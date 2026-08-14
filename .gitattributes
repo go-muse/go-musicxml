@@ -1,0 +1,7 @@
+# Preserve upstream fixtures exactly. Some are non-UTF-8 or binary.
+testdata/** -text
+
+# Keep generated schemas and fixtures out of GitHub language statistics.
+**/zz_generated_*.go linguist-generated=true
+schema/** linguist-vendored=true
+testdata/corpus/** linguist-vendored=true

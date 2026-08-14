@@ -1,0 +1,148 @@
+# go-musicxml
+
+[![CI](https://github.com/go-muse/go-musicxml/actions/workflows/ci.yml/badge.svg)](https://github.com/go-muse/go-musicxml/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/go-muse/go-musicxml.svg)](https://pkg.go.dev/github.com/go-muse/go-musicxml)
+[![GitHub Release](https://img.shields.io/github/v/release/go-muse/go-musicxml)](https://github.com/go-muse/go-musicxml/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+`go-musicxml` is a typed, pure-Go implementation of the MusicXML 4.0 data
+model. It reads, writes, validates, and constructs partwise scores, timewise
+scores, opus documents, and compressed `.mxl` packages.
+
+The runtime package uses only the Go standard library. Its generated types and
+validation rules come from the bundled official MusicXML 4.0 XSD files.
+
+## Caution
+
+This project was entirely vibe-coded with GPT-5.6 Sol, but it has solid evidence of correctness through testing.
+
+## Requirements
+
+- Go 1.26 or later
+- MusicXML 4.0 input for schema validation
+
+## Installation
+
+```bash
+go get github.com/go-muse/go-musicxml@v0.1.0
+```
+
+## Quick start
+
+```go
+package main
+
+import (
+	"log"
+	"os"
+
+	musicxml "github.com/go-muse/go-musicxml"
+)
+
+func main() {
+	score := musicxml.NewScorePartwise(
+		musicxml.PartDefinition{ID: "P1", Name: "Piano"},
+	)
+
+	measure := musicxml.NewScorePartwiseMeasure("1")
+	measure.AddAttributes(&musicxml.Attributes{
+		Divisions: musicxml.Ptr(musicxml.PositiveDivisions(1)),
+	})
+	measure.AddNote(musicxml.NewPitchedNote(
+		musicxml.StepC,
+		4,
+		1,
+	))
+	score.Part[0].AddMeasure(measure)
+
+	if err := score.Validate(); err != nil {
+		log.Fatal(err)
+	}
+	if err := musicxml.Encode(os.Stdout, score); err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+Runnable examples also cover decoding and `.mxl` round trips in
+[`example_test.go`](example_test.go).
+
+## Main API
+
+| Task | API |
+| --- | --- |
+| Read or write XML | `Decode`, `Encode` |
+| Read or write compressed MusicXML | `DecodeMXL`, `EncodeMXL` |
+| Preserve MXL resources | `DecodeMXLPackage`, `EncodeMXLPackage` |
+| Validate against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
+| Construct scores and opus documents | `NewScorePartwise`, `NewScoreTimewise`, `NewOpusDocument` |
+| Construct common notes | `NewPitchedNote`, `NewRestNote` |
+| Resolve linked opus documents | `MXLPackage.ResolveOpus` |
+| Persist resolved-opus edits | `MXLPackage.SyncResolvedOpus` |
+
+The full generated data model is available through the package documentation.
+See [`API.md`](API.md) for invariants and compatibility rules.
+
+## Transport and validation
+
+`Decode` and `Encode` are transport operations. They do not validate
+automatically, so callers can inspect, repair, and re-encode incomplete
+documents. Call `Validate` explicitly when XSD conformance is required.
+
+XML decoding supports UTF-8, UTF-16BE/LE, and ISO-8859-1. MusicXML root
+elements are unqualified because the official MusicXML 4.0 schema has no
+target namespace.
+
+Optional XSD attributes remain pointers after decoding. Generated
+`Effective...` methods expose schema defaults without changing omission
+semantics, and `...MatchesFixed` methods check fixed attributes.
+
+## Compressed MXL and opus
+
+`DecodeMXLPackage` retains alternate root files, images, PDFs, linked scores,
+and other resources. Unchanged linked XML resources remain byte-for-byte
+unchanged after `ResolveOpus` and `SyncResolvedOpus`; edited documents are
+re-encoded as UTF-8 MusicXML.
+
+MXL decoding rejects unsafe paths, duplicate entries, invalid container
+metadata, and oversized archives. Version 0.1 limits compressed input to
+64 MiB, metadata to 1 MiB, the primary document and each resource to 256 MiB,
+and all resources together to 512 MiB.
+
+## Reliability
+
+- The interoperability test corpus contains 150 real MusicXML Test Suite
+  files, including XML in multiple encodings and compressed `.mxl`.
+- Every decodable fixture is decoded, validated when expected to be valid,
+  encoded, decoded again, and compared as a typed Go model.
+- A second encoding must match the first byte-for-byte, proving that XML and
+  MXL serialization reach a deterministic fixed point.
+- CI runs tests on Linux, macOS, and Windows, plus the race detector and three
+  fuzz targets.
+
+## Limitations
+
+- The generated model and schema validator target MusicXML 4.0.
+- XML extensions not represented by the MusicXML 4.0 model are not preserved.
+- Encoding normalizes lexical details such as whitespace, attribute order,
+  character encoding, and ZIP metadata; the first output need not match the
+  original bytes.
+- The API is pre-1.0 and may change between minor releases.
+
+## Development
+
+```bash
+make check
+make release-check
+```
+
+`make check` runs formatting, tests, and `go vet`. `make release-check` also
+checks module tidiness and generated files, runs the race detector, and
+performs short fuzzing passes. Release checks require a clean, committed
+worktree.
+
+## License
+
+The library code is licensed under the [MIT License](LICENSE). Bundled schemas
+and test fixtures retain their upstream terms; see
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).

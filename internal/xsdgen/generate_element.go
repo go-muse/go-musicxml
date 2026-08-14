@@ -1,0 +1,313 @@
+package xsdgen
+
+import (
+	"bytes"
+	"errors"
+	"fmt"
+	"go/format"
+	"go/token"
+	"sort"
+)
+
+var ErrNoElements = errors.New(
+	"xsdgen: no global elements selected for generation",
+)
+
+type generatedElement struct {
+	declaration *Declaration
+	goName      string
+	structure   *complexStructure
+}
+
+// GenerateElements generates root structures for the selected global XSD
+// elements. Anonymous nested complex types receive stable exported names based
+// on their path from the root element.
+func GenerateElements(
+	index *Index,
+	packageName string,
+	elements ...QName,
+) ([]byte, error) {
+	if index == nil {
+		return nil, ErrNilIndex
+	}
+	if !token.IsIdentifier(packageName) {
+		return nil, fmt.Errorf(
+			"%w %q",
+			ErrInvalidPackageName,
+			packageName,
+		)
+	}
+	if len(elements) == 0 {
+		return nil, ErrNoElements
+	}
+
+	names, err := NewTypeNames(index)
+	if err != nil {
+		return nil, err
+	}
+
+	simplePlans, err := PlanSimpleTypes(index)
+	if err != nil {
+		return nil, err
+	}
+
+	simpleRenderer := &simpleTypeRenderer{
+		names:      names,
+		plans:      make(map[*Declaration]*SimpleTypeDefinition, len(simplePlans)),
+		kindStates: make(map[*Declaration]resolveState, len(simplePlans)),
+		kinds:      make(map[*Declaration]GoTypeKind, len(simplePlans)),
+	}
+	for planIndex := range simplePlans {
+		plan := &simplePlans[planIndex]
+		simpleRenderer.plans[plan.Declaration] = plan.Definition
+	}
+
+	renderer := complexTypeRenderer{
+		index:          index,
+		names:          names,
+		simpleRenderer: simpleRenderer,
+		packageName:    packageName,
+		usedTypeNames:  make(map[string]string),
+		nameInline:     true,
+	}
+	for _, declaration := range names.Declarations() {
+		name, found := names.Lookup(declaration)
+		if !found {
+			panic("xsdgen: missing Go name for indexed type")
+		}
+		renderer.usedTypeNames[name] = describeDeclaration(declaration)
+	}
+
+	selected := append([]QName(nil), elements...)
+	sort.Slice(selected, func(left int, right int) bool {
+		if selected[left].Namespace != selected[right].Namespace {
+			return selected[left].Namespace < selected[right].Namespace
+		}
+
+		return selected[left].Local < selected[right].Local
+	})
+
+	roots := make([]generatedElement, 0, len(selected))
+	seen := make(map[expandedName]struct{}, len(selected))
+
+	for _, name := range selected {
+		if !validNCName(name.Local) {
+			return nil, fmt.Errorf(
+				"%w: invalid global element name %q",
+				ErrInvalidElement,
+				name.Local,
+			)
+		}
+
+		key := expandedName{
+			namespace: name.Namespace,
+			local:     name.Local,
+		}
+		if _, found := seen[key]; found {
+			return nil, fmt.Errorf(
+				"%w: duplicate selected element %s",
+				ErrInvalidElement,
+				formatExpandedName(name),
+			)
+		}
+		seen[key] = struct{}{}
+
+		declaration, found := index.LookupElement(name)
+		if !found {
+			return nil, &UnresolvedReferenceError{
+				Space:   ElementSymbolSpace,
+				Lexical: name.String(),
+				Name:    name,
+				From:    "element generation",
+			}
+		}
+		if declaration.Element == nil || declaration.File == nil {
+			return nil, ErrInvalidElement
+		}
+
+		goName, err := GoTypeName(declaration.Name.Local)
+		if err != nil {
+			return nil, err
+		}
+		if err := renderer.reserveTypeName(
+			goName,
+			"global element "+formatExpandedName(declaration.Name),
+		); err != nil {
+			return nil, err
+		}
+
+		planner := complexTypePlanner{
+			index:        index,
+			file:         declaration.File,
+			ownerName:    declaration.Name.Local,
+			ownerGoName:  goName,
+			expandGroups: true,
+		}
+		typePlan, err := planner.planElementType(declaration.Element)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"xsdgen: plan global element %q: %w",
+				declaration.Name.Local,
+				err,
+			)
+		}
+
+		structure, err := renderer.buildElementStructure(
+			goName,
+			typePlan,
+		)
+		if err != nil {
+			return nil, fmt.Errorf(
+				"xsdgen: generate global element %q: %w",
+				declaration.Name.Local,
+				err,
+			)
+		}
+		if err := ensureXMLNameAvailable(structure); err != nil {
+			return nil, err
+		}
+
+		roots = append(roots, generatedElement{
+			declaration: declaration,
+			goName:      goName,
+			structure:   structure,
+		})
+	}
+
+	var body bytes.Buffer
+	for rootIndex := range roots {
+		renderer.renderElement(&body, &roots[rootIndex])
+	}
+	for _, inlineType := range renderer.inlineTypes {
+		if inlineType == nil || inlineType.structure == nil {
+			return nil, ErrInvalidComplexType
+		}
+
+		fmt.Fprintf(
+			&body,
+			"// %s represents an anonymous nested XSD complex type.\n",
+			inlineType.name,
+		)
+		fmt.Fprintf(&body, "type %s ", inlineType.name)
+		renderer.renderStructure(&body, inlineType.structure)
+		body.WriteString("\n\n")
+		renderer.renderValueConstraintMethods(
+			&body,
+			inlineType.structure,
+		)
+	}
+	for _, choice := range renderer.choices {
+		renderer.renderChoice(&body, choice)
+	}
+
+	var source bytes.Buffer
+	source.WriteString("// Code generated by xsdgen; DO NOT EDIT.\n\n")
+	fmt.Fprintf(&source, "package %s\n\n", packageName)
+	source.WriteString("import (\n")
+	source.WriteString("\t\"encoding/xml\"\n")
+	if len(renderer.choices) != 0 {
+		source.WriteString("\t\"fmt\"\n")
+	}
+	source.WriteString(")\n\n")
+	source.Write(body.Bytes())
+
+	result, err := format.Source(source.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf(
+			"xsdgen: format generated global elements: %w",
+			err,
+		)
+	}
+
+	return result, nil
+}
+
+func (r *complexTypeRenderer) buildElementStructure(
+	owner string,
+	plan *TypePlan,
+) (*complexStructure, error) {
+	if plan == nil {
+		return nil, ErrInvalidElement
+	}
+	if plan.InlineComplex != nil {
+		return r.buildStructure(owner, plan.InlineComplex)
+	}
+
+	result := newEmptyComplexStructure(owner)
+	valueType, err := r.typePlanGoTypeWithOwner(plan, owner)
+	if err != nil {
+		return nil, err
+	}
+
+	if plan.Declaration != nil &&
+		plan.Declaration.Kind == DeclarationComplexType {
+		result.embedded = valueType
+	} else {
+		result.valueType = valueType
+	}
+
+	return result, nil
+}
+
+func newEmptyComplexStructure(owner string) *complexStructure {
+	return &complexStructure{
+		owner:            owner,
+		elementIndexes:   make(map[expandedName]int),
+		attributeIndexes: make(map[expandedName]int),
+		choices:          make(map[*ParticlePlan]*complexChoice),
+		choiceByElement:  make(map[expandedName]*complexChoice),
+		insertedChoices:  make(map[*complexChoice]bool),
+	}
+}
+
+func ensureXMLNameAvailable(structure *complexStructure) error {
+	if structure == nil {
+		return ErrInvalidComplexType
+	}
+	if structure.embedded == "XMLName" {
+		return xmlNameCollision(structure.owner, "embedded base XMLName")
+	}
+
+	for _, field := range structure.elements {
+		if field.goName == "XMLName" {
+			return xmlNameCollision(structure.owner, field.description)
+		}
+	}
+	for _, field := range structure.attributes {
+		if field.goName == "XMLName" {
+			return xmlNameCollision(structure.owner, field.description)
+		}
+	}
+
+	return nil
+}
+
+func xmlNameCollision(owner string, second string) error {
+	return &GoFieldNameCollisionError{
+		Owner:  owner,
+		Name:   "XMLName",
+		First:  "root element name",
+		Second: second,
+	}
+}
+
+func (r *complexTypeRenderer) renderElement(
+	target *bytes.Buffer,
+	element *generatedElement,
+) {
+	fmt.Fprintf(
+		target,
+		"// %s represents the %q root element.\n",
+		element.goName,
+		element.declaration.Name.Local,
+	)
+	fmt.Fprintf(target, "type %s struct {\n", element.goName)
+	fmt.Fprintf(
+		target,
+		"\tXMLName xml.Name %s\n",
+		xmlStructTag(element.declaration.Name, false, false),
+	)
+	r.renderStructureFields(target, element.structure)
+	target.WriteString("}\n\n")
+	r.renderValueConstraintMethods(target, element.structure)
+}
