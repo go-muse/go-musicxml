@@ -33,38 +33,56 @@ go get github.com/go-muse/go-musicxml@v0.1.0
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
-	musicxml "github.com/go-muse/go-musicxml"
+	"github.com/go-muse/go-musicxml"
 )
 
 func main() {
-	score := musicxml.NewScorePartwise(
-		musicxml.PartDefinition{ID: "P1", Name: "Piano"},
+	input, err := os.Open("score.musicxml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer input.Close()
+
+	document, err := musicxml.Decode(input)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	score, ok := document.(*musicxml.ScorePartwise)
+	if !ok {
+		log.Fatalf("expected a partwise score, got %T", document)
+	}
+	fmt.Printf(
+		"MusicXML %s: %d parts\n",
+		score.EffectiveVersion(),
+		len(score.Part),
 	)
 
-	measure := musicxml.NewScorePartwiseMeasure("1")
-	measure.AddAttributes(&musicxml.Attributes{
-		Divisions: musicxml.Ptr(musicxml.PositiveDivisions(1)),
-	})
-	measure.AddNote(musicxml.NewPitchedNote(
-		musicxml.StepC,
-		4,
-		1,
-	))
-	score.Part[0].AddMeasure(measure)
+	score.MovementTitle = musicxml.Ptr("Edited with go-musicxml")
 
 	if err := score.Validate(); err != nil {
 		log.Fatal(err)
 	}
-	if err := musicxml.Encode(os.Stdout, score); err != nil {
+
+	output, err := os.Create("edited.musicxml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer output.Close()
+
+	if err := musicxml.Encode(output, score); err != nil {
 		log.Fatal(err)
 	}
 }
 ```
 
-Runnable examples also cover decoding and `.mxl` round trips in
+This example decodes a MusicXML document, accesses and edits its typed model,
+validates the result, and writes it back. Runnable examples also cover score
+construction and compressed `.mxl` round trips in
 [`example_test.go`](example_test.go).
 
 ## Main API

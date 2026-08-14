@@ -1,3 +1,6 @@
+# Keep Go source and generated output byte-stable across platforms.
+*.go text eol=lf
+
 # Preserve upstream fixtures exactly. Some are non-UTF-8 or binary.
 testdata/** -text
 
