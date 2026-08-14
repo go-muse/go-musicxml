@@ -47,15 +47,11 @@ func main() {
 	}
 	defer input.Close()
 
-	document, err := musicxml.Decode(input)
+	score, err := musicxml.DecodeScorePartwise(input)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	score, ok := document.(*musicxml.ScorePartwise)
-	if !ok {
-		log.Fatalf("expected a partwise score, got %T", document)
-	}
 	fmt.Printf(
 		"MusicXML %s: %d parts\n",
 		score.EffectiveVersion(),
@@ -89,7 +85,8 @@ construction and compressed `.mxl` round trips in
 
 | Task | API |
 | --- | --- |
-| Read or write XML | `Decode`, `Encode` |
+| Read XML | `Decode`, `DecodeScorePartwise`, `DecodeScoreTimewise`, `DecodeOpusDocument` |
+| Write XML | `Encode` |
 | Read or write compressed MusicXML | `DecodeMXL`, `EncodeMXL` |
 | Preserve MXL resources | `DecodeMXLPackage`, `EncodeMXLPackage` |
 | Validate against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |

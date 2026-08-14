@@ -13,24 +13,9 @@ import (
 // Supported roots are score-partwise, score-timewise, and opus from the
 // no-namespace MusicXML 4.0 schemas. Decode does not call Validate.
 func Decode(reader io.Reader) (Document, error) {
-	if reader == nil {
-		return nil, ErrNilReader
-	}
-
-	decoder, err := newXMLDecoder(reader)
-	if err != nil {
-		return nil, fmt.Errorf(
-			"musicxml: initialize XML decoder: %w",
-			err,
-		)
-	}
-
-	start, err := readRoot(decoder)
+	decoder, start, err := newDocumentDecoder(reader)
 	if err != nil {
 		return nil, err
-	}
-	if start.Name.Space != "" {
-		return nil, &UnsupportedRootError{Name: start.Name}
 	}
 
 	var document Document
@@ -45,14 +30,117 @@ func Decode(reader io.Reader) (Document, error) {
 		return nil, &UnsupportedRootError{Name: start.Name}
 	}
 
-	if err := decoder.DecodeElement(document, &start); err != nil {
-		return nil, fmt.Errorf("musicxml: decode document: %w", err)
-	}
-	if err := readDocumentTail(decoder); err != nil {
+	if err := decodeRootElement(decoder, start, document); err != nil {
 		return nil, err
 	}
 
 	return document, nil
+}
+
+// DecodeScorePartwise reads one uncompressed score-partwise document.
+//
+// It returns ErrUnsupportedRoot when the input contains another root type and
+// does not call Validate.
+func DecodeScorePartwise(reader io.Reader) (*ScorePartwise, error) {
+	document := &ScorePartwise{}
+	if err := decodeExpectedDocument(
+		reader,
+		"score-partwise",
+		document,
+	); err != nil {
+		return nil, err
+	}
+
+	return document, nil
+}
+
+// DecodeScoreTimewise reads one uncompressed score-timewise document.
+//
+// It returns ErrUnsupportedRoot when the input contains another root type and
+// does not call Validate.
+func DecodeScoreTimewise(reader io.Reader) (*ScoreTimewise, error) {
+	document := &ScoreTimewise{}
+	if err := decodeExpectedDocument(
+		reader,
+		"score-timewise",
+		document,
+	); err != nil {
+		return nil, err
+	}
+
+	return document, nil
+}
+
+// DecodeOpusDocument reads one uncompressed opus document.
+//
+// It returns ErrUnsupportedRoot when the input contains another root type and
+// does not call Validate.
+func DecodeOpusDocument(reader io.Reader) (*OpusDocument, error) {
+	document := &OpusDocument{}
+	if err := decodeExpectedDocument(reader, "opus", document); err != nil {
+		return nil, err
+	}
+
+	return document, nil
+}
+
+func decodeExpectedDocument(
+	reader io.Reader,
+	expectedRoot string,
+	document Document,
+) error {
+	decoder, start, err := newDocumentDecoder(reader)
+	if err != nil {
+		return err
+	}
+	if start.Name.Local != expectedRoot {
+		return &UnsupportedRootError{Name: start.Name}
+	}
+
+	return decodeRootElement(decoder, start, document)
+}
+
+func newDocumentDecoder(
+	reader io.Reader,
+) (*xml.Decoder, xml.StartElement, error) {
+	if reader == nil {
+		return nil, xml.StartElement{}, ErrNilReader
+	}
+
+	decoder, err := newXMLDecoder(reader)
+	if err != nil {
+		return nil, xml.StartElement{}, fmt.Errorf(
+			"musicxml: initialize XML decoder: %w",
+			err,
+		)
+	}
+
+	start, err := readRoot(decoder)
+	if err != nil {
+		return nil, xml.StartElement{}, err
+	}
+	if start.Name.Space != "" {
+		return nil, xml.StartElement{}, &UnsupportedRootError{
+			Name: start.Name,
+		}
+	}
+
+	return decoder, start, nil
+}
+
+func decodeRootElement(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+	document Document,
+) error {
+	if err := decoder.DecodeElement(document, &start); err != nil {
+		return fmt.Errorf("musicxml: decode document: %w", err)
+	}
+	if err := readDocumentTail(decoder); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func readRoot(decoder *xml.Decoder) (xml.StartElement, error) {

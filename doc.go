@@ -1,7 +1,9 @@
 // Package musicxml provides a typed Go model for MusicXML 4.0.
 //
 // Decode and Encode read and write score-partwise, score-timewise, and opus
-// root documents. DecodeMXL and EncodeMXL provide the equivalent transport for
+// root documents. DecodeScorePartwise, DecodeScoreTimewise, and
+// DecodeOpusDocument provide concrete result types when the expected root is
+// known. DecodeMXL and EncodeMXL provide the equivalent transport for
 // compressed MusicXML archives. DecodeMXLPackage preserves related resources,
 // while ResolveOpus and SyncResolvedOpus support linked documents inside an
 // archive.

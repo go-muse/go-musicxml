@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"encoding/xml"
+	"io"
 	"strings"
 	"testing"
 
@@ -80,6 +81,117 @@ func TestDecode(t *testing.T) {
 
 			assert.NoError(t, err)
 			assert.Equal(t, test.want, actual)
+		})
+	}
+}
+
+func TestDecodeTypedDocuments(t *testing.T) {
+	t.Parallel()
+
+	version := "4.0"
+	tests := []struct {
+		name   string
+		input  string
+		decode func(io.Reader) (any, error)
+		want   any
+	}{
+		{
+			name:  "score partwise",
+			input: `<score-partwise version="4.0"></score-partwise>`,
+			decode: func(reader io.Reader) (any, error) {
+				return DecodeScorePartwise(reader)
+			},
+			want: &ScorePartwise{
+				XMLName: xml.Name{Local: "score-partwise"},
+				Version: &version,
+			},
+		},
+		{
+			name:  "score timewise",
+			input: `<score-timewise version="4.0"></score-timewise>`,
+			decode: func(reader io.Reader) (any, error) {
+				return DecodeScoreTimewise(reader)
+			},
+			want: &ScoreTimewise{
+				XMLName: xml.Name{Local: "score-timewise"},
+				Version: &version,
+			},
+		},
+		{
+			name:  "opus",
+			input: `<opus version="4.0"></opus>`,
+			decode: func(reader io.Reader) (any, error) {
+				return DecodeOpusDocument(reader)
+			},
+			want: &OpusDocument{
+				XMLName: xml.Name{Local: "opus"},
+				Version: &version,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual, err := test.decode(strings.NewReader(test.input))
+
+			assert.NoError(t, err)
+			assert.Equal(t, test.want, actual)
+		})
+	}
+}
+
+func TestDecodeTypedDocumentsRejectUnexpectedRoot(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		input    string
+		decode   func(io.Reader) error
+		wantName xml.Name
+	}{
+		{
+			name:  "score partwise",
+			input: `<score-timewise></score-timewise>`,
+			decode: func(reader io.Reader) error {
+				_, err := DecodeScorePartwise(reader)
+				return err
+			},
+			wantName: xml.Name{Local: "score-timewise"},
+		},
+		{
+			name:  "score timewise",
+			input: `<opus></opus>`,
+			decode: func(reader io.Reader) error {
+				_, err := DecodeScoreTimewise(reader)
+				return err
+			},
+			wantName: xml.Name{Local: "opus"},
+		},
+		{
+			name:  "opus",
+			input: `<score-partwise></score-partwise>`,
+			decode: func(reader io.Reader) error {
+				_, err := DecodeOpusDocument(reader)
+				return err
+			},
+			wantName: xml.Name{Local: "score-partwise"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := test.decode(strings.NewReader(test.input))
+
+			assert.ErrorIs(t, err, ErrUnsupportedRoot)
+
+			var rootErr *UnsupportedRootError
+			if assert.ErrorAs(t, err, &rootErr) {
+				assert.Equal(t, test.wantName, rootErr.Name)
+			}
 		})
 	}
 }

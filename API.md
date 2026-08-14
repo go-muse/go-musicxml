@@ -47,6 +47,10 @@ methods are conveniences, not a separate object model.
 `opus` root and rejects non-whitespace content outside it. It does not call
 `Validate`.
 
+When the expected root type is known, `DecodeScorePartwise`,
+`DecodeScoreTimewise`, and `DecodeOpusDocument` return the corresponding
+concrete pointer type. They return `ErrUnsupportedRoot` for any other root.
+
 `Encode` writes one root element without an XML declaration and does not call
 `Validate`. MXL encoding adds an XML declaration to stored MusicXML documents.
 

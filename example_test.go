@@ -6,11 +6,11 @@ import (
 	"log"
 	"strings"
 
-	musicxml "github.com/go-muse/go-musicxml"
+	"github.com/go-muse/go-musicxml"
 )
 
-func ExampleDecode() {
-	document, err := musicxml.Decode(strings.NewReader(
+func ExampleDecodeScorePartwise() {
+	score, err := musicxml.DecodeScorePartwise(strings.NewReader(
 		`<score-partwise version="4.0">` +
 			`<part-list>` +
 			`<score-part id="P1"><part-name>Piano</part-name></score-part>` +
@@ -24,7 +24,6 @@ func ExampleDecode() {
 		log.Fatal(err)
 	}
 
-	score := document.(*musicxml.ScorePartwise)
 	fmt.Println(score.EffectiveVersion(), score.Part[0].ID)
 
 	// Output:
