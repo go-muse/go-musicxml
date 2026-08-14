@@ -9,15 +9,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- Typed `DecodeScorePartwise`, `DecodeScoreTimewise`, and `DecodeOpusDocument`
-  helpers for callers that know the expected MusicXML root type.
-
-## [0.1.0] - 2026-07-26
-
-### Added
-
 - Generated Go model for the official MusicXML 4.0 score and opus XSDs.
 - Partwise, timewise, and opus XML decoding and encoding.
+- Typed `DecodeScorePartwise`, `DecodeScoreTimewise`, and `DecodeOpusDocument`
+  helpers for callers that know the expected MusicXML root type.
+- Configurable XML-depth and MXL byte limits through `DecodeOptions` and
+  `MXLOptions`.
 - UTF-8, UTF-16BE/LE, and ISO-8859-1 XML decoding.
 - Compressed `.mxl` decoding and encoding with safe ZIP-path and size checks.
 - Lossless preservation of MXL rootfile metadata and related resources.
@@ -29,8 +26,22 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Stable end-to-end round trips that compare decoded models and require the
   first and second encodings to be byte-identical.
 - GitHub CI across Linux, macOS, and Windows, with race and fuzz checks.
+- Independent libxml2 validation of re-encoded corpus documents in CI.
 - A release workflow that validates tags against `main` and publishes release
   notes from this changelog.
+
+### Fixed
+
+- Preserve repeated `key`, `lyric`, `time`, and other grouped child elements
+  in typed ordered `Content` slices instead of lossy parallel slices.
+- Generate XML fields in schema order and validate content models strictly in
+  document order.
+- Reject excessive XML nesting before recursive model decoding can exhaust the
+  goroutine stack.
+- Validate all XSD date/time lexical forms and XML 1.0 Unicode name types.
+- Accept the optional UTF-8 byte-order mark.
+- Give the MXL fuzz target bounded expansion limits, small focused seeds, and
+  a deterministic 10,000-execution CI budget.
 
 ### Changed
 
@@ -40,5 +51,4 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   unqualified.
 - GitHub Actions are pinned to immutable commit SHAs.
 
-[Unreleased]: https://github.com/go-muse/go-musicxml/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/go-muse/go-musicxml/releases/tag/v0.1.0
+[Unreleased]: https://github.com/go-muse/go-musicxml/commits/main

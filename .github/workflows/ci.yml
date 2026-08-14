@@ -88,6 +88,28 @@ jobs:
       - name: Run tests with race detector
         run: make race
 
+  xsd-conformance:
+    name: External XSD conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Install xmllint
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libxml2-utils
+
+      - name: Validate re-encoded corpus
+        run: go test -count=1 -run='^TestEncodedCorpusConformsToMusicXMLSchema$' .
+
   fuzz:
     name: Fuzz smoke (${{ matrix.target }})
     runs-on: ubuntu-latest
@@ -95,10 +117,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - FuzzDocumentRoundTrip
-          - FuzzMXLPackageRoundTrip
-          - FuzzMXLLinkResolution
+        include:
+          - target: FuzzDocumentRoundTrip
+            fuzztime: 10s
+          - target: FuzzMXLPackageRoundTrip
+            # An execution count makes negligible coverage impossible to
+            # conceal behind a nominal time budget.
+            fuzztime: 10000x
+          - target: FuzzMXLLinkResolution
+            fuzztime: 10s
 
     steps:
       - name: Check out repository
@@ -112,4 +139,4 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run fuzz target
-        run: go test -run='^$' -fuzz='^${{ matrix.target }}$' -fuzztime=10s .
+        run: go test -run='^$' -fuzz='^${{ matrix.target }}$' -fuzztime='${{ matrix.fuzztime }}' .
