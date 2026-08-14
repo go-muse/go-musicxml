@@ -1343,25 +1343,34 @@ func validateBuiltin(
 		}
 
 	case "Name":
-		if validationNamePattern.MatchString(normalized) {
+		if validXMLName(normalized) {
 			return nil
 		}
 
 	case "NCName", "ID", "IDREF", "ENTITY":
-		if validationNCNamePattern.MatchString(normalized) {
+		if validXMLNCName(normalized) {
 			return nil
 		}
 
 	case "NMTOKEN":
-		if validationNMTOKENPattern.MatchString(normalized) {
+		if validXMLNMTOKEN(normalized) {
 			return nil
 		}
 
-	case "NMTOKENS", "IDREFS", "ENTITIES":
+	case "NMTOKENS":
 		items := strings.Fields(normalized)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
-				return !validationNMTOKENPattern.MatchString(item)
+				return !validXMLNMTOKEN(item)
+			}) == false {
+			return nil
+		}
+
+	case "IDREFS", "ENTITIES":
+		items := strings.Fields(normalized)
+		if len(items) != 0 &&
+			slices.ContainsFunc(items, func(item string) bool {
+				return !validXMLNCName(item)
 			}) == false {
 			return nil
 		}
@@ -1428,13 +1437,13 @@ func validateBuiltin(
 		}
 
 	case "QName", "NOTATION":
-		if validationQNamePattern.MatchString(normalized) {
+		if validXMLQName(normalized) {
 			return nil
 		}
 
 	case "date", "dateTime", "duration", "gDay", "gMonth",
 		"gMonthDay", "gYear", "gYearMonth", "time":
-		if normalized != "" {
+		if validXSDDateTime(name, normalized) {
 			return nil
 		}
 
@@ -2159,18 +2168,6 @@ func validationAttributeQNamePath(
 var (
 	validationLanguagePattern = regexp.MustCompile(
 		`^[A-Za-z]{1,8}(?:-[A-Za-z0-9]{1,8})*$`,
-	)
-	validationNamePattern = regexp.MustCompile(
-		`^[A-Za-z_:][A-Za-z0-9_.:-]*$`,
-	)
-	validationNCNamePattern = regexp.MustCompile(
-		`^[A-Za-z_][A-Za-z0-9_.-]*$`,
-	)
-	validationNMTOKENPattern = regexp.MustCompile(
-		`^[A-Za-z0-9_.:-]+$`,
-	)
-	validationQNamePattern = regexp.MustCompile(
-		`^(?:[A-Za-z_][A-Za-z0-9_.-]*:)?[A-Za-z_][A-Za-z0-9_.-]*$`,
 	)
 	validationDecimalPattern = regexp.MustCompile(
 		`^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$`,

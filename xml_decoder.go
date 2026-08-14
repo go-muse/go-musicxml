@@ -154,7 +154,17 @@ func (r *latin1Reader) Read(target []byte) (int, error) {
 func detectUTF16(
 	reader *bufio.Reader,
 ) (binary.ByteOrder, bool, error) {
-	prefix, err := reader.Peek(2)
+	prefix, err := reader.Peek(3)
+	if len(prefix) >= 3 &&
+		prefix[0] == 0xef &&
+		prefix[1] == 0xbb &&
+		prefix[2] == 0xbf {
+		if _, err := reader.Discard(3); err != nil {
+			return nil, false, err
+		}
+
+		return nil, false, nil
+	}
 	if err != nil && len(prefix) < 2 {
 		return nil, false, nil
 	}
