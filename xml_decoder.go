@@ -66,6 +66,51 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 	return decoder, nil
 }
 
+func newDepthLimitedXMLDecoder(
+	reader io.Reader,
+	maximum int,
+) (*xml.Decoder, error) {
+	source, err := newXMLDecoder(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return xml.NewTokenDecoder(&depthLimitedXMLTokenReader{
+		source:  source,
+		maximum: maximum,
+	}), nil
+}
+
+type depthLimitedXMLTokenReader struct {
+	source  xml.TokenReader
+	depth   int
+	maximum int
+}
+
+func (r *depthLimitedXMLTokenReader) Token() (xml.Token, error) {
+	token, err := r.source.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	switch token.(type) {
+	case xml.StartElement:
+		if r.depth >= r.maximum {
+			return nil, fmt.Errorf(
+				"%w: maximum is %d elements",
+				ErrXMLTooDeep,
+				r.maximum,
+			)
+		}
+		r.depth++
+
+	case xml.EndElement:
+		r.depth--
+	}
+
+	return token, nil
+}
+
 type latin1Reader struct {
 	source  *bufio.Reader
 	pending []byte
@@ -109,7 +154,17 @@ func (r *latin1Reader) Read(target []byte) (int, error) {
 func detectUTF16(
 	reader *bufio.Reader,
 ) (binary.ByteOrder, bool, error) {
-	prefix, err := reader.Peek(2)
+	prefix, err := reader.Peek(3)
+	if len(prefix) >= 3 &&
+		prefix[0] == 0xef &&
+		prefix[1] == 0xbb &&
+		prefix[2] == 0xbf {
+		if _, err := reader.Discard(3); err != nil {
+			return nil, false, err
+		}
+
+		return nil, false, nil
+	}
 	if err != nil && len(prefix) < 2 {
 		return nil, false, nil
 	}

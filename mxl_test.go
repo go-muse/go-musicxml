@@ -460,6 +460,63 @@ func TestDecodeMXLLimits(t *testing.T) {
 	}
 }
 
+func TestDecodeMXLXMLDepthLimit(t *testing.T) {
+	t.Parallel()
+
+	archive := makeMXLTestArchive(t, []mxlTestEntry{
+		mxlTestContainerEntry(
+			`<rootfile full-path="score.musicxml"/>`,
+		),
+		mxlTestFileEntry(
+			"score.musicxml",
+			nestedOpusXML(defaultMaxXMLDepth+1),
+		),
+	})
+
+	document, err := DecodeMXL(bytes.NewReader(archive))
+	assert.ErrorIs(t, err, ErrXMLTooDeep)
+	assert.Nil(t, document)
+
+	value, err := DecodeMXLPackage(bytes.NewReader(archive))
+	assert.ErrorIs(t, err, ErrXMLTooDeep)
+	assert.Nil(t, value)
+}
+
+func TestDecodeMXLWithOptions(t *testing.T) {
+	t.Parallel()
+
+	archive := makeMXLTestArchive(t, []mxlTestEntry{
+		mxlTestContainerEntry(
+			`<rootfile full-path="score.musicxml"/>`,
+		),
+		mxlTestFileEntry(
+			"score.musicxml",
+			nestedOpusXML(3),
+		),
+	})
+
+	document, err := DecodeMXLWithOptions(
+		bytes.NewReader(archive),
+		MXLOptions{MaxXMLDepth: 2},
+	)
+	assert.ErrorIs(t, err, ErrXMLTooDeep)
+	assert.Nil(t, document)
+
+	document, err = DecodeMXLWithOptions(
+		bytes.NewReader(archive),
+		MXLOptions{MaxArchiveBytes: int64(len(archive) - 1)},
+	)
+	assert.ErrorIs(t, err, ErrMXLTooLarge)
+	assert.Nil(t, document)
+
+	document, err = DecodeMXLWithOptions(
+		bytes.NewReader(archive),
+		MXLOptions{MaxDocumentBytes: -1},
+	)
+	assert.ErrorIs(t, err, ErrInvalidMXLOptions)
+	assert.Nil(t, document)
+}
+
 func TestValidMXLPath(t *testing.T) {
 	t.Parallel()
 

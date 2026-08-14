@@ -1,6 +1,7 @@
 package xsdgen
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -190,6 +191,65 @@ func (value BaseContent) MarshalXML(
 `, string(actual))
 }
 
+func TestGenerateComplexTypesOrdersFieldsFromParticle(t *testing.T) {
+	t.Parallel()
+
+	file := parseSchemaFile(t, "types.xsd", `
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:complexType name="record">
+		<xs:choice>
+			<xs:sequence>
+				<xs:element name="alpha" type="xs:string"/>
+				<xs:element name="charlie" type="xs:string"/>
+			</xs:sequence>
+			<xs:sequence>
+				<xs:element name="bravo" type="xs:string"/>
+				<xs:element name="alpha" type="xs:string"/>
+			</xs:sequence>
+		</xs:choice>
+	</xs:complexType>
+</xs:schema>`)
+	index, err := NewIndex(&Set{Files: []*SchemaFile{file}})
+	require.NoError(t, err)
+
+	actual, err := GenerateComplexTypes(index, "example")
+	require.NoError(t, err)
+
+	source := string(actual)
+	bravo := strings.Index(source, "\tBravo")
+	alpha := strings.Index(source, "\tAlpha")
+	charlie := strings.Index(source, "\tCharlie")
+	require.NotEqual(t, -1, bravo)
+	require.NotEqual(t, -1, alpha)
+	require.NotEqual(t, -1, charlie)
+	assert.Less(t, bravo, alpha)
+	assert.Less(t, alpha, charlie)
+}
+
+func TestGenerateComplexTypesOrderedRepeatedSequence(t *testing.T) {
+	t.Parallel()
+
+	file := parseSchemaFile(t, "types.xsd", `
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:complexType name="record">
+		<xs:sequence maxOccurs="unbounded">
+			<xs:element name="alpha" type="xs:string"/>
+			<xs:element name="beta" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>`)
+	index, err := NewIndex(&Set{Files: []*SchemaFile{file}})
+	require.NoError(t, err)
+
+	actual, err := GenerateComplexTypes(index, "example")
+	require.NoError(t, err)
+
+	source := string(actual)
+	assert.Contains(t, source, "Content []RecordContent")
+	assert.Contains(t, source, "func (value *Record) AddAlpha(")
+	assert.Contains(t, source, "func (value *Record) AddBeta(")
+}
+
 func TestGenerateComplexTypesError(t *testing.T) {
 	t.Parallel()
 
@@ -252,6 +312,21 @@ func TestGenerateComplexTypesError(t *testing.T) {
 	</xs:complexType>
 </xs:schema>`,
 			wantErr: ErrUnsupportedComplexGeneration,
+		},
+		{
+			name:        "element at multiple ordered positions",
+			packageName: "musicxml",
+			schema: `
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<xs:complexType name="record">
+		<xs:sequence>
+			<xs:element name="alpha" type="xs:string"/>
+			<xs:element name="beta" type="xs:string"/>
+			<xs:element name="alpha" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>`,
+			wantErr: ErrAmbiguousComplexContent,
 		},
 		{
 			name:        "ordered content field collision",

@@ -93,6 +93,27 @@ func TestDecodeISO88591(t *testing.T) {
 	assert.Equal(t, "Café", *actual.MovementTitle)
 }
 
+func TestDecodeUTF8BOM(t *testing.T) {
+	t.Parallel()
+
+	input := append(
+		[]byte{0xef, 0xbb, 0xbf},
+		[]byte(
+			`<?xml version="1.0" encoding="UTF-8"?>`+
+				`<score-partwise version="4.0">`+
+				`<movement-title>Čajkovskij</movement-title>`+
+				`</score-partwise>`,
+		)...,
+	)
+
+	document, err := Decode(bytes.NewReader(input))
+	require.NoError(t, err)
+	actual, ok := document.(*ScorePartwise)
+	require.True(t, ok)
+	require.NotNil(t, actual.MovementTitle)
+	assert.Equal(t, "Čajkovskij", *actual.MovementTitle)
+}
+
 func encodeUTF16(
 	value string,
 	order binary.ByteOrder,

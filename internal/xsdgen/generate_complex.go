@@ -16,6 +16,9 @@ var (
 	ErrGoFieldNameCollision = errors.New(
 		"xsdgen: Go field name collision",
 	)
+	ErrAmbiguousComplexContent = errors.New(
+		"xsdgen: complex content cannot be flattened without losing order",
+	)
 )
 
 // GoFieldNameCollisionError reports fields in one generated structure that
@@ -256,6 +259,7 @@ type complexStructure struct {
 	elementIndexes   map[expandedName]int
 	attributeIndexes map[expandedName]int
 	choices          map[*ParticlePlan]*complexChoice
+	choiceIndexes    map[*complexChoice]int
 	choiceByElement  map[expandedName]*complexChoice
 	insertedChoices  map[*complexChoice]bool
 }
@@ -319,6 +323,7 @@ func (r *complexTypeRenderer) buildStructure(
 		elementIndexes:   make(map[expandedName]int),
 		attributeIndexes: make(map[expandedName]int),
 		choices:          make(map[*ParticlePlan]*complexChoice),
+		choiceIndexes:    make(map[*complexChoice]int),
 		choiceByElement:  make(map[expandedName]*complexChoice),
 		insertedChoices:  make(map[*complexChoice]bool),
 	}
@@ -403,6 +408,11 @@ func (r *complexTypeRenderer) buildStructure(
 	); err != nil {
 		return nil, err
 	}
+	if err := result.validateFlattenableParticle(
+		definition.Particle,
+	); err != nil {
+		return nil, err
+	}
 
 	if err := r.collectParticle(
 		result,
@@ -417,6 +427,11 @@ func (r *complexTypeRenderer) buildStructure(
 			ErrUnsupportedComplexGeneration,
 			owner,
 		)
+	}
+	if err := result.orderElementsByParticle(
+		definition.Particle,
+	); err != nil {
+		return nil, err
 	}
 
 	if definition.AnyAttribute != nil {

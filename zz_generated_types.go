@@ -419,14 +419,9 @@ type Coda struct {
 
 // Credit represents the "credit" XSD complex type.
 type Credit struct {
-	CreditType   []string            `xml:"credit-type"`
-	Link         []Link              `xml:"link"`
-	Bookmark     []Bookmark          `xml:"bookmark"`
-	CreditImage  *Image              `xml:"credit-image,omitempty"`
-	CreditWords  []FormattedTextID   `xml:"credit-words"`
-	CreditSymbol []FormattedSymbolID `xml:"credit-symbol"`
-	Page         *uint64             `xml:"page,attr,omitempty"`
-	ID           *string             `xml:"id,attr,omitempty"`
+	Content []CreditContent `xml:",any"`
+	Page    *uint64         `xml:"page,attr,omitempty"`
+	ID      *string         `xml:"id,attr,omitempty"`
 }
 
 // Dashes represents the "dashes" XSD complex type.
@@ -1203,13 +1198,7 @@ type Harmonic struct {
 
 // Harmony represents the "harmony" XSD complex type.
 type Harmony struct {
-	Root        []Root              `xml:"root"`
-	Numeral     []Numeral           `xml:"numeral"`
-	Function    []StyleText         `xml:"function"`
-	Kind        []Kind              `xml:"kind"`
-	Inversion   []Inversion         `xml:"inversion"`
-	Bass        []Bass              `xml:"bass"`
-	Degree      []Degree            `xml:"degree"`
+	Content     []HarmonyContent    `xml:",any"`
 	Frame       *Frame              `xml:"frame,omitempty"`
 	Offset      *Offset             `xml:"offset,omitempty"`
 	Footnote    *FormattedText      `xml:"footnote,omitempty"`
@@ -1363,11 +1352,10 @@ type InstrumentLink struct {
 
 // Interchangeable represents the "interchangeable" XSD complex type.
 type Interchangeable struct {
-	TimeRelation *TimeRelation  `xml:"time-relation,omitempty"`
-	Beats        []string       `xml:"beats"`
-	BeatType     []string       `xml:"beat-type"`
-	Symbol       *TimeSymbol    `xml:"symbol,attr,omitempty"`
-	Separator    *TimeSeparator `xml:"separator,attr,omitempty"`
+	TimeRelation *TimeRelation            `xml:"time-relation,omitempty"`
+	Content      []InterchangeableContent `xml:",any"`
+	Symbol       *TimeSymbol              `xml:"symbol,attr,omitempty"`
+	Separator    *TimeSeparator           `xml:"separator,attr,omitempty"`
 }
 
 // Inversion represents the "inversion" XSD complex type.
@@ -1387,25 +1375,23 @@ type Inversion struct {
 
 // Key represents the "key" XSD complex type.
 type Key struct {
-	Cancel        *Cancel         `xml:"cancel,omitempty"`
-	Fifths        *Fifths         `xml:"fifths,omitempty"`
-	Mode          *Mode           `xml:"mode,omitempty"`
-	KeyStep       []Step          `xml:"key-step"`
-	KeyAlter      []Semitones     `xml:"key-alter"`
-	KeyAccidental []KeyAccidental `xml:"key-accidental"`
-	KeyOctave     []KeyOctave     `xml:"key-octave"`
-	Number        *StaffNumber    `xml:"number,attr,omitempty"`
-	DefaultX      *Tenths         `xml:"default-x,attr,omitempty"`
-	DefaultY      *Tenths         `xml:"default-y,attr,omitempty"`
-	RelativeX     *Tenths         `xml:"relative-x,attr,omitempty"`
-	RelativeY     *Tenths         `xml:"relative-y,attr,omitempty"`
-	FontFamily    *FontFamily     `xml:"font-family,attr,omitempty"`
-	FontStyle     *FontStyle      `xml:"font-style,attr,omitempty"`
-	FontSize      *FontSize       `xml:"font-size,attr,omitempty"`
-	FontWeight    *FontWeight     `xml:"font-weight,attr,omitempty"`
-	Color         *Color          `xml:"color,attr,omitempty"`
-	PrintObject   *YesNo          `xml:"print-object,attr,omitempty"`
-	ID            *string         `xml:"id,attr,omitempty"`
+	Cancel      *Cancel      `xml:"cancel,omitempty"`
+	Fifths      *Fifths      `xml:"fifths,omitempty"`
+	Mode        *Mode        `xml:"mode,omitempty"`
+	Content     []KeyContent `xml:",any"`
+	KeyOctave   []KeyOctave  `xml:"key-octave"`
+	Number      *StaffNumber `xml:"number,attr,omitempty"`
+	DefaultX    *Tenths      `xml:"default-x,attr,omitempty"`
+	DefaultY    *Tenths      `xml:"default-y,attr,omitempty"`
+	RelativeX   *Tenths      `xml:"relative-x,attr,omitempty"`
+	RelativeY   *Tenths      `xml:"relative-y,attr,omitempty"`
+	FontFamily  *FontFamily  `xml:"font-family,attr,omitempty"`
+	FontStyle   *FontStyle   `xml:"font-style,attr,omitempty"`
+	FontSize    *FontSize    `xml:"font-size,attr,omitempty"`
+	FontWeight  *FontWeight  `xml:"font-weight,attr,omitempty"`
+	Color       *Color       `xml:"color,attr,omitempty"`
+	PrintObject *YesNo       `xml:"print-object,attr,omitempty"`
+	ID          *string      `xml:"id,attr,omitempty"`
 }
 
 // KeyAccidental represents the "key-accidental" XSD complex type.
@@ -1526,28 +1512,19 @@ type Listening struct {
 
 // Lyric represents the "lyric" XSD complex type.
 type Lyric struct {
-	Syllabic     []Syllabic        `xml:"syllabic"`
-	Text         []TextElementData `xml:"text"`
-	Elision      []Elision         `xml:"elision"`
-	Extend       *Extend           `xml:"extend,omitempty"`
-	Laughing     *Empty            `xml:"laughing,omitempty"`
-	Humming      *Empty            `xml:"humming,omitempty"`
-	EndLine      *Empty            `xml:"end-line,omitempty"`
-	EndParagraph *Empty            `xml:"end-paragraph,omitempty"`
-	Footnote     *FormattedText    `xml:"footnote,omitempty"`
-	Level        *Level            `xml:"level,omitempty"`
-	Number       *string           `xml:"number,attr,omitempty"`
-	Name         *string           `xml:"name,attr,omitempty"`
-	TimeOnly     *TimeOnly         `xml:"time-only,attr,omitempty"`
-	Justify      *LeftCenterRight  `xml:"justify,attr,omitempty"`
-	DefaultX     *Tenths           `xml:"default-x,attr,omitempty"`
-	DefaultY     *Tenths           `xml:"default-y,attr,omitempty"`
-	RelativeX    *Tenths           `xml:"relative-x,attr,omitempty"`
-	RelativeY    *Tenths           `xml:"relative-y,attr,omitempty"`
-	Placement    *AboveBelow       `xml:"placement,attr,omitempty"`
-	Color        *Color            `xml:"color,attr,omitempty"`
-	PrintObject  *YesNo            `xml:"print-object,attr,omitempty"`
-	ID           *string           `xml:"id,attr,omitempty"`
+	Content     []LyricContent   `xml:",any"`
+	Number      *string          `xml:"number,attr,omitempty"`
+	Name        *string          `xml:"name,attr,omitempty"`
+	TimeOnly    *TimeOnly        `xml:"time-only,attr,omitempty"`
+	Justify     *LeftCenterRight `xml:"justify,attr,omitempty"`
+	DefaultX    *Tenths          `xml:"default-x,attr,omitempty"`
+	DefaultY    *Tenths          `xml:"default-y,attr,omitempty"`
+	RelativeX   *Tenths          `xml:"relative-x,attr,omitempty"`
+	RelativeY   *Tenths          `xml:"relative-y,attr,omitempty"`
+	Placement   *AboveBelow      `xml:"placement,attr,omitempty"`
+	Color       *Color           `xml:"color,attr,omitempty"`
+	PrintObject *YesNo           `xml:"print-object,attr,omitempty"`
+	ID          *string          `xml:"id,attr,omitempty"`
 }
 
 // LyricFont represents the "lyric-font" XSD complex type.
@@ -1758,13 +1735,13 @@ type Notations struct {
 // Note represents the "note" XSD complex type.
 type Note struct {
 	Grace            *Grace              `xml:"grace,omitempty"`
+	Cue              *Empty              `xml:"cue,omitempty"`
 	Chord            *Empty              `xml:"chord,omitempty"`
 	Pitch            *Pitch              `xml:"pitch,omitempty"`
 	Unpitched        *Unpitched          `xml:"unpitched,omitempty"`
 	Rest             *Rest               `xml:"rest,omitempty"`
-	Tie              []Tie               `xml:"tie"`
-	Cue              *Empty              `xml:"cue,omitempty"`
 	Duration         *PositiveDivisions  `xml:"duration,omitempty"`
+	Tie              []Tie               `xml:"tie"`
 	Instrument       []Instrument        `xml:"instrument"`
 	Footnote         *FormattedText      `xml:"footnote,omitempty"`
 	Level            *Level              `xml:"level,omitempty"`
@@ -1938,23 +1915,8 @@ func (value *Opus) EffectiveActuate() string {
 
 // Ornaments represents the "ornaments" XSD complex type.
 type Ornaments struct {
-	TrillMark            []EmptyTrillSound    `xml:"trill-mark"`
-	Turn                 []HorizontalTurn     `xml:"turn"`
-	DelayedTurn          []HorizontalTurn     `xml:"delayed-turn"`
-	InvertedTurn         []HorizontalTurn     `xml:"inverted-turn"`
-	DelayedInvertedTurn  []HorizontalTurn     `xml:"delayed-inverted-turn"`
-	VerticalTurn         []EmptyTrillSound    `xml:"vertical-turn"`
-	InvertedVerticalTurn []EmptyTrillSound    `xml:"inverted-vertical-turn"`
-	Shake                []EmptyTrillSound    `xml:"shake"`
-	WavyLine             []WavyLine           `xml:"wavy-line"`
-	Mordent              []Mordent            `xml:"mordent"`
-	InvertedMordent      []Mordent            `xml:"inverted-mordent"`
-	Schleifer            []EmptyPlacement     `xml:"schleifer"`
-	Tremolo              []Tremolo            `xml:"tremolo"`
-	Haydn                []EmptyTrillSound    `xml:"haydn"`
-	OtherOrnament        []OtherPlacementText `xml:"other-ornament"`
-	AccidentalMark       []AccidentalMark     `xml:"accidental-mark"`
-	ID                   *string              `xml:"id,attr,omitempty"`
+	Content []OrnamentsContent `xml:",any"`
+	ID      *string            `xml:"id,attr,omitempty"`
 }
 
 // OtherAppearance represents the "other-appearance" XSD complex type.
@@ -2381,18 +2343,17 @@ type ScoreInstrument struct {
 
 // ScorePart represents the "score-part" XSD complex type.
 type ScorePart struct {
-	Identification          *Identification   `xml:"identification,omitempty"`
-	PartLink                []PartLink        `xml:"part-link"`
-	PartName                PartName          `xml:"part-name"`
-	PartNameDisplay         *NameDisplay      `xml:"part-name-display,omitempty"`
-	PartAbbreviation        *PartName         `xml:"part-abbreviation,omitempty"`
-	PartAbbreviationDisplay *NameDisplay      `xml:"part-abbreviation-display,omitempty"`
-	Group                   []string          `xml:"group"`
-	ScoreInstrument         []ScoreInstrument `xml:"score-instrument"`
-	Player                  []Player          `xml:"player"`
-	MIDIDevice              []MIDIDevice      `xml:"midi-device"`
-	MIDIInstrument          []MIDIInstrument  `xml:"midi-instrument"`
-	ID                      string            `xml:"id,attr"`
+	Identification          *Identification    `xml:"identification,omitempty"`
+	PartLink                []PartLink         `xml:"part-link"`
+	PartName                PartName           `xml:"part-name"`
+	PartNameDisplay         *NameDisplay       `xml:"part-name-display,omitempty"`
+	PartAbbreviation        *PartName          `xml:"part-abbreviation,omitempty"`
+	PartAbbreviationDisplay *NameDisplay       `xml:"part-abbreviation-display,omitempty"`
+	Group                   []string           `xml:"group"`
+	ScoreInstrument         []ScoreInstrument  `xml:"score-instrument"`
+	Player                  []Player           `xml:"player"`
+	Content                 []ScorePartContent `xml:",any"`
+	ID                      string             `xml:"id,attr"`
 }
 
 // Segno represents the "segno" XSD complex type.
@@ -2487,30 +2448,27 @@ func (value *Slur) EffectiveNumber() NumberLevel {
 
 // Sound represents the "sound" XSD complex type.
 type Sound struct {
-	InstrumentChange []InstrumentChange  `xml:"instrument-change"`
-	MIDIDevice       []MIDIDevice        `xml:"midi-device"`
-	MIDIInstrument   []MIDIInstrument    `xml:"midi-instrument"`
-	Play             []Play              `xml:"play"`
-	Swing            *Swing              `xml:"swing,omitempty"`
-	Offset           *Offset             `xml:"offset,omitempty"`
-	Tempo            *NonNegativeDecimal `xml:"tempo,attr,omitempty"`
-	Dynamics         *NonNegativeDecimal `xml:"dynamics,attr,omitempty"`
-	Dacapo           *YesNo              `xml:"dacapo,attr,omitempty"`
-	Segno            *string             `xml:"segno,attr,omitempty"`
-	Dalsegno         *string             `xml:"dalsegno,attr,omitempty"`
-	Coda             *string             `xml:"coda,attr,omitempty"`
-	Tocoda           *string             `xml:"tocoda,attr,omitempty"`
-	Divisions        *Divisions          `xml:"divisions,attr,omitempty"`
-	ForwardRepeat    *YesNo              `xml:"forward-repeat,attr,omitempty"`
-	Fine             *string             `xml:"fine,attr,omitempty"`
-	TimeOnly         *TimeOnly           `xml:"time-only,attr,omitempty"`
-	Pizzicato        *YesNo              `xml:"pizzicato,attr,omitempty"`
-	Pan              *RotationDegrees    `xml:"pan,attr,omitempty"`
-	Elevation        *RotationDegrees    `xml:"elevation,attr,omitempty"`
-	DamperPedal      *YesNoNumber        `xml:"damper-pedal,attr,omitempty"`
-	SoftPedal        *YesNoNumber        `xml:"soft-pedal,attr,omitempty"`
-	SostenutoPedal   *YesNoNumber        `xml:"sostenuto-pedal,attr,omitempty"`
-	ID               *string             `xml:"id,attr,omitempty"`
+	Content        []SoundContent      `xml:",any"`
+	Swing          *Swing              `xml:"swing,omitempty"`
+	Offset         *Offset             `xml:"offset,omitempty"`
+	Tempo          *NonNegativeDecimal `xml:"tempo,attr,omitempty"`
+	Dynamics       *NonNegativeDecimal `xml:"dynamics,attr,omitempty"`
+	Dacapo         *YesNo              `xml:"dacapo,attr,omitempty"`
+	Segno          *string             `xml:"segno,attr,omitempty"`
+	Dalsegno       *string             `xml:"dalsegno,attr,omitempty"`
+	Coda           *string             `xml:"coda,attr,omitempty"`
+	Tocoda         *string             `xml:"tocoda,attr,omitempty"`
+	Divisions      *Divisions          `xml:"divisions,attr,omitempty"`
+	ForwardRepeat  *YesNo              `xml:"forward-repeat,attr,omitempty"`
+	Fine           *string             `xml:"fine,attr,omitempty"`
+	TimeOnly       *TimeOnly           `xml:"time-only,attr,omitempty"`
+	Pizzicato      *YesNo              `xml:"pizzicato,attr,omitempty"`
+	Pan            *RotationDegrees    `xml:"pan,attr,omitempty"`
+	Elevation      *RotationDegrees    `xml:"elevation,attr,omitempty"`
+	DamperPedal    *YesNoNumber        `xml:"damper-pedal,attr,omitempty"`
+	SoftPedal      *YesNoNumber        `xml:"soft-pedal,attr,omitempty"`
+	SostenutoPedal *YesNoNumber        `xml:"sostenuto-pedal,attr,omitempty"`
+	ID             *string             `xml:"id,attr,omitempty"`
 }
 
 // StaffDetails represents the "staff-details" XSD complex type.
@@ -2758,8 +2716,7 @@ type Tied struct {
 
 // Time represents the "time" XSD complex type.
 type Time struct {
-	Beats           []string         `xml:"beats"`
-	BeatType        []string         `xml:"beat-type"`
+	Content         []TimeContent    `xml:",any"`
 	Interchangeable *Interchangeable `xml:"interchangeable,omitempty"`
 	SenzaMisura     *string          `xml:"senza-misura,omitempty"`
 	Number          *StaffNumber     `xml:"number,attr,omitempty"`
@@ -3394,6 +3351,187 @@ func (value ArticulationsContent) MarshalXML(
 		start := xml.StartElement{Name: xml.Name{Local: "other-articulation"}}
 		if err := encoder.EncodeElement(value.OtherArticulation, start); err != nil {
 			return fmt.Errorf("musicxml: encode ArticulationsContent.OtherArticulation: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// CreditContent is one ordered child element of Credit.
+type CreditContent struct {
+	CreditType   *string
+	Link         *Link
+	Bookmark     *Bookmark
+	CreditImage  *Image
+	CreditWords  *FormattedTextID
+	CreditSymbol *FormattedSymbolID
+}
+
+// AddCreditType appends the "credit-type" child while preserving content order.
+func (value *Credit) AddCreditType(element *string) *string {
+	value.Content = append(value.Content, CreditContent{CreditType: element})
+	return element
+}
+
+// AddLink appends the "link" child while preserving content order.
+func (value *Credit) AddLink(element *Link) *Link {
+	value.Content = append(value.Content, CreditContent{Link: element})
+	return element
+}
+
+// AddBookmark appends the "bookmark" child while preserving content order.
+func (value *Credit) AddBookmark(element *Bookmark) *Bookmark {
+	value.Content = append(value.Content, CreditContent{Bookmark: element})
+	return element
+}
+
+// AddCreditImage appends the "credit-image" child while preserving content order.
+func (value *Credit) AddCreditImage(element *Image) *Image {
+	value.Content = append(value.Content, CreditContent{CreditImage: element})
+	return element
+}
+
+// AddCreditWords appends the "credit-words" child while preserving content order.
+func (value *Credit) AddCreditWords(element *FormattedTextID) *FormattedTextID {
+	value.Content = append(value.Content, CreditContent{CreditWords: element})
+	return element
+}
+
+// AddCreditSymbol appends the "credit-symbol" child while preserving content order.
+func (value *Credit) AddCreditSymbol(element *FormattedSymbolID) *FormattedSymbolID {
+	value.Content = append(value.Content, CreditContent{CreditSymbol: element})
+	return element
+}
+
+// UnmarshalXML decodes one CreditContent variant.
+func (value *CreditContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = CreditContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "credit-type"}):
+		var decoded string
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode CreditContent.CreditType: %w", err)
+		}
+		value.CreditType = &decoded
+		return nil
+
+	case (xml.Name{Local: "link"}):
+		var decoded Link
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode CreditContent.Link: %w", err)
+		}
+		value.Link = &decoded
+		return nil
+
+	case (xml.Name{Local: "bookmark"}):
+		var decoded Bookmark
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode CreditContent.Bookmark: %w", err)
+		}
+		value.Bookmark = &decoded
+		return nil
+
+	case (xml.Name{Local: "credit-image"}):
+		var decoded Image
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode CreditContent.CreditImage: %w", err)
+		}
+		value.CreditImage = &decoded
+		return nil
+
+	case (xml.Name{Local: "credit-words"}):
+		var decoded FormattedTextID
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode CreditContent.CreditWords: %w", err)
+		}
+		value.CreditWords = &decoded
+		return nil
+
+	case (xml.Name{Local: "credit-symbol"}):
+		var decoded FormattedSymbolID
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode CreditContent.CreditSymbol: %w", err)
+		}
+		value.CreditSymbol = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported CreditContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected CreditContent variant.
+func (value CreditContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.CreditType != nil {
+		selected++
+	}
+	if value.Link != nil {
+		selected++
+	}
+	if value.Bookmark != nil {
+		selected++
+	}
+	if value.CreditImage != nil {
+		selected++
+	}
+	if value.CreditWords != nil {
+		selected++
+	}
+	if value.CreditSymbol != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: CreditContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.CreditType != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "credit-type"}}
+		if err := encoder.EncodeElement(value.CreditType, start); err != nil {
+			return fmt.Errorf("musicxml: encode CreditContent.CreditType: %w", err)
+		}
+		return nil
+	case value.Link != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "link"}}
+		if err := encoder.EncodeElement(value.Link, start); err != nil {
+			return fmt.Errorf("musicxml: encode CreditContent.Link: %w", err)
+		}
+		return nil
+	case value.Bookmark != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "bookmark"}}
+		if err := encoder.EncodeElement(value.Bookmark, start); err != nil {
+			return fmt.Errorf("musicxml: encode CreditContent.Bookmark: %w", err)
+		}
+		return nil
+	case value.CreditImage != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "credit-image"}}
+		if err := encoder.EncodeElement(value.CreditImage, start); err != nil {
+			return fmt.Errorf("musicxml: encode CreditContent.CreditImage: %w", err)
+		}
+		return nil
+	case value.CreditWords != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "credit-words"}}
+		if err := encoder.EncodeElement(value.CreditWords, start); err != nil {
+			return fmt.Errorf("musicxml: encode CreditContent.CreditWords: %w", err)
+		}
+		return nil
+	case value.CreditSymbol != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "credit-symbol"}}
+		if err := encoder.EncodeElement(value.CreditSymbol, start); err != nil {
+			return fmt.Errorf("musicxml: encode CreditContent.CreditSymbol: %w", err)
 		}
 		return nil
 	}
@@ -4328,6 +4466,405 @@ func (value EncodingContent) MarshalXML(
 	return nil
 }
 
+// HarmonyContent is one ordered child element of Harmony.
+type HarmonyContent struct {
+	Root      *Root
+	Numeral   *Numeral
+	Function  *StyleText
+	Kind      *Kind
+	Inversion *Inversion
+	Bass      *Bass
+	Degree    *Degree
+}
+
+// AddRoot appends the "root" child while preserving content order.
+func (value *Harmony) AddRoot(element *Root) *Root {
+	value.Content = append(value.Content, HarmonyContent{Root: element})
+	return element
+}
+
+// AddNumeral appends the "numeral" child while preserving content order.
+func (value *Harmony) AddNumeral(element *Numeral) *Numeral {
+	value.Content = append(value.Content, HarmonyContent{Numeral: element})
+	return element
+}
+
+// AddFunction appends the "function" child while preserving content order.
+func (value *Harmony) AddFunction(element *StyleText) *StyleText {
+	value.Content = append(value.Content, HarmonyContent{Function: element})
+	return element
+}
+
+// AddKind appends the "kind" child while preserving content order.
+func (value *Harmony) AddKind(element *Kind) *Kind {
+	value.Content = append(value.Content, HarmonyContent{Kind: element})
+	return element
+}
+
+// AddInversion appends the "inversion" child while preserving content order.
+func (value *Harmony) AddInversion(element *Inversion) *Inversion {
+	value.Content = append(value.Content, HarmonyContent{Inversion: element})
+	return element
+}
+
+// AddBass appends the "bass" child while preserving content order.
+func (value *Harmony) AddBass(element *Bass) *Bass {
+	value.Content = append(value.Content, HarmonyContent{Bass: element})
+	return element
+}
+
+// AddDegree appends the "degree" child while preserving content order.
+func (value *Harmony) AddDegree(element *Degree) *Degree {
+	value.Content = append(value.Content, HarmonyContent{Degree: element})
+	return element
+}
+
+// UnmarshalXML decodes one HarmonyContent variant.
+func (value *HarmonyContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = HarmonyContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "root"}):
+		var decoded Root
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode HarmonyContent.Root: %w", err)
+		}
+		value.Root = &decoded
+		return nil
+
+	case (xml.Name{Local: "numeral"}):
+		var decoded Numeral
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode HarmonyContent.Numeral: %w", err)
+		}
+		value.Numeral = &decoded
+		return nil
+
+	case (xml.Name{Local: "function"}):
+		var decoded StyleText
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode HarmonyContent.Function: %w", err)
+		}
+		value.Function = &decoded
+		return nil
+
+	case (xml.Name{Local: "kind"}):
+		var decoded Kind
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode HarmonyContent.Kind: %w", err)
+		}
+		value.Kind = &decoded
+		return nil
+
+	case (xml.Name{Local: "inversion"}):
+		var decoded Inversion
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode HarmonyContent.Inversion: %w", err)
+		}
+		value.Inversion = &decoded
+		return nil
+
+	case (xml.Name{Local: "bass"}):
+		var decoded Bass
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode HarmonyContent.Bass: %w", err)
+		}
+		value.Bass = &decoded
+		return nil
+
+	case (xml.Name{Local: "degree"}):
+		var decoded Degree
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode HarmonyContent.Degree: %w", err)
+		}
+		value.Degree = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported HarmonyContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected HarmonyContent variant.
+func (value HarmonyContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.Root != nil {
+		selected++
+	}
+	if value.Numeral != nil {
+		selected++
+	}
+	if value.Function != nil {
+		selected++
+	}
+	if value.Kind != nil {
+		selected++
+	}
+	if value.Inversion != nil {
+		selected++
+	}
+	if value.Bass != nil {
+		selected++
+	}
+	if value.Degree != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: HarmonyContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.Root != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "root"}}
+		if err := encoder.EncodeElement(value.Root, start); err != nil {
+			return fmt.Errorf("musicxml: encode HarmonyContent.Root: %w", err)
+		}
+		return nil
+	case value.Numeral != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "numeral"}}
+		if err := encoder.EncodeElement(value.Numeral, start); err != nil {
+			return fmt.Errorf("musicxml: encode HarmonyContent.Numeral: %w", err)
+		}
+		return nil
+	case value.Function != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "function"}}
+		if err := encoder.EncodeElement(value.Function, start); err != nil {
+			return fmt.Errorf("musicxml: encode HarmonyContent.Function: %w", err)
+		}
+		return nil
+	case value.Kind != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "kind"}}
+		if err := encoder.EncodeElement(value.Kind, start); err != nil {
+			return fmt.Errorf("musicxml: encode HarmonyContent.Kind: %w", err)
+		}
+		return nil
+	case value.Inversion != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "inversion"}}
+		if err := encoder.EncodeElement(value.Inversion, start); err != nil {
+			return fmt.Errorf("musicxml: encode HarmonyContent.Inversion: %w", err)
+		}
+		return nil
+	case value.Bass != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "bass"}}
+		if err := encoder.EncodeElement(value.Bass, start); err != nil {
+			return fmt.Errorf("musicxml: encode HarmonyContent.Bass: %w", err)
+		}
+		return nil
+	case value.Degree != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "degree"}}
+		if err := encoder.EncodeElement(value.Degree, start); err != nil {
+			return fmt.Errorf("musicxml: encode HarmonyContent.Degree: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// InterchangeableContent is one ordered child element of Interchangeable.
+type InterchangeableContent struct {
+	Beats    *string
+	BeatType *string
+}
+
+// AddBeats appends the "beats" child while preserving content order.
+func (value *Interchangeable) AddBeats(element *string) *string {
+	value.Content = append(value.Content, InterchangeableContent{Beats: element})
+	return element
+}
+
+// AddBeatType appends the "beat-type" child while preserving content order.
+func (value *Interchangeable) AddBeatType(element *string) *string {
+	value.Content = append(value.Content, InterchangeableContent{BeatType: element})
+	return element
+}
+
+// UnmarshalXML decodes one InterchangeableContent variant.
+func (value *InterchangeableContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = InterchangeableContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "beats"}):
+		var decoded string
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode InterchangeableContent.Beats: %w", err)
+		}
+		value.Beats = &decoded
+		return nil
+
+	case (xml.Name{Local: "beat-type"}):
+		var decoded string
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode InterchangeableContent.BeatType: %w", err)
+		}
+		value.BeatType = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported InterchangeableContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected InterchangeableContent variant.
+func (value InterchangeableContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.Beats != nil {
+		selected++
+	}
+	if value.BeatType != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: InterchangeableContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.Beats != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "beats"}}
+		if err := encoder.EncodeElement(value.Beats, start); err != nil {
+			return fmt.Errorf("musicxml: encode InterchangeableContent.Beats: %w", err)
+		}
+		return nil
+	case value.BeatType != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "beat-type"}}
+		if err := encoder.EncodeElement(value.BeatType, start); err != nil {
+			return fmt.Errorf("musicxml: encode InterchangeableContent.BeatType: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// KeyContent is one ordered child element of Key.
+type KeyContent struct {
+	KeyStep       *Step
+	KeyAlter      *Semitones
+	KeyAccidental *KeyAccidental
+}
+
+// AddKeyStep appends the "key-step" child while preserving content order.
+func (value *Key) AddKeyStep(element *Step) *Step {
+	value.Content = append(value.Content, KeyContent{KeyStep: element})
+	return element
+}
+
+// AddKeyAlter appends the "key-alter" child while preserving content order.
+func (value *Key) AddKeyAlter(element *Semitones) *Semitones {
+	value.Content = append(value.Content, KeyContent{KeyAlter: element})
+	return element
+}
+
+// AddKeyAccidental appends the "key-accidental" child while preserving content order.
+func (value *Key) AddKeyAccidental(element *KeyAccidental) *KeyAccidental {
+	value.Content = append(value.Content, KeyContent{KeyAccidental: element})
+	return element
+}
+
+// UnmarshalXML decodes one KeyContent variant.
+func (value *KeyContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = KeyContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "key-step"}):
+		var decoded Step
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode KeyContent.KeyStep: %w", err)
+		}
+		value.KeyStep = &decoded
+		return nil
+
+	case (xml.Name{Local: "key-alter"}):
+		var decoded Semitones
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode KeyContent.KeyAlter: %w", err)
+		}
+		value.KeyAlter = &decoded
+		return nil
+
+	case (xml.Name{Local: "key-accidental"}):
+		var decoded KeyAccidental
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode KeyContent.KeyAccidental: %w", err)
+		}
+		value.KeyAccidental = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported KeyContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected KeyContent variant.
+func (value KeyContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.KeyStep != nil {
+		selected++
+	}
+	if value.KeyAlter != nil {
+		selected++
+	}
+	if value.KeyAccidental != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: KeyContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.KeyStep != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "key-step"}}
+		if err := encoder.EncodeElement(value.KeyStep, start); err != nil {
+			return fmt.Errorf("musicxml: encode KeyContent.KeyStep: %w", err)
+		}
+		return nil
+	case value.KeyAlter != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "key-alter"}}
+		if err := encoder.EncodeElement(value.KeyAlter, start); err != nil {
+			return fmt.Errorf("musicxml: encode KeyContent.KeyAlter: %w", err)
+		}
+		return nil
+	case value.KeyAccidental != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "key-accidental"}}
+		if err := encoder.EncodeElement(value.KeyAccidental, start); err != nil {
+			return fmt.Errorf("musicxml: encode KeyContent.KeyAccidental: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
 // ListenContent is one ordered child element of Listen.
 type ListenContent struct {
 	Assess      *Assess
@@ -4515,6 +5052,283 @@ func (value ListeningContent) MarshalXML(
 		start := xml.StartElement{Name: xml.Name{Local: "other-listening"}}
 		if err := encoder.EncodeElement(value.OtherListening, start); err != nil {
 			return fmt.Errorf("musicxml: encode ListeningContent.OtherListening: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// LyricContent is one ordered child element of Lyric.
+type LyricContent struct {
+	Syllabic     *Syllabic
+	Text         *TextElementData
+	Elision      *Elision
+	Extend       *Extend
+	Laughing     *Empty
+	Humming      *Empty
+	EndLine      *Empty
+	EndParagraph *Empty
+	Footnote     *FormattedText
+	Level        *Level
+}
+
+// AddSyllabic appends the "syllabic" child while preserving content order.
+func (value *Lyric) AddSyllabic(element *Syllabic) *Syllabic {
+	value.Content = append(value.Content, LyricContent{Syllabic: element})
+	return element
+}
+
+// AddText appends the "text" child while preserving content order.
+func (value *Lyric) AddText(element *TextElementData) *TextElementData {
+	value.Content = append(value.Content, LyricContent{Text: element})
+	return element
+}
+
+// AddElision appends the "elision" child while preserving content order.
+func (value *Lyric) AddElision(element *Elision) *Elision {
+	value.Content = append(value.Content, LyricContent{Elision: element})
+	return element
+}
+
+// AddExtend appends the "extend" child while preserving content order.
+func (value *Lyric) AddExtend(element *Extend) *Extend {
+	value.Content = append(value.Content, LyricContent{Extend: element})
+	return element
+}
+
+// AddLaughing appends the "laughing" child while preserving content order.
+func (value *Lyric) AddLaughing(element *Empty) *Empty {
+	value.Content = append(value.Content, LyricContent{Laughing: element})
+	return element
+}
+
+// AddHumming appends the "humming" child while preserving content order.
+func (value *Lyric) AddHumming(element *Empty) *Empty {
+	value.Content = append(value.Content, LyricContent{Humming: element})
+	return element
+}
+
+// AddEndLine appends the "end-line" child while preserving content order.
+func (value *Lyric) AddEndLine(element *Empty) *Empty {
+	value.Content = append(value.Content, LyricContent{EndLine: element})
+	return element
+}
+
+// AddEndParagraph appends the "end-paragraph" child while preserving content order.
+func (value *Lyric) AddEndParagraph(element *Empty) *Empty {
+	value.Content = append(value.Content, LyricContent{EndParagraph: element})
+	return element
+}
+
+// AddFootnote appends the "footnote" child while preserving content order.
+func (value *Lyric) AddFootnote(element *FormattedText) *FormattedText {
+	value.Content = append(value.Content, LyricContent{Footnote: element})
+	return element
+}
+
+// AddLevel appends the "level" child while preserving content order.
+func (value *Lyric) AddLevel(element *Level) *Level {
+	value.Content = append(value.Content, LyricContent{Level: element})
+	return element
+}
+
+// UnmarshalXML decodes one LyricContent variant.
+func (value *LyricContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = LyricContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "syllabic"}):
+		var decoded Syllabic
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Syllabic: %w", err)
+		}
+		value.Syllabic = &decoded
+		return nil
+
+	case (xml.Name{Local: "text"}):
+		var decoded TextElementData
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Text: %w", err)
+		}
+		value.Text = &decoded
+		return nil
+
+	case (xml.Name{Local: "elision"}):
+		var decoded Elision
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Elision: %w", err)
+		}
+		value.Elision = &decoded
+		return nil
+
+	case (xml.Name{Local: "extend"}):
+		var decoded Extend
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Extend: %w", err)
+		}
+		value.Extend = &decoded
+		return nil
+
+	case (xml.Name{Local: "laughing"}):
+		var decoded Empty
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Laughing: %w", err)
+		}
+		value.Laughing = &decoded
+		return nil
+
+	case (xml.Name{Local: "humming"}):
+		var decoded Empty
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Humming: %w", err)
+		}
+		value.Humming = &decoded
+		return nil
+
+	case (xml.Name{Local: "end-line"}):
+		var decoded Empty
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.EndLine: %w", err)
+		}
+		value.EndLine = &decoded
+		return nil
+
+	case (xml.Name{Local: "end-paragraph"}):
+		var decoded Empty
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.EndParagraph: %w", err)
+		}
+		value.EndParagraph = &decoded
+		return nil
+
+	case (xml.Name{Local: "footnote"}):
+		var decoded FormattedText
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Footnote: %w", err)
+		}
+		value.Footnote = &decoded
+		return nil
+
+	case (xml.Name{Local: "level"}):
+		var decoded Level
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode LyricContent.Level: %w", err)
+		}
+		value.Level = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported LyricContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected LyricContent variant.
+func (value LyricContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.Syllabic != nil {
+		selected++
+	}
+	if value.Text != nil {
+		selected++
+	}
+	if value.Elision != nil {
+		selected++
+	}
+	if value.Extend != nil {
+		selected++
+	}
+	if value.Laughing != nil {
+		selected++
+	}
+	if value.Humming != nil {
+		selected++
+	}
+	if value.EndLine != nil {
+		selected++
+	}
+	if value.EndParagraph != nil {
+		selected++
+	}
+	if value.Footnote != nil {
+		selected++
+	}
+	if value.Level != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: LyricContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.Syllabic != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "syllabic"}}
+		if err := encoder.EncodeElement(value.Syllabic, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Syllabic: %w", err)
+		}
+		return nil
+	case value.Text != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "text"}}
+		if err := encoder.EncodeElement(value.Text, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Text: %w", err)
+		}
+		return nil
+	case value.Elision != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "elision"}}
+		if err := encoder.EncodeElement(value.Elision, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Elision: %w", err)
+		}
+		return nil
+	case value.Extend != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "extend"}}
+		if err := encoder.EncodeElement(value.Extend, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Extend: %w", err)
+		}
+		return nil
+	case value.Laughing != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "laughing"}}
+		if err := encoder.EncodeElement(value.Laughing, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Laughing: %w", err)
+		}
+		return nil
+	case value.Humming != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "humming"}}
+		if err := encoder.EncodeElement(value.Humming, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Humming: %w", err)
+		}
+		return nil
+	case value.EndLine != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "end-line"}}
+		if err := encoder.EncodeElement(value.EndLine, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.EndLine: %w", err)
+		}
+		return nil
+	case value.EndParagraph != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "end-paragraph"}}
+		if err := encoder.EncodeElement(value.EndParagraph, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.EndParagraph: %w", err)
+		}
+		return nil
+	case value.Footnote != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "footnote"}}
+		if err := encoder.EncodeElement(value.Footnote, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Footnote: %w", err)
+		}
+		return nil
+	case value.Level != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "level"}}
+		if err := encoder.EncodeElement(value.Level, start); err != nil {
+			return fmt.Errorf("musicxml: encode LyricContent.Level: %w", err)
 		}
 		return nil
 	}
@@ -5270,6 +6084,427 @@ func (value NoteheadTextContent) MarshalXML(
 	return nil
 }
 
+// OrnamentsContent is one ordered child element of Ornaments.
+type OrnamentsContent struct {
+	TrillMark            *EmptyTrillSound
+	Turn                 *HorizontalTurn
+	DelayedTurn          *HorizontalTurn
+	InvertedTurn         *HorizontalTurn
+	DelayedInvertedTurn  *HorizontalTurn
+	VerticalTurn         *EmptyTrillSound
+	InvertedVerticalTurn *EmptyTrillSound
+	Shake                *EmptyTrillSound
+	WavyLine             *WavyLine
+	Mordent              *Mordent
+	InvertedMordent      *Mordent
+	Schleifer            *EmptyPlacement
+	Tremolo              *Tremolo
+	Haydn                *EmptyTrillSound
+	OtherOrnament        *OtherPlacementText
+	AccidentalMark       *AccidentalMark
+}
+
+// AddTrillMark appends the "trill-mark" child while preserving content order.
+func (value *Ornaments) AddTrillMark(element *EmptyTrillSound) *EmptyTrillSound {
+	value.Content = append(value.Content, OrnamentsContent{TrillMark: element})
+	return element
+}
+
+// AddTurn appends the "turn" child while preserving content order.
+func (value *Ornaments) AddTurn(element *HorizontalTurn) *HorizontalTurn {
+	value.Content = append(value.Content, OrnamentsContent{Turn: element})
+	return element
+}
+
+// AddDelayedTurn appends the "delayed-turn" child while preserving content order.
+func (value *Ornaments) AddDelayedTurn(element *HorizontalTurn) *HorizontalTurn {
+	value.Content = append(value.Content, OrnamentsContent{DelayedTurn: element})
+	return element
+}
+
+// AddInvertedTurn appends the "inverted-turn" child while preserving content order.
+func (value *Ornaments) AddInvertedTurn(element *HorizontalTurn) *HorizontalTurn {
+	value.Content = append(value.Content, OrnamentsContent{InvertedTurn: element})
+	return element
+}
+
+// AddDelayedInvertedTurn appends the "delayed-inverted-turn" child while preserving content order.
+func (value *Ornaments) AddDelayedInvertedTurn(element *HorizontalTurn) *HorizontalTurn {
+	value.Content = append(value.Content, OrnamentsContent{DelayedInvertedTurn: element})
+	return element
+}
+
+// AddVerticalTurn appends the "vertical-turn" child while preserving content order.
+func (value *Ornaments) AddVerticalTurn(element *EmptyTrillSound) *EmptyTrillSound {
+	value.Content = append(value.Content, OrnamentsContent{VerticalTurn: element})
+	return element
+}
+
+// AddInvertedVerticalTurn appends the "inverted-vertical-turn" child while preserving content order.
+func (value *Ornaments) AddInvertedVerticalTurn(element *EmptyTrillSound) *EmptyTrillSound {
+	value.Content = append(value.Content, OrnamentsContent{InvertedVerticalTurn: element})
+	return element
+}
+
+// AddShake appends the "shake" child while preserving content order.
+func (value *Ornaments) AddShake(element *EmptyTrillSound) *EmptyTrillSound {
+	value.Content = append(value.Content, OrnamentsContent{Shake: element})
+	return element
+}
+
+// AddWavyLine appends the "wavy-line" child while preserving content order.
+func (value *Ornaments) AddWavyLine(element *WavyLine) *WavyLine {
+	value.Content = append(value.Content, OrnamentsContent{WavyLine: element})
+	return element
+}
+
+// AddMordent appends the "mordent" child while preserving content order.
+func (value *Ornaments) AddMordent(element *Mordent) *Mordent {
+	value.Content = append(value.Content, OrnamentsContent{Mordent: element})
+	return element
+}
+
+// AddInvertedMordent appends the "inverted-mordent" child while preserving content order.
+func (value *Ornaments) AddInvertedMordent(element *Mordent) *Mordent {
+	value.Content = append(value.Content, OrnamentsContent{InvertedMordent: element})
+	return element
+}
+
+// AddSchleifer appends the "schleifer" child while preserving content order.
+func (value *Ornaments) AddSchleifer(element *EmptyPlacement) *EmptyPlacement {
+	value.Content = append(value.Content, OrnamentsContent{Schleifer: element})
+	return element
+}
+
+// AddTremolo appends the "tremolo" child while preserving content order.
+func (value *Ornaments) AddTremolo(element *Tremolo) *Tremolo {
+	value.Content = append(value.Content, OrnamentsContent{Tremolo: element})
+	return element
+}
+
+// AddHaydn appends the "haydn" child while preserving content order.
+func (value *Ornaments) AddHaydn(element *EmptyTrillSound) *EmptyTrillSound {
+	value.Content = append(value.Content, OrnamentsContent{Haydn: element})
+	return element
+}
+
+// AddOtherOrnament appends the "other-ornament" child while preserving content order.
+func (value *Ornaments) AddOtherOrnament(element *OtherPlacementText) *OtherPlacementText {
+	value.Content = append(value.Content, OrnamentsContent{OtherOrnament: element})
+	return element
+}
+
+// AddAccidentalMark appends the "accidental-mark" child while preserving content order.
+func (value *Ornaments) AddAccidentalMark(element *AccidentalMark) *AccidentalMark {
+	value.Content = append(value.Content, OrnamentsContent{AccidentalMark: element})
+	return element
+}
+
+// UnmarshalXML decodes one OrnamentsContent variant.
+func (value *OrnamentsContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = OrnamentsContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "trill-mark"}):
+		var decoded EmptyTrillSound
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.TrillMark: %w", err)
+		}
+		value.TrillMark = &decoded
+		return nil
+
+	case (xml.Name{Local: "turn"}):
+		var decoded HorizontalTurn
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.Turn: %w", err)
+		}
+		value.Turn = &decoded
+		return nil
+
+	case (xml.Name{Local: "delayed-turn"}):
+		var decoded HorizontalTurn
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.DelayedTurn: %w", err)
+		}
+		value.DelayedTurn = &decoded
+		return nil
+
+	case (xml.Name{Local: "inverted-turn"}):
+		var decoded HorizontalTurn
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.InvertedTurn: %w", err)
+		}
+		value.InvertedTurn = &decoded
+		return nil
+
+	case (xml.Name{Local: "delayed-inverted-turn"}):
+		var decoded HorizontalTurn
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.DelayedInvertedTurn: %w", err)
+		}
+		value.DelayedInvertedTurn = &decoded
+		return nil
+
+	case (xml.Name{Local: "vertical-turn"}):
+		var decoded EmptyTrillSound
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.VerticalTurn: %w", err)
+		}
+		value.VerticalTurn = &decoded
+		return nil
+
+	case (xml.Name{Local: "inverted-vertical-turn"}):
+		var decoded EmptyTrillSound
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.InvertedVerticalTurn: %w", err)
+		}
+		value.InvertedVerticalTurn = &decoded
+		return nil
+
+	case (xml.Name{Local: "shake"}):
+		var decoded EmptyTrillSound
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.Shake: %w", err)
+		}
+		value.Shake = &decoded
+		return nil
+
+	case (xml.Name{Local: "wavy-line"}):
+		var decoded WavyLine
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.WavyLine: %w", err)
+		}
+		value.WavyLine = &decoded
+		return nil
+
+	case (xml.Name{Local: "mordent"}):
+		var decoded Mordent
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.Mordent: %w", err)
+		}
+		value.Mordent = &decoded
+		return nil
+
+	case (xml.Name{Local: "inverted-mordent"}):
+		var decoded Mordent
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.InvertedMordent: %w", err)
+		}
+		value.InvertedMordent = &decoded
+		return nil
+
+	case (xml.Name{Local: "schleifer"}):
+		var decoded EmptyPlacement
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.Schleifer: %w", err)
+		}
+		value.Schleifer = &decoded
+		return nil
+
+	case (xml.Name{Local: "tremolo"}):
+		var decoded Tremolo
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.Tremolo: %w", err)
+		}
+		value.Tremolo = &decoded
+		return nil
+
+	case (xml.Name{Local: "haydn"}):
+		var decoded EmptyTrillSound
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.Haydn: %w", err)
+		}
+		value.Haydn = &decoded
+		return nil
+
+	case (xml.Name{Local: "other-ornament"}):
+		var decoded OtherPlacementText
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.OtherOrnament: %w", err)
+		}
+		value.OtherOrnament = &decoded
+		return nil
+
+	case (xml.Name{Local: "accidental-mark"}):
+		var decoded AccidentalMark
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode OrnamentsContent.AccidentalMark: %w", err)
+		}
+		value.AccidentalMark = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported OrnamentsContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected OrnamentsContent variant.
+func (value OrnamentsContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.TrillMark != nil {
+		selected++
+	}
+	if value.Turn != nil {
+		selected++
+	}
+	if value.DelayedTurn != nil {
+		selected++
+	}
+	if value.InvertedTurn != nil {
+		selected++
+	}
+	if value.DelayedInvertedTurn != nil {
+		selected++
+	}
+	if value.VerticalTurn != nil {
+		selected++
+	}
+	if value.InvertedVerticalTurn != nil {
+		selected++
+	}
+	if value.Shake != nil {
+		selected++
+	}
+	if value.WavyLine != nil {
+		selected++
+	}
+	if value.Mordent != nil {
+		selected++
+	}
+	if value.InvertedMordent != nil {
+		selected++
+	}
+	if value.Schleifer != nil {
+		selected++
+	}
+	if value.Tremolo != nil {
+		selected++
+	}
+	if value.Haydn != nil {
+		selected++
+	}
+	if value.OtherOrnament != nil {
+		selected++
+	}
+	if value.AccidentalMark != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: OrnamentsContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.TrillMark != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "trill-mark"}}
+		if err := encoder.EncodeElement(value.TrillMark, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.TrillMark: %w", err)
+		}
+		return nil
+	case value.Turn != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "turn"}}
+		if err := encoder.EncodeElement(value.Turn, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.Turn: %w", err)
+		}
+		return nil
+	case value.DelayedTurn != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "delayed-turn"}}
+		if err := encoder.EncodeElement(value.DelayedTurn, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.DelayedTurn: %w", err)
+		}
+		return nil
+	case value.InvertedTurn != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "inverted-turn"}}
+		if err := encoder.EncodeElement(value.InvertedTurn, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.InvertedTurn: %w", err)
+		}
+		return nil
+	case value.DelayedInvertedTurn != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "delayed-inverted-turn"}}
+		if err := encoder.EncodeElement(value.DelayedInvertedTurn, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.DelayedInvertedTurn: %w", err)
+		}
+		return nil
+	case value.VerticalTurn != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "vertical-turn"}}
+		if err := encoder.EncodeElement(value.VerticalTurn, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.VerticalTurn: %w", err)
+		}
+		return nil
+	case value.InvertedVerticalTurn != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "inverted-vertical-turn"}}
+		if err := encoder.EncodeElement(value.InvertedVerticalTurn, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.InvertedVerticalTurn: %w", err)
+		}
+		return nil
+	case value.Shake != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "shake"}}
+		if err := encoder.EncodeElement(value.Shake, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.Shake: %w", err)
+		}
+		return nil
+	case value.WavyLine != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "wavy-line"}}
+		if err := encoder.EncodeElement(value.WavyLine, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.WavyLine: %w", err)
+		}
+		return nil
+	case value.Mordent != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "mordent"}}
+		if err := encoder.EncodeElement(value.Mordent, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.Mordent: %w", err)
+		}
+		return nil
+	case value.InvertedMordent != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "inverted-mordent"}}
+		if err := encoder.EncodeElement(value.InvertedMordent, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.InvertedMordent: %w", err)
+		}
+		return nil
+	case value.Schleifer != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "schleifer"}}
+		if err := encoder.EncodeElement(value.Schleifer, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.Schleifer: %w", err)
+		}
+		return nil
+	case value.Tremolo != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "tremolo"}}
+		if err := encoder.EncodeElement(value.Tremolo, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.Tremolo: %w", err)
+		}
+		return nil
+	case value.Haydn != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "haydn"}}
+		if err := encoder.EncodeElement(value.Haydn, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.Haydn: %w", err)
+		}
+		return nil
+	case value.OtherOrnament != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "other-ornament"}}
+		if err := encoder.EncodeElement(value.OtherOrnament, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.OtherOrnament: %w", err)
+		}
+		return nil
+	case value.AccidentalMark != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "accidental-mark"}}
+		if err := encoder.EncodeElement(value.AccidentalMark, start); err != nil {
+			return fmt.Errorf("musicxml: encode OrnamentsContent.AccidentalMark: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
 // PartListContent is one ordered child element of PartList.
 type PartListContent struct {
 	PartGroup *PartGroup
@@ -5481,6 +6716,224 @@ func (value PlayContent) MarshalXML(
 		start := xml.StartElement{Name: xml.Name{Local: "other-play"}}
 		if err := encoder.EncodeElement(value.OtherPlay, start); err != nil {
 			return fmt.Errorf("musicxml: encode PlayContent.OtherPlay: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// ScorePartContent is one ordered child element of ScorePart.
+type ScorePartContent struct {
+	MIDIDevice     *MIDIDevice
+	MIDIInstrument *MIDIInstrument
+}
+
+// AddMIDIDevice appends the "midi-device" child while preserving content order.
+func (value *ScorePart) AddMIDIDevice(element *MIDIDevice) *MIDIDevice {
+	value.Content = append(value.Content, ScorePartContent{MIDIDevice: element})
+	return element
+}
+
+// AddMIDIInstrument appends the "midi-instrument" child while preserving content order.
+func (value *ScorePart) AddMIDIInstrument(element *MIDIInstrument) *MIDIInstrument {
+	value.Content = append(value.Content, ScorePartContent{MIDIInstrument: element})
+	return element
+}
+
+// UnmarshalXML decodes one ScorePartContent variant.
+func (value *ScorePartContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = ScorePartContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "midi-device"}):
+		var decoded MIDIDevice
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode ScorePartContent.MIDIDevice: %w", err)
+		}
+		value.MIDIDevice = &decoded
+		return nil
+
+	case (xml.Name{Local: "midi-instrument"}):
+		var decoded MIDIInstrument
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode ScorePartContent.MIDIInstrument: %w", err)
+		}
+		value.MIDIInstrument = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported ScorePartContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected ScorePartContent variant.
+func (value ScorePartContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.MIDIDevice != nil {
+		selected++
+	}
+	if value.MIDIInstrument != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: ScorePartContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.MIDIDevice != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "midi-device"}}
+		if err := encoder.EncodeElement(value.MIDIDevice, start); err != nil {
+			return fmt.Errorf("musicxml: encode ScorePartContent.MIDIDevice: %w", err)
+		}
+		return nil
+	case value.MIDIInstrument != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "midi-instrument"}}
+		if err := encoder.EncodeElement(value.MIDIInstrument, start); err != nil {
+			return fmt.Errorf("musicxml: encode ScorePartContent.MIDIInstrument: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// SoundContent is one ordered child element of Sound.
+type SoundContent struct {
+	InstrumentChange *InstrumentChange
+	MIDIDevice       *MIDIDevice
+	MIDIInstrument   *MIDIInstrument
+	Play             *Play
+}
+
+// AddInstrumentChange appends the "instrument-change" child while preserving content order.
+func (value *Sound) AddInstrumentChange(element *InstrumentChange) *InstrumentChange {
+	value.Content = append(value.Content, SoundContent{InstrumentChange: element})
+	return element
+}
+
+// AddMIDIDevice appends the "midi-device" child while preserving content order.
+func (value *Sound) AddMIDIDevice(element *MIDIDevice) *MIDIDevice {
+	value.Content = append(value.Content, SoundContent{MIDIDevice: element})
+	return element
+}
+
+// AddMIDIInstrument appends the "midi-instrument" child while preserving content order.
+func (value *Sound) AddMIDIInstrument(element *MIDIInstrument) *MIDIInstrument {
+	value.Content = append(value.Content, SoundContent{MIDIInstrument: element})
+	return element
+}
+
+// AddPlay appends the "play" child while preserving content order.
+func (value *Sound) AddPlay(element *Play) *Play {
+	value.Content = append(value.Content, SoundContent{Play: element})
+	return element
+}
+
+// UnmarshalXML decodes one SoundContent variant.
+func (value *SoundContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = SoundContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "instrument-change"}):
+		var decoded InstrumentChange
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode SoundContent.InstrumentChange: %w", err)
+		}
+		value.InstrumentChange = &decoded
+		return nil
+
+	case (xml.Name{Local: "midi-device"}):
+		var decoded MIDIDevice
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode SoundContent.MIDIDevice: %w", err)
+		}
+		value.MIDIDevice = &decoded
+		return nil
+
+	case (xml.Name{Local: "midi-instrument"}):
+		var decoded MIDIInstrument
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode SoundContent.MIDIInstrument: %w", err)
+		}
+		value.MIDIInstrument = &decoded
+		return nil
+
+	case (xml.Name{Local: "play"}):
+		var decoded Play
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode SoundContent.Play: %w", err)
+		}
+		value.Play = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported SoundContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected SoundContent variant.
+func (value SoundContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.InstrumentChange != nil {
+		selected++
+	}
+	if value.MIDIDevice != nil {
+		selected++
+	}
+	if value.MIDIInstrument != nil {
+		selected++
+	}
+	if value.Play != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: SoundContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.InstrumentChange != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "instrument-change"}}
+		if err := encoder.EncodeElement(value.InstrumentChange, start); err != nil {
+			return fmt.Errorf("musicxml: encode SoundContent.InstrumentChange: %w", err)
+		}
+		return nil
+	case value.MIDIDevice != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "midi-device"}}
+		if err := encoder.EncodeElement(value.MIDIDevice, start); err != nil {
+			return fmt.Errorf("musicxml: encode SoundContent.MIDIDevice: %w", err)
+		}
+		return nil
+	case value.MIDIInstrument != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "midi-instrument"}}
+		if err := encoder.EncodeElement(value.MIDIInstrument, start); err != nil {
+			return fmt.Errorf("musicxml: encode SoundContent.MIDIInstrument: %w", err)
+		}
+		return nil
+	case value.Play != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "play"}}
+		if err := encoder.EncodeElement(value.Play, start); err != nil {
+			return fmt.Errorf("musicxml: encode SoundContent.Play: %w", err)
 		}
 		return nil
 	}
@@ -6262,6 +7715,91 @@ func (value TechnicalContent) MarshalXML(
 		start := xml.StartElement{Name: xml.Name{Local: "other-technical"}}
 		if err := encoder.EncodeElement(value.OtherTechnical, start); err != nil {
 			return fmt.Errorf("musicxml: encode TechnicalContent.OtherTechnical: %w", err)
+		}
+		return nil
+	}
+
+	return nil
+}
+
+// TimeContent is one ordered child element of Time.
+type TimeContent struct {
+	Beats    *string
+	BeatType *string
+}
+
+// AddBeats appends the "beats" child while preserving content order.
+func (value *Time) AddBeats(element *string) *string {
+	value.Content = append(value.Content, TimeContent{Beats: element})
+	return element
+}
+
+// AddBeatType appends the "beat-type" child while preserving content order.
+func (value *Time) AddBeatType(element *string) *string {
+	value.Content = append(value.Content, TimeContent{BeatType: element})
+	return element
+}
+
+// UnmarshalXML decodes one TimeContent variant.
+func (value *TimeContent) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	*value = TimeContent{}
+
+	switch start.Name {
+	case (xml.Name{Local: "beats"}):
+		var decoded string
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode TimeContent.Beats: %w", err)
+		}
+		value.Beats = &decoded
+		return nil
+
+	case (xml.Name{Local: "beat-type"}):
+		var decoded string
+		if err := decoder.DecodeElement(&decoded, &start); err != nil {
+			return fmt.Errorf("musicxml: decode TimeContent.BeatType: %w", err)
+		}
+		value.BeatType = &decoded
+		return nil
+
+	default:
+		return fmt.Errorf(
+			"musicxml: unsupported TimeContent element {%s}%s",
+			start.Name.Space,
+			start.Name.Local,
+		)
+	}
+}
+
+// MarshalXML encodes the selected TimeContent variant.
+func (value TimeContent) MarshalXML(
+	encoder *xml.Encoder,
+	_ xml.StartElement,
+) error {
+	selected := 0
+	if value.Beats != nil {
+		selected++
+	}
+	if value.BeatType != nil {
+		selected++
+	}
+	if selected != 1 {
+		return fmt.Errorf("musicxml: TimeContent must contain exactly one value, got %d", selected)
+	}
+
+	switch {
+	case value.Beats != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "beats"}}
+		if err := encoder.EncodeElement(value.Beats, start); err != nil {
+			return fmt.Errorf("musicxml: encode TimeContent.Beats: %w", err)
+		}
+		return nil
+	case value.BeatType != nil:
+		start := xml.StartElement{Name: xml.Name{Local: "beat-type"}}
+		if err := encoder.EncodeElement(value.BeatType, start); err != nil {
+			return fmt.Errorf("musicxml: encode TimeContent.BeatType: %w", err)
 		}
 		return nil
 	}

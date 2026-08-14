@@ -11,9 +11,18 @@ import (
 
 const (
 	maxFuzzXMLSize  = 1 << 20
-	maxFuzzMXLSize  = 2 << 20
+	maxFuzzMXLSize  = 4 << 10
 	maxFuzzLinkSize = 8 << 10
 )
+
+var fuzzMXLOptions = MXLOptions{
+	MaxArchiveBytes:   maxFuzzMXLSize,
+	MaxMetadataBytes:  4 << 10,
+	MaxDocumentBytes:  64 << 10,
+	MaxResourceBytes:  64 << 10,
+	MaxResourcesBytes: 128 << 10,
+	MaxXMLDepth:       32,
+}
 
 func FuzzDocumentRoundTrip(f *testing.F) {
 	addDocumentFuzzSeeds(f)
@@ -46,21 +55,20 @@ func FuzzDocumentRoundTrip(f *testing.F) {
 }
 
 func FuzzMXLPackageRoundTrip(f *testing.F) {
-	addFileFuzzSeed(
-		f,
-		filepath.Join(
-			musicXMLTestSuiteDirectory,
-			"90a-Compressed-MusicXML.mxl",
-		),
-	)
 	f.Add(mustEncodeFuzzOpusPackage(f))
+	f.Add(mustEncodeFuzzScorePackage(f))
+	f.Add([]byte{})
+	f.Add([]byte("not a zip archive"))
 
 	f.Fuzz(func(t *testing.T, input []byte) {
 		if len(input) > maxFuzzMXLSize {
 			return
 		}
 
-		value, err := DecodeMXLPackage(bytes.NewReader(input))
+		value, err := DecodeMXLPackageWithOptions(
+			bytes.NewReader(input),
+			fuzzMXLOptions,
+		)
 		if err != nil {
 			return
 		}
@@ -79,8 +87,9 @@ func FuzzMXLPackageRoundTrip(f *testing.F) {
 			t.Fatalf("encode successfully decoded MXL package: %v", err)
 		}
 
-		decodedAgain, err := DecodeMXLPackage(
+		decodedAgain, err := DecodeMXLPackageWithOptions(
 			bytes.NewReader(encoded.Bytes()),
+			fuzzMXLOptions,
 		)
 		if err != nil {
 			t.Fatalf("decode encoded MXL package: %v", err)
@@ -203,6 +212,25 @@ func mustEncodeFuzzOpusPackage(f *testing.F) []byte {
 	var result bytes.Buffer
 	if err := EncodeMXLPackage(&result, value); err != nil {
 		f.Fatalf("encode MXL fuzz seed: %v", err)
+	}
+
+	return result.Bytes()
+}
+
+func mustEncodeFuzzScorePackage(f *testing.F) []byte {
+	f.Helper()
+
+	score := NewScorePartwise(PartDefinition{
+		ID:   "P1",
+		Name: "Piano",
+	})
+	measure := NewScorePartwiseMeasure("1")
+	measure.AddNote(NewPitchedNote(StepC, 4, 1))
+	score.Part[0].AddMeasure(measure)
+
+	var result bytes.Buffer
+	if err := EncodeMXL(&result, score); err != nil {
+		f.Fatalf("encode score MXL fuzz seed: %v", err)
 	}
 
 	return result.Bytes()

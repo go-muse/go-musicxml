@@ -110,6 +110,136 @@ func TestListeningContentRoundTrip(t *testing.T) {
 	)
 }
 
+func TestRepeatedSequenceContentRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	t.Run("key", func(t *testing.T) {
+		t.Parallel()
+
+		input := []byte(
+			`<key>` +
+				`<key-step>C</key-step><key-alter>1</key-alter>` +
+				`<key-accidental>sharp</key-accidental>` +
+				`<key-step>D</key-step><key-alter>-1</key-alter>` +
+				`</key>`,
+		)
+		var actual Key
+		require.NoError(t, xml.Unmarshal(input, &actual))
+		require.Len(t, actual.Content, 5)
+		require.NotNil(t, actual.Content[0].KeyStep)
+		assert.Equal(t, StepC, *actual.Content[0].KeyStep)
+		require.NotNil(t, actual.Content[1].KeyAlter)
+		assert.Equal(t, Semitones(1), *actual.Content[1].KeyAlter)
+		require.NotNil(t, actual.Content[2].KeyAccidental)
+		require.NotNil(t, actual.Content[3].KeyStep)
+		assert.Equal(t, StepD, *actual.Content[3].KeyStep)
+
+		encoded, err := marshalElement("key", actual)
+		require.NoError(t, err)
+		names, err := childElementNames(encoded)
+		require.NoError(t, err)
+		assert.Equal(t, []string{
+			"key-step",
+			"key-alter",
+			"key-accidental",
+			"key-step",
+			"key-alter",
+		}, names)
+	})
+
+	t.Run("lyric", func(t *testing.T) {
+		t.Parallel()
+
+		input := []byte(
+			`<lyric>` +
+				`<syllabic>begin</syllabic><text>Hel</text>` +
+				`<elision>‿</elision>` +
+				`<syllabic>end</syllabic><text>lo</text>` +
+				`</lyric>`,
+		)
+		var actual Lyric
+		require.NoError(t, xml.Unmarshal(input, &actual))
+		require.Len(t, actual.Content, 5)
+		require.NotNil(t, actual.Content[1].Text)
+		assert.Equal(t, "Hel", actual.Content[1].Text.Value)
+		require.NotNil(t, actual.Content[4].Text)
+		assert.Equal(t, "lo", actual.Content[4].Text.Value)
+
+		encoded, err := marshalElement("lyric", actual)
+		require.NoError(t, err)
+		names, err := childElementNames(encoded)
+		require.NoError(t, err)
+		assert.Equal(t, []string{
+			"syllabic",
+			"text",
+			"elision",
+			"syllabic",
+			"text",
+		}, names)
+	})
+
+	t.Run("time", func(t *testing.T) {
+		t.Parallel()
+
+		input := []byte(
+			`<time>` +
+				`<beats>3</beats><beat-type>8</beat-type>` +
+				`<beats>2</beats><beat-type>4</beat-type>` +
+				`</time>`,
+		)
+		var actual Time
+		require.NoError(t, xml.Unmarshal(input, &actual))
+		require.Len(t, actual.Content, 4)
+		require.NotNil(t, actual.Content[0].Beats)
+		assert.Equal(t, "3", *actual.Content[0].Beats)
+		require.NotNil(t, actual.Content[3].BeatType)
+		assert.Equal(t, "4", *actual.Content[3].BeatType)
+
+		encoded, err := marshalElement("time", actual)
+		require.NoError(t, err)
+		names, err := childElementNames(encoded)
+		require.NoError(t, err)
+		assert.Equal(t, []string{
+			"beats",
+			"beat-type",
+			"beats",
+			"beat-type",
+		}, names)
+	})
+}
+
+func TestDistinctRepeatedSequenceContentDoesNotCollapse(t *testing.T) {
+	t.Parallel()
+
+	var first Lyric
+	require.NoError(t, xml.Unmarshal(
+		[]byte(`<lyric><text>first</text></lyric>`),
+		&first,
+	))
+	var second Lyric
+	require.NoError(t, xml.Unmarshal(
+		[]byte(`<lyric><text>second</text></lyric>`),
+		&second,
+	))
+
+	assert.NotEqual(t, first, second)
+}
+
+func TestNoteEncodingUsesSchemaOrder(t *testing.T) {
+	t.Parallel()
+
+	note := Note{
+		Rest:     &Rest{},
+		Duration: Ptr(PositiveDivisions(1)),
+		Tie:      []Tie{{Type: StartStopStart}},
+	}
+	encoded, err := marshalElement("note", note)
+	require.NoError(t, err)
+	names, err := childElementNames(encoded)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"rest", "duration", "tie"}, names)
+}
+
 func TestChoiceContentErrors(t *testing.T) {
 	t.Parallel()
 

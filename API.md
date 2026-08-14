@@ -45,17 +45,21 @@ methods are conveniences, not a separate object model.
 
 `Decode` accepts exactly one unqualified `score-partwise`, `score-timewise`, or
 `opus` root and rejects non-whitespace content outside it. It does not call
-`Validate`.
+`Validate`. `DecodeWithOptions` changes the XML nesting ceiling; the zero-value
+options use the documented safe default.
 
 When the expected root type is known, `DecodeScorePartwise`,
 `DecodeScoreTimewise`, and `DecodeOpusDocument` return the corresponding
 concrete pointer type. They return `ErrUnsupportedRoot` for any other root.
+Each typed helper has a corresponding `WithOptions` variant.
 
 `Encode` writes one root element without an XML declaration and does not call
 `Validate`. MXL encoding adds an XML declaration to stored MusicXML documents.
 
 Encoding preserves the typed model, not original XML formatting. Unknown XML
-extensions are not part of the compatibility guarantee.
+extensions are not part of the compatibility guarantee. Unknown children may
+be ignored by ordinary `encoding/xml` fields or rejected by generated ordered
+`Content` decoders, depending on their location.
 
 ## Validation
 
@@ -77,6 +81,10 @@ other regular file except `mimetype` and `META-INF/container.xml`.
 Resource order and bytes are preserved; ZIP compression metadata is not.
 Encoding validates archive paths and rejects collisions with reserved or
 primary paths.
+
+`DecodeMXLWithOptions` and `DecodeMXLPackageWithOptions` expose the archive,
+metadata, primary-document, per-resource, aggregate-resource, and XML-depth
+limits. Zero-value fields select the package defaults.
 
 `ResolveOpus` builds a memoized graph. Repeated links share targets, and cycles
 are supported. `SyncResolvedOpus` accepts only the graph created for the same,

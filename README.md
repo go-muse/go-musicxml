@@ -14,7 +14,10 @@ validation rules come from the bundled official MusicXML 4.0 XSD files.
 
 ## Caution
 
-This project was entirely vibe-coded with GPT-5.6 Sol, but it has solid evidence of correctness through testing.
+This project was developed with substantial AI assistance. It is pre-1.0, so
+evaluate it against your own MusicXML files before production use. The test
+suite includes round trips, independent XSD conformance checks, fuzzing, and
+race detection.
 
 ## Requirements
 
@@ -24,7 +27,7 @@ This project was entirely vibe-coded with GPT-5.6 Sol, but it has solid evidence
 ## Installation
 
 ```bash
-go get github.com/go-muse/go-musicxml@v0.1.0
+go get github.com/go-muse/go-musicxml@latest
 ```
 
 ## Quick start
@@ -85,10 +88,10 @@ construction and compressed `.mxl` round trips in
 
 | Task | API |
 | --- | --- |
-| Read XML | `Decode`, `DecodeScorePartwise`, `DecodeScoreTimewise`, `DecodeOpusDocument` |
+| Read XML | `Decode`, typed `Decode...` helpers, and their `WithOptions` variants |
 | Write XML | `Encode` |
-| Read or write compressed MusicXML | `DecodeMXL`, `EncodeMXL` |
-| Preserve MXL resources | `DecodeMXLPackage`, `EncodeMXLPackage` |
+| Read or write compressed MusicXML | `DecodeMXL`, `DecodeMXLWithOptions`, `EncodeMXL` |
+| Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
 | Construct scores and opus documents | `NewScorePartwise`, `NewScoreTimewise`, `NewOpusDocument` |
 | Construct common notes | `NewPitchedNote`, `NewRestNote` |
@@ -104,9 +107,11 @@ See [`API.md`](API.md) for invariants and compatibility rules.
 automatically, so callers can inspect, repair, and re-encode incomplete
 documents. Call `Validate` explicitly when XSD conformance is required.
 
-XML decoding supports UTF-8, UTF-16BE/LE, and ISO-8859-1. MusicXML root
-elements are unqualified because the official MusicXML 4.0 schema has no
-target namespace.
+XML decoding supports UTF-8 (with or without a BOM), UTF-16BE/LE, and
+ISO-8859-1. MusicXML root elements are unqualified because the official
+MusicXML 4.0 schema has no target namespace. Decoding rejects documents deeper
+than 256 simultaneously open XML elements by default; `DecodeOptions` can set
+a different ceiling.
 
 Optional XSD attributes remain pointers after decoding. Generated
 `Effective...` methods expose schema defaults without changing omission
@@ -120,9 +125,10 @@ unchanged after `ResolveOpus` and `SyncResolvedOpus`; edited documents are
 re-encoded as UTF-8 MusicXML.
 
 MXL decoding rejects unsafe paths, duplicate entries, invalid container
-metadata, and oversized archives. Version 0.1 limits compressed input to
-64 MiB, metadata to 1 MiB, the primary document and each resource to 256 MiB,
-and all resources together to 512 MiB.
+metadata, and oversized archives. The default limits restrict compressed input
+to 64 MiB, metadata to 1 MiB, the primary document and each resource to
+256 MiB, and all resources together to 512 MiB. `MXLOptions` exposes every byte
+limit and the XML nesting limit for callers with a stricter threat model.
 
 ## Reliability
 
@@ -132,6 +138,8 @@ and all resources together to 512 MiB.
   encoded, decoded again, and compared as a typed Go model.
 - A second encoding must match the first byte-for-byte, proving that XML and
   MXL serialization reach a deterministic fixed point.
+- On Ubuntu, CI also validates every re-encoded, originally valid corpus
+  document with libxml2 against the bundled MusicXML 4.0 XSD.
 - CI runs tests on Linux, macOS, and Windows, plus the race detector and three
   fuzz targets.
 
@@ -139,6 +147,8 @@ and all resources together to 512 MiB.
 
 - The generated model and schema validator target MusicXML 4.0.
 - XML extensions not represented by the MusicXML 4.0 model are not preserved.
+  Depending on their location, `encoding/xml` may ignore them or an ordered
+  generated `Content` decoder may reject them as unsupported.
 - Encoding normalizes lexical details such as whitespace, attribute order,
   character encoding, and ZIP metadata; the first output need not match the
   original bytes.
@@ -154,7 +164,8 @@ make release-check
 `make check` runs formatting, tests, and `go vet`. `make release-check` also
 checks module tidiness and generated files, runs the race detector, and
 performs short fuzzing passes. Release checks require a clean, committed
-worktree.
+worktree. CI and the release workflow additionally install `xmllint` for an
+independent XSD conformance pass.
 
 ## License
 

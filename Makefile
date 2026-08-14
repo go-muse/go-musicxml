@@ -1,6 +1,7 @@
 GO ?= go
 GOFMT ?= gofmt
 FUZZ_TIME ?= 10s
+MXL_FUZZ_TIME ?= 10000x
 
 .PHONY: check format format-check fuzz generate generated mod-check release-check test vet race
 
@@ -48,7 +49,7 @@ race:
 
 fuzz:
 	$(GO) test -run='^$$' -fuzz='^FuzzDocumentRoundTrip$$' -fuzztime=$(FUZZ_TIME) .
-	$(GO) test -run='^$$' -fuzz='^FuzzMXLPackageRoundTrip$$' -fuzztime=$(FUZZ_TIME) .
+	$(GO) test -run='^$$' -fuzz='^FuzzMXLPackageRoundTrip$$' -fuzztime=$(MXL_FUZZ_TIME) .
 	$(GO) test -run='^$$' -fuzz='^FuzzMXLLinkResolution$$' -fuzztime=$(FUZZ_TIME) .
 
 release-check: mod-check generated format-check test vet race fuzz
