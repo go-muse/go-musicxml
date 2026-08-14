@@ -62,6 +62,15 @@ var (
 	// ErrInvalidDocument reports one or more MusicXML XSD violations.
 	ErrInvalidDocument = errors.New("musicxml: invalid document")
 
+	// ErrXMLTooDeep reports an XML element nesting depth limit violation.
+	ErrXMLTooDeep = errors.New("musicxml: XML nesting depth limit exceeded")
+
+	// ErrInvalidDecodeOptions reports invalid uncompressed decode limits.
+	ErrInvalidDecodeOptions = errors.New("musicxml: invalid decode options")
+
+	// ErrInvalidMXLOptions reports invalid compressed decode limits.
+	ErrInvalidMXLOptions = errors.New("musicxml: invalid MXL options")
+
 	// ErrInvalidMXL reports a malformed or unsafe MXL archive.
 	ErrInvalidMXL = errors.New("musicxml: invalid MXL archive")
 

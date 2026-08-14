@@ -85,6 +85,47 @@ func TestDecode(t *testing.T) {
 	}
 }
 
+func TestDecodeXMLDepthLimit(t *testing.T) {
+	t.Parallel()
+
+	allowed, err := DecodeOpusDocumentWithOptions(
+		strings.NewReader(nestedOpusXML(4)),
+		DecodeOptions{MaxXMLDepth: 4},
+	)
+	assert.NoError(t, err)
+	assert.NotNil(t, allowed)
+
+	rejected, err := DecodeWithOptions(
+		strings.NewReader(nestedOpusXML(5)),
+		DecodeOptions{MaxXMLDepth: 4},
+	)
+	assert.ErrorIs(t, err, ErrXMLTooDeep)
+	assert.Nil(t, rejected)
+
+	rejected, err = Decode(
+		strings.NewReader(nestedOpusXML(defaultMaxXMLDepth + 1)),
+	)
+	assert.ErrorIs(t, err, ErrXMLTooDeep)
+	assert.Nil(t, rejected)
+}
+
+func TestDecodeOptionsRejectNegativeDepth(t *testing.T) {
+	t.Parallel()
+
+	document, err := DecodeWithOptions(
+		strings.NewReader(`<opus/>`),
+		DecodeOptions{MaxXMLDepth: -1},
+	)
+
+	assert.ErrorIs(t, err, ErrInvalidDecodeOptions)
+	assert.Nil(t, document)
+}
+
+func nestedOpusXML(depth int) string {
+	return strings.Repeat(`<opus>`, depth) +
+		strings.Repeat(`</opus>`, depth)
+}
+
 func TestDecodeTypedDocuments(t *testing.T) {
 	t.Parallel()
 

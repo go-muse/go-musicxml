@@ -35,6 +35,20 @@ func DecodeMXL(reader io.Reader) (Document, error) {
 	return decodeMXL(reader, defaultMXLLimits())
 }
 
+// DecodeMXLWithOptions reads a compressed MusicXML document using explicit
+// resource limits. Zero option fields use the package defaults.
+func DecodeMXLWithOptions(
+	reader io.Reader,
+	options MXLOptions,
+) (Document, error) {
+	limits, err := options.limits()
+	if err != nil {
+		return nil, err
+	}
+
+	return decodeMXL(reader, limits)
+}
+
 // EncodeMXL writes a compressed MusicXML document.
 func EncodeMXL(
 	writer io.Writer,
@@ -51,6 +65,7 @@ type mxlLimits struct {
 	documentSize  int64
 	resourceSize  int64
 	resourcesSize int64
+	xmlDepth      int
 }
 
 type mxlContainer struct {
@@ -76,7 +91,7 @@ func decodeMXL(
 		return nil, err
 	}
 
-	return archive.decodeDocument(limits.documentSize)
+	return archive.decodeDocument(limits)
 }
 
 func indexMXLEntries(

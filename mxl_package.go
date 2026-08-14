@@ -39,6 +39,20 @@ func DecodeMXLPackage(reader io.Reader) (*MXLPackage, error) {
 	return decodeMXLPackage(reader, defaultMXLLimits())
 }
 
+// DecodeMXLPackageWithOptions reads a compressed MusicXML package using
+// explicit resource limits. Zero option fields use the package defaults.
+func DecodeMXLPackageWithOptions(
+	reader io.Reader,
+	options MXLOptions,
+) (*MXLPackage, error) {
+	limits, err := options.limits()
+	if err != nil {
+		return nil, err
+	}
+
+	return decodeMXLPackage(reader, limits)
+}
+
 // EncodeMXLPackage writes a compressed MusicXML document together with its
 // related files.
 //
@@ -128,6 +142,7 @@ func defaultMXLLimits() mxlLimits {
 		documentSize:  maxMXLDocumentSize,
 		resourceSize:  maxMXLResourceSize,
 		resourcesSize: maxMXLResourcesSize,
+		xmlDepth:      defaultMaxXMLDepth,
 	}
 }
 
@@ -216,14 +231,20 @@ func openMXL(
 }
 
 func (a *openedMXL) decodeDocument(
-	limit int64,
+	limits mxlLimits,
 ) (Document, error) {
-	documentData, err := readMXLFile(a.documentFile, limit)
+	documentData, err := readMXLFile(
+		a.documentFile,
+		limits.documentSize,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	document, err := Decode(bytes.NewReader(documentData))
+	document, err := DecodeWithOptions(
+		bytes.NewReader(documentData),
+		DecodeOptions{MaxXMLDepth: limits.xmlDepth},
+	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"musicxml: decode MXL root file %q: %w",
@@ -252,7 +273,7 @@ func decodeMXLPackage(
 		return nil, err
 	}
 
-	document, err := archive.decodeDocument(limits.documentSize)
+	document, err := archive.decodeDocument(limits)
 	if err != nil {
 		return nil, err
 	}
