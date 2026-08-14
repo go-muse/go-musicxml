@@ -700,38 +700,21 @@ func (c *validationContext) validateComplex(
 		0,
 	)
 	if !matched || result.next != len(node.Children) {
-		// Ordinary Go struct fields cannot express the order of elements that
-		// appear in different branches of a non-repeating XSD choice. The
-		// generated encoder therefore has a deterministic field order that
-		// can differ from the branch order (notably duration/tie in note).
-		// Retry against the same XSD grammar using the elements as a multiset.
-		// Ordered repeated choices still retain their typed Content order;
-		// XSD validation only needs to prove that every child belongs to one
-		// valid content-model occurrence.
-		unordered, used, unorderedMatched := c.matchParticleUnordered(
-			effective.particle,
-			node.Children,
-			make([]bool, len(node.Children)),
-		)
-		if unorderedMatched && validationAllUsed(used) {
-			result = unordered
-		} else {
-			if !matched {
-				c.addContentIssue(node, path, failure)
-				return
-			}
-
-			index := result.next
-			c.addIssue(
-				validationIndexedChildPath(path, node.Children, index),
-				"content-model",
-				fmt.Sprintf(
-					"unexpected element %s",
-					validationDisplayName(node.Children[index].Name),
-				),
-			)
+		if !matched {
+			c.addContentIssue(node, path, failure)
 			return
 		}
+
+		index := result.next
+		c.addIssue(
+			validationIndexedChildPath(path, node.Children, index),
+			"content-model",
+			fmt.Sprintf(
+				"unexpected element %s",
+				validationDisplayName(node.Children[index].Name),
+			),
+		)
+		return
 	}
 
 	paths := validationChildPaths(path, node.Children)
@@ -1748,160 +1731,6 @@ func (c *validationContext) matchParticle(
 	}
 
 	return result, bestFailure, true
-}
-
-func (c *validationContext) matchParticleUnordered(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	used []bool,
-) (validationMatchResult, []bool, bool) {
-	if particle == nil {
-		return validationMatchResult{}, append([]bool(nil), used...), true
-	}
-
-	state := append([]bool(nil), used...)
-	result := validationMatchResult{}
-	count := uint64(0)
-	maximum := particle.Occurrence.Max
-	if particle.Occurrence.Unbounded {
-		maximum = uint64(len(children) + 1)
-	}
-
-	for count < maximum {
-		next, nextState, matched := c.matchParticleBodyUnordered(
-			particle,
-			children,
-			state,
-		)
-		if !matched {
-			break
-		}
-
-		consumed := validationUsedCount(nextState) -
-			validationUsedCount(state)
-		state = nextState
-		result.elements = append(result.elements, next.elements...)
-		count++
-		if consumed == 0 {
-			break
-		}
-	}
-
-	if count < particle.Occurrence.Min {
-		return validationMatchResult{}, used, false
-	}
-	result.next = validationUsedCount(state)
-
-	return result, state, true
-}
-
-func (c *validationContext) matchParticleBodyUnordered(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	used []bool,
-) (validationMatchResult, []bool, bool) {
-	switch particle.Kind {
-	case validationParticleElement:
-		element, found := c.resolveElement(particle.Element)
-		if !found {
-			return validationMatchResult{}, used, false
-		}
-		for index, child := range children {
-			if used[index] ||
-				validationName(child.Name) != element.Name {
-				continue
-			}
-
-			state := append([]bool(nil), used...)
-			state[index] = true
-			return validationMatchResult{
-				next: 1,
-				elements: []validationElementMatch{{
-					index:  index,
-					schema: element,
-				}},
-			}, state, true
-		}
-		return validationMatchResult{}, used, false
-
-	case validationParticleSequence, validationParticleAll:
-		state := append([]bool(nil), used...)
-		result := validationMatchResult{}
-		for _, child := range particle.Children {
-			next, nextState, matched := c.matchParticleUnordered(
-				child,
-				children,
-				state,
-			)
-			if !matched {
-				return validationMatchResult{}, used, false
-			}
-			state = nextState
-			result.elements = append(
-				result.elements,
-				next.elements...,
-			)
-		}
-		result.next = validationUsedCount(state) -
-			validationUsedCount(used)
-		return result, state, true
-
-	case validationParticleChoice:
-		var emptyResult *validationMatchResult
-		var emptyState []bool
-		for _, child := range particle.Children {
-			result, state, matched := c.matchParticleUnordered(
-				child,
-				children,
-				used,
-			)
-			if !matched {
-				continue
-			}
-			if validationUsedCount(state) > validationUsedCount(used) {
-				return result, state, true
-			}
-			if emptyResult == nil {
-				copy := result
-				emptyResult = &copy
-				emptyState = state
-			}
-		}
-		if emptyResult != nil {
-			return *emptyResult, emptyState, true
-		}
-		return validationMatchResult{}, used, false
-
-	case validationParticleAny:
-		for index := range children {
-			if used[index] {
-				continue
-			}
-			state := append([]bool(nil), used...)
-			state[index] = true
-			return validationMatchResult{
-				next: 1,
-			}, state, true
-		}
-		return validationMatchResult{}, used, false
-
-	default:
-		return validationMatchResult{}, used, false
-	}
-}
-
-func validationUsedCount(used []bool) int {
-	result := 0
-	for _, value := range used {
-		if value {
-			result++
-		}
-	}
-	return result
-}
-
-func validationAllUsed(used []bool) bool {
-	return validationUsedCount(used) == len(used)
 }
 
 func (c *validationContext) matchParticleBody(

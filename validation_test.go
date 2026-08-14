@@ -192,6 +192,51 @@ func TestValidateErrors(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsOutOfOrderContent(t *testing.T) {
+	t.Parallel()
+
+	document, err := Decode(strings.NewReader(`
+<score-partwise version="4.0">
+	<part-list>
+		<score-part id="P1"><part-name>Music</part-name></score-part>
+	</part-list>
+	<part id="P1">
+		<measure number="1">
+			<attributes>
+				<key>
+					<key-step>C</key-step>
+					<key-accidental>natural</key-accidental>
+					<key-alter>0</key-alter>
+				</key>
+			</attributes>
+		</measure>
+	</part>
+</score-partwise>`))
+	require.NoError(t, err)
+
+	validationErr := Validate(document)
+	require.ErrorIs(t, validationErr, ErrInvalidDocument)
+	var details *ValidationError
+	require.ErrorAs(t, validationErr, &details)
+	require.NotEmpty(t, details.Issues)
+	assert.Equal(t, "content-model", details.Issues[0].Constraint)
+}
+
+func TestValidateRegularNoteWithTie(t *testing.T) {
+	t.Parallel()
+
+	score := NewScorePartwise(
+		PartDefinition{ID: "P1", Name: "Piano"},
+	)
+	measure := NewScorePartwiseMeasure("1")
+	note := NewRestNote(1)
+	note.Tie = []Tie{{Type: StartStopStart}}
+	measure.AddNote(note)
+	score.Part[0].AddMeasure(measure)
+
+	assert.NoError(t, score.Validate())
+}
+
 func decodeValidationScore(t *testing.T) *ScorePartwise {
 	t.Helper()
 

@@ -52,11 +52,11 @@ func (r *complexTypeRenderer) planRepeatedChoices(
 	}
 
 	var particles []*ParticlePlan
-	collectRepeatedChoices(particle, &particles)
+	collectOrderedParticles(particle, &particles)
 
 	if len(particles) > 1 {
 		return fmt.Errorf(
-			"%w: %s contains %d repeated choices",
+			"%w: %s contains %d independently ordered repeated particles; configure the type as ordered content",
 			ErrUnsupportedComplexGeneration,
 			structure.owner,
 			len(particles),
@@ -69,7 +69,7 @@ func (r *complexTypeRenderer) planRepeatedChoices(
 	choice, err := r.buildChoice(
 		structure.owner,
 		particles[0],
-		true,
+		false,
 	)
 	if err != nil {
 		return err
@@ -105,24 +105,49 @@ func registerComplexChoice(
 	return nil
 }
 
-func collectRepeatedChoices(
+func collectOrderedParticles(
 	particle *ParticlePlan,
 	result *[]*ParticlePlan,
 ) {
 	if particle == nil {
 		return
 	}
-	if particle.Kind == ParticleChoice &&
-		particle.Occurrence.Repeated() {
+	if particle.Kind != ParticleElement &&
+		particle.Occurrence.Repeated() &&
+		particleHasMultipleElementNames(particle) {
 		*result = append(*result, particle)
+		return
 	}
 
 	for childIndex := range particle.Children {
-		collectRepeatedChoices(
+		collectOrderedParticles(
 			&particle.Children[childIndex],
 			result,
 		)
 	}
+}
+
+func particleHasMultipleElementNames(particle *ParticlePlan) bool {
+	var elements []*ElementPlan
+	if err := collectChoiceElements(particle, &elements); err != nil {
+		return false
+	}
+
+	names := make(map[expandedName]struct{})
+	for _, element := range elements {
+		if element == nil {
+			continue
+		}
+		names[expandedName{
+			namespace: element.Name.Namespace,
+			local:     element.Name.Local,
+		}] = struct{}{}
+		if len(names) > 1 {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (r *complexTypeRenderer) buildChoice(
@@ -310,6 +335,7 @@ func (s *complexStructure) addChoice(
 		return nil
 	}
 
+	s.choiceIndexes[choice] = len(s.elements)
 	s.elements = append(s.elements, complexField{
 		kind:        complexFieldChoice,
 		goType:      choice.goType,

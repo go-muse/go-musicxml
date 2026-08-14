@@ -5,6 +5,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -32,6 +33,8 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 		"musicxml",
 		ComplexGenerationOptions{
 			OrderedContentTypes: []QName{
+				{Local: "credit"},
+				{Local: "lyric"},
 				{Local: "metronome"},
 			},
 		},
@@ -54,7 +57,7 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 		parser.SkipObjectResolution,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, 237, countTypeDeclarations(file))
+	assert.Equal(t, 246, countTypeDeclarations(file))
 
 	source := string(actual)
 	assert.Contains(t, source, "type Pitch struct {")
@@ -85,7 +88,7 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 	assert.Contains(
 		t,
 		source,
-		"KeyAlter      []Semitones     `xml:\"key-alter\"`",
+		"Content     []KeyContent `xml:\",any\"`",
 	)
 	assert.Contains(
 		t,
@@ -97,4 +100,14 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 		source,
 		"func (value PartListContent) MarshalXML(",
 	)
+
+	noteStart := strings.Index(source, "type Note struct {")
+	require.Greater(t, noteStart, -1)
+	noteEnd := strings.Index(source[noteStart:], "\n}") + noteStart
+	require.Greater(t, noteEnd, noteStart)
+	note := source[noteStart:noteEnd]
+	assert.Less(t, strings.Index(note, "\tGrace"), strings.Index(note, "\tCue"))
+	assert.Less(t, strings.Index(note, "\tCue"), strings.Index(note, "\tChord"))
+	assert.Less(t, strings.Index(note, "\tRest"), strings.Index(note, "\tDuration"))
+	assert.Less(t, strings.Index(note, "\tDuration"), strings.Index(note, "\tTie"))
 }
