@@ -515,6 +515,13 @@ func TestDecodeMXLWithOptions(t *testing.T) {
 	)
 	assert.ErrorIs(t, err, ErrInvalidMXLOptions)
 	assert.Nil(t, document)
+
+	document, err = DecodeMXLWithOptions(
+		bytes.NewReader(archive),
+		MXLOptions{MaxXMLDepth: maximumXMLDepth + 1},
+	)
+	assert.ErrorIs(t, err, ErrInvalidMXLOptions)
+	assert.Nil(t, document)
 }
 
 func TestValidMXLPath(t *testing.T) {

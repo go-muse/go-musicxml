@@ -281,17 +281,87 @@ func TestChoiceContentErrors(t *testing.T) {
 func TestChoiceContentUnknownElement(t *testing.T) {
 	t.Parallel()
 
-	var actual Articulations
+	unknownElements := []string{
+		`<future-articulation/>`,
+		`<vendor:future-articulation xmlns:vendor="urn:vendor"/>`,
+	}
+	for _, unknown := range unknownElements {
+		var actual Articulations
+		err := xml.Unmarshal(
+			[]byte(
+				`<articulations><accent/>`+unknown+
+					`<staccato/></articulations>`,
+			),
+			&actual,
+		)
+		require.NoError(t, err)
+		discardUnknownXMLContent(&actual)
+		require.Len(t, actual.Content, 2)
+
+		encoded, err := marshalElement("articulations", actual)
+		require.NoError(t, err)
+		names, err := childElementNames(encoded)
+		require.NoError(t, err)
+		assert.Equal(t, []string{"accent", "staccato"}, names)
+		assert.NotContains(t, string(encoded), "future-articulation")
+	}
+}
+
+func TestNewOrderedContentIgnoresUnknownElement(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		element string
+		value   any
+	}{
+		{name: "credit", element: "credit", value: &Credit{}},
+		{name: "harmony", element: "harmony", value: &Harmony{}},
+		{
+			name:    "interchangeable",
+			element: "interchangeable",
+			value:   &Interchangeable{},
+		},
+		{name: "key", element: "key", value: &Key{}},
+		{name: "lyric", element: "lyric", value: &Lyric{}},
+		{name: "ornaments", element: "ornaments", value: &Ornaments{}},
+		{name: "score part", element: "score-part", value: &ScorePart{}},
+		{name: "sound", element: "sound", value: &Sound{}},
+		{name: "time", element: "time", value: &Time{}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			input := `<` + test.element + `>` +
+				`<vendor:extension xmlns:vendor="urn:vendor"/>` +
+				`</` + test.element + `>`
+			require.NoError(t, xml.Unmarshal([]byte(input), test.value))
+			discardUnknownXMLContent(test.value)
+
+			encoded, err := marshalElement(test.element, test.value)
+			require.NoError(t, err)
+			assert.NotContains(t, string(encoded), "extension")
+		})
+	}
+
+	var actual Key
 	err := xml.Unmarshal(
-		[]byte(`<articulations><future-articulation/></articulations>`),
+		[]byte(
+			`<key><fifths>0</fifths>`+
+				`<vendor:extension xmlns:vendor="urn:vendor"/>`+
+				`<mode>major</mode></key>`,
+		),
 		&actual,
 	)
+	require.NoError(t, err)
+	discardUnknownXMLContent(&actual)
 
-	assert.EqualError(
-		t,
-		err,
-		"musicxml: unsupported ArticulationsContent element {}future-articulation",
-	)
+	encoded, err := marshalElement("key", actual)
+	require.NoError(t, err)
+	names, err := childElementNames(encoded)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"fifths", "mode"}, names)
 }
 
 func marshalElement(

@@ -330,6 +330,49 @@ func TestValidateUnicodeXMLNames(t *testing.T) {
 	assert.NoError(t, score.Validate())
 }
 
+func TestValidateRejectsNonXMLWhitespaceInID(t *testing.T) {
+	t.Parallel()
+
+	score := NewScorePartwise(
+		PartDefinition{ID: "P1", Name: "Piano"},
+	)
+	measure := NewScorePartwiseMeasure("1")
+	note := NewRestNote(1)
+	note.ID = Ptr("n1\u3000")
+	measure.AddNote(note)
+	score.Part[0].AddMeasure(measure)
+
+	err := score.Validate()
+	require.ErrorIs(t, err, ErrInvalidDocument)
+	var details *ValidationError
+	require.ErrorAs(t, err, &details)
+	require.NotEmpty(t, details.Issues)
+	assert.Equal(t, "datatype", details.Issues[0].Constraint)
+	assert.Equal(
+		t,
+		"/score-partwise/part/measure/note/@id",
+		details.Issues[0].Path,
+	)
+}
+
+func TestNormalizeValidationWhitespaceUsesXSDCharacters(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(
+		t,
+		"alpha beta",
+		normalizeValidationWhitespace("token", " \talpha\r\n beta "),
+	)
+	assert.Equal(
+		t,
+		"\u2000alpha\u3000beta\u00a0",
+		normalizeValidationWhitespace(
+			"token",
+			"\u2000alpha\u3000beta\u00a0",
+		),
+	)
+}
+
 func TestValidateXMLNameBuiltins(t *testing.T) {
 	t.Parallel()
 
@@ -345,6 +388,10 @@ func TestValidateXMLNameBuiltins(t *testing.T) {
 		{builtin: "QName", value: "муз:голос", valid: true},
 		{builtin: "NCName", value: "1голос"},
 		{builtin: "NCName", value: "муз:голос"},
+		{builtin: "Name", value: "\u2000голос"},
+		{builtin: "ID", value: "голос\u3000"},
+		{builtin: "IDREFS", value: "голос\u3000партия"},
+		{builtin: "NMTOKENS", value: "голос\u00a0партия"},
 		{builtin: "QName", value: "a:b:c"},
 		{builtin: "NMTOKEN", value: "голос value"},
 	}

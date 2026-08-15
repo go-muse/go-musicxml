@@ -2,13 +2,18 @@ package musicxml
 
 import "fmt"
 
-const defaultMaxXMLDepth = 256
+const (
+	defaultMaxXMLDepth = 256
+	maximumXMLDepth    = 4096
+)
 
 // DecodeOptions controls resource limits for uncompressed XML decoding.
 //
-// Zero values select the package defaults. Negative values are invalid.
+// Zero values select the package defaults. Negative values and XML depths
+// above the documented maximum are invalid.
 type DecodeOptions struct {
 	// MaxXMLDepth is the maximum number of simultaneously open XML elements.
+	// Zero selects 256; values above 4096 are invalid.
 	MaxXMLDepth int
 }
 
@@ -20,14 +25,16 @@ func DefaultDecodeOptions() DecodeOptions {
 
 // MXLOptions controls resource limits for compressed MusicXML decoding.
 //
-// Zero values select the package defaults. Negative values are invalid.
+// Zero values select the package defaults. Negative values and XML depths
+// above the documented maximum are invalid.
 type MXLOptions struct {
 	MaxArchiveBytes   int64
 	MaxMetadataBytes  int64
 	MaxDocumentBytes  int64
 	MaxResourceBytes  int64
 	MaxResourcesBytes int64
-	MaxXMLDepth       int
+	// MaxXMLDepth has the same zero default and 4096 maximum as DecodeOptions.
+	MaxXMLDepth int
 }
 
 // DefaultMXLOptions returns the limits used by DecodeMXL and
@@ -44,10 +51,11 @@ func DefaultMXLOptions() MXLOptions {
 }
 
 func (o DecodeOptions) xmlDepth() (int, error) {
-	if o.MaxXMLDepth < 0 {
+	if o.MaxXMLDepth < 0 || o.MaxXMLDepth > maximumXMLDepth {
 		return 0, fmt.Errorf(
-			"%w: MaxXMLDepth must not be negative",
+			"%w: MaxXMLDepth must be between 0 and %d",
 			ErrInvalidDecodeOptions,
+			maximumXMLDepth,
 		)
 	}
 	if o.MaxXMLDepth == 0 {
@@ -63,11 +71,17 @@ func (o MXLOptions) limits() (mxlLimits, error) {
 		o.MaxMetadataBytes < 0 ||
 		o.MaxDocumentBytes < 0 ||
 		o.MaxResourceBytes < 0 ||
-		o.MaxResourcesBytes < 0 ||
-		o.MaxXMLDepth < 0 {
+		o.MaxResourcesBytes < 0 {
 		return mxlLimits{}, fmt.Errorf(
-			"%w: limits must not be negative",
+			"%w: byte limits must not be negative",
 			ErrInvalidMXLOptions,
+		)
+	}
+	if o.MaxXMLDepth < 0 || o.MaxXMLDepth > maximumXMLDepth {
+		return mxlLimits{}, fmt.Errorf(
+			"%w: MaxXMLDepth must be between 0 and %d",
+			ErrInvalidMXLOptions,
+			maximumXMLDepth,
 		)
 	}
 

@@ -185,6 +185,7 @@ func decodeRootElement(
 	if err := decoder.DecodeElement(document, &start); err != nil {
 		return fmt.Errorf("musicxml: decode document: %w", err)
 	}
+	discardUnknownXMLContent(document)
 	if err := readDocumentTail(decoder); err != nil {
 		return err
 	}

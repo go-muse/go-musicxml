@@ -3181,11 +3181,10 @@ func (value *ArticulationsContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported ArticulationsContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported ArticulationsContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -3461,11 +3460,10 @@ func (value *CreditContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported CreditContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported CreditContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -3582,11 +3580,10 @@ func (value *DirectionTypeContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported DirectionTypeContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported DirectionTypeContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -4042,11 +4039,10 @@ func (value *DynamicsContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported DynamicsContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported DynamicsContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -4397,11 +4393,10 @@ func (value *EncodingContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported EncodingContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported EncodingContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -4584,11 +4579,10 @@ func (value *HarmonyContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported HarmonyContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported HarmonyContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -4714,11 +4708,10 @@ func (value *InterchangeableContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported InterchangeableContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported InterchangeableContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -4814,11 +4807,10 @@ func (value *KeyContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported KeyContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported KeyContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -4923,11 +4915,10 @@ func (value *ListenContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported ListenContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported ListenContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -5017,11 +5008,10 @@ func (value *ListeningContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported ListeningContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported ListeningContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -5222,11 +5212,10 @@ func (value *LyricContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported LyricContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported LyricContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -5454,11 +5443,10 @@ func (value *MetronomeContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported MetronomeContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported MetronomeContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -5584,11 +5572,10 @@ func (value *NameDisplayContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported NameDisplayContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported NameDisplayContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -5849,11 +5836,10 @@ func (value *NotationsContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported NotationsContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported NotationsContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -6042,11 +6028,10 @@ func (value *NoteheadTextContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported NoteheadTextContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported NoteheadTextContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -6337,11 +6322,10 @@ func (value *OrnamentsContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported OrnamentsContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported OrnamentsContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -6548,11 +6532,10 @@ func (value *PartListContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported PartListContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported PartListContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -6663,11 +6646,10 @@ func (value *PlayContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported PlayContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported PlayContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -6766,11 +6748,10 @@ func (value *ScorePartContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported ScorePartContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported ScorePartContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -6881,11 +6862,10 @@ func (value *SoundContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported SoundContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported SoundContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -7419,11 +7399,10 @@ func (value *TechnicalContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported TechnicalContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported TechnicalContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -7765,11 +7744,10 @@ func (value *TimeContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported TimeContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported TimeContent element: %w", err)
+		}
+		return nil
 	}
 }
 

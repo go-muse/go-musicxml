@@ -42,6 +42,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Accept the optional UTF-8 byte-order mark.
 - Give the MXL fuzz target bounded expansion limits, small focused seeds, and
   a deterministic 10,000-execution CI budget.
+- Ignore unsupported child elements consistently during transport, including
+  inside generated ordered content, while dropping them on re-encoding.
+- Reject configured XML nesting limits above the safe package maximum.
+- Apply XSD whitespace normalization to XML whitespace characters only.
 
 ### Changed
 
@@ -50,5 +54,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Namespaced root elements are rejected because MusicXML 4.0 roots are
   unqualified.
 - GitHub Actions are pinned to immutable commit SHAs.
+- External XSD validation forbids network access, and release metadata checks
+  require canonical semantic-version tags and an exact install command.
 
 [Unreleased]: https://github.com/go-muse/go-musicxml/commits/main

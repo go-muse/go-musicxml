@@ -443,16 +443,16 @@ func (r *complexTypeRenderer) renderChoice(
 	target.WriteString("\tdefault:\n")
 	fmt.Fprintf(
 		target,
-		"\t\treturn fmt.Errorf(\n\t\t\t%s,\n",
+		"\t\tif err := decoder.Skip(); err != nil {\n"+
+			"\t\t\treturn fmt.Errorf(%s, err)\n"+
+			"\t\t}\n",
 		strconv.Quote(fmt.Sprintf(
-			"%s: unsupported %s element {%%s}%%s",
+			"%s: skip unsupported %s element: %%w",
 			r.packageName,
 			choice.goType,
 		)),
 	)
-	target.WriteString("\t\t\tstart.Name.Space,\n")
-	target.WriteString("\t\t\tstart.Name.Local,\n")
-	target.WriteString("\t\t)\n")
+	target.WriteString("\t\treturn nil\n")
 	target.WriteString("\t}\n")
 	target.WriteString("}\n\n")
 

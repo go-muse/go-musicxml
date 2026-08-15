@@ -1038,7 +1038,7 @@ func (c *validationContext) recordIdentity(
 		)
 
 	case "IDREFS":
-		for _, item := range strings.Fields(normalized) {
+		for _, item := range splitValidationList(normalized) {
 			c.references = append(
 				c.references,
 				validationIdentityReference{
@@ -1176,7 +1176,7 @@ func (c *validationContext) validateSimple(
 				message:    "list item type is missing",
 			}
 		}
-		for index, item := range strings.Fields(value) {
+		for index, item := range splitValidationList(value) {
 			if failure := c.validateSimpleMember(
 				schema.Item,
 				item,
@@ -1358,7 +1358,7 @@ func validateBuiltin(
 		}
 
 	case "NMTOKENS":
-		items := strings.Fields(normalized)
+		items := splitValidationList(normalized)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
 				return !validXMLNMTOKEN(item)
@@ -1367,7 +1367,7 @@ func validateBuiltin(
 		}
 
 	case "IDREFS", "ENTITIES":
-		items := strings.Fields(normalized)
+		items := splitValidationList(normalized)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
 				return !validXMLNCName(item)
@@ -1504,7 +1504,47 @@ func normalizeValidationWhitespace(name string, value string) string {
 			"\r", " ",
 		).Replace(value)
 	default:
-		return strings.Join(strings.Fields(value), " ")
+		return collapseValidationWhitespace(value)
+	}
+}
+
+func collapseValidationWhitespace(value string) string {
+	var result strings.Builder
+	result.Grow(len(value))
+	wroteValue := false
+	pendingSpace := false
+
+	for _, character := range value {
+		if isValidationWhitespace(character) {
+			pendingSpace = wroteValue
+			continue
+		}
+		if pendingSpace {
+			result.WriteByte(' ')
+			pendingSpace = false
+		}
+		result.WriteRune(character)
+		wroteValue = true
+	}
+
+	return result.String()
+}
+
+func splitValidationList(value string) []string {
+	normalized := collapseValidationWhitespace(value)
+	if normalized == "" {
+		return nil
+	}
+
+	return strings.Split(normalized, " ")
+}
+
+func isValidationWhitespace(value rune) bool {
+	switch value {
+	case ' ', '\t', '\n', '\r':
+		return true
+	default:
+		return false
 	}
 }
 
@@ -1590,7 +1630,7 @@ func validateLengthFacets(
 
 	length := uint64(utf8.RuneCountInString(value))
 	if list {
-		length = uint64(len(strings.Fields(value)))
+		length = uint64(len(splitValidationList(value)))
 	}
 
 	switch {

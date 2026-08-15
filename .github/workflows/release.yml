@@ -27,7 +27,7 @@ jobs:
       - name: Validate semantic-version tag
         shell: bash
         run: |
-          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             echo "Tag must have the form vMAJOR.MINOR.PATCH"
             exit 1
           fi
@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           install="go get github.com/go-muse/go-musicxml@$GITHUB_REF_NAME"
-          if ! grep -Fq "$install" README.md; then
+          if ! grep -Fxq -- "$install" README.md; then
             echo "README.md installation command must use $GITHUB_REF_NAME"
             exit 1
           fi

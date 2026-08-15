@@ -147,11 +147,10 @@ func (value *BaseContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"example: unsupported BaseContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("example: skip unsupported BaseContent element: %w", err)
+		}
+		return nil
 	}
 }
 

@@ -1,12 +1,14 @@
 package musicxml
 
 import (
+	"bytes"
 	"encoding/xml"
 	"io"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDecode(t *testing.T) {
@@ -109,16 +111,48 @@ func TestDecodeXMLDepthLimit(t *testing.T) {
 	assert.Nil(t, rejected)
 }
 
-func TestDecodeOptionsRejectNegativeDepth(t *testing.T) {
+func TestDecodeOptionsRejectInvalidDepth(t *testing.T) {
 	t.Parallel()
 
-	document, err := DecodeWithOptions(
-		strings.NewReader(`<opus/>`),
-		DecodeOptions{MaxXMLDepth: -1},
+	allowed, err := DecodeWithOptions(
+		strings.NewReader(nestedOpusXML(maximumXMLDepth)),
+		DecodeOptions{MaxXMLDepth: maximumXMLDepth},
 	)
+	assert.NoError(t, err)
+	assert.NotNil(t, allowed)
 
-	assert.ErrorIs(t, err, ErrInvalidDecodeOptions)
-	assert.Nil(t, document)
+	for _, depth := range []int{-1, maximumXMLDepth + 1} {
+		document, err := DecodeWithOptions(
+			strings.NewReader(`<opus/>`),
+			DecodeOptions{MaxXMLDepth: depth},
+		)
+
+		assert.ErrorIs(t, err, ErrInvalidDecodeOptions)
+		assert.Nil(t, document)
+	}
+}
+
+func TestDecodeIgnoresUnknownChildElements(t *testing.T) {
+	t.Parallel()
+
+	document, err := Decode(strings.NewReader(
+		`<score-partwise version="4.0">` +
+			`<part-list><score-part id="P1">` +
+			`<part-name>Piano</part-name>` +
+			`</score-part></part-list>` +
+			`<part id="P1"><measure number="1">` +
+			`<attributes><key><fifths>0</fifths>` +
+			`<vendor:extension xmlns:vendor="urn:vendor"/>` +
+			`<mode>major</mode></key></attributes>` +
+			`<note><rest/><duration>1</duration></note>` +
+			`</measure></part></score-partwise>`,
+	))
+	require.NoError(t, err)
+
+	var encoded bytes.Buffer
+	require.NoError(t, Encode(&encoded, document))
+	assert.NotContains(t, encoded.String(), "extension")
+	assert.NoError(t, Validate(document))
 }
 
 func nestedOpusXML(depth int) string {
