@@ -227,6 +227,20 @@ func TestMXLPackageResolveOpusErrors(t *testing.T) {
 			wantErr: ErrMXLNotOpus,
 		},
 		{
+			name:    "cyclic opus model",
+			value:   cyclicOpusPackage(),
+			wantErr: ErrDocumentCycle,
+		},
+		{
+			name: "excessively deep opus model",
+			value: &MXLPackage{
+				Document: nestedOpusDocument(
+					maximumDocumentDepth + 1,
+				),
+			},
+			wantErr: ErrDocumentTooDeep,
+		},
+		{
 			name: "malformed URI",
 			value: opusPackageWithLink(
 				&OpusScore{Href: "%zz"},
@@ -373,6 +387,13 @@ func TestMXLPackageResolveOpusErrors(t *testing.T) {
 			assert.Equal(t, test.wantTarget, linkErr.TargetPath)
 		})
 	}
+}
+
+func cyclicOpusPackage() *MXLPackage {
+	root := NewOpusDocument()
+	root.AddOpus(root)
+
+	return &MXLPackage{Document: root}
 }
 
 func opusPackageWithLink(
