@@ -59,13 +59,13 @@ type ScorePartwisePart struct {
 
 // ScorePartwisePartMeasure represents an anonymous nested XSD complex type.
 type ScorePartwisePartMeasure struct {
-	Content        []ScorePartwisePartMeasureContent `xml:",any"`
-	Number         string                            `xml:"number,attr"`
-	Text           *MeasureText                      `xml:"text,attr,omitempty"`
-	Implicit       *YesNo                            `xml:"implicit,attr,omitempty"`
-	NonControlling *YesNo                            `xml:"non-controlling,attr,omitempty"`
-	Width          *Tenths                           `xml:"width,attr,omitempty"`
-	ID             *string                           `xml:"id,attr,omitempty"`
+	Content        ScorePartwisePartMeasureContents `xml:",any"`
+	Number         string                           `xml:"number,attr"`
+	Text           *MeasureText                     `xml:"text,attr,omitempty"`
+	Implicit       *YesNo                           `xml:"implicit,attr,omitempty"`
+	NonControlling *YesNo                           `xml:"non-controlling,attr,omitempty"`
+	Width          *Tenths                          `xml:"width,attr,omitempty"`
+	ID             *string                          `xml:"id,attr,omitempty"`
 }
 
 // ScoreTimewiseMeasure represents an anonymous nested XSD complex type.
@@ -81,8 +81,27 @@ type ScoreTimewiseMeasure struct {
 
 // ScoreTimewiseMeasurePart represents an anonymous nested XSD complex type.
 type ScoreTimewiseMeasurePart struct {
-	Content []ScoreTimewiseMeasurePartContent `xml:",any"`
-	ID      string                            `xml:"id,attr"`
+	Content ScoreTimewiseMeasurePartContents `xml:",any"`
+	ID      string                           `xml:"id,attr"`
+}
+
+// ScorePartwisePartMeasureContents stores the recognized ordered child elements of ScorePartwisePartMeasure.
+type ScorePartwisePartMeasureContents []ScorePartwisePartMeasureContent
+
+// UnmarshalXML decodes and appends one recognized ScorePartwisePartMeasure child.
+func (values *ScorePartwisePartMeasureContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded ScorePartwisePartMeasureContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (ScorePartwisePartMeasureContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
 }
 
 // ScorePartwisePartMeasureContent is one ordered child element of ScorePartwisePartMeasure.
@@ -454,6 +473,25 @@ func (value ScorePartwisePartMeasureContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// ScoreTimewiseMeasurePartContents stores the recognized ordered child elements of ScoreTimewiseMeasurePart.
+type ScoreTimewiseMeasurePartContents []ScoreTimewiseMeasurePartContent
+
+// UnmarshalXML decodes and appends one recognized ScoreTimewiseMeasurePart child.
+func (values *ScoreTimewiseMeasurePartContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded ScoreTimewiseMeasurePartContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (ScoreTimewiseMeasurePartContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 

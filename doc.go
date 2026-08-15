@@ -4,9 +4,10 @@
 // root documents. DecodeScorePartwise, DecodeScoreTimewise, and
 // DecodeOpusDocument provide concrete result types when the expected root is
 // known. DecodeMXL and EncodeMXL provide the equivalent transport for
-// compressed MusicXML archives. DecodeMXLPackage preserves related resources,
-// while ResolveOpus and SyncResolvedOpus support linked documents inside an
-// archive.
+// compressed MusicXML archives, with typed DecodeMXLScorePartwise,
+// DecodeMXLScoreTimewise, and DecodeMXLOpusDocument variants.
+// DecodeMXLPackage preserves related resources, while ResolveOpus and
+// SyncResolvedOpus support linked documents inside an archive.
 //
 // Validation is explicit. Decode and Encode preserve transport semantics and
 // do not call Validate automatically. Constructors and ordered-content Add

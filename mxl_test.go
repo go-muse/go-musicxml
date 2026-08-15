@@ -16,7 +16,7 @@ import (
 func TestEncodeMXL(t *testing.T) {
 	t.Parallel()
 
-	version := Version
+	version := MusicXMLVersion
 	title := "Fidelio"
 	tests := []struct {
 		name     string
@@ -166,7 +166,7 @@ func TestDecodeMXL(t *testing.T) {
 			want: &OpusDocument{
 				XMLName: xml.Name{Local: "opus"},
 				Title:   stringPointer("Fidelio"),
-				Version: stringPointer(Version),
+				Version: stringPointer(MusicXMLVersion),
 			},
 		},
 		{
@@ -188,7 +188,7 @@ func TestDecodeMXL(t *testing.T) {
 			},
 			want: &ScorePartwise{
 				XMLName: xml.Name{Local: "score-partwise"},
-				Version: stringPointer(Version),
+				Version: stringPointer(MusicXMLVersion),
 			},
 		},
 		{
@@ -201,7 +201,7 @@ func TestDecodeMXL(t *testing.T) {
 			},
 			want: &ScoreTimewise{
 				XMLName: xml.Name{Local: "score-timewise"},
-				Version: stringPointer(Version),
+				Version: stringPointer(MusicXMLVersion),
 			},
 		},
 		{
@@ -398,6 +398,54 @@ func TestDecodeMXL(t *testing.T) {
 			assert.Equal(t, test.want, actual)
 		})
 	}
+}
+
+func TestTypedMXLDecoders(t *testing.T) {
+	t.Parallel()
+
+	partwiseArchive := encodeMXLTestDocument(t, NewScorePartwise())
+	partwise, err := DecodeMXLScorePartwise(
+		bytes.NewReader(partwiseArchive),
+	)
+	require.NoError(t, err)
+	assert.IsType(t, &ScorePartwise{}, partwise)
+
+	timewiseArchive := encodeMXLTestDocument(t, NewScoreTimewise())
+	timewise, err := DecodeMXLScoreTimewiseWithOptions(
+		bytes.NewReader(timewiseArchive),
+		DefaultMXLOptions(),
+	)
+	require.NoError(t, err)
+	assert.IsType(t, &ScoreTimewise{}, timewise)
+
+	opusArchive := encodeMXLTestDocument(t, NewOpusDocument())
+	opus, err := DecodeMXLOpusDocument(bytes.NewReader(opusArchive))
+	require.NoError(t, err)
+	assert.IsType(t, &OpusDocument{}, opus)
+
+	partwise, err = DecodeMXLScorePartwise(
+		bytes.NewReader(opusArchive),
+	)
+	assert.ErrorIs(t, err, ErrUnsupportedRoot)
+	assert.Nil(t, partwise)
+	var rootErr *UnsupportedRootError
+	require.ErrorAs(t, err, &rootErr)
+	assert.Equal(t, xml.Name{Local: "opus"}, rootErr.Name)
+
+	opus, err = DecodeMXLOpusDocumentWithOptions(
+		bytes.NewReader(opusArchive),
+		MXLOptions{MaxXMLDepth: maximumXMLDepth + 1},
+	)
+	assert.ErrorIs(t, err, ErrInvalidMXLOptions)
+	assert.Nil(t, opus)
+}
+
+func encodeMXLTestDocument(t *testing.T, document Document) []byte {
+	t.Helper()
+
+	var encoded bytes.Buffer
+	require.NoError(t, EncodeMXL(&encoded, document))
+	return encoded.Bytes()
 }
 
 func TestDecodeMXLLimits(t *testing.T) {

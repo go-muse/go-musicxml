@@ -7,6 +7,7 @@ Contributions are welcome.
 - Go 1.26 or later
 - Git
 - Make for the convenience targets, or the equivalent Go commands
+- Optional: `xmllint` for running the external XSD conformance test locally
 
 ## Local checks
 
@@ -24,7 +25,10 @@ make release-check
 
 The latter requires a clean, committed worktree. It also checks `go mod tidy`
 and reproducible generation, uses the race detector, and runs short fuzzing
-passes.
+passes. The external XSD test runs locally when `xmllint` is available; Linux
+CI installs it and requires that test to execute. The underlying
+`scripts/release-check.sh` is also used by the release workflow on Linux,
+macOS, and Windows.
 
 ## Generated code
 

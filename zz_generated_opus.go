@@ -88,10 +88,10 @@ func (value *OpusScore) EffectiveActuate() string {
 
 // OpusDocument represents the "opus" root element.
 type OpusDocument struct {
-	XMLName xml.Name              `xml:"opus"`
-	Title   *string               `xml:"title,omitempty"`
-	Content []OpusDocumentContent `xml:",any"`
-	Version *string               `xml:"version,attr,omitempty"`
+	XMLName xml.Name             `xml:"opus"`
+	Title   *string              `xml:"title,omitempty"`
+	Content OpusDocumentContents `xml:",any"`
+	Version *string              `xml:"version,attr,omitempty"`
 }
 
 // EffectiveVersion returns Version when explicitly present and the XSD default value "1.0" otherwise.
@@ -100,6 +100,25 @@ func (value *OpusDocument) EffectiveVersion() string {
 		return *value.Version
 	}
 	return "1.0"
+}
+
+// OpusDocumentContents stores the recognized ordered child elements of OpusDocument.
+type OpusDocumentContents []OpusDocumentContent
+
+// UnmarshalXML decodes and appends one recognized OpusDocument child.
+func (values *OpusDocumentContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded OpusDocumentContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (OpusDocumentContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
 }
 
 // OpusDocumentContent is one ordered child element of OpusDocument.

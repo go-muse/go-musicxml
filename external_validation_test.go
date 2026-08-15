@@ -15,14 +15,16 @@ import (
 func TestEncodedCorpusConformsToMusicXMLSchema(t *testing.T) {
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
-		t.Skip("xmllint is not installed; CI runs this test with libxml2")
+		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {
+			t.Fatal("xmllint is required but was not found in PATH")
+		}
+		t.Skip("xmllint is not installed; Linux CI runs the external XSD conformance test")
 	}
 
 	entries, err := os.ReadDir(musicXMLTestSuiteDirectory)
 	require.NoError(t, err)
 	schemaDirectory, err := filepath.Abs(filepath.Join("schema", "musicxml-4.0"))
 	require.NoError(t, err)
-
 	// These upstream fixtures are intentionally invalid before a round trip.
 	invalidFixtures := map[string]struct{}{
 		"41g-PartNoId.xml":         {},

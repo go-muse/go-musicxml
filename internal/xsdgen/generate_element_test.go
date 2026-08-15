@@ -65,8 +65,9 @@ func TestGenerateElements(t *testing.T) {
 	assert.Contains(
 		t,
 		source,
-		"Content []ScorePartContent `xml:\",any\"`",
+		"Content ScorePartContents `xml:\",any\"`",
 	)
+	assert.Contains(t, source, "type ScorePartContents []ScorePartContent")
 	assert.Contains(t, source, "type ScorePartContent struct {")
 	assert.Contains(
 		t,

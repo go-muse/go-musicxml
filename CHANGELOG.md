@@ -13,6 +13,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Partwise, timewise, and opus XML decoding and encoding.
 - Typed `DecodeScorePartwise`, `DecodeScoreTimewise`, and `DecodeOpusDocument`
   helpers for callers that know the expected MusicXML root type.
+- Typed MXL decoding helpers and safe `AsScorePartwise`, `AsScoreTimewise`, and
+  `AsOpusDocument` accessors for polymorphic documents.
 - Configurable XML-depth and MXL byte limits through `DecodeOptions` and
   `MXLOptions`.
 - UTF-8, UTF-16BE/LE, and ISO-8859-1 XML decoding.
@@ -26,7 +28,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Stable end-to-end round trips that compare decoded models and require the
   first and second encodings to be byte-identical.
 - GitHub CI across Linux, macOS, and Windows, with race and fuzz checks.
-- Independent libxml2 validation of re-encoded corpus documents in CI.
+- External libxml2 XSD validation of re-encoded corpus documents in Linux CI.
+- Explicit concurrent transport and validation regression coverage.
 - A release workflow that validates tags against `main` and publishes release
   notes from this changelog.
 
@@ -46,15 +49,23 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   inside generated ordered content, while dropping them on re-encoding.
 - Reject configured XML nesting limits above the safe package maximum.
 - Apply XSD whitespace normalization to XML whitespace characters only.
+- Keep generated ordered `Content` slices valid when callers use
+  `encoding/xml` directly and unknown elements are encountered.
+- Reject cyclic or excessively deep programmatically constructed opus models
+  before encoding or validation can exhaust the goroutine stack.
 
 ### Changed
 
 - Added the unambiguous `MusicXMLVersion` constant.
-- Retained `Version` as a deprecated compatibility alias.
+- Removed the unreleased deprecated `Version` alias.
 - Namespaced root elements are rejected because MusicXML 4.0 roots are
   unqualified.
 - GitHub Actions are pinned to immutable commit SHAs.
 - External XSD validation forbids network access, and release metadata checks
   require canonical semantic-version tags and an exact install command.
+- Module, generation, formatting, test, and release checks now cover Linux,
+  macOS, and Windows; external XSD conformance is enforced in Linux CI.
+- The MXL fuzz target includes the realistic compressed corpus fixture and
+  accepts inputs up to 64 KiB.
 
 [Unreleased]: https://github.com/go-muse/go-musicxml/commits/main

@@ -146,8 +146,8 @@ type Arrow struct {
 
 // Articulations represents the "articulations" XSD complex type.
 type Articulations struct {
-	Content []ArticulationsContent `xml:",any"`
-	ID      *string                `xml:"id,attr,omitempty"`
+	Content ArticulationsContents `xml:",any"`
+	ID      *string               `xml:"id,attr,omitempty"`
 }
 
 // Assess represents the "assess" XSD complex type.
@@ -419,9 +419,9 @@ type Coda struct {
 
 // Credit represents the "credit" XSD complex type.
 type Credit struct {
-	Content []CreditContent `xml:",any"`
-	Page    *uint64         `xml:"page,attr,omitempty"`
-	ID      *string         `xml:"id,attr,omitempty"`
+	Content CreditContents `xml:",any"`
+	Page    *uint64        `xml:"page,attr,omitempty"`
+	ID      *string        `xml:"id,attr,omitempty"`
 }
 
 // Dashes represents the "dashes" XSD complex type.
@@ -527,7 +527,7 @@ type DirectionType struct {
 	Rehearsal             []FormattedTextID       `xml:"rehearsal"`
 	Segno                 []Segno                 `xml:"segno"`
 	Coda                  []Coda                  `xml:"coda"`
-	Content               []DirectionTypeContent  `xml:",any"`
+	Content               DirectionTypeContents   `xml:",any"`
 	Wedge                 *Wedge                  `xml:"wedge,omitempty"`
 	Dynamics              []Dynamics              `xml:"dynamics"`
 	Dashes                *Dashes                 `xml:"dashes,omitempty"`
@@ -563,24 +563,24 @@ type Double struct {
 
 // Dynamics represents the "dynamics" XSD complex type.
 type Dynamics struct {
-	Content     []DynamicsContent `xml:",any"`
-	DefaultX    *Tenths           `xml:"default-x,attr,omitempty"`
-	DefaultY    *Tenths           `xml:"default-y,attr,omitempty"`
-	RelativeX   *Tenths           `xml:"relative-x,attr,omitempty"`
-	RelativeY   *Tenths           `xml:"relative-y,attr,omitempty"`
-	FontFamily  *FontFamily       `xml:"font-family,attr,omitempty"`
-	FontStyle   *FontStyle        `xml:"font-style,attr,omitempty"`
-	FontSize    *FontSize         `xml:"font-size,attr,omitempty"`
-	FontWeight  *FontWeight       `xml:"font-weight,attr,omitempty"`
-	Color       *Color            `xml:"color,attr,omitempty"`
-	Halign      *LeftCenterRight  `xml:"halign,attr,omitempty"`
-	Valign      *Valign           `xml:"valign,attr,omitempty"`
-	Placement   *AboveBelow       `xml:"placement,attr,omitempty"`
-	Underline   *NumberOfLines    `xml:"underline,attr,omitempty"`
-	Overline    *NumberOfLines    `xml:"overline,attr,omitempty"`
-	LineThrough *NumberOfLines    `xml:"line-through,attr,omitempty"`
-	Enclosure   *EnclosureShape   `xml:"enclosure,attr,omitempty"`
-	ID          *string           `xml:"id,attr,omitempty"`
+	Content     DynamicsContents `xml:",any"`
+	DefaultX    *Tenths          `xml:"default-x,attr,omitempty"`
+	DefaultY    *Tenths          `xml:"default-y,attr,omitempty"`
+	RelativeX   *Tenths          `xml:"relative-x,attr,omitempty"`
+	RelativeY   *Tenths          `xml:"relative-y,attr,omitempty"`
+	FontFamily  *FontFamily      `xml:"font-family,attr,omitempty"`
+	FontStyle   *FontStyle       `xml:"font-style,attr,omitempty"`
+	FontSize    *FontSize        `xml:"font-size,attr,omitempty"`
+	FontWeight  *FontWeight      `xml:"font-weight,attr,omitempty"`
+	Color       *Color           `xml:"color,attr,omitempty"`
+	Halign      *LeftCenterRight `xml:"halign,attr,omitempty"`
+	Valign      *Valign          `xml:"valign,attr,omitempty"`
+	Placement   *AboveBelow      `xml:"placement,attr,omitempty"`
+	Underline   *NumberOfLines   `xml:"underline,attr,omitempty"`
+	Overline    *NumberOfLines   `xml:"overline,attr,omitempty"`
+	LineThrough *NumberOfLines   `xml:"line-through,attr,omitempty"`
+	Enclosure   *EnclosureShape  `xml:"enclosure,attr,omitempty"`
+	ID          *string          `xml:"id,attr,omitempty"`
 }
 
 // Effect represents the "effect" XSD complex type.
@@ -743,7 +743,7 @@ type EmptyTrillSound struct {
 
 // Encoding represents the "encoding" XSD complex type.
 type Encoding struct {
-	Content []EncodingContent `xml:",any"`
+	Content EncodingContents `xml:",any"`
 }
 
 // Ending represents the "ending" XSD complex type.
@@ -1198,7 +1198,7 @@ type Harmonic struct {
 
 // Harmony represents the "harmony" XSD complex type.
 type Harmony struct {
-	Content     []HarmonyContent    `xml:",any"`
+	Content     HarmonyContents     `xml:",any"`
 	Frame       *Frame              `xml:"frame,omitempty"`
 	Offset      *Offset             `xml:"offset,omitempty"`
 	Footnote    *FormattedText      `xml:"footnote,omitempty"`
@@ -1352,10 +1352,10 @@ type InstrumentLink struct {
 
 // Interchangeable represents the "interchangeable" XSD complex type.
 type Interchangeable struct {
-	TimeRelation *TimeRelation            `xml:"time-relation,omitempty"`
-	Content      []InterchangeableContent `xml:",any"`
-	Symbol       *TimeSymbol              `xml:"symbol,attr,omitempty"`
-	Separator    *TimeSeparator           `xml:"separator,attr,omitempty"`
+	TimeRelation *TimeRelation           `xml:"time-relation,omitempty"`
+	Content      InterchangeableContents `xml:",any"`
+	Symbol       *TimeSymbol             `xml:"symbol,attr,omitempty"`
+	Separator    *TimeSeparator          `xml:"separator,attr,omitempty"`
 }
 
 // Inversion represents the "inversion" XSD complex type.
@@ -1378,7 +1378,7 @@ type Key struct {
 	Cancel      *Cancel      `xml:"cancel,omitempty"`
 	Fifths      *Fifths      `xml:"fifths,omitempty"`
 	Mode        *Mode        `xml:"mode,omitempty"`
-	Content     []KeyContent `xml:",any"`
+	Content     KeyContents  `xml:",any"`
 	KeyOctave   []KeyOctave  `xml:"key-octave"`
 	Number      *StaffNumber `xml:"number,attr,omitempty"`
 	DefaultX    *Tenths      `xml:"default-x,attr,omitempty"`
@@ -1501,18 +1501,18 @@ func (value *Link) EffectiveActuate() string {
 
 // Listen represents the "listen" XSD complex type.
 type Listen struct {
-	Content []ListenContent `xml:",any"`
+	Content ListenContents `xml:",any"`
 }
 
 // Listening represents the "listening" XSD complex type.
 type Listening struct {
-	Content []ListeningContent `xml:",any"`
-	Offset  *Offset            `xml:"offset,omitempty"`
+	Content ListeningContents `xml:",any"`
+	Offset  *Offset           `xml:"offset,omitempty"`
 }
 
 // Lyric represents the "lyric" XSD complex type.
 type Lyric struct {
-	Content     []LyricContent   `xml:",any"`
+	Content     LyricContents    `xml:",any"`
 	Number      *string          `xml:"number,attr,omitempty"`
 	Name        *string          `xml:"name,attr,omitempty"`
 	TimeOnly    *TimeOnly        `xml:"time-only,attr,omitempty"`
@@ -1605,22 +1605,22 @@ type Metal struct {
 
 // Metronome represents the "metronome" XSD complex type.
 type Metronome struct {
-	Content     []MetronomeContent `xml:",any"`
-	Parentheses *YesNo             `xml:"parentheses,attr,omitempty"`
-	DefaultX    *Tenths            `xml:"default-x,attr,omitempty"`
-	DefaultY    *Tenths            `xml:"default-y,attr,omitempty"`
-	RelativeX   *Tenths            `xml:"relative-x,attr,omitempty"`
-	RelativeY   *Tenths            `xml:"relative-y,attr,omitempty"`
-	FontFamily  *FontFamily        `xml:"font-family,attr,omitempty"`
-	FontStyle   *FontStyle         `xml:"font-style,attr,omitempty"`
-	FontSize    *FontSize          `xml:"font-size,attr,omitempty"`
-	FontWeight  *FontWeight        `xml:"font-weight,attr,omitempty"`
-	Color       *Color             `xml:"color,attr,omitempty"`
-	Halign      *LeftCenterRight   `xml:"halign,attr,omitempty"`
-	Valign      *Valign            `xml:"valign,attr,omitempty"`
-	PrintObject *YesNo             `xml:"print-object,attr,omitempty"`
-	Justify     *LeftCenterRight   `xml:"justify,attr,omitempty"`
-	ID          *string            `xml:"id,attr,omitempty"`
+	Content     MetronomeContents `xml:",any"`
+	Parentheses *YesNo            `xml:"parentheses,attr,omitempty"`
+	DefaultX    *Tenths           `xml:"default-x,attr,omitempty"`
+	DefaultY    *Tenths           `xml:"default-y,attr,omitempty"`
+	RelativeX   *Tenths           `xml:"relative-x,attr,omitempty"`
+	RelativeY   *Tenths           `xml:"relative-y,attr,omitempty"`
+	FontFamily  *FontFamily       `xml:"font-family,attr,omitempty"`
+	FontStyle   *FontStyle        `xml:"font-style,attr,omitempty"`
+	FontSize    *FontSize         `xml:"font-size,attr,omitempty"`
+	FontWeight  *FontWeight       `xml:"font-weight,attr,omitempty"`
+	Color       *Color            `xml:"color,attr,omitempty"`
+	Halign      *LeftCenterRight  `xml:"halign,attr,omitempty"`
+	Valign      *Valign           `xml:"valign,attr,omitempty"`
+	PrintObject *YesNo            `xml:"print-object,attr,omitempty"`
+	Justify     *LeftCenterRight  `xml:"justify,attr,omitempty"`
+	ID          *string           `xml:"id,attr,omitempty"`
 }
 
 // MetronomeBeam represents the "metronome-beam" XSD complex type.
@@ -1706,8 +1706,8 @@ type MultipleRest struct {
 
 // NameDisplay represents the "name-display" XSD complex type.
 type NameDisplay struct {
-	Content     []NameDisplayContent `xml:",any"`
-	PrintObject *YesNo               `xml:"print-object,attr,omitempty"`
+	Content     NameDisplayContents `xml:",any"`
+	PrintObject *YesNo              `xml:"print-object,attr,omitempty"`
 }
 
 // NonArpeggiate represents the "non-arpeggiate" XSD complex type.
@@ -1725,11 +1725,11 @@ type NonArpeggiate struct {
 
 // Notations represents the "notations" XSD complex type.
 type Notations struct {
-	Footnote    *FormattedText     `xml:"footnote,omitempty"`
-	Level       *Level             `xml:"level,omitempty"`
-	Content     []NotationsContent `xml:",any"`
-	PrintObject *YesNo             `xml:"print-object,attr,omitempty"`
-	ID          *string            `xml:"id,attr,omitempty"`
+	Footnote    *FormattedText    `xml:"footnote,omitempty"`
+	Level       *Level            `xml:"level,omitempty"`
+	Content     NotationsContents `xml:",any"`
+	PrintObject *YesNo            `xml:"print-object,attr,omitempty"`
+	ID          *string           `xml:"id,attr,omitempty"`
 }
 
 // Note represents the "note" XSD complex type.
@@ -1809,7 +1809,7 @@ type Notehead struct {
 
 // NoteheadText represents the "notehead-text" XSD complex type.
 type NoteheadText struct {
-	Content []NoteheadTextContent `xml:",any"`
+	Content NoteheadTextContents `xml:",any"`
 }
 
 // Numeral represents the "numeral" XSD complex type.
@@ -1915,8 +1915,8 @@ func (value *Opus) EffectiveActuate() string {
 
 // Ornaments represents the "ornaments" XSD complex type.
 type Ornaments struct {
-	Content []OrnamentsContent `xml:",any"`
-	ID      *string            `xml:"id,attr,omitempty"`
+	Content OrnamentsContents `xml:",any"`
+	ID      *string           `xml:"id,attr,omitempty"`
 }
 
 // OtherAppearance represents the "other-appearance" XSD complex type.
@@ -2097,7 +2097,7 @@ func (value *PartLink) EffectiveActuate() string {
 
 // PartList represents the "part-list" XSD complex type.
 type PartList struct {
-	Content []PartListContent `xml:",any"`
+	Content PartListContents `xml:",any"`
 }
 
 // PartName represents the "part-name" XSD complex type.
@@ -2230,8 +2230,8 @@ type PlacementText struct {
 
 // Play represents the "play" XSD complex type.
 type Play struct {
-	Content []PlayContent `xml:",any"`
-	ID      *string       `xml:"id,attr,omitempty"`
+	Content PlayContents `xml:",any"`
+	ID      *string      `xml:"id,attr,omitempty"`
 }
 
 // Player represents the "player" XSD complex type.
@@ -2343,17 +2343,17 @@ type ScoreInstrument struct {
 
 // ScorePart represents the "score-part" XSD complex type.
 type ScorePart struct {
-	Identification          *Identification    `xml:"identification,omitempty"`
-	PartLink                []PartLink         `xml:"part-link"`
-	PartName                PartName           `xml:"part-name"`
-	PartNameDisplay         *NameDisplay       `xml:"part-name-display,omitempty"`
-	PartAbbreviation        *PartName          `xml:"part-abbreviation,omitempty"`
-	PartAbbreviationDisplay *NameDisplay       `xml:"part-abbreviation-display,omitempty"`
-	Group                   []string           `xml:"group"`
-	ScoreInstrument         []ScoreInstrument  `xml:"score-instrument"`
-	Player                  []Player           `xml:"player"`
-	Content                 []ScorePartContent `xml:",any"`
-	ID                      string             `xml:"id,attr"`
+	Identification          *Identification   `xml:"identification,omitempty"`
+	PartLink                []PartLink        `xml:"part-link"`
+	PartName                PartName          `xml:"part-name"`
+	PartNameDisplay         *NameDisplay      `xml:"part-name-display,omitempty"`
+	PartAbbreviation        *PartName         `xml:"part-abbreviation,omitempty"`
+	PartAbbreviationDisplay *NameDisplay      `xml:"part-abbreviation-display,omitempty"`
+	Group                   []string          `xml:"group"`
+	ScoreInstrument         []ScoreInstrument `xml:"score-instrument"`
+	Player                  []Player          `xml:"player"`
+	Content                 ScorePartContents `xml:",any"`
+	ID                      string            `xml:"id,attr"`
 }
 
 // Segno represents the "segno" XSD complex type.
@@ -2448,7 +2448,7 @@ func (value *Slur) EffectiveNumber() NumberLevel {
 
 // Sound represents the "sound" XSD complex type.
 type Sound struct {
-	Content        []SoundContent      `xml:",any"`
+	Content        SoundContents       `xml:",any"`
 	Swing          *Swing              `xml:"swing,omitempty"`
 	Offset         *Offset             `xml:"offset,omitempty"`
 	Tempo          *NonNegativeDecimal `xml:"tempo,attr,omitempty"`
@@ -2664,8 +2664,8 @@ type Tap struct {
 
 // Technical represents the "technical" XSD complex type.
 type Technical struct {
-	Content []TechnicalContent `xml:",any"`
-	ID      *string            `xml:"id,attr,omitempty"`
+	Content TechnicalContents `xml:",any"`
+	ID      *string           `xml:"id,attr,omitempty"`
 }
 
 // TextElementData represents the "text-element-data" XSD complex type.
@@ -2716,7 +2716,7 @@ type Tied struct {
 
 // Time represents the "time" XSD complex type.
 type Time struct {
-	Content         []TimeContent    `xml:",any"`
+	Content         TimeContents     `xml:",any"`
 	Interchangeable *Interchangeable `xml:"interchangeable,omitempty"`
 	SenzaMisura     *string          `xml:"senza-misura,omitempty"`
 	Number          *StaffNumber     `xml:"number,attr,omitempty"`
@@ -2911,6 +2911,25 @@ type Work struct {
 	WorkNumber *string `xml:"work-number,omitempty"`
 	WorkTitle  *string `xml:"work-title,omitempty"`
 	Opus       *Opus   `xml:"opus,omitempty"`
+}
+
+// ArticulationsContents stores the recognized ordered child elements of Articulations.
+type ArticulationsContents []ArticulationsContent
+
+// UnmarshalXML decodes and appends one recognized Articulations child.
+func (values *ArticulationsContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded ArticulationsContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (ArticulationsContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
 }
 
 // ArticulationsContent is one ordered child element of Articulations.
@@ -3357,6 +3376,25 @@ func (value ArticulationsContent) MarshalXML(
 	return nil
 }
 
+// CreditContents stores the recognized ordered child elements of Credit.
+type CreditContents []CreditContent
+
+// UnmarshalXML decodes and appends one recognized Credit child.
+func (values *CreditContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded CreditContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (CreditContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // CreditContent is one ordered child element of Credit.
 type CreditContent struct {
 	CreditType   *string
@@ -3537,6 +3575,25 @@ func (value CreditContent) MarshalXML(
 	return nil
 }
 
+// DirectionTypeContents stores the recognized ordered child elements of DirectionType.
+type DirectionTypeContents []DirectionTypeContent
+
+// UnmarshalXML decodes and appends one recognized DirectionType child.
+func (values *DirectionTypeContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded DirectionTypeContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (DirectionTypeContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // DirectionTypeContent is one ordered child element of DirectionType.
 type DirectionTypeContent struct {
 	Words  *FormattedTextID
@@ -3618,6 +3675,25 @@ func (value DirectionTypeContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// DynamicsContents stores the recognized ordered child elements of Dynamics.
+type DynamicsContents []DynamicsContent
+
+// UnmarshalXML decodes and appends one recognized Dynamics child.
+func (values *DynamicsContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded DynamicsContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (DynamicsContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -4305,6 +4381,25 @@ func (value DynamicsContent) MarshalXML(
 	return nil
 }
 
+// EncodingContents stores the recognized ordered child elements of Encoding.
+type EncodingContents []EncodingContent
+
+// UnmarshalXML decodes and appends one recognized Encoding child.
+func (values *EncodingContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded EncodingContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (EncodingContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // EncodingContent is one ordered child element of Encoding.
 type EncodingContent struct {
 	EncodingDate        *YYYYMMDD
@@ -4458,6 +4553,25 @@ func (value EncodingContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// HarmonyContents stores the recognized ordered child elements of Harmony.
+type HarmonyContents []HarmonyContent
+
+// UnmarshalXML decodes and appends one recognized Harmony child.
+func (values *HarmonyContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded HarmonyContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (HarmonyContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -4665,6 +4779,25 @@ func (value HarmonyContent) MarshalXML(
 	return nil
 }
 
+// InterchangeableContents stores the recognized ordered child elements of Interchangeable.
+type InterchangeableContents []InterchangeableContent
+
+// UnmarshalXML decodes and appends one recognized Interchangeable child.
+func (values *InterchangeableContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded InterchangeableContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (InterchangeableContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // InterchangeableContent is one ordered child element of Interchangeable.
 type InterchangeableContent struct {
 	Beats    *string
@@ -4746,6 +4879,25 @@ func (value InterchangeableContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// KeyContents stores the recognized ordered child elements of Key.
+type KeyContents []KeyContent
+
+// UnmarshalXML decodes and appends one recognized Key child.
+func (values *KeyContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded KeyContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (KeyContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -4857,6 +5009,25 @@ func (value KeyContent) MarshalXML(
 	return nil
 }
 
+// ListenContents stores the recognized ordered child elements of Listen.
+type ListenContents []ListenContent
+
+// UnmarshalXML decodes and appends one recognized Listen child.
+func (values *ListenContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded ListenContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (ListenContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // ListenContent is one ordered child element of Listen.
 type ListenContent struct {
 	Assess      *Assess
@@ -4965,6 +5136,25 @@ func (value ListenContent) MarshalXML(
 	return nil
 }
 
+// ListeningContents stores the recognized ordered child elements of Listening.
+type ListeningContents []ListeningContent
+
+// UnmarshalXML decodes and appends one recognized Listening child.
+func (values *ListeningContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded ListeningContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (ListeningContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // ListeningContent is one ordered child element of Listening.
 type ListeningContent struct {
 	Sync           *Sync
@@ -5046,6 +5236,25 @@ func (value ListeningContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// LyricContents stores the recognized ordered child elements of Lyric.
+type LyricContents []LyricContent
+
+// UnmarshalXML decodes and appends one recognized Lyric child.
+func (values *LyricContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded LyricContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (LyricContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -5325,6 +5534,25 @@ func (value LyricContent) MarshalXML(
 	return nil
 }
 
+// MetronomeContents stores the recognized ordered child elements of Metronome.
+type MetronomeContents []MetronomeContent
+
+// UnmarshalXML decodes and appends one recognized Metronome child.
+func (values *MetronomeContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded MetronomeContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (MetronomeContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // MetronomeContent is one ordered child element of Metronome.
 type MetronomeContent struct {
 	BeatUnit          *NoteTypeValue
@@ -5529,6 +5757,25 @@ func (value MetronomeContent) MarshalXML(
 	return nil
 }
 
+// NameDisplayContents stores the recognized ordered child elements of NameDisplay.
+type NameDisplayContents []NameDisplayContent
+
+// UnmarshalXML decodes and appends one recognized NameDisplay child.
+func (values *NameDisplayContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded NameDisplayContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (NameDisplayContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // NameDisplayContent is one ordered child element of NameDisplay.
 type NameDisplayContent struct {
 	DisplayText    *FormattedText
@@ -5610,6 +5857,25 @@ func (value NameDisplayContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// NotationsContents stores the recognized ordered child elements of Notations.
+type NotationsContents []NotationsContent
+
+// UnmarshalXML decodes and appends one recognized Notations child.
+func (values *NotationsContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded NotationsContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (NotationsContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -5985,6 +6251,25 @@ func (value NotationsContent) MarshalXML(
 	return nil
 }
 
+// NoteheadTextContents stores the recognized ordered child elements of NoteheadText.
+type NoteheadTextContents []NoteheadTextContent
+
+// UnmarshalXML decodes and appends one recognized NoteheadText child.
+func (values *NoteheadTextContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded NoteheadTextContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (NoteheadTextContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // NoteheadTextContent is one ordered child element of NoteheadText.
 type NoteheadTextContent struct {
 	DisplayText    *FormattedText
@@ -6066,6 +6351,25 @@ func (value NoteheadTextContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// OrnamentsContents stores the recognized ordered child elements of Ornaments.
+type OrnamentsContents []OrnamentsContent
+
+// UnmarshalXML decodes and appends one recognized Ornaments child.
+func (values *OrnamentsContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded OrnamentsContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (OrnamentsContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -6489,6 +6793,25 @@ func (value OrnamentsContent) MarshalXML(
 	return nil
 }
 
+// PartListContents stores the recognized ordered child elements of PartList.
+type PartListContents []PartListContent
+
+// UnmarshalXML decodes and appends one recognized PartList child.
+func (values *PartListContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded PartListContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (PartListContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // PartListContent is one ordered child element of PartList.
 type PartListContent struct {
 	PartGroup *PartGroup
@@ -6570,6 +6893,25 @@ func (value PartListContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// PlayContents stores the recognized ordered child elements of Play.
+type PlayContents []PlayContent
+
+// UnmarshalXML decodes and appends one recognized Play child.
+func (values *PlayContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded PlayContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (PlayContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -6705,6 +7047,25 @@ func (value PlayContent) MarshalXML(
 	return nil
 }
 
+// ScorePartContents stores the recognized ordered child elements of ScorePart.
+type ScorePartContents []ScorePartContent
+
+// UnmarshalXML decodes and appends one recognized ScorePart child.
+func (values *ScorePartContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded ScorePartContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (ScorePartContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
+}
+
 // ScorePartContent is one ordered child element of ScorePart.
 type ScorePartContent struct {
 	MIDIDevice     *MIDIDevice
@@ -6786,6 +7147,25 @@ func (value ScorePartContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// SoundContents stores the recognized ordered child elements of Sound.
+type SoundContents []SoundContent
+
+// UnmarshalXML decodes and appends one recognized Sound child.
+func (values *SoundContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded SoundContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (SoundContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -6918,6 +7298,25 @@ func (value SoundContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// TechnicalContents stores the recognized ordered child elements of Technical.
+type TechnicalContents []TechnicalContent
+
+// UnmarshalXML decodes and appends one recognized Technical child.
+func (values *TechnicalContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded TechnicalContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (TechnicalContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 
@@ -7698,6 +8097,25 @@ func (value TechnicalContent) MarshalXML(
 		return nil
 	}
 
+	return nil
+}
+
+// TimeContents stores the recognized ordered child elements of Time.
+type TimeContents []TimeContent
+
+// UnmarshalXML decodes and appends one recognized Time child.
+func (values *TimeContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded TimeContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (TimeContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
 	return nil
 }
 

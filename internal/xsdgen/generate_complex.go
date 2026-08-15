@@ -1056,9 +1056,9 @@ func (r *complexTypeRenderer) renderStructureFields(
 		case complexFieldChoice:
 			fmt.Fprintf(
 				target,
-				"\t%s []%s `xml:\",any\"`\n",
+				"\t%s %s `xml:\",any\"`\n",
 				field.goName,
-				field.goType,
+				field.choice.listGoType,
 			)
 
 		default:

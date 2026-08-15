@@ -72,12 +72,14 @@ func ExampleEncodeMXL() {
 		log.Fatal(err)
 	}
 
-	decoded, err := musicxml.DecodeMXL(bytes.NewReader(archive.Bytes()))
+	decoded, err := musicxml.DecodeMXLScorePartwise(
+		bytes.NewReader(archive.Bytes()),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("%T\n", decoded)
+	fmt.Println(decoded.EffectiveVersion(), len(decoded.Part))
 
 	// Output:
-	// *musicxml.ScorePartwise
+	// 4.0 1
 }

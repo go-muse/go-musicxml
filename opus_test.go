@@ -47,7 +47,7 @@ func TestOfficialOpusExamplesRoundTrip(t *testing.T) {
 
 			opus, ok := document.(*OpusDocument)
 			require.True(t, ok)
-			assert.Equal(t, stringPointer(Version), opus.Version)
+			assert.Equal(t, stringPointer(MusicXMLVersion), opus.Version)
 			assert.Equal(t, stringPointer("Fidelio"), opus.Title)
 			require.Len(t, opus.Content, test.wantLength)
 
@@ -203,7 +203,7 @@ func TestOpusDocumentXMLName(t *testing.T) {
 func TestOpusMXLPackageResourcesRoundTrip(t *testing.T) {
 	t.Parallel()
 
-	version := Version
+	version := MusicXMLVersion
 	value := &MXLPackage{
 		Document: &OpusDocument{
 			XMLName: xml.Name{Local: "opus"},

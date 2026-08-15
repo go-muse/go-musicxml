@@ -16,9 +16,16 @@ concurrency:
 
 jobs:
   quality:
-    name: Generate, format, and vet
-    runs-on: ubuntu-latest
+    name: Quality (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
 
     steps:
       - name: Check out repository
@@ -32,16 +39,39 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Check module files
-        run: make mod-check
+        shell: bash
+        run: |
+          go mod tidy
+          changes="$(git status --porcelain -- go.mod go.sum)"
+          if [[ -n "$changes" ]]; then
+            echo "go mod tidy changed module files:"
+            echo "$changes"
+            exit 1
+          fi
 
       - name: Check generated code
-        run: make generated
+        shell: bash
+        run: |
+          go generate ./...
+          changes="$(git status --porcelain --untracked-files=all)"
+          if [[ -n "$changes" ]]; then
+            echo "go generate changed or created files:"
+            echo "$changes"
+            exit 1
+          fi
 
       - name: Check formatting
-        run: make format-check
+        shell: bash
+        run: |
+          unformatted="$(git ls-files -z --cached --others --exclude-standard -- '*.go' | xargs -0 gofmt -l)"
+          if [[ -n "$unformatted" ]]; then
+            echo "unformatted Go files:"
+            echo "$unformatted"
+            exit 1
+          fi
 
       - name: Run go vet
-        run: make vet
+        run: go vet ./...
 
   test:
     name: Test (${{ matrix.os }})
@@ -108,6 +138,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libxml2-utils
 
       - name: Validate re-encoded corpus
+        env:
+          MUSICXML_REQUIRE_XMLLINT: "1"
         run: go test -count=1 -run='^TestEncodedCorpusConformsToMusicXMLSchema$' .
 
   fuzz:

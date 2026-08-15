@@ -56,7 +56,7 @@ func TestMXLPackageRoundTrip(t *testing.T) {
 	want := &MXLPackage{
 		Document: &ScorePartwise{
 			XMLName: xml.Name{Local: "score-partwise"},
-			Version: stringPointer(Version),
+			Version: stringPointer(MusicXMLVersion),
 		},
 		RootFiles: []MXLRootFile{
 			{
@@ -113,7 +113,7 @@ func TestMXLPackageRoundTrip(t *testing.T) {
 func TestEncodeMXLPackageUsesDefaultRootFile(t *testing.T) {
 	t.Parallel()
 
-	version := Version
+	version := MusicXMLVersion
 	value := &MXLPackage{
 		Document: &ScoreTimewise{
 			XMLName: xml.Name{Local: "score-timewise"},

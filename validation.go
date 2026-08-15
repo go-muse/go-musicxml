@@ -73,6 +73,9 @@ func Validate(document Document) error {
 	if err != nil {
 		return err
 	}
+	if err := checkDocumentNesting(document); err != nil {
+		return fmt.Errorf("%w: %w", ErrInvalidDocument, err)
+	}
 
 	var encoded bytes.Buffer
 	if err := Encode(&encoded, document); err != nil {
@@ -389,7 +392,7 @@ func parseValidationDocument(source []byte) (*validationNode, error) {
 
 		switch value := token.(type) {
 		case xml.StartElement:
-			root, err := readValidationNode(decoder, value)
+			root, err := readValidationNode(decoder, value, 1)
 			if err != nil {
 				return nil, err
 			}
@@ -408,7 +411,16 @@ func parseValidationDocument(source []byte) (*validationNode, error) {
 func readValidationNode(
 	decoder *xml.Decoder,
 	start xml.StartElement,
+	depth int,
 ) (*validationNode, error) {
+	if depth > maximumDocumentDepth {
+		return nil, fmt.Errorf(
+			"%w: maximum is %d elements",
+			ErrDocumentTooDeep,
+			maximumDocumentDepth,
+		)
+	}
+
 	result := &validationNode{
 		Name:  start.Name,
 		Attrs: append([]xml.Attr(nil), start.Attr...),
@@ -426,7 +438,7 @@ func readValidationNode(
 
 		switch value := token.(type) {
 		case xml.StartElement:
-			child, err := readValidationNode(decoder, value)
+			child, err := readValidationNode(decoder, value, depth+1)
 			if err != nil {
 				return nil, err
 			}

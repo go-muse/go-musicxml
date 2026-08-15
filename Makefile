@@ -52,4 +52,6 @@ fuzz:
 	$(GO) test -run='^$$' -fuzz='^FuzzMXLPackageRoundTrip$$' -fuzztime=$(MXL_FUZZ_TIME) .
 	$(GO) test -run='^$$' -fuzz='^FuzzMXLLinkResolution$$' -fuzztime=$(FUZZ_TIME) .
 
-release-check: mod-check generated format-check test vet race fuzz
+release-check:
+	GO='$(GO)' GOFMT='$(GOFMT)' FUZZ_TIME='$(FUZZ_TIME)' \
+		MXL_FUZZ_TIME='$(MXL_FUZZ_TIME)' bash scripts/release-check.sh

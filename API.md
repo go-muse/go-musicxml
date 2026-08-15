@@ -9,8 +9,7 @@ This document describes the public contract for the `v0.1` release line.
 releases in the `v0.1.x` line should preserve source compatibility unless a
 security or data-integrity defect requires otherwise.
 
-`MusicXMLVersion` is the supported schema version. `Version` is retained as a
-deprecated compatibility alias.
+`MusicXMLVersion` is the supported schema version.
 
 ## Documents
 
@@ -24,6 +23,9 @@ deprecated compatibility alias.
 value that `Encode`, `Validate`, or MXL transport cannot handle from satisfying
 the interface accidentally.
 
+`AsScorePartwise`, `AsScoreTimewise`, and `AsOpusDocument` safely narrow a
+polymorphic `Document` without a panicking type assertion.
+
 ## Generated model
 
 Most exported types mirror MusicXML 4.0 XSD complex and simple types.
@@ -33,7 +35,9 @@ Most exported types mirror MusicXML 4.0 XSD complex and simple types.
 - XSD enumerations use named string types and constants.
 - XSD choices use wrapper structs where exactly one field must be set.
 - Types whose child order is semantically significant expose `Content` and
-  generated `Add...` methods.
+  generated `Add...` methods. Their generated `...Contents` slice types append
+  recognized elements and discard unknown elements during unmarshalling, so
+  every retained entry contains exactly one child variant.
 - `Effective...` methods return XSD defaults without mutating the raw field.
 - `...MatchesFixed` methods test explicit values against XSD `fixed`
   constraints.
@@ -60,6 +64,14 @@ Encoding preserves the typed model, not original XML formatting. Unknown XML
 extensions are not part of the compatibility guarantee. `Decode` ignores
 unknown child elements inside a supported root, including inside generated
 ordered `Content`, and `Encode` does not reproduce them.
+
+Direct `encoding/xml` unmarshalling of generated types applies the same
+ordered-content filtering. It does not apply the package decoder's character
+encoding support or configurable XML-depth limit, so `Decode` and its typed
+variants remain the recommended document entry points.
+
+`Encode` rejects cyclic opus models and document nesting deeper than 4096
+elements before calling `encoding/xml`.
 
 ## Validation
 
@@ -88,12 +100,18 @@ limits. Zero-value fields select the package defaults. XML depth defaults to
 256 and may be configured up to 4096; larger values are rejected because they
 cannot be decoded safely on every supported platform.
 
+`DecodeMXLScorePartwise`, `DecodeMXLScoreTimewise`, and
+`DecodeMXLOpusDocument`, together with their `WithOptions` variants, return a
+concrete root type when the expected MXL document kind is known. The `As...`
+accessors cover `MXLPackage.Document` and other polymorphic document values.
+
 `ResolveOpus` builds a memoized graph. Repeated links share targets, and cycles
 are supported. `SyncResolvedOpus` accepts only the graph created for the same,
 unchanged package. It commits linked-resource updates atomically.
 
 ## Errors
 
-Public sentinel errors are intended for `errors.Is`. `UnsupportedRootError`,
-`MXLLinkError`, and `ValidationError` provide structured context and are
-intended for `errors.As`.
+Public sentinel errors are intended for `errors.Is`, including
+`ErrDocumentTooDeep` and `ErrDocumentCycle` for unsafe programmatically built
+models. `UnsupportedRootError`, `MXLLinkError`, and `ValidationError` provide
+structured context and are intended for `errors.As`.

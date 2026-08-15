@@ -49,6 +49,81 @@ func DecodeMXLWithOptions(
 	return decodeMXL(reader, limits)
 }
 
+// DecodeMXLScorePartwise reads a compressed score-partwise document.
+//
+// It returns ErrUnsupportedRoot when the archive contains another root type.
+func DecodeMXLScorePartwise(reader io.Reader) (*ScorePartwise, error) {
+	return DecodeMXLScorePartwiseWithOptions(reader, MXLOptions{})
+}
+
+// DecodeMXLScorePartwiseWithOptions reads a compressed score-partwise
+// document using explicit resource limits.
+func DecodeMXLScorePartwiseWithOptions(
+	reader io.Reader,
+	options MXLOptions,
+) (*ScorePartwise, error) {
+	document, err := DecodeMXLWithOptions(reader, options)
+	if err != nil {
+		return nil, err
+	}
+	value, ok := AsScorePartwise(document)
+	if !ok {
+		return nil, &UnsupportedRootError{Name: documentRootName(document)}
+	}
+
+	return value, nil
+}
+
+// DecodeMXLScoreTimewise reads a compressed score-timewise document.
+//
+// It returns ErrUnsupportedRoot when the archive contains another root type.
+func DecodeMXLScoreTimewise(reader io.Reader) (*ScoreTimewise, error) {
+	return DecodeMXLScoreTimewiseWithOptions(reader, MXLOptions{})
+}
+
+// DecodeMXLScoreTimewiseWithOptions reads a compressed score-timewise
+// document using explicit resource limits.
+func DecodeMXLScoreTimewiseWithOptions(
+	reader io.Reader,
+	options MXLOptions,
+) (*ScoreTimewise, error) {
+	document, err := DecodeMXLWithOptions(reader, options)
+	if err != nil {
+		return nil, err
+	}
+	value, ok := AsScoreTimewise(document)
+	if !ok {
+		return nil, &UnsupportedRootError{Name: documentRootName(document)}
+	}
+
+	return value, nil
+}
+
+// DecodeMXLOpusDocument reads a compressed opus document.
+//
+// It returns ErrUnsupportedRoot when the archive contains another root type.
+func DecodeMXLOpusDocument(reader io.Reader) (*OpusDocument, error) {
+	return DecodeMXLOpusDocumentWithOptions(reader, MXLOptions{})
+}
+
+// DecodeMXLOpusDocumentWithOptions reads a compressed opus document using
+// explicit resource limits.
+func DecodeMXLOpusDocumentWithOptions(
+	reader io.Reader,
+	options MXLOptions,
+) (*OpusDocument, error) {
+	document, err := DecodeMXLWithOptions(reader, options)
+	if err != nil {
+		return nil, err
+	}
+	value, ok := AsOpusDocument(document)
+	if !ok {
+		return nil, &UnsupportedRootError{Name: documentRootName(document)}
+	}
+
+	return value, nil
+}
+
 // EncodeMXL writes a compressed MusicXML document.
 func EncodeMXL(
 	writer io.Writer,

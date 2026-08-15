@@ -51,7 +51,7 @@ func TestGenerateMusicXMLElements(t *testing.T) {
 		parser.SkipObjectResolution,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, 8, countTypeDeclarations(file))
+	assert.Equal(t, 10, countTypeDeclarations(file))
 
 	source := string(actual)
 	assert.Contains(t, source, "type ScorePartwise struct {")
@@ -65,11 +65,11 @@ func TestGenerateMusicXMLElements(t *testing.T) {
 	assert.Contains(
 		t,
 		source,
-		"[]ScorePartwisePartMeasureContent `xml:\",any\"`",
+		"ScorePartwisePartMeasureContents `xml:\",any\"`",
 	)
 	assert.Contains(
 		t,
 		source,
-		"[]ScoreTimewiseMeasurePartContent `xml:\",any\"`",
+		"ScoreTimewiseMeasurePartContents `xml:\",any\"`",
 	)
 }
