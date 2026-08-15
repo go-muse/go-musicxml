@@ -11,7 +11,7 @@ import (
 
 const (
 	maxFuzzXMLSize  = 1 << 20
-	maxFuzzMXLSize  = 4 << 10
+	maxFuzzMXLSize  = 64 << 10
 	maxFuzzLinkSize = 8 << 10
 )
 
@@ -57,6 +57,13 @@ func FuzzDocumentRoundTrip(f *testing.F) {
 func FuzzMXLPackageRoundTrip(f *testing.F) {
 	f.Add(mustEncodeFuzzOpusPackage(f))
 	f.Add(mustEncodeFuzzScorePackage(f))
+	addFileFuzzSeed(
+		f,
+		filepath.Join(
+			musicXMLTestSuiteDirectory,
+			"90a-Compressed-MusicXML.mxl",
+		),
+	)
 	f.Add([]byte{})
 	f.Add([]byte("not a zip archive"))
 

@@ -57,7 +57,7 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 		parser.SkipObjectResolution,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, 246, countTypeDeclarations(file))
+	assert.Equal(t, 268, countTypeDeclarations(file))
 
 	source := string(actual)
 	assert.Contains(t, source, "type Pitch struct {")
@@ -83,12 +83,12 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 	assert.Contains(
 		t,
 		source,
-		"Content []ArticulationsContent `xml:\",any\"`",
+		"Content ArticulationsContents `xml:\",any\"`",
 	)
 	assert.Contains(
 		t,
 		source,
-		"Content     []KeyContent `xml:\",any\"`",
+		"Content     KeyContents  `xml:\",any\"`",
 	)
 	assert.Contains(
 		t,

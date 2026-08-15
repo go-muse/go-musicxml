@@ -58,12 +58,13 @@ func TestGenerateMusicXMLOpusDocument(t *testing.T) {
 		parser.SkipObjectResolution,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, 4, countTypeDeclarations(file))
+	assert.Equal(t, 5, countTypeDeclarations(file))
 
 	source := string(actual)
 	assert.Contains(t, source, "type OpusDocument struct {")
 	assert.Contains(t, source, "type OpusLink struct {")
 	assert.Contains(t, source, "type OpusScore struct {")
+	assert.Contains(t, source, "type OpusDocumentContents []OpusDocumentContent")
 	assert.Contains(t, source, "type OpusDocumentContent struct {")
 	assert.NotContains(t, source, "type YesNo ")
 }

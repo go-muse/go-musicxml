@@ -68,7 +68,7 @@ func TestGenerateDocument(t *testing.T) {
 		parser.SkipObjectResolution,
 	)
 	require.NoError(t, err)
-	assert.Equal(t, 4, countTypeDeclarations(parsed))
+	assert.Equal(t, 5, countTypeDeclarations(parsed))
 
 	source := string(actual)
 	assert.NotContains(t, source, "type YesNo ")
@@ -77,8 +77,9 @@ func TestGenerateDocument(t *testing.T) {
 	assert.Contains(
 		t,
 		source,
-		"Content []OpusDocumentContent `xml:\",any\"`",
+		"Content OpusDocumentContents `xml:\",any\"`",
 	)
+	assert.Contains(t, source, "type OpusDocumentContents []OpusDocumentContent")
 	assert.Contains(t, source, "Opus     *OpusDocument")
 	assert.Contains(t, source, "OpusLink *OpusLink")
 	assert.Contains(t, source, "Score    *OpusScore")

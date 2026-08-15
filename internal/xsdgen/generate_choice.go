@@ -11,6 +11,7 @@ import (
 type complexChoice struct {
 	owner          string
 	goType         string
+	listGoType     string
 	variants       []complexChoiceVariant
 	variantIndexes map[expandedName]int
 }
@@ -169,6 +170,13 @@ func (r *complexTypeRenderer) buildChoice(
 	if err := r.reserveTypeName(goType, description); err != nil {
 		return nil, err
 	}
+	listGoType := owner + "Contents"
+	if err := r.reserveTypeName(
+		listGoType,
+		"ordered content list for "+owner,
+	); err != nil {
+		return nil, err
+	}
 
 	var elements []*ElementPlan
 	for childIndex := range particle.Children {
@@ -195,6 +203,7 @@ func (r *complexTypeRenderer) buildChoice(
 	result := &complexChoice{
 		owner:          owner,
 		goType:         goType,
+		listGoType:     listGoType,
 		variantIndexes: make(map[expandedName]int),
 	}
 	usedFieldNames := make(map[string]string)
@@ -339,7 +348,7 @@ func (s *complexStructure) addChoice(
 	s.elements = append(s.elements, complexField{
 		kind:        complexFieldChoice,
 		goType:      choice.goType,
-		description: "ordered content " + choice.goType,
+		description: "ordered content " + choice.listGoType,
 		choice:      choice,
 	})
 	s.insertedChoices[choice] = true
@@ -351,6 +360,49 @@ func (r *complexTypeRenderer) renderChoice(
 	target *bytes.Buffer,
 	choice *complexChoice,
 ) {
+	fmt.Fprintf(
+		target,
+		"// %s stores the recognized ordered child elements of %s.\n",
+		choice.listGoType,
+		choice.owner,
+	)
+	fmt.Fprintf(
+		target,
+		"type %s []%s\n\n",
+		choice.listGoType,
+		choice.goType,
+	)
+
+	fmt.Fprintf(
+		target,
+		"// UnmarshalXML decodes and appends one recognized %s child.\n",
+		choice.owner,
+	)
+	fmt.Fprintf(
+		target,
+		"func (values *%s) UnmarshalXML(\n",
+		choice.listGoType,
+	)
+	target.WriteString("\tdecoder *xml.Decoder,\n")
+	target.WriteString("\tstart xml.StartElement,\n")
+	target.WriteString(") error {\n")
+	fmt.Fprintf(target, "\tvar decoded %s\n", choice.goType)
+	target.WriteString(
+		"\tif err := decoded.UnmarshalXML(decoder, start); err != nil {\n",
+	)
+	target.WriteString("\t\treturn err\n")
+	target.WriteString("\t}\n")
+	fmt.Fprintf(
+		target,
+		"\tif decoded == (%s{}) {\n",
+		choice.goType,
+	)
+	target.WriteString("\t\treturn nil\n")
+	target.WriteString("\t}\n")
+	target.WriteString("\t*values = append(*values, decoded)\n")
+	target.WriteString("\treturn nil\n")
+	target.WriteString("}\n\n")
+
 	fmt.Fprintf(
 		target,
 		"// %s is one ordered child element of %s.\n",

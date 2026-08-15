@@ -61,12 +61,6 @@ func TestNewOpusDocument(t *testing.T) {
 	assert.Equal(t, MusicXMLVersion, *opus.Version)
 }
 
-func TestVersionCompatibilityAlias(t *testing.T) {
-	t.Parallel()
-
-	assert.Equal(t, MusicXMLVersion, Version)
-}
-
 func TestNewNotes(t *testing.T) {
 	t.Parallel()
 

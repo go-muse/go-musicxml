@@ -81,9 +81,9 @@ import (
 
 // Base represents the "base" XSD complex type.
 type Base struct {
-	Title   string        `+"`xml:\"urn:score title\"`"+`
-	Content []BaseContent `+"`xml:\",any\"`"+`
-	Shared  *Label        `+"`xml:\"urn:score shared,omitempty\"`"+`
+	Title   string       `+"`xml:\"urn:score title\"`"+`
+	Content BaseContents `+"`xml:\",any\"`"+`
+	Shared  *Label       `+"`xml:\"urn:score shared,omitempty\"`"+`
 	Inline  *struct {
 		Value Label  `+"`xml:\",chardata\"`"+`
 		Code  string `+"`xml:\"code,attr\"`"+`
@@ -102,6 +102,25 @@ type Derived struct {
 type Formatted struct {
 	Value Label   `+"`xml:\",chardata\"`"+`
 	Lang  *string `+"`xml:\"lang,attr,omitempty\"`"+`
+}
+
+// BaseContents stores the recognized ordered child elements of Base.
+type BaseContents []BaseContent
+
+// UnmarshalXML decodes and appends one recognized Base child.
+func (values *BaseContents) UnmarshalXML(
+	decoder *xml.Decoder,
+	start xml.StartElement,
+) error {
+	var decoded BaseContent
+	if err := decoded.UnmarshalXML(decoder, start); err != nil {
+		return err
+	}
+	if decoded == (BaseContent{}) {
+		return nil
+	}
+	*values = append(*values, decoded)
+	return nil
 }
 
 // BaseContent is one ordered child element of Base.
@@ -244,7 +263,8 @@ func TestGenerateComplexTypesOrderedRepeatedSequence(t *testing.T) {
 	require.NoError(t, err)
 
 	source := string(actual)
-	assert.Contains(t, source, "Content []RecordContent")
+	assert.Contains(t, source, "Content RecordContents")
+	assert.Contains(t, source, "type RecordContents []RecordContent")
 	assert.Contains(t, source, "func (value *Record) AddAlpha(")
 	assert.Contains(t, source, "func (value *Record) AddBeta(")
 }

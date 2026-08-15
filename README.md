@@ -90,7 +90,7 @@ construction and compressed `.mxl` round trips in
 | --- | --- |
 | Read XML | `Decode`, typed `Decode...` helpers, and their `WithOptions` variants |
 | Write XML | `Encode` |
-| Read or write compressed MusicXML | `DecodeMXL`, `DecodeMXLWithOptions`, `EncodeMXL` |
+| Read or write compressed MusicXML | `DecodeMXL`, typed `DecodeMXL...` helpers, `As...` accessors, and `EncodeMXL` |
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
 | Construct scores and opus documents | `NewScorePartwise`, `NewScoreTimewise`, `NewOpusDocument` |
@@ -117,6 +117,11 @@ Optional XSD attributes remain pointers after decoding. Generated
 `Effective...` methods expose schema defaults without changing omission
 semantics, and `...MatchesFixed` methods check fixed attributes.
 
+Ordered `Content` fields use generated slice types that discard unknown child
+elements before appending them. This keeps the same invariant for both the
+package decoders and direct `encoding/xml` use: every retained entry represents
+exactly one recognized child.
+
 ## Compressed MXL and opus
 
 `DecodeMXLPackage` retains alternate root files, images, PDFs, linked scores,
@@ -130,6 +135,12 @@ to 64 MiB, metadata to 1 MiB, the primary document and each resource to
 256 MiB, and all resources together to 512 MiB. `MXLOptions` exposes every byte
 limit and the XML nesting limit for callers with a stricter threat model.
 
+When the expected archive root is known, use `DecodeMXLScorePartwise`,
+`DecodeMXLScoreTimewise`, or `DecodeMXLOpusDocument` and their `WithOptions`
+variants. Polymorphic `Document` values can be inspected without a panicking
+type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
+`AsOpusDocument`.
+
 ## Reliability
 
 - The interoperability test corpus contains 150 real MusicXML Test Suite
@@ -138,16 +149,20 @@ limit and the XML nesting limit for callers with a stricter threat model.
   encoded, decoded again, and compared as a typed Go model.
 - A second encoding must match the first byte-for-byte, proving that XML and
   MXL serialization reach a deterministic fixed point.
-- On Ubuntu, CI also validates every re-encoded, originally valid corpus
-  document with libxml2 against the bundled MusicXML 4.0 XSD.
-- CI runs tests on Linux, macOS, and Windows, plus the race detector and three
-  fuzz targets.
+- A dedicated Linux CI job validates every re-encoded, originally valid corpus
+  document with `xmllint` against the bundled MusicXML 4.0 XSD without network
+  access.
+- CI runs tests, module and generation reproducibility checks, and formatting
+  checks on Linux, macOS, and Windows, plus the race detector and three fuzz
+  targets.
 
 ## Limitations
 
 - The generated model and schema validator target MusicXML 4.0.
 - XML extensions not represented by the MusicXML 4.0 model are ignored during
   decoding and are not preserved when re-encoded.
+- Encoding and validation reject cyclic opus models and models deeper than
+  4096 nested elements.
 - Encoding normalizes lexical details such as whitespace, attribute order,
   character encoding, and ZIP metadata; the first output need not match the
   original bytes.
@@ -163,8 +178,9 @@ make release-check
 `make check` runs formatting, tests, and `go vet`. `make release-check` also
 checks module tidiness and generated files, runs the race detector, and
 performs short fuzzing passes. Release checks require a clean, committed
-worktree. CI and the release workflow additionally install `xmllint` for an
-independent XSD conformance pass.
+worktree. When `xmllint` is available, the test suite also runs its external
+XSD conformance pass; Linux CI installs and requires it. The release workflow
+runs the same release checks on Linux, macOS, and Windows.
 
 ## License
 

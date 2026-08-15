@@ -43,6 +43,9 @@ func Encode(
 			document,
 		)
 	}
+	if err := checkDocumentNesting(document); err != nil {
+		return err
+	}
 
 	if err := xml.NewEncoder(writer).Encode(document); err != nil {
 		return fmt.Errorf("musicxml: encode document: %w", err)

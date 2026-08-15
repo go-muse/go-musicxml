@@ -295,7 +295,6 @@ func TestChoiceContentUnknownElement(t *testing.T) {
 			&actual,
 		)
 		require.NoError(t, err)
-		discardUnknownXMLContent(&actual)
 		require.Len(t, actual.Content, 2)
 
 		encoded, err := marshalElement("articulations", actual)
@@ -337,7 +336,6 @@ func TestNewOrderedContentIgnoresUnknownElement(t *testing.T) {
 				`<vendor:extension xmlns:vendor="urn:vendor"/>` +
 				`</` + test.element + `>`
 			require.NoError(t, xml.Unmarshal([]byte(input), test.value))
-			discardUnknownXMLContent(test.value)
 
 			encoded, err := marshalElement(test.element, test.value)
 			require.NoError(t, err)
@@ -355,13 +353,36 @@ func TestNewOrderedContentIgnoresUnknownElement(t *testing.T) {
 		&actual,
 	)
 	require.NoError(t, err)
-	discardUnknownXMLContent(&actual)
 
 	encoded, err := marshalElement("key", actual)
 	require.NoError(t, err)
 	names, err := childElementNames(encoded)
 	require.NoError(t, err)
 	assert.Equal(t, []string{"fifths", "mode"}, names)
+}
+
+func TestStandardLibraryDocumentRoundTripIgnoresUnknownContent(t *testing.T) {
+	t.Parallel()
+
+	input := []byte(
+		`<score-partwise version="4.0">` +
+			`<part-list><score-part id="P1"><part-name>Music</part-name>` +
+			`</score-part></part-list>` +
+			`<part id="P1"><measure number="1"><attributes>` +
+			`<key><fifths>0</fifths>` +
+			`<vendor:extension xmlns:vendor="urn:vendor"/>` +
+			`<mode>major</mode></key>` +
+			`</attributes></measure></part>` +
+			`</score-partwise>`,
+	)
+
+	var score ScorePartwise
+	require.NoError(t, xml.Unmarshal(input, &score))
+
+	encoded, err := xml.Marshal(&score)
+	require.NoError(t, err)
+	assert.NotContains(t, string(encoded), "extension")
+	assert.NoError(t, score.Validate())
 }
 
 func marshalElement(
