@@ -55,6 +55,9 @@ type MXLResolvedScore struct {
 // document containing the link. Only documents stored inside the MXL package
 // are resolved. Linked documents are decoded without changing Resources;
 // call SyncResolvedOpus after editing to update their resource bytes.
+//
+// Opus-link cycles between archive documents are supported, but a cyclic or
+// excessively deep in-memory opus model is rejected before traversal.
 func (value *MXLPackage) ResolveOpus() (*MXLResolvedOpus, error) {
 	if value == nil {
 		return nil, ErrNilMXLPackage
@@ -74,6 +77,9 @@ func (value *MXLPackage) ResolveOpus() (*MXLResolvedOpus, error) {
 	}
 	if document == nil {
 		return nil, ErrNilDocument
+	}
+	if err := checkDocumentNesting(document); err != nil {
+		return nil, err
 	}
 
 	rootFiles, err := prepareMXLPackage(value)

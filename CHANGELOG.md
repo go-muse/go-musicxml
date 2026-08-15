@@ -52,7 +52,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Keep generated ordered `Content` slices valid when callers use
   `encoding/xml` directly and unknown elements are encountered.
 - Reject cyclic or excessively deep programmatically constructed opus models
-  before encoding or validation can exhaust the goroutine stack.
+  before encoding, validation, or opus resolution can exhaust the goroutine
+  stack.
 
 ### Changed
 

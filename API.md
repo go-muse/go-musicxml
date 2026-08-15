@@ -70,8 +70,8 @@ ordered-content filtering. It does not apply the package decoder's character
 encoding support or configurable XML-depth limit, so `Decode` and its typed
 variants remain the recommended document entry points.
 
-`Encode` rejects cyclic opus models and document nesting deeper than 4096
-elements before calling `encoding/xml`.
+`Encode`, `Validate`, and `ResolveOpus` reject cyclic opus models and document
+nesting deeper than 4096 elements before walking the model recursively.
 
 ## Validation
 
@@ -105,9 +105,10 @@ cannot be decoded safely on every supported platform.
 concrete root type when the expected MXL document kind is known. The `As...`
 accessors cover `MXLPackage.Document` and other polymorphic document values.
 
-`ResolveOpus` builds a memoized graph. Repeated links share targets, and cycles
-are supported. `SyncResolvedOpus` accepts only the graph created for the same,
-unchanged package. It commits linked-resource updates atomically.
+`ResolveOpus` builds a memoized graph. Repeated links share targets, and
+opus-link cycles between archive documents are supported. `SyncResolvedOpus`
+accepts only the graph created for the same, unchanged package. It commits
+linked-resource updates atomically.
 
 ## Errors
 
