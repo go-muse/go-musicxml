@@ -63,7 +63,7 @@ var (
 	ErrInvalidDocument = errors.New("musicxml: invalid document")
 
 	// ErrDocumentTooDeep reports a programmatically constructed document whose
-	// element nesting exceeds the safe encoding and validation limit.
+	// element nesting exceeds the safe model traversal limit.
 	ErrDocumentTooDeep = errors.New(
 		"musicxml: document nesting depth limit exceeded",
 	)
