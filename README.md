@@ -27,7 +27,7 @@ race detection.
 ## Installation
 
 ```bash
-go get github.com/go-muse/go-musicxml@latest
+go get github.com/go-muse/go-musicxml@v0.1.0
 ```
 
 ## Quick start

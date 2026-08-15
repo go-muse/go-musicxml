@@ -7,6 +7,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-15
+
 ### Added
 
 - Generated Go model for the official MusicXML 4.0 score and opus XSDs.
@@ -69,4 +71,5 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - The MXL fuzz target includes the realistic compressed corpus fixture and
   accepts inputs up to 64 KiB.
 
-[Unreleased]: https://github.com/go-muse/go-musicxml/commits/main
+[Unreleased]: https://github.com/go-muse/go-musicxml/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/go-muse/go-musicxml/releases/tag/v0.1.0
