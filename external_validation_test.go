@@ -57,6 +57,7 @@ func TestEncodedCorpusConformsToMusicXMLSchema(t *testing.T) {
 
 			command := exec.Command(
 				xmllint,
+				"--nonet",
 				"--noout",
 				"--schema",
 				filepath.Join(schemaDirectory, "musicxml.xsd"),

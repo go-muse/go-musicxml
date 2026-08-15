@@ -111,7 +111,7 @@ XML decoding supports UTF-8 (with or without a BOM), UTF-16BE/LE, and
 ISO-8859-1. MusicXML root elements are unqualified because the official
 MusicXML 4.0 schema has no target namespace. Decoding rejects documents deeper
 than 256 simultaneously open XML elements by default; `DecodeOptions` can set
-a different ceiling.
+a different ceiling up to the package maximum of 4096.
 
 Optional XSD attributes remain pointers after decoding. Generated
 `Effective...` methods expose schema defaults without changing omission
@@ -146,9 +146,8 @@ limit and the XML nesting limit for callers with a stricter threat model.
 ## Limitations
 
 - The generated model and schema validator target MusicXML 4.0.
-- XML extensions not represented by the MusicXML 4.0 model are not preserved.
-  Depending on their location, `encoding/xml` may ignore them or an ordered
-  generated `Content` decoder may reject them as unsupported.
+- XML extensions not represented by the MusicXML 4.0 model are ignored during
+  decoding and are not preserved when re-encoded.
 - Encoding normalizes lexical details such as whitespace, attribute order,
   character encoding, and ZIP metadata; the first output need not match the
   original bytes.

@@ -308,11 +308,10 @@ func (value *ScorePartwisePartMeasureContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported ScorePartwisePartMeasureContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported ScorePartwisePartMeasureContent element: %w", err)
+		}
+		return nil
 	}
 }
 
@@ -681,11 +680,10 @@ func (value *ScoreTimewiseMeasurePartContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported ScoreTimewiseMeasurePartContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported ScoreTimewiseMeasurePartContent element: %w", err)
+		}
+		return nil
 	}
 }
 

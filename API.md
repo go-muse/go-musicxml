@@ -57,9 +57,9 @@ Each typed helper has a corresponding `WithOptions` variant.
 `Validate`. MXL encoding adds an XML declaration to stored MusicXML documents.
 
 Encoding preserves the typed model, not original XML formatting. Unknown XML
-extensions are not part of the compatibility guarantee. Unknown children may
-be ignored by ordinary `encoding/xml` fields or rejected by generated ordered
-`Content` decoders, depending on their location.
+extensions are not part of the compatibility guarantee. `Decode` ignores
+unknown child elements inside a supported root, including inside generated
+ordered `Content`, and `Encode` does not reproduce them.
 
 ## Validation
 
@@ -84,7 +84,9 @@ primary paths.
 
 `DecodeMXLWithOptions` and `DecodeMXLPackageWithOptions` expose the archive,
 metadata, primary-document, per-resource, aggregate-resource, and XML-depth
-limits. Zero-value fields select the package defaults.
+limits. Zero-value fields select the package defaults. XML depth defaults to
+256 and may be configured up to 4096; larger values are rejected because they
+cannot be decoded safely on every supported platform.
 
 `ResolveOpus` builds a memoized graph. Repeated links share targets, and cycles
 are supported. `SyncResolvedOpus` accepts only the graph created for the same,

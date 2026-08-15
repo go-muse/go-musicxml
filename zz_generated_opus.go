@@ -160,11 +160,10 @@ func (value *OpusDocumentContent) UnmarshalXML(
 		return nil
 
 	default:
-		return fmt.Errorf(
-			"musicxml: unsupported OpusDocumentContent element {%s}%s",
-			start.Name.Space,
-			start.Name.Local,
-		)
+		if err := decoder.Skip(); err != nil {
+			return fmt.Errorf("musicxml: skip unsupported OpusDocumentContent element: %w", err)
+		}
+		return nil
 	}
 }
 

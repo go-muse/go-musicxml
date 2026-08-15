@@ -174,16 +174,19 @@ func TestOpusDocumentUnknownElement(t *testing.T) {
 	t.Parallel()
 
 	document, err := Decode(bytes.NewBufferString(
-		`<opus><future-entry/></opus>`,
+		`<opus><future-entry/><title>Known</title></opus>`,
 	))
+	require.NoError(t, err)
+	require.NotNil(t, document)
 
-	assert.Nil(t, document)
-	assert.EqualError(
-		t,
-		err,
-		"musicxml: decode document: "+
-			"musicxml: unsupported OpusDocumentContent element {}future-entry",
-	)
+	var encoded bytes.Buffer
+	require.NoError(t, Encode(&encoded, document))
+	assert.NotContains(t, encoded.String(), "future-entry")
+	assert.Contains(t, encoded.String(), "<title>Known</title>")
+
+	decodedAgain, err := Decode(bytes.NewReader(encoded.Bytes()))
+	require.NoError(t, err)
+	assert.Equal(t, document, decodedAgain)
 }
 
 func TestOpusDocumentXMLName(t *testing.T) {
