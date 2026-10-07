@@ -1427,9 +1427,8 @@ func validateBuiltin(
 
 	case "nonNegativeInteger", "positiveInteger", "unsignedLong",
 		"unsignedInt", "unsignedShort", "unsignedByte":
-		number, err := strconv.ParseUint(
+		number, err := parseXMLUnsignedInteger(
 			normalized,
-			10,
 			validationUnsignedBits(name),
 		)
 		if err == nil &&
@@ -1727,13 +1726,16 @@ func matchValidationPattern(pattern string, value string) (bool, error) {
 	translated := strings.ReplaceAll(
 		pattern,
 		`\c`,
-		`[A-Za-z0-9_.:-]`,
+		`[`+validationXMLNameCharacters+`]`,
 	)
 	translated = strings.ReplaceAll(
 		translated,
 		`\i`,
-		`[A-Za-z_:]`,
+		`[`+validationXMLNameStartCharacters+`]`,
 	)
+
+	// XSD \d denotes Unicode decimal digits, including inside character classes.
+	translated = strings.ReplaceAll(translated, `\d`, `\p{Nd}`)
 
 	compiled, err := regexp.Compile(`^(?:` + translated + `)$`)
 	if err != nil {

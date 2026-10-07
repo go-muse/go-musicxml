@@ -20,6 +20,8 @@ type complexChoiceVariant struct {
 	name        QName
 	goName      string
 	goType      string
+	xmlType     string
+	inline      *complexStructure
 	description string
 }
 
@@ -226,6 +228,10 @@ func (r *complexTypeRenderer) buildChoice(
 			)
 		}
 
+		xmlType, inline, err := r.elementXMLType(element, goType)
+		if err != nil {
+			return nil, err
+		}
 		description := "element " + formatExpandedName(element.Name)
 		key := expandedName{
 			namespace: element.Name.Namespace,
@@ -261,6 +267,8 @@ func (r *complexTypeRenderer) buildChoice(
 				name:        element.Name,
 				goName:      goName,
 				goType:      goTypeValue,
+				xmlType:     xmlType,
+				inline:      inline,
 				description: description,
 			},
 		)
@@ -469,7 +477,7 @@ func (r *complexTypeRenderer) renderChoice(
 		fmt.Fprintf(
 			target,
 			"\t\tvar decoded %s\n",
-			variant.goType,
+			r.choiceXMLType(variant),
 		)
 		target.WriteString(
 			"\t\tif err := decoder.DecodeElement(&decoded, &start); err != nil {\n",
@@ -487,8 +495,9 @@ func (r *complexTypeRenderer) renderChoice(
 		target.WriteString("\t\t}\n")
 		fmt.Fprintf(
 			target,
-			"\t\tvalue.%s = &decoded\n",
+			"\t\tvalue.%s = %s\n",
 			variant.goName,
+			r.choiceXMLDecoded(variant),
 		)
 		target.WriteString("\t\treturn nil\n\n")
 	}
@@ -557,8 +566,8 @@ func (r *complexTypeRenderer) renderChoice(
 		)
 		fmt.Fprintf(
 			target,
-			"\t\tif err := encoder.EncodeElement(value.%s, start); err != nil {\n",
-			variant.goName,
+			"\t\tif err := encoder.EncodeElement(%s, start); err != nil {\n",
+			r.choiceXMLValue(variant),
 		)
 		fmt.Fprintf(
 			target,

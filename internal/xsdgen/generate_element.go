@@ -195,9 +195,14 @@ func GenerateElements(
 			&body,
 			inlineType.structure,
 		)
+		renderer.registerNamedStructure(inlineType.structure)
 	}
 	for _, choice := range renderer.choices {
 		renderer.renderChoice(&body, choice)
+	}
+
+	if _, err := renderer.renderNumericXML(&body); err != nil {
+		return nil, err
 	}
 
 	var source bytes.Buffer
@@ -244,8 +249,17 @@ func (r *complexTypeRenderer) buildElementStructure(
 		result.embedded = valueType
 	} else {
 		result.valueType = valueType
+		value, err := r.simpleTypePlanGoType(plan)
+		if err != nil {
+			return nil, err
+		}
+		result.valueXMLType = value.xmlType
+		if plan.Declaration != nil {
+			result.valueXMLType = r.simpleRenderer.declarationXMLType(plan.Declaration)
+		}
 	}
 
+	r.registerStructure(result)
 	return result, nil
 }
 
@@ -310,4 +324,6 @@ func (r *complexTypeRenderer) renderElement(
 	r.renderStructureFields(target, element.structure)
 	target.WriteString("}\n\n")
 	r.renderValueConstraintMethods(target, element.structure)
+	element.structure.xmlName = &element.declaration.Name
+	r.registerNamedStructure(element.structure)
 }

@@ -56,14 +56,47 @@ func TestGenerateSimpleTypes(t *testing.T) {
 
 package example
 
+import "encoding/xml"
+
 // Amount represents the "amount" XSD simple type.
 type Amount float64
+
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value Amount) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value Amount) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Amount) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Amount) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // Levels represents the "levels" XSD simple type.
 type Levels string
 
 // Rank represents the "rank" XSD simple type.
 type Rank uint64
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Rank) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Rank) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 const (
 	// Rank1 is the "1" value.

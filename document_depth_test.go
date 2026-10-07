@@ -85,3 +85,38 @@ func nestedOpusDocument(depth int) *OpusDocument {
 
 	return root
 }
+
+func TestDocumentDepthIncludesOpusLeafElements(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		name string
+		add  func(*OpusDocument)
+	}{
+		{"title", func(opus *OpusDocument) { opus.Title = Ptr("") }},
+		{"score", func(opus *OpusDocument) { opus.AddScore(&OpusScore{Href: "score.musicxml"}) }},
+		{"opus-link", func(opus *OpusDocument) { opus.AddOpusLink(&OpusLink{Href: "collection.musicxml"}) }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			for _, depth := range []int{maximumDocumentDepth - 1, maximumDocumentDepth} {
+				document := nestedOpusDocument(depth)
+				leaf := document
+				for len(leaf.Content) > 0 {
+					leaf = leaf.Content[0].Opus
+				}
+				test.add(leaf)
+				var output bytes.Buffer
+				err := Encode(&output, document)
+				if depth == maximumDocumentDepth {
+					assert.ErrorIs(t, err, ErrDocumentTooDeep)
+					assert.Empty(t, output.Bytes())
+					assert.ErrorIs(t, Validate(document), ErrDocumentTooDeep)
+				} else {
+					require.NoError(t, err)
+					assert.NoError(t, Validate(document))
+					_, err = DecodeWithOptions(bytes.NewReader(output.Bytes()), DecodeOptions{MaxXMLDepth: maximumDocumentDepth})
+					assert.NoError(t, err)
+				}
+			}
+		})
+	}
+}

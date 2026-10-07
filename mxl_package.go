@@ -396,8 +396,8 @@ func prepareMXLPackage(
 	} else {
 		for index, rootFile := range value.RootFiles {
 			rootFiles[index] = mxlRootFile{
-				FullPath:  rootFile.FullPath,
-				MediaType: rootFile.MediaType,
+				FullPath:  collapseValidationWhitespace(rootFile.FullPath),
+				MediaType: collapseValidationWhitespace(rootFile.MediaType),
 			}
 		}
 	}

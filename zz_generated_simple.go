@@ -2,6 +2,8 @@
 
 package musicxml
 
+import "encoding/xml"
+
 // AboveBelow represents the "above-below" XSD simple type.
 type AboveBelow string
 
@@ -103,6 +105,16 @@ const (
 // AccordionMiddle represents the "accordion-middle" XSD simple type.
 type AccordionMiddle uint64
 
+// UnmarshalXML decodes numeric XML content.
+func (value *AccordionMiddle) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *AccordionMiddle) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // ArrowDirection represents the "arrow-direction" XSD simple type.
 type ArrowDirection string
 
@@ -195,6 +207,16 @@ const (
 
 // BeamLevel represents the "beam-level" XSD simple type.
 type BeamLevel uint64
+
+// UnmarshalXML decodes numeric XML content.
+func (value *BeamLevel) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *BeamLevel) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // BeamValue represents the "beam-value" XSD simple type.
 type BeamValue string
@@ -403,6 +425,27 @@ type DistanceType string
 
 // Divisions represents the "divisions" XSD simple type.
 type Divisions float64
+
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value Divisions) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value Divisions) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Divisions) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Divisions) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // EffectValue represents the "effect-value" XSD simple type.
 type EffectValue string
@@ -984,17 +1027,78 @@ const (
 // MIDI128 represents the "midi-128" XSD simple type.
 type MIDI128 uint64
 
+// UnmarshalXML decodes numeric XML content.
+func (value *MIDI128) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *MIDI128) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // MIDI16 represents the "midi-16" XSD simple type.
 type MIDI16 uint64
+
+// UnmarshalXML decodes numeric XML content.
+func (value *MIDI16) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *MIDI16) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // MIDI16384 represents the "midi-16384" XSD simple type.
 type MIDI16384 uint64
 
+// UnmarshalXML decodes numeric XML content.
+func (value *MIDI16384) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *MIDI16384) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // Millimeters represents the "millimeters" XSD simple type.
 type Millimeters float64
 
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value Millimeters) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value Millimeters) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Millimeters) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Millimeters) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // Milliseconds represents the "milliseconds" XSD simple type.
 type Milliseconds uint64
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Milliseconds) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Milliseconds) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // Mode represents the "mode" XSD simple type.
 type Mode string
@@ -1037,6 +1141,27 @@ const (
 
 // NonNegativeDecimal represents the "non-negative-decimal" XSD simple type.
 type NonNegativeDecimal float64
+
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value NonNegativeDecimal) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value NonNegativeDecimal) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *NonNegativeDecimal) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *NonNegativeDecimal) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // NoteSizeType represents the "note-size-type" XSD simple type.
 type NoteSizeType string
@@ -1151,8 +1276,28 @@ const (
 // NumberLevel represents the "number-level" XSD simple type.
 type NumberLevel uint64
 
+// UnmarshalXML decodes numeric XML content.
+func (value *NumberLevel) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *NumberLevel) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // NumberOfLines represents the "number-of-lines" XSD simple type.
 type NumberOfLines uint64
+
+// UnmarshalXML decodes numeric XML content.
+func (value *NumberOfLines) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *NumberOfLines) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // NumberOrNormal represents the "number-or-normal" XSD simple type.
 type NumberOrNormal string
@@ -1180,6 +1325,16 @@ const (
 
 // NumeralValue represents the "numeral-value" XSD simple type.
 type NumeralValue uint64
+
+// UnmarshalXML decodes numeric XML content.
+func (value *NumeralValue) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *NumeralValue) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // Octave represents the "octave" XSD simple type.
 type Octave int64
@@ -1227,6 +1382,27 @@ const (
 // Percent represents the "percent" XSD simple type.
 type Percent float64
 
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value Percent) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value Percent) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Percent) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Percent) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // PitchedValue represents the "pitched-value" XSD simple type.
 type PitchedValue string
 
@@ -1258,8 +1434,50 @@ const (
 // PositiveDecimal represents the "positive-decimal" XSD simple type.
 type PositiveDecimal float64
 
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value PositiveDecimal) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value PositiveDecimal) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *PositiveDecimal) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *PositiveDecimal) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // PositiveDivisions represents the "positive-divisions" XSD simple type.
 type PositiveDivisions Divisions
+
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value PositiveDivisions) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value PositiveDivisions) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *PositiveDivisions) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *PositiveDivisions) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // PositiveIntegerOrEmpty represents the "positive-integer-or-empty" XSD simple type.
 type PositiveIntegerOrEmpty string
@@ -1298,6 +1516,27 @@ const (
 // RotationDegrees represents the "rotation-degrees" XSD simple type.
 type RotationDegrees float64
 
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value RotationDegrees) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value RotationDegrees) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *RotationDegrees) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *RotationDegrees) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // SemiPitched represents the "semi-pitched" XSD simple type.
 type SemiPitched string
 
@@ -1318,6 +1557,27 @@ const (
 
 // Semitones represents the "semitones" XSD simple type.
 type Semitones float64
+
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value Semitones) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value Semitones) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Semitones) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Semitones) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // ShowFrets represents the "show-frets" XSD simple type.
 type ShowFrets string
@@ -1377,11 +1637,31 @@ const (
 // StaffLine represents the "staff-line" XSD simple type.
 type StaffLine uint64
 
+// UnmarshalXML decodes numeric XML content.
+func (value *StaffLine) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *StaffLine) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // StaffLinePosition represents the "staff-line-position" XSD simple type.
 type StaffLinePosition int64
 
 // StaffNumber represents the "staff-number" XSD simple type.
 type StaffNumber uint64
+
+// UnmarshalXML decodes numeric XML content.
+func (value *StaffNumber) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *StaffNumber) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // StaffType represents the "staff-type" XSD simple type.
 type StaffType string
@@ -1564,6 +1844,16 @@ const (
 // StringNumber represents the "string-number" XSD simple type.
 type StringNumber uint64
 
+// UnmarshalXML decodes numeric XML content.
+func (value *StringNumber) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlUnsigned64)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *StringNumber) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlUnsigned64)(value).UnmarshalText([]byte(attribute.Value))
+}
+
 // SwingTypeValue represents the "swing-type-value" XSD simple type.
 type SwingTypeValue NoteTypeValue
 
@@ -1660,6 +1950,27 @@ const (
 
 // Tenths represents the "tenths" XSD simple type.
 type Tenths float64
+
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value Tenths) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value Tenths) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *Tenths) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *Tenths) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // TextDirection represents the "text-direction" XSD simple type.
 type TextDirection string
@@ -1795,6 +2106,27 @@ const (
 
 // TrillBeats represents the "trill-beats" XSD simple type.
 type TrillBeats float64
+
+// MarshalXML encodes an XSD decimal without exponent notation.
+func (value TrillBeats) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDecimal(value), start)
+}
+
+// MarshalXMLAttr encodes an XSD decimal attribute without exponent notation.
+func (value TrillBeats) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
+	text, err := xmlDecimal(value).MarshalText()
+	return xml.Attr{Name: name, Value: string(text)}, err
+}
+
+// UnmarshalXML decodes numeric XML content.
+func (value *TrillBeats) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	return decoder.DecodeElement((*xmlDecimal)(value), &start)
+}
+
+// UnmarshalXMLAttr decodes a numeric XML attribute.
+func (value *TrillBeats) UnmarshalXMLAttr(attribute xml.Attr) error {
+	return (*xmlDecimal)(value).UnmarshalText([]byte(attribute.Value))
+}
 
 // TrillStep represents the "trill-step" XSD simple type.
 type TrillStep string

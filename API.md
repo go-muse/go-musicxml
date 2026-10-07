@@ -42,6 +42,11 @@ Most exported types mirror MusicXML 4.0 XSD complex and simple types.
 - `...MatchesFixed` methods test explicit values against XSD `fixed`
   constraints.
 
+Numeric field types are unchanged by XML lexical normalization. Finite decimals
+are written without exponent notation, but the model still uses `float64`
+precision. Integers must fit their generated Go type. Exact arbitrary-precision
+XSD numbers are outside the model's representational range.
+
 Directly assigning generated fields is supported. Constructors and `Add...`
 methods are conveniences, not a separate object model.
 
@@ -91,6 +96,9 @@ Issue paths use indexed XML-style paths.
 other regular file except `mimetype` and `META-INF/container.xml`.
 
 Resource order and bytes are preserved; ZIP compression metadata is not.
+Root-file paths and media types are interpreted using XSD token whitespace
+normalization. Opus hrefs use XSD anyURI whitespace normalization before URI
+parsing; literal ZIP resource names and percent-encoded spaces are unchanged.
 Encoding validates archive paths and rejects collisions with reserved or
 primary paths.
 
@@ -104,6 +112,10 @@ cannot be decoded safely on every supported platform.
 `DecodeMXLOpusDocument`, together with their `WithOptions` variants, return a
 concrete root type when the expected MXL document kind is known. The `As...`
 accessors cover `MXLPackage.Document` and other polymorphic document values.
+
+`ResolveOpus` decodes linked XML resources with the default XML depth limit of
+256, independently of the `MXLOptions.MaxXMLDepth` used to read the primary
+document. There is currently no separate linked-document depth option.
 
 `ResolveOpus` builds a memoized graph. Repeated links share targets, and
 opus-link cycles between archive documents are supported. `SyncResolvedOpus`

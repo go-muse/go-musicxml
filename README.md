@@ -107,8 +107,10 @@ See [`API.md`](API.md) for invariants and compatibility rules.
 automatically, so callers can inspect, repair, and re-encode incomplete
 documents. Call `Validate` explicitly when XSD conformance is required.
 
-XML decoding supports UTF-8 (with or without a BOM), UTF-16BE/LE, and
-ISO-8859-1. MusicXML root elements are unqualified because the official
+XML decoding supports UTF-8 (with or without a BOM), UTF-16BE/LE (with a BOM,
+or without one when the XML declaration names the byte order), and
+ISO-8859-1. A UTF-16 BOM takes precedence over the encoding declaration.
+MusicXML root elements are unqualified because the official
 MusicXML 4.0 schema has no target namespace. Decoding rejects documents deeper
 than 256 simultaneously open XML elements by default; `DecodeOptions` can set
 a different ceiling up to the package maximum of 4096.
@@ -159,6 +161,12 @@ type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
 ## Limitations
 
 - The generated model and schema validator target MusicXML 4.0.
+- Numeric values use the generated Go numeric types. Decimal values have
+  `float64` precision, and integer values must fit their Go representation;
+  arbitrary-precision XSD values are not preserved.
+- `ResolveOpus` decodes linked resources with the default XML depth limit of
+  256. `MXLOptions.MaxXMLDepth` applies to the primary document, not later
+  linked-resource resolution.
 - XML extensions not represented by the MusicXML 4.0 model are ignored during
   decoding and are not preserved when re-encoded.
 - Encoding and validation reject cyclic opus models and models deeper than

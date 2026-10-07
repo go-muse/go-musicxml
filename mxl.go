@@ -257,7 +257,7 @@ func validateMXLRootFile(value mxlRootFile) error {
 		)
 	}
 
-	mediaType := strings.TrimSpace(value.MediaType)
+	mediaType := collapseValidationWhitespace(value.MediaType)
 	if mediaType != "" && mediaType != musicXMLMIMEType {
 		return fmt.Errorf(
 			"%w: %q",
@@ -313,6 +313,12 @@ func decodeMXLContainer(
 			ErrMXLInvalidContainer,
 			err,
 		)
+	}
+	for index := range result.RootFiles.Files {
+		rootFile := &result.RootFiles.Files[index]
+		// Both attributes are xs:token values, not literal ZIP entry names.
+		rootFile.FullPath = collapseValidationWhitespace(rootFile.FullPath)
+		rootFile.MediaType = collapseValidationWhitespace(rootFile.MediaType)
 	}
 
 	return result, nil

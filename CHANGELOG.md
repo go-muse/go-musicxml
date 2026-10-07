@@ -17,6 +17,23 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   individually.
 - CI jobs and the Make check targets run stages of `scripts/check-all.sh`
   instead of keeping their own copies of the checks.
+- Documented the numeric precision and range limits of the generated model
+  and the default linked-document depth limit used by `ResolveOpus`.
+
+### Fixed
+
+- Encode finite XSD decimal values without exponent notation, including direct
+  built-in fields, named derived types, attributes, and simple content.
+- Accept legal leading signs for unsigned XSD integer values during XML
+  transport and validation, including negative zero for nonnegative values.
+- Decode explicitly declared UTF-16BE/LE documents without a byte-order mark.
+- Decode UTF-16 documents by their byte-order mark even when the encoding
+  declaration names another encoding, instead of re-decoding the text as the
+  declared one.
+- Normalize XSD whitespace in MXL root-file metadata and opus links before
+  resolving paths, while preserving literal resource names and bytes.
+- Use the XSD Unicode name and decimal-digit classes in validation patterns.
+- Include terminal opus elements when checking the maximum document depth.
 
 ## [0.1.0] - 2026-08-15
 
