@@ -17,18 +17,25 @@ Run the standard checks before opening a pull request:
 make check
 ```
 
-For release-level verification:
+For the full set of code checks:
 
 ```bash
-make release-check
+make check-all
 ```
 
-The latter requires a clean, committed worktree. It also checks `go mod tidy`
-and reproducible generation, uses the race detector, and runs short fuzzing
-passes. The external XSD test runs locally when `xmllint` is available; Linux
-CI installs it and requires that test to execute. The underlying
-`scripts/release-check.sh` is also used by the release workflow on Linux,
-macOS, and Windows.
+The latter also checks `go mod tidy` and reproducible generation, uses the
+race detector, and runs short fuzzing passes. It works on a worktree with
+uncommitted changes. The external XSD test runs locally when `xmllint` is
+available; Linux CI installs it and requires that test to execute. The
+underlying `scripts/check-all.sh` is also used by CI and the release workflow
+on Linux, macOS, and Windows. Tag, changelog, and README version checks run
+only in the release workflow.
+
+Single stages can be run directly, for example
+`bash scripts/check-all.sh mod generate`; the stages are `mod`, `generate`,
+`format`, `test`, `vet`, `race`, and `fuzz`. The Make targets `mod-check`,
+`generated`, `format-check`, `test`, `vet`, `race`, and `fuzz` are shortcuts
+for the same stages, and the CI jobs run them from the same script.
 
 ## Generated code
 

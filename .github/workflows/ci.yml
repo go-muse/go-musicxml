@@ -40,38 +40,19 @@ jobs:
 
       - name: Check module files
         shell: bash
-        run: |
-          go mod tidy
-          changes="$(git status --porcelain -- go.mod go.sum)"
-          if [[ -n "$changes" ]]; then
-            echo "go mod tidy changed module files:"
-            echo "$changes"
-            exit 1
-          fi
+        run: bash scripts/check-all.sh mod
 
       - name: Check generated code
         shell: bash
-        run: |
-          go generate ./...
-          changes="$(git status --porcelain --untracked-files=all)"
-          if [[ -n "$changes" ]]; then
-            echo "go generate changed or created files:"
-            echo "$changes"
-            exit 1
-          fi
+        run: bash scripts/check-all.sh generate
 
       - name: Check formatting
         shell: bash
-        run: |
-          unformatted="$(git ls-files -z --cached --others --exclude-standard -- '*.go' | xargs -0 gofmt -l)"
-          if [[ -n "$unformatted" ]]; then
-            echo "unformatted Go files:"
-            echo "$unformatted"
-            exit 1
-          fi
+        run: bash scripts/check-all.sh format
 
       - name: Run go vet
-        run: go vet ./...
+        shell: bash
+        run: bash scripts/check-all.sh vet
 
   test:
     name: Test (${{ matrix.os }})
@@ -97,7 +78,8 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run tests
-        run: go test -count=1 ./...
+        shell: bash
+        run: bash scripts/check-all.sh test
 
   race:
     name: Race detector
@@ -116,7 +98,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run tests with race detector
-        run: make race
+        run: bash scripts/check-all.sh race
 
   xsd-conformance:
     name: External XSD conformance
@@ -143,21 +125,9 @@ jobs:
         run: go test -count=1 -run='^TestEncodedCorpusConformsToMusicXMLSchema$' .
 
   fuzz:
-    name: Fuzz smoke (${{ matrix.target }})
+    name: Fuzz smoke
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: FuzzDocumentRoundTrip
-            fuzztime: 10s
-          - target: FuzzMXLPackageRoundTrip
-            # An execution count makes negligible coverage impossible to
-            # conceal behind a nominal time budget.
-            fuzztime: 10000x
-          - target: FuzzMXLLinkResolution
-            fuzztime: 10s
 
     steps:
       - name: Check out repository
@@ -170,5 +140,5 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      - name: Run fuzz target
-        run: go test -run='^$' -fuzz='^${{ matrix.target }}$' -fuzztime='${{ matrix.fuzztime }}' .
+      - name: Run fuzz targets
+        run: bash scripts/check-all.sh fuzz

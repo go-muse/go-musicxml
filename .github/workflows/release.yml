@@ -83,13 +83,13 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libxml2-utils
 
-      - name: Run release checks
+      - name: Run full checks
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == "Linux" ]]; then
             export MUSICXML_REQUIRE_XMLLINT=1
           fi
-          bash scripts/release-check.sh
+          bash scripts/check-all.sh
 
   publish:
     name: Create GitHub release
