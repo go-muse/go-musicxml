@@ -26,6 +26,7 @@ const (
 type GoType struct {
 	Expression string
 	Kind       GoTypeKind
+	xmlType    string
 }
 
 // BuiltinGoType returns the Go representation of an XML Schema built-in
@@ -55,6 +56,18 @@ func BuiltinGoType(declaration *Declaration) (GoType, error) {
 		)
 	}
 
+	switch declaration.Name.Local {
+	case "decimal":
+		value.xmlType = "xmlDecimal"
+	case "positiveInteger", "nonNegativeInteger", "unsignedLong":
+		value.xmlType = "xmlUnsigned64"
+	case "unsignedInt":
+		value.xmlType = "xmlUnsigned32"
+	case "unsignedShort":
+		value.xmlType = "xmlUnsigned16"
+	case "unsignedByte":
+		value.xmlType = "xmlUnsigned8"
+	}
 	return value, nil
 }
 

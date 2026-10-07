@@ -233,9 +233,14 @@ func GenerateDocument(
 			&body,
 			inlineType.structure,
 		)
+		renderer.registerNamedStructure(inlineType.structure)
 	}
 	for _, choice := range renderer.choices {
 		renderer.renderChoice(&body, choice)
+	}
+
+	if _, err := renderer.renderNumericXML(&body); err != nil {
+		return nil, err
 	}
 
 	var source bytes.Buffer

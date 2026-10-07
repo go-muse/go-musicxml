@@ -150,7 +150,7 @@ func TestResolveMXLLinkWhitespaceNormalization(t *testing.T) {
 func TestMXLWhitespaceResolveAndSync(t *testing.T) {
 	t.Parallel()
 
-	firstXML := encodeUTF16(`<?xml version="1.0" encoding="UTF-16BE"?><score-partwise/>`, binary.BigEndian)
+	firstXML := encodeUTF16(`<?xml version="1.0" encoding="UTF-16BE"?><score-partwise/>`, binary.BigEndian)[2:]
 	secondXML := []byte("<score-timewise>\n</score-timewise>")
 	childXML := []byte(`<opus><score xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href=" %20second%20%20score.musicxml%20 "/></opus>`)
 	value := &MXLPackage{

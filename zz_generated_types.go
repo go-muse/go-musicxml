@@ -8202,3 +8202,1855 @@ func (value TimeContent) MarshalXML(
 
 	return nil
 }
+
+type xmlAttributes struct {
+	Footnote     *FormattedText     `xml:"footnote,omitempty"`
+	Level        *Level             `xml:"level,omitempty"`
+	Divisions    *PositiveDivisions `xml:"divisions,omitempty"`
+	Key          []Key              `xml:"key"`
+	Time         []Time             `xml:"time"`
+	Staves       *xmlUnsigned64     `xml:"staves,omitempty"`
+	PartSymbol   *PartSymbol        `xml:"part-symbol,omitempty"`
+	Instruments  *xmlUnsigned64     `xml:"instruments,omitempty"`
+	Clef         []Clef             `xml:"clef"`
+	StaffDetails []StaffDetails     `xml:"staff-details"`
+	Transpose    []Transpose        `xml:"transpose"`
+	ForPart      []ForPart          `xml:"for-part"`
+	Directive    []struct {
+		Value      string      `xml:",chardata"`
+		Lang       *string     `xml:"http://www.w3.org/XML/1998/namespace lang,attr,omitempty"`
+		DefaultX   *Tenths     `xml:"default-x,attr,omitempty"`
+		DefaultY   *Tenths     `xml:"default-y,attr,omitempty"`
+		RelativeX  *Tenths     `xml:"relative-x,attr,omitempty"`
+		RelativeY  *Tenths     `xml:"relative-y,attr,omitempty"`
+		FontFamily *FontFamily `xml:"font-family,attr,omitempty"`
+		FontStyle  *FontStyle  `xml:"font-style,attr,omitempty"`
+		FontSize   *FontSize   `xml:"font-size,attr,omitempty"`
+		FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
+		Color      *Color      `xml:"color,attr,omitempty"`
+	} `xml:"directive"`
+	MeasureStyle []MeasureStyle `xml:"measure-style"`
+}
+
+func xmlAttributesFrom(value Attributes) xmlAttributes {
+	return xmlAttributes{
+		Footnote:     value.Footnote,
+		Level:        value.Level,
+		Divisions:    value.Divisions,
+		Key:          value.Key,
+		Time:         value.Time,
+		Staves:       (*xmlUnsigned64)(value.Staves),
+		PartSymbol:   value.PartSymbol,
+		Instruments:  (*xmlUnsigned64)(value.Instruments),
+		Clef:         value.Clef,
+		StaffDetails: value.StaffDetails,
+		Transpose:    value.Transpose,
+		ForPart:      value.ForPart,
+		Directive:    value.Directive,
+		MeasureStyle: value.MeasureStyle,
+	}
+}
+
+func (value xmlAttributes) model() Attributes {
+	return Attributes{
+		Footnote:     value.Footnote,
+		Level:        value.Level,
+		Divisions:    value.Divisions,
+		Key:          value.Key,
+		Time:         value.Time,
+		Staves:       (*uint64)(value.Staves),
+		PartSymbol:   value.PartSymbol,
+		Instruments:  (*uint64)(value.Instruments),
+		Clef:         value.Clef,
+		StaffDetails: value.StaffDetails,
+		Transpose:    value.Transpose,
+		ForPart:      value.ForPart,
+		Directive:    value.Directive,
+		MeasureStyle: value.MeasureStyle,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Attributes) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlAttributesFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Attributes) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlAttributesFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlBeatRepeat struct {
+	SlashType   *NoteTypeValue `xml:"slash-type,omitempty"`
+	SlashDot    []Empty        `xml:"slash-dot"`
+	ExceptVoice []string       `xml:"except-voice"`
+	Type        StartStop      `xml:"type,attr"`
+	Slashes     *xmlUnsigned64 `xml:"slashes,attr,omitempty"`
+	UseDots     *YesNo         `xml:"use-dots,attr,omitempty"`
+}
+
+func xmlBeatRepeatFrom(value BeatRepeat) xmlBeatRepeat {
+	return xmlBeatRepeat{
+		SlashType:   value.SlashType,
+		SlashDot:    value.SlashDot,
+		ExceptVoice: value.ExceptVoice,
+		Type:        value.Type,
+		Slashes:     (*xmlUnsigned64)(value.Slashes),
+		UseDots:     value.UseDots,
+	}
+}
+
+func (value xmlBeatRepeat) model() BeatRepeat {
+	return BeatRepeat{
+		SlashType:   value.SlashType,
+		SlashDot:    value.SlashDot,
+		ExceptVoice: value.ExceptVoice,
+		Type:        value.Type,
+		Slashes:     (*uint64)(value.Slashes),
+		UseDots:     value.UseDots,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value BeatRepeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlBeatRepeatFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *BeatRepeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlBeatRepeatFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlBookmark struct {
+	ID       string         `xml:"id,attr"`
+	Name     *string        `xml:"name,attr,omitempty"`
+	Element  *string        `xml:"element,attr,omitempty"`
+	Position *xmlUnsigned64 `xml:"position,attr,omitempty"`
+}
+
+func xmlBookmarkFrom(value Bookmark) xmlBookmark {
+	return xmlBookmark{
+		ID:       value.ID,
+		Name:     value.Name,
+		Element:  value.Element,
+		Position: (*xmlUnsigned64)(value.Position),
+	}
+}
+
+func (value xmlBookmark) model() Bookmark {
+	return Bookmark{
+		ID:       value.ID,
+		Name:     value.Name,
+		Element:  value.Element,
+		Position: (*uint64)(value.Position),
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Bookmark) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlBookmarkFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Bookmark) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlBookmarkFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlCredit struct {
+	Content CreditContents `xml:",any"`
+	Page    *xmlUnsigned64 `xml:"page,attr,omitempty"`
+	ID      *string        `xml:"id,attr,omitempty"`
+}
+
+func xmlCreditFrom(value Credit) xmlCredit {
+	return xmlCredit{
+		Content: value.Content,
+		Page:    (*xmlUnsigned64)(value.Page),
+		ID:      value.ID,
+	}
+}
+
+func (value xmlCredit) model() Credit {
+	return Credit{
+		Content: value.Content,
+		Page:    (*uint64)(value.Page),
+		ID:      value.ID,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Credit) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlCreditFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Credit) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlCreditFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlDegreeAlter struct {
+	Value      xmlDecimal  `xml:",chardata"`
+	PlusMinus  *YesNo      `xml:"plus-minus,attr,omitempty"`
+	DefaultX   *Tenths     `xml:"default-x,attr,omitempty"`
+	DefaultY   *Tenths     `xml:"default-y,attr,omitempty"`
+	RelativeX  *Tenths     `xml:"relative-x,attr,omitempty"`
+	RelativeY  *Tenths     `xml:"relative-y,attr,omitempty"`
+	FontFamily *FontFamily `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle  `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize   `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight `xml:"font-weight,attr,omitempty"`
+	Color      *Color      `xml:"color,attr,omitempty"`
+}
+
+func xmlDegreeAlterFrom(value DegreeAlter) xmlDegreeAlter {
+	return xmlDegreeAlter{
+		Value:      xmlDecimal(value.Value),
+		PlusMinus:  value.PlusMinus,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+func (value xmlDegreeAlter) model() DegreeAlter {
+	return DegreeAlter{
+		Value:      Semitones(value.Value),
+		PlusMinus:  value.PlusMinus,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value DegreeAlter) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDegreeAlterFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *DegreeAlter) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlDegreeAlterFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlDegreeValue struct {
+	Value      xmlUnsigned64      `xml:",chardata"`
+	Symbol     *DegreeSymbolValue `xml:"symbol,attr,omitempty"`
+	Text       *string            `xml:"text,attr,omitempty"`
+	DefaultX   *Tenths            `xml:"default-x,attr,omitempty"`
+	DefaultY   *Tenths            `xml:"default-y,attr,omitempty"`
+	RelativeX  *Tenths            `xml:"relative-x,attr,omitempty"`
+	RelativeY  *Tenths            `xml:"relative-y,attr,omitempty"`
+	FontFamily *FontFamily        `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle         `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize          `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight        `xml:"font-weight,attr,omitempty"`
+	Color      *Color             `xml:"color,attr,omitempty"`
+}
+
+func xmlDegreeValueFrom(value DegreeValue) xmlDegreeValue {
+	return xmlDegreeValue{
+		Value:      xmlUnsigned64(value.Value),
+		Symbol:     value.Symbol,
+		Text:       value.Text,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+func (value xmlDegreeValue) model() DegreeValue {
+	return DegreeValue{
+		Value:      uint64(value.Value),
+		Symbol:     value.Symbol,
+		Text:       value.Text,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value DegreeValue) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDegreeValueFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *DegreeValue) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlDegreeValueFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlDirection struct {
+	DirectionType []DirectionType `xml:"direction-type"`
+	Offset        *Offset         `xml:"offset,omitempty"`
+	Footnote      *FormattedText  `xml:"footnote,omitempty"`
+	Level         *Level          `xml:"level,omitempty"`
+	Voice         *string         `xml:"voice,omitempty"`
+	Staff         *xmlUnsigned64  `xml:"staff,omitempty"`
+	Sound         *Sound          `xml:"sound,omitempty"`
+	Listening     *Listening      `xml:"listening,omitempty"`
+	Placement     *AboveBelow     `xml:"placement,attr,omitempty"`
+	Directive     *YesNo          `xml:"directive,attr,omitempty"`
+	System        *SystemRelation `xml:"system,attr,omitempty"`
+	ID            *string         `xml:"id,attr,omitempty"`
+}
+
+func xmlDirectionFrom(value Direction) xmlDirection {
+	return xmlDirection{
+		DirectionType: value.DirectionType,
+		Offset:        value.Offset,
+		Footnote:      value.Footnote,
+		Level:         value.Level,
+		Voice:         value.Voice,
+		Staff:         (*xmlUnsigned64)(value.Staff),
+		Sound:         value.Sound,
+		Listening:     value.Listening,
+		Placement:     value.Placement,
+		Directive:     value.Directive,
+		System:        value.System,
+		ID:            value.ID,
+	}
+}
+
+func (value xmlDirection) model() Direction {
+	return Direction{
+		DirectionType: value.DirectionType,
+		Offset:        value.Offset,
+		Footnote:      value.Footnote,
+		Level:         value.Level,
+		Voice:         value.Voice,
+		Staff:         (*uint64)(value.Staff),
+		Sound:         value.Sound,
+		Listening:     value.Listening,
+		Placement:     value.Placement,
+		Directive:     value.Directive,
+		System:        value.System,
+		ID:            value.ID,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Direction) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDirectionFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Direction) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlDirectionFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlDistance struct {
+	Value xmlDecimal   `xml:",chardata"`
+	Type  DistanceType `xml:"type,attr"`
+}
+
+func xmlDistanceFrom(value Distance) xmlDistance {
+	return xmlDistance{
+		Value: xmlDecimal(value.Value),
+		Type:  value.Type,
+	}
+}
+
+func (value xmlDistance) model() Distance {
+	return Distance{
+		Value: Tenths(value.Value),
+		Type:  value.Type,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Distance) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlDistanceFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Distance) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlDistanceFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlFirstFret struct {
+	Value    xmlUnsigned64 `xml:",chardata"`
+	Text     *string       `xml:"text,attr,omitempty"`
+	Location *LeftRight    `xml:"location,attr,omitempty"`
+}
+
+func xmlFirstFretFrom(value FirstFret) xmlFirstFret {
+	return xmlFirstFret{
+		Value:    xmlUnsigned64(value.Value),
+		Text:     value.Text,
+		Location: value.Location,
+	}
+}
+
+func (value xmlFirstFret) model() FirstFret {
+	return FirstFret{
+		Value:    uint64(value.Value),
+		Text:     value.Text,
+		Location: value.Location,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value FirstFret) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlFirstFretFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *FirstFret) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlFirstFretFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlForward struct {
+	Duration PositiveDivisions `xml:"duration"`
+	Footnote *FormattedText    `xml:"footnote,omitempty"`
+	Level    *Level            `xml:"level,omitempty"`
+	Voice    *string           `xml:"voice,omitempty"`
+	Staff    *xmlUnsigned64    `xml:"staff,omitempty"`
+}
+
+func xmlForwardFrom(value Forward) xmlForward {
+	return xmlForward{
+		Duration: value.Duration,
+		Footnote: value.Footnote,
+		Level:    value.Level,
+		Voice:    value.Voice,
+		Staff:    (*xmlUnsigned64)(value.Staff),
+	}
+}
+
+func (value xmlForward) model() Forward {
+	return Forward{
+		Duration: value.Duration,
+		Footnote: value.Footnote,
+		Level:    value.Level,
+		Voice:    value.Voice,
+		Staff:    (*uint64)(value.Staff),
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Forward) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlForwardFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Forward) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlForwardFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlFrame struct {
+	FrameStrings xmlUnsigned64    `xml:"frame-strings"`
+	FrameFrets   xmlUnsigned64    `xml:"frame-frets"`
+	FirstFret    *FirstFret       `xml:"first-fret,omitempty"`
+	FrameNote    []FrameNote      `xml:"frame-note"`
+	Height       *Tenths          `xml:"height,attr,omitempty"`
+	Width        *Tenths          `xml:"width,attr,omitempty"`
+	Unplayed     *string          `xml:"unplayed,attr,omitempty"`
+	DefaultX     *Tenths          `xml:"default-x,attr,omitempty"`
+	DefaultY     *Tenths          `xml:"default-y,attr,omitempty"`
+	RelativeX    *Tenths          `xml:"relative-x,attr,omitempty"`
+	RelativeY    *Tenths          `xml:"relative-y,attr,omitempty"`
+	Color        *Color           `xml:"color,attr,omitempty"`
+	Halign       *LeftCenterRight `xml:"halign,attr,omitempty"`
+	Valign       *ValignImage     `xml:"valign,attr,omitempty"`
+	ID           *string          `xml:"id,attr,omitempty"`
+}
+
+func xmlFrameFrom(value Frame) xmlFrame {
+	return xmlFrame{
+		FrameStrings: xmlUnsigned64(value.FrameStrings),
+		FrameFrets:   xmlUnsigned64(value.FrameFrets),
+		FirstFret:    value.FirstFret,
+		FrameNote:    value.FrameNote,
+		Height:       value.Height,
+		Width:        value.Width,
+		Unplayed:     value.Unplayed,
+		DefaultX:     value.DefaultX,
+		DefaultY:     value.DefaultY,
+		RelativeX:    value.RelativeX,
+		RelativeY:    value.RelativeY,
+		Color:        value.Color,
+		Halign:       value.Halign,
+		Valign:       value.Valign,
+		ID:           value.ID,
+	}
+}
+
+func (value xmlFrame) model() Frame {
+	return Frame{
+		FrameStrings: uint64(value.FrameStrings),
+		FrameFrets:   uint64(value.FrameFrets),
+		FirstFret:    value.FirstFret,
+		FrameNote:    value.FrameNote,
+		Height:       value.Height,
+		Width:        value.Width,
+		Unplayed:     value.Unplayed,
+		DefaultX:     value.DefaultX,
+		DefaultY:     value.DefaultY,
+		RelativeX:    value.RelativeX,
+		RelativeY:    value.RelativeY,
+		Color:        value.Color,
+		Halign:       value.Halign,
+		Valign:       value.Valign,
+		ID:           value.ID,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Frame) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlFrameFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Frame) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlFrameFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlFret struct {
+	Value      xmlUnsigned64 `xml:",chardata"`
+	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
+	Color      *Color        `xml:"color,attr,omitempty"`
+}
+
+func xmlFretFrom(value Fret) xmlFret {
+	return xmlFret{
+		Value:      xmlUnsigned64(value.Value),
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+func (value xmlFret) model() Fret {
+	return Fret{
+		Value:      uint64(value.Value),
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Fret) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlFretFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Fret) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlFretFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlHarmony struct {
+	Content     HarmonyContents     `xml:",any"`
+	Frame       *Frame              `xml:"frame,omitempty"`
+	Offset      *Offset             `xml:"offset,omitempty"`
+	Footnote    *FormattedText      `xml:"footnote,omitempty"`
+	Level       *Level              `xml:"level,omitempty"`
+	Staff       *xmlUnsigned64      `xml:"staff,omitempty"`
+	Type        *HarmonyType        `xml:"type,attr,omitempty"`
+	PrintFrame  *YesNo              `xml:"print-frame,attr,omitempty"`
+	Arrangement *HarmonyArrangement `xml:"arrangement,attr,omitempty"`
+	PrintObject *YesNo              `xml:"print-object,attr,omitempty"`
+	DefaultX    *Tenths             `xml:"default-x,attr,omitempty"`
+	DefaultY    *Tenths             `xml:"default-y,attr,omitempty"`
+	RelativeX   *Tenths             `xml:"relative-x,attr,omitempty"`
+	RelativeY   *Tenths             `xml:"relative-y,attr,omitempty"`
+	FontFamily  *FontFamily         `xml:"font-family,attr,omitempty"`
+	FontStyle   *FontStyle          `xml:"font-style,attr,omitempty"`
+	FontSize    *FontSize           `xml:"font-size,attr,omitempty"`
+	FontWeight  *FontWeight         `xml:"font-weight,attr,omitempty"`
+	Color       *Color              `xml:"color,attr,omitempty"`
+	Placement   *AboveBelow         `xml:"placement,attr,omitempty"`
+	System      *SystemRelation     `xml:"system,attr,omitempty"`
+	ID          *string             `xml:"id,attr,omitempty"`
+}
+
+func xmlHarmonyFrom(value Harmony) xmlHarmony {
+	return xmlHarmony{
+		Content:     value.Content,
+		Frame:       value.Frame,
+		Offset:      value.Offset,
+		Footnote:    value.Footnote,
+		Level:       value.Level,
+		Staff:       (*xmlUnsigned64)(value.Staff),
+		Type:        value.Type,
+		PrintFrame:  value.PrintFrame,
+		Arrangement: value.Arrangement,
+		PrintObject: value.PrintObject,
+		DefaultX:    value.DefaultX,
+		DefaultY:    value.DefaultY,
+		RelativeX:   value.RelativeX,
+		RelativeY:   value.RelativeY,
+		FontFamily:  value.FontFamily,
+		FontStyle:   value.FontStyle,
+		FontSize:    value.FontSize,
+		FontWeight:  value.FontWeight,
+		Color:       value.Color,
+		Placement:   value.Placement,
+		System:      value.System,
+		ID:          value.ID,
+	}
+}
+
+func (value xmlHarmony) model() Harmony {
+	return Harmony{
+		Content:     value.Content,
+		Frame:       value.Frame,
+		Offset:      value.Offset,
+		Footnote:    value.Footnote,
+		Level:       value.Level,
+		Staff:       (*uint64)(value.Staff),
+		Type:        value.Type,
+		PrintFrame:  value.PrintFrame,
+		Arrangement: value.Arrangement,
+		PrintObject: value.PrintObject,
+		DefaultX:    value.DefaultX,
+		DefaultY:    value.DefaultY,
+		RelativeX:   value.RelativeX,
+		RelativeY:   value.RelativeY,
+		FontFamily:  value.FontFamily,
+		FontStyle:   value.FontStyle,
+		FontSize:    value.FontSize,
+		FontWeight:  value.FontWeight,
+		Color:       value.Color,
+		Placement:   value.Placement,
+		System:      value.System,
+		ID:          value.ID,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Harmony) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlHarmonyFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Harmony) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlHarmonyFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlHarmonyAlter struct {
+	Value       xmlDecimal  `xml:",chardata"`
+	Location    *LeftRight  `xml:"location,attr,omitempty"`
+	PrintObject *YesNo      `xml:"print-object,attr,omitempty"`
+	DefaultX    *Tenths     `xml:"default-x,attr,omitempty"`
+	DefaultY    *Tenths     `xml:"default-y,attr,omitempty"`
+	RelativeX   *Tenths     `xml:"relative-x,attr,omitempty"`
+	RelativeY   *Tenths     `xml:"relative-y,attr,omitempty"`
+	FontFamily  *FontFamily `xml:"font-family,attr,omitempty"`
+	FontStyle   *FontStyle  `xml:"font-style,attr,omitempty"`
+	FontSize    *FontSize   `xml:"font-size,attr,omitempty"`
+	FontWeight  *FontWeight `xml:"font-weight,attr,omitempty"`
+	Color       *Color      `xml:"color,attr,omitempty"`
+}
+
+func xmlHarmonyAlterFrom(value HarmonyAlter) xmlHarmonyAlter {
+	return xmlHarmonyAlter{
+		Value:       xmlDecimal(value.Value),
+		Location:    value.Location,
+		PrintObject: value.PrintObject,
+		DefaultX:    value.DefaultX,
+		DefaultY:    value.DefaultY,
+		RelativeX:   value.RelativeX,
+		RelativeY:   value.RelativeY,
+		FontFamily:  value.FontFamily,
+		FontStyle:   value.FontStyle,
+		FontSize:    value.FontSize,
+		FontWeight:  value.FontWeight,
+		Color:       value.Color,
+	}
+}
+
+func (value xmlHarmonyAlter) model() HarmonyAlter {
+	return HarmonyAlter{
+		Value:       Semitones(value.Value),
+		Location:    value.Location,
+		PrintObject: value.PrintObject,
+		DefaultX:    value.DefaultX,
+		DefaultY:    value.DefaultY,
+		RelativeX:   value.RelativeX,
+		RelativeY:   value.RelativeY,
+		FontFamily:  value.FontFamily,
+		FontStyle:   value.FontStyle,
+		FontSize:    value.FontSize,
+		FontWeight:  value.FontWeight,
+		Color:       value.Color,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value HarmonyAlter) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlHarmonyAlterFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *HarmonyAlter) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlHarmonyAlterFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlInversion struct {
+	Value      xmlUnsigned64 `xml:",chardata"`
+	Text       *string       `xml:"text,attr,omitempty"`
+	DefaultX   *Tenths       `xml:"default-x,attr,omitempty"`
+	DefaultY   *Tenths       `xml:"default-y,attr,omitempty"`
+	RelativeX  *Tenths       `xml:"relative-x,attr,omitempty"`
+	RelativeY  *Tenths       `xml:"relative-y,attr,omitempty"`
+	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
+	Color      *Color        `xml:"color,attr,omitempty"`
+}
+
+func xmlInversionFrom(value Inversion) xmlInversion {
+	return xmlInversion{
+		Value:      xmlUnsigned64(value.Value),
+		Text:       value.Text,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+func (value xmlInversion) model() Inversion {
+	return Inversion{
+		Value:      uint64(value.Value),
+		Text:       value.Text,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Inversion) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlInversionFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Inversion) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlInversionFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlKeyOctave struct {
+	Value  Octave        `xml:",chardata"`
+	Number xmlUnsigned64 `xml:"number,attr"`
+	Cancel *YesNo        `xml:"cancel,attr,omitempty"`
+}
+
+func xmlKeyOctaveFrom(value KeyOctave) xmlKeyOctave {
+	return xmlKeyOctave{
+		Value:  value.Value,
+		Number: xmlUnsigned64(value.Number),
+		Cancel: value.Cancel,
+	}
+}
+
+func (value xmlKeyOctave) model() KeyOctave {
+	return KeyOctave{
+		Value:  value.Value,
+		Number: uint64(value.Number),
+		Cancel: value.Cancel,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value KeyOctave) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlKeyOctaveFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *KeyOctave) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlKeyOctaveFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlLineWidth struct {
+	Value xmlDecimal    `xml:",chardata"`
+	Type  LineWidthType `xml:"type,attr"`
+}
+
+func xmlLineWidthFrom(value LineWidth) xmlLineWidth {
+	return xmlLineWidth{
+		Value: xmlDecimal(value.Value),
+		Type:  value.Type,
+	}
+}
+
+func (value xmlLineWidth) model() LineWidth {
+	return LineWidth{
+		Value: Tenths(value.Value),
+		Type:  value.Type,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value LineWidth) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlLineWidthFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *LineWidth) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlLineWidthFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlLink struct {
+	Name      *string        `xml:"name,attr,omitempty"`
+	Href      string         `xml:"http://www.w3.org/1999/xlink href,attr"`
+	Type      *string        `xml:"http://www.w3.org/1999/xlink type,attr,omitempty"`
+	Role      *string        `xml:"http://www.w3.org/1999/xlink role,attr,omitempty"`
+	Title     *string        `xml:"http://www.w3.org/1999/xlink title,attr,omitempty"`
+	Show      *string        `xml:"http://www.w3.org/1999/xlink show,attr,omitempty"`
+	Actuate   *string        `xml:"http://www.w3.org/1999/xlink actuate,attr,omitempty"`
+	Element   *string        `xml:"element,attr,omitempty"`
+	Position  *xmlUnsigned64 `xml:"position,attr,omitempty"`
+	DefaultX  *Tenths        `xml:"default-x,attr,omitempty"`
+	DefaultY  *Tenths        `xml:"default-y,attr,omitempty"`
+	RelativeX *Tenths        `xml:"relative-x,attr,omitempty"`
+	RelativeY *Tenths        `xml:"relative-y,attr,omitempty"`
+}
+
+func xmlLinkFrom(value Link) xmlLink {
+	return xmlLink{
+		Name:      value.Name,
+		Href:      value.Href,
+		Type:      value.Type,
+		Role:      value.Role,
+		Title:     value.Title,
+		Show:      value.Show,
+		Actuate:   value.Actuate,
+		Element:   value.Element,
+		Position:  (*xmlUnsigned64)(value.Position),
+		DefaultX:  value.DefaultX,
+		DefaultY:  value.DefaultY,
+		RelativeX: value.RelativeX,
+		RelativeY: value.RelativeY,
+	}
+}
+
+func (value xmlLink) model() Link {
+	return Link{
+		Name:      value.Name,
+		Href:      value.Href,
+		Type:      value.Type,
+		Role:      value.Role,
+		Title:     value.Title,
+		Show:      value.Show,
+		Actuate:   value.Actuate,
+		Element:   value.Element,
+		Position:  (*uint64)(value.Position),
+		DefaultX:  value.DefaultX,
+		DefaultY:  value.DefaultY,
+		RelativeX: value.RelativeX,
+		RelativeY: value.RelativeY,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Link) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlLinkFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Link) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlLinkFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlMeasureRepeat struct {
+	Value   PositiveIntegerOrEmpty `xml:",chardata"`
+	Type    StartStop              `xml:"type,attr"`
+	Slashes *xmlUnsigned64         `xml:"slashes,attr,omitempty"`
+}
+
+func xmlMeasureRepeatFrom(value MeasureRepeat) xmlMeasureRepeat {
+	return xmlMeasureRepeat{
+		Value:   value.Value,
+		Type:    value.Type,
+		Slashes: (*xmlUnsigned64)(value.Slashes),
+	}
+}
+
+func (value xmlMeasureRepeat) model() MeasureRepeat {
+	return MeasureRepeat{
+		Value:   value.Value,
+		Type:    value.Type,
+		Slashes: (*uint64)(value.Slashes),
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value MeasureRepeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlMeasureRepeatFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *MeasureRepeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlMeasureRepeatFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlMetronomeTuplet struct {
+	xmlTimeModification
+	Type       StartStop   `xml:"type,attr"`
+	Bracket    *YesNo      `xml:"bracket,attr,omitempty"`
+	ShowNumber *ShowTuplet `xml:"show-number,attr,omitempty"`
+}
+
+func xmlMetronomeTupletFrom(value MetronomeTuplet) xmlMetronomeTuplet {
+	return xmlMetronomeTuplet{
+		xmlTimeModification: xmlTimeModificationFrom(value.TimeModification),
+		Type:                value.Type,
+		Bracket:             value.Bracket,
+		ShowNumber:          value.ShowNumber,
+	}
+}
+
+func (value xmlMetronomeTuplet) model() MetronomeTuplet {
+	return MetronomeTuplet{
+		TimeModification: value.xmlTimeModification.model(),
+		Type:             value.Type,
+		Bracket:          value.Bracket,
+		ShowNumber:       value.ShowNumber,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value MetronomeTuplet) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlMetronomeTupletFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *MetronomeTuplet) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlMetronomeTupletFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlMultipleRest struct {
+	Value      xmlUnsigned64 `xml:",chardata"`
+	UseSymbols *YesNo        `xml:"use-symbols,attr,omitempty"`
+}
+
+func xmlMultipleRestFrom(value MultipleRest) xmlMultipleRest {
+	return xmlMultipleRest{
+		Value:      xmlUnsigned64(value.Value),
+		UseSymbols: value.UseSymbols,
+	}
+}
+
+func (value xmlMultipleRest) model() MultipleRest {
+	return MultipleRest{
+		Value:      uint64(value.Value),
+		UseSymbols: value.UseSymbols,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value MultipleRest) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlMultipleRestFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *MultipleRest) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlMultipleRestFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlNote struct {
+	Grace            *Grace              `xml:"grace,omitempty"`
+	Cue              *Empty              `xml:"cue,omitempty"`
+	Chord            *Empty              `xml:"chord,omitempty"`
+	Pitch            *Pitch              `xml:"pitch,omitempty"`
+	Unpitched        *Unpitched          `xml:"unpitched,omitempty"`
+	Rest             *Rest               `xml:"rest,omitempty"`
+	Duration         *PositiveDivisions  `xml:"duration,omitempty"`
+	Tie              []Tie               `xml:"tie"`
+	Instrument       []Instrument        `xml:"instrument"`
+	Footnote         *FormattedText      `xml:"footnote,omitempty"`
+	Level            *Level              `xml:"level,omitempty"`
+	Voice            *string             `xml:"voice,omitempty"`
+	Type             *NoteType           `xml:"type,omitempty"`
+	Dot              []EmptyPlacement    `xml:"dot"`
+	Accidental       *Accidental         `xml:"accidental,omitempty"`
+	TimeModification *TimeModification   `xml:"time-modification,omitempty"`
+	Stem             *Stem               `xml:"stem,omitempty"`
+	Notehead         *Notehead           `xml:"notehead,omitempty"`
+	NoteheadText     *NoteheadText       `xml:"notehead-text,omitempty"`
+	Staff            *xmlUnsigned64      `xml:"staff,omitempty"`
+	Beam             []Beam              `xml:"beam"`
+	Notations        []Notations         `xml:"notations"`
+	Lyric            []Lyric             `xml:"lyric"`
+	Play             *Play               `xml:"play,omitempty"`
+	Listen           *Listen             `xml:"listen,omitempty"`
+	PrintLeger       *YesNo              `xml:"print-leger,attr,omitempty"`
+	Dynamics         *NonNegativeDecimal `xml:"dynamics,attr,omitempty"`
+	EndDynamics      *NonNegativeDecimal `xml:"end-dynamics,attr,omitempty"`
+	Attack           *Divisions          `xml:"attack,attr,omitempty"`
+	Release          *Divisions          `xml:"release,attr,omitempty"`
+	TimeOnly         *TimeOnly           `xml:"time-only,attr,omitempty"`
+	Pizzicato        *YesNo              `xml:"pizzicato,attr,omitempty"`
+	DefaultX         *Tenths             `xml:"default-x,attr,omitempty"`
+	DefaultY         *Tenths             `xml:"default-y,attr,omitempty"`
+	RelativeX        *Tenths             `xml:"relative-x,attr,omitempty"`
+	RelativeY        *Tenths             `xml:"relative-y,attr,omitempty"`
+	FontFamily       *FontFamily         `xml:"font-family,attr,omitempty"`
+	FontStyle        *FontStyle          `xml:"font-style,attr,omitempty"`
+	FontSize         *FontSize           `xml:"font-size,attr,omitempty"`
+	FontWeight       *FontWeight         `xml:"font-weight,attr,omitempty"`
+	Color            *Color              `xml:"color,attr,omitempty"`
+	PrintDot         *YesNo              `xml:"print-dot,attr,omitempty"`
+	PrintLyric       *YesNo              `xml:"print-lyric,attr,omitempty"`
+	PrintObject      *YesNo              `xml:"print-object,attr,omitempty"`
+	PrintSpacing     *YesNo              `xml:"print-spacing,attr,omitempty"`
+	ID               *string             `xml:"id,attr,omitempty"`
+}
+
+func xmlNoteFrom(value Note) xmlNote {
+	return xmlNote{
+		Grace:            value.Grace,
+		Cue:              value.Cue,
+		Chord:            value.Chord,
+		Pitch:            value.Pitch,
+		Unpitched:        value.Unpitched,
+		Rest:             value.Rest,
+		Duration:         value.Duration,
+		Tie:              value.Tie,
+		Instrument:       value.Instrument,
+		Footnote:         value.Footnote,
+		Level:            value.Level,
+		Voice:            value.Voice,
+		Type:             value.Type,
+		Dot:              value.Dot,
+		Accidental:       value.Accidental,
+		TimeModification: value.TimeModification,
+		Stem:             value.Stem,
+		Notehead:         value.Notehead,
+		NoteheadText:     value.NoteheadText,
+		Staff:            (*xmlUnsigned64)(value.Staff),
+		Beam:             value.Beam,
+		Notations:        value.Notations,
+		Lyric:            value.Lyric,
+		Play:             value.Play,
+		Listen:           value.Listen,
+		PrintLeger:       value.PrintLeger,
+		Dynamics:         value.Dynamics,
+		EndDynamics:      value.EndDynamics,
+		Attack:           value.Attack,
+		Release:          value.Release,
+		TimeOnly:         value.TimeOnly,
+		Pizzicato:        value.Pizzicato,
+		DefaultX:         value.DefaultX,
+		DefaultY:         value.DefaultY,
+		RelativeX:        value.RelativeX,
+		RelativeY:        value.RelativeY,
+		FontFamily:       value.FontFamily,
+		FontStyle:        value.FontStyle,
+		FontSize:         value.FontSize,
+		FontWeight:       value.FontWeight,
+		Color:            value.Color,
+		PrintDot:         value.PrintDot,
+		PrintLyric:       value.PrintLyric,
+		PrintObject:      value.PrintObject,
+		PrintSpacing:     value.PrintSpacing,
+		ID:               value.ID,
+	}
+}
+
+func (value xmlNote) model() Note {
+	return Note{
+		Grace:            value.Grace,
+		Cue:              value.Cue,
+		Chord:            value.Chord,
+		Pitch:            value.Pitch,
+		Unpitched:        value.Unpitched,
+		Rest:             value.Rest,
+		Duration:         value.Duration,
+		Tie:              value.Tie,
+		Instrument:       value.Instrument,
+		Footnote:         value.Footnote,
+		Level:            value.Level,
+		Voice:            value.Voice,
+		Type:             value.Type,
+		Dot:              value.Dot,
+		Accidental:       value.Accidental,
+		TimeModification: value.TimeModification,
+		Stem:             value.Stem,
+		Notehead:         value.Notehead,
+		NoteheadText:     value.NoteheadText,
+		Staff:            (*uint64)(value.Staff),
+		Beam:             value.Beam,
+		Notations:        value.Notations,
+		Lyric:            value.Lyric,
+		Play:             value.Play,
+		Listen:           value.Listen,
+		PrintLeger:       value.PrintLeger,
+		Dynamics:         value.Dynamics,
+		EndDynamics:      value.EndDynamics,
+		Attack:           value.Attack,
+		Release:          value.Release,
+		TimeOnly:         value.TimeOnly,
+		Pizzicato:        value.Pizzicato,
+		DefaultX:         value.DefaultX,
+		DefaultY:         value.DefaultY,
+		RelativeX:        value.RelativeX,
+		RelativeY:        value.RelativeY,
+		FontFamily:       value.FontFamily,
+		FontStyle:        value.FontStyle,
+		FontSize:         value.FontSize,
+		FontWeight:       value.FontWeight,
+		Color:            value.Color,
+		PrintDot:         value.PrintDot,
+		PrintLyric:       value.PrintLyric,
+		PrintObject:      value.PrintObject,
+		PrintSpacing:     value.PrintSpacing,
+		ID:               value.ID,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Note) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlNoteFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Note) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlNoteFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlNoteSize struct {
+	Value xmlDecimal   `xml:",chardata"`
+	Type  NoteSizeType `xml:"type,attr"`
+}
+
+func xmlNoteSizeFrom(value NoteSize) xmlNoteSize {
+	return xmlNoteSize{
+		Value: xmlDecimal(value.Value),
+		Type:  value.Type,
+	}
+}
+
+func (value xmlNoteSize) model() NoteSize {
+	return NoteSize{
+		Value: NonNegativeDecimal(value.Value),
+		Type:  value.Type,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value NoteSize) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlNoteSizeFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *NoteSize) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlNoteSizeFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlNumeralRoot struct {
+	Value      xmlUnsigned64 `xml:",chardata"`
+	Text       *string       `xml:"text,attr,omitempty"`
+	DefaultX   *Tenths       `xml:"default-x,attr,omitempty"`
+	DefaultY   *Tenths       `xml:"default-y,attr,omitempty"`
+	RelativeX  *Tenths       `xml:"relative-x,attr,omitempty"`
+	RelativeY  *Tenths       `xml:"relative-y,attr,omitempty"`
+	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
+	Color      *Color        `xml:"color,attr,omitempty"`
+}
+
+func xmlNumeralRootFrom(value NumeralRoot) xmlNumeralRoot {
+	return xmlNumeralRoot{
+		Value:      xmlUnsigned64(value.Value),
+		Text:       value.Text,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+func (value xmlNumeralRoot) model() NumeralRoot {
+	return NumeralRoot{
+		Value:      NumeralValue(value.Value),
+		Text:       value.Text,
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value NumeralRoot) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlNumeralRootFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *NumeralRoot) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlNumeralRootFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlOctaveShift struct {
+	Type        UpDownStopContinue `xml:"type,attr"`
+	Number      *NumberLevel       `xml:"number,attr,omitempty"`
+	Size        *xmlUnsigned64     `xml:"size,attr,omitempty"`
+	DashLength  *Tenths            `xml:"dash-length,attr,omitempty"`
+	SpaceLength *Tenths            `xml:"space-length,attr,omitempty"`
+	DefaultX    *Tenths            `xml:"default-x,attr,omitempty"`
+	DefaultY    *Tenths            `xml:"default-y,attr,omitempty"`
+	RelativeX   *Tenths            `xml:"relative-x,attr,omitempty"`
+	RelativeY   *Tenths            `xml:"relative-y,attr,omitempty"`
+	FontFamily  *FontFamily        `xml:"font-family,attr,omitempty"`
+	FontStyle   *FontStyle         `xml:"font-style,attr,omitempty"`
+	FontSize    *FontSize          `xml:"font-size,attr,omitempty"`
+	FontWeight  *FontWeight        `xml:"font-weight,attr,omitempty"`
+	Color       *Color             `xml:"color,attr,omitempty"`
+	ID          *string            `xml:"id,attr,omitempty"`
+}
+
+func xmlOctaveShiftFrom(value OctaveShift) xmlOctaveShift {
+	return xmlOctaveShift{
+		Type:        value.Type,
+		Number:      value.Number,
+		Size:        (*xmlUnsigned64)(value.Size),
+		DashLength:  value.DashLength,
+		SpaceLength: value.SpaceLength,
+		DefaultX:    value.DefaultX,
+		DefaultY:    value.DefaultY,
+		RelativeX:   value.RelativeX,
+		RelativeY:   value.RelativeY,
+		FontFamily:  value.FontFamily,
+		FontStyle:   value.FontStyle,
+		FontSize:    value.FontSize,
+		FontWeight:  value.FontWeight,
+		Color:       value.Color,
+		ID:          value.ID,
+	}
+}
+
+func (value xmlOctaveShift) model() OctaveShift {
+	return OctaveShift{
+		Type:        value.Type,
+		Number:      value.Number,
+		Size:        (*uint64)(value.Size),
+		DashLength:  value.DashLength,
+		SpaceLength: value.SpaceLength,
+		DefaultX:    value.DefaultX,
+		DefaultY:    value.DefaultY,
+		RelativeX:   value.RelativeX,
+		RelativeY:   value.RelativeY,
+		FontFamily:  value.FontFamily,
+		FontStyle:   value.FontStyle,
+		FontSize:    value.FontSize,
+		FontWeight:  value.FontWeight,
+		Color:       value.Color,
+		ID:          value.ID,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value OctaveShift) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlOctaveShiftFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *OctaveShift) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlOctaveShiftFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlOffset struct {
+	Value xmlDecimal `xml:",chardata"`
+	Sound *YesNo     `xml:"sound,attr,omitempty"`
+}
+
+func xmlOffsetFrom(value Offset) xmlOffset {
+	return xmlOffset{
+		Value: xmlDecimal(value.Value),
+		Sound: value.Sound,
+	}
+}
+
+func (value xmlOffset) model() Offset {
+	return Offset{
+		Value: Divisions(value.Value),
+		Sound: value.Sound,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Offset) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlOffsetFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Offset) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlOffsetFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlPrint struct {
+	PageLayout              *PageLayout       `xml:"page-layout,omitempty"`
+	SystemLayout            *SystemLayout     `xml:"system-layout,omitempty"`
+	StaffLayout             []StaffLayout     `xml:"staff-layout"`
+	MeasureLayout           *MeasureLayout    `xml:"measure-layout,omitempty"`
+	MeasureNumbering        *MeasureNumbering `xml:"measure-numbering,omitempty"`
+	PartNameDisplay         *NameDisplay      `xml:"part-name-display,omitempty"`
+	PartAbbreviationDisplay *NameDisplay      `xml:"part-abbreviation-display,omitempty"`
+	StaffSpacing            *Tenths           `xml:"staff-spacing,attr,omitempty"`
+	NewSystem               *YesNo            `xml:"new-system,attr,omitempty"`
+	NewPage                 *YesNo            `xml:"new-page,attr,omitempty"`
+	BlankPage               *xmlUnsigned64    `xml:"blank-page,attr,omitempty"`
+	PageNumber              *string           `xml:"page-number,attr,omitempty"`
+	ID                      *string           `xml:"id,attr,omitempty"`
+}
+
+func xmlPrintFrom(value Print) xmlPrint {
+	return xmlPrint{
+		PageLayout:              value.PageLayout,
+		SystemLayout:            value.SystemLayout,
+		StaffLayout:             value.StaffLayout,
+		MeasureLayout:           value.MeasureLayout,
+		MeasureNumbering:        value.MeasureNumbering,
+		PartNameDisplay:         value.PartNameDisplay,
+		PartAbbreviationDisplay: value.PartAbbreviationDisplay,
+		StaffSpacing:            value.StaffSpacing,
+		NewSystem:               value.NewSystem,
+		NewPage:                 value.NewPage,
+		BlankPage:               (*xmlUnsigned64)(value.BlankPage),
+		PageNumber:              value.PageNumber,
+		ID:                      value.ID,
+	}
+}
+
+func (value xmlPrint) model() Print {
+	return Print{
+		PageLayout:              value.PageLayout,
+		SystemLayout:            value.SystemLayout,
+		StaffLayout:             value.StaffLayout,
+		MeasureLayout:           value.MeasureLayout,
+		MeasureNumbering:        value.MeasureNumbering,
+		PartNameDisplay:         value.PartNameDisplay,
+		PartAbbreviationDisplay: value.PartAbbreviationDisplay,
+		StaffSpacing:            value.StaffSpacing,
+		NewSystem:               value.NewSystem,
+		NewPage:                 value.NewPage,
+		BlankPage:               (*uint64)(value.BlankPage),
+		PageNumber:              value.PageNumber,
+		ID:                      value.ID,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Print) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlPrintFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Print) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlPrintFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlRepeat struct {
+	Direction BackwardForward `xml:"direction,attr"`
+	Times     *xmlUnsigned64  `xml:"times,attr,omitempty"`
+	AfterJump *YesNo          `xml:"after-jump,attr,omitempty"`
+	Winged    *Winged         `xml:"winged,attr,omitempty"`
+}
+
+func xmlRepeatFrom(value Repeat) xmlRepeat {
+	return xmlRepeat{
+		Direction: value.Direction,
+		Times:     (*xmlUnsigned64)(value.Times),
+		AfterJump: value.AfterJump,
+		Winged:    value.Winged,
+	}
+}
+
+func (value xmlRepeat) model() Repeat {
+	return Repeat{
+		Direction: value.Direction,
+		Times:     (*uint64)(value.Times),
+		AfterJump: value.AfterJump,
+		Winged:    value.Winged,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Repeat) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlRepeatFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Repeat) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlRepeatFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlStaffDetails struct {
+	StaffType    *StaffType     `xml:"staff-type,omitempty"`
+	StaffLines   *xmlUnsigned64 `xml:"staff-lines,omitempty"`
+	LineDetail   []LineDetail   `xml:"line-detail"`
+	StaffTuning  []StaffTuning  `xml:"staff-tuning"`
+	Capo         *xmlUnsigned64 `xml:"capo,omitempty"`
+	StaffSize    *StaffSize     `xml:"staff-size,omitempty"`
+	Number       *StaffNumber   `xml:"number,attr,omitempty"`
+	ShowFrets    *ShowFrets     `xml:"show-frets,attr,omitempty"`
+	PrintObject  *YesNo         `xml:"print-object,attr,omitempty"`
+	PrintSpacing *YesNo         `xml:"print-spacing,attr,omitempty"`
+}
+
+func xmlStaffDetailsFrom(value StaffDetails) xmlStaffDetails {
+	return xmlStaffDetails{
+		StaffType:    value.StaffType,
+		StaffLines:   (*xmlUnsigned64)(value.StaffLines),
+		LineDetail:   value.LineDetail,
+		StaffTuning:  value.StaffTuning,
+		Capo:         (*xmlUnsigned64)(value.Capo),
+		StaffSize:    value.StaffSize,
+		Number:       value.Number,
+		ShowFrets:    value.ShowFrets,
+		PrintObject:  value.PrintObject,
+		PrintSpacing: value.PrintSpacing,
+	}
+}
+
+func (value xmlStaffDetails) model() StaffDetails {
+	return StaffDetails{
+		StaffType:    value.StaffType,
+		StaffLines:   (*uint64)(value.StaffLines),
+		LineDetail:   value.LineDetail,
+		StaffTuning:  value.StaffTuning,
+		Capo:         (*uint64)(value.Capo),
+		StaffSize:    value.StaffSize,
+		Number:       value.Number,
+		ShowFrets:    value.ShowFrets,
+		PrintObject:  value.PrintObject,
+		PrintSpacing: value.PrintSpacing,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value StaffDetails) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlStaffDetailsFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *StaffDetails) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlStaffDetailsFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlStaffSize struct {
+	Value   xmlDecimal          `xml:",chardata"`
+	Scaling *NonNegativeDecimal `xml:"scaling,attr,omitempty"`
+}
+
+func xmlStaffSizeFrom(value StaffSize) xmlStaffSize {
+	return xmlStaffSize{
+		Value:   xmlDecimal(value.Value),
+		Scaling: value.Scaling,
+	}
+}
+
+func (value xmlStaffSize) model() StaffSize {
+	return StaffSize{
+		Value:   NonNegativeDecimal(value.Value),
+		Scaling: value.Scaling,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value StaffSize) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlStaffSizeFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *StaffSize) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlStaffSizeFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlString struct {
+	Value      xmlUnsigned64 `xml:",chardata"`
+	DefaultX   *Tenths       `xml:"default-x,attr,omitempty"`
+	DefaultY   *Tenths       `xml:"default-y,attr,omitempty"`
+	RelativeX  *Tenths       `xml:"relative-x,attr,omitempty"`
+	RelativeY  *Tenths       `xml:"relative-y,attr,omitempty"`
+	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
+	Color      *Color        `xml:"color,attr,omitempty"`
+	Placement  *AboveBelow   `xml:"placement,attr,omitempty"`
+}
+
+func xmlStringFrom(value String) xmlString {
+	return xmlString{
+		Value:      xmlUnsigned64(value.Value),
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+		Placement:  value.Placement,
+	}
+}
+
+func (value xmlString) model() String {
+	return String{
+		Value:      StringNumber(value.Value),
+		DefaultX:   value.DefaultX,
+		DefaultY:   value.DefaultY,
+		RelativeX:  value.RelativeX,
+		RelativeY:  value.RelativeY,
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+		Placement:  value.Placement,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value String) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlStringFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *String) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlStringFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlSwing struct {
+	Straight   *Empty          `xml:"straight,omitempty"`
+	First      *xmlUnsigned64  `xml:"first,omitempty"`
+	Second     *xmlUnsigned64  `xml:"second,omitempty"`
+	SwingType  *SwingTypeValue `xml:"swing-type,omitempty"`
+	SwingStyle *string         `xml:"swing-style,omitempty"`
+}
+
+func xmlSwingFrom(value Swing) xmlSwing {
+	return xmlSwing{
+		Straight:   value.Straight,
+		First:      (*xmlUnsigned64)(value.First),
+		Second:     (*xmlUnsigned64)(value.Second),
+		SwingType:  value.SwingType,
+		SwingStyle: value.SwingStyle,
+	}
+}
+
+func (value xmlSwing) model() Swing {
+	return Swing{
+		Straight:   value.Straight,
+		First:      (*uint64)(value.First),
+		Second:     (*uint64)(value.Second),
+		SwingType:  value.SwingType,
+		SwingStyle: value.SwingStyle,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value Swing) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlSwingFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *Swing) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlSwingFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlTimeModification struct {
+	ActualNotes xmlUnsigned64  `xml:"actual-notes"`
+	NormalNotes xmlUnsigned64  `xml:"normal-notes"`
+	NormalType  *NoteTypeValue `xml:"normal-type,omitempty"`
+	NormalDot   []Empty        `xml:"normal-dot"`
+}
+
+func xmlTimeModificationFrom(value TimeModification) xmlTimeModification {
+	return xmlTimeModification{
+		ActualNotes: xmlUnsigned64(value.ActualNotes),
+		NormalNotes: xmlUnsigned64(value.NormalNotes),
+		NormalType:  value.NormalType,
+		NormalDot:   value.NormalDot,
+	}
+}
+
+func (value xmlTimeModification) model() TimeModification {
+	return TimeModification{
+		ActualNotes: uint64(value.ActualNotes),
+		NormalNotes: uint64(value.NormalNotes),
+		NormalType:  value.NormalType,
+		NormalDot:   value.NormalDot,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value TimeModification) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlTimeModificationFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *TimeModification) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlTimeModificationFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}
+
+type xmlTupletNumber struct {
+	Value      xmlUnsigned64 `xml:",chardata"`
+	FontFamily *FontFamily   `xml:"font-family,attr,omitempty"`
+	FontStyle  *FontStyle    `xml:"font-style,attr,omitempty"`
+	FontSize   *FontSize     `xml:"font-size,attr,omitempty"`
+	FontWeight *FontWeight   `xml:"font-weight,attr,omitempty"`
+	Color      *Color        `xml:"color,attr,omitempty"`
+}
+
+func xmlTupletNumberFrom(value TupletNumber) xmlTupletNumber {
+	return xmlTupletNumber{
+		Value:      xmlUnsigned64(value.Value),
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+func (value xmlTupletNumber) model() TupletNumber {
+	return TupletNumber{
+		Value:      uint64(value.Value),
+		FontFamily: value.FontFamily,
+		FontStyle:  value.FontStyle,
+		FontSize:   value.FontSize,
+		FontWeight: value.FontWeight,
+		Color:      value.Color,
+	}
+}
+
+// MarshalXML encodes numeric fields using their XSD lexical forms.
+func (value TupletNumber) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error {
+	return encoder.EncodeElement(xmlTupletNumberFrom(value), start)
+}
+
+// UnmarshalXML decodes numeric fields using their XSD lexical forms.
+func (value *TupletNumber) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error {
+	decoded := xmlTupletNumberFrom(*value)
+	if err := decoder.DecodeElement(&decoded, &start); err != nil {
+		return err
+	}
+	*value = decoded.model()
+	return nil
+}

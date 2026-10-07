@@ -13,13 +13,13 @@ import (
 
 func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 	buffered := bufio.NewReader(reader)
-	order, utf16Encoded, err := detectUTF16(buffered)
+	order, hasBOM, err := detectUTF16(buffered)
 	if err != nil {
 		return nil, err
 	}
 
 	var source io.Reader = buffered
-	if utf16Encoded {
+	if order != nil {
 		source = &utf16Reader{
 			source: buffered,
 			order:  order,
@@ -31,26 +31,14 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 		charset string,
 		input io.Reader,
 	) (io.Reader, error) {
+		if order != nil {
+			// The input has already been transcoded from UTF-16. The byte
+			// order mark, or the declaration check in the token reader for
+			// documents without one, settles the encoding; the declared
+			// charset is not applied a second time.
+			return input, nil
+		}
 		switch normalizeCharset(charset) {
-		case "utf16", "utf16be", "utf16le":
-			if utf16Encoded {
-				return input, nil
-			}
-
-			switch normalizeCharset(charset) {
-			case "utf16be":
-				return &utf16Reader{
-					source: input,
-					order:  binary.BigEndian,
-				}, nil
-
-			case "utf16le":
-				return &utf16Reader{
-					source: input,
-					order:  binary.LittleEndian,
-				}, nil
-			}
-
 		case "iso88591", "latin1":
 			return &latin1Reader{
 				source: bufio.NewReader(input),
@@ -63,7 +51,73 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 		)
 	}
 
+	// A byte order mark settles the encoding, whatever the declaration
+	// says. Without one, the declaration is the only evidence of the byte
+	// order and must agree with the detected one.
+	if order != nil && !hasBOM {
+		return xml.NewTokenDecoder(&utf16XMLTokenReader{
+			source: decoder,
+			order:  order,
+		}), nil
+	}
+
 	return decoder, nil
+}
+
+// utf16XMLTokenReader checks the XML declaration of a UTF-16 document that
+// has no byte order mark: the declaration must name the detected byte order.
+type utf16XMLTokenReader struct {
+	source    xml.TokenReader
+	order     binary.ByteOrder
+	readToken bool
+}
+
+func (r *utf16XMLTokenReader) Token() (xml.Token, error) {
+	token, err := r.source.Token()
+	if err != nil {
+		return nil, err
+	}
+	if r.readToken {
+		return token, nil
+	}
+	r.readToken = true
+
+	instruction, ok := token.(xml.ProcInst)
+	if !ok || instruction.Target != "xml" {
+		return nil, fmt.Errorf("musicxml: UTF-16 XML without a byte order mark requires an encoding declaration")
+	}
+
+	// XML declaration pseudo-attributes have the same quoting and whitespace
+	// syntax as attributes. Parse them separately because encoding/xml does
+	// not expose the declared encoding and can skip CharsetReader.
+	var declaration struct {
+		Encoding string `xml:"encoding,attr"`
+	}
+	if err := xml.Unmarshal(
+		[]byte("<xml "+string(instruction.Inst)+"/>"),
+		&declaration,
+	); err != nil {
+		return nil, fmt.Errorf("musicxml: invalid UTF-16 XML declaration: %w", err)
+	}
+
+	switch normalizeCharset(declaration.Encoding) {
+	case "utf16be":
+		if r.order == binary.BigEndian {
+			return token, nil
+		}
+	case "utf16le":
+		if r.order == binary.LittleEndian {
+			return token, nil
+		}
+	case "", "utf16":
+		return nil, fmt.Errorf("musicxml: UTF-16 XML without a byte order mark requires an explicit UTF-16BE or UTF-16LE declaration")
+	}
+
+	return nil, fmt.Errorf(
+		"musicxml: XML encoding %q does not match detected UTF-16 byte order %s",
+		declaration.Encoding,
+		r.order,
+	)
 }
 
 func newDepthLimitedXMLDecoder(
@@ -154,7 +208,7 @@ func (r *latin1Reader) Read(target []byte) (int, error) {
 func detectUTF16(
 	reader *bufio.Reader,
 ) (binary.ByteOrder, bool, error) {
-	prefix, err := reader.Peek(3)
+	prefix, err := reader.Peek(4)
 	if len(prefix) >= 3 &&
 		prefix[0] == 0xef &&
 		prefix[1] == 0xbb &&
@@ -176,6 +230,18 @@ func detectUTF16(
 	case prefix[0] == 0xff && prefix[1] == 0xfe:
 		order = binary.LittleEndian
 	default:
+		// A BOM-less UTF-16 document must begin with an XML declaration
+		// identifying its byte order. Do not guess from a bare root tag.
+		if len(prefix) >= 4 {
+			switch {
+			case prefix[0] == 0 && prefix[1] == '<' &&
+				prefix[2] == 0 && prefix[3] == '?':
+				return binary.BigEndian, false, nil
+			case prefix[0] == '<' && prefix[1] == 0 &&
+				prefix[2] == '?' && prefix[3] == 0:
+				return binary.LittleEndian, false, nil
+			}
+		}
 		return nil, false, nil
 	}
 
