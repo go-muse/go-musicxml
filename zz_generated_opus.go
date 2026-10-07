@@ -25,9 +25,9 @@ func (value *OpusLink) EffectiveType() string {
 	return "simple"
 }
 
-// TypeMatchesFixed reports whether Type is absent or equals its XSD fixed value "simple".
+// TypeMatchesFixed reports whether Type is absent or matches its XSD fixed value "simple" after whitespace normalization.
 func (value *OpusLink) TypeMatchesFixed() bool {
-	return value == nil || value.Type == nil || *value.Type == "simple"
+	return value == nil || value.Type == nil || normalizeValidationWhitespace("token", string(*value.Type)) == normalizeValidationWhitespace("token", "simple")
 }
 
 // EffectiveShow returns Show when explicitly present and the XSD default value "replace" otherwise.
@@ -65,9 +65,9 @@ func (value *OpusScore) EffectiveType() string {
 	return "simple"
 }
 
-// TypeMatchesFixed reports whether Type is absent or equals its XSD fixed value "simple".
+// TypeMatchesFixed reports whether Type is absent or matches its XSD fixed value "simple" after whitespace normalization.
 func (value *OpusScore) TypeMatchesFixed() bool {
-	return value == nil || value.Type == nil || *value.Type == "simple"
+	return value == nil || value.Type == nil || normalizeValidationWhitespace("token", string(*value.Type)) == normalizeValidationWhitespace("token", "simple")
 }
 
 // EffectiveShow returns Show when explicitly present and the XSD default value "replace" otherwise.

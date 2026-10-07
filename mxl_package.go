@@ -298,7 +298,7 @@ func decodeMXLPackageRootFiles(
 	seen := make(map[string]struct{}, len(values))
 
 	for index, value := range values {
-		if !validMXLContentPath(value.FullPath) {
+		if !validMXLRootFilePath(value.FullPath) {
 			return nil, fmt.Errorf(
 				"%w: %q",
 				ErrMXLInvalidPath,
@@ -395,6 +395,18 @@ func prepareMXLPackage(
 		}
 	} else {
 		for index, rootFile := range value.RootFiles {
+			// Check before whitespace normalization, which replaces invalid
+			// UTF-8 while iterating runes.
+			if !validXMLText(rootFile.FullPath) {
+				return nil, fmt.Errorf("%w: %q", ErrMXLInvalidPath, rootFile.FullPath)
+			}
+			if !validXMLText(rootFile.MediaType) {
+				return nil, fmt.Errorf(
+					"%w: rootfile %q media type cannot be represented as XML 1.0 text",
+					ErrMXLInvalidContainer,
+					rootFile.FullPath,
+				)
+			}
 			rootFiles[index] = mxlRootFile{
 				FullPath:  collapseValidationWhitespace(rootFile.FullPath),
 				MediaType: collapseValidationWhitespace(rootFile.MediaType),
@@ -433,7 +445,7 @@ func prepareMXLPackage(
 
 	seenRootFiles := make(map[string]struct{}, len(rootFiles))
 	for index, rootFile := range rootFiles {
-		if !validMXLContentPath(rootFile.FullPath) {
+		if !validMXLRootFilePath(rootFile.FullPath) {
 			return nil, fmt.Errorf(
 				"%w: %q",
 				ErrMXLInvalidPath,
@@ -470,4 +482,11 @@ func validMXLContentPath(value string) bool {
 	return value != mxlMIMETypePath &&
 		value != mxlContainerPath &&
 		validMXLPath(value, false)
+}
+
+// Root-file paths are also stored as XML attributes. encoding/xml replaces
+// forbidden XML characters with U+FFFD, which would break the reference to the
+// literal ZIP entry name. Ordinary resource names are not XML metadata.
+func validMXLRootFilePath(value string) bool {
+	return validMXLContentPath(value) && validXMLText(value)
 }

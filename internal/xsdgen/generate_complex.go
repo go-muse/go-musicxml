@@ -253,6 +253,7 @@ type complexField struct {
 	choice            *complexChoice
 	constraint        *ValueConstraint
 	constraintLiteral string
+	constraintSpace   string
 }
 
 type particleContext struct {
@@ -483,6 +484,9 @@ func (r *complexTypeRenderer) buildStructure(
 			constraint:  attribute.Constraint,
 		}
 		if attribute.Constraint != nil {
+			if attribute.Constraint.Kind == ValueFixed && goTypeValue.Kind == GoTypeString {
+				field.constraintSpace = r.simpleRenderer.constraintWhitespace(&attribute.Type)
+			}
 			field.constraintLiteral, err = enumerationLiteral(
 				goTypeValue.Kind,
 				attribute.Constraint.Value,
@@ -1161,7 +1165,7 @@ func (r *complexTypeRenderer) renderValueConstraintMethods(
 
 		fmt.Fprintf(
 			target,
-			"// %sMatchesFixed reports whether %s is absent or equals its XSD fixed value %q.\n",
+			"// %sMatchesFixed reports whether %s is absent or matches its XSD fixed value %q after whitespace normalization.\n",
 			field.goName,
 			field.goName,
 			field.constraint.Value,
@@ -1172,21 +1176,24 @@ func (r *complexTypeRenderer) renderValueConstraintMethods(
 			structure.owner,
 			field.goName,
 		)
+		value := "value." + field.goName
+		if !field.required {
+			value = "*" + value
+		}
+		comparison := value + " == " + field.constraintLiteral
+		if field.constraintSpace != "" && field.constraintSpace != "string" {
+			comparison = fmt.Sprintf(
+				"normalizeValidationWhitespace(%q, string(%s)) == normalizeValidationWhitespace(%q, %s)",
+				field.constraintSpace,
+				value,
+				field.constraintSpace,
+				field.constraintLiteral,
+			)
+		}
 		if field.required {
-			fmt.Fprintf(
-				target,
-				"\treturn value == nil || value.%s == %s\n",
-				field.goName,
-				field.constraintLiteral,
-			)
+			fmt.Fprintf(target, "\treturn value == nil || %s\n", comparison)
 		} else {
-			fmt.Fprintf(
-				target,
-				"\treturn value == nil || value.%s == nil || *value.%s == %s\n",
-				field.goName,
-				field.goName,
-				field.constraintLiteral,
-			)
+			fmt.Fprintf(target, "\treturn value == nil || value.%s == nil || %s\n", field.goName, comparison)
 		}
 		target.WriteString("}\n\n")
 	}

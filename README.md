@@ -106,12 +106,16 @@ See [`API.md`](API.md) for invariants and compatibility rules.
 `Decode` and `Encode` are transport operations. They do not validate
 automatically, so callers can inspect, repair, and re-encode incomplete
 documents. Call `Validate` explicitly when XSD conformance is required.
+Encoding rejects invalid UTF-8 and XML 1.0 characters before writing, so text
+is never silently replaced with U+FFFD.
 
 XML decoding supports UTF-8 (with or without a BOM), UTF-16BE/LE (with a BOM,
 or without one when the XML declaration names the byte order), and
 ISO-8859-1. A UTF-16 BOM takes precedence over the encoding declaration.
 MusicXML root elements are unqualified because the official
-MusicXML 4.0 schema has no target namespace. Decoding rejects documents deeper
+MusicXML 4.0 schema has no target namespace. The package decoders ignore
+foreign-namespace child elements and attributes rather than treating matching
+local names as MusicXML fields. Decoding rejects documents deeper
 than 256 simultaneously open XML elements by default; `DecodeOptions` can set
 a different ceiling up to the package maximum of 4096.
 

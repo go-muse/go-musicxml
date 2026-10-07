@@ -1478,9 +1478,9 @@ func (value *Link) EffectiveType() string {
 	return "simple"
 }
 
-// TypeMatchesFixed reports whether Type is absent or equals its XSD fixed value "simple".
+// TypeMatchesFixed reports whether Type is absent or matches its XSD fixed value "simple" after whitespace normalization.
 func (value *Link) TypeMatchesFixed() bool {
-	return value == nil || value.Type == nil || *value.Type == "simple"
+	return value == nil || value.Type == nil || normalizeValidationWhitespace("token", string(*value.Type)) == normalizeValidationWhitespace("token", "simple")
 }
 
 // EffectiveShow returns Show when explicitly present and the XSD default value "replace" otherwise.
@@ -1892,9 +1892,9 @@ func (value *Opus) EffectiveType() string {
 	return "simple"
 }
 
-// TypeMatchesFixed reports whether Type is absent or equals its XSD fixed value "simple".
+// TypeMatchesFixed reports whether Type is absent or matches its XSD fixed value "simple" after whitespace normalization.
 func (value *Opus) TypeMatchesFixed() bool {
-	return value == nil || value.Type == nil || *value.Type == "simple"
+	return value == nil || value.Type == nil || normalizeValidationWhitespace("token", string(*value.Type)) == normalizeValidationWhitespace("token", "simple")
 }
 
 // EffectiveShow returns Show when explicitly present and the XSD default value "replace" otherwise.
@@ -2074,9 +2074,9 @@ func (value *PartLink) EffectiveType() string {
 	return "simple"
 }
 
-// TypeMatchesFixed reports whether Type is absent or equals its XSD fixed value "simple".
+// TypeMatchesFixed reports whether Type is absent or matches its XSD fixed value "simple" after whitespace normalization.
 func (value *PartLink) TypeMatchesFixed() bool {
-	return value == nil || value.Type == nil || *value.Type == "simple"
+	return value == nil || value.Type == nil || normalizeValidationWhitespace("token", string(*value.Type)) == normalizeValidationWhitespace("token", "simple")
 }
 
 // EffectiveShow returns Show when explicitly present and the XSD default value "replace" otherwise.

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"net/url"
 	"regexp"
 	"slices"
 	"strconv"
@@ -1345,7 +1344,7 @@ func validateBuiltin(
 		return nil
 
 	case "anyURI":
-		if _, err := url.Parse(normalized); err == nil {
+		if validXSDAnyURI(normalized) {
 			return nil
 		}
 

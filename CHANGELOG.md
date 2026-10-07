@@ -22,6 +22,19 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Ignore foreign-namespace lookalikes and namespace declarations when decoding
+  MusicXML fields and MXL container metadata, preserving supported XML/XLink
+  attributes.
+- Avoid overflowing the read ceiling for explicitly configured MaxInt64 MXL
+  byte limits, which could silently empty resources.
+- Normalize dot segments in archive-root-relative opus links and reject
+  directory references instead of resolving them to regular files.
+- Reject unrepresentable XML text and root-file metadata before serialization
+  or whitespace normalization can replace characters, lose text, or leave
+  unreadable archives.
+- Apply XSD whitespace normalization in generated fixed-attribute comparisons.
+- Check XSD URI lexical forms beyond Go URL parsing, including percent escapes
+  in queries and opaque URIs, fragment delimiters, and escaped authorities.
 - Encode finite XSD decimal values without exponent notation, including direct
   built-in fields, named derived types, attributes, and simple content.
 - Accept legal leading signs for unsigned XSD integer values during XML

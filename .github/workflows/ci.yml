@@ -122,7 +122,7 @@ jobs:
       - name: Validate re-encoded corpus
         env:
           MUSICXML_REQUIRE_XMLLINT: "1"
-        run: go test -count=1 -run='^TestEncodedCorpusConformsToMusicXMLSchema$' .
+        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema)$' .
 
   fuzz:
     name: Fuzz smoke
