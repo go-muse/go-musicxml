@@ -56,7 +56,7 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 	// order and must agree with the detected one.
 	if order != nil && !hasBOM {
 		return xml.NewTokenDecoder(&utf16XMLTokenReader{
-			source: decoder,
+			source: rawXMLTokenReader{decoder},
 			order:  order,
 		}), nil
 	}
@@ -130,9 +130,21 @@ func newDepthLimitedXMLDecoder(
 	}
 
 	return xml.NewTokenDecoder(&depthLimitedXMLTokenReader{
-		source:  source,
+		source:  rawXMLTokenReader{source},
 		maximum: maximum,
 	}), nil
+}
+
+// rawXMLTokenReader forwards lexical tokens to a wrapping xml.Decoder. Passing
+// Decoder.Token here would resolve namespace URIs a second time: a URI such as
+// "xlink" or "xml" could then be mistaken for a prefix. The wrapping decoder
+// still checks matching start/end tags and resolves namespaces normally.
+type rawXMLTokenReader struct {
+	decoder *xml.Decoder
+}
+
+func (r rawXMLTokenReader) Token() (xml.Token, error) {
+	return r.decoder.RawToken()
 }
 
 type depthLimitedXMLTokenReader struct {

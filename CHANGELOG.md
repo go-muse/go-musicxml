@@ -22,6 +22,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Resolve namespace prefixes exactly once through XML token adapters, including
+  BOM-less UTF-16, so foreign namespace URIs cannot become XML/XLink prefixes.
+- Preserve URI segment boundaries while resolving MXL links, including empty
+  segments and escaped slashes, to avoid selecting a different archive file.
+- Accept RFC 2732 IPv6 literals with zero-padded decimal IPv4 tails during
+  XSD anyURI validation.
+- Reject unsupported fixed-attribute unions with mixed whitespace policies or
+  non-string value spaces instead of generating an incorrect comparison.
 - Ignore foreign-namespace lookalikes and namespace declarations when decoding
   MusicXML fields and MXL container metadata, preserving supported XML/XLink
   attributes.

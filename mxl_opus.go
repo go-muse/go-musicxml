@@ -385,25 +385,13 @@ func resolveMXLLinkPath(
 		)
 	}
 
-	targetPath := reference.Path
-	// A directory reference must not resolve to a same-named regular file
-	// merely because path.Clean / path.Join discard its trailing slash.
-	directoryReference := targetPath != "" &&
-		(strings.HasSuffix(targetPath, "/") ||
-			path.Base(targetPath) == "." || path.Base(targetPath) == "..")
-	switch {
-	case targetPath == "":
-		targetPath = sourcePath
-	case strings.HasPrefix(targetPath, "/"):
-		// Archive-root-relative references need the same dot-segment
-		// normalization as relative links. Clean only after removing the
-		// leading slash, so traversal above the archive root stays invalid.
-		targetPath = path.Clean(strings.TrimPrefix(targetPath, "/"))
-	default:
-		targetPath = path.Join(path.Dir(sourcePath), targetPath)
-	}
-
-	if directoryReference || !validMXLContentPath(targetPath) {
+	// A directory reference cannot bind to a same-named regular file.
+	referencePath := reference.Path
+	directoryReference := referencePath != "" &&
+		(strings.HasSuffix(referencePath, "/") ||
+			path.Base(referencePath) == "." || path.Base(referencePath) == "..")
+	targetPath, ok := resolveMXLArchivePath(sourcePath, reference.EscapedPath())
+	if !ok || directoryReference || !validMXLContentPath(targetPath) {
 		return "", "", fmt.Errorf(
 			"%w: %w",
 			ErrMXLInvalidLink,
@@ -412,6 +400,45 @@ func resolveMXLLinkPath(
 	}
 
 	return targetPath, reference.Fragment, nil
+}
+
+// resolveMXLArchivePath removes URI dot segments while preserving empty
+// segments. Filesystem cleanup would collapse "a//../b" to "b" instead of
+// "a/b". Split before percent-decoding so an escaped slash remains part of its
+// original segment while a following ".." is resolved. Each segment is decoded
+// once; encoded unreserved dots retain the existing dot-segment behavior.
+func resolveMXLArchivePath(sourcePath, escapedPath string) (string, bool) {
+	if escapedPath == "" {
+		return sourcePath, true
+	}
+
+	var segments []string
+	if strings.HasPrefix(escapedPath, "/") {
+		escapedPath = strings.TrimPrefix(escapedPath, "/")
+	} else if directory := path.Dir(sourcePath); directory != "." {
+		// The source path is a literal ZIP entry name, already decoded.
+		segments = strings.Split(directory, "/")
+	}
+
+	for _, escapedSegment := range strings.Split(escapedPath, "/") {
+		segment, err := url.PathUnescape(escapedSegment)
+		if err != nil {
+			return "", false
+		}
+		switch segment {
+		case ".":
+			continue
+		case "..":
+			if len(segments) == 0 {
+				// Preserve the package's prohibition on leaving the archive.
+				return "", false
+			}
+			segments = segments[:len(segments)-1]
+		default:
+			segments = append(segments, segment)
+		}
+	}
+	return strings.Join(segments, "/"), true
 }
 
 func newMXLLinkError(
