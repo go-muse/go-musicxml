@@ -9,6 +9,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- Require Go 1.27 or later.
 - Renamed the `release-check` Make target and `scripts/release-check.sh` to
   `check-all` and `scripts/check-all.sh`.
 - `check-all` compares worktree snapshots around `go mod tidy` and

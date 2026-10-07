@@ -21,7 +21,7 @@ race detection.
 
 ## Requirements
 
-- Go 1.26 or later
+- Go 1.27 or later
 - MusicXML 4.0 input for schema validation
 
 ## Installation
