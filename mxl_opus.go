@@ -386,16 +386,24 @@ func resolveMXLLinkPath(
 	}
 
 	targetPath := reference.Path
+	// A directory reference must not resolve to a same-named regular file
+	// merely because path.Clean / path.Join discard its trailing slash.
+	directoryReference := targetPath != "" &&
+		(strings.HasSuffix(targetPath, "/") ||
+			path.Base(targetPath) == "." || path.Base(targetPath) == "..")
 	switch {
 	case targetPath == "":
 		targetPath = sourcePath
 	case strings.HasPrefix(targetPath, "/"):
-		targetPath = strings.TrimPrefix(targetPath, "/")
+		// Archive-root-relative references need the same dot-segment
+		// normalization as relative links. Clean only after removing the
+		// leading slash, so traversal above the archive root stays invalid.
+		targetPath = path.Clean(strings.TrimPrefix(targetPath, "/"))
 	default:
 		targetPath = path.Join(path.Dir(sourcePath), targetPath)
 	}
 
-	if !validMXLContentPath(targetPath) {
+	if directoryReference || !validMXLContentPath(targetPath) {
 		return "", "", fmt.Errorf(
 			"%w: %w",
 			ErrMXLInvalidLink,

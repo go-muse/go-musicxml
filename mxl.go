@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"math"
 	"path"
 	"strings"
 )
@@ -272,7 +273,7 @@ func validateMXLRootFile(value mxlRootFile) error {
 func decodeMXLContainer(
 	data []byte,
 ) (mxlContainer, error) {
-	decoder, err := newXMLDecoder(bytes.NewReader(data))
+	source, err := newXMLDecoder(bytes.NewReader(data))
 	if err != nil {
 		return mxlContainer{}, fmt.Errorf(
 			"%w: initialize XML decoder: %w",
@@ -281,6 +282,9 @@ func decodeMXLContainer(
 		)
 	}
 
+	decoder := xml.NewTokenDecoder(&namespaceXMLTokenReader{
+		source: source,
+	})
 	start, err := readRoot(decoder)
 	if err != nil {
 		return mxlContainer{}, fmt.Errorf(
@@ -369,7 +373,13 @@ func readMXLStream(
 	limit int64,
 	name string,
 ) ([]byte, error) {
-	result, err := io.ReadAll(io.LimitReader(reader, limit+1))
+	// Read one byte beyond the limit to distinguish an exact fit from an
+	// oversized stream, without wrapping an explicitly allowed MaxInt64.
+	readLimit := limit
+	if readLimit < math.MaxInt64 {
+		readLimit++
+	}
+	result, err := io.ReadAll(io.LimitReader(reader, readLimit))
 	if err != nil {
 		return nil, fmt.Errorf(
 			"%w: read %s: %w",

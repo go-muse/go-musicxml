@@ -164,6 +164,11 @@ func newDocumentDecoder(
 		)
 	}
 
+	decoder = xml.NewTokenDecoder(&namespaceXMLTokenReader{
+		source:                  decoder,
+		allowQualifiedAttribute: musicXMLQualifiedAttribute,
+	})
+
 	start, err := readRoot(decoder)
 	if err != nil {
 		return nil, xml.StartElement{}, err

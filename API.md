@@ -40,7 +40,7 @@ Most exported types mirror MusicXML 4.0 XSD complex and simple types.
   every retained entry contains exactly one child variant.
 - `Effective...` methods return XSD defaults without mutating the raw field.
 - `...MatchesFixed` methods test explicit values against XSD `fixed`
-  constraints.
+  constraints after applying the attribute type's XML-whitespace policy.
 
 Numeric field types are unchanged by XML lexical normalization. Finite decimals
 are written without exponent notation, but the model still uses `float64`
@@ -63,17 +63,24 @@ concrete pointer type. They return `ErrUnsupportedRoot` for any other root.
 Each typed helper has a corresponding `WithOptions` variant.
 
 `Encode` writes one root element without an XML declaration and does not call
-`Validate`. MXL encoding adds an XML declaration to stored MusicXML documents.
+`Validate`. It rejects invalid UTF-8 and characters forbidden by XML 1.0 before
+writing output, rather than silently replacing them with U+FFFD. `Validate`
+reports these failures as representation issues. MXL encoding adds an XML
+declaration to stored MusicXML documents.
 
 Encoding preserves the typed model, not original XML formatting. Unknown XML
-extensions are not part of the compatibility guarantee. `Decode` ignores
-unknown child elements inside a supported root, including inside generated
-ordered `Content`, and `Encode` does not reproduce them.
+extensions are not part of the compatibility guarantee. The package decoders
+ignore foreign-namespace children and attributes, including names that match
+unqualified MusicXML fields; supported XML and XLink attributes are retained.
+`Decode` ignores unknown child elements inside a supported root, including
+inside generated ordered `Content`, and `Encode` does not reproduce them.
 
 Direct `encoding/xml` unmarshalling of generated types applies the same
 ordered-content filtering. It does not apply the package decoder's character
-encoding support or configurable XML-depth limit, so `Decode` and its typed
-variants remain the recommended document entry points.
+encoding support, configurable XML-depth limit, or foreign-namespace filtering
+for ordinary struct fields, nor the encoder's XML-text preflight. Go's
+`encoding/xml` matches unqualified struct tags by local name, so `Decode` and
+its typed variants remain the recommended document entry points.
 
 `Encode`, `Validate`, and `ResolveOpus` reject cyclic opus models and document
 nesting deeper than 4096 elements before walking the model recursively.
@@ -90,17 +97,27 @@ Use `errors.Is(err, ErrInvalidDocument)` for the category and
 `errors.As(err, *ValidationError)` to inspect every `ValidationIssue`.
 Issue paths use indexed XML-style paths.
 
+URI values are checked using XSD `anyURI` lexical rules, including XLink
+escaping of spaces and non-ASCII characters. Validation leaves the stored
+string unchanged and does not check resource existence or accessibility.
+
 ## MXL packages
 
 `MXLPackage.RootFiles[0]` identifies `Document`. `Resources` contains every
 other regular file except `mimetype` and `META-INF/container.xml`.
 
 Resource order and bytes are preserved; ZIP compression metadata is not.
-Root-file paths and media types are interpreted using XSD token whitespace
-normalization. Opus hrefs use XSD anyURI whitespace normalization before URI
-parsing; literal ZIP resource names and percent-encoded spaces are unchanged.
-Encoding validates archive paths and rejects collisions with reserved or
-primary paths.
+Container elements and attributes are matched by their expanded XML names;
+namespace declarations and foreign-namespace lookalikes cannot select root
+files. Root-file paths and media types are interpreted using XSD token
+whitespace normalization. Opus hrefs use XSD anyURI whitespace normalization
+before URI parsing; literal ZIP resource names and percent-encoded spaces are
+unchanged. Encoding validates archive paths and rejects collisions with
+reserved or primary paths. Root-file paths and media types must also be
+representable as XML 1.0 text, and are checked before whitespace
+normalization. Opus links normalize dot segments in both relative and
+archive-root-relative paths; references to directories cannot bind to a
+same-named regular file.
 
 `DecodeMXLWithOptions` and `DecodeMXLPackageWithOptions` expose the archive,
 metadata, primary-document, per-resource, aggregate-resource, and XML-depth
