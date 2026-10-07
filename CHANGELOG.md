@@ -7,6 +7,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed the `release-check` Make target and `scripts/release-check.sh` to
+  `check-all` and `scripts/check-all.sh`.
+- `check-all` compares worktree snapshots around `go mod tidy` and
+  `go generate` instead of requiring a clean, committed worktree, prints a
+  header before each stage, and accepts stage names to run checks
+  individually.
+- CI jobs and the Make check targets run stages of `scripts/check-all.sh`
+  instead of keeping their own copies of the checks.
+
 ## [0.1.0] - 2026-08-15
 
 ### Added
