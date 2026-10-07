@@ -1,6 +1,6 @@
 GO ?= go
 GOFMT ?= gofmt
-FUZZ_TIME ?= 10s
+FUZZ_TIME ?= 50000x
 MXL_FUZZ_TIME ?= 10000x
 
 CHECK_ALL = GO='$(GO)' GOFMT='$(GOFMT)' FUZZ_TIME='$(FUZZ_TIME)' \

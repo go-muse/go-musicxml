@@ -13,9 +13,11 @@ set -euo pipefail
 
 check_go="${GO:-go}"
 check_gofmt="${GOFMT:-gofmt}"
-check_fuzz_time="${FUZZ_TIME:-10s}"
-# An execution count for the MXL target makes negligible coverage impossible
-# to conceal behind a nominal time budget.
+# Fuzz budgets are execution counts, not durations. A count makes negligible
+# coverage impossible to conceal behind a nominal time budget, and a duration
+# can fail spuriously with "context deadline exceeded" on Go 1.26 because of
+# a race in the fuzz coordinator (go.dev/issue/75804, fixed in Go 1.27).
+check_fuzz_time="${FUZZ_TIME:-50000x}"
 check_mxl_fuzz_time="${MXL_FUZZ_TIME:-10000x}"
 
 all_stages=(mod generate format test vet race fuzz)

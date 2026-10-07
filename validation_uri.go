@@ -103,7 +103,7 @@ func validValidationURIAuthority(authority string) bool {
 		return false
 	}
 	address, port, closed := strings.Cut(host[1:], "]")
-	if !closed || !strings.ContainsRune(address, ':') || net.ParseIP(address) == nil {
+	if !closed || !validValidationIPv6(address) {
 		return false
 	}
 	if port == "" {
@@ -119,6 +119,40 @@ func validValidationURIAuthority(authority string) bool {
 		}
 	}
 	return true
+}
+
+// validValidationIPv6 checks RFC 2373's IPv6 representation, which RFC 2732
+// incorporates. Its embedded IPv4 octets permit 1-3 decimal digits, including
+// leading zeros. net.ParseIP deliberately rejects those zeros, so remove them
+// from a checked temporary representation without changing the original URI.
+func validValidationIPv6(address string) bool {
+	if !strings.ContainsRune(address, ':') {
+		return false
+	}
+	if strings.ContainsRune(address, '.') {
+		colon := strings.LastIndexByte(address, ':')
+		octets := strings.SplitN(address[colon+1:], ".", 5)
+		if len(octets) != 4 {
+			return false
+		}
+		for index, octet := range octets {
+			if len(octet) == 0 || len(octet) > 3 {
+				return false
+			}
+			for _, digit := range octet {
+				if digit < '0' || digit > '9' {
+					return false
+				}
+			}
+			octets[index] = strings.TrimLeft(octet, "0")
+			if octets[index] == "" {
+				octets[index] = "0"
+			}
+		}
+		address = address[:colon+1] + strings.Join(octets, ".")
+	}
+	// Keep net.ParseIP's address-width and octet-range checks.
+	return net.ParseIP(address) != nil
 }
 
 func validationURIAuthority(value string) (start, end int) {

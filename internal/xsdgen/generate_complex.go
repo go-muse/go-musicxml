@@ -485,7 +485,10 @@ func (r *complexTypeRenderer) buildStructure(
 		}
 		if attribute.Constraint != nil {
 			if attribute.Constraint.Kind == ValueFixed && goTypeValue.Kind == GoTypeString {
-				field.constraintSpace = r.simpleRenderer.constraintWhitespace(&attribute.Type)
+				field.constraintSpace, err = r.simpleRenderer.constraintWhitespace(&attribute.Type)
+				if err != nil {
+					return nil, fmt.Errorf("xsdgen: resolve fixed attribute %q whitespace: %w", attribute.Name.Local, err)
+				}
 			}
 			field.constraintLiteral, err = enumerationLiteral(
 				goTypeValue.Kind,

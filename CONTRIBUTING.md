@@ -4,7 +4,7 @@ Contributions are welcome.
 
 ## Prerequisites
 
-- Go 1.26 or later
+- Go 1.27 or later
 - Git
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
