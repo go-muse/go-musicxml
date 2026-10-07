@@ -19,6 +19,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   instead of keeping their own copies of the checks.
 - Documented the numeric precision and range limits of the generated model
   and the default linked-document depth limit used by `ResolveOpus`.
+- Fuzz smoke budgets are execution counts for every target. A duration budget
+  can fail spuriously with `context deadline exceeded` on Go 1.26
+  (go.dev/issue/75804).
 
 ### Fixed
 
