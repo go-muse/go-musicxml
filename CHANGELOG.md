@@ -18,6 +18,15 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - CI jobs and the Make check targets run stages of `scripts/check-all.sh`
   instead of keeping their own copies of the checks.
 
+### Fixed
+
+- Accept legal leading signs for unsigned XSD integer values during
+  validation, including negative zero for nonnegative values.
+- Normalize XSD whitespace in MXL root-file metadata and opus links before
+  resolving paths, while preserving literal resource names and bytes.
+- Use the XSD Unicode name and decimal-digit classes in validation patterns.
+- Include terminal opus elements when checking the maximum document depth.
+
 ## [0.1.0] - 2026-08-15
 
 ### Added

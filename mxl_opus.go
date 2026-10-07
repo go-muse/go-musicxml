@@ -362,7 +362,9 @@ func resolveMXLLinkPath(
 	sourcePath string,
 	href string,
 ) (string, string, error) {
-	reference, err := url.Parse(href)
+	// XLink href is xs:anyURI, whose whitespace facet is collapse. Normalize
+	// before URI parsing so percent-encoded spaces remain significant.
+	reference, err := url.Parse(collapseValidationWhitespace(href))
 	if err != nil {
 		return "", "", fmt.Errorf(
 			"%w: %v",

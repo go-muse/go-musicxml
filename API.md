@@ -91,6 +91,9 @@ Issue paths use indexed XML-style paths.
 other regular file except `mimetype` and `META-INF/container.xml`.
 
 Resource order and bytes are preserved; ZIP compression metadata is not.
+Root-file paths and media types are interpreted using XSD token whitespace
+normalization. Opus hrefs use XSD anyURI whitespace normalization before URI
+parsing; literal ZIP resource names and percent-encoded spaces are unchanged.
 Encoding validates archive paths and rejects collisions with reserved or
 primary paths.
 

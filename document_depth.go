@@ -29,7 +29,8 @@ func checkDocumentNesting(document Document) error {
 			delete(active, visit.document)
 			continue
 		}
-		if visit.depth > maximumDocumentDepth {
+		if visit.depth > maximumDocumentDepth ||
+			visit.depth == maximumDocumentDepth && opusHasLeafChildren(visit.document) {
 			return fmt.Errorf(
 				"%w: maximum is %d elements",
 				ErrDocumentTooDeep,
@@ -58,4 +59,18 @@ func checkDocumentNesting(document Document) error {
 	}
 
 	return nil
+}
+
+// Inline opus children are checked by the traversal. Leaf elements also consume
+// one XML level, even though they do not add another in-memory opus node.
+func opusHasLeafChildren(document *OpusDocument) bool {
+	if document.Title != nil {
+		return true
+	}
+	for _, child := range document.Content {
+		if child.OpusLink != nil || child.Score != nil {
+			return true
+		}
+	}
+	return false
 }
