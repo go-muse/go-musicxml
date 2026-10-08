@@ -141,14 +141,21 @@ const (
     ComponentGroup ComponentKind = "group"
     ComponentAttribute ComponentKind = "attribute"
 )
+type Assembly string
+const (
+    AssemblyMusicXML Assembly = "musicxml"
+    AssemblyOpus Assembly = "opus"
+    AssemblySounds Assembly = "sounds"
+    AssemblyContainer Assembly = "container"
+)
 type ComponentID struct {
-    Assembly string // musicxml | opus | sounds | container; not namespace alone
+    Assembly Assembly // schema assembly identity, not namespace alone
     Name QName
     Kind ComponentKind
     Occurrence string // required identity for an anonymous component
 }
 type DeclarationID struct {
-    Assembly string
+    Assembly Assembly
     OwnerOccurrence string // stable ID of named or anonymous declaring component
     Occurrence string // exact local/global declaration or reference-use occurrence
 }
@@ -542,9 +549,12 @@ type FactView interface {
 ```
 
 `Catalog.Profile` and `Catalog.Rule` return defensive deep copies, including
-nested target/dependency/source-ID slices. Reports also deeply own their compact
-metadata. Caller edits to a returned value cannot mutate a shared engine or
-another report. Internal compiled plans can use immutable borrowed tables.
+nested target/dependency/source-ID slices and the non-nil Selector.Component
+and Selector.Declaration pointees. A value copy of RuleDefinition alone is not
+sufficient: mutating either returned selector branch must not alter the catalog
+or another result. Reports apply the same deep-copy guarantee to their compact
+metadata, including selector branches. Caller edits to a returned value cannot
+mutate a shared engine or another report. Internal compiled plans can use immutable borrowed tables.
 
 Operator instances are immutable, compiled from reviewed typed plans and bound
 to one rule key and its parameters. `Predicate` is a stable lookup key in that
