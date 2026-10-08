@@ -584,6 +584,9 @@ func (p *plan) validate() error {
 			return withID(id, err)
 		}
 	}
+	if err := p.validateSharedRecipes(); err != nil {
+		return err
+	}
 	return p.validateTraceability(snapshot)
 }
 

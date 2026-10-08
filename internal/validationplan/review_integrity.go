@@ -261,3 +261,41 @@ func externalRecord(item any) (object, error) {
 	}
 	return ext, nil
 }
+
+// Specificity applies to every case in an axis, not just the complete array:
+// mixing one shared recipe with distinct cases does not make that axis specific.
+func (p *plan) validateSharedRecipes() error {
+	owners := map[string]map[string]bool{}
+	axes := []string{"positive", "negative", "boundary", "missing_fact", "interaction"}
+	for id, t := range p.tests {
+		cases, _ := t["cases"].(map[string]any)
+		for _, axis := range axes {
+			for _, text := range stringsAt(cases, axis) {
+				key := axis + "\x00" + text
+				if owners[key] == nil {
+					owners[key] = map[string]bool{}
+				}
+				owners[key][id] = true
+			}
+		}
+	}
+	for id, t := range p.tests {
+		cases, _ := t["cases"].(map[string]any)
+		status, _ := t["axis_status"].(map[string]any)
+		for _, axis := range axes {
+			if str(status, axis) != "record_specific" {
+				continue
+			}
+			for _, text := range stringsAt(cases, axis) {
+				if len(owners[axis+"\x00"+text]) > 1 {
+					return fmt.Errorf("%s %s has a shared case recipe labeled record_specific", id, axis)
+				}
+			}
+		}
+	}
+	stage := p.stages["STAGE-context"]
+	if str(stage, "dependency_interpretation") != "batch_acceptance" || str(stage, "scope_note") == "" {
+		return fmt.Errorf("STAGE-context must distinguish batch acceptance from per-clause evidence")
+	}
+	return nil
+}

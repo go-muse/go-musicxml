@@ -190,10 +190,12 @@
         "STAGE-DEF-08"
       ],
       "acceptance": [
-        "Complete the parent stage acceptance for this bounded group.",
+        "Complete STAGE-DEF-08 for acceptance of the complete context-provider batch; permit independently verified local-default slices earlier without adding a musical-time prerequisite.",
         "Resolve clause selectors, per-target field capabilities and all required test-contract axes before enabling a runtime obligation.",
         "An unresolved interpretation or external closure gate is reported explicitly and never silently counted as implemented."
-      ]
+      ],
+      "dependency_interpretation": "batch_acceptance",
+      "scope_note": "This deliberately coarse group closes the complete context-provider batch after STAGE-DEF-08. It does not assert that every member needs musical-time facts: per-element defaults may be implemented and tested earlier in a bounded local profile. Each check depends at runtime only on its declared evidence capabilities and clause prerequisites; this stage edge is a scheduling/acceptance milestone."
     },
     {
       "id": "STAGE-external",
@@ -2524,7 +2526,7 @@
     },
     {
       "id": "REQ-DEF-ISSUE-BEAM-SIX-EIGHT",
-      "title": "Use explicit beam-level 1\u20138 facet as the candidate interpretation",
+      "title": "Use explicit beam-level 1–8 facet as the candidate interpretation",
       "role": "context_fact",
       "inputs": [
         "MX40-ISSUE-beam-six-eight",

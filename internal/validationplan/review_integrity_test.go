@@ -129,3 +129,27 @@ func TestExternalRecordShape(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestMixedSharedRecipesRequireGenericOrParameterizedAxes(t *testing.T) {
+	for _, item := range []struct{ id, axis string }{{"TEST-smufl-canonical-name", "negative"}, {"TEST-smufl-canonical-name", "missing_fact"}, {"TEST-smufl-canonical-name", "interaction"}, {"TEST-part-id-target", "negative"}, {"TEST-assess-player-target", "boundary"}} {
+		t.Run(item.id+"/"+item.axis, func(t *testing.T) {
+			p := testPlan(t)
+			p.tests[item.id]["axis_status"].(map[string]any)[item.axis] = "record_specific"
+			if err := p.validate(); err == nil {
+				t.Fatal("shared recipe hidden inside a mixed axis was accepted")
+			}
+		})
+	}
+	p := testPlan(t)
+	p.tests["TEST-smufl-canonical-name"]["axis_status"].(map[string]any)["negative"] = "parameterized"
+	if err := p.validate(); err != nil {
+		t.Fatal(err)
+	}
+}
+func TestContextStageKeepsItsBatchMeaning(t *testing.T) {
+	p := testPlan(t)
+	delete(p.stages["STAGE-context"], "dependency_interpretation")
+	if err := p.validate(); err == nil {
+		t.Fatal("ambiguous context-stage dependency was accepted")
+	}
+}

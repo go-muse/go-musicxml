@@ -2374,10 +2374,10 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
-        "missing_fact": "record_specific",
-        "interaction": "record_specific"
+        "missing_fact": "generic",
+        "interaction": "generic"
       },
       "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
@@ -2416,7 +2416,7 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
         "missing_fact": "generic",
         "interaction": "generic"
@@ -2458,7 +2458,7 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
         "missing_fact": "generic",
         "interaction": "generic"
@@ -2500,7 +2500,7 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
         "missing_fact": "generic",
         "interaction": "generic"
@@ -2542,7 +2542,7 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
         "missing_fact": "generic",
         "interaction": "generic"
@@ -2584,7 +2584,7 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
         "missing_fact": "generic",
         "interaction": "generic"
@@ -2626,7 +2626,7 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
         "missing_fact": "generic",
         "interaction": "generic"
@@ -2822,7 +2822,7 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
+        "negative": "generic",
         "boundary": "generic",
         "missing_fact": "record_specific",
         "interaction": "generic"
@@ -3468,8 +3468,8 @@
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
-        "negative": "record_specific",
-        "boundary": "record_specific",
+        "negative": "generic",
+        "boundary": "generic",
         "missing_fact": "generic",
         "interaction": "generic"
       },

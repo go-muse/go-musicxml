@@ -154,11 +154,14 @@ record-specific case:
 - **interaction**: meaningful inheritance, ordering, scope, dependency or compatibility cases
 
 Each `axis_status` distinguishes `record_specific`, `parameterized`, and
-`generic`. There are 736 record-specific axis descriptions, 300 parameterized
-XSD axes, and 1,529 generic axes in this snapshot (2,565 axes across 513
+`generic`. There are 724 record-specific axis descriptions, 300 parameterized
+XSD axes, and 1,541 generic axes in this snapshot (2,565 axes across 513
 contracts). All 279 synopsis/template-derived context contracts label every
 axis generic, even where appending the record's summary makes the text unique.
-Repeated shared recipes elsewhere are likewise generic. Neither text uniqueness
+Repeated individual case recipes elsewhere are likewise generic, even when
+other cases make their enclosing axis array unique. The checker detects shared
+case strings across contracts and prevents a mixed shared axis from being
+labeled record-specific. Neither text uniqueness
 nor a nonempty array establishes concrete case coverage. These are future test
 contracts, and even record-specific descriptions are not executed fixtures.
 
@@ -218,6 +221,14 @@ resolved before implementing it. Stage means ownership/sequence, while `status`
 and `implementation_binding` separately state semantic and implementation
 readiness. A nonempty closure or pending translation alone does not place a
 specified contract in the review stage.
+
+`STAGE-context` deliberately remains a coarse **batch-acceptance** group.
+Its dependency on `STAGE-DEF-08` closes the complete context-provider batch;
+it does not mean that every member requires musical time. Per-element defaults
+such as notehead fill or justify alignment can be implemented and tested earlier
+in a bounded local slice. Their actual evaluation prerequisites remain their
+own evidence capabilities and clause dependencies. The stage record states this
+distinction explicitly; no musical-time input is added to a local default.
 
 1. Prepare narrow regression tests for mandatory XML duplicate-attribute/DOCTYPE
    checks, simple/builtin attributes plus all four xsi contracts, and exact numeric
