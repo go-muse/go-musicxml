@@ -519,6 +519,13 @@ func (c *validationContext) validateElement(
 		return
 	}
 
+	// This is an element constraint, not a scalar constraint: validateType is
+	// also reused for complex simple-content bases whose attributes are legal.
+	simple, _, builtin, _ := c.resolveType(&schema.Type)
+	if simple != nil || (builtin != "" && builtin != "anyType") {
+		c.validateSimpleElementAttributes(node, path)
+	}
+
 	nilValue, nilPresent := validationNilAttribute(node.Attrs)
 	if nilPresent {
 		if !schema.Nillable {
@@ -887,6 +894,29 @@ func validationSequence(
 			},
 			Children: []*validationParticleSchema{left, right},
 		}
+	}
+}
+
+// validateSimpleElementAttributes enforces XSD 1.0 cvc-type 3.1.1. The four
+// standard xsi names are permitted independently of their value semantics.
+// Keep their existing behavior here; full xsi validation remains separate work.
+// https://www.w3.org/TR/xmlschema-1/#cvc-type
+func (c *validationContext) validateSimpleElementAttributes(node *validationNode, path string) {
+	for _, attribute := range node.Attrs {
+		if validationNamespaceDeclaration(attribute) {
+			continue
+		}
+		if attribute.Name.Space == validationXSINamespace {
+			switch attribute.Name.Local {
+			case "type", "nil", "schemaLocation", "noNamespaceSchemaLocation":
+				continue
+			}
+		}
+		c.addIssue(
+			validationAttributePath(path, attribute.Name),
+			"attribute",
+			"attribute is not allowed",
+		)
 	}
 }
 

@@ -26,6 +26,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Check ordinary attribute permissibility on simple- and builtin-typed elements
+  in the internal XML validator, including `step` and `staves`, without
+  rechecking the attributes of complex simple-content bases. Public `Decode`
+  remains permissive, and `Validate` still assesses the model after encoding;
+  full schema-instance attribute semantics remain deferred.
+
 - Reject misplaced or repeated XML declarations and reserved case variants of
   the exact `xml` processing-instruction target across document and MXL reads.
   First or omitted declarations, encoding signatures and ordinary targets such

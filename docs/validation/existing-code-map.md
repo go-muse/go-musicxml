@@ -59,6 +59,57 @@ and [`xml_wellformedness_errors_test.go`](../../xml_wellformedness_errors_test.g
 (`TestXMLWellFormednessErrorPositions`). These are executable evidence for the
 current-reader slice, not a change to the planning JSON's completion semantics.
 
+## Ordinary-attribute repair update
+
+The ordinary-attribute gap on simple- and builtin-typed elements is now repaired
+at the existing validator's element boundary in
+[`validation.go`](../../validation.go). Named and inline simple types and builtin
+simple types reject undeclared attributes by expanded name. Namespace declarations
+remain permitted. The check runs before nil-content short-circuiting, leaves
+`xs:anyType` unchanged, and does not run again when a complex simple-content type
+validates its scalar base. Existing complex attributes, inherited attributes,
+fixed/default behavior and identity recording remain on their current path.
+
+This is a bounded existing-validator slice of `REQ-DEF-ATTR-SIMPLE` and
+`REQ-DEF-ATTR-COMPLEX` (`DEF02-01/02`), not completion of `STAGE-DEF-02`.
+[XSD 1.0 cvc-type 3.1.1](https://www.w3.org/TR/xmlschema-1/#cvc-type) permits the
+four standard schema-instance attribute names on simple elements. Their previous
+acceptance is preserved here, and unknown `xsi` names are rejected. The existing
+`xsi:nil` handling is unchanged. Full value/type/nillability contracts for all
+four names (`REQ-DEF-XSI-*`, `DEF02-03/04`) remain open, including the known
+complex-type rejection of `xsi:type` and schema-location hints. Permitting a
+standard name is not evidence that its value semantics have been checked.
+
+Executable evidence is in
+[`validation_attributes_test.go`](../../validation_attributes_test.go):
+`TestValidateElementAttributeContracts`, `TestValidateSimpleElementTypeForms`,
+`TestValidateSimpleElementAttributeAndContentIssues`,
+`TestValidateAnyTypeAttributesUnchanged`,
+`TestValidateComplexSimpleContentIdentityOnce`,
+`TestValidateUnknownElementTypeRemainsSchemaIssue`,
+`TestDecodeDoesNotValidateSimpleElementAttributes`, and
+`TestElementAttributeContractsAgainstSchema`. The internal checker and required
+Linux external-XSD job use the same raw source cases against the pinned score
+and opus schemas. Valid standard-xsi cases are compatibility checks, not tests
+of the deferred semantic contracts. Full source validation is still not exposed:
+`Decode` may discard these attributes, and public `Validate` still uses
+Encode/reparse and cannot reconstruct them. Strict-source integration and
+machine-readable partial-implementation evidence remain separate work.
+
+A residual namespace-provenance gap is explicitly deferred: `encoding/xml`
+represents namespace declarations with the sentinel namespace `xmlns`. An ordinary
+attribute bound to the literal relative namespace URI `xmlns` (for example,
+`xmlns:p="xmlns" p:rubbish="x"`) has the same retained shape and is currently
+mistaken for a declaration. This affects the existing complex checker as well as
+the simple-element check. Repair needs lexical declaration provenance before
+namespace expansion. The checked-in
+[raw reproducer](../../testdata/validation/namespace-declaration-lookalike.musicxml)
+covers `step`, `staves` and complex `measure`. The external-XSD test requires its
+rejection; it is deliberately not included among the 35 shared internal/oracle
+cases. A future source-reader repair must reject it internally too. This slice
+does not claim complete namespace-attribute conformance or resolve that
+parser-level ambiguity.
+
 ## Reuse and adaptation
 
 | Existing component | Proposed use | Required adaptation or verification |
@@ -82,7 +133,8 @@ Focused review probes at the pinned code base showed the following. They
 identify the original implementation work; completed repairs are called out
 explicitly below, while other limits remain open.
 
-- **Attributes on simple-typed elements:** unrecognized attributes on `staves`
+- **Attributes on simple-typed elements** (ordinary-attribute slice repaired;
+  see [current evidence](#ordinary-attribute-repair-update)): unrecognized attributes on `staves`
   and `step`, such as `rubbish="x"`, pass the internal source-validation path.
   [`validateType`](https://github.com/go-muse/go-musicxml/blob/e486735cd6e4537e839ff67704b7768a9df3bdb3/validation.go#L569-L620)
   checks text and children in its simple/builtin branches but calls attribute
