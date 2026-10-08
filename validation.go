@@ -917,6 +917,24 @@ func validationSequence(
 	}
 }
 
+// validationStandardXSIName recognizes the standard schema-instance names
+// exempted by XSD 1.0 cvc-type 3.1.1 and cvc-complex-type 3. allowType preserves
+// the current simple/complex name-allowance difference: permitting xsi:type on
+// simple elements does not resolve or apply that type. Full xsi value/type
+// semantics remain separate work; hints never select or fetch a schema here.
+func validationStandardXSIName(name xml.Name, allowType bool) bool {
+	if name.Space != validationXSINamespace {
+		return false
+	}
+	switch name.Local {
+	case "nil", "schemaLocation", "noNamespaceSchemaLocation":
+		return true
+	case "type":
+		return allowType
+	}
+	return false
+}
+
 // validateSimpleElementAttributes enforces XSD 1.0 cvc-type 3.1.1. The four
 // standard xsi names are permitted independently of their value semantics.
 // Keep their existing behavior here; full xsi validation remains separate work.
@@ -926,11 +944,8 @@ func (c *validationContext) validateSimpleElementAttributes(node *validationNode
 		if validationNamespaceDeclaration(attribute) {
 			continue
 		}
-		if attribute.Name.Space == validationXSINamespace {
-			switch attribute.Name.Local {
-			case "type", "nil", "schemaLocation", "noNamespaceSchemaLocation":
-				continue
-			}
+		if validationStandardXSIName(attribute.Name, true) {
+			continue
 		}
 		c.addIssue(
 			validationAttributePath(path, attribute.Name),
@@ -956,14 +971,8 @@ func (c *validationContext) validateAttributes(
 		if validationNamespaceDeclaration(attribute) {
 			continue
 		}
-		if attribute.Name.Space == validationXSINamespace {
-			switch attribute.Name.Local {
-			case "nil", "schemaLocation", "noNamespaceSchemaLocation":
-				// XSD 1.0 cvc-complex-type 3 permits these standard names.
-				// Hint values do not select or fetch a schema here; their
-				// lexical/list/pair contracts remain separate work.
-				continue
-			}
+		if validationStandardXSIName(attribute.Name, false) {
+			continue
 		}
 
 		name := validationName(attribute.Name)

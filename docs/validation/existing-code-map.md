@@ -142,8 +142,11 @@ types, including complex simple-content. Simple types already permit them.
 This follows [XSD 1.0 cvc-complex-type clause 3][xsi-name-rule]; it does not
 implement the other schema-instance contracts. Unknown `xsi` names, unqualified
 lookalikes and foreign-namespace lookalikes still follow ordinary attribute
-validation. The existing `xsi:type`, `xsi:nil` and `xs:anyType` behavior is
-unchanged.
+validation. Both attribute paths use `validationStandardXSIName`; its explicit
+`allowType` parameter preserves the existing difference between simple and
+complex paths. Allowing the `xsi:type` name on simple elements does not resolve
+or apply that type. The existing `xsi:type`, `xsi:nil` and `xs:anyType` behavior
+is unchanged.
 
 This is only a **name-permissibility slice** of `REQ-DEF-XSI-SCHEMALOC` and
 `REQ-DEF-XSI-NONAMESPACE` (`DEF02-03/04`). Hint values are not validated: no
@@ -164,6 +167,10 @@ and ordinary required/enumeration/datatype/fixed/content failures beside hints.
 `TestSchemaLocationHintsDoNotFetch` uses a live HTTP request counter with valid
 and invalid documents; `TestSchemaLocationHintsPreservePublicModelValidation`
 checks the existing public model boundary.
+[`validation_xsi_names_test.go`](../../validation_xsi_names_test.go) checks both
+helper modes across exact/case-variant/unknown names and matching/unqualified/
+foreign namespace URIs, plus the preserved `xsi:type` name allowance on builtin,
+inline simple, complex and complex simple-content types.
 
 ### Deferred hint-value reconciliation
 
