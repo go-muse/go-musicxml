@@ -32,12 +32,18 @@ func validationAttributeCases() []validationAttributeCase {
 		}{
 			{"unqualified", ` rubbish="x"`, "/@rubbish"},
 			{"foreign", ` xmlns:p="urn:foreign" p:rubbish="x"`, "/@{urn:foreign}rubbish"},
+			{"literal xmlns URI", ` xmlns:p="xmlns" p:rubbish="x"`, "/@{xmlns}rubbish"},
+			{"literal xmlns URI before declaration", ` p:rubbish="x" xmlns:p="xmlns"`, "/@{xmlns}rubbish"},
+			{"declaration and ordinary same expanded name", ` xmlns:p="xmlns" xmlns:rubbish="urn:unused" p:rubbish="x"`, "/@{xmlns}rubbish"},
+			{"qualified xmlns local name", ` xmlns:p="xmlns" p:xmlns="x"`, "/@{xmlns}xmlns"},
 			{"XML namespace", ` xml:lang="en"`, "/@{http://www.w3.org/XML/1998/namespace}lang"},
 			{"unknown xsi", ` xmlns:i="http://www.w3.org/2001/XMLSchema-instance" i:unknown="x"`, "/@{http://www.w3.org/2001/XMLSchema-instance}unknown"},
 			{"unqualified xsi lookalike", ` nil="false"`, "/@nil"},
 			{"foreign xsi lookalike", ` xmlns:i="urn:foreign" i:schemaLocation="urn:example schema.xsd"`, "/@{urn:foreign}schemaLocation"},
 			{"hint and unknown xsi", ` xmlns:i="http://www.w3.org/2001/XMLSchema-instance" i:noNamespaceSchemaLocation="musicxml.xsd" i:unknown="x"`, "/@{http://www.w3.org/2001/XMLSchema-instance}unknown"},
 			{"namespace declarations", ` xmlns="" xmlns:p="urn:unused"`, ""},
+			{"literal xmlns declaration", ` xmlns:p="xmlns"`, ""},
+			{"explicit XML declaration", ` xmlns:xml="http://www.w3.org/XML/1998/namespace"`, ""},
 			{"schema location", ` xmlns:i="http://www.w3.org/2001/XMLSchema-instance" i:schemaLocation="urn:example https://example.invalid/schema.xsd"`, ""},
 			{"no namespace schema location", ` xmlns:i="http://www.w3.org/2001/XMLSchema-instance" i:noNamespaceSchemaLocation="musicxml.xsd"`, ""},
 		} {
@@ -72,9 +78,12 @@ func validationAttributeCases() []validationAttributeCase {
 		{"required complex attribute", ` number="1"`, "", "required", "/score-partwise/part/measure/@number"},
 		{"complex enum", `implicit="yes"`, `implicit="maybe"`, "enumeration", "/score-partwise/part/measure/@implicit"},
 		{"complex unknown attribute", `<measure number`, `<measure rubbish="x" number`, "attribute", "/score-partwise/part/measure/@rubbish"},
+		{"complex literal xmlns URI", `<measure number`, `<measure xmlns:p="xmlns" p:rubbish="x" number`, "attribute", "/score-partwise/part/measure/@{xmlns}rubbish"},
+		{"complex literal xmlns declaration", `<measure number`, `<measure xmlns:p="xmlns" number`, "", ""},
 		{"simple content enum", `size="cue"`, `size="bad"`, "enumeration", "/score-partwise/part/measure/note/type/@size"},
 		{"simple content datatype", `font-style="italic"`, `font-style="italic" default-x="bad"`, "datatype", "/score-partwise/part-list/score-part/part-name/@default-x"},
 		{"simple content unknown attribute", `<type size`, `<type rubbish="x" size`, "attribute", "/score-partwise/part/measure/note/type/@rubbish"},
+		{"simple content literal xmlns URI", `<type size`, `<type xmlns:p="xmlns" p:rubbish="x" size`, "attribute", "/score-partwise/part/measure/note/type/@{xmlns}rubbish"},
 		{"simple content default omitted", ` size="cue"`, "", "", ""},
 		{"simple content default explicit", `size="cue"`, `size="full"`, "", ""},
 	} {
@@ -264,13 +273,11 @@ func TestElementAttributeContractsAgainstSchema(t *testing.T) {
 	directory, err := filepath.Abs(filepath.Join("schema", "musicxml-4.0"))
 	require.NoError(t, err)
 	tests := validationAttributeCases()
-	// This raw fixture records a separate, pre-existing source-provenance gap.
-	// Check its required XSD outcome without treating the current internal
-	// parser's namespace-declaration ambiguity as conforming behavior.
+	// This fixture is also checked internally by TestValidateNamespaceDeclarationLookalike.
 	lookalike, err := os.ReadFile(filepath.Join("testdata", "validation", "namespace-declaration-lookalike.musicxml"))
 	require.NoError(t, err)
 	tests = append(tests, validationAttributeCase{
-		name: "deferred namespace declaration lookalike", source: string(lookalike), constraint: "attribute",
+		name: "namespace declaration lookalike", source: string(lookalike), constraint: "attribute",
 	})
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -290,5 +297,22 @@ func TestElementAttributeContractsAgainstSchema(t *testing.T) {
 				assert.Equalf(t, 3, exitError.ExitCode(), "expected schema-invalid exit, got: %s", output)
 			}
 		})
+	}
+}
+
+func TestValidateNamespaceDeclarationLookalike(t *testing.T) {
+	t.Parallel()
+	source, err := os.ReadFile(filepath.Join("testdata", "validation", "namespace-declaration-lookalike.musicxml"))
+	require.NoError(t, err)
+	context := validateAttributeSource(t, &scoreValidationSchema, string(source))
+	want := []string{
+		"/score-partwise/part/measure/@{xmlns}rubbish",
+		"/score-partwise/part/measure/attributes/staves/@{xmlns}rubbish",
+		"/score-partwise/part/measure/note/pitch/step/@{xmlns}rubbish",
+	}
+	require.Len(t, context.issues, len(want))
+	for index, path := range want {
+		assert.Equal(t, "attribute", context.issues[index].Constraint)
+		assert.Equal(t, path, context.issues[index].Path)
 	}
 }

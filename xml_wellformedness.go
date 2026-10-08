@@ -20,6 +20,11 @@ type wellFormedXMLTokenReader struct {
 	doctype    bool
 	namespaces map[string]string
 	scopes     [][]xmlNamespaceUndo
+
+	// Matches the most recent raw start tag's Attr order. The wrapping
+	// decoder expands names in place; consumers must copy these flags before
+	// requesting another token because this buffer is reused.
+	namespaceDeclarations []bool
 }
 
 type xmlNamespaceUndo struct {
@@ -96,9 +101,12 @@ func (r *wellFormedXMLTokenReader) Token() (xml.Token, error) {
 }
 
 func (r *wellFormedXMLTokenReader) checkAttributes(attributes []xml.Attr) error {
+	r.namespaceDeclarations = r.namespaceDeclarations[:0]
 	lexical := make(map[xml.Name]struct{}, len(attributes))
 	var undo []xmlNamespaceUndo
 	for _, attribute := range attributes {
+		r.namespaceDeclarations = append(r.namespaceDeclarations,
+			attribute.Name.Space == "xmlns" || (attribute.Name.Space == "" && attribute.Name.Local == "xmlns"))
 		if _, duplicate := lexical[attribute.Name]; duplicate {
 			return r.syntaxError("duplicate XML attribute {%s}%s", attribute.Name.Space, attribute.Name.Local)
 		}

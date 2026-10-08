@@ -288,9 +288,17 @@ type validationElementSchema struct {
 
 type validationNode struct {
 	Name     xml.Name
-	Attrs    []xml.Attr
+	Attrs    []validationAttribute
 	Text     strings.Builder
 	Children []*validationNode
+}
+
+// validationAttribute retains lexical declaration provenance because an ordinary
+// attribute in a namespace whose literal URI is "xmlns" has the same expanded
+// xml.Name as a namespace declaration.
+type validationAttribute struct {
+	xml.Attr
+	NamespaceDeclaration bool
 }
 
 type validationContext struct {
@@ -379,10 +387,11 @@ func validationDocumentPath(document Document) string {
 
 func parseValidationDocument(source []byte) (*validationNode, error) {
 	rawDecoder := xml.NewDecoder(bytes.NewReader(source))
-	decoder := xml.NewTokenDecoder(&wellFormedXMLTokenReader{
+	tokens := &wellFormedXMLTokenReader{
 		source:   rawXMLTokenReader{rawDecoder},
 		position: rawDecoder.InputPos,
-	})
+	}
+	decoder := xml.NewTokenDecoder(tokens)
 
 	for {
 		token, err := decoder.Token()
@@ -395,7 +404,7 @@ func parseValidationDocument(source []byte) (*validationNode, error) {
 
 		switch value := token.(type) {
 		case xml.StartElement:
-			root, err := readValidationNode(decoder, value, 1)
+			root, err := readValidationNode(decoder, tokens, value, 1)
 			if err != nil {
 				return nil, err
 			}
@@ -413,6 +422,7 @@ func parseValidationDocument(source []byte) (*validationNode, error) {
 
 func readValidationNode(
 	decoder *xml.Decoder,
+	tokens *wellFormedXMLTokenReader,
 	start xml.StartElement,
 	depth int,
 ) (*validationNode, error) {
@@ -424,9 +434,11 @@ func readValidationNode(
 		)
 	}
 
-	result := &validationNode{
-		Name:  start.Name,
-		Attrs: append([]xml.Attr(nil), start.Attr...),
+	result := &validationNode{Name: start.Name}
+	for index, attribute := range start.Attr {
+		result.Attrs = append(result.Attrs, validationAttribute{
+			Attr: attribute, NamespaceDeclaration: tokens.namespaceDeclarations[index],
+		})
 	}
 
 	for {
@@ -441,7 +453,7 @@ func readValidationNode(
 
 		switch value := token.(type) {
 		case xml.StartElement:
-			child, err := readValidationNode(decoder, value, depth+1)
+			child, err := readValidationNode(decoder, tokens, value, depth+1)
 			if err != nil {
 				return nil, err
 			}
@@ -954,7 +966,7 @@ func (c *validationContext) validateAttributes(
 			)
 			continue
 		}
-		present[name] = attribute
+		present[name] = attribute.Attr
 
 		if schema.Use == validationAttributeProhibited {
 			c.addIssue(
@@ -2142,7 +2154,7 @@ func validationAnyAttributeAllows(
 }
 
 func validationNilAttribute(
-	attributes []xml.Attr,
+	attributes []validationAttribute,
 ) (bool, bool) {
 	for _, attribute := range attributes {
 		if attribute.Name.Space != validationXSINamespace ||
@@ -2156,9 +2168,8 @@ func validationNilAttribute(
 	return false, false
 }
 
-func validationNamespaceDeclaration(attribute xml.Attr) bool {
-	return attribute.Name.Space == "xmlns" ||
-		(attribute.Name.Space == "" && attribute.Name.Local == "xmlns")
+func validationNamespaceDeclaration(attribute validationAttribute) bool {
+	return attribute.NamespaceDeclaration
 }
 
 func validationName(name xml.Name) validationQName {

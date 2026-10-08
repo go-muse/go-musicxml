@@ -39,7 +39,7 @@ existing plain UTF-8 input contract. Full declaration pseudo-attribute grammar,
 DTD syntax, broader XML/namespace conformance and strict-source integration
 remain outside this repair.
 
-The following review follow-ups are still explicitly **deferred**:
+The following review follow-up is still explicitly **deferred**:
 
 - **Machine-readable implementation evidence:** add a reviewed `implemented_by`
   or `evidence` contract to the planning format and its integrity checker.
@@ -47,20 +47,6 @@ The following review follow-ups are still explicitly **deferred**:
   and test names; check that referenced local artifacts exist. Retain the
   meaning of `status: planned` and keep incomplete strict-source obligations
   visible rather than marking the entire contract implemented.
-
-- **Namespace-declaration provenance:** repair the pre-existing
-  `xmlns:p="xmlns" p:rubbish="x"` ambiguity for `step`, `staves` and complex
-  `measure`; retain the [raw regression fixture](../../testdata/validation/namespace-declaration-lookalike.musicxml)
-  and require both internal and external validators to reject it. The existing
-  [`wellFormedXMLTokenReader`](../../xml_wellformedness.go) sees raw start tags
-  before namespace expansion: a declaration is
-  `xml.Name{Space: "xmlns", Local: "p"}`, while the ordinary lookalike is
-  `xml.Name{Space: "p", Local: "rubbish"}`. Carry per-attribute declaration flags
-  from those raw tokens into the `validationNode` built by
-  `parseValidationDocument`, then have `validationNamespaceDeclaration` consult
-  that provenance instead of inferring it from the expanded `"xmlns"` sentinel.
-  Keep this repair inside the existing parser path without a public API change;
-  preserve actual namespace declarations and once-only namespace expansion.
 
 Until that evidence contract is designed, the existing-reader evidence for
 `REQ-DEF-XML-ATTR`, `REQ-DEF-XML-DOCTYPE`, `REQ-DEF-XML-SKIP` and their matching
@@ -110,19 +96,39 @@ of the deferred semantic contracts. Full source validation is still not exposed:
 Encode/reparse and cannot reconstruct them. Strict-source integration and
 machine-readable partial-implementation evidence remain separate work.
 
-A residual namespace-provenance gap is explicitly deferred: `encoding/xml`
-represents namespace declarations with the sentinel namespace `xmlns`. An ordinary
-attribute bound to the literal relative namespace URI `xmlns` (for example,
-`xmlns:p="xmlns" p:rubbish="x"`) has the same retained shape and is currently
-mistaken for a declaration. This affects the existing complex checker as well as
-the simple-element check. The concrete raw-token provenance repair is tracked
-under [XML-reading follow-ups](#xml-reading-follow-ups). The checked-in
-[raw reproducer](../../testdata/validation/namespace-declaration-lookalike.musicxml)
-covers `step`, `staves` and complex `measure`. The external-XSD test requires its
-rejection; it is deliberately not included among the 35 shared internal/oracle
-cases. A future source-reader repair must reject it internally too. This slice
-does not claim complete namespace-attribute conformance or resolve that
-parser-level ambiguity.
+## Namespace-declaration provenance repair update
+
+The namespace-provenance follow-up is now repaired in the existing internal
+parser and validator. `encoding/xml` represents namespace declarations with the
+sentinel namespace `xmlns`; an ordinary attribute bound to the literal relative
+namespace URI `xmlns` can have the same expanded name. The
+[`wellFormedXMLTokenReader`](../../xml_wellformedness.go) now records a declaration
+flag for each attribute from its raw lexical name, before namespace expansion.
+`parseValidationDocument` copies those flags together with the expanded attributes
+into each `validationNode`. `validationNamespaceDeclaration` reads that retained
+provenance, so only actual declarations bypass ordinary attribute checks. Names
+are still expanded exactly once, and no second namespace resolver is introduced.
+
+The retained [raw reproducer](../../testdata/validation/namespace-declaration-lookalike.musicxml)
+now produces three internal `attribute` issues, on `measure`, `staves` and `step`,
+and the external XSD test rejects the identical source. Shared raw cases in
+[`validation_attributes_test.go`](../../validation_attributes_test.go) also cover
+lexical attribute order, declarations and ordinary attributes with the same
+expanded name, `p:xmlns`, real declarations and complex simple-content.
+`TestValidateNamespaceDeclarationLookalike` checks the exact three issue paths.
+[`validation_namespace_provenance_test.go`](../../validation_namespace_provenance_test.go)
+covers retained flags after nested and self-closing elements, default namespace
+resets, prefix rebinding and restoration, explicit `xml` declarations, required
+ordinary attributes in the literal `xmlns` namespace, and unchanged public
+Decode behavior across supported encodings.
+
+This closes the recorded declaration/lookalike ambiguity without changing the
+public API. The internal Encode/reparse helper retains its plain UTF-8 input
+contract; public Decode still discards unsupported attributes and public Validate
+cannot reconstruct them. Full XML/namespace conformance, strict-source adapters,
+full schema-instance semantics and machine-readable partial-implementation
+evidence remain separate work. The planning JSON's `status: planned` semantics
+are unchanged; these regressions do not complete `STAGE-DEF-01` or `STAGE-DEF-02`.
 
 ## Reuse and adaptation
 
@@ -156,7 +162,9 @@ explicitly below, while other limits remain open.
   validation reached only through the complex-type branch. The existing validator
   now rejects these ordinary attributes through `validateSimpleElementAttributes`;
   see the [repair update](#ordinary-attribute-repair-update) for executable
-  evidence and remaining namespace/xsi limitations. Complex-type attributes such
+  evidence and remaining xsi limitations; the later
+  [provenance repair](#namespace-declaration-provenance-repair-update) closes the
+  recorded namespace-declaration lookalike gap. Complex-type attributes such
   as `measure/@implicit="maybe"` were already rejected at the baseline and remain
   rejected.
 - **XML well-formedness** (repaired by [PR #14](https://github.com/go-muse/go-musicxml/pull/14)):
