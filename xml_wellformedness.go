@@ -6,14 +6,16 @@ import (
 	"strings"
 )
 
-// wellFormedXMLTokenReader fills two gaps in encoding/xml: duplicate
-// attributes and DOCTYPE placement. It observes lexical tokens below every
-// model/namespace skip, and forwards them unchanged so the wrapping decoder
-// still expands namespaces exactly once and checks matching element names.
+// wellFormedXMLTokenReader checks duplicate attributes, DOCTYPE placement,
+// XML-declaration placement and reserved processing-instruction targets.
+// It observes lexical tokens below every model/namespace skip, and forwards
+// them unchanged so the wrapping decoder still expands namespaces exactly
+// once and checks matching element names.
 // It does not parse DTD declarations or load external resources.
 type wellFormedXMLTokenReader struct {
 	source     xml.TokenReader
 	position   func() (line, column int)
+	readToken  bool
 	started    bool
 	doctype    bool
 	namespaces map[string]string
@@ -39,8 +41,23 @@ func (r *wellFormedXMLTokenReader) Token() (xml.Token, error) {
 	if err != nil {
 		return nil, err
 	}
+	first := !r.readToken
+	r.readToken = true
 
 	switch value := token.(type) {
+	case xml.ProcInst:
+		// XML 1.0 productions 17 and 22-23 reserve all case variants of
+		// the exact target "xml"; only lowercase starts a declaration,
+		// and that declaration must precede every token, even whitespace.
+		// Encoding signatures have already been removed by newXMLDecoder.
+		if strings.EqualFold(value.Target, "xml") {
+			if value.Target != "xml" {
+				return nil, r.syntaxError("reserved XML processing instruction target %q", value.Target)
+			}
+			if !first {
+				return nil, r.syntaxError("XML declaration must be at the start of the document")
+			}
+		}
 	case xml.StartElement:
 		r.started = true
 		if err := r.checkAttributes(value.Attr); err != nil {

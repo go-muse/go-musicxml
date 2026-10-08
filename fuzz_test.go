@@ -148,6 +148,10 @@ func addDocumentFuzzSeeds(f *testing.F) {
 	// Keep XML-layer regressions reachable both in ordinary model content
 	// and in subtrees skipped by namespace filtering.
 	for _, input := range []string{
+		` <?xml version="1.0"?><opus/>`,
+		`<?xml version="1.0"?><opus xmlns:v="urn:vendor"><v:extension><?xml version="1.0"?></v:extension></opus>`,
+		`<opus/><?XmL version="1.0"?>`,
+		`<?xml version="1.0"?><?xml-stylesheet href="style.xsl"?><opus/>`,
 		`<opus title="first" title="second"/>`,
 		`<opus xmlns:p="urn:vendor" xmlns:q="urn:vendor"><p:extension><child p:a="1" q:a="2"/></p:extension></opus>`,
 		`<!DOCTYPE opus><opus><unknown><!DOCTYPE opus></unknown></opus>`,

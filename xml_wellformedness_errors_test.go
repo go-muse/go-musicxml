@@ -18,6 +18,8 @@ func TestXMLWellFormednessWithoutPosition(t *testing.T) {
 		input   string
 		message string
 	}{
+		{"late XML declaration", ` <?xml version="1.0"?><root/>`, "XML declaration must be at the start of the document"},
+		{"reserved XML target", `<?XmL version="1.0"?><root/>`, `reserved XML processing instruction target "XmL"`},
 		{"lexical duplicate", `<root a="1" a="2"/>`, "duplicate XML attribute {}a"},
 		{"expanded duplicate", `<root xmlns:p="urn:x" xmlns:q="urn:x" p:a="1" q:a="2"/>`, "duplicate XML attribute {urn:x}a"},
 		{"prefix undeclaration", `<root xmlns:p=""/>`, `namespace prefix undeclaring is not allowed: "p"`},
@@ -52,6 +54,9 @@ func TestXMLWellFormednessErrorPositions(t *testing.T) {
 		message string
 		line    int
 	}{
+		{"late XML declaration", "<!-- comment -->\n\n<?xml version='1.0'?><ROOT/>", "XML declaration must be at the start of the document", 3},
+		{"multiline XML declaration", "<ROOT>\n<unknown><?xml\n version='1.0'\n?></unknown></ROOT>", "XML declaration must be at the start of the document", 4},
+		{"reserved XML target", "<ROOT/>\n\n<?XmL version='1.0'?>", `reserved XML processing instruction target "XmL"`, 3},
 		{"lexical duplicate", "<ROOT>\n\n<KNOWN a='1' a='2'>Keep</KNOWN></ROOT>", "duplicate XML attribute {}a", 3},
 		{"expanded duplicate", "<ROOT xmlns:p='urn:x' xmlns:q='urn:x'>\n<unknown>\n<child p:a='1' q:a='2'/></unknown></ROOT>", "duplicate XML attribute {urn:x}a", 3},
 		{"foreign subtree", "<ROOT xmlns:p='urn:x'>\n<p:extension>\n<child a='1' a='2'/></p:extension></ROOT>", "duplicate XML attribute {}a", 3},

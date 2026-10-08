@@ -9,7 +9,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
-	"testing/iotest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,11 +16,7 @@ import (
 
 // These are XML-reading regressions, independent of MusicXML validity. ROOT
 // and KNOWN are replaced with each supported root and a known text element.
-var xmlWellFormednessCases = []struct {
-	name  string
-	input string
-	valid bool
-}{
+var xmlWellFormednessCases = []xmlReadingCase{
 	{"duplicate root attribute", `<ROOT version="4.0" version="3.0"/>`, false},
 	{"duplicate known attribute", `<ROOT><KNOWN a="1" a="2">Keep</KNOWN></ROOT>`, false},
 	{"duplicate unknown attribute", `<ROOT><unknown><child a="1" a="2"/></unknown></ROOT>`, false},
@@ -70,85 +65,15 @@ var xmlWellFormednessCases = []struct {
 }
 
 func TestXMLWellFormednessDecodePaths(t *testing.T) {
-	t.Parallel()
-	for _, root := range []string{"score-partwise", "score-timewise", "opus"} {
-		for _, test := range xmlWellFormednessCases {
-			t.Run(root+"/"+test.name, func(t *testing.T) {
-				input := xmlWellFormednessInput(test.input, root)
-				for encoding, data := range xmlReadingEncodingVariants(input) {
-					t.Run(encoding, func(t *testing.T) {
-						archive := makeMXLTestArchive(t, []mxlTestEntry{
-							mxlTestFileEntry(mxlContainerPath, `<container><rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`),
-							mxlTestFileEntry("score.musicxml", string(data)),
-						})
-						for _, path := range xmlReadingPaths(root) {
-							t.Run(path.name, func(t *testing.T) {
-								content := data
-								if path.archive {
-									content = archive
-								}
-								document, err := path.decode(iotest.OneByteReader(bytes.NewReader(content)))
-								if !test.valid {
-									assert.Error(t, err)
-									assert.Nil(t, document)
-									return
-								}
-								require.NoError(t, err)
-								assertXMLReadingTitle(t, document)
-							})
-						}
-					})
-				}
-			})
-		}
-	}
+	runXMLReadingDecodePaths(t, xmlWellFormednessCases, xmlReadingEncodingVariants, assertXMLReadingError)
 }
 
 func TestXMLWellFormednessContainer(t *testing.T) {
-	t.Parallel()
-	for _, test := range xmlWellFormednessCases {
-		t.Run(test.name, func(t *testing.T) {
-			input := xmlWellFormednessInput(test.input, "container")
-			// Preserve the malformed fragment while supplying usable metadata.
-			input = strings.Replace(input, `</container>`, `<rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`, 1)
-			for encoding, data := range xmlReadingEncodingVariants(input) {
-				t.Run(encoding, func(t *testing.T) {
-					archive := makeMXLTestArchive(t, []mxlTestEntry{
-						mxlTestFileEntry(mxlContainerPath, string(data)),
-						mxlTestFileEntry("score.musicxml", `<opus><title>Keep</title></opus>`),
-					})
-					for _, path := range xmlReadingPaths("opus") {
-						if !path.archive {
-							continue
-						}
-						t.Run(path.name, func(t *testing.T) {
-							document, err := path.decode(bytes.NewReader(archive))
-							if !test.valid {
-								assert.ErrorIs(t, err, ErrMXLInvalidContainer)
-								return
-							}
-							require.NoError(t, err)
-							assertXMLReadingTitle(t, document)
-						})
-					}
-				})
-			}
-		})
-	}
+	runXMLReadingContainer(t, xmlWellFormednessCases, xmlReadingEncodingVariants, assertXMLReadingError)
 }
 
 func TestXMLWellFormednessValidationParser(t *testing.T) {
-	t.Parallel()
-	for _, test := range xmlWellFormednessCases {
-		t.Run(test.name, func(t *testing.T) {
-			_, err := parseValidationDocument([]byte(xmlWellFormednessInput(test.input, "opus")))
-			if test.valid {
-				assert.NoError(t, err)
-			} else {
-				assert.Error(t, err)
-			}
-		})
-	}
+	runXMLReadingValidationParser(t, xmlWellFormednessCases, xmlReadingUTF8Input, assertXMLReadingError)
 }
 
 func TestXMLWellFormednessDepthBoundary(t *testing.T) {
@@ -169,40 +94,7 @@ func TestXMLWellFormednessDepthBoundary(t *testing.T) {
 }
 
 func TestXMLWellFormednessLinkedResources(t *testing.T) {
-	t.Parallel()
-	for _, root := range []string{"score-partwise", "score-timewise", "opus"} {
-		for _, test := range xmlWellFormednessCases {
-			t.Run(root+"/"+test.name, func(t *testing.T) {
-				input := xmlWellFormednessInput(test.input, root)
-				for encoding, data := range xmlReadingEncodingVariants(input) {
-					t.Run(encoding, func(t *testing.T) {
-						link := `<score xlink:href="linked.musicxml"/>`
-						if root == "opus" {
-							link = `<opus-link xlink:href="linked.musicxml"/>`
-						}
-						archive := makeMXLTestArchive(t, []mxlTestEntry{
-							mxlTestFileEntry(mxlContainerPath, `<container><rootfiles><rootfile full-path="main.musicxml"/></rootfiles></container>`),
-							mxlTestFileEntry("main.musicxml", `<opus xmlns:xlink="http://www.w3.org/1999/xlink">`+link+`</opus>`),
-							mxlTestFileEntry("linked.musicxml", string(data)),
-						})
-						value, err := DecodeMXLPackage(bytes.NewReader(archive))
-						require.NoError(t, err) // Resources remain opaque until resolution.
-						resolved, err := value.ResolveOpus()
-						if !test.valid {
-							assert.Error(t, err)
-							return
-						}
-						require.NoError(t, err)
-						if root == "opus" {
-							assertXMLReadingTitle(t, resolved.Content[0].OpusLink.Target.Document)
-						} else {
-							assertXMLReadingTitle(t, resolved.Content[0].Score.Target)
-						}
-					})
-				}
-			})
-		}
-	}
+	runXMLReadingLinkedResources(t, xmlWellFormednessCases, xmlReadingEncodingVariants, assertXMLReadingError)
 }
 
 func TestXMLDoctypeDoesNotFetchExternalDTD(t *testing.T) {
