@@ -5,6 +5,44 @@ Status: **PROPOSED**. This mapping is based on repository commit
 this documentation proposal. It identifies reuse candidates and observed limits;
 it is not an implementation plan with a fixed API or an exhaustive validator audit.
 
+## XML-reading repair update
+
+The duplicate-attribute and DOCTYPE-placement gaps recorded below are now
+repaired in the existing decoding and internal XML-parsing paths by
+[`xml_wellformedness.go`](../../xml_wellformedness.go), with
+[regressions](../../xml_wellformedness_test.go) covering skipped subtrees and
+MXL paths. This is the existing-reader slice of STAGE-DEF-01. Integration with
+the proposed strict source adapter remains open; the pinned historical review
+and broader deferred contracts below are not a claim of completed validation.
+
+## XML-reading follow-ups
+
+The following items from [PR #14 review](https://github.com/go-muse/go-musicxml/pull/14#pullrequestreview-5459364076)
+are explicitly **deferred**, not completed by the existing-reader repair:
+
+- **XML declaration ordering:** enforce the XML-declaration-first rule in a
+  separate bounded XML-reading change. Cover declarations after whitespace,
+  comments, DOCTYPE and root content, plus valid first/omitted declarations
+  across supported encodings and skipped paths. Current `encoding/xml`
+  tolerance remains in place; this repair does not claim full prolog grammar.
+- **Machine-readable implementation evidence:** add a reviewed `implemented_by`
+  or `evidence` contract to the planning format and its integrity checker.
+  Link partial requirement/test implementations to PRs, commits, source files
+  and test names; check that referenced local artifacts exist. Retain the
+  meaning of `status: planned` and keep incomplete strict-source obligations
+  visible rather than marking the entire contract implemented.
+
+Until that evidence contract is designed, the existing-reader evidence for
+`REQ-DEF-XML-ATTR`, `REQ-DEF-XML-DOCTYPE`, `REQ-DEF-XML-SKIP` and their matching
+`TEST-DEF-XML-*` contracts is [PR #14](https://github.com/go-muse/go-musicxml/pull/14),
+[`xml_wellformedness_test.go`](../../xml_wellformedness_test.go)
+(`TestXMLWellFormednessDecodePaths`, `TestXMLWellFormednessContainer`,
+`TestXMLWellFormednessValidationParser`, `TestXMLWellFormednessLinkedResources`,
+`TestXMLWellFormednessDepthBoundary`, `TestXMLDoctypeDoesNotFetchExternalDTD`),
+and [`xml_wellformedness_errors_test.go`](../../xml_wellformedness_errors_test.go)
+(`TestXMLWellFormednessErrorPositions`). These are executable evidence for the
+current-reader slice, not a change to the planning JSON's completion semantics.
+
 ## Reuse and adaptation
 
 | Existing component | Proposed use | Required adaptation or verification |
@@ -25,8 +63,8 @@ of the current XSD engine is assumed.
 ## Confirmed limits of the current implementation
 
 Focused review probes at the pinned code base showed the following. They
-identify work for a later implementation change; this documentation does not
-repair these behaviors.
+identify the original implementation work; completed repairs are called out
+explicitly below, while other limits remain open.
 
 - **Attributes on simple-typed elements:** unrecognized attributes on `staves`
   and `step`, such as `rubbish="x"`, pass the internal source-validation path.
@@ -35,9 +73,12 @@ repair these behaviors.
   validation only through the complex-type branch. This is narrower than saying
   all simple attribute values are unchecked: complex-type attributes such as
   `measure/@implicit="maybe"` are correctly rejected.
-- **XML well-formedness:** duplicate attributes and a DOCTYPE inside the root
-  are accepted by the current decoding/internal parsing paths. These belong to
-  the mandatory XML layer, regardless of the strict MusicXML flag.
+- **XML well-formedness** (repaired by [PR #14](https://github.com/go-muse/go-musicxml/pull/14)):
+  duplicate attributes and a DOCTYPE inside the root were accepted at the
+  pinned review baseline. The existing decoding/internal parsing paths now
+  reject them through [`xml_wellformedness.go`](../../xml_wellformedness.go),
+  including skipped subtrees. See the [repair update](#xml-reading-repair-update)
+  for current coverage; future strict-source integration remains open.
 - **xsi semantics:** `xsi:noNamespaceSchemaLocation` is rejected as an unallowed
   attribute by the current source path. The proposed fix is the standard
   attribute contract, not blanket acceptance of every xsi value. `xsi:type`

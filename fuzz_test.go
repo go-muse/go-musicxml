@@ -145,6 +145,18 @@ func addDocumentFuzzSeeds(f *testing.F) {
 			`</score-partwise>`,
 	))
 
+	// Keep XML-layer regressions reachable both in ordinary model content
+	// and in subtrees skipped by namespace filtering.
+	for _, input := range []string{
+		`<opus title="first" title="second"/>`,
+		`<opus xmlns:p="urn:vendor" xmlns:q="urn:vendor"><p:extension><child p:a="1" q:a="2"/></p:extension></opus>`,
+		`<!DOCTYPE opus><opus><unknown><!DOCTYPE opus></unknown></opus>`,
+		`<!DOCTYPE opus><!DOCTYPE opus><opus/>`,
+		`<!DOCTYPE opus SYSTEM "https://example.invalid/opus.dtd"><opus xmlns:p="urn:first" xmlns:q="urn:second"><unknown p:a="1" q:a="2"/></opus>`,
+	} {
+		f.Add([]byte(input))
+	}
+
 	for _, file := range []string{
 		"01d-Pitches-Microtones.xml",
 		"23d-Tuplets-Nested.xml",

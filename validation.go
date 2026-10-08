@@ -378,7 +378,11 @@ func validationDocumentPath(document Document) string {
 }
 
 func parseValidationDocument(source []byte) (*validationNode, error) {
-	decoder := xml.NewDecoder(bytes.NewReader(source))
+	rawDecoder := xml.NewDecoder(bytes.NewReader(source))
+	decoder := xml.NewTokenDecoder(&wellFormedXMLTokenReader{
+		source:   rawXMLTokenReader{rawDecoder},
+		position: rawDecoder.InputPos,
+	})
 
 	for {
 		token, err := decoder.Token()
