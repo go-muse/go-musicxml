@@ -1,0 +1,1805 @@
+{
+  "format": "musicxml-validation-plan-1",
+  "test_contracts": [
+    {
+      "id": "TEST-XSD-schema_namespace_contract",
+      "check_ids": [
+        "CHECK-XSD-schema_namespace_contract"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "A correctly expanded element/attribute in the four root assemblies and their six schema modules, including imports passes."
+        ],
+        "negative": [
+          "Wrong namespace URI fails even if local name matches."
+        ],
+        "boundary": [
+          "Empty target namespace and unqualified attributes do not inherit the element default namespace."
+        ],
+        "missing_fact": [
+          "Missing assembly or declaration evidence is unsupported, never a no-namespace guess."
+        ],
+        "interaction": [
+          "Two prefixes bound to one URI agree; namespace rebinding changes the selected declaration."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-schema_dependency",
+      "check_ids": [
+        "CHECK-XSD-schema_dependency"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "The pinned xml.xsd and xlink.xsd imports resolve to expected namespaces."
+        ],
+        "negative": [
+          "Wrong module digest or imported namespace cannot produce a resolved graph."
+        ],
+        "boundary": [
+          "Duplicate/import cycles use identity-aware resolution; no unbounded recursion."
+        ],
+        "missing_fact": [
+          "Unavailable pinned module means unsupported context; dependent checks cannot pass."
+        ],
+        "interaction": [
+          "Instance xsi:schemaLocation cannot replace or redirect the pinned assembly."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-simple_value_domain",
+      "check_ids": [
+        "CHECK-XSD-simple_value_domain"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Valid value reaches the linked restriction/union once."
+        ],
+        "negative": [
+          "A facet failure is attributed to the shared clause once, retaining type provenance."
+        ],
+        "boundary": [
+          "Union alternatives remain in declaration order; a type with an empty lexical form is not automatically absent."
+        ],
+        "missing_fact": [
+          "Missing source lexeme affects lexical subchecks; exact current model value can still satisfy value-space checks."
+        ],
+        "interaction": [
+          "Two elements using one type reuse the immutable plan but have distinct subjects/diagnostics."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-restriction_contract",
+      "check_ids": [
+        "CHECK-XSD-restriction_contract"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Every enumerated alternative and every satisfying bound is accepted."
+        ],
+        "negative": [
+          "Value violating each individual facet is rejected while other facets remain satisfied."
+        ],
+        "boundary": [
+          "Test inclusive/exclusive equality and nearest representable exact values; XML character count differs from UTF-8 bytes."
+        ],
+        "missing_fact": [
+          "Unknown lexeme does not invalidate a known value; unresolved base domain blocks dependent facets."
+        ],
+        "interaction": [
+          "Inherited restriction layers combine; invalid lexical input suppresses misleading bound/enumeration cascades."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-union_contract",
+      "check_ids": [
+        "CHECK-XSD-union_contract"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "A value accepted only by a later member passes."
+        ],
+        "negative": [
+          "Value outside all members fails once with bounded cause detail."
+        ],
+        "boundary": [
+          "Overlapping member values preserve first successful member identity; empty and whitespace-only strings stay distinguishable by policy."
+        ],
+        "missing_fact": [
+          "Unavailable member capability leaves result incomplete if that member could accept; failed other members cannot prove total failure."
+        ],
+        "interaction": [
+          "Restricting the selected union value uses its typed value space rather than raw string equality."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-reusable_attributeGroup",
+      "check_ids": [
+        "CHECK-XSD-reusable_attributeGroup"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "One group used at two owners gives the same permitted uses with distinct owner identities."
+        ],
+        "negative": [
+          "Missing required group attribute is reported at its actual owner, not the definition."
+        ],
+        "boundary": [
+          "Nested references and empty group definitions do not invent attributes."
+        ],
+        "missing_fact": [
+          "Unresolved group target blocks closedness and required-use conclusions."
+        ],
+        "interaction": [
+          "Inherited groups plus local attributes form the effective permitted set; namespace and standard xsi exceptions remain separate."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-attribute_contract",
+      "check_ids": [
+        "CHECK-XSD-attribute_contract"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Required present and optional absent attributes pass; allowed fixed values compare in typed space."
+        ],
+        "negative": [
+          "Missing required attribute, prohibited use, wrong expanded name or invalid type fails its responsible clause."
+        ],
+        "boundary": [
+          "Empty present value differs from absent; numeric 1.0 and 1 may share a value."
+        ],
+        "missing_fact": [
+          "Incomplete attribute enumeration cannot prove absence; model zero values cannot prove original XML presence."
+        ],
+        "interaction": [
+          "simple/builtin element attribute closedness and four standard xsi attributes need their separate contracts."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-complex_content_contract",
+      "check_ids": [
+        "CHECK-XSD-complex_content_contract"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Content and attributes allowed by the effective graph pass, including lawful character data."
+        ],
+        "negative": [
+          "An otherwise valid extra child/attribute or forbidden text fails the residual closedness/text clause."
+        ],
+        "boundary": [
+          "Empty versus element-only whitespace and mixed-content text have distinct semantics."
+        ],
+        "missing_fact": [
+          "Incomplete child/attribute scope prevents a proof of closedness or required absence."
+        ],
+        "interaction": [
+          "Group/extension leaves and this aggregate produce one diagnosis per canonical clause+subject, never duplicate leaf diagnostics."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-extension_contract",
+      "check_ids": [
+        "CHECK-XSD-extension_contract"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Valid inherited and extension content/attributes pass through their shared leaf plans."
+        ],
+        "negative": [
+          "Missing inherited required content cannot be excused by valid extension content."
+        ],
+        "boundary": [
+          "A simple-content extension retains scalar base normalization and its new attributes."
+        ],
+        "missing_fact": [
+          "Missing base plan prevents a complete derived-type assessment."
+        ],
+        "interaction": [
+          "Required/default/fixed constraints survive derivation; block/final and xsi:type are assessed by their own semantic contracts."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-element_contract",
+      "check_ids": [
+        "CHECK-XSD-element_contract"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Each legal declared root/use-site and valid resolved type passes."
+        ],
+        "negative": [
+          "Wrong name, abstract declaration instance or prohibited nil fails the responsible clause."
+        ],
+        "boundary": [
+          "minOccurs=0 versus 1, finite max versus unbounded, and empty present scalar differ."
+        ],
+        "missing_fact": [
+          "Missing model presence/branch/order evidence limits only dependent clauses; no source history is fabricated."
+        ],
+        "interaction": [
+          "xsi:type/nil legality, substitution/block/final, and enclosing choice/sequence retain separate clause identities."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-particle_sequence",
+      "check_ids": [
+        "CHECK-XSD-particle_sequence"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Shortest valid sequence and each optional combination pass in declared order."
+        ],
+        "negative": [
+          "Swapped distinguishable children, omitted required term and trailing unmatched term fail."
+        ],
+        "boundary": [
+          "Zero/min/max/max+1 repetitions, empty nullable terms and unbounded repetition are bounded by work budgets."
+        ],
+        "missing_fact": [
+          "Unknown original order on a model cannot be treated as source order or a historical source pass."
+        ],
+        "interaction": [
+          "Nullable nested choice/repetition avoids infinite loops and preserves alternative states until disambiguated."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-particle_choice",
+      "check_ids": [
+        "CHECK-XSD-particle_choice"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Each alternative branch and legal repeated mix passes."
+        ],
+        "negative": [
+          "A hybrid not belonging to any branch and missing required nonnullable branch fail."
+        ],
+        "boundary": [
+          "Empty nullable choice, min=0, max=1 and repeated-choice boundaries are distinct."
+        ],
+        "missing_fact": [
+          "Incomplete scope or unknown branch evidence is incomplete, never automatically empty."
+        ],
+        "interaction": [
+          "Backtracking alternatives with common prefixes are retained; choice plus sequence preserves occurrence bounds."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-reusable_group",
+      "check_ids": [
+        "CHECK-XSD-reusable_group"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "A reused group passes independently at each legal use-site."
+        ],
+        "negative": [
+          "Use-site max/min violation fails even if each group body is valid."
+        ],
+        "boundary": [
+          "Zero occurrences, nullable group body and repeated group boundary are exercised."
+        ],
+        "missing_fact": [
+          "Missing target graph is unsupported; it cannot mean the group accepts arbitrary content."
+        ],
+        "interaction": [
+          "Nested group/choice/sequence expansions retain use-site bounds without duplicate leaf findings."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-NAME",
+      "check_ids": [
+        "CHECK-XSD-LANG-NAME"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Equivalent prefixes and local declarations."
+        ],
+        "negative": [
+          "Wrong namespace URI."
+        ],
+        "boundary": [
+          "No/default/rebound namespace."
+        ],
+        "missing_fact": [
+          "Unknown declaration binding."
+        ],
+        "interaction": [
+          "Attribute namespace versus element default."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-ORDER",
+      "check_ids": [
+        "CHECK-XSD-LANG-ORDER"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Declared concatenation."
+        ],
+        "negative": [
+          "Reversed distinguishable terms."
+        ],
+        "boundary": [
+          "Nullable sequence."
+        ],
+        "missing_fact": [
+          "Lost model order."
+        ],
+        "interaction": [
+          "Nested repetition."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-CHOICE",
+      "check_ids": [
+        "CHECK-XSD-LANG-CHOICE"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Each legal branch."
+        ],
+        "negative": [
+          "Hybrid of incompatible branches."
+        ],
+        "boundary": [
+          "Nullable branch."
+        ],
+        "missing_fact": [
+          "Unknown branch state."
+        ],
+        "interaction": [
+          "Common-prefix alternatives."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-OCCURS",
+      "check_ids": [
+        "CHECK-XSD-LANG-OCCURS"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "min and max accepted."
+        ],
+        "negative": [
+          "min-1 and max+1 rejected."
+        ],
+        "boundary": [
+          "0 and unbounded."
+        ],
+        "missing_fact": [
+          "Unfinished child scope."
+        ],
+        "interaction": [
+          "Nullable repeated groups."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-TYPE",
+      "check_ids": [
+        "CHECK-XSD-LANG-TYPE"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Resolved declared type."
+        ],
+        "negative": [
+          "Wrong content/domain."
+        ],
+        "boundary": [
+          "Simple/builtin/anonymous types."
+        ],
+        "missing_fact": [
+          "Missing assembly type."
+        ],
+        "interaction": [
+          "Dynamic type derivation."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-ATTRUSE",
+      "check_ids": [
+        "CHECK-XSD-LANG-ATTRUSE"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Required present, optional absent."
+        ],
+        "negative": [
+          "Required absent/prohibited present."
+        ],
+        "boundary": [
+          "Empty present versus absent."
+        ],
+        "missing_fact": [
+          "Incomplete attribute scope."
+        ],
+        "interaction": [
+          "Group inheritance."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-DEFAULT",
+      "check_ids": [
+        "CHECK-XSD-LANG-DEFAULT"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Absent optional attribute obtains effective default."
+        ],
+        "negative": [
+          "Present invalid value remains invalid."
+        ],
+        "boundary": [
+          "Empty element versus absent optional element."
+        ],
+        "missing_fact": [
+          "Unknown physical presence."
+        ],
+        "interaction": [
+          "Default retains absent provenance."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-FIXED",
+      "check_ids": [
+        "CHECK-XSD-LANG-FIXED"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Typed equality to fixed value."
+        ],
+        "negative": [
+          "Typed inequality."
+        ],
+        "boundary": [
+          "1 versus 1.0 where decimal."
+        ],
+        "missing_fact": [
+          "Invalid lexical prerequisite."
+        ],
+        "interaction": [
+          "Optional absence and effective fixed default."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-CLOSED",
+      "check_ids": [
+        "CHECK-XSD-LANG-CLOSED"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Declared attributes/grammar only."
+        ],
+        "negative": [
+          "Unknown attribute/child."
+        ],
+        "boundary": [
+          "Simple and builtin element attributes."
+        ],
+        "missing_fact": [
+          "Incomplete child/attribute set."
+        ],
+        "interaction": [
+          "Four xsi exceptions checked, foreign skipped subtree observed."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-TEXT",
+      "check_ids": [
+        "CHECK-XSD-LANG-TEXT"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Permitted text category."
+        ],
+        "negative": [
+          "Forbidden child/nonwhitespace text."
+        ],
+        "boundary": [
+          "Empty/element-only/mixed distinctions."
+        ],
+        "missing_fact": [
+          "Truncated scalar input."
+        ],
+        "interaction": [
+          "Whitespace after XML normalization."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-NIL",
+      "check_ids": [
+        "CHECK-XSD-LANG-NIL"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "False nil and legal nillable empty instance."
+        ],
+        "negative": [
+          "True nil on nonnillable declaration."
+        ],
+        "boundary": [
+          "Boolean true/1/false/0."
+        ],
+        "missing_fact": [
+          "Unknown declaration."
+        ],
+        "interaction": [
+          "Nil content and fixed value constraints."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-XSI",
+      "check_ids": [
+        "CHECK-XSD-LANG-XSI"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Resolved QName validly derived type."
+        ],
+        "negative": [
+          "Unbound prefix/unrelated dynamic type."
+        ],
+        "boundary": [
+          "Default namespace QName rules."
+        ],
+        "missing_fact": [
+          "Missing dynamic type metadata."
+        ],
+        "interaction": [
+          "block/final derivation path."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-BLOCK",
+      "check_ids": [
+        "CHECK-XSD-LANG-BLOCK"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Allowed derivation path."
+        ],
+        "negative": [
+          "Blocked path."
+        ],
+        "boundary": [
+          "Extension versus restriction."
+        ],
+        "missing_fact": [
+          "Unknown derivation chain."
+        ],
+        "interaction": [
+          "Substitution and dynamic type."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-FINAL",
+      "check_ids": [
+        "CHECK-XSD-LANG-FINAL"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Legal declared derivation."
+        ],
+        "negative": [
+          "Illegal final-blocked declaration relation."
+        ],
+        "boundary": [
+          "No blanket ban on xsi:type."
+        ],
+        "missing_fact": [
+          "Missing schema graph."
+        ],
+        "interaction": [
+          "Separate block from final."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-ENUM",
+      "check_ids": [
+        "CHECK-XSD-LANG-ENUM"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Each typed member."
+        ],
+        "negative": [
+          "Nonmember."
+        ],
+        "boundary": [
+          "Lexical variants same typed value."
+        ],
+        "missing_fact": [
+          "Invalid member parse."
+        ],
+        "interaction": [
+          "Union value/member identity."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-PATTERN",
+      "check_ids": [
+        "CHECK-XSD-LANG-PATTERN"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "XSD regular-expression accepted language."
+        ],
+        "negative": [
+          "Outside pattern language."
+        ],
+        "boundary": [
+          "Unicode categories and escape semantics."
+        ],
+        "missing_fact": [
+          "Unavailable XSD regex capability."
+        ],
+        "interaction": [
+          "Synthetic same-restriction alternatives use OR, derived restriction layers use AND, with datatype whitespace."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-BOUND",
+      "check_ids": [
+        "CHECK-XSD-LANG-BOUND"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Exact values within bounds."
+        ],
+        "negative": [
+          "Outside one bound."
+        ],
+        "boundary": [
+          "Equality inclusive/exclusive and arbitrary precision."
+        ],
+        "missing_fact": [
+          "Invalid/unavailable scalar."
+        ],
+        "interaction": [
+          "Multiple inherited facets."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-LENGTH",
+      "check_ids": [
+        "CHECK-XSD-LANG-LENGTH"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Correct XML-character length."
+        ],
+        "negative": [
+          "Below minLength."
+        ],
+        "boundary": [
+          "Multibyte Unicode counted as characters."
+        ],
+        "missing_fact": [
+          "Truncated string."
+        ],
+        "interaction": [
+          "Datatype normalization before length."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-RESTRICT",
+      "check_ids": [
+        "CHECK-XSD-LANG-RESTRICT"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Base and each facet hold."
+        ],
+        "negative": [
+          "Base valid but facet invalid."
+        ],
+        "boundary": [
+          "Layer inheritance."
+        ],
+        "missing_fact": [
+          "Unknown base result."
+        ],
+        "interaction": [
+          "Enumerations alternatives, facet layers combined."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-EXTEND",
+      "check_ids": [
+        "CHECK-XSD-LANG-EXTEND"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Base plus extension."
+        ],
+        "negative": [
+          "Missing base obligations."
+        ],
+        "boundary": [
+          "Simple-content extension."
+        ],
+        "missing_fact": [
+          "Unresolved base."
+        ],
+        "interaction": [
+          "Inherited attributes and content order."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-UNION",
+      "check_ids": [
+        "CHECK-XSD-LANG-UNION"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Later member succeeds."
+        ],
+        "negative": [
+          "All members reject."
+        ],
+        "boundary": [
+          "First successful ordered member."
+        ],
+        "missing_fact": [
+          "Unavailable potentially accepting member."
+        ],
+        "interaction": [
+          "Member-specific whitespace and typed facets."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-WS",
+      "check_ids": [
+        "CHECK-XSD-LANG-WS"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Correct preserve/replace/collapse."
+        ],
+        "negative": [
+          "Invalid post-normalization domain."
+        ],
+        "boundary": [
+          "Tab LF CR space versus other Unicode spaces."
+        ],
+        "missing_fact": [
+          "Missing source lexeme."
+        ],
+        "interaction": [
+          "Different union-member policies."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-LEXICAL",
+      "check_ids": [
+        "CHECK-XSD-LANG-LEXICAL"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Allowed datatype spelling."
+        ],
+        "negative": [
+          "Invalid spelling despite parseable Go value."
+        ],
+        "boundary": [
+          "Plus sign/leading zero/decimal dot."
+        ],
+        "missing_fact": [
+          "Lost source spelling."
+        ],
+        "interaction": [
+          "Go conversion kept separate."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-ID",
+      "check_ids": [
+        "CHECK-XSD-LANG-ID"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Distinct normalized IDs."
+        ],
+        "negative": [
+          "Duplicate normalized ID."
+        ],
+        "boundary": [
+          "Forward declaration order."
+        ],
+        "missing_fact": [
+          "Incomplete document scope."
+        ],
+        "interaction": [
+          "Same spelling across distinct documents."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-IDREF",
+      "check_ids": [
+        "CHECK-XSD-LANG-IDREF"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Forward/backward ref resolves."
+        ],
+        "negative": [
+          "Missing ID at complete EOF."
+        ],
+        "boundary": [
+          "Repeated IDREF legal."
+        ],
+        "missing_fact": [
+          "EOF unavailable."
+        ],
+        "interaction": [
+          "Typed MusicXML target-kind extra condition."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-IMPORT",
+      "check_ids": [
+        "CHECK-XSD-LANG-IMPORT"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Pinned namespace module resolves."
+        ],
+        "negative": [
+          "Wrong pinned module identity."
+        ],
+        "boundary": [
+          "Import with hint."
+        ],
+        "missing_fact": [
+          "Missing local module."
+        ],
+        "interaction": [
+          "No schema hint fetching."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-GROUP",
+      "check_ids": [
+        "CHECK-XSD-LANG-GROUP"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Referenced definition with use bounds."
+        ],
+        "negative": [
+          "Use-site bound violation."
+        ],
+        "boundary": [
+          "Nested nullable group."
+        ],
+        "missing_fact": [
+          "Missing target."
+        ],
+        "interaction": [
+          "Definition and use-site provenance."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-FORM",
+      "check_ids": [
+        "CHECK-XSD-LANG-FORM"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Declared expanded names."
+        ],
+        "negative": [
+          "Wrong namespace qualification."
+        ],
+        "boundary": [
+          "Absent targetNamespace."
+        ],
+        "missing_fact": [
+          "Unresolved assembly."
+        ],
+        "interaction": [
+          "xml/xlink imported qualified attributes."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-XSI-LOCATION",
+      "check_ids": [
+        "CHECK-XSD-LANG-XSI-LOCATION"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "schemaLocation URI pairs and noNamespace URI."
+        ],
+        "negative": [
+          "Odd schemaLocation URI list."
+        ],
+        "boundary": [
+          "Empty and whitespace according to XSD."
+        ],
+        "missing_fact": [
+          "Lexeme missing."
+        ],
+        "interaction": [
+          "No external retrieval from hints."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-LANG-XSI-ATTRS",
+      "check_ids": [
+        "CHECK-XSD-LANG-XSI-ATTRS"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Exactly four standard xsi names with valid values."
+        ],
+        "negative": [
+          "Unknown xsi name or invalid allowed value."
+        ],
+        "boundary": [
+          "Simple/builtin/complex element."
+        ],
+        "missing_fact": [
+          "Unknown declaration metadata."
+        ],
+        "interaction": [
+          "xsi:type, nil and hints each retain own validation."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-ID",
+      "check_ids": [
+        "CHECK-XSD-TYPE-ID"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "NCName unique in complete document."
+        ],
+        "negative": [
+          "Colon/duplicate normalized ID."
+        ],
+        "boundary": [
+          "Whitespace collapse."
+        ],
+        "missing_fact": [
+          "Document incomplete."
+        ],
+        "interaction": [
+          "Distinct document scopes."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-IDREF",
+      "check_ids": [
+        "CHECK-XSD-TYPE-IDREF"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "NCName with resolved target."
+        ],
+        "negative": [
+          "Invalid NCName/dangling reference."
+        ],
+        "boundary": [
+          "Forward IDREF."
+        ],
+        "missing_fact": [
+          "Incomplete ID index."
+        ],
+        "interaction": [
+          "Typed target kind differs from existence."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-NCName",
+      "check_ids": [
+        "CHECK-XSD-TYPE-NCName"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Underscore or permitted Unicode start."
+        ],
+        "negative": [
+          "Colon or forbidden start."
+        ],
+        "boundary": [
+          "Pinned XML NameStartChar ranges."
+        ],
+        "missing_fact": [
+          "Lexeme unavailable."
+        ],
+        "interaction": [
+          "Namespace QName is a separate domain."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-NMTOKEN",
+      "check_ids": [
+        "CHECK-XSD-TYPE-NMTOKEN"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "One or more XML NameChar."
+        ],
+        "negative": [
+          "Empty or illegal name character."
+        ],
+        "boundary": [
+          "Digit/colon permitted where NameChar."
+        ],
+        "missing_fact": [
+          "Source spelling lost."
+        ],
+        "interaction": [
+          "Whitespace collapse."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-Name",
+      "check_ids": [
+        "CHECK-XSD-TYPE-Name"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Pinned XML Name start/continuation."
+        ],
+        "negative": [
+          "Disallowed name start."
+        ],
+        "boundary": [
+          "Colon permitted versus NCName."
+        ],
+        "missing_fact": [
+          "Unavailable XML name table."
+        ],
+        "interaction": [
+          "Derived NCName restriction."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-anySimpleType",
+      "check_ids": [
+        "CHECK-XSD-TYPE-anySimpleType"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Simple value in selected derived domain."
+        ],
+        "negative": [
+          "Invalid selected derived domain."
+        ],
+        "boundary": [
+          "Empty string without invented restriction."
+        ],
+        "missing_fact": [
+          "Unresolved derivation."
+        ],
+        "interaction": [
+          "Not permission for arbitrary complex children."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-anyType",
+      "check_ids": [
+        "CHECK-XSD-TYPE-anyType"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Ur-type content per pinned semantics."
+        ],
+        "negative": [
+          "Violation of a derived restriction."
+        ],
+        "boundary": [
+          "Mixed content and wildcards."
+        ],
+        "missing_fact": [
+          "Unsupported wildcard assessment."
+        ],
+        "interaction": [
+          "Never substitute for a known stricter type."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-anyURI",
+      "check_ids": [
+        "CHECK-XSD-TYPE-anyURI"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Relative URI and XSD escaping."
+        ],
+        "negative": [
+          "Invalid XSD 1.0 URI-reference spelling."
+        ],
+        "boundary": [
+          "Empty, percent encodings, Unicode escaped per XSD."
+        ],
+        "missing_fact": [
+          "Lexical evidence unavailable."
+        ],
+        "interaction": [
+          "No fetch and no generic web-URL validator."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-date",
+      "check_ids": [
+        "CHECK-XSD-TYPE-date"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "2024-02-29."
+        ],
+        "negative": [
+          "2026-02-30 and year 0000."
+        ],
+        "boundary": [
+          "Signed/extended years, timezone ±14:00."
+        ],
+        "missing_fact": [
+          "Unavailable source lexeme."
+        ],
+        "interaction": [
+          "MusicXML timezone prohibition is additional restriction."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-decimal",
+      "check_ids": [
+        "CHECK-XSD-TYPE-decimal"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "+01.20 and .5."
+        ],
+        "negative": [
+          "1e3, NaN, INF."
+        ],
+        "boundary": [
+          "Arbitrary precision finite decimals and -0."
+        ],
+        "missing_fact": [
+          "Budget exhausted => incomplete."
+        ],
+        "interaction": [
+          "Exact facet comparison; Go float conversion separate."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-integer",
+      "check_ids": [
+        "CHECK-XSD-TYPE-integer"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "+0001 and -0."
+        ],
+        "negative": [
+          "1.0 and exponent."
+        ],
+        "boundary": [
+          "2^64 and values beyond int64."
+        ],
+        "missing_fact": [
+          "Precision budget => incomplete."
+        ],
+        "interaction": [
+          "Go unrepresentable is not XSD violation."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-language",
+      "check_ids": [
+        "CHECK-XSD-TYPE-language"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "en and permitted hyphen subtags."
+        ],
+        "negative": [
+          "Overlong first subtag/underscore."
+        ],
+        "boundary": [
+          "1 and 8 character subtag boundaries."
+        ],
+        "missing_fact": [
+          "Missing lexeme."
+        ],
+        "interaction": [
+          "Not a claim of registry-valid BCP47 tags."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-nonNegativeInteger",
+      "check_ids": [
+        "CHECK-XSD-TYPE-nonNegativeInteger"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "0 and 18446744073709551616."
+        ],
+        "negative": [
+          "-1."
+        ],
+        "boundary": [
+          "0,2^64-1,2^64."
+        ],
+        "missing_fact": [
+          "Budget/capability missing."
+        ],
+        "interaction": [
+          "No uint64 bound substituted."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-normalizedString",
+      "check_ids": [
+        "CHECK-XSD-TYPE-normalizedString"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "XML whitespace replaced by spaces."
+        ],
+        "negative": [
+          "Derived restriction violated after replacement."
+        ],
+        "boundary": [
+          "Non-XML Unicode whitespace preserved."
+        ],
+        "missing_fact": [
+          "Missing lexeme."
+        ],
+        "interaction": [
+          "Base string and token derivation differ."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-positiveInteger",
+      "check_ids": [
+        "CHECK-XSD-TYPE-positiveInteger"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "1 and arbitrary large integer."
+        ],
+        "negative": [
+          "0 and -1."
+        ],
+        "boundary": [
+          "1 and 2^64."
+        ],
+        "missing_fact": [
+          "Budget exhaustion."
+        ],
+        "interaction": [
+          "Inherited integer lexical constraints."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-string",
+      "check_ids": [
+        "CHECK-XSD-TYPE-string"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Valid XML character string."
+        ],
+        "negative": [
+          "Forbidden XML characters at XML layer."
+        ],
+        "boundary": [
+          "Empty/multibyte/whitespace preserved."
+        ],
+        "missing_fact": [
+          "Truncated input."
+        ],
+        "interaction": [
+          "XML normalization before XSD preserve."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    },
+    {
+      "id": "TEST-XSD-TYPE-token",
+      "check_ids": [
+        "CHECK-XSD-TYPE-token"
+      ],
+      "targets": [
+        "source",
+        "model"
+      ],
+      "cases": {
+        "positive": [
+          "Collapsed XML whitespace."
+        ],
+        "negative": [
+          "Derived domain invalid after collapse."
+        ],
+        "boundary": [
+          "Leading/trailing and runs; non-XML spaces preserved."
+        ],
+        "missing_fact": [
+          "Lost source whitespace evidence."
+        ],
+        "interaction": [
+          "Union member normalization is independent."
+        ]
+      },
+      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "status": "planned",
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+    }
+  ]
+}

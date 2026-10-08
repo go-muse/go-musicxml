@@ -15,12 +15,14 @@ a new public API, or a claim of complete validation by the current library.
 2. [Proposed Go contracts](go-contracts.md) and [six worked traces](go-contract-examples.md):
    concrete component/API boundaries, evidence, lifecycle, context, diagnostics,
    compatibility, and bounded implementation seams; no production implementation.
-3. [Existing-code map](existing-code-map.md): reuse candidates, confirmed gaps,
+3. [Catalog and test-coverage plan](catalog-and-test-plan.md): explicit record dispositions,
+   clause/test contracts, deferred-work traceability and automated planning integrity.
+4. [Existing-code map](existing-code-map.md): reuse candidates, confirmed gaps,
    model evidence, compatibility, and first implementation candidates.
-4. [Sources and coverage](sources-and-coverage.md): the pinned publication, what was
+5. [Sources and coverage](sources-and-coverage.md): the pinned publication, what was
    reviewed, provenance limitations, and the boundary of completeness.
-5. [Open questions](open-questions.md): 28 issues and proposed dispositions.
-6. [Research registry](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/README.md): canonical requirements and supporting
+6. [Open questions](open-questions.md): 28 issues and proposed dispositions.
+7. [Research registry](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/README.md): canonical requirements and supporting
    machine-readable evidence.
 
 The catalog contains 2,218 XSD contracts and 342 prose records. These 2,560

@@ -11,6 +11,10 @@ in the external [registry snapshot][registry] at
 `3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c`. Its research IDs remain provenance,
 not an automatically executable catalog or a promise of complete conformance.
 
+The follow-on [catalog and test-coverage plan](catalog-and-test-plan.md) binds
+research records and deferred implementation work to explicit check/test contracts,
+without implementing or freezing these proposed interfaces.
+
 ## 1. Boundaries and dependency direction
 
 Proposed package placement is deliberately small:
