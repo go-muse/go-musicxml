@@ -121,7 +121,7 @@ Variants distinguish the dependencies:
 
 - `id="P1"`: both generic reference and typed target pass.
 - `id="missing"`: at finalization the generic rule fails once; the typed rule is
-  `blocked` with a `DecisionRef` to that exact failure. Conformance is violated,
+  `blocked` with a document-qualified `DecisionRef` to that exact failure. Conformance is violated,
   assessment incomplete under the contract's conservative blocked policy.
 - Two declarations of `I1`: uniqueness fails with both locations; resolution is
   ambiguous and dependent target rules are blocked, not arbitrary first-match.
@@ -246,7 +246,8 @@ example; it does not pretend to implement a complete musical timeline.
 A selected `MX40-PROSE-numeral-requires-key` plan illustrates the stricter boundary:
 its provider needs effective key at the numeral's musical position and staff.
 An explicit local numeral-key can satisfy its corresponding alternative; otherwise
-`ContextKey` includes document, part, staff/voice as relevant, and subject `At`.
+`ContextKey.At` carries the document-qualified subject; the key also includes
+part and staff/voice as relevant.
 If backup/forward, divisions or ordering cannot be interpreted, effective key is
 unknown/unsupported and the obligation is incomplete. Do not pick the last key
 encountered lexically, borrow another staff's key, or invent C major. A provider

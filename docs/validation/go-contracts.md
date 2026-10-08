@@ -50,8 +50,7 @@ type AssessmentOptions struct {
 
 type DecodeAssessmentOptions struct {
     Decode DecodeOptions
-    Assessment AssessmentOptions
-    StrictSource bool // zero is the existing permissive behavior
+    Assessment *AssessmentOptions // nil is permissive; non-nil requests strict source assessment
 }
 
 type DecodeResult struct {
@@ -67,11 +66,15 @@ func DecodeAssessed(ctx context.Context, r io.Reader, opts DecodeAssessmentOptio
 
 - `InspectXML` checks source independently of Go representability and does not
   build a model. A profile may select any of the five known schema roots,
-  including `container` and `sounds`; those do not become new `Document` types.
+  including `container` and `sounds` as a future contract; those do not become
+  new `Document` types. The first increment is limited to the existing musicxml
+  and opus assemblies (three roots). Container/sounds require new generator
+  directives, generated schema data and tests before they are supported; until
+  then their profiles/roots explicitly report unsupported.
 - `Assess` traverses the current model directly. It never calls `Encode`, XML
   marshal, or an XML parser, including in an alleged exportability fast path.
 - `DecodeAssessed` parses once, optionally assesses source, and maps the same
-  stream to a model. Default `StrictSource=false` is permissive MusicXML
+  stream to a model. Default `Assessment=nil` is permissive MusicXML
   decoding, with mandatory XML syntax, namespace and safety checks still active.
   `Source.Requested=false` is an explicit unassessed result, never a pass.
 - `InspectXML`/`Assess` return ordinary rule violations in the report with a nil
@@ -90,10 +93,13 @@ func DecodeAssessed(ctx context.Context, r io.Reader, opts DecodeAssessmentOptio
 
 `InspectXML`, `Assess`, and strict decode require a nonempty explicit profile
 ID; empty/unknown/incompatible IDs fail before input is read. This prevents an
-unfinished broad profile from becoming an accidental default. Non-strict
-`DecodeAssessed` does not run assessment, load a catalog, or invoke the resolver;
-it rejects nonzero `Assessment` fields rather than silently ignoring a mistaken
-strict request. Existing default Decode behavior and its DecodeOptions remain
+unfinished broad profile from becoming an accidental default. A non-nil pointer
+with an empty profile is invalid. `DecodeAssessed` snapshots non-nil options at
+entry; callers must not mutate them concurrently. With nil `Assessment`, it does
+not run assessment, load a catalog, or invoke a resolver, and follows the same
+permissive transport/conversion contract as `DecodeWithOptions`. The pointer is
+the sole strict-mode discriminator; there is no independent conflicting flag.
+Existing default Decode behavior and its DecodeOptions remain
 unchanged. A future named default profile requires a separate compatibility
 and coverage decision.
 
@@ -106,36 +112,88 @@ operator steps and resolver calls; it cannot interrupt arbitrary blocking
 ## 3. Shared types: identity, evidence, and values
 
 The following core declarations are a compile-checkable contract sketch, not
-an implementation. String enums below are closed sets checked by constructors;
-empty/unknown values are never interpreted as success.
+an implementation. Named enum types and constants below define the vocabulary;
+Go still permits arbitrary conversions and does not enforce exhaustive switches.
+Constructors, catalog loading and every public/session ingress must reject unknown
+or zero enum values unless explicitly allowed. Exported struct literals cannot
+bypass that validation. `Code`, IDs, fingerprints and registry keys are extensible
+identifiers, not enums; missing required identifiers are also rejected.
 
 ```go
 type ProfileID string
 type RuleID string
 type RuleKey struct { ID RuleID; Revision uint32 }
-type NodeID uint64
+type NodeID uint64 // real nodes start at 1; zero is scope/no-parent only
+type NodeRef struct { DocumentID string; Node NodeID }
 type Code string
-type Target string // source | model | package
+type Target string
+const (
+    TargetSource Target = "source"
+    TargetModel Target = "model"
+    TargetPackage Target = "package"
+)
 
 type QName struct { Space, Local string }
+type ComponentKind string
+const (
+    ComponentElement ComponentKind = "element"
+    ComponentType ComponentKind = "type"
+    ComponentGroup ComponentKind = "group"
+    ComponentAttribute ComponentKind = "attribute"
+)
 type ComponentID struct {
     Assembly string // musicxml | opus | sounds | container; not namespace alone
     Name QName
-    Kind string // element | type | group | attribute
+    Kind ComponentKind
+    Occurrence string // required identity for an anonymous component
+}
+type DeclarationID struct {
+    Assembly string
+    OwnerOccurrence string // stable ID of named or anonymous declaring component
+    Occurrence string // exact local/global declaration or reference-use occurrence
+}
+type Selector struct {
+    Component *ComponentID // global type/component selection
+    Declaration *DeclarationID // exact declaration/use-site selection
 }
 
-type EvidenceState string // known | absent | unknown | unsupported | invalid
+type EvidenceState string
+const (
+    EvidenceKnown EvidenceState = "known"
+    EvidenceAbsent EvidenceState = "absent"
+    EvidenceUnknown EvidenceState = "unknown"
+    EvidenceUnsupported EvidenceState = "unsupported"
+    EvidenceInvalid EvidenceState = "invalid"
+)
 type Evidence[T any] struct {
     State EvidenceState
     Value T // meaningful only when State == known
     Reason Code
 }
 
-type Rational struct { Numerator, Denominator string }
+type AtomicKind string
+const (
+    AtomicString AtomicKind = "string"
+    AtomicBoolean AtomicKind = "boolean"
+    AtomicInteger AtomicKind = "integer"
+    AtomicDecimal AtomicKind = "decimal"
+    AtomicQName AtomicKind = "qname"
+)
+type Integer struct { value *big.Int } // opaque immutable parsed value
+type Decimal struct { value *big.Rat } // opaque immutable exact decimal value
+// Proposed constructor/accessor signatures; implementation omitted.
+func NewInteger(value *big.Int) (Integer, error)
+func NewDecimal(value *big.Rat) (Decimal, error)
+func (n Integer) Cmp(other Integer) int
+func (n Integer) String() string
+func (n Decimal) Cmp(other Decimal) int
+func (n Decimal) String() string
+
 type Atomic struct {
-    Kind string // string | boolean | integer | decimal | qname
-    Text string // string, canonical boolean, or canonical unbounded integer
-    Number Rational // decimal: exact rational, denominator positive
+    Kind AtomicKind
+    Text string // string value or canonical boolean; not the numeric store
+    Integer Integer
+    Decimal Decimal
     Name QName // qname: already expanded in the subject's namespace scope
 }
 type Scalar struct {
@@ -161,9 +219,20 @@ operator lacks that capability. `invalid` means a prerequisite is already
 invalid, with a traceable cause. Absence must be proven from a completed scope,
 not inferred because an adapter omitted a fact.
 
-Exact integers use canonical signed decimal strings and budgeted arbitrary
-precision. Exact decimals use reduced rational values whose denominator factors
-permit a finite decimal. No `float64` comparison substitutes for XSD decimal
+Exact integers and decimals use opaque immutable parsed `big.Int`/`big.Rat`
+wrappers; canonical strings are generated only for bounded diagnostics. A nil
+internal value is uninitialized, not zero. Constructors copy caller data, expose
+no mutable pointer/slice aliases, and operators never use a shared value as an
+arithmetic receiver. Decimal denominators are positive, reduced, and have factors
+permitting a finite decimal. The shared scalar plan parses/normalizes a source
+value once per document-qualified scalar subject (element text or exact
+attribute declaration/expanded name), domain/union-member and normalization
+policy; the session
+caches that immutable result for all dependent operators. It never reparses
+numeric strings on every comparison. Union members retain distinct whitespace
+policies and declaration order. Model adapters wrap their existing exact values;
+they do not duplicate source lexical/domain validation. No `float64` comparison
+substitutes for XSD decimal
 value-space validation. For current finite Go `float64` fields, the adapter may
 supply their exact binary value as a rational (for example, `big.Rat.SetFloat64`),
 marked as current-model evidence; it cannot recover the original decimal.
@@ -174,7 +243,21 @@ profile decision and tests; calling the encoder to obtain a value is prohibited.
 Source `Lexeme` is the parser's XML-normalized attribute/text value, not raw quote,
 entity, line-ending, or numeric spelling bytes. XSD whitespace is applied in the
 shared scalar operator, separately for each union member in declaration order.
-Source QName values need the in-scope namespace bindings below. Model values do
+Source QName values need the in-scope namespace bindings below.
+
+Dates intentionally use a bounded lexeme-level scalar plan rather than a new
+date-arithmetic fact type. The `yyyy-mm-dd` plan first checks the complete pinned
+XSD 1.0 `xs:date` calendar/lexical contract, then its MusicXML restriction
+`[^:Z]*` and applicable no-timezone prose. `2026-02-30` fails calendar validity;
+`2024-02-29` passes that calendar check. The plan handles leap years, XSD 1.0's
+no-year-zero rule, budgeted arbitrary-width/signed years, and timezone absence
+separately from UTC; a regex or `time.Time` normalization alone is insufficient.
+Source input comes from the actual lexeme; a model `YYYYMMDD` string supplies
+its current string value directly. `AtomicString` is therefore input to this
+resolved date plan, never evidence that date validity already passed. The source
+is `schema/musicxml-4.0/musicxml.xsd`'s `yyyy-mm-dd` restriction and registry
+`MX40-PROSE-date-no-timezone`. No generic date comparison/arithmetic capability
+is claimed by this sketch. Model values do
 not invent source lexemes. Required non-pointer fields, pointer absence, ordered
 content, fixed field order and discarded source information are different
 capabilities, as [the existing-code map](existing-code-map.md) documents.
@@ -186,45 +269,56 @@ type Binding struct { Prefix, URI string }
 type NodeHeader struct {
     ID, Parent NodeID
     Name QName
-    Component Evidence[ComponentID]
+    Type Evidence[ComponentID] // resolved type, distinct from element declaration
+    Declaration Evidence[DeclarationID]
     Location Location
     Bindings []Binding
 }
 type AttributeFact struct {
     Owner NodeID
     Name QName
+    Declaration Evidence[DeclarationID]
     Presence Evidence[bool]
     Scalar Scalar
     Location Location
 }
+type OrderKind string
+const (
+    OrderSource OrderKind = "source-order"
+    OrderModelContent OrderKind = "model-content"
+    OrderModelFields OrderKind = "model-field-order"
+)
 type NodeEnd struct {
     ID NodeID
     Scalar Scalar
     ChildrenComplete Evidence[bool]
     AttributesComplete Evidence[bool]
-    Order Evidence[string] // source-order | model-content | model-field-order
+    Order Evidence[OrderKind]
 }
-type Event struct {
-    Kind string // open | attribute | close
-    Open NodeHeader
-    Attribute AttributeFact
-    Close NodeEnd
-}
-
+type SyntaxState string
+const (
+    SyntaxWellFormed SyntaxState = "well-formed"
+    SyntaxMalformed SyntaxState = "malformed"
+    SyntaxIncomplete SyntaxState = "incomplete"
+    SyntaxNotAssessed SyntaxState = "not-assessed"
+)
 type Completion struct {
     InputComplete bool // EOF for source; complete traversal for model
-    Syntax string // well-formed | malformed | incomplete | not-assessed
+    Syntax SyntaxState
     Cause error // nil on a completed transport/traversal
 }
 type Session interface {
-    Accept(ctx context.Context, event Event) error
+    Open(ctx context.Context, node NodeHeader) error
+    Attribute(ctx context.Context, attribute AttributeFact) error
+    Close(ctx context.Context, node NodeEnd) error
     Finish(ctx context.Context, end Completion) (Report, error)
 }
 type Engine interface {
     NewBudgetAccount(limits Budgets) (BudgetAccount, error)
-    Begin(ctx context.Context, target Target, opts RunOptions) (Session, error)
+    Begin(ctx context.Context, opts RunOptions) (Session, error)
 }
 type RunOptions struct {
+    DocumentID string // root-run-unique occurrence identity allocated by orchestration
     Profile ProfileID
     Budgets Budgets
     Account BudgetAccount // nil creates root account; children inherit the same one
@@ -233,17 +327,35 @@ type RunOptions struct {
 ```
 
 `Begin` resolves and validates the exact profile and catalog before input is
-consumed. `Accept` receives a tagged event with exactly one payload, balanced
-parent/child identity and no duplicate node IDs within a document. It consumes
-its arguments synchronously; the producer may reuse buffers only after return.
+consumed. Its target comes only from `Catalog.Profile(opts.Profile).Target`;
+`RunOptions.DocumentID` must be nonempty and binds the session before input;
+all local input events, their locations and local subject references must agree
+with it. Cross-document Cause/Related/Origins references keep their own IDs. The
+root Open has Parent=0, all real nodes have nonzero IDs, and FactView.DocumentID
+returns this bound identity. Each linked occurrence receives its own ID.
+Public wrappers require their corresponding target (source for InspectXML/strict
+decode, model for Assess) before reading. A mismatch is a configuration error,
+never an override. Reports repeat the resolved target as metadata and must agree.
+`Open`, `Attribute` and `Close` take only their own payload, eliminating an
+all-payload event union. They enforce balanced parent/child identity and unique
+local node IDs in a document. Each consumes its arguments synchronously; the
+producer may reuse buffers only after return.
 The session must copy anything it retains. `Finish` is called exactly once,
 even after cancellation/abort, releases retained buffers and resolver resources,
 and returns the best available report without erasing prior findings. After
-`Finish`, `Accept` is an error. Cleanup must work with a canceled context.
+`Finish`, every input method is an error. Cleanup must work with a canceled
+context. Every non-nil error from `Open`, `Attribute` or `Close` is terminal:
+stop feeding that session and call `Finish` once. Ordinary rule violations remain
+findings and do not return input-method errors. The failed session records its
+first terminal cause; `Finish` returns the partial report and preserves that
+cause through `errors.Is`/`errors.As`, even if Completion.Cause is nil. Additional
+transport/cleanup causes may be joined without duplicating the same cause.
+A terminal validation/session failure is not the recoverable model-mapping
+failure described below; further source observation requires a healthy session.
 
-`open` establishes parent-child occurrence and order. `attribute` includes known
+`Open` establishes parent-child occurrence and order. `Attribute` includes known
 present attributes and model fields with absent/unknown presence when relevant.
-`close` supplies accumulated scalar text/value and completeness proofs. A source
+`Close` supplies accumulated scalar text/value and completeness proofs. A source
 adapter can buffer bounded scalar chunks until close; it need not build a second
 whole-document tree. Required child absence follows only from a known-complete
 child set. If model field representation prevents enumeration, emit incomplete
@@ -252,8 +364,12 @@ current values may be checked; they do not prove historical source presence.
 
 The engine derives rule subjects, maintains indexes and releases closed local
 scopes when dependencies permit. Parent links, IDs and retained contextual facts
-are bounded. Node IDs are assessment-local, not public object pointers or stable
-cross-edit identities. Reports own their compact locations and metadata and can
+are bounded. Node IDs are local to one document occurrence; `NodeRef` pairs them
+with a root-run-unique `DocumentID` allocated by orchestration. This occurrence
+identity is distinct from a canonical resource URI/cache key and is propagated
+through decisions, causes, context positions and external roots. Re-adopting
+cached facts into another occurrence remaps their NodeRefs; IDs are not public
+object pointers or stable cross-edit identities. Reports own their compact locations and metadata and can
 outlive the session and input/model.
 
 ### Single XML parse and conversion failure
@@ -307,39 +423,88 @@ assessment. The profile records its target and evidence scope in the report.
 ```go
 type SourceRef struct { IDs []string; URL, Locator string }
 type RuleText struct { Title, Explanation, Message string }
-type Dependency struct {
-    Kind string // rule | fact | external
-    Key string
-    Relation string // same-node | parent | document | part | musical-position
-}
+type DependencyKind string
+const (
+    DependencyRule DependencyKind = "rule"
+    DependencyFact DependencyKind = "fact"
+    DependencyExternal DependencyKind = "external"
+)
+type RelationKind string
+const (
+    RelationSameNode RelationKind = "same-node"
+    RelationParent RelationKind = "parent"
+    RelationDocument RelationKind = "document"
+    RelationPart RelationKind = "part"
+    RelationMusicalPosition RelationKind = "musical-position"
+)
+type RuleClass string
+const (
+    ClassMandatory RuleClass = "mandatory"
+    ClassRecommendation RuleClass = "recommendation"
+    ClassInterpretation RuleClass = "interpretation"
+    ClassDefault RuleClass = "default"
+    ClassPolicy RuleClass = "policy"
+)
+type RuleRole string
+const (
+    RolePredicate RuleRole = "predicate"
+    RoleContextProvider RuleRole = "context-provider"
+    RoleAdvisory RuleRole = "advisory"
+)
+type ScopeKind string
+const (
+    ScopeNode ScopeKind = "node"
+    ScopeSiblings ScopeKind = "siblings"
+    ScopeMeasure ScopeKind = "measure"
+    ScopePart ScopeKind = "part"
+    ScopeDocument ScopeKind = "document"
+    ScopePackage ScopeKind = "package"
+)
+type Dependency struct { Kind DependencyKind; Key string; Relation RelationKind }
 type RuleDefinition struct {
     Key RuleKey
-    Class string // mandatory | recommendation | interpretation | default | policy
-    Role string // predicate | context-provider | advisory
+    Class RuleClass
+    Role RuleRole
     Targets []Target
-    Scope string // node | siblings | measure | part | document | package
-    Selector ComponentID
+    Scope ScopeKind
+    Selector Selector
     Predicate string // reviewed compiled-plan ID, not source code or an expression
     Requires []Dependency
     Sources []SourceRef
     Text RuleText
 }
+type ImplementationState string
+const (
+    ImplementationAvailable ImplementationState = "available"
+    ImplementationUnsupported ImplementationState = "unsupported"
+)
+type RuleSupport struct { Rule RuleKey; State ImplementationState; Reason Code }
 type Profile struct {
     ID ProfileID
     MusicXMLVersion, CatalogDigest, RegistryCommit string
     Target Target
     Required []RuleKey
+    Support []RuleSupport // one entry per required/transitive dependency rule
+    SupportedRoots []QName // no implied support from merely knowing a schema root
     NormativeClosure string // declared scope and unresolved external boundaries
 }
 type Catalog interface {
-    Profile(id ProfileID, target Target) (Profile, bool)
+    Profile(id ProfileID) (Profile, bool)
     Rule(key RuleKey) (RuleDefinition, bool)
 }
 
+type ContextKind string
+const (
+    ContextEffectiveKey ContextKind = "effective-key"
+    ContextDivisions ContextKind = "divisions"
+    ContextConcertScore ContextKind = "concert-score"
+    ContextIdentity ContextKind = "identity"
+    ContextIntent ContextKind = "intent"
+)
 type ContextKey struct {
-    Kind string // effective-key | divisions | concert-score | identity | intent
-    DocumentID, PartID, Staff, Voice string
-    At NodeID
+    Kind ContextKind
+    PartID, Staff, Voice string
+    At NodeRef // Node == 0 denotes the document scope, with DocumentID still set
 }
 type ContextFact struct {
     Value Evidence[Atomic]
@@ -349,10 +514,10 @@ type ContextFact struct {
 type ContextView interface {
     Lookup(ctx context.Context, key ContextKey) (ContextFact, error)
 }
-type DecisionRef struct { Rule RuleKey; Subject NodeID }
+type DecisionRef struct { Rule RuleKey; Subject NodeRef }
 type Decision struct {
     Rule RuleKey
-    Subject NodeID
+    Subject NodeRef
     Outcome Outcome
     Cause *DecisionRef
     Reason Code
@@ -365,12 +530,13 @@ type Evaluation struct {
     Produced []ContextUpdate // context-provider output, copied by the session
 }
 type Operator interface {
-    Evaluate(ctx context.Context, subject NodeID, facts FactView, context ContextView) (Evaluation, error)
+    Evaluate(ctx context.Context, subject NodeRef, facts FactView, context ContextView) (Evaluation, error)
 }
 type FactView interface {
+    DocumentID() string
     Node(id NodeID) (NodeHeader, bool)
     Attributes(id NodeID) ([]AttributeFact, Evidence[bool])
-    Children(id NodeID) ([]NodeHeader, Evidence[bool], Evidence[string])
+    Children(id NodeID) ([]NodeHeader, Evidence[bool], Evidence[OrderKind])
     Scalar(id NodeID) Scalar
 }
 ```
@@ -386,10 +552,36 @@ compiled artifact; it is not a runtime-loaded DSL. Plan constructors validate
 operator-specific arguments (domain/component, grammar, selected child names,
 minimum count, reference role/target/scope, or context key) before an engine can
 start. The catalog binds schema assembly to eliminate no-namespace homonyms.
+`Selector` has exactly one non-nil branch. Component selection is for globally
+identified types/components; declaration selection uses stable owner and exact
+occurrence IDs, including anonymous owners and group reference use-sites. QName
+alone is never a local-declaration key. The same `DeclarationID` is emitted by
+node/attribute adapters; a plan can select part/@id without selecting every id.
+For reused groups, preserve both the shared declaration and each use occurrence
+in compiled metadata, and bind the plan explicitly to the intended level. IDs
+can derive from the pinned registry's MX40-XSD occurrences or an equivalently
+stable generated declaration map, with source XPath retained as provenance.
+Missing declaration evidence stays unknown/unsupported, never a wildcard match.
+NodeHeader.Type is resolved type evidence and Declaration is element declaration
+identity; AttributeFact.Declaration identifies the attribute declaration/use.
+The source observer may initially leave binding unknown. A shared catalog binder
+resolves it from parent/type/grammar context; adapters must not guess by local
+name or duplicate content-grammar predicates. The model walker uses the reviewed
+generated declaration map. Global type/group selectors compile to their precise
+bound declaration/use set; no component-kind ambiguity is hidden in one field.
 Unsupported plans and missing required rules are explicit profile limitations,
 not silently omitted catalog entries. A profile must carry its full required
 obligation inventory, including known-unimplemented entries; it cannot manufacture
 100% coverage by enumerating only implemented rules.
+`Profile.Support` makes implementation availability machine-readable before input:
+every required and transitive dependency rule has exactly one entry; unsupported
+entries carry a reason, while available entries must resolve to a compiled plan.
+`Begin` rejects missing/duplicate entries, unresolved available plans, invalid
+keys and target mismatches. Known unsupported entries are retained in the run;
+they produce unsupported/incomplete obligations whenever applicability cannot be
+proven false. Dynamic missing evidence (for example, a nil resolver) is separate
+from static plan availability. Profile IDs identify target-specific profiles;
+there is no second target argument competing with the resolved profile.
 
 The contract intentionally does not design a general expression language or
 plugin operator ABI. Initial families are exact scalar domain, child grammar,
@@ -421,17 +613,23 @@ cannot drop dependencies simply because full timeline implementation is deferred
 
 `FactView` and `ContextView` are read-only, session-scoped borrowed views. Operators
 must not retain or modify returned slices. Provider output is stored/copied by
-the session with origin locations and provider rule keys, making defaults and
+the session with document-qualified origin/subject locations and provider rule keys, making defaults and
 invalid prerequisites auditable. Application intent, when required, is an
 explicit external dependency, never guessed from model shape.
 
 ## 6. External resolution is explicit, bounded, and partial
 
 ```go
+type ExternalKind string
+const (
+    ExternalLinkedDocument ExternalKind = "linked-document"
+    ExternalDictionary ExternalKind = "dictionary"
+    ExternalApplicationIntent ExternalKind = "application-intent"
+)
 type ExternalRequest struct {
     RequiredProfile ProfileID
     Query string // reviewed dependency-specific selector, never executable code
-    Kind string // linked-document | dictionary | application-intent
+    Kind ExternalKind
     BaseURI, Href, Revision string
     Location Location
 }
@@ -439,21 +637,39 @@ type ExternalResource struct {
     State EvidenceState
     Reason Code
     CanonicalID, Revision, Digest, MediaType string
-    Body io.ReadCloser // only for a known resource
+    Body io.ReadCloser // known linked document or encoded dictionary/intent
+    Facts []ContextUpdate // non-nil alternative for already-typed dictionary/intent
 }
 type Resolver interface {
     Resolve(ctx context.Context, request ExternalRequest) (ExternalResource, error)
 }
 
+type BudgetKind string
+const (
+    BudgetInputBytes BudgetKind = "input-bytes"
+    BudgetExternalBytes BudgetKind = "external-bytes"
+    BudgetBufferedBytes BudgetKind = "buffered-bytes"
+    BudgetDepth BudgetKind = "depth"
+    BudgetNodes BudgetKind = "nodes"
+    BudgetAttributes BudgetKind = "attributes"
+    BudgetScalarBytes BudgetKind = "scalar-bytes"
+    BudgetIDs BudgetKind = "ids"
+    BudgetRuleSteps BudgetKind = "rule-steps"
+    BudgetContextFacts BudgetKind = "context-facts"
+    BudgetLinkedDocuments BudgetKind = "linked-documents"
+    BudgetDiagnostics BudgetKind = "diagnostics"
+    BudgetDiagnosticBytes BudgetKind = "diagnostic-bytes"
+)
 type BudgetAccount interface {
-    Charge(kind string, amount int64) error // shared atomic check-and-consume
-    Release(kind string, amount int64) // only live gauges, never cumulative quotas
+    Charge(kind BudgetKind, amount int64) error // cumulative quota or live gauge
+    Release(kind BudgetKind, amount int64) error // live gauges only
+    Check(kind BudgetKind, amount int64) error // per-item limit only
 }
 type ExternalFacts struct {
     State EvidenceState
     Reason Code
     CanonicalID, Revision, Digest string
-    Root NodeID // entry point for Document; zero when no document
+    Root NodeRef // document-qualified entry point; zero only with no Document
     Document FactView // optional owned immutable snapshot, not a finished child view
     Context []ContextUpdate // dictionary/intent or derived evidence
     Assessment *Report // required linked-document assessment, if any
@@ -473,19 +689,27 @@ by the caller's profile/resolver configuration, after local preconditions pass.
 The resolver receives identity, base/href and requested revision, never the whole
 model. It must identify authoritative absence versus unavailable/not-supported;
 a fetch error is not proof a referenced object does not exist. `known` requires
-an owned non-nil `Body`, a canonical identity and revision/digest required by the
-profile. Each successful Resolve transfers exclusive ownership of a freshly
+a canonical identity and revision/digest required by the
+profile, and exactly one payload: an owned `Body` or non-nil `Facts`. Linked XML
+requires Body. Dictionary/intent resolvers may supply already-typed Facts,
+including explicit absent/unknown evidence for the requested query; an empty
+slice alone is not proof of absence or success. The loader validates query,
+profile, value types, identity/revision/digest and scope before accepting facts,
+and copies/rebinds document-qualified context into the current assessment.
+Each successful Body-returning Resolve transfers exclusive ownership of a freshly
 readable stream; resolvers cannot reuse an already consumed stream between calls.
 The root-owned loader reads it through shared budgets and always closes it,
-including on errors. Non-known resources have no body; a body returned with an
-error is still closed. No raw resolver error becomes a MusicXML violation.
+including on errors. Non-known resources have no payload; a body returned with an
+error or invalid mixed payload is still closed. No raw resolver error becomes a
+MusicXML violation.
 
 The root orchestration constructs an `ExternalProvider` around the caller's raw
 `Resolver` and its source/dictionary adapters. The core calls only this typed
 fact provider: **the core never parses `Body`**. The loader uses the same XML
 adapter for linked XML, creates a child session under `RequiredProfile`, and
 returns immutable facts plus that child's assessment. Dictionary/intent loaders
-return the requested typed context facts. Invalid or incompletely assessed linked
+return the requested typed context facts, parsing Body only if typed Facts were
+not supplied. Invalid or incompletely assessed linked
 content cannot be laundered into a successful external obligation. The loader
 owns child finalization and stream closure; its cache/snapshots are owned by the
 root call and released after the parent session finishes. Core and child sessions
@@ -495,20 +719,38 @@ account from validated finite limits for a standalone core session. Public root
 orchestration instead calls `Engine.NewBudgetAccount` once **before** creating
 its reader/adapter/session and passes that same non-nil account to all three;
 input accounting is never hidden in an inaccessible session. Children never
-reset the shared account or increase its limits. Charging ownership is explicit: byte reader charges input bytes, adapter
+reset the shared account or increase its limits. Charging ownership is explicit:
+byte reader charges input bytes, adapter
 charges emitted nodes/attributes/scalars, engine charges rule steps/IDs/context,
 and loader charges linked-document count and external bytes. The same resource
 is not charged again merely at each wrapper. Live depth/buffer gauges are
 released when scopes/buffers close; cumulative byte/node/work quotas are never
-refunded. Release cannot make usage negative. The loader snapshots the required
+refunded. Release cannot make usage negative. Unknown kinds, negative amounts,
+wrong-mode calls and overflow fail closed without changing counters; typed string
+constants alone are not enough. Each kind maps to the correspondingly named
+Budgets field (BudgetInputBytes → MaxInputBytes, etc.). Depth and BufferedBytes
+are live gauges; ScalarBytes is a per-scalar cap checked with Check before
+allocation/parsing, while aggregate scalar retention also charges BufferedBytes.
+All other kinds are cumulative quotas. Check does not consume shared quota;
+Release is never valid for a per-item cap or cumulative quota. Counter arithmetic
+and host-int allocation conversion are checked before overflow or allocation.
+The loader snapshots the required
 bounded facts before child `Finish`; `ExternalFacts.Document` is an owned
 immutable snapshot rooted at `Root`, valid until root-call cleanup, not a
-borrowed view into a finished child session. This injection breaks the otherwise circular dependency
+borrowed view into a finished child session. This injection breaks the otherwise
+circular dependency
 between engine and XML/model adapters. There is no network or parse fallback
 inside the engine when a loader capability is absent.
 
-Cache by canonical identity **and revision/digest**, scope each cache to one
-assessment, detect link cycles, and share aggregate byte/depth/document budgets
+Keep linked-document/session caches within one assessment and key them by
+canonical identity **and revision/digest**. An optional caller-owned bounded,
+thread-safe cache may share immutable parsed dictionary data across assessments,
+keyed additionally by dictionary schema/parser/interpretation version. It shares
+no NodeRefs, ContextUpdates, reports, application intent or mutable evaluation
+state. Each query binds fresh context to its current DocumentID/At; cache hits
+still charge the current run for lookup work, emitted facts and retained bytes.
+No network is implied and content identity is verified before cache adoption.
+Detect link cycles and share aggregate byte/depth/document budgets
 across all descendants. Parse each resolved XML resource at most once per pinned
 identity in that assessment; reusing its facts is allowed. URI fragments do not
 cause repeated parsing. Package-local path and traversal rules stay in the
@@ -522,25 +764,51 @@ instructions or load executable predicates from the resource.
 ## 7. Results, diagnostics, and error compatibility
 
 ```go
-type Outcome string // pass | fail | not-applicable | unknown | unsupported | blocked
+type Outcome string
+const (
+    OutcomePass Outcome = "pass"
+    OutcomeFail Outcome = "fail"
+    OutcomeNotApplicable Outcome = "not-applicable"
+    OutcomeUnknown Outcome = "unknown"
+    OutcomeUnsupported Outcome = "unsupported"
+    OutcomeBlocked Outcome = "blocked"
+)
+type DiagnosticCategory string
+const (
+    CategoryNormative DiagnosticCategory = "normative"
+    CategoryModel DiagnosticCategory = "model"
+    CategoryCapability DiagnosticCategory = "capability"
+    CategoryResource DiagnosticCategory = "resource"
+    CategorySyntax DiagnosticCategory = "syntax"
+    CategoryAdvisory DiagnosticCategory = "advisory"
+    CategoryPolicy DiagnosticCategory = "policy"
+)
+type ConformanceState string
+const (
+    ConformanceConformant ConformanceState = "conformant"
+    ConformanceViolated ConformanceState = "violated"
+    ConformanceUndetermined ConformanceState = "undetermined"
+)
+type ConversionState string
+const (
+    ConversionNotRequested ConversionState = "not-requested"
+    ConversionConverted ConversionState = "converted"
+    ConversionUnrepresentable ConversionState = "unrepresentable"
+    ConversionFailed ConversionState = "failed"
+    ConversionIncomplete ConversionState = "incomplete"
+)
 type Finding struct {
-    Rule RuleKey
-    Subject NodeID
-    Outcome Outcome
-    Category string // normative | model | capability | resource | syntax | advisory
-    Reason Code
+    Decision
+    Category DiagnosticCategory
     Location Location
-    Related []Location
-    Expected, Actual string
-    Cause *DecisionRef
 }
 type Counts struct { Pass, Fail, NotApplicable, Unknown, Unsupported, Blocked uint64 }
 type Report struct {
     Requested bool
     Profile Profile
     Target Target
-    Syntax string
-    Conformance string // conformant | violated | undetermined
+    Syntax SyntaxState
+    Conformance ConformanceState
     AssessmentComplete bool
     Counts Counts // normative mandatory predicate instances only
     BlockingProblems uint64 // untruncated model/policy/terminal technical blockers
@@ -550,15 +818,15 @@ type Report struct {
     InputComplete bool
 }
 type ConversionResult struct {
-    State string // not-requested | converted | unrepresentable | failed | incomplete
+    State ConversionState
     Findings []Finding
 }
 
 type Budgets struct {
     MaxInputBytes, MaxExternalBytes, MaxBufferedBytes int64
-    MaxDepth, MaxNodes, MaxAttributes, MaxScalarBytes int
-    MaxIDs, MaxRuleSteps, MaxContextFacts, MaxLinkedDocuments int
-    MaxDiagnostics, MaxDiagnosticBytes int
+    MaxDepth, MaxNodes, MaxAttributes, MaxScalarBytes int64
+    MaxIDs, MaxRuleSteps, MaxContextFacts, MaxLinkedDocuments int64
+    MaxDiagnostics, MaxDiagnosticBytes int64
 }
 ```
 
@@ -601,6 +869,8 @@ findings include the first conflicting location. Original bytes/lines are emitte
 only when correctly mapped through transcoding; otherwise omit or label the
 coordinate space. Trim/escape untrusted values and cap both count and byte size.
 
+All budget limits and charge quantities are int64, including byte and count limits;
+host-size conversion is checked and cannot weaken limits on 32-bit targets.
 Budget zero fields select documented finite defaults; negative or impossible
 values fail before reading. Existing XML depth defaults/maxima and five separate
 MXL byte limits remain intact. Strict decode enforces both Decode.MaxXMLDepth
@@ -626,8 +896,11 @@ object's conversion state. Non-strict decode gates only XML/transport and
 conversion success, not its intentionally unrequested source report.
 `InspectXML` has no conversion requirement.
 Infrastructure findings may use an empty `RuleKey` with a nonempty category and
-reason; they must not fabricate a MusicXML rule. A `DecisionRef` identifies both
-the causal rule and its subject, so two failures of the same rule stay distinct.
+reason; they must not fabricate a MusicXML rule. A `DecisionRef` identifies the causal rule and document-qualified subject, so
+same-numbered nodes in different linked documents cannot collide. Finding embeds
+Decision to keep these fields synchronized, but session finalization still deep
+copies Cause/Related and locations; embedding does not transfer borrowed memory.
+Operator subjects must match FactView.DocumentID; mismatches are contract errors.
 
 ### Error families and legacy wrappers
 
@@ -665,7 +938,7 @@ No new error behavior is shipped by this documentation PR.
 | Existing code | Use in the proposed contracts | Required change or proof |
 | --- | --- | --- |
 | `decode.go`, `xml_decoder.go`, `xml_namespace.go` | Source orchestrator and observer | Observe before destructive filtering/skips, establish mandatory missing syntax checks, prove once-only namespace expansion, drain after conversion failure. |
-| `internal/xsdgen/generate_validation.go`, generated validation schemas | Compiled catalog/type/grammar data | Preserve assembly/source identity; version/fingerprint and separate executable obligations from inventory. |
+| `internal/xsdgen/generate_validation.go`, `generate.go`, generated validation schemas | Compiled catalog/type/grammar data | Preserve assembly/declaration/use-site identity and support inventory. Currently only score and opus validation schemas are generated; add container/sounds generation directives, data and tests before advertising those roots. |
 | `validation.go`: `matchParticle` family | Shared child-grammar operator | Verify nested choice/sequence, nullable/repeated particles and work budgets, not independent child counters. |
 | `validateSimple`, `validateBuiltin`, facet helpers; scalar helper files | Shared scalar plans | Exact integers/decimals, union whitespace/member order, proper XSD facets/pattern semantics; do not keep machine-int validity caps. |
 | `validateAttributes` | Attribute operator | Cover simple-type elements and specific xsi contracts; QName values need bindings. |
