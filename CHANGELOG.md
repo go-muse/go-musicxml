@@ -26,6 +26,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reject duplicate XML attributes, including namespace-expanded collisions,
+  and repeated or misplaced DOCTYPE declarations before model filtering,
+  including skipped subtrees, MXL metadata, and linked documents. Legal
+  prolog DOCTYPE declarations remain accepted without fetching their DTDs.
+
 - Resolve namespace prefixes exactly once through XML token adapters, including
   BOM-less UTF-16, so foreign namespace URIs cannot become XML/XLink prefixes.
 - Preserve URI segment boundaries while resolving MXL links, including empty

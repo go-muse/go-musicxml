@@ -5,6 +5,16 @@ Status: **PROPOSED**. This mapping is based on repository commit
 this documentation proposal. It identifies reuse candidates and observed limits;
 it is not an implementation plan with a fixed API or an exhaustive validator audit.
 
+## XML-reading repair update
+
+The duplicate-attribute and DOCTYPE-placement gaps recorded below are now
+repaired in the existing decoding and internal XML-parsing paths by
+[`xml_wellformedness.go`](../../xml_wellformedness.go), with
+[regressions](../../xml_wellformedness_test.go) covering skipped subtrees and
+MXL paths. This is the existing-reader slice of STAGE-DEF-01. Integration with
+the proposed strict source adapter remains open; the pinned historical review
+and broader deferred contracts below are not a claim of completed validation.
+
 ## Reuse and adaptation
 
 | Existing component | Proposed use | Required adaptation or verification |

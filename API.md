@@ -57,6 +57,14 @@ methods are conveniences, not a separate object model.
 `Validate`. `DecodeWithOptions` changes the XML nesting ceiling; the zero-value
 options use the documented safe default.
 
+XML reading rejects duplicate attributes (including collisions after namespace
+expansion) and repeated DOCTYPE declarations or declarations inside/after the
+root, even in skipped unknown or foreign-namespace subtrees. A single prolog
+DOCTYPE is accepted without loading external DTDs; an XML declaration is not
+required. These checks also apply to MXL container metadata and documents
+parsed while resolving opus links. They do not add DTD validation or strict
+MusicXML validation.
+
 When the expected root type is known, `DecodeScorePartwise`,
 `DecodeScoreTimewise`, and `DecodeOpusDocument` return the corresponding
 concrete pointer type. They return `ErrUnsupportedRoot` for any other root.
@@ -77,8 +85,9 @@ inside generated ordered `Content`, and `Encode` does not reproduce them.
 
 Direct `encoding/xml` unmarshalling of generated types applies the same
 ordered-content filtering. It does not apply the package decoder's character
-encoding support, configurable XML-depth limit, or foreign-namespace filtering
-for ordinary struct fields, nor the encoder's XML-text preflight. Go's
+encoding support, configurable XML-depth limit, duplicate-attribute/DOCTYPE
+checks, or foreign-namespace filtering for ordinary struct fields, nor the
+encoder's XML-text preflight. Go's
 `encoding/xml` matches unqualified struct tags by local name, so `Decode` and
 its typed variants remain the recommended document entry points.
 

@@ -51,17 +51,18 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 		)
 	}
 
+	var tokens xml.TokenReader = rawXMLTokenReader{decoder}
 	// A byte order mark settles the encoding, whatever the declaration
 	// says. Without one, the declaration is the only evidence of the byte
 	// order and must agree with the detected one.
 	if order != nil && !hasBOM {
-		return xml.NewTokenDecoder(&utf16XMLTokenReader{
-			source: rawXMLTokenReader{decoder},
+		tokens = &utf16XMLTokenReader{
+			source: tokens,
 			order:  order,
-		}), nil
+		}
 	}
 
-	return decoder, nil
+	return xml.NewTokenDecoder(&wellFormedXMLTokenReader{source: tokens}), nil
 }
 
 // utf16XMLTokenReader checks the XML declaration of a UTF-16 document that
