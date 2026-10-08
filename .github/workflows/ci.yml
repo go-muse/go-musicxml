@@ -119,10 +119,10 @@ jobs:
       - name: Install xmllint
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libxml2-utils
 
-      - name: Validate re-encoded corpus
+      - name: Validate corpus and raw attribute contracts
         env:
           MUSICXML_REQUIRE_XMLLINT: "1"
-        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema)$' .
+        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema|TestElementAttributeContractsAgainstSchema)$' .
 
   fuzz:
     name: Fuzz smoke
