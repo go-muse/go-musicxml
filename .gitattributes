@@ -11,3 +11,8 @@ testdata/** -text
 **/zz_generated_*.go linguist-generated=true
 schema/** linguist-vendored=true
 testdata/corpus/** linguist-vendored=true
+
+# The reviewed planning data is large; collapse it in GitHub's default diff view.
+docs/validation/plan/*.json linguist-generated=true
+# The published deferred source has a checked byte hash on every platform.
+docs/validation/deferred-inventory.md text eol=lf

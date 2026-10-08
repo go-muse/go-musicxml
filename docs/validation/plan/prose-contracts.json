@@ -55,7 +55,7 @@
       ],
       "selector": "Every scalar subject resolved to smufl-glyph-name or a derived SMuFL domain, including SMuFL attributes and element text/simpleContent such as symbol, credit-symbol and glyph.",
       "applicability": "Applicable when a selected SMuFL scalar subject is present, whether an attribute or element text/simpleContent; prove subject absence or an inapplicable domain before returning not-applicable. The corresponding pinned dictionary supplies canonical-name existence.",
-      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require any canonical glyph name. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Choose and review the normative SMuFL revision (the registry mentions 1.4 but does not supply complete closure), canonical versus alias treatment and immutable lookup/family schema; pin its source/digest and positive/negative fixtures before promoting this full predicate. Local shared XSD checking is independently implementable.",
+      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require any canonical glyph name. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -102,7 +102,7 @@
       ],
       "selector": "musicxml scalar use sites whose resolved type is smufl-accidental-glyph-name",
       "applicability": "Applicable when a selected SMuFL-valued attribute is present; absence of an optional reference proves not-applicable. A missing dictionary does not.",
-      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix acc, medRenFla, medRenNatura, medRenShar, or kievanAccidental followed by at least one XML name character. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Choose and review the normative SMuFL revision (the registry mentions 1.4 but does not supply complete closure), canonical versus alias treatment and immutable lookup/family schema; pin its source/digest and positive/negative fixtures before promoting this full predicate. Local shared XSD checking is independently implementable. Clause prerequisite modes: local NMTOKEN/family-pattern evaluation is independent of external canonical-name membership. A proven prefix violation is retained even with no dictionary; missing canonical evidence may simultaneously make assessment incomplete. CHECK-smufl-canonical-name may supply reusable membership evidence, but its selection or successful result is not a gating dependency of the local prefix clause. Only the facts genuinely needed by a sub-clause can block that sub-clause.",
+      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix acc, medRenFla, medRenNatura, medRenShar, or kievanAccidental followed by at least one XML name character. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -149,7 +149,7 @@
       ],
       "selector": "musicxml scalar use sites whose resolved type is smufl-coda-glyph-name",
       "applicability": "Applicable when a selected SMuFL-valued attribute is present; absence of an optional reference proves not-applicable. A missing dictionary does not.",
-      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix coda followed by zero or more XML name characters. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Choose and review the normative SMuFL revision (the registry mentions 1.4 but does not supply complete closure), canonical versus alias treatment and immutable lookup/family schema; pin its source/digest and positive/negative fixtures before promoting this full predicate. Local shared XSD checking is independently implementable. Clause prerequisite modes: local NMTOKEN/family-pattern evaluation is independent of external canonical-name membership. A proven prefix violation is retained even with no dictionary; missing canonical evidence may simultaneously make assessment incomplete. CHECK-smufl-canonical-name may supply reusable membership evidence, but its selection or successful result is not a gating dependency of the local prefix clause. Only the facts genuinely needed by a sub-clause can block that sub-clause.",
+      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix coda followed by zero or more XML name characters. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -196,7 +196,7 @@
       ],
       "selector": "musicxml scalar use sites whose resolved type is smufl-lyrics-glyph-name",
       "applicability": "Applicable when a selected SMuFL-valued attribute is present; absence of an optional reference proves not-applicable. A missing dictionary does not.",
-      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix lyrics followed by at least one XML name character. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Choose and review the normative SMuFL revision (the registry mentions 1.4 but does not supply complete closure), canonical versus alias treatment and immutable lookup/family schema; pin its source/digest and positive/negative fixtures before promoting this full predicate. Local shared XSD checking is independently implementable. Clause prerequisite modes: local NMTOKEN/family-pattern evaluation is independent of external canonical-name membership. A proven prefix violation is retained even with no dictionary; missing canonical evidence may simultaneously make assessment incomplete. CHECK-smufl-canonical-name may supply reusable membership evidence, but its selection or successful result is not a gating dependency of the local prefix clause. Only the facts genuinely needed by a sub-clause can block that sub-clause.",
+      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix lyrics followed by at least one XML name character. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -243,7 +243,7 @@
       ],
       "selector": "musicxml scalar use sites whose resolved type is smufl-pictogram-glyph-name",
       "applicability": "Applicable when a selected SMuFL-valued attribute is present; absence of an optional reference proves not-applicable. A missing dictionary does not.",
-      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix pict followed by at least one XML name character. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Choose and review the normative SMuFL revision (the registry mentions 1.4 but does not supply complete closure), canonical versus alias treatment and immutable lookup/family schema; pin its source/digest and positive/negative fixtures before promoting this full predicate. Local shared XSD checking is independently implementable. Clause prerequisite modes: local NMTOKEN/family-pattern evaluation is independent of external canonical-name membership. A proven prefix violation is retained even with no dictionary; missing canonical evidence may simultaneously make assessment incomplete. CHECK-smufl-canonical-name may supply reusable membership evidence, but its selection or successful result is not a gating dependency of the local prefix clause. Only the facts genuinely needed by a sub-clause can block that sub-clause.",
+      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix pict followed by at least one XML name character. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -290,7 +290,7 @@
       ],
       "selector": "musicxml scalar use sites whose resolved type is smufl-segno-glyph-name",
       "applicability": "Applicable when a selected SMuFL-valued attribute is present; absence of an optional reference proves not-applicable. A missing dictionary does not.",
-      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix segno followed by zero or more XML name characters. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Choose and review the normative SMuFL revision (the registry mentions 1.4 but does not supply complete closure), canonical versus alias treatment and immutable lookup/family schema; pin its source/digest and positive/negative fixtures before promoting this full predicate. Local shared XSD checking is independently implementable. Clause prerequisite modes: local NMTOKEN/family-pattern evaluation is independent of external canonical-name membership. A proven prefix violation is retained even with no dictionary; missing canonical evidence may simultaneously make assessment incomplete. CHECK-smufl-canonical-name may supply reusable membership evidence, but its selection or successful result is not a gating dependency of the local prefix clause. Only the facts genuinely needed by a sub-clause can block that sub-clause.",
+      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require prefix segno followed by zero or more XML name characters. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -337,7 +337,7 @@
       ],
       "selector": "musicxml scalar use sites whose resolved type is smufl-wavy-line-glyph-name",
       "applicability": "Applicable when a selected SMuFL-valued attribute is present; absence of an optional reference proves not-applicable. A missing dictionary does not.",
-      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require wiggle followed by at least one XML name character, or guitar followed by zero or more XML name characters and VibratoStroke; beam glyphs are excluded. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Choose and review the normative SMuFL revision (the registry mentions 1.4 but does not supply complete closure), canonical versus alias treatment and immutable lookup/family schema; pin its source/digest and positive/negative fixtures before promoting this full predicate. Local shared XSD checking is independently implementable. Clause prerequisite modes: local NMTOKEN/family-pattern evaluation is independent of external canonical-name membership. A proven prefix violation is retained even with no dictionary; missing canonical evidence may simultaneously make assessment incomplete. CHECK-smufl-canonical-name may supply reusable membership evidence, but its selection or successful result is not a gating dependency of the local prefix clause. Only the facts genuinely needed by a sub-clause can block that sub-clause.",
+      "semantics": "Share the XSD NMTOKEN/collapse lexical plan and applicable family pattern. After scalar validity, require wiggle followed by at least one XML name character, or guitar followed by zero or more XML name characters and VibratoStroke; beam glyphs are excluded. Canonical existence is exact membership in the reviewed canonical-name set, not code-point syntax, arbitrary Unicode membership or an alias guessed from its spelling. Dictionary family metadata must be pinned where needed; a successful raw resource read is not evidence that the requested glyph exists. Only authoritative absence from a complete dictionary can fail membership. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -383,7 +383,7 @@
       ],
       "selector": "musicxml scalar subjects of resolved type time-only",
       "applicability": "Applicable to each present time-only scalar. No repeat graph, actual pass count or playback execution is needed for ordering.",
-      "semantics": "Parse comma-separated positive integers after the shared [1-9][0-9]*(, ?[1-9][0-9]*)* lexical check, then compare adjacent arbitrary-precision values numerically, not lexicographically. Any descending pair fails. Proposed complete policy is strictly increasing; equal adjacent values remain an explicit decision gate rather than an undocumented hard rejection. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Resolve whether ascending excludes repeated pass numbers; add an explicit normative rationale and duplicate fixture. Descending-order checks and lexical parsing can ship in a scoped profile without claiming this unresolved duplicate case.",
+      "semantics": "Parse comma-separated positive integers after the shared [1-9][0-9]*(, ?[1-9][0-9]*)* lexical check, then compare adjacent arbitrary-precision values numerically, not lexicographically. Any descending pair fails. Proposed complete policy is strictly increasing; equal adjacent values remain an explicit decision gate rather than an undocumented hard rejection. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -708,7 +708,7 @@
       ],
       "selector": "musicxml play/ipa text",
       "applicability": "Applicable to every present ipa element; empty-content handling must be part of the reviewed repertoire policy.",
-      "semantics": "Check the actual permitted IPA 2015 strings/code-point sequences in Unicode 13.0 using a reviewed pinned repertoire. A Unicode block or general letter/category test is insufficient. Reject only authoritative disallowed content under that reviewed policy; do not strip or normalize combining marks without a normative policy. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Acquire and review IPA 2015 and Unicode 13.0 sources; decide exact allowed sequences, combining characters, whitespace, empty string and normalization; pin fixtures and citations before executable promotion.",
+      "semantics": "Check the actual permitted IPA 2015 strings/code-point sequences in Unicode 13.0 using a reviewed pinned repertoire. A Unicode block or general letter/category test is insufficient. Reject only authoritative disallowed content under that reviewed policy; do not strip or normalize combining marks without a normative policy. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -755,7 +755,7 @@
       ],
       "selector": "musicxml attributes contexts for each encoded part/staff and exporter intent scope",
       "applicability": "Applies only when a transposing instrument is authoritatively known to be encoded in written pitch. Registry exporter applicability is an evidence requirement, not exclusion from source/model assessment.",
-      "semantics": "If the antecedent is known true, require an effective transpose encoding for the applicable part/staff/position, with the transposition interval supplied by reviewed intent evidence. Do not infer transposition or intended pitch from part-name or a guessed instrument dictionary. Known concert-pitch encoding or non-transposing instrument makes this specific conditional rule not-applicable. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Define caller-supplied intent/interval contract and normative interval matching versus presence-only claim; review scope/default semantics and corresponding fixtures. A document-only validator cannot claim this obligation complete without that evidence.",
+      "semantics": "If the antecedent is known true, require an effective transpose encoding for the applicable part/staff/position, with the transposition interval supplied by reviewed intent evidence. Do not infer transposition or intended pitch from part-name or a guessed instrument dictionary. Known concert-pitch encoding or non-transposing instrument makes this specific conditional rule not-applicable. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -846,7 +846,7 @@
       ],
       "selector": "musicxml measure-style/beat-repeat declarations and affected part spans",
       "applicability": "Applicable to the actual repetition span denoted by the display marker. A stop marks the first non-repeated span; absence of an explicit stop may extend to the end of the part.",
-      "semantics": "Require encoded musical content in every affected beat rather than treating the graphical repeat symbol as a substitute for notes/rests. Use duration-normalized, voice/staff-aware musical events; do not compare raw XML strings or merely count child nodes. Exact required event-equivalence, tied events and range construction remain gated. Do not execute playback repeat navigation as an assumed solution. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Specify and approve the exact repeated-span builder and event-equivalence relation, including voices/staves, ties, grace notes, rests and transposition. Pin positive/negative semantic fixtures; until then, do not hard-reject merely nonidentical XML.",
+      "semantics": "Require encoded musical content in every affected beat rather than treating the graphical repeat symbol as a substitute for notes/rests. Use duration-normalized, voice/staff-aware musical events; do not compare raw XML strings or merely count child nodes. Exact required event-equivalence, tied events and range construction remain gated. Do not execute playback repeat navigation as an assumed solution. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -937,7 +937,7 @@
       ],
       "selector": "musicxml measure-style/measure-repeat declarations and affected part spans",
       "applicability": "Applicable to the actual repetition span denoted by the display marker. A stop marks the first non-repeated span; absence of an explicit stop may extend to the end of the part.",
-      "semantics": "Require encoded musical content in every affected measure rather than treating the graphical repeat symbol as a substitute for notes/rests. Use duration-normalized, voice/staff-aware musical events; do not compare raw XML strings or merely count child nodes. Exact required event-equivalence, tied events and range construction remain gated. Do not execute playback repeat navigation as an assumed solution. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Specify and approve the exact repeated-span builder and event-equivalence relation, including voices/staves, ties, grace notes, rests and transposition. Pin positive/negative semantic fixtures; until then, do not hard-reject merely nonidentical XML.",
+      "semantics": "Require encoded musical content in every affected measure rather than treating the graphical repeat symbol as a substitute for notes/rests. Use duration-normalized, voice/staff-aware musical events; do not compare raw XML strings or merely count child nodes. Exact required event-equivalence, tied events and range construction remain gated. Do not execute playback repeat navigation as an assumed solution. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -986,7 +986,7 @@
       ],
       "selector": "musicxml barline declarations in partwise measure or timewise part musical content",
       "applicability": "Applicable to each barline. The effective default is right.",
-      "semantics": "Require semantic agreement between declared location and position in the musical data. Do not equate the mandatory clause with a hard first/last XML-child rule: the detailed first/last language is should, and the tutorial permits attributes before a left barline. Candidate interpretation is left at the measure start, right at its end and middle inside the measure, with a reviewed treatment of zero-duration metadata. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Resolve the mandatory musical-position interpretation and recommendation severity, including metadata exemptions, zero-duration measures, backup/forward and middle barlines; publish fixtures before enabling rejection.",
+      "semantics": "Require semantic agreement between declared location and position in the musical data. Do not equate the mandatory clause with a hard first/last XML-child rule: the detailed first/last language is should, and the tutorial permits attributes before a left barline. Candidate interpretation is left at the measure start, right at its end and middle inside the measure, with a reviewed treatment of zero-duration metadata. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -1387,7 +1387,7 @@
       ],
       "selector": "musicxml technical/bend occurrences with release semantics after a bend",
       "applicability": "Applies when the occurrence is established to represent a release following a bend. A negative value alone cannot establish this antecedent; a generic bend or pre-bend is not automatically selected.",
-      "semantics": "For a known release-after-bend occurrence require bend-alter < 0 using exact decimal comparison. Zero is not a release distance. Fractional negative values are permitted. Do not infer a previous bend from an unrelated neighboring XML node, require an unsupported exact negation of its amplitude, or apply this conditional prohibition to all zero bend-alter values. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Define and review precisely how a release-after-bend relation is proven across bend occurrences/notes, scope and ordering, and how pre-bend/release distinctions work; pin antecedent and ambiguous fixtures before hard rejection.",
+      "semantics": "For a known release-after-bend occurrence require bend-alter < 0 using exact decimal comparison. Zero is not a release distance. Fractional negative values are permitted. Do not infer a previous bend from an unrelated neighboring XML node, require an unsupported exact negation of its amplitude, or apply this conditional prohibition to all zero bend-alter values. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -1576,7 +1576,7 @@
       ],
       "selector": "musicxml score-part/part-link/instrument-link",
       "applicability": "Applies to each instrument-link. Local typed/scoped reference and linked-file association are separable sub-obligations; a successful local reference does not satisfy the whole record.",
-      "semantics": "Require the unique local IDREF target to be a score-instrument in the owning score-part. Resolve the parent part-link only through the authorized provider and require reviewed typed evidence that this instrument is associated with that part file. Do not invent an identical ID spelling requirement across documents; matching spellings alone are not association proof. Local reference failure blocks unnecessary external retrieval. A loaded XML file without an implemented association operator leaves this selected external obligation unsupported. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Specify the association proof contract from the normative part-link/instrument-link semantics, including absence/error ownership and whether child validation is mandatory. Add pinned linked-document fixtures with intentionally differing IDs; do not claim full readiness from mere file existence.",
+      "semantics": "Require the unique local IDREF target to be a score-instrument in the owning score-part. Resolve the parent part-link only through the authorized provider and require reviewed typed evidence that this instrument is associated with that part file. Do not invent an identical ID spelling requirement across documents; matching spellings alone are not association proof. Local reference failure blocks unnecessary external retrieval. A loaded XML file without an implemented association operator leaves this selected external obligation unsupported. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -1766,7 +1766,7 @@
       ],
       "selector": "MXL package container bytes",
       "applicability": "Applicable when the selected input is claimed to be an MXL package.",
-      "semantics": "Validate only the explicitly reviewed ZIP/JAR compatibility subset and describe unsupported features. Successfully opening a ZIP with a library is not full MusicXML package conformance. Do not invent an exhaustive DEFLATE-only policy for all non-mimetype entries from this annotation. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Unresolved gate: Read and pin the cited Info-ZIP, Java JAR/java.util.zip and RFC 1951 corpus; define the exact compatibility/feature matrix and security-vs-normative distinction with differential fixtures before full package closure.",
+      "semantics": "Validate only the explicitly reviewed ZIP/JAR compatibility subset and describe unsupported features. Successfully opening a ZIP with a library is not full MusicXML package conformance. Do not invent an exhaustive DEFLATE-only policy for all non-mimetype entries from this annotation. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation.",
       "targets": [
         "package"
       ],
@@ -1888,7 +1888,7 @@
       ],
       "selector": "MXL package entry named mimetype",
       "applicability": "Applies only to a present mimetype entry.",
-      "semantics": "The known local ZIP-header clause requires no extra field on mimetype; do not apply it to other entries. The source says its zip header without separately defining local-versus-central coverage. Record both header locations and retain a gate before claiming that a central-only extra field is a normative violation. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Unresolved gate: Review cited ZIP/JAR sources and decide whether the prohibition covers local header only or both headers; publish central-only/local-only fixtures and a clause-specific provenance citation before full promotion.",
+      "semantics": "The known local ZIP-header clause requires no extra field on mimetype; do not apply it to other entries. The source says its zip header without separately defining local-versus-central coverage. Record both header locations and retain a gate before claiming that a central-only extra field is a normative violation. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation.",
       "targets": [
         "package"
       ],
@@ -1927,7 +1927,7 @@
       ],
       "selector": "MXL package entry named mimetype",
       "applicability": "Applies when mimetype is present; this is a byte-content condition, not an XML-text condition.",
-      "semantics": "Reject any established leading padding/whitespace or byte-order mark before MIME content. Preserve bytes; do not TrimSpace, decode XML or silently strip a BOM. Leading ASCII whitespace and the UTF-8 BOM are direct core cases. The general padding/BOM byte families require a reviewed closure definition; this clause alone does not create a prohibition on trailing whitespace or make recommended exact MIME bytes mandatory. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Unresolved gate: Define normative padding, whitespace and BOM byte sets (including non-UTF-8 BOMs and NUL padding) with pinned external references and fixtures before claiming exhaustive prefix validation.",
+      "semantics": "Reject any established leading padding/whitespace or byte-order mark before MIME content. Preserve bytes; do not TrimSpace, decode XML or silently strip a BOM. Leading ASCII whitespace and the UTF-8 BOM are direct core cases. The general padding/BOM byte families require a reviewed closure definition; this clause alone does not create a prohibition on trailing whitespace or make recommended exact MIME bytes mandatory. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation.",
       "targets": [
         "package"
       ],
@@ -2008,7 +2008,7 @@
       ],
       "selector": "first rootfile of an MXL package containing a full score and separate part files",
       "applicability": "Applies only when evidence establishes that this archive contains both a score file and its individual part files.",
-      "semantics": "Require first rootfile to identify the score. Part files need not appear as rootfile descriptors and may be linked from the score. Number of score-part elements, filename or shared ID spelling alone is not an authoritative role classifier; unresolved roles do not prove a false antecedent. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Unresolved gate: Define evidence for full-score/part roles and association, including one-part scores and part-link-only resources; pin role fixtures before hard rejection beyond authoritatively labeled cases.",
+      "semantics": "Require first rootfile to identify the score. Part files need not appear as rootfile descriptors and may be linked from the score. Number of score-part elements, filename or shared ID spelling alone is not an authoritative role classifier; unresolved roles do not prove a false antecedent. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation.",
       "targets": [
         "package"
       ],
@@ -2091,7 +2091,7 @@
       ],
       "selector": "first container/rootfiles/rootfile/@media-type",
       "applicability": "Applies to the first rootfile. Proven absent media-type uses the documented MusicXML assumption and is not a missing-attribute violation.",
-      "semantics": "Reject a present media-type established to be non-MusicXML. Do not silently narrow the allowed set to exactly application/vnd.recordare.musicxml+xml or assume all XML-related types qualify. Absence does not excuse validating the actual root resource. The allowed set and nested compressed-root handling remain explicit review gates. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Unresolved gate: Approve the precise MusicXML media-type set, parameter/case comparison rules and nested compressed-root policy with authoritative citations and fixtures; retain a scoped known-non-MusicXML check if full closure is unavailable.",
+      "semantics": "Reject a present media-type established to be non-MusicXML. Do not silently narrow the allowed set to exactly application/vnd.recordare.musicxml+xml or assume all XML-related types qualify. Absence does not excuse validating the actual root resource. The allowed set and nested compressed-root handling remain explicit review gates. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation.",
       "targets": [
         "package"
       ],
@@ -2173,7 +2173,7 @@
       ],
       "selector": "musicxml pitch elements in an author-intent comparison scope",
       "applicability": "Applies when authoritative intent establishes that a non-natural alteration is needed for this encoded actual pitch. Key signature or accidental appearance alone cannot establish the intended pitch.",
-      "semantics": "Require explicit pitch/alter equal to the intended chromatic alteration when that alteration is needed. Do not derive a missing alteration from a key signature, visual accidental, part name or what the music probably means. A natural note may omit alter; an omitted alter remains a legitimate natural encoding unless contrary intent is supplied. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position. Unresolved gate: Define and authorize the optional intended-pitch evidence contract and its exact units/identity. Document document-only incompleteness; pin explicit-intent fixtures before advertising executable coverage.",
+      "semantics": "Require explicit pitch/alter equal to the intended chromatic alteration when that alteration is needed. Do not derive a missing alteration from a key signature, visual accidental, part name or what the music probably means. A natural note may omit alter; an omitted alter remains a legitimate natural encoding unless contrary intent is supplied. Known complete absence may prove a false antecedent/not-applicable; unknown or unsupported facts never do. An invalid prerequisite blocks dependent evaluation with its causal DecisionRef. Resource exhaustion is incomplete, not a normative violation. Source facts use XML-normalized lexemes before the declared XSD whitespace policy. Model facts are current field values and structural presence only; no Encode/reparse and no invented original source spelling or position.",
       "targets": [
         "source",
         "model"
@@ -2327,7 +2327,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "generic",
+        "interaction": "record_specific"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-smufl-canonical-name",
@@ -2363,7 +2371,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-smufl-accidental-family",
@@ -2397,7 +2413,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-smufl-coda-family",
@@ -2431,7 +2455,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-smufl-lyrics-family",
@@ -2465,7 +2497,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-smufl-pictogram-family",
@@ -2499,7 +2539,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-smufl-segno-family",
@@ -2533,7 +2581,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-smufl-wavy-family",
@@ -2567,7 +2623,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-time-only-ascending",
@@ -2600,7 +2664,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "generic",
+        "interaction": "record_specific"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-date-no-timezone",
@@ -2633,7 +2705,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-bezier-second-control",
@@ -2663,7 +2742,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-id-document-unique",
@@ -2693,7 +2779,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-part-id-target",
@@ -2726,7 +2819,15 @@
         ]
       },
       "oracle": "Pinned target annotation and actual XSD declaration placement; generic IDREF, typed target and part membership have distinct expected outcomes.  Timewise part reference values may recur in multiple measures; no unsupported sibling-uniqueness rule is added.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "record_specific",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-midi-device-target",
@@ -2759,7 +2860,15 @@
         ]
       },
       "oracle": "Pinned target annotation and actual XSD declaration placement; generic IDREF, typed target and part membership have distinct expected outcomes.  If id is provably absent, assignment applies to all score-instrument children of the owning score-part; absence is not an invalid reference.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "generic",
+        "negative": "generic",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-midi-instrument-target",
@@ -2791,7 +2900,15 @@
         ]
       },
       "oracle": "Pinned target annotation and actual XSD declaration placement; generic IDREF, typed target and part membership have distinct expected outcomes.  The erroneous prose about a score-instrument parent does not override the XSD score-part/sound declaration placement.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "generic",
+        "negative": "generic",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-ipa-2015-unicode13",
@@ -2820,7 +2937,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-written-transposition",
@@ -2851,7 +2975,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-for-part-requires-concert",
@@ -2880,7 +3011,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-beat-repeat-content",
@@ -2910,7 +3048,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-key-octave-cancel-exists",
@@ -2939,7 +3085,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-measure-repeat-content",
@@ -2969,7 +3122,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-barline-location",
@@ -3000,7 +3161,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-accordion-at-least-one",
@@ -3030,7 +3198,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-instrument-change-target",
@@ -3062,7 +3237,15 @@
         ]
       },
       "oracle": "Pinned target annotation and actual XSD declaration placement; generic IDREF, typed target and part membership have distinct expected outcomes.  ",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "generic",
+        "negative": "generic",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-metronome-relation-value",
@@ -3091,7 +3274,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-numeral-requires-key",
@@ -3121,7 +3311,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-sound-dacapo-yes",
@@ -3151,7 +3348,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "generic",
+        "negative": "generic",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-sound-forward-repeat-yes",
@@ -3181,7 +3386,15 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "generic",
+        "negative": "generic",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-sound-pedal-range",
@@ -3212,7 +3425,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-assess-player-target",
@@ -3245,7 +3465,15 @@
         ]
       },
       "oracle": "Pinned target annotation and actual XSD declaration placement; generic IDREF, typed target and part membership have distinct expected outcomes.  If player is absent the override applies to all players; this does not make required assess/@type optional.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-bend-release-negative",
@@ -3275,7 +3503,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-instrument-note-target",
@@ -3307,7 +3542,15 @@
         ]
       },
       "oracle": "Pinned target annotation and actual XSD declaration placement; generic IDREF, typed target and part membership have distinct expected outcomes.  Multiple instrument references on one note are permitted for shared sound; do not invent exactly-one multiplicity.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "generic",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-grace-cue-duration",
@@ -3336,7 +3579,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-concert-score-transpose",
@@ -3365,7 +3615,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-instrument-link-target",
@@ -3397,7 +3654,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-midi-requires-score-instrument",
@@ -3427,7 +3691,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-harmony-root-choice",
@@ -3456,7 +3727,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-chord-duration-bound",
@@ -3487,7 +3765,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-zip-format",
@@ -3515,7 +3800,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-container-path",
@@ -3543,7 +3835,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-mimetype-stored",
@@ -3571,7 +3870,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-mimetype-no-extra",
@@ -3600,7 +3906,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-mimetype-no-prefix",
@@ -3629,7 +3942,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-first-root-musicxml",
@@ -3657,7 +3977,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-score-before-parts",
@@ -3686,7 +4013,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-rootfile-document-root",
@@ -3714,7 +4048,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-mxl-first-media-type",
@@ -3743,7 +4084,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-xlink-namespace",
@@ -3771,7 +4119,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-pitch-alter-explicit",
@@ -3801,7 +4156,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-beam-number-distinct",
@@ -3831,7 +4193,14 @@
         ]
       },
       "oracle": "Reviewed pinned prose clause plus explicit operator semantics above; evaluate each advertised target separately. Candidate fixtures are future test contracts, not executed conformance evidence.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "record_specific",
+        "negative": "record_specific",
+        "boundary": "record_specific",
+        "missing_fact": "record_specific",
+        "interaction": "record_specific"
+      }
     },
     {
       "id": "TEST-play-instrument-target",
@@ -3864,7 +4233,15 @@
         ]
       },
       "oracle": "Pinned target annotation and actual XSD declaration placement; generic IDREF, typed target and part membership have distinct expected outcomes.  If id is absent, preserve the broader playback scope described by the owning play context; do not require an ID for every play.",
-      "status": "planned"
+      "status": "planned",
+      "axis_status": {
+        "positive": "generic",
+        "negative": "generic",
+        "boundary": "generic",
+        "missing_fact": "generic",
+        "interaction": "generic"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     }
   ],
   "overlap_reviews": [
@@ -3878,7 +4255,11 @@
         "MX40-REQ-4aefb63559e24c13"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. Other parameters in the linked record stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. Other parameters in the linked record stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-no-musicxml-namespace"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-smufl-canonical-name",
@@ -3891,7 +4272,11 @@
         "MX40-REQ-d109b7b132119f14"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-smufl-canonical-name"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-smufl-accidental-family",
@@ -3904,7 +4289,11 @@
         "MX40-REQ-62d2e8fe9355a693"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-smufl-accidental-family"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-smufl-coda-family",
@@ -3917,7 +4306,11 @@
         "MX40-REQ-939399559c6f4c46"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-smufl-coda-family"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-smufl-lyrics-family",
@@ -3930,7 +4323,11 @@
         "MX40-REQ-1977dba87b2c19b9"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-smufl-lyrics-family"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-smufl-pictogram-family",
@@ -3943,7 +4340,11 @@
         "MX40-REQ-1021c6c8d38a32bb"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-smufl-pictogram-family"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-smufl-segno-family",
@@ -3956,7 +4357,11 @@
         "MX40-REQ-0ffc8e9beba2b40e"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-smufl-segno-family"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-smufl-wavy-family",
@@ -3969,7 +4374,11 @@
         "MX40-REQ-50a577ee3dd904cb"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-smufl-wavy-family"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-time-only-ascending",
@@ -3982,7 +4391,11 @@
         "MX40-REQ-13adf97af1bae9ca"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-time-only-ascending"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-date-no-timezone",
@@ -3995,7 +4408,11 @@
         "MX40-REQ-e1142d45fe9f8176"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-date-no-timezone"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-bezier-second-control",
@@ -4005,7 +4422,11 @@
       "additional_condition": "Require owner element slur and type exactly continue whenever any second-control attribute is present. A tied element never qualifies even if its type spelling is continue. Do not require all three attributes together and do not require second-control attributes on every continuation.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-bezier-second-control"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-id-document-unique",
@@ -4018,7 +4439,11 @@
         "MX40-REQ-2b21de2bb0f9da75"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-id-document-unique"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-part-id-target",
@@ -4031,7 +4456,11 @@
         "MX40-REQ-bb35bbb41b5f38f7"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-part-id-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-midi-device-target",
@@ -4046,7 +4475,11 @@
         "MX40-REQ-8fd7dd020b7d5d83"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-midi-device-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-midi-instrument-target",
@@ -4068,7 +4501,11 @@
         "MX40-REQ-a6e0bf1407b48be2"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-midi-instrument-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-ipa-2015-unicode13",
@@ -4078,7 +4515,11 @@
       "additional_condition": "Check the actual permitted IPA 2015 strings/code-point sequences in Unicode 13.0 using a reviewed pinned repertoire. A Unicode block or general letter/category test is insufficient. Reject only authoritative disallowed content under that reviewed policy; do not strip or normalize combining marks without a normative policy.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-ipa-2015-unicode13"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-written-transposition",
@@ -4088,7 +4529,11 @@
       "additional_condition": "If the antecedent is known true, require an effective transpose encoding for the applicable part/staff/position, with the transposition interval supplied by reviewed intent evidence. Do not infer transposition or intended pitch from part-name or a guessed instrument dictionary. Known concert-pitch encoding or non-transposing instrument makes this specific conditional rule not-applicable.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-written-transposition"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-for-part-requires-concert",
@@ -4098,7 +4543,11 @@
       "additional_condition": "Require a concert-score element in this document defaults. Known complete absence is a violation. Do not borrow a marker from a linked document or another assessment session.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-for-part-requires-concert"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-beat-repeat-content",
@@ -4108,7 +4557,11 @@
       "additional_condition": "Require encoded musical content in every affected beat rather than treating the graphical repeat symbol as a substitute for notes/rests. Use duration-normalized, voice/staff-aware musical events; do not compare raw XML strings or merely count child nodes. Exact required event-equivalence, tied events and range construction remain gated. Do not execute playback repeat navigation as an assumed solution.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-beat-repeat-content"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-key-octave-cancel-exists",
@@ -4118,7 +4571,11 @@
       "additional_condition": "For cancel=yes require a corresponding cancel child in the same parent key. Presence is the bounded predicate; key-octave/@number indexes and detailed cancellation glyph ordering are separate obligations, not silently added here.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-key-octave-cancel-exists"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-measure-repeat-content",
@@ -4128,7 +4585,11 @@
       "additional_condition": "Require encoded musical content in every affected measure rather than treating the graphical repeat symbol as a substitute for notes/rests. Use duration-normalized, voice/staff-aware musical events; do not compare raw XML strings or merely count child nodes. Exact required event-equivalence, tied events and range construction remain gated. Do not execute playback repeat navigation as an assumed solution.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-measure-repeat-content"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-barline-location",
@@ -4138,7 +4599,11 @@
       "additional_condition": "Require semantic agreement between declared location and position in the musical data. Do not equate the mandatory clause with a hard first/last XML-child rule: the detailed first/last language is should, and the tutorial permits attributes before a left barline. Candidate interpretation is left at the measure start, right at its end and middle inside the measure, with a reviewed treatment of zero-duration metadata.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-barline-location"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-accordion-at-least-one",
@@ -4148,7 +4613,11 @@
       "additional_condition": "Count the selected child presences and require count >= 1. Each child remains governed by its own XSD occurrence and value domain. This extra group-presence predicate is not supplied by three optional XSD children.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-accordion-at-least-one"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-instrument-change-target",
@@ -4162,7 +4631,11 @@
         "MX40-REQ-8666924329e5b2db"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-instrument-change-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-metronome-relation-value",
@@ -4172,7 +4645,11 @@
       "additional_condition": "Accept exactly the empty string or equals. Empty content has the documented equals interpretation. Because the declaration is xs:string, do not trim whitespace or case-fold: a space-only value is not empty and \" equals \" is not equals. This is a MusicXML 4.0-specific allowed-value rule, not a future-version assumption.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-metronome-relation-value"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-numeral-requires-key",
@@ -4182,7 +4659,11 @@
       "additional_condition": "Require either this numeral own numeral-key or an applicable explicitly encoded key. Otherwise query effective-key context at the document-qualified subject, part and staff; do not choose the last key in lexical order, borrow another staff key, or invent C major. An explicit key with fifths=0 is still a specified key.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-numeral-requires-key"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-sound-dacapo-yes",
@@ -4192,7 +4673,11 @@
       "additional_condition": "Require the declared yes-no value to equal yes. The legal XSD value no is a prose violation here, not equivalent to omission. This local predicate does not need a playback-navigation graph or proof that a jump executes.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-sound-dacapo-yes"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-sound-forward-repeat-yes",
@@ -4202,7 +4687,11 @@
       "additional_condition": "Require the declared yes-no value to equal yes. The legal XSD value no is a prose violation here, not equivalent to omission. This local predicate does not need a playback-navigation graph or proof that a jump executes.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-sound-forward-repeat-yes"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-sound-pedal-range",
@@ -4240,7 +4729,11 @@
         "MX40-REQ-78bf6bf8da41a7f2"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-sound-pedal-range"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-assess-player-target",
@@ -4255,7 +4748,11 @@
         "MX40-REQ-6c6b8781d4809527"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-assess-player-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-bend-release-negative",
@@ -4265,7 +4762,11 @@
       "additional_condition": "For a known release-after-bend occurrence require bend-alter < 0 using exact decimal comparison. Zero is not a release distance. Fractional negative values are permitted. Do not infer a previous bend from an unrelated neighboring XML node, require an unsupported exact negation of its amplitude, or apply this conditional prohibition to all zero bend-alter values.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-bend-release-negative"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-instrument-note-target",
@@ -4278,7 +4779,11 @@
         "MX40-REQ-f0a186d4f314a0e9"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-instrument-note-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-grace-cue-duration",
@@ -4336,7 +4841,11 @@
         "MX40-REQ-b82f43c3fe450a0e"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-grace-cue-duration"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-concert-score-transpose",
@@ -4346,7 +4855,11 @@
       "additional_condition": "Require chromatic=0 and diatonic absent or 0 on each selected transpose. Preserve permitted nonzero octave-change and double; do not select part-transpose nested in for-part. Keep the marker location as related evidence.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-concert-score-transpose"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-instrument-link-target",
@@ -4359,7 +4872,11 @@
         "MX40-REQ-b8e8bc7e2f0547de"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-instrument-link-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-midi-requires-score-instrument",
@@ -4376,7 +4893,11 @@
         "MX40-REQ-65fdfaf17aae8d22"
       ],
       "disposition": "review_required",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent. The links describe the target declaration rather than the triggering reference; prove the conditional existence discharge through the typed-reference check before deduplicating diagnostics."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent. The links describe the target declaration rather than the triggering reference; prove the conditional existence discharge through the typed-reference check before deduplicating diagnostics.",
+      "additional_condition_check_ids": [
+        "CHECK-midi-requires-score-instrument"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-harmony-root-choice",
@@ -4397,7 +4918,11 @@
         "MX40-REQ-566aa68e8cf38a60"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-harmony-root-choice"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-chord-duration-bound",
@@ -4407,7 +4932,11 @@
       "additional_condition": "Compare each chord-tone duration to the first preceding non-chord base note of its established chord group and require tone <= base after exact common-unit normalization. A shorter tone followed by a longer one is allowed if both remain <= base. Do not impose pairwise nonincreasing durations. Failed or ambiguous grouping is an unavailable prerequisite, not a guessed preceding XML note.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-chord-duration-bound"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-zip-format",
@@ -4417,7 +4946,11 @@
       "additional_condition": "Validate only the explicitly reviewed ZIP/JAR compatibility subset and describe unsupported features. Successfully opening a ZIP with a library is not full MusicXML package conformance. Do not invent an exhaustive DEFLATE-only policy for all non-mimetype entries from this annotation.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-zip-format"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-container-path",
@@ -4427,7 +4960,11 @@
       "additional_condition": "Require an entry at the exact case-sensitive path META-INF/container.xml, then parse it with the container assembly to obtain root descriptors. Presence and XML schema validity are separate sub-results. Do not treat another case, root-level container.xml or a host-filesystem fallback as satisfying the path.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-container-path"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-mimetype-stored",
@@ -4437,7 +4974,11 @@
       "additional_condition": "Require compression method STORE (0) and no encryption for the mimetype entry. Verify consistency between observed representations rather than trusting only a decoder API that silently discards header facts. Do not require mimetype presence or first-entry placement from recommendations alone.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-mimetype-stored"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-mimetype-no-extra",
@@ -4447,7 +4988,11 @@
       "additional_condition": "The known local ZIP-header clause requires no extra field on mimetype; do not apply it to other entries. The source says its zip header without separately defining local-versus-central coverage. Record both header locations and retain a gate before claiming that a central-only extra field is a normative violation.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-mimetype-no-extra"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-mimetype-no-prefix",
@@ -4457,7 +5002,11 @@
       "additional_condition": "Reject any established leading padding/whitespace or byte-order mark before MIME content. Preserve bytes; do not TrimSpace, decode XML or silently strip a BOM. Leading ASCII whitespace and the UTF-8 BOM are direct core cases. The general padding/BOM byte families require a reviewed closure definition; this clause alone does not create a prohibition on trailing whitespace or make recommended exact MIME bytes mandatory.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-mimetype-no-prefix"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-first-root-musicxml",
@@ -4467,7 +5016,11 @@
       "additional_condition": "Require the first rootfile to identify the primary MusicXML representation rather than a PDF/audio alternate. Resolve the target and validate its document kind rather than relying on extension. Additional rootfile descriptors may identify alternate non-MusicXML media. Package primary selection is the first occurrence, not sorted name order.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-first-root-musicxml"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-score-before-parts",
@@ -4477,7 +5030,11 @@
       "additional_condition": "Require first rootfile to identify the score. Part files need not appear as rootfile descriptors and may be linked from the score. Number of score-part elements, filename or shared ID spelling alone is not an authoritative role classifier; unresolved roles do not prove a false antecedent.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-score-before-parts"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-rootfile-document-root",
@@ -4487,7 +5044,11 @@
       "additional_condition": "Require the referenced XML document element to be no-namespace score-partwise, score-timewise or opus. container and sounds are not musical rootfiles under this clause. Proving an allowed root is only a root-kind result, not complete child-document conformance. Unsupported nested compressed resources remain incomplete until their policy is settled.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-rootfile-document-root"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-mxl-first-media-type",
@@ -4497,7 +5058,11 @@
       "additional_condition": "Reject a present media-type established to be non-MusicXML. Do not silently narrow the allowed set to exactly application/vnd.recordare.musicxml+xml or assume all XML-related types qualify. Absence does not excuse validating the actual root resource. The allowed set and nested compressed-root handling remain explicit review gates.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-mxl-first-media-type"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-xlink-namespace",
@@ -4509,7 +5074,11 @@
         "MX40-REQ-72305f50edd34b63"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. Other parameters in the linked record stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. Other parameters in the linked record stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-xlink-namespace"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-pitch-alter-explicit",
@@ -4519,7 +5088,11 @@
       "additional_condition": "Require explicit pitch/alter equal to the intended chromatic alteration when that alteration is needed. Do not derive a missing alteration from a key signature, visual accidental, part name or what the music probably means. A natural note may omit alter; an omitted alter remains a legitimate natural encoding unless contrary intent is supplied.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-pitch-alter-explicit"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-beam-number-distinct",
@@ -4529,7 +5102,11 @@
       "additional_condition": "Compute each beam effective number using default 1 when the attribute is proven absent, then require pairwise distinct exact integer values within that note. The XSD range 1..8 and maximum eight children do not establish this uniqueness condition. Do not require contiguous levels or limit to six based on outdated prose.",
       "xsd_research_ids": [],
       "disposition": "no_overlap",
-      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned."
+      "justification": "Reviewed the prose condition against its pinned declaration/annotation: the additional condition is not asserted by the linked XSD machinery. No XSD record is collapsed; prerequisites remain separately owned.",
+      "additional_condition_check_ids": [
+        "CHECK-beam-number-distinct"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     },
     {
       "id": "OVERLAP-play-instrument-target",
@@ -4548,7 +5125,11 @@
         "MX40-REQ-8760efe67f5f4ac7"
       ],
       "disposition": "proven_shared_clause",
-      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent."
+      "justification": "Inspected actual linked parameters and the pinned schema declaration, rather than treating reconciliation IDs as equivalence proofs. Reuse only the shared clause above. All remaining linked aggregate parameters stay independent.",
+      "additional_condition_check_ids": [
+        "CHECK-play-instrument-target"
+      ],
+      "additional_condition_source": "reviewed_overlap"
     }
   ]
 }

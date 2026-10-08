@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +27,11 @@ func TestPinnedRegistryIfProvided(t *testing.T) {
 	root := os.Getenv("MUSICXML_PLAN_REGISTRY")
 	if root == "" {
 		t.Skip("external snapshot not materialized; offline planning integrity runs separately")
+	}
+	var err error
+	root, err = registryTestRoot(root)
+	if err != nil {
+		t.Fatal(err)
 	}
 	if err := testPlan(t).verifyRegistry(root); err != nil {
 		t.Fatal(err)
@@ -162,5 +168,20 @@ func TestRecordPointers(t *testing.T) {
 		if _, err := recordIndex(p); err == nil {
 			t.Errorf("accepted %s", p)
 		}
+	}
+}
+
+func registryTestRoot(value string) (string, error) {
+	if !filepath.IsAbs(value) {
+		return "", fmt.Errorf("MUSICXML_PLAN_REGISTRY must be an absolute path; go test runs in internal/validationplan")
+	}
+	return value, nil
+}
+func TestRegistryTestRoot(t *testing.T) {
+	if _, err := registryTestRoot("../registry"); err == nil {
+		t.Fatal("relative registry path was accepted")
+	}
+	if _, err := registryTestRoot(t.TempDir()); err != nil {
+		t.Fatal(err)
 	}
 }

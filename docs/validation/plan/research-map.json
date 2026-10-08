@@ -1,4 +1,6 @@
-{"format":"musicxml-validation-plan-1","research_records":[
+{
+"format": "musicxml-validation-plan-1",
+"research_records": [
 {"research_id":"MX40-REQ-4aefb63559e24c13","origin":"XSD","role":"predicate","disposition":"parameterized_check","check_ids":["INSTANCE-MX40-REQ-4aefb63559e24c13"],"registry_pointer":"/records/0/record"},
 {"research_id":"MX40-REQ-5e18dc6ec71872f2","origin":"XSD","role":"context_fact","disposition":"parameterized_check","check_ids":["INSTANCE-MX40-REQ-5e18dc6ec71872f2"],"registry_pointer":"/records/1/record"},
 {"research_id":"MX40-REQ-2aeadada3dda5c2b","origin":"XSD","role":"context_fact","disposition":"parameterized_check","check_ids":["INSTANCE-MX40-REQ-2aeadada3dda5c2b"],"registry_pointer":"/records/2/record"},
@@ -2559,4 +2561,5 @@
 {"research_id":"MX40-PROSE-direction-type-format-scope","origin":"prose","role":"context_fact","disposition":"planned","check_ids":["CHECK-context-direction-type-format-scope"],"registry_pointer":"/records/2557/record"},
 {"research_id":"MX40-PROSE-trill-playback-beat-count","origin":"prose","role":"context_fact","disposition":"planned","check_ids":["CHECK-context-trill-playback-beat-count"],"registry_pointer":"/records/2558/record"},
 {"research_id":"MX40-PROSE-sounds-application-mapping","origin":"prose","role":"out_of_scope","disposition":"excluded","check_ids":["CHECK-context-sounds-application-mapping"],"registry_pointer":"/records/2559/record"}
-]}
+]
+}

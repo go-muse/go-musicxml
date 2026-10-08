@@ -8,7 +8,7 @@ This is the next planning layer after [Go contracts](go-contracts.md) and
 [worked traces](go-contract-examples.md). The package baseline is
 `ba32b92300a54485f000105615fbe4af10325b8e`. The research remains in the external
 [registry at `3e33e4c`][registry]. The 16 MB research corpus is not copied into the
-library or downloaded at runtime. Only compact dispositions, parameter bindings,
+library or downloaded at runtime. Only planning dispositions, parameter bindings,
 contract matrices, and pinned references live here.
 
 ## Read the artifacts
@@ -23,6 +23,7 @@ contract matrices, and pinned references live here.
 | [context-dispositions.json](plan/context-dispositions.json) | Explicit roles, fact/advisory meanings, readiness gates, tests and overlap handling for the other 291 prose records. Compound records can map to more than one role/check. |
 | [advisory-clause-review.json](plan/advisory-clause-review.json) | Review of all 59 advisories, retaining compound defaults, context facts and reused XSD clauses. |
 | [capabilities.json](plan/capabilities.json) | Named evidence dependencies with reciprocal links and explicit unbound-provider gates. A name does not imply implementation. |
+| [deferred-inventory.md](deferred-inventory.md) | Published English source for all 15 deferred sections and 52 stable DEF keys. |
 | [implementation-plan.json](plan/implementation-plan.json) | Every deferred obligation, its test contract, implementation group and acceptance criterion, including technical requirements outside the MusicXML record inventory. |
 | [open-questions.json](plan/open-questions.json) | All 28 research questions, proposed interpretations, affected context and explicit decision gates. |
 
@@ -41,7 +42,8 @@ identity and migration explicitly, while preserving these provenance links.
    not a summary that drops inconvenient facets, branches, defaults or limits.
 4. Follow `plan_dependencies` and `reuse_instances`, or the prose check's typed
    prerequisite description and `capability_ids`.
-5. Follow `test_contracts` to the five case axes, then `stage` to acceptance.
+5. Follow `test_contracts` to each axis and its explicit `axis_status`, then `stage`
+   to acceptance. A populated generic axis is still an uninstantiated test obligation.
 
 For XSD instances, source `source_url`, `source_xpath`, assembly, exact
 `scope_occurrence_id`, and reference-use identity are inherited from that exact
@@ -57,6 +59,12 @@ The four planning roles are `predicate`, `context_fact`, `advisory`, and
 that a compound record contains only one clause. Follow all check links to see
 additional context/default clauses. In particular, advice about repeat endpoints
 must not discard the same record's explicit defaults or stop semantics.
+
+`inputs` names evidence payloads, while `capabilities` names the abilities
+needed to supply or assess them. Their labels often coincide in this planning
+snapshot; both fields are retained so later typed contracts can specialize them
+without conflating data with availability. The checker separately keeps the
+capability label list equal to its linked gate labels.
 
 External dictionaries, authorized linked files, author intent, musical time and
 current-model evidence are dependencies. They are not extra roles. Renderer or
@@ -117,7 +125,13 @@ subjects or erase extra source conditions.
 
 ### Prose/XSD and prose/prose
 
-Every prose record retains its overlap relation. A linked XSD ID is provenance,
+Every prose record retains its overlap relation. Context added-condition text is
+bound to that record's own disposition summary or an explicitly associated
+`research_clauses` entry on its check. Reviewed shared-text groups are narrowly
+allowlisted in `overlap-policy.json`; duplicate-text checks supplement source
+association and do not prove semantic equivalence.
+
+A linked XSD ID is provenance,
 not proof that the whole record is equivalent. Reviewed constraint records name
 the common clause and any additional condition separately. Other relations remain
 `review_required` where that proof is not available. An unreviewed relation is
@@ -129,13 +143,29 @@ than treating the entire source records as interchangeable.
 
 ## Test-contract interpretation
 
-Every check or engineering requirement has a reciprocal test-contract link with:
+Every check or engineering requirement has a reciprocal test-contract link
+listing obligations on five axes. A listed axis is not necessarily a
+record-specific case:
 
 - **positive**: the condition/fact holds for each advertised target
 - **negative**: an isolated violation or incorrect provider result is detected
 - **boundary**: exact endpoints, empty/absent/zero distinctions, count and scope limits
 - **missing_fact**: unknown, unsupported or invalid evidence is preserved honestly
 - **interaction**: meaningful inheritance, ordering, scope, dependency or compatibility cases
+
+Each `axis_status` distinguishes `record_specific`, `parameterized`, and
+`generic`. There are 736 record-specific axis descriptions, 300 parameterized
+XSD axes, and 1,529 generic axes in this snapshot (2,565 axes across 513
+contracts). All 279 synopsis/template-derived context contracts label every
+axis generic, even where appending the record's summary makes the text unique.
+Repeated shared recipes elsewhere are likewise generic. Neither text uniqueness
+nor a nonempty array establishes concrete case coverage. These are future test
+contracts, and even record-specific descriptions are not executed fixtures.
+
+Every generic or parameterized axis has a `case_instantiation_gate`. Its owner
+must supply exact subject inputs, source/model evidence and expected outcomes
+before implementation acceptance. The generic slots remain visible work rather
+than being counted as completed record-level coverage.
 
 Parameterized XSD matrices must be instantiated for each actual enumeration,
 facet, union member, branch and cardinality. A representative family test cannot
@@ -151,6 +181,12 @@ requirement can point to the agreed architecture or existing-code map; that does
 not turn a project API/resource decision into a MusicXML normative clause.
 
 ### Required outcome distinctions
+
+The structured outcome vocabulary follows the proposed Go contracts: `fail` and
+`not-applicable`. Natural-language “violation” describes a failed normative
+condition; it is not an additional outcome enum. `catalog` is a planning-only
+target for metadata/design requirements and has no runtime `Target` equivalent;
+the runtime targets remain `source`, `model`, and `package`.
 
 - A known false applicability antecedent can yield `not-applicable`.
 - Missing instance data yields `unknown`; an absent capability yields
@@ -174,7 +210,14 @@ evidence; they cannot be inferred from convenient XML spelling alone.
 
 The thirteen `STAGE-DEF-*` groups provide the sequencing plan. Semantic
 `STAGE-xsd/local/context/external/package/review/advisory` labels attach contracts
-to those groups; they are not additional promised PRs.
+to those groups; they are not additional promised PRs. `STAGE-review` is now
+reserved for decision-gated clauses (50 checks); the 177 specified context
+contracts previously parked there have moved to `STAGE-context`. Semantic domain
+stages can still contain a decision-gated check, whose explicit closure must be
+resolved before implementing it. Stage means ownership/sequence, while `status`
+and `implementation_binding` separately state semantic and implementation
+readiness. A nonempty closure or pending translation alone does not place a
+specified contract in the review stage.
 
 1. Prepare narrow regression tests for mandatory XML duplicate-attribute/DOCTYPE
    checks, simple/builtin attributes plus all four xsi contracts, and exact numeric
@@ -193,7 +236,13 @@ to those groups; they are not additional promised PRs.
 
 Diagnostics, cancellation, no-automatic-fetch behavior and resource limits are
 entry gates for each implementation slice, not optional cleanup at the end.
-All budgets in the deferred inventory have separate requirements. The open API,
+All budgets in the [published deferred inventory](deferred-inventory.md) have
+separate requirements. Every `source_bullets` key resolves to the correspondingly
+named heading there (for example, `DEF01-01` → `#def01-01`); each `source_section`
+is a real relative section link. The snapshot pins the inventory's byte hash,
+and offline integrity verifies the document, all 52 headings, all 15 sections,
+and requirement/source links. These keys are editorial traceability labels for
+the published task specification, not new MusicXML normative IDs. The open API,
 compiled-catalog delivery, error compatibility and profile decisions form a
 parallel decision lane. Issues block only affected disputed clauses. Optional
 opus byte replacement, quotations and edit-invalidated evidence snapshots remain
@@ -212,12 +261,21 @@ For pin verification, materialize the external repository separately and supply
 its root. The command does not clone or fetch it:
 
 ```sh
-go run ./internal/validationplan -registry /path/to/go-musicxml-registry
+go run ./internal/validationplan -registry /absolute/path/to/go-musicxml-registry
+MUSICXML_PLAN_REGISTRY=/absolute/path/to/go-musicxml-registry go test ./internal/validationplan
 ```
+
+`MUSICXML_PLAN_REGISTRY` enables the test's external snapshot verification; it
+must be an **absolute path** because Go executes this package's tests from
+`internal/validationplan`. The CLI `-registry` flag instead resolves a relative
+path against its invocation directory. Without the environment variable, the
+external test is explicitly skipped and the offline integrity tests still run.
 
 Offline integrity checks ID uniqueness, exact inventory identity, both directions
 of contract/test/capability links, dependency/stage links and DAGs where required,
-all five test axes, all deferred bullet/paragraph keys, aggregate policies,
+axis specificity and instantiation gates, all published deferred source links,
+unique overlap rows and own-record clauses, contract/test target subsets,
+capability label/ID consistency, aggregate policies,
 translation/question sets and honest status fields. The optional external check
 verifies file byte hashes, exact record/issue pointers, dependency references and
 pinned overlap records. It does not crawl normative websites or prove semantic
@@ -228,6 +286,26 @@ Pin updates are deliberate review work: verify new bytes, reconcile every
 added/removed/changed record, review role/overlap/capability/test/stage changes,
 then update the integrity expectations together. There is no automatic research
 synchronization or runtime registry loading.
+
+## Storage and reviewability decision
+
+This PR deliberately keeps the planning snapshot with its offline checker so
+one repository contains the reviewable contract graph, published task inventory,
+and CI inputs. It therefore increases the library distribution footprint. The
+16 MB research corpus remains external; this decision does not make the derived
+planning data free to download.
+
+Measured Git ZIP archives: `ba32b923` = 625,015 bytes; initial PR head `a92c653` =
+1,053,407 bytes (+68.5%). The revised-tree measurement is recorded in the PR's
+review-response section. These are reproducible `git archive --format=zip`
+measurements, a distribution-size proxy rather than an exact Go proxy ZIP byte
+count. The additional reviewed JSON is the explicit cost of self-contained
+offline verification. A future externalization would need its own immutable pin,
+availability and update workflow; it is not performed silently in this PR.
+
+GitHub's `linguist-generated` attribute collapses large planning JSON diffs by
+default for review navigation. It does not mean the semantic judgments were
+machine-proven or that the data is production-generated validation code.
 
 ## Task record and limits
 

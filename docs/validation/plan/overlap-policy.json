@@ -1,0 +1,43 @@
+{
+  "format": "musicxml-validation-plan-1",
+  "shared_additional_conditions": [
+    {
+      "research_ids": [
+        "MX40-PROSE-smufl-accidental-family",
+        "MX40-PROSE-smufl-canonical-name",
+        "MX40-PROSE-smufl-coda-family",
+        "MX40-PROSE-smufl-lyrics-family",
+        "MX40-PROSE-smufl-pictogram-family",
+        "MX40-PROSE-smufl-segno-family"
+      ],
+      "condition_sha256": "6aead04013ded137926d985cb8f55344181c0e6737595f2ecd9b1c98e8e35612",
+      "justification": "These listed records intentionally reuse this exact additional-condition statement. This permits text sharing only for the named clause, never whole-record equivalence; each record keeps its own check/source binding."
+    },
+    {
+      "research_ids": [
+        "MX40-PROSE-instrument-change-target",
+        "MX40-PROSE-midi-device-target",
+        "MX40-PROSE-midi-instrument-target",
+        "MX40-PROSE-play-instrument-target"
+      ],
+      "condition_sha256": "b261c77ba81b9a9511775a6e091b214abbd9349e4a7a7074a44513b04ab20faf",
+      "justification": "These listed records intentionally reuse this exact additional-condition statement. This permits text sharing only for the named clause, never whole-record equivalence; each record keeps its own check/source binding."
+    },
+    {
+      "research_ids": [
+        "MX40-PROSE-sound-dacapo-yes",
+        "MX40-PROSE-sound-forward-repeat-yes"
+      ],
+      "condition_sha256": "8fb761ac7e54fdaa6048962bf72bef134248c3f294d87a5bcacb33310a31dece",
+      "justification": "These listed records intentionally reuse this exact additional-condition statement. This permits text sharing only for the named clause, never whole-record equivalence; each record keeps its own check/source binding."
+    },
+    {
+      "research_ids": [
+        "MX40-PROSE-empty-fermata-normal",
+        "MX40-PROSE-fermata-upright"
+      ],
+      "condition_sha256": "d45772a63cb48ca369161fb4633e0bffd8aa3f7df3b9788610cf0cf31cf74e20",
+      "justification": "These listed records intentionally reuse this exact additional-condition statement. This permits text sharing only for the named clause, never whole-record equivalence; each record keeps its own check/source binding."
+    }
+  ]
+}

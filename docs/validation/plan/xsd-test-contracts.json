@@ -29,7 +29,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-schema_dependency",
@@ -59,7 +67,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-simple_value_domain",
@@ -89,7 +105,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-restriction_contract",
@@ -119,7 +143,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-union_contract",
@@ -149,7 +181,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-reusable_attributeGroup",
@@ -179,7 +219,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-attribute_contract",
@@ -209,7 +257,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-complex_content_contract",
@@ -239,7 +295,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-extension_contract",
@@ -269,7 +333,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-element_contract",
@@ -299,7 +371,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-particle_sequence",
@@ -329,7 +409,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-particle_choice",
@@ -359,7 +447,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-reusable_group",
@@ -389,7 +485,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-NAME",
@@ -419,7 +523,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-ORDER",
@@ -449,7 +561,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-CHOICE",
@@ -479,7 +599,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-OCCURS",
@@ -509,7 +637,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-TYPE",
@@ -539,7 +675,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-ATTRUSE",
@@ -569,7 +713,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-DEFAULT",
@@ -599,7 +751,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-FIXED",
@@ -629,7 +789,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-CLOSED",
@@ -659,7 +827,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-TEXT",
@@ -689,7 +865,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-NIL",
@@ -719,7 +903,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-XSI",
@@ -749,7 +941,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-BLOCK",
@@ -779,7 +979,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-FINAL",
@@ -809,7 +1017,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-ENUM",
@@ -839,7 +1055,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-PATTERN",
@@ -869,7 +1093,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-BOUND",
@@ -899,7 +1131,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-LENGTH",
@@ -929,7 +1169,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-RESTRICT",
@@ -959,7 +1207,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-EXTEND",
@@ -989,7 +1245,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-UNION",
@@ -1019,7 +1283,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-WS",
@@ -1049,7 +1321,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-LEXICAL",
@@ -1079,7 +1359,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-ID",
@@ -1109,7 +1397,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-IDREF",
@@ -1139,7 +1435,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-IMPORT",
@@ -1169,7 +1473,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-GROUP",
@@ -1199,7 +1511,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-FORM",
@@ -1229,7 +1549,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-XSI-LOCATION",
@@ -1259,7 +1587,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-LANG-XSI-ATTRS",
@@ -1289,7 +1625,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-ID",
@@ -1319,7 +1663,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-IDREF",
@@ -1349,7 +1701,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-NCName",
@@ -1379,7 +1739,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-NMTOKEN",
@@ -1409,7 +1777,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-Name",
@@ -1439,7 +1815,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-anySimpleType",
@@ -1469,7 +1853,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-anyType",
@@ -1499,7 +1891,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-anyURI",
@@ -1529,7 +1929,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-date",
@@ -1559,7 +1967,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-decimal",
@@ -1589,7 +2005,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-integer",
@@ -1619,7 +2043,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-language",
@@ -1649,7 +2081,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-nonNegativeInteger",
@@ -1679,7 +2119,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-normalizedString",
@@ -1709,7 +2157,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-positiveInteger",
@@ -1739,7 +2195,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-string",
@@ -1769,7 +2233,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     },
     {
       "id": "TEST-XSD-TYPE-token",
@@ -1799,7 +2271,15 @@
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
       "status": "planned",
-      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission."
+      "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
+      "axis_status": {
+        "positive": "parameterized",
+        "negative": "parameterized",
+        "boundary": "parameterized",
+        "missing_fact": "parameterized",
+        "interaction": "parameterized"
+      },
+      "case_instantiation_gate": "Before implementation acceptance, instantiate each generic or parameterized axis with exact subject inputs, target-specific evidence, expected outcomes and meaningful scope interactions. These entries preserve future test obligations; their presence is not completed case coverage."
     }
   ]
 }

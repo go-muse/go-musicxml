@@ -124,5 +124,20 @@
   ],
   "pin_update_policy": "An explicit review updates the pin, verified file hashes and identity sets together, reconciles added/removed/changed records, reviews role/overlap/test/stage changes, and reruns offline plus external integrity. No network or automatic synchronization occurs at build time or runtime.",
   "research_mapping_sha256": "5db5cc8e129df42aac406e4dcce5672b6e5fc40f14e560d970eba8f719343b31",
-  "xsd_dependency_edges_sha256": "81fb774479c6e0457c579b6316dc415f5b9342db463739d3d3ef769576f4aaaa"
+  "xsd_dependency_edges_sha256": "81fb774479c6e0457c579b6316dc415f5b9342db463739d3d3ef769576f4aaaa",
+  "inventory_counts": {
+    "research": 2560,
+    "xsd_instances": 2218,
+    "prose_dispositions": 291,
+    "open_questions": 28,
+    "deferred_items": 15,
+    "overlap_reviews": 342,
+    "advisory_reviews": 59,
+    "occurrence_mappings": 2939
+  },
+  "deferred_inventory": {
+    "path": "../deferred-inventory.md",
+    "sha256": "e06e7db1d3a425e23bb9fadac26f8f59820ee544a44edf91545033b970505c5d",
+    "key_heading_prefix": "### "
+  }
 }

@@ -4,7 +4,6 @@
     {
       "research_id": "MX40-PROSE-fractional-divisions",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Integral divisions are a compatibility preference; acceptance of positive fractions is already the scalar domain and needs no new default provider.",
@@ -20,7 +19,6 @@
     {
       "research_id": "MX40-PROSE-stop-before-start",
       "decision": "reuse_context",
-      "check_ids": [],
       "related_research_ids": [
         "MX40-PROSE-start-stop-score-order"
       ],
@@ -40,7 +38,6 @@
     {
       "research_id": "MX40-PROSE-same-note-span-order",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The whole clause is should-level same-note ordering without a separate fixed default.",
@@ -56,9 +53,6 @@
     {
       "research_id": "MX40-PROSE-same-note-single-order",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-single-endpoint-completeness"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The single endpoint exception is preserved by an explicit pairing-requirement-none context subcontract.",
@@ -75,7 +69,6 @@
     {
       "research_id": "MX40-PROSE-one-note-visual-tie",
       "decision": "reuse_context",
-      "check_ids": [],
       "related_research_ids": [
         "MX40-PROSE-let-ring-single-tie",
         "MX40-PROSE-tie-sound-vs-tied"
@@ -97,9 +90,6 @@
     {
       "research_id": "MX40-PROSE-cancel-before-barline-midmeasure",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-cancel-location-default"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The absent-location left fact is mapped independently from mid-measure placement advice.",
@@ -116,7 +106,6 @@
     {
       "research_id": "MX40-PROSE-deprecated-none-clef",
       "decision": "reuse_context",
-      "check_ids": [],
       "related_research_ids": [
         "MX40-PROSE-musicxml40-deprecations"
       ],
@@ -136,7 +125,6 @@
     {
       "research_id": "MX40-PROSE-harmony-none-hide-root",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Root hiding is recommended and its absent numeral-step source wording remains an explicit unresolved editorial issue.",
@@ -152,9 +140,6 @@
     {
       "research_id": "MX40-PROSE-system-number-single-part",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-system-number-position-scope"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Top and bottom placement flags require current-system scope independently of extraction advice.",
@@ -171,9 +156,6 @@
     {
       "research_id": "MX40-PROSE-system-mark-single-part",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-system-mark-part-scope"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "System none has a concrete containing-part scope that must survive the advisory classification.",
@@ -190,7 +172,6 @@
     {
       "research_id": "MX40-PROSE-named-notehead-text",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The two SMuFL codepoint ranges limit where the representation advice applies; they do not introduce a required default or new predicate.",
@@ -206,7 +187,6 @@
     {
       "research_id": "MX40-PROSE-measure-text-hide",
       "decision": "reuse_xsd",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [
         "MX40-REQ-64882b6077ed80c7",
@@ -228,9 +208,6 @@
     {
       "research_id": "MX40-PROSE-position-resolution",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-relative-position-basis"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The relative-position relationship to placement, offset, and directive is preserved as a separately gated coordinate-basis contract.",
@@ -247,9 +224,6 @@
     {
       "research_id": "MX40-PROSE-image-scaling",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-image-resource-type"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Image type denotes MIME information; source and type requiredness are reused XSD clauses rather than scaling advice.",
@@ -266,9 +240,6 @@
     {
       "research_id": "MX40-PROSE-parallel-print-position",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-parallel-print-mismatch-outcome"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "A demonstrated cross-part mismatch produces unspecified layout behavior without automatic invalidity.",
@@ -285,9 +256,6 @@
     {
       "research_id": "MX40-PROSE-measure-identity",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-measure-label-domain"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Nonnumeric and nonunique labels retain their label semantics separately from consistency advice.",
@@ -304,7 +272,6 @@
     {
       "research_id": "MX40-PROSE-coda-sound",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Matching playback data is reliability advice and does not create a mandatory sound-presence fact for notation-only files.",
@@ -320,7 +287,6 @@
     {
       "research_id": "MX40-PROSE-segno-sound",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The record contains playback reliability advice without a new absent-value default or unconditional constraint.",
@@ -336,7 +302,6 @@
     {
       "research_id": "MX40-PROSE-barline-wavy-continue",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Continue is the recommended encoding, not a required effective type when a different type is present.",
@@ -352,9 +317,6 @@
     {
       "research_id": "MX40-PROSE-beat-repeat-stop",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-beat-repeat-state"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Slashes and use-dots defaults plus the first-unaffected-beat stop boundary are explicit context clauses.",
@@ -371,9 +333,6 @@
     {
       "research_id": "MX40-PROSE-measure-repeat-stop",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-measure-repeat-state"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Slashes default, ignored stop text, and first-ordinary-measure boundary are explicit context clauses.",
@@ -390,7 +349,6 @@
     {
       "research_id": "MX40-PROSE-barline-boundary-order",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Boundary placement and print/bookmark/link exceptions scope an advisory whose conflicting example remains gated.",
@@ -406,9 +364,6 @@
     {
       "research_id": "MX40-PROSE-symbol-semantic-markup",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-symbol-defaults-and-name"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Justify and enclosure defaults plus canonical-name reference meaning are kept apart from markup-choice advice.",
@@ -425,7 +380,6 @@
     {
       "research_id": "MX40-PROSE-harp-pedal-order",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The listed pedal sequence is recommended presentation order without a fixed missing-field default.",
@@ -441,7 +395,6 @@
     {
       "research_id": "MX40-PROSE-listening-distinct-targets",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Player and pass distinction define the comparison scope of the advice but introduce no missing-value scope default in this record.",
@@ -457,7 +410,6 @@
     {
       "research_id": "MX40-PROSE-metronome-tie-pair",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Separate-note pairing is recommended only; no new general sounding tie rule is derived.",
@@ -473,7 +425,6 @@
     {
       "research_id": "MX40-PROSE-principal-voice-symbol",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "None and plain are contextual recommended choices, not universal effective-symbol defaults.",
@@ -489,7 +440,6 @@
     {
       "research_id": "MX40-PROSE-sound-instrument-grouping",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Instrument grouping is recommended document arrangement without an independent ordering predicate.",
@@ -505,7 +455,6 @@
     {
       "research_id": "MX40-PROSE-swing-ratio-reduced",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Lowest-term notation is advisory and equivalent unreduced ratios remain covered by existing numeric semantics.",
@@ -521,9 +470,6 @@
     {
       "research_id": "MX40-PROSE-encoder-type",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-metadata-role-domain"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The role-string domain stays open and absent single-encoder type is not a new error.",
@@ -540,9 +486,6 @@
     {
       "research_id": "MX40-PROSE-creator-type",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-metadata-role-domain"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The shared open-role context preserves extension roles without converting role advice into requiredness.",
@@ -559,7 +502,6 @@
     {
       "research_id": "MX40-PROSE-supports-reporting",
       "decision": "reuse_context",
-      "check_ids": [],
       "related_research_ids": [
         "MX40-PROSE-supports-absence-meaning"
       ],
@@ -579,7 +521,6 @@
     {
       "research_id": "MX40-PROSE-glyph-match-type",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Glyph-to-type semantic matching remains advisory, with external SMuFL availability as an evaluation prerequisite.",
@@ -595,9 +536,6 @@
     {
       "research_id": "MX40-PROSE-arrow-glyph-consistency",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-arrowhead-geometry"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Arrowhead denotes a head-only graphical component, separately from glyph-consistency advice.",
@@ -614,9 +552,6 @@
     {
       "research_id": "MX40-PROSE-assess-default",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-assess-target-scope"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Missing player and time-only produce all-player and all-pass target scopes independently of assessment preference.",
@@ -633,7 +568,6 @@
     {
       "research_id": "MX40-PROSE-backup-positive",
       "decision": "reuse_xsd",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [
         "MX40-REQ-4fbb86e9dfc60089",
@@ -659,7 +593,6 @@
     {
       "research_id": "MX40-PROSE-backup-no-boundary-cross",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The record recommends boundaries and explicitly does not establish full-meter duration equality.",
@@ -675,7 +608,6 @@
     {
       "research_id": "MX40-PROSE-forward-positive",
       "decision": "reuse_xsd",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [
         "MX40-REQ-e3746acc0499ad49",
@@ -703,7 +635,6 @@
     {
       "research_id": "MX40-PROSE-forward-no-boundary-cross",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Boundary advice does not create a new voice-completeness or full-measure fill requirement.",
@@ -719,7 +650,6 @@
     {
       "research_id": "MX40-PROSE-multi-instrument-note",
       "decision": "reuse_xsd",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [
         "MX40-REQ-d0c62bedc11f1bb4"
@@ -739,7 +669,6 @@
     {
       "research_id": "MX40-PROSE-listen-distinct-targets",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The record scopes a target-distinction recommendation to one note and supplies no new target default.",
@@ -755,9 +684,6 @@
     {
       "research_id": "MX40-PROSE-tie-attack-release",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-attack-release-units"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Independent divisions-based timing values are preserved separately from endpoint-specific advice against them.",
@@ -774,7 +700,6 @@
     {
       "research_id": "MX40-PROSE-slur-pair-usual",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "This descriptive background prevents unsupported universal closure checks and is deliberately not a context requirement.",
@@ -790,9 +715,6 @@
     {
       "research_id": "MX40-PROSE-lyric-literal-hyphen",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-lyric-hyphen-and-syllabic"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Literal text content and structural syllabic meaning remain separate without inventing a linguistic correctness predicate.",
@@ -809,7 +731,6 @@
     {
       "research_id": "MX40-PROSE-tie-pitch-equivalence",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The equivalence recommendation retains visual navigation and let-ring exceptions without a universal pitch predicate.",
@@ -825,7 +746,6 @@
     {
       "research_id": "MX40-PROSE-unmeasured-tremolo-zero",
       "decision": "reuse_xsd",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [
         "MX40-REQ-241a56f2808577de",
@@ -847,7 +767,6 @@
     {
       "research_id": "MX40-PROSE-double-note-tremolo-duration",
       "decision": "reuse_context",
-      "check_ids": [],
       "related_research_ids": [
         "MX40-PROSE-time-modification-cumulative"
       ],
@@ -867,7 +786,6 @@
     {
       "research_id": "MX40-PROSE-percussion-clef-unpitched",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The effective clef is an advisory prerequisite, not an unconditional pitch-branch prohibition.",
@@ -883,7 +801,6 @@
     {
       "research_id": "MX40-PROSE-group-link-match",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The target comparison is advisory and unavailable external content yields unknown under its explicit dependency contract.",
@@ -899,7 +816,6 @@
     {
       "research_id": "MX40-PROSE-octave-change-interval",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Interval-size encoding is a should-level preference, not an extra integer-range predicate.",
@@ -915,7 +831,6 @@
     {
       "research_id": "MX40-PROSE-mxl-entry-name-utf8",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "UTF-8 is a compatibility recommendation without a mandatory legacy-archive rejection.",
@@ -931,7 +846,6 @@
     {
       "research_id": "MX40-PROSE-mxl-mimetype-first",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Entry order, ASCII media string, and presence are all part of the recommended encoding and version exceptions.",
@@ -947,7 +861,6 @@
     {
       "research_id": "MX40-PROSE-musicxml-file-types",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Extensions and media types are format-signaling recommendations, not evidence of XML validity.",
@@ -963,7 +876,6 @@
     {
       "research_id": "MX40-PROSE-tie-stop-start-same-note",
       "decision": "reuse_context",
-      "check_ids": [],
       "related_research_ids": [
         "MX40-PROSE-start-stop-score-order"
       ],
@@ -983,7 +895,6 @@
     {
       "research_id": "MX40-PROSE-one-divisions-per-part",
       "decision": "reuse_context",
-      "check_ids": [],
       "related_research_ids": [
         "MX40-PROSE-attribute-score-order",
         "MX40-PROSE-divisions-tuplet-units"
@@ -1005,7 +916,6 @@
     {
       "research_id": "MX40-PROSE-xlink-actuate-behavior",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Traversal trigger descriptions are recommendations and application choices; they supply no authority to perform network actions.",
@@ -1021,9 +931,6 @@
     {
       "research_id": "MX40-PROSE-xlink-show-behavior",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-xlink-show-default"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The replace attribute-group default and application-defined other or none behavior are mapped separately from display recommendations.",
@@ -1040,7 +947,6 @@
     {
       "research_id": "MX40-PROSE-css-size-guidelines",
       "decision": "advisory_only",
-      "check_ids": [],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "Relative CSS size factors are explicitly approximate renderer guidance rather than exact fixed dimensions.",
@@ -1056,9 +962,6 @@
     {
       "research_id": "MX40-PROSE-slash-start-stop",
       "decision": "additional_context",
-      "check_ids": [
-        "CHECK-context-slash-stop-boundary"
-      ],
       "related_research_ids": [],
       "related_xsd_research_ids": [],
       "rationale": "The first beat without slash is an actual state-transition fact, even though endpoint completeness is advisory.",

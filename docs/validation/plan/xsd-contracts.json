@@ -34,11 +34,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -87,11 +87,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -141,11 +141,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -199,11 +199,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -264,11 +264,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -318,11 +318,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -377,11 +377,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -436,11 +436,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -492,11 +492,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -555,11 +555,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -614,11 +614,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -669,11 +669,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -724,11 +724,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -778,11 +778,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -832,11 +832,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -886,11 +886,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -940,11 +940,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -994,11 +994,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1048,11 +1048,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1102,11 +1102,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1158,11 +1158,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1219,11 +1219,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1273,11 +1273,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1327,11 +1327,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1384,11 +1384,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1450,11 +1450,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1504,11 +1504,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1560,11 +1560,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1623,11 +1623,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1686,11 +1686,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1749,11 +1749,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1810,11 +1810,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1864,11 +1864,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1918,11 +1918,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -1972,11 +1972,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2026,11 +2026,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2082,11 +2082,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2145,11 +2145,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2206,11 +2206,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2260,11 +2260,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2314,11 +2314,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2368,11 +2368,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2422,11 +2422,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2476,11 +2476,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2530,11 +2530,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2584,11 +2584,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2638,11 +2638,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2692,11 +2692,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2746,11 +2746,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2800,11 +2800,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2854,11 +2854,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2908,11 +2908,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -2962,11 +2962,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -3016,11 +3016,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -3070,11 +3070,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -3124,11 +3124,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -3178,11 +3178,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -3232,11 +3232,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -3286,11 +3286,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {
@@ -3340,11 +3340,11 @@
     "status": "planned",
     "expected_outcomes": {
       "pass": "Known applicable condition holds (or a complete context fact is produced).",
-      "violation": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
-      "not_applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient.",
       "unknown": "Required instance fact is unavailable though its capability exists.",
       "unsupported": "Selected adapter/operator/provider lacks a required capability.",
-      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link."
+      "blocked": "Invalid prerequisite prevents a meaningful dependent comparison; preserve causal link.",
+      "fail": "Known applicable normative predicate is false; context providers instead retain invalid evidence and cause.",
+      "not-applicable": "Known antecedent false or subject outside the declared scope; missing information alone is insufficient."
     },
     "model_limit": "Current-model facts only. Each field needs an explicit presence/branch/order/value/lexeme capability binding before implementation acceptance; no historical source pass is inferred.",
     "model_evidence": {

@@ -20,6 +20,7 @@ import (
 type object map[string]any
 
 type plan struct {
+	planDir                                                                                                   string
 	docs                                                                                                      map[string]object
 	checks, instances, tests, requirements, stages, research, dispositions, questions, deferred, capabilities map[string]object
 }
@@ -46,7 +47,7 @@ func main() {
 }
 
 func load(dir string) (*plan, error) {
-	p := &plan{docs: map[string]object{}, checks: map[string]object{}, instances: map[string]object{}, tests: map[string]object{}, requirements: map[string]object{}, stages: map[string]object{}, research: map[string]object{}, dispositions: map[string]object{}, questions: map[string]object{}, deferred: map[string]object{}, capabilities: map[string]object{}}
+	p := &plan{planDir: dir, docs: map[string]object{}, checks: map[string]object{}, instances: map[string]object{}, tests: map[string]object{}, requirements: map[string]object{}, stages: map[string]object{}, research: map[string]object{}, dispositions: map[string]object{}, questions: map[string]object{}, deferred: map[string]object{}, capabilities: map[string]object{}}
 	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
 	if err != nil {
 		return nil, err
@@ -68,9 +69,6 @@ func load(dir string) (*plan, error) {
 		}
 		if str(d, "format") != "musicxml-validation-plan-1" {
 			return nil, fmt.Errorf("%s: unknown format", file)
-		}
-		if err := stringArrays(d); err != nil {
-			return nil, fmt.Errorf("%s: %w", file, err)
 		}
 		p.docs[filepath.Base(file)] = d
 		for _, set := range []struct {
@@ -190,9 +188,10 @@ func (p *plan) validate() error {
 	if str(snapshot, "registry_commit") != "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c" {
 		return fmt.Errorf("unexpected registry pin; review snapshot migration explicitly")
 	}
-	if len(p.research) != 2560 || len(p.instances) != 2218 || len(p.dispositions) != 291 || len(p.questions) != 28 || len(p.deferred) != 15 {
-		return fmt.Errorf("incomplete inventory: research=%d instances=%d dispositions=%d questions=%d deferred=%d", len(p.research), len(p.instances), len(p.dispositions), len(p.questions), len(p.deferred))
+	if err := p.validateCounts(snapshot); err != nil {
+		return err
 	}
+
 	ids := make([]string, 0, len(p.research))
 	for id := range p.research {
 		ids = append(ids, id)
@@ -250,6 +249,22 @@ func (p *plan) validate() error {
 				}
 			}
 		}
+		if err := links(c, "capability_ids", p.capabilities, true); err != nil {
+			return withID(id, err)
+		}
+		for _, cap := range stringsAt(c, "capability_ids") {
+			if !has(stringsAt(p.capabilities[cap], "check_ids"), id) {
+				return fmt.Errorf("%s asymmetric capability %s", id, cap)
+			}
+		}
+		labels := []string{}
+		for _, capID := range stringsAt(c, "capability_ids") {
+			labels = append(labels, str(p.capabilities[capID], "label"))
+		}
+		if !sameStrings(labels, stringsAt(c, "capabilities")) {
+			return fmt.Errorf("%s capability labels disagree with IDs", id)
+		}
+
 		if !has([]string{"planned", "decision_required", "optional", "retained_advisory", "excluded"}, str(c, "status")) {
 			return fmt.Errorf("%s invalid check status", id)
 		}
@@ -260,6 +275,16 @@ func (p *plan) validate() error {
 		}
 		if !has(roles, str(c, "role")) {
 			return fmt.Errorf("%s invalid role", id)
+		}
+		if outcomes, ok := c["expected_outcomes"].(map[string]any); ok {
+			if len(outcomes) != 6 {
+				return fmt.Errorf("%s invalid outcome vocabulary", id)
+			}
+			for _, outcome := range []string{"pass", "fail", "not-applicable", "unknown", "unsupported", "blocked"} {
+				if str(outcomes, outcome) == "" {
+					return fmt.Errorf("%s missing outcome %s", id, outcome)
+				}
+			}
 		}
 		if c["revision"] != float64(1) {
 			return fmt.Errorf("%s invalid revision", id)
@@ -294,6 +319,7 @@ func (p *plan) validate() error {
 			}
 		}
 	}
+	policies, _ := p.docs["xsd-contracts.json"]["target_policies"].(map[string]any)
 	for id, i := range p.instances {
 		if i["revision"] != float64(1) || str(i, "status") != "planned" {
 			return fmt.Errorf("%s invalid instance revision/status", id)
@@ -316,7 +342,6 @@ func (p *plan) validate() error {
 				return withID(id, err)
 			}
 		}
-		policies, _ := p.docs["xsd-contracts.json"]["target_policies"].(map[string]any)
 		if _, ok := policies[str(i, "target_policy")]; !ok {
 			return fmt.Errorf("%s missing target policy", id)
 		}
@@ -384,6 +409,27 @@ func (p *plan) validate() error {
 				return fmt.Errorf("%s invalid test target %s", id, target)
 			}
 		}
+		for _, contractID := range append(stringsAt(t, "check_ids"), stringsAt(t, "requirement_ids")...) {
+			for _, target := range stringsAt(t, "targets") {
+				if !has(stringsAt(all[contractID], "targets"), target) {
+					return fmt.Errorf("%s target %s exceeds contract %s", id, target, contractID)
+				}
+			}
+		}
+		axisStatus, ok := t["axis_status"].(map[string]any)
+		if !ok {
+			return fmt.Errorf("%s missing axis status", id)
+		}
+		for _, axis := range []string{"positive", "negative", "boundary", "missing_fact", "interaction"} {
+			status := str(axisStatus, axis)
+			if !has([]string{"generic", "parameterized", "record_specific"}, status) {
+				return fmt.Errorf("%s invalid %s axis status", id, axis)
+			}
+			if status != "record_specific" && str(t, "case_instantiation_gate") == "" {
+				return fmt.Errorf("%s missing case instantiation gate", id)
+			}
+		}
+
 		if !has([]string{"planned", "decision_required"}, str(t, "status")) {
 			return fmt.Errorf("%s test contract is not an executed test", id)
 		}
@@ -424,7 +470,7 @@ func (p *plan) validate() error {
 	}
 	for id, d := range p.deferred {
 		valid := false
-		for n := 1; n <= 15; n++ {
+		for n := 1; n <= p.inventoryCount("deferred_items"); n++ {
 			if id == fmt.Sprintf("D%02d", n) {
 				valid = true
 			}
@@ -494,16 +540,7 @@ func (p *plan) validate() error {
 			return withID(id, err)
 		}
 	}
-	for id, c := range p.checks {
-		if err := links(c, "capability_ids", p.capabilities, true); err != nil {
-			return withID(id, err)
-		}
-		for _, cap := range stringsAt(c, "capability_ids") {
-			if !has(stringsAt(p.capabilities[cap], "check_ids"), id) {
-				return fmt.Errorf("%s asymmetric capability %s", id, cap)
-			}
-		}
-	}
+
 	for id, c := range p.capabilities {
 		if err := nonempty(c, "label", "kind", "provider_status", "closure", "missing_outcome", "targets"); err != nil {
 			return withID(id, err)
@@ -524,7 +561,7 @@ func (p *plan) validate() error {
 		}
 	}
 	advisories := rows(p.docs["advisory-clause-review.json"], "advisory_clause_reviews")
-	if len(advisories) != 59 {
+	if len(advisories) != p.inventoryCount("advisory_reviews") {
 		return fmt.Errorf("incomplete compound-advisory review")
 	}
 	seenAdvisory := map[string]bool{}
@@ -609,20 +646,13 @@ func (p *plan) validateTraceability(snapshot object) error {
 			return fmt.Errorf("unmapped candidate %s", id)
 		}
 	}
-	for _, d := range p.docs {
-		for _, raw := range rows(d, "overlap_reviews") {
-			id := str(raw, "research_id")
-			if _, ok := p.research[id]; !ok {
-				return fmt.Errorf("orphan overlap %s", id)
-			}
-			if err := links(raw, "xsd_research_ids", p.research, false); err != nil {
-				return withID(id, err)
-			}
-			if err := nonempty(raw, "shared_condition", "additional_condition", "disposition", "justification"); err != nil {
-				return withID(id, err)
-			}
-		}
+	if err := p.validateOverlaps(); err != nil {
+		return err
 	}
+	if err := p.validateDeferredInventory(snapshot); err != nil {
+		return err
+	}
+
 	return nil
 }
 func keys(m map[string]object) []string {
@@ -716,15 +746,21 @@ func (p *plan) verifyRegistry(root string) error {
 	for _, m := range rows(documents["occurrence-requirement-map.json"], "mapping") {
 		occurrenceMap[str(m, "occurrence_id")] = stringsAt(m, "requirement_ids")
 	}
-	if len(occurrenceMap) != 2939 {
+	if len(occurrenceMap) != p.inventoryCount("occurrence_mappings") {
 		return fmt.Errorf("incomplete external occurrence map")
 	}
 	for _, item := range raw {
-		ext := item.(map[string]any)
+		ext, err := externalRecord(item)
+		if err != nil {
+			return err
+		}
 		if str(ext, "registry_origin") != "XSD" {
 			continue
 		}
-		r := ext["record"].(map[string]any)
+		r, ok := ext["record"].(map[string]any)
+		if !ok {
+			return fmt.Errorf("external XSD record %s lacks record object", str(ext, "id"))
+		}
 		rid := str(ext, "id")
 		instance := p.instances["INSTANCE-"+rid]
 		expected := map[string]map[string]bool{"schema_component": {}, "language_semantics": {}}
@@ -783,7 +819,7 @@ func (p *plan) verifyRegistry(root string) error {
 			overlaps[id] = r
 		}
 	}
-	if len(overlaps) != 342 {
+	if len(overlaps) != p.inventoryCount("overlap_reviews") {
 		return fmt.Errorf("incomplete prose overlap inventory")
 	}
 	for _, rel := range rows(documents["reconciliation.json"], "relations") {
@@ -876,7 +912,7 @@ func stringArrays(value any) error {
 		return stringArrays(map[string]any(v))
 	case map[string]any:
 		known := map[string]bool{}
-		for _, k := range []string{"inputs", "targets", "capabilities", "capability_ids", "provider_requirement_ids", "dependencies", "normative_provenance", "test_contracts", "check_ids", "requirement_ids", "research_ids", "requirements", "source_bullets", "depends_on", "acceptance", "reuse_instances", "contextual_research_ids", "xsd_research_ids", "schema_component", "language_semantics", "candidate_prose_ids", "deferred_source_bullets", "primary_check_ids", "reuse_check_ids", "related_research_ids", "related_xsd_research_ids", "positive", "negative", "boundary", "missing_fact", "interaction"} {
+		for _, k := range []string{"inputs", "targets", "capabilities", "capability_ids", "provider_requirement_ids", "dependencies", "normative_provenance", "test_contracts", "check_ids", "requirement_ids", "research_ids", "requirements", "source_bullets", "depends_on", "acceptance", "reuse_instances", "contextual_research_ids", "xsd_research_ids", "schema_component", "language_semantics", "candidate_prose_ids", "deferred_source_bullets", "primary_check_ids", "reuse_check_ids", "related_research_ids", "related_xsd_research_ids", "additional_condition_check_ids", "positive", "negative", "boundary", "missing_fact", "interaction"} {
 			known[k] = true
 		}
 		for key, item := range v {
@@ -884,7 +920,7 @@ func stringArrays(value any) error {
 			collection := document && (key == "test_contracts" || key == "requirements")
 			_, identified := v["id"]
 			_, research := v["research_id"]
-			_, cases := v["positive"]
+			_, cases := v["positive"].([]any)
 			_, graph := v["schema_component"]
 			structured := document || identified || research || cases || graph
 			if known[key] && !collection && structured {

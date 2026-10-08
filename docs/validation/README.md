@@ -16,7 +16,8 @@ a new public API, or a claim of complete validation by the current library.
    concrete component/API boundaries, evidence, lifecycle, context, diagnostics,
    compatibility, and bounded implementation seams; no production implementation.
 3. [Catalog and test-coverage plan](catalog-and-test-plan.md): explicit record dispositions,
-   clause/test contracts, deferred-work traceability and automated planning integrity.
+   clause/test contracts, [published deferred source](deferred-inventory.md),
+   deferred-work traceability and automated planning integrity.
 4. [Existing-code map](existing-code-map.md): reuse candidates, confirmed gaps,
    model evidence, compatibility, and first implementation candidates.
 5. [Sources and coverage](sources-and-coverage.md): the pinned publication, what was
