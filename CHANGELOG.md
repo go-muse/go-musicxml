@@ -26,6 +26,13 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Permit the exact standard `xsi:schemaLocation` and
+  `xsi:noNamespaceSchemaLocation` names on complex-typed elements in the
+  internal XML validator, as already permitted on simple-typed elements.
+  Hints do not fetch or replace the pinned schema. Their value semantics,
+  full `xsi:type` / `xsi:nil` validation and strict-source integration remain
+  deferred; public `Validate` still assesses the encoded model.
+
 - Preserve lexical namespace-declaration provenance in the internal XML
   validator, so ordinary attributes bound to the literal URI `xmlns` cannot
   bypass attribute checks. Actual declarations and public Decode behavior

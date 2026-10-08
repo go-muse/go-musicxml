@@ -956,9 +956,14 @@ func (c *validationContext) validateAttributes(
 		if validationNamespaceDeclaration(attribute) {
 			continue
 		}
-		if attribute.Name.Space == validationXSINamespace &&
-			attribute.Name.Local == "nil" {
-			continue
+		if attribute.Name.Space == validationXSINamespace {
+			switch attribute.Name.Local {
+			case "nil", "schemaLocation", "noNamespaceSchemaLocation":
+				// XSD 1.0 cvc-complex-type 3 permits these standard names.
+				// Hint values do not select or fetch a schema here; their
+				// lexical/list/pair contracts remain separate work.
+				continue
+			}
 		}
 
 		name := validationName(attribute.Name)

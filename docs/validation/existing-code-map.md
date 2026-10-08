@@ -77,8 +77,11 @@ four standard schema-instance attribute names on simple elements. Their previous
 acceptance is preserved here, and unknown `xsi` names are rejected. The existing
 `xsi:nil` handling is unchanged. Full value/type/nillability contracts for all
 four names (`REQ-DEF-XSI-*`, `DEF02-03/04`) remain open, including the known
-complex-type rejection of `xsi:type` and schema-location hints. Permitting a
-standard name is not evidence that its value semantics have been checked.
+complex-type rejection of `xsi:type`. The later
+[schema-location name repair](#schema-location-hint-name-repair-update) removes
+complex-type rejection of the two hint names, without checking their values.
+Permitting a standard name is not evidence that its value semantics have been
+checked.
 
 Executable evidence is in
 [`validation_attributes_test.go`](../../validation_attributes_test.go):
@@ -130,6 +133,63 @@ full schema-instance semantics and machine-readable partial-implementation
 evidence remain separate work. The planning JSON's `status: planned` semantics
 are unchanged; these regressions do not complete `STAGE-DEF-01` or `STAGE-DEF-02`.
 
+## Schema-location hint name repair update
+
+The existing internal validator now permits the exact expanded names
+`{http://www.w3.org/2001/XMLSchema-instance}schemaLocation` and
+`{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation` on complex
+types, including complex simple-content. Simple types already permit them.
+This follows [XSD 1.0 cvc-complex-type clause 3][xsi-name-rule]; it does not
+implement the other schema-instance contracts. Unknown `xsi` names, unqualified
+lookalikes and foreign-namespace lookalikes still follow ordinary attribute
+validation. The existing `xsi:type`, `xsi:nil` and `xs:anyType` behavior is
+unchanged.
+
+This is only a **name-permissibility slice** of `REQ-DEF-XSI-SCHEMALOC` and
+`REQ-DEF-XSI-NONAMESPACE` (`DEF02-03/04`). Hint values are not validated: no
+lexical, list or namespace/location pair check is added. No schema is fetched
+or selected from a hint; the existing caller-selected score/opus schema stays
+in effect. Public Decode still drops unsupported source attributes, and public
+Validate still assesses Encode/reparse output. No strict-source API is added.
+The planning JSON requirements and their `status: planned` remain unchanged.
+
+Executable evidence is in
+[`validation_schema_hints_test.go`](../../validation_schema_hints_test.go).
+`validationSchemaHintCases` adds identical raw-source fixtures to both
+`TestValidateElementAttributeContracts` and the required Linux oracle test
+`TestElementAttributeContractsAgainstSchema`. Cases include partwise/timewise
+and opus roots, complex content, complex simple-content, named/builtin simple
+types, alternate and inherited/rebound prefixes, exact-name negative controls,
+and ordinary required/enumeration/datatype/fixed/content failures beside hints.
+`TestSchemaLocationHintsDoNotFetch` uses a live HTTP request counter with valid
+and invalid documents; `TestSchemaLocationHintsPreservePublicModelValidation`
+checks the existing public model boundary.
+
+### Deferred hint-value reconciliation
+
+[XSD 1.0 section 3.2.7][xsi-declarations] defines `schemaLocation` as a list of
+`anyURI`, and `noNamespaceSchemaLocation` as `anyURI`.
+[Section 4.3.2][xsi-location-pairs] separately describes namespace/location pairs
+for schema discovery. The plan's `TEST-DEF-XSI-SCHEMALOC` expects an odd number
+of tokens to fail the pair contract. Before implementing that contract, establish
+which normative assessment layer owns that rejection and distinguish it from
+the built-in list datatype and this library's fixed-schema, no-fetch policy.
+
+A stage-selection probe with xmllint/libxml2 2.9.14, `--nonet`, and explicit
+pinned `opus.xsd` accepted odd token counts and candidate values `%` and
+`http://[invalid` for the standard hints. **That leniency is not evidence that
+these values are normatively valid.** It shows that this oracle invocation
+cannot establish the deferred lexical/pair outcomes. The name-allowance tests
+therefore use ordinary valid URI hints and do not freeze malformed-value
+acceptance as a compatibility requirement. Implementing hint lexical/pair
+semantics, reconciling the oracle evidence with the cited normative rules,
+full `xsi:type` / `xsi:nil` handling, strict-source integration and checked
+machine-readable implementation evidence remain separate work.
+
+[xsi-name-rule]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type
+[xsi-declarations]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation
+[xsi-location-pairs]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc
+
 ## Reuse and adaptation
 
 | Existing component | Proposed use | Required adaptation or verification |
@@ -173,10 +233,12 @@ explicitly below, while other limits remain open.
   reject them through [`xml_wellformedness.go`](../../xml_wellformedness.go),
   including skipped subtrees. See the [repair update](#xml-reading-repair-update)
   for current coverage; future strict-source integration remains open.
-- **xsi semantics:** `xsi:noNamespaceSchemaLocation` is rejected as an unallowed
-  attribute by the current source path. The proposed fix is the standard
-  attribute contract, not blanket acceptance of every xsi value. `xsi:type`
-  and `xsi:nil` also require their own semantic checks.
+- **xsi semantics:** The pinned baseline rejected schema-location hints on
+  complex types as unallowed attributes. The existing validator now permits
+  their exact standard names; see the [name repair](#schema-location-hint-name-repair-update).
+  Hint lexical/list/pair semantics are still unchecked and require the standard
+  attribute contracts. `xsi:type` and `xsi:nil` also require their own semantic
+  checks.
 - **Integer value space:** `staves=18446744073709551616` is accepted by libxml2
   against the pinned schema but rejected by the current scalar checker.
   Its [`ParseInt`/unsigned parsing branches](https://github.com/go-muse/go-musicxml/blob/e486735cd6e4537e839ff67704b7768a9df3bdb3/validation.go#L1410-L1440)

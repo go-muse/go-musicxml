@@ -107,7 +107,7 @@ func validationAttributeCases() []validationAttributeCase {
 			path: "/opus/score/@{http://www.w3.org/1999/xlink}type",
 		})
 	}
-	return tests
+	return append(tests, validationSchemaHintCases()...)
 }
 
 // Raw XML is deliberate: Decode discards attributes that the typed model cannot
