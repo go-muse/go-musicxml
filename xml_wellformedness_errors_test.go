@@ -3,12 +3,46 @@ package musicxml
 import (
 	"bytes"
 	"encoding/xml"
+	"strings"
 	"testing"
 	"testing/iotest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestXMLWellFormednessWithoutPosition(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		name    string
+		input   string
+		message string
+	}{
+		{"lexical duplicate", `<root a="1" a="2"/>`, "duplicate XML attribute {}a"},
+		{"expanded duplicate", `<root xmlns:p="urn:x" xmlns:q="urn:x" p:a="1" q:a="2"/>`, "duplicate XML attribute {urn:x}a"},
+		{"prefix undeclaration", `<root xmlns:p=""/>`, `namespace prefix undeclaring is not allowed: "p"`},
+		{"in-root doctype", `<root><!DOCTYPE root></root>`, "DOCTYPE must precede the root element"},
+		{"repeated doctype", `<!DOCTYPE root><!DOCTYPE root><root/>`, "multiple DOCTYPE declarations"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			reader := &wellFormedXMLTokenReader{
+				source: rawXMLTokenReader{xml.NewDecoder(strings.NewReader(test.input))},
+			}
+			var err error
+			if !assert.NotPanics(t, func() {
+				for err == nil {
+					_, err = reader.Token()
+				}
+			}) {
+				return
+			}
+			var syntaxError *xml.SyntaxError
+			require.ErrorAs(t, err, &syntaxError)
+			assert.Zero(t, syntaxError.Line)
+			assert.Equal(t, test.message, syntaxError.Msg)
+		})
+	}
+}
 
 func TestXMLWellFormednessErrorPositions(t *testing.T) {
 	t.Parallel()

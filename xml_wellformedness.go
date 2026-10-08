@@ -134,6 +134,9 @@ func (r *wellFormedXMLTokenReader) checkAttributes(attributes []xml.Attr) error 
 func (r *wellFormedXMLTokenReader) syntaxError(format string, arguments ...any) error {
 	// Token wrappers do not track byte positions. Use the innermost XML
 	// decoder's position after the offending token, including UTF-16 input.
-	line, _ := r.position()
+	line := 0
+	if r.position != nil {
+		line, _ = r.position()
+	}
 	return &xml.SyntaxError{Msg: fmt.Sprintf(format, arguments...), Line: line}
 }
