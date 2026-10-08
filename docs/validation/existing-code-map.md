@@ -17,14 +17,30 @@ and broader deferred contracts below are not a claim of completed validation.
 
 ## XML-reading follow-ups
 
-The following items from [PR #14 review](https://github.com/go-muse/go-musicxml/pull/14#pullrequestreview-5459364076)
-are explicitly **deferred**, not completed by the existing-reader repair:
+The XML-declaration-ordering follow-up from [PR #14 review](https://github.com/go-muse/go-musicxml/pull/14#pullrequestreview-5459364076)
+is now repaired in the existing readers by
+[`xml_wellformedness.go`](../../xml_wellformedness.go). A declaration must be
+first after any encoding signature; whitespace, comments, processing
+instructions, DOCTYPE and root content may not precede it. Case variants of the
+exact reserved PI target `xml` are rejected, while `xml-stylesheet` and other
+ordinary targets remain accepted. These rules follow XML 1.0
+[productions 22-23](https://www.w3.org/TR/REC-xml/#sec-prolog-dtd) and
+[production 17](https://www.w3.org/TR/REC-xml/#sec-pi).
 
-- **XML declaration ordering:** enforce the XML-declaration-first rule in a
-  separate bounded XML-reading change. Cover declarations after whitespace,
-  comments, DOCTYPE and root content, plus valid first/omitted declarations
-  across supported encodings and skipped paths. Current `encoding/xml`
-  tolerance remains in place; this repair does not claim full prolog grammar.
+Executable evidence is in [`xml_declaration_test.go`](../../xml_declaration_test.go)
+(`TestXMLDeclarationDecodePaths`, `TestXMLDeclarationContainer`,
+`TestXMLDeclarationValidationParser`, `TestXMLDeclarationLinkedResources`,
+`TestXMLDeclarationReservedTargets`) and the declaration cases in
+[`xml_wellformedness_errors_test.go`](../../xml_wellformedness_errors_test.go).
+Public decode paths retain supported encodings and cover skipped subtrees,
+MXL root/container documents, deferred linked-document parsing and error
+wrapping/positions. The internal Encode/reparse validation helper retains its
+existing plain UTF-8 input contract. Full declaration pseudo-attribute grammar,
+DTD syntax, broader XML/namespace conformance and strict-source integration
+remain outside this repair.
+
+The following review follow-up is still explicitly **deferred**:
+
 - **Machine-readable implementation evidence:** add a reviewed `implemented_by`
   or `evidence` contract to the planning format and its integrity checker.
   Link partial requirement/test implementations to PRs, commits, source files

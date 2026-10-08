@@ -61,21 +61,27 @@ XML reading rejects duplicate attributes (including collisions after namespace
 expansion) and repeated DOCTYPE declarations or declarations inside/after the
 root, even in skipped unknown or foreign-namespace subtrees. A single prolog
 DOCTYPE is accepted without loading external DTDs; an XML declaration is not
-required. These checks also apply to MXL container metadata and documents
-parsed while resolving opus links. They do not add DTD validation or strict
-MusicXML validation. Empty prefixed namespace declarations such as `xmlns:p=""`
-are rejected under Namespaces in XML 1.0; resetting the default namespace with
-`xmlns=""` remains allowed.
+required. If present, the XML declaration must be first, before whitespace,
+comments, processing instructions or DOCTYPE; an encoding byte order mark is
+allowed before it. Repeated declarations and all other case variants of the
+exact processing-instruction target `xml` are rejected. Ordinary targets such
+as `xml-stylesheet` remain allowed. These checks also apply to MXL container
+metadata and documents parsed while resolving opus links. They do not add DTD
+validation or strict MusicXML validation. Empty prefixed namespace declarations
+such as `xmlns:p=""` are rejected under Namespaces in XML 1.0; resetting the
+default namespace with `xmlns=""` remains allowed.
 
-Duplicate-attribute, DOCTYPE-placement and empty-prefix-declaration errors wrap
+Duplicate-attribute, DOCTYPE-placement, XML-declaration-placement,
+reserved-XML-target and empty-prefix-declaration errors wrap
 `*xml.SyntaxError`, available through `errors.As`. Its `Line` is the innermost
 XML decoder's detection position after reading the offending token; for a
 multiline token this is its end line, not the attribute's start line. Existing
 resource-limit and encoding errors retain their separate error contracts.
 
-Full prolog grammar is not checked here: XML declaration ordering is still
-handled by `encoding/xml`, which can accept `<?xml ...?>` after a DOCTYPE.
-Enforcement of that ordering is a [tracked follow-up](docs/validation/existing-code-map.md#xml-reading-follow-ups).
+These are bounded XML-reading checks, not complete prolog or XML-declaration
+pseudo-attribute grammar validation. The declaration's contents and DTD syntax
+remain subject to the existing `encoding/xml` behavior; no DTD is parsed or
+fetched by this additional token check.
 
 When the expected root type is known, `DecodeScorePartwise`,
 `DecodeScoreTimewise`, and `DecodeOpusDocument` return the corresponding
@@ -97,9 +103,9 @@ inside generated ordered `Content`, and `Encode` does not reproduce them.
 
 Direct `encoding/xml` unmarshalling of generated types applies the same
 ordered-content filtering. It does not apply the package decoder's character
-encoding support, configurable XML-depth limit, duplicate-attribute/DOCTYPE
-checks, or foreign-namespace filtering for ordinary struct fields, nor the
-encoder's XML-text preflight. Go's
+encoding support, configurable XML-depth limit, duplicate-attribute/DOCTYPE/
+XML-declaration checks, or foreign-namespace filtering for ordinary struct
+fields, nor the encoder's XML-text preflight. Go's
 `encoding/xml` matches unqualified struct tags by local name, so `Decode` and
 its typed variants remain the recommended document entry points.
 

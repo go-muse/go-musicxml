@@ -26,6 +26,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reject misplaced or repeated XML declarations and reserved case variants of
+  the exact `xml` processing-instruction target across document and MXL reads.
+  First or omitted declarations, encoding signatures and ordinary targets such
+  as `xml-stylesheet` remain supported.
 - Reject duplicate XML attributes, including namespace-expanded collisions,
   and repeated or misplaced DOCTYPE declarations before model filtering,
   including skipped subtrees, MXL metadata, and linked documents. Legal
