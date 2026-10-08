@@ -19,7 +19,7 @@ Deferred to implementation design and review:
 - Public Go API, package placement, frozen rule IDs, exact operator syntax, and the sentinel-error migration policy.
 - Concrete model capability mapping, complete predicate/test coverage, and contextual or external-dependency closure for each claimed profile.
 - Staged musical-time and package/link support; prerequisites of selected rules still have to be satisfied.
-- A separate packaging/generation decision for the research registries. This proposal keeps the evidence in the repository.
+- Future registry revision selection and generation workflows. The current research evidence is pinned in the separate registry repository; this library keeps package-facing design documents.
 
 The [existing-code map](existing-code-map.md) identifies reuse candidates, verified gaps, model limits, error compatibility, and a bounded candidate backlog.
 
@@ -64,7 +64,7 @@ The combined catalog contains **2,218 XSD contracts plus 342 prose records, tota
 
 Ordinary `Decode` should retain its permissive default behavior. Turning off the strict flag must not disable XML syntax checks, namespace checks, or protective limits. Separate model validation is useful after creating or editing a model and after permissive `Decode`; it does not require source validation first.
 
-Strict `Decode` must construct the model and validate the source together. Source facts are checked before information is lost, including simple attributes, unknown elements, and foreign namespaces. A strict decode can succeed only after EOF, completion of document-wide checks, and successful conversion to the model. If XML conforms to the standard but an exact number cannot be represented by the current Go model, that is a model-representability error, not a fabricated XSD violation. A schema-valid but unrepresentable document must remain distinguishable from a schema-invalid one.
+Strict `Decode` must construct the model and validate the source together. Source facts are checked before information is lost, including simple attributes, unknown elements, and foreign namespaces. A strict decode can succeed only after EOF, completion of document-wide checks, and successful conversion to the model. If XML conforms to the standard but an exact number cannot be represented by the current Go model, that is a model-representability error, not a fabricated XSD violation. A schema-valid but unrepresentable document must remain distinguishable from a schema-invalid one. Source conformance can be assessed with exact numeric values within explicit resource budgets even if Go-model conversion fails. If an implementation cannot assess the required value space, report that capability limit and incomplete assessment; exceeding a Go type's range is not evidence of an XSD violation.
 
 Results should expose independent notions of `conformance` and `assessment_complete`. Finding no violation when a mandatory check is unfinished or unsupported does not mean “valid.” Success always refers to a stated version, profile, and target.
 
@@ -112,6 +112,8 @@ A future `RuleDefinition` should describe:
 
 An expression or predicate must not be arbitrary executable code taken from a source. Prefer a small set of inspectable operators: presence/cardinality, scalar domain, sequence/choice grammar, conditional implication, uniqueness/reference, and relations over context. When necessary, add a new shared operator once with defined semantics. This does not yet select Go structures, DSL syntax, or a generator.
 
+Execution/reporting role and required dependencies are separate axes. A record can define a mandatory predicate, provide a context fact, or support an advisory, while independently requiring an external dictionary, linked document, or caller-supplied intent. "Needs external facts" is a capability/dependency statement, not a mutually exclusive fourth role and not a fixed rule outcome. Record both axes explicitly during formalization.
+
 Interpretations and defaults produce facts for mandatory checks; they do not automatically produce errors. For example, the default beam number of `1` participates in checking that one note's beam numbers are distinct. An inactive attribute that the specification says to ignore does not become an error merely because it is present.
 
 ### Avoiding duplicate validation
@@ -141,7 +143,7 @@ Implement XML and XSD semantics against pinned specifications, not a superficial
 
 ### Illustrative operator names
 
-The six [rule examples](registry/rule-definition-examples.json) use these names. This mapping explains their relationship to the families above; it does not define a finished DSL or approve executable implementations.
+The six [rule examples](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/rule-definition-examples.json) use these names. This mapping explains their relationship to the families above; it does not define a finished DSL or approve executable implementations.
 
 | Example name | Family and intended role |
 | --- | --- |
@@ -160,9 +162,11 @@ Source facts retain the lexical form needed after mandatory XML normalization, a
 
 Context services in the engine must be explicit: a document ID index, typed part/instrument/player indexes, part/measure timelines, effective attribute state, linked-document/package indexes, and external versioned dictionaries. Every check need not have all of these services. Source and model adapters may supply the same contextual facts in different ways.
 
+For `MX40-PROSE-instrument-link-target`, a local sub-contract may check the IDREF target's kind and scope using available document facts. Establishing the external part file's existence and content requires a separate resolver and a declared linked-document scope. A local success is only a partial result and must not be reported as a pass for the whole requirement while those external obligations remain unresolved. The resolver does not imply automatic network access; it can receive authorized or caller-supplied documents. If the rule is demonstrably inapplicable, report that separately from missing resolution capability.
+
 Musical order is not XML order. `backup`, `forward`, `chord`, and changes to `divisions` require a defined temporal model. Numeric and temporal comparisons must not silently round through `float64` if that changes the normative conclusion. Insufficient representation requires an explicit precision or context limitation. Do not invent initial C major, 4/4, treble clef, or `divisions=1`.
 
-A rule's outcome is one of: pass, violation, not-applicable, unknown, unsupported, or blocked-by-invalid-prerequisite. An unknown precondition is not false. If a scalar is already invalid, dependent musical calculations must not generate cascades of invented errors. Independent checks continue while structure and resource budgets permit.
+A rule's outcome is one of: pass, violation, not-applicable, unknown, unsupported, or blocked-by-invalid-prerequisite. An unknown precondition is not false. `not-applicable` is justified only when applicability is known to be false for the assessed document and scope. Missing facts for a possibly applicable obligation produce `unknown`, or `unsupported` when the implementation lacks the necessary capability; neither means `pass`. Outcomes are determined for each document, scope, and available facts. Do not assign a static outcome to a set of rules merely because those rules can depend on external context. If a scalar is already invalid, dependent musical calculations must not generate cascades of invented errors. Independent checks continue while structure and resource budgets permit.
 
 Document-scoped requirements may be unavailable when validating only a subtree. Such validation must report its scope and missing context rather than promise whole-document validity. A cyclic Go object graph, an invalid internal representation such as a nil slice element, or numeric unrepresentability belongs to the model contract. If nil means a required XML element or attribute is absent, however, the required/minOccurs violation remains a normative XSD defect on the model target; it must not be hidden among internal errors.
 
@@ -221,17 +225,20 @@ Grammar needs branch and repetition coverage; enumerations and facets need bound
 
 Readiness must be defined per profile: every mandatory applicable requirement has a check or an explicit, supported limitation; unresolved obligations are not masked by success; violations are not duplicated; explanations are available offline; source XML is parsed once; and model validation does not use serialization.
 
-## Repository research registry
+## External research registry
 
-Supporting research is stored under `docs/validation/registry/`:
+Supporting research is stored in the separate
+[go-musicxml-registry snapshot](https://github.com/go-muse/go-musicxml-registry/tree/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c),
+pinned to `3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c`. The links below point to
+that exact revision's `docs/validation/registry/` directory, not this library's tree:
 
-- [`catalog.json`](registry/catalog.json): the combined research catalog of 2,560 records, preserving IDs and original semantics.
-- [`reconciliation.json`](registry/reconciliation.json): checked XSD/prose relationships and a policy against duplicate validation without unproven merging.
-- [`coverage-reconciliation.json`](registry/coverage-reconciliation.json): final reconciliation of sources, references, and completeness boundaries.
-- [`rule-definition-examples.json`](registry/rule-definition-examples.json): six illustrative declarative rules; not code or a complete runtime catalog.
-- [`issues.json`](registry/issues.json): 28 issues with sources and recommended dispositions.
-- [`xsd/`](registry/xsd/) and [`prose/`](registry/prose/): supporting source and coverage registries and provenance, without a raw HTML cache.
-- [`manifest.json`](registry/manifest.json): the supporting registry inventory and file SHA-256 hashes.
+- [`catalog.json`](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/catalog.json): the combined research catalog of 2,560 records, preserving IDs and original semantics.
+- [`reconciliation.json`](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/reconciliation.json): checked XSD/prose relationships and a policy against duplicate validation without unproven merging.
+- [`coverage-reconciliation.json`](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/coverage-reconciliation.json): final reconciliation of sources, references, and completeness boundaries.
+- [`rule-definition-examples.json`](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/rule-definition-examples.json): six illustrative declarative rules; not code or a complete runtime catalog.
+- [`issues.json`](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/issues.json): 28 issues with sources and recommended dispositions.
+- [`xsd/`](https://github.com/go-muse/go-musicxml-registry/tree/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/xsd/) and [`prose/`](https://github.com/go-muse/go-musicxml-registry/tree/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/): supporting source and coverage registries and provenance, without a raw HTML cache.
+- [`manifest.json`](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/manifest.json): the supporting registry inventory and file SHA-256 hashes.
 
 The supporting data preserves all original fields, including Russian research paraphrases and source locators. Additive English fields cover the 51 constraint records, 28 issues, and six illustrative rules. The remaining 291 prose records retain their original descriptions pending translation; no translation replaces the original evidence. Research IDs, evidence relations, issue dispositions, and examples are preserved as research data; they do not freeze executable predicates or a public validation API.
 

@@ -184,8 +184,10 @@ type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
 
 See [`docs/validation`](docs/validation/README.md) for the proposed validation
 architecture, MusicXML 4.0 requirements catalog, source coverage, and open
-questions. These documents describe future work; they do not change the
-current API or claim that the proposal is implemented.
+questions. The research data lives separately in the
+[pinned registry snapshot](https://github.com/go-muse/go-musicxml-registry/tree/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c).
+These documents describe future work; they do not change the current API or
+claim that the proposal is implemented.
 
 ## Development
 

@@ -1,7 +1,7 @@
 # Open questions and proposed dispositions
 
 This English review guide summarizes all **28 stable issue IDs** in
-[the preserved issue registry](registry/issues.json). The dispositions below are
+[the preserved issue registry](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/issues.json). The dispositions below are
 research proposals, **not approved project policy**, implemented behavior, or new
 MusicXML requirements. Every issue record has `hard_error_basis: false`: an issue
 is not itself authority to reject a document. Clear formal constraints may still
@@ -10,7 +10,7 @@ be enforced on their own evidence.
 The issues mix editorial discrepancies, interpretation questions, and unfinished
 external dependencies. They are not all blockers to starting implementation.
 An issue-to-rule link normally means shared source context, not that every clause
-on that page is disputed; see [reconciliation](registry/reconciliation.json).
+on that page is disputed; see [reconciliation](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/reconciliation.json).
 Before implementing a disputed predicate, record its clause-level interpretation,
 scope, evidence, and disposition. Where evidence remains insufficient, preserve
 that uncertainty rather than inventing a hard error. The source registry retains

@@ -4,6 +4,12 @@ This is the source-accounting record for a **proposed** MusicXML 4.0 validation
 architecture. The accompanying catalog is research evidence, not an implemented
 validator, an approved conformance profile, or a test-coverage report. Counts and
 verification results below describe the recorded research run of 8 October 2026.
+The linked data is now maintained in the separate
+[registry repository](https://github.com/go-muse/go-musicxml-registry/tree/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c)
+at commit `3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c`; it is not vendored in this
+library's current tree. Its [import provenance](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/provenance/initial-import.json)
+records the byte-identical import from library commit
+`a7927e591e817ec8fddaab2ee4d33ccf80c37bd0`.
 
 ## Version and provenance
 
@@ -19,7 +25,7 @@ verification results below describe the recorded research run of 8 October 2026.
   and [Datatypes, Second Edition][datatypes]. The catalog's language summaries do
   not replace these specifications.
 
-[Source provenance](registry/xsd/source-provenance.json) records raw-file,
+[Source provenance](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/xsd/source-provenance.json) records raw-file,
 dated-listing HTML, and operative-tree SHA-256 hashes, exact public URLs, and the
 method used for each schema. The verification is deliberately narrower than a
 fresh byte-for-byte download of all six pinned Git files:
@@ -38,7 +44,7 @@ fresh byte-for-byte download of all six pinned Git files:
    provenance explicitly records no new full Git-object verification.
 
 The HTML study separately obtained the [official archive at the pinned
-commit][archive]. Its [provenance](registry/prose/github-archive-provenance.json)
+commit][archive]. Its [provenance](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/github-archive-provenance.json)
 records 5,634,909 bytes and SHA-256
 `57d8e41fae85e1c5b3747c8bb036bf7b56629904b2550f0c1892385e735c3b52`.
 That later archive retrieval does not retroactively strengthen the recorded
@@ -70,8 +76,8 @@ they need not have an XSD XPath or source-line field.
 
 ## Formal schema inventory
 
-The [source coverage](registry/xsd/source-coverage.json) and
-[combined reconciliation](registry/coverage-reconciliation.json) account for:
+The [source coverage](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/xsd/source-coverage.json) and
+[combined reconciliation](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/coverage-reconciliation.json) account for:
 
 | Schema | All XSD nodes | Operative occurrences | Documentation blocks | Explicit properties | QName reference tokens |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -110,11 +116,11 @@ element.
 
 ## Published prose corpus and exclusions
 
-The [coverage ledger](registry/prose/coverage-ledger.json) accounts for **974 discovered
+The [coverage ledger](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/coverage-ledger.json) accounts for **974 discovered
 dated HTML URLs**, with no unretrieved URL in the scoped corpus. Of these, 260 were
 retrieved directly from the dated W3C publication and 714 from the pinned official
 archive. All 260 overlapping pages had matching main text in the
-[archive comparison](registry/prose/archive-equivalence.json); this is not a
+[archive comparison](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/archive-equivalence.json); this is not a
 claim of byte-identical HTML or direct W3C retrieval of the other 714 pages.
 
 | Final page disposition | Pages |
@@ -138,17 +144,17 @@ element pages and 159 datatype pages excluding their indexes; 370 unique attribu
 descriptions; 414 datatype value-description rows; 203 reference introductory
 paragraphs not automatically matched to annotations; and 9 additional explanatory
 paragraphs from examples. These measures overlap and are not additional page
-totals. The repository's [coverage ledger](registry/prose/coverage-ledger.json)
+totals. The pinned registry's [coverage ledger](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/coverage-ledger.json)
 retains all 974 page records and 642 annotation records with their dispositions;
-see also [attribute coverage](registry/prose/html-attribute-coverage.json) and
-[prose verification](registry/prose/verification.json). The original 14,569-block
+see also [attribute coverage](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/html-attribute-coverage.json) and
+[prose verification](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/verification.json). The original 14,569-block
 HTML hash index is omitted from Git. Its aggregate counts and the original full
 ledger's SHA-256 are retained, but its detailed block evidence remains in the
 original research archive and cannot be reconstructed from these page summaries.
 
 ## What the catalog counts
 
-The [combined catalog](registry/catalog.json) has **2,560 records**:
+The [combined catalog](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/catalog.json) has **2,560 records**:
 
 - 2,218 XSD-side contracts: 2,171 explicit contracts, 30 XSD-language topic
   records, and 17 builtin-datatype records.
@@ -163,7 +169,7 @@ separate requirements to equal each value. Prose classification does not establi
 runtime severity, and an interpretation or default need not describe an invalid
 document at all.
 
-[Reconciliation](registry/reconciliation.json) labels prose/XSD overlap as 19
+[Reconciliation](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/reconciliation.json) labels prose/XSD overlap as 19
 full, 43 partial, and 280 none. Those are contract-context links, not a completed
 predicate-level equivalence proof. An issue link usually means shared source
 context; it does not automatically invalidate every rule from that page or type.
@@ -176,12 +182,12 @@ normative classification, source evidence, or predicate semantics.
 
 ## What was verified, and what remains outside the claim
 
-- The recorded [independent static check](registry/xsd/independent-verification.json)
+- The recorded [independent static check](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/xsd/independent-verification.json)
   ran 22,162 source-to-registry checks with zero failures. The
-  [schema assembly sanity check](registry/xsd/schema-compilation-check.json)
+  [schema assembly sanity check](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/xsd/schema-compilation-check.json)
   compiled all six schemas with local import resolution using libxml2. It ran no
   document-instance or product tests.
-- The [cross-registry check](registry/coverage-reconciliation.json) reconciled
+- The [cross-registry check](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/coverage-reconciliation.json) reconciled
   unique rule IDs, supplied prose-to-XSD and prose-to-issue links, and all 642
   documentation IDs and text hashes. This verifies recorded relationships, not
   the universal correctness of the extracted interpretations.
@@ -199,7 +205,7 @@ normative classification, source evidence, or predicate semantics.
   resource limits need explicit implementation boundaries. `container.xsd` does
   not validate a ZIP archive. Security policy and application heuristics must not
   be presented as new MusicXML norms. See
-  [scope and applicability](registry/xsd/scope-and-applicability.json).
+  [scope and applicability](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/xsd/scope-and-applicability.json).
 
 ## Attribution and hash boundaries
 
@@ -215,10 +221,10 @@ specification under the repository's license.
 Keep three integrity scopes distinct:
 
 1. Original-source hashes in
-   [XSD provenance](registry/xsd/source-provenance.json),
-   [archive provenance](registry/prose/github-archive-provenance.json), and the
+   [XSD provenance](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/xsd/source-provenance.json),
+   [archive provenance](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/prose/github-archive-provenance.json), and the
    prose ledgers identify the research inputs and their representations.
-2. [Packaging provenance](registry/packaging-provenance.json) records original
+2. [Packaging provenance](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/packaging-provenance.json) records original
    research-file digests, exclusions, and transformations. The English README is
    regenerated; Russian narrative reports and duplicate CSV views are omitted.
    The explicit-property table is omitted because its 3,958 property IDs and values
@@ -230,11 +236,14 @@ Keep three integrity scopes distinct:
    catalog. The XSD coverage file refers to the retained prose annotation records
    rather than repeating their handoff data; their IDs and hashes were verified
    to match. The detailed HTML block index is omitted as described above.
-3. [The regenerated registry manifest](registry/manifest.json) records current
-   packaged registry files, separately from original research-file and source
-   hashes. Its hashes attest to packaging integrity only; they neither replace
-   source hashes nor strengthen source-verification or implementation-coverage
-   claims.
+3. [The preserved registry manifest](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/manifest.json) records current
+   packaged registry files at the external pin, separately from original
+   research-file and source hashes. The standalone repository's
+   [MANIFEST.json](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/MANIFEST.json)
+   additionally covers its full publication. These hashes attest to packaging
+   integrity only; they neither replace source hashes nor strengthen
+   source-verification or implementation-coverage claims. Removing the local
+   registry copy does not rewrite Git history or remove its historical blobs.
 
 [report]: https://www.w3.org/2021/06/musicxml40/
 [release]: https://github.com/w3c-cg/musicxml/releases/tag/v4.0

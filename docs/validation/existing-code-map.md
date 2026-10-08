@@ -124,9 +124,20 @@ and **29 remaining candidate records**. These sets are disjoint in this snapshot
 The remaining applicability is 27 `both`, one `source`, and one `exporter`.
 This is a planning filter, not 29 proven independent executable predicates.
 
+A proposed review profile is a selection from this inventory, not a replacement
+for it. `MX40-PROSE-bend-release-negative` is already present in the
+[catalog](https://github.com/go-muse/go-musicxml-registry/blob/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c/docs/validation/registry/catalog.json).
+Its omission from a reviewer's candidate list does not indicate a missing catalog
+record or justify creating a duplicate. Selection still requires its bend-sequence
+context and exact value conditions.
+
 Useful early candidates are `accordion-at-least-one`, `beam-number-distinct`,
-typed instrument/part/player targets, `key-octave-cancel-exists`,
-`concert-score-transpose`, and `for-part-requires-concert`. Each still needs an
+local typed instrument/part/player targets, `key-octave-cancel-exists`,
+`concert-score-transpose`, and `for-part-requires-concert`. For
+`instrument-link-target`, keep the local IDREF type/scope sub-contract separate
+from checking the linked part file: that external existence/content obligation
+requires a resolver. Passing the local sub-contract does not establish a pass
+for the whole requirement. Each still needs an
 exact selector, prerequisites, target capabilities, and positive/negative/boundary
 cases before becoming executable.
 
@@ -139,4 +150,8 @@ cannot be omitted or guessed.
 Renderer/exporter labels are not automatic exclusion from validation work.
 Defaults and interpretations can supply context facts; exporter recommendations
 can be optional advisories; some obligations need external intent or application
-state. Assign the execution/reporting role per record during formalization.
+state. Assign the execution/reporting role per record during formalization,
+and record dependencies/capabilities separately. A mandatory predicate or context
+fact may itself require external information. Missing required facts produce
+unknown/unsupported assessment, not automatic not-applicable or pass; applicability
+and outcomes depend on the actual document and scope.
