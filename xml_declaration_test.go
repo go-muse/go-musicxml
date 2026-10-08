@@ -14,11 +14,7 @@ import (
 
 // DECL is replaced with a declaration matching each test's byte encoding.
 // The fixtures exercise placement, not the full XML declaration grammar.
-var xmlDeclarationCases = []struct {
-	name  string
-	input string
-	valid bool
-}{
+var xmlDeclarationCases = []xmlReadingCase{
 	{"first", `DECL<ROOT><KNOWN>Keep</KNOWN></ROOT>`, true},
 	{"first before misc and doctype", "DECL\n<!-- comment --><?test ok?><!DOCTYPE ROOT><ROOT><KNOWN>Keep</KNOWN></ROOT>", true},
 	{"omitted", `<ROOT><KNOWN>Keep</KNOWN></ROOT>`, true},
@@ -41,130 +37,19 @@ var xmlDeclarationCases = []struct {
 }
 
 func TestXMLDeclarationDecodePaths(t *testing.T) {
-	t.Parallel()
-	for _, root := range []string{"score-partwise", "score-timewise", "opus"} {
-		for _, test := range xmlDeclarationCases {
-			t.Run(root+"/"+test.name, func(t *testing.T) {
-				for encoding, data := range xmlDeclarationEncodingVariants(xmlWellFormednessInput(test.input, root)) {
-					t.Run(encoding, func(t *testing.T) {
-						archive := makeMXLTestArchive(t, []mxlTestEntry{
-							mxlTestFileEntry(mxlContainerPath, `<container><rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`),
-							mxlTestFileEntry("score.musicxml", string(data)),
-						})
-						for _, path := range xmlReadingPaths(root) {
-							t.Run(path.name, func(t *testing.T) {
-								content := data
-								if path.archive {
-									content = archive
-								}
-								document, err := path.decode(iotest.OneByteReader(bytes.NewReader(content)))
-								if !test.valid {
-									var syntaxError *xml.SyntaxError
-									assert.ErrorAs(t, err, &syntaxError)
-									assert.Nil(t, document)
-									return
-								}
-								require.NoError(t, err)
-								assertXMLReadingTitle(t, document)
-							})
-						}
-					})
-				}
-			})
-		}
-	}
+	runXMLReadingDecodePaths(t, xmlDeclarationCases, xmlDeclarationEncodingVariants, assertXMLReadingSyntaxError)
 }
 
 func TestXMLDeclarationContainer(t *testing.T) {
-	t.Parallel()
-	for _, test := range xmlDeclarationCases {
-		t.Run(test.name, func(t *testing.T) {
-			input := xmlWellFormednessInput(test.input, "container")
-			input = strings.Replace(input, `</container>`, `<rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`, 1)
-			for encoding, data := range xmlDeclarationEncodingVariants(input) {
-				t.Run(encoding, func(t *testing.T) {
-					archive := makeMXLTestArchive(t, []mxlTestEntry{
-						mxlTestFileEntry(mxlContainerPath, string(data)),
-						mxlTestFileEntry("score.musicxml", `<opus><title>Keep</title></opus>`),
-					})
-					for _, path := range xmlReadingPaths("opus") {
-						if !path.archive {
-							continue
-						}
-						t.Run(path.name, func(t *testing.T) {
-							document, err := path.decode(bytes.NewReader(archive))
-							if !test.valid {
-								assert.ErrorIs(t, err, ErrMXLInvalidContainer)
-								var syntaxError *xml.SyntaxError
-								assert.ErrorAs(t, err, &syntaxError)
-								assert.Nil(t, document)
-								return
-							}
-							require.NoError(t, err)
-							assertXMLReadingTitle(t, document)
-						})
-					}
-				})
-			}
-		})
-	}
+	runXMLReadingContainer(t, xmlDeclarationCases, xmlDeclarationEncodingVariants, assertXMLReadingSyntaxError)
 }
 
 func TestXMLDeclarationValidationParser(t *testing.T) {
-	t.Parallel()
-	for _, test := range xmlDeclarationCases {
-		t.Run(test.name, func(t *testing.T) {
-			// This internal Encode/reparse helper takes UTF-8 only. Public
-			// decoding owns BOM handling and other supported encodings.
-			input := xmlWellFormednessInput(test.input, "opus")
-			data := strings.ReplaceAll(input, "DECL", `<?xml version="1.0"?>`)
-			_, err := parseValidationDocument([]byte(data))
-			if test.valid {
-				assert.NoError(t, err)
-			} else {
-				var syntaxError *xml.SyntaxError
-				assert.ErrorAs(t, err, &syntaxError)
-			}
-		})
-	}
+	runXMLReadingValidationParser(t, xmlDeclarationCases, xmlDeclarationUTF8Input, assertXMLReadingSyntaxError)
 }
 
 func TestXMLDeclarationLinkedResources(t *testing.T) {
-	t.Parallel()
-	for _, root := range []string{"score-partwise", "score-timewise", "opus"} {
-		for _, test := range xmlDeclarationCases {
-			t.Run(root+"/"+test.name, func(t *testing.T) {
-				for encoding, data := range xmlDeclarationEncodingVariants(xmlWellFormednessInput(test.input, root)) {
-					t.Run(encoding, func(t *testing.T) {
-						link := `<score xlink:href="linked.musicxml"/>`
-						if root == "opus" {
-							link = `<opus-link xlink:href="linked.musicxml"/>`
-						}
-						archive := makeMXLTestArchive(t, []mxlTestEntry{
-							mxlTestFileEntry(mxlContainerPath, `<container><rootfiles><rootfile full-path="main.musicxml"/></rootfiles></container>`),
-							mxlTestFileEntry("main.musicxml", `<opus xmlns:xlink="http://www.w3.org/1999/xlink">`+link+`</opus>`),
-							mxlTestFileEntry("linked.musicxml", string(data)),
-						})
-						value, err := DecodeMXLPackage(bytes.NewReader(archive))
-						require.NoError(t, err) // Resources remain opaque until resolution.
-						resolved, err := value.ResolveOpus()
-						if !test.valid {
-							assert.ErrorIs(t, err, ErrMXLLinkedDocumentInvalid)
-							var syntaxError *xml.SyntaxError
-							assert.ErrorAs(t, err, &syntaxError)
-							return
-						}
-						require.NoError(t, err)
-						if root == "opus" {
-							assertXMLReadingTitle(t, resolved.Content[0].OpusLink.Target.Document)
-						} else {
-							assertXMLReadingTitle(t, resolved.Content[0].Score.Target)
-						}
-					})
-				}
-			})
-		}
-	}
+	runXMLReadingLinkedResources(t, xmlDeclarationCases, xmlDeclarationEncodingVariants, assertXMLReadingSyntaxError)
 }
 
 func TestXMLDeclarationReservedTargets(t *testing.T) {
@@ -209,4 +94,8 @@ func xmlDeclarationEncodingVariants(input string) map[string][]byte {
 		variants["UTF16LE-no-BOM"] = le[2:]
 	}
 	return variants
+}
+
+func xmlDeclarationUTF8Input(input string) []byte {
+	return []byte(strings.ReplaceAll(input, "DECL", `<?xml version="1.0"?>`))
 }
