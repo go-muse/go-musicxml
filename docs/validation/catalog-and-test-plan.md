@@ -35,6 +35,8 @@ identity and migration explicitly, while preserving these provenance links.
 The existing-reader XML repairs and their executable tests are recorded in the
 [code-map update](existing-code-map.md#xml-reading-repair-update), including the
 [namespace-declaration provenance repair](existing-code-map.md#namespace-declaration-provenance-repair-update).
+The bounded [schema-location hint name repair](existing-code-map.md#schema-location-hint-name-repair-update)
+also records its remaining lexical/list/pair reconciliation explicitly.
 A checked,
 machine-readable implementation-evidence field is an explicit
 [follow-up](existing-code-map.md#xml-reading-follow-ups); the planning JSON and
