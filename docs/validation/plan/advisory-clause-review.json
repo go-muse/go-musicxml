@@ -1,0 +1,979 @@
+{
+  "format": "musicxml-validation-plan-1",
+  "advisory_clause_reviews": [
+    {
+      "research_id": "MX40-PROSE-fractional-divisions",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Integral divisions are a compatibility preference; acceptance of positive fractions is already the scalar domain and needs no new default provider.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L90"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-fractional-divisions"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-stop-before-start",
+      "decision": "reuse_context",
+      "related_research_ids": [
+        "MX40-PROSE-start-stop-score-order"
+      ],
+      "related_xsd_research_ids": [],
+      "rationale": "The non-LIFO and XML-order caveat is already preserved by the musical endpoint-order context rather than a new obligation.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L287"
+      ],
+      "reuse_check_ids": [
+        "CHECK-context-start-stop-score-order"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-stop-before-start"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-same-note-span-order",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The whole clause is should-level same-note ordering without a separate fixed default.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L485"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-same-note-span-order"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-same-note-single-order",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The single endpoint exception is preserved by an explicit pairing-requirement-none context subcontract.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L514"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-same-note-single-order",
+        "CHECK-context-single-endpoint-completeness"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-one-note-visual-tie",
+      "decision": "reuse_context",
+      "related_research_ids": [
+        "MX40-PROSE-let-ring-single-tie",
+        "MX40-PROSE-tie-sound-vs-tied"
+      ],
+      "related_xsd_research_ids": [],
+      "rationale": "Ordinary single-note encoding is advisory; the let-ring exemption and visual-versus-sound distinction have existing context records.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L567"
+      ],
+      "reuse_check_ids": [
+        "CHECK-context-let-ring-single-tie",
+        "CHECK-context-tie-sound-vs-tied"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-one-note-visual-tie"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-cancel-before-barline-midmeasure",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The absent-location left fact is mapped independently from mid-measure placement advice.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L716"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-cancel-before-barline-midmeasure",
+        "CHECK-context-cancel-location-default"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-deprecated-none-clef",
+      "decision": "reuse_context",
+      "related_research_ids": [
+        "MX40-PROSE-musicxml40-deprecations"
+      ],
+      "related_xsd_research_ids": [],
+      "rationale": "The permission to retain none is preserved by the deprecation context; suggested treble rendering remains advisory.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L727"
+      ],
+      "reuse_check_ids": [
+        "CHECK-context-musicxml40-deprecations"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-deprecated-none-clef"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-harmony-none-hide-root",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Root hiding is recommended and its absent numeral-step source wording remains an explicit unresolved editorial issue.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1039"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-harmony-none-hide-root"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-system-number-single-part",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Top and bottom placement flags require current-system scope independently of extraction advice.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1329"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-system-number-single-part",
+        "CHECK-context-system-number-position-scope"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-system-mark-single-part",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "System none has a concrete containing-part scope that must survive the advisory classification.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1342"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-system-mark-single-part",
+        "CHECK-context-system-mark-part-scope"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-named-notehead-text",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The two SMuFL codepoint ranges limit where the representation advice applies; they do not introduce a required default or new predicate.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1766"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-named-notehead-text"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-measure-text-hide",
+      "decision": "reuse_xsd",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [
+        "MX40-REQ-64882b6077ed80c7",
+        "MX40-REQ-1dfb6731f4eb09c0"
+      ],
+      "rationale": "The nonempty measure-text lexical obligation belongs to the existing XSD domain; implicit-based hiding is advisory.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1922"
+      ],
+      "reuse_check_ids": [
+        "INSTANCE-MX40-REQ-1dfb6731f4eb09c0",
+        "INSTANCE-MX40-REQ-64882b6077ed80c7"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-measure-text-hide"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-position-resolution",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The relative-position relationship to placement, offset, and directive is preserved as a separately gated coordinate-basis contract.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2102"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-position-resolution",
+        "CHECK-context-relative-position-basis"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-image-scaling",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Image type denotes MIME information; source and type requiredness are reused XSD clauses rather than scaling advice.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2326"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-image-scaling",
+        "CHECK-context-image-resource-type"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-parallel-print-position",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "A demonstrated cross-part mismatch produces unspecified layout behavior without automatic invalidity.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2339"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-parallel-print-position",
+        "CHECK-context-parallel-print-mismatch-outcome"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-measure-identity",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Nonnumeric and nonunique labels retain their label semantics separately from consistency advice.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2385"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-measure-identity",
+        "CHECK-context-measure-label-domain"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-coda-sound",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Matching playback data is reliability advice and does not create a mandatory sound-presence fact for notation-only files.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2437"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-coda-sound"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-segno-sound",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The record contains playback reliability advice without a new absent-value default or unconditional constraint.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2768"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-segno-sound"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-barline-wavy-continue",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Continue is the recommended encoding, not a required effective type when a different type is present.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2800"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-barline-wavy-continue"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-beat-repeat-stop",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Slashes and use-dots defaults plus the first-unaffected-beat stop boundary are explicit context clauses.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2907"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-beat-repeat-stop",
+        "CHECK-context-beat-repeat-state"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-measure-repeat-stop",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Slashes default, ignored stop text, and first-ordinary-measure boundary are explicit context clauses.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3048"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-measure-repeat-stop",
+        "CHECK-context-measure-repeat-state"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-barline-boundary-order",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Boundary placement and print/bookmark/link exceptions scope an advisory whose conflicting example remains gated.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3227"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-barline-boundary-order"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-symbol-semantic-markup",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Justify and enclosure defaults plus canonical-name reference meaning are kept apart from markup-choice advice.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3502"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-symbol-semantic-markup",
+        "CHECK-context-symbol-defaults-and-name"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-harp-pedal-order",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The listed pedal sequence is recommended presentation order without a fixed missing-field default.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3668"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-harp-pedal-order"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-listening-distinct-targets",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Player and pass distinction define the comparison scope of the advice but introduce no missing-value scope default in this record.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3741"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-listening-distinct-targets"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-metronome-tie-pair",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Separate-note pairing is recommended only; no new general sounding tie rule is derived.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3869"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-metronome-tie-pair"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-principal-voice-symbol",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "None and plain are contextual recommended choices, not universal effective-symbol defaults.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4058"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-principal-voice-symbol"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-sound-instrument-grouping",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Instrument grouping is recommended document arrangement without an independent ordering predicate.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4125"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-sound-instrument-grouping"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-swing-ratio-reduced",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Lowest-term notation is advisory and equivalent unreduced ratios remain covered by existing numeric semantics.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4216"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-swing-ratio-reduced"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-encoder-type",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The role-string domain stays open and absent single-encoder type is not a new error.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4290"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-encoder-type",
+        "CHECK-context-metadata-role-domain"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-creator-type",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The shared open-role context preserves extension roles without converting role advice into requiredness.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4308"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-creator-type",
+        "CHECK-context-metadata-role-domain"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-supports-reporting",
+      "decision": "reuse_context",
+      "related_research_ids": [
+        "MX40-PROSE-supports-absence-meaning"
+      ],
+      "related_xsd_research_ids": [],
+      "rationale": "Capability-sensitive absence interpretation is already provided by the dedicated supports context.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4353"
+      ],
+      "reuse_check_ids": [
+        "CHECK-context-supports-absence-meaning"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-supports-reporting"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-glyph-match-type",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Glyph-to-type semantic matching remains advisory, with external SMuFL availability as an evaluation prerequisite.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4389"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-glyph-match-type"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-arrow-glyph-consistency",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Arrowhead denotes a head-only graphical component, separately from glyph-consistency advice.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4682"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-arrow-glyph-consistency",
+        "CHECK-context-arrowhead-geometry"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-assess-default",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Missing player and time-only produce all-player and all-pass target scopes independently of assessment preference.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4699"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-assess-default",
+        "CHECK-context-assess-target-scope"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-backup-positive",
+      "decision": "reuse_xsd",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [
+        "MX40-REQ-4fbb86e9dfc60089",
+        "MX40-REQ-14311ef89a8cd2cc",
+        "MX40-REQ-8ea62e6b2c1ef756",
+        "MX40-REQ-9e68a1f68537d107"
+      ],
+      "rationale": "Positive-divisions already supplies the mandatory positive duration predicate; advisory prose cannot weaken it or create a duplicate failure.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4708"
+      ],
+      "reuse_check_ids": [
+        "INSTANCE-MX40-REQ-14311ef89a8cd2cc",
+        "INSTANCE-MX40-REQ-4fbb86e9dfc60089",
+        "INSTANCE-MX40-REQ-8ea62e6b2c1ef756",
+        "INSTANCE-MX40-REQ-9e68a1f68537d107"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-backup-positive"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-backup-no-boundary-cross",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The record recommends boundaries and explicitly does not establish full-meter duration equality.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4708"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-backup-no-boundary-cross"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-forward-positive",
+      "decision": "reuse_xsd",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [
+        "MX40-REQ-e3746acc0499ad49",
+        "MX40-REQ-5920ffcb6d79f9a0",
+        "MX40-REQ-19dfa432aa6bfee6",
+        "MX40-REQ-805ced26de8c2fe3",
+        "MX40-REQ-09c10a489a3d3d6b"
+      ],
+      "rationale": "The positive duration obligation is already XSD and is reused rather than promoted from advisory wording.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4869"
+      ],
+      "reuse_check_ids": [
+        "INSTANCE-MX40-REQ-09c10a489a3d3d6b",
+        "INSTANCE-MX40-REQ-19dfa432aa6bfee6",
+        "INSTANCE-MX40-REQ-5920ffcb6d79f9a0",
+        "INSTANCE-MX40-REQ-805ced26de8c2fe3",
+        "INSTANCE-MX40-REQ-e3746acc0499ad49"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-forward-positive"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-forward-no-boundary-cross",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Boundary advice does not create a new voice-completeness or full-measure fill requirement.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4869"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-forward-no-boundary-cross"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-multi-instrument-note",
+      "decision": "reuse_xsd",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [
+        "MX40-REQ-d0c62bedc11f1bb4"
+      ],
+      "rationale": "Instrument identification is recommended; permitted multiple instrument children are already the 4.0 schema branch cardinality.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5037"
+      ],
+      "reuse_check_ids": [
+        "INSTANCE-MX40-REQ-d0c62bedc11f1bb4"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-multi-instrument-note"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-listen-distinct-targets",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The record scopes a target-distinction recommendation to one note and supplies no new target default.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5044"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-listen-distinct-targets"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-tie-attack-release",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Independent divisions-based timing values are preserved separately from endpoint-specific advice against them.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5162"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-tie-attack-release",
+        "CHECK-context-attack-release-units"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-slur-pair-usual",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "This descriptive background prevents unsupported universal closure checks and is deliberately not a context requirement.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5465"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-slur-pair-usual"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-lyric-literal-hyphen",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Literal text content and structural syllabic meaning remain separate without inventing a linguistic correctness predicate.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5636"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-lyric-literal-hyphen",
+        "CHECK-context-lyric-hyphen-and-syllabic"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-tie-pitch-equivalence",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The equivalence recommendation retains visual navigation and let-ring exceptions without a universal pitch predicate.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5661"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-tie-pitch-equivalence"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-unmeasured-tremolo-zero",
+      "decision": "reuse_xsd",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [
+        "MX40-REQ-241a56f2808577de",
+        "MX40-REQ-f8588584e5b956ff"
+      ],
+      "rationale": "Zero is advisory; the existing XSD zero-through-eight stroke domain is preserved and not narrowed.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5715"
+      ],
+      "reuse_check_ids": [
+        "INSTANCE-MX40-REQ-241a56f2808577de",
+        "INSTANCE-MX40-REQ-f8588584e5b956ff"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-unmeasured-tremolo-zero"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-double-note-tremolo-duration",
+      "decision": "reuse_context",
+      "related_research_ids": [
+        "MX40-PROSE-time-modification-cumulative"
+      ],
+      "related_xsd_research_ids": [],
+      "rationale": "The two-to-one and half-duration encoding is recommended, while multiplication with existing tuplet timing is covered by cumulative-ratio context.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5715"
+      ],
+      "reuse_check_ids": [
+        "CHECK-context-time-modification-cumulative"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-double-note-tremolo-duration"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-percussion-clef-unpitched",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The effective clef is an advisory prerequisite, not an unconditional pitch-branch prohibition.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5809"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-percussion-clef-unpitched"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-group-link-match",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The target comparison is advisory and unavailable external content yields unknown under its explicit dependency contract.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6000"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-group-link-match"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-octave-change-interval",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Interval-size encoding is a should-level preference, not an extra integer-range predicate.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6375"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-octave-change-interval"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-entry-name-utf8",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "UTF-8 is a compatibility recommendation without a mandatory legacy-archive rejection.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L4"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-mxl-entry-name-utf8"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-mimetype-first",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Entry order, ASCII media string, and presence are all part of the recommended encoding and version exceptions.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L4"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-mxl-mimetype-first"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-musicxml-file-types",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Extensions and media types are format-signaling recommendations, not evidence of XML validity.",
+      "normative_provenance": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L4"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-musicxml-file-types"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-tie-stop-start-same-note",
+      "decision": "reuse_context",
+      "related_research_ids": [
+        "MX40-PROSE-start-stop-score-order"
+      ],
+      "related_xsd_research_ids": [],
+      "rationale": "Local stop-before-start advice does not change the dedicated fact that musical endpoints differ from XML traversal order.",
+      "normative_provenance": [
+        "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/"
+      ],
+      "reuse_check_ids": [
+        "CHECK-context-start-stop-score-order"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-tie-stop-start-same-note"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-one-divisions-per-part",
+      "decision": "reuse_context",
+      "related_research_ids": [
+        "MX40-PROSE-attribute-score-order",
+        "MX40-PROSE-divisions-tuplet-units"
+      ],
+      "related_xsd_research_ids": [],
+      "rationale": "A single initial divisions value is advisory; legal later changes retain ordinary effective-state and timing semantics.",
+      "normative_provenance": [
+        "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/#divisions"
+      ],
+      "reuse_check_ids": [
+        "CHECK-context-attribute-score-order",
+        "CHECK-context-divisions-tuplet-units"
+      ],
+      "primary_check_ids": [
+        "CHECK-context-one-divisions-per-part"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-xlink-actuate-behavior",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Traversal trigger descriptions are recommendations and application choices; they supply no authority to perform network actions.",
+      "normative_provenance": [
+        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xlink-actuate/"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-xlink-actuate-behavior"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-xlink-show-behavior",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The replace attribute-group default and application-defined other or none behavior are mapped separately from display recommendations.",
+      "normative_provenance": [
+        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xlink-show/"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-xlink-show-behavior",
+        "CHECK-context-xlink-show-default"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-css-size-guidelines",
+      "decision": "advisory_only",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "Relative CSS size factors are explicitly approximate renderer guidance rather than exact fixed dimensions.",
+      "normative_provenance": [
+        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/css-font-size/"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-css-size-guidelines"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    },
+    {
+      "research_id": "MX40-PROSE-slash-start-stop",
+      "decision": "additional_context",
+      "related_research_ids": [],
+      "related_xsd_research_ids": [],
+      "rationale": "The first beat without slash is an actual state-transition fact, even though endpoint completeness is advisory.",
+      "normative_provenance": [
+        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/slash/"
+      ],
+      "reuse_check_ids": [],
+      "primary_check_ids": [
+        "CHECK-context-slash-start-stop",
+        "CHECK-context-slash-stop-boundary"
+      ],
+      "reuse_scope": "Only the shared fact/domain described in rationale is reused. Related records are not asserted wholly equivalent; additional advisory and context clauses remain selected through primary_check_ids."
+    }
+  ]
+}

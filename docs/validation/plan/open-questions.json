@@ -1,0 +1,514 @@
+{
+  "format": "musicxml-validation-plan-1",
+  "open_questions": [
+    {
+      "id": "MX40-ISSUE-beam-six-eight",
+      "registry_pointer": "/issues/0",
+      "description": "The beam-level annotation describes six levels, while its facet, beam, and beam-value support eight.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: use the explicit XSD range 1–8; do not turn the outdated phrase into a limit of six.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-BEAM-SIX-EIGHT"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-beam-group-identity",
+        "MX40-PROSE-beam-fan-conditions"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-cue-duration",
+      "registry_pointer": "/issues/1",
+      "description": "The full-note annotation says that cue notes lack duration; note and its formal branches require duration for cue notes and exclude it only for grace notes.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: follow the structural XSD contract, as supported by the note prose itself, while retaining the discrepancy.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-CUE-DURATION"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-grace-cue-duration",
+        "MX40-PROSE-note-print-leger-default",
+        "MX40-PROSE-tie-attack-release"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-container-schema-exists",
+      "registry_pointer": "/issues/2",
+      "description": "The tutorial says that container.xsd does not exist, while the 4.0 release notes announce the added schema and the file exists.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: treat the tutorial statement as outdated; container.xsd is part of version 4.0.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-CONTAINER-SCHEMA-EXISTS"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-mxl-zip-format",
+        "MX40-PROSE-mxl-entry-name-utf8",
+        "MX40-PROSE-mxl-deflate",
+        "MX40-PROSE-mxl-container-path",
+        "MX40-PROSE-mxl-mimetype-first",
+        "MX40-PROSE-mxl-mimetype-stored",
+        "MX40-PROSE-mxl-mimetype-no-extra",
+        "MX40-PROSE-mxl-mimetype-no-prefix",
+        "MX40-PROSE-musicxml-file-types",
+        "MX40-PROSE-mxl-media-location-open",
+        "MX40-PROSE-musicxml40-deprecations"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-container-sounds-wording",
+      "registry_pointer": "/issues/3",
+      "description": "The container type description incorrectly calls it the root of a sounds file, while the global container declaration identifies it with META-INF/container.xml.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not allow sounds as the container-document root; the explicit structure and the second annotation agree.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-CONTAINER-SOUNDS-WORDING"
+      ],
+      "contextual_research_ids": [],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-container-schema-uri",
+      "registry_pointer": "/issues/4",
+      "description": "The end of the container.xsd prose gives a sounds.xsd URI for validation.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: record a probable editorial error; use the pinned container.xsd without substituting the sounds schema.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-CONTAINER-SCHEMA-URI"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-mxl-zip-format",
+        "MX40-PROSE-mxl-entry-name-utf8",
+        "MX40-PROSE-mxl-deflate",
+        "MX40-PROSE-mxl-container-path",
+        "MX40-PROSE-mxl-mimetype-first",
+        "MX40-PROSE-mxl-mimetype-stored",
+        "MX40-PROSE-mxl-mimetype-no-extra",
+        "MX40-PROSE-mxl-mimetype-no-prefix",
+        "MX40-PROSE-musicxml-file-types"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-xml-declaration-required",
+      "registry_pointer": "/issues/5",
+      "description": "The tutorial describes an XML declaration as mandatory for every XML document.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: the claim does not follow from the MusicXML XSD; do not add a prohibition on XML without a declaration. The dependent XML specification was not separately reviewed in this pass.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-XML-DECLARATION-REQUIRED"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-pitch-alter-explicit"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-every-note-duration",
+      "registry_pointer": "/issues/6",
+      "description": "The tutorial generalizes its example to duration on every note, overlooking grace notes.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: apply the actual note branches; do not introduce a universal duration-required rule that also covers grace notes.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-EVERY-NOTE-DURATION"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-grace-cue-duration",
+        "MX40-PROSE-note-print-leger-default",
+        "MX40-PROSE-tie-attack-release",
+        "MX40-PROSE-pitch-alter-explicit"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-part-id-uniqueness-scope",
+      "registry_pointer": "/issues/7",
+      "description": "The partwise example's statement that every part has a unique ID does not define the scope of repeated part IDs across timewise measures.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: score-part ID uniqueness is document-wide; timewise part IDREF values may recur across measures. Additional uniqueness among sibling part elements requires a separately supported rule.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-PART-ID-UNIQUENESS-SCOPE"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-part-id-target",
+        "MX40-PROSE-pitch-alter-explicit"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-duration-integer",
+      "registry_pointer": "/issues/8",
+      "description": "The tutorial calls duration an integer, while the XSD and reference allow decimal-based positive-divisions.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not reject fractional duration values; integer values are a compatibility recommendation.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-DURATION-INTEGER"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-fractional-divisions",
+        "MX40-PROSE-duration-cursor",
+        "MX40-PROSE-duration-not-notated-equality",
+        "MX40-PROSE-tie-stop-start-same-note",
+        "MX40-PROSE-one-divisions-per-part",
+        "MX40-PROSE-no-default-tempo"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-left-barline-attributes",
+      "registry_pointer": "/issues/9",
+      "description": "The reference recommends placing a left barline first, except for print, bookmark, and link; the tutorial explicitly places it after attributes.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not introduce a hard XML first-child check; a musical zero-position interpretation is possible. The recommendation and the mandatory location requirement need a separate interpretation.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-LEFT-BARLINE-ATTRIBUTES"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-barline-location",
+        "MX40-PROSE-barline-boundary-order",
+        "MX40-PROSE-tie-stop-start-same-note",
+        "MX40-PROSE-one-divisions-per-part",
+        "MX40-PROSE-no-default-tempo"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-old-note-type-list",
+      "registry_pointer": "/issues/10",
+      "description": "The tutorial lists note types only from 256th to long, while the XSD and reference include 1024th, 512th, and maxima.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: use the complete 4.0 XSD enumeration; do not restrict it to the older illustrative list.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-OLD-NOTE-TYPE-LIST"
+      ],
+      "contextual_research_ids": [],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-numeral-step-typo",
+      "registry_pointer": "/issues/11",
+      "description": "The kind-value advice calls for empty text on numeral-step, which does not exist in the schema; numeral-root does exist.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: numeral-root is the probable intended name, but do not create a new field or element; retain this as an editorial ambiguity.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-NUMERAL-STEP-TYPO"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-harmony-none",
+        "MX40-PROSE-harmony-none-hide-root",
+        "MX40-PROSE-numeral-root-display",
+        "MX40-PROSE-kind-other-add-degrees"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-chord-preceding-duration",
+      "registry_pointer": "/issues/12",
+      "description": "The reference refers to the preceding note and to the first preceding non-chord note for time movement; the tutorial requires the longest note first.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: the duration bound relative to the base note is supported. A pairwise non-increasing order for all chord tones is not proven; without clarification, do not reject a shorter tone followed by a longer tone when both durations are less than or equal to the base duration.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-CHORD-PRECEDING-DURATION"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-chord-duration-bound",
+        "MX40-PROSE-chord-anchor",
+        "MX40-PROSE-tie-stop-start-same-note",
+        "MX40-PROSE-one-divisions-per-part",
+        "MX40-PROSE-no-default-tempo"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-mxl-methods-compatibility",
+      "registry_pointer": "/issues/13",
+      "description": "DEFLATE is described as the format for container files, and mimetype must use the stored method; an exhaustive list of permitted methods for the other entries is not stated separately.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not claim complete ZIP validation from these paragraphs; the external ZIP/JAR corpus needs review.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-MXL-METHODS-COMPATIBILITY"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-mxl-zip-format",
+        "MX40-PROSE-mxl-entry-name-utf8",
+        "MX40-PROSE-mxl-deflate",
+        "MX40-PROSE-mxl-container-path",
+        "MX40-PROSE-mxl-mimetype-first",
+        "MX40-PROSE-mxl-mimetype-stored",
+        "MX40-PROSE-mxl-mimetype-no-extra",
+        "MX40-PROSE-mxl-mimetype-no-prefix",
+        "MX40-PROSE-musicxml-file-types",
+        "MX40-PROSE-mxl-media-location-open"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-mxl-first-media-type-set",
+      "registry_pointer": "/issues/14",
+      "description": "The first rootfile cannot use a non-MusicXML media type, but this condition does not give the precise set of MusicXML media types or address nested compressed roots.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: check a direct XML root separately; clarify the set of permitted media types rather than inventing equality to a single MIME value without explanation.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-MXL-FIRST-MEDIA-TYPE-SET"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-mxl-rootfile-document-root",
+        "MX40-PROSE-mxl-rootfile-relative-path",
+        "MX40-PROSE-mxl-first-media-type",
+        "MX40-PROSE-mxl-media-type-default",
+        "MX40-PROSE-mxl-media-location-open"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-smufl-version-dictionary",
+      "registry_pointer": "/issues/15",
+      "description": "Canonical glyph constraints rely on the external SMuFL dictionary; the 4.0 release mentions SMuFL 1.4, but the entire dictionary was not reviewed here.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: canonical-name existence remains unknown without a pinned dictionary; the XSD prefix constraints can still be checked.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-SMUFL-VERSION-DICTIONARY"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-smufl-canonical-name",
+        "MX40-PROSE-named-notehead-text",
+        "MX40-PROSE-musicxml40-deprecations"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-ipa-character-repertoire",
+      "registry_pointer": "/issues/16",
+      "description": "IPA 2015 in Unicode 13.0 constrains the content, but the exact allowlist and combining characters are not enumerated.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not claim complete IPA validation from an arbitrary Unicode-block check; external corpus review remains pending.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-IPA-CHARACTER-REPERTOIRE"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-ipa-2015-unicode13",
+        "MX40-PROSE-musicxml40-deprecations"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-initial-effective-context",
+      "registry_pointer": "/issues/17",
+      "description": "The formal structure permits omission of divisions, key, time, and clef; their initial defaults are not all universally specified.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not invent C major, 4/4, treble clef, or divisions = 1 as format requirements; distinguish unknown effective context from a failed constraint.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-INITIAL-EFFECTIVE-CONTEXT"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-attribute-score-order",
+        "MX40-PROSE-divisions-tuplet-units",
+        "MX40-PROSE-defaults-app-choice"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-span-pairing-scope",
+      "registry_pointer": "/issues/18",
+      "description": "The start, stop, and continue values and overlap IDs are described, but no universal mandatory requirement for complete paired closure of every span is given.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not generalize statements about most cases or recommendations into mandatory balance for all span types; account for repeats, let-ring, cross-system spans, and stop-before-start ordering.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-SPAN-PAIRING-SCOPE"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-number-level-overlap",
+        "MX40-PROSE-stop-before-start",
+        "MX40-PROSE-slur-pair-usual",
+        "MX40-PROSE-tie-pitch-equivalence",
+        "MX40-PROSE-tied-number-implied"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-assess-type-default",
+      "registry_pointer": "/issues/19",
+      "description": "The assess table describes a default for an omitted type, although the XSD requires type itself.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: the contextual assessment default means absence of an assess override; this phrase alone does not permit an assess element without its required type.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-ASSESS-TYPE-DEFAULT"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-assess-player-target",
+        "MX40-PROSE-assess-default"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-measure-duration-completeness",
+      "registry_pointer": "/issues/20",
+      "description": "No universal rule was found requiring the duration of each measure or voice to equal the time signature's duration.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: pickup, implicit, non-controlling, and senza-misura contexts rule out such a blanket requirement; this belongs in a separate profile or heuristic, not a mandatory MusicXML rule.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-MEASURE-DURATION-COMPLETENESS"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-measure-identity",
+        "MX40-PROSE-implicit-measure-number",
+        "MX40-PROSE-noncontrolling-measure",
+        "MX40-PROSE-senza-misura",
+        "MX40-PROSE-duration-cursor",
+        "MX40-PROSE-duration-not-notated-equality"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-zero-counts-and-ratios",
+      "registry_pointer": "/issues/21",
+      "description": "XSD nonNegativeInteger permits zero for staves, actual-notes, and normal-notes, and scaling tenths permits zero; the prose does not prohibit zero in every case.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not strengthen these domains to positiveInteger without a source. Computations with a zero denominator require a separate unsupported or undefined result, rather than an invented format rule.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-ZERO-COUNTS-AND-RATIOS"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-staves-default",
+        "MX40-PROSE-scaling-physical-units",
+        "MX40-PROSE-time-modification-cumulative"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-external-spec-closure",
+      "registry_pointer": "/issues/22",
+      "description": "The complete semantics of XML, XSD datatypes, XLink, XML Base/ID, ZIP/JAR/DEFLATE, SMuFL, and IPA reside in external specifications.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: this registry does not claim complete transitive normative closure; the external pages were not fetched or reviewed by this researcher.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-EXTERNAL-SPEC-CLOSURE"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-mxl-zip-format",
+        "MX40-PROSE-mxl-entry-name-utf8",
+        "MX40-PROSE-mxl-deflate",
+        "MX40-PROSE-mxl-container-path",
+        "MX40-PROSE-mxl-mimetype-first",
+        "MX40-PROSE-mxl-mimetype-stored",
+        "MX40-PROSE-mxl-mimetype-no-extra",
+        "MX40-PROSE-mxl-mimetype-no-prefix",
+        "MX40-PROSE-musicxml-file-types",
+        "MX40-PROSE-xml-reserved-semantics",
+        "MX40-PROSE-xlink-namespace"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-midi-instrument-parent-wording",
+      "registry_pointer": "/issues/23",
+      "description": "Some prose describes midi-instrument as a child of score-instrument, while the formal structure and score-part description place the initial assignment in score-part.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not allow invalid nesting on the basis of imprecise introductory wording; the XSD defines the actual content model.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-MIDI-INSTRUMENT-PARENT-WORDING"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-midi-instrument-target",
+        "MX40-PROSE-midi-requires-score-instrument"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-legacy-tutorial-header-root-list",
+      "registry_pointer": "/issues/24",
+      "description": "The tutorial uses an older count of header children and says that every chord symbol has root, although 4.0 includes defaults and credit and the root/numeral/function choice.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: descriptions of specific examples must not narrow the complete 4.0 XSD contract.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-LEGACY-TUTORIAL-HEADER-ROOT-LIST"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-harmony-root-choice"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-pull-off-attribute-descriptions-swapped",
+      "registry_pointer": "/issues/25",
+      "description": "The HTML descriptions of pull-off type and number are swapped: type is described as distinguishing overlaps, while number is assigned start/stop and a default of 1.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: the XSD types and hammer-on-pull-off model are unambiguous: type uses start/stop, and number uses number-level. Do not generate rules from the mistaken table descriptions.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-PULL-OFF-ATTRIBUTE-DESCRIPTIONS-SWAPPED"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-hammer-empty-default"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-pizzicato-nonexistent-element",
+      "registry_pointer": "/issues/26",
+      "description": "The description of note pizzicato contrasts it with a nonexistent pizzicato element; the general mode is provided by the pizzicato attribute on sound.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: do not add a new XML element. The sound prose makes the semantics of note-level versus sound-level scope clear.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-PIZZICATO-NONEXISTENT-ELEMENT"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-sound-dacapo-yes",
+        "MX40-PROSE-sound-forward-repeat-yes",
+        "MX40-PROSE-sound-pedal-range",
+        "MX40-PROSE-sound-tempo-dynamics",
+        "MX40-PROSE-sound-jump-passes",
+        "MX40-PROSE-sound-fine-duration",
+        "MX40-PROSE-sound-pizzicato-scope",
+        "MX40-PROSE-sound-instrument-grouping",
+        "MX40-PROSE-sound-offset-precedence",
+        "MX40-PROSE-grace-cue-duration",
+        "MX40-PROSE-note-print-leger-default",
+        "MX40-PROSE-tie-attack-release"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    },
+    {
+      "id": "MX40-ISSUE-time-beat-spelling",
+      "registry_pointer": "/issues/27",
+      "description": "The HTML time prose refers to beat/beat-type pairs, while the structural names are beats/beat-type.",
+      "disposition": "decision_required",
+      "proposed_interpretation": "Proposed disposition: treat this as editorial shorthand or an error; the XSD determines the permitted expanded names.",
+      "hard_error_basis": false,
+      "requirements": [
+        "REQ-DEF-ISSUE-TIME-BEAT-SPELLING"
+      ],
+      "contextual_research_ids": [
+        "MX40-PROSE-time-staff-scope"
+      ],
+      "closure": "Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection."
+    }
+  ]
+}
