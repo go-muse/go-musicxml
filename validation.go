@@ -434,10 +434,18 @@ func readValidationNode(
 		)
 	}
 
+	flags := tokens.namespaceDeclarations
+	if len(flags) != len(start.Attr) {
+		return nil, fmt.Errorf(
+			"musicxml: namespace declaration provenance out of sync at %s: got %d flags for %d attributes",
+			validationDisplayName(start.Name), len(flags), len(start.Attr),
+		)
+	}
+
 	result := &validationNode{Name: start.Name}
 	for index, attribute := range start.Attr {
 		result.Attrs = append(result.Attrs, validationAttribute{
-			Attr: attribute, NamespaceDeclaration: tokens.namespaceDeclarations[index],
+			Attr: attribute, NamespaceDeclaration: flags[index],
 		})
 	}
 

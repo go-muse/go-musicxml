@@ -3,6 +3,7 @@ package musicxml
 import (
 	"bytes"
 	"encoding/xml"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -92,6 +93,53 @@ func TestNamespaceProvenancePreservesEncodedDecode(t *testing.T) {
 			assert.Equal(t, xml.Name{Local: "opus"}, document.XMLName)
 			assert.Equal(t, Ptr("Keep"), document.Title)
 			assert.NoError(t, Validate(document))
+		})
+	}
+}
+
+func TestValidationNamespaceDeclarationProvenanceLength(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		name, source string
+		flags        []bool
+		wantError    bool
+	}{
+		{"nil", `<value rubbish="x"/>`, nil, true},
+		{"short", `<value xmlns:p="urn:test" p:rubbish="x"/>`, []bool{true}, true},
+		{"long", `<value rubbish="x"/>`, []bool{false, true}, true},
+		{"nonempty flags without attributes", `<value/>`, []bool{true}, true},
+		{"matching", `<value xmlns:p="urn:test" p:rubbish="x"/>`, []bool{true, false}, false},
+		{"empty", `<value/>`, nil, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			raw := xml.NewDecoder(strings.NewReader(test.source))
+			tokens := &wellFormedXMLTokenReader{source: rawXMLTokenReader{raw}}
+			decoder := xml.NewTokenDecoder(tokens)
+			token, err := decoder.Token()
+			require.NoError(t, err)
+			start, ok := token.(xml.StartElement)
+			require.True(t, ok)
+			// Simulate a future adapter losing alignment after raw capture.
+			tokens.namespaceDeclarations = test.flags
+			var node *validationNode
+			require.NotPanics(t, func() {
+				node, err = readValidationNode(decoder, tokens, start, 1)
+			})
+			if test.wantError {
+				assert.ErrorContains(t, err, "namespace declaration provenance out of sync at <value>")
+				assert.Nil(t, node)
+				// Fail before consuming any content from the mismatched element.
+				next, err := decoder.Token()
+				require.NoError(t, err)
+				assert.Equal(t, start.End(), next)
+				return
+			}
+			require.NoError(t, err)
+			require.Len(t, node.Attrs, len(test.flags))
+			for index, flag := range test.flags {
+				assert.Equal(t, flag, node.Attrs[index].NamespaceDeclaration)
+			}
 		})
 	}
 }
