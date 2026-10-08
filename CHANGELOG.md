@@ -26,6 +26,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Preserve lexical namespace-declaration provenance in the internal XML
+  validator, so ordinary attributes bound to the literal URI `xmlns` cannot
+  bypass attribute checks. Actual declarations and public Decode behavior
+  remain unchanged; public Validate still assesses the encoded model.
+
 - Check ordinary attribute permissibility on simple- and builtin-typed elements
   in the internal XML validator, including `step` and `staves`, without
   rechecking the attributes of complex simple-content bases. Public `Decode`

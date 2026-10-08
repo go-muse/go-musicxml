@@ -32,11 +32,13 @@ planning identities at revision 1. Their names are **not frozen public runtime
 error codes** or a new DSL. A later compiler/API decision must specify runtime
 identity and migration explicitly, while preserving these provenance links.
 
-The existing-reader XML repair and its executable tests are recorded in the
-[code-map update](existing-code-map.md#xml-reading-repair-update). A checked,
+The existing-reader XML repairs and their executable tests are recorded in the
+[code-map update](existing-code-map.md#xml-reading-repair-update), including the
+[namespace-declaration provenance repair](existing-code-map.md#namespace-declaration-provenance-repair-update).
+A checked,
 machine-readable implementation-evidence field is an explicit
 [follow-up](existing-code-map.md#xml-reading-follow-ups); the planning JSON and
-its `status: planned` contract remain unchanged by that repair.
+its `status: planned` contract remain unchanged by those repairs.
 
 ### Resolve one research record
 
