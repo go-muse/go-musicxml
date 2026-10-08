@@ -1,0 +1,103 @@
+{
+  "format": "musicxml40-xsd-property-glossary-1",
+  "source_inventory": "occurrence-registry.json",
+  "property_id_convention": "occurrence.id + \"@\" + attribute_name",
+  "property_value_convention": "occurrence.attributes[attribute_name]",
+  "properties": {
+    "elementFormDefault": {
+      "description": "Local element namespace form",
+      "constraint_class": "schema_composition",
+      "applicability_preassessment": "source"
+    },
+    "attributeFormDefault": {
+      "description": "Local attribute namespace form",
+      "constraint_class": "schema_composition",
+      "applicability_preassessment": "source"
+    },
+    "namespace": {
+      "description": "Imported namespace",
+      "constraint_class": "schema_composition",
+      "applicability_preassessment": "source"
+    },
+    "schemaLocation": {
+      "description": "Schema location hint",
+      "constraint_class": "schema_composition",
+      "applicability_preassessment": "source"
+    },
+    "name": {
+      "description": "Component/declaration name",
+      "constraint_class": "schema_composition",
+      "applicability_preassessment": "both"
+    },
+    "base": {
+      "description": "Base type reference",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "value": {
+      "description": "Facet parameter",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "memberTypes": {
+      "description": "Ordered union type references",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "type": {
+      "description": "Declared type reference",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "default": {
+      "description": "Defaulted attribute value",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "ref": {
+      "description": "Reusable component reference",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "use": {
+      "description": "Attribute presence contract",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "fixed": {
+      "description": "Fixed attribute value",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "minOccurs": {
+      "description": "Minimum particle repetition",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "maxOccurs": {
+      "description": "Maximum particle repetition",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "both"
+    },
+    "block": {
+      "description": "Blocked derivations/substitution",
+      "constraint_class": "instance_contract",
+      "applicability_preassessment": "source"
+    },
+    "final": {
+      "description": "Final derivation set",
+      "constraint_class": "schema_composition",
+      "applicability_preassessment": "source"
+    },
+    "targetNamespace": {
+      "description": "Schema target namespace",
+      "constraint_class": "schema_composition",
+      "applicability_preassessment": "source"
+    },
+    "{http://www.w3.org/XML/1998/namespace}lang": {
+      "description": "Schema documentation language",
+      "constraint_class": "schema_metadata",
+      "applicability_preassessment": "both"
+    }
+  }
+}

@@ -180,6 +180,13 @@ type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
   original bytes.
 - The API is pre-1.0 and may change between minor releases.
 
+## Validation design
+
+See [`docs/validation`](docs/validation/README.md) for the proposed validation
+architecture, MusicXML 4.0 requirements catalog, source coverage, and open
+questions. These documents describe future work; they do not change the
+current API or claim that the proposal is implemented.
+
 ## Development
 
 ```bash
@@ -201,3 +208,4 @@ in this README.
 The library code is licensed under the [MIT License](LICENSE). Bundled schemas
 and test fixtures retain their upstream terms; see
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+

@@ -1,0 +1,1289 @@
+{
+  "metadata": {
+    "registry_format": "musicxml-prose-requirements-neutral-v1",
+    "musicxml_version": "4.0",
+    "report_version": "1.1",
+    "retrieved_at": "2026-10-08",
+    "pinned_publication": "https://www.w3.org/2021/06/musicxml40/",
+    "publication_status": "Final Community Group Report, 1 June 2021; not a W3C Recommendation",
+    "official_release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53",
+    "rule_id_policy": "MX40-PROSE- plus stable semantic slug; does not depend on row number",
+    "scope": "All 642 annotations of six pinned XSD modules; the complete 974-page pinned 4.0 HTML corpus was inventoried and its normative prose reviewed, with explicit exclusions for old-version history and illustrative code/data. External normative dependency closure is separate.",
+    "exhaustive_claim": false,
+    "coverage_claim": "complete scoped MusicXML 4.0 prose corpus review; not a proof of complete transitive external standard validation",
+    "external_dependency_closure_complete": false,
+    "quote_policy": "No verbatim passages reproduced in deliverables. Rules are paraphrases with exact source locators.",
+    "counts_by_classification": {
+      "constraint": 51,
+      "recommendation": 58,
+      "interpretation": 143,
+      "default": 73,
+      "application_dependent": 14,
+      "descriptive": 3
+    },
+    "counts_by_applicability": {
+      "source": 15,
+      "exporter": 44,
+      "both": 115,
+      "model": 37,
+      "renderer": 129,
+      "out_of_scope": 2
+    },
+    "total_rules": 342,
+    "total_open_issues": 28,
+    "implementation_status": "Research artifacts only. No Go code, tests, product or repository changes."
+  },
+  "issues": [
+    {
+      "id": "MX40-ISSUE-beam-six-eight",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Аннотация beam-level говорит о шести уровнях, тогда как facet, beam и beam-value поддерживают восемь.",
+      "disposition_ru": "Опираться на явный XSD диапазон 1…8; устаревшую фразу не превращать в ограничение 6.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-68fc7ad2968f8e7b",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L43",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='beam-level']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 43,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 3,
+          "source_text_sha256": "9e6d25ffe16cf427c3c96a40f6c4f1bd37f68a4be8325767f4db8771aa2bc838",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-05dd56ce3aad0c45",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1607",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='beam-value']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 1607,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 122,
+          "source_text_sha256": "59a58af757bb73f396819650291eb9bddcca93ee6a222c38e0a751c4434b5d79",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-e96de7c57d0b1ced",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4718",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='beam']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4718,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 409,
+          "source_text_sha256": "4fe88293e3b0a77edb864ee0aa2b79effcc4a2a5ddeb9c7a5df6735b36e0214b",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-cue-duration",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "full-note приписывает cue отсутствие duration; note и его формальные ветви требуют duration у cue и исключают его только у grace.",
+      "disposition_ru": "Приоритет структурного XSD-контракта подтверждён самим note prose; сохранить расхождение.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-79b454784f714c07",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6492",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:group[@name='full-note']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6492,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 601,
+          "source_text_sha256": "00fe8a3b32aa5061654dfb2401761b2f9e0deb6a8a031716fbf33e42a716ff96",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-ebdd690c019df499",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5162",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='note']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5162,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 452,
+          "source_text_sha256": "b9bfb0313d60791f87d44f32d25c82d9ff6bd1660f6e5ce98bcb66c108338c0f",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-container-schema-exists",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Tutorial утверждает отсутствие container.xsd, release notes 4.0 сообщает о добавленной схеме, файл существует.",
+      "disposition_ru": "Считать tutorial утверждение устаревшим; container.xsd входит в версию 4.0.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-569f9c1a298c5d62",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "b18ab96162c43f4f8539c71d1aa6c88f2d4d309cf2b03a1eb595cb1929011f59",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/"
+        },
+        {
+          "source_id": "MX40-PAGE-100b51e97fee633c",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "8c52c251ba9df6f92a2059c12ecd13e93ed7d41d4eedd957e3480f99fbc4e28a",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/"
+        },
+        {
+          "source_id": "MX40-DOC-c0faac3c7e257e40",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L4",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+          "source_xpath": "/xs:schema/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4,
+          "source_file": "container.xsd",
+          "annotation_index_zero_based": 0,
+          "source_text_sha256": "3fbf4525ad3c55f9838991b72aad9b89e417fea4884fee08e83fa71a7489fcfa",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-container-sounds-wording",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Описание container type ошибочно называет его корнем sounds file, а global container определён как META-INF/container.xml.",
+      "disposition_ru": "Не разрешать sounds как корень container; явная структура и вторая аннотация согласованы.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-06811a9c911bdb27",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L108",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='container']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 108,
+          "source_file": "container.xsd",
+          "annotation_index_zero_based": 1,
+          "source_text_sha256": "2a7570d47aaaac697bdb9bd3a3f333791eacb9f8c3467fadbe306c9f31f5bb36",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-7221d2eddbf9bfbe",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L140",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+          "source_xpath": "/xs:schema/xs:element[@name='container']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 140,
+          "source_file": "container.xsd",
+          "annotation_index_zero_based": 4,
+          "source_text_sha256": "e95fa51625e5ef160fa3966e57bdae4a57c4f2788fabda18ee132110803c26e7",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-container-schema-uri",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "В конце container.xsd prose указан URI sounds.xsd для валидации.",
+      "disposition_ru": "Зафиксировать вероятную редакционную ошибку; пользоваться закреплённым container.xsd, не подменять схемой sounds.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-c0faac3c7e257e40",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L4",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+          "source_xpath": "/xs:schema/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4,
+          "source_file": "container.xsd",
+          "annotation_index_zero_based": 0,
+          "source_text_sha256": "3fbf4525ad3c55f9838991b72aad9b89e417fea4884fee08e83fa71a7489fcfa",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-xml-declaration-required",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Tutorial называет XML declaration обязательной для всех XML-документов.",
+      "disposition_ru": "Утверждение не следует из MusicXML XSD; не добавлять запрет XML без declaration. Зависимая XML-спецификация отдельно не исследована в этом проходе.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-db6974b6f1261bf1",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "b04d904464f9e7d446495549c5b3b76f7627a85a2dcebc0a0733a02af2a8a57a",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-every-note-duration",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Tutorial обобщает пример до duration у каждой ноты, забывая grace.",
+      "disposition_ru": "Применять реальные ветви note; не вводить universal duration-required поверх grace.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-db6974b6f1261bf1",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "b04d904464f9e7d446495549c5b3b76f7627a85a2dcebc0a0733a02af2a8a57a",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/"
+        },
+        {
+          "source_id": "MX40-DOC-ebdd690c019df499",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5162",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='note']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5162,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 452,
+          "source_text_sha256": "b9bfb0313d60791f87d44f32d25c82d9ff6bd1660f6e5ce98bcb66c108338c0f",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-part-id-uniqueness-scope",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Фраза every part unique id в partwise-примере не определяет scope повторных part id по тактам timewise.",
+      "disposition_ru": "Уникальность score-part ID документная; timewise part IDREF может повторяться по тактам. Дополнительная уникальность sibling part требует отдельно обоснованной нормы.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-db6974b6f1261bf1",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "b04d904464f9e7d446495549c5b3b76f7627a85a2dcebc0a0733a02af2a8a57a",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/"
+        },
+        {
+          "source_id": "MX40-DOC-6e875b8d290aec82",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2407",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:attributeGroup[@name='part-attributes']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2407,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 190,
+          "source_text_sha256": "c220823f1a79c92f6bf98014b8cc60d9ce0939de4c2a072eeec6f7c0e862e506",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-6828d0b1e3dff85e",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6614",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:element[@name='score-timewise']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6614,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 612,
+          "source_text_sha256": "298244dfe340784f55335519c1b71adf521f2f3b7f218f49b5d415295de49460",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-duration-integer",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Tutorial называет duration integer, XSD и reference разрешают positive-divisions на decimal.",
+      "disposition_ru": "Не отклонять дробную duration; целые значения — рекомендация совместимости.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-83dabf74303afbad",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "15291a71335edad3f597bb4f50ff64f1de419628f9900071062101d0f964ee3b",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/"
+        },
+        {
+          "source_id": "MX40-DOC-f337ab227e15f42c",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L90",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='divisions']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 90,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 7,
+          "source_text_sha256": "5b7f85b63e9a356fd3889b55b1f7d1d515578506dc20a5678cc5fe3df758b897",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-4ea6119b5e3e4d2d",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6472",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:group[@name='duration']/xs:sequence[1]/xs:element[@name='duration']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6472,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 599,
+          "source_text_sha256": "a2e1ce55b190c6f6ce5fcaad751e0c044a2b30900687c8f1ea99d05825c3d2be",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-left-barline-attributes",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Reference рекомендует left barline первой кроме print/bookmark/link; tutorial явно ставит её после attributes.",
+      "disposition_ru": "Не вводить жёсткую XML first-child проверку; возможна музыкальная нулевая позиция. Нужна отдельная интерпретация should и must location.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-83dabf74303afbad",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "15291a71335edad3f597bb4f50ff64f1de419628f9900071062101d0f964ee3b",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/"
+        },
+        {
+          "source_id": "MX40-DOC-6b3fb07b3983506e",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3227",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='barline']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 3227,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 272,
+          "source_text_sha256": "bc69b35f983db16f572ae6aa61ba50bb4cd12a56345fd3cb3e760b00a336f536",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-old-note-type-list",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Tutorial перечисляет types только от 256th до long, XSD и reference включают 1024th, 512th и maxima.",
+      "disposition_ru": "Использовать полный XSD enum 4.0, не ограничивать старым примерным списком.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-b0392379abdbe0ed",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/notation-basics/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/notation-basics/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "5cc7d2821cb5fb41cf0ab1d870183e1bd3fba0933d2976ce005bc2250a4bd468",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/notation-basics/"
+        },
+        {
+          "source_id": "MX40-DOC-b4a0eaf359ea6517",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1744",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='note-type-value']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 1744,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 133,
+          "source_text_sha256": "edc40782d1c6300ce6d948b05c91b807ac803202a7710164c715c943319da0be",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-numeral-step-typo",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "kind-value советует пустой text у numeral-step, которого нет в схеме; существует numeral-root.",
+      "disposition_ru": "Вероятное имя по смыслу numeral-root, но не создавать новое поле/элемент; пометить как редакционную неоднозначность.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-7030fcfa4fdcca7c",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1039",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='kind-value']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 1039,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 90,
+          "source_text_sha256": "084b3357ac9426e2f82a1499dece15dc727fce67c4d2ff31c89ecee47bd08a2c",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-b9e09d48bce7728d",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3915",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='numeral-root']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 3915,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 333,
+          "source_text_sha256": "0d9774d664e6b7c4400349f62359b9c6e41760e52d6012f50f30ce8666bc6a50",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-chord-preceding-duration",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Reference говорит preceding note и first preceding non-chord для движения времени; tutorial требует самую длинную ноту первой.",
+      "disposition_ru": "Граница относительно базовой ноты обоснована. Попарный невозрастающий порядок всех chord tones не доказан; не запрещать короткую затем более длинную, если обе ≤ base, без уточнения.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-bd8d2e100ed65a89",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6497",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:group[@name='full-note']/xs:sequence[1]/xs:element[@name='chord']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6497,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 602,
+          "source_text_sha256": "c921e4b7693598f1d8e5ef4128c22519797ad8f16566237e49fbc9f9449d4b44",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-PAGE-83dabf74303afbad",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "15291a71335edad3f597bb4f50ff64f1de419628f9900071062101d0f964ee3b",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-mxl-methods-compatibility",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "DEFLATE описан как формат файлов контейнера; mimetype обязан stored; исчерпывающий список допустимых остальных методов не сформулирован отдельно.",
+      "disposition_ru": "Не утверждать полную ZIP-validation по этим параграфам; требуется сверка внешнего ZIP/JAR корпуса.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-c0faac3c7e257e40",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L4",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+          "source_xpath": "/xs:schema/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4,
+          "source_file": "container.xsd",
+          "annotation_index_zero_based": 0,
+          "source_text_sha256": "3fbf4525ad3c55f9838991b72aad9b89e417fea4884fee08e83fa71a7489fcfa",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-PAGE-569f9c1a298c5d62",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "b18ab96162c43f4f8539c71d1aa6c88f2d4d309cf2b03a1eb595cb1929011f59",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-mxl-first-media-type-set",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Для первого rootfile запрещён non-MusicXML media type, но точный перечень MusicXML media types/вложенных compressed roots не дан в этом условии.",
+      "disposition_ru": "Прямой XML root проверяется отдельно; множество разрешённых media types нужно уточнить, не придумывать equality одному MIME без объяснения.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-9f4537f8ac75d8dc",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L128",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='rootfile']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 128,
+          "source_file": "container.xsd",
+          "annotation_index_zero_based": 3,
+          "source_text_sha256": "f3c851d36d03f94387f4140828a5cd53560f3633b98ded50de593b05a408808f",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-PAGE-569f9c1a298c5d62",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "b18ab96162c43f4f8539c71d1aa6c88f2d4d309cf2b03a1eb595cb1929011f59",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-smufl-version-dictionary",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Canonical glyph constraints опираются на внешний SMuFL словарь; release 4.0 упоминает SMuFL 1.4, но весь словарь здесь не прочитан.",
+      "disposition_ru": "Проверка canonical existence остаётся unknown без закреплённого словаря; prefix XSD можно проверять.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-8554ae4ea8bd95f5",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L413",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='smufl-glyph-name']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 413,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 35,
+          "source_text_sha256": "2417bdef843d17fa1f66f81c9dac8d1a337e475d2330f38a19b13b0e99c926eb",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-cd5bcf383e744590",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1766",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='notehead-value']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 1766,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 134,
+          "source_text_sha256": "718d98486e2edfdf58fb31836080dd4fabfe4d815b72328cb45dfe635a1746c4",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-PAGE-100b51e97fee633c",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "8c52c251ba9df6f92a2059c12ecd13e93ed7d41d4eedd957e3480f99fbc4e28a",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-ipa-character-repertoire",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "IPA 2015 in Unicode 13.0 ограничивает содержимое, но точный allowlist и комбинационные знаки не перечислены.",
+      "disposition_ru": "Нельзя выдавать полную IPA-валидацию по произвольному Unicode block; внешний корпус pending.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-a1f769fb8b3b4b22",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2755",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='play']/xs:sequence[1]/xs:choice[1]/xs:element[@name='ipa']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2755,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 225,
+          "source_text_sha256": "82d8af424ea36c9ec4557bfae5ef138dfea0881b3044fb0e8c75f79573b1e6c3",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-PAGE-100b51e97fee633c",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "8c52c251ba9df6f92a2059c12ecd13e93ed7d41d4eedd957e3480f99fbc4e28a",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-initial-effective-context",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "divisions/key/time/clef могут отсутствовать формально; все начальные defaults не заданы универсально.",
+      "disposition_ru": "Не выдумывать C major, 4/4, treble или divisions=1 как форматную норму; неизвестный effective context отделить от отрицательного результата.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-686efd65001e2ed9",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2815",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='attributes']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2815,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 230,
+          "source_text_sha256": "5e7daed7b19d25ff523176872a58ea1450d891da147300da4f528070f438b504",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-cddf039dd41eda2a",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2822",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='attributes']/xs:sequence[1]/xs:element[@name='divisions']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2822,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 231,
+          "source_text_sha256": "2420aa45eac4add610fc4fedf644a4a506f0fc4452c1203decb25c04ac2c7891",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-97d773fc04f3239b",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5865",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='defaults']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5865,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 522,
+          "source_text_sha256": "c4431e118f7bbc8e21698c47dcd22f9be9af8b7d2069cbcbfe47255fb5a05cb3",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-span-pairing-scope",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Даны значения start/stop/continue и overlap IDs, но не универсальное MUST полного попарного замыкания для всех спанов.",
+      "disposition_ru": "Не обобщать most/should на обязательное balance всех типов; учитывать repeats, let-ring, cross-system и stop-before-start.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-1986383ec951ac3f",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L287",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='number-level']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 287,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 24,
+          "source_text_sha256": "4be46a8a6b88f9919a0a70812f6cc961a6664de24236d02cae8675bee49107a8",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-877d00b45703c0c8",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5465",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='slur']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5465,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 480,
+          "source_text_sha256": "e544c601fbdff1e85252b2f83eb1b86ee8ff6c13a7fb030bc41eef5162d1fa99",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-fb17281eb0d6f075",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5661",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='tied']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5661,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 505,
+          "source_text_sha256": "ef5025b55bbacb6e9cfe2cfd494aeba55989c23ea656ae6bc23b58e9bec215f0",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-assess-type-default",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Таблица assess описывает default для неуказанного type, хотя сам type required в XSD.",
+      "disposition_ru": "Контекстный default оценки означает отсутствие override assess; нельзя принять assess без required type только по этой фразе.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-298eb303e1a920a6",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/assess/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/assess/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "85d0c6c1e9cb6e23dcdb36a376e59e72c459f7dc9c1dd8dec1cb1f4b5cd65671",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/assess/"
+        },
+        {
+          "source_id": "MX40-DOC-ca1f745fb16d70dc",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4699",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='assess']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4699,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 407,
+          "source_text_sha256": "f1ee597825e8770c736823905863eb688cc832d6d06a3db3dfc8106a2aeedc12",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-measure-duration-completeness",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Не найдена универсальная норма о равенстве duration каждого такта или voice размеру.",
+      "disposition_ru": "Pickup, implicit, non-controlling и senza-misura исключают такое blanket rule; это отдельный профиль/эвристика, не MusicXML MUST.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-04b1f8ede16e58cf",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2385",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:attributeGroup[@name='measure-attributes']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2385,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 189,
+          "source_text_sha256": "f51f9b288f2d9debbb62381c0f6e92e1f05a03a2282dadfb38a3e5884278da90",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-a72ea37cb8631191",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3191",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='time']/xs:choice[1]/xs:element[@name='senza-misura']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 3191,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 269,
+          "source_text_sha256": "84a5b3d69b3ff69c82334d265787ea902c44d211269fe6b4834097932539d3c6",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-4ea6119b5e3e4d2d",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6472",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:group[@name='duration']/xs:sequence[1]/xs:element[@name='duration']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6472,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 599,
+          "source_text_sha256": "a2e1ce55b190c6f6ce5fcaad751e0c044a2b30900687c8f1ea99d05825c3d2be",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-zero-counts-and-ratios",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "XSD nonNegativeInteger допускает 0 в staves/actual-notes/normal-notes, tenths допускает 0 в scaling; prose не везде задаёт запрет.",
+      "disposition_ru": "Не повышать до positiveInteger без источника. Вычисления с нулевым denominator требуют отдельного результата unsupported/undefined, а не выдуманной нормы.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-c3132c7dc40b1280",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2840",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='attributes']/xs:sequence[1]/xs:element[@name='staves']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2840,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 234,
+          "source_text_sha256": "5f5b4d6341442b5cad0ebf079f45c9e3a26ed0cd3977f5a698b7ac00aa78749d",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-8bc658c84d47bd0c",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5685",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='time-modification']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5685,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 506,
+          "source_text_sha256": "2c723ca205bb8fbe078e7652234b77e27ecb613d9e74598c633c910a942c4422",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-2d2edd9ba8f252d3",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4471",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='scaling']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4471,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 380,
+          "source_text_sha256": "a521ab3d0b500bbacde943ae175ebe8dbc1f09292b640d780bc343583e71347c",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-external-spec-closure",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Полная семантика XML, XSD datatypes, XLink, XML Base/ID, ZIP/JAR/DEFLATE, SMuFL и IPA живёт во внешних спецификациях.",
+      "disposition_ru": "Этот реестр не претендует на полный transitive normative closure; внешние страницы не получены/не прочитаны этим исследователем.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-305b1fcc38efef26",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/xml.xsd#L5",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/xml.xsd/",
+          "source_xpath": "/xs:schema/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5,
+          "source_file": "xml.xsd",
+          "annotation_index_zero_based": 0,
+          "source_text_sha256": "a79c6f24c8e1ba3fae21e090a081f32c0a42d35188760a49b58659d54a9d15ca",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-6fa17be7c5390ec9",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/xlink.xsd#L4",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/xlink.xsd/",
+          "source_xpath": "/xs:schema/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4,
+          "source_file": "xlink.xsd",
+          "annotation_index_zero_based": 0,
+          "source_text_sha256": "a851cd7a86ba74057af4b83f25a64a6755417134749755a335851393a2f1152f",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-c0faac3c7e257e40",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L4",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+          "source_xpath": "/xs:schema/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4,
+          "source_file": "container.xsd",
+          "annotation_index_zero_based": 0,
+          "source_text_sha256": "3fbf4525ad3c55f9838991b72aad9b89e417fea4884fee08e83fa71a7489fcfa",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-midi-instrument-parent-wording",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Часть prose говорит о midi-instrument как дочернем score-instrument, тогда как формальная структура и score-part описание размещают начальное назначение в score-part.",
+      "disposition_ru": "Не разрешать недопустимую вложенность по неточной вводной фразе; фактический content model определяет XSD.",
+      "sources": [
+        {
+          "source_id": "MX40-DOC-a9db631b0a5fe315",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2676",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='midi-instrument']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2676,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 213,
+          "source_text_sha256": "1d3ccf62b20650352557a6b034d17569130d49f2275913889a88635439f881c1",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-29b185d907dfeae6",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6048",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='score-instrument']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6048,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 542,
+          "source_text_sha256": "c3580cb017f6556868f6af8eb27764f6a4dff2ba349240357e6edd7dc5193528",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-f2be04a607b2ea18",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6072",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='score-part']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6072,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 545,
+          "source_text_sha256": "1169c1e40608d92b9721f49425c10203ed4621da78d2f11d8373572888febdea",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-legacy-tutorial-header-root-list",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Tutorial использует старое число header children и говорит о root в каждом chord symbol, хотя 4.0 содержит defaults/credit и выбор root/numeral/function.",
+      "disposition_ru": "Описания конкретных примеров не должны сужать полный XSD-контракт 4.0.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-8bce5fe9ece47900",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/structure-of-musicxml-files/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/structure-of-musicxml-files/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "73ba0730fd4d1edbc2a03c9dd8d82628041dfa93e5704fb86ae585f11471540e",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/structure-of-musicxml-files/"
+        },
+        {
+          "source_id": "MX40-PAGE-693338337ad2790a",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/chord-symbols-and-diagrams/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/chord-symbols-and-diagrams/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "90d57a98d12640d060f108094e07317712085a6ea0d795cee0a145aa44130442",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "dated_w3c_http",
+          "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/chord-symbols-and-diagrams/"
+        },
+        {
+          "source_id": "MX40-DOC-a185741f39fa9ecb",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6408",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:group[@name='harmony-chord']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6408,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 593,
+          "source_text_sha256": "075fe6ec585828f2a0fb2472a408efe1d5d0335c1694d216c578006d04103aee",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-cfa98f91a5a50934",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6549",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:group[@name='score-header']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 6549,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 605,
+          "source_text_sha256": "0e31e04d01a9178970fc141e07526e9b9a25a51d90af541be6312d37c47c46b9",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-pull-off-attribute-descriptions-swapped",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "HTML-описания pull-off type и number перепутаны местами: type приписано различение overlaps, number — start/stop и default 1.",
+      "disposition_ru": "Типы XSD и hammer-on-pull-off модель однозначны: type=start/stop, number=number-level. Не генерировать правила из ошибочных подписей таблицы.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-22bea174b1c99e6d",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/pull-off/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/pull-off/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "e58e0731911a6d2e80c61f3d29c129ace781920e6c6dca1ecf065e524c9a3686",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "official_pinned_github_archive",
+          "retrieval_source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/docs/musicxml-reference/elements/pull-off/index.html"
+        },
+        {
+          "source_id": "MX40-DOC-03f1f00ec2f16769",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4906",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='hammer-on-pull-off']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4906,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 427,
+          "source_text_sha256": "f0fee0b0fea172d5efd3622761815358fd423e217a177d5fd3c8ca7ace43aaaa",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-pizzicato-nonexistent-element",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "Описание note pizzicato противопоставляет его несуществующему pizzicato element; общий режим находится в sound pizzicato attribute.",
+      "disposition_ru": "Не добавлять новый XML element. Семантика области note versus sound при этом понятна из sound prose.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-81f78f9dfcc4963f",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "fc08385be9faf44f22da8453bf956f7b9f76716936cd3649553b5af1c661dd33",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "official_pinned_github_archive",
+          "retrieval_source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/docs/musicxml-reference/elements/note/index.html"
+        },
+        {
+          "source_id": "MX40-DOC-ebdd690c019df499",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5162",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='note']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 5162,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 452,
+          "source_text_sha256": "b9bfb0313d60791f87d44f32d25c82d9ff6bd1660f6e5ce98bcb66c108338c0f",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        },
+        {
+          "source_id": "MX40-DOC-3e9c3d19ddd45778",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4125",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 4125,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 352,
+          "source_text_sha256": "fa70444a1d4dc0dc55e29fb68f843276b626b93f86424c58e158ee124eb7a3dd",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    },
+    {
+      "id": "MX40-ISSUE-time-beat-spelling",
+      "version": "4.0",
+      "classification": "ambiguity_or_contradiction",
+      "description_ru": "HTML time prose говорит о парах beat/beat-type, тогда как структурное имя — beats/beat-type.",
+      "disposition_ru": "Это редакционное сокращение/ошибка; разрешённые expanded names определяет XSD.",
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-d141fdc1acb75d8e",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/time/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/time/",
+          "section_label": "",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "193068a20c71eb538cf7fc75458b29b22a0b3672a8a4a18d839af7da32f0ee77",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "official_pinned_github_archive",
+          "retrieval_source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/docs/musicxml-reference/elements/time/index.html"
+        },
+        {
+          "source_id": "MX40-DOC-2c2d4752acb9b065",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3180",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='time']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 3180,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 268,
+          "source_text_sha256": "909aa2072d47a558d1d75aaf92b2d03c47ccb0c3d6be5017ab5c54d95cff1c2a",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "hard_error_basis": false
+    }
+  ]
+}

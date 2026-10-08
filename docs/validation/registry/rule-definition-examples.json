@@ -1,0 +1,370 @@
+{
+  "metadata": {
+    "format": "musicxml40-reconciled-requirements-1.0",
+    "created_at": "2026-10-08",
+    "musicxml_version": "4.0",
+    "official_report": "https://www.w3.org/2021/06/musicxml40/",
+    "release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53",
+    "artifact_kind": "research_and_architecture_only",
+    "executable": false,
+    "product_code_changed": false,
+    "product_tests_created_or_run": false,
+    "full_published_musicxml_source_coverage": true,
+    "full_transitive_external_normative_closure": false,
+    "counts_are_catalogue_records_not_independent_mandatory_predicates": true
+  },
+  "status": "illustrative architecture declarations only; six examples do not constitute full compiled catalog",
+  "operator_semantics": "described abstractly; no parser/compiler or Go API is implemented",
+  "examples": [
+    {
+      "id": "MX40-PROPOSED-RULE-octave-domain",
+      "id_status": "illustrative_semantic_id_not_frozen_runtime_API",
+      "version": {
+        "musicxml": "4.0",
+        "catalogue_revision": "architecture-example-1",
+        "release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53"
+      },
+      "classification": "mandatory",
+      "provenance_kind": "XSD",
+      "requirement_ids": [
+        "MX40-REQ-7bf68ac5dff0effc"
+      ],
+      "sources": [
+        {
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1807",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='octave']",
+          "source_occurrence_ids": [
+            "MX40-XSD-ef3110478fb27afe"
+          ]
+        }
+      ],
+      "title_ru": "Значение octave является целым от 0 до 9",
+      "explanation_ru": "Лексическая форма проверяется при наличии source lexeme; модельное число проверяется в своём точном value space. Форма прежней строки по числу не восстанавливается.",
+      "applicability": {
+        "targets": [
+          "source",
+          "model"
+        ],
+        "when": "value is assessed under musicxml.xsd simpleType octave",
+        "requires_capabilities": [
+          "exact_value",
+          "type_context"
+        ],
+        "source_additional_evidence": [
+          "normalized_lexeme"
+        ],
+        "missing_required_evidence": "unknown_or_unsupported"
+      },
+      "predicate": {
+        "operator": "scalar_domain",
+        "domain_ref": "MX40-XSD-ef3110478fb27afe",
+        "abstract_value_space": "integer",
+        "bounds": {
+          "minInclusive": "0",
+          "maxInclusive": "9"
+        },
+        "source_lexical_validation": "XSD10 integer lexical space before facets"
+      },
+      "diagnostic": {
+        "reason_ru": "Значение octave не входит в допустимый целочисленный диапазон.",
+        "expected": "integer in [0,9]",
+        "actual": "adapter exact value or lexeme",
+        "rule_metadata_embedded_offline": true
+      }
+    },
+    {
+      "id": "MX40-PROPOSED-RULE-accordion-at-least-one",
+      "id_status": "illustrative_semantic_id_not_frozen_runtime_API",
+      "version": {
+        "musicxml": "4.0",
+        "catalogue_revision": "architecture-example-1",
+        "release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53"
+      },
+      "classification": "mandatory",
+      "provenance_kind": "prose",
+      "requirement_ids": [
+        "MX40-PROSE-accordion-at-least-one"
+      ],
+      "sources": [
+        {
+          "source_id": "MX40-DOC-9aaafab843a7745d",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3290",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:complexType[@name='accordion-registration']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 3290,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 276,
+          "source_text_sha256": "7b51eb907987367d8a79c6ba60b02883b48370a399731d8786c2f5081e37c816",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "title_ru": "accordion-registration должен содержать хотя бы один из high, middle, low.",
+      "explanation_ru": "Все три дочерних элемента формально optional; XSD недостаточен для этого ограничения.",
+      "applicability": {
+        "targets": [
+          "source",
+          "model"
+        ],
+        "when": "an accordion-registration object is present",
+        "requires_capabilities": [
+          "child_presence"
+        ],
+        "missing_required_evidence": "unknown_or_unsupported; never pass",
+        "model_claim": "current_model_only; not historical_source_validity"
+      },
+      "predicate": {
+        "operator": "count_union_at_least",
+        "child_names": [
+          "{}accordion-high",
+          "{}accordion-middle",
+          "{}accordion-low"
+        ],
+        "minimum": 1
+      },
+      "diagnostic": {
+        "template_ru": "{path}: {reason}. Ожидалось: {expected}; фактически: {actual}. {explanation}. Источник: {source_url}. Правило: {rule_id}.",
+        "expected": "at least one register child",
+        "path_from": "adapter_location",
+        "first_related_location_when_useful": true,
+        "rule_metadata_embedded_offline": true
+      }
+    },
+    {
+      "id": "MX40-PROPOSED-RULE-beam-number-distinct",
+      "id_status": "illustrative_semantic_id_not_frozen_runtime_API",
+      "version": {
+        "musicxml": "4.0",
+        "catalogue_revision": "architecture-example-1",
+        "release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53"
+      },
+      "classification": "mandatory",
+      "provenance_kind": "prose",
+      "requirement_ids": [
+        "MX40-PROSE-beam-number-distinct"
+      ],
+      "sources": [
+        {
+          "source_id": "MX40-PAGE-7a6134fc6d668313",
+          "source_kind": "prose",
+          "location_kind": "html_section",
+          "source_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beam/",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beam/",
+          "section_label": "introduction",
+          "anchor_verified": false,
+          "retrieved": true,
+          "source_document_sha256": "a86b9507f5885e074a853d8ce96196e1f8389c71a7124fea7e423446581a81fe",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; no fabricated anchor",
+          "retrieval_origin": "official_pinned_github_archive",
+          "retrieval_source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/docs/musicxml-reference/elements/beam/index.html"
+        }
+      ],
+      "title_ru": "У каждой beam одной ноты должен быть отдельный number, обозначающий её уровень.",
+      "explanation_ru": "XSD maxOccurs=8 и диапазон 1…8 не обеспечивают различие number; пропущенное number имеет default 1.",
+      "applicability": {
+        "targets": [
+          "source",
+          "model"
+        ],
+        "when": "note has beam children",
+        "requires_capabilities": [
+          "ordered_or_unordered_child_occurrences",
+          "attribute_presence",
+          "typed_integer",
+          "effective_default"
+        ],
+        "missing_required_evidence": "unknown_or_unsupported; never pass",
+        "model_claim": "current_model_only; not historical_source_validity"
+      },
+      "predicate": {
+        "operator": "all_distinct",
+        "selection": "beam children of one note",
+        "key": {
+          "operator": "effective_attribute",
+          "name": "{}number",
+          "default_source": "XSD declaration for beam number",
+          "fallback": "1"
+        }
+      },
+      "diagnostic": {
+        "template_ru": "{path}: {reason}. Ожидалось: {expected}; фактически: {actual}. {explanation}. Источник: {source_url}. Правило: {rule_id}.",
+        "expected": "distinct effective beam numbers within this note",
+        "path_from": "adapter_location",
+        "first_related_location_when_useful": true,
+        "rule_metadata_embedded_offline": true
+      }
+    },
+    {
+      "id": "MX40-PROPOSED-RULE-part-id-target",
+      "id_status": "illustrative_semantic_id_not_frozen_runtime_API",
+      "version": {
+        "musicxml": "4.0",
+        "catalogue_revision": "architecture-example-1",
+        "release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53"
+      },
+      "classification": "mandatory",
+      "provenance_kind": "prose",
+      "requirement_ids": [
+        "MX40-PROSE-part-id-target"
+      ],
+      "sources": [
+        {
+          "source_id": "MX40-DOC-6e875b8d290aec82",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2407",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:attributeGroup[@name='part-attributes']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 2407,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 190,
+          "source_text_sha256": "c220823f1a79c92f6bf98014b8cc60d9ce0939de4c2a072eeec6f7c0e862e506",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "title_ru": "part id должен ссылаться именно на score-part в part-list.",
+      "explanation_ru": "xs:IDREF обеспечивает ссылку на ID, но само по себе не проверяет тип целевого элемента.",
+      "applicability": {
+        "targets": [
+          "source",
+          "model"
+        ],
+        "when": "a score part IDREF is present",
+        "requires_capabilities": [
+          "exact_IDREF",
+          "document_ID_index",
+          "target_kind"
+        ],
+        "missing_required_evidence": "unknown_or_unsupported; never pass",
+        "model_claim": "current_model_only; not historical_source_validity"
+      },
+      "predicate": {
+        "operator": "reference_target_kind",
+        "reference_role": "part/@id",
+        "required_target_kind": "score-part",
+        "target_scope": "same document part-list",
+        "prerequisite": "generic IDREF resolution succeeds",
+        "missing_ID_behavior": "report common IDREF failure once; block only target-kind predicate"
+      },
+      "diagnostic": {
+        "template_ru": "{path}: {reason}. Ожидалось: {expected}; фактически: {actual}. {explanation}. Источник: {source_url}. Правило: {rule_id}.",
+        "expected": "score-part target in the document part-list",
+        "path_from": "adapter_location",
+        "first_related_location_when_useful": true,
+        "rule_metadata_embedded_offline": true
+      }
+    },
+    {
+      "id": "MX40-PROPOSED-RULE-time-only-ascending",
+      "id_status": "illustrative_semantic_id_not_frozen_runtime_API",
+      "version": {
+        "musicxml": "4.0",
+        "catalogue_revision": "architecture-example-1",
+        "release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53"
+      },
+      "classification": "mandatory",
+      "provenance_kind": "prose",
+      "requirement_ids": [
+        "MX40-PROSE-time-only-ascending"
+      ],
+      "sources": [
+        {
+          "source_id": "MX40-DOC-18c9f93d3e154513",
+          "source_kind": "prose",
+          "location_kind": "schema_annotation",
+          "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L583",
+          "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+          "source_xpath": "/xs:schema/xs:simpleType[@name='time-only']/xs:annotation[1]/xs:documentation[1]",
+          "source_line": 583,
+          "source_file": "musicxml.xsd",
+          "annotation_index_zero_based": 51,
+          "source_text_sha256": "7514a8d6cbafc990268737bae21deb9e7ba3a25d7c232bfe1ada3408aaf311b6",
+          "short_quote": null,
+          "evidence_form": "Russian paraphrase; original source locator and hash retained"
+        }
+      ],
+      "title_ru": "time-only задаёт положительные номера проходов через запятую в возрастающем порядке.",
+      "explanation_ru": "XSD покрывает lexical pattern, но не численную сортировку.",
+      "applicability": {
+        "targets": [
+          "source",
+          "model"
+        ],
+        "when": "time-only value is present",
+        "requires_capabilities": [
+          "faithful_string_or_exact_sequence"
+        ],
+        "missing_required_evidence": "unknown_or_unsupported; never pass",
+        "model_claim": "current_model_only; not historical_source_validity"
+      },
+      "predicate": {
+        "operator": "ascending_order",
+        "sequence": {
+          "operator": "typed_comma_separated_positive_integers",
+          "input": "time-only value",
+          "prerequisite": "its XSD lexical contract succeeds"
+        },
+        "comparison": "exact integer",
+        "descending_adjacent_pair": "violation",
+        "equal_adjacent_pair": "unknown_without_normative_duplicate_policy; do not reject as a proven mandatory violation",
+        "strictness": "equality/duplicates policy is not established by the word ascending alone"
+      },
+      "diagnostic": {
+        "template_ru": "{path}: {reason}. Ожидалось: {expected}; фактически: {actual}. {explanation}. Источник: {source_url}. Правило: {rule_id}.",
+        "expected": "positive pass numbers in ascending order",
+        "path_from": "adapter_location",
+        "first_related_location_when_useful": true,
+        "rule_metadata_embedded_offline": true
+      }
+    },
+    {
+      "id": "MX40-PROPOSED-RULE-xsi-noNamespaceSchemaLocation",
+      "id_status": "illustrative_semantic_id_not_frozen_runtime_API",
+      "version": {
+        "musicxml": "4.0",
+        "catalogue_revision": "architecture-example-1",
+        "release_commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53"
+      },
+      "classification": "mandatory_XSD_language_metadata",
+      "provenance_kind": "XSD",
+      "requirement_ids": [
+        "MX40-REQ-LANG-XSI-LOCATION"
+      ],
+      "sources": [
+        {
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi_schemaLocation"
+        }
+      ],
+      "title_ru": "Стандартный атрибут xsi:noNamespaceSchemaLocation распознаётся как schema-instance metadata",
+      "explanation_ru": "Проверяется тип значения. Отсутствие этого атрибута среди MusicXML attributes не запрещает его. URL является hint и не запускает сетевую загрузку.",
+      "applicability": {
+        "targets": [
+          "source"
+        ],
+        "model_if_source_metadata_retained": "separate source-evidence reassessment; not inferred from normal model",
+        "when": "attribute expanded name is {http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
+        "requires_capabilities": [
+          "expanded_attribute_names",
+          "normalized_lexeme"
+        ],
+        "missing_required_evidence": "unsupported"
+      },
+      "predicate": {
+        "operator": "standard_xsi_attribute",
+        "attribute": "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
+        "value_domain": "XSD10 anyURI",
+        "network_effect": "none",
+        "schema_selection": "pinned profile unchanged"
+      },
+      "diagnostic": {
+        "reason_ru": "Недопустимое значение стандартного schema-instance атрибута.",
+        "expected": "XSD anyURI value",
+        "rule_metadata_embedded_offline": true
+      }
+    }
+  ]
+}

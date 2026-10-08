@@ -1,0 +1,2088 @@
+{
+  "commit": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53",
+  "official_archive_html_count": 974,
+  "downloaded_dated_comparison_count": 260,
+  "comparison_results": [
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/",
+      "archive_path": "docs/container-reference/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6edd99bbd8378e3a99e0edcec943826af1ea9b2113f36f69d38a85373e04d0a8",
+      "archive_sha256": "e5082f5b8303289a1c6738b82e61b67bdc406d7cf0990af41e3ecce962e4cc09"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/element-tree/",
+      "archive_path": "docs/container-reference/element-tree/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7c015bb47373f9e46fd9c6706e82a39bc54eb2abbb55add655595038b5d27e63",
+      "archive_sha256": "8b9941a016107c179f443b0f97917326c9be179504be8ef384f130c5d68b7aed"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/elements/",
+      "archive_path": "docs/container-reference/elements/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1ba9be3681f2619db274846864a73d650328eadad6384eb91b847177b3f52254",
+      "archive_sha256": "611eeb39a76e1a8b4632120f591e733559c6d8785cd308b4ad0d51949356dfe1"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/elements/container/",
+      "archive_path": "docs/container-reference/elements/container/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7d17bcdc97374285a6ea998f1f8c84a7d3091626017f43a0b26289da6b8a3387",
+      "archive_sha256": "d330bb4c51516ba6924b690eaa1f33f44dfde5ffaef5cd673fc9740c396fbda6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/elements/rootfile/",
+      "archive_path": "docs/container-reference/elements/rootfile/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "d90eb6e6c72bc12decff02ae10413faa21f1d3c0311e2177f9987a17162c1663",
+      "archive_sha256": "c6f6c6a5006a518da50fae767f3ecabd811225fd2911c10cf7fb75ce60fd2b7d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/elements/rootfiles/",
+      "archive_path": "docs/container-reference/elements/rootfiles/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5c084fd6c00af04067bd2e8f717f39324fb4acfdf74fc6f13eccd9e1c15375d6",
+      "archive_sha256": "65e2a3cef7e7eac6808810bbf716a446cacfdb02442f209b8e4a6282fe5eb36a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/examples/",
+      "archive_path": "docs/container-reference/examples/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4c81ff2f9230d7367ee5128108514c40744a5373300afd98c1d78dd409ab665c",
+      "archive_sha256": "984c4c03ad7963de7ad302b71647133624334bec0b19cbeb76c4a443dd1bd428"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/examples/container-element/",
+      "archive_path": "docs/container-reference/examples/container-element/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "74fa14a7fe38221e36409b99fc32f92b3f584c242eaa1a028ef7bb840379a152",
+      "archive_sha256": "9783a648058a55e16969a184d7e2ad581553bdc586a34dfbdc02c916aea4d458"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/container-reference/examples/rootfile-element/",
+      "archive_path": "docs/container-reference/examples/rootfile-element/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "98d3a48fb5c7d3e13ca1772a363ed99c5d19d2deb68011ca3b07ff85e2611f52",
+      "archive_sha256": "a616fd3488eb15da30bdd069f2fba4a84558384ff90060b609edca60de1309c6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/",
+      "archive_path": "docs/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "15d15d9255570e77212db46e47a15bb8c00a0488db9781750dc4a71b13fd35a7",
+      "archive_sha256": "8ddf973c83fbe546f01dad5cdec805982ad670cdb91b3cf253de7f3429600273"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/",
+      "archive_path": "docs/listings/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3b4b17a17a823cdb7fae5746b02eda0b6af0098b50aca63d952431dba7fadac0",
+      "archive_sha256": "37ddf00ed6f1ef88b01012d9e64ce4867b1d99d2797c0d2fb5109642e5d5358a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/catalog.xml/",
+      "archive_path": "docs/listings/catalog.xml/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4eae25e1870b5349a549cc9e233424fec1d14a8eba163aff21bfd0c9dcca2d74",
+      "archive_sha256": "91fa449bda70563afb22212ee708a6fd611a22c784aade77dc083a97f92f314c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/container.xsd/",
+      "archive_path": "docs/listings/container.xsd/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "06fda131ca8254fd208fe37b65791c6647f4210715f1cc2b32774259ff5eed33",
+      "archive_sha256": "794c18ef31eba7f768d9d085b091ee5fbd2737602c2ba70e907dc6b4110c7f97"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/musicxml.xsd/",
+      "archive_path": "docs/listings/musicxml.xsd/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3ed9946c77e04699b7fc673b06f479a404a76025597f574df3afedd5c3700f27",
+      "archive_sha256": "ddca19201470ddb5713200c73dd8efeb0291b6408d89ac9f36ba68fe8ca99ed8"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/opus.xsd/",
+      "archive_path": "docs/listings/opus.xsd/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f2d543e473390f9c62ffd3000a31db887957d9ddc6f68a9cb3b250854ee6c0b1",
+      "archive_sha256": "6160549022ea211f2403dbf4c14437478662d9c2c61b06f10cd5506992693e92"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/overview/",
+      "archive_path": "docs/listings/overview/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "9a3d6a6bb7b620e7342d2f701a88ae012f5231f68bb302650c4a5d5496b809c7",
+      "archive_sha256": "3e6d4ab84cfab924ceea3e9a5c2d214128e6d916fa3f27e61eb0623c6c6875f5"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/parttime.xsl/",
+      "archive_path": "docs/listings/parttime.xsl/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "61d595e0dc50566fdac87d71610128f8b51f27d6db2248843f9dbb557b96caf3",
+      "archive_sha256": "9ac6e76ce70a19c1b78498662febd0a0cb702408d744156b62cbb615d9ed7ef7"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/sounds.xml/",
+      "archive_path": "docs/listings/sounds.xml/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a7901c18a7a5d246cc404619d0517c537a75f00392f31a095ccd5543ce6cac6f",
+      "archive_sha256": "65c124aeed663a18537a865e751d71a816d98a991909878756f213bf73905786"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/sounds.xsd/",
+      "archive_path": "docs/listings/sounds.xsd/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a32e7f4f7a9a84c1e4fba7dff59f4e5ef4bbf23aa23dd98fc63694620d739ba5",
+      "archive_sha256": "65d6da0534ca02222b1444a392c1b83318fbe9b688d46daccd1fef137a15af9e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/timepart.xsl/",
+      "archive_path": "docs/listings/timepart.xsl/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "aa0cdeee82befd689f14826e51516e3854c8a78d47677a3ef219b54285420dbf",
+      "archive_sha256": "e59e6455706433fb49f4e2c3e75c7c9ac82cb78e78c14780fb5d5cb4ebcd657f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/to10.xsl/",
+      "archive_path": "docs/listings/to10.xsl/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a5fb374409cf880bdcb927ce771f4e9a9b05574f82433c30d4fefb45ee847f13",
+      "archive_sha256": "a3aabc9e132b7edcdfd25d0c544609898828a2b7f2b6816efaeef436c1e3defd"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/to11.xsl/",
+      "archive_path": "docs/listings/to11.xsl/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "18ef04393b85728ce907da92beb3d921a439697c23cd75bae66137d0326cb972",
+      "archive_sha256": "3b2c60a123ba462149abe786dd45b69af218d3248d43fcde7e925c8365cf9448"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/to20.xsl/",
+      "archive_path": "docs/listings/to20.xsl/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7f90499df68971dceaca9cc4c07b8f002d03fcd528632e1f33b5016e6911ecb6",
+      "archive_sha256": "4107bf08bec7608c51d19a6a73e802e8ebe588c3afca9b58c1804890973e8130"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/to30.xsl/",
+      "archive_path": "docs/listings/to30.xsl/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e3cb775316170ce9a67a8b32785fc48ed5c2cac4479eda3bd458a843208b4ccd",
+      "archive_sha256": "4ca4db45facba01d965ccdfe6b5b0bf4bae40bc209a02e04db28a555e6458a98"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/to31.xsl/",
+      "archive_path": "docs/listings/to31.xsl/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "cc7115cd61e898ec127ee14a4e71aca5c38e825e61aaaedebf6020752fbb1501",
+      "archive_sha256": "3c9b577a86ef3f763128e01253bbee71ce54f5120825ae6627b620a888b9abda"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/xlink.xsd/",
+      "archive_path": "docs/listings/xlink.xsd/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "de0730494b110b5d657831ee7421e1776b94b65d62ce359f80aefa56bef1ac54",
+      "archive_sha256": "5bac345145617b5ca426598069facbc8107aa3dec8b499f83d321dc94471c559"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/listings/xml.xsd/",
+      "archive_path": "docs/listings/xml.xsd/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "43223537bd782a82c7664be915cc782860be6c6595fa519a582227901f988913",
+      "archive_sha256": "b77a667e26cb96730b5257989d7eef781d4205ba5a7b8f4d108409193e84e21a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/",
+      "archive_path": "docs/musicxml-reference/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "691b0678b2b35b201d69b1052ef4391bfd2dee4fdb58ff6b05af4dd9e4866924",
+      "archive_sha256": "dbe848f55b205b914d657c60bfad5f10b470a60a97a2b5439b38bfc219976323"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/",
+      "archive_path": "docs/musicxml-reference/data-types/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e1f2a0715ec543b01e122856440df2ed5ccc3d6cb462b1b946faba0fccc3963d",
+      "archive_sha256": "6087f1df97d3b56babc8dc7a955fbe5f91603ccf7ea85e607e191e4047453429"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/above-below/",
+      "archive_path": "docs/musicxml-reference/data-types/above-below/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c87322e159a9d1359fb752c639b6fa8f2c0ed4af85640f5ad3035a703a227e37",
+      "archive_sha256": "56b45ce063e245492a7b040848d34f105c80d303c17501b04d914ca73c4e72ce"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/accidental-value/",
+      "archive_path": "docs/musicxml-reference/data-types/accidental-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1c8c9d22ec3d409dac00d5467d8406e65f7f64e95eed3f382ba7c1850f07b2f8",
+      "archive_sha256": "cd2f1d2d1b251dffeb3df788eb0a79d8b95f5ef2b57d38e85c9930fa59bdac39"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/accordion-middle/",
+      "archive_path": "docs/musicxml-reference/data-types/accordion-middle/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b95c5748dca18b1045e9501eb9b5df920f6de5fae64de1f239ae86def6a07473",
+      "archive_sha256": "a3d36405dd9df731da74fc316b5e0f5bc6aeba96275a16d25ef24b0c369fb510"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/arrow-direction/",
+      "archive_path": "docs/musicxml-reference/data-types/arrow-direction/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a3bdbc201b458de7b5cf4db3f52bcbda5b9297353a49b73dd5a1c3370dc3a28c",
+      "archive_sha256": "4592fec67d6ed1a1952ddab1bc2503a94938d51722f4c4733df41f63400506b4"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/arrow-style/",
+      "archive_path": "docs/musicxml-reference/data-types/arrow-style/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "cf06d55cf882e7da9422fa7c79dd742d60736d3277deadf22fd4bb3b956efdcc",
+      "archive_sha256": "e9ab32284bbb1681c97ac12eefa8f41cc1c0cfccfdfade3c69e926f8e2586f94"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/backward-forward/",
+      "archive_path": "docs/musicxml-reference/data-types/backward-forward/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "59f4b805a549430be902ec2dce413bc9d26e34e79c2f3883c285a37b8a9fdc4c",
+      "archive_sha256": "54c2d9c338b696acc4e0f8fa6a8414000bf4074f89f598d3377e9e75fbee4696"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/bar-style/",
+      "archive_path": "docs/musicxml-reference/data-types/bar-style/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "385b568eb733ed3e802a9bc397f1091d060c0f308738cc17fa3505b86657500c",
+      "archive_sha256": "8ecd7ff9cda3913e1d9f2b61caa0be23ba430ef83b9f781e7cbf5a2f5b4409ac"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/beam-level/",
+      "archive_path": "docs/musicxml-reference/data-types/beam-level/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "545c505b0c61e4c172854a363f98ac6ca6d47477a93db27de030bff243f99418",
+      "archive_sha256": "6201aacbde6240185501113bf86c7db1638fe9b6aebcd62de77aefa1e6fbb249"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/beam-value/",
+      "archive_path": "docs/musicxml-reference/data-types/beam-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "af8efe49e65c94ba8f940d06b0bd4507a940fe41fd29f8f6785ab6685003903e",
+      "archive_sha256": "92da7bf2aeab1debff80983574f09ac4c3c6c2a69d8c9725217e5173d6a2d6ed"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/beater-value/",
+      "archive_path": "docs/musicxml-reference/data-types/beater-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c2955be775bf4eabe005fa3bc5962512011e0782ccf5fd51d584d2be5b25eda7",
+      "archive_sha256": "9ab2041f2375cb0a606bc1c3790470b37a943c5e70e8093c5af16b5059db9485"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/bend-shape/",
+      "archive_path": "docs/musicxml-reference/data-types/bend-shape/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e8a1a140688eff4406fe1c431ce874b2bfc5d17bbe761f6259a89f0c26a6164f",
+      "archive_sha256": "b4c9805a662ca8207ba65e2088abab61b497e11926fac7debb746407fdf54520"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/breath-mark-value/",
+      "archive_path": "docs/musicxml-reference/data-types/breath-mark-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "34fbaea5d86e717674c3748eb37630422825313484ceff7ab2c780a15b9db16c",
+      "archive_sha256": "1ff004f0921bb009bc63768fe062a44eccf3462d9521a9b3aef3c15043aba67c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/caesura-value/",
+      "archive_path": "docs/musicxml-reference/data-types/caesura-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "fc32dd30eccd459e023dd4891ee15761b1b07592884d32c30fe4110764fb6aa3",
+      "archive_sha256": "a6bba53aaf3aebd19c92fe7a5eec1e49573cac951396187727d24825d7639c0d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/cancel-location/",
+      "archive_path": "docs/musicxml-reference/data-types/cancel-location/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "d099b89021aedad8ea480dfc73762276378dc7e3f69020076d33ee90282a98af",
+      "archive_sha256": "61e9624ca7950c712979459ab6dc1987b8b0e91e9cf6f9f70f799e911081d459"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/circular-arrow/",
+      "archive_path": "docs/musicxml-reference/data-types/circular-arrow/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1c47952c268b2241c85af642ce53c96e1c4f25f0dd7ca1f7d851c59b93016e3d",
+      "archive_sha256": "abcb0774d614fabfcb782aeeca7da0c69da9b51e733bbca5ccaa94b0bd2d853f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/clef-sign/",
+      "archive_path": "docs/musicxml-reference/data-types/clef-sign/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2b422b7efeb59953670939cf41a6481c4c9ede84263f328222860178df6cdb1b",
+      "archive_sha256": "2c669946b74328cd734075bba579f7a3d6af46557611ddb437dde67b2507a84b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/color/",
+      "archive_path": "docs/musicxml-reference/data-types/color/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8c1cbc98c7aafa4ba174f70d8d9e47a3745f618b3677f29596d512f570aebc52",
+      "archive_sha256": "8055a88730539258e06107231316f2d66e0b925a58683302e504ff1beca0cdf9"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/comma-separated-text/",
+      "archive_path": "docs/musicxml-reference/data-types/comma-separated-text/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "eb651ba54717138ddec8790153f2a0e94ad563ed65396fb42293361482ef23bc",
+      "archive_sha256": "f3fc9d6cf5aa493157b3d7d5d275a15d08253f1a0bc8ad225cd8b9e5c847893d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/css-font-size/",
+      "archive_path": "docs/musicxml-reference/data-types/css-font-size/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "0229df05fa0284c3de6a8997a0ef80b74d7d4da57193d03b5e147db7da8e1caa",
+      "archive_sha256": "57efd2e6c91a1e3bc5ca46c205210178d7691b39e81b68cd23888b01eac3525c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/degree-symbol-value/",
+      "archive_path": "docs/musicxml-reference/data-types/degree-symbol-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6d8cf96c189d2521490850c39f99f3c6bf59858bcc66fa298498011d58e5863b",
+      "archive_sha256": "9eaf16a01067fb8b049af3eb9617cc8b74f15638a9ac97d351bdfcde917a9d8f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/degree-type-value/",
+      "archive_path": "docs/musicxml-reference/data-types/degree-type-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "33546723e82b9ca13ee52a95d6eb366484b14f118191e153cbaa28225fbb9750",
+      "archive_sha256": "ed06ba170d5f1769921e17cafff2f9fc15b9dd9dd94a9cf79263a78210fca198"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/distance-type/",
+      "archive_path": "docs/musicxml-reference/data-types/distance-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "470661671a3bead43bbe771403a362b2d373b492f506d25b4b2fddbac169d822",
+      "archive_sha256": "f5c202a3d5f9fd7f608fa51d768abfee3aed7ef0cf6c3753c33959ca856de98d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/divisions/",
+      "archive_path": "docs/musicxml-reference/data-types/divisions/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f71dbc5922d7c94f216a094175cfbe60b6155554c930b6e7cd1b7782f221ff26",
+      "archive_sha256": "3b301c1aa56f8e71ebf7a44a609b279c216612f6f24e26ffda2a1adca1c34bca"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/effect-value/",
+      "archive_path": "docs/musicxml-reference/data-types/effect-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "574efce44af42c6b8b1ba82519f52119488b59f13bda20b0e46fb73237ae9bc7",
+      "archive_sha256": "8baa8c0a62df4faac08c10245f0ce323b181692fb0ac22e8bc33a4cb6408905e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/enclosure-shape/",
+      "archive_path": "docs/musicxml-reference/data-types/enclosure-shape/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "538b617ec60c48d602159542d2ad7a4f9a97925d1c3e8ffb4d21e21b7d231c37",
+      "archive_sha256": "dc741e1ca1fa196969f3b04292afa0b7d81dbeb558e23905cb8e1ce244ad8c01"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/ending-number/",
+      "archive_path": "docs/musicxml-reference/data-types/ending-number/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "df4cbfc86790ff104fdcdf43ce27bf2068f01ede181d612025c111ff08ef7de2",
+      "archive_sha256": "fb29b546dd1edad27ac92240a5ae0625f7b25ba4ab9fa8b47239ec5384fc2b09"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/fan/",
+      "archive_path": "docs/musicxml-reference/data-types/fan/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a6b855e061cb4de476670c5a99cf3b4a2ce5efc48957ba5e9a6316703d2d0eff",
+      "archive_sha256": "4136c8566db7233714d945f9ea1ef5bee7b3ee2d6c364235f8c429f951809754"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/fermata-shape/",
+      "archive_path": "docs/musicxml-reference/data-types/fermata-shape/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "157b279aebea96f7e34d0b50fbf55b9f7320d653ad6c60dee1619c8122dc69c6",
+      "archive_sha256": "edcffbe3c43359a335808627375a5262feafbb2d7e1206fddae0ed66e36e3fcb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/fifths/",
+      "archive_path": "docs/musicxml-reference/data-types/fifths/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "dbe22f5c16d7e9736897d10ab8d6d1b545e3d799a62e97331068adf3614a3d3c",
+      "archive_sha256": "0e6e82df1b9fbc2a7e670ba4ff45b741d79fb53771285b1e6b8989da25580fca"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-family/",
+      "archive_path": "docs/musicxml-reference/data-types/font-family/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "49f23a4f4aaf60639e98814e96b9a5eac90268be5b4bcf0581e17127f955149a",
+      "archive_sha256": "41c5b6e029583ecd3279c72fcb147d935ba867fa9f940aca154063759c33ed7b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-size/",
+      "archive_path": "docs/musicxml-reference/data-types/font-size/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "ed3ef81cf926d8153f24d319d99a59c486f3f7ae1ef90f23fbe3d5d1f0044daa",
+      "archive_sha256": "707f693c3d3a774e518d62eee30dfbaab8e1bc2da0beddc1d58d3eb7f6d50d4a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-style/",
+      "archive_path": "docs/musicxml-reference/data-types/font-style/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "578415cc0aac2a8b797c5519d770ab4e4521d9e3dff14a25a7fc20e03cdce354",
+      "archive_sha256": "f46a8ceb8b66d6a2e37c2af9451c1da682d87d0d6aac2bf5028817e1f8f56ebb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/font-weight/",
+      "archive_path": "docs/musicxml-reference/data-types/font-weight/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b3db9ec8932df39aaa52cb8ce3a6a5b374bbdb3804f9fb103705278ccfff965c",
+      "archive_sha256": "9209885e4cb1d6f49a9f067ef9be40acb9bae6efec09c73a7ed9f7d3812e602b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/glass-value/",
+      "archive_path": "docs/musicxml-reference/data-types/glass-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3bc09a0ac3f085e42f7383136a75793b0f44182b7800521c2947c35b5b765850",
+      "archive_sha256": "ea86b8699a2d70fbb7de61bb41ff8142a02201c744693ca24121c58242f84659"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/glyph-type/",
+      "archive_path": "docs/musicxml-reference/data-types/glyph-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7baac61ae3097e991875d8dcd0411c02013de3dc881859c39a91b82446ecc401",
+      "archive_sha256": "f300f1fbc01dad482a2572a9af4fc5bbceb4bf6aa75bc4107cd1043bc3189a70"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/group-barline-value/",
+      "archive_path": "docs/musicxml-reference/data-types/group-barline-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1e6695bbc9bbf82c6bf70ae60c44c01dbd6deaa469b3172110e4962460971397",
+      "archive_sha256": "51036dc01bdb861ba069897f44e7b8982896ba6d78b726a4e43b2ef4f54c8f11"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/group-symbol-value/",
+      "archive_path": "docs/musicxml-reference/data-types/group-symbol-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "195643860eebe3d95de575d27ffc840e72cac482c30f5fecc9c9b86d01e406b1",
+      "archive_sha256": "6ddfd1a87357ae68f75c5217ce034dfda4ff6f14af126cf4e265a1def8fd80d2"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/handbell-value/",
+      "archive_path": "docs/musicxml-reference/data-types/handbell-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "69da46e7909862336b0f6561d0503db720582d198aa7ea17c762912d065cbc97",
+      "archive_sha256": "448a05efdcba41e89c85eb7d40207e545a7bbd1ff932f29c10e197871ba07b52"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/harmon-closed-location/",
+      "archive_path": "docs/musicxml-reference/data-types/harmon-closed-location/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "eb67009f6f438bb134ef3be0b813096260d0e1d4e05c949dd6e1592736634df8",
+      "archive_sha256": "d07da3dd4767c5f3acc61bc79c7e9e0d2bd9696908445f8954a9c091c2e474bc"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/harmon-closed-value/",
+      "archive_path": "docs/musicxml-reference/data-types/harmon-closed-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "26ae0f9b2690259a5f8a4909bf10bb5423aeff16065ae42ee225d37d3dea135d",
+      "archive_sha256": "0351fcd537f87878e21e94bc02484869b4526d888d559bfc98bfb84fa68d742b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/harmony-arrangement/",
+      "archive_path": "docs/musicxml-reference/data-types/harmony-arrangement/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "59634432861650086dd069adc781f2e45bb4279f9e4bf7a57a819f6e2c5526ae",
+      "archive_sha256": "7a5f8408e017cfb46d5eddd185f23c74bb57cf062334acd98e44596c81c05351"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/harmony-type/",
+      "archive_path": "docs/musicxml-reference/data-types/harmony-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2c09549dd84d78d7d122d7e13ab703c9b90b8a7a2437b7cfd90f7ebc198b78df",
+      "archive_sha256": "9abcfe26c30462c6b52505a56340c0426ad122cef3a3ab0d520ea825db068893"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/hole-closed-location/",
+      "archive_path": "docs/musicxml-reference/data-types/hole-closed-location/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "532a9c8a1d543e9cee347a10ee62e507026aa04e29598ab2a46188ab3b961870",
+      "archive_sha256": "1ddd453483682c8dda0bcb1d08c49a15ef95c18b61260ca4fefb962bca8128b5"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/hole-closed-value/",
+      "archive_path": "docs/musicxml-reference/data-types/hole-closed-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8143808a49f95758bfade03066b765663c84103c7566a73e347a849dc65ca171",
+      "archive_sha256": "fb46474750754c41d563e868350671b46e590e618721b3088cf2464bc22d78d6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/kind-value/",
+      "archive_path": "docs/musicxml-reference/data-types/kind-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "088387b2f0517197eec36506cc243dd3285a012a3de35670f86d6ae5df2413ec",
+      "archive_sha256": "7609e35e9809c3eced2d45e22a9334e36da1dec3407437160aa30994270ec142"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/left-center-right/",
+      "archive_path": "docs/musicxml-reference/data-types/left-center-right/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "95d0a6c4f7c4ea1a5ae4c0463653f06149cc05aa9960d395773ef038de1b32dc",
+      "archive_sha256": "a83164716f9a5db67cf36114c9f4147cf9f57ecdfdf45b3029c5cb214ee3aafb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/left-right/",
+      "archive_path": "docs/musicxml-reference/data-types/left-right/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4effe51178c29f0b9ca46b6e563426e09a2664e4398510eefbdb94f056a346b1",
+      "archive_sha256": "b6db4384adf9b3f3b7f3f56abced2d8ed3c133dfbf3fc5595dabb7329d5c736b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/line-end/",
+      "archive_path": "docs/musicxml-reference/data-types/line-end/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a2db3651adebe0548b8ff608d71745918e961f2946a7968474ab24039328e6aa",
+      "archive_sha256": "11286fe20cef84e48e61de2eee0b578fd11e25557a1a379b699e8bb9276eab62"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/line-length/",
+      "archive_path": "docs/musicxml-reference/data-types/line-length/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4857bfa016d5d28be08b8741b94657b169d94e370d3d41bedbf6c33438b6aafb",
+      "archive_sha256": "3ddf1290c11f3a0f6ab8c7149a3cc4aa5f0eb9662c919608eed59251110b07e6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/line-shape/",
+      "archive_path": "docs/musicxml-reference/data-types/line-shape/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "ccd27b6e491bebb51f2ba5373198b769603a36d345ac3eb3b8d8cef02ed83796",
+      "archive_sha256": "9ca4c354a656accbcab44def3a8c88c04eedb40228fc7bbd7e5e03f5ff78db46"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/line-type/",
+      "archive_path": "docs/musicxml-reference/data-types/line-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "60a981009d5a92f35b93f39ecfcfd115c032a48ab7ce3c723cdf688d12a4b7f0",
+      "archive_sha256": "b3f9e77265d525aa60012ac7f8735e9f201e8f2cb76d021c89c02e108637a6bf"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/line-width-type/",
+      "archive_path": "docs/musicxml-reference/data-types/line-width-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "876e5eb699ff1264b84d8856440b557edb3533577788e4d3edd533fe9e880d71",
+      "archive_sha256": "f029ed7a48a44f10d5031c96681e94933ae20d6f5ce7083649f0e25844352b5e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/margin-type/",
+      "archive_path": "docs/musicxml-reference/data-types/margin-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b6f6bce84d7fd95cb75be11b8baa1b00d0cb2e04b8c25065eac54b3f9d0a8abd",
+      "archive_sha256": "6188a0736614e1e48c1146f30bc63e688dfbaf56c13c77703b459167c69d66f3"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/measure-numbering-value/",
+      "archive_path": "docs/musicxml-reference/data-types/measure-numbering-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8cfc3112eed77cf2845799235923fdaa1716d63f259da4aebaa0ffcd170fb0db",
+      "archive_sha256": "2c8ea084cf825d2189cf5be0720d3f8bfb460c686d961ce6a8cefb1307a6223c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/measure-text/",
+      "archive_path": "docs/musicxml-reference/data-types/measure-text/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "bfba93117e54455e90ab22080b0c58825dcce6719a67146e4feabff57b70be75",
+      "archive_sha256": "079abda2c4bd5c45cfbdea53250b34585f5ea8ddad40452d76290c4c44183855"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/membrane-value/",
+      "archive_path": "docs/musicxml-reference/data-types/membrane-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "02cd4e7aa6c66531d6588956c22511520eb1ae69dab758f0f8cbd1431e786f5f",
+      "archive_sha256": "6073204a0e95d7953f5fe406bbea3ffd1db80500e902d18ea7d2398445633644"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/metal-value/",
+      "archive_path": "docs/musicxml-reference/data-types/metal-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "50f2d5266780a9185da438cd562a680dd1d049af14970e0d55017b5dcbe9ff4e",
+      "archive_sha256": "fb284c9e7c4e7b32117892ace7a7104195d58902e81a3c8558203c9de66330e4"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/midi-128/",
+      "archive_path": "docs/musicxml-reference/data-types/midi-128/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "96d543e73f29ce7193352d77375e9b3915c598bdeba9672bd60d406b58da49d7",
+      "archive_sha256": "53551726a59ca70f0c2d34deaf9f0af6199582a06c13481bbf0317aedb175a01"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/midi-16/",
+      "archive_path": "docs/musicxml-reference/data-types/midi-16/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2c3cdaee04d6f37938a7a482873d8fa4b04cff61610f799bcba08ae762cf1f79",
+      "archive_sha256": "643710054472986a514fc02ee8b9017d236a3df78f461f6112d7067d2a2fcdb6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/midi-16384/",
+      "archive_path": "docs/musicxml-reference/data-types/midi-16384/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7b9e764e3df9b831b85aedb7b56f0d7c01fbbbe4176b700c3a8ae09a76a6966d",
+      "archive_sha256": "22fab9c48fe86eb5e4c17f760a1ae7553607d17ef442e29d6a96efce51197f1e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/millimeters/",
+      "archive_path": "docs/musicxml-reference/data-types/millimeters/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1c7ccb32150ce24293f56ca83a9325aebb22731aabb7a5089ae2d63ffb56c7cd",
+      "archive_sha256": "b4e55b2c3c0587d3b56cbc3bb5665793bbb395bcad84d58ad49afafefeebc2eb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/milliseconds/",
+      "archive_path": "docs/musicxml-reference/data-types/milliseconds/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f20d2c54ccbd4e524780f2e3086b89ab49672031004246eff312b79771300cb0",
+      "archive_sha256": "81b1df437db11af4de094d93006a47a37285b7603fa3875071eaaa4321a78189"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/mode/",
+      "archive_path": "docs/musicxml-reference/data-types/mode/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b11215f77f3c10b103aed70d3349fd58fcfec0e7db29a887ba315d0afb07943c",
+      "archive_sha256": "81ab9594714c21c98e810a692b769b90a0bfcc58911cd7e42f56ad29277e5fcb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/mute/",
+      "archive_path": "docs/musicxml-reference/data-types/mute/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4bcdcc36935f519293102d865d0d4ea4b0e701428a6f7ead62bae2072c2a478d",
+      "archive_sha256": "2e35a5d84b4a7a8a632e8ccd9e786a68845178a988698d87f924cbac85d46a39"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/non-negative-decimal/",
+      "archive_path": "docs/musicxml-reference/data-types/non-negative-decimal/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "21e1df2587dc9259b78b3368468693fc7b26b605b1d4d3fd0e27f6f9c84b5811",
+      "archive_sha256": "2023bf1049c1ff4d306f02cf54aca3d517b1191916884f648bff20aa3970c079"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/note-size-type/",
+      "archive_path": "docs/musicxml-reference/data-types/note-size-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "993857fa546462315a33383bfafc2a1be8adb756c462e80c8b4d160b79a1993f",
+      "archive_sha256": "16df890af310bcbf14b3d198a620b4a850c8e174422b22d52069887ded98ee6a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/note-type-value/",
+      "archive_path": "docs/musicxml-reference/data-types/note-type-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7303bd8ea32eadc90b8835b71308abba620fe0f4e0c13b1b4c1adec7f7b90edd",
+      "archive_sha256": "58b60a646e67fcc3fd157c1a5a4c3cdcb2f0aa82ebe1113420fc3c518f5ad8d3"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/notehead-value/",
+      "archive_path": "docs/musicxml-reference/data-types/notehead-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5664591bc8fdb78b3752a412031a16d4fe4ae26d7ed82fbd9545d1511c7e6364",
+      "archive_sha256": "853f1a38412e6e6b261c0132091bdd44ee6d407289959839d94d817f43d1b8ae"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/number-level/",
+      "archive_path": "docs/musicxml-reference/data-types/number-level/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "dd9314c635c34aa6c01395cfcdaa81890e30f892c86bb1399aebb288466d13dc",
+      "archive_sha256": "3b0dd6e9fbebee480c74a3966168238094641b494b1536dc4daf9a31a026fdbe"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/number-of-lines/",
+      "archive_path": "docs/musicxml-reference/data-types/number-of-lines/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "81d62ecfffcd5d5c3fe3080fa4a8aef14a682957c87aca1ca007c5d44b4d87d1",
+      "archive_sha256": "563927b185a2ae3a8823878dc52fcd624fa9f30566e51382fe7f8cfcd391bea1"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/number-or-normal/",
+      "archive_path": "docs/musicxml-reference/data-types/number-or-normal/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f727563a779473e0e53ed4184ab9cf8b562a4d2144a9ca261de5f66d359384ff",
+      "archive_sha256": "089f941ddde53e7e0ff7d0aaceb33f7d67dbf3bc18a57856f8086d255bfa0deb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/numeral-mode/",
+      "archive_path": "docs/musicxml-reference/data-types/numeral-mode/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "d9ff61d31392a74b65c41bedbf3295c73d877e33e8ca18d706bb2c045e4f58a0",
+      "archive_sha256": "d5517e4c40b48ee5277b871f8e0181f91fca2bdf6acdc1eeb32b17bf8c172f26"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/numeral-value/",
+      "archive_path": "docs/musicxml-reference/data-types/numeral-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f81685c73bd2b54ee2a8524f82aebc89f313aef1e1c530677a454aec179b0c14",
+      "archive_sha256": "24af5b836b2256861b3692f6aab38242774c5e5c192385f841979d210ce48904"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/octave/",
+      "archive_path": "docs/musicxml-reference/data-types/octave/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1c4d60105e8a235e3d8aa95c11aadb1916a38f36d59a24c7f8beaef79b471278",
+      "archive_sha256": "cbc2b44c4aaacee44a27e0f0aa4a6dfc355c6da9ba6d7329abb6c502cd7a1caf"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/on-off/",
+      "archive_path": "docs/musicxml-reference/data-types/on-off/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6be5f97b2b7362a8cd5fac038c435102bce0313b144e897928b4168e3658a27b",
+      "archive_sha256": "44e4728cb21160df4c9f3fa8b22efaeef27be06e7ae57a009cb24a232237be72"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/over-under/",
+      "archive_path": "docs/musicxml-reference/data-types/over-under/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e2828975a8256cd9fe5b2a9d0f305633269e8db501da2297ffb402107f7b9282",
+      "archive_sha256": "48026e4516f3452c4f626894275f1e66c29916923f396cd65bef77e68daaef2b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/pedal-type/",
+      "archive_path": "docs/musicxml-reference/data-types/pedal-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4db6cd10cfb4c8b5281bc1bbb0693218e09559a325d0d7cc3fd4653a6172a19d",
+      "archive_sha256": "76636438cb0eab6e089bc7768f4602b3c7d5fee9a9c31b309c765d99bd69530f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/percent/",
+      "archive_path": "docs/musicxml-reference/data-types/percent/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "88e349a4f3fc8f62f3622bc5763a7d2f65ee813adb54c9607091739f208e8d63",
+      "archive_sha256": "4d699097e845dde9626659eca87965dfdb118594d3f0e9bdec0b8a91b5d9aab4"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/pitched-value/",
+      "archive_path": "docs/musicxml-reference/data-types/pitched-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "af508343856a54694d07dc31364f9b04f0794804d11d3cecb9034a4eacc80209",
+      "archive_sha256": "ad3cf9b03fc5ec99f8dbe2810b704abc752c9b1f7fb23281af4a50510eeed8fd"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/positive-divisions/",
+      "archive_path": "docs/musicxml-reference/data-types/positive-divisions/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5ff5c72ddd0fc41aa7bd8e6c0653937081aa7732e380c7ec3b2f5de3fbee6010",
+      "archive_sha256": "c8998384d2df281d00fa1c324bbbf07cff25bee1337a6b8989539fdbf0b50a89"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/positive-integer-or-empty/",
+      "archive_path": "docs/musicxml-reference/data-types/positive-integer-or-empty/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b2a9915b308e050b3571b6aae6602e889d8161d34446ad0947f4a75f7a15323f",
+      "archive_sha256": "ea0aa85618cfde0b2ef8d32e769d897391e97b5cddf863786dbdaaa620fc8c11"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/principal-voice-symbol/",
+      "archive_path": "docs/musicxml-reference/data-types/principal-voice-symbol/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c49c2d235aefef0372c789111b70a682d30dc8668fa2c31781c5a6cbb5f49719",
+      "archive_sha256": "d9cb74270a695ffcc9243fb932cf6733f2a747c6952985fbcae02c4db0be2e18"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/right-left-middle/",
+      "archive_path": "docs/musicxml-reference/data-types/right-left-middle/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3476fc2e0a5acb7c21db47a80cc95160877f1ea30a5c5a124faec7a585015b69",
+      "archive_sha256": "6bb81cf2edc684360ae2b22f17eff617e5f24385104fe1dca27ac3ec3cba4bfc"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/rotation-degrees/",
+      "archive_path": "docs/musicxml-reference/data-types/rotation-degrees/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3e121ae5d19bfd650cd20e970b66df51a54f730e9534ed18b77db442a933d385",
+      "archive_sha256": "47e5f90cbb939a786eed288508c89d9e120be6a160c48d04afc509caa983abee"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/semi-pitched/",
+      "archive_path": "docs/musicxml-reference/data-types/semi-pitched/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e338c62c8162d6fa41be2b126a1517016b48966bb6da6df6718837bed95ad874",
+      "archive_sha256": "18d2eef0b154dece7777082f31577fa699d7bcd7d1962c6fce16a1ba593002ac"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/semitones/",
+      "archive_path": "docs/musicxml-reference/data-types/semitones/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "12f0e63d64afd4deccd8e8d26ae8d26817e7ad04614339abbb6d1f850c11f232",
+      "archive_sha256": "d764f7c354c6b640bbbef334348ebf02a0d13859b92d44d9203fa45a28e6e11f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/show-frets/",
+      "archive_path": "docs/musicxml-reference/data-types/show-frets/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e3b6a45c909f4820658d921a220bd2d05a912fa94f4c075575a5c7e2865a436b",
+      "archive_sha256": "55644921a81784160be6db495249471e1f2d047737b763f4dd5254972a4c242c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/show-tuplet/",
+      "archive_path": "docs/musicxml-reference/data-types/show-tuplet/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7b56d9fd71881a580fb7d1e86ce7158ac67035d4dc222b1eca3623fad69aec30",
+      "archive_sha256": "a43363cff8e32538824b0347cb3a3aa23fb283ddf0032694226de36e7cd3bc69"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/smufl-accidental-glyph-name/",
+      "archive_path": "docs/musicxml-reference/data-types/smufl-accidental-glyph-name/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "442d07e3f87b6b2923536831743c224d5cee8684ea92712e6914135619ca198f",
+      "archive_sha256": "92539a7b5a1fba053d2731520a865b3ab8b5c368879ea2b7bbbfc5db9dfd04c0"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/smufl-coda-glyph-name/",
+      "archive_path": "docs/musicxml-reference/data-types/smufl-coda-glyph-name/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7c83875ea2c60998b275a003e1efa2a5dc516c86090f11520ab5d5ff073fec2d",
+      "archive_sha256": "5ea15b1fc2855ade6f93571950c7d9340d42742a501c8fda259a3c44074683f2"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/smufl-glyph-name/",
+      "archive_path": "docs/musicxml-reference/data-types/smufl-glyph-name/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "ede69e068e5b97044e4b6b44c629098673f68a2895a68ff844a4bb45845bbeb6",
+      "archive_sha256": "43f243b3d2fa9a6874a5f3b20756817c4e6b548e351df48dac7c6b961521e955"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/smufl-lyrics-glyph-name/",
+      "archive_path": "docs/musicxml-reference/data-types/smufl-lyrics-glyph-name/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "d58ed8ee0c08fcac310484d41bd15f3108e6373438e153c31d00ea5eb944a16a",
+      "archive_sha256": "0e8490e5a3273c5c1bc6fdafc5e88b84a1fbfb47f0acd0c5f0b281dd4719db89"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/smufl-pictogram-glyph-name/",
+      "archive_path": "docs/musicxml-reference/data-types/smufl-pictogram-glyph-name/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2544ff5347f2431989d9e48fd93055205981567d2bcf0e749e20b9886450400f",
+      "archive_sha256": "53138f18aafbb17e1b8da67321a5bccaadc528d3b4d22a97b21b325bbabff238"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/smufl-segno-glyph-name/",
+      "archive_path": "docs/musicxml-reference/data-types/smufl-segno-glyph-name/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a7a11718b5943f834a1d97747a3fef5c96a76f55bc4abc9453119aae4885cb27",
+      "archive_sha256": "9ebf9688d33b44b2202b9656d0d6f058dacfeb83813dd9f19e98a9143f0a8630"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/smufl-wavy-line-glyph-name/",
+      "archive_path": "docs/musicxml-reference/data-types/smufl-wavy-line-glyph-name/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2697df06c0d0c2ab320d0a7587b11cdf3f9319308c20765b6c7a2803140d0ffd",
+      "archive_sha256": "fee4e22e542d1c7ecc980846c74969816264406e97323f2fd28eed95627cb524"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/staff-divide-symbol/",
+      "archive_path": "docs/musicxml-reference/data-types/staff-divide-symbol/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "ec89e7d9200eddc4b42df07a4bef5e8b73179091d3e93c83a9bee393063b6751",
+      "archive_sha256": "1ea7916b52689587b0a19450504e081e2e4d9c2ef3a27158be768d5fc836f960"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/staff-line-position/",
+      "archive_path": "docs/musicxml-reference/data-types/staff-line-position/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "eda8a658a6c9a0bc443fa593c8a2cf19609f4a45467e0e557b2a1695170c46af",
+      "archive_sha256": "161d2c2c8f09331014b0110f66a309e8edebb13b9415a3906ca0140956429931"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/staff-line/",
+      "archive_path": "docs/musicxml-reference/data-types/staff-line/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "0ee5475e3f1280956864784298edab73acbe4799767f3aa7dc67b1e6afb05801",
+      "archive_sha256": "d66df34787945a58db66b6c150c3fc9baaefab30407f3edb9bc711ee95296519"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/staff-number/",
+      "archive_path": "docs/musicxml-reference/data-types/staff-number/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "997bae0a2535537f8e37e25ff0a3f2a6b00452da11f4962a5d9baa9c2b17ca5d",
+      "archive_sha256": "cea6e2585a54b61a9549f3fd9b92558a733584b9de4795a0dcf852c8f0a9cec2"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/staff-type/",
+      "archive_path": "docs/musicxml-reference/data-types/staff-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e6c6bb949de74dfe95afbffb11bdd869a77e4ca39e60da865e978242a8869bd5",
+      "archive_sha256": "5ddc9a8117dfa40790392c8e040673bfa614a859b71a058934d5d0b97daf7b8b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-note/",
+      "archive_path": "docs/musicxml-reference/data-types/start-note/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4041d98e726fc1eecf6081463357e0bd19e1be7a2d6bc8c77fe07f1bb2108829",
+      "archive_sha256": "ec813b9024f5af94559a992169c4e2604b210d2e9a8ffaee8572ea4ed609a903"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop-continue/",
+      "archive_path": "docs/musicxml-reference/data-types/start-stop-continue/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1b1462d79b317dd011b4288f3940bca8d865144491f1cfe320c1f37db42f9de4",
+      "archive_sha256": "a9ea987ba1f1c1739d667fa47da072308ff7be5b71b98d0a6d40513611be0e0b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop-discontinue/",
+      "archive_path": "docs/musicxml-reference/data-types/start-stop-discontinue/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "9ca0fd34a128a69ea349c8ce17b6a09ea9d8cea69dc1b530e065a2c338dd85d0",
+      "archive_sha256": "e5f8ae5a09bb94bf5b2a9605667da318689428dfe6f5df87d5368831d1d9eb77"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop-single/",
+      "archive_path": "docs/musicxml-reference/data-types/start-stop-single/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "fc2d06fb48c83a5b08e34a3ffd06330859c06198398c51e3476ad8b640ef8dfc",
+      "archive_sha256": "2840e662986fa9ba6f410676efad8c3616557af38360dad6c43cf6f45de66212"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/start-stop/",
+      "archive_path": "docs/musicxml-reference/data-types/start-stop/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "bfb77377b1383b755097214649799dfcc584fead2a5f6b2a231ebd8409b41971",
+      "archive_sha256": "56bb6c5f818424deb4d685c8b8fc62d439ededf2d1479b34155e3f16e3433b0a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/stem-value/",
+      "archive_path": "docs/musicxml-reference/data-types/stem-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7eb7ad18c8461866ab06ae98eca994fe9c114df6f2cd4d2815ee96bb4197aac6",
+      "archive_sha256": "17ff4df490dd866098801133f739928bea9885c38f250510626902872c1a71d6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/step/",
+      "archive_path": "docs/musicxml-reference/data-types/step/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "aa116495667d7d8ae906dad6dff1608cb4ab679cef9518c931ad3ea2a2605d51",
+      "archive_sha256": "f96745bb459aba67fbd2c5124e612cb999f7c0f2b70cb1bc4ee23d708d9d0d98"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/stick-location/",
+      "archive_path": "docs/musicxml-reference/data-types/stick-location/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8b4c6eb54de0e2d4d0fc8935a6cf16a34f35a12a2a9bf462a0e18ce1b0afdfa0",
+      "archive_sha256": "769e581e697bd4382bd386a2ce2c5d59204418ef06ec01b71c8ca84bff53679e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/stick-material/",
+      "archive_path": "docs/musicxml-reference/data-types/stick-material/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "9333146b7dcf9746e9f46129263650e213680f53af034c6fdf9ae8277cab80d6",
+      "archive_sha256": "c4c2c2b8379d42c69008487996adaa67498def44b6ab7e8cb502dbb8c1295307"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/stick-type/",
+      "archive_path": "docs/musicxml-reference/data-types/stick-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "41b8055f002dd5599b5c7d02856d7535cfcdb2ea20225ca91908a9068325d65b",
+      "archive_sha256": "9e890d809693742e0669daea7d4f6a70c6074c1ffc3d304191f101d47b7ba0e6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/string-number/",
+      "archive_path": "docs/musicxml-reference/data-types/string-number/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e9461a979226af3cf85209339f28d55230441dd935560e6053bc81e1387bf54d",
+      "archive_sha256": "1e83f5191da50072a354cca7deed3533740ee4e6495c33540d7ecb016ae6fb7e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/swing-type-value/",
+      "archive_path": "docs/musicxml-reference/data-types/swing-type-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7b162814eee2db6ea0f3231e419214b38c711a396ef4f64d6060c833247306bc",
+      "archive_sha256": "1f1e778d461b0a5f82f7f15ec65e483eb4c73e632465586214ada6d223717bfb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/syllabic/",
+      "archive_path": "docs/musicxml-reference/data-types/syllabic/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b0bbfe27e2f4f4c4d1285cd42b2457597a9bd48be82800b02b493661792d8c05",
+      "archive_sha256": "d7ff4d0ec33b5f73e86334166f6f052f3848ef917522c91d605839475174a026"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/symbol-size/",
+      "archive_path": "docs/musicxml-reference/data-types/symbol-size/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "28a897592dacb9ab50d402d3e3cc9b1109ee491603570016bd4b587e8aabc1cd",
+      "archive_sha256": "db8174564ea7e7963826797dd9fb8d078571abcb46b8e205943d3c342c910bde"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/sync-type/",
+      "archive_path": "docs/musicxml-reference/data-types/sync-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1a711ccbbab6ed45d8e5a59c66a72276b984452b333452940a4cd60c97ac76fa",
+      "archive_sha256": "4778bf62bd9c12c201ab9de78f57ed0cea01ec16376c9f69203ba43b6915e02b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/system-relation-number/",
+      "archive_path": "docs/musicxml-reference/data-types/system-relation-number/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "50f98f46c680b7c4b5cfb38b1051ea5ff27a2a3aaf774ed16ae1eef2350a9c99",
+      "archive_sha256": "17b732310cb9e5a09255f5330b7ad891ecff04743aa9a404f4c1820ae8d34ad0"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/system-relation/",
+      "archive_path": "docs/musicxml-reference/data-types/system-relation/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "deb84df8538ecb26f6565864b6250596ac66ab7e963771a973832f5d9c7c450f",
+      "archive_sha256": "78c8bb6db17ee7f225e0856a744f9d93b2325bdf94df2f44f553d10c5531c33a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/tap-hand/",
+      "archive_path": "docs/musicxml-reference/data-types/tap-hand/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e27d5fe96a5eb4da26cd0ad8953c34a1bb41026f70406258a3fd57037505cfcb",
+      "archive_sha256": "c0913a6ccc2e30bddd372713d0707576c6efc3ba02670b79097895d0ec50fff0"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/tenths/",
+      "archive_path": "docs/musicxml-reference/data-types/tenths/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "da6149f22cd00e7bd78b862d3f5d9935396d41d0091ca9e7871e24a442e8be6e",
+      "archive_sha256": "960254e8567700e8686b3c9f8e928d7929b007da0fc2bbadd89a253a5409bb19"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/text-direction/",
+      "archive_path": "docs/musicxml-reference/data-types/text-direction/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5c1b3b3b7edd3ced00e1a699fb4ea08293e5eaddb098938f621af219dc70589f",
+      "archive_sha256": "285e9e84d3b0d0635dcee47b386cbfc5264e4949bbff2d1ed0519ea7172a46c1"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/tied-type/",
+      "archive_path": "docs/musicxml-reference/data-types/tied-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e62b05e103e81040965bb93d546485124d54d2735b1304c76efa5c46c9da8f0f",
+      "archive_sha256": "92a9783c7996336793a50dfe1b241fd1b6330935c9942e28846f6e49c1954dfa"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/time-only/",
+      "archive_path": "docs/musicxml-reference/data-types/time-only/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5c5c761da0e8f6184f648a2ea22e569c0e6f37acb0eea88a4548f5af1b2c1ed7",
+      "archive_sha256": "20341262da64a8af24fe79f163d74403e2ff94d2a81886aacd7d6bdaaef154af"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/time-relation/",
+      "archive_path": "docs/musicxml-reference/data-types/time-relation/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a5c9cb5f1af806484dae2eee3939466f99296dd1cdda4faeacf23b5677577c09",
+      "archive_sha256": "5a78a7cc4a14c68e19c190718878350e4b3fb19688b9a659e162c7d041c3a0d0"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/time-separator/",
+      "archive_path": "docs/musicxml-reference/data-types/time-separator/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "acc4566d89ca184024e4fc584dc19b5c43f4d805001325e50fb8c241299b85b8",
+      "archive_sha256": "b95bb1e784396e5c39d230e9226a36e4a3d965c546d79d73254561dcdbeb5889"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/time-symbol/",
+      "archive_path": "docs/musicxml-reference/data-types/time-symbol/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "403273c0d49ec4991cfcd1f61cfc786a2c504e3f325087ae1aab96d21fae1573",
+      "archive_sha256": "dd2ed3953e438ad3616026f1fe3de791434109e71a08407d8b3ca7e3ced63bc8"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/tip-direction/",
+      "archive_path": "docs/musicxml-reference/data-types/tip-direction/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "18cab3b1c6319aa76d9d59651fdb72ceb2e0b2028e51fcc58bd8d6652df82d62",
+      "archive_sha256": "d0aeb4d9cda1a52f8d40ca92443c420f11bd52b5e5320031f39befe238d7f004"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/top-bottom/",
+      "archive_path": "docs/musicxml-reference/data-types/top-bottom/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1ce0200e26206999c8166026be512360637caa23168305d1ee764450476c38bf",
+      "archive_sha256": "e87a27536bf2309c9661ba999900674577999e2681e560e3871efec106ec0b87"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/tremolo-marks/",
+      "archive_path": "docs/musicxml-reference/data-types/tremolo-marks/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5a156f49d03ea1d80a7eaddccb6f77fe81d9e6218ce6e73e29ad6e4d9ac956dd",
+      "archive_sha256": "d38f1d05d8cb5f6a1985010c2244617be86edac874544f08f96474d1bf1b9afb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/tremolo-type/",
+      "archive_path": "docs/musicxml-reference/data-types/tremolo-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a193f6ac12d09aa4f1f9be7669c86e11bcdb77b665ec0bcd5f3624af5bad5289",
+      "archive_sha256": "584c4ec0515c6a3eb0e47dd5c7f43fdfddfcc1fe2bacc5734ca0bd170f73d3c1"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/trill-beats/",
+      "archive_path": "docs/musicxml-reference/data-types/trill-beats/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c12a2f38d15dd86fd4b9163a33547f93dedf20232285eda082cd96c832933926",
+      "archive_sha256": "bf5ea387e7303bb8fb21610653416efdcbce06a89143ff92aa6712559e040b4a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/trill-step/",
+      "archive_path": "docs/musicxml-reference/data-types/trill-step/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c4f3c4bb9a418a5a585530ee5920fa0dcd56578854e00f4924d7462246ff8d5d",
+      "archive_sha256": "b79bf43c24734a13b79b41961806b7fdfec6334cf725c196a55888bf5712371e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/two-note-turn/",
+      "archive_path": "docs/musicxml-reference/data-types/two-note-turn/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "62aa69e34da95079b2ce80c71aab5a38e3a7db5cd1f41776cadd1659584ef1e3",
+      "archive_sha256": "ef86124bd50084c5a28ea1c471d05b60f5df96a66316d0574a67c7ba2c955f2e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/up-down-stop-continue/",
+      "archive_path": "docs/musicxml-reference/data-types/up-down-stop-continue/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f1528a1476e0ebb349138460b4b3f83e882116746b1cc0f553d418233d90341a",
+      "archive_sha256": "b9c113b2221540aa416e9010ffa4016121e56b55dcd2e7f6d30ed5e58494fd81"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/up-down/",
+      "archive_path": "docs/musicxml-reference/data-types/up-down/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "93b08f1567a3bb22b54cf1d82592f8016f796fb5a28d2a906dfb32a73fcd32a7",
+      "archive_sha256": "03d624e6c2112fd572fc2885aad0add32736251bfe5493992d6c905fd94f31ae"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/upright-inverted/",
+      "archive_path": "docs/musicxml-reference/data-types/upright-inverted/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "90223ef9f10c1441f6106a1ed3ccc02deff7eebbdc07a6580181d1e223529ef5",
+      "archive_sha256": "efc8dbf0a9e397b623f17f1dd7c31f5db53976a44c89f0ad4c010dc35a43694b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/valign-image/",
+      "archive_path": "docs/musicxml-reference/data-types/valign-image/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3d2d6f582104576e23bce75cb3efe21910d03d916e8d4af2b4181c5c550698be",
+      "archive_sha256": "9ff62c37553172e3929d3cc780c99386e06b877b62ef836e40ca7f5830d0d366"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/valign/",
+      "archive_path": "docs/musicxml-reference/data-types/valign/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "fe520cd350441d8bd4b176c1f1b5a29539328bf7352632d42b2de5ebadfe01ad",
+      "archive_sha256": "866dbf67585bb3cb4ee048538bd8aebd001f25c9d1fcdb64cdb00e92cda9fd77"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/wedge-type/",
+      "archive_path": "docs/musicxml-reference/data-types/wedge-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b70b9ce5be387e6d536b6cf82746417a6f485f1fd36dd565203433e726a4d087",
+      "archive_sha256": "3917fc839dfa588e873d153effed6230648545f59febc8ddf13324643b7b1a51"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/winged/",
+      "archive_path": "docs/musicxml-reference/data-types/winged/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2a4d2fe47f4a43ec0259d775f1f2954894bd16e598a2bd262053a8f0e09b3e6d",
+      "archive_sha256": "8863255e5ea598e6e08344b54d17cbe797ca45435768db4afd1acf742bd68c88"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/wood-value/",
+      "archive_path": "docs/musicxml-reference/data-types/wood-value/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "56af3343be3fda51f55fd13f1d71d251f83a762cd74d50d259a0c178c9e2592c",
+      "archive_sha256": "ce1a61f67cb0437991555d9ebdb42be33f6b1d525ee7db97c9b457398e20fbb9"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xlink-actuate/",
+      "archive_path": "docs/musicxml-reference/data-types/xlink-actuate/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e5b3e65f52489b3da9c09c27ebcfb6db3b687e64a04369af60af1e4ef1d55b12",
+      "archive_sha256": "8af68acd6bf06d2b370bf8da15affa71166cfb8c128e80b23bdddeb601389da5"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xlink-show/",
+      "archive_path": "docs/musicxml-reference/data-types/xlink-show/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "129b974487489bcbee18dc63e25a0b0dba16bce8b33faa32d33a6d461273e2ca",
+      "archive_sha256": "e2238e699ebd8129bee3ee84b4ece5cce910188dd546d1498188809251628cde"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xlink-type/",
+      "archive_path": "docs/musicxml-reference/data-types/xlink-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "fc60ad7e91e9d026277be966b71eb9c03cc825c4fd66bd2b3fc1d1aa4f3cbf1c",
+      "archive_sha256": "d5663ca381b68f2fdaf83eeb84b889e2ff3021a944e99353596f792d17d31f57"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xml-lang/",
+      "archive_path": "docs/musicxml-reference/data-types/xml-lang/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2c69ead6513e886b033eb0d10b645c95e72daf1564ec659297a8aa2a8614dd2f",
+      "archive_sha256": "71a4ba5272d98b293d2f57d15b0fc4c5cfb9eec4eea502aa1430af7c367f5a55"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xml-space/",
+      "archive_path": "docs/musicxml-reference/data-types/xml-space/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f62743eb8bf6be7fc9f8bfb01687ec907e99e170b90c8894775cb19874c8a01c",
+      "archive_sha256": "3f3c4f3450ad52629de2cf0c82fd7b78ad611106cda900352f053a61d7530842"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-ID/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-ID/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4d7a9ac5be2c3ccd9cc31b590c38f249d867b522bef36d046bbb899c3b873746",
+      "archive_sha256": "ab2d10ed9d33f3d70a2f46dd4def3245c321e4bd2057408c2c6f48f77dc0218c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-IDREF/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-IDREF/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "82f018ddc1b468bf1e1a99bad026febb08e9d75344996ea4e943ef06ec95d30f",
+      "archive_sha256": "7101824d536d7117b48f4c0bc6d9839177acbdbc267bcc11d8aa849f1d151134"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-NMTOKEN/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-NMTOKEN/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b82de1b07840d6ba454648976a5558d3bb5ee1da9963f5e7cdd658f6f6d40afc",
+      "archive_sha256": "d9832fe2aa7a8dbb7c1417cb99e464cf08f6974311f1ebe70efeaaf9927c2509"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-anyURI/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-anyURI/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6d1074b95c6f7259b6000946629ee98edd8e10909f5ae60ec73b4147f3d544f9",
+      "archive_sha256": "24f294f0356ff1fa76783ff78f804e7b27c5a8df855ac2e35ea347ee2cce44b2"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-date/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-date/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4eaa53098ec36644b59434565d6332cb38e3eb71be71c18fbece7d658a0df3e3",
+      "archive_sha256": "bec7dd5b74bc69611dcb203945ed75e8a903fe84e6580528e9eef6f992f1d42d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-decimal/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-decimal/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4304237068c80a7dbb1784c77e3afdcb0f57db3f45634474899cce4e02c3b405",
+      "archive_sha256": "3fc756c343ac0a5c55d57774265f18f2544a8ff53e05b53b4526e87acbde38f6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-integer/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-integer/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "04457df308c4fad4b6ed56690616e4d3769cbb00267ba39ab5110a6d55ca99b3",
+      "archive_sha256": "458b47c739bc9bd0e2fe18800031460d3d8e33b0bbdcde4ec73eae518ac2bff1"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-nonNegativeInteger/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-nonNegativeInteger/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c7d1d025086dcdb23d7cd9d203034e4ebe951f646077fd928355f9a3eb0906c1",
+      "archive_sha256": "d2b9279a4e0fe6a968e6896379175fed944aac98d6a20b63bfe70feda834be3d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-positiveInteger/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-positiveInteger/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "df225c406855689da021475fbc3c4e2cbe6b601eff016796f82ba493207702d0",
+      "archive_sha256": "752f73a38a16d555d53ff8de5b7ed1aa85b6f6904d61cf84c4e051a8d975c081"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-string/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-string/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4497cb60cf5e76a42f34e8a35f16b19451e65b6ea47658d9d95831579d004042",
+      "archive_sha256": "91fa455e743addd64598ae35e8db67689950ebc71d4f8d154492561e11a39973"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/xsd-token/",
+      "archive_path": "docs/musicxml-reference/data-types/xsd-token/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "17eaa8a2a8503e41cd3f641ee901e4a3171b5756cca52495d317c08921e6fd8c",
+      "archive_sha256": "88a343b102d214f06da1a9985cce4b18afcca535c61ed5923a5011a2a80accc1"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/yes-no-number/",
+      "archive_path": "docs/musicxml-reference/data-types/yes-no-number/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "370011df32159db9a431ad210aedd94ceee81da6b2696c4cc82ae70676fce7d1",
+      "archive_sha256": "dcee8ba3fcb9d1b5c064cbf5f170426932e52012cbe9da1b59047167fe1774af"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/yes-no/",
+      "archive_path": "docs/musicxml-reference/data-types/yes-no/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6dae7a7a90ad63f0c09f8577550bcaf0286df799eb30e3f28bd5437aafebeb4b",
+      "archive_sha256": "0c1da65662e226917230ee4b8355768025a3687fcc9e83c464e2d5a9a9dbb880"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/data-types/yyyy-mm-dd/",
+      "archive_path": "docs/musicxml-reference/data-types/yyyy-mm-dd/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3e47ed2f10c4ab20774221422995fdc258ec83d4e8432c8336152c8a77302452",
+      "archive_sha256": "46dfd39976cb2fb3b0f127305d62c856a064f326905100e9ac3df7f180635f60"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/element-tree/",
+      "archive_path": "docs/musicxml-reference/element-tree/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "7bfd107c58bff21eeb1e5eeb871f888264660041acf915dfec0ebe6153f39b3e",
+      "archive_sha256": "3d983b8f0f016b963004a2895922ae30cc93e4e041c47d4f73559cb4fe73fdee"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/",
+      "archive_path": "docs/musicxml-reference/elements/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a04dbb0a7afba313d938f063bffc6556bbc2a41ed20162aa165f631e89a7e88c",
+      "archive_sha256": "213d2197cf1cf6b10c6ef9a82aba0b8da4114ba19fe0dad9a1d963678951bb5d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accent/",
+      "archive_path": "docs/musicxml-reference/elements/accent/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6a92a198a29aa09c78d609a4d7398dc15c300f765ead52e07960dbd7e6074aa0",
+      "archive_sha256": "82db6d731784ea5341430849b396d0c728938eeeeb5e0f6765c614505b4fba43"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accidental-mark/",
+      "archive_path": "docs/musicxml-reference/elements/accidental-mark/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5c09189204c3207a0e80c05d283ef52874263fbde7e48048d13206f36f70adca",
+      "archive_sha256": "98eeef586efab1b15831512fefa3dd0b437053e0b653d8bad07cabe04eadb9f5"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accidental-text/",
+      "archive_path": "docs/musicxml-reference/elements/accidental-text/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "a58355388398c64c2f69a1b14b1062a41e27a687064e58b7b00c92583802f796",
+      "archive_sha256": "c386b88173016e44026978fc8864ca166030691fe862b81b58610d6c3d0f7c7e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accidental/",
+      "archive_path": "docs/musicxml-reference/elements/accidental/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "45bd1f281ad9811dab71131cb85efd77f8ca8bfb99d2b51500a751bc31c6f024",
+      "archive_sha256": "dba3d39f4fd9687da0e3de02bed9478cb4ce05be806d1785bcf461343a2f7adf"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accord/",
+      "archive_path": "docs/musicxml-reference/elements/accord/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5ebf78db62931f19fe9c3a611d10c58914efdfbf5051adf3919e5b38c3a076e7",
+      "archive_sha256": "6b8270270c0aa45f63dd9bb83e438d31828d07c7af27e114a7ed07a91ed6a15b"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accordion-high/",
+      "archive_path": "docs/musicxml-reference/elements/accordion-high/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "dea7e50a14c88618d0a1ca675360cdfd1b728d56b15fbdc52b31661f45dd9ccf",
+      "archive_sha256": "c34b5bc19236ba9bd5028351a9459f85123c93a78b09b4c6f54aa940e7093212"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accordion-low/",
+      "archive_path": "docs/musicxml-reference/elements/accordion-low/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "0d839c89318f8335b4a67f7c6e8bbd06587a4c885c8ce62fc6af8202cb8daf9e",
+      "archive_sha256": "57b04c3a677af28c3bfaffb91df1c24b316c75fa0d98db7a12b99214688a030d"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accordion-middle/",
+      "archive_path": "docs/musicxml-reference/elements/accordion-middle/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "595d10061eac59562ae20206516e9fec56157e578726eeebbf22ba2b47b04802",
+      "archive_sha256": "9e4da2c6e5c9ecf75569b652868093adf110763aba877ef87d1cdecae498435a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/accordion-registration/",
+      "archive_path": "docs/musicxml-reference/elements/accordion-registration/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f9e068b4402596e238017c6d04dc57ec10348727fe5cee79a9b62fd5831d76c5",
+      "archive_sha256": "78a149d7abe22d939262348a2833dcac0d7200e3e3360ec0e8811a496cde30e0"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/actual-notes/",
+      "archive_path": "docs/musicxml-reference/elements/actual-notes/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "d60fe2aaf890e3cade663ddc047164a504d096bb68b674ede2d49a95cab625b9",
+      "archive_sha256": "7cc9055dbf2b2fcfedf2fd022e9ced46b4b6b8920bf29224c2182fb5b55cdc25"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/alter/",
+      "archive_path": "docs/musicxml-reference/elements/alter/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c6614155c8b1da316160a8d9c1dfce335dfb4ccab7fa0299c222d0051bc40e6d",
+      "archive_sha256": "10a39db8aa6a0d91e96df072428b3dd6fda8f70e1ec194c6c91840d9cbe497b2"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/appearance/",
+      "archive_path": "docs/musicxml-reference/elements/appearance/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "fdaef462c70793b068edd4124fd5c9c09308492a5749583ae4b8de6d3a704150",
+      "archive_sha256": "95199c933f895e4ac7573d3190160b16aaebf25dc9ae349b8e9fd5c5d6ecbc91"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/arpeggiate/",
+      "archive_path": "docs/musicxml-reference/elements/arpeggiate/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e325ffc2c4b5272e69b91c42c56724d01fc88b5521a1ac2e0bce352ad3b901b2",
+      "archive_sha256": "3b934bf1efaa3465ea50c4f3fdfcbbc9e4b0f3012f57e0e056d0d7f4957d24d5"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/arrow-direction/",
+      "archive_path": "docs/musicxml-reference/elements/arrow-direction/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e718b806b30a0ee805806044aed09821e563ce06cb0f55b9fa0e5881fcf32a84",
+      "archive_sha256": "756ef9394b1790e8801ec1d9d4a0e4d7371851f921c928c2127bc840ef6a8341"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/arrow-style/",
+      "archive_path": "docs/musicxml-reference/elements/arrow-style/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "78774426c8680b19736d72d1d88c26ec9dd819e5a1ea3510e9eb412afb1fb0bf",
+      "archive_sha256": "965a7d6690fce5c9b75e5b26255da78c6bf5115504d16a447b6b0f6591e0cc8e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/arrow/",
+      "archive_path": "docs/musicxml-reference/elements/arrow/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "95de3e82cd938584824cc9f9316cfbe9f5405cc860382f9de6e61d97891814d2",
+      "archive_sha256": "944aa08992da573211e312aead856f85badc312ca82b8ab044aa58a126839673"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/arrowhead/",
+      "archive_path": "docs/musicxml-reference/elements/arrowhead/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8af2b1735d2e2e0e7446873c42708c9fd992ee3166b2573f2e1a7d464a6c3d83",
+      "archive_sha256": "9b5e62548d6fe7200268247c958de343c76c34a23899db8384b16143eed89c39"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/articulations/",
+      "archive_path": "docs/musicxml-reference/elements/articulations/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "229734917f23b2d54b2b40859af8b8c697a03bb178433bff0966baa9fba3ea51",
+      "archive_sha256": "ccc39e0257a0f9d79560c3c4071a0b01979eef4fad992ef9d10859261b0327a3"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/artificial/",
+      "archive_path": "docs/musicxml-reference/elements/artificial/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "006eb4ea5d945446e43b3dab97616c57de8244b7821c8afc73cc064344bce797",
+      "archive_sha256": "73c71b52959a562522b901d1c801d29fe77bbd2076c8dc47e96c9aab41f885f5"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/assess/",
+      "archive_path": "docs/musicxml-reference/elements/assess/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "85d0c6c1e9cb6e23dcdb36a376e59e72c459f7dc9c1dd8dec1cb1f4b5cd65671",
+      "archive_sha256": "8e58c0ba6bf63c64e92ac48973b622f4bdbea294080e14d2b80e6be3f2fba3b3"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/attributes/",
+      "archive_path": "docs/musicxml-reference/elements/attributes/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6e14373da38cf4d9a4f07355d9d0212b27e67657c06504c9ebc993b19b233d08",
+      "archive_sha256": "88200fcf2c8727a68a0113cd1623026d751a16c5961f63832b772e96f28c870c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/backup/",
+      "archive_path": "docs/musicxml-reference/elements/backup/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "23740c30f3981a0258882cd73cb3058dc31019a4e8ee1f63cc3a2458756ba56a",
+      "archive_sha256": "2cefd597e987585dae535f06a1fc89b91da04932501dae52863b8c9179b2e65f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bar-style/",
+      "archive_path": "docs/musicxml-reference/elements/bar-style/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e61ad56264da13d246bdfeffe1300044eaea7125e8e242eaf04994ff1c1ce2d9",
+      "archive_sha256": "569e4e47d9d76ce11747e4ac1c4cf474356ff02974b69dee9abbcc2be3ef3e00"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/barline/",
+      "archive_path": "docs/musicxml-reference/elements/barline/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "20629aa73dfeda32144bb805caba0a0e328077a6117a751919205be54e60e71e",
+      "archive_sha256": "a8260112d819e507fb4b5453ddeb981a44980ba52f8428e6401d8f9eb55f1ff6"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/barre/",
+      "archive_path": "docs/musicxml-reference/elements/barre/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c00fea78d790895c45d08ac0c97c2c9c0bd91fb8d58adb7b7ad0be1834743cf8",
+      "archive_sha256": "b2e4d1e3a834508248ad2ba6259d79bef5231d22d1b6d2047617fd47625ab5f4"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/base-pitch/",
+      "archive_path": "docs/musicxml-reference/elements/base-pitch/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5458f211eae3f8a19a4225336bd0b1ff8aca19715c02b4132c6ff94f4d6ed7e7",
+      "archive_sha256": "8bd65f0867b3e4816c2ec2e8c37e2b562a182a289083d7dff80b7592af131642"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bass-separator/",
+      "archive_path": "docs/musicxml-reference/elements/bass-separator/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "aa373ebf6280b6cdfbe6ccb2053a4af6a96d89aeeb4d427c060293467e516a2c",
+      "archive_sha256": "ef1eb920030bf439bb89573ae95f99f631ef2aff67ff03f1513415a2a620859c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bass-step/",
+      "archive_path": "docs/musicxml-reference/elements/bass-step/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3e3229e7a1186fb70b62c6404ace72cc3b350a163602a135933ad9abf1d65fee",
+      "archive_sha256": "32aacff0d2c918635beeaf37798526fe078b4b681b1d9cf2ef46d6899adb7818"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bass/",
+      "archive_path": "docs/musicxml-reference/elements/bass/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8b031330b6935e97e77b4290877042a727d2e4dec963efda8ea8e5e9b2dde757",
+      "archive_sha256": "738a3e4f08a34a89c438cc160c3aa82bfe0df1f90e1e1a7ab4642ebc8463df9f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beat-repeat/",
+      "archive_path": "docs/musicxml-reference/elements/beat-repeat/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "63e9704739fa417e1a4021da92dd472ecee5dbce6ea3fee039053a4c3af86c4f",
+      "archive_sha256": "f574216c45578e8cee839ae2ae18da59d7c5da5541490094579e0429975eb12c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beat-type/",
+      "archive_path": "docs/musicxml-reference/elements/beat-type/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1d7cb6810f86b7a8a73d3c43b489465bb12531b7fd03bd0d404665a8ab6d17be",
+      "archive_sha256": "a692db09425d076ba39856e16b84f059a72efb304c36051b1f3a4733adfc0b14"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beat-unit-dot/",
+      "archive_path": "docs/musicxml-reference/elements/beat-unit-dot/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "cbad7b1f621c216763754a177b5c2a28ebb7d6f8f41742004340dcf2b65108ee",
+      "archive_sha256": "de8a7da6cbf2a385c146a61962ec8a011df94f061bbe84b508172fde85a5804c"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beat-unit-tied/",
+      "archive_path": "docs/musicxml-reference/elements/beat-unit-tied/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2796dcf5cf6f6df2f07333a6f5f091f27db8083293789b8983d25d9860fef6bd",
+      "archive_sha256": "cc0190b1ecd3917d63f66abc3874820c595572537e29e579032b7ac7a05a541e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beat-unit/",
+      "archive_path": "docs/musicxml-reference/elements/beat-unit/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f5adcf959b455f2f2d8a023d3a6d4c67c9930cf8349857ff477bdc41368ed994",
+      "archive_sha256": "d71887288c90ef8ae66377e0af5d0570cd11db0a9dbda2594331caf071fc6a1e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beater/",
+      "archive_path": "docs/musicxml-reference/elements/beater/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8304832735e65664470d9dcb4d21e3f5abb60ce87ccb18bd4d5cb7d499edc2bc",
+      "archive_sha256": "b8a2f6ebe265cee21c230bd01337397060772d007fc1151be670aea42965e80e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/beats/",
+      "archive_path": "docs/musicxml-reference/elements/beats/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "c8870b3d0bd5a08cb099de55454a5b39850299796e04837986c836b06d311826",
+      "archive_sha256": "5e4966ff92e8a330cf8f6fef30b77e9a3949d01411774e74ab74d896028d3c7a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bend-alter/",
+      "archive_path": "docs/musicxml-reference/elements/bend-alter/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "2d662e71e20ce1d3dcbbd360fb8906cc62f9774cc1962f9ff0feafcafae7b3b0",
+      "archive_sha256": "bd4bcd3ebbab285997d62276000b1f6504277d3421ee7b5a6ca1524662dddc59"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bend/",
+      "archive_path": "docs/musicxml-reference/elements/bend/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f6e80cc03f94a6385324605b5d7276f61588bbdb7096e3a519ec446f9bca7304",
+      "archive_sha256": "5d4e1f99ce85755d1c4296510430ebd94e505697aea93d25a7ec573143ebeeea"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bookmark/",
+      "archive_path": "docs/musicxml-reference/elements/bookmark/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1326a4d1f20c5f78592b8925812cceb4a72f9b7d61a280c2683666f6b0f80a27",
+      "archive_sha256": "7b4d69b6e7bc0dc25af4eaa109ac6c18e04938e84a0e4dbf69da7ac8ea3adae8"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bottom-margin/",
+      "archive_path": "docs/musicxml-reference/elements/bottom-margin/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b7acb2ca09357feebf975bd785f4fa5b7862bf298c12c09df7c998ab0d138f4b",
+      "archive_sha256": "9799747ff6edcb30eafba85be3c7467624fcd3426eb8c0ebb899f97386c41b39"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bracket/",
+      "archive_path": "docs/musicxml-reference/elements/bracket/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "4aac2937b272ed558d67c6be652d4ad9066ae28718fcace9fa525e69fdff614c",
+      "archive_sha256": "65359494ca9245de7f97946e19a00388e5a9fa3c2cf1c0a981eb7b9b804c056e"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/brass-bend/",
+      "archive_path": "docs/musicxml-reference/elements/brass-bend/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "3d213ed452b4aa9b4678e1d64e3309984a4bc250c46ffb528f74a1e79a2fe1bb",
+      "archive_sha256": "fb2bda999d2fa0675834ef983b58dfbdd12fa698c699aee85c7e75ecbad9924f"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/breath-mark/",
+      "archive_path": "docs/musicxml-reference/elements/breath-mark/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "41443bafc9c4ae632225b4b49d557149c3e6a3f7e2c655915e4d83bda4363f5d",
+      "archive_sha256": "d8c114737eb159f204e2dfecaf3e360811f08c118d71d17c9bb23cedad02e310"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/caesura/",
+      "archive_path": "docs/musicxml-reference/elements/caesura/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "ade029f3740c29f8c0a0ba7b2e81d394627cbafbd2cb36d6803eede355844888",
+      "archive_sha256": "e32f17219ec1247539fcf1ce5ad3718871d2c2814cefd49e3c3093d71cba2476"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/",
+      "archive_path": "docs/musicxml-reference/examples/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "edfc8a95335d944e563d1c1d62c536fd043434584bf55a6e1d8a351606be7ab6",
+      "archive_sha256": "a152377e2d7fd98b6b5bfab3165cca6c265c66fd6fdcbf647874ff6ad83e5a94"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/opus-reference/",
+      "archive_path": "docs/opus-reference/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "0ffa2abf61400235ce6576187a4239f7c61209a0c6162d91651f5e51bcd6c2a2",
+      "archive_sha256": "f46bcb120ca87f91c8700f28c1cee4a2a4e1ec6f9a7cec66d848db3269330fa4"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/opus-reference/data-types/",
+      "archive_path": "docs/opus-reference/data-types/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "df865e25b1ffc63dc55d465d85e9492c3bd56b0c18fc7539cb61711687381748",
+      "archive_sha256": "14378566b0c4a6a29a86ddaebb1b6cd9685ac01d699b2a8523bdf541d6c7ccc3"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/opus-reference/elements/",
+      "archive_path": "docs/opus-reference/elements/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e610c7ee028750d09149e6389bb1c47ce4723cce7d78f18e3ddd3d1701c7cc10",
+      "archive_sha256": "5d50c1c7973a5337c9659eb9f2ce5cd80791ec4a988bcb8c04dffaf95227c254"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/opus-reference/examples/",
+      "archive_path": "docs/opus-reference/examples/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "ff7cba930b54f0ad2e0bcb9c60cd4b4ea1b2b46289ba7635e61845db1c7ca3b7",
+      "archive_sha256": "be915d90b32de1f2a9335fcd2effa262876860d6d7682c04a739d87643491ed3"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/sounds-reference/",
+      "archive_path": "docs/sounds-reference/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "16a54204502b89b3c458202e9343840c6154b3b048f48357316ef17ffaf7e525",
+      "archive_sha256": "b390d075d467d3e18d85e0aa488135b074bc9d990dc6334058e1f7fba98e8888"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/sounds-reference/data-types/",
+      "archive_path": "docs/sounds-reference/data-types/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "32b5ad996d79f596a5f79349e5d502ff05b67fbc86b044a7ec51e50f1e194cf2",
+      "archive_sha256": "7927b2de6fa6c37bff5424e1468b5f767b90bc3ac3543caf9be8161d5bb03d1a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/sounds-reference/elements/",
+      "archive_path": "docs/sounds-reference/elements/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "e7d5ad316098d7d7174d2b474e77464dc2d774402fd8fbccc2a2441e3a318b67",
+      "archive_sha256": "a36caa04b27e6e352bdb6ff834c3ca1714e0db6b23e480d7a76b03eceddbd1b7"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/sounds-reference/examples/",
+      "archive_path": "docs/sounds-reference/examples/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "f4a36650ad88aedb2ba58ec250c777fcae770b249f1454b5f1e1890afe96a579",
+      "archive_sha256": "6353976d5f1395771cae8fb2dc4192c4fc091132164d52ce7b8de58263fe50e0"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/chord-symbols-and-diagrams/",
+      "archive_path": "docs/tutorial/chord-symbols-and-diagrams/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "90d57a98d12640d060f108094e07317712085a6ea0d795cee0a145aa44130442",
+      "archive_sha256": "5bb9973270bcb839780fc7a69e2370f114c2a9f314c2a7edc65f547bfbeabf44"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/code-generation/",
+      "archive_path": "docs/tutorial/code-generation/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "6a0d235ca119d51e76bfc65e7b5c37f261b249f591fcac16c10a066b8470c710",
+      "archive_sha256": "ef308a6c672ed62abb7fe18203faf69145efa4c78ebc294eea2cfaaef0401876"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/",
+      "archive_path": "docs/tutorial/compressed-mxl-files/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b18ab96162c43f4f8539c71d1aa6c88f2d4d309cf2b03a1eb595cb1929011f59",
+      "archive_sha256": "0a929fc61e0a305e31dff1bccef9db987f77692312948b382671ee24a9e089a4"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/",
+      "archive_path": "docs/tutorial/hello-world/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "b04d904464f9e7d446495549c5b3b76f7627a85a2dcebc0a0733a02af2a8a57a",
+      "archive_sha256": "c07cf776cbb9e08435bcacfc242543765e9eae1654e8231a9765bf606af56cb3"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/introduction/",
+      "archive_path": "docs/tutorial/introduction/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "56e32d6b8a71d98a15483daa7cdd66ae9d3be06d235f8ec5f4ca7f1848706f93",
+      "archive_sha256": "b69490173a679ef6ad9c5f6da52fe281de514c470186594f47299634369634b9"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/",
+      "archive_path": "docs/tutorial/midi-compatible-part/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "15291a71335edad3f597bb4f50ff64f1de419628f9900071062101d0f964ee3b",
+      "archive_sha256": "bed74aabef17f2855e75cd52f29a8dce37751257240d925c7cfbad2bbac7fc3a"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/notation-basics/",
+      "archive_path": "docs/tutorial/notation-basics/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "5cc7d2821cb5fb41cf0ab1d870183e1bd3fba0933d2976ce005bc2250a4bd468",
+      "archive_sha256": "64da289fe34b309f5f25d30f315c8ae19f698b6cded3ea5b81b8a10954c8f5d4"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/percussion/",
+      "archive_path": "docs/tutorial/percussion/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "1867066c36f83c8bb2cec5b344ba509138b50eef4fd554006ce2aa3aba3c5fc1",
+      "archive_sha256": "3224d821945b74654f41159d5e6aa22708ae29c0b8cf4cd45ccf0471d3371e96"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/structure-of-musicxml-files/",
+      "archive_path": "docs/tutorial/structure-of-musicxml-files/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "73ba0730fd4d1edbc2a03c9dd8d82628041dfa93e5704fb86ae585f11471540e",
+      "archive_sha256": "f0459478894610d588d910b2274a96f75c36df5135801320e4a0580040677746"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/tutorial/tablature/",
+      "archive_path": "docs/tutorial/tablature/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "ffd0638a1aa85a3d586d8313939629a66228c74b08b55cf1de583fa57b6e6174",
+      "archive_sha256": "09e29aa362e205aff7832f2621a89960bbedf73ba97fdb15cc214fae9680dabb"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/",
+      "archive_path": "docs/version-history/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "856deb0b4bb73a5dfea2d1a00d34df96a74605953093b30ff68095e6a3042c96",
+      "archive_sha256": "0bd76856b7074edf046ed33bda6ddfe7c8bde6095929c98d9bd934f5ab406067"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/10/",
+      "archive_path": "docs/version-history/10/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "58e4febcd33d2e3f19eb8795f4999e89d69cbc60bacb642cf72c6d89c31f2534",
+      "archive_sha256": "c7e148cdbe262915c9edea97e96808c7818d5ea3eed228cd97083bd499e559fc"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/11/",
+      "archive_path": "docs/version-history/11/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "780eef7476abf25c89dc921404fc52d529a1710898c745bb843aaa6b812e439c",
+      "archive_sha256": "bb9055838ff02d4720b458806ba6fc4490770c03ea1421ff66420e6cc43771bd"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/20/",
+      "archive_path": "docs/version-history/20/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "12539991a171a851601b893f84a2b73f82de5ccde7ca1dcb8cf58a55bfd5055e",
+      "archive_sha256": "636c9c0da31a669860bd9a3acae5087f447109c0d5b9709dc8ac95e76ae1d866"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/30/",
+      "archive_path": "docs/version-history/30/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "9559d96e484e205acbc46f7501be59f3723c596de864024cd300089a7d23a2f0",
+      "archive_sha256": "6a0a971fd47ad26868912646d30bdbfad8b77a68b949c157b8cda3c49c8dad65"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/31/",
+      "archive_path": "docs/version-history/31/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "804bf37c48556c86eab7f0af72f86c0251e6ac845d73657c26b8c716e231f475",
+      "archive_sha256": "a02e670ae8edaf40938a2d676faa5f80a65dd5bbc646f0efdfa01388352ec1e1"
+    },
+    {
+      "dated_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/",
+      "archive_path": "docs/version-history/40/index.html",
+      "bytes_equal": false,
+      "main_text_equal": true,
+      "dated_sha256": "8c52c251ba9df6f92a2059c12ecd13e93ed7d41d4eedd957e3480f99fbc4e28a",
+      "archive_sha256": "390940a514c8844c1badee26590c8fb56a07e70ea810f14118bdccab70c6ccc7"
+    }
+  ],
+  "license_evidence": "docs/index.html carries W3C Community Final Specification Agreement (FSA); schema files carry same copyright/license statements."
+}

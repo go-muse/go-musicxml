@@ -1,0 +1,97 @@
+{
+  "musicxml_version": "4.0",
+  "assessment_is_preliminary_not_architecture": true,
+  "applicability": [
+    {
+      "family": "Expanded names / element type / attribute allowed set",
+      "preassessment": "both",
+      "model_evidence_required": "expanded names, declaration/type context, attribute presence; namespace prefix spelling irrelevant"
+    },
+    {
+      "family": "sequence / choice / repetition",
+      "preassessment": "both",
+      "model_evidence_required": "ordered child occurrence stream, branch membership and cardinality; field-separated unordered collections may lose evidence"
+    },
+    {
+      "family": "required / optional / default / fixed",
+      "preassessment": "both",
+      "model_evidence_required": "explicit presence separate from effective/defaulted value; typed value equality"
+    },
+    {
+      "family": "numeric bounds / enumeration / ID uniqueness / IDREF resolution",
+      "preassessment": "both",
+      "model_evidence_required": "faithful value domains and document-wide identity context; IDREF target kind is not narrowed by XSD"
+    },
+    {
+      "family": "lexical space / whitespace / pattern",
+      "preassessment": "source",
+      "model_evidence_required": "if normalized lexical spelling or equivalent evidence is preserved, some checks also apply to a model; cannot reconstruct all lexical defects from parsed numeric values"
+    },
+    {
+      "family": "xsi:type / xsi:nil / schema location / namespace declarations",
+      "preassessment": "source",
+      "model_evidence_required": "the complete source metadata must be retained to reassess these; a type annotation alone is insufficient"
+    },
+    {
+      "family": "Schema component imports / final / assembly",
+      "preassessment": "source",
+      "model_evidence_required": "schema-set context; not an ordinary per-object data predicate"
+    }
+  ],
+  "separate_boundaries": [
+    {
+      "id": "BOUNDARY-XML-SYNTAX",
+      "category": "prerequisite_external_standard",
+      "description_ru": "Well-formed XML: один корневой элемент, корректная вложенность/закрытие, допустимые символы и кодировка, корректные entity/character references, отсутствие повторных атрибутов. Это требования XML, а не отдельные ограничения MusicXML XSD.",
+      "source": "https://www.w3.org/TR/REC-xml/"
+    },
+    {
+      "id": "BOUNDARY-XML-NAMESPACES",
+      "category": "prerequisite_external_standard",
+      "description_ru": "Объявления префиксов, зарезервированные xml/xmlns, раскрытие QName и уникальность атрибутов по expanded name принадлежат Namespaces in XML. Конкретные разрешённые expanded names следуют из MusicXML XSD.",
+      "source": "https://www.w3.org/TR/REC-xml-names/"
+    },
+    {
+      "id": "BOUNDARY-SECURITY",
+      "category": "operational_policy_not_MusicXML_norm",
+      "description_ru": "Запрет сетевой загрузки DTD/схем, внешних сущностей, XInclude, требования безопасного разрешения путей и политика недоверенных источников являются защитной политикой. Сам XSD не означает универсальный запрет DOCTYPE или требование сходить по schemaLocation."
+    },
+    {
+      "id": "BOUNDARY-RESOURCES",
+      "category": "operational_policy_not_MusicXML_norm",
+      "description_ru": "Лимиты байтов, глубины, количества элементов, времени, памяти, длины decimal/integer и распаковки требуют отдельного результата resource/unsupported. Они не должны незаметно сужать MusicXML-домен, где maxOccurs=unbounded или числовой верхний предел не задан."
+    },
+    {
+      "id": "BOUNDARY-MXL",
+      "category": "outside_XSD_structural_scope",
+      "description_ru": "ZIP, mimetype, CRC, шифрование, порядок записей, MIME первого rootfile и разрешение связанных файлов описаны prose и другими спецификациями. container.xsd формально ограничивает XML-дерево container.xml, не сам ZIP."
+    },
+    {
+      "id": "BOUNDARY-MODEL",
+      "category": "operational_model_contract_not_MusicXML_norm",
+      "description_ru": "Неподдерживаемые модели, циклы объектного графа, внутренние индексы, ошибки среды и отсутствие исходной лексики не являются новыми нормами MusicXML. Их обработка остаётся архитектурным вопросом."
+    }
+  ],
+  "open_limits": [
+    {
+      "id": "LIMIT-PROVENANCE",
+      "status": "disclosed",
+      "description": "No new full Git object/download verification; five raw hashes match prior pinned audit and all six complete operative trees match dated W3C publication."
+    },
+    {
+      "id": "LIMIT-XSD-LANGUAGE",
+      "status": "normative_dependencies_explicit",
+      "description": "Thirty topic-level semantic requirements plus builtin closure point to normative XSD 1.0 specifications; this inventory is not a standalone replacement for every clause of W3C XML Schema."
+    },
+    {
+      "id": "LIMIT-RUNTIME",
+      "status": "out_of_scope",
+      "description": "No implementation, runtime correctness proof, product tests or architecture decisions were performed."
+    },
+    {
+      "id": "LIMIT-PROSE",
+      "status": "separate_research",
+      "description": "642 documentation nodes are accounted for but prose obligations are not reclassified as XSD-enforced rules; merge with the parallel prose registry."
+    }
+  ]
+}

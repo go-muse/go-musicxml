@@ -1,0 +1,639 @@
+{
+  "metadata": {
+    "registry_format": "musicxml-requirements-neutral-v1",
+    "musicxml_version": "4.0",
+    "pin": "799e2defb2ece0ae7bafe08dcbcac25b2c631d53",
+    "scope": "six official XSD files, exact supplied dependency modules, five roots; XSD 1.0 semantics; no DTD/XSLT or prose norms",
+    "id_policy": "MX40-XSD- + first 16 hex SHA256(file + | + stable XPath); properties append @name. IDs identify source occurrences, not runtime error-code architecture.",
+    "total_schema_occurrences": 2939,
+    "total_explicit_attribute_occurrences": 3958,
+    "total_reference_tokens": 1515,
+    "semantic_rules_count": 30,
+    "builtin_type_closure_count": 17
+  },
+  "semantic_rules": [
+    {
+      "id": "XSD10-SEM-NAME",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Expanded-name matching",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt",
+      "applicability_preassessment": "both",
+      "conditions": "element_or_attribute_assessed",
+      "neutral_rule": "QName(instance)=expanded_name(declaration)"
+    },
+    {
+      "id": "XSD10-SEM-ORDER",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Sequence order",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-model-group",
+      "applicability_preassessment": "both",
+      "conditions": "sequence_occurs",
+      "neutral_rule": "L(sequence)=concatenate(L(child_1),...,L(child_n))"
+    },
+    {
+      "id": "XSD10-SEM-CHOICE",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Choice alternatives",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-model-group",
+      "applicability_preassessment": "both",
+      "conditions": "choice_occurs",
+      "neutral_rule": "L(choice)=union(L(child_1),...,L(child_n)); nullable branches remain nullable"
+    },
+    {
+      "id": "XSD10-SEM-OCCURS",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Particle bounds",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-particle",
+      "applicability_preassessment": "both",
+      "conditions": "particle_assessed",
+      "neutral_rule": "L(particle)=repeat(L(term),minOccurs,maxOccurs); omitted bounds=1"
+    },
+    {
+      "id": "XSD10-SEM-TYPE",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Declared type assessment",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-type",
+      "applicability_preassessment": "both",
+      "conditions": "declaration_assessed",
+      "neutral_rule": "value/content satisfies resolved type"
+    },
+    {
+      "id": "XSD10-SEM-ATTRUSE",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Attribute presence",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type",
+      "applicability_preassessment": "both",
+      "conditions": "attribute_use_assessed",
+      "neutral_rule": "required => present; optional => zero_or_one; omitted use=optional"
+    },
+    {
+      "id": "XSD10-SEM-DEFAULT",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Schema default",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-attribute",
+      "applicability_preassessment": "both",
+      "conditions": "attribute_absent_with_default",
+      "neutral_rule": "effective_value=typed(default); physical_absence remains provenance"
+    },
+    {
+      "id": "XSD10-SEM-FIXED",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Fixed value",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-attribute",
+      "applicability_preassessment": "both",
+      "conditions": "attribute_present_with_fixed",
+      "neutral_rule": "typed(actual)=typed(fixed); absent optional fixed contributes defaulted value"
+    },
+    {
+      "id": "XSD10-SEM-CLOSED",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Closed content",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type",
+      "applicability_preassessment": "both",
+      "conditions": "complex_type_assessed",
+      "neutral_rule": "only declared attributes and child grammar; standard xsi exceptions apply"
+    },
+    {
+      "id": "XSD10-SEM-TEXT",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Text-content category",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type",
+      "applicability_preassessment": "both",
+      "conditions": "complex_type_assessed",
+      "neutral_rule": "simple=>typed text/no children; element_only=>XML whitespace between children; empty=>no character/element children"
+    },
+    {
+      "id": "XSD10-SEM-NIL",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Nil legality",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt",
+      "applicability_preassessment": "source",
+      "conditions": "xsi:nil supplied",
+      "neutral_rule": "nillable=false when absent; xsi:nil=true disallowed; xsi:nil lexical boolean checked"
+    },
+    {
+      "id": "XSD10-SEM-XSI",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Dynamic type assessment",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt",
+      "applicability_preassessment": "source",
+      "conditions": "xsi:type supplied",
+      "neutral_rule": "QName resolves; dynamic type validly derived; block constraints honored"
+    },
+    {
+      "id": "XSD10-SEM-BLOCK",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Blocked derivation/substitution",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt",
+      "applicability_preassessment": "source",
+      "conditions": "dynamic_type_or_substitution_used",
+      "neutral_rule": "reject blocked derivation/substitution path"
+    },
+    {
+      "id": "XSD10-SEM-FINAL",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Final derivation declaration",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#Element_Declaration_details",
+      "applicability_preassessment": "source",
+      "conditions": "schema_derivation_or_substitution_assembly",
+      "neutral_rule": "final constrains schema derivation/substitution membership, not an unconditional ban on xsi:type"
+    },
+    {
+      "id": "XSD10-SEM-ENUM",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Typed enumeration",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-enumeration",
+      "applicability_preassessment": "both",
+      "conditions": "enumeration_facet_assessed",
+      "neutral_rule": "typed(value) in typed(enumeration_values); same-restriction values are alternatives"
+    },
+    {
+      "id": "XSD10-SEM-PATTERN",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "XSD regular expression",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#regexs",
+      "applicability_preassessment": "source",
+      "conditions": "pattern_facet_assessed",
+      "neutral_rule": "XSD10_REGEX_FULL_MATCH(normalized_lexical,pattern); XML Schema Unicode escapes/classes"
+    },
+    {
+      "id": "XSD10-SEM-BOUND",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Numeric bounds",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-minInclusive",
+      "applicability_preassessment": "both",
+      "conditions": "bound_facet_assessed",
+      "neutral_rule": "typed(value) >=,>,<=,< typed(bound) according to facet"
+    },
+    {
+      "id": "XSD10-SEM-LENGTH",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Character length",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-minLength",
+      "applicability_preassessment": "both",
+      "conditions": "string_minLength_assessed",
+      "neutral_rule": "count_XML_characters(value)>=minLength; not UTF-8 bytes"
+    },
+    {
+      "id": "XSD10-SEM-RESTRICT",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Restriction inheritance",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#derivation-by-restriction",
+      "applicability_preassessment": "both",
+      "conditions": "restricted_type_assessed",
+      "neutral_rule": "base validity AND new facets; preserve per-derivation layers"
+    },
+    {
+      "id": "XSD10-SEM-EXTEND",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Extension inheritance",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#Complex_Type_Definition_details",
+      "applicability_preassessment": "both",
+      "conditions": "extended_type_assessed",
+      "neutral_rule": "inherit base content/attributes; append extension content and attribute uses"
+    },
+    {
+      "id": "XSD10-SEM-UNION",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Union member alternatives",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-union",
+      "applicability_preassessment": "both",
+      "conditions": "union_type_assessed",
+      "neutral_rule": "exists member valid; member-specific whitespace and value space; declaration member order retained"
+    },
+    {
+      "id": "XSD10-SEM-WS",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Datatype whitespace",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-whiteSpace",
+      "applicability_preassessment": "source",
+      "conditions": "simple_type_assessed",
+      "neutral_rule": "preserve|replace|collapse per datatype; union uses successful member"
+    },
+    {
+      "id": "XSD10-SEM-LEXICAL",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Datatype lexical space",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#cvc-datatype-valid",
+      "applicability_preassessment": "source",
+      "conditions": "simple_value_assessed",
+      "neutral_rule": "lexical form valid before value-space facets"
+    },
+    {
+      "id": "XSD10-SEM-ID",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "ID uniqueness",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id",
+      "applicability_preassessment": "both",
+      "conditions": "ID_typed_values_present",
+      "neutral_rule": "all ID values unique within validation root/document"
+    },
+    {
+      "id": "XSD10-SEM-IDREF",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "IDREF resolution",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id",
+      "applicability_preassessment": "both",
+      "conditions": "IDREF_typed_values_present",
+      "neutral_rule": "each IDREF has corresponding ID in validation root/document"
+    },
+    {
+      "id": "XSD10-SEM-IMPORT",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Schema import",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#src-import",
+      "applicability_preassessment": "source",
+      "conditions": "schema_assembled",
+      "neutral_rule": "use pinned imported namespace declarations; location is a hint, not document fetch mandate"
+    },
+    {
+      "id": "XSD10-SEM-GROUP",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Reference substitution",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#Model_Group_Definition_details",
+      "applicability_preassessment": "both",
+      "conditions": "group_or_attributeGroup_ref",
+      "neutral_rule": "substitute referenced definition; preserve reference-site occurrence bounds"
+    },
+    {
+      "id": "XSD10-SEM-FORM",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Namespace form defaults",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#Element_Declaration_details",
+      "applicability_preassessment": "source",
+      "conditions": "declaration_assembled",
+      "neutral_rule": "expanded name follows targetNamespace/global-vs-local/form; absent targetNamespace is no namespace"
+    },
+    {
+      "id": "XSD10-SEM-XSI-LOCATION",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Schema-instance location hints",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi_schemaLocation",
+      "applicability_preassessment": "source",
+      "conditions": "xsi:schemaLocation or xsi:noNamespaceSchemaLocation is supplied",
+      "neutral_rule": "Validate standard schema-instance attribute lexical/list shape; location is a hint; no mandatory external fetching"
+    },
+    {
+      "id": "XSD10-SEM-XSI-ATTRS",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "description": "Standard schema-instance attribute exception",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type",
+      "applicability_preassessment": "source",
+      "conditions": "schema-instance attribute supplied on an assessed element",
+      "neutral_rule": "Allow only standard xsi:type, xsi:nil, xsi:schemaLocation, xsi:noNamespaceSchemaLocation subject to their own constraints; do not reject merely because absent from MusicXML XSD"
+    }
+  ],
+  "builtin_types": [
+    {
+      "id": "XSD10-TYPE-ID",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "ID",
+      "base_id": "XSD10-TYPE-NCName",
+      "whiteSpace": "collapse",
+      "description": "Document-unique identifier",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#ID",
+      "explicit_reference_count": 7,
+      "directly_used": true
+    },
+    {
+      "id": "XSD10-TYPE-IDREF",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "IDREF",
+      "base_id": "XSD10-TYPE-NCName",
+      "whiteSpace": "collapse",
+      "description": "Document identifier reference",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#IDREF",
+      "explicit_reference_count": 11,
+      "directly_used": true
+    },
+    {
+      "id": "XSD10-TYPE-NCName",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "NCName",
+      "base_id": "XSD10-TYPE-Name",
+      "whiteSpace": "collapse",
+      "description": "XML NCName",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#NCName",
+      "explicit_reference_count": 1,
+      "directly_used": true
+    },
+    {
+      "id": "XSD10-TYPE-NMTOKEN",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "NMTOKEN",
+      "base_id": "XSD10-TYPE-token",
+      "whiteSpace": "collapse",
+      "description": "XML Nmtoken",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#NMTOKEN",
+      "explicit_reference_count": 11,
+      "directly_used": true
+    },
+    {
+      "id": "XSD10-TYPE-Name",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "Name",
+      "base_id": "XSD10-TYPE-token",
+      "whiteSpace": "collapse",
+      "description": "XML Name",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#Name",
+      "explicit_reference_count": 0,
+      "directly_used": false
+    },
+    {
+      "id": "XSD10-TYPE-anySimpleType",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "anySimpleType",
+      "base_id": "XSD10-TYPE-anyType",
+      "whiteSpace": null,
+      "description": "Any simple value",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#anySimpleType",
+      "explicit_reference_count": 0,
+      "directly_used": false
+    },
+    {
+      "id": "XSD10-TYPE-anyType",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "anyType",
+      "base_id": null,
+      "whiteSpace": null,
+      "description": "Any complex content",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#ur-type-itself",
+      "explicit_reference_count": 0,
+      "directly_used": false
+    },
+    {
+      "id": "XSD10-TYPE-anyURI",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "anyURI",
+      "base_id": "XSD10-TYPE-anySimpleType",
+      "whiteSpace": "collapse",
+      "description": "XSD 1.0 URI reference",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#anyURI",
+      "explicit_reference_count": 3,
+      "directly_used": true,
+      "notes": "Relative references allowed; no network retrieval requirement; XSD 1.0 escaping and URI-reference rules, not an application URL parser."
+    },
+    {
+      "id": "XSD10-TYPE-date",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "date",
+      "base_id": "XSD10-TYPE-anySimpleType",
+      "whiteSpace": "collapse",
+      "description": "XSD 1.0 date",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#date",
+      "explicit_reference_count": 1,
+      "directly_used": true,
+      "lexical_requirement": {
+        "notation": "XSD10_DATE",
+        "value": "-?YYYY-MM-DD(Z|[+-]hh:mm)?; calendar-valid; year 0000 forbidden; extended years no leading zero; timezone max ±14:00"
+      }
+    },
+    {
+      "id": "XSD10-TYPE-decimal",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "decimal",
+      "base_id": "XSD10-TYPE-anySimpleType",
+      "whiteSpace": "collapse",
+      "description": "Finite decimal value",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#decimal",
+      "explicit_reference_count": 12,
+      "directly_used": true,
+      "lexical_requirement": {
+        "notation": "ASCII_GRAMMAR",
+        "value": "[+-]?([0-9]+(.[0-9]*)?|.[0-9]+); dot is literal; no exponent/NaN/INF"
+      }
+    },
+    {
+      "id": "XSD10-TYPE-integer",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "integer",
+      "base_id": "XSD10-TYPE-decimal",
+      "whiteSpace": "collapse",
+      "description": "Integer; no finite machine-width bound",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#integer",
+      "explicit_reference_count": 7,
+      "directly_used": true,
+      "lexical_requirement": {
+        "notation": "ASCII_GRAMMAR",
+        "value": "[+-]?[0-9]+"
+      }
+    },
+    {
+      "id": "XSD10-TYPE-language",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "language",
+      "base_id": "XSD10-TYPE-token",
+      "whiteSpace": "collapse",
+      "description": "Language-tag pattern",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#language",
+      "explicit_reference_count": 1,
+      "directly_used": true,
+      "lexical_requirement": {
+        "notation": "XSD10_REGEX",
+        "value": "[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"
+      }
+    },
+    {
+      "id": "XSD10-TYPE-nonNegativeInteger",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "nonNegativeInteger",
+      "base_id": "XSD10-TYPE-integer",
+      "whiteSpace": "collapse",
+      "description": "Integer at least zero",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#nonNegativeInteger",
+      "explicit_reference_count": 12,
+      "directly_used": true,
+      "value_requirement": "value >= 0"
+    },
+    {
+      "id": "XSD10-TYPE-normalizedString",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "normalizedString",
+      "base_id": "XSD10-TYPE-string",
+      "whiteSpace": "replace",
+      "description": "Replace XML whitespace",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#normalizedString",
+      "explicit_reference_count": 0,
+      "directly_used": false
+    },
+    {
+      "id": "XSD10-TYPE-positiveInteger",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "positiveInteger",
+      "base_id": "XSD10-TYPE-nonNegativeInteger",
+      "whiteSpace": "collapse",
+      "description": "Integer at least one",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#positiveInteger",
+      "explicit_reference_count": 26,
+      "directly_used": true,
+      "value_requirement": "value >= 1"
+    },
+    {
+      "id": "XSD10-TYPE-string",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "string",
+      "base_id": "XSD10-TYPE-anySimpleType",
+      "whiteSpace": "preserve",
+      "description": "XML character string",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#string",
+      "explicit_reference_count": 108,
+      "directly_used": true
+    },
+    {
+      "id": "XSD10-TYPE-token",
+      "version": "XSD-1.0-Second-Edition-2004",
+      "source_kind": "XSD_language",
+      "origin": "normative_language_semantics_not_MusicXML_occurrence",
+      "name": "token",
+      "base_id": "XSD10-TYPE-normalizedString",
+      "whiteSpace": "collapse",
+      "description": "Collapse XML whitespace",
+      "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#token",
+      "explicit_reference_count": 101,
+      "directly_used": true
+    }
+  ],
+  "builtins_directly_used": [
+    "ID",
+    "IDREF",
+    "NCName",
+    "NMTOKEN",
+    "anyURI",
+    "date",
+    "decimal",
+    "integer",
+    "language",
+    "nonNegativeInteger",
+    "positiveInteger",
+    "string",
+    "token"
+  ],
+  "note": "Language-level constraints are normative but are not literal MusicXML XSD occurrences. Source/model labels are preassessments, not implementation decisions.",
+  "schema_instance": {
+    "namespace": "http://www.w3.org/2001/XMLSchema-instance",
+    "attributes": [
+      {
+        "expanded_name": "{http://www.w3.org/2001/XMLSchema-instance}type",
+        "type": "xs:QName",
+        "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi_type",
+        "constraint": "Resolve lexical QName in instance namespace context; valid derivation and blocked-substitution rules apply; declaration final and block are distinct."
+      },
+      {
+        "expanded_name": "{http://www.w3.org/2001/XMLSchema-instance}nil",
+        "type": "xs:boolean",
+        "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi_nil",
+        "constraint": "Lexical values true/false/1/0 after collapse; true requires nillable declaration; MusicXML declarations have default nillable=false."
+      },
+      {
+        "expanded_name": "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation",
+        "type": "list of xs:anyURI pairs",
+        "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi_schemaLocation",
+        "constraint": "Even URI token count; namespace/location pairs are hints; schema validation does not mandate network retrieval."
+      },
+      {
+        "expanded_name": "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation",
+        "type": "xs:anyURI",
+        "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi_noNamespaceSchemaLocation",
+        "constraint": "A no-namespace schema-location hint; not an undeclared MusicXML attribute."
+      }
+    ],
+    "implicit_types_not_counted_as_explicit_schema_references": [
+      "xs:QName",
+      "xs:boolean",
+      "list(xs:anyURI)"
+    ],
+    "notes": "These attributes are supplied by XSD language semantics, not by MusicXML declarations. Other arbitrary attributes in the xsi namespace do not gain blanket permission. Namespace declarations are not ordinary schema attributes."
+  }
+}
