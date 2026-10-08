@@ -30,6 +30,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   and repeated or misplaced DOCTYPE declarations before model filtering,
   including skipped subtrees, MXL metadata, and linked documents. Legal
   prolog DOCTYPE declarations remain accepted without fetching their DTDs.
+- Report these XML guard failures as `*xml.SyntaxError` with the underlying
+  decoder's detection line, preserved through existing MXL error wrappers.
+- Reject empty prefixed namespace declarations (`xmlns:p=""`) explicitly,
+  while preserving legal default namespace resets (`xmlns=""`).
 
 - Resolve namespace prefixes exactly once through XML token adapters, including
   BOM-less UTF-16, so foreign namespace URIs cannot become XML/XLink prefixes.

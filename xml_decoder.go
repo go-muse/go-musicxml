@@ -62,7 +62,10 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 		}
 	}
 
-	return xml.NewTokenDecoder(&wellFormedXMLTokenReader{source: tokens}), nil
+	return xml.NewTokenDecoder(&wellFormedXMLTokenReader{
+		source:   tokens,
+		position: decoder.InputPos,
+	}), nil
 }
 
 // utf16XMLTokenReader checks the XML declaration of a UTF-16 document that

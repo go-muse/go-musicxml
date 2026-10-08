@@ -13,6 +13,7 @@ import (
 // It does not parse DTD declarations or load external resources.
 type wellFormedXMLTokenReader struct {
 	source     xml.TokenReader
+	position   func() (line, column int)
 	started    bool
 	doctype    bool
 	namespaces map[string]string
@@ -66,10 +67,10 @@ func (r *wellFormedXMLTokenReader) Token() (xml.Token, error) {
 			strings.HasPrefix(directive, "DOCTYPE\t") || strings.HasPrefix(directive, "DOCTYPE\r") ||
 			strings.HasPrefix(directive, "DOCTYPE\n") {
 			if r.started {
-				return nil, fmt.Errorf("musicxml: DOCTYPE must precede the root element")
+				return nil, r.syntaxError("DOCTYPE must precede the root element")
 			}
 			if r.doctype {
-				return nil, fmt.Errorf("musicxml: multiple DOCTYPE declarations")
+				return nil, r.syntaxError("multiple DOCTYPE declarations")
 			}
 			r.doctype = true
 		}
@@ -82,10 +83,15 @@ func (r *wellFormedXMLTokenReader) checkAttributes(attributes []xml.Attr) error 
 	var undo []xmlNamespaceUndo
 	for _, attribute := range attributes {
 		if _, duplicate := lexical[attribute.Name]; duplicate {
-			return fmt.Errorf("musicxml: duplicate XML attribute {%s}%s", attribute.Name.Space, attribute.Name.Local)
+			return r.syntaxError("duplicate XML attribute {%s}%s", attribute.Name.Space, attribute.Name.Local)
 		}
 		lexical[attribute.Name] = struct{}{}
 		if attribute.Name.Space == "xmlns" {
+			// Namespaces in XML 1.0 forbids undeclaring a prefix. This
+			// does not affect a legal default namespace reset (xmlns="").
+			if attribute.Value == "" {
+				return r.syntaxError("namespace prefix undeclaring is not allowed: %q", attribute.Name.Local)
+			}
 			if r.namespaces == nil {
 				r.namespaces = make(map[string]string)
 			}
@@ -118,9 +124,16 @@ func (r *wellFormedXMLTokenReader) checkAttributes(attributes []xml.Attr) error 
 			}
 		}
 		if _, duplicate := expanded[key]; duplicate {
-			return fmt.Errorf("musicxml: duplicate XML attribute {%s}%s", key.name.Space, key.name.Local)
+			return r.syntaxError("duplicate XML attribute {%s}%s", key.name.Space, key.name.Local)
 		}
 		expanded[key] = struct{}{}
 	}
 	return nil
+}
+
+func (r *wellFormedXMLTokenReader) syntaxError(format string, arguments ...any) error {
+	// Token wrappers do not track byte positions. Use the innermost XML
+	// decoder's position after the offending token, including UTF-16 input.
+	line, _ := r.position()
+	return &xml.SyntaxError{Msg: fmt.Sprintf(format, arguments...), Line: line}
 }

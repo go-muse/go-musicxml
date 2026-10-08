@@ -63,7 +63,19 @@ root, even in skipped unknown or foreign-namespace subtrees. A single prolog
 DOCTYPE is accepted without loading external DTDs; an XML declaration is not
 required. These checks also apply to MXL container metadata and documents
 parsed while resolving opus links. They do not add DTD validation or strict
-MusicXML validation.
+MusicXML validation. Empty prefixed namespace declarations such as `xmlns:p=""`
+are rejected under Namespaces in XML 1.0; resetting the default namespace with
+`xmlns=""` remains allowed.
+
+Duplicate-attribute, DOCTYPE-placement and empty-prefix-declaration errors wrap
+`*xml.SyntaxError`, available through `errors.As`. Its `Line` is the innermost
+XML decoder's detection position after reading the offending token; for a
+multiline token this is its end line, not the attribute's start line. Existing
+resource-limit and encoding errors retain their separate error contracts.
+
+Full prolog grammar is not checked here: XML declaration ordering is still
+handled by `encoding/xml`, which can accept `<?xml ...?>` after a DOCTYPE.
+Enforcement of that ordering is a [tracked follow-up](docs/validation/existing-code-map.md#xml-reading-follow-ups).
 
 When the expected root type is known, `DecodeScorePartwise`,
 `DecodeScoreTimewise`, and `DecodeOpusDocument` return the corresponding
