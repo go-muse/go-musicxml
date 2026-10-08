@@ -4,6 +4,12 @@ Status: **PROPOSED**. Research snapshot: 8 October 2026.
 
 This document proposes an architecture for validating source MusicXML and the Go model against a versioned body of requirements. It records the outcome of the research and architecture phase. It does not implement a validator, change Go packages, add product tests, freeze a public API, or select a final package layout. Names such as `RuleDefinition`, `conformance`, and `assessment_complete` describe proposed responsibilities and data, not committed Go declarations.
 
+The next design increment is [Go validation foundation: proposed contracts](go-contracts.md),
+with [six end-to-end traces](go-contract-examples.md). It makes component and
+signature proposals concrete while leaving them unimplemented and open to API
+review. The deferred items below describe this architecture document's original
+boundary; the follow-on contract proposal does not freeze or ship them.
+
 ## Decisions proposed now and work deferred
 
 Proposed decisions:
