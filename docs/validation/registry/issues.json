@@ -84,7 +84,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The beam-level annotation describes six levels, while its facet, beam, and beam-value support eight.",
+      "disposition_en": "Proposed disposition: use the explicit XSD range 1–8; do not turn the outdated phrase into a limit of six."
     },
     {
       "id": "MX40-ISSUE-cue-duration",
@@ -122,7 +124,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The full-note annotation says that cue notes lack duration; note and its formal branches require duration for cue notes and exclude it only for grace notes.",
+      "disposition_en": "Proposed disposition: follow the structural XSD contract, as supported by the note prose itself, while retaining the discrepancy."
     },
     {
       "id": "MX40-ISSUE-container-schema-exists",
@@ -176,7 +180,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The tutorial says that container.xsd does not exist, while the 4.0 release notes announce the added schema and the file exists.",
+      "disposition_en": "Proposed disposition: treat the tutorial statement as outdated; container.xsd is part of version 4.0."
     },
     {
       "id": "MX40-ISSUE-container-sounds-wording",
@@ -214,7 +220,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The container type description incorrectly calls it the root of a sounds file, while the global container declaration identifies it with META-INF/container.xml.",
+      "disposition_en": "Proposed disposition: do not allow sounds as the container-document root; the explicit structure and the second annotation agree."
     },
     {
       "id": "MX40-ISSUE-container-schema-uri",
@@ -238,7 +246,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The end of the container.xsd prose gives a sounds.xsd URI for validation.",
+      "disposition_en": "Proposed disposition: record a probable editorial error; use the pinned container.xsd without substituting the sounds schema."
     },
     {
       "id": "MX40-ISSUE-xml-declaration-required",
@@ -263,7 +273,9 @@
           "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/hello-world/"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The tutorial describes an XML declaration as mandatory for every XML document.",
+      "disposition_en": "Proposed disposition: the claim does not follow from the MusicXML XSD; do not add a prohibition on XML without a declaration. The dependent XML specification was not separately reviewed in this pass."
     },
     {
       "id": "MX40-ISSUE-every-note-duration",
@@ -302,7 +314,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The tutorial generalizes its example to duration on every note, overlooking grace notes.",
+      "disposition_en": "Proposed disposition: apply the actual note branches; do not introduce a universal duration-required rule that also covers grace notes."
     },
     {
       "id": "MX40-ISSUE-part-id-uniqueness-scope",
@@ -355,7 +369,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The partwise example's statement that every part has a unique ID does not define the scope of repeated part IDs across timewise measures.",
+      "disposition_en": "Proposed disposition: score-part ID uniqueness is document-wide; timewise part IDREF values may recur across measures. Additional uniqueness among sibling part elements requires a separately supported rule."
     },
     {
       "id": "MX40-ISSUE-duration-integer",
@@ -408,7 +424,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The tutorial calls duration an integer, while the XSD and reference allow decimal-based positive-divisions.",
+      "disposition_en": "Proposed disposition: do not reject fractional duration values; integer values are a compatibility recommendation."
     },
     {
       "id": "MX40-ISSUE-left-barline-attributes",
@@ -447,7 +465,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The reference recommends placing a left barline first, except for print, bookmark, and link; the tutorial explicitly places it after attributes.",
+      "disposition_en": "Proposed disposition: do not introduce a hard XML first-child check; a musical zero-position interpretation is possible. The recommendation and the mandatory location requirement need a separate interpretation."
     },
     {
       "id": "MX40-ISSUE-old-note-type-list",
@@ -486,7 +506,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The tutorial lists note types only from 256th to long, while the XSD and reference include 1024th, 512th, and maxima.",
+      "disposition_en": "Proposed disposition: use the complete 4.0 XSD enumeration; do not restrict it to the older illustrative list."
     },
     {
       "id": "MX40-ISSUE-numeral-step-typo",
@@ -524,7 +546,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The kind-value advice calls for empty text on numeral-step, which does not exist in the schema; numeral-root does exist.",
+      "disposition_en": "Proposed disposition: numeral-root is the probable intended name, but do not create a new field or element; retain this as an editorial ambiguity."
     },
     {
       "id": "MX40-ISSUE-chord-preceding-duration",
@@ -563,7 +587,9 @@
           "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/midi-compatible-part/"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The reference refers to the preceding note and to the first preceding non-chord note for time movement; the tutorial requires the longest note first.",
+      "disposition_en": "Proposed disposition: the duration bound relative to the base note is supported. A pairwise non-increasing order for all chord tones is not proven; without clarification, do not reject a shorter tone followed by a longer tone when both durations are less than or equal to the base duration."
     },
     {
       "id": "MX40-ISSUE-mxl-methods-compatibility",
@@ -602,7 +628,9 @@
           "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "DEFLATE is described as the format for container files, and mimetype must use the stored method; an exhaustive list of permitted methods for the other entries is not stated separately.",
+      "disposition_en": "Proposed disposition: do not claim complete ZIP validation from these paragraphs; the external ZIP/JAR corpus needs review."
     },
     {
       "id": "MX40-ISSUE-mxl-first-media-type-set",
@@ -641,7 +669,9 @@
           "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/tutorial/compressed-mxl-files/"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The first rootfile cannot use a non-MusicXML media type, but this condition does not give the precise set of MusicXML media types or address nested compressed roots.",
+      "disposition_en": "Proposed disposition: check a direct XML root separately; clarify the set of permitted media types rather than inventing equality to a single MIME value without explanation."
     },
     {
       "id": "MX40-ISSUE-smufl-version-dictionary",
@@ -694,7 +724,9 @@
           "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "Canonical glyph constraints rely on the external SMuFL dictionary; the 4.0 release mentions SMuFL 1.4, but the entire dictionary was not reviewed here.",
+      "disposition_en": "Proposed disposition: canonical-name existence remains unknown without a pinned dictionary; the XSD prefix constraints can still be checked."
     },
     {
       "id": "MX40-ISSUE-ipa-character-repertoire",
@@ -733,7 +765,9 @@
           "retrieval_source_url": "https://www.w3.org/2021/06/musicxml40/version-history/40/"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "IPA 2015 in Unicode 13.0 constrains the content, but the exact allowlist and combining characters are not enumerated.",
+      "disposition_en": "Proposed disposition: do not claim complete IPA validation from an arbitrary Unicode-block check; external corpus review remains pending."
     },
     {
       "id": "MX40-ISSUE-initial-effective-context",
@@ -785,7 +819,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The formal structure permits omission of divisions, key, time, and clef; their initial defaults are not all universally specified.",
+      "disposition_en": "Proposed disposition: do not invent C major, 4/4, treble clef, or divisions = 1 as format requirements; distinguish unknown effective context from a failed constraint."
     },
     {
       "id": "MX40-ISSUE-span-pairing-scope",
@@ -837,7 +873,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The start, stop, and continue values and overlap IDs are described, but no universal mandatory requirement for complete paired closure of every span is given.",
+      "disposition_en": "Proposed disposition: do not generalize statements about most cases or recommendations into mandatory balance for all span types; account for repeats, let-ring, cross-system spans, and stop-before-start ordering."
     },
     {
       "id": "MX40-ISSUE-assess-type-default",
@@ -876,7 +914,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The assess table describes a default for an omitted type, although the XSD requires type itself.",
+      "disposition_en": "Proposed disposition: the contextual assessment default means absence of an assess override; this phrase alone does not permit an assess element without its required type."
     },
     {
       "id": "MX40-ISSUE-measure-duration-completeness",
@@ -928,7 +968,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "No universal rule was found requiring the duration of each measure or voice to equal the time signature's duration.",
+      "disposition_en": "Proposed disposition: pickup, implicit, non-controlling, and senza-misura contexts rule out such a blanket requirement; this belongs in a separate profile or heuristic, not a mandatory MusicXML rule."
     },
     {
       "id": "MX40-ISSUE-zero-counts-and-ratios",
@@ -980,7 +1022,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "XSD nonNegativeInteger permits zero for staves, actual-notes, and normal-notes, and scaling tenths permits zero; the prose does not prohibit zero in every case.",
+      "disposition_en": "Proposed disposition: do not strengthen these domains to positiveInteger without a source. Computations with a zero denominator require a separate unsupported or undefined result, rather than an invented format rule."
     },
     {
       "id": "MX40-ISSUE-external-spec-closure",
@@ -1032,7 +1076,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The complete semantics of XML, XSD datatypes, XLink, XML Base/ID, ZIP/JAR/DEFLATE, SMuFL, and IPA reside in external specifications.",
+      "disposition_en": "Proposed disposition: this registry does not claim complete transitive normative closure; the external pages were not fetched or reviewed by this researcher."
     },
     {
       "id": "MX40-ISSUE-midi-instrument-parent-wording",
@@ -1084,7 +1130,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "Some prose describes midi-instrument as a child of score-instrument, while the formal structure and score-part description place the initial assignment in score-part.",
+      "disposition_en": "Proposed disposition: do not allow invalid nesting on the basis of imprecise introductory wording; the XSD defines the actual content model."
     },
     {
       "id": "MX40-ISSUE-legacy-tutorial-header-root-list",
@@ -1152,7 +1200,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The tutorial uses an older count of header children and says that every chord symbol has root, although 4.0 includes defaults and credit and the root/numeral/function choice.",
+      "disposition_en": "Proposed disposition: descriptions of specific examples must not narrow the complete 4.0 XSD contract."
     },
     {
       "id": "MX40-ISSUE-pull-off-attribute-descriptions-swapped",
@@ -1191,7 +1241,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The HTML descriptions of pull-off type and number are swapped: type is described as distinguishing overlaps, while number is assigned start/stop and a default of 1.",
+      "disposition_en": "Proposed disposition: the XSD types and hammer-on-pull-off model are unambiguous: type uses start/stop, and number uses number-level. Do not generate rules from the mistaken table descriptions."
     },
     {
       "id": "MX40-ISSUE-pizzicato-nonexistent-element",
@@ -1244,7 +1296,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The description of note pizzicato contrasts it with a nonexistent pizzicato element; the general mode is provided by the pizzicato attribute on sound.",
+      "disposition_en": "Proposed disposition: do not add a new XML element. The sound prose makes the semantics of note-level versus sound-level scope clear."
     },
     {
       "id": "MX40-ISSUE-time-beat-spelling",
@@ -1283,7 +1337,9 @@
           "evidence_form": "Russian paraphrase; original source locator and hash retained"
         }
       ],
-      "hard_error_basis": false
+      "hard_error_basis": false,
+      "description_en": "The HTML time prose refers to beat/beat-type pairs, while the structural names are beats/beat-type.",
+      "disposition_en": "Proposed disposition: treat this as editorial shorthand or an error; the XSD determines the permitted expanded names."
     }
   ]
 }

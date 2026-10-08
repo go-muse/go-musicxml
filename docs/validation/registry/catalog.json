@@ -164695,7 +164695,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "MusicXML 4.0 is defined without its own namespace.",
+        "short_explanation_en": "MusicXML 4.0 is defined without its own namespace.",
+        "conditions_en": "A different namespace URI denotes a schema variant rather than a standard 4.0 document."
       }
     },
     {
@@ -164889,7 +164892,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-smufl-version-dictionary"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A SMuFL reference contains the canonical glyph name, not a Unicode code point.",
+        "short_explanation_en": "A SMuFL reference contains the canonical glyph name, not a Unicode code point.",
+        "conditions_en": "XSD checks the string form, but not membership in the full SMuFL dictionary."
       }
     },
     {
@@ -164937,7 +164943,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A SMuFL accidental name must belong to the permitted families of accidental names.",
+        "short_explanation_en": "A SMuFL accidental name must belong to the permitted families of accidental names.",
+        "conditions_en": "The prefix pattern is covered by XSD; establishing whether a particular glyph exists requires a dictionary version."
       }
     },
     {
@@ -164985,7 +164994,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "SMuFL coda uses a canonical name with the prefix coda.",
+        "short_explanation_en": "SMuFL coda uses a canonical name with the prefix coda.",
+        "conditions_en": "Formal prefix checking is separate from glyph resolution."
       }
     },
     {
@@ -165033,7 +165045,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "SMuFL for elision uses a canonical name with the prefix lyrics.",
+        "short_explanation_en": "SMuFL for elision uses a canonical name with the prefix lyrics.",
+        "conditions_en": "The precedence of the text content of elision is considered separately."
       }
     },
     {
@@ -165081,7 +165096,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "SMuFL pictogram uses a canonical name with the prefix pict.",
+        "short_explanation_en": "SMuFL pictogram uses a canonical name with the prefix pict.",
+        "conditions_en": "Formal prefix checking does not establish that the glyph exists."
       }
     },
     {
@@ -165129,7 +165147,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "SMuFL segno uses a canonical name with the prefix segno.",
+        "short_explanation_en": "SMuFL segno uses a canonical name with the prefix segno.",
+        "conditions_en": "Glyph resolution may require an external dictionary."
       }
     },
     {
@@ -165177,7 +165198,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "SMuFL wavy-line permits wiggle or guitar…VibratoStroke and excludes beam glyphs.",
+        "short_explanation_en": "SMuFL wavy-line permits wiggle or guitar…VibratoStroke and excludes beam glyphs.",
+        "conditions_en": "Check the actual contents of the applicable family when a pinned SMuFL dictionary is available."
       }
     },
     {
@@ -165633,7 +165657,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "time-only specifies positive pass numbers separated by commas in ascending order.",
+        "short_explanation_en": "time-only specifies positive pass numbers separated by commas in ascending order.",
+        "conditions_en": "XSD covers the lexical pattern, but not numerical ordering."
       }
     },
     {
@@ -165816,7 +165843,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A calendar date has the form yyyy-mm-dd without a time zone.",
+        "short_explanation_en": "A calendar date has the form yyyy-mm-dd without a time zone.",
+        "conditions_en": "Both the lexical restriction and calendar-date validity under XSD date need to be checked."
       }
     },
     {
@@ -167103,7 +167133,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "bezier-x2, bezier-y2, and bezier-offset2 are permitted only on a slur of type continue.",
+        "short_explanation_en": "bezier-x2, bezier-y2, and bezier-offset2 are permitted only on a slur of type continue.",
+        "conditions_en": "The shared XSD attributeGroup does not itself express this condition."
       }
     },
     {
@@ -167604,7 +167637,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "The optional-unique-id value must be unique within the document.",
+        "short_explanation_en": "The optional-unique-id value must be unique within the document.",
+        "conditions_en": "XSD xs:ID provides lexical checking and global uniqueness; do not introduce a separate duplicate error."
       }
     },
     {
@@ -168299,7 +168335,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-part-id-uniqueness-scope"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "part id must refer specifically to a score-part in part-list.",
+        "short_explanation_en": "part id must refer specifically to a score-part in part-list.",
+        "conditions_en": "xs:IDREF provides a reference to an ID, but does not by itself check the target element type."
       }
     },
     {
@@ -168669,7 +168708,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A specified midi-device id refers to the score-instrument for that assignment.",
+        "short_explanation_en": "A specified midi-device id refers to the score-instrument for that assignment.",
+        "conditions_en": "If id is absent, the assignment covers all score-instrument elements in that score-part."
       }
     },
     {
@@ -168728,7 +168770,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-midi-instrument-parent-wording"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "midi-instrument id refers to the affected score-instrument.",
+        "short_explanation_en": "midi-instrument id refers to the affected score-instrument.",
+        "conditions_en": "The existence of an ID of another kind does not satisfy the reference semantics."
       }
     },
     {
@@ -168959,7 +169004,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-ipa-character-repertoire"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "The content of ipa is restricted to IPA 2015 as represented in Unicode 13.0.",
+        "short_explanation_en": "The content of ipa is restricted to IPA 2015 as represented in Unicode 13.0.",
+        "conditions_en": "XSD string does not check this dictionary; the exact permitted set requires a separate pinned source."
       }
     },
     {
@@ -169325,7 +169373,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "When a transposing instrument is notated at written pitch rather than concert pitch, transpose must be encoded.",
+        "short_explanation_en": "When a transposing instrument is notated at written pitch rather than concert pitch, transpose must be encoded.",
+        "conditions_en": "The condition depends on the intent and instrument; it cannot be reliably inferred from part-name alone."
       }
     },
     {
@@ -169370,7 +169421,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "for-part is permitted only in a document with defaults/concert-score.",
+        "short_explanation_en": "for-part is permitted only in a document with defaults/concert-score.",
+        "conditions_en": "This cross-element condition is not expressed in XSD 1.0."
       }
     },
     {
@@ -169415,7 +169469,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "beat-repeat specifies the display; the repeated music must actually be present in MusicXML.",
+        "short_explanation_en": "beat-repeat specifies the display; the repeated music must actually be present in MusicXML.",
+        "conditions_en": "Content similarity needs to be interpreted using duration and context, rather than by comparing XML strings."
       }
     },
     {
@@ -169730,7 +169787,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "key-octave cancel=yes is prohibited without a corresponding cancel in the parent key.",
+        "short_explanation_en": "key-octave cancel=yes is prohibited without a corresponding cancel in the parent key.",
+        "conditions_en": "The default is cancel=no; number indicates the position of the accidental from left to right in the selected key signature."
       }
     },
     {
@@ -169820,7 +169880,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "measure-repeat changes the notation; the actual repeated music must be present in each corresponding measure.",
+        "short_explanation_en": "measure-repeat changes the notation; the actual repeated music must be present in each corresponding measure.",
+        "conditions_en": "Musical events cannot be replaced by a repeat symbol alone."
       }
     },
     {
@@ -170325,7 +170388,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-left-barline-attributes"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "The position of barline in the musical data must match its location.",
+        "short_explanation_en": "The position of barline in the musical data must match its location.",
+        "conditions_en": "The default is right; the detailed first/last rule is phrased as should, while the tutorial permits attributes before a left barline: this ambiguity is noted."
       }
     },
     {
@@ -170462,7 +170528,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "accordion-registration must contain at least one of high, middle, or low.",
+        "short_explanation_en": "accordion-registration must contain at least one of high, middle, or low.",
+        "conditions_en": "All three child elements are formally optional; XSD is insufficient for this constraint."
       }
     },
     {
@@ -171231,7 +171300,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "instrument-change id refers to the affected score-instrument.",
+        "short_explanation_en": "instrument-change id refers to the affected score-instrument.",
+        "conditions_en": "A typed reference requires context, not just a lexical IDREF."
       }
     },
     {
@@ -171501,7 +171573,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "The permitted metronome-relation value in this version is equals; empty content means equals.",
+        "short_explanation_en": "The permitted metronome-relation value in this version is equals; empty content means equals.",
+        "conditions_en": "XSD leaves the type as xs:string, so another value passes formal validation."
       }
     },
     {
@@ -171591,7 +171666,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "numeral requires a specified key or its own numeral-key.",
+        "short_explanation_en": "numeral requires a specified key or its own numeral-key.",
+        "conditions_en": "The effective key signature needs to be determined with musical order and staff scope taken into account."
       }
     },
     {
@@ -172050,7 +172128,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-pizzicato-nonexistent-element"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "If sound dacapo is used, its value must be yes.",
+        "short_explanation_en": "If sound dacapo is used, its value must be yes.",
+        "conditions_en": "XSD yes-no formally permits no; omission and no are not declared equivalent without a policy."
       }
     },
     {
@@ -172097,7 +172178,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-pizzicato-nonexistent-element"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "If sound forward-repeat is used, its value must be yes.",
+        "short_explanation_en": "If sound forward-repeat is used, its value must be yes.",
+        "conditions_en": "The attribute denotes an implied but unprinted forward repeat."
       }
     },
     {
@@ -172172,7 +172256,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-pizzicato-nonexistent-element"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A numeric sound damper/soft/sostenuto-pedal value is given as a percentage from 0 to 100.",
+        "short_explanation_en": "A numeric sound damper/soft/sostenuto-pedal value is given as a percentage from 0 to 100.",
+        "conditions_en": "The general yes-no-number type permits a wider decimal range; 0 is equivalent to no, and 100 to yes."
       }
     },
     {
@@ -173633,7 +173720,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-assess-type-default"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "assess player refers specifically to a player id in the corresponding score-part.",
+        "short_explanation_en": "assess player refers specifically to a player id in the corresponding score-part.",
+        "conditions_en": "An ordinary xs:IDREF does not check membership in the required part."
       }
     },
     {
@@ -173967,7 +174057,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "bend-alter for a release following a bend is negative, rather than zero.",
+        "short_explanation_en": "bend-alter for a release following a bend is negative, rather than zero.",
+        "conditions_en": "The value is a change in semitones; microtonal fractions are permitted."
       }
     },
     {
@@ -174567,7 +174660,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "note/instrument id identifies a score-instrument in score-part.",
+        "short_explanation_en": "note/instrument id identifies a score-instrument in score-part.",
+        "conditions_en": "Multiple instrument elements on one note are permitted for a shared sound."
       }
     },
     {
@@ -174962,7 +175058,10 @@
           "MX40-ISSUE-every-note-duration",
           "MX40-ISSUE-pizzicato-nonexistent-element"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "grace, including grace+cue, has no duration; cue without grace has duration; cue branches do not contain tie.",
+        "short_explanation_en": "grace, including grace+cue, has no duration; cue without grace has duration; cue branches do not contain tie.",
+        "conditions_en": "The exact XSD note branch is decisive; the prose for note/full-note cannot be extended to require duration for grace+cue."
       }
     },
     {
@@ -176375,7 +176474,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A document with concert-score cannot contain transpose with a nonzero diatonic or chromatic value.",
+        "short_explanation_en": "A document with concert-score cannot contain transpose with a nonzero diatonic or chromatic value.",
+        "conditions_en": "octave-change and double are permitted; the rule does not prohibit part-transpose within for-part."
       }
     },
     {
@@ -176468,7 +176570,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "instrument-link id refers to a score-instrument and links it to a part file.",
+        "short_explanation_en": "instrument-link id refers to a score-instrument and links it to a part file.",
+        "conditions_en": "The existence and content of the external file require a separate resolver."
       }
     },
     {
@@ -176800,7 +176905,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-midi-instrument-parent-wording"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "If MIDI channels, banks, or programs are specified, a corresponding score-instrument is required.",
+        "short_explanation_en": "If MIDI channels, banks, or programs are specified, a corresponding score-instrument is required.",
+        "conditions_en": "A typed IDREF and the presence of the correct instrument matter more than the part name; automatic selection in simple cases is a recommendation."
       }
     },
     {
@@ -177222,7 +177330,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-legacy-tutorial-header-root-list"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "Each harmony-chord selects root, numeral, or the deprecated function to avoid duplicating the basis.",
+        "short_explanation_en": "Each harmony-chord selects root, numeral, or the deprecated function to avoid duplicating the basis.",
+        "conditions_en": "XSD choice already ensures this; stacked chords are represented by a sequence of groups."
       }
     },
     {
@@ -177412,7 +177523,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-chord-preceding-duration"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "The duration of a chord note cannot exceed the duration of the preceding base note of the chord.",
+        "short_explanation_en": "The duration of a chord note cannot exceed the duration of the preceding base note of the chord.",
+        "conditions_en": "A shorter duration is permitted; the XML wording preceding note and the tutorial's longest-first wording require careful interpretation for chords with multiple notes."
       }
     },
     {
@@ -177694,7 +177808,10 @@
           "MX40-ISSUE-mxl-methods-compatibility",
           "MX40-ISSUE-external-spec-closure"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "MXL uses a ZIP format compatible with java.util.zip/JAR and the cited Info-ZIP description.",
+        "short_explanation_en": "MXL uses a ZIP format compatible with java.util.zip/JAR and the cited Info-ZIP description.",
+        "conditions_en": "Exact validation of all ZIP fields requires separate reading of the external documents; they have not been examined here."
       }
     },
     {
@@ -177844,7 +177961,10 @@
           "MX40-ISSUE-mxl-methods-compatibility",
           "MX40-ISSUE-external-spec-closure"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "An MXL archive contains META-INF/container.xml, which identifies the root musical entry.",
+        "short_explanation_en": "An MXL archive contains META-INF/container.xml, which identifies the root musical entry.",
+        "conditions_en": "This is a ZIP-package condition outside the XSD document tree."
       }
     },
     {
@@ -177944,7 +178064,10 @@
           "MX40-ISSUE-mxl-methods-compatibility",
           "MX40-ISSUE-external-spec-closure"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "mimetype must not be compressed or encrypted.",
+        "short_explanation_en": "mimetype must not be compressed or encrypted.",
+        "conditions_en": "This applies when mimetype is present; it is a mandatory must not."
       }
     },
     {
@@ -177994,7 +178117,10 @@
           "MX40-ISSUE-mxl-methods-compatibility",
           "MX40-ISSUE-external-spec-closure"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "An extra field is prohibited in the ZIP header of mimetype.",
+        "short_explanation_en": "An extra field is prohibited in the ZIP header of mimetype.",
+        "conditions_en": "Do not extend the extra-field prohibition to all entries."
       }
     },
     {
@@ -178044,7 +178170,10 @@
           "MX40-ISSUE-mxl-methods-compatibility",
           "MX40-ISSUE-external-spec-closure"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "mimetype contains no leading whitespace or padding and does not begin with a BOM.",
+        "short_explanation_en": "mimetype contains no leading whitespace or padding and does not begin with a BOM.",
+        "conditions_en": "The rule does not state a separate general prohibition on trailing whitespace; the exact MIME content is recommended above."
       }
     },
     {
@@ -178139,7 +178268,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "The first rootfile describes the primary MusicXML document.",
+        "short_explanation_en": "The first rootfile describes the primary MusicXML document.",
+        "conditions_en": "Additional rootfiles may represent PDF or audio; order is significant."
       }
     },
     {
@@ -178184,7 +178316,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "If an archive contains a score and individual parts, the first rootfile must be the score.",
+        "short_explanation_en": "If an archive contains a score and individual parts, the first rootfile must be the score.",
+        "conditions_en": "Part files may be referenced through part-link and need not be listed as rootfile elements."
       }
     },
     {
@@ -178231,7 +178366,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-mxl-first-media-type-set"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A MusicXML rootfile has score-partwise, score-timewise, or opus as its root.",
+        "short_explanation_en": "A MusicXML rootfile has score-partwise, score-timewise, or opus as its root.",
+        "conditions_en": "container and sounds as rootfiles are not among the listed musical roots."
       }
     },
     {
@@ -178329,7 +178467,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-mxl-first-media-type-set"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A non-MusicXML media-type is not permitted on the first rootfile.",
+        "short_explanation_en": "A non-MusicXML media-type is not permitted on the first rootfile.",
+        "conditions_en": "The source calls this an error; the exact set of permitted MusicXML types for a nested archive requires a decision."
       }
     },
     {
@@ -178980,7 +179121,10 @@
         "related_issue_ids": [
           "MX40-ISSUE-external-spec-closure"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "XLink attributes belong to the namespace http://www.w3.org/1999/xlink.",
+        "short_explanation_en": "XLink attributes belong to the namespace http://www.w3.org/1999/xlink.",
+        "conditions_en": "A textual prefix alone, without the correct namespace, does not satisfy the contract."
       }
     },
     {
@@ -179030,7 +179174,10 @@
           "MX40-ISSUE-every-note-duration",
           "MX40-ISSUE-part-id-uniqueness-scope"
         ],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "The alteration needed for the actual pitch is encoded in pitch/alter, even if already specified in the key signature.",
+        "short_explanation_en": "The alteration needed for the actual pitch is encoded in pitch/alter, even if already specified in the key signature.",
+        "conditions_en": "A natural note may omit alter; alter cannot be required for every pitch."
       }
     },
     {
@@ -179772,7 +179919,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "Each beam on a single note must have a distinct number indicating its level.",
+        "short_explanation_en": "Each beam on a single note must have a distinct number indicating its level.",
+        "conditions_en": "XSD maxOccurs=8 and the range 1 to 8 do not ensure distinct number values; an omitted number defaults to 1."
       }
     },
     {
@@ -180471,7 +180621,10 @@
         "automatic_failure_authorized_by_classification": false,
         "note": "Requirement inventory only; classification is not a runtime severity policy.",
         "related_issue_ids": [],
-        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency"
+        "related_issue_relation": "same-source contextual association only; not proof that this clause is ambiguous and not an automatic blocking dependency",
+        "description_en": "A specified play id refers to the particular score-instrument to which playback applies.",
+        "short_explanation_en": "A specified play id refers to the particular score-instrument to which playback applies.",
+        "conditions_en": "Without id, the described broader scope of play applies; an arbitrary ID is insufficient."
       }
     },
     {

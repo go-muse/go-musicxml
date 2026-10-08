@@ -44,6 +44,30 @@ records 5,634,909 bytes and SHA-256
 That later archive retrieval does not retroactively strengthen the recorded
 schema-byte verification method.
 
+### Upstream locators and the repository copy of opus
+
+Registry `source_url`, `source_line`, XPath, and annotation hashes refer to the
+pinned upstream representation identified by that record. They do not promise
+the same line numbers or annotation bytes in a repository's vendored copy.
+A follow-up comparison at repository commit
+`e486735cd6e4537e839ff67704b7768a9df3bdb3` found:
+
+- Pinned [upstream opus.xsd](https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/opus.xsd)
+  has SHA-256 `e8256607b9255075f16c1d70ed53f8384ab6e3b9dc4c1f81291cdd1d56b0474a`.
+- The [repository copy](https://github.com/go-muse/go-musicxml/blob/e486735cd6e4537e839ff67704b7768a9df3bdb3/schema/musicxml-4.0/opus.xsd)
+  has SHA-256 `e490ee703d40a27616a36ca3c3f482649e6dbc9a46870c647f4557d2193f66bd`.
+- Named opus occurrence line locations and three annotation text hashes differ
+  against the local copy. The difference includes annotation wording as
+  well as formatting. Operative schema trees agree when annotations, comments,
+  and insignificant whitespace are excluded.
+
+The upstream locators remain valid. All 642 annotation hashes match the pinned
+upstream inputs; 639 match the vendored schemas at that repository commit.
+Use the record's upstream URL for evidence review rather than substituting the
+local file at the recorded line. No schema is changed by this documentation update.
+HTML sources instead use dated-page/section locators and archive provenance;
+they need not have an XSD XPath or source-line field.
+
 ## Formal schema inventory
 
 The [source coverage](registry/xsd/source-coverage.json) and
@@ -143,8 +167,12 @@ document at all.
 full, 43 partial, and 280 none. Those are contract-context links, not a completed
 predicate-level equivalence proof. An issue link usually means shared source
 context; it does not automatically invalidate every rule from that page or type.
-Stable source, contract, prose, and issue IDs and the original bilingual field
-names/text remain unchanged in the research data.
+Stable source, contract, prose, and issue IDs and all original fields remain
+unchanged. Additive English descriptions/conditions cover the 51 constraints;
+English descriptions/dispositions cover all 28 issues; titles, explanations, and
+diagnostics cover the six illustrative rules. The other 291 prose records retain
+their original descriptions pending translation. These additions do not change
+normative classification, source evidence, or predicate semantics.
 
 ## What was verified, and what remains outside the claim
 

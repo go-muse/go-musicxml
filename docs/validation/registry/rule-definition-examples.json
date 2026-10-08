@@ -69,8 +69,11 @@
         "reason_ru": "Значение octave не входит в допустимый целочисленный диапазон.",
         "expected": "integer in [0,9]",
         "actual": "adapter exact value or lexeme",
-        "rule_metadata_embedded_offline": true
-      }
+        "rule_metadata_embedded_offline": true,
+        "reason_en": "The octave value is outside the permitted integer range."
+      },
+      "title_en": "The octave value is an integer from 0 to 9",
+      "explanation_en": "The lexical form is checked when a source lexeme is available; a model number is checked in its own exact value space. The form of the original string cannot be reconstructed from the number."
     },
     {
       "id": "MX40-PROPOSED-RULE-accordion-at-least-one",
@@ -129,8 +132,11 @@
         "expected": "at least one register child",
         "path_from": "adapter_location",
         "first_related_location_when_useful": true,
-        "rule_metadata_embedded_offline": true
-      }
+        "rule_metadata_embedded_offline": true,
+        "template_en": "{path}: {reason}. Expected: {expected}; actual: {actual}. {explanation}. Source: {source_url}. Rule: {rule_id}."
+      },
+      "title_en": "accordion-registration must contain at least one of high, middle, or low.",
+      "explanation_en": "All three child elements are formally optional; the XSD alone is insufficient to enforce this constraint."
     },
     {
       "id": "MX40-PROPOSED-RULE-beam-number-distinct",
@@ -194,8 +200,11 @@
         "expected": "distinct effective beam numbers within this note",
         "path_from": "adapter_location",
         "first_related_location_when_useful": true,
-        "rule_metadata_embedded_offline": true
-      }
+        "rule_metadata_embedded_offline": true,
+        "template_en": "{path}: {reason}. Expected: {expected}; actual: {actual}. {explanation}. Source: {source_url}. Rule: {rule_id}."
+      },
+      "title_en": "Each beam of a single note must have a distinct number identifying its level.",
+      "explanation_en": "The XSD maxOccurs = 8 and the range 1–8 do not ensure distinct number values; an omitted number defaults to 1."
     },
     {
       "id": "MX40-PROPOSED-RULE-part-id-target",
@@ -255,8 +264,11 @@
         "expected": "score-part target in the document part-list",
         "path_from": "adapter_location",
         "first_related_location_when_useful": true,
-        "rule_metadata_embedded_offline": true
-      }
+        "rule_metadata_embedded_offline": true,
+        "template_en": "{path}: {reason}. Expected: {expected}; actual: {actual}. {explanation}. Source: {source_url}. Rule: {rule_id}."
+      },
+      "title_en": "A part id must refer specifically to a score-part in part-list.",
+      "explanation_en": "xs:IDREF ensures a reference to an ID, but does not by itself check the type of the target element."
     },
     {
       "id": "MX40-PROPOSED-RULE-time-only-ascending",
@@ -318,8 +330,11 @@
         "expected": "positive pass numbers in ascending order",
         "path_from": "adapter_location",
         "first_related_location_when_useful": true,
-        "rule_metadata_embedded_offline": true
-      }
+        "rule_metadata_embedded_offline": true,
+        "template_en": "{path}: {reason}. Expected: {expected}; actual: {actual}. {explanation}. Source: {source_url}. Rule: {rule_id}."
+      },
+      "title_en": "time-only specifies comma-separated positive pass numbers in ascending order.",
+      "explanation_en": "The XSD covers the lexical pattern, but not numerical ordering."
     },
     {
       "id": "MX40-PROPOSED-RULE-xsi-noNamespaceSchemaLocation",
@@ -363,8 +378,11 @@
       "diagnostic": {
         "reason_ru": "Недопустимое значение стандартного schema-instance атрибута.",
         "expected": "XSD anyURI value",
-        "rule_metadata_embedded_offline": true
-      }
+        "rule_metadata_embedded_offline": true,
+        "reason_en": "Invalid value for a standard schema-instance attribute."
+      },
+      "title_en": "The standard xsi:noNamespaceSchemaLocation attribute is recognized as schema-instance metadata",
+      "explanation_en": "The value type is checked. The absence of this attribute from the MusicXML attributes does not prohibit it. The URL is a hint and does not trigger a network fetch."
     }
   ]
 }

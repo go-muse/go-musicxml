@@ -5,13 +5,13 @@
   "files": [
     {
       "path": "README.md",
-      "bytes": 4494,
-      "sha256": "7ec44063fbf4464e59e7bda5f75ae89ec6df5a44d1defa90085b614b4f65fcc1"
+      "bytes": 4755,
+      "sha256": "4108e47f29c501dd559513eea77eb05865342287adbea2929dce6e2dea329994"
     },
     {
       "path": "catalog.json",
-      "bytes": 7597284,
-      "sha256": "00c117336c523a38ee35fc9efbf8da531a95390c5468b8a33015c00715bd1369"
+      "bytes": 7614449,
+      "sha256": "17e979012e257e7ae126504c461a578b4dbb94515794cf2dc4f9e34cb8f4be68"
     },
     {
       "path": "coverage-reconciliation.json",
@@ -20,13 +20,13 @@
     },
     {
       "path": "issues.json",
-      "bytes": 74301,
-      "sha256": "8834c68e136aba16d276d781983a539c444e9c9e9d50804decb937967610fc8e"
+      "bytes": 83968,
+      "sha256": "ff17a5123e7b113187591b9dde40edd0b4d14c65cdca3a629969de386784cec5"
     },
     {
       "path": "packaging-provenance.json",
-      "bytes": 4549,
-      "sha256": "e4c8a3996aba35f19a33f0443ec088489829c62312582d8939779d74eeef9994"
+      "bytes": 5024,
+      "sha256": "ff6feaf157ffea470c2ce029bee226ef56f32ed270636fad372d6bc3c972466d"
     },
     {
       "path": "prose/archive-equivalence.json",
@@ -60,8 +60,8 @@
     },
     {
       "path": "rule-definition-examples.json",
-      "bytes": 16563,
-      "sha256": "9d3c4c008728b89ff4fcaa36a55468ee9d7f3b52b157f1359e8c41766a34b6c2"
+      "bytes": 18735,
+      "sha256": "469ce216d72416e3fe2d9b3865f10e144ec6bcef9b280ec8a6396880fdcf2541"
     },
     {
       "path": "xsd/independent-verification.json",

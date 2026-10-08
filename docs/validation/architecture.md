@@ -4,6 +4,25 @@ Status: **PROPOSED**. Research snapshot: 8 October 2026.
 
 This document proposes an architecture for validating source MusicXML and the Go model against a versioned body of requirements. It records the outcome of the research and architecture phase. It does not implement a validator, change Go packages, add product tests, freeze a public API, or select a final package layout. Names such as `RuleDefinition`, `conformance`, and `assessment_complete` describe proposed responsibilities and data, not committed Go declarations.
 
+## Decisions proposed now and work deferred
+
+Proposed decisions:
+
+- Keep mandatory XML well-formedness checks in one parse; source MusicXML validation is opt-in.
+- Use a shared versioned rule catalog and engine with overlapping source/model applicability.
+- Validate current Go objects directly, without Encode → parse; report unavailable evidence explicitly.
+- Include human-readable explanations and source URLs in offline diagnostics.
+- Reuse existing schema, grammar, scalar, and identity components only after checking their contracts; preserve no-network and resource boundaries.
+
+Deferred to implementation design and review:
+
+- Public Go API, package placement, frozen rule IDs, exact operator syntax, and the sentinel-error migration policy.
+- Concrete model capability mapping, complete predicate/test coverage, and contextual or external-dependency closure for each claimed profile.
+- Staged musical-time and package/link support; prerequisites of selected rules still have to be satisfied.
+- A separate packaging/generation decision for the research registries. This proposal keeps the evidence in the repository.
+
+The [existing-code map](existing-code-map.md) identifies reuse candidates, verified gaps, model limits, error compatibility, and a bounded candidate backlog.
+
 ## Recommended design
 
 Use one versioned, declarative requirements catalog and one validation engine, with two fact adapters: source XML and the Go model. XML syntax validation remains a mandatory part of a single parse. Strict validation of source MusicXML is enabled by a separate flag. Validation of a created or edited model is invoked independently and never serializes the model back to XML.
@@ -120,6 +139,21 @@ The six XSD files contain no `xs:key`, `xs:keyref`, or `xs:unique`; ID/IDREF req
 
 Implement XML and XSD semantics against pinned specifications, not a superficially similar Go parser or regular-expression API. In particular, [XSD 1.0 Datatypes](https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/) distinguishes lexical and value spaces, facet layers, and union-member order.
 
+### Illustrative operator names
+
+The six [rule examples](registry/rule-definition-examples.json) use these names. This mapping explains their relationship to the families above; it does not define a finished DSL or approve executable implementations.
+
+| Example name | Family and intended role |
+| --- | --- |
+| `scalar_domain` | Scalars and facets: the selected exact value domain and source lexical check |
+| `count_union_at_least` | Local prose logic: presence/cardinality across a set of child names |
+| `all_distinct` | Identity/local relations: uniqueness of selected values within the declared scope |
+| `effective_attribute` | Attribute/default fact used by another predicate; not an independent violation |
+| `reference_target_kind` | Identity/context: an existing reference must identify the required target kind and scope |
+| `ascending_order` | Local relation over a typed sequence; equal adjacent values retain the example's unresolved policy |
+| `typed_comma_separated_positive_integers` | Scalar parsing fact needed before the order relation; not proof of full rule success |
+| `standard_xsi_attribute` | Standard schema-instance attribute contract, including attribute-specific semantics |
+
 ## Context and assessment reliability
 
 Source facts retain the lexical form needed after mandatory XML normalization, as well as names, presence, and occurrence order. Raw bytes are necessary only for requirements that actually depend on them, such as a BOM in the contents of `mimetype`. Model facts contain the current value and information about its representation. Absence and a default value remain distinct; calculating an effective value for analysis does not mutate the model or source.
@@ -172,7 +206,7 @@ The 28 tracked issues do not require 28 user decisions before any implementation
 2. **Ambiguous strengthening of a requirement.** Do not introduce hard errors for blanket balancing of every span, complete filling of every measure, pairwise-decreasing chord durations, or a rigid left-barline position without proof. In the `time-only` example, “ascending” has not been turned into an unproven prohibition on repeated numbers: decreasing values violate the order, while the policy for equal adjacent values remains open. A separately and explicitly named advisory or profile is possible.
 3. **External dictionary or incomplete environment.** SMuFL prefix patterns can be checked now; canonical glyph existence requires a pinned dictionary. The IPA repertoire, complete ZIP semantics, and the disputed media-type set remain explicitly unresolved. Dependent outcomes must be unknown or unsupported, not pass.
 
-The earlier source engine must not be assumed complete. Previously recorded gaps in simple-attribute validation, duplicate-attribute detection, and DOCTYPE placement, together with incorrect rejection of `xsi:noNamespaceSchemaLocation`, show that reuse needs contract-by-contract verification. Token adapters, grammar processing, scalar validators, and ID indexes are concepts worth evaluating. They do not establish the size of a future implementation or justify a “forty lines” estimate.
+The existing validator provides useful schema data, particle matching, scalar checks, and ID indexes. Reuse still needs contract-by-contract verification: confirmed gaps include attributes on simple-typed elements, duplicate attributes, DOCTYPE placement, xsi handling, and unbounded XSD integer value spaces. These are documented precisely in the [existing-code map](existing-code-map.md); they do not imply that ordinary complex-type attributes are unchecked. The proposed direct model adapter replaces the current Encode → parse route while allowing verified helpers to be reused.
 
 Dependencies between the catalog, engine, and adapters must remain acyclic. The engine need not know public Go models or the XML decoder. A separate internal package is an option when needed to remove a cycle, not a requirement to reorganize the entire repository. Concrete placement is deferred until a bounded mapping review of the existing code.
 
@@ -199,6 +233,6 @@ Supporting research is stored under `docs/validation/registry/`:
 - [`xsd/`](registry/xsd/) and [`prose/`](registry/prose/): supporting source and coverage registries and provenance, without a raw HTML cache.
 - [`manifest.json`](registry/manifest.json): the supporting registry inventory and file SHA-256 hashes.
 
-The supporting data retains its original bilingual fields unchanged, including research paraphrases and source locators. English repository documentation explains the architecture without translating or rewriting evidence fields in place. Research IDs, evidence relations, issue dispositions, and examples are preserved as research data; they do not freeze executable predicates or a public validation API.
+The supporting data preserves all original fields, including Russian research paraphrases and source locators. Additive English fields cover the 51 constraint records, 28 issues, and six illustrative rules. The remaining 291 prose records retain their original descriptions pending translation; no translation replaces the original evidence. Research IDs, evidence relations, issue dispositions, and examples are preserved as research data; they do not freeze executable predicates or a public validation API.
 
 These registries are an auditable foundation for the next phase. Their research counts do not claim that a future validator is ready.

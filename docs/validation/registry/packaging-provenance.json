@@ -2,8 +2,6 @@
   "format": "musicxml40-repository-packaging-1",
   "date": "2026-10-08",
   "research_snapshot": "2026-10-08",
-  "all_2560_catalog_records_unchanged": true,
-  "all_28_issue_records_unchanged": true,
   "all_2939_xsd_occurrences_unchanged": true,
   "all_974_pages_and_642_annotations_unchanged": true,
   "original_research_manifest_sha256": "b03db569664285c1422b56234624e731dfcd9ef39b1cce4ab8e40dca46103341",
@@ -87,5 +85,17 @@
     "The complete 14569-block HTML hash index is archival evidence and is not reconstructible from the retained page summaries. Its original containing-file checksum is retained.",
     "XSD documentation_handoff duplicates the IDs, locators, text hashes and character counts in prose annotation_coverage; the former XSD disposition is retained with the cross-file reference.",
     "Original bilingual research text and IDs remain unchanged in canonical requirements, issues and source occurrence records."
-  ]
+  ],
+  "all_original_2560_catalog_record_fields_preserved": true,
+  "all_original_28_issue_record_fields_preserved": true,
+  "editorial_additions": {
+    "date": "2026-10-08",
+    "english_fields": {
+      "prose_constraint_records": 51,
+      "issue_records": 28,
+      "illustrative_rule_examples": 6
+    },
+    "remaining_prose_records_without_english_descriptions": 291,
+    "policy": "English fields are additive human-facing translations; original Russian text, source evidence, classifications, IDs, predicates and proposed dispositions remain unchanged."
+  }
 }

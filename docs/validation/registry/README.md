@@ -5,18 +5,22 @@ It contains research contracts and interpretations, not executable validation co
 
 ## Canonical data
 
-- [catalog.json](catalog.json): 2,560 unchanged records, comprising 2,218 XSD
+- [catalog.json](catalog.json): 2,560 records with original fields preserved, comprising 2,218 XSD
   contracts and 342 prose records. Each entry preserves its original ID and record.
 - [reconciliation.json](reconciliation.json): XSD/prose links, overlap categories,
   and deduplication cautions. Context links are not predicate equivalence.
-- [issues.json](issues.json): 28 unchanged editorial, ambiguity, and dependency
+- [issues.json](issues.json): 28 editorial, ambiguity, and dependency
   records. See the [English issue guide](../open-questions.md).
 - [rule-definition-examples.json](rule-definition-examples.json): six illustrative
   declarations, not a complete runtime catalog or frozen API.
 - [coverage-reconciliation.json](coverage-reconciliation.json): research counts,
   reconciliation results, and separate coverage axes.
 
-The `_ru` fields and other original bilingual descriptions are retained. Research
+The `_ru` fields and all original evidence are retained. Additive `_en` fields
+cover all 51 prose constraints, 28 issues, and six illustrative rules. The other
+291 prose records do not yet have English descriptions/conditions. Translation
+does not change IDs, source locators, classifications, predicates, or dispositions.
+Research
 metadata such as `product_tests_created_or_run: false` describes the research
 phase, not any later repository CI run.
 

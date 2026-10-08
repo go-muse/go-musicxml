@@ -208,4 +208,3 @@ in this README.
 The library code is licensed under the [MIT License](LICENSE). Bundled schemas
 and test fixtures retain their upstream terms; see
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
-
