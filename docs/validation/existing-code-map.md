@@ -39,7 +39,7 @@ existing plain UTF-8 input contract. Full declaration pseudo-attribute grammar,
 DTD syntax, broader XML/namespace conformance and strict-source integration
 remain outside this repair.
 
-The following review follow-up is still explicitly **deferred**:
+The following review follow-ups are still explicitly **deferred**:
 
 - **Machine-readable implementation evidence:** add a reviewed `implemented_by`
   or `evidence` contract to the planning format and its integrity checker.
@@ -47,6 +47,20 @@ The following review follow-up is still explicitly **deferred**:
   and test names; check that referenced local artifacts exist. Retain the
   meaning of `status: planned` and keep incomplete strict-source obligations
   visible rather than marking the entire contract implemented.
+
+- **Namespace-declaration provenance:** repair the pre-existing
+  `xmlns:p="xmlns" p:rubbish="x"` ambiguity for `step`, `staves` and complex
+  `measure`; retain the [raw regression fixture](../../testdata/validation/namespace-declaration-lookalike.musicxml)
+  and require both internal and external validators to reject it. The existing
+  [`wellFormedXMLTokenReader`](../../xml_wellformedness.go) sees raw start tags
+  before namespace expansion: a declaration is
+  `xml.Name{Space: "xmlns", Local: "p"}`, while the ordinary lookalike is
+  `xml.Name{Space: "p", Local: "rubbish"}`. Carry per-attribute declaration flags
+  from those raw tokens into the `validationNode` built by
+  `parseValidationDocument`, then have `validationNamespaceDeclaration` consult
+  that provenance instead of inferring it from the expanded `"xmlns"` sentinel.
+  Keep this repair inside the existing parser path without a public API change;
+  preserve actual namespace declarations and once-only namespace expansion.
 
 Until that evidence contract is designed, the existing-reader evidence for
 `REQ-DEF-XML-ATTR`, `REQ-DEF-XML-DOCTYPE`, `REQ-DEF-XML-SKIP` and their matching
@@ -101,8 +115,8 @@ represents namespace declarations with the sentinel namespace `xmlns`. An ordina
 attribute bound to the literal relative namespace URI `xmlns` (for example,
 `xmlns:p="xmlns" p:rubbish="x"`) has the same retained shape and is currently
 mistaken for a declaration. This affects the existing complex checker as well as
-the simple-element check. Repair needs lexical declaration provenance before
-namespace expansion. The checked-in
+the simple-element check. The concrete raw-token provenance repair is tracked
+under [XML-reading follow-ups](#xml-reading-follow-ups). The checked-in
 [raw reproducer](../../testdata/validation/namespace-declaration-lookalike.musicxml)
 covers `step`, `staves` and complex `measure`. The external-XSD test requires its
 rejection; it is deliberately not included among the 35 shared internal/oracle
@@ -133,14 +147,18 @@ Focused review probes at the pinned code base showed the following. They
 identify the original implementation work; completed repairs are called out
 explicitly below, while other limits remain open.
 
-- **Attributes on simple-typed elements** (ordinary-attribute slice repaired;
-  see [current evidence](#ordinary-attribute-repair-update)): unrecognized attributes on `staves`
-  and `step`, such as `rubbish="x"`, pass the internal source-validation path.
+- **Attributes on simple-typed elements** (ordinary-attribute slice repaired by
+  [PR #16](https://github.com/go-muse/go-musicxml/pull/16)): unrecognized attributes
+  on `staves` and `step`, such as `rubbish="x"`, passed the internal
+  source-validation path at the pinned review baseline. At that baseline,
   [`validateType`](https://github.com/go-muse/go-musicxml/blob/e486735cd6e4537e839ff67704b7768a9df3bdb3/validation.go#L569-L620)
-  checks text and children in its simple/builtin branches but calls attribute
-  validation only through the complex-type branch. This is narrower than saying
-  all simple attribute values are unchecked: complex-type attributes such as
-  `measure/@implicit="maybe"` are correctly rejected.
+  checked text and children in its simple/builtin branches, with attribute
+  validation reached only through the complex-type branch. The existing validator
+  now rejects these ordinary attributes through `validateSimpleElementAttributes`;
+  see the [repair update](#ordinary-attribute-repair-update) for executable
+  evidence and remaining namespace/xsi limitations. Complex-type attributes such
+  as `measure/@implicit="maybe"` were already rejected at the baseline and remain
+  rejected.
 - **XML well-formedness** (repaired by [PR #14](https://github.com/go-muse/go-musicxml/pull/14)):
   duplicate attributes and a DOCTYPE inside the root were accepted at the
   pinned review baseline. The existing decoding/internal parsing paths now
