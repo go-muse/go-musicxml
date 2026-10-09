@@ -1,12 +1,41 @@
 package musicxml
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestValidateBooleanLexicalForms(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		value string
+		valid bool
+	}{
+		{"true", true}, {"false", true}, {"1", true}, {"0", true},
+		{" \ttrue\r\n ", true}, {" \tfalse\r\n ", true},
+		{" \t1\r\n ", true}, {" \t0\r\n ", true},
+		{"", false}, {" ", false}, {"TRUE", false}, {"False", false},
+		{"yes", false}, {"2", false}, {"-0", false}, {"+1", false},
+		{"true false", false}, {"tr\tue", false},
+		{"\u00a0true\u00a0", false}, {"\u00851\u0085", false}, {"\u2003false\u2003", false},
+	} {
+		t.Run(fmt.Sprintf("%q", test.value), func(t *testing.T) {
+			t.Parallel()
+			failure := validateBuiltin("boolean", test.value)
+			if test.valid {
+				assert.Nil(t, failure)
+				return
+			}
+			require.NotNil(t, failure)
+			assert.Equal(t, "datatype", failure.constraint)
+			assert.Equal(t, fmt.Sprintf("value %q is not valid for xs:boolean", test.value), failure.message)
+		})
+	}
+}
 
 func TestValidateUnsignedIntegerLexicalForms(t *testing.T) {
 	t.Parallel()

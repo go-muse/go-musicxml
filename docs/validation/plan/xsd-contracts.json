@@ -1306,7 +1306,7 @@
     ],
     "selector": "xsi:nil supplied",
     "applicability": "Only a subject instantiating the bound declaration/type/use-site in the selected assembly. Apply conditional clauses only after their antecedent is known; close local or document scope before proving absence.",
-    "semantics": "nillable defaults to false; xsi:nil=true is prohibited on nonnillable declarations (all current MusicXML declaration sites); a legal nillable=true declaration also requires nil content/fixed-value rules; xsi:nil lexical boolean is checked. This is an operator contract instantiated by exact source clauses, not another document-wide diagnostic.",
+    "semantics": "nillable defaults to false; any xsi:nil attribute is prohibited on nonnillable declarations (all current MusicXML declaration sites), including false and 0. On a nillable declaration, true/1 requires no element or character content, forbids a fixed value constraint, and retains complex attribute validation; false/0 follows ordinary validation. The lexical boolean contract uses XML whitespace, not general Unicode whitespace. This is an operator contract instantiated by exact source clauses, not another document-wide diagnostic.",
     "targets": [
       "source",
       "model"

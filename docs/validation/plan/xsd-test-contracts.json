@@ -886,19 +886,19 @@
       ],
       "cases": {
         "positive": [
-          "False nil and legal nillable empty instance."
+          "False nil on a nillable declaration and legal nillable empty true instance."
         ],
         "negative": [
-          "True nil on nonnillable declaration."
+          "Any nil, including false/0, on a nonnillable declaration; malformed boolean values."
         ],
         "boundary": [
-          "Boolean true/1/false/0."
+          "Boolean true/1/false/0 with XML whitespace only; true nil rejects whitespace-only content."
         ],
         "missing_fact": [
           "Unknown declaration."
         ],
         "interaction": [
-          "Nil content and fixed value constraints."
+          "Nil content and fixed value constraints; complex attribute and identity checks remain active."
         ]
       },
       "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
