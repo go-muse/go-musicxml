@@ -95,6 +95,7 @@ func TestValidationDecimalLexicalCompatibility(t *testing.T) {
 }
 
 func TestValidationDecimalConstantSpace(t *testing.T) {
+	// Keep this test nonparallel: AllocsPerRun observes process-wide allocations.
 	value := "-" + strings.Repeat("0", 1<<18) + strings.Repeat("9", 1<<18) + "." + strings.Repeat("0", 1<<18) + "1" + strings.Repeat("0", 1<<18)
 	assert.Zero(t, testing.AllocsPerRun(5, func() {
 		first, ok := parseValidationDecimal(value)
@@ -115,7 +116,7 @@ func TestDecimalGeneratedLexemesRemainExact(t *testing.T) {
 	root, err := parseValidationDocument([]byte("<fixed> \t+0001.25000 </fixed>"))
 	require.NoError(t, err)
 	before := root.Text.String()
-	context := &validationContext{schema: &validationDecimalGenerated, effective: make(map[*validationComplexSchema]*validationEffectiveComplex), identifiers: make(map[string]string)}
+	context := newTestValidationContext(&validationDecimalGenerated)
 	context.validateElement(root, fixed, "/fixed")
 	assert.Empty(t, context.issues)
 	assert.Equal(t, before, root.Text.String())
@@ -144,7 +145,7 @@ func TestValidateDecimalInvalidBoundLiterals(t *testing.T) {
 
 func TestDecimalComparisonDispatchScope(t *testing.T) {
 	t.Parallel()
-	context := &validationContext{schema: &validationDecimalGenerated}
+	context := newTestValidationContext(&validationDecimalGenerated)
 	for _, builtin := range []string{"string", "token", "float", "double"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: builtin}}
 		assert.False(t, context.simpleValuesEqual(reference, "1.0", "1.00"), builtin)

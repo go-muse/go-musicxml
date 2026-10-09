@@ -199,6 +199,7 @@ func TestIntegerSourceAndModelConversion(t *testing.T) {
 }
 
 func TestValidationIntegerExactOperations(t *testing.T) {
+	// Keep this test nonparallel: AllocsPerRun observes process-wide allocations.
 	// Deterministic big.Int comparisons independently check sign, unequal lengths,
 	// leading zeros and near-equal magnitudes far beyond floating-point range.
 	values := []string{"0", "-000", "+001", "-1", "9007199254740992", "9007199254740993", "18446744073709551616"}

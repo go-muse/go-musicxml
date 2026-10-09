@@ -127,6 +127,7 @@ func validationIntegerValuesEqual(left, right string) bool {
 	return firstOK && secondOK && first.compare(second) == 0
 }
 
+// Keep bound rules and diagnostics aligned with validateDecimalBounds; parsing is domain-specific.
 func validateIntegerBounds(schema *validationSimpleSchema, value string) *validationSimpleFailure {
 	number, ok := parseValidationInteger(value)
 	if !ok {

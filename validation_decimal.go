@@ -80,6 +80,7 @@ func validationDecimalValuesEqual(left, right string) bool {
 	return firstOK && secondOK && first.compare(second) == 0
 }
 
+// Keep bound rules and diagnostics aligned with validateIntegerBounds; parsing is domain-specific.
 func validateDecimalBounds(schema *validationSimpleSchema, value string) *validationSimpleFailure {
 	number, ok := parseValidationDecimal(value)
 	if !ok {
