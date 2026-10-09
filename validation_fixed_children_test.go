@@ -100,11 +100,7 @@ func validationFixedChildCases() []validationFixedChildCase {
 func assertFixedChildCase(t *testing.T, test validationFixedChildCase) {
 	t.Helper()
 	context := validateAttributeSource(t, &validationNilGenerated, test.source)
-	var issues []string
-	for _, issue := range context.issues {
-		issues = append(issues, issue.Path+":"+issue.Constraint)
-	}
-	assert.ElementsMatch(t, test.issues, issues, "diagnostics: %v", context.issues)
+	assertValidationIssues(t, context, test.issues)
 }
 
 func TestValidateFixedElementChildren(t *testing.T) {
