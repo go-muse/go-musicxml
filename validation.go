@@ -410,7 +410,7 @@ func parseValidationDocument(source []byte) (*validationNode, error) {
 			}
 			return root, readValidationTail(decoder)
 		case xml.CharData:
-			if len(bytes.Trim(value, " \t\r\n")) != 0 {
+			if len(bytes.Trim(value, xmlWhitespace)) != 0 {
 				return nil, errors.New("unexpected character data before root")
 			}
 		case xml.Comment, xml.ProcInst, xml.Directive:
@@ -493,7 +493,7 @@ func readValidationTail(decoder *xml.Decoder) error {
 
 		switch value := token.(type) {
 		case xml.CharData:
-			if len(bytes.Trim(value, " \t\r\n")) == 0 {
+			if len(bytes.Trim(value, xmlWhitespace)) == 0 {
 				continue
 			}
 		case xml.Comment, xml.ProcInst:
@@ -1677,12 +1677,7 @@ func splitValidationList(value string) []string {
 }
 
 func isValidationWhitespace(value rune) bool {
-	switch value {
-	case ' ', '\t', '\n', '\r':
-		return true
-	default:
-		return false
-	}
+	return strings.ContainsRune(xmlWhitespace, value)
 }
 
 func validateBounds(

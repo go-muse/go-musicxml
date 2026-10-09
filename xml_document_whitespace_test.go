@@ -2,7 +2,6 @@ package musicxml
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"os/exec"
@@ -54,11 +53,11 @@ func xmlDocumentWhitespaceCases() []xmlReadingCase {
 }
 
 func TestXMLDocumentWhitespaceDecodePaths(t *testing.T) {
-	runXMLReadingDecodePaths(t, xmlDocumentWhitespaceCases(), xmlDocumentWhitespaceEncodingVariants, assertXMLReadingError)
+	runXMLReadingDecodePaths(t, xmlDocumentWhitespaceCases(), xmlDeclarationEncodingVariants, assertXMLReadingError)
 }
 
 func TestXMLDocumentWhitespaceContainer(t *testing.T) {
-	runXMLReadingContainer(t, xmlDocumentWhitespaceCases(), xmlDocumentWhitespaceEncodingVariants, assertXMLReadingError)
+	runXMLReadingContainer(t, xmlDocumentWhitespaceCases(), xmlDeclarationEncodingVariants, assertXMLReadingError)
 }
 
 func TestXMLDocumentWhitespaceValidationParser(t *testing.T) {
@@ -66,7 +65,7 @@ func TestXMLDocumentWhitespaceValidationParser(t *testing.T) {
 }
 
 func TestXMLDocumentWhitespaceLinkedResources(t *testing.T) {
-	runXMLReadingLinkedResources(t, xmlDocumentWhitespaceCases(), xmlDocumentWhitespaceEncodingVariants, assertXMLReadingError)
+	runXMLReadingLinkedResources(t, xmlDocumentWhitespaceCases(), xmlDeclarationEncodingVariants, assertXMLReadingError)
 }
 
 func TestXMLDocumentWhitespaceErrors(t *testing.T) {
@@ -113,7 +112,7 @@ func TestXMLDocumentWhitespacePreservesText(t *testing.T) {
 				require.NoError(t, err)
 				require.Len(t, node.Children, 1)
 				assert.Equal(t, test.text, node.Children[0].Text.String())
-				for encoding, data := range xmlDocumentWhitespaceEncodingVariants(input) {
+				for encoding, data := range xmlDeclarationEncodingVariants(input) {
 					t.Run(encoding, func(t *testing.T) {
 						document, err := Decode(iotest.OneByteReader(bytes.NewReader(data)))
 						require.NoError(t, err)
@@ -139,35 +138,6 @@ func TestXMLDocumentWhitespacePreservesText(t *testing.T) {
 	}
 }
 
-// Do not reuse the ASCII-only Latin1 fixture helpers for Unicode cases.
-// Omitted declarations stay omitted; Latin1 requires a declaration and every
-// character must fit in one byte. UTF-16 fixtures contain real code units.
-func xmlDocumentWhitespaceEncodingVariants(input string) map[string][]byte {
-	declaration := func(encoding string) string {
-		return strings.ReplaceAll(input, "DECL", `<?xml version="1.0" encoding="`+encoding+`"?>`)
-	}
-	utf8 := []byte(declaration("UTF-8"))
-	be := encodeUTF16(declaration("UTF-16BE"), binary.BigEndian)
-	le := encodeUTF16(declaration("UTF-16LE"), binary.LittleEndian)
-	variants := map[string][]byte{
-		"UTF8": utf8, "UTF8-BOM": append([]byte{0xef, 0xbb, 0xbf}, utf8...),
-		"UTF16BE": be, "UTF16LE": le,
-	}
-	if strings.HasPrefix(input, "DECL") {
-		variants["UTF16BE-no-BOM"] = be[2:]
-		variants["UTF16LE-no-BOM"] = le[2:]
-		var latin1 []byte
-		for _, character := range declaration("ISO-8859-1") {
-			if character > 0xff {
-				return variants
-			}
-			latin1 = append(latin1, byte(character))
-		}
-		variants["Latin1"] = latin1
-	}
-	return variants
-}
-
 // Compare original bytes, including supported encodings, without round-tripping
 // through the model. This is XML well-formedness only: no --schema or --valid.
 func TestXMLDocumentWhitespaceAgainstXMLLint(t *testing.T) {
@@ -189,7 +159,7 @@ func TestXMLDocumentWhitespaceAgainstXMLLint(t *testing.T) {
 				if root == "container" {
 					input = strings.Replace(input, `</container>`, `<rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`, 1)
 				}
-				for encoding, data := range xmlDocumentWhitespaceEncodingVariants(input) {
+				for encoding, data := range xmlDeclarationEncodingVariants(input) {
 					t.Run(encoding, func(t *testing.T) {
 						command := exec.Command(xmllint, "--nonet", "--noout", "-")
 						command.Stdin = bytes.NewReader(data)

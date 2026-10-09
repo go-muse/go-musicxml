@@ -148,3 +148,20 @@ func TestMXLRepresentableAlternateMediaTypeRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, value.RootFiles, decoded.RootFiles)
 }
+
+func TestIsValidationWhitespace(t *testing.T) {
+	t.Parallel()
+	for _, character := range []rune{' ', '\t', '\r', '\n'} {
+		assert.True(t, isValidationWhitespace(character), "XML S U+%04X", character)
+	}
+	for _, character := range []rune{
+		0, '\v', '\f', 'A', '0',
+		'\u0085', '\u00a0', '\u1680',
+		'\u2000', '\u2001', '\u2002', '\u2003', '\u2004', '\u2005',
+		'\u2006', '\u2007', '\u2008', '\u2009', '\u200a', '\u200b',
+		'\u2028', '\u2029', '\u202f', '\u205f', '\u3000', '\ufeff',
+		'\ufffd', '\U0010ffff', -1,
+	} {
+		assert.False(t, isValidationWhitespace(character), "not XML S U+%04X", character)
+	}
+}

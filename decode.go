@@ -214,7 +214,7 @@ func readRoot(decoder *xml.Decoder) (xml.StartElement, error) {
 		case xml.StartElement:
 			return value, nil
 		case xml.CharData:
-			if len(bytes.Trim(value, " \t\r\n")) == 0 {
+			if len(bytes.Trim(value, xmlWhitespace)) == 0 {
 				continue
 			}
 		case xml.Comment, xml.ProcInst, xml.Directive:
@@ -243,7 +243,7 @@ func readDocumentTail(decoder *xml.Decoder) error {
 
 		switch value := token.(type) {
 		case xml.CharData:
-			if len(bytes.Trim(value, " \t\r\n")) == 0 {
+			if len(bytes.Trim(value, xmlWhitespace)) == 0 {
 				continue
 			}
 

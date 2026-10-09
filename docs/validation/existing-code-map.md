@@ -45,7 +45,10 @@ is now repaired at the four character-data checks in `readRoot`,
 `readDocumentTail`, `parseValidationDocument` and `readValidationTail` in
 [`decode.go`](../../decode.go) and [`validation.go`](../../validation.go).
 They trim only XML `S` (space, tab, carriage return and line feed), rather than
-Unicode whitespace, preserving the existing before/after-root errors.
+Unicode whitespace, preserving the existing before/after-root errors. Their
+`xmlWhitespace` cutset in [`xml_whitespace.go`](../../xml_whitespace.go) is also the shared
+source for `parseXMLUnsignedInteger` and `isValidationWhitespace`; the latter
+continues to govern XSD normalization and element-content checks.
 [XML 1.0 document, S, prolog and Misc productions 1, 3, 22 and 27](https://www.w3.org/TR/REC-xml/#sec-prolog-dtd)
 require rejection of literal non-XML whitespace such as NBSP and NEL at those
 boundaries. This mandatory XML-reading repair is separate from the element-only
@@ -60,9 +63,13 @@ Executable evidence is in
 roots, options, MXL root/container documents and deferred linked resources.
 The literal-character cases cover all four XML `S` characters and all 19
 XML-valid non-`S` Unicode whitespace characters before the root, after the root
-and after a declaration. Encoding variants use genuine UTF-8/UTF-16 bytes and
-declared Latin-1 only for representable characters; omitted declarations stay
-omitted. `TestXMLDocumentWhitespaceErrors` retains ordinary-character errors
+and after a declaration. The shared `xmlDeclarationEncodingVariants` helper
+uses genuine UTF-8/UTF-16 bytes and representable Latin-1; non-ASCII Latin-1
+requires a first declaration. ASCII-only fixtures retain Latin-1 variants even
+without a first declaration, and omitted declarations stay omitted.
+`TestXMLDeclarationEncodingVariants` independently checks fixture bytes and
+representability; `TestIsValidationWhitespace` checks the shared XML `S` set.
+`TestXMLDocumentWhitespaceErrors` retains ordinary-character errors
 and empty/XML-`S`-only input behavior. `TestXMLDocumentWhitespacePreservesText`
 checks exact Unicode text and model round trips, while legal comments/PIs and
 declaration ordering retain their existing matrix coverage.
@@ -77,6 +84,21 @@ repair cannot distinguish those forbidden spellings outside the root from
 literal XML `S`. The tests do not assert their acceptance as valid behavior.
 Full declaration/DTD/namespace conformance and strict-source integration also
 remain open; planning JSON completion semantics are unchanged.
+
+**Typed numeric source whitespace remains a separate deferred follow-up**, as
+recorded in [PR #23 review](https://github.com/go-muse/go-musicxml/pull/23#discussion_r4230227524).
+`xmlDecimal.UnmarshalText` and `parseXMLUnsignedText` in
+[`xml_numeric.go`](../../xml_numeric.go) still use `strings.TrimSpace`, and
+ordinary integer decoding in `encoding/xml` likewise trims Unicode whitespace.
+A Go 1.27.2 probe confirms that NBSP around `divisions`, NEL around `octave`,
+and NBSP, NEL or EM SPACE padding in `staves` can be lost during typed Decode.
+These characters are legal XML element text but are not XML `S` in XSD numeric
+lexical forms. The original-source validator and `xmllint --nonet --schema` reject those
+numeric values, while Decode/Encode canonicalizes them and public `Validate`
+accepts the resulting model because it cannot recover the original text.
+This document-boundary repair does not change numeric transport or freeze that
+leniency as normative acceptance tests. A future transport-compatibility decision
+and strict-source lexical validation remain separate work.
 
 The following review follow-up is still explicitly **deferred**:
 

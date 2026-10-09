@@ -10,7 +10,7 @@ import (
 // such as positiveInteger's exclusion of zero remain the validator's job.
 func parseXMLUnsignedInteger(value string, bitSize int) (uint64, error) {
 	original := value
-	value = strings.Trim(value, " \t\r\n")
+	value = strings.Trim(value, xmlWhitespace)
 	negative := false
 	if len(value) != 0 && (value[0] == '+' || value[0] == '-') {
 		negative = value[0] == '-'
