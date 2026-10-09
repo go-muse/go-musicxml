@@ -46,7 +46,10 @@ content-category contracts. `zz_generated_integer_validation_test.go` uses
 `testdata/validation/integer-contract.xsd` for exact integer value-space contracts.
 `zz_generated_decimal_validation_test.go` uses
 `testdata/validation/decimal-contract.xsd` for atomic decimal ordering, equality and digit facets.
-All three test schemas use the local empty catalog.
+`zz_generated_simple_content_validation_test.go` uses
+`testdata/validation/simple-content-contract.xsd` for complex simple-content
+restriction metadata and supported scalar facets.
+All four test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

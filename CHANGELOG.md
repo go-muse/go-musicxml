@@ -26,6 +26,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Retain and apply supported scalar restriction facets on complex simple-content
+  types, including optional inline scalar bases and inherited restrictions.
+  Keep failed or cyclic effective-type resolution from later accepting a partial
+  cached type. This is a synthetic-schema operator repair; the pinned MusicXML
+  schemas declare no complex simple-content restrictions.
+
 - Apply decimal `totalDigits` and `fractionDigits` to exact values in the existing
   validator, accepting redundant whole/fractional zero padding while retaining
   XSD 1.0 coefficient and scale limits. This synthetic-schema-tested operator

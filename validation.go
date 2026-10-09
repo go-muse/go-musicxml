@@ -214,12 +214,15 @@ const (
 )
 
 type validationComplexSchema struct {
-	Form         validationComplexForm
-	Base         *validationTypeRef
-	Particle     *validationParticleSchema
-	Attributes   []validationAttributeSchema
-	AnyAttribute *validationAnyAttributeSchema
-	Mixed        bool
+	// SimpleContent is a local restriction layer. A missing scalar Base is
+	// bound to the inherited effective scalar in a per-context copy.
+	SimpleContent *validationSimpleSchema
+	Form          validationComplexForm
+	Base          *validationTypeRef
+	Particle      *validationParticleSchema
+	Attributes    []validationAttributeSchema
+	AnyAttribute  *validationAnyAttributeSchema
+	Mixed         bool
 }
 
 type validationAttributeUse string
@@ -819,23 +822,28 @@ func (c *validationContext) validateComplex(
 
 func (c *validationContext) effectiveComplex(
 	schema *validationComplexSchema,
-) (*validationEffectiveComplex, bool) {
+) (result *validationEffectiveComplex, ok bool) {
 	if schema == nil {
 		return nil, false
 	}
 	if cached, found := c.effective[schema]; found {
-		return cached, true
+		return cached, cached != nil
 	}
 
-	result := &validationEffectiveComplex{
+	result = &validationEffectiveComplex{
 		particle:     schema.Particle,
 		attributes:   append([]validationAttributeSchema(nil), schema.Attributes...),
 		anyAttribute: schema.AnyAttribute,
 		mixed:        schema.Mixed,
 	}
-	// Install before resolving a base so malformed cyclic derivations cannot
-	// recurse forever.
-	c.effective[schema] = result
+	// A nil entry marks pending or failed resolution. Publish only a complete
+	// result: repeated or cyclic lookups must never accept a partial type.
+	c.effective[schema] = nil
+	defer func() {
+		if ok {
+			c.effective[schema] = result
+		}
+	}()
 
 	switch schema.Form {
 	case validationComplexDirect:
@@ -871,6 +879,17 @@ func (c *validationContext) effectiveComplex(
 			result.mixed = result.mixed || base.mixed
 		default:
 			return nil, false
+		}
+
+		if schema.Form == validationComplexSimpleContentRestriction && schema.SimpleContent != nil {
+			local := *schema.SimpleContent
+			if local.Base == nil {
+				local.Base = &validationSimpleMember{
+					Name:   result.simple.Name,
+					Inline: result.simple.InlineSimple,
+				}
+			}
+			result.simple = &validationTypeRef{InlineSimple: &local}
 		}
 
 		return result, true

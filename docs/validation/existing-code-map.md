@@ -219,8 +219,8 @@ source-assessment or conversion-report API is introduced.
 This is a bounded existing-validator slice of `STAGE-DEF-03` (`DEF03-01/04` and
 integer comparison portions of `DEF03-02`), not completion of that stage.
 Decimal comparisons and digit facets are covered by the later repairs below;
-typed union/list aggregate equality, omitted complex simple-content restriction
-facets in generated metadata, contextual arithmetic,
+typed union/list aggregate equality, mixed-base simple-content restrictions,
+wider facet semantics, contextual arithmetic,
 session parse-once caching, shared budgets and incomplete/conversion reports
 remain open. No new profile, adapter, public API or resource policy is selected;
 planning JSON retains `status: planned`.
@@ -278,7 +278,8 @@ and cannot recover source precision discarded by model conversion.
 
 This is another bounded existing-validator portion of `STAGE-DEF-03`
 (`REQ-DEF-NUM-EXACT`, `DEF03-02/04`). Decimal digit facets are covered by the
-later repair below. Typed union/list aggregate equality, missing complex simple-content restriction facets,
+later repair below. Typed union/list aggregate equality, mixed-base simple-content
+restrictions and wider facet semantics,
 contextual arithmetic, parse-once session caching, resource budgets,
 incomplete/conversion reports and strict-source/direct-model adapters remain
 separate work. No public API, model-decimal interpretation, profile or planning
@@ -320,14 +321,79 @@ source/schema checks, exact diagnostics and a one-MiB zero-allocation success ca
 
 The pinned MusicXML schemas declare neither facet; this is a verified reusable
 scalar prerequisite under `STAGE-DEF-03` / `REQ-DEF-NUM-EXACT`, not a new MusicXML
-profile or completion of that stage. Missing complex simple-content restriction
-metadata, schema-component validity/metadata-width limits, typed aggregate
+profile or completion of that stage. Mixed-base simple-content restrictions,
+wider whitespace/pattern semantics,
+schema-component validity/metadata-width limits, typed aggregate
 equality, contextual arithmetic, transport and current-model interpretation,
 session caching/budgets, incomplete/conversion reports and the proposed adapters
 remain separate work. Planning statuses remain `planned`.
 
 [decimal-total-digits]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-totalDigits
 [decimal-fraction-digits]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-fractionDigits
+
+## Complex simple-content restriction metadata repair update
+
+The existing generator and validator now retain and apply local scalar
+restriction metadata declared inside complex `simpleContent` restrictions.
+The parent complex type remains distinct from the optional inline `simpleType`:
+without that inline type, local facets restrict the parent's effective scalar;
+with it, they restrict the inline scalar. These are the simple-content-parent
+cases of XSD 1.0 [Structures section 3.4.2][simple-content-mapping]. Named and
+anonymous restrictions, further restrictions and extensions retain their scalar
+layers rather than flattening or replacing inherited facets.
+
+[`complex.go`](../../internal/xsdgen/complex.go) resolves the optional inline
+scalar. [`generate_validation.go`](../../internal/xsdgen/generate_validation.go)
+shares lexical enumeration/pattern/facet rendering and does not impose Go
+constant naming on the outer restriction's enumeration values.
+[`effectiveComplex`](../../validation.go) binds a per-context copy of the local
+layer to its scalar base; generated definitions and source values stay unchanged.
+Existing scalar validation, fixed-value equality, default substitution and
+identity recording consume that same effective scalar once. Ordinary inherited
+attributes, nil handling and child-element rejection retain their existing paths.
+Pending/failed effective-type cache entries now remain failures, including on
+repeated lookup, so malformed cycles and unsupported content cannot become
+partially resolved types.
+
+The bridge applies the existing enumeration, single-pattern, bound, length and
+digit-facet operators, including exact integer/decimal value comparisons. It
+preserves supported facet values, but does **not** claim complete facet semantics:
+`whiteSpace` execution, same-level multiple-pattern alternatives, broader regex
+coverage, schema-component validity, fixed-facet metadata and facet-metadata
+width remain separate work. In particular, preserving `WhiteSpace` and multiple `Patterns` in a
+metadata-only test is not evidence that those runtime operators are repaired.
+Complex restrictions of mixed/emptiable bases remain explicitly unavailable;
+their separate content-category mapping is not implemented here. Existing
+wildcard merging and aggregate list/union equality are also unchanged.
+A separate QA probe confirmed that absent defaulted IDREF attributes are not
+recorded by the existing attribute path; this predates the bridge and remains
+an attribute-default materialization follow-up.
+
+Executable evidence is in
+[`validation_simple_content_test.go`](../../validation_simple_content_test.go),
+[`validation_simple_content_metadata_test.go`](../../validation_simple_content_metadata_test.go)
+and the [generator tests](../../internal/xsdgen/generate_simple_content_validation_test.go),
+using [reproducible synthetic metadata](../../testdata/validation/simple-content-contract.xsd).
+Original-source tests exercise local and inherited failures, optional inline
+scalar facets, integer/decimal exactness, Unicode/token and list lengths,
+required/prohibited/fixed attributes, defaults/fixed values, nil and child
+boundaries, ID/IDREF behavior, sibling isolation and source/schema immutability.
+`TestSimpleContentRestrictionsAgainstSchema` sends identical XML bytes to
+`xmllint --nonet --schema` and is required by Linux CI. The external subset
+excludes arbitrary-width precision probes, libxml2's explicit element-fixed
+lexical comparison, and its observed missing-IDREF/duplicate-ID leniency;
+those remain internal expectations rather than oracle-backed claims.
+
+All six pinned production XSDs contain zero complex simple-content restrictions.
+Production schemas, generated public models and public APIs are unchanged; only
+the existing synthetic nil fixture gains its empty restriction layer on
+regeneration. This is a bounded reusable-scalar prerequisite for
+`REQ-DEF-OPS-SCALARS` / `DEF04-06`, supporting the exact numeric work, not completion
+of `STAGE-DEF-03` or `STAGE-DEF-04`. Catalog binding, adapters, budgets, reports,
+profile selection, `xsi:type` and schema-hint decisions remain open. Planning
+JSON statuses retain `planned`.
+
+[simple-content-mapping]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#Complex_Type_Definition_details
 
 ## Ordinary-attribute repair update
 
