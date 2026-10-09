@@ -10,17 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type validationFixedChildCase struct {
-	name, source string
-	issues       []string
-	// libxml2 2.9.14 accepts a matching fixed mixed value with element
-	// children and rejects empty CDATA for a mixed empty-string fixed value.
-	// Those cases are normative regressions, not oracle parity.
-	oracleComparable bool
-}
-
-func validationFixedChildCases() []validationFixedChildCase {
-	var tests []validationFixedChildCase
+// libxml2 2.9.14 accepts a matching fixed mixed value with element
+// children and rejects empty CDATA for a mixed empty-string fixed value.
+// Those cases are normative regressions, not oracle parity.
+func validationFixedChildCases() []validationSourceCase {
+	var tests []validationSourceCase
 	for _, element := range []struct{ name, value, wrapper string }{
 		{"fixed-mixed", "kept", ""},
 		{"fixed-mixed-empty", "", ""},
@@ -50,7 +44,7 @@ func validationFixedChildCases() []validationFixedChildCase {
 				if element.wrapper != "" {
 					source = "<" + element.wrapper + ">" + source + "</" + element.wrapper + ">"
 				}
-				test := validationFixedChildCase{
+				test := validationSourceCase{
 					name:   element.wrapper + "/" + element.name + nilAttribute + " " + content.name,
 					source: source, oracleComparable: !content.child && !(content.name == "CDATA" && element.value == ""),
 				}
@@ -76,12 +70,12 @@ func validationFixedChildCases() []validationFixedChildCase {
 		{"text mismatch", ` required="1"`, "other", []string{"/fixed-mixed:fixed"}},
 		{"text and child mismatch", ` required="1"`, "other<child>7</child>", []string{"/fixed-mixed:fixed"}},
 	} {
-		tests = append(tests, validationFixedChildCase{
+		tests = append(tests, validationSourceCase{
 			name: test.name, source: `<fixed-mixed xmlns:n="` + validationXSINamespace + `"` + test.attrs + `>` + test.content + `</fixed-mixed>`,
 			issues: test.issues, oracleComparable: true,
 		})
 	}
-	for _, test := range []validationFixedChildCase{
+	for _, test := range []validationSourceCase{
 		{name: "builtin simple child", source: `<fixed>kept<child>7</child></fixed>`, issues: []string{"/fixed:fixed", "/fixed:simple-content"}, oracleComparable: true},
 		{name: "simple-content child", source: `<fixed-content required="1">7<child>7</child></fixed-content>`, issues: []string{"/fixed-content:fixed", "/fixed-content:simple-content"}, oracleComparable: true},
 		{name: "anyType child", source: `<fixed-any>kept<child/></fixed-any>`, issues: []string{"/fixed-any:fixed"}},
@@ -97,9 +91,9 @@ func validationFixedChildCases() []validationFixedChildCase {
 	return tests
 }
 
-func assertFixedChildCase(t *testing.T, test validationFixedChildCase) {
+func assertFixedChildCase(t *testing.T, test validationSourceCase) {
 	t.Helper()
-	context := validateAttributeSource(t, &validationNilGenerated, test.source)
+	context := validateAttributeSource(t, validationSchemaFor(test.schema), test.source)
 	assertValidationIssues(t, context, test.issues)
 }
 
@@ -146,14 +140,14 @@ func TestFixedElementChildrenPreserveAssessment(t *testing.T) {
 		if reference == "missing" {
 			want = append(want, "/fixed-mixed/@ref:IDREF")
 		}
-		assertFixedChildCase(t, validationFixedChildCase{source: source, issues: want})
+		assertFixedChildCase(t, validationSourceCase{source: source, issues: want})
 	}
 	// A fixed constraint failure does not stop the ordinary matched-child walk.
 	source := `<fixed-mixed required="1" ref="target">kept<child>7</child><identity>target</identity></fixed-mixed>`
 	context := validateAttributeSource(t, &validationNilGenerated, source)
 	assert.Equal(t, map[string]string{"target": "/fixed-mixed/identity"}, context.identifiers)
 	assert.Equal(t, []validationIdentityReference{{value: "target", path: "/fixed-mixed/@ref"}}, context.references)
-	assertFixedChildCase(t, validationFixedChildCase{source: source, issues: []string{"/fixed-mixed:fixed"}})
+	assertFixedChildCase(t, validationSourceCase{source: source, issues: []string{"/fixed-mixed:fixed"}})
 	context = validateAttributeSource(t, &validationNilGenerated, `<fixed-mixed required="1">other<child>7</child></fixed-mixed>`)
 	require.Len(t, context.issues, 1)
 	assert.Equal(t, "element with a fixed value must not contain child elements", context.issues[0].Message)

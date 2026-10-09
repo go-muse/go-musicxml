@@ -755,8 +755,10 @@ func (c *validationContext) validateComplex(
 		return
 	}
 
+	// XSD 1.0 cvc-complex-type 2.3 permits only XML S, not Unicode
+	// whitespace, in element-only content. Leave the source text unchanged.
 	if !effective.mixed &&
-		strings.TrimSpace(node.Text.String()) != "" {
+		strings.TrimFunc(node.Text.String(), isValidationWhitespace) != "" {
 		c.addIssue(
 			path,
 			"element-only",

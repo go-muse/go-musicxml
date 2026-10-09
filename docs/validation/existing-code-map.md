@@ -39,7 +39,20 @@ existing plain UTF-8 input contract. Full declaration pseudo-attribute grammar,
 DTD syntax, broader XML/namespace conformance and strict-source integration
 remain outside this repair.
 
-The following review follow-up is still explicitly **deferred**:
+The following review follow-ups are still explicitly **deferred**:
+
+- **Non-XML whitespace outside the root:** [PR #22 review](https://github.com/go-muse/go-musicxml/pull/22#discussion_r4229843345)
+  identified four remaining uses of `bytes.TrimSpace` in
+  `parseValidationDocument`, `readValidationTail`, and the matching before/after
+  root checks in `decode.go`. They accept Unicode whitespace such as NBSP and
+  NEL where [XML 1.0 document/Misc productions 1 and 27](https://www.w3.org/TR/REC-xml/#sec-prolog-dtd)
+  allow only comments, processing instructions and XML `S`. This is a mandatory
+  well-formedness gap in both public Decode and the internal validation parser,
+  separate from the element-only XSD content repair below. A narrow reader
+  follow-up should replace those broad whitespace predicates and add before/
+  after-root and post-declaration regression cases to the existing XML-reading
+  matrix, preserving legal XML whitespace and existing error/encoding behavior.
+  This finding is recorded for follow-up, not repaired by the XSD-content slice.
 
 - **Machine-readable implementation evidence:** add a reviewed `implemented_by`
   or `evidence` contract to the planning format and its integrity checker.
@@ -366,6 +379,53 @@ context, attribute-default materialization, `xsi:type`, hint values, invalid
 nilled descendant assessment, and new source/model adapters remain deferred.
 No public API, production model/schema, schema fetch, or schema assembly is added.
 Public `Validate` retains its Encode/reparse model boundary.
+
+## Element-content XML whitespace repair update
+
+The existing internal validator now uses XML whitespace rather than Go's broader
+Unicode whitespace classification when checking nonmixed complex content.
+[XSD 1.0 cvc-complex-type 2.3][xsi-name-rule] permits only the four characters in
+[XML 1.0 production S](https://www.w3.org/TR/REC-xml/#NT-S): space, tab, carriage
+return and line feed. Nonbreaking space, NEL and Unicode space separators are
+legal XML characters but are not permitted as element-only character content.
+Comments and processing instructions remain irrelevant to that check; CDATA
+and character references contribute their decoded characters.
+
+The check retains its existing parent-path `element-only` diagnostic. It does
+not return early: ordinary attributes, child grammar, matched child values and
+ID/IDREF assessment continue. Mixed content, simple content, nil handling and
+source-node immutability remain unchanged. Tests use original XML bytes against
+the pinned partwise/timewise and opus schemas as well as the existing synthetic
+inherited-type fixture. Executable evidence is in
+[`validation_content_whitespace_test.go`](../../validation_content_whitespace_test.go):
+`TestValidateElementOnlyXMLWhitespace`,
+`TestElementOnlyXMLWhitespacePreservesAssessment`, and
+`TestElementOnlyXMLWhitespacePreservesPublicModels`.
+`TestElementOnlyXMLWhitespaceAgainstSchema` supplies the same original bytes
+to the internal validator and required Linux `xmllint --nonet`, using local
+catalogs without schema fetching.
+
+libxml2 2.9.14 rejects XML-whitespace-only and empty CDATA in element-only
+content even though the former contributes only permitted character codes and
+the latter contributes no characters. Those normative cases remain in the
+internal regressions and are explicitly excluded from the comparable oracle
+subset; tests do not require the oracle to retain that bug. Non-XML character
+data in CDATA remains in the rejection parity cases.
+
+This is a bounded existing-validator repair for `CHECK-XSD-LANG-TEXT` and
+`TEST-XSD-LANG-TEXT`, and a prerequisite for the shared-operator work in
+`DEF04-06`. It does not complete those contracts, `STAGE-DEF-04` or `STAGE-xsd`;
+the planning JSON retains `status: planned`. In particular, the current runtime
+does not fully distinguish empty complex content from element-only content.
+This repair also rejects Unicode whitespace in the existing empty-type path,
+but its acceptance of XML whitespace there remains a separate gap under
+cvc-complex-type 2.1. The tests do not describe that acceptance as normative.
+
+No production schemas, generated metadata/models, public API or validation
+profile are changed. Public Decode may discard inter-element source text, and
+public `Validate` still assesses Encode/reparse output. Strict-source and direct
+model adapters, full text-category classification, typed fixed-value equality,
+schema-instance type/hint values and other deferred contracts remain open.
 
 ## Reuse and adaptation
 
