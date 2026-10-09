@@ -54,16 +54,19 @@ func TestGeneratedNumericXMLCodecs(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotContains(t, string(complex), "type xmlFloatControl ")
 	assert.NotContains(t, string(simple), ") MarshalText(")
-	runtimeSource, err := os.ReadFile(filepath.Join("..", "..", "xml_numeric.go"))
-	require.NoError(t, err)
 	directory := t.TempDir()
 	files := map[string][]byte{
 		"go.mod":          []byte("module numeric-test\n\ngo 1.26\n"),
 		"simple.go":       simple,
 		"complex.go":      complex,
 		"elements.go":     elements,
-		"xml_numeric.go":  runtimeSource,
 		"numeric_test.go": []byte(generatedNumericRuntimeTests),
+	}
+	// Compile generated codecs with their actual shared runtime helpers.
+	for _, name := range []string{"xml_numeric.go", "xml_whitespace.go"} {
+		contents, err := os.ReadFile(filepath.Join("..", "..", name))
+		require.NoError(t, err)
+		files[name] = contents
 	}
 	for name, contents := range files {
 		require.NoError(t, os.WriteFile(filepath.Join(directory, name), contents, 0600))

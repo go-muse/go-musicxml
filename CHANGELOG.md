@@ -26,6 +26,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reject non-XML Unicode whitespace before and after the document root,
+  including after an XML declaration, across Decode and MXL reads and the
+  internal XML parser. XML whitespace, legal comments and processing
+  instructions, and Unicode text inside elements remain supported.
+
 - Reject non-XML Unicode whitespace in element-only complex content in the
   internal XML validator. Only space, tab, carriage return and line feed are
   permitted between children; mixed and simple content retain their existing

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"testing/iotest"
+	"unicode/utf16"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -85,7 +87,6 @@ func xmlDeclarationEncodingVariants(input string) map[string][]byte {
 	variants := map[string][]byte{
 		"UTF8": utf8, "UTF8-BOM": append([]byte{0xef, 0xbb, 0xbf}, utf8...),
 		"UTF16BE": be, "UTF16LE": le,
-		"Latin1": []byte(declaration("ISO-8859-1")),
 	}
 	// BOM-less UTF-16 requires a first declaration naming its byte order.
 	// Do not prepend one and accidentally turn valid fixtures into repeats.
@@ -93,9 +94,103 @@ func xmlDeclarationEncodingVariants(input string) map[string][]byte {
 		variants["UTF16BE-no-BOM"] = be[2:]
 		variants["UTF16LE-no-BOM"] = le[2:]
 	}
+	// ASCII bytes are also valid undeclared UTF-8, preserving omitted and
+	// misplaced-declaration fixtures. Non-ASCII Latin1 needs a first declaration;
+	// omit it when any character is unrepresentable rather than relabeling UTF-8.
+	maximum := rune(0x7f)
+	if strings.HasPrefix(input, "DECL") {
+		maximum = 0xff
+	}
+	var latin1 []byte
+	for _, character := range declaration("ISO-8859-1") {
+		if character > maximum {
+			return variants
+		}
+		latin1 = append(latin1, byte(character))
+	}
+	variants["Latin1"] = latin1
 	return variants
 }
 
 func xmlDeclarationUTF8Input(input string) []byte {
 	return []byte(strings.ReplaceAll(input, "DECL", `<?xml version="1.0"?>`))
+}
+
+// Check source bytes independently of the runtime reader: a malformed encoding
+// must not make a negative XML-reading fixture pass for the wrong reason.
+func TestXMLDeclarationEncodingVariants(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct {
+		name, input     string
+		latin1, bomless bool
+	}{
+		{"ASCII declared", `DECL<opus><title>Keep</title></opus>`, true, true},
+		{"ASCII omitted", `<opus><title>Keep</title></opus>`, true, false},
+		{"ASCII misplaced", ` DECL<opus/>`, true, false},
+		{"ASCII repeated", `DECLDECL<opus/>`, true, true},
+		{"Latin1 declared", "DECL<opus><title>\u0085\u00a0\u00ff</title></opus>", true, true},
+		{"Latin1 omitted", "<opus><title>\u0085\u00a0\u00ff</title></opus>", false, false},
+		{"Latin1 misplaced", " DECL<opus><title>\u00a0</title></opus>", false, false},
+		{"beyond Latin1", "DECL<opus><title>\u0100</title></opus>", false, true},
+		{"Unicode declared", "DECL<opus><title>\u1680\u3000\U0001d11e</title></opus>", false, true},
+		{"Unicode omitted", "<opus><title>\u1680\u3000\U0001d11e</title></opus>", false, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			variants := xmlDeclarationEncodingVariants(test.input)
+			wantNames := []string{"UTF8", "UTF8-BOM", "UTF16BE", "UTF16LE"}
+			if test.latin1 {
+				wantNames = append(wantNames, "Latin1")
+			}
+			if test.bomless {
+				wantNames = append(wantNames, "UTF16BE-no-BOM", "UTF16LE-no-BOM")
+			}
+			var names []string
+			for name := range variants {
+				names = append(names, name)
+			}
+			assert.ElementsMatch(t, wantNames, names)
+			for name, data := range variants {
+				t.Run(name, func(t *testing.T) {
+					encoding, decoded := "UTF-8", ""
+					switch name {
+					case "UTF8", "UTF8-BOM":
+						if name == "UTF8-BOM" {
+							require.True(t, bytes.HasPrefix(data, []byte{0xef, 0xbb, 0xbf}))
+							data = data[3:]
+						}
+						assert.True(t, utf8.Valid(data))
+						decoded = string(data)
+					case "UTF16BE", "UTF16LE", "UTF16BE-no-BOM", "UTF16LE-no-BOM":
+						var order binary.ByteOrder = binary.BigEndian
+						encoding = "UTF-16BE"
+						bom := []byte{0xfe, 0xff}
+						if strings.HasPrefix(name, "UTF16LE") {
+							encoding, order, bom = "UTF-16LE", binary.LittleEndian, []byte{0xff, 0xfe}
+						}
+						if !strings.HasSuffix(name, "-no-BOM") {
+							require.True(t, bytes.HasPrefix(data, bom))
+							data = data[2:]
+						}
+						require.Zero(t, len(data)%2)
+						var units []uint16
+						for offset := 0; offset < len(data); offset += 2 {
+							units = append(units, order.Uint16(data[offset:]))
+						}
+						decoded = string(utf16.Decode(units))
+					case "Latin1":
+						encoding = "ISO-8859-1"
+						var characters []rune
+						for _, character := range data {
+							characters = append(characters, rune(character))
+						}
+						decoded = string(characters)
+					default:
+						t.Fatalf("unexpected encoding %q", name)
+					}
+					want := strings.ReplaceAll(test.input, "DECL", `<?xml version="1.0" encoding="`+encoding+`"?>`)
+					assert.Equal(t, want, decoded)
+				})
+			}
+		})
+	}
 }
