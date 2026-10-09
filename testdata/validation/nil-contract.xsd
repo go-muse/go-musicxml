@@ -66,11 +66,23 @@
   </xs:element>
   <xs:element name="default-content" type="simpleDerived" default="7" nillable="true"/>
   <xs:complexType name="optionalMixed" mixed="true">
-    <xs:sequence><xs:element name="child" type="xs:int" minOccurs="0"/></xs:sequence>
+    <xs:sequence>
+      <xs:element name="child" type="xs:int" minOccurs="0"/>
+      <xs:element name="identity" type="xs:ID" minOccurs="0"/>
+    </xs:sequence>
     <xs:attributeGroup ref="checked"/>
   </xs:complexType>
   <xs:element name="default-mixed" type="optionalMixed" default="kept" nillable="true"/>
   <xs:element name="fixed-mixed" type="optionalMixed" fixed="kept" nillable="true"/>
+  <xs:element name="fixed-mixed-empty" type="optionalMixed" fixed="" nillable="true"/>
+  <xs:element name="fixed-mixed-plain" type="optionalMixed" fixed="kept"/>
+  <xs:element name="fixed-any" type="xs:anyType" fixed="kept" nillable="true"/>
+  <xs:complexType name="derivedOptionalMixed">
+    <xs:complexContent mixed="true"><xs:extension base="optionalMixed">
+      <xs:attribute name="extra" type="xs:string"/>
+    </xs:extension></xs:complexContent>
+  </xs:complexType>
+  <xs:element name="fixed-mixed-derived" type="derivedOptionalMixed" fixed="kept" nillable="true"/>
   <xs:element name="default-ref" type="xs:IDREF" default="target" nillable="true"/>
   <xs:element name="fixed-ref" type="xs:IDREF" fixed="target" nillable="true"/>
   <xs:element name="default-refs" type="xs:IDREFS" default="target other" nillable="true"/>
@@ -86,6 +98,7 @@
     <xs:complexType><xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element ref="defaulted"/>
       <xs:element ref="fixed"/>
+      <xs:element ref="fixed-mixed"/>
       <xs:element ref="default-ref"/>
       <xs:element ref="fixed-ref"/>
       <xs:element ref="default-refs"/>
@@ -94,6 +107,7 @@
       <xs:element ref="fixed-reference-content"/>
       <xs:element name="local-default" type="xs:int" default="7" nillable="true"/>
       <xs:element name="local-fixed" type="xs:string" fixed="kept" nillable="true"/>
+      <xs:element name="local-fixed-mixed" type="optionalMixed" fixed="kept" nillable="true"/>
       <xs:element name="target"><xs:complexType><xs:attribute name="id" type="xs:ID" use="required"/></xs:complexType></xs:element>
     </xs:choice></xs:complexType>
   </xs:element>

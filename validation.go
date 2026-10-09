@@ -590,17 +590,23 @@ func (c *validationContext) validateElement(
 		}
 	}
 
-	if !nilled && schema.Fixed != nil &&
-		node.Text.String() != *schema.Fixed {
-		c.addIssue(
-			path,
-			"fixed",
-			fmt.Sprintf(
-				"value %q does not equal fixed value %q",
-				node.Text.String(),
-				*schema.Fixed,
-			),
-		)
+	if !nilled && schema.Fixed != nil {
+		// XSD 1.0 cvc-elt 5.2.2.1 forbids element children independently
+		// of fixed-value equality, including for mixed content. Report the
+		// structural failure first, but keep ordinary type assessment below.
+		if len(node.Children) != 0 {
+			c.addIssue(path, "fixed", "element with a fixed value must not contain child elements")
+		} else if node.Text.String() != *schema.Fixed {
+			c.addIssue(
+				path,
+				"fixed",
+				fmt.Sprintf(
+					"value %q does not equal fixed value %q",
+					node.Text.String(),
+					*schema.Fixed,
+				),
+			)
+		}
 	}
 
 	c.validateType(node, &schema.Type, path, nilled)

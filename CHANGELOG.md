@@ -26,6 +26,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reject child elements under a fixed-constrained, nonnilled element in the
+  internal XML validator, including mixed content whose text matches the fixed
+  value. Ordinary type, attribute and identity checks still run. This is a
+  synthetic-schema repair; the pinned MusicXML schemas have no element value
+  constraints, and public `Validate` still assesses the encoded model.
+
 - Apply element default/fixed values to genuinely empty, nonnilled elements in
   the internal XML validator. Whitespace-only content and true nil do not
   trigger defaulting; source nodes and caller models remain unchanged. The

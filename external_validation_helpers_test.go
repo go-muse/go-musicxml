@@ -10,6 +10,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func assertValidationIssues(t *testing.T, context *validationContext, want []string) {
+	t.Helper()
+	var issues []string
+	for _, issue := range context.issues {
+		issues = append(issues, issue.Path+":"+issue.Constraint)
+	}
+	assert.ElementsMatch(t, want, issues, "diagnostics: %v", context.issues)
+}
+
 func assertXMLLintOutcome(t *testing.T, xmllint, schemaFile, catalog, source string, wantValid bool) {
 	t.Helper()
 	command := exec.Command(xmllint, "--nonet", "--noout", "--schema", schemaFile, "-")

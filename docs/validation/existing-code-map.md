@@ -308,13 +308,64 @@ production model, strict-source adapter, schema fetching, or schema assembly is
 added. `Validate` still encodes/reparses the model and cannot recover discarded
 source facts.
 
-General typed fixed-value equality and fixed mixed-content child checks remain
-unchanged, as do QName/NOTATION schema-context handling, general schema
+General typed fixed-value equality remains unchanged. The fixed mixed-content
+child gap is addressed in the [separate repair below](#fixed-element-child-content-repair-update).
+QName/NOTATION schema-context handling, general schema
 canonical-value processing, attribute-default materialization, `xsi:type`, hint
-values, and assessment of descendants beneath an invalid nilled element. This
+values, and assessment of descendants beneath an invalid nilled element remain
+unchanged. This
 repair does not claim complete default/fixed or XSD validation.
 
 [element-default-erratum]: https://www.w3.org/2004/03/xmlschema-errata.html#e1-56
+
+## Fixed-element child-content repair update
+
+The existing internal validator now rejects element children under a resolved,
+fixed-constrained element when it is not true-nilled. This implements the
+separate structural condition in [XSD 1.0 cvc-elt 5.2.2.1][nil-rule], including
+mixed content and `xs:anyType`; matching direct character content does not
+excuse a child element. It is independent of the fixed-value equality condition
+in 5.2.2.2. The [approved E1-56 correction][element-default-erratum] leaves this
+prohibition unchanged.
+
+The check runs at the declaration boundary, after reference resolution and nil
+assessment. A child-content failure gets one `fixed` issue at the parent path,
+with structural failure taking precedence over a textual fixed-value mismatch.
+Ordinary type validation continues: required, prohibited, fixed and datatype
+attribute checks, matched-child assessment, and existing ID/IDREF tracking are
+not bypassed. Empty-element defaulting, true-nil handling and child-free textual
+fixed comparisons keep their existing behavior; no source nodes are changed.
+
+Executable evidence is in
+[`validation_fixed_children_test.go`](../../validation_fixed_children_test.go):
+`TestValidateFixedElementChildren` covers matching and mismatching mixed content,
+child-only content, empty fixed strings, inherited mixed types, global/referenced
+and local declarations, builtin and complex simple-content, `xs:anyType`, nil
+boundaries, comment/PI/CDATA controls, and ordinary attribute/child errors.
+Default-constrained and unconstrained mixed children remain permitted.
+`TestFixedElementChildrenPreserveAssessment` checks parent and descendant identity
+recording, unresolved references, and repeated validation without mutation.
+The fixture metadata is regenerated from `testdata/validation/nil-contract.xsd`.
+
+`TestFixedElementChildrenAgainstSchema` feeds the same original bytes to the
+internal validator and required Linux `xmllint --nonet` for its explicitly
+comparable subset. libxml2 2.9.14 incorrectly accepts the decisive mixed
+counterexample `<fixed-mixed required="1">kept<child>7</child></fixed-mixed>`.
+It also incorrectly rejects an empty CDATA section under a mixed empty-string
+fixed declaration. These cases remain normative unit regressions outside the
+parity subset; tests do not require an oracle to retain either bug. Oracle
+rejection for a separate attribute or child datatype error does not establish
+that it implements the fixed-child rule.
+
+This is another bounded existing-validator prerequisite for
+`REQ-DEF-OPS-SCALARS` (`DEF04-06`), not completion of `STAGE-DEF-04`. Planning
+JSON remains `status: planned`. The pinned production schemas still have no
+element default/fixed declarations; this repair makes no new production
+coverage claim. General typed equality, canonicalization, QName/NOTATION schema
+context, attribute-default materialization, `xsi:type`, hint values, invalid
+nilled descendant assessment, and new source/model adapters remain deferred.
+No public API, production model/schema, schema fetch, or schema assembly is added.
+Public `Validate` retains its Encode/reparse model boundary.
 
 ## Reuse and adaptation
 

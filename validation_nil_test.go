@@ -239,27 +239,23 @@ func TestValidateNilIndependentIssues(t *testing.T) {
 	t.Parallel()
 	nilPath := "/@{" + validationXSINamespace + "}nil"
 	for _, test := range []struct {
-		name, source       string
-		constraints, paths []string
+		name, source string
+		issues       []string
 	}{
 		{"invalid and forbidden nil", `<plain xmlns:n="` + validationXSINamespace + `" n:nil="maybe"/>`,
-			[]string{"datatype", "nillable"}, []string{"/plain" + nilPath, "/plain" + nilPath}},
+			[]string{"/plain" + nilPath + ":datatype", "/plain" + nilPath + ":nillable"}},
 		{"invalid nil and required attribute", `<complex xmlns:n="` + validationXSINamespace + `" n:nil="maybe"><child>7</child></complex>`,
-			[]string{"datatype", "required"}, []string{"/complex" + nilPath, "/complex/@required"}},
+			[]string{"/complex" + nilPath + ":datatype", "/complex/@required:required"}},
 		{"fixed content and required attribute", `<fixed-content xmlns:n="` + validationXSINamespace + `" n:nil="true"> </fixed-content>`,
-			[]string{"fixed", "nillable", "required"}, []string{"/fixed-content", "/fixed-content", "/fixed-content/@required"}},
+			[]string{"/fixed-content:fixed", "/fixed-content:nillable", "/fixed-content/@required:required"}},
 		{"simple content and unknown attribute", `<simple xmlns:n="` + validationXSINamespace + `" n:nil="true" rubbish="x"> </simple>`,
-			[]string{"attribute", "nillable"}, []string{"/simple/@rubbish", "/simple"}},
+			[]string{"/simple/@rubbish:attribute", "/simple:nillable"}},
 		{"false missing content and required attribute", `<complex xmlns:n="` + validationXSINamespace + `" n:nil="false"/>`,
-			[]string{"required", "content-model"}, []string{"/complex/@required", "/complex"}},
+			[]string{"/complex/@required:required", "/complex:content-model"}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			context := validateAttributeSource(t, &validationNilGenerated, test.source)
-			require.Len(t, context.issues, len(test.constraints))
-			for index, issue := range context.issues {
-				assert.Equal(t, test.constraints[index], issue.Constraint)
-				assert.Equal(t, test.paths[index], issue.Path)
-			}
+			assertValidationIssues(t, context, test.issues)
 		})
 	}
 }
