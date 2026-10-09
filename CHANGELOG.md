@@ -26,6 +26,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reject non-XML Unicode whitespace in element-only complex content in the
+  internal XML validator. Only space, tab, carriage return and line feed are
+  permitted between children; mixed and simple content retain their existing
+  rules. Public `Validate` still assesses the encoded model and cannot recover
+  source text discarded during Decode.
+
 - Reject child elements under a fixed-constrained, nonnilled element in the
   internal XML validator, including mixed content whose text matches the fixed
   value. Ordinary type, attribute and identity checks still run. This is a
