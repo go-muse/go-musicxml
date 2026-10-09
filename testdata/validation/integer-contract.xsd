@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 integer value-space contracts; no production schema changes. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="integer" type="xs:integer"/>
+  <xs:element name="nonPositiveInteger" type="xs:nonPositiveInteger"/>
+  <xs:element name="negativeInteger" type="xs:negativeInteger"/>
+  <xs:element name="long" type="xs:long"/>
+  <xs:element name="int" type="xs:int"/>
+  <xs:element name="short" type="xs:short"/>
+  <xs:element name="byte" type="xs:byte"/>
+  <xs:element name="nonNegativeInteger" type="xs:nonNegativeInteger"/>
+  <xs:element name="unsignedLong" type="xs:unsignedLong"/>
+  <xs:element name="unsignedInt" type="xs:unsignedInt"/>
+  <xs:element name="unsignedShort" type="xs:unsignedShort"/>
+  <xs:element name="unsignedByte" type="xs:unsignedByte"/>
+  <xs:element name="positiveInteger" type="xs:positiveInteger"/>
+  <xs:simpleType name="min-type"><xs:restriction base="xs:integer"><xs:minInclusive value="9007199254740993"/></xs:restriction></xs:simpleType>
+  <xs:element name="min" type="min-type"/>
+  <xs:simpleType name="max-type"><xs:restriction base="xs:integer"><xs:maxInclusive value="9007199254740993"/></xs:restriction></xs:simpleType>
+  <xs:element name="max" type="max-type"/>
+  <xs:simpleType name="min-exclusive-type"><xs:restriction base="xs:integer"><xs:minExclusive value="9007199254740993"/></xs:restriction></xs:simpleType>
+  <xs:element name="min-exclusive" type="min-exclusive-type"/>
+  <xs:simpleType name="max-exclusive-type"><xs:restriction base="xs:integer"><xs:maxExclusive value="9007199254740993"/></xs:restriction></xs:simpleType>
+  <xs:element name="max-exclusive" type="max-exclusive-type"/>
+  <xs:simpleType name="negative-max-type"><xs:restriction base="xs:integer"><xs:maxInclusive value="-9007199254740993"/></xs:restriction></xs:simpleType>
+  <xs:element name="negative-max" type="negative-max-type"/>
+  <xs:simpleType name="huge-min-type"><xs:restriction base="xs:integer"><xs:minInclusive value="18446744073709551616"/></xs:restriction></xs:simpleType>
+  <xs:element name="huge-min" type="huge-min-type"/>
+  <xs:simpleType name="enum-type"><xs:restriction base="xs:integer">
+    <xs:enumeration value="+00018446744073709551616"/><xs:enumeration value="-000"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="enum" type="enum-type"/>
+  <xs:element name="digits"><xs:simpleType><xs:restriction base="xs:integer">
+    <xs:totalDigits value="3"/><xs:fractionDigits value="0"/>
+  </xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="pattern"><xs:simpleType><xs:restriction base="xs:integer">
+    <xs:pattern value="0[0-9]"/>
+  </xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="layered"><xs:simpleType><xs:restriction base="huge-min-type">
+    <xs:maxInclusive value="18446744073709551617"/>
+  </xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="fixed" type="xs:integer" fixed="+00018446744073709551616" nillable="true"/>
+  <xs:element name="default" type="xs:integer" default="+00018446744073709551616"/>
+  <xs:complexType name="scalar-type"><xs:simpleContent><xs:extension base="enum-type">
+    <xs:attribute name="locked" type="xs:integer" fixed="+00018446744073709551616"/>
+    <xs:attribute name="number" type="xs:integer"/>
+  </xs:extension></xs:simpleContent></xs:complexType>
+  <xs:element name="attributes" type="scalar-type"/>
+  <xs:element name="scalar" type="scalar-type" fixed="+00018446744073709551616"/>
+  <xs:element name="list"><xs:simpleType><xs:list itemType="xs:integer"/></xs:simpleType></xs:element>
+  <xs:element name="union"><xs:simpleType><xs:union memberTypes="xs:positiveInteger">
+    <xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="none"/></xs:restriction></xs:simpleType>
+  </xs:union></xs:simpleType></xs:element>
+</xs:schema>

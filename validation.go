@@ -597,7 +597,7 @@ func (c *validationContext) validateElement(
 		// structural failure first, but keep ordinary type assessment below.
 		if len(node.Children) != 0 {
 			c.addIssue(path, "fixed", "element with a fixed value must not contain child elements")
-		} else if node.Text.String() != *schema.Fixed {
+		} else if !c.elementFixedValuesEqual(&schema.Type, node.Text.String(), *schema.Fixed) {
 			c.addIssue(
 				path,
 				"fixed",
@@ -1123,6 +1123,9 @@ func (c *validationContext) simpleValuesEqual(
 	right string,
 ) bool {
 	builtin := c.simpleBuiltin(reference)
+	if _, _, integer := validationIntegerLimits(builtin); integer {
+		return validationIntegerValuesEqual(left, right)
+	}
 	return normalizeValidationWhitespace(
 		builtin,
 		left,
@@ -1224,6 +1227,9 @@ func (c *validationContext) validateSimple(
 			!slices.ContainsFunc(
 				schema.Enumerations,
 				func(candidate string) bool {
+					if _, _, integer := validationIntegerLimits(builtin); integer {
+						return validationIntegerValuesEqual(candidate, normalized)
+					}
 					return normalizeValidationWhitespace(
 						builtin,
 						candidate,
@@ -1263,7 +1269,7 @@ func (c *validationContext) validateSimple(
 			}
 		}
 
-		if failure := validateBounds(schema, normalized); failure != nil {
+		if failure := validateBounds(schema, normalized, builtin); failure != nil {
 			return failure
 		}
 		if failure := validateLengthFacets(
@@ -1273,7 +1279,7 @@ func (c *validationContext) validateSimple(
 		); failure != nil {
 			return failure
 		}
-		if failure := validateDigitFacets(schema, normalized); failure != nil {
+		if failure := validateDigitFacets(schema, normalized, builtin); failure != nil {
 			return failure
 		}
 
@@ -1522,31 +1528,10 @@ func validateBuiltin(
 			return nil
 		}
 
-	case "integer", "long", "int", "short", "byte":
-		if _, err := strconv.ParseInt(
-			normalized,
-			10,
-			validationSignedBits(name),
-		); err == nil {
-			return nil
-		}
-
-	case "nonPositiveInteger", "negativeInteger":
-		number, err := strconv.ParseInt(normalized, 10, 64)
-		if err == nil &&
-			((name == "nonPositiveInteger" && number <= 0) ||
-				(name == "negativeInteger" && number < 0)) {
-			return nil
-		}
-
-	case "nonNegativeInteger", "positiveInteger", "unsignedLong",
+	case "integer", "long", "int", "short", "byte", "nonPositiveInteger",
+		"negativeInteger", "nonNegativeInteger", "positiveInteger", "unsignedLong",
 		"unsignedInt", "unsignedShort", "unsignedByte":
-		number, err := parseXMLUnsignedInteger(
-			normalized,
-			validationUnsignedBits(name),
-		)
-		if err == nil &&
-			(name != "positiveInteger" || number > 0) {
+		if validValidationInteger(name, normalized) {
 			return nil
 		}
 
@@ -1608,32 +1593,6 @@ func parseValidationBoolean(value string) (bool, *validationSimpleFailure) {
 	}
 }
 
-func validationSignedBits(name string) int {
-	switch name {
-	case "byte":
-		return 8
-	case "short":
-		return 16
-	case "int":
-		return 32
-	default:
-		return 64
-	}
-}
-
-func validationUnsignedBits(name string) int {
-	switch name {
-	case "unsignedByte":
-		return 8
-	case "unsignedShort":
-		return 16
-	case "unsignedInt":
-		return 32
-	default:
-		return 64
-	}
-}
-
 func normalizeValidationWhitespace(name string, value string) string {
 	switch name {
 	case "string", "anySimpleType":
@@ -1687,12 +1646,17 @@ func isValidationWhitespace(value rune) bool {
 func validateBounds(
 	schema *validationSimpleSchema,
 	value string,
+	builtin string,
 ) *validationSimpleFailure {
 	if !schema.HasMinInclusive &&
 		!schema.HasMaxInclusive &&
 		!schema.HasMinExclusive &&
 		!schema.HasMaxExclusive {
 		return nil
+	}
+
+	if _, _, integer := validationIntegerLimits(builtin); integer {
+		return validateIntegerBounds(schema, value)
 	}
 
 	number, err := strconv.ParseFloat(value, 64)
@@ -1805,11 +1769,19 @@ func validateLengthFacets(
 func validateDigitFacets(
 	schema *validationSimpleSchema,
 	value string,
+	builtin string,
 ) *validationSimpleFailure {
 	if !schema.HasTotalDigits && !schema.HasFractionDigits {
 		return nil
 	}
 
+	// Integer digit facets count the value's significant digits; the source
+	// spelling is retained separately for lexical patterns and diagnostics.
+	if _, _, integer := validationIntegerLimits(builtin); integer {
+		if number, ok := parseValidationInteger(value); ok {
+			value = number.digits
+		}
+	}
 	normalized := strings.TrimPrefix(strings.TrimPrefix(value, "+"), "-")
 	parts := strings.SplitN(normalized, ".", 2)
 	total := uint64(0)

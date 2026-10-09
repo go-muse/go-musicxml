@@ -26,6 +26,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Validate integer value spaces and integer-derived bounds, enumeration/fixed
+  equality and digit facets exactly, including values beyond Go integer ranges.
+  Existing typed Decode representation limits and decimal validation are unchanged.
+
 - Reject references and CDATA outside the XML root across Decode, MXL reads and
   the internal XML parser, including references to whitespace and empty CDATA.
   Legal in-root text, supported encodings and literal boundary whitespace remain

@@ -171,6 +171,63 @@ unchanged. Numeric transport whitespace, full declaration/DTD/namespace grammar,
 new validation profiles and machine-readable implementation evidence remain
 separate work. Planning JSON retains `status: planned`.
 
+## Exact integer value-space repair update
+
+The existing validator now separates all 13 XSD integer-family domains from Go
+conversion. The five unbounded families accept arbitrary finite ASCII-digit
+lexemes; the eight bounded families retain their normative XSD ranges. The
+[integer helper](../../validation_integer.go) uses immutable sign/digit views
+with leading zeros removed for comparison and a single zero value. Parsing and
+comparison scan linearly with constant auxiliary space; existing normalization,
+source storage and diagnostics still allocate in proportion to their input.
+There is no big-number arithmetic, exponent expansion or newly chosen numeric
+limit. Signed unsigned-type spellings preserve existing library compatibility.
+
+Genuinely integer-derived restrictions now use exact inclusive/exclusive bounds,
+value-space enumeration and significant-digit counts. Integer fixed values use
+exact equality on attributes, simple elements and resolved complex simple-content
+elements. Lexical patterns still receive the original XSD-normalized spelling;
+source nodes and generated schema literals remain unchanged. Integer identity is
+selected from builtin ancestry, never from an integral-looking decimal value.
+The normative basis is XSD 1.0 [integer and derived domains][integer-domain],
+[value facets][integer-facets] and [element fixed constraints][integer-fixed].
+
+[`validation_integer_test.go`](../../validation_integer_test.go) covers machine
+endpoints and their neighbors, signs/zero/leading zeros, ASCII digits, XML-only
+whitespace, 2^53 neighbors, positive and negative values beyond floating-point
+range, every bound kind, layered restrictions, enumeration/fixed/default values,
+patterns, nil/child interactions, lists and union member acceptance. Generated
+metadata comes from [the synthetic fixture](../../testdata/validation/integer-contract.xsd).
+Independent `math/big` checks cover exact ordering, including 4,096-digit values;
+allocation checks cover the standalone digit-view operations.
+
+`TestIntegerValueSpacesAgainstSchema` sends identical original source bytes to
+the internal validator and `xmllint --nonet --schema`; Linux CI requires it.
+Its bounded differential subset includes `staves=18446744073709551616` against
+the pinned MusicXML schema. libxml2 2.9.14 has observed precision limits beyond
+24 significant digits and disagrees on certain signed/whitespace spellings and
+numeric element-fixed equality. Those cases remain explicit internal
+normative/compatibility tests and are excluded from that oracle subset, not
+changed to match it. Full large-value support is not inferred from the oracle.
+
+`TestIntegerSourceAndModelConversion` separately proves raw-source acceptance of
+`staves=2^64` and unchanged typed Decode range failure, including its underlying
+`strconv.ErrRange` and absence of a `ValidationError`. Public `Validate` still
+uses Encode/reparse and cannot recover discarded source information; no new
+source-assessment or conversion-report API is introduced.
+
+This is a bounded existing-validator slice of `STAGE-DEF-03` (`DEF03-01/04` and
+integer comparison portions of `DEF03-02`), not completion of that stage.
+Decimal value spaces/facets, typed union/list aggregate equality, omitted complex
+simple-content restriction facets in generated metadata, contextual arithmetic,
+session parse-once caching, shared budgets and incomplete/conversion reports
+remain open. No new profile, adapter, public API or resource policy is selected;
+planning JSON retains `status: planned`.
+
+[integer-domain]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#integer
+[integer-facets]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-totalDigits
+[integer-fixed]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
+
 ## Ordinary-attribute repair update
 
 The ordinary-attribute gap on simple- and builtin-typed elements is now repaired
