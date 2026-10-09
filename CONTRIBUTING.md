@@ -49,7 +49,12 @@ content-category contracts. `zz_generated_integer_validation_test.go` uses
 `zz_generated_simple_content_validation_test.go` uses
 `testdata/validation/simple-content-contract.xsd` for complex simple-content
 restriction metadata and supported scalar facets.
-All four test schemas use the local empty catalog.
+`zz_generated_whitespace_validation_test.go` uses
+`testdata/validation/whitespace-contract.xsd` for effective whitespace, ordered
+union lexical views and atomic string-derived fixed comparisons. Its source
+matrix retains explicit element-fixed value-space expectations internally;
+libxml2's observed lexical comparison excludes only those cases from the oracle.
+All five test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 fixture for effective whiteSpace and lexical scalar views. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="preserve-type"><xs:restriction base="xs:string"><xs:whiteSpace value="preserve"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="replace-type"><xs:restriction base="xs:string"><xs:whiteSpace value="replace"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="collapse-type"><xs:restriction base="replace-type"><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="inherited-type"><xs:restriction base="collapse-type"/></xs:simpleType>
+  <xs:simpleType name="pattern-base"><xs:restriction base="xs:string"><xs:pattern value="a b"/><xs:length value="3"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="pattern-collapse"><xs:restriction base="pattern-base"><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="pattern-replace"><xs:restriction base="pattern-base"><xs:whiteSpace value="replace"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="length-base"><xs:restriction base="xs:string"><xs:length value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="length-collapse"><xs:restriction base="length-base"><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="length-range"><xs:restriction base="collapse-type"><xs:minLength value="1"/><xs:maxLength value="3"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="empty-collapse"><xs:restriction base="collapse-type"><xs:length value="0"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="enum-same"><xs:restriction base="xs:string"><xs:enumeration value=" a "/><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="enum-base"><xs:restriction base="preserve-type"><xs:enumeration value=" a "/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="enum-derived"><xs:restriction base="enum-base"><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="enum-collapsed"><xs:restriction base="inherited-type"><xs:enumeration value=" a &#x9; b "/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="enum-replaced"><xs:restriction base="replace-type"><xs:enumeration value=" a&#x9;b "/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="token-string"><xs:union memberTypes="xs:token xs:string"/></xs:simpleType>
+  <xs:simpleType name="string-token"><xs:union memberTypes="xs:string xs:token"/></xs:simpleType>
+  <xs:simpleType name="union-token-first"><xs:restriction base="token-string"><xs:pattern value="a"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="union-string-first"><xs:restriction base="string-token"><xs:pattern value="a"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="union-no-backtrack"><xs:restriction base="token-string"><xs:pattern value=" a "/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="x-collapse"><xs:restriction base="collapse-type"><xs:enumeration value="x"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="padded-a"><xs:restriction base="xs:string"><xs:pattern value=" a "/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="failed-member"><xs:union memberTypes="x-collapse padded-a"/></xs:simpleType>
+  <xs:simpleType name="union-isolation"><xs:restriction base="failed-member"><xs:pattern value=" a "/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="mixed-members"><xs:union memberTypes="xs:integer replace-type"/></xs:simpleType>
+  <xs:simpleType name="union-replace"><xs:restriction base="mixed-members"><xs:pattern value=" a b "/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="list-type"><xs:list itemType="xs:token"/></xs:simpleType>
+  <xs:simpleType name="list-pattern"><xs:restriction base="list-type"><xs:pattern value="a b"/><xs:length value="2"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="list-derived"><xs:restriction base="list-pattern"/></xs:simpleType>
+  <xs:element name="preserve" type="preserve-type" fixed=" a b "/>
+  <xs:element name="replace" type="replace-type" fixed=" a b "/>
+  <xs:element name="collapse" type="collapse-type" fixed="a b" nillable="true"/>
+  <xs:element name="inherited" type="inherited-type" fixed=" a b "/>
+  <xs:element name="token" type="xs:token" fixed="a b"/>
+  <xs:element name="normalized" type="xs:normalizedString" fixed="a b"/>
+  <xs:element name="pattern" type="pattern-collapse" nillable="true"/>
+  <xs:element name="pattern-replace" type="pattern-replace"/>
+  <xs:element name="length" type="length-collapse"/>
+  <xs:element name="range" type="length-range"/>
+  <xs:element name="empty" type="empty-collapse"/>
+  <xs:element name="enum-same" type="enum-same"/>
+  <xs:element name="enum-base" type="enum-base"/>
+  <xs:element name="enum-derived" type="enum-derived"/>
+  <xs:element name="enum-collapsed" type="enum-collapsed"/>
+  <xs:element name="enum-replaced" type="enum-replaced"/>
+  <xs:element name="union-token-first" type="union-token-first"/>
+  <xs:element name="union-string-first" type="union-string-first"/>
+  <xs:element name="union-no-backtrack" type="union-no-backtrack"/>
+  <xs:element name="union-isolation" type="union-isolation"/>
+  <xs:element name="union-replace" type="union-replace"/>
+  <xs:element name="list" type="list-derived"/>
+  <xs:simpleType name="list-string"><xs:union memberTypes="list-type xs:string"/></xs:simpleType>
+  <xs:simpleType name="string-list"><xs:union memberTypes="xs:string list-type"/></xs:simpleType>
+  <xs:simpleType name="list-first"><xs:restriction base="list-string"><xs:pattern value="a b"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="list-second"><xs:restriction base="string-list"><xs:pattern value="a b"/></xs:restriction></xs:simpleType>
+  <xs:element name="list-first" type="list-first"/>
+  <xs:element name="list-second" type="list-second"/>
+  <xs:element name="inline"><xs:simpleType><xs:restriction><xs:simpleType><xs:restriction base="pattern-base"><xs:whiteSpace value="replace"/></xs:restriction></xs:simpleType><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType></xs:element>
+  <xs:complexType name="complex-base"><xs:simpleContent><xs:extension base="pattern-base"><xs:attribute name="code" type="pattern-collapse" use="required"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="complex-collapse"><xs:simpleContent><xs:restriction base="complex-base"><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleContent></xs:complexType>
+  <xs:complexType name="complex-extended"><xs:simpleContent><xs:extension base="complex-collapse"><xs:attribute name="extra" type="replace-type" fixed="a b"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:element name="complex" type="complex-collapse" nillable="true"/>
+  <xs:element name="extended" type="complex-extended"/>
+  <xs:element name="complex-fixed" type="complex-extended" fixed="a b" nillable="true"/>
+  <xs:element name="complex-inline"><xs:complexType><xs:simpleContent><xs:restriction base="complex-base"><xs:simpleType><xs:restriction base="pattern-base"><xs:whiteSpace value="replace"/></xs:restriction></xs:simpleType><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleContent></xs:complexType></xs:element>
+  <xs:element name="default" type="pattern-collapse" default=" a  b "/>
+  <xs:element name="complex-default" type="complex-collapse" default=" a  b "/>
+  <xs:element name="attributes"><xs:complexType>
+    <xs:attribute name="preserve" type="preserve-type" fixed=" a b "/>
+    <xs:attribute name="replace" type="replace-type" fixed=" a b "/>
+    <xs:attribute name="collapse" type="collapse-type" fixed="a b"/>
+    <xs:attribute name="inherited" type="inherited-type" fixed=" a b "/>
+    <xs:attribute name="pattern" type="pattern-collapse"/>
+    <xs:attribute name="enum" type="enum-derived"/>
+    <xs:attribute name="inline" fixed="a b"><xs:simpleType><xs:restriction base="xs:string"><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType></xs:attribute>
+  </xs:complexType></xs:element>
+  <xs:element name="mixed" fixed=" a b "><xs:complexType mixed="true"><xs:sequence><xs:element name="child" minOccurs="0"/></xs:sequence></xs:complexType></xs:element>
+  <xs:element name="siblings"><xs:complexType><xs:sequence><xs:element ref="complex"/><xs:element ref="pattern-replace"/><xs:element ref="enum-base"/></xs:sequence></xs:complexType></xs:element>
+</xs:schema>

@@ -26,6 +26,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Execute effective XSD `whiteSpace` facets before inherited scalar checks in
+  the existing validator. Ordered unions supply the first successful member's
+  normalized text; enumeration literals use their declaring restriction's base.
+  Atomic string-derived fixed values now use the effective whitespace policy,
+  including complex simple content. Source text and schema literals stay intact;
+  scalar diagnostics retain source spelling. Aggregate equality, same-level
+  pattern alternatives and other primitive typed equality remain separate work.
+
 - Retain and apply supported scalar restriction facets on complex simple-content
   types, including optional inline scalar bases and inherited restrictions.
   Keep failed or cyclic effective-type resolution from later accepting a partial

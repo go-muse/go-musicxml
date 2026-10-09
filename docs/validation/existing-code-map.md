@@ -358,7 +358,8 @@ partially resolved types.
 The bridge applies the existing enumeration, single-pattern, bound, length and
 digit-facet operators, including exact integer/decimal value comparisons. It
 preserves supported facet values, but does **not** claim complete facet semantics:
-`whiteSpace` execution, same-level multiple-pattern alternatives, broader regex
+The subsequent [effective-whitespace repair](#effective-scalar-whitespace-repair-update)
+executes `whiteSpace`; same-level multiple-pattern alternatives, broader regex
 coverage, schema-component validity, fixed-facet metadata and facet-metadata
 width remain separate work. In particular, preserving `WhiteSpace` and multiple `Patterns` in a
 metadata-only test is not evidence that those runtime operators are repaired.
@@ -394,6 +395,78 @@ profile selection, `xsi:type` and schema-hint decisions remain open. Planning
 JSON statuses retain `planned`.
 
 [simple-content-mapping]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#Complex_Type_Definition_details
+
+## Effective scalar whitespace repair update
+
+The existing validator now applies the most-derived atomic/list `whiteSpace`
+policy before inherited lexical facets. Named and inline restrictions retain
+`preserve`, `replace` and `collapse`; normalization uses XML `S` only, keeping
+NBSP and NEL as data. The immutable lexical view is separate from source text
+and exact numeric values. Patterns, enumerations, builtin datatype and numeric
+bound diagnostics retain the original source spelling, including inherited
+failures; digit/length messages continue to report measured counts.
+
+[`validation_whitespace.go`](../../validation_whitespace.go) resolves policy and
+genuine atomic string ancestry with a per-context cache. Missing, invalid-policy
+and cyclic dependencies fail closed, including repeated lookups. This is not a
+full schema-component validity checker or a change to generated fixed helpers.
+Union members retain independent policies and declaration order; the first
+member that validates supplies its normalized lexical view to outer restrictions.
+An outer facet failure does not backtrack to another union member. List lexical
+facets receive collapsed text; aggregate typed equality remains unimplemented.
+Enumeration literals use direct atomic/list normalization or ordered union-member
+assessment without reassessing every inherited restriction. Union literal views
+are cached per context by declaring restriction and literal index, including
+explicit success/failure for empty values. Cache growth is bounded by reached
+schema enumeration entries, never by XML instance values. Layered atomic/list,
+union and nested-union allocation regressions in
+[`validation_whitespace_cost_test.go`](../../validation_whitespace_cost_test.go)
+prevent exponential repeated base assessment; they do not set a public work budget.
+
+Enumeration candidates are interpreted using the base type of the restriction
+that declares them. They do not inherit a same-level or descendant's stronger
+policy: a padded enumeration declared over `xs:string` can become unreachable
+when the subject is collapsed. Fixed comparisons instead apply the declaration's
+effective type policy to both sides, only for genuinely atomic string-derived
+types. The existing exact integer/decimal comparators and raw mixed-content
+fixed comparisons retain their domains. Boolean, date/time, QName, URI and
+aggregate value-space equality remain separate work.
+
+Normative basis: XSD 1.0 [whiteSpace][scalar-whitespace],
+[normalization during validation][scalar-normalization],
+[enumeration base values][scalar-enumeration],
+[ordered union members][scalar-union] and [element fixed constraints][scalar-fixed].
+The complex simple-content bridge above supplies the same effective scalar to
+this path without a second identity-registration pass. Source nodes, attributes,
+constraint literals, generated schemas and public models remain unchanged.
+
+[`validation_whitespace_test.go`](../../validation_whitespace_test.go), using
+[generated test-only metadata](../../testdata/validation/whitespace-contract.xsd),
+covers strengthened policies versus inherited patterns/length, both enumeration
+traps and base-collapse controls, named/inline/complex scalar paths, attribute
+references, CDATA/split text, empty/XML-`S`-only values, NBSP/NEL, ordered and
+failed union members, list lexical normalization, scalar fixed/default/nil/child
+boundaries, exact diagnostics, sibling isolation and source/schema immutability.
+`TestWhitespaceMetadataFailures` checks missing, malformed and cyclic metadata;
+`TestWhitespaceFixedComparisonScope` keeps comparison dispatch bounded.
+
+`TestEffectiveWhitespaceAgainstSchema` sends identical original XML bytes to
+`xmllint --nonet --schema` and is required in Linux CI. libxml2 2.9.14 locally
+rejects six explicit scalar element-fixed spellings equal in value space;
+only these cases are excluded from the oracle subset and retain normative
+internal acceptance tests. Attribute-fixed normalization agrees externally.
+
+This is a bounded existing-validator part of `REQ-DEF-OPS-SCALARS` / `DEF04-06`,
+not completion of `STAGE-DEF-04` or a new source/model API. Production schemas,
+public models and planning statuses are unchanged. Pattern grouping, broader
+regex/facet support, mixed-parent mapping, absent-defaulted-IDREF augmentation,
+catalog/profile/budget choices and strict-source adapter integration remain open.
+
+[scalar-whitespace]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-whiteSpace
+[scalar-normalization]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#whiteSpace
+[scalar-enumeration]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-enumeration
+[scalar-union]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-union
+[scalar-fixed]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
 
 ## Ordinary-attribute repair update
 
