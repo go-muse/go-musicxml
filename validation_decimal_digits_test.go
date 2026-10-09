@@ -178,32 +178,37 @@ func TestDecimalDigitFacetsRationalOracle(t *testing.T) {
 		for range random.IntN(10) + 1 {
 			value.WriteByte(byte('0' + random.IntN(10)))
 		}
+		whole := value.String()
 		value.WriteByte('.')
 		for range random.IntN(20) + 1 {
 			value.WriteByte(byte('0' + random.IntN(10)))
 		}
 		value.WriteString(strings.Repeat("0", random.IntN(10)))
-		literal := value.String()
-		total, fraction := decimalDigitCountsFromRational(t, literal)
-		limitsToCheck := [][2]uint64{{total, fraction}, {total + 1, fraction + 1}}
-		if total > 1 {
-			limitsToCheck = append(limitsToCheck, [2]uint64{total - 1, fraction})
-		}
-		for _, limits := range limitsToCheck {
-			schema := &validationSimpleSchema{HasTotalDigits: true, TotalDigits: limits[0], HasFractionDigits: true, FractionDigits: limits[1]}
-			failure := validateDigitFacets(schema, literal, "decimal")
-			if limits[0] < total {
-				if assert.NotNil(t, failure, "%q", literal) {
-					assert.Equal(t, "totalDigits", failure.constraint)
-				}
-			} else {
-				assert.Nil(t, failure, "%q", literal)
+		// Preserve the original fractional stream and also exercise scale-zero
+		// values, optional trailing points, and coefficient growth from whole zeros.
+		wholeZeros := whole + strings.Repeat("0", index%10+1)
+		for _, literal := range []string{value.String(), whole, whole + ".", wholeZeros, wholeZeros + "."} {
+			total, fraction := decimalDigitCountsFromRational(t, literal)
+			limitsToCheck := [][2]uint64{{total, fraction}, {total + 1, fraction + 1}}
+			if total > 1 {
+				limitsToCheck = append(limitsToCheck, [2]uint64{total - 1, fraction})
 			}
-		}
-		if fraction > 0 {
-			failure := validateDigitFacets(&validationSimpleSchema{HasFractionDigits: true, FractionDigits: fraction - 1}, literal, "decimal")
-			if assert.NotNil(t, failure, "%q", literal) {
-				assert.Equal(t, "fractionDigits", failure.constraint)
+			for _, limits := range limitsToCheck {
+				schema := &validationSimpleSchema{HasTotalDigits: true, TotalDigits: limits[0], HasFractionDigits: true, FractionDigits: limits[1]}
+				failure := validateDigitFacets(schema, literal, "decimal")
+				if limits[0] < total {
+					if assert.NotNil(t, failure, "%q", literal) {
+						assert.Equal(t, "totalDigits", failure.constraint)
+					}
+				} else {
+					assert.Nil(t, failure, "%q", literal)
+				}
+			}
+			if fraction > 0 {
+				failure := validateDigitFacets(&validationSimpleSchema{HasFractionDigits: true, FractionDigits: fraction - 1}, literal, "decimal")
+				if assert.NotNil(t, failure, "%q", literal) {
+					assert.Equal(t, "fractionDigits", failure.constraint)
+				}
 			}
 		}
 	}
