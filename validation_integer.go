@@ -127,21 +127,6 @@ func validationIntegerValuesEqual(left, right string) bool {
 	return firstOK && secondOK && first.compare(second) == 0
 }
 
-// Only integer fixed equality is changed here. Noninteger/mixed element fixed
-// semantics retain their existing path; union/list typed equality is separate.
-func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef, left, right string) bool {
-	_, complex, _, _ := c.resolveType(reference)
-	if complex != nil {
-		if effective, ok := c.effectiveComplex(complex); ok && effective.simple != nil {
-			reference = effective.simple
-		}
-	}
-	if _, _, integer := validationIntegerLimits(c.simpleBuiltin(reference)); integer {
-		return validationIntegerValuesEqual(left, right)
-	}
-	return left == right
-}
-
 func validateIntegerBounds(schema *validationSimpleSchema, value string) *validationSimpleFailure {
 	number, ok := parseValidationInteger(value)
 	if !ok {

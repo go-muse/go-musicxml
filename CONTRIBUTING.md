@@ -44,7 +44,9 @@ use `schema/musicxml-4.0`; the test-only `zz_generated_nil_validation_test.go`
 uses `testdata/validation/nil-contract.xsd` for nil, element value-constraint and
 content-category contracts. `zz_generated_integer_validation_test.go` uses
 `testdata/validation/integer-contract.xsd` for exact integer value-space contracts.
-Both test schemas use the local empty catalog.
+`zz_generated_decimal_validation_test.go` uses
+`testdata/validation/decimal-contract.xsd` for atomic decimal ordering and equality.
+All three test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

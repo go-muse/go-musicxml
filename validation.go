@@ -1126,6 +1126,9 @@ func (c *validationContext) simpleValuesEqual(
 	if _, _, integer := validationIntegerLimits(builtin); integer {
 		return validationIntegerValuesEqual(left, right)
 	}
+	if builtin == "decimal" {
+		return validationDecimalValuesEqual(left, right)
+	}
 	return normalizeValidationWhitespace(
 		builtin,
 		left,
@@ -1133,6 +1136,25 @@ func (c *validationContext) simpleValuesEqual(
 		builtin,
 		right,
 	)
+}
+
+// Atomic integer and decimal fixed constraints compare values. Other element
+// fixed semantics retain their existing path; union/list typed equality is separate.
+func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef, left, right string) bool {
+	_, complex, _, _ := c.resolveType(reference)
+	if complex != nil {
+		if effective, ok := c.effectiveComplex(complex); ok && effective.simple != nil {
+			reference = effective.simple
+		}
+	}
+	builtin := c.simpleBuiltin(reference)
+	if _, _, integer := validationIntegerLimits(builtin); integer {
+		return validationIntegerValuesEqual(left, right)
+	}
+	if builtin == "decimal" {
+		return validationDecimalValuesEqual(left, right)
+	}
+	return left == right
 }
 
 func (c *validationContext) recordIdentity(
@@ -1229,6 +1251,9 @@ func (c *validationContext) validateSimple(
 				func(candidate string) bool {
 					if _, _, integer := validationIntegerLimits(builtin); integer {
 						return validationIntegerValuesEqual(candidate, normalized)
+					}
+					if builtin == "decimal" {
+						return validationDecimalValuesEqual(candidate, normalized)
 					}
 					return normalizeValidationWhitespace(
 						builtin,
@@ -1657,6 +1682,9 @@ func validateBounds(
 
 	if _, _, integer := validationIntegerLimits(builtin); integer {
 		return validateIntegerBounds(schema, value)
+	}
+	if builtin == "decimal" {
+		return validateDecimalBounds(schema, value)
 	}
 
 	number, err := strconv.ParseFloat(value, 64)

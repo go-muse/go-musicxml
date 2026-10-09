@@ -218,8 +218,9 @@ source-assessment or conversion-report API is introduced.
 
 This is a bounded existing-validator slice of `STAGE-DEF-03` (`DEF03-01/04` and
 integer comparison portions of `DEF03-02`), not completion of that stage.
-Decimal value spaces/facets, typed union/list aggregate equality, omitted complex
-simple-content restriction facets in generated metadata, contextual arithmetic,
+Decimal comparisons are covered by the later repair below; decimal digit facets,
+typed union/list aggregate equality, omitted complex simple-content restriction
+facets in generated metadata, contextual arithmetic,
 session parse-once caching, shared budgets and incomplete/conversion reports
 remain open. No new profile, adapter, public API or resource policy is selected;
 planning JSON retains `status: planned`.
@@ -227,6 +228,64 @@ planning JSON retains `status: planned`.
 [integer-domain]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#integer
 [integer-facets]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-totalDigits
 [integer-fixed]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
+
+## Exact atomic decimal comparison repair update
+
+The existing validator now compares atomic decimal-derived values exactly for
+all four inclusive/exclusive bound facets, enumeration, and fixed constraints
+on attributes, simple elements and resolved complex simple-content elements.
+The [decimal helper](../../validation_decimal.go) uses immutable sign, whole-digit
+and fractional-digit views. Leading whole zeros and trailing fractional zeros
+are omitted from the views, and every signed zero compares equally. Lexical
+acceptance remains the existing XSD decimal contract. Comparisons do not convert
+to `float64`, expand exponents, allocate scaled integers or perform arithmetic;
+they scan linearly with constant auxiliary space. Existing source storage,
+normalization and diagnostics still allocate proportionally to their input.
+No numeric limit or shared-session budget policy is selected here.
+
+Only builtin ancestry `decimal` selects the new comparison path. Integer,
+float/double, string and aggregate union/list equality retain their previous
+paths; decimal list items and union members benefit from their own atomic bound
+checks without establishing aggregate typed equality. Patterns still see the
+unchanged normalized source spelling. Fixed-value comparison reuses effective
+simple-content ancestry resolution; generated schema literals and source text
+are never rewritten. The basis is XSD 1.0 [decimal value identity][decimal-domain],
+[bound and enumeration facets][decimal-facets] and
+[typed element fixed constraints][integer-fixed].
+
+[`validation_decimal_test.go`](../../validation_decimal_test.go) contains
+replayable original-source regressions independent of the new helper: close
+fractional neighbors, alternate equal spellings, signed zeros, all bound kinds,
+layered restrictions, fixed/default values, patterns, nil/child interactions,
+attribute parity and decimal members of lists/unions. Arbitrary-width positive
+and negative bound cases include 4,096-digit whole/fractional parts. Generated
+metadata comes from [the synthetic fixture](../../testdata/validation/decimal-contract.xsd).
+[`validation_decimal_operations_test.go`](../../validation_decimal_operations_test.go)
+compares against independent `math/big.Rat` values, checks lexical compatibility,
+invalid bound metadata, dispatch scope, immutable source/schema spellings and
+constant-space helper behavior on a one-MiB input.
+
+`TestDecimalComparisonsAgainstSchema` sends identical source bytes to the
+internal validator and `xmllint --nonet --schema`, including actual MusicXML
+`positive-divisions` values; the Linux CI selector requires it. The external
+subset excludes values outside libxml2 2.9.x's supported decimal precision and
+its lexical comparison of explicit decimal element-fixed values. Those cases
+remain internal normative tests, not evidence that the oracle supports the
+entire decimal domain. `TestDecimalSourceAndModelConversion` separately proves
+raw acceptance of huge/tiny positive divisions and the unchanged typed Decode
+range error for a huge finite value. Public `Validate` still uses Encode/reparse
+and cannot recover source precision discarded by model conversion.
+
+This is another bounded existing-validator portion of `STAGE-DEF-03`
+(`REQ-DEF-NUM-EXACT`, `DEF03-02/04`). Decimal `totalDigits`/`fractionDigits`, typed
+union/list aggregate equality, missing complex simple-content restriction facets,
+contextual arithmetic, parse-once session caching, resource budgets,
+incomplete/conversion reports and strict-source/direct-model adapters remain
+separate work. No public API, model-decimal interpretation, profile or planning
+completion semantics changes; all relevant planning statuses remain `planned`.
+
+[decimal-domain]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#decimal
+[decimal-facets]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-maxInclusive
 
 ## Ordinary-attribute repair update
 
