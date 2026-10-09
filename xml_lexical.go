@@ -13,12 +13,12 @@ import (
 // a CharData token occurs outside all elements.
 type lexicalXMLTokenReader struct {
 	decoder             *xml.Decoder
-	input               *xmlLexicalReader
+	input               *xmlLexicalObserver
 	characterDataMarkup bool
 }
 
 func newLexicalXMLTokenReader(source io.Reader) *lexicalXMLTokenReader {
-	input := newXMLLexicalReader(source, 0)
+	input := newXMLLexicalObserver(source, 0)
 	return &lexicalXMLTokenReader{decoder: xml.NewDecoder(input), input: input}
 }
 
@@ -40,28 +40,31 @@ func (r *lexicalXMLTokenReader) Token() (xml.Token, error) {
 
 // switchInput installs an observer after charset conversion, using the inner
 // decoder's UTF-8 byte offset. The old observer may remain upstream of the
-// converter and read ahead; its source-byte offsets must no longer be used.
+// converter and read ahead; detach it so its unused source-byte markers are
+// neither updated nor consulted after the handoff.
 func (r *lexicalXMLTokenReader) switchInput(source io.Reader) io.Reader {
-	r.input = newXMLLexicalReader(source, r.decoder.InputOffset())
+	r.input.detached = true
+	r.input = newXMLLexicalObserver(source, r.decoder.InputOffset())
 	return r.input
 }
 
 // Implementing io.ByteReader keeps encoding/xml from buffering ahead of this
 // observer. Buffering below it is bounded and does not affect observed offsets.
-type xmlLexicalReader struct {
+type xmlLexicalObserver struct {
 	source    *bufio.Reader
 	offset    int64
 	angle     int64
 	ampersand int64
+	detached  bool
 }
 
-func newXMLLexicalReader(source io.Reader, offset int64) *xmlLexicalReader {
-	return &xmlLexicalReader{
+func newXMLLexicalObserver(source io.Reader, offset int64) *xmlLexicalObserver {
+	return &xmlLexicalObserver{
 		source: bufio.NewReader(source), offset: offset, angle: -1, ampersand: -1,
 	}
 }
 
-func (r *xmlLexicalReader) observe(value byte) {
+func (r *xmlLexicalObserver) observe(value byte) {
 	switch value {
 	case '<':
 		r.angle = r.offset
@@ -71,18 +74,20 @@ func (r *xmlLexicalReader) observe(value byte) {
 	r.offset++
 }
 
-func (r *xmlLexicalReader) ReadByte() (byte, error) {
+func (r *xmlLexicalObserver) ReadByte() (byte, error) {
 	value, err := r.source.ReadByte()
-	if err == nil {
+	if err == nil && !r.detached {
 		r.observe(value)
 	}
 	return value, err
 }
 
-func (r *xmlLexicalReader) Read(target []byte) (int, error) {
+func (r *xmlLexicalObserver) Read(target []byte) (int, error) {
 	n, err := r.source.Read(target)
-	for _, value := range target[:n] {
-		r.observe(value)
+	if !r.detached {
+		for _, value := range target[:n] {
+			r.observe(value)
+		}
 	}
 	return n, err
 }

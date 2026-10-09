@@ -14,8 +14,12 @@ import (
 // once and checks matching element names.
 // It does not parse DTD declarations or load external resources.
 type wellFormedXMLTokenReader struct {
-	source              xml.TokenReader
-	position            func() (line, column int)
+	source   xml.TokenReader
+	position func() (line, column int)
+	// characterDataMarkup describes the most recent token returned by source.
+	// Read it before requesting another token: intervening token readers must
+	// forward exactly one token per call, without buffering or reordering.
+	// utf16XMLTokenReader preserves this synchronous provenance invariant.
 	characterDataMarkup func() bool
 	readToken           bool
 	started             bool
