@@ -39,20 +39,46 @@ existing plain UTF-8 input contract. Full declaration pseudo-attribute grammar,
 DTD syntax, broader XML/namespace conformance and strict-source integration
 remain outside this repair.
 
-The following review follow-ups are still explicitly **deferred**:
+The **non-XML whitespace outside the root** follow-up from
+[PR #22 review](https://github.com/go-muse/go-musicxml/pull/22#discussion_r4229843345)
+is now repaired at the four character-data checks in `readRoot`,
+`readDocumentTail`, `parseValidationDocument` and `readValidationTail` in
+[`decode.go`](../../decode.go) and [`validation.go`](../../validation.go).
+They trim only XML `S` (space, tab, carriage return and line feed), rather than
+Unicode whitespace, preserving the existing before/after-root errors.
+[XML 1.0 document, S, prolog and Misc productions 1, 3, 22 and 27](https://www.w3.org/TR/REC-xml/#sec-prolog-dtd)
+require rejection of literal non-XML whitespace such as NBSP and NEL at those
+boundaries. This mandatory XML-reading repair is separate from the element-only
+XSD content repair below and does not add XSD assessment to Decode.
 
-- **Non-XML whitespace outside the root:** [PR #22 review](https://github.com/go-muse/go-musicxml/pull/22#discussion_r4229843345)
-  identified four remaining uses of `bytes.TrimSpace` in
-  `parseValidationDocument`, `readValidationTail`, and the matching before/after
-  root checks in `decode.go`. They accept Unicode whitespace such as NBSP and
-  NEL where [XML 1.0 document/Misc productions 1 and 27](https://www.w3.org/TR/REC-xml/#sec-prolog-dtd)
-  allow only comments, processing instructions and XML `S`. This is a mandatory
-  well-formedness gap in both public Decode and the internal validation parser,
-  separate from the element-only XSD content repair below. A narrow reader
-  follow-up should replace those broad whitespace predicates and add before/
-  after-root and post-declaration regression cases to the existing XML-reading
-  matrix, preserving legal XML whitespace and existing error/encoding behavior.
-  This finding is recorded for follow-up, not repaired by the XSD-content slice.
+Executable evidence is in
+[`xml_document_whitespace_test.go`](../../xml_document_whitespace_test.go):
+`TestXMLDocumentWhitespaceDecodePaths`, `TestXMLDocumentWhitespaceContainer`,
+`TestXMLDocumentWhitespaceValidationParser` and
+`TestXMLDocumentWhitespaceLinkedResources` extend the shared
+[XML-reading matrix](../../xml_reading_matrix_test.go) across all three document
+roots, options, MXL root/container documents and deferred linked resources.
+The literal-character cases cover all four XML `S` characters and all 19
+XML-valid non-`S` Unicode whitespace characters before the root, after the root
+and after a declaration. Encoding variants use genuine UTF-8/UTF-16 bytes and
+declared Latin-1 only for representable characters; omitted declarations stay
+omitted. `TestXMLDocumentWhitespaceErrors` retains ordinary-character errors
+and empty/XML-`S`-only input behavior. `TestXMLDocumentWhitespacePreservesText`
+checks exact Unicode text and model round trips, while legal comments/PIs and
+declaration ordering retain their existing matrix coverage.
+`TestXMLDocumentWhitespaceAgainstXMLLint` compares the same raw source bytes
+with `xmllint --nonet --noout`, required in Linux CI, without an XSD or DTD
+validity check. The internal validation parser retains its plain UTF-8 contract.
+
+This remains a bounded existing-reader slice of `STAGE-DEF-01`. Lexical XML
+grammar beyond these literal-character checks remains deferred: `encoding/xml`
+exposes character references and CDATA as decoded `CharData`, so this predicate
+repair cannot distinguish those forbidden spellings outside the root from
+literal XML `S`. The tests do not assert their acceptance as valid behavior.
+Full declaration/DTD/namespace conformance and strict-source integration also
+remain open; planning JSON completion semantics are unchanged.
+
+The following review follow-up is still explicitly **deferred**:
 
 - **Machine-readable implementation evidence:** add a reviewed `implemented_by`
   or `evidence` contract to the planning format and its integrity checker.
