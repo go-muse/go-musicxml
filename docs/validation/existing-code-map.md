@@ -74,9 +74,10 @@ This is a bounded existing-validator slice of `REQ-DEF-ATTR-SIMPLE` and
 `REQ-DEF-ATTR-COMPLEX` (`DEF02-01/02`), not completion of `STAGE-DEF-02`.
 [XSD 1.0 cvc-type 3.1.1](https://www.w3.org/TR/xmlschema-1/#cvc-type) permits the
 four standard schema-instance attribute names on simple elements. Their previous
-acceptance is preserved here, and unknown `xsi` names are rejected. The existing
-`xsi:nil` handling is unchanged. Full value/type/nillability contracts for all
-four names (`REQ-DEF-XSI-*`, `DEF02-03/04`) remain open, including the known
+acceptance is preserved here, and unknown `xsi` names are rejected. At that repair,
+`xsi:nil` handling was unchanged; the [nil repair below](#xsinil-repair-update)
+now checks its bounded existing-validator contract. Full schema-instance
+integration (`REQ-DEF-XSI-*`, `DEF02-03/04`) remains open, including the known
 complex-type rejection of `xsi:type`. The later
 [schema-location name repair](#schema-location-hint-name-repair-update) removes
 complex-type rejection of the two hint names, without checking their values.
@@ -145,8 +146,8 @@ lookalikes and foreign-namespace lookalikes still follow ordinary attribute
 validation. Both attribute paths use `validationStandardXSIName`; its explicit
 `allowType` parameter preserves the existing difference between simple and
 complex paths. Allowing the `xsi:type` name on simple elements does not resolve
-or apply that type. The existing `xsi:type`, `xsi:nil` and `xs:anyType` behavior
-is unchanged.
+or apply that type. That name repair left `xsi:type`, `xsi:nil` and `xs:anyType` behavior
+unchanged; the later [nil repair](#xsinil-repair-update) adds nil checks.
 
 This is only a **name-permissibility slice** of `REQ-DEF-XSI-SCHEMALOC` and
 `REQ-DEF-XSI-NONAMESPACE` (`DEF02-03/04`). Hint values are not validated: no
@@ -190,12 +191,62 @@ cannot establish the deferred lexical/pair outcomes. The name-allowance tests
 therefore use ordinary valid URI hints and do not freeze malformed-value
 acceptance as a compatibility requirement. Implementing hint lexical/pair
 semantics, reconciling the oracle evidence with the cited normative rules,
-full `xsi:type` / `xsi:nil` handling, strict-source integration and checked
-machine-readable implementation evidence remain separate work.
+full `xsi:type` handling, its interaction with nil, strict-source integration
+and checked machine-readable implementation evidence remain separate work.
 
 [xsi-name-rule]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type
 [xsi-declarations]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation
 [xsi-location-pairs]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc
+
+## xsi:nil repair update
+
+The existing internal validator now checks `xsi:nil` by expanded name against
+[XSD 1.0 Element Locally Valid, clauses 3.1 and 3.2][nil-rule] and the
+[boolean lexical contract][nil-boolean]. Only `true`, `1`, `false` and `0` are
+accepted after XML whitespace normalization. Unicode whitespace does not become
+XML whitespace. A nonnillable declaration forbids the attribute even when its
+value is `false` or `0`.
+
+On a nillable declaration, true nil requires no element or character content,
+including whitespace-only text, and forbids a fixed value constraint. Comments
+and processing instructions do not count as character content. Scalar values
+and required child particles are suppressed only for true nil; complex
+attributes still pass through the existing effective-attribute validator,
+including inherited required, prohibited, fixed and datatype constraints and
+ID/IDREF tracking. False nil uses ordinary content and attribute validation.
+Diagnostics for the nil attribute use its expanded-name path, independently
+of the source prefix.
+
+Executable evidence is in [`validation_nil_test.go`](../../validation_nil_test.go):
+`TestValidateNilContracts`, `TestValidateNilIdentityTracking`,
+`TestValidateMusicXMLNilContracts`, `TestNilContractsAgainstSchema`, and
+`TestMusicXMLNilPreservesPublicModelValidation`. The external test uses identical
+original XML bytes for its internal/oracle parity cases with real
+`xmllint --nonet`; Linux CI requires it to execute. Positive nil cases use the synthetic
+[`nil-contract.xsd`](../../testdata/validation/nil-contract.xsd), because the
+pinned MusicXML score and opus declarations are all nonnillable. Real MusicXML
+negative cases prevent synthetic-schema support from implying new MusicXML
+nil support. Separate internal assertions cover known libxml2 2.9.14 limitations: it accepts
+unresolved IDREF(S) and whitespace-only IDREFS, and rejects empty CDATA on
+nilled elements even though that section contributes no character information
+items ([XML Infoset section 2.6][nil-characters]). IDREFS requires a
+[nonempty sequence][nil-idrefs]. These oracle disagreements are not treated as
+normative outcomes.
+
+This is an existing-validator slice of `REQ-DEF-XSI-NIL` and
+`CHECK-XSD-LANG-NIL`. The planning contracts clarify that false nil also needs
+a nillable declaration, but retain `status: planned`: source adapters, dynamic
+`xsi:type` resolution and its nil interactions, rule-level implementation
+bindings, and model capability mapping remain future work. Hint-value semantics
+are unchanged. `Decode` still discards unsupported source attributes; public
+`Validate` still encodes and reparses the typed model and cannot recover the
+original nil attribute. No public API, schema fetch, or generated-model change
+is introduced.
+
+[nil-rule]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
+[nil-boolean]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#boolean
+[nil-characters]: https://www.w3.org/TR/xml-infoset/#infoitem.character
+[nil-idrefs]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#IDREFS
 
 ## Reuse and adaptation
 
@@ -244,8 +295,8 @@ explicitly below, while other limits remain open.
   complex types as unallowed attributes. The existing validator now permits
   their exact standard names; see the [name repair](#schema-location-hint-name-repair-update).
   Hint lexical/list/pair semantics are still unchecked and require the standard
-  attribute contracts. `xsi:type` and `xsi:nil` also require their own semantic
-  checks.
+  attribute contracts. The [nil repair](#xsinil-repair-update) covers nil in the
+  current internal validator; `xsi:type` and its nil interaction remain open.
 - **Integer value space:** `staves=18446744073709551616` is accepted by libxml2
   against the pinned schema but rejected by the current scalar checker.
   Its [`ParseInt`/unsigned parsing branches](https://github.com/go-muse/go-musicxml/blob/e486735cd6e4537e839ff67704b7768a9df3bdb3/validation.go#L1410-L1440)

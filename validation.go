@@ -546,28 +546,35 @@ func (c *validationContext) validateElement(
 		c.validateSimpleElementAttributes(node, path)
 	}
 
+	// xsi:nil is an xs:boolean regardless of the declared element type.
+	// XSD 1.0 cvc-elt 3 requires nillability even for false/0, and true
+	// forbids all character/element content as well as a fixed constraint.
+	// https://www.w3.org/TR/xmlschema-1/#cvc-elt
 	nilValue, nilPresent := validationNilAttribute(node.Attrs)
+	nilled := false
 	if nilPresent {
+		nilPath := validationAttributePath(path, xml.Name{Space: validationXSINamespace, Local: "nil"})
+		if failure := validateBuiltin("boolean", nilValue); failure != nil {
+			c.addIssue(nilPath, failure.constraint, failure.message)
+		} else {
+			normalized := normalizeValidationWhitespace("boolean", nilValue)
+			nilled = schema.Nillable && (normalized == "true" || normalized == "1")
+		}
 		if !schema.Nillable {
-			c.addIssue(
-				path+"/@xsi:nil",
-				"nillable",
-				"element is not nillable",
-			)
-		} else if nilValue {
-			if len(node.Children) != 0 ||
-				strings.TrimSpace(node.Text.String()) != "" {
-				c.addIssue(
-					path,
-					"nillable",
-					"nil element must not contain a value",
-				)
-			}
-			return
+			c.addIssue(nilPath, "nillable", "element is not nillable")
 		}
 	}
 
-	if schema.Fixed != nil &&
+	if nilled {
+		if schema.Fixed != nil {
+			c.addIssue(path, "fixed", "nil element must not have a fixed value constraint")
+		}
+		if len(node.Children) != 0 || node.Text.Len() != 0 {
+			c.addIssue(path, "nillable", "nil element must not contain character data or child elements")
+		}
+	}
+
+	if !nilled && schema.Fixed != nil &&
 		node.Text.String() != *schema.Fixed {
 		c.addIssue(
 			path,
@@ -580,7 +587,7 @@ func (c *validationContext) validateElement(
 		)
 	}
 
-	c.validateType(node, &schema.Type, path)
+	c.validateType(node, &schema.Type, path, nilled)
 }
 
 func (c *validationContext) resolveElement(
@@ -597,10 +604,13 @@ func (c *validationContext) resolveElement(
 	return resolved, found
 }
 
+// nilled suppresses scalar and element content validation only. Type resolution
+// and complex attribute validation (including identity recording) still apply.
 func (c *validationContext) validateType(
 	node *validationNode,
 	reference *validationTypeRef,
 	path string,
+	nilled bool,
 ) {
 	simple, complex, builtin, found := c.resolveType(reference)
 	if !found {
@@ -610,6 +620,9 @@ func (c *validationContext) validateType(
 
 	switch {
 	case simple != nil:
+		if nilled {
+			return
+		}
 		if len(node.Children) != 0 {
 			c.addIssue(
 				path,
@@ -625,12 +638,15 @@ func (c *validationContext) validateType(
 		}
 
 	case complex != nil:
-		c.validateComplex(node, complex, path)
+		c.validateComplex(node, complex, path, nilled)
 
 	case builtin == "anyType":
 		return
 
 	case builtin != "":
+		if nilled {
+			return
+		}
 		if len(node.Children) != 0 {
 			c.addIssue(
 				path,
@@ -686,6 +702,7 @@ func (c *validationContext) validateComplex(
 	node *validationNode,
 	schema *validationComplexSchema,
 	path string,
+	nilled bool,
 ) {
 	effective, ok := c.effectiveComplex(schema)
 	if !ok {
@@ -699,6 +716,9 @@ func (c *validationContext) validateComplex(
 		effective.anyAttribute,
 		path,
 	)
+	if nilled {
+		return
+	}
 
 	if effective.simple != nil {
 		if len(node.Children) != 0 {
@@ -709,7 +729,7 @@ func (c *validationContext) validateComplex(
 			)
 			return
 		}
-		c.validateType(node, effective.simple, path)
+		c.validateType(node, effective.simple, path, false)
 		return
 	}
 
@@ -920,8 +940,9 @@ func validationSequence(
 // validationStandardXSIName recognizes the standard schema-instance names
 // exempted by XSD 1.0 cvc-type 3.1.1 and cvc-complex-type 3. allowType preserves
 // the current simple/complex name-allowance difference: permitting xsi:type on
-// simple elements does not resolve or apply that type. Full xsi value/type
-// semantics remain separate work; hints never select or fetch a schema here.
+// simple elements does not resolve or apply that type. xsi:nil is checked by
+// validateElement; hint values and xsi:type semantics remain separate work.
+// Hints never select or fetch a schema here.
 func validationStandardXSIName(name xml.Name, allowType bool) bool {
 	if name.Space != validationXSINamespace {
 		return false
@@ -936,8 +957,8 @@ func validationStandardXSIName(name xml.Name, allowType bool) bool {
 }
 
 // validateSimpleElementAttributes enforces XSD 1.0 cvc-type 3.1.1. The four
-// standard xsi names are permitted independently of their value semantics.
-// Keep their existing behavior here; full xsi validation remains separate work.
+// standard xsi names are permitted here; validateElement separately checks
+// xsi:nil. Hint-value and xsi:type semantics remain separate work.
 // https://www.w3.org/TR/xmlschema-1/#cvc-type
 func (c *validationContext) validateSimpleElementAttributes(node *validationNode, path string) {
 	for _, attribute := range node.Attrs {
@@ -2177,17 +2198,16 @@ func validationAnyAttributeAllows(
 
 func validationNilAttribute(
 	attributes []validationAttribute,
-) (bool, bool) {
+) (string, bool) {
 	for _, attribute := range attributes {
 		if attribute.Name.Space != validationXSINamespace ||
 			attribute.Name.Local != "nil" {
 			continue
 		}
 
-		value := strings.TrimSpace(attribute.Value)
-		return value == "true" || value == "1", true
+		return attribute.Value, true
 	}
-	return false, false
+	return "", false
 }
 
 func validationNamespaceDeclaration(attribute validationAttribute) bool {

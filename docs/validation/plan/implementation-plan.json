@@ -477,7 +477,7 @@
       "stage": "STAGE-DEF-02",
       "status": "planned",
       "acceptance": [
-        "Check the XSD boolean contract, declaration nillability and nil-content constraints."
+        "Check true/1/false/0 with XML whitespace; reject any xsi:nil on nonnillable declarations. True nil forbids element/character content and fixed constraints, while retaining complex attribute and identity checks; false nil follows ordinary validation."
       ],
       "source_bullets": [
         "DEF02-03",
@@ -4079,21 +4079,21 @@
       ],
       "cases": {
         "positive": [
-          "xsi:nil=\"false\" or \"0\" follows the ordinary content contract.",
+          "On a nillable declaration, xsi:nil=\"false\" or \"0\" follows the ordinary content contract.",
           "A valid nil form on a nillable declaration with permitted empty content passes the reviewed contract."
         ],
         "negative": [
           "xsi:nil=\"maybe\" fails datatype.",
-          "True nil on a non-nillable element fails nillability."
+          "Any xsi:nil on a non-nillable element, including false or 0, fails nillability."
         ],
         "boundary": [
-          "Both true/1 and false/0 lexical forms are covered; nil true is not an instruction to ignore forbidden content."
+          "Both true/1 and false/0 with XML whitespace are covered; Unicode whitespace and split tokens fail. True nil forbids even whitespace-only character content and any fixed constraint."
         ],
         "missing_fact": [
           "Unknown nillability remains unknown/unsupported rather than permitting nil."
         ],
         "interaction": [
-          "xsi:type and xsi:nil are validated together against the resolved type without dropping ordinary attributes."
+          "Nilled complex elements retain required/prohibited/fixed/datatype attribute checks and ID/IDREF tracking. Future xsi:type integration validates nil against the resolved type without dropping ordinary attributes."
         ]
       },
       "oracle": "Review against the cited pinned contracts. These are planned test specifications, not executed production tests or a new normative claim.",

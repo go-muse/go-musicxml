@@ -26,11 +26,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Enforce the `xsi:nil` boolean, nillability, empty-content and fixed-value
+  contracts in the internal XML validator. Nilled complex elements still check
+  their attributes and identity references. Any `xsi:nil` is rejected on the
+  nonnillable MusicXML declarations, including `false` and `0`. Public
+  `Validate` still assesses the encoded model; no strict-source API is added.
+
 - Permit the exact standard `xsi:schemaLocation` and
   `xsi:noNamespaceSchemaLocation` names on complex-typed elements in the
   internal XML validator, as already permitted on simple-typed elements.
   Hints do not fetch or replace the pinned schema. Their value semantics,
-  full `xsi:type` / `xsi:nil` validation and strict-source integration remain
+  `xsi:type` validation and strict-source integration remain
   deferred; public `Validate` still assesses the encoded model.
 
 - Preserve lexical namespace-declaration provenance in the internal XML

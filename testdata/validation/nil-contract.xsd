@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic XML Schema 1.0 fixture for the bounded xsi:nil contract.
+     Kept in sync with validationNilSchema in validation_nil_test.go. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="word">
+    <xs:restriction base="xs:string"><xs:enumeration value="ok"/></xs:restriction>
+  </xs:simpleType>
+  <xs:attributeGroup name="checked">
+    <xs:attribute name="required" type="xs:int" use="required"/>
+    <xs:attribute name="locked" type="xs:token" fixed="kept"/>
+    <xs:attribute name="id" type="xs:ID"/>
+    <xs:attribute name="ref" type="xs:IDREF"/>
+    <xs:attribute name="refs" type="xs:IDREFS"/>
+  </xs:attributeGroup>
+  <xs:complexType name="complexBase">
+    <xs:sequence><xs:element name="child" type="xs:int"/></xs:sequence>
+    <xs:attributeGroup ref="checked"/>
+    <xs:attribute name="blocked" type="xs:string"/>
+  </xs:complexType>
+  <xs:complexType name="complexRestricted">
+    <xs:complexContent><xs:restriction base="complexBase">
+      <xs:sequence><xs:element name="child" type="xs:int"/></xs:sequence>
+      <xs:attributeGroup ref="checked"/>
+      <xs:attribute name="blocked" type="xs:string" use="prohibited"/>
+    </xs:restriction></xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="complexDerived">
+    <xs:complexContent><xs:extension base="complexRestricted">
+      <xs:attribute name="extra" type="xs:string"/>
+    </xs:extension></xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="simpleBase">
+    <xs:simpleContent><xs:extension base="xs:int">
+      <xs:attributeGroup ref="checked"/>
+      <xs:attribute name="blocked" type="xs:string"/>
+    </xs:extension></xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="simpleRestricted">
+    <xs:simpleContent><xs:restriction base="simpleBase">
+      <xs:attribute name="blocked" type="xs:string" use="prohibited"/>
+    </xs:restriction></xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="simpleDerived">
+    <xs:simpleContent><xs:extension base="simpleRestricted">
+      <xs:attribute name="extra" type="xs:string"/>
+    </xs:extension></xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="plain" type="xs:string"/>
+  <xs:element name="integer" type="xs:int" nillable="true"/>
+  <xs:element name="named" type="word" nillable="true"/>
+  <xs:element name="inline" nillable="true">
+    <xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="ok"/></xs:restriction></xs:simpleType>
+  </xs:element>
+  <xs:element name="simple" type="xs:anySimpleType" nillable="true"/>
+  <xs:element name="fixed" type="xs:string" fixed="kept" nillable="true"/>
+  <xs:element name="empty-fixed" type="xs:string" fixed="" nillable="true"/>
+  <xs:element name="defaulted" type="xs:int" default="7" nillable="true"/>
+  <xs:element name="any" type="xs:anyType" nillable="true"/>
+  <xs:element name="complex" type="complexDerived" nillable="true"/>
+  <xs:element name="simple-content" type="simpleDerived" nillable="true"/>
+  <xs:element name="fixed-content" type="simpleDerived" fixed="7" nillable="true"/>
+  <xs:element name="mixed" nillable="true">
+    <xs:complexType mixed="true">
+      <xs:sequence><xs:element name="child" type="xs:int"/></xs:sequence>
+      <xs:attributeGroup ref="checked"/>
+      <xs:attribute name="blocked" type="xs:string" use="prohibited"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="references">
+    <xs:complexType><xs:sequence><xs:element ref="integer" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
+  </xs:element>
+  <xs:element name="items">
+    <xs:complexType><xs:sequence><xs:element name="item" type="simpleDerived" nillable="true" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
+  </xs:element>
+</xs:schema>
