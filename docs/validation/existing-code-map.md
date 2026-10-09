@@ -463,17 +463,73 @@ data in CDATA remains in the rejection parity cases.
 This is a bounded existing-validator repair for `CHECK-XSD-LANG-TEXT` and
 `TEST-XSD-LANG-TEXT`, and a prerequisite for the shared-operator work in
 `DEF04-06`. It does not complete those contracts, `STAGE-DEF-04` or `STAGE-xsd`;
-the planning JSON retains `status: planned`. In particular, the current runtime
-does not fully distinguish empty complex content from element-only content.
-This repair also rejects Unicode whitespace in the existing empty-type path,
-but its acceptance of XML whitespace there remains a separate gap under
-cvc-complex-type 2.1. The tests do not describe that acceptance as normative.
+the planning JSON retains `status: planned`. That repair also rejects Unicode
+whitespace in the existing empty-type path. The later
+[particleless empty-content repair](#particleless-empty-content-repair-update)
+closes its XML-whitespace gap under cvc-complex-type 2.1; full schema content
+category normalization remains separate work.
 
 No production schemas, generated metadata/models, public API or validation
 profile are changed. Public Decode may discard inter-element source text, and
 public `Validate` still assesses Encode/reparse output. Strict-source and direct
 model adapters, full text-category classification, typed fixed-value equality,
 schema-instance type/hint values and other deferred contracts remain open.
+
+## Particleless empty-content repair update
+
+The existing internal validator now rejects all character content for a resolved,
+nonsimple, nonmixed complex type whose effective particle is absent, including
+space, tab, carriage return and line feed. [XSD 1.0 cvc-complex-type 2.1][xsi-name-rule]
+requires no character or element information-item children for empty content.
+This differs from element-only content, which permits XML `S`. Comments,
+processing instructions and empty CDATA contribute no characters and remain
+valid. Character references and nonempty CDATA contribute their decoded text.
+
+[`validateComplex`](../../validation.go) checks this already-represented empty
+category after attribute, true-nil and simple-content handling. It retains the
+legacy parent-path `element-only` diagnostic and `character data is not allowed`
+message for character failures, including the existing nonwhitespace failures.
+Unexpected children retain their `content-model` diagnostics. Attribute failures
+and ID/IDREF assessment still run, and source nodes remain unchanged.
+
+The scope is deliberately **absent effective particles**, not particle
+emptiability. Direct and restricted particleless types, empty-to-empty extension,
+and restriction from an optional particle to empty are covered. A base extended
+with an actual particle, a nullable particle with no instance children, mixed
+content, simple content, true nil and `xs:anyType` keep their existing contracts.
+The generator still retains explicit empty sequence/all/optional-empty-choice
+particles and loses some source distinctions when expanding groups; normalizing
+those into the XSD content categories requires separate generator/runtime work.
+No recursive or nullable-particle heuristic is introduced. Mixed-derivation
+normalization is also outside this repair.
+
+Executable evidence is in
+[`validation_empty_content_test.go`](../../validation_empty_content_test.go):
+`TestValidateEmptyComplexContent`, `TestEmptyComplexContentCategoryControls`,
+`TestEmptyComplexContentPreservesAssessment` and
+`TestEmptyComplexContentPreservesPublicModels`. The synthetic
+[`nil-contract.xsd`](../../testdata/validation/nil-contract.xsd) supplies generated
+metadata for the inheritance/category boundary cases; production partwise,
+timewise and opus cases use the pinned original schemas. Source cases cover
+literal, reference and CDATA whitespace, empty/comment/PI controls, nil values,
+attributes, identity references and existing unexpected-child paths.
+
+`TestEmptyComplexContentAgainstSchema` validates identical original bytes with
+the internal checker and required Linux `xmllint --nonet --schema`, using local
+catalogs. libxml2 2.9.14 incorrectly rejects empty CDATA in genuinely empty complex
+content despite its lack of character information items. Those normative positive
+cases remain internal regressions outside the parity subset; whitespace-bearing
+CDATA rejection remains in that subset. No source is decoded and re-encoded
+before an oracle comparison.
+
+This is a bounded existing-validator prerequisite for `CHECK-XSD-LANG-TEXT`,
+`TEST-XSD-LANG-TEXT` and `DEF04-06`, not completion of those contracts,
+`STAGE-DEF-04` or `STAGE-xsd`. Planning JSON remains `status: planned`. Production
+schemas, generated production models/metadata, public APIs and validation profiles
+are unchanged. Decode remains permissive for source-XSD character-content
+violations; public `Validate` assesses Encode/reparse output and cannot recover
+text discarded by Decode. Strict-source/direct-model adapters, full content
+category normalization and the other deferred validation contracts remain open.
 
 ## Reuse and adaptation
 

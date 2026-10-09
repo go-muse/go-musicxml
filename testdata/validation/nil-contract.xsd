@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Synthetic XML Schema 1.0 fixture for nil and element value constraints.
+<!-- Synthetic XML Schema 1.0 fixture for nil, element values and content categories.
      Generates zz_generated_nil_validation_test.go for runtime parity tests. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:simpleType name="word">
@@ -131,4 +131,49 @@
   <xs:element name="items">
     <xs:complexType><xs:sequence><xs:element name="item" type="simpleDerived" nillable="true" maxOccurs="unbounded"/></xs:sequence></xs:complexType>
   </xs:element>
+  <!-- Particleless empty-content contracts and nearby category controls. -->
+  <xs:complexType name="emptyBase">
+    <xs:attributeGroup ref="checked"/>
+  </xs:complexType>
+  <xs:complexType name="emptyExtended">
+    <xs:complexContent><xs:extension base="emptyBase">
+      <xs:attribute name="extra" type="xs:string"/>
+    </xs:extension></xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="emptyRestricted">
+    <xs:complexContent><xs:restriction base="emptyExtended">
+      <xs:attributeGroup ref="checked"/>
+      <xs:attribute name="extra" type="xs:string" use="prohibited"/>
+    </xs:restriction></xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="optionalNonmixed">
+    <xs:sequence><xs:element name="child" type="xs:int" minOccurs="0"/></xs:sequence>
+    <xs:attributeGroup ref="checked"/>
+  </xs:complexType>
+  <xs:complexType name="emptiedRestriction">
+    <xs:complexContent><xs:restriction base="optionalNonmixed">
+      <xs:attributeGroup ref="checked"/>
+    </xs:restriction></xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="emptyWithChild">
+    <xs:complexContent><xs:extension base="emptyBase">
+      <xs:sequence><xs:element name="child" type="xs:int"/></xs:sequence>
+    </xs:extension></xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="mixedEmpty" mixed="true">
+    <xs:attributeGroup ref="checked"/>
+  </xs:complexType>
+  <xs:complexType name="mixedEmptyExtended">
+    <xs:complexContent mixed="true"><xs:extension base="mixedEmpty">
+      <xs:attribute name="extra" type="xs:string"/>
+    </xs:extension></xs:complexContent>
+  </xs:complexType>
+  <xs:element name="empty" type="emptyBase" nillable="true"/>
+  <xs:element name="empty-extended" type="emptyExtended" nillable="true"/>
+  <xs:element name="empty-restricted" type="emptyRestricted" nillable="true"/>
+  <xs:element name="emptied-restriction" type="emptiedRestriction" nillable="true"/>
+  <xs:element name="optional-nonmixed" type="optionalNonmixed"/>
+  <xs:element name="empty-with-child" type="emptyWithChild"/>
+  <xs:element name="mixed-empty" type="mixedEmpty"/>
+  <xs:element name="mixed-empty-extended" type="mixedEmptyExtended"/>
 </xs:schema>

@@ -755,10 +755,13 @@ func (c *validationContext) validateComplex(
 		return
 	}
 
-	// XSD 1.0 cvc-complex-type 2.3 permits only XML S, not Unicode
-	// whitespace, in element-only content. Leave the source text unchanged.
-	if !effective.mixed &&
-		strings.TrimFunc(node.Text.String(), isValidationWhitespace) != "" {
+	// XSD 1.0 cvc-complex-type 2.1 forbids every character in empty
+	// content; 2.3 permits XML S in element-only content. An absent
+	// effective particle identifies the empty types represented here, not
+	// nullable particles or the generator's unnormalized empty groups.
+	// Keep the legacy diagnostic and leave the source text unchanged.
+	if !effective.mixed && node.Text.Len() != 0 &&
+		(effective.particle == nil || strings.TrimFunc(node.Text.String(), isValidationWhitespace) != "") {
 		c.addIssue(
 			path,
 			"element-only",
