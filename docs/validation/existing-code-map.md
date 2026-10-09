@@ -217,17 +217,15 @@ ID/IDREF tracking. False nil uses ordinary content and attribute validation.
 Diagnostics for the nil attribute use its expanded-name path, independently
 of the source prefix.
 
-Two pre-existing assessment limits remain explicit. When a true-nilled element
+One pre-existing assessment limit remains explicit. When a true-nilled element
 illegally contains children, the validator reports the parent's nil-content
 failure and still checks its attributes, but does not assess those descendants
 or record their identities. A reference elsewhere to an ID only inside that
 rejected subtree can therefore produce an additional unresolved-IDREF issue.
-Empty-content application of schema default/fixed value constraints
-([cvc-elt clause 5.1.1][nil-rule]) is also not implemented: empty `defaulted` or
-`fixed` elements with absent or false nil may fail current scalar/fixed checks
-even when the synthetic XSD accepts them. The parity cases do not claim coverage
-of those empty-value-constraint forms. Neither limitation is expanded in this
-bounded nil repair.
+The empty-content default/fixed gap that was deferred by the nil repair is
+addressed separately in the [element value-constraint update below](#empty-element-value-constraint-repair-update).
+Its application branch is cvc-elt 5.1/5.1.2; clause 5.1.1 specifically concerns
+an `xsi:type`-selected local type and remains outside these repairs.
 
 Executable evidence is in [`validation_nil_test.go`](../../validation_nil_test.go):
 `TestValidateNilContracts`, `TestValidateNilIdentityTracking`,
@@ -265,6 +263,58 @@ is introduced.
 [nil-boolean]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#boolean
 [nil-characters]: https://www.w3.org/TR/xml-infoset/#infoitem.character
 [nil-idrefs]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#IDREFS
+
+## Empty-element value-constraint repair update
+
+The existing internal validator now applies an element declaration's stored
+default or fixed value when the original element has no character or element
+children and is not true-nilled. This is the bounded empty-content branch of
+[XSD 1.0 cvc-elt 5.1/5.1.2][nil-rule], read with the
+[approved E1-56 correction][element-default-erratum]. Whitespace-only content
+does not trigger defaulting. Comments, processing instructions and empty CDATA
+contribute no character content. Absent elements are never created.
+
+After declaration resolution and the original-source nil checks, validation
+uses a temporary node with a fresh text builder and the existing attributes.
+The stored schema lexeme follows the ordinary scalar/facet and complex-type
+paths; required/prohibited/fixed attributes and IDREF(S) recording still apply.
+The source node is not modified, repeated validation remains stable, and no
+default is materialized into the caller's Go model. True nil still suppresses
+defaults and still rejects a fixed constraint.
+
+Executable evidence is in
+[`validation_element_values_test.go`](../../validation_element_values_test.go).
+The matrix covers builtin/named/inline simple types, inherited simple-content,
+mixed content with an emptiable particle, referenced declarations, empty-string
+constraints, lexical-pattern preservation, nil/whitespace/content boundaries,
+ordinary attributes, and public partwise/timewise/opus model stability. Both the
+internal validator and `TestElementValueConstraintsAgainstSchema` receive the
+same original bytes. Linux CI requires that oracle test with `xmllint --nonet`.
+The extended synthetic XSD still generates the test-only validation metadata;
+`go generate` guards drift. Identity tests independently check resolved and
+unresolved default/fixed IDREF(S), since libxml2 does not reliably reject missing
+targets. No invalid ID-valued default declarations are introduced.
+
+`TestElementValueConstraintEmptyCDATA` separately checks zero-character CDATA:
+xmllint/libxml2 2.9.14 incorrectly leaves a defaulted integer empty in that case.
+That oracle disagreement is not used as a normative rejection.
+
+This is a narrow existing-validator prerequisite for `REQ-DEF-OPS-SCALARS`
+(`DEF04-06`), not completion of `STAGE-DEF-04` or the schema-instance stage.
+Planning JSON remains `status: planned`. The pinned MusicXML score and opus
+schemas have no element default/fixed declarations, so this synthetic-schema
+capability adds no newly covered production declaration. No public API, generated
+production model, strict-source adapter, schema fetching, or schema assembly is
+added. `Validate` still encodes/reparses the model and cannot recover discarded
+source facts.
+
+General typed fixed-value equality and fixed mixed-content child checks remain
+unchanged, as do QName/NOTATION schema-context handling, general schema
+canonical-value processing, attribute-default materialization, `xsi:type`, hint
+values, and assessment of descendants beneath an invalid nilled element. This
+repair does not claim complete default/fixed or XSD validation.
+
+[element-default-erratum]: https://www.w3.org/2004/03/xmlschema-errata.html#e1-56
 
 ## Reuse and adaptation
 
