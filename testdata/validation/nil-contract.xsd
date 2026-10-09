@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Synthetic XML Schema 1.0 fixture for the bounded xsi:nil contract.
+<!-- Synthetic XML Schema 1.0 fixture for nil and element value constraints.
      Generates zz_generated_nil_validation_test.go for runtime parity tests. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:simpleType name="word">
@@ -55,6 +55,51 @@
   <xs:element name="fixed" type="xs:string" fixed="kept" nillable="true"/>
   <xs:element name="empty-fixed" type="xs:string" fixed="" nillable="true"/>
   <xs:element name="defaulted" type="xs:int" default="7" nillable="true"/>
+  <xs:element name="default-named" type="word" default="ok" nillable="true"/>
+  <xs:element name="default-inline" default="ok" nillable="true">
+    <xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="ok"/></xs:restriction></xs:simpleType>
+  </xs:element>
+  <xs:element name="default-empty" type="xs:string" default="" nillable="true"/>
+  <xs:element name="default-plain" type="xs:int" default="7"/>
+  <xs:element name="default-pattern" default="07" nillable="true">
+    <xs:simpleType><xs:restriction base="xs:int"><xs:pattern value="0[0-9]"/></xs:restriction></xs:simpleType>
+  </xs:element>
+  <xs:element name="default-content" type="simpleDerived" default="7" nillable="true"/>
+  <xs:complexType name="optionalMixed" mixed="true">
+    <xs:sequence><xs:element name="child" type="xs:int" minOccurs="0"/></xs:sequence>
+    <xs:attributeGroup ref="checked"/>
+  </xs:complexType>
+  <xs:element name="default-mixed" type="optionalMixed" default="kept" nillable="true"/>
+  <xs:element name="fixed-mixed" type="optionalMixed" fixed="kept" nillable="true"/>
+  <xs:element name="default-ref" type="xs:IDREF" default="target" nillable="true"/>
+  <xs:element name="fixed-ref" type="xs:IDREF" fixed="target" nillable="true"/>
+  <xs:element name="default-refs" type="xs:IDREFS" default="target other" nillable="true"/>
+  <xs:element name="fixed-refs" type="xs:IDREFS" fixed="target other" nillable="true"/>
+  <xs:complexType name="referenceContent">
+    <xs:simpleContent><xs:extension base="xs:IDREF">
+      <xs:attribute name="id" type="xs:ID" use="required"/>
+    </xs:extension></xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="default-reference-content" type="referenceContent" default="target" nillable="true"/>
+  <xs:element name="fixed-reference-content" type="referenceContent" fixed="target" nillable="true"/>
+  <xs:element name="value-items">
+    <xs:complexType><xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="defaulted"/>
+      <xs:element ref="fixed"/>
+      <xs:element ref="default-ref"/>
+      <xs:element ref="fixed-ref"/>
+      <xs:element ref="default-refs"/>
+      <xs:element ref="fixed-refs"/>
+      <xs:element ref="default-reference-content"/>
+      <xs:element ref="fixed-reference-content"/>
+      <xs:element name="local-default" type="xs:int" default="7" nillable="true"/>
+      <xs:element name="local-fixed" type="xs:string" fixed="kept" nillable="true"/>
+      <xs:element name="target"><xs:complexType><xs:attribute name="id" type="xs:ID" use="required"/></xs:complexType></xs:element>
+    </xs:choice></xs:complexType>
+  </xs:element>
+  <xs:element name="required-value">
+    <xs:complexType><xs:sequence><xs:element ref="defaulted"/></xs:sequence></xs:complexType>
+  </xs:element>
   <xs:element name="any" type="xs:anyType" nillable="true"/>
   <xs:element name="complex" type="complexDerived" nillable="true"/>
   <xs:element name="simple-content" type="simpleDerived" nillable="true"/>

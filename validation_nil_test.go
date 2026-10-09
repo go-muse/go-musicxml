@@ -360,19 +360,9 @@ func TestNilContractsAgainstSchema(t *testing.T) {
 						}
 					}
 					context := validateAttributeSource(t, schema, test.source)
-					command := exec.Command(xmllint, "--nonet", "--noout", "--schema", schemaFile, "-")
-					command.Env = append(os.Environ(), "XML_CATALOG_FILES="+filepath.Join(directory, "catalog.xml"))
-					command.Stdin = strings.NewReader(test.source)
-					output, err := command.CombinedOutput()
 					wantValid := test.constraint == ""
 					assert.Equal(t, wantValid, len(context.issues) == 0, "internal validation: %v", context.issues)
-					if wantValid {
-						assert.NoErrorf(t, err, "independent XSD validation: %s", output)
-					} else {
-						var exitError *exec.ExitError
-						require.ErrorAsf(t, err, &exitError, "independent XSD validation unexpectedly accepted source: %s", output)
-						assert.Equalf(t, 3, exitError.ExitCode(), "expected schema-invalid exit, got: %s", output)
-					}
+					assertXMLLintOutcome(t, xmllint, schemaFile, filepath.Join(directory, "catalog.xml"), test.source, wantValid)
 				})
 			}
 		})

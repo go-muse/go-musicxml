@@ -573,6 +573,23 @@ func (c *validationContext) validateElement(
 		}
 	}
 
+	// XSD 1.0 cvc-elt 5.1/5.1.2 applies an element value constraint only
+	// when there are no character or element children and the element is not
+	// nilled. Whitespace is character content; comments and PIs are not.
+	// Use a validation-only view: the source text and model stay unchanged.
+	if !nilled && len(node.Children) == 0 && node.Text.Len() == 0 {
+		value := schema.Default
+		if schema.Fixed != nil {
+			value = schema.Fixed
+		}
+		if value != nil {
+			// A fresh builder avoids copying strings.Builder's internal state.
+			effective := &validationNode{Name: node.Name, Attrs: node.Attrs, Children: node.Children}
+			effective.Text.WriteString(*value)
+			node = effective
+		}
+	}
+
 	if !nilled && schema.Fixed != nil &&
 		node.Text.String() != *schema.Fixed {
 		c.addIssue(
