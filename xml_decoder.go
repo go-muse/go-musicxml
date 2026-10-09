@@ -26,7 +26,8 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 		}
 	}
 
-	decoder := xml.NewDecoder(source)
+	lexical := newLexicalXMLTokenReader(source)
+	decoder := lexical.decoder
 	decoder.CharsetReader = func(
 		charset string,
 		input io.Reader,
@@ -40,9 +41,9 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 		}
 		switch normalizeCharset(charset) {
 		case "iso88591", "latin1":
-			return &latin1Reader{
+			return lexical.switchInput(&latin1Reader{
 				source: bufio.NewReader(input),
-			}, nil
+			}), nil
 		}
 
 		return nil, fmt.Errorf(
@@ -51,7 +52,7 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 		)
 	}
 
-	var tokens xml.TokenReader = rawXMLTokenReader{decoder}
+	var tokens xml.TokenReader = lexical
 	// A byte order mark settles the encoding, whatever the declaration
 	// says. Without one, the declaration is the only evidence of the byte
 	// order and must agree with the detected one.
@@ -63,8 +64,9 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 	}
 
 	return xml.NewTokenDecoder(&wellFormedXMLTokenReader{
-		source:   tokens,
-		position: decoder.InputPos,
+		source:              tokens,
+		position:            decoder.InputPos,
+		characterDataMarkup: func() bool { return lexical.characterDataMarkup },
 	}), nil
 }
 

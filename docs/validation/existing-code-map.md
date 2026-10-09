@@ -77,13 +77,11 @@ declaration ordering retain their existing matrix coverage.
 with `xmllint --nonet --noout`, required in Linux CI, without an XSD or DTD
 validity check. The internal validation parser retains its plain UTF-8 contract.
 
-This remains a bounded existing-reader slice of `STAGE-DEF-01`. Lexical XML
-grammar beyond these literal-character checks remains deferred: `encoding/xml`
-exposes character references and CDATA as decoded `CharData`, so this predicate
-repair cannot distinguish those forbidden spellings outside the root from
-literal XML `S`. The tests do not assert their acceptance as valid behavior.
-Full declaration/DTD/namespace conformance and strict-source integration also
-remain open; planning JSON completion semantics are unchanged.
+This remains a bounded existing-reader slice of `STAGE-DEF-01`. The later
+[document-boundary lexical repair](#document-boundary-lexical-repair-update)
+closes the separate reference/CDATA gap that a decoded-character predicate
+cannot distinguish. Full declaration/DTD/namespace conformance and strict-source
+integration remain open; planning JSON completion semantics are unchanged.
 
 **Typed numeric source whitespace remains a separate deferred follow-up**, as
 recorded in [PR #23 review](https://github.com/go-muse/go-musicxml/pull/23#discussion_r4230227524).
@@ -119,6 +117,59 @@ Until that evidence contract is designed, the existing-reader evidence for
 and [`xml_wellformedness_errors_test.go`](../../xml_wellformedness_errors_test.go)
 (`TestXMLWellFormednessErrorPositions`). These are executable evidence for the
 current-reader slice, not a change to the planning JSON's completion semantics.
+
+## Document-boundary lexical repair update
+
+The existing readers now reject references and CDATA sections outside the root,
+including references to XML whitespace and empty CDATA. XML 1.0
+[document, prolog and Misc productions 1, 22 and 27](https://www.w3.org/TR/REC-xml/#sec-prolog-dtd)
+permit literal XML `S`, comments and processing instructions at these boundaries,
+with an XML declaration and DOCTYPE only in their permitted prolog positions.
+Decoded whitespace is insufficient evidence: references and CDATA are different
+lexical constructs. Both remain supported inside the root.
+
+[`xml_lexical.go`](../../xml_lexical.go) observes the innermost decoder's byte
+stream after encoding conversion. It retains only the latest `<` and `&` offsets
+and tests them against each `CharData` token's half-open `InputOffset` span.
+The decoder's lookahead `<` is excluded from the preceding literal text, while
+CDATA's own markup remains within its token even when the section is empty.
+An `io.ByteReader` prevents decoder buffering above the observer; buffering below
+it remains bounded. Latin-1 conversion installs a fresh observer at the current
+decoder offset, so upstream read-ahead and source-byte lengths cannot corrupt
+post-conversion offsets. No document or token copy, second parse, entity expansion
+or resource fetching is added.
+
+[`wellFormedXMLTokenReader`](../../xml_wellformedness.go) applies this origin check
+only outside its existing element scopes, below namespace/model filtering. New
+failures wrap `*xml.SyntaxError` and report the innermost decoder's detection line
+at the end of the offending token. Literal-character boundary errors retain
+their existing messages; namespace/depth checks and deferred MXL parsing retain
+their existing contracts. The internal validation parser still takes plain UTF-8;
+public readers retain their existing UTF-8, UTF-16 and Latin-1 support.
+
+Executable evidence is in
+[`xml_document_lexical_test.go`](../../xml_document_lexical_test.go): the
+`TestXMLDocumentLexicalDecodePaths`, `Container`, `ValidationParser` and
+`LinkedResources` tests reuse the shared XML-reading matrix. Negative cases cover
+all four XML `S` characters as decimal and hexadecimal references, predefined
+entities, empty/whitespace/text CDATA, declaration/DOCTYPE/tail boundaries and
+self-closing roots. Controls preserve literal whitespace, markup-looking text in
+comments/PIs/DTD literals, attribute references, and legal known/unknown/foreign
+content. `TestXMLDocumentLexicalErrors` checks syntax-error lines and no-root
+inputs; `PreservesText` checks exact text and model round trips; `Streaming` and
+`BoundedReadAhead` cover buffer boundaries, charset offset divergence, supplementary
+characters, one-byte/data-plus-EOF readers and incremental root delivery.
+
+`TestXMLDocumentLexicalAgainstXMLLint` compares identical original bytes through
+the shared `xmllint --nonet --noout` driver, required in Linux CI. This is XML
+well-formedness evidence, not XSD or DTD validity and not Decode/Encode parity.
+
+This is another bounded current-reader prerequisite under `STAGE-DEF-01` and
+`DEF01-03`/`DEF01-04`; it does not complete the stage or a strict-source adapter.
+Production schemas, generated models/metadata and public API signatures are
+unchanged. Numeric transport whitespace, full declaration/DTD/namespace grammar,
+new validation profiles and machine-readable implementation evidence remain
+separate work. Planning JSON retains `status: planned`.
 
 ## Ordinary-attribute repair update
 
