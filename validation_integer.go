@@ -15,6 +15,8 @@ type validationInteger struct {
 	negative bool
 }
 
+// Keep lexical acceptance aligned with parseXMLUnsignedInteger; that transport
+// helper separately preserves machine-conversion values and strconv error details.
 func parseValidationInteger(value string) (validationInteger, bool) {
 	value = strings.Trim(value, xmlWhitespace)
 	negative := false

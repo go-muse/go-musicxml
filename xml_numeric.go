@@ -8,6 +8,8 @@ import (
 // parseXMLUnsignedInteger accepts the signed lexical forms of the XSD integer
 // family when their value fits the unsigned Go representation. Range facets
 // such as positiveInteger's exclusion of zero remain the validator's job.
+// Keep lexical acceptance aligned with parseValidationInteger, whose exact
+// digit views do not impose this transport helper's machine-conversion limits.
 func parseXMLUnsignedInteger(value string, bitSize int) (uint64, error) {
 	original := value
 	value = strings.Trim(value, xmlWhitespace)
