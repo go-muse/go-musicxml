@@ -554,11 +554,10 @@ func (c *validationContext) validateElement(
 	nilled := false
 	if nilPresent {
 		nilPath := validationAttributePath(path, xml.Name{Space: validationXSINamespace, Local: "nil"})
-		if failure := validateBuiltin("boolean", nilValue); failure != nil {
+		if value, failure := parseValidationBoolean(nilValue); failure != nil {
 			c.addIssue(nilPath, failure.constraint, failure.message)
 		} else {
-			normalized := normalizeValidationWhitespace("boolean", nilValue)
-			nilled = schema.Nillable && (normalized == "true" || normalized == "1")
+			nilled = schema.Nillable && value
 		}
 		if !schema.Nillable {
 			c.addIssue(nilPath, "nillable", "element is not nillable")
@@ -1426,6 +1425,10 @@ func validateBuiltin(
 	name string,
 	value string,
 ) *validationSimpleFailure {
+	if name == "boolean" {
+		_, failure := parseValidationBoolean(value)
+		return failure
+	}
 	normalized := normalizeValidationWhitespace(name, value)
 
 	switch name {
@@ -1472,12 +1475,6 @@ func validateBuiltin(
 			slices.ContainsFunc(items, func(item string) bool {
 				return !validXMLNCName(item)
 			}) == false {
-			return nil
-		}
-
-	case "boolean":
-		switch normalized {
-		case "true", "false", "1", "0":
 			return nil
 		}
 
@@ -1563,6 +1560,22 @@ func validateBuiltin(
 			value,
 			name,
 		),
+	}
+}
+
+// parseValidationBoolean shares XSD whitespace and lexical handling between
+// ordinary boolean values and the xsi:nil element constraint.
+func parseValidationBoolean(value string) (bool, *validationSimpleFailure) {
+	switch normalizeValidationWhitespace("boolean", value) {
+	case "true", "1":
+		return true, nil
+	case "false", "0":
+		return false, nil
+	default:
+		return false, &validationSimpleFailure{
+			constraint: "datatype",
+			message:    fmt.Sprintf("value %q is not valid for xs:boolean", value),
+		}
 	}
 }
 

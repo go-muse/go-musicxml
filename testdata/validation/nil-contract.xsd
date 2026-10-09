@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Synthetic XML Schema 1.0 fixture for the bounded xsi:nil contract.
-     Kept in sync with validationNilSchema in validation_nil_test.go. -->
+     Generates zz_generated_nil_validation_test.go for runtime parity tests. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:simpleType name="word">
     <xs:restriction base="xs:string"><xs:enumeration value="ok"/></xs:restriction>

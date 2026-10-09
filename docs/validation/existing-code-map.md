@@ -217,6 +217,18 @@ ID/IDREF tracking. False nil uses ordinary content and attribute validation.
 Diagnostics for the nil attribute use its expanded-name path, independently
 of the source prefix.
 
+Two pre-existing assessment limits remain explicit. When a true-nilled element
+illegally contains children, the validator reports the parent's nil-content
+failure and still checks its attributes, but does not assess those descendants
+or record their identities. A reference elsewhere to an ID only inside that
+rejected subtree can therefore produce an additional unresolved-IDREF issue.
+Empty-content application of schema default/fixed value constraints
+([cvc-elt clause 5.1.1][nil-rule]) is also not implemented: empty `defaulted` or
+`fixed` elements with absent or false nil may fail current scalar/fixed checks
+even when the synthetic XSD accepts them. The parity cases do not claim coverage
+of those empty-value-constraint forms. Neither limitation is expanded in this
+bounded nil repair.
+
 Executable evidence is in [`validation_nil_test.go`](../../validation_nil_test.go):
 `TestValidateNilContracts`, `TestValidateNilIdentityTracking`,
 `TestValidateMusicXMLNilContracts`, `TestNilContractsAgainstSchema`, and
@@ -224,7 +236,13 @@ Executable evidence is in [`validation_nil_test.go`](../../validation_nil_test.g
 original XML bytes for its internal/oracle parity cases with real
 `xmllint --nonet`; Linux CI requires it to execute. Positive nil cases use the synthetic
 [`nil-contract.xsd`](../../testdata/validation/nil-contract.xsd), because the
-pinned MusicXML score and opus declarations are all nonnillable. Real MusicXML
+pinned MusicXML score and opus declarations are all nonnillable. The fixture's
+runtime metadata is generated into the test-only
+[`zz_generated_nil_validation_test.go`](../../zz_generated_nil_validation_test.go)
+using the existing schema generator and a local empty catalog. `go generate`
+and the `check-all` generation stage guard schema/metadata drift; no handwritten
+full-schema mirror remains. Positive cases also compose nil with the standard
+schema-location hint names on simple and complex elements. Real MusicXML
 negative cases prevent synthetic-schema support from implying new MusicXML
 nil support. Separate internal assertions cover known libxml2 2.9.14 limitations: it accepts
 unresolved IDREF(S) and whitespace-only IDREFS, and rejects empty CDATA on

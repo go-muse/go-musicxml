@@ -39,8 +39,9 @@ for the same stages, and the CI jobs run them from the same script.
 
 ## Generated code
 
-Files named `zz_generated_*.go` are generated from the XSD files in
-`schema/musicxml-4.0`.
+Files named `zz_generated_*.go` are generated from XSD inputs. Production files
+use `schema/musicxml-4.0`; the test-only `zz_generated_nil_validation_test.go`
+uses `testdata/validation/nil-contract.xsd` and its local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,83 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// validationNilSchema mirrors testdata/validation/nil-contract.xsd. The real
-// MusicXML schemas have no nillable declarations, so they cannot exercise the
-// positive contract. No schema parser or public raw-source API is added here.
-func validationNilSchema() *validationSchemaSet {
-	builtin := func(name string) validationTypeRef {
-		return validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
-	}
-	attributes := []validationAttributeSchema{
-		{Name: validationQName{Local: "required"}, Type: builtin("int"), Use: validationAttributeRequired},
-		{Name: validationQName{Local: "blocked"}, Type: builtin("string"), Use: validationAttributeProhibited},
-		{Name: validationQName{Local: "locked"}, Type: builtin("token"), Constraint: &validationValueConstraint{Kind: "fixed", Value: "kept"}},
-		{Name: validationQName{Local: "id"}, Type: builtin("ID")},
-		{Name: validationQName{Local: "ref"}, Type: builtin("IDREF")},
-		{Name: validationQName{Local: "refs"}, Type: builtin("IDREFS")},
-	}
-	particle := func(element *validationElementSchema, unbounded bool) *validationParticleSchema {
-		return &validationParticleSchema{
-			Kind: validationParticleElement, Occurrence: validationOccurrence{Min: 1, Max: 1, Unbounded: unbounded}, Element: element,
-		}
-	}
-	child := particle(&validationElementSchema{Name: validationQName{Local: "child"}, Type: builtin("int")}, false)
-	word := &validationSimpleSchema{Form: validationSimpleRestriction,
-		Base: &validationSimpleMember{Name: builtin("string").Name}, Enumerations: []string{"ok"}}
-	intType := builtin("int")
-	baseAttributes := append([]validationAttributeSchema(nil), attributes...)
-	baseAttributes[1].Use = validationAttributeOptional
-	base := &validationComplexSchema{Form: validationComplexDirect, Particle: child, Attributes: baseAttributes}
-	restricted := &validationComplexSchema{Form: validationComplexComplexContentRestriction,
-		Base: &validationTypeRef{Name: validationQName{Local: "complexBase"}}, Particle: child, Attributes: attributes}
-	simpleBase := &validationComplexSchema{Form: validationComplexSimpleContentExtension, Base: &intType, Attributes: baseAttributes}
-	simpleRestricted := &validationComplexSchema{Form: validationComplexSimpleContentRestriction,
-		Base: &validationTypeRef{Name: validationQName{Local: "simpleBase"}}, Attributes: []validationAttributeSchema{attributes[1]}}
-	derived := &validationComplexSchema{Form: validationComplexComplexContentExtension,
-		Base:       &validationTypeRef{Name: validationQName{Local: "complexRestricted"}},
-		Attributes: []validationAttributeSchema{{Name: validationQName{Local: "extra"}, Type: builtin("string")}}}
-	simpleDerived := &validationComplexSchema{Form: validationComplexSimpleContentExtension,
-		Base:       &validationTypeRef{Name: validationQName{Local: "simpleRestricted"}},
-		Attributes: []validationAttributeSchema{{Name: validationQName{Local: "extra"}, Type: builtin("string")}}}
-	schema := &validationSchemaSet{
-		Types: map[validationQName]*validationTypeSchema{
-			{Local: "word"}: {Simple: word}, {Local: "complexBase"}: {Complex: base},
-			{Local: "complexRestricted"}: {Complex: restricted}, {Local: "simpleRestricted"}: {Complex: simpleRestricted},
-			{Local: "complexDerived"}: {Complex: derived}, {Local: "simpleBase"}: {Complex: simpleBase},
-			{Local: "simpleDerived"}: {Complex: simpleDerived},
-		},
-		Elements: make(map[validationQName]*validationElementSchema),
-	}
-	add := func(name string, reference validationTypeRef, nillable bool) *validationElementSchema {
-		element := &validationElementSchema{Name: validationQName{Local: name}, Type: reference, Nillable: nillable}
-		schema.Elements[element.Name] = element
-		return element
-	}
-	add("plain", builtin("string"), false)
-	add("integer", builtin("int"), true)
-	add("named", validationTypeRef{Name: validationQName{Local: "word"}}, true)
-	add("inline", validationTypeRef{InlineSimple: word}, true)
-	add("simple", builtin("anySimpleType"), true)
-	add("fixed", builtin("string"), true).Fixed = validationString("kept")
-	add("empty-fixed", builtin("string"), true).Fixed = validationString("")
-	add("defaulted", builtin("int"), true).Default = validationString("7")
-	add("any", builtin("anyType"), true)
-	add("complex", validationTypeRef{Name: validationQName{Local: "complexDerived"}}, true)
-	simpleType := validationTypeRef{Name: validationQName{Local: "simpleDerived"}}
-	add("simple-content", simpleType, true)
-	add("fixed-content", simpleType, true).Fixed = validationString("7")
-	add("mixed", validationTypeRef{InlineComplex: &validationComplexSchema{
-		Form: validationComplexDirect, Particle: child, Attributes: attributes, Mixed: true,
-	}}, true)
-	add("references", validationTypeRef{InlineComplex: &validationComplexSchema{
-		Form: validationComplexDirect, Particle: particle(&validationElementSchema{Reference: validationQName{Local: "integer"}}, true),
-	}}, false)
-	add("items", validationTypeRef{InlineComplex: &validationComplexSchema{
-		Form: validationComplexDirect, Particle: particle(&validationElementSchema{Name: validationQName{Local: "item"}, Type: simpleType, Nillable: true}, true),
-	}}, false)
-	return schema
-}
-
+// The real MusicXML schemas have no nillable declarations. The positive
+// contract uses validationNilGenerated, generated from the same synthetic XSD
+// supplied to xmllint. Shared schema metadata is read-only; validation contexts
+// (including effective-type caches) are fresh for every source.
 func validationNilCases() []validationAttributeCase {
 	nilPath := "/@{" + validationXSINamespace + "}nil"
 	wrap := func(name, attributes, content string) string {
@@ -110,6 +38,20 @@ func validationNilCases() []validationAttributeCase {
 			add(element.name+" nonnil "+value, element.name, element.attributes+` n:nil="`+value+`"`, element.content, "", "")
 		}
 		add(element.name+" absent", element.name, element.attributes, element.content, "", "")
+		for _, hint := range []struct{ name, attributes string }{
+			{"schemaLocation", ` n:schemaLocation="urn:example https://example.invalid/schema.xsd"`},
+			{"noNamespaceSchemaLocation", ` n:noNamespaceSchemaLocation="nil-contract.xsd"`},
+			{"both schema hints", ` n:schemaLocation="urn:example https://example.invalid/schema.xsd" n:noNamespaceSchemaLocation="nil-contract.xsd"`},
+		} {
+			for _, value := range []string{"true", "false"} {
+				content := element.content
+				if value == "true" {
+					content = ""
+				}
+				add(element.name+" nil "+value+" with "+hint.name, element.name,
+					element.attributes+` n:nil="`+value+`"`+hint.attributes, content, "", "")
+			}
+		}
 		for _, content := range []string{" ", "\t\r\n", "&#xD;", "&#xA0;", "text", "<![CDATA[ ]]>", "<child/>"} {
 			add(element.name+" nil content "+content, element.name, element.attributes+` n:nil="true"`, content, "nillable", "")
 		}
@@ -190,7 +132,7 @@ func TestValidateNilContracts(t *testing.T) {
 	for _, test := range validationNilCases() {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			assertValidationNilCase(t, validationNilSchema(), test)
+			assertValidationNilCase(t, &validationNilGenerated, test)
 		})
 	}
 }
@@ -219,7 +161,7 @@ func TestValidateNilIdentityTracking(t *testing.T) {
 		{"false retains ID tracking", `<items xmlns:n="` + validationXSINamespace + `"><item n:nil="false" required="1" ref="later">7</item><item n:nil="0" required="2" id="later">8</item></items>`, "", ""},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			context := validateAttributeSource(t, validationNilSchema(), test.source)
+			context := validateAttributeSource(t, &validationNilGenerated, test.source)
 			if test.constraint != "" {
 				require.Len(t, context.issues, 1)
 				assert.Equal(t, test.constraint, context.issues[0].Constraint)
@@ -241,7 +183,7 @@ func TestValidateNilIdentityTypeForms(t *testing.T) {
 	for _, element := range []string{"complex", "simple-content", "mixed"} {
 		t.Run(element, func(t *testing.T) {
 			source := `<` + element + ` xmlns:n="` + validationXSINamespace + `" n:nil="true" required="1" id=" &#x9;known&#xA; " ref="known" refs="known&#x9;known"/>`
-			context := validateAttributeSource(t, validationNilSchema(), source)
+			context := validateAttributeSource(t, &validationNilGenerated, source)
 			assert.Empty(t, context.issues)
 			assert.Equal(t, map[string]string{"known": "/" + element + "/@id"}, context.identifiers)
 			require.Len(t, context.references, 3)
@@ -251,14 +193,27 @@ func TestValidateNilIdentityTypeForms(t *testing.T) {
 		})
 	}
 	for _, simpleContent := range []bool{false, true} {
-		schema := validationNilSchema()
+		// These scalar identity controls need ID-valued content. Copy only the
+		// metadata being changed so parallel tests keep the generated schema
+		// immutable; validateAttributeSource supplies a fresh context each time.
+		schema := validationNilGenerated
 		id := validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "ID"}}
 		element, attributes := "simple", ""
 		if simpleContent {
-			schema.Types[validationQName{Local: "simpleBase"}].Complex.Base = &id
+			schema.Types = maps.Clone(schema.Types)
+			name := validationQName{Local: "simpleBase"}
+			baseType := *schema.Types[name]
+			baseComplex := *baseType.Complex
+			baseComplex.Base = &id
+			baseType.Complex = &baseComplex
+			schema.Types[name] = &baseType
 			element, attributes = "simple-content", ` required="1" id="attribute-id"`
 		} else {
-			schema.Elements[validationQName{Local: "simple"}].Type = id
+			schema.Elements = maps.Clone(schema.Elements)
+			name := validationQName{Local: "simple"}
+			declaration := *schema.Elements[name]
+			declaration.Type = id
+			schema.Elements[name] = &declaration
 		}
 		for _, nilled := range []bool{false, true} {
 			value, content := "false", "content-id"
@@ -266,7 +221,7 @@ func TestValidateNilIdentityTypeForms(t *testing.T) {
 				value, content = "true", ""
 			}
 			source := `<` + element + ` xmlns:n="` + validationXSINamespace + `" n:nil="` + value + `"` + attributes + `>` + content + `</` + element + `>`
-			context := validateAttributeSource(t, schema, source)
+			context := validateAttributeSource(t, &schema, source)
 			assert.Empty(t, context.issues)
 			want := map[string]string{}
 			if simpleContent {
@@ -299,7 +254,7 @@ func TestValidateNilIndependentIssues(t *testing.T) {
 			[]string{"required", "content-model"}, []string{"/complex/@required", "/complex"}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			context := validateAttributeSource(t, validationNilSchema(), test.source)
+			context := validateAttributeSource(t, &validationNilGenerated, test.source)
 			require.Len(t, context.issues, len(test.constraints))
 			for index, issue := range context.issues {
 				assert.Equal(t, test.constraints[index], issue.Constraint)
@@ -307,6 +262,16 @@ func TestValidateNilIndependentIssues(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidateNilBooleanDiagnostic(t *testing.T) {
+	t.Parallel()
+	source := `<simple xmlns:n="` + validationXSINamespace + `" n:nil="&#x9;maybe&#xA;"/>`
+	context := validateAttributeSource(t, &validationNilGenerated, source)
+	require.Len(t, context.issues, 1)
+	assert.Equal(t, "datatype", context.issues[0].Constraint)
+	assert.Equal(t, "/simple/@{"+validationXSINamespace+"}nil", context.issues[0].Path)
+	assert.Equal(t, `value "\tmaybe\n" is not valid for xs:boolean`, context.issues[0].Message)
 }
 
 func validationMusicXMLNilCases() []validationAttributeCase {
@@ -384,7 +349,7 @@ func TestNilContractsAgainstSchema(t *testing.T) {
 		t.Run(group.name, func(t *testing.T) {
 			for _, test := range group.cases {
 				t.Run(test.name, func(t *testing.T) {
-					schema := validationNilSchema()
+					schema := &validationNilGenerated
 					schemaFile := filepath.Join("testdata", "validation", "nil-contract.xsd")
 					if group.name == "MusicXML" {
 						schema = &scoreValidationSchema
@@ -453,7 +418,7 @@ func TestValidateNilOracleLimitations(t *testing.T) {
 		{name: "empty IDREFS", source: `<simple-content xmlns:n="` + validationXSINamespace + `" n:nil="true" required="1" refs=" "/>`, constraint: "datatype", path: "/simple-content/@refs"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			assertValidationNilCase(t, validationNilSchema(), test)
+			assertValidationNilCase(t, &validationNilGenerated, test)
 		})
 	}
 }
