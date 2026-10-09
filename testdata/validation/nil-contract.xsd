@@ -92,6 +92,8 @@
       <xs:element ref="fixed-refs"/>
       <xs:element ref="default-reference-content"/>
       <xs:element ref="fixed-reference-content"/>
+      <xs:element name="local-default" type="xs:int" default="7" nillable="true"/>
+      <xs:element name="local-fixed" type="xs:string" fixed="kept" nillable="true"/>
       <xs:element name="target"><xs:complexType><xs:attribute name="id" type="xs:ID" use="required"/></xs:complexType></xs:element>
     </xs:choice></xs:complexType>
   </xs:element>

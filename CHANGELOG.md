@@ -26,6 +26,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Apply element default/fixed values to genuinely empty, nonnilled elements in
+  the internal XML validator. Whitespace-only content and true nil do not
+  trigger defaulting; source nodes and caller models remain unchanged. The
+  pinned MusicXML schemas have no element value constraints, and public
+  `Validate` still assesses the encoded model.
+
 - Enforce the `xsi:nil` boolean, nillability, empty-content and fixed-value
   contracts in the internal XML validator. Nilled complex elements still check
   their attributes and identity references. Any `xsi:nil` is rejected on the

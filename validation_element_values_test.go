@@ -82,6 +82,30 @@ func validationElementValueCases() []validationAttributeCase {
 		validationAttributeCase{name: "required element is not created", source: `<required-value/>`, constraint: "content-model", path: "/required-value"},
 		validationAttributeCase{name: "present required element defaults", source: `<required-value><defaulted/></required-value>`},
 	)
+	// Local declarations carry their own constraints, without a global ref.
+	for _, element := range []struct{ name, value, whitespaceFailure string }{
+		{"local-default", "7", "datatype"}, {"local-fixed", "kept", "fixed"},
+	} {
+		for _, test := range []struct{ name, attributes, content, constraint string }{
+			{"empty", "", "", ""},
+			{"comments", "", "<!--comment-->", ""},
+			{"explicit", "", element.value, ""},
+			{"false nil", ` n:nil="false"`, "", ""},
+			{"zero nil", ` n:nil="0"`, "", ""},
+			{"whitespace", "", " ", element.whitespaceFailure},
+			{"unknown attribute", ` rubbish="x"`, "", "attribute"},
+		} {
+			path := "/value-items/" + element.name
+			if test.constraint == "attribute" {
+				path += "/@rubbish"
+			}
+			tests = append(tests, validationAttributeCase{
+				name:       element.name + " " + test.name,
+				source:     `<value-items xmlns:n="` + validationXSINamespace + `"><` + element.name + test.attributes + `>` + test.content + `</` + element.name + `></value-items>`,
+				constraint: test.constraint, path: path,
+			})
+		}
+	}
 	return tests
 }
 
@@ -108,19 +132,10 @@ func TestElementValueConstraintsAgainstSchema(t *testing.T) {
 	for _, test := range validationElementValueCases() {
 		t.Run(test.name, func(t *testing.T) {
 			context := validateAttributeSource(t, &validationNilGenerated, test.source)
-			command := exec.Command(xmllint, "--nonet", "--noout", "--schema", filepath.Join(directory, "nil-contract.xsd"), "-")
-			command.Env = append(os.Environ(), "XML_CATALOG_FILES="+filepath.Join(directory, "catalog.xml"))
-			command.Stdin = strings.NewReader(test.source)
-			output, err := command.CombinedOutput()
 			wantValid := test.constraint == ""
 			assert.Equal(t, wantValid, len(context.issues) == 0, "internal validation: %v", context.issues)
-			if wantValid {
-				assert.NoErrorf(t, err, "independent XSD validation: %s", output)
-			} else {
-				var exitError *exec.ExitError
-				require.ErrorAsf(t, err, &exitError, "independent XSD validation unexpectedly accepted source: %s", output)
-				assert.Equalf(t, 3, exitError.ExitCode(), "expected schema-invalid exit, got: %s", output)
-			}
+			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "nil-contract.xsd"),
+				filepath.Join(directory, "catalog.xml"), test.source, wantValid)
 		})
 	}
 }

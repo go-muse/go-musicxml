@@ -89,15 +89,7 @@ func TestAnyURILexicalFormsAgainstOpusSchema(t *testing.T) {
 			document := &OpusDocument{Content: OpusDocumentContents{{Score: &OpusScore{Href: test.href}}}}
 			var encoded bytes.Buffer
 			require.NoError(t, Encode(&encoded, document))
-			command := exec.Command(xmllint, "--nonet", "--noout", "--schema", filepath.Join(directory, "opus.xsd"), "-")
-			command.Env = append(os.Environ(), "XML_CATALOG_FILES="+filepath.Join(directory, "catalog.xml"))
-			command.Stdin = bytes.NewReader(encoded.Bytes())
-			output, err := command.CombinedOutput()
-			if test.valid {
-				assert.NoErrorf(t, err, "independent XSD validation: %s", output)
-			} else {
-				assert.Errorf(t, err, "independent XSD validation unexpectedly accepted %q", test.href)
-			}
+			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "opus.xsd"), filepath.Join(directory, "catalog.xml"), encoded.String(), test.valid)
 		})
 	}
 }

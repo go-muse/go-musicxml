@@ -285,7 +285,7 @@ defaults and still rejects a fixed constraint.
 Executable evidence is in
 [`validation_element_values_test.go`](../../validation_element_values_test.go).
 The matrix covers builtin/named/inline simple types, inherited simple-content,
-mixed content with an emptiable particle, referenced declarations, empty-string
+mixed content with an emptiable particle, global/referenced and local declarations, empty-string
 constraints, lexical-pattern preservation, nil/whitespace/content boundaries,
 ordinary attributes, and public partwise/timewise/opus model stability. Both the
 internal validator and `TestElementValueConstraintsAgainstSchema` receive the
