@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- Synthetic XSD 1.0 atomic decimal comparison contracts. -->
+<!-- Synthetic XSD 1.0 atomic decimal value-space contracts. -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:element name="decimal" type="xs:decimal"/>
   <xs:simpleType name="decimal-type"><xs:restriction base="xs:decimal"/></xs:simpleType>
@@ -27,4 +27,26 @@
   <xs:element name="scalar" type="derived-scalar-type" fixed="+0001.2500"/>
   <xs:element name="list"><xs:simpleType><xs:list itemType="min-type"/></xs:simpleType></xs:element>
   <xs:element name="union"><xs:simpleType><xs:union memberTypes="min-type"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="none"/></xs:restriction></xs:simpleType></xs:union></xs:simpleType></xs:element>
+  <xs:simpleType name="total-three-type"><xs:restriction base="decimal-type"><xs:totalDigits value="3"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="fraction-two-type"><xs:restriction base="decimal-type"><xs:fractionDigits value="2"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="digits-type"><xs:restriction base="total-three-type"><xs:fractionDigits value="2"/></xs:restriction></xs:simpleType>
+  <xs:element name="total-one"><xs:simpleType><xs:restriction base="xs:decimal"><xs:totalDigits value="1"/></xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="total-three" type="total-three-type"/>
+  <xs:element name="fraction-zero"><xs:simpleType><xs:restriction base="xs:decimal"><xs:fractionDigits value="0"/></xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="fraction-two" type="fraction-two-type"/>
+  <xs:element name="digits" type="digits-type" nillable="true"/>
+  <xs:element name="digits-layered"><xs:simpleType><xs:restriction base="digits-type"><xs:totalDigits value="2"/></xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="digits-pattern"><xs:simpleType><xs:restriction base="digits-type"><xs:pattern value="0[0-9]\.[0-9]{3}"/></xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="digits-enum"><xs:simpleType><xs:restriction base="digits-type"><xs:enumeration value="+001.2000"/></xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="digits-default" type="digits-type" default="+001.2000"/>
+  <xs:element name="digits-fixed" type="digits-type" fixed="+001.2000"/>
+  <xs:complexType name="digits-scalar-type"><xs:simpleContent><xs:extension base="digits-type">
+    <xs:attribute name="total" type="total-three-type"/>
+    <xs:attribute name="fraction" type="fraction-two-type"/>
+    <xs:attribute name="digits" type="digits-type"/>
+  </xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="digits-derived-type"><xs:simpleContent><xs:extension base="digits-scalar-type"/></xs:simpleContent></xs:complexType>
+  <xs:element name="digits-scalar" type="digits-derived-type" nillable="true"/>
+  <xs:element name="digits-list"><xs:simpleType><xs:list itemType="digits-type"/></xs:simpleType></xs:element>
+  <xs:element name="digits-union"><xs:simpleType><xs:union memberTypes="digits-type"><xs:simpleType><xs:restriction base="xs:string"><xs:enumeration value="none"/></xs:restriction></xs:simpleType></xs:union></xs:simpleType></xs:element>
 </xs:schema>

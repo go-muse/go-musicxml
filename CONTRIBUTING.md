@@ -45,7 +45,7 @@ uses `testdata/validation/nil-contract.xsd` for nil, element value-constraint an
 content-category contracts. `zz_generated_integer_validation_test.go` uses
 `testdata/validation/integer-contract.xsd` for exact integer value-space contracts.
 `zz_generated_decimal_validation_test.go` uses
-`testdata/validation/decimal-contract.xsd` for atomic decimal ordering and equality.
+`testdata/validation/decimal-contract.xsd` for atomic decimal ordering, equality and digit facets.
 All three test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under

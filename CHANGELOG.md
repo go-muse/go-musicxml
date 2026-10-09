@@ -26,10 +26,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Apply decimal `totalDigits` and `fractionDigits` to exact values in the existing
+  validator, accepting redundant whole/fractional zero padding while retaining
+  XSD 1.0 coefficient and scale limits. This synthetic-schema-tested operator
+  repair leaves typed transport and the pinned MusicXML schemas unchanged.
+
 - Compare decimal-derived bounds, enumerations and fixed values exactly in the
   existing validator, including alternate equal spellings and values outside
-  floating-point precision/range. Typed transport and decimal digit facets are
-  unchanged.
+  floating-point precision/range. Typed transport is unchanged.
 
 - Validate integer value spaces and integer-derived bounds, enumeration/fixed
   equality and digit facets exactly, including values beyond Go integer ranges.

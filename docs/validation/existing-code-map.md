@@ -218,7 +218,7 @@ source-assessment or conversion-report API is introduced.
 
 This is a bounded existing-validator slice of `STAGE-DEF-03` (`DEF03-01/04` and
 integer comparison portions of `DEF03-02`), not completion of that stage.
-Decimal comparisons are covered by the later repair below; decimal digit facets,
+Decimal comparisons and digit facets are covered by the later repairs below;
 typed union/list aggregate equality, omitted complex simple-content restriction
 facets in generated metadata, contextual arithmetic,
 session parse-once caching, shared budgets and incomplete/conversion reports
@@ -277,8 +277,8 @@ range error for a huge finite value. Public `Validate` still uses Encode/reparse
 and cannot recover source precision discarded by model conversion.
 
 This is another bounded existing-validator portion of `STAGE-DEF-03`
-(`REQ-DEF-NUM-EXACT`, `DEF03-02/04`). Decimal `totalDigits`/`fractionDigits`, typed
-union/list aggregate equality, missing complex simple-content restriction facets,
+(`REQ-DEF-NUM-EXACT`, `DEF03-02/04`). Decimal digit facets are covered by the
+later repair below. Typed union/list aggregate equality, missing complex simple-content restriction facets,
 contextual arithmetic, parse-once session caching, resource budgets,
 incomplete/conversion reports and strict-source/direct-model adapters remain
 separate work. No public API, model-decimal interpretation, profile or planning
@@ -286,6 +286,48 @@ completion semantics changes; all relevant planning statuses remain `planned`.
 
 [decimal-domain]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#decimal
 [decimal-facets]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-maxInclusive
+
+## Exact decimal digit-facet repair update
+
+The existing validator now evaluates atomic decimal `totalDigits` and
+`fractionDigits` from the immutable decimal value views, rather than counting
+source spelling. Leading whole zeros and trailing fractional zeros do not alter
+the result. Leading fractional zeros and trailing whole zeros remain relevant:
+`.001` requires `totalDigits >= 3`, and `1000` requires `totalDigits >= 4`.
+Every signed zero has scale zero and a total count of one.
+
+This follows XSD 1.0 Second Edition [totalDigits][decimal-total-digits] and
+[fractionDigits][decimal-fraction-digits]: `totalDigits` restricts both the
+coefficient magnitude and scale, while `fractionDigits` bounds scale alone.
+The existing normalized views permit constant-space, linear-time counting without
+float conversion, arithmetic, exponent expansion or a new numeric limit.
+Patterns still see the original normalized spelling; source values and generated
+schema literals are not rewritten. Existing issue paths, constraint names and
+failure order are preserved, with digit-count messages now reporting value counts.
+Integer behavior and nondecimal fallback remain on their existing paths.
+
+[`validation_decimal_digits_test.go`](../../validation_decimal_digits_test.go)
+provides raw-source positive, negative and boundary regressions with
+[generated synthetic metadata](../../testdata/validation/decimal-contract.xsd).
+It covers named/inline/layered restrictions, attributes and effective complex
+simple-content extensions, defaults/fixed values, nil and child interactions,
+lexical patterns, and decimal list items/union members. The same source bytes run
+against `xmllint --nonet --schema` in `TestDecimalDigitFacetsAgainstSchema`,
+required by Linux CI. Its ordinary-width subset excludes unsupported huge values
+and libxml2's lexical element-fixed equality limitation. Separate internal tests
+use a reduced-rational arithmetic oracle, 4,096-digit boundary values, immutable
+source/schema checks, exact diagnostics and a one-MiB zero-allocation success case.
+
+The pinned MusicXML schemas declare neither facet; this is a verified reusable
+scalar prerequisite under `STAGE-DEF-03` / `REQ-DEF-NUM-EXACT`, not a new MusicXML
+profile or completion of that stage. Missing complex simple-content restriction
+metadata, schema-component validity/metadata-width limits, typed aggregate
+equality, contextual arithmetic, transport and current-model interpretation,
+session caching/budgets, incomplete/conversion reports and the proposed adapters
+remain separate work. Planning statuses remain `planned`.
+
+[decimal-total-digits]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-totalDigits
+[decimal-fraction-digits]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-fractionDigits
 
 ## Ordinary-attribute repair update
 
