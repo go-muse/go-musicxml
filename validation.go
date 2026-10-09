@@ -1297,6 +1297,10 @@ func (c *validationContext) validateSimpleValue(
 			}
 		}
 
+		// Patterns in one restriction are alternatives; the base assessment above
+		// preserves intersection across restriction layers. Check every alternative
+		// so an earlier match or miss cannot conceal an invalid generated pattern.
+		patternsMatched := len(schema.Patterns) == 0
 		for _, pattern := range schema.Patterns {
 			matched, err := matchValidationPattern(pattern, normalized)
 			if err != nil {
@@ -1309,16 +1313,16 @@ func (c *validationContext) validateSimpleValue(
 					),
 				}
 			}
-			if !matched {
-				return "", &validationSimpleFailure{
-					constraint: "pattern",
-					message: fmt.Sprintf(
-						"value %q does not match XSD pattern %q",
-						display,
-						pattern,
-					),
-				}
+			patternsMatched = patternsMatched || matched
+		}
+		if !patternsMatched {
+			var message string
+			if len(schema.Patterns) == 1 {
+				message = fmt.Sprintf("value %q does not match XSD pattern %q", display, schema.Patterns[0])
+			} else {
+				message = fmt.Sprintf("value %q does not match any XSD pattern in %q", display, schema.Patterns)
 			}
+			return "", &validationSimpleFailure{constraint: "pattern", message: message}
 		}
 
 		if failure := validateBoundsValue(schema, normalized, builtin, display); failure != nil {

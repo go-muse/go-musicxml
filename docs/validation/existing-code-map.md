@@ -321,9 +321,10 @@ source/schema checks, exact diagnostics and a one-MiB zero-allocation success ca
 
 The pinned MusicXML schemas declare neither facet; this is a verified reusable
 scalar prerequisite under `STAGE-DEF-03` / `REQ-DEF-NUM-EXACT`, not a new MusicXML
-profile or completion of that stage. Mixed-base simple-content restrictions,
-wider whitespace/pattern semantics,
-schema-component validity/metadata-width limits, typed aggregate
+profile or completion of that stage. The later effective-whitespace and
+[pattern-group repair](#same-level-pattern-alternatives-repair-update) close those
+bounded scalar gaps. Mixed-base simple-content restrictions, broader regex
+semantics, schema-component validity/metadata-width limits, typed aggregate
 equality, contextual arithmetic, transport and current-model interpretation,
 session caching/budgets, incomplete/conversion reports and the proposed adapters
 remain separate work. Planning statuses remain `planned`.
@@ -358,11 +359,12 @@ partially resolved types.
 The bridge applies the existing enumeration, single-pattern, bound, length and
 digit-facet operators, including exact integer/decimal value comparisons. It
 preserves supported facet values, but does **not** claim complete facet semantics:
-The subsequent [effective-whitespace repair](#effective-scalar-whitespace-repair-update)
-executes `whiteSpace`; same-level multiple-pattern alternatives, broader regex
-coverage, schema-component validity, fixed-facet metadata and facet-metadata
-width remain separate work. In particular, preserving `WhiteSpace` and multiple `Patterns` in a
-metadata-only test is not evidence that those runtime operators are repaired.
+the subsequent [effective-whitespace repair](#effective-scalar-whitespace-repair-update)
+executes `whiteSpace`, and the [pattern-group repair](#same-level-pattern-alternatives-repair-update)
+executes same-level alternatives. Broader regex coverage, schema-component
+validity, fixed-facet metadata and facet-metadata width remain separate work.
+The metadata-only tests here establish preservation; the later sections supply
+independent runtime evidence for those two operators.
 Complex restrictions of mixed/emptiable bases remain explicitly unavailable;
 their separate content-category mapping is not implemented here. Existing
 wildcard merging and aggregate list/union equality are also unchanged.
@@ -458,15 +460,63 @@ internal acceptance tests. Attribute-fixed normalization agrees externally.
 
 This is a bounded existing-validator part of `REQ-DEF-OPS-SCALARS` / `DEF04-06`,
 not completion of `STAGE-DEF-04` or a new source/model API. Production schemas,
-public models and planning statuses are unchanged. Pattern grouping, broader
-regex/facet support, mixed-parent mapping, absent-defaulted-IDREF augmentation,
-catalog/profile/budget choices and strict-source adapter integration remain open.
+public models and planning statuses are unchanged. The later
+[pattern-group repair](#same-level-pattern-alternatives-repair-update) supplies
+same-level alternatives. Broader regex/facet support, mixed-parent mapping,
+absent-defaulted-IDREF augmentation, catalog/profile/budget choices and
+strict-source adapter integration remain open.
 
 [scalar-whitespace]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-whiteSpace
 [scalar-normalization]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#whiteSpace
 [scalar-enumeration]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-enumeration
 [scalar-union]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-union
 [scalar-fixed]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
+
+## Same-level pattern alternatives repair update
+
+The existing scalar restriction path in [`validation.go`](../../validation.go)
+now treats each local `Patterns` slice as an OR group. Base validation still
+runs independently, retaining intersection across restriction layers rather than
+flattening groups. This follows XSD 1.0 [multiple patterns in one restriction][pattern-groups].
+Every reached local alternative is evaluated before accepting or rejecting the
+group, so an earlier match or miss cannot conceal malformed or unsupported
+pattern metadata. An actual schema error still stops assessment immediately;
+this is not a schema-component validity pass over unreachable restrictions.
+A successful group continues into bounds, length and digit checks.
+
+The subject remains the effective normalized lexical view from the whitespace
+repair above, including collapsed list text and the first successful union
+member's view. Numeric equality does not canonicalize the pattern subject:
+`01.20` and `+1.2` can satisfy a group while equal-valued `1.2` fails it. Failed
+groups report their alternatives together and retain original display spelling.
+The exact single-pattern diagnostic and no-pattern behavior are unchanged.
+The [existing regex translator](../../validation_pattern.go) is unchanged;
+unsupported constructs such as Unicode block escapes are not newly supported.
+
+[`validation_pattern_groups_test.go`](../../validation_pattern_groups_test.go)
+uses [reproducibly generated synthetic metadata](../../testdata/validation/pattern-contract.xsd)
+for first/last alternatives, empty patterns, inherited intersections, own/inherited
+and strengthened whitespace, numeric spelling, named/inline/complex scalar and
+attribute paths, list/union lexical subjects, defaults/fixed values, nil/children,
+and continued bounds/length/digit checks. Internal permutations cover malformed
+and translator-unsupported patterns before and after matches and misses; repeated
+assessment verifies exact diagnostics and source/metadata immutability.
+`TestPatternGroupsAgainstSchema` assesses the same original XML bytes internally
+and with `xmllint --nonet --schema`, and Linux CI requires it. Of 135 source cases,
+134 are oracle-comparable; the sole exclusion is libxml2 2.9.14's numeric
+**element**-fixed lexical comparison. The analogous attribute-fixed alternative
+agrees externally. The excluded source retains its internal value-space contract.
+
+All six pinned production schemas have no sibling multi-pattern group;
+`musicxml.xsd` has 11 single pattern facets. This is a bounded reusable-operator
+repair under `REQ-DEF-OPS-SCALARS` / `DEF04-06`, not completion of a stage or
+profile. Production schemas/models, public APIs and planning statuses are
+unchanged. Broader regex support, aggregate and other primitive typed equality,
+mixed/emptiable-base mapping, wildcard derivation, schema-component validity,
+fixed-facet metadata/facet-width limits, absent-defaulted-IDREF augmentation,
+`xsi:type`/schema hints and catalog/adapter/budget/profile decisions remain open.
+
+[pattern-groups]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#src-multiple-patterns
 
 ## Ordinary-attribute repair update
 

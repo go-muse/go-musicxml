@@ -54,7 +54,14 @@ restriction metadata and supported scalar facets.
 union lexical views and atomic string-derived fixed comparisons. Its source
 matrix retains explicit element-fixed value-space expectations internally;
 libxml2's observed lexical comparison excludes only those cases from the oracle.
-All five test schemas use the local empty catalog.
+`zz_generated_pattern_validation_test.go` uses
+`testdata/validation/pattern-contract.xsd` for local pattern alternatives,
+intersection across restrictions and normalized lexical subjects. Its exact-source
+matrix compares internal assessment and xmllint on the same bytes; the single
+numeric element-fixed lexical discrepancy remains an internal normative case.
+Malformed and translator-unsupported patterns use separate metadata tests rather
+than weakening the valid-schema oracle. All six test schemas use the local empty
+catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

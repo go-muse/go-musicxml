@@ -122,7 +122,7 @@ jobs:
       - name: Validate corpus and raw XML/XSD contracts
         env:
           MUSICXML_REQUIRE_XMLLINT: "1"
-        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema|TestElementAttributeContractsAgainstSchema|TestNilContractsAgainstSchema|TestElementValueConstraintsAgainstSchema|TestFixedElementChildrenAgainstSchema|TestElementOnlyXMLWhitespaceAgainstSchema|TestEmptyComplexContentAgainstSchema|TestXMLDocumentWhitespaceAgainstXMLLint|TestXMLDocumentLexicalAgainstXMLLint|TestIntegerValueSpacesAgainstSchema|TestDecimalComparisonsAgainstSchema|TestDecimalDigitFacetsAgainstSchema|TestSimpleContentRestrictionsAgainstSchema|TestEffectiveWhitespaceAgainstSchema)$' .
+        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema|TestElementAttributeContractsAgainstSchema|TestNilContractsAgainstSchema|TestElementValueConstraintsAgainstSchema|TestFixedElementChildrenAgainstSchema|TestElementOnlyXMLWhitespaceAgainstSchema|TestEmptyComplexContentAgainstSchema|TestXMLDocumentWhitespaceAgainstXMLLint|TestXMLDocumentLexicalAgainstXMLLint|TestIntegerValueSpacesAgainstSchema|TestDecimalComparisonsAgainstSchema|TestDecimalDigitFacetsAgainstSchema|TestSimpleContentRestrictionsAgainstSchema|TestEffectiveWhitespaceAgainstSchema|TestPatternGroupsAgainstSchema)$' .
 
   fuzz:
     name: Fuzz smoke
