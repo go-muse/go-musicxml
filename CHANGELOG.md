@@ -26,6 +26,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reject references and CDATA outside the XML root across Decode, MXL reads and
+  the internal XML parser, including references to whitespace and empty CDATA.
+  Legal in-root text, supported encodings and literal boundary whitespace remain
+  supported; lexical-origin tracking uses bounded streaming state.
+
 - Reject all character data, including XML whitespace, in the internal validator's
   particleless empty complex types. Preserve comments, processing instructions,
   empty CDATA, nil handling and attribute checks. Nullable particles still permit

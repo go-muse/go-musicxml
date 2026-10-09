@@ -7,19 +7,21 @@ import (
 )
 
 // wellFormedXMLTokenReader checks duplicate attributes, DOCTYPE placement,
-// XML-declaration placement and reserved processing-instruction targets.
+// XML-declaration placement, reserved processing-instruction targets and
+// references/CDATA outside the root element.
 // It observes lexical tokens below every model/namespace skip, and forwards
 // them unchanged so the wrapping decoder still expands namespaces exactly
 // once and checks matching element names.
 // It does not parse DTD declarations or load external resources.
 type wellFormedXMLTokenReader struct {
-	source     xml.TokenReader
-	position   func() (line, column int)
-	readToken  bool
-	started    bool
-	doctype    bool
-	namespaces map[string]string
-	scopes     [][]xmlNamespaceUndo
+	source              xml.TokenReader
+	position            func() (line, column int)
+	characterDataMarkup func() bool
+	readToken           bool
+	started             bool
+	doctype             bool
+	namespaces          map[string]string
+	scopes              [][]xmlNamespaceUndo
 
 	// Matches the most recent raw start tag's Attr order. The wrapping
 	// decoder expands names in place; consumers must copy these flags before
@@ -50,6 +52,10 @@ func (r *wellFormedXMLTokenReader) Token() (xml.Token, error) {
 	r.readToken = true
 
 	switch value := token.(type) {
+	case xml.CharData:
+		if len(r.scopes) == 0 && r.characterDataMarkup != nil && r.characterDataMarkup() {
+			return nil, r.syntaxError("references and CDATA are not allowed outside the root element")
+		}
 	case xml.ProcInst:
 		// XML 1.0 productions 17 and 22-23 reserve all case variants of
 		// the exact target "xml"; only lowercase starts a declaration,

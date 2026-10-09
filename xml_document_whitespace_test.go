@@ -17,8 +17,8 @@ import (
 // around the root (plus the declaration/DOCTYPE in their prolog positions).
 // https://www.w3.org/TR/REC-xml/#sec-prolog-dtd
 // These are literal-character tests, independent of MusicXML/XSD validity.
-// Lexical handling of references and CDATA outside the root is a separate
-// reader limitation: decoded CharData alone cannot distinguish their spelling.
+// References and CDATA outside the root have separate lexical-origin tests in
+// xml_document_lexical_test.go; decoded CharData alone loses those spellings.
 func xmlDocumentWhitespaceCases() []xmlReadingCase {
 	const root = `<ROOT><KNOWN>Keep</KNOWN></ROOT>`
 	var cases []xmlReadingCase
@@ -141,16 +141,21 @@ func TestXMLDocumentWhitespacePreservesText(t *testing.T) {
 // Compare original bytes, including supported encodings, without round-tripping
 // through the model. This is XML well-formedness only: no --schema or --valid.
 func TestXMLDocumentWhitespaceAgainstXMLLint(t *testing.T) {
+	cases := xmlDocumentWhitespaceCases()
+	for _, test := range xmlDocumentWhitespaceTextCases {
+		cases = append(cases, xmlReadingCase{"preserved text " + test.name, `DECL<ROOT><KNOWN>` + test.text + `</KNOWN></ROOT>`, true})
+	}
+	runXMLReadingAgainstXMLLint(t, cases)
+}
+
+func runXMLReadingAgainstXMLLint(t *testing.T, cases []xmlReadingCase) {
+	t.Helper()
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {
 			t.Fatal("xmllint is required but was not found in PATH")
 		}
 		t.Skip("xmllint is not installed; Linux CI requires this XML well-formedness test")
-	}
-	cases := xmlDocumentWhitespaceCases()
-	for _, test := range xmlDocumentWhitespaceTextCases {
-		cases = append(cases, xmlReadingCase{"preserved text " + test.name, `DECL<ROOT><KNOWN>` + test.text + `</KNOWN></ROOT>`, true})
 	}
 	for _, root := range []string{"score-partwise", "score-timewise", "opus", "container"} {
 		for _, test := range cases {

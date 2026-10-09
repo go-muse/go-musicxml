@@ -53,8 +53,11 @@ methods are conveniences, not a separate object model.
 ## Transport
 
 `Decode` accepts exactly one unqualified `score-partwise`, `score-timewise`, or
-`opus` root and rejects non-whitespace content outside it. It does not call
-`Validate`. `DecodeWithOptions` changes the XML nesting ceiling; the zero-value
+`opus` root and rejects non-whitespace content outside it. Boundary whitespace
+must be literal XML `S`: space, tab, carriage return or line feed. References
+and CDATA sections are forbidden outside the root, even if they decode to
+whitespace or no characters; they remain supported inside elements. It does not
+call `Validate`. `DecodeWithOptions` changes the XML nesting ceiling; the zero-value
 options use the documented safe default.
 
 XML reading rejects duplicate attributes (including collisions after namespace
@@ -72,7 +75,7 @@ such as `xmlns:p=""` are rejected under Namespaces in XML 1.0; resetting the
 default namespace with `xmlns=""` remains allowed.
 
 Duplicate-attribute, DOCTYPE-placement, XML-declaration-placement,
-reserved-XML-target and empty-prefix-declaration errors wrap
+reserved-XML-target, empty-prefix-declaration and outside-root reference/CDATA errors wrap
 `*xml.SyntaxError`, available through `errors.As`. Its `Line` is the innermost
 XML decoder's detection position after reading the offending token; for a
 multiline token this is its end line, not the attribute's start line. Existing
