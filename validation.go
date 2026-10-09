@@ -214,12 +214,15 @@ const (
 )
 
 type validationComplexSchema struct {
-	Form         validationComplexForm
-	Base         *validationTypeRef
-	Particle     *validationParticleSchema
-	Attributes   []validationAttributeSchema
-	AnyAttribute *validationAnyAttributeSchema
-	Mixed        bool
+	// SimpleContent is a local restriction layer. A missing scalar Base is
+	// bound to the inherited effective scalar in a per-context copy.
+	SimpleContent *validationSimpleSchema
+	Form          validationComplexForm
+	Base          *validationTypeRef
+	Particle      *validationParticleSchema
+	Attributes    []validationAttributeSchema
+	AnyAttribute  *validationAnyAttributeSchema
+	Mixed         bool
 }
 
 type validationAttributeUse string
@@ -302,11 +305,13 @@ type validationAttribute struct {
 }
 
 type validationContext struct {
-	schema      *validationSchemaSet
-	issues      []ValidationIssue
-	effective   map[*validationComplexSchema]*validationEffectiveComplex
-	identifiers map[string]string
-	references  []validationIdentityReference
+	schema            *validationSchemaSet
+	issues            []ValidationIssue
+	effective         map[*validationComplexSchema]*validationEffectiveComplex
+	simpleSemantics   map[*validationSimpleSchema]*validationSimpleSemantics
+	enumerationValues map[validationEnumerationKey]validationEnumerationValue
+	identifiers       map[string]string
+	references        []validationIdentityReference
 }
 
 type validationIdentityReference struct {
@@ -819,23 +824,28 @@ func (c *validationContext) validateComplex(
 
 func (c *validationContext) effectiveComplex(
 	schema *validationComplexSchema,
-) (*validationEffectiveComplex, bool) {
+) (result *validationEffectiveComplex, ok bool) {
 	if schema == nil {
 		return nil, false
 	}
 	if cached, found := c.effective[schema]; found {
-		return cached, true
+		return cached, cached != nil
 	}
 
-	result := &validationEffectiveComplex{
+	result = &validationEffectiveComplex{
 		particle:     schema.Particle,
 		attributes:   append([]validationAttributeSchema(nil), schema.Attributes...),
 		anyAttribute: schema.AnyAttribute,
 		mixed:        schema.Mixed,
 	}
-	// Install before resolving a base so malformed cyclic derivations cannot
-	// recurse forever.
-	c.effective[schema] = result
+	// A nil entry marks pending or failed resolution. Publish only a complete
+	// result: repeated or cyclic lookups must never accept a partial type.
+	c.effective[schema] = nil
+	defer func() {
+		if ok {
+			c.effective[schema] = result
+		}
+	}()
 
 	switch schema.Form {
 	case validationComplexDirect:
@@ -871,6 +881,17 @@ func (c *validationContext) effectiveComplex(
 			result.mixed = result.mixed || base.mixed
 		default:
 			return nil, false
+		}
+
+		if schema.Form == validationComplexSimpleContentRestriction && schema.SimpleContent != nil {
+			local := *schema.SimpleContent
+			if local.Base == nil {
+				local.Base = &validationSimpleMember{
+					Name:   result.simple.Name,
+					Inline: result.simple.InlineSimple,
+				}
+			}
+			result.simple = &validationTypeRef{InlineSimple: &local}
 		}
 
 		return result, true
@@ -1122,37 +1143,55 @@ func (c *validationContext) simpleValuesEqual(
 	left string,
 	right string,
 ) bool {
-	builtin := c.simpleBuiltin(reference)
+	semantics := c.simpleTypeSemantics(reference)
+	if semantics == nil {
+		return false
+	}
+	builtin := semantics.builtin
 	if _, _, integer := validationIntegerLimits(builtin); integer {
 		return validationIntegerValuesEqual(left, right)
 	}
 	if builtin == "decimal" {
 		return validationDecimalValuesEqual(left, right)
 	}
-	return normalizeValidationWhitespace(
-		builtin,
-		left,
-	) == normalizeValidationWhitespace(
-		builtin,
-		right,
-	)
+	if semantics.stringValue {
+		return semantics.normalize(left) == semantics.normalize(right)
+	}
+	// Preserve existing comparison for other primitives and aggregates.
+	// An aggregate's old builtin fallback was string, not its item/member.
+	if builtin == "" {
+		builtin = "string"
+	}
+	return normalizeValidationWhitespace(builtin, left) == normalizeValidationWhitespace(builtin, right)
 }
 
-// Atomic integer and decimal fixed constraints compare values. Other element
-// fixed semantics retain their existing path; union/list typed equality is separate.
+// Atomic integer, decimal and string-derived fixed constraints compare values.
+// Other element fixed semantics retain their existing path; aggregate typed
+// equality is separate, and mixed content still compares the initial text.
 func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef, left, right string) bool {
 	_, complex, _, _ := c.resolveType(reference)
 	if complex != nil {
-		if effective, ok := c.effectiveComplex(complex); ok && effective.simple != nil {
-			reference = effective.simple
+		effective, ok := c.effectiveComplex(complex)
+		if !ok {
+			return false
 		}
+		if effective.simple == nil {
+			return left == right
+		}
+		reference = effective.simple
 	}
-	builtin := c.simpleBuiltin(reference)
-	if _, _, integer := validationIntegerLimits(builtin); integer {
+	semantics := c.simpleTypeSemantics(reference)
+	if semantics == nil {
+		return false
+	}
+	if _, _, integer := validationIntegerLimits(semantics.builtin); integer {
 		return validationIntegerValuesEqual(left, right)
 	}
-	if builtin == "decimal" {
+	if semantics.builtin == "decimal" {
 		return validationDecimalValuesEqual(left, right)
+	}
+	if semantics.stringValue {
+		return semantics.normalize(left) == semantics.normalize(right)
 	}
 	return left == right
 }
@@ -1223,57 +1262,49 @@ func (c *validationContext) validateSimple(
 	schema *validationSimpleSchema,
 	value string,
 ) *validationSimpleFailure {
-	if schema == nil {
-		return &validationSimpleFailure{
-			constraint: "schema",
-			message:    "simple type is missing",
-		}
-	}
+	_, failure := c.validateSimpleValue(schema, value, value)
+	return failure
+}
 
+// Return a successful normalized lexical view as well as failure. The most
+// derived atomic/list policy runs before inherited lexical facets. A union
+// instead supplies each member the same input and returns the first success's
+// view; a later OUTER facet failure never restarts union member selection.
+// Display is kept separately so inherited diagnostics retain source spelling.
+func (c *validationContext) validateSimpleValue(
+	schema *validationSimpleSchema,
+	value, display string,
+) (string, *validationSimpleFailure) {
+	semantics := c.resolveSimpleSemantics(schema)
+	if semantics == nil {
+		return "", &validationSimpleFailure{constraint: "schema", message: "simple type whitespace cannot be resolved"}
+	}
+	value = semantics.normalize(value)
 	switch schema.Form {
 	case validationSimpleRestriction:
-		if schema.Base == nil {
-			return &validationSimpleFailure{
-				constraint: "schema",
-				message:    "restriction base is missing",
-			}
+		normalized, failure := c.validateSimpleMemberValue(schema.Base, value, display)
+		if failure != nil {
+			return "", failure
 		}
-		if failure := c.validateSimpleMember(schema.Base, value); failure != nil {
-			return failure
-		}
-
-		builtin := c.simpleMemberBuiltin(schema.Base)
-		normalized := normalizeValidationWhitespace(builtin, value)
-
-		if len(schema.Enumerations) != 0 &&
-			!slices.ContainsFunc(
-				schema.Enumerations,
-				func(candidate string) bool {
-					if _, _, integer := validationIntegerLimits(builtin); integer {
-						return validationIntegerValuesEqual(candidate, normalized)
-					}
-					if builtin == "decimal" {
-						return validationDecimalValuesEqual(candidate, normalized)
-					}
-					return normalizeValidationWhitespace(
-						builtin,
-						candidate,
-					) == normalized
-				},
-			) {
-			return &validationSimpleFailure{
+		builtin := semantics.builtin
+		if len(schema.Enumerations) != 0 && !c.matchesSimpleEnumeration(schema, normalized, builtin) {
+			return "", &validationSimpleFailure{
 				constraint: "enumeration",
 				message: fmt.Sprintf(
 					"value %q is not one of the allowed values",
-					value,
+					display,
 				),
 			}
 		}
 
+		// Patterns in one restriction are alternatives; the base assessment above
+		// preserves intersection across restriction layers. Check every alternative
+		// so an earlier match or miss cannot conceal an invalid generated pattern.
+		patternsMatched := len(schema.Patterns) == 0
 		for _, pattern := range schema.Patterns {
 			matched, err := matchValidationPattern(pattern, normalized)
 			if err != nil {
-				return &validationSimpleFailure{
+				return "", &validationSimpleFailure{
 					constraint: "schema",
 					message: fmt.Sprintf(
 						"invalid generated XSD pattern %q: %v",
@@ -1282,110 +1313,75 @@ func (c *validationContext) validateSimple(
 					),
 				}
 			}
-			if !matched {
-				return &validationSimpleFailure{
-					constraint: "pattern",
-					message: fmt.Sprintf(
-						"value %q does not match XSD pattern %q",
-						value,
-						pattern,
-					),
-				}
+			patternsMatched = patternsMatched || matched
+		}
+		if !patternsMatched {
+			var message string
+			if len(schema.Patterns) == 1 {
+				message = fmt.Sprintf("value %q does not match XSD pattern %q", display, schema.Patterns[0])
+			} else {
+				message = fmt.Sprintf("value %q does not match any XSD pattern in %q", display, schema.Patterns)
 			}
+			return "", &validationSimpleFailure{constraint: "pattern", message: message}
 		}
 
-		if failure := validateBounds(schema, normalized, builtin); failure != nil {
-			return failure
+		if failure := validateBoundsValue(schema, normalized, builtin, display); failure != nil {
+			return "", failure
 		}
 		if failure := validateLengthFacets(
 			schema,
 			normalized,
 			c.simpleMemberList(schema.Base),
 		); failure != nil {
-			return failure
+			return "", failure
 		}
 		if failure := validateDigitFacets(schema, normalized, builtin); failure != nil {
-			return failure
+			return "", failure
 		}
 
-		return nil
+		return normalized, nil
 
 	case validationSimpleUnion:
-		for index := range schema.Members {
-			if c.validateSimpleMember(
-				schema.Members[index],
-				value,
-			) == nil {
-				return nil
+		for _, member := range schema.Members {
+			if normalized, failure := c.validateSimpleMemberValue(member, value, display); failure == nil {
+				return normalized, nil
 			}
 		}
-
-		return &validationSimpleFailure{
+		return "", &validationSimpleFailure{
 			constraint: "union",
-			message: fmt.Sprintf(
-				"value %q does not match any union member",
-				value,
-			),
+			message:    fmt.Sprintf("value %q does not match any union member", display),
 		}
 
 	case validationSimpleList:
-		if schema.Item == nil {
-			return &validationSimpleFailure{
-				constraint: "schema",
-				message:    "list item type is missing",
-			}
-		}
 		for index, item := range splitValidationList(value) {
-			if failure := c.validateSimpleMember(
-				schema.Item,
-				item,
-			); failure != nil {
-				return &validationSimpleFailure{
+			if _, failure := c.validateSimpleMemberValue(schema.Item, item, item); failure != nil {
+				return "", &validationSimpleFailure{
 					constraint: failure.constraint,
-					message: fmt.Sprintf(
-						"list item %d: %s",
-						index+1,
-						failure.message,
-					),
+					message:    fmt.Sprintf("list item %d: %s", index+1, failure.message),
 				}
 			}
 		}
-		return nil
-
+		return value, nil
 	default:
-		return &validationSimpleFailure{
-			constraint: "schema",
-			message:    "unsupported simple type form",
-		}
+		return "", &validationSimpleFailure{constraint: "schema", message: "unsupported simple type form"}
 	}
 }
 
-func (c *validationContext) validateSimpleMember(
+func (c *validationContext) validateSimpleMemberValue(
 	member *validationSimpleMember,
-	value string,
-) *validationSimpleFailure {
-	if member == nil {
-		return &validationSimpleFailure{
-			constraint: "schema",
-			message:    "simple type member is missing",
-		}
+	value, display string,
+) (string, *validationSimpleFailure) {
+	semantics := c.memberSemantics(member)
+	if semantics == nil {
+		return "", &validationSimpleFailure{constraint: "schema", message: "simple type member cannot be resolved"}
 	}
 	if member.Inline != nil {
-		return c.validateSimple(member.Inline, value)
+		return c.validateSimpleValue(member.Inline, value, display)
 	}
 	if member.Name.Space == validationXSDNamespace {
-		return validateBuiltin(member.Name.Local, value)
+		return semantics.normalize(value), validateBuiltinValue(member.Name.Local, value, display)
 	}
-
-	resolved, found := c.schema.Types[member.Name]
-	if !found || resolved == nil || resolved.Simple == nil {
-		return &validationSimpleFailure{
-			constraint: "schema",
-			message:    "simple type member cannot be resolved",
-		}
-	}
-
-	return c.validateSimple(resolved.Simple, value)
+	return c.validateSimpleValue(c.schema.Types[member.Name].Simple, value, display)
 }
 
 func (c *validationContext) simpleBuiltin(
@@ -1485,9 +1481,15 @@ func validateBuiltin(
 	name string,
 	value string,
 ) *validationSimpleFailure {
+	return validateBuiltinValue(name, value, value)
+}
+
+func validateBuiltinValue(name, value, display string) *validationSimpleFailure {
 	if name == "boolean" {
-		_, failure := parseValidationBoolean(value)
-		return failure
+		if _, failure := parseValidationBoolean(value); failure != nil {
+			return &validationSimpleFailure{constraint: "datatype", message: fmt.Sprintf("value %q is not valid for xs:boolean", display)}
+		}
+		return nil
 	}
 	normalized := normalizeValidationWhitespace(name, value)
 
@@ -1596,7 +1598,7 @@ func validateBuiltin(
 		constraint: "datatype",
 		message: fmt.Sprintf(
 			"value %q is not valid for xs:%s",
-			value,
+			display,
 			name,
 		),
 	}
@@ -1673,6 +1675,10 @@ func validateBounds(
 	value string,
 	builtin string,
 ) *validationSimpleFailure {
+	return validateBoundsValue(schema, value, builtin, value)
+}
+
+func validateBoundsValue(schema *validationSimpleSchema, value, builtin, display string) *validationSimpleFailure {
 	if !schema.HasMinInclusive &&
 		!schema.HasMaxInclusive &&
 		!schema.HasMinExclusive &&
@@ -1681,17 +1687,17 @@ func validateBounds(
 	}
 
 	if _, _, integer := validationIntegerLimits(builtin); integer {
-		return validateIntegerBounds(schema, value)
+		return validateIntegerBounds(schema, value, display)
 	}
 	if builtin == "decimal" {
-		return validateDecimalBounds(schema, value)
+		return validateDecimalBounds(schema, value, display)
 	}
 
 	number, err := strconv.ParseFloat(value, 64)
 	if err != nil || math.IsNaN(number) {
 		return &validationSimpleFailure{
 			constraint: "datatype",
-			message:    fmt.Sprintf("value %q is not numeric", value),
+			message:    fmt.Sprintf("value %q is not numeric", display),
 		}
 	}
 
@@ -1734,7 +1740,7 @@ func validateBounds(
 				constraint: test.constraint,
 				message: fmt.Sprintf(
 					"value %q violates %s=%q",
-					value,
+					display,
 					test.constraint,
 					test.limit,
 				),

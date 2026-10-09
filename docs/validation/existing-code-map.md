@@ -219,8 +219,8 @@ source-assessment or conversion-report API is introduced.
 This is a bounded existing-validator slice of `STAGE-DEF-03` (`DEF03-01/04` and
 integer comparison portions of `DEF03-02`), not completion of that stage.
 Decimal comparisons and digit facets are covered by the later repairs below;
-typed union/list aggregate equality, omitted complex simple-content restriction
-facets in generated metadata, contextual arithmetic,
+typed union/list aggregate equality, mixed-base simple-content restrictions,
+wider facet semantics, contextual arithmetic,
 session parse-once caching, shared budgets and incomplete/conversion reports
 remain open. No new profile, adapter, public API or resource policy is selected;
 planning JSON retains `status: planned`.
@@ -278,7 +278,8 @@ and cannot recover source precision discarded by model conversion.
 
 This is another bounded existing-validator portion of `STAGE-DEF-03`
 (`REQ-DEF-NUM-EXACT`, `DEF03-02/04`). Decimal digit facets are covered by the
-later repair below. Typed union/list aggregate equality, missing complex simple-content restriction facets,
+later repair below. Typed union/list aggregate equality, mixed-base simple-content
+restrictions and wider facet semantics,
 contextual arithmetic, parse-once session caching, resource budgets,
 incomplete/conversion reports and strict-source/direct-model adapters remain
 separate work. No public API, model-decimal interpretation, profile or planning
@@ -320,14 +321,202 @@ source/schema checks, exact diagnostics and a one-MiB zero-allocation success ca
 
 The pinned MusicXML schemas declare neither facet; this is a verified reusable
 scalar prerequisite under `STAGE-DEF-03` / `REQ-DEF-NUM-EXACT`, not a new MusicXML
-profile or completion of that stage. Missing complex simple-content restriction
-metadata, schema-component validity/metadata-width limits, typed aggregate
+profile or completion of that stage. The later effective-whitespace and
+[pattern-group repair](#same-level-pattern-alternatives-repair-update) close those
+bounded scalar gaps. Mixed-base simple-content restrictions, broader regex
+semantics, schema-component validity/metadata-width limits, typed aggregate
 equality, contextual arithmetic, transport and current-model interpretation,
 session caching/budgets, incomplete/conversion reports and the proposed adapters
 remain separate work. Planning statuses remain `planned`.
 
 [decimal-total-digits]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-totalDigits
 [decimal-fraction-digits]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-fractionDigits
+
+## Complex simple-content restriction metadata repair update
+
+The existing generator and validator now retain and apply local scalar
+restriction metadata declared inside complex `simpleContent` restrictions.
+The parent complex type remains distinct from the optional inline `simpleType`:
+without that inline type, local facets restrict the parent's effective scalar;
+with it, they restrict the inline scalar. These are the simple-content-parent
+cases of XSD 1.0 [Structures section 3.4.2][simple-content-mapping]. Named and
+anonymous restrictions, further restrictions and extensions retain their scalar
+layers rather than flattening or replacing inherited facets.
+
+[`complex.go`](../../internal/xsdgen/complex.go) resolves the optional inline
+scalar. [`generate_validation.go`](../../internal/xsdgen/generate_validation.go)
+shares lexical enumeration/pattern/facet rendering and does not impose Go
+constant naming on the outer restriction's enumeration values.
+[`effectiveComplex`](../../validation.go) binds a per-context copy of the local
+layer to its scalar base; generated definitions and source values stay unchanged.
+Existing scalar validation, fixed-value equality, default substitution and
+identity recording consume that same effective scalar once. Ordinary inherited
+attributes, nil handling and child-element rejection retain their existing paths.
+Pending/failed effective-type cache entries now remain failures, including on
+repeated lookup, so malformed cycles and unsupported content cannot become
+partially resolved types.
+
+The bridge applies the existing enumeration, single-pattern, bound, length and
+digit-facet operators, including exact integer/decimal value comparisons. It
+preserves supported facet values, but does **not** claim complete facet semantics:
+the subsequent [effective-whitespace repair](#effective-scalar-whitespace-repair-update)
+executes `whiteSpace`, and the [pattern-group repair](#same-level-pattern-alternatives-repair-update)
+executes same-level alternatives. Broader regex coverage, schema-component
+validity, fixed-facet metadata and facet-metadata width remain separate work.
+The metadata-only tests here establish preservation; the later sections supply
+independent runtime evidence for those two operators.
+Complex restrictions of mixed/emptiable bases remain explicitly unavailable;
+their separate content-category mapping is not implemented here. Existing
+wildcard merging and aggregate list/union equality are also unchanged.
+A separate QA probe confirmed that absent defaulted IDREF attributes are not
+recorded by the existing attribute path; this predates the bridge and remains
+an attribute-default materialization follow-up.
+
+Executable evidence is in
+[`validation_simple_content_test.go`](../../validation_simple_content_test.go),
+[`validation_simple_content_metadata_test.go`](../../validation_simple_content_metadata_test.go)
+and the [generator tests](../../internal/xsdgen/generate_simple_content_validation_test.go),
+using [reproducible synthetic metadata](../../testdata/validation/simple-content-contract.xsd).
+Original-source tests exercise local and inherited failures, optional inline
+scalar facets, integer/decimal exactness, Unicode/token and list lengths,
+required/prohibited/fixed attributes, defaults/fixed values, nil and child
+boundaries, ID/IDREF behavior, sibling isolation and source/schema immutability.
+`TestSimpleContentRestrictionsAgainstSchema` sends identical XML bytes to
+`xmllint --nonet --schema` and is required by Linux CI. The external subset
+excludes arbitrary-width precision probes, libxml2's explicit element-fixed
+lexical comparison, and its observed missing-IDREF/duplicate-ID leniency;
+those remain internal expectations rather than oracle-backed claims.
+
+All six pinned production XSDs contain zero complex simple-content restrictions.
+Production schemas, generated public models and public APIs are unchanged; only
+the existing synthetic nil fixture gains its empty restriction layer on
+regeneration. This is a bounded reusable-scalar prerequisite for
+`REQ-DEF-OPS-SCALARS` / `DEF04-06`, supporting the exact numeric work, not completion
+of `STAGE-DEF-03` or `STAGE-DEF-04`. Catalog binding, adapters, budgets, reports,
+profile selection, `xsi:type` and schema-hint decisions remain open. Planning
+JSON statuses retain `planned`.
+
+[simple-content-mapping]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#Complex_Type_Definition_details
+
+## Effective scalar whitespace repair update
+
+The existing validator now applies the most-derived atomic/list `whiteSpace`
+policy before inherited lexical facets. Named and inline restrictions retain
+`preserve`, `replace` and `collapse`; normalization uses XML `S` only, keeping
+NBSP and NEL as data. The immutable lexical view is separate from source text
+and exact numeric values. Patterns, enumerations, builtin datatype and numeric
+bound diagnostics retain the original source spelling, including inherited
+failures; digit/length messages continue to report measured counts.
+
+[`validation_whitespace.go`](../../validation_whitespace.go) resolves policy and
+genuine atomic string ancestry with a per-context cache. Missing, invalid-policy
+and cyclic dependencies fail closed, including repeated lookups. This is not a
+full schema-component validity checker or a change to generated fixed helpers.
+Union members retain independent policies and declaration order; the first
+member that validates supplies its normalized lexical view to outer restrictions.
+An outer facet failure does not backtrack to another union member. List lexical
+facets receive collapsed text; aggregate typed equality remains unimplemented.
+Enumeration literals use direct atomic/list normalization or ordered union-member
+assessment without reassessing every inherited restriction. Union literal views
+are cached per context by declaring restriction and literal index, including
+explicit success/failure for empty values. Cache growth is bounded by reached
+schema enumeration entries, never by XML instance values. Layered atomic/list,
+union and nested-union allocation regressions in
+[`validation_whitespace_cost_test.go`](../../validation_whitespace_cost_test.go)
+prevent exponential repeated base assessment; they do not set a public work budget.
+
+Enumeration candidates are interpreted using the base type of the restriction
+that declares them. They do not inherit a same-level or descendant's stronger
+policy: a padded enumeration declared over `xs:string` can become unreachable
+when the subject is collapsed. Fixed comparisons instead apply the declaration's
+effective type policy to both sides, only for genuinely atomic string-derived
+types. The existing exact integer/decimal comparators and raw mixed-content
+fixed comparisons retain their domains. Boolean, date/time, QName, URI and
+aggregate value-space equality remain separate work.
+
+Normative basis: XSD 1.0 [whiteSpace][scalar-whitespace],
+[normalization during validation][scalar-normalization],
+[enumeration base values][scalar-enumeration],
+[ordered union members][scalar-union] and [element fixed constraints][scalar-fixed].
+The complex simple-content bridge above supplies the same effective scalar to
+this path without a second identity-registration pass. Source nodes, attributes,
+constraint literals, generated schemas and public models remain unchanged.
+
+[`validation_whitespace_test.go`](../../validation_whitespace_test.go), using
+[generated test-only metadata](../../testdata/validation/whitespace-contract.xsd),
+covers strengthened policies versus inherited patterns/length, both enumeration
+traps and base-collapse controls, named/inline/complex scalar paths, attribute
+references, CDATA/split text, empty/XML-`S`-only values, NBSP/NEL, ordered and
+failed union members, list lexical normalization, scalar fixed/default/nil/child
+boundaries, exact diagnostics, sibling isolation and source/schema immutability.
+`TestWhitespaceMetadataFailures` checks missing, malformed and cyclic metadata;
+`TestWhitespaceFixedComparisonScope` keeps comparison dispatch bounded.
+
+`TestEffectiveWhitespaceAgainstSchema` sends identical original XML bytes to
+`xmllint --nonet --schema` and is required in Linux CI. libxml2 2.9.14 locally
+rejects six explicit scalar element-fixed spellings equal in value space;
+only these cases are excluded from the oracle subset and retain normative
+internal acceptance tests. Attribute-fixed normalization agrees externally.
+
+This is a bounded existing-validator part of `REQ-DEF-OPS-SCALARS` / `DEF04-06`,
+not completion of `STAGE-DEF-04` or a new source/model API. Production schemas,
+public models and planning statuses are unchanged. The later
+[pattern-group repair](#same-level-pattern-alternatives-repair-update) supplies
+same-level alternatives. Broader regex/facet support, mixed-parent mapping,
+absent-defaulted-IDREF augmentation, catalog/profile/budget choices and
+strict-source adapter integration remain open.
+
+[scalar-whitespace]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-whiteSpace
+[scalar-normalization]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#whiteSpace
+[scalar-enumeration]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-enumeration
+[scalar-union]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-union
+[scalar-fixed]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
+
+## Same-level pattern alternatives repair update
+
+The existing scalar restriction path in [`validation.go`](../../validation.go)
+now treats each local `Patterns` slice as an OR group. Base validation still
+runs independently, retaining intersection across restriction layers rather than
+flattening groups. This follows XSD 1.0 [multiple patterns in one restriction][pattern-groups].
+Every reached local alternative is evaluated before accepting or rejecting the
+group, so an earlier match or miss cannot conceal malformed or unsupported
+pattern metadata. An actual schema error still stops assessment immediately;
+this is not a schema-component validity pass over unreachable restrictions.
+A successful group continues into bounds, length and digit checks.
+
+The subject remains the effective normalized lexical view from the whitespace
+repair above, including collapsed list text and the first successful union
+member's view. Numeric equality does not canonicalize the pattern subject:
+`01.20` and `+1.2` can satisfy a group while equal-valued `1.2` fails it. Failed
+groups report their alternatives together and retain original display spelling.
+The exact single-pattern diagnostic and no-pattern behavior are unchanged.
+The [existing regex translator](../../validation_pattern.go) is unchanged;
+unsupported constructs such as Unicode block escapes are not newly supported.
+
+[`validation_pattern_groups_test.go`](../../validation_pattern_groups_test.go)
+uses [reproducibly generated synthetic metadata](../../testdata/validation/pattern-contract.xsd)
+for first/last alternatives, empty patterns, inherited intersections, own/inherited
+and strengthened whitespace, numeric spelling, named/inline/complex scalar and
+attribute paths, list/union lexical subjects, defaults/fixed values, nil/children,
+and continued bounds/length/digit checks. Internal permutations cover malformed
+and translator-unsupported patterns before and after matches and misses; repeated
+assessment verifies exact diagnostics and source/metadata immutability.
+`TestPatternGroupsAgainstSchema` assesses the same original XML bytes internally
+and with `xmllint --nonet --schema`, and Linux CI requires it. Of 135 source cases,
+134 are oracle-comparable; the sole exclusion is libxml2 2.9.14's numeric
+**element**-fixed lexical comparison. The analogous attribute-fixed alternative
+agrees externally. The excluded source retains its internal value-space contract.
+
+All six pinned production schemas have no sibling multi-pattern group;
+`musicxml.xsd` has 11 single pattern facets. This is a bounded reusable-operator
+repair under `REQ-DEF-OPS-SCALARS` / `DEF04-06`, not completion of a stage or
+profile. Production schemas/models, public APIs and planning statuses are
+unchanged. Broader regex support, aggregate and other primitive typed equality,
+mixed/emptiable-base mapping, wildcard derivation, schema-component validity,
+fixed-facet metadata/facet-width limits, absent-defaulted-IDREF augmentation,
+`xsi:type`/schema hints and catalog/adapter/budget/profile decisions remain open.
+
+[pattern-groups]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#src-multiple-patterns
 
 ## Ordinary-attribute repair update
 

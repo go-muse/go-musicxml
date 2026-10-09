@@ -46,7 +46,22 @@ content-category contracts. `zz_generated_integer_validation_test.go` uses
 `testdata/validation/integer-contract.xsd` for exact integer value-space contracts.
 `zz_generated_decimal_validation_test.go` uses
 `testdata/validation/decimal-contract.xsd` for atomic decimal ordering, equality and digit facets.
-All three test schemas use the local empty catalog.
+`zz_generated_simple_content_validation_test.go` uses
+`testdata/validation/simple-content-contract.xsd` for complex simple-content
+restriction metadata and supported scalar facets.
+`zz_generated_whitespace_validation_test.go` uses
+`testdata/validation/whitespace-contract.xsd` for effective whitespace, ordered
+union lexical views and atomic string-derived fixed comparisons. Its source
+matrix retains explicit element-fixed value-space expectations internally;
+libxml2's observed lexical comparison excludes only those cases from the oracle.
+`zz_generated_pattern_validation_test.go` uses
+`testdata/validation/pattern-contract.xsd` for local pattern alternatives,
+intersection across restrictions and normalized lexical subjects. Its exact-source
+matrix compares internal assessment and xmllint on the same bytes; the single
+numeric element-fixed lexical discrepancy remains an internal normative case.
+Malformed and translator-unsupported patterns use separate metadata tests rather
+than weakening the valid-schema oracle. All six test schemas use the local empty
+catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,
