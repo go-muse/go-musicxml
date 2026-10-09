@@ -39,7 +39,20 @@ existing plain UTF-8 input contract. Full declaration pseudo-attribute grammar,
 DTD syntax, broader XML/namespace conformance and strict-source integration
 remain outside this repair.
 
-The following review follow-up is still explicitly **deferred**:
+The following review follow-ups are still explicitly **deferred**:
+
+- **Non-XML whitespace outside the root:** [PR #22 review](https://github.com/go-muse/go-musicxml/pull/22#discussion_r4229843345)
+  identified four remaining uses of `bytes.TrimSpace` in
+  `parseValidationDocument`, `readValidationTail`, and the matching before/after
+  root checks in `decode.go`. They accept Unicode whitespace such as NBSP and
+  NEL where [XML 1.0 document/Misc productions 1 and 27](https://www.w3.org/TR/REC-xml/#sec-prolog-dtd)
+  allow only comments, processing instructions and XML `S`. This is a mandatory
+  well-formedness gap in both public Decode and the internal validation parser,
+  separate from the element-only XSD content repair below. A narrow reader
+  follow-up should replace those broad whitespace predicates and add before/
+  after-root and post-declaration regression cases to the existing XML-reading
+  matrix, preserving legal XML whitespace and existing error/encoding behavior.
+  This finding is recorded for follow-up, not repaired by the XSD-content slice.
 
 - **Machine-readable implementation evidence:** add a reviewed `implemented_by`
   or `evidence` contract to the planning format and its integrity checker.

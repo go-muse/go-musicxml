@@ -10,6 +10,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type validationSourceCase struct {
+	name, source, schema string
+	issues               []string
+	oracleComparable     bool
+}
+
+func validationSchemaFor(name string) *validationSchemaSet {
+	switch name {
+	case "musicxml.xsd":
+		return &scoreValidationSchema
+	case "opus.xsd":
+		return &opusValidationSchema
+	default:
+		return &validationNilGenerated
+	}
+}
+
 func assertValidationIssues(t *testing.T, context *validationContext, want []string) {
 	t.Helper()
 	var issues []string

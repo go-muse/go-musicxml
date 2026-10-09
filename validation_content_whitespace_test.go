@@ -13,14 +13,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type validationContentWhitespaceCase struct {
-	name, source, schema string
-	issues               []string
-	// libxml2 2.9.14 rejects whitespace-only and empty CDATA in element-only
-	// content. Keep those normative cases outside the compatible oracle set.
-	oracleWhitespaceCDATA bool
-}
-
 func validationContentWhitespaceDocuments() []struct{ name, start, first, second, end, schema string } {
 	const partList = `<part-list><score-part id="P1"><part-name>Music</part-name></score-part></part-list>`
 	return []struct{ name, start, first, second, end, schema string }{
@@ -34,11 +26,13 @@ func validationContentWhitespaceDocuments() []struct{ name, start, first, second
 // U+0020, U+0009, U+000A, and U+000D, not Unicode's broader whitespace set.
 // https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type
 // Test original source: Decode cannot retain this text in the public models.
-func validationContentWhitespaceCases() []validationContentWhitespaceCase {
-	var tests []validationContentWhitespaceCase
+// libxml2 2.9.14 rejects whitespace-only and empty CDATA in element-only
+// content. Keep those normative cases outside the compatible oracle set.
+func validationContentWhitespaceCases() []validationSourceCase {
+	var tests []validationSourceCase
 	addComplex := func(name, attributes, content string, issues ...string) {
-		tests = append(tests, validationContentWhitespaceCase{
-			name: name, source: `<complex xmlns:n="` + validationXSINamespace + `"` + attributes + `>` + content + `</complex>`, issues: issues,
+		tests = append(tests, validationSourceCase{
+			name: name, source: `<complex xmlns:n="` + validationXSINamespace + `"` + attributes + `>` + content + `</complex>`, issues: issues, oracleComparable: true,
 		})
 	}
 	// Exercise every boundary character in each XML representation once, using
@@ -63,7 +57,7 @@ func validationContentWhitespaceCases() []validationContentWhitespaceCase {
 		} {
 			addComplex(fmt.Sprintf("U+%04X %s", character, representation.name), ` required="1" extra="inherited"`,
 				" \t"+representation.text+"<child>7</child>\r\n", issues...)
-			tests[len(tests)-1].oracleWhitespaceCDATA = len(issues) == 0 && representation.name == "CDATA"
+			tests[len(tests)-1].oracleComparable = len(issues) != 0 || representation.name != "CDATA"
 		}
 	}
 	for _, content := range []struct{ name, text string }{
@@ -73,7 +67,7 @@ func validationContentWhitespaceCases() []validationContentWhitespaceCase {
 		{"comments and PI", "<!--\u00a0text--><?note \u0085text?>"},
 	} {
 		addComplex(content.name, ` required="1"`, content.text+"<child>7</child>"+content.text)
-		tests[len(tests)-1].oracleWhitespaceCDATA = content.name == "empty CDATA"
+		tests[len(tests)-1].oracleComparable = content.name != "empty CDATA"
 	}
 	for _, content := range []struct{ name, text string }{
 		{"ordinary text", "text"}, {"digit", "7"}, {"non-ASCII text", "é"},
@@ -97,8 +91,8 @@ func validationContentWhitespaceCases() []validationContentWhitespaceCase {
 				case "after":
 					after = content.text
 				}
-				test := validationContentWhitespaceCase{
-					name: document.name + " " + position + " " + content.name, schema: document.schema,
+				test := validationSourceCase{
+					name: document.name + " " + position + " " + content.name, schema: document.schema, oracleComparable: true,
 					source: document.start + before + document.first + between + document.second + after + document.end,
 				}
 				if content.name == "Unicode whitespace" {
@@ -133,33 +127,22 @@ func validationContentWhitespaceCases() []validationContentWhitespaceCase {
 	} {
 		addComplex(test.name, test.attributes, test.content, test.issues...)
 	}
-	return append(tests, []validationContentWhitespaceCase{
-		{name: "mixed Unicode text", source: `<mixed required="1">text &#x85;<![CDATA[ ]]><child>7</child> 　</mixed>`},
-		{name: "mixed child datatype", source: `<mixed required="1">&#xA0;<child>bad</child></mixed>`, issues: []string{"/mixed/child:datatype"}},
-		{name: "string Unicode text", source: `<plain> &#x85;<![CDATA[ ]]> 　</plain>`},
-		{name: "simple content value", source: `<simple-content required="1">7</simple-content>`},
-		{name: "simple content Unicode whitespace", source: `<simple-content required="1">&#xA0;7</simple-content>`, issues: []string{"/simple-content:datatype"}},
-		{name: "simple content children", source: `<simple-content required="1">&#xA0;<child>7</child></simple-content>`, issues: []string{"/simple-content:simple-content"}},
-		{name: "empty complex rejects Unicode text", source: `<value-items><target id="target">&#xA0;</target></value-items>`, issues: []string{"/value-items/target:element-only"}},
-		{name: "production simple content Unicode text", schema: "musicxml.xsd", source: strings.Replace(validationAttributeScore, "Music</part-name>", "\u00a0&#x85;<![CDATA[\u1680]]>Music\u2028\u3000</part-name>", 1)},
-		{name: "nested partwise Unicode text", schema: "musicxml.xsd", source: strings.Replace(validationAttributeScore, `<measure number="1" implicit="yes">`, `<measure number="1" implicit="yes">&#xA0;`, 1), issues: []string{"/score-partwise/part/measure:element-only"}},
+	return append(tests, []validationSourceCase{
+		{name: "mixed Unicode text", source: `<mixed required="1">text &#x85;<![CDATA[ ]]><child>7</child> 　</mixed>`, oracleComparable: true},
+		{name: "mixed child datatype", source: `<mixed required="1">&#xA0;<child>bad</child></mixed>`, issues: []string{"/mixed/child:datatype"}, oracleComparable: true},
+		{name: "string Unicode text", source: `<plain> &#x85;<![CDATA[ ]]> 　</plain>`, oracleComparable: true},
+		{name: "simple content value", source: `<simple-content required="1">7</simple-content>`, oracleComparable: true},
+		{name: "simple content Unicode whitespace", source: `<simple-content required="1">&#xA0;7</simple-content>`, issues: []string{"/simple-content:datatype"}, oracleComparable: true},
+		{name: "simple content children", source: `<simple-content required="1">&#xA0;<child>7</child></simple-content>`, issues: []string{"/simple-content:simple-content"}, oracleComparable: true},
+		{name: "empty complex rejects Unicode text", source: `<value-items><target id="target">&#xA0;</target></value-items>`, issues: []string{"/value-items/target:element-only"}, oracleComparable: true},
+		{name: "production simple content Unicode text", schema: "musicxml.xsd", source: strings.Replace(validationAttributeScore, "Music</part-name>", "\u00a0&#x85;<![CDATA[\u1680]]>Music\u2028\u3000</part-name>", 1), oracleComparable: true},
+		{name: "nested partwise Unicode text", schema: "musicxml.xsd", source: strings.Replace(validationAttributeScore, `<measure number="1" implicit="yes">`, `<measure number="1" implicit="yes">&#xA0;`, 1), issues: []string{"/score-partwise/part/measure:element-only"}, oracleComparable: true},
 	}...)
 }
 
-func contentWhitespaceSchema(name string) *validationSchemaSet {
-	switch name {
-	case "musicxml.xsd":
-		return &scoreValidationSchema
-	case "opus.xsd":
-		return &opusValidationSchema
-	default:
-		return &validationNilGenerated
-	}
-}
-
-func assertContentWhitespaceCase(t *testing.T, test validationContentWhitespaceCase) {
+func assertContentWhitespaceCase(t *testing.T, test validationSourceCase) {
 	t.Helper()
-	context := validateAttributeSource(t, contentWhitespaceSchema(test.schema), test.source)
+	context := validateAttributeSource(t, validationSchemaFor(test.schema), test.source)
 	assertValidationIssues(t, context, test.issues)
 	for _, issue := range context.issues {
 		if issue.Constraint == "element-only" {
@@ -189,7 +172,7 @@ func TestElementOnlyXMLWhitespaceAgainstSchema(t *testing.T) {
 		t.Skip("xmllint is not installed; Linux CI requires this external XSD test")
 	}
 	for _, test := range validationContentWhitespaceCases() {
-		if test.oracleWhitespaceCDATA {
+		if !test.oracleComparable {
 			continue // Covered normatively without freezing an oracle bug.
 		}
 		t.Run(test.name, func(t *testing.T) {
@@ -255,7 +238,7 @@ func TestElementOnlyXMLWhitespacePreservesPublicModels(t *testing.T) {
 			root, err := parseValidationDocument([]byte(source))
 			require.NoError(t, err)
 			assert.Equal(t, "\u00a0\u0085\u1680", root.Text.String())
-			context := validateAttributeSource(t, contentWhitespaceSchema(test.schema), source)
+			context := validateAttributeSource(t, validationSchemaFor(test.schema), source)
 			assertValidationIssues(t, context, []string{"/" + root.Name.Local + ":element-only"})
 
 			document, err := Decode(strings.NewReader(source))
@@ -274,7 +257,7 @@ func TestElementOnlyXMLWhitespacePreservesPublicModels(t *testing.T) {
 			for _, character := range []rune{'\u00a0', '\u0085', '\u1680'} {
 				assert.NotContains(t, after.String(), string(character))
 			}
-			assertValidationIssues(t, validateAttributeSource(t, contentWhitespaceSchema(test.schema), after.String()), nil)
+			assertValidationIssues(t, validateAttributeSource(t, validationSchemaFor(test.schema), after.String()), nil)
 		})
 	}
 }
