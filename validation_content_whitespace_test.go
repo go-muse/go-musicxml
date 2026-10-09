@@ -32,7 +32,7 @@ func validationContentWhitespaceCases() []validationSourceCase {
 	var tests []validationSourceCase
 	addComplex := func(name, attributes, content string, issues ...string) {
 		tests = append(tests, validationSourceCase{
-			name: name, source: `<complex xmlns:n="` + validationXSINamespace + `"` + attributes + `>` + content + `</complex>`, issues: issues, oracleComparable: true,
+			name: name, source: wrapValidationElement("complex", attributes, content), issues: issues, oracleComparable: true,
 		})
 	}
 	// Exercise every boundary character in each XML representation once, using

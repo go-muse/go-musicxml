@@ -21,7 +21,7 @@ func validationEmptyContentCases() []validationSourceCase {
 	var tests []validationSourceCase
 	add := func(name, element, attributes, content string, comparable bool, issues ...string) {
 		tests = append(tests, validationSourceCase{
-			name: name, source: "<" + element + ` xmlns:n="` + validationXSINamespace + `"` + attributes + ">" + content + "</" + element + ">",
+			name: name, source: wrapValidationElement(element, attributes, content),
 			issues: issues, oracleComparable: comparable,
 		})
 	}

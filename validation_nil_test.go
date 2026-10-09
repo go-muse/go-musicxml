@@ -19,12 +19,9 @@ import (
 // (including effective-type caches) are fresh for every source.
 func validationNilCases() []validationAttributeCase {
 	nilPath := "/@{" + validationXSINamespace + "}nil"
-	wrap := func(name, attributes, content string) string {
-		return "<" + name + ` xmlns:n="` + validationXSINamespace + `"` + attributes + ">" + content + "</" + name + ">"
-	}
 	var tests []validationAttributeCase
 	add := func(name, element, attributes, content, constraint, path string) {
-		tests = append(tests, validationAttributeCase{name: name, source: wrap(element, attributes, content), constraint: constraint, path: "/" + element + path})
+		tests = append(tests, validationAttributeCase{name: name, source: wrapValidationElement(element, attributes, content), constraint: constraint, path: "/" + element + path})
 	}
 	for _, element := range []struct{ name, content, attributes string }{
 		{"integer", "7", ""}, {"named", "ok", ""}, {"inline", "ok", ""}, {"simple", "text", ""},
