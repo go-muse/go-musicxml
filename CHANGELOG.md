@@ -26,6 +26,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reject all character data, including XML whitespace, in the internal validator's
+  particleless empty complex types. Preserve comments, processing instructions,
+  empty CDATA, nil handling and attribute checks. Nullable particles still permit
+  XML whitespace; full empty-group normalization remains separate. Public
+  `Validate` cannot recover source text discarded during Decode.
+
 - Reject non-XML Unicode whitespace before and after the document root,
   including after an XML declaration, across Decode and MXL reads and the
   internal XML parser. XML whitespace, legal comments and processing

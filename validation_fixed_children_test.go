@@ -40,7 +40,7 @@ func validationFixedChildCases() []validationSourceCase {
 				{"child after text", element.value + "<child>7</child>", true},
 				{"child surrounded by text", element.value[:len(element.value)/2] + "<child>7</child>" + element.value[len(element.value)/2:], true},
 			} {
-				source := "<" + element.name + ` xmlns:n="` + validationXSINamespace + `" required="1"` + nilAttribute + ">" + content.value + "</" + element.name + ">"
+				source := wrapValidationElement(element.name, ` required="1"`+nilAttribute, content.value)
 				if element.wrapper != "" {
 					source = "<" + element.wrapper + ">" + source + "</" + element.wrapper + ">"
 				}
@@ -71,7 +71,7 @@ func validationFixedChildCases() []validationSourceCase {
 		{"text and child mismatch", ` required="1"`, "other<child>7</child>", []string{"/fixed-mixed:fixed"}},
 	} {
 		tests = append(tests, validationSourceCase{
-			name: test.name, source: `<fixed-mixed xmlns:n="` + validationXSINamespace + `"` + test.attrs + `>` + test.content + `</fixed-mixed>`,
+			name: test.name, source: wrapValidationElement("fixed-mixed", test.attrs, test.content),
 			issues: test.issues, oracleComparable: true,
 		})
 	}

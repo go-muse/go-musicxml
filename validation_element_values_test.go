@@ -19,7 +19,7 @@ func validationElementValueCases() []validationAttributeCase {
 	var tests []validationAttributeCase
 	add := func(name, element, attributes, content, constraint, suffix string) {
 		tests = append(tests, validationAttributeCase{
-			name: name, source: "<" + element + ` xmlns:n="` + validationXSINamespace + `"` + attributes + ">" + content + "</" + element + ">",
+			name: name, source: wrapValidationElement(element, attributes, content),
 			constraint: constraint, path: "/" + element + suffix,
 		})
 	}
