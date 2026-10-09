@@ -1803,24 +1803,36 @@ func validateDigitFacets(
 		return nil
 	}
 
-	// Integer digit facets count the value's significant digits; the source
-	// spelling is retained separately for lexical patterns and diagnostics.
-	if _, _, integer := validationIntegerLimits(builtin); integer {
-		if number, ok := parseValidationInteger(value); ok {
-			value = number.digits
+	var total, fraction uint64
+	if builtin == "decimal" {
+		number, ok := parseValidationDecimal(value)
+		if !ok {
+			return &validationSimpleFailure{constraint: "datatype", message: fmt.Sprintf("value %q is not numeric", value)}
 		}
-	}
-	normalized := strings.TrimPrefix(strings.TrimPrefix(value, "+"), "-")
-	parts := strings.SplitN(normalized, ".", 2)
-	total := uint64(0)
-	for _, character := range normalized {
-		if unicode.IsDigit(character) {
-			total++
+		// XSD 1.0 totalDigits bounds both coefficient magnitude and scale:
+		// https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-totalDigits
+		// Keep leading fractional zeros (.001 needs totalDigits >= 3), but the
+		// immutable views omit leading whole and trailing fractional zeros.
+		fraction = uint64(len(number.fraction))
+		total = max(1, uint64(len(number.whole))+fraction)
+	} else {
+		// Integer digit facets count the value's significant digits; the source
+		// spelling is retained separately for lexical patterns and diagnostics.
+		if _, _, integer := validationIntegerLimits(builtin); integer {
+			if number, ok := parseValidationInteger(value); ok {
+				value = number.digits
+			}
 		}
-	}
-	fraction := uint64(0)
-	if len(parts) == 2 {
-		fraction = uint64(utf8.RuneCountInString(parts[1]))
+		normalized := strings.TrimPrefix(strings.TrimPrefix(value, "+"), "-")
+		parts := strings.SplitN(normalized, ".", 2)
+		for _, character := range normalized {
+			if unicode.IsDigit(character) {
+				total++
+			}
+		}
+		if len(parts) == 2 {
+			fraction = uint64(utf8.RuneCountInString(parts[1]))
+		}
 	}
 
 	if schema.HasTotalDigits && total > schema.TotalDigits {
