@@ -231,7 +231,8 @@ func (c *Context) currentLiteralValue(reference *TypeRef, value CurrentScalar) (
 	if semantics.Union != nil {
 		result, failure := c.assessCurrentSimple(semantics.Union, value.Value)
 		if TechnicalFailure(failure) {
-			c.Incomplete("current fixed union member is unavailable")
+			c.currentFixedUnavailable = true
+			c.capability(c.local.family, "model-fixed-value-unavailable")
 		}
 		return result, failure == nil
 	}
@@ -242,6 +243,7 @@ func (c *Context) currentLiteralValue(reference *TypeRef, value CurrentScalar) (
 	return result, failure == nil
 }
 func (c *Context) currentFixedEqual(reference *TypeRef, value CurrentScalar, literal string) bool {
+	c.currentFixedUnavailable = false
 	c.currentTrials++
 	defer func() { c.currentTrials-- }()
 	actual, ok := c.currentLiteralValue(reference, value)

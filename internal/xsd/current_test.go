@@ -300,3 +300,17 @@ func TestCurrentUnionTrialFailureDoesNotPolluteSuccess(t *testing.T) {
 		t.Fatalf("trial failure poisoned success: %+v", got)
 	}
 }
+
+func TestCurrentFixedUnionPatternIsLocalCapability(t *testing.T) {
+	pattern := currentRestriction("integer")
+	pattern.Patterns = []string{"[0-9]+"}
+	union := &SimpleSchema{Form: SimpleUnion, Members: []*SimpleMember{{Inline: pattern}, {Name: QName{Space: XSDNamespace, Local: "decimal"}}}}
+	fixed := "4"
+	r, b, _ := bindCurrent(t, TypeRef{InlineSimple: union}, currentNumber(t, "4"), &fixed)
+	if got := r.Results(b); !got.Declaration.Valid || got.Declaration.Complete || got.Scalar.Complete {
+		t.Fatalf("current capability=%+v", got)
+	}
+	if r.context.AssessmentErr != nil || r.context.IdentityIncomplete {
+		t.Fatalf("unrelated identity closure poisoned: %v, %v", r.context.AssessmentErr, r.context.IdentityIncomplete)
+	}
+}

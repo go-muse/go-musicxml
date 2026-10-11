@@ -207,19 +207,20 @@ type Attribute struct {
 }
 
 type Context struct {
-	currentTrials      int
-	identitySource     identityOrigin
-	identityDiagnostic identityDiagnostic
-	run                *Run
-	local              *boundState
-	AssessmentErr      error
-	AssessmentVersion  uint64
-	TypeMetadata       map[TypeIdentity]uint8
-	Derivations        map[DerivationKey]bool
-	Schema             *SchemaData
-	Issues             []Issue
-	Effective          map[*ComplexSchema]*EffectiveComplex
-	ParticleNullable   map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
+	currentTrials           int
+	currentFixedUnavailable bool
+	identitySource          identityOrigin
+	identityDiagnostic      identityDiagnostic
+	run                     *Run
+	local                   *boundState
+	AssessmentErr           error
+	AssessmentVersion       uint64
+	TypeMetadata            map[TypeIdentity]uint8
+	Derivations             map[DerivationKey]bool
+	Schema                  *SchemaData
+	Issues                  []Issue
+	Effective               map[*ComplexSchema]*EffectiveComplex
+	ParticleNullable        map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
 	// when enumeration literals need immutable lexical and value views.
@@ -443,7 +444,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		if len(node.Children) != 0 {
 			declarationValid = false
 			c.AddIssue(path, "fixed", "element with a fixed value must not contain child elements")
-		} else if equal := c.elementFixedEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed); !equal && (!c.currentModel() || c.AssessmentVersion == beforeFixed) {
+		} else if equal := c.elementFixedEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed); !equal && (!c.currentModel() || (c.AssessmentVersion == beforeFixed && !c.currentFixedUnavailable)) {
 			declarationValid = false
 			if c.currentModel() {
 				c.local.result().Valid = false
@@ -458,7 +459,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 				),
 			)
 		}
-		declarationValid = declarationValid && c.AssessmentVersion == beforeFixed
+		declarationValid = declarationValid && c.AssessmentVersion == beforeFixed && (!c.currentModel() || !c.currentFixedUnavailable)
 	}
 
 	// An unavailable/invalid default blocks dependent scalar/content checks,
@@ -1101,6 +1102,9 @@ func (c *Context) ValidateAttributes(
 			continue
 		}
 		attributeValid := true
+		if c.currentModel() {
+			c.currentFixedUnavailable = false
+		}
 		beforeFixed := c.AssessmentVersion
 		if schema.Constraint != nil &&
 			schema.Constraint.Kind == "fixed" &&
@@ -1108,7 +1112,7 @@ func (c *Context) ValidateAttributes(
 				&schema.Type,
 				attribute.Value,
 				schema.Constraint.Value,
-			) && c.AssessmentVersion == beforeFixed {
+			) && c.AssessmentVersion == beforeFixed && (!c.currentModel() || !c.currentFixedUnavailable) {
 			attributeValid = false
 			valid = false
 			if c.currentModel() {
@@ -1125,7 +1129,7 @@ func (c *Context) ValidateAttributes(
 			)
 		}
 
-		if c.AssessmentVersion != beforeFixed {
+		if c.AssessmentVersion != beforeFixed || (c.currentModel() && c.currentFixedUnavailable) {
 			attributeValid = false
 			valid = false
 		}
