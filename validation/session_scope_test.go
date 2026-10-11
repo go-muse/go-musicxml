@@ -19,13 +19,13 @@ func TestQARound3ContextScopeSameNodeOnlyRelevantPublishers(t *testing.T) {
 			end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "children-unavailable"}
 			qaClose(t, s, end)
 			r := qaFinish(t, s, true)
-			f := qaFinding(t, r, "z-consumer", 1)
-			want := OutcomePass
 			if possibleParentWriter {
-				want = OutcomeUnknown
-			}
-			if f.Outcome != want {
-				t.Fatalf("outcome=%s want=%s parentWriter=%t", f.Outcome, want, possibleParentWriter)
+				f := qaFinding(t, r, "z-consumer", 1)
+				if f.Outcome != OutcomeUnknown {
+					t.Errorf("possible parent publisher did not keep consumer unresolved: %+v", f)
+				}
+			} else if r.Counts != (Counts{Pass: 1}) || len(r.Findings) != 0 || r.DiagnosticsTruncated || r.BlockingProblems != 0 {
+				t.Errorf("local provider did not satisfy the one selected consumer: %+v", r)
 			}
 			if r.Satisfied() {
 				t.Fatal("unknown input subject enumeration cannot satisfy full assessment")
@@ -45,9 +45,8 @@ func TestQARound3ContextScopeParentReadSeesNodeLocalProvider(t *testing.T) {
 	end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "siblings-unavailable"}
 	qaClose(t, s, end)
 	r := qaFinish(t, s, true)
-	f := qaFinding(t, r, "z-consumer", 2)
-	if f.Outcome != OutcomePass {
-		t.Fatalf("closed parent's local provider suppressed by unrelated unknown siblings: %+v", f)
+	if r.Counts != (Counts{Pass: 1, NotApplicable: 1}) || len(r.Findings) != 0 || r.DiagnosticsTruncated || r.BlockingProblems != 0 {
+		t.Fatalf("closed parent's local provider suppressed by unrelated unknown siblings: %+v", r)
 	}
 }
 

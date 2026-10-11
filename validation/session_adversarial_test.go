@@ -111,9 +111,8 @@ func TestQAIdentityReferenceWaitsForDeferredDeclaration(t *testing.T) {
 	ciStreamNode(t, s, 3, 1, "test.decl", "K")
 	qaClose(t, s, factEnd(1))
 	r := qaFinish(t, s, true)
-	f := qaFinding(t, r, "a-reference", 2)
-	if f.Outcome != OutcomePass || !r.Satisfied() {
-		t.Fatalf("forward reference must await deferred declaration; outcome=%s reason=%s satisfied=%t counts=%+v", f.Outcome, f.Reason, r.Satisfied(), r.Counts)
+	if r.Counts != (Counts{Pass: 3, NotApplicable: 4}) || !r.Satisfied() || len(r.Findings) != 0 || len(r.Rules) != 0 || r.DiagnosticsTruncated {
+		t.Fatalf("forward reference must await deferred declaration, with all three selected obligations passing: %+v", r)
 	}
 }
 func TestQAIdentityCannotCloseIncompleteChildEnumeration(t *testing.T) {

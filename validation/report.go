@@ -298,7 +298,10 @@ func (a *reportAccumulator) record(rule RuleDefinition, decision Decision, locat
 			a.report.AssessmentComplete = false
 		}
 	}
-	if a.report.DiagnosticsTruncated {
+	// Pass and proven exclusion are assessment results, not diagnostics. Keep
+	// their authoritative counts above, without measuring or storing payloads,
+	// consuming diagnostic quotas, or marking diagnostic storage truncated.
+	if decision.Outcome == OutcomePass || decision.Outcome == OutcomeNotApplicable || a.report.DiagnosticsTruncated {
 		return nil
 	}
 	// The expected/actual preview is bounded before measuring or cloning. Other

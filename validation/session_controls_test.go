@@ -197,11 +197,14 @@ func TestQAControlExactDeclarationIsolation(t *testing.T) {
 			}
 			qaClose(t, s, factEnd(1))
 			r := qaFinish(t, s, true)
+			if variant == "exact" {
+				if r.Counts != (Counts{Pass: 1}) || !r.Satisfied() || len(r.Findings) != 0 || r.DiagnosticsTruncated {
+					t.Fatalf("exact declaration did not satisfy the presence obligation: %+v", r)
+				}
+				return
+			}
 			f := qaFinding(t, r, "presence", 1)
 			want := OutcomeFail
-			if variant == "exact" {
-				want = OutcomePass
-			}
 			if variant == "unknown" {
 				want = OutcomeUnknown
 			}
@@ -274,8 +277,14 @@ func TestQAControlChildCountBoundsAndIncompleteEvidence(t *testing.T) {
 			end.ChildrenComplete = Evidence[bool]{State: EvidenceKnown, Value: complete}
 			qaClose(t, s, end)
 			r := qaFinish(t, s, true)
+			if complete && count >= 1 && count <= 2 {
+				if r.Counts != (Counts{Pass: 1, NotApplicable: uint64(count)}) || !r.Satisfied() || len(r.Findings) != 0 || r.DiagnosticsTruncated {
+					t.Fatalf("valid complete child count %d did not satisfy the obligation: %+v", count, r)
+				}
+				continue
+			}
 			f := qaFinding(t, r, "count", 1)
-			want := OutcomePass
+			want := OutcomeFail
 			if !complete {
 				want = OutcomeUnknown
 			}

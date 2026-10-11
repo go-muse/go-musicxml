@@ -23,6 +23,45 @@ func reportTestDecision(outcome Outcome) Decision {
 	return Decision{Rule: reportTestRule().Key, Subject: NodeRef{DocumentID: "doc", Node: 1}, Outcome: outcome, Reason: "test", Expected: "expected", Actual: "actual"}
 }
 
+func TestReportAccumulatorSuccessfulDecisionsUseNoDiagnosticQuota(t *testing.T) {
+	for _, outcome := range []Outcome{OutcomePass, OutcomeNotApplicable} {
+		for _, category := range []DiagnosticCategory{CategoryNormative, CategoryModel, CategoryPolicy, CategoryAdvisory} {
+			t.Run(string(outcome)+"/"+string(category), func(t *testing.T) {
+				account, _ := NewBudgetAccount(Budgets{MaxDiagnostics: 1, MaxDiagnosticBytes: 1})
+				acc := newReportAccumulator(reportTestProfile(), account)
+				rule, decision := reportTestRule(), reportTestDecision(outcome)
+				rule.Category = category
+				// Even oversized successful metadata must never be measured or
+				// retained as diagnostics, or set diagnostic truncation.
+				rule.Text.Explanation = strings.Repeat("x", 1<<20)
+				decision.Related = []Location{{Path: strings.Repeat("y", 1<<20)}}
+				for i := 0; i < 1200; i++ {
+					if err := acc.record(rule, decision, Location{}); err != nil {
+						t.Fatal(err)
+					}
+				}
+				r := acc.finish(true, SyntaxNotAssessed)
+				want := Counts{}
+				if category == CategoryNormative {
+					if outcome == OutcomePass {
+						want.Pass = 1200
+					} else {
+						want.NotApplicable = 1200
+					}
+				}
+				if r.Counts != want || !r.Satisfied() || r.DiagnosticsTruncated || len(r.Findings) != 0 || len(r.Rules) != 0 {
+					t.Errorf("success-only report retained diagnostics or lost authoritative counts: %+v", r)
+				}
+				for _, kind := range []BudgetKind{BudgetDiagnostics, BudgetDiagnosticBytes} {
+					if used, err := account.Usage(kind); err != nil || used != 0 {
+						t.Errorf("successful decisions consumed %s = %d (%v)", kind, used, err)
+					}
+				}
+			})
+		}
+	}
+}
+
 func TestReportAccumulatorIndependentAxesAndTruncation(t *testing.T) {
 	tests := []struct {
 		name                string
@@ -41,7 +80,7 @@ func TestReportAccumulatorIndependentAxesAndTruncation(t *testing.T) {
 	}
 	for _, tc := range tests {
 		for _, tiny := range []bool{false, true} {
-			t.Run(tc.name+map[bool]string{false: "/retained", true: "/truncated"}[tiny], func(t *testing.T) {
+			t.Run(tc.name+map[bool]string{false: "/default-budget", true: "/tiny-budget"}[tiny], func(t *testing.T) {
 				limits := Budgets{}
 				if tiny {
 					limits.MaxDiagnostics, limits.MaxDiagnosticBytes = 1, 1
@@ -57,11 +96,15 @@ func TestReportAccumulatorIndependentAxesAndTruncation(t *testing.T) {
 				if r.Conformance != tc.conformance || r.AssessmentComplete != tc.complete || r.Satisfied() != tc.satisfied || r.Counts != tc.counts || r.BlockingProblems != 0 {
 					t.Fatalf("report axes = %+v", r)
 				}
-				if r.DiagnosticsTruncated != tiny {
+				problems := tc.counts.Fail + tc.counts.Unknown + tc.counts.Unsupported + tc.counts.Blocked
+				if r.DiagnosticsTruncated != (tiny && problems != 0) {
 					t.Fatalf("truncation = %v", r.DiagnosticsTruncated)
 				}
 				if tiny && (len(r.Findings) != 0 || len(r.Rules) != 0) {
 					t.Fatal("oversized diagnostic retained")
+				}
+				if !tiny && (uint64(len(r.Findings)) != problems || (len(r.Rules) == 0) != (problems == 0)) {
+					t.Fatalf("stored findings = %d, rule records = %d; want only %d problem diagnostics", len(r.Findings), len(r.Rules), problems)
 				}
 			})
 		}
@@ -199,13 +242,16 @@ func TestReportAccumulatorAtomicStorageReservationAndBoundedValues(t *testing.T)
 		beforeCount, _ := account.Usage(BudgetDiagnostics)
 		beforeBytes, _ := account.Usage(BudgetDiagnosticBytes)
 		acc := newReportAccumulator(reportTestProfile(), account)
-		if err := acc.record(reportTestRule(), reportTestDecision(OutcomePass), Location{}); err != nil {
+		if err := acc.record(reportTestRule(), reportTestDecision(OutcomeFail), Location{}); err != nil {
 			t.Fatal(err)
 		}
 		afterCount, _ := account.Usage(BudgetDiagnostics)
 		afterBytes, _ := account.Usage(BudgetDiagnosticBytes)
 		if afterCount != beforeCount || afterBytes != beforeBytes {
 			t.Fatal("partial diagnostic reservation consumed quota")
+		}
+		if r := acc.finish(true, SyntaxNotAssessed); !r.DiagnosticsTruncated || len(r.Findings) != 0 || r.Counts != (Counts{Fail: 1}) {
+			t.Fatalf("unretained problem must remain authoritative: %+v", r)
 		}
 	}
 	account, _ := NewBudgetAccount(Budgets{})
@@ -276,14 +322,17 @@ func TestReportTerminalIsReservedBoundedAndKeepsFirstStatus(t *testing.T) {
 func TestReportTruncationWithoutTerminalDoesNotStopCounting(t *testing.T) {
 	account, _ := NewBudgetAccount(Budgets{MaxDiagnostics: 1})
 	acc := newReportAccumulator(reportTestProfile(), account)
-	for _, outcome := range []Outcome{OutcomePass, OutcomeFail, OutcomeUnknown} {
+	for _, outcome := range []Outcome{OutcomePass, OutcomeFail, OutcomeUnknown, OutcomeNotApplicable, OutcomePass} {
 		if err := acc.record(reportTestRule(), reportTestDecision(outcome), Location{}); err != nil {
 			t.Fatal(err)
 		}
 	}
 	r := acc.finish(true, SyntaxNotAssessed)
-	if !r.DiagnosticsTruncated || len(r.Findings) != 1 || r.Counts != (Counts{Pass: 1, Fail: 1, Unknown: 1}) || r.Conformance != ConformanceViolated || r.AssessmentComplete || r.Terminal != nil || r.BlockingProblems != 0 {
+	if !r.DiagnosticsTruncated || len(r.Findings) != 1 || r.Counts != (Counts{Pass: 2, Fail: 1, NotApplicable: 1, Unknown: 1}) || r.Conformance != ConformanceViolated || r.AssessmentComplete || r.Terminal != nil || r.BlockingProblems != 0 {
 		t.Fatalf("storage truncation changed assessment: %+v", r)
+	}
+	if r.Findings[0].Outcome != OutcomeFail {
+		t.Errorf("success consumed quota before the first problem: %+v", r.Findings[0])
 	}
 }
 
