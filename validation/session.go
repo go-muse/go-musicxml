@@ -1,0 +1,518 @@
+package validation
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+)
+
+// RunOptions binds one occurrence to an explicit profile. Account nil creates
+// an independent finite account. A supplied Account must be core-created and
+// requires zero Budgets; child sessions cannot reset or widen its limits.
+// DocumentID must be unique among occurrences in the caller's root assessment.
+type RunOptions struct {
+	DocumentID string
+	Profile    ProfileID
+	Budgets    Budgets
+	Account    *Account
+}
+
+// Engine shares only an immutable compiled catalog. Independent sessions may run
+// concurrently; each Session itself is single-goroutine and must be finalized.
+type Engine struct{ catalog *CompiledCatalog }
+
+// NewEngine accepts only a successfully compiled, nonempty catalog.
+func NewEngine(catalog *CompiledCatalog) (*Engine, error) {
+	if catalog == nil || len(catalog.profiles) == 0 {
+		return nil, contract("engine", "compiled catalog required")
+	}
+	return &Engine{catalog: catalog}, nil
+}
+
+// SessionError identifies an invalid fact event or lifecycle transition. It
+// preserves a more specific contract or prior terminal cause when available.
+type SessionError struct {
+	Operation, Reason string
+	Cause             error
+}
+
+// Error describes the rejected event without interpreting its cause.
+func (e *SessionError) Error() string {
+	if e == nil {
+		return "validation: nil session error"
+	}
+	return fmt.Sprintf("%s: %s: %s", ErrInvalidSession, e.Operation, e.Reason)
+}
+
+// Unwrap preserves the lifecycle sentinel and the original cause.
+func (e *SessionError) Unwrap() []error {
+	if e == nil {
+		return nil
+	}
+	if e.Cause == nil {
+		return []error{ErrInvalidSession}
+	}
+	return []error{ErrInvalidSession, e.Cause}
+}
+
+// UnsupportedRootError describes a known root excluded by the selected profile.
+// It denotes a capability boundary, not malformed XML or normative invalidity.
+type UnsupportedRootError struct {
+	Name    QName
+	Profile ProfileID
+}
+
+// Error identifies the excluded root and selected profile.
+func (e *UnsupportedRootError) Error() string {
+	if e == nil {
+		return "validation: nil unsupported root error"
+	}
+	return fmt.Sprintf("validation: root {%s}%s is unsupported by profile %s", e.Name.Space, e.Name.Local, e.Profile)
+}
+
+// Unwrap classifies unsupported roots as incomplete assessment.
+func (e *UnsupportedRootError) Unwrap() error { return ErrIncompleteAssessment }
+
+type factNode struct {
+	header     NodeHeader
+	end        NodeEnd
+	closed     bool
+	children   []*factNode
+	attributes []AttributeFact
+}
+type decisionID struct {
+	rule RuleKey
+	node NodeID
+}
+
+// Session consumes validated facts synchronously. It retains a bounded fact set
+// until Finish (not a streaming constant-memory promise). Every event error is
+// terminal; call Finish exactly once even on cancellation to release live gauges.
+// Reports own their contents after cleanup. The caller must serialize methods.
+type Session struct {
+	catalog                 *CompiledCatalog
+	documentID              string
+	profile                 Profile
+	account                 *Account
+	accumulator             *reportAccumulator
+	nodes                   map[NodeID]*factNode
+	sequence                []NodeID
+	stack                   []*factNode
+	decisions               map[decisionID]Decision
+	contexts                map[ContextKey]ContextFact
+	identities              map[string]*identityIndex
+	registered              map[decisionID]bool
+	terminalCause           error
+	inputComplete, finished bool
+	enumerationIncomplete   bool
+	collectingIdentity      bool
+	root                    *factNode
+	retained, depth         int64
+}
+
+// Begin validates configuration and cancellation before accepting input. It
+// creates no parser, resolver or source/model adapter and chooses no default.
+func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
+	if ctx == nil {
+		return nil, contract("context", "must not be nil")
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, &IncompleteError{Reason: "canceled-before-begin", Cause: err}
+	}
+	if e == nil || e.catalog == nil {
+		return nil, contract("engine", "uninitialized engine")
+	}
+	if !validID(opts.DocumentID) {
+		return nil, contract("document ID", "explicit nonempty occurrence required")
+	}
+	profile, ok := e.catalog.profiles[opts.Profile]
+	if !ok {
+		return nil, contract("profile", "unknown or empty explicit profile")
+	}
+	account := opts.Account
+	if account != nil {
+		if opts.Budgets != (Budgets{}) {
+			return nil, contract("budgets", "nonzero limits cannot accompany shared account")
+		}
+		if _, err := account.Usage(BudgetNodes); err != nil {
+			return nil, err
+		}
+	} else {
+		var err error
+		account, err = NewBudgetAccount(opts.Budgets)
+		if err != nil {
+			return nil, err
+		}
+	}
+	s := &Session{catalog: e.catalog, documentID: strings.Clone(opts.DocumentID), profile: profile, account: account, nodes: make(map[NodeID]*factNode), decisions: make(map[decisionID]Decision), contexts: make(map[ContextKey]ContextFact), identities: make(map[string]*identityIndex), registered: make(map[decisionID]bool)}
+	// Profile/report fixed metadata is finite at compile time and its per-run
+	// copied payload is also reserved before the report snapshot is allocated.
+	if err := s.retain(int64(1024+len(opts.DocumentID)) + profileLogicalBytes(profile)); err != nil {
+		return nil, err
+	}
+	s.accumulator = newReportAccumulator(profile, account)
+	for _, key := range e.catalog.orders[profile.ID] {
+		rule := e.catalog.rules[key]
+		if plan, ok := e.catalog.plans[rule.Predicate]; ok && plan.kind == planIdentityDeclare {
+			if err := s.markIdentityProvider(plan.key); err != nil {
+				s.cleanup()
+				return nil, err
+			}
+			if e.catalog.supports[profile.ID][key].State != ImplementationAvailable {
+				s.markIdentityIncomplete(plan.key)
+			}
+		}
+	}
+	return s, nil
+}
+func (s *Session) event(ctx context.Context, op string) error {
+	if s == nil {
+		return &SessionError{Operation: op, Reason: "nil session"}
+	}
+	if s.finished {
+		return &SessionError{Operation: op, Reason: "session already finished"}
+	}
+	if s.catalog == nil || s.account == nil || s.accumulator == nil {
+		return &SessionError{Operation: op, Reason: "uninitialized session"}
+	}
+	if s.terminalCause != nil {
+		return &SessionError{Operation: op, Reason: "session has a terminal failure", Cause: s.terminalCause}
+	}
+	if ctx == nil {
+		return s.fail(contract("context", "must not be nil"))
+	}
+	if err := ctx.Err(); err != nil {
+		return s.fail(err)
+	}
+	if err := s.account.Charge(BudgetEvents, 1); err != nil {
+		return s.fail(err)
+	}
+	return nil
+}
+func (s *Session) fail(err error) error {
+	if err == nil {
+		return nil
+	}
+	if s.terminalCause == nil {
+		s.terminalCause = err
+	}
+	return err
+}
+func (s *Session) step(ctx context.Context, amount int64) error {
+	if ctx == nil {
+		return contract("context", "must not be nil")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return s.account.Charge(BudgetRuleSteps, amount)
+}
+func (s *Session) retain(amount int64) error {
+	if err := s.account.Charge(BudgetBufferedBytes, amount); err != nil {
+		return err
+	}
+	s.retained += amount
+	return nil
+}
+
+// Open starts one balanced occurrence and copies retained headers and bindings.
+func (s *Session) Open(ctx context.Context, node NodeHeader) error {
+	if err := s.event(ctx, "Open"); err != nil {
+		return err
+	}
+	if len(node.Bindings) > 65536 {
+		return s.fail(contract("bindings", "too many bindings"))
+	}
+	if err := s.account.Charge(BudgetNodes, 1); err != nil {
+		return s.fail(err)
+	}
+	if err := s.account.Charge(BudgetDepth, 1); err != nil {
+		return s.fail(err)
+	}
+	s.depth++
+	if err := s.retain(headerLogicalBytes(node)); err != nil {
+		return s.fail(err)
+	}
+	if err := validateHeader(node, s.profile.Target, s.documentID); err != nil {
+		return s.fail(&SessionError{Operation: "Open", Reason: "invalid node header", Cause: err})
+	}
+	if _, exists := s.nodes[node.ID]; exists {
+		return s.fail(&SessionError{Operation: "Open", Reason: "duplicate occurrence ID"})
+	}
+	if len(s.stack) == 0 {
+		if s.root != nil || node.Parent != 0 {
+			return s.fail(&SessionError{Operation: "Open", Reason: "duplicate root or nonzero root parent"})
+		}
+		found := false
+		for _, name := range s.profile.SupportedRoots {
+			if name == node.Name {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return s.fail(&UnsupportedRootError{Name: node.Name, Profile: s.profile.ID})
+		}
+	} else if node.Parent != s.stack[len(s.stack)-1].header.ID {
+		return s.fail(&SessionError{Operation: "Open", Reason: "parent is not current open occurrence"})
+	}
+	retained := &factNode{header: cloneHeader(node)}
+	if len(s.stack) == 0 {
+		s.root = retained
+	} else {
+		parent := s.stack[len(s.stack)-1]
+		parent.children = append(parent.children, retained)
+	}
+	s.nodes[node.ID] = retained
+	s.sequence = append(s.sequence, node.ID)
+	s.stack = append(s.stack, retained)
+	return nil
+}
+
+// Attribute supplies one exact slot before any child on its currently open owner.
+func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error {
+	if err := s.event(ctx, "Attribute"); err != nil {
+		return err
+	}
+	if len(s.stack) == 0 {
+		return s.fail(&SessionError{Operation: "Attribute", Reason: "no open owner"})
+	}
+	n := s.stack[len(s.stack)-1]
+	if attribute.Owner != n.header.ID || len(n.children) > 0 {
+		return s.fail(&SessionError{Operation: "Attribute", Reason: "wrong owner or attribute after children"})
+	}
+	if err := s.account.Charge(BudgetAttributes, 1); err != nil {
+		return s.fail(err)
+	}
+	if err := s.checkScalar(attribute.Scalar); err != nil {
+		return s.fail(err)
+	}
+	if err := s.retain(attributeLogicalBytes(attribute)); err != nil {
+		return s.fail(err)
+	}
+	if err := validateAttribute(attribute, s.profile.Target, s.documentID); err != nil {
+		return s.fail(&SessionError{Operation: "Attribute", Reason: "invalid attribute", Cause: err})
+	}
+	for _, existing := range n.attributes {
+		if err := s.step(ctx, 1); err != nil {
+			return s.fail(err)
+		}
+		if existing.Name == attribute.Name {
+			return s.fail(&SessionError{Operation: "Attribute", Reason: "duplicate expanded attribute slot"})
+		}
+	}
+	n.attributes = append(n.attributes, cloneAttribute(attribute))
+	return nil
+}
+
+// Close seals one occurrence. Ordinary predicate failures are retained findings,
+// not method errors. Independent local decisions are established before EOF.
+func (s *Session) Close(ctx context.Context, end NodeEnd) error {
+	if err := s.event(ctx, "Close"); err != nil {
+		return err
+	}
+	if len(s.stack) == 0 || s.stack[len(s.stack)-1].header.ID != end.ID {
+		return s.fail(&SessionError{Operation: "Close", Reason: "unbalanced close"})
+	}
+	n := s.stack[len(s.stack)-1]
+	if err := s.checkScalar(end.Scalar); err != nil {
+		return s.fail(err)
+	}
+	if err := s.retain(endLogicalBytes(end)); err != nil {
+		return s.fail(err)
+	}
+	if err := validateEnd(end, s.profile.Target); err != nil {
+		return s.fail(&SessionError{Operation: "Close", Reason: "invalid closure facts", Cause: err})
+	}
+	if end.ChildrenComplete.State != EvidenceKnown || !end.ChildrenComplete.Value {
+		s.enumerationIncomplete = true
+		for name := range s.identities {
+			s.markIdentityIncomplete(name)
+		}
+	}
+	n.end = cloneEnd(end)
+	n.closed = true
+	s.stack = s.stack[:len(s.stack)-1]
+	if err := s.account.Release(BudgetDepth, 1); err != nil {
+		return s.fail(err)
+	}
+	s.depth--
+	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.evaluate(ctx, n, key, false); err != nil {
+			return s.fail(err)
+		}
+	}
+	return nil
+}
+
+// Finish finalizes pending document obligations, returns the best report and
+// always frees owned live gauges. Evidence-only unknown/unsupported outcomes and
+// normative violations have nil operation errors; terminal failures return an
+// IncompleteError preserving actual causes. A second Finish returns no report.
+func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
+	if s == nil {
+		return Report{}, &SessionError{Operation: "Finish", Reason: "nil session"}
+	}
+	if s.finished {
+		return Report{}, &SessionError{Operation: "Finish", Reason: "session already finished"}
+	}
+	if s.catalog == nil || s.account == nil || s.accumulator == nil {
+		return Report{}, &SessionError{Operation: "Finish", Reason: "uninitialized session"}
+	}
+	s.finished = true
+	defer s.cleanup()
+	addCause := func(err error) {
+		if err == nil {
+			return
+		}
+		if s.terminalCause == nil {
+			s.terminalCause = err
+		} else if !errors.Is(s.terminalCause, err) {
+			s.terminalCause = errors.Join(s.terminalCause, err)
+		}
+	}
+	if ctx == nil {
+		addCause(contract("context", "must not be nil"))
+	} else {
+		addCause(ctx.Err())
+	}
+	addCause(end.Cause)
+	if err := s.validateCompletion(end); err != nil {
+		addCause(err)
+	}
+	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && reportSyntaxComplete(s.profile.Target, end.Syntax)
+	if s.terminalCause == nil {
+		for _, phase := range s.catalog.phases[s.profile.ID] {
+			s.collectingIdentity = phase.registration
+			for _, id := range s.sequence {
+				n := s.nodes[id]
+				if !n.closed {
+					continue
+				}
+				if err := s.evaluate(ctx, n, phase.rule, true); err != nil {
+					addCause(err)
+					break
+				}
+			}
+			if s.terminalCause != nil {
+				break
+			}
+		}
+	}
+	if !s.inputComplete || s.terminalCause != nil || s.enumerationIncomplete {
+		s.accumulator.incomplete()
+	}
+	if s.terminalCause != nil {
+		category := terminalCategory(s.terminalCause)
+		if end.Syntax == SyntaxMalformed && category != CategoryResource {
+			category = CategorySyntax
+		}
+		s.accumulator.terminal(s.terminalCause, category, "assessment-interrupted")
+	}
+	report := s.accumulator.finish(s.inputComplete, end.Syntax)
+	if s.terminalCause != nil {
+		return report, &IncompleteError{Reason: "session-terminated", Cause: s.terminalCause}
+	}
+	return report, nil
+}
+func (s *Session) validateCompletion(end Completion) error {
+	if s.profile.Target == TargetSource {
+		if end.Syntax != SyntaxWellFormed && end.Syntax != SyntaxMalformed && end.Syntax != SyntaxIncomplete {
+			return contract("completion syntax", "source syntax assertion required")
+		}
+		if end.InputComplete && end.Syntax != SyntaxWellFormed {
+			return contract("completion syntax", "complete source requires well-formed syntax")
+		}
+	} else if end.Syntax != SyntaxNotAssessed {
+		return contract("completion syntax", "model/package syntax must be not-assessed")
+	}
+	if end.InputComplete && (s.root == nil || len(s.stack) != 0) {
+		return &SessionError{Operation: "Finish", Reason: "complete input requires one closed root"}
+	}
+	if end.Syntax == SyntaxMalformed && end.Cause == nil && s.terminalCause == nil {
+		return &SessionError{Operation: "Finish", Reason: "malformed source requires a syntax cause"}
+	}
+	return nil
+}
+func terminalCategory(err error) DiagnosticCategory {
+	if errors.Is(err, ErrResourceLimit) {
+		return CategoryResource
+	}
+	var root *UnsupportedRootError
+	if errors.As(err, &root) {
+		return CategoryCapability
+	}
+	return CategoryPolicy
+}
+func (s *Session) cleanup() {
+	if s.depth > 0 {
+		_ = s.account.Release(BudgetDepth, s.depth)
+		s.depth = 0
+	}
+	if s.retained > 0 {
+		_ = s.account.Release(BudgetBufferedBytes, s.retained)
+		s.retained = 0
+	}
+	s.nodes = nil
+	s.sequence = nil
+	s.stack = nil
+	s.root = nil
+	s.decisions = nil
+	s.contexts = nil
+	s.identities = nil
+	s.registered = nil
+	s.accumulator = nil
+}
+func (s *Session) checkScalar(v Scalar) error {
+	if err := s.account.Check(BudgetScalarBytes, int64(len(v.Lexeme.Value))); err != nil {
+		return err
+	}
+	return s.account.Check(BudgetScalarBytes, atomicLogicalBytes(v.Value.Value))
+}
+func atomicLogicalBytes(v Atomic) int64 {
+	return int64(len(v.Text)+len(v.Name.Space)+len(v.Name.Local)) + v.Integer.ByteSize() + v.Decimal.ByteSize()
+}
+func evidenceLogicalBytes[T any](v Evidence[T]) int64 {
+	n := int64(len(v.Reason))
+	if v.Cause != nil {
+		n += int64(128 + len(v.Cause.Rule.ID) + len(v.Cause.Subject.DocumentID))
+	}
+	return n
+}
+func locationLogicalBytes(v Location) int64 {
+	n := int64(96 + len(v.DocumentID) + len(v.Entry) + len(v.Path))
+	if v.Position != nil {
+		n += int64(64 + len(v.Position.CoordinateSpace))
+	}
+	return n
+}
+func scalarLogicalBytes(v Scalar) int64 {
+	return 192 + int64(len(v.Lexeme.Value)) + atomicLogicalBytes(v.Value.Value) + evidenceLogicalBytes(v.Lexeme) + evidenceLogicalBytes(v.Value)
+}
+func headerLogicalBytes(v NodeHeader) int64 {
+	n := int64(512+len(v.Name.Space)+len(v.Name.Local)+len(v.Type.Value.Name.Space)+len(v.Type.Value.Name.Local)+len(v.Type.Value.Occurrence)+len(v.Declaration.Value.OwnerOccurrence)+len(v.Declaration.Value.Occurrence)) + locationLogicalBytes(v.Location) + evidenceLogicalBytes(v.Type) + evidenceLogicalBytes(v.Declaration)
+	for _, b := range v.Bindings {
+		n += int64(64 + len(b.Prefix) + len(b.URI))
+	}
+	return n
+}
+func attributeLogicalBytes(v AttributeFact) int64 {
+	return 256 + int64(len(v.Name.Space)+len(v.Name.Local)+len(v.Declaration.Value.OwnerOccurrence)+len(v.Declaration.Value.Occurrence)) + locationLogicalBytes(v.Location) + scalarLogicalBytes(v.Scalar) + evidenceLogicalBytes(v.Declaration) + evidenceLogicalBytes(v.Presence)
+}
+func endLogicalBytes(v NodeEnd) int64 {
+	return 192 + scalarLogicalBytes(v.Scalar) + evidenceLogicalBytes(v.ChildrenComplete) + evidenceLogicalBytes(v.AttributesComplete) + evidenceLogicalBytes(v.Order)
+}
+func profileLogicalBytes(v Profile) int64 {
+	n := int64(512 + len(v.ID) + len(v.MusicXMLVersion) + len(v.CatalogDigest) + len(v.RegistryCommit) + len(v.NormativeClosure))
+	for _, k := range v.Required {
+		n += int64(64 + len(k.ID))
+	}
+	for _, s := range v.Support {
+		n += int64(96 + len(s.Rule.ID) + len(s.Reason))
+	}
+	for _, r := range v.SupportedRoots {
+		n += int64(64 + len(r.Local) + len(r.Space))
+	}
+	return n
+}

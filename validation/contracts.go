@@ -193,6 +193,9 @@ func validateAttribute(v AttributeFact, target Target, doc string) error {
 	if v.Presence.State == EvidenceKnown && !v.Presence.Value {
 		return contract("attribute presence", "use absent evidence for proven absence")
 	}
+	if v.Presence.State == EvidenceAbsent && (v.Scalar.Lexeme.State == EvidenceKnown || v.Scalar.Value.State == EvidenceKnown) {
+		return contract("attribute presence", "proven absence cannot carry known scalar evidence")
+	}
 	return validateScalar(v.Scalar)
 }
 func validateEnd(v NodeEnd, target Target) error {
