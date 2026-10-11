@@ -79,9 +79,14 @@ type Completion struct {
 	run                                                   *Run
 	subject                                               SubjectID
 }
+
+// IdentityResults is cumulative within a run. Issues retains emission order:
+// later calls append newly proved findings without moving the preview prefix.
+// Valid becomes false before any allocation needed to publish its detail.
 type IdentityResults struct {
-	BySubject map[SubjectID]Result
-	Complete  bool
+	BySubject       map[SubjectID]Result
+	Issues          []Detail
+	Valid, Complete bool
 }
 
 // Meter is a fixed execution-control interface, never a predicate callback.
@@ -128,13 +133,17 @@ type Run struct {
 	closed, finalized bool
 	current           context.Context
 	identityResults   map[SubjectID]Result
+	identityIssues    []Detail
+	identitySeen      map[identityDiagnostic]bool
+	identityValid     bool
+	identityOutput    *IdentityResults
 }
 
 func NewRun(schema *Compiled, meter Meter) (*Run, error) {
 	if schema == nil || schema.digest == "" || meter == nil {
 		return nil, errors.New("xsd: compiled schema and meter required")
 	}
-	r := &Run{schema: schema, meter: meter, nodes: map[SubjectID]*Node{}, states: map[SubjectID]*boundState{}}
+	r := &Run{schema: schema, meter: meter, nodes: map[SubjectID]*Node{}, states: map[SubjectID]*boundState{}, identityValid: true}
 	r.context = Context{Schema: &schema.data, Effective: map[*ComplexSchema]*EffectiveComplex{}, Identifiers: map[string]string{}, run: r}
 	return r, nil
 }
@@ -455,9 +464,14 @@ func (r *Run) Identity(ctx context.Context, inputComplete bool) (out IdentityRes
 	}
 	r.current = ctx
 	defer recoverRun(&err)
-	out = IdentityResults{BySubject: map[SubjectID]Result{}, Complete: inputComplete && !r.context.IdentityIncomplete && r.context.AssessmentErr == nil}
-	r.identityResults = out.BySubject
-	defer func() { r.identityResults = nil }()
+	if r.identityResults == nil {
+		r.reserve(256)
+		r.identityResults = make(map[SubjectID]Result)
+		r.identitySeen = make(map[identityDiagnostic]bool)
+	}
+	out = IdentityResults{BySubject: r.identityResults, Issues: r.identityIssues, Valid: r.identityValid, Complete: inputComplete && !r.context.IdentityIncomplete && r.context.AssessmentErr == nil}
+	r.identityOutput = &out
+	defer func() { r.identityOutput = nil }()
 	old := r.context.IdentityIncomplete
 	r.context.IdentityIncomplete = old || !inputComplete
 	defer func() { r.context.IdentityIncomplete = old }()
@@ -485,6 +499,9 @@ func (r *Run) Close() error {
 	r.nodes = nil
 	r.states = nil
 	r.context = Context{}
+	r.identityResults = nil
+	r.identityIssues = nil
+	r.identitySeen = nil
 	return err
 }
 func (c *Context) setFamily(name string) {
@@ -515,10 +532,16 @@ func (c *Context) observeScalar(assessment SimpleAssessment, valid bool) {
 }
 func (c *Context) identityDetail(path, constraint, message string) {
 	r := c.run
-	if r == nil {
+	if r == nil || r.identityOutput == nil {
 		return
 	}
-	r.reserve(int64(160 + len(path) + len(constraint) + len(message)))
+	// Keep this scalar fact even when reserving diagnostic storage aborts.
+	r.identityValid = false
+	r.identityOutput.Valid = false
+	if r.identitySeen[c.identityDiagnostic] {
+		return
+	}
+	r.reserve(int64(400 + len(path) + len(constraint) + len(message)))
 	id := c.identitySource.subject
 	attribute := c.identitySource.attribute
 	v, ok := r.identityResults[id]
@@ -526,9 +549,14 @@ func (c *Context) identityDetail(path, constraint, message string) {
 		v = freshResult()
 	}
 	v.Valid = false
-	v.Issues = append(v.Issues, Detail{Issue: Issue{path, constraint, message}, Subject: id, Attribute: attribute})
+	detail := Detail{Issue: Issue{path, constraint, message}, Subject: id, Attribute: attribute}
+	v.Issues = append(v.Issues, detail)
 	r.identityResults[id] = v
+	r.identityIssues = append(r.identityIssues, detail)
+	r.identitySeen[c.identityDiagnostic] = true
+	r.identityOutput.Issues = r.identityIssues
 }
+
 func (c *Context) attributeResult(schema AttributeSchema, value string, present, typeValid, declarationValid bool) {
 	if c.local == nil {
 		return

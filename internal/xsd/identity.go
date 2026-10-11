@@ -10,6 +10,11 @@ import "fmt"
 // https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id
 // https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id
 // These XSD owners are unrelated to future MusicXML musical reference scopes.
+type identityDiagnostic struct {
+	kind  uint8
+	index int
+}
+
 type identityOrigin struct {
 	subject   SubjectID
 	attribute QName
@@ -133,7 +138,8 @@ func (c *Context) SkipIdentityChildren(node *Node) {
 }
 
 func (c *Context) ValidateIdentityReferences() {
-	for _, entry := range c.IdentityEntries {
+	for index, entry := range c.IdentityEntries {
+		c.identityDiagnostic = identityDiagnostic{kind: 1, index: index}
 		bindings := c.IdentityBindings[entry.Value]
 		if bindings != nil && len(bindings.Owners) > 1 {
 			c.identitySource = bindings.secondOrigin
@@ -154,7 +160,8 @@ func (c *Context) ValidateIdentityReferences() {
 	if c.AssessmentErr != nil || c.IdentityIncomplete {
 		return
 	}
-	for _, reference := range c.References {
+	for index, reference := range c.References {
+		c.identityDiagnostic = identityDiagnostic{kind: 2, index: index}
 		if c.IdentityBindings[reference.Value] != nil {
 			continue
 		}

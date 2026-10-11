@@ -206,17 +206,18 @@ type Attribute struct {
 }
 
 type Context struct {
-	identitySource    identityOrigin
-	run               *Run
-	local             *boundState
-	AssessmentErr     error
-	AssessmentVersion uint64
-	TypeMetadata      map[TypeIdentity]uint8
-	Derivations       map[DerivationKey]bool
-	Schema            *SchemaData
-	Issues            []Issue
-	Effective         map[*ComplexSchema]*EffectiveComplex
-	ParticleNullable  map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
+	identitySource     identityOrigin
+	identityDiagnostic identityDiagnostic
+	run                *Run
+	local              *boundState
+	AssessmentErr      error
+	AssessmentVersion  uint64
+	TypeMetadata       map[TypeIdentity]uint8
+	Derivations        map[DerivationKey]bool
+	Schema             *SchemaData
+	Issues             []Issue
+	Effective          map[*ComplexSchema]*EffectiveComplex
+	ParticleNullable   map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
 	// when enumeration literals need immutable lexical and value views.
@@ -1936,7 +1937,7 @@ func (c *Context) AddIssue(
 		c.local.detail(path, constraint, message)
 		return
 	}
-	if c.run != nil && c.run.identityResults != nil {
+	if c.run != nil && c.run.identityOutput != nil {
 		c.identityDetail(path, constraint, message)
 		return
 	}
