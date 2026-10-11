@@ -13,8 +13,8 @@ type validationParticleKey struct {
 }
 
 type validationParticleEndpoints struct {
-	ends    []int // descending, unique; deterministic longest-first traversal
-	failure validationMatchFailure
+	ends    []int                   // descending, unique; deterministic longest-first traversal
+	failure *validationMatchFailure // nil until a failed run requests diagnostics
 }
 
 // These optional counters support algorithmic regression tests. They are not a
@@ -24,12 +24,14 @@ type validationParticleWork struct {
 }
 
 type validationParticleMatcher struct {
-	context   *validationContext
-	children  []*validationNode
-	particles map[validationParticleKey]validationParticleEndpoints
-	bodies    map[validationParticleKey]validationParticleEndpoints
-	nullable  map[*validationParticleSchema]bool // body, before its occurrence range
-	work      *validationParticleWork
+	context     *validationContext
+	children    []*validationNode
+	particles   map[validationParticleKey]validationParticleEndpoints
+	bodies      map[validationParticleKey]validationParticleEndpoints
+	nullable    map[*validationParticleSchema]bool // body, before its occurrence range
+	singletons  []int                              // immutable singleton endpoint views, owned by this match
+	diagnostics bool                               // collect failure names only after an unsuccessful endpoint pass
+	work        *validationParticleWork
 }
 
 func newValidationParticleMatcher(c *validationContext, children []*validationNode) *validationParticleMatcher {
@@ -40,7 +42,15 @@ func newValidationParticleMatcher(c *validationContext, children []*validationNo
 }
 
 func (c *validationContext) matchParticle(particle *validationParticleSchema, children []*validationNode, position int) (validationMatchResult, validationMatchFailure, bool) {
-	return newValidationParticleMatcher(c, children).run(particle, position)
+	m := newValidationParticleMatcher(c, children)
+	// Like effective complex types, this is immutable schema information.
+	// Reuse it across elements of one validation, never across documents.
+	if c.particleNullable == nil {
+		c.particleNullable = m.nullable
+	} else {
+		m.nullable = c.particleNullable
+	}
+	return m.run(particle, position)
 }
 
 func (m *validationParticleMatcher) run(p *validationParticleSchema, start int) (validationMatchResult, validationMatchFailure, bool) {
@@ -60,13 +70,21 @@ func (m *validationParticleMatcher) run(p *validationParticleSchema, start int) 
 	}
 	endpoints := m.match(p, start)
 	if len(endpoints.ends) == 0 {
-		return validationMatchResult{}, endpoints.failure, false
+		// Success does not consume branch failures. Replay the same bounded DP
+		// only when diagnostics are needed; this also preserves failures from
+		// alternatives that are not part of a selected witness. Work counters
+		// include both passes, and every memo entry belongs to this matcher.
+		clear(m.particles)
+		clear(m.bodies)
+		m.diagnostics = true
+		endpoints = m.match(p, start)
+		return validationMatchResult{}, *endpoints.failure, false
 	}
 	result := validationMatchResult{next: endpoints.ends[0]}
 	if !m.witness(p, start, result.next, &result.elements) {
 		return validationMatchResult{}, validationMatchFailure{schema: "content-model witness cannot be reconstructed"}, false
 	}
-	return result, endpoints.failure, true
+	return result, validationMatchFailure{}, true
 }
 
 // This structural guard is not a complete XSD schema-validity or UPA checker.
@@ -145,6 +163,32 @@ func (m *validationParticleMatcher) transition() {
 	}
 }
 
+func (m *validationParticleMatcher) initialFailure(start int) *validationMatchFailure {
+	if !m.diagnostics {
+		return nil
+	}
+	return &validationMatchFailure{position: start}
+}
+
+func (m *validationParticleMatcher) failure(left, right *validationMatchFailure) *validationMatchFailure {
+	if !m.diagnostics {
+		return nil
+	}
+	failure := betterValidationFailure(*left, *right)
+	return &failure
+}
+
+func (m *validationParticleMatcher) singleton(position int) []int {
+	if m.singletons == nil {
+		m.singletons = make([]int, len(m.children)+1)
+		for index := range m.singletons {
+			m.singletons[index] = len(m.children) - index
+		}
+	}
+	index := len(m.children) - position
+	return m.singletons[index : index+1 : index+1]
+}
+
 func validationOrderedPositions(seen map[int]bool) []int {
 	positions := make([]int, 0, len(seen))
 	for position := range seen {
@@ -153,6 +197,37 @@ func validationOrderedPositions(seen map[int]bool) []int {
 	slices.Sort(positions)
 	slices.Reverse(positions)
 	return positions
+}
+
+// Most score states have zero or one endpoint. Promote only actual
+// alternatives to a map. Multiple-endpoint slices are privately owned;
+// single endpoints share only the matcher's immutable position array.
+type validationParticlePositionSet struct {
+	first    int
+	hasFirst bool
+	many     map[int]bool
+}
+
+func (s *validationParticlePositionSet) add(position int) {
+	if !s.hasFirst {
+		s.first, s.hasFirst = position, true
+		return
+	}
+	if s.many != nil {
+		s.many[position] = true
+	} else if position != s.first {
+		s.many = map[int]bool{s.first: true, position: true}
+	}
+}
+
+func (s *validationParticlePositionSet) ordered(m *validationParticleMatcher) []int {
+	if s.many != nil {
+		return validationOrderedPositions(s.many)
+	}
+	if s.hasFirst {
+		return m.singleton(s.first)
+	}
+	return nil
 }
 
 func (m *validationParticleMatcher) limit(p *validationParticleSchema, start int) int {
@@ -164,6 +239,27 @@ func (m *validationParticleMatcher) limit(p *validationParticleSchema, start int
 }
 
 func (m *validationParticleMatcher) match(p *validationParticleSchema, start int) validationParticleEndpoints {
+	// A required single occurrence has exactly its body's endpoints. Reusing
+	// the immutable slice avoids a second memo entry and repetition maps.
+	if !m.diagnostics && !p.Occurrence.Unbounded && p.Occurrence.Min == 1 && p.Occurrence.Max == 1 {
+		return m.body(p, start)
+	}
+	// An optional terminal has at most the consumed and empty endpoints.
+	// Both are adjacent views of the matcher's immutable position array.
+	if !m.diagnostics && !p.Occurrence.Unbounded && p.Occurrence.Max <= 1 &&
+		(p.Kind == validationParticleElement || p.Kind == validationParticleAny) {
+		if p.Occurrence.Max == 0 {
+			return validationParticleEndpoints{ends: m.singleton(start)}
+		}
+		result := m.body(p, start)
+		if len(result.ends) == 0 {
+			result.ends = m.singleton(start)
+		} else {
+			index := len(m.children) - start - 1
+			result.ends = m.singletons[index : index+2 : index+2]
+		}
+		return result
+	}
 	key := validationParticleKey{p, start}
 	if cached, ok := m.particles[key]; ok {
 		return cached
@@ -171,61 +267,66 @@ func (m *validationParticleMatcher) match(p *validationParticleSchema, start int
 	if m.work != nil {
 		m.work.particles++
 	}
-	result := validationParticleEndpoints{failure: validationMatchFailure{position: start}}
-	accepted := make(map[int]bool)
+	result := validationParticleEndpoints{failure: m.initialFailure(start)}
+	var accepted validationParticlePositionSet
 	if p.Occurrence.Min == 0 || m.nullable[p] {
-		accepted[start] = true
+		accepted.add(start)
 	}
 	current := []int{start}
 	for count := 1; count <= m.limit(p, start) && len(current) > 0; count++ {
-		next := make(map[int]bool)
+		var next validationParticlePositionSet
 		for _, position := range current {
 			if m.work != nil {
 				m.work.repeatStates++
 			}
 			body := m.body(p, position)
-			result.failure = betterValidationFailure(result.failure, body.failure)
+			result.failure = m.failure(result.failure, body.failure)
 			for _, end := range body.ends {
 				m.transition()
 				if end == position {
 					continue
 				} // any needed empty occurrences can be padding
-				next[end] = true
+				next.add(end)
 				if m.nullable[p] || uint64(count) >= p.Occurrence.Min {
-					accepted[end] = true
+					accepted.add(end)
 				}
 			}
 		}
-		current = validationOrderedPositions(next)
+		current = next.ordered(m)
 	}
 	// Even at EOF, inspect the body for accurate missing-child diagnostics. A
 	// maxOccurs=0 particle must not attempt a prohibited occurrence.
-	if len(accepted) == 0 && (p.Occurrence.Unbounded || p.Occurrence.Max > 0) {
-		result.failure = betterValidationFailure(result.failure, m.body(p, start).failure)
+	if !accepted.hasFirst && (p.Occurrence.Unbounded || p.Occurrence.Max > 0) {
+		result.failure = m.failure(result.failure, m.body(p, start).failure)
 		for _, position := range current {
-			result.failure = betterValidationFailure(result.failure, m.body(p, position).failure)
+			result.failure = m.failure(result.failure, m.body(p, position).failure)
 		}
 	}
-	result.ends = validationOrderedPositions(accepted)
+	result.ends = accepted.ordered(m)
 	m.particles[key] = result
 	return result
 }
 
 func (m *validationParticleMatcher) body(p *validationParticleSchema, start int) validationParticleEndpoints {
 	key := validationParticleKey{p, start}
-	if cached, ok := m.bodies[key]; ok {
-		return cached
+	// Terminal bodies are constant work and need no endpoint memo entries.
+	// Preserve ordinary caching in the diagnostic replay.
+	terminal := !m.diagnostics && (p.Kind == validationParticleElement || p.Kind == validationParticleAny)
+	if !terminal {
+		if cached, ok := m.bodies[key]; ok {
+			return cached
+		}
 	}
 	if m.work != nil {
 		m.work.bodies++
 	}
-	result := validationParticleEndpoints{failure: validationMatchFailure{position: start}}
+	result := validationParticleEndpoints{failure: m.initialFailure(start)}
 	switch p.Kind {
 	case validationParticleElement:
 		e, _ := m.context.resolveElement(p.Element)
 		if start < len(m.children) && validationName(m.children[start].Name) == e.Name {
-			result.ends = []int{start + 1}
-		} else {
+			result.ends = m.singleton(start + 1)
+		} else if m.diagnostics {
 			result.failure.expected = []validationQName{e.Name}
 		}
 	case validationParticleAny:
@@ -233,32 +334,32 @@ func (m *validationParticleMatcher) body(p *validationParticleSchema, start int)
 		// semantics need their separate support contract; this repair does not
 		// advertise that they have been verified.
 		if start < len(m.children) {
-			result.ends = []int{start + 1}
+			result.ends = m.singleton(start + 1)
 		}
 	case validationParticleChoice:
-		ends := make(map[int]bool)
+		var ends validationParticlePositionSet
 		for _, child := range p.Children {
 			branch := m.match(child, start)
-			result.failure = betterValidationFailure(result.failure, branch.failure)
+			result.failure = m.failure(result.failure, branch.failure)
 			for _, end := range branch.ends {
 				m.transition()
-				ends[end] = true
+				ends.add(end)
 			}
 		}
-		result.ends = validationOrderedPositions(ends)
+		result.ends = ends.ordered(m)
 	case validationParticleSequence:
 		current := []int{start}
 		for _, child := range p.Children {
-			ends := make(map[int]bool)
+			var ends validationParticlePositionSet
 			for _, position := range current {
 				branch := m.match(child, position)
-				result.failure = betterValidationFailure(result.failure, branch.failure)
+				result.failure = m.failure(result.failure, branch.failure)
 				for _, end := range branch.ends {
 					m.transition()
-					ends[end] = true
+					ends.add(end)
 				}
 			}
-			current = validationOrderedPositions(ends)
+			current = ends.ordered(m)
 			if len(current) == 0 {
 				break
 			}
@@ -266,12 +367,16 @@ func (m *validationParticleMatcher) body(p *validationParticleSchema, start int)
 		result.ends = current
 	case validationParticleAll:
 		end, failure, ok := m.all(p, start, nil)
-		result.failure = failure
+		if m.diagnostics {
+			result.failure = &failure
+		}
 		if ok {
-			result.ends = []int{end}
+			result.ends = m.singleton(end)
 		}
 	}
-	m.bodies[key] = result
+	if !terminal {
+		m.bodies[key] = result
+	}
 	return result
 }
 
@@ -304,13 +409,68 @@ func (m *validationParticleMatcher) all(p *validationParticleSchema, start int, 
 		}
 	}
 	failure := validationMatchFailure{position: end}
+	missing := false
 	for index, child := range p.Children {
 		if !used[index] && child.Occurrence.Min > 0 {
-			e, _ := m.context.resolveElement(child.Element)
-			failure.expected = append(failure.expected, e.Name)
+			missing = true
+			if m.diagnostics {
+				e, _ := m.context.resolveElement(child.Element)
+				failure.expected = append(failure.expected, e.Name)
+			}
 		}
 	}
-	return end, failure, len(failure.expected) == 0
+	return end, failure, !missing
+}
+
+// A predecessor layer normally contains one endpoint. Preserve the first
+// predecessor on collisions, and promote to a map only for alternatives.
+type validationParticlePredecessors struct {
+	end, start int
+	hasFirst   bool
+	many       map[int]int
+}
+
+func (p *validationParticlePredecessors) add(end, start int) bool {
+	if !p.hasFirst {
+		p.end, p.start, p.hasFirst = end, start, true
+		return true
+	}
+	if p.many == nil {
+		if p.end == end {
+			return false
+		}
+		p.many = map[int]int{p.end: p.start, end: start}
+		return true
+	}
+	if _, found := p.many[end]; found {
+		return false
+	}
+	p.many[end] = start
+	return true
+}
+
+func (p *validationParticlePredecessors) previous(end int) (int, bool) {
+	if p.many != nil {
+		start, found := p.many[end]
+		return start, found
+	}
+	return p.start, p.hasFirst && end == p.end
+}
+
+func (p *validationParticlePredecessors) ordered(m *validationParticleMatcher) []int {
+	if p.many != nil {
+		positions := make([]int, 0, len(p.many))
+		for end := range p.many {
+			positions = append(positions, end)
+		}
+		slices.Sort(positions)
+		slices.Reverse(positions)
+		return positions
+	}
+	if p.hasFirst {
+		return m.singleton(p.end)
+	}
+	return nil
 }
 
 // predecessor layers retain only integer positions. They are local to witness
@@ -320,18 +480,20 @@ func (m *validationParticleMatcher) witness(p *validationParticleSchema, start, 
 	if start == end {
 		return p.Occurrence.Min == 0 || m.nullable[p]
 	}
-	layers := []map[int]int{nil}
+	if !p.Occurrence.Unbounded && p.Occurrence.Max == 1 {
+		return m.bodyWitness(p, start, end, elements)
+	}
+	layers := []validationParticlePredecessors{{}}
 	current := []int{start}
 	for count := 1; count <= m.limit(p, start) && len(current) > 0; count++ {
-		previous := make(map[int]int)
+		var previous validationParticlePredecessors
 		for _, position := range current {
 			for _, next := range m.body(p, position).ends {
 				m.transition()
 				if next <= position || next > end {
 					continue
 				}
-				if _, ok := previous[next]; !ok {
-					previous[next] = position
+				if previous.add(next, position) {
 					if m.work != nil {
 						m.work.witnessStates++
 					}
@@ -339,11 +501,11 @@ func (m *validationParticleMatcher) witness(p *validationParticleSchema, start, 
 			}
 		}
 		layers = append(layers, previous)
-		if _, ok := previous[end]; ok && (m.nullable[p] || uint64(count) >= p.Occurrence.Min) {
+		if _, ok := previous.previous(end); ok && (m.nullable[p] || uint64(count) >= p.Occurrence.Min) {
 			positions := make([]int, count+1)
 			positions[count] = end
 			for index := count; index > 0; index-- {
-				positions[index-1] = layers[index][positions[index]]
+				positions[index-1], _ = layers[index].previous(positions[index])
 			}
 			// No cached endpoint owns these tables. Only the selected split survives.
 			layers = nil
@@ -354,11 +516,7 @@ func (m *validationParticleMatcher) witness(p *validationParticleSchema, start, 
 			}
 			return true
 		}
-		seen := make(map[int]bool, len(previous))
-		for next := range previous {
-			seen[next] = true
-		}
-		current = validationOrderedPositions(seen)
+		current = previous.ordered(m)
 	}
 	return false
 }
@@ -378,18 +536,17 @@ func (m *validationParticleMatcher) bodyWitness(p *validationParticleSchema, sta
 			}
 		}
 	case validationParticleSequence:
-		layers := make([]map[int]int, 0, len(p.Children))
+		layers := make([]validationParticlePredecessors, 0, len(p.Children))
 		current := []int{start}
 		for _, child := range p.Children {
-			previous := make(map[int]int)
+			var previous validationParticlePredecessors
 			for _, position := range current {
 				for _, next := range m.match(child, position).ends {
 					m.transition()
 					if next > end {
 						continue
 					}
-					if _, ok := previous[next]; !ok {
-						previous[next] = position
+					if previous.add(next, position) {
 						if m.work != nil {
 							m.work.witnessStates++
 						}
@@ -397,11 +554,7 @@ func (m *validationParticleMatcher) bodyWitness(p *validationParticleSchema, sta
 				}
 			}
 			layers = append(layers, previous)
-			seen := make(map[int]bool, len(previous))
-			for next := range previous {
-				seen[next] = true
-			}
-			current = validationOrderedPositions(seen)
+			current = previous.ordered(m)
 		}
 		if !slices.Contains(current, end) {
 			return false
@@ -409,7 +562,7 @@ func (m *validationParticleMatcher) bodyWitness(p *validationParticleSchema, sta
 		positions := make([]int, len(p.Children)+1)
 		positions[len(p.Children)] = end
 		for index := len(p.Children) - 1; index >= 0; index-- {
-			positions[index] = layers[index][positions[index+1]]
+			positions[index], _ = layers[index].previous(positions[index+1])
 		}
 		layers = nil
 		for index, child := range p.Children {

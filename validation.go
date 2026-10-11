@@ -313,6 +313,7 @@ type validationContext struct {
 	schema            *validationSchemaSet
 	issues            []ValidationIssue
 	effective         map[*validationComplexSchema]*validationEffectiveComplex
+	particleNullable  map[*validationParticleSchema]bool // prepared immutable metadata, scoped to this validation
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
 	// when enumeration literals need immutable lexical and value views.

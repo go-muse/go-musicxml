@@ -87,7 +87,8 @@ func TestGrammarNullableSymbolicCounts(t *testing.T) {
 	m.work = &validationParticleWork{}
 	_, _, ok = m.run(p, 0)
 	assert.False(t, ok)
-	assert.LessOrEqual(t, m.work.transitions, int64(4))
+	// Invalid content can require one diagnostic replay of the input-bounded DP.
+	assert.LessOrEqual(t, m.work.transitions, int64(8))
 }
 
 func TestGrammarWitnessBindingsAndCache(t *testing.T) {
