@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 fixture. No production MusicXML schemas changed. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="choice-type"><xs:restriction base="xs:string">
+    <xs:pattern value="A[0-9]"/><xs:pattern value="B[0-9]"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="choice" type="choice-type" nillable="true"/>
+  <xs:element name="default" type="choice-type" default="B2"/>
+  <xs:element name="fixed" type="choice-type" fixed="B2" nillable="true"/>
+  <xs:simpleType name="layer-type"><xs:restriction base="choice-type">
+    <xs:pattern value="[AB]1"/><xs:pattern value="[AB]2"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="layer" type="layer-type"/>
+  <xs:simpleType name="empty-type"><xs:restriction base="xs:string">
+    <xs:pattern value=""/><xs:pattern value="x"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="empty" type="empty-type"/>
+  <xs:simpleType name="collapse-type"><xs:restriction base="xs:string">
+    <xs:whiteSpace value="collapse"/>
+    <xs:pattern value="A B"/><xs:pattern value="C D"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="collapse" type="collapse-type"/>
+  <xs:simpleType name="replace-type"><xs:restriction base="xs:string">
+    <xs:whiteSpace value="replace"/>
+    <xs:pattern value=" A B "/><xs:pattern value=" C D "/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="replace" type="replace-type"/>
+  <xs:simpleType name="numeric-type"><xs:restriction base="xs:decimal">
+    <xs:pattern value="01\.20"/><xs:pattern value="\+1\.2"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="numeric" type="numeric-type"/>
+  <xs:element name="numeric-fixed" type="numeric-type" fixed="01.20"/>
+  <xs:simpleType name="integer-type"><xs:restriction base="xs:integer">
+    <xs:pattern value="01"/><xs:pattern value="\+1"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="integer" type="integer-type"/>
+  <xs:element name="attributes"><xs:complexType>
+    <xs:attribute name="choice" type="choice-type" use="required"/>
+    <xs:attribute name="space" type="collapse-type"/>
+    <xs:attribute name="fixed" type="numeric-type" fixed="01.20"/>
+    <xs:attribute name="default" type="choice-type" default="B2"/>
+  </xs:complexType></xs:element>
+  <xs:complexType name="scalar-base"><xs:simpleContent><xs:extension base="choice-type">
+    <xs:attribute name="code" type="choice-type" use="required"/>
+  </xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="scalar-type"><xs:simpleContent><xs:restriction base="scalar-base">
+    <xs:pattern value="[AB]1"/><xs:pattern value="[AB]2"/>
+  </xs:restriction></xs:simpleContent></xs:complexType>
+  <xs:element name="scalar" type="scalar-type" nillable="true"/>
+  <xs:element name="scalar-default" type="scalar-type" default="B2"/>
+  <xs:element name="scalar-fixed" type="scalar-type" fixed="B2" nillable="true"/>
+  <xs:element name="inline"><xs:simpleType><xs:restriction>
+    <xs:simpleType><xs:restriction base="xs:string">
+      <xs:pattern value="A[0-9]"/><xs:pattern value="B[0-9]"/>
+    </xs:restriction></xs:simpleType>
+    <xs:pattern value="[AB]1"/><xs:pattern value="[AB]2"/>
+  </xs:restriction></xs:simpleType></xs:element>
+  <xs:complexType name="complex-inline-type"><xs:simpleContent><xs:restriction base="scalar-base">
+    <xs:simpleType><xs:restriction base="choice-type">
+      <xs:pattern value="[AB]1"/><xs:pattern value="[AB]2"/>
+    </xs:restriction></xs:simpleType>
+    <xs:pattern value="A1"/><xs:pattern value="B2"/>
+  </xs:restriction></xs:simpleContent></xs:complexType>
+  <xs:element name="complex-inline" type="complex-inline-type"/>
+  <xs:simpleType name="list-base"><xs:list itemType="xs:integer"/></xs:simpleType>
+  <xs:simpleType name="list-type"><xs:restriction base="list-base">
+    <xs:pattern value="01 2"/><xs:pattern value="3 04"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="list" type="list-type"/>
+  <xs:simpleType name="list-items-type"><xs:list itemType="integer-type"/></xs:simpleType>
+  <xs:element name="list-items" type="list-items-type"/>
+  <xs:simpleType name="none-type"><xs:restriction base="xs:token"><xs:enumeration value="none"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="union-base"><xs:union memberTypes="xs:integer none-type"/></xs:simpleType>
+  <xs:simpleType name="union-type"><xs:restriction base="union-base">
+    <xs:pattern value="01"/><xs:pattern value="none"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="union" type="union-type"/>
+  <xs:simpleType name="preserve-union-base"><xs:union memberTypes="xs:string xs:integer"/></xs:simpleType>
+  <xs:simpleType name="preserve-union-type"><xs:restriction base="preserve-union-base">
+    <xs:pattern value="01"/><xs:pattern value="none"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="preserve-union" type="preserve-union-type"/>
+
+  <xs:simpleType name="length-type"><xs:restriction base="xs:string">
+    <xs:pattern value="A+"/><xs:pattern value="B+"/><xs:length value="2"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="length" type="length-type"/>
+  <xs:simpleType name="facets-type"><xs:restriction base="xs:decimal">
+    <xs:pattern value="[0-9]+\.[0-9]+"/><xs:pattern value="\+[0-9]+\.[0-9]+"/>
+    <xs:maxInclusive value="2"/><xs:fractionDigits value="1"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="facets" type="facets-type"/>
+  <!-- A derived policy applies before the inherited OR group. -->
+  <xs:simpleType name="strengthened-base"><xs:restriction base="xs:string">
+    <xs:pattern value="A B"/><xs:pattern value="C D"/>
+  </xs:restriction></xs:simpleType>
+  <xs:simpleType name="strengthened-type"><xs:restriction base="strengthened-base">
+    <xs:whiteSpace value="collapse"/>
+    <xs:pattern value="A.*"/><xs:pattern value="C.*"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="strengthened" type="strengthened-type"/>
+  <xs:simpleType name="inherited-space-type"><xs:restriction base="collapse-type">
+    <xs:pattern value="A.*"/><xs:pattern value="C.*"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="inherited-space" type="inherited-space-type"/>
+  <xs:simpleType name="total-type"><xs:restriction base="xs:decimal">
+    <xs:pattern value="[0-9]+"/><xs:pattern value="\+[0-9]+"/>
+    <xs:totalDigits value="2"/>
+  </xs:restriction></xs:simpleType>
+  <xs:element name="total" type="total-type"/>
+</xs:schema>

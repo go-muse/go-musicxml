@@ -1,6 +1,7 @@
 package musicxml
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"strings"
@@ -41,6 +42,22 @@ func newTestValidationContext(schema *validationSchemaSet) *validationContext {
 		effective:   make(map[*validationComplexSchema]*validationEffectiveComplex),
 		identifiers: make(map[string]string),
 	}
+}
+
+func snapshotValidationSchema(t *testing.T, set *validationSchemaSet) map[string]string {
+	t.Helper()
+	result := make(map[string]string)
+	for name, schema := range set.Types {
+		encoded, err := json.Marshal(schema)
+		require.NoError(t, err)
+		result["type:"+name.Space+"\x00"+name.Local] = string(encoded)
+	}
+	for name, schema := range set.Elements {
+		encoded, err := json.Marshal(schema)
+		require.NoError(t, err)
+		result["element:"+name.Space+"\x00"+name.Local] = string(encoded)
+	}
+	return result
 }
 
 func assertValidationIssues(t *testing.T, context *validationContext, want []string) {
@@ -95,4 +112,37 @@ func TestNewTestValidationContext(t *testing.T) {
 	first.identifiers["seen"] = "/first"
 	assert.Empty(t, second.effective)
 	assert.Empty(t, second.identifiers)
+}
+
+func TestSnapshotValidationSchemaNamespaces(t *testing.T) {
+	t.Parallel()
+	schema := &validationSchemaSet{
+		Types: map[validationQName]*validationTypeSchema{
+			{Space: "urn:first", Local: "same"}:  {Simple: &validationSimpleSchema{WhiteSpace: "preserve"}},
+			{Space: "urn:second", Local: "same"}: {Simple: &validationSimpleSchema{WhiteSpace: "collapse"}},
+		},
+		Elements: map[validationQName]*validationElementSchema{
+			{Space: "urn:first", Local: "same"}:  {Nillable: true},
+			{Space: "urn:second", Local: "same"}: {Nillable: false},
+		},
+	}
+	before := snapshotValidationSchema(t, schema)
+	require.Len(t, before, 4)
+	assert.Equal(t, before, snapshotValidationSchema(t, schema))
+	for _, namespace := range []string{"urn:first", "urn:second"} {
+		name := validationQName{Space: namespace, Local: "same"}
+		key := "type:" + namespace + "\x00same"
+		require.Contains(t, before, key)
+		schema.Types[name].Simple.Patterns = []string{"changed"}
+		after := snapshotValidationSchema(t, schema)
+		assert.NotEqual(t, before[key], after[key])
+		schema.Types[name].Simple.Patterns = nil
+		key = "element:" + namespace + "\x00same"
+		require.Contains(t, before, key)
+		schema.Elements[name].Abstract = true
+		after = snapshotValidationSchema(t, schema)
+		assert.NotEqual(t, before[key], after[key])
+		schema.Elements[name].Abstract = false
+	}
+	assert.Equal(t, before, snapshotValidationSchema(t, schema))
 }

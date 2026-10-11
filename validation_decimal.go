@@ -81,10 +81,10 @@ func validationDecimalValuesEqual(left, right string) bool {
 }
 
 // Keep bound rules and diagnostics aligned with validateIntegerBounds; parsing is domain-specific.
-func validateDecimalBounds(schema *validationSimpleSchema, value string) *validationSimpleFailure {
+func validateDecimalBounds(schema *validationSimpleSchema, value, display string) *validationSimpleFailure {
 	number, ok := parseValidationDecimal(value)
 	if !ok {
-		return &validationSimpleFailure{constraint: "datatype", message: fmt.Sprintf("value %q is not numeric", value)}
+		return &validationSimpleFailure{constraint: "datatype", message: fmt.Sprintf("value %q is not numeric", display)}
 	}
 	tests := []struct {
 		enabled            bool
@@ -106,7 +106,7 @@ func validateDecimalBounds(schema *validationSimpleSchema, value string) *valida
 		}
 		comparison := number.compare(limit)
 		if (test.minimum && comparison < 0) || (!test.minimum && comparison > 0) || (test.exclusive && comparison == 0) {
-			return &validationSimpleFailure{constraint: test.constraint, message: fmt.Sprintf("value %q violates %s=%q", value, test.constraint, test.limit)}
+			return &validationSimpleFailure{constraint: test.constraint, message: fmt.Sprintf("value %q violates %s=%q", display, test.constraint, test.limit)}
 		}
 	}
 	return nil

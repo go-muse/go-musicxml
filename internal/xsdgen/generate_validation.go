@@ -189,31 +189,7 @@ func (r *validationSchemaRenderer) renderSimpleSchema(
 			return err
 		}
 		target.WriteString(",")
-		if len(definition.Enumerations) != 0 {
-			target.WriteString("Enumerations: []string{")
-			for _, enumeration := range definition.Enumerations {
-				fmt.Fprintf(
-					target,
-					"%s,",
-					strconv.Quote(enumeration.Value),
-				)
-			}
-			target.WriteString("},")
-		}
-
-		restriction := definition.Source.Restriction
-		if len(restriction.Patterns) != 0 {
-			target.WriteString("Patterns: []string{")
-			for _, pattern := range restriction.Patterns {
-				fmt.Fprintf(
-					target,
-					"%s,",
-					strconv.Quote(pattern.Value),
-				)
-			}
-			target.WriteString("},")
-		}
-		if err := renderValidationFacets(target, restriction); err != nil {
+		if err := renderValidationRestriction(target, definition.Source.Restriction); err != nil {
 			return err
 		}
 
@@ -275,6 +251,31 @@ func (r *validationSchemaRenderer) renderSimpleMember(
 	target.WriteString("}")
 
 	return nil
+}
+
+// renderValidationRestriction retains lexical facet values without imposing Go
+// constant naming on complex simple-content restrictions.
+func renderValidationRestriction(target *bytes.Buffer, restriction *Restriction) error {
+	if restriction == nil {
+		return ErrInvalidSimpleType
+	}
+	for _, group := range []struct {
+		name   string
+		facets []Facet
+	}{
+		{"Enumerations", restriction.Enumerations},
+		{"Patterns", restriction.Patterns},
+	} {
+		if len(group.facets) == 0 {
+			continue
+		}
+		fmt.Fprintf(target, "%s: []string{", group.name)
+		for _, facet := range group.facets {
+			fmt.Fprintf(target, "%s,", strconv.Quote(facet.Value))
+		}
+		target.WriteString("},")
+	}
+	return renderValidationFacets(target, restriction)
 }
 
 func renderValidationFacets(
@@ -367,6 +368,23 @@ func (r *validationSchemaRenderer) renderComplexSchema(
 	if definition.Base != nil {
 		target.WriteString("Base: &validationTypeRef{Name: ")
 		renderValidationQName(target, definition.Base.Name)
+		target.WriteString("},")
+	}
+	if definition.Form == ComplexTypeSimpleContentRestriction {
+		if definition.Source == nil || definition.Source.SimpleContent == nil || definition.Source.SimpleContent.Restriction == nil {
+			return ErrInvalidComplexType
+		}
+		target.WriteString("SimpleContent: &validationSimpleSchema{Form: validationSimpleRestriction,")
+		if definition.SimpleContentBase != nil {
+			target.WriteString("Base: &validationSimpleMember{Inline: ")
+			if err := r.renderSimpleSchema(target, definition.SimpleContentBase); err != nil {
+				return err
+			}
+			target.WriteString("},")
+		}
+		if err := renderValidationRestriction(target, definition.Source.SimpleContent.Restriction); err != nil {
+			return err
+		}
 		target.WriteString("},")
 	}
 	if definition.Particle != nil {

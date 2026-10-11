@@ -98,15 +98,18 @@ type ComplexTypePlan struct {
 //
 // Base is set for simpleContent and complexContent derivations. Particle keeps
 // sequence and choice nesting intact instead of flattening ordered content.
+// SimpleContentBase is the optional inline simpleType of a simpleContent
+// restriction; Base remains the distinct parent complex type declaration.
 type ComplexTypeDefinition struct {
-	Source          *ComplexType
-	Form            ComplexTypeForm
-	Base            *Declaration
-	Particle        *ParticlePlan
-	Attributes      []AttributePlan
-	AttributeGroups []AttributeGroupPlan
-	AnyAttribute    *AnyAttribute
-	Mixed           bool
+	Source            *ComplexType
+	Form              ComplexTypeForm
+	Base              *Declaration
+	SimpleContentBase *SimpleTypeDefinition
+	Particle          *ParticlePlan
+	Attributes        []AttributePlan
+	AttributeGroups   []AttributeGroupPlan
+	AnyAttribute      *AnyAttribute
+	Mixed             bool
 }
 
 // TypePlan identifies either a named XSD type or an anonymous inline type.
@@ -319,6 +322,7 @@ func (p *complexTypePlanner) plan(
 	form := ComplexTypeDirect
 	body := bodyFromComplexType(source)
 	var base *Declaration
+	var simpleContentBase *SimpleTypeDefinition
 
 	switch {
 	case source.SimpleContent != nil:
@@ -340,6 +344,15 @@ func (p *complexTypePlanner) plan(
 			restriction := source.SimpleContent.Restriction
 			lexical = restriction.Base
 			body = bodyFromRestriction(restriction)
+			if restriction.SimpleType != nil {
+				var err error
+				simpleContentBase, err = p.planInlineSimpleType(
+					restriction.SimpleType, p.ownerGoName+"Content",
+				)
+				if err != nil {
+					return nil, p.wrap("plan simple-content scalar base", err)
+				}
+			}
 		default:
 			return nil, p.invalid(
 				"simpleContent has neither extension nor restriction",
@@ -434,14 +447,15 @@ func (p *complexTypePlanner) plan(
 	}
 
 	return &ComplexTypeDefinition{
-		Source:          source,
-		Form:            form,
-		Base:            base,
-		Particle:        particle,
-		Attributes:      attributes,
-		AttributeGroups: attributeGroups,
-		AnyAttribute:    anyAttribute,
-		Mixed:           mixed,
+		Source:            source,
+		Form:              form,
+		Base:              base,
+		SimpleContentBase: simpleContentBase,
+		Particle:          particle,
+		Attributes:        attributes,
+		AttributeGroups:   attributeGroups,
+		AnyAttribute:      anyAttribute,
+		Mixed:             mixed,
 	}, nil
 }
 

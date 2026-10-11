@@ -26,6 +26,27 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Treat XSD patterns declared in one restriction as alternatives, while retaining
+  intersection with inherited restriction groups. Every local alternative is
+  checked for malformed or unsupported patterns, even after a match or miss;
+  successful groups still run bounds, length and digit facets. Single-pattern
+  diagnostics and the existing regex translator remain unchanged. This is a
+  synthetic-schema operator repair; the pinned schemas have no sibling patterns.
+
+- Execute effective XSD `whiteSpace` facets before inherited scalar checks in
+  the existing validator. Ordered unions supply the first successful member's
+  normalized text; enumeration literals use their declaring restriction's base.
+  Atomic string-derived fixed values now use the effective whitespace policy,
+  including complex simple content. Source text and schema literals stay intact;
+  scalar diagnostics retain source spelling. Pattern alternatives are repaired
+  above; aggregate equality and other primitive typed equality remain separate work.
+
+- Retain and apply supported scalar restriction facets on complex simple-content
+  types, including optional inline scalar bases and inherited restrictions.
+  Keep failed or cyclic effective-type resolution from later accepting a partial
+  cached type. This is a synthetic-schema operator repair; the pinned MusicXML
+  schemas declare no complex simple-content restrictions.
+
 - Apply decimal `totalDigits` and `fractionDigits` to exact values in the existing
   validator, accepting redundant whole/fractional zero padding while retaining
   XSD 1.0 coefficient and scale limits. This synthetic-schema-tested operator
