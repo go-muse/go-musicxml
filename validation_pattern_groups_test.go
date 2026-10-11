@@ -257,21 +257,7 @@ func TestPatternGroupDiagnostics(t *testing.T) {
 
 func TestPatternGroupMetadataAndSourceImmutability(t *testing.T) {
 	t.Parallel()
-	snapshot := func() map[string]string {
-		result := make(map[string]string)
-		for name, schema := range validationPatternGenerated.Types {
-			encoded, err := json.Marshal(schema)
-			require.NoError(t, err)
-			result["type:"+name.Space+"\x00"+name.Local] = string(encoded)
-		}
-		for name, schema := range validationPatternGenerated.Elements {
-			encoded, err := json.Marshal(schema)
-			require.NoError(t, err)
-			result["element:"+name.Space+"\x00"+name.Local] = string(encoded)
-		}
-		return result
-	}
-	metadataBefore := snapshot()
+	metadataBefore := snapshotValidationSchema(t, &validationPatternGenerated)
 	for range 3 {
 		for _, test := range validationPatternGroupCases() {
 			root, err := parseValidationDocument([]byte(test.source))
@@ -293,7 +279,7 @@ func TestPatternGroupMetadataAndSourceImmutability(t *testing.T) {
 			assert.Equal(t, attributesBefore, attributesAfter, test.name)
 		}
 	}
-	assert.Equal(t, metadataBefore, snapshot())
+	assert.Equal(t, metadataBefore, snapshotValidationSchema(t, &validationPatternGenerated))
 }
 
 func TestPatternGroupValidPermutations(t *testing.T) {

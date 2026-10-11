@@ -151,28 +151,14 @@ func TestSimpleContentRestrictionsAgainstSchema(t *testing.T) {
 
 func TestSimpleContentRestrictionImmutability(t *testing.T) {
 	t.Parallel()
-	snapshot := func() map[string]string {
-		result := make(map[string]string)
-		for name, schema := range validationSimpleContentGenerated.Types {
-			encoded, err := json.Marshal(schema)
-			require.NoError(t, err)
-			result["type:"+name.Space+"\x00"+name.Local] = string(encoded)
-		}
-		for name, schema := range validationSimpleContentGenerated.Elements {
-			encoded, err := json.Marshal(schema)
-			require.NoError(t, err)
-			result["element:"+name.Space+"\x00"+name.Local] = string(encoded)
-		}
-		return result
-	}
-	before := snapshot()
+	before := snapshotValidationSchema(t, &validationSimpleContentGenerated)
 	for range 3 {
 		for _, test := range validationSimpleContentCases() {
 			context := validateAttributeSource(t, &validationSimpleContentGenerated, test.source)
 			assertValidationIssues(t, context, test.issues)
 		}
 	}
-	assert.Equal(t, before, snapshot())
+	assert.Equal(t, before, snapshotValidationSchema(t, &validationSimpleContentGenerated))
 	// The source tree, including lexical numeric spelling, remains untouched.
 	source := `<digits code="keep" id="P1">+001.23000</digits>`
 	node, err := parseValidationDocument([]byte(source))

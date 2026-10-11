@@ -173,27 +173,13 @@ func TestEffectiveWhitespaceAgainstSchema(t *testing.T) {
 
 func TestEffectiveWhitespaceDiagnosticsAndImmutability(t *testing.T) {
 	t.Parallel()
-	snapshot := func() map[string]string {
-		result := make(map[string]string)
-		for name, schema := range validationWhitespaceGenerated.Types {
-			encoded, err := json.Marshal(schema)
-			require.NoError(t, err)
-			result["type:"+name.Local] = string(encoded)
-		}
-		for name, schema := range validationWhitespaceGenerated.Elements {
-			encoded, err := json.Marshal(schema)
-			require.NoError(t, err)
-			result["element:"+name.Local] = string(encoded)
-		}
-		return result
-	}
-	before := snapshot()
+	before := snapshotValidationSchema(t, &validationWhitespaceGenerated)
 	for range 3 {
 		for _, test := range validationWhitespaceCases() {
 			assertValidationIssues(t, validateAttributeSource(t, &validationWhitespaceGenerated, test.source), test.issues)
 		}
 	}
-	assert.Equal(t, before, snapshot())
+	assert.Equal(t, before, snapshotValidationSchema(t, &validationWhitespaceGenerated))
 	for _, test := range []struct {
 		source, text string
 		messages     []string
@@ -285,6 +271,7 @@ func TestWhitespaceMetadataFailures(t *testing.T) {
 				failure := context.validateSimple(test.schema, " a ")
 				if assert.NotNil(t, failure) {
 					assert.Equal(t, "schema", failure.constraint)
+					assert.Equal(t, "simple type cannot be resolved", failure.message)
 				}
 				reference := &validationTypeRef{InlineSimple: test.schema}
 				assert.False(t, context.simpleValuesEqual(reference, " a ", "a"))

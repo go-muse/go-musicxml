@@ -305,9 +305,12 @@ type validationAttribute struct {
 }
 
 type validationContext struct {
-	schema            *validationSchemaSet
-	issues            []ValidationIssue
-	effective         map[*validationComplexSchema]*validationEffectiveComplex
+	schema    *validationSchemaSet
+	issues    []ValidationIssue
+	effective map[*validationComplexSchema]*validationEffectiveComplex
+	// These per-context, schema-keyed caches are lazy: simpleSemantics is
+	// needed only when a simple schema is reached; enumerationValues only
+	// when union-derived enumeration literals need normalized member views.
 	simpleSemantics   map[*validationSimpleSchema]*validationSimpleSemantics
 	enumerationValues map[validationEnumerationKey]validationEnumerationValue
 	identifiers       map[string]string
@@ -1145,6 +1148,9 @@ func (c *validationContext) simpleValuesEqual(
 ) bool {
 	semantics := c.simpleTypeSemantics(reference)
 	if semantics == nil {
+		// Deliberately fail closed, even for identical spellings. Ordinary
+		// value validation reports the schema failure; the additional fixed
+		// issue is retained until diagnostic deduplication is addressed.
 		return false
 	}
 	builtin := semantics.builtin
@@ -1182,6 +1188,8 @@ func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef
 	}
 	semantics := c.simpleTypeSemantics(reference)
 	if semantics == nil {
+		// As in simpleValuesEqual, retain fail-closed comparison and its
+		// additional fixed issue alongside ordinary schema diagnostics.
 		return false
 	}
 	if _, _, integer := validationIntegerLimits(semantics.builtin); integer {
@@ -1277,7 +1285,7 @@ func (c *validationContext) validateSimpleValue(
 ) (string, *validationSimpleFailure) {
 	semantics := c.resolveSimpleSemantics(schema)
 	if semantics == nil {
-		return "", &validationSimpleFailure{constraint: "schema", message: "simple type whitespace cannot be resolved"}
+		return "", &validationSimpleFailure{constraint: "schema", message: "simple type cannot be resolved"}
 	}
 	value = semantics.normalize(value)
 	switch schema.Form {
@@ -1620,16 +1628,16 @@ func parseValidationBoolean(value string) (bool, *validationSimpleFailure) {
 	}
 }
 
+// Reuse the concurrency-safe replacer across builtin checks and resolved
+// replace-policy views instead of rebuilding it for every value or literal.
+var validationReplaceWhitespace = strings.NewReplacer("\t", " ", "\n", " ", "\r", " ")
+
 func normalizeValidationWhitespace(name string, value string) string {
 	switch name {
 	case "string", "anySimpleType":
 		return value
 	case "normalizedString":
-		return strings.NewReplacer(
-			"\t", " ",
-			"\n", " ",
-			"\r", " ",
-		).Replace(value)
+		return validationReplaceWhitespace.Replace(value)
 	default:
 		return collapseValidationWhitespace(value)
 	}

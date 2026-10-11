@@ -14,6 +14,7 @@ import (
 // deterministic regression signal here, with a generous allowance for linear
 // or quadratic traversal; this is not a public validation-resource budget.
 func TestWhitespaceEnumerationLayeredWork(t *testing.T) {
+	// Keep this test nonparallel: AllocsPerRun observes process-wide allocations.
 	builtin := func(name string) *validationSimpleMember {
 		return &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: name}}
 	}
@@ -52,6 +53,7 @@ func TestWhitespaceEnumerationLayeredWork(t *testing.T) {
 }
 
 func TestWhitespaceEnumerationLiteralViews(t *testing.T) {
+	t.Parallel()
 	builtin := func(name string) *validationSimpleMember {
 		return &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: name}}
 	}
@@ -92,6 +94,7 @@ func TestWhitespaceEnumerationLiteralViews(t *testing.T) {
 }
 
 func TestWhitespaceEnumerationCacheBound(t *testing.T) {
+	t.Parallel()
 	context := newTestValidationContext(&validationSchemaSet{})
 	schema := &validationSimpleSchema{Form: validationSimpleRestriction,
 		Base: &validationSimpleMember{Inline: &validationSimpleSchema{Form: validationSimpleUnion,
@@ -107,4 +110,25 @@ func TestWhitespaceEnumerationCacheBound(t *testing.T) {
 		assert.Len(t, context.enumerationValues, len(schema.Enumerations))
 	}
 	assert.Equal(t, validationEnumerationValue{value: "", valid: true}, context.enumerationValues[validationEnumerationKey{schema: schema, index: 2}])
+}
+
+func TestReplaceWhitespaceAllocations(t *testing.T) {
+	// Keep this test nonparallel: AllocsPerRun observes process-wide allocations.
+	for _, test := range []struct {
+		name, input, want string
+		maxAllocs         float64
+	}{
+		{"unchanged", "a b\u00a0c", "a b\u00a0c", 0},
+		{"replace", "\ta\r\nb\u00a0c\t", " a  b\u00a0c ", 2},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var got string
+			allocations := testing.AllocsPerRun(100, func() {
+				got = normalizeValidationWhitespace("normalizedString", test.input)
+			})
+			assert.Equal(t, test.want, got)
+			// Bound reusable-replacer overhead, not public validation resources.
+			assert.LessOrEqual(t, allocations, test.maxAllocs)
+		})
+	}
 }
