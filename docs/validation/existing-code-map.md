@@ -472,6 +472,36 @@ strict-source adapter integration remain open.
 [scalar-union]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-union
 [scalar-fixed]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
 
+## Built-in list length repair update
+
+The existing validator now classifies `NMTOKENS`, `IDREFS` and `ENTITIES` as
+list varieties for `length`, `minLength` and `maxLength`, including named
+restrictions, inherited restrictions, attributes and effective complex
+simple-content scalar bridges. These facets count items after XML whitespace
+collapse, not Unicode characters. Ordinary list lexical validation and document
+IDREF recording keep their existing behavior.
+
+The synthetic [schema](../../testdata/validation/builtin-list-contract.xsd) and
+[`validation_builtin_list_test.go`](../../validation_builtin_list_test.go) cover
+77 exact-source cases, including boundary counts, XML character references,
+split text, invalid and empty values, plus repeated/concurrent source and schema
+immutability. Of these, 67 run against the identical bytes in `xmllint --nonet`.
+The ten positive `ENTITIES` element cases are internal-only: libxml2 2.9.14
+rejects their declared unparsed-entity values in simple content, while the same
+entity declarations and `ENTITIES` attribute values pass. Entity declaration
+validation remains outside this repair. The internal fixture uses an internal
+DTD with unparsed entities and never fetches external resources.
+
+Basis: XSD 1.0 [list datatypes][scalar-list] and
+[item-count length facets][scalar-length]. This bounded existing-validator
+repair contributes to `REQ-DEF-OPS-SCALARS` / `DEF04-06`; the broader plan remains
+proposed/planned. None of the six production schema files declares `xs:list`
+or restricts these built-in lists. Production schemas, public models and API
+are unchanged; the regression establishes reusable operator behavior.
+
+[scalar-list]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-list
+[scalar-length]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-length
+
 ## Same-level pattern alternatives repair update
 
 The existing scalar restriction path in [`validation.go`](../../validation.go)
