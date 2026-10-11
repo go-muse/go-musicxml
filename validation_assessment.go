@@ -25,6 +25,15 @@ func (c *validationContext) result() error {
 
 func (c *validationContext) incompleteFailure(message string) *validationSimpleFailure {
 	c.incomplete(message)
+	return c.assessmentFailure(message)
+}
+
+// Preserve the original cause when metadata assessment already recorded it.
+// Every assessment failure must still carry a non-nil technical outcome.
+func (c *validationContext) assessmentFailure(message string) *validationSimpleFailure {
+	if c.assessmentErr == nil {
+		c.incomplete(message)
+	}
 	return &validationSimpleFailure{constraint: "assessment", message: message}
 }
 

@@ -194,3 +194,63 @@ func TestIncompleteDefaultPreservesActualAttributes(t *testing.T) {
 	assert.Equal(t, "/value/@code", c.issues[0].Path)
 	assert.ErrorIs(t, c.result(), ErrInvalidDocument)
 }
+
+func TestAssessmentIssueSinkPreservesTechnicalOutcome(t *testing.T) {
+	for _, existingIssue := range []bool{false, true} {
+		t.Run(map[bool]string{false: "technical only", true: "joined with proven issue"}[existingIssue], func(t *testing.T) {
+			c := newTestValidationContext(&validationSchemaSet{})
+			if existingIssue {
+				c.addIssue("/value/@bad", "attribute", "attribute is not permitted")
+			}
+			c.addIssue("/value", "assessment", "producer did not record its cause")
+			require.Error(t, c.assessmentErr)
+			assert.Contains(t, c.assessmentErr.Error(), "/value: producer did not record its cause")
+			assert.Equal(t, uint64(1), c.assessmentVersion)
+			result := c.result()
+			require.Error(t, result)
+			assert.Equal(t, existingIssue, errors.Is(result, ErrInvalidDocument))
+			var invalid *ValidationError
+			assert.Equal(t, existingIssue, errors.As(result, &invalid))
+			if existingIssue {
+				require.Len(t, invalid.Issues, 1)
+				assert.Equal(t, "attribute", invalid.Issues[0].Constraint)
+			} else {
+				assert.Empty(t, c.issues)
+			}
+		})
+	}
+}
+
+func TestAssessmentIssueSinkDoesNotDuplicateRecordedCause(t *testing.T) {
+	c := newTestValidationContext(&validationSchemaSet{})
+	failure := c.incompleteFailure("original metadata cause")
+	original := c.assessmentErr
+	version := c.assessmentVersion
+	for range 2 {
+		c.addIssue("/value", failure.constraint, failure.message)
+		assert.Same(t, original, c.assessmentErr)
+		assert.Equal(t, version, c.assessmentVersion)
+	}
+	c.addIssue("/other", "schema", "independent missing schema")
+	assert.Equal(t, version+1, c.assessmentVersion)
+	assert.Contains(t, c.result().Error(), "original metadata cause")
+	assert.Contains(t, c.result().Error(), "/other: independent missing schema")
+	assert.Empty(t, c.issues)
+	assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
+}
+
+func TestAssessmentFailurePreservesRecordedCause(t *testing.T) {
+	c := newTestValidationContext(&validationSchemaSet{})
+	failure := c.assessmentFailure("missing cause")
+	require.NotNil(t, failure)
+	assert.Equal(t, "assessment", failure.constraint)
+	assert.Equal(t, "missing cause", failure.message)
+	require.Error(t, c.assessmentErr)
+	original := c.assessmentErr
+	version := c.assessmentVersion
+	failure = c.assessmentFailure("already recorded by metadata")
+	assert.Equal(t, "already recorded by metadata", failure.message)
+	assert.Same(t, original, c.assessmentErr)
+	assert.Equal(t, version, c.assessmentVersion)
+	assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
+}

@@ -1273,7 +1273,7 @@ func (c *validationContext) validateSimpleType(
 		return c.incompleteFailure("simple type cannot be resolved")
 	}
 	if !c.validTypeMetadata(validationTypeIdentity{simple: simple, builtin: builtin}) {
-		return &validationSimpleFailure{constraint: "assessment", message: "simple type metadata incomplete"}
+		return c.assessmentFailure("simple type metadata incomplete")
 	}
 	if simple != nil {
 		return c.validateSimple(simple, value)
@@ -1386,7 +1386,7 @@ func (c *validationContext) assessSimpleValue(
 		}
 	}()
 	if !c.validTypeMetadata(validationTypeIdentity{simple: schema}) {
-		return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "assessment", message: "simple derivation metadata incomplete"}
+		return validationSimpleAssessment{}, c.assessmentFailure("simple derivation metadata incomplete")
 	}
 	semantics := c.resolveSimpleSemantics(schema)
 	if semantics == nil {
@@ -1404,7 +1404,7 @@ func (c *validationContext) assessSimpleValue(
 		beforeEnumeration := c.assessmentVersion
 		enumerationMatch := len(schema.Enumerations) == 0 || c.matchesSimpleEnumeration(schema, assessment)
 		if c.assessmentVersion != beforeEnumeration {
-			return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "assessment", message: "enumeration literal assessment incomplete"}
+			return validationSimpleAssessment{}, c.assessmentFailure("enumeration literal assessment incomplete")
 		}
 		if !enumerationMatch {
 			return validationSimpleAssessment{}, &validationSimpleFailure{
@@ -2120,7 +2120,7 @@ func (c *validationContext) addIssue(
 	message string,
 ) {
 	if constraint == "schema" || constraint == "assessment" {
-		if constraint == "schema" {
+		if constraint == "schema" || c.assessmentErr == nil {
 			c.incomplete(path + ": " + message)
 		}
 		return
