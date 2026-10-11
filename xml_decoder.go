@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bufio"
+	"context"
 	"encoding/binary"
 	"encoding/xml"
 	"fmt"
@@ -12,62 +13,11 @@ import (
 )
 
 func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
-	buffered := bufio.NewReader(reader)
-	order, hasBOM, err := detectUTF16(buffered)
+	source, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: context.Background()})
 	if err != nil {
 		return nil, err
 	}
-
-	var source io.Reader = buffered
-	if order != nil {
-		source = &utf16Reader{
-			source: buffered,
-			order:  order,
-		}
-	}
-
-	lexical := newLexicalXMLTokenReader(source)
-	decoder := lexical.decoder
-	decoder.CharsetReader = func(
-		charset string,
-		input io.Reader,
-	) (io.Reader, error) {
-		if order != nil {
-			// The input has already been transcoded from UTF-16. The byte
-			// order mark, or the declaration check in the token reader for
-			// documents without one, settles the encoding; the declared
-			// charset is not applied a second time.
-			return input, nil
-		}
-		switch normalizeCharset(charset) {
-		case "iso88591", "latin1":
-			return lexical.switchInput(&latin1Reader{
-				source: bufio.NewReader(input),
-			}), nil
-		}
-
-		return nil, fmt.Errorf(
-			"musicxml: unsupported XML encoding %q",
-			charset,
-		)
-	}
-
-	var tokens xml.TokenReader = lexical
-	// A byte order mark settles the encoding, whatever the declaration
-	// says. Without one, the declaration is the only evidence of the byte
-	// order and must agree with the detected one.
-	if order != nil && !hasBOM {
-		tokens = &utf16XMLTokenReader{
-			source: tokens,
-			order:  order,
-		}
-	}
-
-	return xml.NewTokenDecoder(&wellFormedXMLTokenReader{
-		source:              tokens,
-		position:            decoder.InputPos,
-		characterDataMarkup: func() bool { return lexical.characterDataMarkup },
-	}), nil
+	return xml.NewTokenDecoder(source), nil
 }
 
 // utf16XMLTokenReader checks the XML declaration of a UTF-16 document that
@@ -126,19 +76,12 @@ func (r *utf16XMLTokenReader) Token() (xml.Token, error) {
 	)
 }
 
-func newDepthLimitedXMLDecoder(
-	reader io.Reader,
-	maximum int,
-) (*xml.Decoder, error) {
-	source, err := newXMLDecoder(reader)
+func newDepthLimitedXMLDecoder(reader io.Reader, maximum int) (*xml.Decoder, error) {
+	source, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: context.Background(), MaxDepth: maximum})
 	if err != nil {
 		return nil, err
 	}
-
-	return xml.NewTokenDecoder(&depthLimitedXMLTokenReader{
-		source:  rawXMLTokenReader{source},
-		maximum: maximum,
-	}), nil
+	return xml.NewTokenDecoder(source), nil
 }
 
 // rawXMLTokenReader forwards lexical tokens to a wrapping xml.Decoder. Passing

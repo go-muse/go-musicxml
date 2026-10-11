@@ -6,8 +6,13 @@ import "encoding/xml"
 // in every namespace. MusicXML 4.0 and MXL container elements are unqualified. Filter
 // extensions before they can overwrite an ordinary generated field. The
 // underlying decoder still sees every token and enforces XML depth limits.
+type xmlTokenSource interface {
+	Token() (xml.Token, error)
+	Skip() error
+}
+
 type namespaceXMLTokenReader struct {
-	source                  *xml.Decoder
+	source                  xmlTokenSource
 	allowQualifiedAttribute func(element string, name xml.Name) bool
 	started                 bool
 	depth                   int

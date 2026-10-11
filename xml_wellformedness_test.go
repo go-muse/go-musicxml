@@ -124,10 +124,11 @@ func TestXMLDoctypeDoesNotFetchExternalDTD(t *testing.T) {
 
 func TestXMLAttributeCheckDoesNotInventNamespaceBindings(t *testing.T) {
 	t.Parallel()
-	// encoding/xml permits undeclared prefixes. This bounded repair must not
-	// mistake that prefix for a literal URI and report an invented collision.
+	// An undeclared prefix is rejected as such, not confused with a literal
+	// namespace URI to report an invented duplicate-attribute collision.
 	_, err := Decode(strings.NewReader(`<opus xmlns:q="p" p:a="1" q:a="2"/>`))
-	assert.NoError(t, err)
+	assert.ErrorContains(t, err, "undeclared XML namespace prefix p")
+	assert.NotContains(t, err.Error(), "duplicate XML attribute")
 }
 
 func xmlReadingEncodingVariants(input string) map[string][]byte {

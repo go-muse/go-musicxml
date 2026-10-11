@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"encoding/xml"
 	"fmt"
 	"os"
 	"os/exec"
@@ -80,7 +81,9 @@ func TestXMLDocumentWhitespaceErrors(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := Decode(strings.NewReader(test.input))
-			assert.EqualError(t, err, test.decodeError)
+			var syntaxError *xml.SyntaxError
+			require.ErrorAs(t, err, &syntaxError)
+			assert.Contains(t, syntaxError.Msg, "character data outside the root element")
 			assert.NotErrorIs(t, err, ErrEmptyDocument)
 			_, err = parseValidationDocument([]byte(test.input))
 			assert.EqualError(t, err, test.validationError)
