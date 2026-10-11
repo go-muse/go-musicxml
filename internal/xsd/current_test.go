@@ -314,3 +314,38 @@ func TestCurrentFixedUnionPatternIsLocalCapability(t *testing.T) {
 		t.Fatalf("unrelated identity closure poisoned: %v, %v", r.context.AssessmentErr, r.context.IdentityIncomplete)
 	}
 }
+
+func TestCurrentUnknownNumericAttributeDoesNotHideIdentityOwner(t *testing.T) {
+	name := QName{Local: "root"}
+	schema, err := Compile(SchemaData{Elements: map[QName]*ElementSchema{name: {Name: name, Type: TypeRef{InlineComplex: &ComplexSchema{Form: ComplexDirect, Attributes: []AttributeSchema{
+		{Name: QName{Local: "id"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "ID"}}}, {Name: QName{Local: "number"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "decimal"}}},
+	}}}}}}, CompileLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, err := NewRun(schema, &testMeter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	use, _ := r.Root(name)
+	b, err := r.Bind(context.Background(), use, Subject{ID: 1, Name: name, CurrentModel: true, Current: CurrentScalar{Absent: true}, ChildrenOrderKnown: true, ChildrenComplete: true, AttributesComplete: true, Attributes: []Attribute{
+		{Attr: Attr{Name: QName{Local: "id"}}, Current: CurrentScalar{Known: true, Value: SimpleValue{Domain: StringDomain, Text: "target"}}}, {Attr: Attr{Name: QName{Local: "number"}}},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Complete(context.Background(), b, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Finalize(context.Background(), true); err != nil {
+		t.Fatal(err)
+	}
+	result, err := r.ResolveIdentity(context.Background(), "target")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != IdentityUnique || result.Owner != 1 {
+		t.Fatalf("numeric value hole hid independent ID owner: %+v", result)
+	}
+}

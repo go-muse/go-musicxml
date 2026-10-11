@@ -248,3 +248,53 @@ func TestModelSchemaBridgeExtremeFloatValues(t *testing.T) {
 		}
 	}
 }
+
+func TestModelSchemaRepresentationHoleKeepsIndependentReference(t *testing.T) {
+	for _, broken := range []string{"number", "id"} {
+		t.Run(broken, func(t *testing.T) {
+			schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
+				{Name: SchemaName{Local: "id"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "ID"}}}, {Name: SchemaName{Local: "ref"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "IDREF"}}}, {Name: SchemaName{Local: "number"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "decimal"}}},
+			}}}}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			s := modelSchemaSession(t, schema, Budgets{})
+			ctx := context.Background()
+			h := modelSchemaHeader(1, 0, "root", "Root")
+			if err := s.Open(ctx, h); err != nil {
+				t.Fatal(err)
+			}
+			for _, pair := range []struct{ name, text string }{{"id", "target"}, {"ref", "target"}, {"number", "4"}} {
+				value := Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: pair.text}}
+				if pair.name == broken {
+					value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "invalid-representation"}
+				}
+				if err := s.Attribute(ctx, AttributeFact{Owner: 1, Name: QName{Local: pair.name}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Declaration: Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "pending"}, Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceUnsupported, Reason: "no-source"}, Value: value}, Location: h.Location}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			modelSchemaClose(t, s, modelSchemaEnd(1, Evidence[Atomic]{State: EvidenceAbsent}, OrderModelFields), ModelProblem{Code: "model-value-invalid", Axis: ModelAxisAttribute, Attribute: QName{Local: broken}, Location: h.Location, Actual: "invalid current representation"})
+			if _, err := s.schema.run.Identity(ctx, true); err != nil {
+				t.Fatal(err)
+			}
+			result, cause, err := s.schemaResolveIdentity(ctx, 1, QName{Local: "ref"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := xsd.IdentityUnique
+			if broken == "id" {
+				want = xsd.IdentityIncomplete
+			}
+			if result.Status != want || cause != nil {
+				t.Fatalf("%s hole resolution=%+v cause=%+v", broken, result, cause)
+			}
+			report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxNotAssessed})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if report.AssessmentComplete || report.BlockingProblems == 0 {
+				t.Fatalf("value hole itself was lost: %+v", report)
+			}
+		})
+	}
+}

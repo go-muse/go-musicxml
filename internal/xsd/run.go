@@ -58,7 +58,9 @@ type AttributeResult struct {
 	Name                                           QName
 	Use                                            Use
 	Present, TypeValid, DeclarationValid, Complete bool
-	Scalar                                         ScalarResult
+	// Violation records a proved slot-local failure independently of completeness.
+	Violation bool
+	Scalar    ScalarResult
 }
 type WitnessMode string
 
@@ -109,6 +111,7 @@ type boundState struct {
 	attributeEpoch                               uint64
 	attributeKnown                               bool
 	attributeLimited                             bool
+	attributeInvalid                             bool
 	defaulted                                    bool
 	run                                          *Run
 	subject                                      Subject
@@ -248,6 +251,9 @@ func (s *boundState) limit(family, reason string, cause error) {
 func (s *boundState) detail(path, constraint, message string) {
 	v := s.result()
 	v.Valid = false
+	if s.attribute != (QName{}) {
+		s.attributeInvalid = true
+	}
 	s.run.reserve(int64(len(path)))
 	s.run.reserve(int64(len(message)))
 	d := Detail{Issue: Issue{Path: path, Constraint: constraint, Message: message}, Subject: s.subject.ID, Attribute: s.attribute}
@@ -347,7 +353,9 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		s.limit("scalar", "scalar-lexeme-unavailable", nil)
 		s.limit("declaration", "scalar-lexeme-unavailable", nil)
 		s.limit("content", "scalar-lexeme-unavailable", nil)
-		r.context.IdentityIncomplete = true
+		if !subject.CurrentModel {
+			r.context.IdentityIncomplete = true
+		}
 	}
 	if !subject.AttributesComplete {
 		// An omitted xsi:type or xsi:nil can change all dependent local
@@ -632,7 +640,7 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	if s.subject.CurrentModel {
 		scalar.Lexeme = ""
 	}
-	s.attributes = appendRetained(c, s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Scalar: scalar})
+	s.attributes = appendRetained(c, s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Violation: s.attributeInvalid, Scalar: scalar})
 }
 
 // size validates arithmetic and host allocation width before any allocation.

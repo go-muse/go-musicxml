@@ -194,6 +194,7 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		s.attributeEpoch = c.AssessmentVersion
 		s.attributeKnown = true
 		s.attributeLimited = false
+		s.attributeInvalid = false
 		s.scalarAssessed = false
 		s.scalarAssessment = SimpleAssessment{}
 		if schema.Constraint == nil {

@@ -830,6 +830,9 @@ func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attrib
 		if result.Name != (xsd.QName{Space: attribute.Space, Local: attribute.Local}) {
 			continue
 		}
+		if result.Violation {
+			return s.schemaInvalidValue(ctx, n, XSDCheckAttributes)
+		}
 		if !result.Present && !result.Scalar.Defaulted && result.Complete {
 			return Evidence[Atomic]{State: EvidenceAbsent}, nil
 		}

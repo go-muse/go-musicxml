@@ -328,6 +328,9 @@ func (c *Context) attributeIdentityText(text string) string {
 func (c *Context) currentFailure(constraint, message string, args ...any) *SimpleFailure {
 	if c.currentModel() && c.currentTrials == 0 {
 		c.local.result().Valid = false
+		if c.local.attribute != (QName{}) {
+			c.local.attributeInvalid = true
+		}
 	}
 	c.scratch(48)
 	if len(args) > 0 {
@@ -339,4 +342,12 @@ func (c *Context) assessCurrentTrial(member *SimpleMember, value SimpleValue) (S
 	c.currentTrials++
 	defer func() { c.currentTrials-- }()
 	return c.assessCurrentMember(member, value, true)
+}
+
+// A known current numeric slot cannot conceal an ID owner. Keep unknown
+// identity-capable declarations conservative without widening the source lane.
+func (c *Context) currentIdentityCapable(reference *TypeRef) bool {
+	before := c.AssessmentVersion
+	identity := c.IdentityBuiltin(reference) != "" || c.constructedIdentity(reference)
+	return identity || c.AssessmentVersion != before
 }

@@ -329,6 +329,9 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	if c.local != nil {
 		c.local.actual = actualType
 		c.local.declared = &schema.Type
+		if c.currentModel() && !c.local.subject.Current.Known && !c.local.subject.Current.Absent && (c.currentIdentityCapable(&schema.Type) || c.currentIdentityCapable(actualType)) {
+			c.IdentityIncomplete = true
+		}
 	}
 
 	// This is an element constraint, not a scalar constraint: validateType is
@@ -1058,6 +1061,7 @@ func (c *Context) ValidateAttributes(
 			c.local.attributeEpoch = c.AssessmentVersion
 			c.local.attributeKnown = attribute.ValueKnown
 			c.local.attributeLimited = false
+			c.local.attributeInvalid = false
 			c.local.currentAttributeSet = c.currentModel()
 			if c.currentModel() {
 				c.local.currentAttribute = c.checkCurrent(attribute.Current)
@@ -1096,7 +1100,9 @@ func (c *Context) ValidateAttributes(
 
 		if c.local != nil && !c.local.attributeKnown {
 			c.local.limit("attributes", "attribute-value-unavailable", nil)
-			c.IdentityIncomplete = true
+			if !c.currentModel() || c.currentIdentityCapable(&schema.Type) {
+				c.IdentityIncomplete = true
+			}
 			c.attributeResult(schema, attribute.Value, true, false, false)
 			valid = false
 			continue
@@ -1117,6 +1123,7 @@ func (c *Context) ValidateAttributes(
 			valid = false
 			if c.currentModel() {
 				c.local.result().Valid = false
+				c.local.attributeInvalid = true
 			}
 			c.AddIssue(
 				attributePath(path, attribute.Name, c),
