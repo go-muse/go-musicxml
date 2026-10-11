@@ -47,7 +47,17 @@ type sourceXMLFrame struct {
 	retained int64
 }
 
+const (
+	sourceXMLNameScratchBytes  = 64
+	sourceXMLValueScratchBytes = 256
+	sourceXMLReaderBytes       = 512 + sourceXMLNameScratchBytes + sourceXMLValueScratchBytes
+)
+
 type sourceXMLTokenReader struct {
+	// Names become owned strings before another name is scanned. Value tokens
+	// remain borrowed until Token advances, and entity names use separate storage.
+	nameScratch                                                [sourceXMLNameScratchBytes]byte
+	valueScratch                                               [sourceXMLValueScratchBytes]byte
 	cursor                                                     *sourceXMLCursor
 	account                                                    *validation.Account
 	maxDepth                                                   int64
@@ -71,7 +81,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 		return nil, err
 	}
 	if config.Account != nil {
-		if err := config.Account.Charge(validation.BudgetBufferedBytes, 512); err != nil {
+		if err := config.Account.Charge(validation.BudgetBufferedBytes, sourceXMLReaderBytes); err != nil {
 			cursor.close()
 			return nil, err
 		}
@@ -83,7 +93,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 	if config.Account != nil && config.Account.Limits().MaxDepth < maximum {
 		maximum = config.Account.Limits().MaxDepth
 	}
-	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, maxDepth: maximum, retained: 512}, nil
+	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, maxDepth: maximum, retained: sourceXMLReaderBytes}, nil
 }
 func (r *sourceXMLTokenReader) Metadata() sourceXMLTokenMeta { return r.metadata }
 func (r *sourceXMLTokenReader) Summary() sourceXMLSummary {
@@ -176,8 +186,9 @@ func (r *sourceXMLTokenReader) spaces() (bool, error) {
 }
 
 type sourceXMLBuilder struct {
-	r    *sourceXMLTokenReader
-	data []byte
+	r        *sourceXMLTokenReader
+	data     []byte
+	borrowed bool
 }
 
 func (b *sourceXMLBuilder) append(c rune) error {
@@ -211,10 +222,13 @@ func (b *sourceXMLBuilder) append(c rune) error {
 		copy(next, b.data)
 		old := int64(cap(b.data))
 		b.data = next
-		if b.r.account != nil && old > 0 {
-			_ = b.r.account.Release(validation.BudgetBufferedBytes, old)
+		if !b.borrowed {
+			if b.r.account != nil && old > 0 {
+				_ = b.r.account.Release(validation.BudgetBufferedBytes, old)
+			}
+			b.r.tokenOwned -= old
 		}
-		b.r.tokenOwned -= old
+		b.borrowed = false
 	}
 	b.data = utf8.AppendRune(b.data, c)
 	return nil
@@ -226,8 +240,7 @@ func (b *sourceXMLBuilder) string() (string, error) {
 	return string(b.data), nil
 }
 func (r *sourceXMLTokenReader) name() (string, error) {
-	var b sourceXMLBuilder
-	b.r = r
+	b := sourceXMLBuilder{r: r, data: r.nameScratch[:0], borrowed: true}
 	u, err := r.peek()
 	if err != nil {
 		if err == io.EOF {
@@ -474,7 +487,7 @@ func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
 	if cdata {
 		return r.cdata()
 	}
-	b := sourceXMLBuilder{r: r}
+	b := sourceXMLBuilder{r: r, data: r.valueScratch[:0], borrowed: true}
 	var last1, last2 rune
 	for {
 		u, err := r.peek()
@@ -521,7 +534,7 @@ func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
 	return xml.CharData(b.data), nil
 }
 func (r *sourceXMLTokenReader) cdata() (xml.Token, error) {
-	b := sourceXMLBuilder{r: r}
+	b := sourceXMLBuilder{r: r, data: r.valueScratch[:0], borrowed: true}
 	brackets := 0
 	for {
 		u, err := r.must()
@@ -556,7 +569,7 @@ func (r *sourceXMLTokenReader) cdata() (xml.Token, error) {
 	}
 }
 func (r *sourceXMLTokenReader) comment() (xml.Token, error) {
-	b := sourceXMLBuilder{r: r}
+	b := sourceXMLBuilder{r: r, data: r.valueScratch[:0], borrowed: true}
 	dashes := 0
 	for {
 		u, err := r.must()
@@ -595,7 +608,7 @@ func (r *sourceXMLTokenReader) quoted(normalize, references bool) (string, sourc
 		return "", span, r.syntax("unquoted or missing attribute value in element")
 	}
 	span.Start = r.cursor.position
-	b := sourceXMLBuilder{r: r}
+	b := sourceXMLBuilder{r: r, data: r.valueScratch[:0], borrowed: true}
 	for {
 		u, err = r.must()
 		if err != nil {
@@ -916,7 +929,7 @@ func (r *sourceXMLTokenReader) instruction(first bool) (xml.Token, error) {
 	if !separated && u.Rune != '?' {
 		return nil, r.syntax("processing instruction data requires whitespace")
 	}
-	b := sourceXMLBuilder{r: r}
+	b := sourceXMLBuilder{r: r, data: r.valueScratch[:0], borrowed: true}
 	question := false
 	for {
 		u, err = r.must()

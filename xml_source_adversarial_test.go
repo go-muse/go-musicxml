@@ -202,8 +202,8 @@ func TestSourceCursorAvoidsPerCharacterAllocation(t *testing.T) {
 		}
 		s.Close()
 	})
-	if allocations > 12000 {
-		t.Fatalf("source scan allocated %.0f objects; per-character caching must be allocation-free", allocations)
+	if allocations > 4500 {
+		t.Fatalf("source scan allocated %.0f objects; small name/text buffers must be reused", allocations)
 	}
 }
 
@@ -255,5 +255,32 @@ func TestSourceDepthLimitPreservesResourceIdentity(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestSourceReusedBuffersPreserveCopiedTokens(t *testing.T) {
+	input := `<?xml version="1.0"?><!--comment--><?target instruction?><root first="one&amp;two" second="three"><child>text&amp;more</child><![CDATA[&raw]]></root>`
+	tokens, err := sourceScan(t, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tokens) != 9 {
+		t.Fatalf("tokens: %#v", tokens)
+	}
+	if got := tokens[0].(xml.ProcInst); got.Target != "xml" || string(got.Inst) != `version="1.0"` {
+		t.Fatalf("declaration overwritten: %#v", got)
+	}
+	if string(tokens[1].(xml.Comment)) != "comment" {
+		t.Fatalf("comment overwritten: %#v", tokens[1])
+	}
+	if got := tokens[2].(xml.ProcInst); got.Target != "target" || string(got.Inst) != "instruction" {
+		t.Fatalf("PI overwritten: %#v", got)
+	}
+	root := tokens[3].(xml.StartElement)
+	if root.Name.Local != "root" || len(root.Attr) != 2 || root.Attr[0].Name.Local != "first" || root.Attr[0].Value != "one&two" || root.Attr[1].Name.Local != "second" || root.Attr[1].Value != "three" {
+		t.Fatalf("start strings overwritten: %#v", root)
+	}
+	if string(tokens[5].(xml.CharData)) != "text&more" || string(tokens[7].(xml.CharData)) != "&raw" {
+		t.Fatalf("text overwritten: %#v", tokens)
 	}
 }
