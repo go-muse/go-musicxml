@@ -120,6 +120,9 @@ func TestTypedReferenceAuthoritativeResolutionBothTargets(t *testing.T) {
 				} else if !found || d.Outcome != tc.want {
 					t.Fatalf("want=%s got=%+v report=%+v", tc.want, d, r)
 				}
+				if tc.want == OutcomeFail && (d.Expected == "" || d.Actual == "") {
+					t.Fatalf("missing expected/actual %+v", d)
+				}
 				if tc.cause != "" && (d.Cause == nil || string(d.Cause.Rule.ID) != tc.cause) {
 					t.Fatalf("cause %s got %+v", tc.cause, d)
 				}

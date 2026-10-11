@@ -151,7 +151,7 @@ func (s *Session) referenceAncestor(ctx context.Context, n *factNode, declaratio
 		}
 		n = s.nodes[n.header.Parent]
 	}
-	return nil, Decision{Outcome: OutcomeFail, Reason: "typed-target-ancestor-mismatch"}, nil
+	return nil, Decision{Outcome: OutcomeFail, Reason: "typed-target-ancestor-mismatch", Expected: "an allowed exact target ancestor", Actual: "no matching ancestor"}, nil
 }
 func (s *Session) referenceResolution(ctx context.Context, n *factNode, a AttributeSelector) (*factNode, Decision, error) {
 	v, e := s.localScalar(ctx, n, &a)
@@ -280,7 +280,7 @@ func (s *Session) evaluateReferencePlan(ctx context.Context, n *factNode, p *ref
 		return d, false, e
 	}
 	if !matches {
-		return Decision{Outcome: OutcomeFail, Reason: "typed-reference-target-kind", Related: []Location{target.header.Location}}, false, nil
+		return Decision{Outcome: OutcomeFail, Reason: "typed-reference-target-kind", Expected: "an allowed exact target declaration", Actual: target.header.Name.Local, Related: []Location{target.header.Location}}, false, nil
 	}
 	if len(p.TargetAncestors) > 0 {
 		_, d, e = s.referenceAncestor(ctx, s.nodes[target.header.Parent], p.TargetAncestors)
@@ -301,7 +301,7 @@ func (s *Session) evaluateReferencePlan(ctx context.Context, n *factNode, p *ref
 			return scopeDecision, false, e
 		}
 		if actual.header.ID != expected.header.ID {
-			return Decision{Outcome: OutcomeFail, Reason: "typed-reference-owner-mismatch", Related: []Location{target.header.Location, actual.header.Location, expected.header.Location}}, false, nil
+			return Decision{Outcome: OutcomeFail, Reason: "typed-reference-owner-mismatch", Expected: expected.header.Location.Path, Actual: actual.header.Location.Path, Related: []Location{target.header.Location, actual.header.Location, expected.header.Location}}, false, nil
 		}
 	}
 	return Decision{Outcome: OutcomePass}, false, nil

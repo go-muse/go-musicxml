@@ -478,6 +478,9 @@ func TestLocalSchemaClauseMatrixBothTargets(t *testing.T) {
 					} else if !found || d.Outcome != tc.want {
 						t.Fatalf("want=%s got=%+v report=%+v", tc.want, d, r)
 					}
+					if tc.want == OutcomeFail && (d.Expected == "" || d.Actual == "") {
+						t.Fatalf("missing actionable expected/actual: %+v", d)
+					}
 					if tc.want == OutcomeBlocked && d.Cause == nil {
 						t.Fatalf("missing exact prerequisite cause %+v", d)
 					}

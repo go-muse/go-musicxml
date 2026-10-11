@@ -477,7 +477,7 @@ func (s *Session) localPresence(ctx context.Context, n *factNode, declarations [
 	if gap.Outcome != OutcomePass {
 		return gap, nil, nil
 	}
-	return Decision{Outcome: OutcomeFail, Reason: "required-related-child-absent"}, nil, nil
+	return Decision{Outcome: OutcomeFail, Reason: "required-related-child-absent", Expected: "at least one selected child", Actual: "0"}, nil, nil
 }
 func (s *Session) localCompare(ctx context.Context, v Evidence[Atomic], expected Atomic) (Decision, error) {
 	if v.State != EvidenceKnown {
@@ -563,7 +563,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 				return comparison, false, nil
 			}
 		}
-		return Decision{Outcome: OutcomeFail, Reason: "local-value-not-allowed", Actual: atomicDisplay(v.Value)}, false, nil
+		return Decision{Outcome: OutcomeFail, Reason: "local-value-not-allowed", Expected: "one of the reviewed typed constants", Actual: atomicDisplay(v.Value)}, false, nil
 	case localPresenceAttribute:
 		present := false
 		gap := Decision{Outcome: OutcomePass}
@@ -588,7 +588,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 		}
 		owner := selectorDecision(p.Owner, n.header)
 		if owner.Outcome == OutcomeNotApplicable {
-			return Decision{Outcome: OutcomeFail, Reason: "local-owner-mismatch"}, false, nil
+			return Decision{Outcome: OutcomeFail, Reason: "local-owner-mismatch", Expected: "the required exact owner selector", Actual: n.header.Name.Local}, false, nil
 		}
 		if owner.Outcome != OutcomePass {
 			return owner, false, nil
@@ -714,7 +714,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 					return d, false, e
 				}
 				if comparison.Outcome == OutcomePass {
-					return Decision{Outcome: OutcomeFail, Reason: "duplicate-effective-child-value", Actual: atomicDisplay(v.Value), Related: []Location{previous.header.Location, ch.header.Location}}, false, nil
+					return Decision{Outcome: OutcomeFail, Reason: "duplicate-effective-child-value", Expected: "distinct effective child values", Actual: atomicDisplay(v.Value), Related: []Location{previous.header.Location, ch.header.Location}}, false, nil
 				}
 				if comparison.Outcome != OutcomeFail {
 					gap = localWorst(gap, comparison)
