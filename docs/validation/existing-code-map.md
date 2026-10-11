@@ -1077,6 +1077,36 @@ violations; public `Validate` assesses Encode/reparse output and cannot recover
 text discarded by Decode. Strict-source/direct-model adapters, full content
 category normalization and the other deferred validation contracts remain open.
 
+## XSD datatype-name repertoire repair update
+
+The existing scalar validator now uses the pinned XSD 1.0 XML 1.0 Second Edition
+name repertoire for Name, NCName, NMTOKEN, their ID/IDREF/ENTITY derivatives,
+built-in lists and QName/NOTATION lexical checks. The [name helpers](../../validation_xml_name.go)
+share the existing XSD pattern `\i`/`\c` character inventory instead of the
+broader Fifth Edition ranges. The helpers are explicitly named `validXSD*`;
+XML parsing, namespace declaration reading and permissive Decode are unchanged.
+
+Previously accepted scalar values containing U+0220, U+200C or supplementary
+U+10000 now fail their datatype contract. Multilingual letters in the pinned
+repertoire, permitted combining marks/extenders and XML whitespace normalization
+remain supported. The basis is XSD 1.0 [Name/NCName](https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#Name)
+and the referenced [Second Edition character productions](https://www.w3.org/TR/2000/REC-xml-20001006#CharClasses).
+
+The [synthetic schema](../../testdata/validation/datatype-name-contract.xsd) and
+[regressions](../../validation_datatype_name_test.go) cover atomic, restricted,
+inline, union, list, complex simple-content, element and attribute paths,
+independent character-boundary examples, production score ID/IDREF values,
+source/schema immutability and concurrent assessment.
+`TestDatatypeNamesAgainstSchema` and `TestDatatypeNamesProductionAgainstSchema`
+compare the same original XML bytes with offline xmllint and are required in
+Linux CI. ENTITY/ENTITIES element lexical cases remain internal because
+libxml2 2.9.14 rejects even their declared positive values; corresponding
+attribute cases retain oracle coverage. An independent OpenJDK 21 JAXP run
+agrees on all 99 identical-source synthetic cases, including those four element
+cases. QName namespace expansion, NOTATION
+declarations and ENTITY unparsed-entity assessment are separate contracts,
+not claims of this lexical repair. Planning statuses remain unchanged.
+
 ## Reuse and adaptation
 
 | Existing component | Proposed use | Required adaptation or verification |

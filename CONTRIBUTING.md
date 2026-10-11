@@ -78,7 +78,13 @@ flattening and its direct-restriction, list-item and atomic/list-member controls
 identity, fixed-value equality and URI whitespace. Six explicit element-fixed
 alternate-spelling cases remain internal because libxml2 compares them lexically;
 the same-byte external subset retains attribute-fixed and negative controls.
-All ten test schemas use the local empty catalog.
+`zz_generated_datatype_name_validation_test.go` uses
+`testdata/validation/datatype-name-contract.xsd` for XSD 1.0 Second Edition
+name-character lexical contracts, including restricted, list, union and attribute
+paths. QName binding and ENTITY declaration semantics remain separate. Its
+ENTITY/ENTITIES element lexical cases remain internal because libxml2 rejects
+the declared positive element values; equivalent attribute cases use the oracle.
+All eleven test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

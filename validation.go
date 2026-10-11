@@ -1543,17 +1543,17 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		}
 
 	case "Name":
-		if validXMLName(normalized) {
+		if validXSDName(normalized) {
 			return nil
 		}
 
 	case "NCName", "ID", "IDREF", "ENTITY":
-		if validXMLNCName(normalized) {
+		if validXSDNCName(normalized) {
 			return nil
 		}
 
 	case "NMTOKEN":
-		if validXMLNMTOKEN(normalized) {
+		if validXSDNMTOKEN(normalized) {
 			return nil
 		}
 
@@ -1561,7 +1561,7 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		items := splitValidationList(normalized)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
-				return !validXMLNMTOKEN(item)
+				return !validXSDNMTOKEN(item)
 			}) == false {
 			return nil
 		}
@@ -1570,7 +1570,7 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		items := splitValidationList(normalized)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
-				return !validXMLNCName(item)
+				return !validXSDNCName(item)
 			}) == false {
 			return nil
 		}
@@ -1609,7 +1609,7 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		}
 
 	case "QName", "NOTATION":
-		if validXMLQName(normalized) {
+		if validXSDQName(normalized) {
 			return nil
 		}
 
