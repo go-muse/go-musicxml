@@ -442,9 +442,49 @@
           "file": "validation/local_schema_plan_test.go",
           "name": "TestLocalClosedScalarFailureSurvivesLaterInterruption",
           "scope": "Known local failure retained after later interruption."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesRetainCompactPerNodeFacts",
+          "scope": "Both source/current-model kernel lanes: a repeated node with 32 unconstrained optional absences retains compact per-node references within the synthetic bound, preserving all absence/use facts and full Close cleanup. This is not a universal per-node MusicXML cost."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesKeepOrderedIndependentFacts",
+          "scope": "Both kernel lanes preserve input-then-schema order, effective default/fixed values and required-absence failure; only unconstrained absent records share identity. Present/default/fixed records stay subject-specific, iterator copies/early stop are safe, and incomplete enumeration invents no absence."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesPreserveActualTypeUse",
+          "scope": "Source-lane synthetic base, restriction and inherited extension with xsi:type preserve exact absent-attribute declaration owner uses across repeated bindings. This does not add current-model xsi evidence."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesStopAtProvedPrefix",
+          "scope": "Cold/warmed synthetic source cache interrupted by buffer, work or cancellation retains only the proved ordered prefix and incomplete attribute enumeration; a later binding completes and Close releases all retained bytes."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributeIteratorLifecycle",
+          "scope": "Synthetic source iterator rejects nil, zero, foreign and stale bindings; closing during iteration stops after the already-yielded value, delayed/closed iterators expose no stale facts, and all retained charges release."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributeCacheAdmission",
+          "scope": "Synthetic exact admission failures for the cache pointer array, shared AttributeResult and per-node result pointer prevent unadmitted allocation/publication; previously admitted immutable records remain valid and Close releases the account."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesConcurrentIndependentRuns",
+          "scope": "Eight independent source/model runs reuse one compiled schema with run-local absence caches; 16 bindings each retain correct declaration/absence facts and release their own meters. Shared-run concurrent mutation is not claimed."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributeCacheKeepsAliasedNamedUses",
+          "scope": "Two named types alias one complex metadata object; repeated source/model bindings preserve each exact named owner use rather than borrowing another owner's cached declaration."
         }
       ],
-      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
+      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active. Round-1 retention uses run-local effective-schema indexed immutable unconstrained-absence records with exact owner occurrence identity; aliases with another owner fall back to independent assessment. Present/default/fixed records remain independent. This storage correction does not close absent default/fixed identity or wider constructed-type obligations retained for batch 9.",
       "pending_batch5_scope": "Final combined-diff QA, corrections and final integrated local/386/CI evidence listed in execution_evidence.pending_acceptance."
     },
     {
@@ -524,6 +564,11 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestAssessModelOfficialCorpusAndSourceDTDRemainSeparate",
           "scope": "Five current-model XSD/local official fixtures; original external-DTD scores remain incomplete and DOCTYPE-free opus remains separate."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesPreserveActualTypeUse",
+          "scope": "Source-lane synthetic base, restriction and inherited extension with xsi:type preserve exact absent-attribute declaration owner uses across repeated bindings. This does not add current-model xsi evidence."
         }
       ],
       "evidence_scope": "Source contract preserved; direct models contain only representable static fields and do not recover discarded xsi controls or namespace history. The listed integration checks are source-regression evidence, not new model xsi coverage. Existing source ledger and remaining owners stay authoritative.",
@@ -1333,6 +1378,16 @@
           "file": "validation/reference_plan_test.go",
           "name": "TestTypedReferenceAuthoritativeResolutionBothTargets",
           "scope": "Shared operator: forward, missing, invalid, ambiguous different-kind, wrong-kind/part and unrelated-invalid-ID controls on both fact targets; not a separate fixture for every production declaration."
+        },
+        {
+          "file": "validation/session_representation_schedule_test.go",
+          "name": "TestCloseUsesCompiledRepresentationSchedule",
+          "scope": "Synthetic source/model catalogs with 1, 64 and 512 unrelated rules use a compiled ordered representation-only preparation schedule; input/output mutation isolation, causal order, constant preparation charge and live-resource cleanup are checked. Full selected-rule assessment still occurs later."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctMixedFamiliesAndEncounterOrder",
+          "scope": "Synthetic unavailable selection and mixed scalar families remain unsupported unless independent known duplicates prove failure; duplicate related locations retain original encounter order and scratch is released."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -2323,6 +2378,11 @@
           "file": "validation/local_schema_plan_test.go",
           "name": "TestLocalClosedScalarFailureSurvivesLaterInterruption",
           "scope": "Known local failure retained after later interruption."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestValidateLegacyLargeScore",
+          "scope": "A generated 3000-measure current model passes legacy Validate and explicitly raised model-XSD buffer/step budgets; a MaxNodes=100 assessment fails with resource/incomplete sentinels. No original fixture is edited."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -2384,7 +2444,7 @@
         8,
         9
       ],
-      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "implementation_status": "partial-batch5-implementation-final-verification-pending",
       "batch5_scope": "Implement the frozen 19 whole local candidate clauses and instrument-link local subclause, retaining all nine whole exclusions; bind exact shared operators and prove target-specific readiness without whole-MusicXML claims.",
       "batch5_owner": "batch5",
@@ -2394,7 +2454,7 @@
         8,
         9
       ],
-      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "runtime_bindings": [],
       "executable_tests": [
         {
@@ -2490,7 +2550,7 @@
         8,
         9
       ],
-      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "implementation_status": "partial-batch5-implementation-final-verification-pending",
       "batch5_scope": "Implement the frozen 19 whole local candidate clauses and instrument-link local subclause, retaining all nine whole exclusions; bind exact shared operators and prove target-specific readiness without whole-MusicXML claims.",
       "batch5_owner": "batch5",
@@ -2500,7 +2560,7 @@
         8,
         9
       ],
-      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "runtime_bindings": [],
       "executable_tests": [
         {
@@ -2527,6 +2587,16 @@
           "file": "validation/local_resource_plan_test.go",
           "name": "TestPlanInterruptionRequiresExactProducerProof",
           "scope": "A proved result can be latched only for its exact producer node/plan, not an unrelated or nested error."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctMaterializesEachEffectiveValueOnce",
+          "scope": "Both targets with 8, 32 and 128 synthetic children: each selected effective exact value, including absent-number default 1, is materialized once per evaluation; three evaluations and cleanup retain only the one-lookup-per-child cost. This exercises the generic operator beyond the production beam child limit."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctMixedFamiliesAndEncounterOrder",
+          "scope": "Synthetic unavailable selection and mixed scalar families remain unsupported unless independent known duplicates prove failure; duplicate related locations retain original encounter order and scratch is released."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -2590,7 +2660,7 @@
         8,
         9
       ],
-      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "implementation_status": "partial-batch5-implementation-final-verification-pending",
       "batch5_scope": "Implement the frozen 19 whole local candidate clauses and instrument-link local subclause, retaining all nine whole exclusions; bind exact shared operators and prove target-specific readiness without whole-MusicXML claims.",
       "batch5_owner": "batch5",
@@ -2600,7 +2670,7 @@
         8,
         9
       ],
-      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "runtime_bindings": [
         {
           "id": "MX40-LOCAL-instrument-link-target/local",
@@ -2865,7 +2935,7 @@
         8,
         9
       ],
-      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "previous_remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "implementation_status": "partial-batch5-implementation-final-verification-pending",
       "batch5_scope": "Implement the frozen 19 whole local candidate clauses and instrument-link local subclause, retaining all nine whole exclusions; bind exact shared operators and prove target-specific readiness without whole-MusicXML claims.",
       "batch5_owner": "batch5",
@@ -2875,7 +2945,7 @@
         8,
         9
       ],
-      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6–9.",
+      "remaining_scope": "Batch 5 all 29 candidate dispositions, local relations, typed references and first bounded production profile; dependent timeline/context/package/external clauses retain batches 6\u20139.",
       "runtime_bindings": [],
       "executable_tests": [
         {
@@ -3375,6 +3445,16 @@
           "file": "validation/local_resource_plan_test.go",
           "name": "TestPlanInterruptionRequiresExactProducerProof",
           "scope": "A proved result can be latched only for its exact producer node/plan, not an unrelated or nested error."
+        },
+        {
+          "file": "validation_direct_model_test.go",
+          "name": "TestValidateDependentRepresentationIncompleteness",
+          "scope": "NaN measure width retains a same-report model-failure cause and blocked XSD work; legacy Validate matches both invalid and incomplete. Omitting diagnostic details preserves counts/incompleteness; complete ordinary schema failure matches invalid only."
+        },
+        {
+          "file": "validation/model_mixed_limitation_test.go",
+          "name": "TestModelBlockedCompositeCanRetainIndependentLimitations",
+          "scope": "Synthetic model-schema comparison: a known representation failure and the same failure plus an independent unavailable numeric lexical pattern have identical composite report findings/counts. A causal Blocked summary cannot prove absence of hidden independent limitations; this is not a claim that this exact schema occurs in pinned MusicXML."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -3611,6 +3691,16 @@
           "file": "validation/local_resource_plan_test.go",
           "name": "TestPlanInterruptionRequiresExactProducerProof",
           "scope": "A proved result can be latched only for its exact producer node/plan, not an unrelated or nested error."
+        },
+        {
+          "file": "validation_direct_model_test.go",
+          "name": "TestValidateDependentRepresentationIncompleteness",
+          "scope": "NaN measure width retains a same-report model-failure cause and blocked XSD work; legacy Validate matches both invalid and incomplete. Omitting diagnostic details preserves counts/incompleteness; complete ordinary schema failure matches invalid only."
+        },
+        {
+          "file": "validation/model_mixed_limitation_test.go",
+          "name": "TestModelBlockedCompositeCanRetainIndependentLimitations",
+          "scope": "Synthetic model-schema comparison: a known representation failure and the same failure plus an independent unavailable numeric lexical pattern have identical composite report findings/counts. A causal Blocked summary cannot prove absence of hidden independent limitations; this is not a claim that this exact schema occurs in pinned MusicXML."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -3701,9 +3791,34 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestBoundedLocalStrictAccordionIntegration",
           "scope": "Legacy Validate stays XSD-only."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestLegacyValidationBudgetPolicy",
+          "scope": "Every private legacy quota is MaxInt64 except depth 4096; account overflow fails safely. The host allocation-width branch runs only on 32-bit hosts; current corrected-head actual 386 execution remains pending."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestValidateLegacyLargeScore",
+          "scope": "A generated 3000-measure current model passes legacy Validate and explicitly raised model-XSD buffer/step budgets; a MaxNodes=100 assessment fails with resource/incomplete sentinels. No original fixture is edited."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestValidateLegacyLargeCurrentText",
+          "scope": "A valid part-name containing 1048577 ASCII characters passes legacy Validate; default AssessModel retains its scalar resource ceiling."
+        },
+        {
+          "file": "validation_direct_model_test.go",
+          "name": "TestValidateDependentRepresentationIncompleteness",
+          "scope": "NaN measure width retains a same-report model-failure cause and blocked XSD work; legacy Validate matches both invalid and incomplete. Omitting diagnostic details preserves counts/incompleteness; complete ordinary schema failure matches invalid only."
+        },
+        {
+          "file": "validation/model_mixed_limitation_test.go",
+          "name": "TestModelBlockedCompositeCanRetainIndependentLimitations",
+          "scope": "Synthetic model-schema comparison: a known representation failure and the same failure plus an independent unavailable numeric lexical pattern have identical composite report findings/counts. A causal Blocked summary cannot prove absence of hidden independent limitations; this is not a claim that this exact schema occurs in pinned MusicXML."
         }
       ],
-      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
+      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active. Round-1 compatibility reconciliation: legacy Validate uses MaxInt64 quota ceilings except depth 4096, while bounded assessment defaults are unchanged. The intentional invalid-plus-incomplete join includes dependent blocked work; a composite can conceal additional independent limitations. Existing legacy invalid recognition is retained, not inferred as a new strict-source conversion category. The original planned negative case and broader package contract remain unchanged rather than being declared complete.",
       "pending_batch5_scope": "Final combined-diff QA, corrections and final integrated local/386/CI evidence listed in execution_evidence.pending_acceptance."
     },
     {
@@ -3980,9 +4095,14 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestAssessModelFiniteResourcesAndIndependentAxes",
           "scope": "Root finite-account integration and independent outcomes."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestLegacyValidationBudgetPolicy",
+          "scope": "Every private legacy quota is MaxInt64 except depth 4096; account overflow fails safely. The host allocation-width branch runs only on 32-bit hosts; current corrected-head actual 386 execution remains pending."
         }
       ],
-      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
+      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active. Finite zero/default policy remains the assessed APIs' contract. Legacy Validate alone uses private MaxInt64 ceilings except depth 4096 to avoid imposing new default size/work/scalar/diagnostic limits; accounting overflow and host-allocation guards remain. This is not a memory or throughput guarantee.",
       "pending_batch5_scope": "Final combined-diff QA, corrections and final integrated local/386/CI evidence listed in execution_evidence.pending_acceptance."
     },
     {
@@ -4225,6 +4345,31 @@
           "file": "validation/local_resource_plan_test.go",
           "name": "TestPlanInterruptionRequiresExactProducerProof",
           "scope": "A proved result can be latched only for its exact producer node/plan, not an unrelated or nested error."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctMaterializesEachEffectiveValueOnce",
+          "scope": "Both targets with 8, 32 and 128 synthetic children: each selected effective exact value, including absent-number default 1, is materialized once per evaluation; three evaluations and cleanup retain only the one-lookup-per-child cost. This exercises the generic operator beyond the production beam child limit."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctScratchExactLimitAndCleanup",
+          "scope": "Synthetic scratch growth uses the actual host entry size, including pointer/padding: exact 2-entry and simultaneous 2+4-entry allocation boundaries pass, one byte below fails (271/272 and 815/816 on amd64). Repeated runs retain another owner's 73-byte charge and release only owned scratch."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesRetainCompactPerNodeFacts",
+          "scope": "Both source/current-model kernel lanes: a repeated node with 32 unconstrained optional absences retains compact per-node references within the synthetic bound, preserving all absence/use facts and full Close cleanup. This is not a universal per-node MusicXML cost."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributeCacheAdmission",
+          "scope": "Synthetic exact admission failures for the cache pointer array, shared AttributeResult and per-node result pointer prevent unadmitted allocation/publication; previously admitted immutable records remain valid and Close releases the account."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributeIteratorLifecycle",
+          "scope": "Synthetic source iterator rejects nil, zero, foreign and stale bindings; closing during iteration stops after the already-yielded value, delayed/closed iterators expose no stale facts, and all retained charges release."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -4523,6 +4668,16 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestAssessModelFiniteResourcesAndIndependentAxes",
           "scope": "Root finite-account integration and independent outcomes."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesKeepOrderedIndependentFacts",
+          "scope": "Both kernel lanes preserve input-then-schema order, effective default/fixed values and required-absence failure; only unconstrained absent records share identity. Present/default/fixed records stay subject-specific, iterator copies/early stop are safe, and incomplete enumeration invents no absence."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesStopAtProvedPrefix",
+          "scope": "Cold/warmed synthetic source cache interrupted by buffer, work or cancellation retains only the proved ordered prefix and incomplete attribute enumeration; a later binding completes and Close releases all retained bytes."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -4648,6 +4803,11 @@
           "file": "validation/model_schema_test.go",
           "name": "TestModelSchemaEffectiveValuesRemainDistinctFromInput",
           "scope": "Shared effective value retains separate raw current input/default evidence."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestValidateLegacyLargeCurrentText",
+          "scope": "A valid part-name containing 1048577 ASCII characters passes legacy Validate; default AssessModel retains its scalar resource ceiling."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -4876,6 +5036,16 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestAssessModelFiniteResourcesAndIndependentAxes",
           "scope": "Root finite-account integration and independent outcomes."
+        },
+        {
+          "file": "validation/session_representation_schedule_test.go",
+          "name": "TestCloseUsesCompiledRepresentationSchedule",
+          "scope": "Synthetic source/model catalogs with 1, 64 and 512 unrelated rules use a compiled ordered representation-only preparation schedule; input/output mutation isolation, causal order, constant preparation charge and live-resource cleanup are checked. Full selected-rule assessment still occurs later."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctSelectionWorkScalesWithChildren",
+          "scope": "Synthetic 64-child/4096-declaration selector: selection and effective lookup are linear in child count for fixed selector size; exact equality comparisons remain pairwise and are separately charged. No linear-total-work claim."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -5233,9 +5403,24 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestAssessModelFiniteResourcesAndIndependentAxes",
           "scope": "Seven finite resource failures; truncated NaN blocker and cycle with later sibling."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestLegacyValidationBudgetPolicy",
+          "scope": "Every private legacy quota is MaxInt64 except depth 4096; account overflow fails safely. The host allocation-width branch runs only on 32-bit hosts; current corrected-head actual 386 execution remains pending."
+        },
+        {
+          "file": "validation_legacy_limits_test.go",
+          "name": "TestValidateLegacyLargeScore",
+          "scope": "A generated 3000-measure current model passes legacy Validate and explicitly raised model-XSD buffer/step budgets; a MaxNodes=100 assessment fails with resource/incomplete sentinels. No original fixture is edited."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesConcurrentIndependentRuns",
+          "scope": "Eight independent source/model runs reuse one compiled schema with run-local absence caches; 16 bindings each retain correct declaration/absence facts and release their own meters. Shared-run concurrent mutation is not claimed."
         }
       ],
-      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active. Whole-program budget acceptance also requires actual 386 execution and all final aggregate stages; no claim closes those gates.",
+      "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active. Whole-program budget acceptance also requires actual 386 execution and all final aggregate stages; no claim closes those gates. Finite zero/default policy remains the assessed APIs' contract. Legacy Validate alone uses private MaxInt64 ceilings except depth 4096 to avoid imposing new default size/work/scalar/diagnostic limits; accounting overflow and host-allocation guards remain. This is not a memory or throughput guarantee.",
       "pending_batch5_scope": "Final combined-diff QA, corrections and final integrated local/386/CI evidence listed in execution_evidence.pending_acceptance."
     },
     {
@@ -5337,6 +5522,16 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestAssessModelFiniteResourcesAndIndependentAxes",
           "scope": "Root finite-account integration and independent outcomes."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctCancellationReleasesScratch",
+          "scope": "Synthetic cancellation after scratch allocation releases its full live charge and does not manufacture a normative failure."
+        },
+        {
+          "file": "internal/xsd/absent_retention_test.go",
+          "name": "TestRunAbsentAttributesStopAtProvedPrefix",
+          "scope": "Cold/warmed synthetic source cache interrupted by buffer, work or cancellation retains only the proved ordered prefix and incomplete attribute enumeration; a later binding completes and Close releases all retained bytes."
         }
       ],
       "evidence_scope": "Only the current-model/local contribution described by batch5_scope and the exact inspected tests below is evidenced. The complete original acceptance/five-axis contract is not marked complete; later remaining owners and final batch-5 acceptance gates remain active.",
@@ -5986,14 +6181,14 @@
       "previous_remaining_batches": [
         5
       ],
-      "previous_remaining_scope": "Proposed disposition: use the explicit XSD range 1–8; do not turn the outdated phrase into a limit of six. Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection.",
+      "previous_remaining_scope": "Proposed disposition: use the explicit XSD range 1\u20138; do not turn the outdated phrase into a limit of six. Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection.",
       "implementation_status": "retained-issue-gate-not-promoted",
       "batch5_scope": "Retain clause-specific interpretation, evidence and tests for the unambiguous pinned XSD/current-model behavior. Do not activate an issue as a hard-error rule or mark its original decision gate approved.",
       "batch5_owner": "batch5",
       "remaining_batches": [
         9
       ],
-      "remaining_scope": "Proposed disposition: use the explicit XSD range 1–8; do not turn the outdated phrase into a limit of six. Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection. Final issue/status reconciliation remains explicit where this row carries a research gate.",
+      "remaining_scope": "Proposed disposition: use the explicit XSD range 1\u20138; do not turn the outdated phrase into a limit of six. Before implementing the affected disputed clause, approve its interpretation, scope, evidence and selector; update that clause test contract. This contextual issue association alone neither blocks other clauses nor authorizes hard rejection. Final issue/status reconciliation remains explicit where this row carries a research gate.",
       "runtime_bindings": [],
       "executable_tests": [],
       "evidence_scope": "The original decision_required gate and hard_error_basis=false remain unchanged. Independently clear schema/local behavior is not approval of the disputed clause."
@@ -8862,7 +9057,7 @@
         {
           "file": "local_assessment_test.go",
           "name": "TestBoundedLocalProductionClausesBothTargets",
-          "scope": "beam-default-distinct, beam-default-duplicate and beam-level-eight."
+          "scope": "beam-default-distinct, beam-default-duplicate, beam-level-eight and beam-equivalent-lexical-values (01 and 1 normalize to the same value), on both targets."
         },
         {
           "file": "validation/local_schema_plan_test.go",
@@ -8883,13 +9078,38 @@
           "file": "validation/local_resource_plan_test.go",
           "name": "TestLocalDistinctFailureStorageBoundary",
           "scope": "Known duplicate survives exact related/cache allocation boundaries 1, 255, 256 and 257; no retained storage leak."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctMaterializesEachEffectiveValueOnce",
+          "scope": "Both targets with 8, 32 and 128 synthetic children: each selected effective exact value, including absent-number default 1, is materialized once per evaluation; three evaluations and cleanup retain only the one-lookup-per-child cost. This exercises the generic operator beyond the production beam child limit."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctSelectionWorkScalesWithChildren",
+          "scope": "Synthetic 64-child/4096-declaration selector: selection and effective lookup are linear in child count for fixed selector size; exact equality comparisons remain pairwise and are separately charged. No linear-total-work claim."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctScratchExactLimitAndCleanup",
+          "scope": "Synthetic scratch growth uses the actual host entry size, including pointer/padding: exact 2-entry and simultaneous 2+4-entry allocation boundaries pass, one byte below fails (271/272 and 815/816 on amd64). Repeated runs retain another owner's 73-byte charge and release only owned scratch."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctCancellationReleasesScratch",
+          "scope": "Synthetic cancellation after scratch allocation releases its full live charge and does not manufacture a normative failure."
+        },
+        {
+          "file": "validation/local_distinct_materialization_test.go",
+          "name": "TestLocalDistinctMixedFamiliesAndEncounterOrder",
+          "scope": "Synthetic unavailable selection and mixed scalar families remain unsupported unless independent known duplicates prove failure; duplicate related locations retain original encounter order and scratch is released."
         }
       ],
       "disposition": "selected-local-clause",
       "batch5_scope": "Compute each beam effective number using default 1 when the attribute is proven absent, then require pairwise distinct exact integer values within that note. The XSD range 1..8 and maximum eight children do not establish this uniqueness condition. Do not require contiguous levels or limit to six based on outdated prose.",
       "remaining_batches": [],
       "remaining_scope": "No further work for this exact selected clause after its implementation/tests pass; broader contextual/default clauses remain separately owned.",
-      "evidence_scope": "Inspected production integration and/or shared-operator controls listed below exercise this selected clause. Their exact scopes distinguish production bindings from synthetic capability/causal cases. Original planned axes and generic case-instantiation gates remain unchanged; combined final verification is pending."
+      "evidence_scope": "Inspected production integration and/or shared-operator controls listed below exercise this selected clause. Their exact scopes distinguish production bindings from synthetic capability/causal cases. Original planned axes and generic case-instantiation gates remain unchanged; combined final verification is pending. Round-1 materialization/cost controls use the shared generic operator; selection/lookup is no longer repeated for earlier children, but exact comparisons remain pairwise. These controls do not broaden the production beam clause or close additional original axes."
     },
     {
       "research_id": "MX40-PROSE-beat-repeat-content",
@@ -11660,11 +11880,11 @@
       "required_tests": [
         "Check exact ID sets/status/hash preservation; no synthetic musical defaults or universal balancing."
       ],
-      "later_boundary": "Batches5–9 own remaining decision clauses and translations as separately listed."
+      "later_boundary": "Batches5\u20139 own remaining decision clauses and translations as separately listed."
     }
   ],
   "execution_evidence": {
-    "status": "bounded-implementation-final-verification-pending",
+    "status": "bounded-implementation-round1-corrections-final-verification-and-review-pending",
     "focused_revision": "1a6af41e93fa7d17507729f3a142e3bd84f757aa",
     "focused_status": "Focused adapter, shared-kernel, local-plan, typed-reference, catalog, API and six root integration tests passed at their implementation revisions. Listed names identify inspected executable evidence, not automatic completion of every original planned case.",
     "independent_core_review": {
@@ -11680,9 +11900,9 @@
       "scope": "Bounded current-model value/choice/cycle/shared-pointer states; no claim that one fuzz target replaces clause-specific tests."
     },
     "pending_acceptance": [
-      "All seven check-all stages on the final integrated revision: mod, generate, format, test, vet, race and counted fuzz, with required original-byte xmllint oracle roots actually executed.",
-      "Actual GOARCH=386 all-package runtime tests. Local 386 compilation is not runtime evidence: the native host rejected execution with exec format error.",
-      "Exact published head, all nine required CI jobs and retained reviewer-loop evidence. CI run/artifact links are pending and must be recorded for that exact head before readiness is claimed."
+      "All seven check-all stages on the final round-1 corrected revision: mod, generate, format, test, vet, race and counted fuzz, with the required original-byte xmllint roots actually executed. Initial-head results do not accept later changes.",
+      "Actual GOARCH=386 all-package runtime tests for the corrected published head. Initial head 60c7a7702016630d68263f827716c77b5380d50f passed actual 386 in CI; this host still provides compilation-only evidence because execution is rejected with exec format error.",
+      "Exact corrected published-head/tree verification, all nine required CI jobs, measured performance disclosure and retained reviewer-loop acceptance. Corrected-head run/artifact links remain pending."
     ],
     "evidence_interpretation": "Runtime bindings are exact rule IDs at revision 1. Test names are parsed from Go source by TestModelAssessmentOwnershipExecutableEvidence; their presence alone does not prove execution or full five-axis coverage. Original test_contracts remain future obligations wherever not covered by the stated concrete test scope.",
     "preacceptance_local_checks": {
@@ -11704,6 +11924,40 @@
       "status": "all-seven-check-all-stages-passed",
       "counted_fuzz_executions": 150028,
       "scope": "Integrated production, tests and documentation before final README/evidence wording reconciliation. Exact publication-head and actual386 CI proof remains pending."
+    },
+    "initial_publication_local_checks": {
+      "revision": "8b9b0438b4b42b4eb6cb31f6bf8b0f9931cb53d6",
+      "tree": "2f32955c56c011d45ab6a3042cb81863d61ff476",
+      "status": "all-seven-check-all-stages-passed",
+      "counted_fuzz_executions": 150000,
+      "oracle_roots_executed": 27,
+      "oracle_subtests_executed": 8548,
+      "oracle_skips": 0,
+      "oracle_failures": 0,
+      "scope": "Final initial-publication local tree, before PR 34 round-1 corrections. Actual local 386 execution was unavailable; later initial-head CI supplied it. Counts are not a conformance denominator."
+    },
+    "initial_published_head_ci": {
+      "revision": "60c7a7702016630d68263f827716c77b5380d50f",
+      "tree": "2f32955c56c011d45ab6a3042cb81863d61ff476",
+      "run_id": 38170367439,
+      "url": "https://github.com/go-muse/go-musicxml/actions/runs/38170367439",
+      "status": "all-nine-jobs-passed",
+      "actual_386": "passed-all-package-runtime-tests-in-ubuntu-test-job",
+      "required_xmllint": "passed-real-oracle-job",
+      "counted_fuzz_executions": 150000,
+      "scope": "Verified initial published head and tree. Round-1 review subsequently identified legacy quota/performance regressions despite green CI. This run does not accept corrected commits or close the reviewer gate."
+    },
+    "round1_corrections": {
+      "inspected_revision": "4c96f9b6067f52de827fdf9e8fd891f78fbeea4e",
+      "status": "focused-contract-and-ownership-regressions-passed-corrected-head-aggregate-ci-and-review-pending",
+      "scope": [
+        "Legacy quota compatibility and large-model/current-text controls; finite assessed defaults remain unchanged.",
+        "Intentional dependent invalid/incomplete join and synthetic hidden-independent-limitation proof.",
+        "Compiled ordered representation-only Close preparation and once-per-selected-child effective-value materialization with pairwise comparisons, exact scratch limits and cleanup. Independent review corrected scratch accounting to use actual host entry size, including pointer and padding, while accounting for both arrays during growth.",
+        "Compact run-local unconstrained absent-attribute facts preserve exact owner occurrence, ordering, partial prefixes, per-subject default/fixed/present values and iterator lifecycle. Cache arrays, records and per-binding pointers are admitted before allocation; internal iterator consumers meter visits. Final matched performance disclosure, corrected-head aggregate checks, CI and reviewer acceptance remain pending."
+      ],
+      "evidence_interpretation": "Exact executable names/scopes are added only to affected requirements and the beam clause above. Original planning fields, issue gates, source contracts and deferred owners remain unchanged.",
+      "focused_verification": "At local revision 4c96f9b6067f52de827fdf9e8fd891f78fbeea4e with this evidence reconciliation, the named legacy quota/large-input/joined-contract, model mixed-limitation, compiled representation schedule, local distinct, all eight absent-attribute kernel and ownership integrity tests passed on amd64. Planning/catalog package regressions also passed during this documentation reconciliation. This does not claim full corrected-head checks, actual 386 execution or reviewer acceptance."
     }
   }
 }

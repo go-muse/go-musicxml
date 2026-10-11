@@ -1,6 +1,6 @@
 # Direct model and bounded local assessment scope
 
-Status: **bounded implementation under final verification; batch-5 acceptance pending**.
+Status: **bounded implementation under round-1 correction verification; batch-5 reviewer acceptance pending**.
 Base: `511f55b4fa01dee1dd7542414ccd1eb5ad7ec6bf`.
 
 This document records the frozen scope and its bounded implementation. Its
@@ -258,8 +258,25 @@ its real cause and best partial report. Model syntax is NotAssessed.
 `Validate` stays XSD-only and uses the same direct adapter, preserving
 ErrNilDocument, unsupported-document recognition, ValidationError and genuine
 ErrInvalidDocument findings. Existing cycle/depth recognition is preserved only
-in that legacy facade. Legacy depth 4096 remains distinct from default assessed
-limits. Model/resource/unsupported results are not source malformed XML.
+in that legacy facade. Its private compatibility policy sets every quota to
+`math.MaxInt64` except depth 4096, avoiding new default document, scalar, work and
+diagnostic ceilings on `Validate`. Shared-account overflow checks and host
+allocation guards remain active; this is not unlimited memory or a throughput
+guarantee. Memory and work grow with the model. `AssessModel` and source assessed
+APIs retain their finite defaults; use explicit assessed budgets for untrusted
+input. Model/resource/unsupported results are not source malformed XML.
+
+Legacy `Validate` can intentionally match both `ErrInvalidDocument` and
+`ErrIncompleteAssessment` even when blocked XSD work depends on a known model
+failure, such as a NaN width. Invalidity remains definitive: callers must not
+interpret the incomplete sentinel alone as meaning no invalidity was proved.
+A composite XSD result can also contain an independent unavailable capability
+behind the same causal `Blocked` summary; counts and retained findings do not
+prove that every underlying limitation is dependent. The facade therefore does
+not suppress incompleteness from that summary. A complete ordinary XSD violation
+still produces invalidity without incompleteness. `AssessModel` keeps its report
+axes and nil operation error for these ordinary findings; diagnostic omission
+never changes counts or completion.
 
 One shared account owns the whole run. Session ingress charges actual nodes,
 attributes and depth once. Walker work includes every visited field, choice and
@@ -269,6 +286,31 @@ facts, compiled witnesses, scalar/index execution and report storage. All scans
 and growth check cancellation and allowance before work/allocation. No cumulative
 quota is refunded; every run is finished once and live gauges are released.
 No artificial input-byte charge is invented for the caller's existing graph.
+These accounting mechanisms also serve legacy `Validate`, but its private quota
+policy above deliberately differs from the finite assessed defaults.
+
+Model-representation preparation at `Close` uses an immutable compiled ordered
+subset, rather than reclassifying every selected rule for each node; full rule
+assessment still visits the selected schedule. The distinct-child operator
+selects and materializes each effective child value once per evaluation. Exact
+equality comparisons remain pairwise and metered. Temporary scratch growth is
+charged before allocation and released on success, limits and cancellation;
+known duplicates and related-location encounter order retain their semantics.
+The generic stress controls do not broaden MusicXML beam counts or claim linear
+total work.
+
+The shared kernel retains ordered per-binding attribute-result pointers and
+shares only immutable unconstrained-absence facts in a run-local effective-schema
+indexed cache. Exact declaration-owner occurrence identity is part of that
+cache's applicability: another named alias owner falls back to independent
+assessment. Present, defaulted and fixed-value records remain subject-specific.
+The internal `Attributes` iterator yields value copies in input-then-schema order
+without allocating a materialized snapshot; consumers meter each visit. Cache
+fields, arrays, records and per-binding pointers are admitted before allocation.
+Incomplete enumeration and interrupted prefixes never become known complete
+absence, and iteration cannot expose facts after the owning run is closed.
+These storage changes preserve the original source/current-model evidence
+contract and do not close broader default/fixed identity obligations.
 
 Diagnostics retain exact rule revision, target, model/source location, English
 explanation, provenance, actual/expected and related owner evidence. Truncation
@@ -321,6 +363,15 @@ These integrity tests do not prove that a named test ran or covers every clause.
 | `TestLocalPublicSessionFailureSurvivesPostProofStorageStop`, `TestTypedReferenceNestedOwnerProofIsNotCountedForConsumer` | Optional diagnostic/cache storage interruption preserves established failures and exact provider attribution; resource axes stay incomplete |
 | `TestBoundedProfilesConcurrentIndependentReports`, `ExampleAssessModel` | Independent unchanged-model reads and public external-package usage |
 | `TestAssessModelOfficialCorpusAndSourceDTDRemainSeparate` | Five unchanged official fixtures satisfy both current-model profiles; three external-DTD score sources remain incomplete, two DOCTYPE-free opus sources satisfy source-local |
+| `TestLegacyValidationBudgetPolicy`, `TestValidateLegacyLargeScore`, `TestValidateLegacyLargeCurrentText` | Private legacy quotas/overflow guards, a 3000-measure model and >1 MiB valid text; explicit/default assessed limits remain effective |
+| `TestValidateDependentRepresentationIncompleteness`, `TestModelBlockedCompositeCanRetainIndependentLimitations` | Intentional joined legacy sentinels, truncation invariance and a synthetic composite whose causal summary also hides an independent lexical-pattern limitation |
+| `TestCloseUsesCompiledRepresentationSchedule` | Synthetic source/model catalogs, copied configuration, stable causal order and preparation independent of 1/64/512 unrelated rules |
+| `TestLocalDistinctMaterializesEachEffectiveValueOnce`, `TestLocalDistinctSelectionWorkScalesWithChildren` | Generic both-target effective-value materialization once per child; selection/lookup cost separated from still-pairwise exact equality comparisons |
+| `TestLocalDistinctScratchExactLimitAndCleanup`, `TestLocalDistinctCancellationReleasesScratch`, `TestLocalDistinctMixedFamiliesAndEncounterOrder` | Exact scratch boundaries, owned-charge cleanup, cancellation and retained known-duplicate/related-location semantics in synthetic controls |
+| `TestRunAbsentAttributesRetainCompactPerNodeFacts`, `TestRunAbsentAttributesKeepOrderedIndependentFacts` | Synthetic both-lane compact retention, ordered absence, independent present/default/fixed values, incomplete-enumeration and cleanup controls |
+| `TestRunAbsentAttributesPreserveActualTypeUse`, `TestRunAbsentAttributeCacheKeepsAliasedNamedUses` | Source actual-type/inherited owners and source/model named-alias owner identity stay exact; no new model xsi capability |
+| `TestRunAbsentAttributesStopAtProvedPrefix`, `TestRunAbsentAttributeCacheAdmission` | Cold/warm source interruption preserves only proved prefixes; cache/record/node-pointer admission failures retain no unadmitted facts |
+| `TestRunAbsentAttributeIteratorLifecycle`, `TestRunAbsentAttributesConcurrentIndependentRuns` | Invalid/stale/closed iterator controls and independent source/model runs sharing immutable compiled schema with run-local caches |
 | `FuzzAssessCurrentModel` | Direct caller-created values/shapes under finite budgets, determinism/non-mutation and model target axes; focused counted run passed 10,018 executions against a 10,000 minimum |
 
 Independent core review at `681f1cb2e429566085202f75a796d3c9d53e69f7`
@@ -345,15 +396,37 @@ the direct-model target. These revision IDs identify local pre-publication test
 snapshots; the PR acceptance record maps their identical trees to published
 commits when connector publication recreates commit IDs.
 
+The final initial-publication local snapshot
+`8b9b0438b4b42b4eb6cb31f6bf8b0f9931cb53d6`, tree
+`2f32955c56c011d45ab6a3042cb81863d61ff476`, passed all seven stages,
+150,000 counted fuzz executions and the required 27-root/8,548-subtest xmllint
+selection with zero skips/failures. Its equivalent published head
+`60c7a7702016630d68263f827716c77b5380d50f` subsequently passed all nine jobs in
+[CI run 38170367439](https://github.com/go-muse/go-musicxml/actions/runs/38170367439),
+including **actual all-package 386 execution** in the Ubuntu test job and the
+required real-xmllint job. Local 386 compilation alone was not the runtime proof.
+
+Round-1 review of that green head still identified legacy quota and performance
+regressions. The private legacy quota correction, intentional dependent
+invalid/incomplete contract, compiled representation preparation and distinct-value
+materialization controls above address specific findings. The compact
+absent-attribute correction and its eight focused kernel tests are also
+integrated. Final matched measurements and corrected-head acceptance remain
+under review; no fixed per-node cost or final performance acceptance is claimed
+here. Numerical disclosure belongs in [API.md](../../API.md) and
+[CHANGELOG.md](../../CHANGELOG.md). Initial-head CI does not accept these later
+corrections or close the reviewer gate.
+
 Still required before a readiness/merge claim:
 - All seven `check-all` stages (`mod`, `generate`, `format`, `test`, `vet`, `race`,
-  `fuzz`) on the final integrated revision, with reproducible generation/planning
-  and required original-byte xmllint oracle roots actually executed
-- Actual `GOARCH=386 go test -count=1 ./...` execution. Native 386 compilation
-  succeeded, but this local host rejected execution with `exec format error`;
-  that is missing runtime evidence, not a pass
-- Exact published-head verification, all nine required CI jobs, and the retained
-  reviewer loop. CI run/artifact links for that exact head are pending
+  `fuzz`) on the final round-1 corrected revision, with reproducible generation/
+  planning and required original-byte xmllint roots actually executed
+- Actual `GOARCH=386 go test -count=1 ./...` on the corrected published head.
+  This local host still rejects execution with `exec format error`; initial-head
+  CI success is evidence only for its verified head/tree
+- Corrected published-head/tree verification, all nine required CI jobs,
+  measured performance reconciliation and the retained reviewer loop. Corrected-
+  head run/artifact links and reviewer acceptance remain pending
 
 The public ownership manifest carries these pending evidence fields explicitly.
 Official corpus and fuzz results supplement clause-specific tests; neither
