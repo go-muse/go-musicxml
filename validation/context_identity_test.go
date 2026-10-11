@@ -176,8 +176,12 @@ func TestIdentityEvidenceAndTypedStringContract(t *testing.T) {
 	p, _ := NewIdentityDeclarationPlan("ids", ciSelector())
 	n := ciStringNode(1, "true")
 	n.attributes[0].Scalar.Value.Value.Kind = AtomicBoolean
-	if _, _, err := evaluateIdentityPlan(context.Background(), s, n, ciRule("declaration"), p, false); err == nil {
-		t.Fatal("non-string identity was coerced")
+	d, pending, err := evaluateIdentityPlan(context.Background(), s, n, ciRule("declaration"), p, false)
+	if err != nil || pending || d.Outcome != OutcomeUnsupported || d.Reason != "identity-family-unavailable" {
+		t.Fatalf("valid non-string identity must be unsupported without coercion or a terminal contract error: decision=%+v pending=%t err=%v", d, pending, err)
+	}
+	if !s.identities["ids"].incomplete {
+		t.Error("unsupported declaration family did not keep the index incomplete")
 	}
 }
 

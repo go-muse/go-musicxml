@@ -396,7 +396,12 @@ func evaluateIdentityPlan(ctx context.Context, s *Session, n *factNode, r RuleDe
 		return d, false, nil
 	}
 	if value.Value.Kind != AtomicString {
-		return d, false, contract("identity value", "requires an upstream-domain-validated AtomicString")
+		if p.kind == planIdentityDeclare {
+			index.incomplete = true
+		}
+		d.Outcome = OutcomeUnsupported
+		d.Reason = "identity-family-unavailable"
+		return d, false, nil
 	}
 	if err := validateAtomic(value.Value); err != nil {
 		return d, false, err
