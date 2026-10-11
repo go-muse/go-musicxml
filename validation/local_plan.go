@@ -643,6 +643,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 		if marker.Outcome != OutcomePass {
 			return marker, false, nil
 		}
+		unresolved := Decision{Outcome: OutcomePass}
 		for _, requirement := range p.Requirements {
 			presence, ch, e := s.localPresence(ctx, n, []DeclarationID{requirement.Child}, false)
 			if e != nil {
@@ -652,7 +653,11 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 				continue
 			}
 			if presence.Outcome != OutcomePass {
-				return presence, false, nil
+				if presence.Outcome == OutcomeFail {
+					return presence, false, nil
+				}
+				unresolved = localWorst(unresolved, presence)
+				continue
 			}
 			v, e := s.localScalar(ctx, ch, nil)
 			if e != nil {
@@ -663,7 +668,11 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 				return d, false, e
 			}
 			if comparison.Outcome != OutcomePass {
-				if comparison.Outcome == OutcomeFail && markerNode != nil {
+				if comparison.Outcome != OutcomeFail {
+					unresolved = localWorst(unresolved, comparison)
+					continue
+				}
+				if markerNode != nil {
 					if err := s.retain(128); err != nil {
 						return comparison, false, err
 					}
@@ -672,7 +681,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 				return comparison, false, nil
 			}
 		}
-		return d, false, nil
+		return unresolved, false, nil
 	case localDistinct:
 		gap := Decision{Outcome: OutcomePass}
 		count := 0

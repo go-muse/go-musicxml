@@ -44,7 +44,7 @@ func localSchema(t *testing.T) *CompiledSchema {
 	cancel := SchemaAttribute{Name: SchemaName{Local: "cancel"}, Type: localType("yes-no"), Use: SchemaAttributeOptional, Constraint: &SchemaValueConstraint{Kind: "default", Value: "no"}}
 	add("octave", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{cancel}})
 	add("key", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("cancel", "integer"), localElement("octave", "octave"))})
-	add("transpose", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("chromatic", "decimal"), localElement("diatonic", "integer"), localElement("octave-change", "integer"))})
+	add("transpose", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("diatonic", "integer"), localElement("chromatic", "decimal"), localElement("octave-change", "integer"))})
 	add("defaults", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("concert", "empty"))})
 	add("sound", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "dacapo"}, Type: localType("yes-no")}, {Name: SchemaName{Local: "forward-repeat"}, Type: localType("yes-no")}, {Name: SchemaName{Local: "pedal"}, Type: localType("pedal")}}})
 	add("target", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{attr("id", "ID", SchemaAttributeRequired)}})
@@ -580,5 +580,42 @@ func TestLocalClosedScalarFailureSurvivesLaterInterruption(t *testing.T) {
 	r, e := s.Finish(ctx, Completion{Syntax: SyntaxIncomplete, Cause: interruption})
 	if !errors.Is(e, interruption) || r.Counts.Fail != 1 || r.Conformance != ConformanceViolated || r.AssessmentComplete {
 		t.Fatalf("lost established local result %+v %v", r, e)
+	}
+}
+
+func TestLocalSchemaConjunctFailureSurvivesInvalidSibling(t *testing.T) {
+	schema := localSchema(t)
+	declaration := localUse(t, schema, "root", "transpose", false).Declaration
+	p, e := NewDocumentMarkerValuesPlan([]DeclarationID{localUse(t, schema, "defaults", "concert", false).Declaration}, []ChildValueRequirement{{Child: localUse(t, schema, "transpose", "diatonic", false).Declaration, Expected: localInteger(t, 0), AllowAbsent: true}, {Child: localUse(t, schema, "transpose", "chromatic", false).Declaration, Expected: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "0")}}})
+	rule := localBinding(t, "local.transpose", declaration, p, e)
+	for _, target := range []Target{TargetSource, TargetModel} {
+		for _, invalid := range []string{"diatonic", "chromatic"} {
+			for _, otherValue := range []string{"0", "1"} {
+				t.Run(string(target)+"/"+invalid+"/"+otherValue, func(t *testing.T) {
+					diatonic, chromatic := otherValue, otherValue
+					if invalid == "diatonic" {
+						diatonic = "bad"
+					} else {
+						chromatic = "bad"
+					}
+					root := lt("root", lt("defaults", lt("concert")), lt("transpose", &localTree{name: "diatonic", text: diatonic}, &localTree{name: "chromatic", text: chromatic}))
+					r := localFeed(t, localEngine(t, schema, target, rule), target, root, true)
+					d, ok := localFinding(r, "local.transpose")
+					want := OutcomeBlocked
+					if otherValue == "1" {
+						want = OutcomeFail
+					}
+					if !ok || d.Outcome != want {
+						t.Fatalf("known conjunct masked: want=%s got=%+v report=%+v", want, d, r)
+					}
+					if want == OutcomeBlocked && (d.Cause == nil || d.Cause.Rule.ID != "xsd.scalar") {
+						t.Fatalf("missing invalid sibling cause %+v", d)
+					}
+					if want == OutcomeFail && r.Counts.Fail != 2 {
+						t.Fatalf("expected one XSD and one local defect %+v", r)
+					}
+				})
+			}
+		}
 	}
 }

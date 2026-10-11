@@ -410,3 +410,107 @@ func TestLocalPlanCanonicalSetDigestAndQNameIdentity(t *testing.T) {
 		t.Fatal("different QName identities collided")
 	}
 }
+
+func TestLocalMarkerValuesIndependentConjuncts(t *testing.T) {
+	cause := &DecisionRef{Rule: RuleKey{ID: "schema.scalar", Revision: 1}, Subject: NodeRef{DocumentID: "doc", Node: 3}}
+	for _, state := range []EvidenceState{EvidenceUnknown, EvidenceUnsupported, EvidenceInvalid} {
+		for _, unavailableFirst := range []bool{false, true} {
+			for _, knownValue := range []int64{0, 1} {
+				t.Run(fmt.Sprintf("%s/first=%v/known=%d", state, unavailableFirst, knownValue), func(t *testing.T) {
+					root := localNode(1, 0, "root")
+					marker := localNode(2, 1, "marker")
+					owner := localNode(3, 1, "owner")
+					unknownName, knownName := "b-value", "a-value"
+					if unavailableFirst {
+						unknownName, knownName = knownName, unknownName
+					}
+					unknown := localNode(4, 3, unknownName)
+					known := localNode(5, 3, knownName)
+					root.children = []*factNode{marker, owner}
+					owner.children = []*factNode{unknown, known}
+					unknown.end.Scalar.Value = Evidence[Atomic]{State: state, Reason: "unavailable-scalar"}
+					if state == EvidenceInvalid {
+						unknown.end.Scalar.Value.Cause = cause
+					}
+					known.end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, knownValue)}
+					p, e := NewDocumentMarkerValuesPlan([]DeclarationID{localDecl("marker")}, []ChildValueRequirement{{Child: unknown.header.Declaration.Value, Expected: localInteger(t, 0)}, {Child: known.header.Declaration.Value, Expected: localInteger(t, 0)}})
+					if e != nil {
+						t.Fatal(e)
+					}
+					d := localRun(t, p, root, owner, marker, owner, unknown, known)
+					want := OutcomeFail
+					if knownValue == 0 {
+						want = localGap(unknown.end.Scalar.Value).Outcome
+					}
+					if d.Outcome != want {
+						t.Fatalf("independent conjunct lost: want=%s got=%+v", want, d)
+					}
+					if want == OutcomeBlocked && (d.Cause == nil || *d.Cause != *cause) {
+						t.Fatalf("blocked cause changed %+v", d)
+					}
+				})
+			}
+		}
+	}
+}
+func TestLocalDistinctIndependentDuplicateSurvivesUnavailableNumbers(t *testing.T) {
+	p, e := NewDistinctChildAttributePlan([]DeclarationID{localDecl("beam")}, localAttr("number"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	for _, state := range []EvidenceState{EvidenceUnknown, EvidenceUnsupported, EvidenceInvalid} {
+		for unavailableAt := 0; unavailableAt < 3; unavailableAt++ {
+			for _, duplicate := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%s/at=%d/duplicate=%v", state, unavailableAt, duplicate), func(t *testing.T) {
+					n := localNode(1, 0, "note")
+					count := int64(0)
+					var gap Evidence[Atomic]
+					for i := 0; i < 3; i++ {
+						ch := localNode(NodeID(i+2), 1, "beam")
+						number := int64(2)
+						if !duplicate {
+							number += count
+						}
+						localSetAttr(ch, "number", localInteger(t, number))
+						if i == unavailableAt {
+							gap = Evidence[Atomic]{State: state, Reason: "number-unavailable"}
+							if state == EvidenceInvalid {
+								gap.Cause = &DecisionRef{Rule: RuleKey{ID: "schema.attribute", Revision: 1}, Subject: NodeRef{DocumentID: "doc", Node: ch.header.ID}}
+							}
+							ch.attributes[0].Scalar.Value = gap
+						} else {
+							count++
+						}
+						n.children = append(n.children, ch)
+					}
+					d := localRun(t, p, n, n, n.children...)
+					want := localGap(gap).Outcome
+					if duplicate {
+						want = OutcomeFail
+					}
+					if d.Outcome != want {
+						t.Fatalf("independent uniqueness lost want=%s got=%+v", want, d)
+					}
+					if want == OutcomeBlocked && (d.Cause == nil || *d.Cause != *gap.Cause) {
+						t.Fatalf("cause changed %+v", d)
+					}
+				})
+			}
+		}
+	}
+}
+func TestLocalTriggerDisjunctionContinuesAfterUnknownPresence(t *testing.T) {
+	owner := localDecl("slur")
+	p, e := NewPresenceImpliesAttributePlan([]AttributeSelector{localAttr("a-control"), localAttr("b-control")}, Selector{Declaration: &owner}, localAttr("type"), localString("continue"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	n := localNode(1, 0, "slur")
+	localSetAttr(n, "a-control", localInteger(t, 0))
+	n.attributes[0].Presence = Evidence[bool]{State: EvidenceUnknown, Reason: "unknown-first-trigger"}
+	localSetAttr(n, "b-control", localInteger(t, 0))
+	localSetAttr(n, "type", localString("start"))
+	if d := localRun(t, p, n, n); d.Outcome != OutcomeFail {
+		t.Fatalf("known activation and counterexample suppressed %+v", d)
+	}
+}
