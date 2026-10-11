@@ -538,6 +538,7 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 			}
 		}
 	}
+	addCause(s.flushSourceDTDSummaries())
 	if !s.inputComplete || !reportSyntaxComplete(s.profile.Target, end.Syntax) || s.terminalCause != nil || s.enumerationIncomplete {
 		s.accumulator.incomplete()
 	}

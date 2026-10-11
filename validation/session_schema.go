@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"strconv"
 	"strings"
 
 	"github.com/go-muse/go-musicxml/internal/xsd"
@@ -19,7 +20,20 @@ type schemaSession struct {
 	identityReady bool
 	recorded      map[decisionID]schemaRecord
 	proofRules    map[Assembly]map[XSDCheck][]RuleKey
+	dtdSummaries  map[RuleKey]schemaDTDSummary
+	dtdOrder      []RuleKey
+	dtdOmitted    bool
 }
+
+// A session has one document. Only the fixed, cause-free DTD capability reason
+// is eligible for this bounded representative-location summary.
+type schemaDTDSummary struct {
+	first NodeID
+	count uint64
+}
+
+const schemaDTDSummaryBytes int64 = 320 // map, order capacity, record and bounded count text
+
 type schemaRecord struct {
 	details  int
 	complete bool
@@ -532,12 +546,16 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 			return err
 		}
 	}
-	if !done && len(result.Issues) == 0 {
+	deferDTD := !done && len(result.Issues) == 0 && d.Outcome == OutcomeUnsupported && d.Cause == nil && d.Reason == "dtd-infoset-unavailable"
+	if !done && len(result.Issues) == 0 && !deferDTD {
 		if err := s.accumulator.storeDiagnostic(r, d, n.header.Location); err != nil {
 			return err
 		}
 	}
 	if err := s.retain(64); err != nil {
+		if deferDTD {
+			s.schema.dtdOmitted = true
+		}
 		return err
 	}
 	if s.schema.recorded == nil {
@@ -547,7 +565,70 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 	if done {
 		return nil
 	}
-	return s.cacheDecision(r, n, d)
+	if err := s.cacheDecision(r, n, d); err != nil {
+		if deferDTD {
+			s.schema.dtdOmitted = true
+		}
+		return err
+	}
+	if deferDTD {
+		return s.deferSourceDTDSummary(r.Key, n.header.ID)
+	}
+	return nil
+}
+
+func (s *Session) deferSourceDTDSummary(key RuleKey, subject NodeID) error {
+	state := s.schema
+	if summary, ok := state.dtdSummaries[key]; ok {
+		summary.count++
+		state.dtdSummaries[key] = summary
+		return nil
+	}
+	// This is optional diagnostic storage. Do not spend a diagnostic slot yet,
+	// or turn failed summary admission into a semantic assessment interruption.
+	if err := s.retain(schemaDTDSummaryBytes); err != nil {
+		if errors.Is(err, ErrResourceLimit) {
+			state.dtdOmitted = true
+			return nil
+		}
+		return err
+	}
+	if state.dtdSummaries == nil {
+		state.dtdSummaries = make(map[RuleKey]schemaDTDSummary)
+	}
+	state.dtdSummaries[key] = schemaDTDSummary{first: subject, count: 1}
+	state.dtdOrder = append(state.dtdOrder, key)
+	return nil
+}
+
+func (s *Session) flushSourceDTDSummaries() error {
+	state := s.schema
+	if state == nil {
+		return nil
+	}
+	// Flush after ordinary findings, even on an interrupted Finish. No healthy
+	// context is needed for this already bounded diagnostic-only operation.
+	for _, key := range state.dtdOrder {
+		if s.accumulator.report.DiagnosticsTruncated {
+			break
+		}
+		summary := state.dtdSummaries[key]
+		n := s.nodes[summary.first]
+		if n == nil {
+			state.dtdOmitted = true
+			continue
+		}
+		d := Decision{Rule: key, Subject: NodeRef{s.documentID, summary.first}, Outcome: OutcomeUnsupported, Reason: "dtd-infoset-unavailable",
+			Actual: "Document-wide limitation summary covers " + strconv.FormatUint(summary.count, 10) + " selected rule evaluations; location is the first summarized occurrence."}
+		if err := s.accumulator.storeDiagnostic(s.catalog.rules[key], d, n.header.Location); err != nil {
+			return err
+		}
+	}
+	// Setting this earlier would suppress later ordinary failure storage.
+	if state.dtdOmitted {
+		s.accumulator.report.DiagnosticsTruncated = true
+	}
+	return nil
 }
 
 func (s *Session) recordXSDIdentityFailure(ctx context.Context) error {
