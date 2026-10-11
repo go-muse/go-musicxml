@@ -373,6 +373,8 @@ type Decision struct {
 }
 
 // Finding adds the category and location needed for independent diagnostics.
+// Session reports retain only fail, unknown, unsupported and blocked findings;
+// eligible pass and not-applicable outcomes are counted without diagnostic storage.
 type Finding struct {
 	Decision
 	Category DiagnosticCategory
@@ -401,6 +403,10 @@ type TerminalSummary struct {
 
 // Report is an independently owned result. Public values are editable metadata,
 // not tamper-proof certificates; Satisfied evaluates their explicit result axes.
+// Findings contains only retained fail/unknown/unsupported/blocked diagnostics;
+// Rules contains metadata for those findings. Pass and not-applicable outcomes
+// contribute to eligible Counts without consuming diagnostic quotas or setting
+// DiagnosticsTruncated. Reports do not provide an all-decisions execution trace.
 type Report struct {
 	Requested            bool
 	Profile              Profile

@@ -121,6 +121,15 @@ Completeness is checked in the relevant provider domain: unrelated incomplete
 subtrees do not erase a proven local failure or duplicate, while possible unseen
 parent/document publishers prevent invented context values.
 
+A known, well-formed integer, decimal, boolean or QName atomic value is outside
+the identity plans' string-key family. It produces a per-rule
+`OutcomeUnsupported` with reason `identity-family-unavailable`, without coercion
+or terminating independent assessment. An unsupported declaration makes its
+index incomplete, so an unresolved reference is unknown rather than a fabricated
+missing-target violation. An unsupported reference does not make a complete
+declaration index incomplete. Malformed atomic payloads, including invalid tags
+or uninitialized numeric wrappers, remain terminal fact-contract failures.
+
 `NewInteger(*big.Int)` and `NewDecimal(*big.Rat)` copy exact values; accessors
 return copies, comparisons reject uninitialized operands, and zero wrappers are
 not numeric zero. Decimals must have finite base-ten expansions. Neither
@@ -146,6 +155,24 @@ preserves prior findings, and retains the original cause plus distinct later
 completion/cancellation causes. Repeated `Finish` returns a session error and no
 second report. No reader or resolver exists here for the core to interrupt.
 
+Pass and not-applicable outcomes use compact per-rule, per-node state for
+dependency execution rather than full cached `Decision` payloads. This state is
+charged separately from diagnostics to `MaxBufferedBytes`: 32 logical bytes per
+successful/excluded entry plus 128 bytes and the rule ID length for each rule's
+table. Problem-dependency entries retain outcome, reason and cause, without value
+previews or related-location lists. These are bounded accounting allowances, not
+measurements of Go map overhead.
+
+Each `RelationDocument` rule-prerequisite aggregate is computed lazily on its
+first actual use after the prerequisite's final evaluation phase, then reused
+by all consumers. Excluded consumers do not trigger an aggregate scan. The
+aggregate reserves 512 logical bytes plus the prerequisite rule ID length in
+`MaxBufferedBytes`, separately from the per-node result table. Aggregation keeps
+the same subject-order causal priority and incomplete-enumeration semantics as
+an uncached scan. This avoids repeated document scans for the same prerequisite;
+it does not remove rules-times-nodes dispatch, general context/identity work, or
+the bounded fact set retained until finalization.
+
 `Report` independently records requested profile/target, syntax, conformance,
 assessment completion, input completion, mandatory normative counts, required
 non-normative blockers, diagnostic truncation and terminal infrastructure status.
@@ -168,15 +195,47 @@ also prevent complete assessment. Advisory outcomes do not block acceptance.
 A normative failure remains violated even when another obligation or input is
 incomplete; unknown-only normative assessment is undetermined.
 
-Diagnostic count/byte exhaustion truncates storage without stopping assessment
-or changing counts/blockers. Terminal infrastructure status has a separate bounded
-reserve and does not invent a MusicXML rule. Reports own their retained metadata
+`Report.Findings` contains only fail, unknown, unsupported and blocked diagnostics.
+`Report.Rules` contains metadata only for those retained findings. Pass and
+not-applicable outcomes still contribute to eligible counts and dependency
+execution, but do not consume `MaxDiagnostics` or `MaxDiagnosticBytes` and cannot
+set `DiagnosticsTruncated`, even when their metadata would exceed those limits.
+There is no all-decisions trace option. Diagnostic count/byte exhaustion truncates
+problem storage without stopping assessment or changing counts/blockers.
+Terminal infrastructure status has a separate bounded reserve and does not invent a MusicXML rule. Reports own their retained metadata
 and remain usable after cleanup. `Format` and `FormatLocalized` work offline,
 escape untrusted text, identify source coordinate spaces, and never invent model
 line numbers. Formatting caps fields at 4,096 encoded bytes, total output at
 1 MiB, findings/rules at 1,000 and nested records at 64; omissions are marked.
 Localization changes text only, with bounded English fallback. Writer errors,
 including short writes, propagate.
+
+### Terminal disposition
+
+`Report.Terminal` selects the first matching row below from all retained causes
+and the validated completion assertion. This precedence is independent of the
+order of joined causes. The returned incomplete error preserves the original and
+distinct later completion/cancellation causes through `errors.Is`/`errors.As`; selecting
+one summary neither discards them nor changes proven normative failures.
+
+| Priority | Matching terminal condition | Category | Reason code |
+| ---: | --- | --- | --- |
+| 1 | `errors.Is(err, ErrResourceLimit)` | `CategoryResource` | `resource-limit` |
+| 2 | `errors.Is(err, context.Canceled)` | `CategoryResource` | `canceled` |
+| 3 | `errors.Is(err, context.DeadlineExceeded)` | `CategoryResource` | `deadline-exceeded` |
+| 4 | Valid source completion asserts `SyntaxMalformed` with an explicit `Completion.Cause` | `CategorySyntax` | `malformed-source` |
+| 5 | `errors.As` finds `*UnsupportedRootError` | `CategoryCapability` | `unsupported-root` |
+| 6 | `errors.Is(err, ErrInvalidSession)` | `CategoryCapability` | `invalid-session` |
+| 7 | `errors.Is(err, ErrInvalidConfiguration)` | `CategoryCapability` | `invalid-configuration` |
+| 8 | Other infrastructure interruption | `CategoryCapability` | `assessment-interrupted` |
+
+For example, a joined resource-limit/cancellation error remains a resource-limit
+summary even with a valid malformed-source assertion, while a session error
+wrapping configuration failure is summarized as invalid-session. Invalid
+model/package syntax assertions, a malformed-source assertion without an explicit
+cause, or contradictory `InputComplete` plus `SyntaxMalformed` are capability
+contract/lifecycle failures, not proof of malformed XML. `CategoryPolicy` is
+reserved for explicitly categorized rule outcomes; it is not a terminal fallback.
 
 ## Shared finite resource accounting
 
@@ -189,7 +248,7 @@ that every other quota can accommodate an input of that size.
 | --- | ---: | --- |
 | `MaxInputBytes` | 64 MiB | Cumulative primary raw bytes; future source reader. No input reader in this core. |
 | `MaxExternalBytes` | 64 MiB | Cumulative resolved/decompressed bytes; future package/loader owner. |
-| `MaxBufferedBytes` | 64 MiB | Live logical retained bytes; core facts, decisions, context/identity and report-profile metadata; future adapters own their private buffers. |
+| `MaxBufferedBytes` | 64 MiB | Live logical retained bytes; core facts, compact success/not-applicable tables, problem-dependency state, document aggregates, context/identity and report-profile metadata; future adapters own their private buffers. |
 | `MaxDepth` | 1,024 | Live open fact scopes, charged/released by the session; future private traversal/link scopes must share the account without charging the same scope twice. |
 | `MaxNodes` | 1,000,000 | Cumulative `Open` node attempts, charged by the core after event admission. |
 | `MaxAttributes` | 4,000,000 | Cumulative admitted owner-slot attribute attempts, charged by the core. |
@@ -199,8 +258,8 @@ that every other quota can accommodate an input of that size.
 | `MaxRuleSteps` | 20,000,000 | Cumulative dispatch, dependency, search/index and comparison work; byte-proportional value work where implemented. |
 | `MaxContextFacts` | 1,000,000 | Cumulative context publication attempts, including conflict/provenance work; core providers. |
 | `MaxLinkedDocuments` | 128 | Cumulative linked document occurrences; future resolver/loader owner. |
-| `MaxDiagnostics` | 1,000 | Cumulative stored findings, charged by report accumulation. |
-| `MaxDiagnosticBytes` | 1 MiB | Cumulative stored finding and distinct rule metadata payload plus fixed allowances; report accumulation. |
+| `MaxDiagnostics` | 1,000 | Cumulative stored fail/unknown/unsupported/blocked findings, charged by report accumulation; pass/not-applicable outcomes are excluded. |
+| `MaxDiagnosticBytes` | 1 MiB | Cumulative stored problem-finding and distinct associated rule metadata payload plus fixed allowances; report accumulation excludes pass/not-applicable outcomes. |
 
 `NewBudgetAccount` creates the only valid account; nil/zero accounts reject
 accounting operations. A nil `RunOptions.Account` creates an independent account.
@@ -233,7 +292,12 @@ errors remain separately inspectable. Terminal session errors do not fabricate
 The legacy private XSD carrier now exposes the public incomplete identity and
 typed cause. Pure incompleteness does not match `ErrInvalidDocument`; a genuine
 XSD `ValidationError` joined with incompleteness matches both families and retains
-its original issues. Existing XSD-only `Validate` still encodes and reparses the
+its original issues. Its error text intentionally migrates from
+`musicxml: incomplete XSD assessment: …` to
+`validation: incomplete assessment: incomplete XSD assessment: …`.
+Callers should use `errors.Is`/`errors.As` instead of matching string prefixes;
+recognition is supported through the public sentinel and typed carrier.
+Existing XSD-only `Validate` still encodes and reparses the
 model. It is not redirected to this engine and does not become prose validation.
 Existing root signatures, `DecodeOptions` fields, permissive decoding, generated
 models and transport behavior are unchanged.
@@ -250,12 +314,12 @@ whole-record completion or executed results for future adapters.
 | --- | --- |
 | `CAT-METADATA`, `CAT-ROLES`, `CAT-MATRIX`, `DEC-CATALOG` | [Catalog compilation](../../validation/catalog_compilation_test.go): full-revision closure, exhaustive support, metadata/provenance, canonical digest and copied accessors. [Inventory tests](../../validation/inventory_test.go): all-record projection, pins, relationships and reproducibility. |
 | `CAT-OPERATORS`, `CAT-OVERLAP`, `OPS-GRAMMAR`, `OPS-SCALARS` | [Typed-plan tests](../../validation/plans_test.go), [session tests](../../validation/session_test.go), [schedule tests](../../validation/catalog_schedule_test.go): only the eight families above, exact selectors and derived ordering; full XSD grammar/scalar binding remains open. |
-| `OPS-IDENTITY`, `CONTEXT-OUTCOMES` | [Context/identity tests](../../validation/context_identity_test.go), [adversarial tests](../../validation/session_adversarial_test.go), [phase regressions](../../validation/session_phase_test.go) and [provider-scope regressions](../../validation/session_scope_test.go): forward/missing/duplicate targets, causes, copied defaults, conflicts and late document providers. |
+| `OPS-IDENTITY`, `CONTEXT-OUTCOMES` | [Context/identity tests](../../validation/context_identity_test.go), [adversarial tests](../../validation/session_adversarial_test.go), [phase regressions](../../validation/session_phase_test.go), [provider-scope regressions](../../validation/session_scope_test.go) and [identity review regressions](../../validation/review_identity_test.go): forward/missing/duplicate targets, causes, copied defaults, conflicts, late document providers, unsupported key families without false absence, and malformed atomic contract failures. |
 | `NUM-DOMAIN`, `NUM-EXACT` | [Exact-value tests](../../validation/values_test.go): copies, independent exact comparisons, finite decimals, magnitude/output boundaries; no source lexical or model conversion claim. |
-| `RESULT-AXES`, `DIAG-METADATA`, `DIAG-CATEGORIES`, `DIAG-BOUNDS`, shared `NUM-CONVERSION` vocabulary | [Accumulator tests](../../validation/report_accumulator_test.go), [formatting bounds](../../validation/report_bounds_test.go): independent axes and blockers survive truncation, offline metadata and output limits. |
+| `RESULT-AXES`, `DIAG-METADATA`, `DIAG-CATEGORIES`, `DIAG-BOUNDS`, shared `NUM-CONVERSION` vocabulary | [Accumulator tests](../../validation/report_accumulator_test.go), [report/session regressions](../../validation/report_session_test.go), [terminal review regressions](../../validation/review_terminal_test.go), [formatting bounds](../../validation/report_bounds_test.go): diagnostic-only storage, independent counts/blockers and dependency causes, terminal categories/precedence, offline metadata and output limits. |
 | `DIAG-COMPAT`, `DEC-API` | [Root bridge](../../validation_foundation_bridge_test.go), [error tests](../../validation/errors_test.go), [external example](../../validation/example_test.go): public alias, pure/joined outcomes and usable core API. |
-| `BUDGET-ACCOUNT`, `BUDGET-INPUT`, `BUDGET-UNPACKED`, `BUDGET-BUFFER`, `BUDGET-DEPTH`, `BUDGET-EVENTS`, `BUDGET-ATTRS`, `BUDGET-SCALAR`, `BUDGET-IDS`, `BUDGET-MATCH`, `BUDGET-CONTEXT`, `BUDGET-LINKS`, `BUDGET-DIAGS`, `BUDGET-MODEL`, `SEC-CANCEL` | [All-resource arithmetic tests](../../validation/budgets_test.go), session/context/identity/adversarial tests: defaults, modes, shared quotas, host-width guards, terminal cleanup and cause retention. Reader/loader/walker integrations are future obligations. |
-| `SEC-NOFETCH`, `VERIFY-CI`, `VERIFY-DIFFERENTIAL`, `VERIFY-PROFILE` | [Import boundary](../../validation/boundary_test.go), [independent contracts](../../validation/independent_contracts_test.go), existing prerequisite/oracle suites: bounded core proof and regression gates, not profile readiness. |
+| `BUDGET-ACCOUNT`, `BUDGET-INPUT`, `BUDGET-UNPACKED`, `BUDGET-BUFFER`, `BUDGET-DEPTH`, `BUDGET-EVENTS`, `BUDGET-ATTRS`, `BUDGET-SCALAR`, `BUDGET-IDS`, `BUDGET-MATCH`, `BUDGET-CONTEXT`, `BUDGET-LINKS`, `BUDGET-DIAGS`, `BUDGET-MODEL`, `SEC-CANCEL` | [All-resource arithmetic tests](../../validation/budgets_test.go), [runtime review regressions](../../validation/review_runtime_test.go), session/context/identity/adversarial tests: defaults, modes, shared quotas, host-width guards, compact success retention, linear repeated-document-prerequisite work, terminal cleanup and cause retention. Reader/loader/walker integrations are future obligations. |
+| `SEC-NOFETCH`, `VERIFY-CI`, `VERIFY-DIFFERENTIAL`, `VERIFY-PROFILE` | [Import/verification boundary](../../validation/boundary_test.go), [independent contracts](../../validation/independent_contracts_test.go), [independent review oracles](../../validation/independent_review_test.go), [independent terminal edges](../../validation/independent_terminal_test.go), [report fuzzing](../../validation/report_bounds_test.go), [session fuzzing](../../validation/session_fuzz_test.go), existing prerequisite/oracle suites: bounded core proof and regression gates, not profile readiness. |
 
 ## All-requirement ownership summary and remaining work
 
@@ -301,7 +365,10 @@ position, universal span balance or broad `ProductionMusicXML` profile is added.
 are intentionally absent until their adapters can satisfy their contracts.
 
 Required verification remains `make check-all`, the existing required Linux
-external-XSD roots and planning/generation reproducibility. Executable 386
-budget/value verification is assigned to a new Linux CI step; a cross-build alone
-does not establish 32-bit runtime coverage. Test links describe checked contracts;
-they do not assert that remote CI or all whole-change checks have passed.
+external-XSD roots and planning/generation reproducibility. The Linux CI test job
+executes `GOARCH=386 go test -count=1 ./validation` for actual host-width coverage;
+a cross-build alone does not establish 32-bit runtime coverage. `check-all` runs
+`FuzzReportFieldIsBoundedEscapedUTF8` and `FuzzSessionLifecycle` for 10,000 counted
+executions each by default, configurable with `VALIDATION_FUZZ_TIME`, as documented
+in [local checks](../../CONTRIBUTING.md#local-checks). Test links describe checked
+contracts; they do not assert that remote CI or all whole-change checks have passed.

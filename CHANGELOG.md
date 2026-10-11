@@ -17,9 +17,18 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Export `ErrIncompleteAssessment` with identical root/core sentinel identity
   and typed incomplete causes, preserving pure and joined legacy XSD outcomes
   without changing `Validate`'s encode/reparse path.
+- Execute `GOARCH=386 go test -count=1 ./validation` in the Linux CI test job
+  for actual 32-bit host-width coverage. Add the validation-core fuzz targets
+  `FuzzReportFieldIsBoundedEscapedUTF8` and `FuzzSessionLifecycle` to `check-all`,
+  each with 10,000 counted executions by default (`VALIDATION_FUZZ_TIME` overrides
+  this count).
 
 ### Changed
 
+- Migrate legacy incomplete-XSD error text from
+  `musicxml: incomplete XSD assessment: …` to
+  `validation: incomplete assessment: incomplete XSD assessment: …`.
+  Recognize this result with `errors.Is`/`errors.As`, not string-prefix matching.
 - Require Go 1.27 or later.
 - Renamed the `release-check` Make target and `scripts/release-check.sh` to
   `check-all` and `scripts/check-all.sh`.
@@ -37,6 +46,20 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Keep pass and not-applicable assessment outcomes out of stored diagnostics
+  and their quotas while retaining counts and compact, separately budgeted
+  dependency state. Reports store only fail/unknown/unsupported/blocked findings
+  and their rule metadata; successful assessment cannot hide later diagnostics
+  or mark diagnostic storage truncated. No all-decisions trace option is added.
+- Cache each document rule-prerequisite aggregate lazily after its final phase,
+  avoiding repeated full-document scans by its consumers without claiming to
+  remove rules-times-nodes dispatch or all retained fact storage.
+- Treat valid non-string identity keys as per-rule unsupported evidence and
+  keep declaration indexes incomplete rather than inventing missing-reference
+  failures. Malformed atomic facts remain terminal contract errors.
+- Classify terminal resource/cancellation/deadline, malformed-source and
+  capability failures with deterministic precedence and dedicated reason codes,
+  preserving joined error causes and leaving policy as an explicit rule category.
 - Resolve schema-instance type QNames within captured instance namespace scopes,
   enforce supported type derivation/block/final/abstract contracts, and compose
   actual-type assessment with nil and element value constraints. Missing required

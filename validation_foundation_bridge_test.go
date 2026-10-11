@@ -29,6 +29,11 @@ func TestIncompleteAssessmentPublicBridge(t *testing.T) {
 			if !errors.As(err, &technical) {
 				t.Fatalf("missing typed technical result: %v", err)
 			}
+			// Characterize the disclosed migration; callers should inspect the
+			// public identities above rather than depend on a textual prefix.
+			if got, want := technical.Error(), "validation: incomplete assessment: incomplete XSD assessment: unsupported exact-domain metadata"; got != want {
+				t.Fatalf("documented technical text changed: %q, want %q", got, want)
+			}
 			var legacy *ValidationError
 			if errors.As(err, &legacy) != invalid {
 				t.Fatalf("legacy issue recognition = %v", err)
