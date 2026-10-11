@@ -99,8 +99,14 @@ block/final/abstract metadata, canonical dynamic defaults, and independent
 attribute/content checks. `TestXSITypeAgainstSchema` executes internal assertions
 for every case and external checks for the comparable cases; named libxml2
 QName-whitespace, canonical-default/fixed and IDREF divergences retain exact
-source evidence plus supplemental JAXP results. All test schemas use the local
-empty catalog.
+source evidence plus supplemental JAXP results.
+`zz_generated_schema_hint_validation_test.go` uses
+`testdata/validation/schema-hint-contract.xsd` for ordinary attribute carriers
+of the standard hint datatypes: facet-free list(anyURI) and anyURI. Same-byte
+carrier comparisons supply lexical evidence because libxml2 fixed-schema
+validation does not assess malformed standard hint values. Exact URI-parser
+exclusions and the separately retained discovery-pairing obligation are in the
+code map. All test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

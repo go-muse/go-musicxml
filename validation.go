@@ -545,6 +545,8 @@ func (c *validationContext) validateElement(
 	schema *validationElementSchema,
 	path string,
 ) {
+	c.validateSchemaLocationHints(node, path)
+
 	resolved, found := c.resolveElement(schema)
 	if !found {
 		c.addIssue(
@@ -1069,8 +1071,8 @@ func validationSequence(
 }
 
 // validationStandardXSIName recognizes standard schema-instance names permitted
-// by cvc-type and cvc-complex-type. validateElement checks type and nil values;
-// hints do not select or fetch schemas.
+// by cvc-type and cvc-complex-type. validateElement checks type, nil and hint
+// values; hints do not select or fetch schemas.
 func validationStandardXSIName(name xml.Name, allowType bool) bool {
 	if name.Space != validationXSINamespace {
 		return false
@@ -1086,7 +1088,7 @@ func validationStandardXSIName(name xml.Name, allowType bool) bool {
 
 // validateSimpleElementAttributes enforces XSD 1.0 cvc-type 3.1.1. The four
 // standard xsi names are permitted here; validateElement separately checks
-// xsi:nil and xsi:type. Hint-value semantics remain separate work.
+// xsi:nil, xsi:type and hint datatypes.
 // https://www.w3.org/TR/xmlschema-1/#cvc-type
 func (c *validationContext) validateSimpleElementAttributes(node *validationNode, path string) {
 	for _, attribute := range node.Attrs {

@@ -2347,7 +2347,7 @@
     ],
     "selector": "xsi:schemaLocation or xsi:noNamespaceSchemaLocation is supplied",
     "applicability": "Only a subject instantiating the bound declaration/type/use-site in the selected assembly. Apply conditional clauses only after their antecedent is known; close local or document scope before proving absence.",
-    "semantics": "Validate standard schema-instance attribute lexical/list shape; location is a hint; no mandatory external fetching. This is an operator contract instantiated by exact source clauses, not another document-wide diagnostic.",
+    "semantics": "Validate schemaLocation as a facet-free list(anyURI) and noNamespaceSchemaLocation as anyURI with XML whitespace normalization. Zero, odd and even URI-list lengths are datatype-valid; no hint selects or retrieves a schema. Namespace/location pair shape is a separate batch 8 schema-discovery/resolver obligation under section 4.3.2, with explicit unmatched-final-URI tests. This operator remains instantiated by exact source clauses, not a new document-wide diagnostic; current-model evidence limits remain unchanged.",
     "targets": [
       "source",
       "model"
@@ -2359,7 +2359,10 @@
     ],
     "dependencies": [],
     "normative_provenance": [
-      "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi_schemaLocation"
+      "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation",
+      "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc",
+      "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#anyURI",
+      "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#list-datatypes"
     ],
     "test_contracts": [
       "TEST-XSD-LANG-XSI-LOCATION"

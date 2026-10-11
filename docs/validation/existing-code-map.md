@@ -741,7 +741,7 @@ full schema-instance semantics and machine-readable partial-implementation
 evidence remain separate work. The planning JSON's `status: planned` semantics
 are unchanged; these regressions do not complete `STAGE-DEF-01` or `STAGE-DEF-02`.
 
-## Schema-location hint name repair update
+## Schema-location hint name repair update (historical checkpoint)
 
 The existing internal validator now permits the exact expanded names
 `{http://www.w3.org/2001/XMLSchema-instance}schemaLocation` and
@@ -780,7 +780,7 @@ helper modes across exact/case-variant/unknown names and matching/unqualified/
 foreign namespace URIs, plus the preserved `xsi:type` name allowance on builtin,
 inline simple, complex and complex simple-content types.
 
-### Deferred hint-value reconciliation
+### Hint-value reconciliation (historical deferral, resolved below)
 
 [XSD 1.0 section 3.2.7][xsi-declarations] defines `schemaLocation` as a list of
 `anyURI`, and `noNamespaceSchemaLocation` as `anyURI`.
@@ -800,6 +800,66 @@ acceptance as a compatibility requirement. Implementing hint lexical/pair
 semantics, reconciling the oracle evidence with the cited normative rules,
 full `xsi:type` handling, its interaction with nil, strict-source integration
 and checked machine-readable implementation evidence remain separate work.
+
+
+### Schema-location hint datatype repair
+
+The later prerequisite repair resolves the above deferral for the existing
+fixed-schema validator. `validation_schema_hints.go` checks the exact expanded
+standard hint names on each assessed element, before element-type branching.
+It reuses `collapseValidationWhitespace` and the reviewed `validXSDAnyURI`;
+no parallel URL policy or URI equality/canonicalization is introduced.
+`schemaLocation` is a facet-free list of `anyURI`; its empty, odd and even lengths
+are accepted when all items are legal. `noNamespaceSchemaLocation` is `anyURI`,
+including an empty value. Only XML whitespace splits list items. Invalid values
+produce one `datatype` issue per attribute at its expanded-name attribute path.
+Ordinary attribute/content errors, nil checks and source/model immutability
+remain independent. Hints perform no I/O and never select another schema.
+
+This is the reviewed fixed-schema interpretation of [section 3.2.7][xsi-declarations]
+and the separate discovery layer in [section 4.3.2][xsi-location-pairs]. The
+latter's namespace/location pairing is **not** an even-length datatype facet.
+The two conflicting planned odd-count failures, `TEST-DEF-XSI-SCHEMALOC` and
+`TEST-XSD-LANG-XSI-LOCATION`, now reflect that separation; their related
+requirements/check retain planned status, IDs, axes and source/model limits.
+Batch 8's schema-discovery/resolver owner still owes pairing tests, including an
+unmatched final URI and its discovery-specific outcome. No resolver or future
+catalog/report implementation is completed by this repair. XML reading, XSD
+assessment and MusicXML semantic validation remain separate stages.
+
+`validation_schema_hint_datatype_test.go` supplies raw-source datatype cases,
+prefix aliases/rebinding, ordinary-error interactions, nilled elements,
+anyType at the assessed-element boundary, repeated/concurrent nonmutation,
+and mandatory-XML malformed-character/duplicate-attribute controls. Existing
+name tests remain in place. The live HTTP counter in
+`TestSchemaLocationHintsDoNotFetch` now covers even/odd and malformed hints with
+ordinary failures. Public Decode still drops unsupported attributes: public
+Validate cannot recover an invalid hint discarded by Decode. This repair does
+not claim a strict-source API or new schema roots.
+
+`TestSchemaHintDatatypesAgainstSchema` is explicitly in the Linux CI selector.
+The synthetic `schema-hint-contract.xsd` declares ordinary attribute carriers
+with the same two datatypes. Internal and external validation receive the same
+original carrier bytes, including character references, with no model round trip.
+The test also checks same-byte positive standard hints. **Negative standard
+hint parity is excluded:** libxml2 2.9.14 with an explicit schema accepts the
+malformed hint values, whereas the ordinary typed carriers reject them. This is
+a known oracle assessment omission, not normative approval of those values.
+Two existing URI-grammar discrepancies are also bounded explicitly in each
+matrix: `http://host:abc` is a legal registry authority and `scheme:` is an
+illegal empty absolute URI under the reviewed RFC 2396/2732 contract. They are
+internal normative controls rather than claimed libxml2 agreement. A separately
+recorded OpenJDK 21.0.12.1 JAXP/Xerces probe agrees on all 104 exact-source hint
+and carrier documents, including those four carrier discrepancies. It does not
+add a JAXP CI dependency. No generic external-conformance closure is inferred.
+
+The datatype basis is [XSD 1.0 Part 2 anyURI][hint-anyuri] and
+[list datatypes][hint-list]; the existing URI helper retains its RFC/XLink
+provenance. Mandatory namespace-layer completeness, full anyType subtree
+assessment and strict-source integration retain their separate owners.
+
+[hint-anyuri]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#anyURI
+[hint-list]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#list-datatypes
 
 [xsi-name-rule]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type
 [xsi-declarations]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation
