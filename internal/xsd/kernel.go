@@ -188,6 +188,7 @@ type ElementSchema struct {
 }
 
 type Node struct {
+	ID         SubjectID
 	Namespaces map[string]string
 	Name       QName
 	Attrs      []Attribute
@@ -201,9 +202,13 @@ type Node struct {
 type Attribute struct {
 	Attr
 	NamespaceDeclaration bool
+	ValueKnown           bool
 }
 
 type Context struct {
+	identitySource    identityOrigin
+	run               *Run
+	local             *boundState
 	AssessmentErr     error
 	AssessmentVersion uint64
 	TypeMetadata      map[TypeIdentity]uint8
@@ -226,8 +231,9 @@ type Context struct {
 }
 
 type IdentityReference struct {
-	Value string
-	Path  string
+	origin identityOrigin
+	Value  string
+	Path   string
 }
 
 type EffectiveComplex struct {
@@ -239,8 +245,9 @@ type EffectiveComplex struct {
 }
 
 type ElementMatch struct {
-	Index  int
-	Schema *ElementSchema
+	Particle *ParticleSchema
+	Index    int
+	Schema   *ElementSchema
 }
 
 type MatchResult struct {
@@ -273,6 +280,7 @@ func (c *Context) ValidateElement(
 // issue state: a parent/sibling failure cannot erase this item's binding facts.
 func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path string, owner *Node) bool {
 	original := node
+	c.setFamily("declaration")
 	c.ValidateSchemaLocationHints(node, path)
 
 	resolved, found := c.ResolveElement(schema)
@@ -300,18 +308,25 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		return false
 	}
 
+	c.setFamily("declaration")
 	if schema.Abstract {
 		c.AddIssue(path, "abstract", "abstract element cannot be used")
 	}
 
 	// Nomination validity belongs to cvc-elt.4. The returned fallback type can
 	// still independently validate an ID-bearing item when nomination fails.
+	c.setFamily("declaration")
 	actualType, declarationValid := c.ActualElementType(node, schema, path)
 	declarationValid = declarationValid && !schema.Abstract
+	if c.local != nil {
+		c.local.actual = actualType
+		c.local.declared = &schema.Type
+	}
 
 	// This is an element constraint, not a scalar constraint: validateType is
 	// also reused for complex simple-content bases whose attributes are legal.
 	simple, _, builtin, _ := c.ResolveType(actualType)
+	c.setFamily("attributes")
 	typeAttributesValid := true
 	if simple != nil || (builtin != "" && builtin != "anyType") {
 		typeAttributesValid = c.ValidateSimpleElementAttributes(node, path)
@@ -321,6 +336,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	// XSD 1.0 cvc-elt 3 requires nillability even for false/0, and true
 	// forbids all character/element content as well as a fixed constraint.
 	// https://www.w3.org/TR/xmlschema-1/#cvc-elt
+	c.setFamily("declaration")
 	nilValue, nilPresent := NilAttribute(node.Attrs)
 	nilled := false
 	if nilPresent {
@@ -354,7 +370,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	// Use a validation-only view: the source text and model stay unchanged.
 	defaulted := false
 	constraintBlocked := false
-	if !nilled && len(node.Children) == 0 && node.Text.Len() == 0 {
+	if !nilled && (c.local == nil || c.local.subject.TextKnown) && len(node.Children) == 0 && node.Text.Len() == 0 {
 		value := schema.Default
 		if schema.Fixed != nil {
 			value = schema.Fixed
@@ -379,11 +395,14 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 			}
 			effective.Text.WriteString(lexical)
 			defaulted = true
+			if c.local != nil {
+				c.local.defaulted = true
+			}
 			node = effective
 		}
 	}
 
-	if !nilled && !defaulted && schema.Fixed != nil {
+	if !nilled && !defaulted && schema.Fixed != nil && (c.local == nil || c.local.subject.TextKnown) {
 		beforeFixed := c.AssessmentVersion
 		// XSD 1.0 cvc-elt 5.2.2.1 forbids element children independently
 		// of fixed-value equality, including for mixed content. Report the
@@ -408,8 +427,18 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 
 	// An unavailable/invalid default blocks dependent scalar/content checks,
 	// while actual-type attribute checks remain independent.
+	if c.local != nil {
+		c.local.effectiveText = node.Text.String()
+	}
+	c.setFamily("scalar")
 	typeValid := c.ValidateType(node, actualType, path, nilled || constraintBlocked, original) && typeAttributesValid
 	declarationValid = declarationValid && typeValid && !constraintBlocked
+	if c.local != nil {
+		c.local.typeValid = typeValid
+		c.local.declarationValid = declarationValid
+		c.local.identityAllowed = !nilled && !constraintBlocked && c.local.subject.TextKnown
+		return declarationValid
+	}
 	if typeValid && !nilled && !constraintBlocked {
 		c.RecordElementIdentity(&schema.Type, actualType, node.Text.String(), path, owner, declarationValid)
 	}
@@ -463,7 +492,12 @@ func (c *Context) ValidateType(
 			)
 			return false
 		}
-		if failure := c.ValidateSimple(simple, node.Text.String()); failure != nil {
+		if c.local != nil && !c.local.subject.TextKnown {
+			return false
+		}
+		assessment, failure := c.AssessSimpleValue(simple, node.Text.String(), node.Text.String())
+		c.observeScalar(assessment, failure == nil)
+		if failure != nil {
 			c.AddIssue(path, failure.Constraint, failure.Message)
 		} else {
 			return true
@@ -488,7 +522,12 @@ func (c *Context) ValidateType(
 			)
 			return false
 		}
-		if _, failure := c.AssessBuiltinValue(builtin, node.Text.String(), node.Text.String()); failure != nil {
+		if c.local != nil && !c.local.subject.TextKnown {
+			return false
+		}
+		assessment, failure := c.AssessBuiltinValue(builtin, node.Text.String(), node.Text.String())
+		c.observeScalar(assessment, failure == nil)
+		if failure != nil {
 			c.AddIssue(path, failure.Constraint, failure.Message)
 		} else {
 			return true
@@ -551,12 +590,14 @@ func (c *Context) ValidateComplex(
 		return false
 	}
 
+	c.setFamily("attributes")
 	attributesValid := c.ValidateAttributes(
 		subject,
 		effective.Attributes,
 		effective.AnyAttribute,
 		path,
 	)
+	c.setFamily("content")
 	if schema.Abstract {
 		// Attribute declarations are independently assessable even when their
 		// owner's actual type is abstract. Content recovery remains separate.
@@ -577,6 +618,7 @@ func (c *Context) ValidateComplex(
 			)
 			return false
 		}
+		c.setFamily("scalar")
 		return c.ValidateType(node, effective.Simple, path, false, subject) && attributesValid
 	}
 
@@ -586,7 +628,7 @@ func (c *Context) ValidateComplex(
 	// effective particle identifies the empty types represented here, not
 	// nullable particles or the generator's unnormalized empty groups.
 	// Keep the legacy diagnostic and leave the source text unchanged.
-	if !effective.Mixed && node.Text.Len() != 0 &&
+	if (c.local == nil || c.local.subject.TextKnown) && !effective.Mixed && node.Text.Len() != 0 &&
 		(effective.Particle == nil || strings.TrimFunc(node.Text.String(), IsWhitespace) != "") {
 		c.AddIssue(
 			path,
@@ -611,6 +653,9 @@ func (c *Context) ValidateComplex(
 		return attributesValid && contentValid && len(node.Children) == 0
 	}
 
+	if c.local != nil && !c.local.subject.ChildrenComplete {
+		return false
+	}
 	result, failure, matched := c.MatchParticle(
 		effective.Particle,
 		node.Children,
@@ -635,6 +680,10 @@ func (c *Context) ValidateComplex(
 		return false
 	}
 
+	if c.local != nil {
+		c.local.matches = result.Elements
+		return attributesValid && contentValid
+	}
 	paths := ChildPaths(path, node.Children)
 	for _, match := range result.Elements {
 		if !c.ValidateElementOwned(
@@ -890,6 +939,12 @@ func (c *Context) ValidateAttributes(
 			continue
 		}
 
+		if c.local != nil {
+			c.local.attribute = attribute.Name
+			c.local.attributeEpoch = c.AssessmentVersion
+			c.local.attributeKnown = attribute.ValueKnown
+			c.local.scalarAssessed = false
+		}
 		name := Name(attribute.Name)
 		schema, found := known[name]
 		if !found {
@@ -916,6 +971,13 @@ func (c *Context) ValidateAttributes(
 			continue
 		}
 
+		if c.local != nil && !attribute.ValueKnown {
+			c.local.limit("attributes", "attribute-value-unavailable", nil)
+			c.IdentityIncomplete = true
+			c.attributeResult(schema, attribute.Value, true, false, false)
+			valid = false
+			continue
+		}
 		attributeValid := true
 		beforeFixed := c.AssessmentVersion
 		if schema.Constraint != nil &&
@@ -959,13 +1021,21 @@ func (c *Context) ValidateAttributes(
 			}
 			c.RecordIdentityBinding(&schema.Type, attribute.Value, attributePath, node)
 		}
+		c.attributeResult(schema, attribute.Value, true, c.local == nil || c.local.scalarAssessed, attributeValid && (c.local == nil || c.local.scalarAssessed))
 	}
 
+	if c.local != nil {
+		c.local.attribute = QName{}
+	}
 	for _, schema := range schemas {
 		if schema.Use != AttributeRequired {
 			continue
 		}
 		if _, found := present[schema.Name]; found {
+			continue
+		}
+		if c.local != nil && !c.local.subject.AttributesComplete {
+			valid = false
 			continue
 		}
 
@@ -991,9 +1061,12 @@ func (c *Context) ValidateSimpleType(
 		return c.AssessmentFailure("simple type metadata incomplete")
 	}
 	if simple != nil {
-		return c.ValidateSimple(simple, value)
+		assessment, failure := c.AssessSimpleValue(simple, value, value)
+		c.observeScalar(assessment, failure == nil)
+		return failure
 	}
-	_, failure := c.AssessBuiltinValue(builtin, value, value)
+	assessment, failure := c.AssessBuiltinValue(builtin, value, value)
+	c.observeScalar(assessment, failure == nil)
 	return failure
 }
 
@@ -1838,6 +1911,14 @@ func (c *Context) AddIssue(
 		if constraint == "schema" || c.AssessmentErr == nil {
 			c.Incomplete(path + ": " + message)
 		}
+		return
+	}
+	if c.local != nil {
+		c.local.detail(path, constraint, message)
+		return
+	}
+	if c.run != nil && c.run.identityResults != nil {
+		c.identityDetail(path, constraint, message)
 		return
 	}
 	c.Issues = append(c.Issues, Issue{

@@ -4,6 +4,7 @@ package xsd
 // In particular, a union carries the first successful member's value; comparing
 // that member's normalized spelling cannot safely select a member a second time.
 type SimpleAssessment struct {
+	Builtin string
 	Lexical string
 	Value   SimpleValue
 }
@@ -105,7 +106,7 @@ func (c *Context) AssessBuiltinValue(name, value, display string) (SimpleAssessm
 	}
 	semantics := BuiltinSemantics(name)
 	lexical := semantics.Normalize(value)
-	result := SimpleAssessment{Lexical: lexical}
+	result := SimpleAssessment{Lexical: lexical, Builtin: name}
 	if item := BuiltinListItem(name); item != "" {
 		result.Value.Domain = ListDomain
 		itemSemantics := BuiltinSemantics(item)

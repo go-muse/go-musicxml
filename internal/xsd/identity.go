@@ -10,13 +10,27 @@ import "fmt"
 // https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id
 // https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id
 // These XSD owners are unrelated to future MusicXML musical reference scopes.
+type identityOrigin struct {
+	subject   SubjectID
+	attribute QName
+}
+
+func (c *Context) origin() identityOrigin {
+	if c.local == nil {
+		return identityOrigin{}
+	}
+	return identityOrigin{c.local.subject.ID, c.local.attribute}
+}
+
 type IdentityEntry struct {
+	origin                  identityOrigin
 	Value, Path, Constraint string
 }
 
 type IdentityBindings struct {
-	Owners                map[*Node]struct{}
-	FirstPath, SecondPath string
+	firstOrigin, secondOrigin identityOrigin
+	Owners                    map[*Node]struct{}
+	FirstPath, SecondPath     string
 }
 
 // Follow real derivation ancestry. A union/list's selected item or member is
@@ -61,11 +75,11 @@ func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
 		}
 		c.SeedIdentity(normalized, path, "ID")
 	case "IDREF":
-		c.References = append(c.References, IdentityReference{Value: normalized, Path: path})
+		c.References = append(c.References, IdentityReference{Value: normalized, Path: path, origin: c.origin()})
 		c.SeedIdentity(normalized, path, "IDREF")
 	case "IDREFS":
 		for _, item := range SplitList(normalized) {
-			c.References = append(c.References, IdentityReference{Value: item, Path: path})
+			c.References = append(c.References, IdentityReference{Value: item, Path: path, origin: c.origin()})
 			c.SeedIdentity(item, path, "IDREF")
 		}
 	}
@@ -77,7 +91,7 @@ func (c *Context) SeedIdentity(value, path, constraint string) {
 	}
 	if !c.IdentityEntrySeen[value] {
 		c.IdentityEntrySeen[value] = true
-		c.IdentityEntries = append(c.IdentityEntries, IdentityEntry{value, path, constraint})
+		c.IdentityEntries = append(c.IdentityEntries, IdentityEntry{Value: value, Path: path, Constraint: constraint, origin: c.origin()})
 	}
 }
 
@@ -93,7 +107,7 @@ func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, 
 	}
 	bindings := c.IdentityBindings[value]
 	if bindings == nil {
-		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path}
+		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path, firstOrigin: c.origin()}
 		c.IdentityBindings[value] = bindings
 	}
 	if _, seen := bindings.Owners[owner]; seen {
@@ -101,6 +115,7 @@ func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, 
 	}
 	if len(bindings.Owners) == 1 {
 		bindings.SecondPath = path
+		bindings.secondOrigin = c.origin()
 	}
 	bindings.Owners[owner] = struct{}{}
 }
@@ -119,6 +134,7 @@ func (c *Context) ValidateIdentityReferences() {
 	for _, entry := range c.IdentityEntries {
 		bindings := c.IdentityBindings[entry.Value]
 		if bindings != nil && len(bindings.Owners) > 1 {
+			c.identitySource = bindings.secondOrigin
 			c.AddIssue(bindings.SecondPath, "ID", fmt.Sprintf("duplicate ID %q; first bound at %s", entry.Value, bindings.FirstPath))
 		} else if bindings == nil && c.AssessmentErr == nil && !c.IdentityIncomplete && entry.Constraint == "ID" {
 			// XSD 1.0 Second Edition, sic-id (3.15.5), [binding] clause 2
@@ -127,6 +143,7 @@ func (c *Context) ValidateIdentityReferences() {
 			// rejects that empty entry even though both tested oracles accept it.
 			// https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id
 			// https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id
+			c.identitySource = entry.origin
 			c.AddIssue(entry.Path, "ID", fmt.Sprintf("ID %q has no containing element binding in the document", entry.Value))
 		}
 	}
@@ -139,6 +156,7 @@ func (c *Context) ValidateIdentityReferences() {
 		if c.IdentityBindings[reference.Value] != nil {
 			continue
 		}
+		c.identitySource = reference.origin
 		c.AddIssue(reference.Path, "IDREF", fmt.Sprintf("IDREF %q does not identify an element in the document", reference.Value))
 	}
 }

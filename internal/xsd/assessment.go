@@ -9,6 +9,9 @@ import (
 func (c *Context) Incomplete(message string) {
 	c.AssessmentErr = errors.Join(c.AssessmentErr, &TechnicalError{Message: message})
 	c.AssessmentVersion++
+	if c.local != nil {
+		c.local.limit(c.local.family, "xsd-assessment-incomplete", c.AssessmentErr)
+	}
 }
 
 // A cache hit revisits an existing incomplete fact. Preserve the original cause
@@ -19,6 +22,9 @@ func (c *Context) IncompleteAgain(message string) {
 		return
 	}
 	c.AssessmentVersion++
+	if c.local != nil {
+		c.local.limit(c.local.family, "xsd-assessment-incomplete", c.AssessmentErr)
+	}
 }
 
 func (c *Context) IncompleteFailure(message string) *SimpleFailure {

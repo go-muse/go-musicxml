@@ -399,7 +399,7 @@ func (m *ParticleMatcher) All(p *ParticleSchema, start int, elements *[]ElementM
 			used[index] = true
 			found = true
 			if elements != nil {
-				*elements = append(*elements, ElementMatch{Index: end, Schema: e})
+				*elements = append(*elements, ElementMatch{Index: end, Schema: e, Particle: child})
 			}
 			end++
 			break
@@ -525,7 +525,7 @@ func (m *ParticleMatcher) BodyWitness(p *ParticleSchema, start, end int, element
 	switch p.Kind {
 	case ParticleElement:
 		e, _ := m.Context.ResolveElement(p.Element)
-		*elements = append(*elements, ElementMatch{Index: start, Schema: e})
+		*elements = append(*elements, ElementMatch{Index: start, Schema: e, Particle: p})
 		return end == start+1
 	case ParticleAny:
 		return end == start+1
