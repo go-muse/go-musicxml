@@ -12,7 +12,7 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// AssessmentOptions selects an explicit source profile and finite shared limits.
+// AssessmentOptions selects an explicit target-specific profile and finite shared limits.
 // An empty or unknown Profile is invalid; zero budget fields select defaults.
 // Profiles describe their bounded scope and are not interchangeable with model
 // or package assessment. Source facts also have fixed identity limits: 1024
@@ -219,7 +219,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	}
 	run := &sourceAssessmentRun{ctx: ctx}
 	if assessment != nil {
-		if assessment.Profile != ProfileSourceXSDPreview {
+		if assessment.Profile != ProfileSourceXSDPreview && assessment.Profile != ProfileSourceLocal {
 			return nil, &validation.ConfigurationError{Field: "profile", Reason: "unknown or empty explicit source profile"}
 		}
 		run.account, err = validation.NewBudgetAccount(assessment.Budgets)
@@ -231,7 +231,13 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 		if !converting {
 			maxDepth = 0
 		}
-		engine, engineErr := newSourceAssessmentEngine()
+		var engine *validation.Engine
+		var engineErr error
+		if assessment.Profile == ProfileSourceLocal {
+			engine, engineErr = newModelAssessmentEngine()
+		} else {
+			engine, engineErr = newSourceAssessmentEngine()
+		}
 		if engineErr != nil {
 			return nil, engineErr
 		}
