@@ -53,6 +53,14 @@ incomplete: local grammar closure does not establish all declaration WFCs.
 An unread external identifier alone is distinguished from this internal-declaration
 WFC limitation, while still exposing possible infoset dependencies as unsupported.
 
+Consequently, the source preview cannot satisfy an ordinary score that includes
+an external DOCTYPE. This includes all three committed official score samples;
+strict assessed decoding rejects their source assessment despite successful
+model conversion. The two committed opus examples contain no DOCTYPE. Neither a
+known MusicXML public identifier nor xmllint's XSD-only acceptance proves that
+an unread external subset is infoset-neutral. No ignore-DTD policy or implicit
+DTD loading is provided in this batch.
+
 Parameter-entity replacement needed to continue the internal-subset grammar,
 non-predefined entity expansion, and namespace bindings that could depend on
 unread DTD default attributes stop with typed capability errors. Unavailable

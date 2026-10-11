@@ -2,6 +2,17 @@
 
 ## Contract and architecture
 
+**Practical input scope:** this preview cannot accept files with an unread
+external DOCTYPE subset. All three committed official score examples
+(`Chant.musicxml`, `MozartTrio.musicxml`, UTF-16 `MozaChloSample.musicxml`) have
+one and therefore remain unsupported/incomplete. Strict assessed decoding
+returns no document for them even when conversion succeeds. The two committed
+opus examples have no DOCTYPE and are assessable. Thus this batch provides the
+single-pass engine/API and a DTD-independent developmental execution scope; it
+does not provide source acceptance for common external-DOCTYPE score exports.
+The original-byte oracle tests preserve this distinction. Removing a DOCTYPE
+is a different input, not evidence that its unread subset was neutral.
+
 `InspectXML` and opt-in `DecodeAssessed` select
 `musicxml-4.0/source-xsd-preview` explicitly. This developmental source profile
 accepts the pinned no-namespace MusicXML `score-partwise`, `score-timewise` and
@@ -66,6 +77,15 @@ budgeted diagnostic/cache work. Diagnostic truncation cannot erase normative
 failure, blockers or the terminal cause. Identity preview can retain duplicate
 proofs; only final complete evidence can prove an absent target. Additional EOF
 issues append without recounting the same predicate.
+
+Only cause-free `dtd-infoset-unavailable` diagnostic instances are grouped by
+full rule key within one document. Each bounded summary identifies its first
+representative source occurrence and states how many rule evaluations it
+summarizes; semantic counts, blockers and dependency decisions remain per
+instance. These summaries are retained optionally and flushed after ordinary
+findings, including on interrupted Finish paths. No diagnostics are evicted and
+no cumulative quota is refunded. Omitted summaries mark truncation only after
+ordinary storage. Other unsupported reasons and causal blockers remain distinct.
 
 `InspectXML` ordinary normative failure is a report outcome with nil operation
 error. Callers must inspect `Report.Satisfied()`. `DecodeAssessed` with a requested

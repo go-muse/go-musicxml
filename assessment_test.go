@@ -185,3 +185,13 @@ func TestSourceAssessmentDiagnosticOriginalPosition(t *testing.T) {
 		})
 	}
 }
+
+func TestSourcePreviewDeclaresExternalDOCTYPEAcceptanceLimit(t *testing.T) {
+	report, err := InspectXML(context.Background(), strings.NewReader(assessedScore("1", "")), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(report.Profile.NormativeClosure, "external DOCTYPE") || !strings.Contains(report.Profile.NormativeClosure, "cannot satisfy") {
+		t.Fatalf("public profile does not state its practical input limitation: %s", report.Profile.NormativeClosure)
+	}
+}

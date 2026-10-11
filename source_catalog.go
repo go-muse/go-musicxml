@@ -8,7 +8,9 @@ import (
 
 // ProfileSourceXSDPreview explicitly selects the developmental single-pass
 // source XSD assessment scope. It covers the three generated score/opus roots,
-// with reached unsupported XSD capabilities reported as incomplete. It excludes
+// with reached unsupported XSD capabilities reported as incomplete. Unread
+// external DOCTYPE subsets prevent acceptance, including for the three committed
+// official score samples; no infoset-neutral DTD assumption is made. It excludes
 // MusicXML prose, direct models, packages, linked documents and dictionaries;
 // it is not a production MusicXML conformance profile or an implicit default.
 const ProfileSourceXSDPreview validation.ProfileID = "musicxml-4.0/source-xsd-preview"
@@ -22,7 +24,7 @@ func buildSourceAssessmentEngine() (*validation.Engine, error) {
 		ID: ProfileSourceXSDPreview, MusicXMLVersion: "4.0", Target: validation.TargetSource,
 		RegistryCommit:   "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
 		SupportedRoots:   []validation.QName{{Local: "score-partwise"}, {Local: "score-timewise"}, {Local: "opus"}},
-		NormativeClosure: "Preview source-only execution of the pinned generated MusicXML 4.0 score and opus XSD assemblies. Counts are selected per-node composite XSD operation instances, not research-record coverage. Mandatory XML syntax is separate. Reached unavailable metadata, opaque/open-content, DTD infoset and unsupported value/identity capabilities remain incomplete. MusicXML prose, current-model traversal, packages, links, external dictionaries and broad production conformance are excluded.",
+		NormativeClosure: "Preview source-only execution of the pinned generated MusicXML 4.0 score and opus XSD assemblies. Counts are selected per-node composite XSD operation instances, not research-record coverage. Mandatory XML syntax is separate. Files with an unread external DOCTYPE subset cannot satisfy this preview, including the three committed official score samples. Reached unavailable metadata, opaque/open-content, DTD infoset and unsupported value/identity capabilities remain incomplete. MusicXML prose, current-model traversal, packages, links, external dictionaries and broad production conformance are excluded.",
 	}
 	var rules []validation.RuleDefinition
 	var plans []validation.PlanBinding

@@ -218,6 +218,18 @@ resource limits are not XSD facets. The legacy `Validate` encode/reparse path,
 
 ## Opt-in original-source assessment
 
+**Current preview input limit:** an unread external DOCTYPE subset prevents
+source acceptance. The committed official score samples `Chant.musicxml`,
+`MozartTrio.musicxml` and UTF-16 `MozaChloSample.musicxml` therefore produce
+unsupported/incomplete source reports. Strict `DecodeAssessed` returns no
+`Document` for them even though model conversion succeeds. The DOCTYPE-free
+`OpusLink.musicxml` and `OpusScore.musicxml` fixtures are within the currently
+assessable source scope. This is a developmental DTD-independent preview, not
+validation support for the usual external-DOCTYPE MusicXML score exports.
+A familiar public identifier is not treated as proof that an unread DTD is
+infoset-neutral. Removing a DOCTYPE changes the input and is not equivalent
+assessment of the original file. DTD closure remains later work.
+
 `InspectXML(ctx, reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})`
 assesses original XML without creating a Go document. An empty/unknown profile,
 invalid budgets, or an already canceled context fail before the first input read.
@@ -255,6 +267,14 @@ identity, reusing the authoritative shared XSD implementation. Each selected
 operation counts once per applicable subject, regardless of how many diagnostic
 details it emits. A proved failure and incomplete remaining work can coexist.
 A small diagnostic quota cannot turn failure/incompleteness into acceptance.
+Repeated cause-free `dtd-infoset-unavailable` outcomes are displayed as one
+bounded summary per full rule key and document, with the number of summarized
+rule evaluations and the first representative occurrence. All instance counts
+and blockers remain exact. Those summaries are admitted after ordinary details,
+so they cannot consume a fitting later failure's only diagnostic slot. Other
+unsupported reasons and causal blockers are not coalesced. `ValidationError.Issues`
+contains only quota-admitted normative details and may be empty; a truncated
+source error additionally explains the failed-evaluation count and truncation.
 
 This preview is not the first bounded production MusicXML profile. It excludes
 MusicXML prose, direct current-model evidence, local typed musical relations,

@@ -1,7 +1,9 @@
 package musicxml
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -47,6 +49,51 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 				t.Errorf("source assessment=%+v error=%v expected-valid=%t", report, err, tt.valid)
 			}
 			assertXMLLintOutcome(t, xmllint, filepath.Join("schema", "musicxml-4.0", "musicxml.xsd"), filepath.Join("schema", "musicxml-4.0", "catalog.xml"), tt.input, tt.valid)
+		})
+	}
+	// These unchanged original files intentionally exercise both the usable
+	// DTD-independent scope and the explicit external-subset capability boundary.
+	// xmllint's XSD result does not establish unread DTD infoset neutrality.
+	for _, fixture := range []struct {
+		name, schema string
+		externalDTD  bool
+	}{
+		{"Chant.musicxml", "musicxml.xsd", true},
+		{"MozartTrio.musicxml", "musicxml.xsd", true},
+		{"MozaChloSample.musicxml", "musicxml.xsd", true},
+		{"OpusLink.musicxml", "opus.xsd", false},
+		{"OpusScore.musicxml", "opus.xsd", false},
+	} {
+		t.Run("official/"+fixture.name, func(t *testing.T) {
+			input, err := os.ReadFile(filepath.Join("testdata", "official", fixture.name))
+			if err != nil {
+				t.Fatal(err)
+			}
+			report, err := InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+			if err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed {
+				t.Fatalf("original source: %+v %v", report, err)
+			}
+			if fixture.externalDTD {
+				if report.Satisfied() || report.AssessmentComplete || report.Conformance != validation.ConformanceUndetermined || report.Counts.Unsupported == 0 || report.Counts.Fail != 0 {
+					t.Fatalf("unread external subset became trusted: %+v", report)
+				}
+				found := false
+				for _, finding := range report.Findings {
+					if finding.Reason == "dtd-infoset-unavailable" {
+						found = true
+					}
+				}
+				if !found {
+					t.Fatal("missing explicit DTD capability explanation")
+				}
+				result, decodeErr := DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+				if result.Document != nil || result.Conversion.State != validation.ConversionConverted || !errors.Is(decodeErr, ErrIncompleteAssessment) || errors.Is(decodeErr, ErrInvalidDocument) {
+					t.Fatalf("strict external-DTD result: %+v %v", result, decodeErr)
+				}
+			} else if !report.Satisfied() {
+				t.Fatalf("DOCTYPE-free official opus fixture: %+v", report)
+			}
+			assertXMLLintOutcome(t, xmllint, filepath.Join("schema", "musicxml-4.0", fixture.schema), filepath.Join("schema", "musicxml-4.0", "catalog.xml"), string(input), true)
 		})
 	}
 }

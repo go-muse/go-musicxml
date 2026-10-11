@@ -12,7 +12,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Add opt-in single-pass `InspectXML` and `DecodeAssessed` with explicit
   `ProfileSourceXSDPreview`, original-byte locations, bounded retained facts and
   independent source-conformance/model-conversion outcomes. This is a source XSD
-  preview, not a complete production MusicXML profile.
+  preview, not a complete production MusicXML profile. Unread external DOCTYPE
+  subsets prevent source acceptance, including all three committed official score
+  samples; strict assessed decoding returns no document for those files. The two
+  committed DOCTYPE-free opus examples are within the preview's assessable scope.
 - Reuse one XML-neutral authoritative XSD kernel through immutable schema
   snapshots and sealed binding/declaration/attribute/scalar/content/identity
   plans. Composite predicates count once while retaining multiple issue details.
