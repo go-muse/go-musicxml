@@ -217,7 +217,7 @@ func TestXSD10IdentityOwnerNamespaceCollision(t *testing.T) {
 
 func TestXSD10IdentityStableFinalization(t *testing.T) {
 	source := `<root><refs>B A missing</refs><item id="A"/><item id="B"/><item id="A"/><item id="B"/></root>`
-	var first []ValidationIssue
+	var first []validationKernelIssue
 	for run := 0; run < 20; run++ {
 		c := validateAttributeSource(t, &validationIdentityGenerated, source)
 		if run == 0 {

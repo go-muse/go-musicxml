@@ -7,7 +7,16 @@ import (
 )
 
 // ValidationIssue describes one XSD validation failure.
-type ValidationIssue = xsd.Issue
+type ValidationIssue struct {
+	Path       string
+	Constraint string
+	Message    string
+}
+
+// String returns the issue path and message.
+func (i ValidationIssue) String() string { return xsd.Issue(i).String() }
+
+type validationKernelIssue = xsd.Issue
 
 var betterValidationFailure = xsd.BetterFailure
 var collapseValidationWhitespace = xsd.CollapseWhitespace
@@ -264,7 +273,11 @@ func (c *validationContext) result() error {
 	if len(c.Issues) == 0 {
 		return technical
 	}
-	invalid := &ValidationError{Issues: c.Issues}
+	issues := make([]ValidationIssue, len(c.Issues))
+	for i, issue := range c.Issues {
+		issues[i] = ValidationIssue(issue)
+	}
+	invalid := &ValidationError{Issues: issues}
 	if technical == nil {
 		return invalid
 	}

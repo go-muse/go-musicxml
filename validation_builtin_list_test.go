@@ -138,7 +138,7 @@ func TestBuiltinListLengthDiagnostics(t *testing.T) {
 	} {
 		context := validateAttributeSource(t, &validationBuiltinListGenerated, wrapValidationElement(test.element, "", test.value))
 		require.Len(t, context.Issues, 1)
-		assert.Equal(t, ValidationIssue{Path: "/" + test.element, Constraint: test.kind, Message: test.message}, context.Issues[0])
+		assert.Equal(t, validationKernelIssue{Path: "/" + test.element, Constraint: test.kind, Message: test.message}, context.Issues[0])
 	}
 }
 

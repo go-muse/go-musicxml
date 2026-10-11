@@ -16,7 +16,7 @@ func TestIncompleteAssessmentPublicBridge(t *testing.T) {
 			c := validationContext{Context: validationKernelContext{}}
 			c.Incomplete("unsupported exact-domain metadata")
 			if invalid {
-				c.Issues = append(c.Issues, ValidationIssue{Path: "/score-partwise", Constraint: "required", Message: "missing independently proven required attribute"})
+				c.Issues = append(c.Issues, validationKernelIssue{Path: "/score-partwise", Constraint: "required", Message: "missing independently proven required attribute"})
 			}
 			err := c.result()
 			if !errors.Is(err, ErrIncompleteAssessment) {
