@@ -107,6 +107,8 @@ stage_fuzz() {
         -fuzztime="$check_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzSourceXMLReader$' \
         -fuzztime="$check_validation_fuzz_time" .
+    "$check_go" test -run='^$' -fuzz='^FuzzAssessCurrentModel$' \
+        -fuzztime="$check_validation_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzReportFieldIsBoundedEscapedUTF8$' \
           -fuzztime="$check_validation_fuzz_time" ./validation
     "$check_go" test -run='^$' -fuzz='^FuzzSessionLifecycle$' \
