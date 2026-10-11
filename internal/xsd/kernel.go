@@ -652,8 +652,8 @@ func (c *Context) ValidateComplex(
 	if effective.Particle == nil {
 		if len(node.Children) != 0 {
 			c.IdentityIncomplete = true
-			c.AddIssue(
-				ChildPath(path, node.Children[0], 1),
+			c.childIssue(
+				node, path, 0,
 				"content-model",
 				fmt.Sprintf(
 					"unexpected element %s",
@@ -686,8 +686,8 @@ func (c *Context) ValidateComplex(
 		}
 
 		index := result.Next
-		c.AddIssue(
-			IndexedChildPath(path, node.Children, index),
+		c.childIssue(
+			node, path, index,
 			"content-model",
 			fmt.Sprintf(
 				"unexpected element %s",
@@ -1913,8 +1913,8 @@ func (c *Context) AddContentIssue(
 	if expected != "" {
 		message += "; expected " + expected
 	}
-	c.AddIssue(
-		IndexedChildPath(path, node.Children, position),
+	c.childIssue(
+		node, path, position,
 		"content-model",
 		message,
 	)

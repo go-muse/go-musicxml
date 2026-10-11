@@ -116,6 +116,7 @@ type boundState struct {
 	effectiveText                                string
 	family                                       string
 	attribute                                    QName
+	issueSubject                                 SubjectID
 	scalarAssessment                             SimpleAssessment
 	scalarAssessed                               bool
 	done                                         bool
@@ -231,11 +232,8 @@ func (s *boundState) detail(path, constraint, message string) {
 			}
 		}
 	}
-	for _, ch := range s.subject.Children {
-		if path == ch.Path {
-			d.Subject = ch.ID
-			break
-		}
+	if s.issueSubject != 0 {
+		d.Subject = s.issueSubject
 	}
 	v := s.result()
 	v.Valid = false
@@ -566,4 +564,20 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
 	s.run.reserve(160)
 	s.attributes = append(s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Scalar: scalar})
+}
+
+// Child occurrence identity comes from the grammar position, never display paths.
+func (c *Context) childIssue(node *Node, path string, index int, constraint, message string) {
+	if c.local != nil {
+		old := c.local.issueSubject
+		c.local.issueSubject = node.Children[index].ID
+		defer func() { c.local.issueSubject = old }()
+	}
+	c.AddIssue(IndexedChildPath(path, node.Children, index), constraint, message)
+}
+func (c *Context) proveIdentityFailure() {
+	if c.run != nil && c.run.identityOutput != nil {
+		c.run.identityValid = false
+		c.run.identityOutput.Valid = false
+	}
 }

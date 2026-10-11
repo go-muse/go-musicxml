@@ -143,6 +143,7 @@ func (c *Context) ValidateIdentityReferences() {
 		bindings := c.IdentityBindings[entry.Value]
 		if bindings != nil && len(bindings.Owners) > 1 {
 			c.identitySource = bindings.secondOrigin
+			c.proveIdentityFailure()
 			c.AddIssue(bindings.SecondPath, "ID", fmt.Sprintf("duplicate ID %q; first bound at %s", entry.Value, bindings.FirstPath))
 		} else if bindings == nil && c.AssessmentErr == nil && !c.IdentityIncomplete && entry.Constraint == "ID" {
 			// XSD 1.0 Second Edition, sic-id (3.15.5), [binding] clause 2
@@ -152,6 +153,7 @@ func (c *Context) ValidateIdentityReferences() {
 			// https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id
 			// https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id
 			c.identitySource = entry.origin
+			c.proveIdentityFailure()
 			c.AddIssue(entry.Path, "ID", fmt.Sprintf("ID %q has no containing element binding in the document", entry.Value))
 		}
 	}
@@ -166,6 +168,7 @@ func (c *Context) ValidateIdentityReferences() {
 			continue
 		}
 		c.identitySource = reference.origin
+		c.proveIdentityFailure()
 		c.AddIssue(reference.Path, "IDREF", fmt.Sprintf("IDREF %q does not identify an element in the document", reference.Value))
 	}
 }

@@ -211,3 +211,25 @@ func TestRunIncompleteEnumerationRetainsSafeFullMatchWitness(t *testing.T) {
 		t.Fatal("closed invalid child was lost")
 	}
 }
+
+func TestRunContentIssueUsesOccurrenceInsteadOfAmbiguousPath(t *testing.T) {
+	typ := &ComplexSchema{Form: ComplexDirect, Particle: &ParticleSchema{Kind: ParticleElement, Occurrence: Occurrence{Min: 1, Max: 1}, Element: &ElementSchema{Name: QName{Space: "a", Local: "item"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "string"}}}}}
+	c, err := Compile(SchemaData{Elements: map[QName]*ElementSchema{{Local: "root"}: {Name: QName{Local: "root"}, Type: TypeRef{InlineComplex: typ}}}}, CompileLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, err := NewRun(c, &testMeter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	u, _ := c.Root(QName{Local: "root"})
+	b, err := r.Bind(context.Background(), u, Subject{ID: 1, Name: QName{Local: "root"}, Path: "/root", TextKnown: true, AttributesComplete: true, ChildrenComplete: true, Children: []Child{{ID: 2, Name: QName{Space: "a", Local: "item"}, Path: "/root/item"}, {ID: 3, Name: QName{Space: "b", Local: "item"}, Path: "/root/item"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	issues := r.Results(b).Content.Issues
+	if len(issues) != 1 || issues[0].Subject != 3 {
+		t.Fatalf("ambiguous display path selected wrong source occurrence: %+v", issues)
+	}
+}
