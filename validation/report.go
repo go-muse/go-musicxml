@@ -260,6 +260,48 @@ func newReportAccumulator(profile Profile, account *Account) *reportAccumulator 
 }
 
 func (a *reportAccumulator) record(rule RuleDefinition, decision Decision, location Location) error {
+	if err := a.recordOutcome(rule, decision); err != nil {
+		return err
+	}
+	return a.storeDiagnostic(rule, decision, location)
+}
+
+// recordComposite is reserved for sealed shared-schema operations. The summary
+// is one predicate instance; detail findings never increment its counts again.
+// Incomplete required work is an untruncated acceptance blocker even when a
+// proven failure already settles the composite predicate's truth value.
+func (a *reportAccumulator) recordComposite(rule RuleDefinition, summary Decision, location Location, details []Finding, complete bool) error {
+	if !complete && (summary.Outcome == OutcomePass || summary.Outcome == OutcomeNotApplicable) {
+		return contract("composite result", "incomplete work cannot pass or prove exclusion")
+	}
+	if complete && (summary.Outcome == OutcomeUnknown || summary.Outcome == OutcomeUnsupported || summary.Outcome == OutcomeBlocked) {
+		return contract("composite result", "unresolved work cannot be complete")
+	}
+	if err := a.recordOutcome(rule, summary); err != nil {
+		return err
+	}
+	if !complete {
+		a.incomplete()
+		a.report.BlockingProblems++
+	}
+	if len(details) == 0 {
+		return a.storeDiagnostic(rule, summary, location)
+	}
+	for _, detail := range details {
+		if a.report.DiagnosticsTruncated {
+			break
+		}
+		// Kernel details share the composite decision identity; individual
+		// attribute/child occurrences remain explicit in each location.
+		detail.Rule, detail.Subject = summary.Rule, summary.Subject
+		if err := a.storeDiagnostic(rule, detail.Decision, detail.Location); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *reportAccumulator) recordOutcome(rule RuleDefinition, decision Decision) error {
 	if a.account.Limits().MaxDiagnosticBytes <= 0 {
 		return &ConfigurationError{Field: "Account", Reason: "must be created by NewBudgetAccount"}
 	}
@@ -298,6 +340,10 @@ func (a *reportAccumulator) record(rule RuleDefinition, decision Decision, locat
 			a.report.AssessmentComplete = false
 		}
 	}
+	return nil
+}
+
+func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decision, location Location) error {
 	// Pass and proven exclusion are assessment results, not diagnostics. Keep
 	// their authoritative counts above, without measuring or storing payloads,
 	// consuming diagnostic quotas, or marking diagnostic storage truncated.
