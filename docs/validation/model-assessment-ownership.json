@@ -11680,7 +11680,6 @@
       "scope": "Bounded current-model value/choice/cycle/shared-pointer states; no claim that one fuzz target replaces clause-specific tests."
     },
     "pending_acceptance": [
-      "Independent combined-diff QA, including verification of the allocation and local-conjunct corrections and any subsequent findings.",
       "All seven check-all stages on the final integrated revision: mod, generate, format, test, vet, race and counted fuzz, with required original-byte xmllint oracle roots actually executed.",
       "Actual GOARCH=386 all-package runtime tests. Local 386 compilation is not runtime evidence: the native host rejected execution with exec format error.",
       "Exact published head, all nine required CI jobs and retained reviewer-loop evidence. CI run/artifact links are pending and must be recorded for that exact head before readiness is claimed."
@@ -11694,6 +11693,17 @@
       "oracle_skips": 0,
       "oracle_failures": 0,
       "scope": "Preliminary local regression evidence only. Final integrated checks and actual 386/exact-head CI remain pending; oracle counts are not conformance coverage."
+    },
+    "revision_identity": "Local pre-publication test snapshot IDs. The PR acceptance record maps tested trees to published commits if connector publication recreates commit IDs.",
+    "independent_combined_review": {
+      "revision": "ae2babc57967a029689c35d191febc3a64b425c9",
+      "status": "All confirmed allocation, conjunct-independence and post-proof resource findings corrected and independently reverified. Unexcluded all-package tests with required xmllint passed; affected race and full vet passed at8adb1fe. Documentation and ownership reviewed, with README fuzz-count wording corrected afterward."
+    },
+    "integrated_local_checks": {
+      "revision": "86d7578f835840399a016bbcfacbfd3ba9523ea2",
+      "status": "all-seven-check-all-stages-passed",
+      "counted_fuzz_executions": 150028,
+      "scope": "Integrated production, tests and documentation before final README/evidence wording reconciliation. Exact publication-head and actual386 CI proof remains pending."
     }
   }
 }

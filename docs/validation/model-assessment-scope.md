@@ -327,9 +327,11 @@ Independent core review at `681f1cb2e429566085202f75a796d3c9d53e69f7`
 reproduced and verified fixes for unavailable-union fixed comparison, per-slot
 attribute completeness and lost causal evidence. Its all-package tests with real
 xmllint, focused core race and vet passed. That core-only review does not accept
-the later adapter/local/catalog/API integration. Subsequent combined review has
-also driven allocation and local-conjunct regression corrections; final combined
-acceptance remains pending.
+the later adapter/local/catalog/API integration. Subsequent independent combined review verified the allocation, local-conjunct
+and post-proof storage-interruption corrections. All-package tests with required
+xmllint passed at local snapshot `ae2babc57967a029689c35d191febc3a64b425c9`;
+focused affected-package race and full vet passed at `8adb1fe`. The final
+documentation/ownership scan found only the corrected fuzz-target total.
 
 An earlier integrated revision, `1a6af41e93fa7d17507729f3a142e3bd84f757aa`,
 passed all seven local `check-all` stages. Its separately required real-xmllint
@@ -337,9 +339,13 @@ selection executed 27 oracle roots and 8,548 subtests with no skips or failures.
 Those results predate later corrections and this documentation reconciliation;
 they are preliminary evidence, not final-head acceptance or conformance counts.
 
-Still required before a readiness/merge claim:
+The integrated local snapshot `86d7578f835840399a016bbcfacbfd3ba9523ea2`
+subsequently passed all seven stages and 150,028 counted fuzz executions, including
+the direct-model target. These revision IDs identify local pre-publication test
+snapshots; the PR acceptance record maps their identical trees to published
+commits when connector publication recreates commit IDs.
 
-- Final combined-diff independent QA, including rechecking all corrections
+Still required before a readiness/merge claim:
 - All seven `check-all` stages (`mod`, `generate`, `format`, `test`, `vet`, `race`,
   `fuzz`) on the final integrated revision, with reproducible generation/planning
   and required original-byte xmllint oracle roots actually executed
