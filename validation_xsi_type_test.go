@@ -126,9 +126,9 @@ func TestXSITypeAgainstSchema(t *testing.T) {
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {
-			t.Fatal(err)
+			t.Fatal("xmllint is required but was not found in PATH")
 		}
-		t.Skip("xmllint unavailable")
+		t.Skip("xmllint is not installed; Linux CI requires this external XSD test")
 	}
 	directory, err := filepath.Abs("testdata/validation")
 	require.NoError(t, err)
