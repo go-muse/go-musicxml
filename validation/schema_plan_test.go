@@ -241,3 +241,32 @@ func TestSourceSchemaCompositeAppendsDetailsWithoutRecount(t *testing.T) {
 	}
 	_, _ = session.Finish(ctx, Completion{Syntax: SyntaxIncomplete})
 }
+
+func TestSourceSchemaKnownProofPrecedesLaterCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	session, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(ctx, RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := session.Open(ctx, schemaPendingHeader()); err != nil {
+		t.Fatal(err)
+	}
+	run, err := xsd.NewRun(session.schema.active.kernel, schemaMeter{session})
+	if err != nil {
+		t.Fatal(err)
+	}
+	session.schema.run = run
+	use, _ := session.schema.active.kernel.Root(xsd.QName{Local: "root"})
+	binding, err := run.Bind(ctx, use, xsd.Subject{ID: 1, Name: xsd.QName{Local: "root"}, Text: "bad", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	session.schema.nodes = map[NodeID]schemaNode{1: {binding: binding, available: true}}
+	cancel()
+	err = session.recordXSDProvedFailures(ctx, session.root)
+	if !errors.Is(err, context.Canceled) || session.accumulator.report.Counts.Fail != 1 {
+		t.Fatalf("known proof erased by later cancellation: count=%+v error=%v", session.accumulator.report.Counts, err)
+	}
+	_, _ = session.Finish(ctx, Completion{Syntax: SyntaxIncomplete, Cause: err})
+}

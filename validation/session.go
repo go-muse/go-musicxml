@@ -173,7 +173,11 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 	}
 	s.accumulator = newReportAccumulator(profile, account)
 	if len(e.catalog.schemas[profile.ID]) != 0 {
-		s.schema = &schemaSession{schemas: e.catalog.schemas[profile.ID]}
+		if err := s.retain(512); err != nil {
+			s.cleanup()
+			return nil, err
+		}
+		s.schema = &schemaSession{schemas: e.catalog.schemas[profile.ID], proofRules: make(map[Assembly]map[XSDCheck][]RuleKey)}
 	}
 
 	for _, key := range e.catalog.orders[profile.ID] {
@@ -182,6 +186,18 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 			return nil, &IncompleteError{Reason: "session-initialization", Cause: err}
 		}
 		rule := e.catalog.rules[key]
+		if p := e.catalog.plans[rule.Predicate]; s.schema != nil && p.kind == planXSD && len(rule.Requires) == 0 && e.catalog.supports[profile.ID][key].State == ImplementationAvailable {
+			if err := s.retain(384); err != nil {
+				s.cleanup()
+				return nil, err
+			}
+			groups := s.schema.proofRules[p.schema.assembly]
+			if groups == nil {
+				groups = make(map[XSDCheck][]RuleKey)
+				s.schema.proofRules[p.schema.assembly] = groups
+			}
+			groups[p.xsdCheck] = append(groups[p.xsdCheck], key)
+		}
 		for _, dependency := range rule.Requires {
 			if err := s.step(ctx, 1); err != nil {
 				s.cleanup()

@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"strings"
 
@@ -17,6 +18,7 @@ type schemaSession struct {
 	identity      xsd.IdentityResults
 	identityReady bool
 	recorded      map[decisionID]schemaRecord
+	proofRules    map[Assembly]map[XSDCheck][]RuleKey
 }
 type schemaRecord struct {
 	details  int
@@ -411,24 +413,23 @@ func (s *Session) schemaResult(n *factNode, check XSDCheck) xsd.Result {
 	return xsd.Result{}
 }
 func (s *Session) recordXSDProvedFailures(ctx context.Context, n *factNode) error {
-	for _, key := range s.catalog.orders[s.profile.ID] {
-		if err := s.step(ctx, 1); err != nil {
-			return err
-		}
-		r := s.catalog.rules[key]
-		p := s.catalog.plans[r.Predicate]
-		if p.kind != planXSD || p.xsdCheck == XSDCheckIdentity || len(r.Requires) > 0 || p.schema.assembly != s.schema.active.assembly || s.catalog.supports[s.profile.ID][key].State != ImplementationAvailable {
+	// These bounded, dependency-free rule lists were admitted and charged at
+	// Begin. Looking up an already proved result must precede a new cancellation
+	// or exhausted-work check; diagnostic/cache work remains checked afterwards.
+	for _, check := range []XSDCheck{XSDCheckBinding, XSDCheckDeclaration, XSDCheckAttributes, XSDCheckScalar, XSDCheckContent} {
+		result := s.schemaResult(n, check)
+		if !result.Applicable || result.Valid {
 			continue
 		}
-		result := s.schemaResult(n, p.xsdCheck)
-		if result.Applicable && !result.Valid {
-			if err := s.recordXSDResult(ctx, n, r, result); err != nil {
+		for _, key := range s.schema.proofRules[s.schema.active.assembly][check] {
+			if err := s.recordXSDResult(ctx, n, s.catalog.rules[key], result); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
 }
+
 func (s *Session) evaluateXSD(ctx context.Context, n *factNode, r RuleDefinition, p Plan, final bool) error {
 	if p.xsdCheck == XSDCheckIdentity {
 		if !final {
@@ -550,20 +551,16 @@ func (s *Session) recordXSDIdentityFailure(ctx context.Context) error {
 	if s.schema.identity.Valid {
 		return nil
 	}
-	for _, key := range s.catalog.orders[s.profile.ID] {
-		if err := s.step(ctx, 1); err != nil {
-			return err
-		}
+	for _, key := range s.schema.proofRules[s.schema.active.assembly][XSDCheckIdentity] {
 		r := s.catalog.rules[key]
 		p := s.catalog.plans[r.Predicate]
-		if p.kind == planXSD && p.xsdCheck == XSDCheckIdentity && len(r.Requires) == 0 && p.schema.assembly == s.schema.active.assembly && s.catalog.supports[s.profile.ID][key].State == ImplementationAvailable {
-			if err := s.evaluateXSD(ctx, s.root, r, p, true); err != nil {
-				return err
-			}
+		if err := s.evaluateXSD(ctx, s.root, r, p, true); err != nil {
+			return err
 		}
 	}
 	return nil
 }
+
 func (s *Session) finalizeSourceSchema(ctx context.Context) error {
 	state := s.schema
 	if state.run == nil {
@@ -572,8 +569,8 @@ func (s *Session) finalizeSourceSchema(ctx context.Context) error {
 	identity, err := state.run.Finalize(ctx, s.inputComplete)
 	state.identity = identity
 	state.identityReady = true
-	if err != nil {
-		return err
+	if proofErr := s.recordXSDIdentityFailure(ctx); proofErr != nil {
+		return errors.Join(err, proofErr)
 	}
-	return s.recordXSDIdentityFailure(ctx)
+	return err
 }
