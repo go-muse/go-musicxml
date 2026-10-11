@@ -4,6 +4,7 @@ import (
 	"context"
 	"slices"
 	"strings"
+	"unsafe"
 )
 
 const planLocal planKind = "local-relation"
@@ -699,7 +700,8 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 		}
 		var first [1]entry
 		values := first[:0]
-		const entryBytes int64 = 128
+		// Charge the complete host-layout entry, including pointer and padding.
+		const entryBytes = int64(unsafe.Sizeof(entry{}))
 		var scratchBytes int64
 		defer func() {
 			if scratchBytes != 0 {
