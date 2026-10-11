@@ -2,7 +2,7 @@ package xsd
 
 import "unsafe"
 
-// Source assessment exposes the prerequisite kernel's documented capability
+// Controlled assessment exposes the prerequisite kernel's documented capability
 // boundaries. Compatibility Context calls leave these guards inactive.
 func (c *Context) capability(family, reason string) {
 	c.step(1)

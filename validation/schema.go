@@ -161,8 +161,8 @@ func validXSDCheck(check XSDCheck) bool {
 	return false
 }
 
-// NewXSDPlan creates a sealed shared-schema operation. It executes only source
-// facts in this increment; direct current-model evidence is not reconstructed.
+// NewXSDPlan creates a sealed shared-schema operation for source or current-model
+// facts. Current values never reconstruct unavailable original source evidence.
 // Its selector must be the exact Assembly branch matching the compiled schema.
 func NewXSDPlan(schema *CompiledSchema, check XSDCheck) (Plan, error) {
 	return checkedPlan(Plan{kind: planXSD, schema: schema, xsdCheck: check})

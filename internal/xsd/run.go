@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-// SubjectID identifies a source occurrence; zero denotes no containing owner.
+// SubjectID identifies an input occurrence; zero denotes no containing owner.
 type SubjectID uint64
 
 // Subject contains XML-neutral borrowed facts. The caller keeps their storage
