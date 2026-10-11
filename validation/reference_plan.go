@@ -280,13 +280,15 @@ func (s *Session) evaluateReferencePlan(ctx context.Context, n *factNode, p *ref
 		return d, false, e
 	}
 	if !matches {
-		return Decision{Outcome: OutcomeFail, Reason: "typed-reference-target-kind", Expected: "an allowed exact target declaration", Actual: target.header.Name.Local, Related: []Location{target.header.Location}}, false, nil
+		failure := Decision{Outcome: OutcomeFail, Reason: "typed-reference-target-kind", Expected: "an allowed exact target declaration", Actual: target.header.Name.Local}
+		failure, e = s.withProvedPlanRelated(n, nil, p, failure, target.header.Location)
+		return failure, false, e
 	}
 	if len(p.TargetAncestors) > 0 {
 		_, d, e = s.referenceAncestor(ctx, s.nodes[target.header.Parent], p.TargetAncestors)
 		if e != nil || d.Outcome != OutcomePass {
 			if d.Outcome == OutcomeFail {
-				d.Related = []Location{target.header.Location}
+				d, e = s.withProvedPlanRelated(n, nil, p, d, target.header.Location)
 			}
 			return d, false, e
 		}
@@ -301,7 +303,9 @@ func (s *Session) evaluateReferencePlan(ctx context.Context, n *factNode, p *ref
 			return scopeDecision, false, e
 		}
 		if actual.header.ID != expected.header.ID {
-			return Decision{Outcome: OutcomeFail, Reason: "typed-reference-owner-mismatch", Expected: expected.header.Location.Path, Actual: actual.header.Location.Path, Related: []Location{target.header.Location, actual.header.Location, expected.header.Location}}, false, nil
+			failure := Decision{Outcome: OutcomeFail, Reason: "typed-reference-owner-mismatch", Expected: expected.header.Location.Path, Actual: actual.header.Location.Path}
+			failure, e = s.withProvedPlanRelated(n, nil, p, failure, target.header.Location, actual.header.Location, expected.header.Location)
+			return failure, false, e
 		}
 	}
 	return Decision{Outcome: OutcomePass}, false, nil

@@ -146,10 +146,10 @@ func lt(name string, children ...*localTree) *localTree {
 func la(name, id string, children ...*localTree) *localTree {
 	return &localTree{name: name, attrs: map[string]string{"id": id}, children: children}
 }
-func localFeed(t *testing.T, e *Engine, target Target, tree *localTree, complete bool) Report {
+func localAdmit(t *testing.T, e *Engine, target Target, tree *localTree, account *Account) *Session {
 	t.Helper()
 	ctx := context.Background()
-	s, err := e.Begin(ctx, RunOptions{DocumentID: "doc", Profile: "local.test"})
+	s, err := e.Begin(ctx, RunOptions{DocumentID: "doc", Profile: "local.test", Account: account})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,15 +206,20 @@ func localFeed(t *testing.T, e *Engine, target Target, tree *localTree, complete
 		}
 	}
 	visit(tree, 0)
+	return s
+}
+func localFeed(t *testing.T, e *Engine, target Target, tree *localTree, complete bool) Report {
+	t.Helper()
+	s := localAdmit(t, e, target, tree, nil)
 	syntax := SyntaxWellFormed
 	if target == TargetModel {
 		syntax = SyntaxNotAssessed
 	}
-	r, err := s.Finish(ctx, Completion{InputComplete: complete, Syntax: syntax})
+	report, err := s.Finish(context.Background(), Completion{InputComplete: complete, Syntax: syntax})
 	if err != nil {
 		t.Fatal(err)
 	}
-	return r
+	return report
 }
 func localFinding(r Report, key string) (Finding, bool) {
 	for _, d := range r.Findings {

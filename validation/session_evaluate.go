@@ -98,7 +98,7 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 	}
 	decision, pending, err := s.evaluatePlan(ctx, n, r, p, final)
 	if err != nil {
-		return err
+		return s.recordProvedPlanInterruption(r, n, p, err)
 	}
 	if pending {
 		return nil

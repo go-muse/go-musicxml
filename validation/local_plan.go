@@ -490,6 +490,9 @@ func (s *Session) localCompare(ctx context.Context, v Evidence[Atomic], expected
 		return Decision{}, e
 	}
 	ok, e := compareAtomic(v.Value, expected, ComparisonEqual)
+	if e != nil {
+		return Decision{}, e
+	}
 	d := Decision{Outcome: OutcomePass}
 	if !ok {
 		d = Decision{Outcome: OutcomeFail, Reason: "local-value-mismatch", Expected: atomicDisplay(expected), Actual: atomicDisplay(v.Value)}
@@ -632,7 +635,10 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 	case localDocumentChild, localMarkerValues:
 		marker, markerNode, e := s.localDocumentPresence(ctx, p)
 		if e != nil {
-			return d, false, e
+			if p.Operation == localDocumentChild && marker.Outcome == OutcomeFail {
+				return marker, false, planProofStop(n, p, nil, marker, e)
+			}
+			return Decision{}, false, e
 		}
 		if p.Operation == localDocumentChild {
 			return marker, false, nil
@@ -673,10 +679,8 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 					continue
 				}
 				if markerNode != nil {
-					if err := s.retain(128); err != nil {
-						return comparison, false, err
-					}
-					comparison.Related = []Location{markerNode.header.Location}
+					comparison, e = s.withProvedPlanRelated(n, p, nil, comparison, markerNode.header.Location)
+					return comparison, false, e
 				}
 				return comparison, false, nil
 			}
@@ -723,7 +727,9 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 					return d, false, e
 				}
 				if comparison.Outcome == OutcomePass {
-					return Decision{Outcome: OutcomeFail, Reason: "duplicate-effective-child-value", Expected: "distinct effective child values", Actual: atomicDisplay(v.Value), Related: []Location{previous.header.Location, ch.header.Location}}, false, nil
+					duplicate := Decision{Outcome: OutcomeFail, Reason: "duplicate-effective-child-value", Expected: "distinct effective child values", Actual: atomicDisplay(v.Value)}
+					duplicate, e = s.withProvedPlanRelated(n, p, nil, duplicate, previous.header.Location, ch.header.Location)
+					return duplicate, false, e
 				}
 				if comparison.Outcome != OutcomeFail {
 					gap = localWorst(gap, comparison)
