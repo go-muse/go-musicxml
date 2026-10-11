@@ -460,8 +460,14 @@ func (s *Session) localCompare(ctx context.Context, v Evidence[Atomic], expected
 	return d, e
 }
 func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPlan, final bool) (Decision, bool, error) {
-	if !final {
+	if !final && (p.Operation == localDocumentChild || p.Operation == localMarkerValues || (p.Operation == localAttributeChild && p.Relation == RelationDocument)) {
 		return Decision{}, true, nil
+	}
+	if !final && p.Operation == localAttributeChild && p.Relation == RelationParent {
+		parent := s.nodes[n.header.Parent]
+		if parent != nil && !parent.closed {
+			return Decision{}, true, nil
+		}
 	}
 	d := Decision{Outcome: OutcomePass}
 	switch p.Operation {

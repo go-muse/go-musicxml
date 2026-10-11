@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"testing"
@@ -536,5 +537,45 @@ func TestLocalFailureSurvivesDiagnosticTruncationAndReleasesAccount(t *testing.T
 		if used, _ := account.Usage(kind); used != 0 {
 			t.Fatalf("leaked %s: %d", kind, used)
 		}
+	}
+}
+
+func TestLocalClosedScalarFailureSurvivesLaterInterruption(t *testing.T) {
+	schema := localSchema(t)
+	p, e := NewScalarOneOfPlan([]Atomic{localString("equals")})
+	rule := localBinding(t, "local.literal", localUse(t, schema, "root", "relation", false).Declaration, p, e)
+	engine := localEngine(t, schema, TargetSource, rule)
+	ctx := context.Background()
+	s, e := engine.Begin(ctx, RunOptions{DocumentID: "doc", Profile: "local.test"})
+	if e != nil {
+		t.Fatal(e)
+	}
+	h := schemaPendingHeader()
+	h.Location.DocumentID = "doc"
+	if e = s.Open(ctx, h); e != nil {
+		t.Fatal(e)
+	}
+	h.ID = 2
+	h.Parent = 1
+	h.Name.Local = "relation"
+	h.Location.Path = "/root/relation"
+	if e = s.Open(ctx, h); e != nil {
+		t.Fatal(e)
+	}
+	end := schemaLexemeEnd("bad")
+	end.ID = 2
+	if e = s.Close(ctx, end); e != nil {
+		t.Fatal(e)
+	}
+	if e = s.Close(ctx, schemaLexemeEnd("")); e != nil {
+		t.Fatal(e)
+	}
+	if d, ok := s.lookupDecision(decisionID{rule.key, 2}); !ok || d.Outcome != OutcomeFail {
+		t.Errorf("closed local failure was deferred %+v", d)
+	}
+	interruption := errors.New("source tail interrupted")
+	r, e := s.Finish(ctx, Completion{Syntax: SyntaxIncomplete, Cause: interruption})
+	if !errors.Is(e, interruption) || r.Counts.Fail != 1 || r.Conformance != ConformanceViolated || r.AssessmentComplete {
+		t.Fatalf("lost established local result %+v %v", r, e)
 	}
 }
