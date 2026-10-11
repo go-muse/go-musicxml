@@ -61,6 +61,7 @@ func TestModelAssessmentRemainingPerformanceOwner(t *testing.T) {
 	if !ok {
 		t.Fatal("missing distinct remaining-program section")
 	}
+	remaining = strings.Join(strings.Fields(remaining), " ")
 	for _, required := range []string{
 		"B5-PERF-01", "shared validation kernel/session", "batch 9",
 		"outstanding", "Run.Bind", "child witnesses", "recordXSDResult",

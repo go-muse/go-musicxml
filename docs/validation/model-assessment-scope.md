@@ -411,13 +411,18 @@ regressions. The private legacy quota correction, intentional dependent
 invalid/incomplete contract, compiled representation preparation and distinct-value
 materialization controls above address specific findings. The compact
 absent-attribute correction and its eight focused kernel tests are also
-integrated. Final matched measurements and corrected-head acceptance remain
-under review; no fixed per-node cost or final performance acceptance is claimed
-here. Numerical disclosure belongs in [API.md](../../API.md) and
-[CHANGELOG.md](../../CHANGELOG.md). Initial-head CI does not accept these later
-corrections or close the reviewer gate.
+integrated. Final matched measurements exist in [API.md](../../API.md) and
+[CHANGELOG.md](../../CHANGELOG.md); no universal per-node cost is claimed.
+The pre-publication gates below are a historical snapshot. The corrected head
+`4c739e275bc68566ad7d20a4c8e2171ea11e6ad7` passed all nine jobs in
+[CI run 38174422528](https://github.com/go-muse/go-musicxml/actions/runs/38174422528),
+including actual 386 execution and required real xmllint. The reviewer accepted
+the residual performance tradeoff for this batch subject to retaining the owned
+follow-up below. Initial-head CI does not accept later corrections or close the
+reviewer gate.
 
-Still required before a readiness/merge claim:
+Historical pre-publication pending gates (superseded by the exact-head record
+above where stated; future corrections require their own checks):
 - All seven `check-all` stages (`mod`, `generate`, `format`, `test`, `vet`, `race`,
   `fuzz`) on the final round-1 corrected revision, with reproducible generation/
   planning and required original-byte xmllint roots actually executed
@@ -432,8 +437,38 @@ The public ownership manifest carries these pending evidence fields explicitly.
 Official corpus and fuzz results supplement clause-specific tests; neither
 supplies a conformance denominator or replaces final acceptance.
 
-Remaining program: batch 6 exact timeline/effective state; batch 7 broader
+## Remaining program
+
+Batch 6 exact timeline/effective state; batch 7 broader
 contexts/repeats/spans/intent and gated local ordering; batch 8 MXL, links,
 container/sounds, bounded resolution and schema discovery; batch 9 external
 normative and DTD/XSD/value/identity closure, remaining faithful translations and
 final reconciliation. None is silently discharged by this bounded profile.
+
+### B5-PERF-01: residual direct-path validation cost
+
+Status: **outstanding engineering obligation**, separate from normative coverage
+and acceptance of this batch's measured tradeoff. Owner: **shared validation
+kernel/session workstream**, with **batch 9 final reconciliation** responsible
+for an explicit disposition; earlier dependency-appropriate work may address it.
+The retained cost areas are `Run.Bind` per-node state, child witnesses,
+`recordXSDResult`, `Open` header copies and `cacheDecision`.
+
+The matched warmed `BenchmarkValidate` evidence on `MozaChloSample.musicxml`
+(Go 1.27.2, linux/amd64, AMD EPYC 9V74, GOMAXPROCS=4, five alternating
+750 ms samples) compares base `511f55b` with corrected production `4c96f9b`
+(published equivalent `6c453ce`; later round-1 changes are documentation only):
+median **27.02 ms / 11,705,376 allocated bytes/op / 123,632 allocations/op**
+versus **100.73 ms / 33,374,378 allocated bytes/op / 181,857 allocations/op**,
+or **3.73× / 2.85× / 1.47×**. These are fixture-specific warmed costs, not
+retained-budget or peak-memory figures. [API.md](../../API.md) retains the ranges
+and methodological caveats; the [review discussion](https://github.com/go-muse/go-musicxml/pull/34#discussion_r4243223274)
+records the conditional batch-5 acceptance and follow-up request.
+
+Closure requires matched remeasurement and a reviewed improvement or explicit
+reviewed residual-cost disposition, preserving exact current-value, source/model,
+causal and resource-accounting contracts. Preserve this measurement history when
+recording that disposition. A streaming/fact-lifetime redesign is a possible
+investigation, not a prescribed architecture or a silent policy change. Neither
+this engineering item nor its documentation-integrity test adds normative
+runtime coverage or discharges any batch 6–9 obligation.
