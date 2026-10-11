@@ -92,3 +92,48 @@ func TestSourceCursorBudgetAndCancellation(t *testing.T) {
 type sourceCursorReadSpy struct{ calls int }
 
 func (r *sourceCursorReadSpy) Read(p []byte) (int, error) { r.calls++; return 0, io.EOF }
+
+func TestSourceCursorUTF16LookaheadAllocations(t *testing.T) {
+	input := encodeUTF16(strings.Repeat("ASCII é 𝄞\r\n", 256), binary.LittleEndian)
+	allocations := testing.AllocsPerRun(3, func() {
+		cursor, err := newSourceXMLCursor(bytes.NewReader(input), context.Background(), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer cursor.close()
+		for {
+			_, err = cursor.take()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	})
+	if allocations > 20 {
+		t.Fatalf("UTF-16 code units allocate: %.0f allocations", allocations)
+	}
+}
+
+func TestSourceCursorCachedUnitCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cursor, err := newSourceXMLCursor(strings.NewReader("abcde"), ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cursor.close()
+	if _, err = cursor.peek(); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	if _, err = cursor.peek(); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cached peek: %v", err)
+	}
+	if _, err = cursor.take(); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cached take: %v", err)
+	}
+	if cursor.position.ByteOffset != 0 {
+		t.Fatalf("canceled unit consumed: %+v", cursor.position)
+	}
+}

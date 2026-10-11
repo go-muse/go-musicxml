@@ -3,7 +3,6 @@ package musicxml
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/binary"
 	"encoding/xml"
 	"fmt"
 	"hash"
@@ -41,6 +40,7 @@ const sourceXMLCursorBytes = 4096
 type sourceXMLCursor struct {
 	source            io.Reader
 	ctx               context.Context
+	cancelable        bool
 	account           *validation.Account
 	data              [sourceXMLCursorBytes]byte
 	at, n             int
@@ -77,7 +77,7 @@ func newSourceXMLCursor(r io.Reader, ctx context.Context, a *validation.Account)
 			return nil, err
 		}
 	}
-	return &sourceXMLCursor{source: r, ctx: ctx, account: a, digest: sha256.New(), encoding: "utf8", position: sourceXMLPosition{Line: 1, Column: 1}}, nil
+	return &sourceXMLCursor{source: r, ctx: ctx, cancelable: ctx.Done() != nil, account: a, digest: sha256.New(), encoding: "utf8", position: sourceXMLPosition{Line: 1, Column: 1}}, nil
 }
 func (c *sourceXMLCursor) close() {
 	if !c.closed {
@@ -91,8 +91,19 @@ func (c *sourceXMLCursor) readDigest() (d [32]byte) { copy(d[:], c.digest.Sum(ni
 func (c *sourceXMLCursor) syntax(msg string) error {
 	return &xml.SyntaxError{Msg: msg, Line: c.position.Line}
 }
+
+// A nil Done channel means the context can never be canceled. Avoid repeated
+// interface calls for the ordinary Background transport without weakening checks
+// on cancellable contexts, including already cached lookahead.
+func (c *sourceXMLCursor) contextErr() error {
+	if c.cancelable {
+		return c.ctx.Err()
+	}
+	return nil
+}
+
 func (c *sourceXMLCursor) byte() (byte, error) {
-	if err := c.ctx.Err(); err != nil {
+	if err := c.contextErr(); err != nil {
 		return 0, err
 	}
 	for c.at == c.n {
@@ -137,7 +148,7 @@ func (c *sourceXMLCursor) byte() (byte, error) {
 		if err != nil {
 			c.pendingErr = err
 		}
-		if contextErr := c.ctx.Err(); contextErr != nil {
+		if contextErr := c.contextErr(); contextErr != nil {
 			c.pendingErr = contextErr
 			c.n = 0
 			return 0, contextErr
@@ -148,7 +159,7 @@ func (c *sourceXMLCursor) byte() (byte, error) {
 				if n != 0 || err != nil {
 					break
 				}
-				if contextErr := c.ctx.Err(); contextErr != nil {
+				if contextErr := c.contextErr(); contextErr != nil {
 					return 0, contextErr
 				}
 			}
@@ -266,11 +277,10 @@ func (c *sourceXMLCursor) rawRune() (sourceXMLUnit, error) {
 			}
 			return sourceXMLUnit{}, e
 		}
-		var order binary.ByteOrder = binary.BigEndian
+		v := uint16(b)<<8 | uint16(second)
 		if c.encoding == "utf16le" {
-			order = binary.LittleEndian
+			v = uint16(second)<<8 | uint16(b)
 		}
-		v := order.Uint16([]byte{b, second})
 		if v >= 0xd800 && v <= 0xdbff {
 			a, e := c.encodedByte()
 			if e != nil {
@@ -286,7 +296,10 @@ func (c *sourceXMLCursor) rawRune() (sourceXMLUnit, error) {
 				}
 				return sourceXMLUnit{}, e
 			}
-			low := order.Uint16([]byte{a, z})
+			low := uint16(a)<<8 | uint16(z)
+			if c.encoding == "utf16le" {
+				low = uint16(z)<<8 | uint16(a)
+			}
 			if low < 0xdc00 || low > 0xdfff {
 				return sourceXMLUnit{}, c.syntax("invalid UTF-16 surrogate pair")
 			}
@@ -327,7 +340,7 @@ func (c *sourceXMLCursor) rawRune() (sourceXMLUnit, error) {
 	return sourceXMLUnit{Rune: r, Start: sourceXMLPosition{ByteOffset: start}, End: sourceXMLPosition{ByteOffset: c.rawOffset}}, nil
 }
 func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
-	if err := c.ctx.Err(); err != nil {
+	if err := c.contextErr(); err != nil {
 		return sourceXMLUnit{}, err
 	}
 	if c.hasCached {
@@ -368,6 +381,14 @@ func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
 	return u, nil
 }
 func (c *sourceXMLCursor) take() (sourceXMLUnit, error) {
+	if c.hasCached {
+		if err := c.contextErr(); err != nil {
+			return sourceXMLUnit{}, err
+		}
+		c.hasCached = false
+		c.position = c.cached.End
+		return c.cached, nil
+	}
 	u, err := c.peek()
 	if err == nil {
 		c.hasCached = false
