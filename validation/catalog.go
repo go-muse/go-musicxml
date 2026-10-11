@@ -27,7 +27,15 @@ type CompiledCatalog struct {
 	profiles map[ProfileID]Profile
 	plans    map[string]Plan
 	orders   map[ProfileID][]RuleKey
+	phases   map[ProfileID][]catalogPhase
 	supports map[ProfileID]map[RuleKey]RuleSupport
+}
+
+// A declaration's registration phase collects every eligible subject before
+// any same-index uniqueness verdict. Evaluation remains a separate causal result.
+type catalogPhase struct {
+	rule         RuleKey
+	registration bool
 }
 
 // Compilation is bounded independently from per-document session resources.
@@ -47,10 +55,12 @@ const (
 // Unavailable scopes/selectors require unsupported support; unavailable runtime
 // dependencies remain present and can produce unsupported assessment outcomes.
 // Selected context value/default writers precede readers of the same key and
-// overlapping local/document scope, and identity declarations precede references
-// to the same index. These typed-plan ordering edges are cycle-checked alongside
-// Rule dependencies and exposed by Schedule; they neither select additional
-// rules nor change semantic Requires or turn provider non-applicability into a
+// overlapping local/document scope. Identity declaration collection from every
+// selected declaring plan precedes all same-index uniqueness/reference verdicts;
+// collection itself waits for that declaration's semantic prerequisites. These
+// typed-plan phase edges are cycle-checked alongside Rule dependencies;
+// Schedule exposes final-evaluation order. They neither select additional rules
+// nor change semantic Requires or turn provider non-applicability into a
 // failure. Missing/unselected providers remain runtime evidence limitations.
 //
 // Compilation rejects more than 65,536 rules or plans, 4,096 profiles, or 64 MiB
@@ -58,8 +68,8 @@ const (
 // parameter bytes). IDs are bounded to 1,024 bytes, namespace URIs and rule text
 // to 4,096 bytes, and profile closure text to 16,384 bytes. Bounds are checked
 // before snapshots are allocated. Compiled profile schedules additionally allow
-// at most 524,288 unique prerequisite edges across the catalog (64 MiB at 128
-// accounting bytes per edge), checked before retaining each edge. This bounds
+// at most 524,288 unique prerequisite phase edges across the catalog (64 MiB,
+// at 128 accounting bytes per edge), checked before retaining each edge. This bounds
 // expansion of matching context/identity writers and readers. Invalid input
 // returns ConfigurationError.
 //
@@ -76,6 +86,7 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 		profiles: make(map[ProfileID]Profile, len(profiles)),
 		plans:    make(map[string]Plan, len(plans)),
 		orders:   make(map[ProfileID][]RuleKey, len(profiles)),
+		phases:   make(map[ProfileID][]catalogPhase, len(profiles)),
 		supports: make(map[ProfileID]map[RuleKey]RuleSupport, len(profiles)),
 	}
 	for _, binding := range plans {
@@ -157,12 +168,19 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 				}
 			}
 		}
-		keys, err := catalogProfileOrder(c, closure, &scheduleBudget)
+		phases, err := catalogProfileOrder(c, closure, &scheduleBudget)
 		if err != nil {
 			return nil, err
 		}
+		keys := make([]RuleKey, 0, len(closure))
+		for _, phase := range phases {
+			if !phase.registration {
+				keys = append(keys, phase.rule)
+			}
+		}
 		c.profiles[owned.ID] = owned
 		c.orders[owned.ID] = keys
+		c.phases[owned.ID] = phases
 		c.supports[owned.ID] = supports
 	}
 	digest, err := catalogDigest(c)
@@ -205,10 +223,11 @@ func (c *CompiledCatalog) Profile(id ProfileID) (Profile, bool) {
 	return cloneProfile(profile), true
 }
 
-// Schedule returns an independent copy of a profile's compiled rule order.
+// Schedule returns an independent copy of a profile's final-evaluation rule order.
 // The order includes declared rule prerequisites and ordering-only edges derived
-// from the selected sealed context/identity plans. It never selects extra rules
-// or adds semantic Requires prerequisites. Nil and unknown catalogs return false.
+// from the selected sealed context/identity plans. Each rule occurs exactly
+// once; identity registration phases precede final evaluation internally. It
+// never selects extra rules or adds semantic Requires prerequisites. Nil and unknown catalogs return false.
 func (c *CompiledCatalog) Schedule(id ProfileID) ([]RuleKey, bool) {
 	if c == nil {
 		return nil, false
@@ -457,18 +476,18 @@ func catalogOrder(rules map[RuleKey]RuleDefinition) ([]RuleKey, error) {
 			dependencies[key] = append(dependencies[key], dep.Rule)
 		}
 	}
-	return catalogSortGraph(keys, dependencies)
+	return catalogSortGraph(keys, dependencies, catalogCompareKeys)
 }
 
-func catalogSortGraph(keys []RuleKey, dependencies map[RuleKey][]RuleKey) ([]RuleKey, error) {
+func catalogSortGraph[T comparable](keys []T, dependencies map[T][]T, compare func(T, T) int) ([]T, error) {
 	for _, key := range keys {
-		slices.SortFunc(dependencies[key], catalogCompareKeys)
+		slices.SortFunc(dependencies[key], compare)
 	}
-	slices.SortFunc(keys, catalogCompareKeys)
-	state := make(map[RuleKey]uint8, len(keys))
-	order := make([]RuleKey, 0, len(keys))
+	slices.SortFunc(keys, compare)
+	state := make(map[T]uint8, len(keys))
+	order := make([]T, 0, len(keys))
 	type frame struct {
-		key  RuleKey
+		key  T
 		next int
 	}
 	stack := make([]frame, 0)
@@ -509,12 +528,26 @@ type catalogFactBinding struct {
 	document bool
 }
 
-func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *catalogBudget) ([]RuleKey, error) {
+func catalogComparePhases(a, b catalogPhase) int {
+	if n := catalogCompareKeys(a.rule, b.rule); n != 0 {
+		return n
+	}
+	if a.registration == b.registration {
+		return 0
+	}
+	if a.registration {
+		return -1
+	}
+	return 1
+}
+
+func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *catalogBudget) ([]catalogPhase, error) {
 	contextProviders := make(map[catalogFactBinding][]RuleKey)
 	identityProviders := make(map[string][]RuleKey)
-	keys := make([]RuleKey, 0, len(closure))
+	declaring := make(map[RuleKey]bool)
+	phases := make([]catalogPhase, 0, len(closure))
 	for key := range closure {
-		keys = append(keys, key)
+		phases = append(phases, catalogPhase{rule: key})
 		rule := c.rules[key]
 		plan, ok := c.plans[rule.Predicate]
 		if !ok {
@@ -526,28 +559,36 @@ func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *c
 			contextProviders[binding] = append(contextProviders[binding], key)
 		case planIdentityDeclare:
 			identityProviders[plan.key] = append(identityProviders[plan.key], key)
+			declaring[key] = true
+			phases = append(phases, catalogPhase{rule: key, registration: true})
 		}
 	}
-	dependencies := make(map[RuleKey][]RuleKey, len(keys))
-	for _, key := range keys {
-		rule := c.rules[key]
-		seen := make(map[RuleKey]bool)
-		add := func(provider RuleKey) error {
-			if seen[provider] {
-				return nil
-			}
-			budget.slots(1)
-			if !budget.ok() {
-				return contract("catalog schedule", "total profile ordering edge limit exceeded")
-			}
-			seen[provider] = true
-			dependencies[key] = append(dependencies[key], provider)
+	dependencies := make(map[catalogPhase][]catalogPhase, len(phases))
+	seen := make(map[catalogPhase]map[catalogPhase]bool)
+	add := func(consumer, provider catalogPhase) error {
+		if seen[consumer][provider] {
 			return nil
 		}
+		budget.slots(1)
+		if !budget.ok() {
+			return contract("catalog schedule", "total profile ordering phase-edge limit exceeded")
+		}
+		if seen[consumer] == nil {
+			seen[consumer] = make(map[catalogPhase]bool)
+		}
+		seen[consumer][provider] = true
+		dependencies[consumer] = append(dependencies[consumer], provider)
+		return nil
+	}
+	for key := range closure {
+		rule := c.rules[key]
+		// A declaration must meet its original prerequisites before collecting
+		// any keys. Other rule families have only their evaluation phase.
+		consumer := catalogPhase{rule: key, registration: declaring[key]}
 		reads := make(map[catalogFactBinding]bool)
 		for _, dep := range rule.Requires {
 			if dep.Kind == DependencyRule {
-				if err := add(dep.Rule); err != nil {
+				if err := add(consumer, catalogPhase{rule: dep.Rule}); err != nil {
 					return nil, err
 				}
 			}
@@ -559,23 +600,31 @@ func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *c
 			if plan.kind == planContextCompare {
 				reads[catalogFactBinding{key: plan.key, document: plan.relation == RelationDocument}] = true
 			}
-			if plan.kind == planIdentityReference {
+			if plan.kind == planIdentityDeclare || plan.kind == planIdentityReference {
+				verdict := catalogPhase{rule: key}
 				for _, provider := range identityProviders[plan.key] {
-					if err := add(provider); err != nil {
+					// Every declaration verdict must observe collection from
+					// every declaring plan, not merely from its own subjects.
+					if err := add(verdict, catalogPhase{rule: provider, registration: true}); err != nil {
 						return nil, err
+					}
+					if plan.kind == planIdentityReference {
+						if err := add(verdict, catalogPhase{rule: provider}); err != nil {
+							return nil, err
+						}
 					}
 				}
 			}
 		}
 		for read := range reads {
 			for _, provider := range contextProviders[read] {
-				if err := add(provider); err != nil {
+				if err := add(consumer, catalogPhase{rule: provider}); err != nil {
 					return nil, err
 				}
 			}
 		}
 	}
-	return catalogSortGraph(keys, dependencies)
+	return catalogSortGraph(phases, dependencies, catalogComparePhases)
 }
 
 func catalogClosure(required []RuleKey, rules map[RuleKey]RuleDefinition) (map[RuleKey]bool, error) {
