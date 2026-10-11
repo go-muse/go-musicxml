@@ -31,6 +31,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   actual-type assessment with nil and element value constraints. Missing required
   metadata or ENTITY declaration facts return technical errors without inventing
   document violations; independently proven issues remain inspectable.
+- Separate declaration-based identity-table entries from successful actual-ID
+  bindings, counting distinct containing elements. Retain dynamic-ID resolution,
+  root ownership and local validation gates without mutating source nodes.
 - Validate standard schema-location hint datatypes without fetching or selecting
   schemas. Odd list lengths alone remain valid at this fixed-schema layer;
   namespace/location pairing belongs to separately scoped schema discovery.

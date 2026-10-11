@@ -4,8 +4,9 @@ import "fmt"
 
 // XSD 1.0 sic-id has two independent predicates: declaration-valid eligible
 // items seed entry strings; successful actual ID types bind containing elements.
-// Selected list/union members and absent default attributes do not widen this
-// edition's rules. An owner is the original source node, not its display path.
+// This bounded 1.0 interpretation does not register selected list/union trials
+// or absent default attributes; see docs/validation/xsd-prerequisite-scope.md.
+// An owner is the original source node, not its display path.
 // https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id
 // https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id
 // These XSD owners are unrelated to future MusicXML musical reference scopes.

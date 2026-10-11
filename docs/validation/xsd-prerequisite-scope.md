@@ -23,7 +23,7 @@ reopen repairs already present on merged main.
 | REQ-DEF-NUM-EXACT | Preserve exact immutable integer/decimal comparison and existing operation-cost tests | Context arithmetic, shared accounts, source conversion and model evidence |
 | REQ-DEF-XSI-TYPE / XSI-NIL | Subject namespace scope, assembly-local type lookup, derivation/block/final/abstract metadata and actual-type assessment composed with declaration nillability | Shared binder/capability profile and source adapter |
 | REQ-DEF-XSI-SCHEMALOC / NONAMESPACE | Actual list(anyURI)/anyURI datatype assessment under the approved fixed-schema disposition | Web discovery/resolution and namespace/location pairing (batch 8); hints never select/fetch a schema here |
-| REQ-DEF-ATTR-COMPLEX / OPS-IDENTITY | Preserve physical presence and XSD 1.0 identity eligibility; explicitly disposition proposed default/list/union expansion | Effective fact production, document-qualified ambiguity/causal outcomes, later typed musical scopes |
+| REQ-DEF-ATTR-COMPLEX / OPS-IDENTITY | Separate declaration-eligible entries from actual-ID bindings and distinct containing owners; preserve physical presence and the default/list/union version boundary | Effective fact production, document-qualified ambiguity/causal outcomes, later typed musical scopes |
 | REQ-DEF-OPS-GRAMMAR | Valid-schema endpoint matching, nullable/repeated occurrence semantics, deterministic witnesses and polynomial-work evidence | General schema-component validity/UPA and unimplemented wildcard semantics |
 | REQ-DEF-BUDGET-MATCH | Algorithmic cost proof and test counters, no loops proportional to huge nullable occurrence bounds | Shared limits, defaults, accounting, cancellation and observable exhaustion in the session/report batch |
 
@@ -78,39 +78,60 @@ an extra MusicXML rule.
 Sources: [XSD 1.0 standard schema-location attributes](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation)
 and [Web schema discovery](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc).
 
-## Identity version disposition
+## Identity entries, bindings and version disposition
 
-An effective schema default is distinct from membership in the normative
-ID/IDREF table. This batch does not add the proposed absent-default/fixed-attribute
-or arbitrary constructed-list/union identity rejection rules to XSD 1.0.
+XSD 1.0 has two predicates, not one. Successfully declaration-validated
+ID/IDREF/IDREFS items and their applicable derivations seed table entries.
+Successfully actual-ID-type-validated attributes or children supply bindings to
+those entries through their containing element. Thus a string declaration with
+an admitted actual ID type can bind a separately declared reference without
+creating an entry by itself. Count distinct containing owners, not occurrences:
+two equal ID children of one owner produce one binding. Root ID content has no
+containing element in the assessed scope and cannot bind itself.
 
-XSD 1.0 section 3.15.5 uses declaration-type eligibility. XSD 1.1 explicitly
-changes these rules: Appendix G.1.7 identifies checks on default values and the
-extension through list construction, union and extension as changes from 1.0.
-The associated W3C bug is labeled 1.1-only. This is a correction to the proposed
-implementation task based on the selected specification version, not an omitted
-obligation or a new product policy.
+Declaration-local and actual-type success must remain separate. A declaration
+fixed mismatch or abstract element can prevent entry creation while leaving concrete type-valid ID content
+available to another entry. Ordinary invalid attributes or children can prevent
+that content's actual-type success. Independently assessed standard xsi
+attributes and unrelated owner failures are not interchangeable with these
+conditions. Effective default views retain the original source item's identity;
+no source or model nodes are changed. Incomplete traversal cannot establish an
+empty binding, although independently established multiple owners remain facts.
 
-Retain ordinary ID/IDREF/IDREFS and applicable restriction behavior, forward
-resolution, repeated references, document isolation and physical absence.
-Retain existing effective element-default behavior with its E1-56 evidence;
-absent-attribute contribution is not a reason to revert that earlier repair.
-Keep actual scalar primitive identity and declaration-based ID-table eligibility
-separate during dynamic type selection. Do not let trial union members create
-identity side effects. Later typed musical-reference and incomplete-traversal
-rules remain distinct obligations.
+This entry/binding distinction corrects the earlier prerequisite design's
+blanket declaration-only treatment. Preserve genuine complex simple-content
+ID/IDREF/IDREFS derivation ancestry already admitted by XSD 1.0. The broader
+XSD 1.1 changes are not a reason to suppress those 1.0 bindings.
 
-Audit observations are deliberately labeled: libxml2 accepts unresolved explicit
-IDREF fixtures and therefore cannot establish those negative outcomes. JAXP
-rejects several constructed-type cases but that observed behavior does not
-supersede the pinned 1.0 text. Both tested 1.0 engines accept the absent
-attribute-default/fixed-reference cases; they are not labeled oracle bugs.
+An effective schema default is distinct from ID-table participation. This batch
+does not newly register absent optional default/fixed attributes or arbitrary
+constructed-list/union members. Retain the earlier effective element-default
+repair and its E1-56 evidence. Fresh construction is distinct from an actual ID
+restriction or builtin IDREFS derivation. Excluding selected member/item trials
+from item-type binding is an explicitly bounded interpretation of the 1.0
+formal type/value distinction, not a claim of complete constructed-type closure.
+That wider interpretation remains with external normative closure. Later typed
+musical references, causal outcomes and document-qualified scopes remain separate.
+
+Neither tested engine establishes every identity outcome. libxml2 accepts some
+missing references, duplicate element bindings and root-ID cases. JAXP supports
+actual-ID resolution but rejects some equal-child/same-owner positives and
+unseeded dynamic duplicates, and accepts root ID. Exact oracle exclusions must
+retain the normative internal expectations. Both accept absent attribute-default
+references; those observations are not classified as oracle bugs. The generated
+identity fixture asserts 59 original sources internally and compares 45 complete
+outcomes with libxml2. The other 14 stay explicitly excluded from that parity.
+Both engines were independently replayed on all 59 unchanged sources; a shared
+invalid outcome alone does not prove every individual identity diagnostic.
 
 Sources:
-- [XSD 1.0 identity table](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id)
-- [XSD 1.0 attribute default contribution](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-attrDefault)
-- [XSD 1.1 changes, Appendix G.1.7](https://www.w3.org/TR/2012/REC-xmlschema11-1-20120405/)
-- [W3C constructed-type identity bug 10662](https://www.w3.org/Bugs/Public/show_bug.cgi?id=10662)
+- [XSD 1.0 identity table and binding definition](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id)
+- [Identity cardinality](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id)
+- [Element and actual-type conditions](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt)
+- [Complex derivation](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cos-ct-derived-ok)
+- [Applicable Second Edition erratum E1-56](https://www.w3.org/2004/03/xmlschema-errata)
+- [XSD 1.1 changes, G.1.7; parent clarification, G.2.3](https://www.w3.org/TR/2012/REC-xmlschema11-1-20120405/)
+- [W3C constructed-type identity bug 10662, labeled 1.1-only](https://www.w3.org/Bugs/Public/show_bug.cgi?id=10662)
 
 ## Readiness boundary
 
@@ -162,14 +183,15 @@ planned executable catalog or profile-readiness records.
 | Actual type, derivation, nil and constraints | `TestValidateXSIType`, `TestXSITypeGeneratedMetadata`, `TestXSITypeSelectedAssembly`, `TestXSITypeCacheBounds`; [source tests](../../validation_xsi_type_test.go), [metadata tests](../../validation_xsi_metadata_test.go), [generator tests](../../internal/xsdgen/generate_derivation_validation_test.go) |
 | Hint datatype and no-fetch | `TestValidateSchemaHintDatatypes`, `TestSchemaLocationHintsDoNotFetch`; [hint tests](../../validation_schema_hint_datatype_test.go), [no-fetch counter](../../validation_schema_hints_test.go) |
 | Grammar endpoints and bounded work | `TestValidateGrammarParticles`, `TestGrammarExhaustiveShortLanguages`, algorithmic work/large-occurrence controls; [grammar tests](../../validation_grammar_test.go), [work tests](../../validation_grammar_work_test.go) |
-| Technical boundary and composition | `TestGrammarMetadataAssessmentBoundary`, `TestXSIQNameUsesDatatypeRepertoire`, `TestReferencedNilElementDeclarationIsIncomplete`, `TestFixedUnresolvedComplexTypeIsIncomplete`; [integration](../../validation_prerequisite_integration_test.go), [metadata failures](../../validation_element_metadata_test.go) |
-| Explicit identity reuse and version boundary | `TestXSITypeIdentityUsesDeclaration`, `TestIncompleteIdentityTraversalDoesNotProveAbsentTarget`, existing `TestValidateNilIdentityTracking`, `TestValidateNilIdentityTypeForms`, `TestElementValueConstraintIdentityTracking`, `TestValidateComplexSimpleContentIdentityOnce` |
+| Technical boundary and composition | `TestGrammarMetadataAssessmentBoundary`, `TestXSIQNameUsesDatatypeRepertoire`, `TestReferencedNilElementDeclarationIsIncomplete`, `TestFixedUnresolvedComplexTypeIsIncomplete`, `TestIncompleteUnionDerivationPreservesTechnicalState`; [derivation provenance](../../validation_derivation_assessment_test.go), [integration](../../validation_prerequisite_integration_test.go), [metadata failures](../../validation_element_metadata_test.go) |
+| Identity entries, actual-ID bindings and owners | `TestXSD10IdentityBindings`, `TestXSD10IdentitySharedInput`, `TestXSD10IdentityLocalGates`, `TestXSD10IdentityOriginalDefaultOwner`, `TestXSD10IdentityOwnerNamespaceCollision`, `TestXSD10IdentityIncompleteTraversal`, `TestXSD10IdentityStableFinalization`; [identity tests](../../validation_identity_test.go), `TestXSITypeIdentityUsesDeclaration`, `TestIncompleteIdentityTraversalDoesNotProveAbsentTarget`, existing `TestValidateNilIdentityTracking`, `TestValidateNilIdentityTypeForms`, `TestElementValueConstraintIdentityTracking`, `TestValidateComplexSimpleContentIdentityOnce` |
 
 Every new external parity root is named explicitly in the
 [Linux CI selector](../../.github/workflows/ci.yml). The selector must execute
 `TestPrimitiveValuesAgainstSchema`, `TestDatatypeNamesAgainstSchema`,
 `TestDatatypeNamesProductionAgainstSchema`, `TestGrammarParticlesAgainstSchema`,
-`TestXSITypeAgainstSchema` and `TestSchemaHintDatatypesAgainstSchema` on the
+`TestXSITypeAgainstSchema`, `TestSchemaHintDatatypesAgainstSchema` and
+`TestXSD10IdentityBindingsAgainstSchema` on the
 original fixture bytes. Optional local absence of xmllint is an explicit skip;
 required CI absence is a hard failure. Named oracle divergences do not weaken
 internal normative expectations or turn missing facts into success.

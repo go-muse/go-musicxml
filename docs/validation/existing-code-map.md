@@ -491,13 +491,15 @@ The synthetic [schema](../../testdata/validation/builtin-list-contract.xsd) and
 [`validation_builtin_list_test.go`](../../validation_builtin_list_test.go) cover
 77 exact-source cases, including boundary counts, XML character references,
 split text, invalid and empty values, plus repeated/concurrent source and schema
-immutability, including explicit recursive text snapshots. Of these, 53 run
-against the identical bytes in `xmllint --nonet`. All 24 `ENTITIES` element cases
-are internal-only: libxml2 2.9.14 rejects their declared unparsed-entity values
-before it can establish the length facets. The same entity declarations and
-`ENTITIES` attribute controls pass the oracle. Entity declaration
-validation remains outside this repair. The internal fixture uses an internal
-DTD with unparsed entities and never fetches external resources.
+immutability, including explicit recursive text snapshots. In the composed
+prerequisite tree, 51 run against identical bytes in `xmllint --nonet`. All 24
+`ENTITIES` element cases and two lexically valid ENTITIES attribute cases stay
+outside complete-outcome parity. The earlier lexical-only checkpoint compared
+53 cases, but the later technical-assessment seam now explicitly reports
+incompleteness when successful ENTITY lexemes need unparsed-declaration facts.
+Lexical negatives remain provable datatype violations. The internal fixture
+retains its original DTD bytes, but the current tree does not retain those entity
+declarations and never fetches external resources.
 
 Basis: XSD 1.0 [list datatypes][scalar-list] and
 [item-count length facets][scalar-length]. This bounded existing-validator
@@ -1425,9 +1427,12 @@ nomination falls back to ordinary declared-type assessment as specified by
 cvc-elt 4, retaining independent failures. Complex-content restrictions inherit
 omitted attribute uses, while restriction wildcards remain local, including
 simple-content restrictions. True nil still requires actual-type attributes.
-XSD 1.0 declaration-type ID/IDREF eligibility remains separate from actual scalar
-selection; this does not adopt XSD 1.1 defaulted/reference or union/list identity
-rules.
+XSD 1.0 declaration-type entry eligibility remains separate from actual-ID
+binding eligibility. Bindings identify distinct containing source elements, not
+ID occurrences or display paths; root content has no parent binding. Declaration
+and actual-type success have separate gates. The [current scope ledger](xsd-prerequisite-scope.md#identity-entries-bindings-and-version-disposition)
+supersedes the earlier blanket declaration-only interpretation. This does not
+add XSD 1.1 absent-default or generic constructed-member participation.
 
 For empty elements with an admitted local type, cvc-elt 5.1.1 checks Immediate
 content-category/emptiability requirements and 5.1.2 assesses the declared
@@ -1455,7 +1460,9 @@ values therefore yield incomplete assessment; the standalone builtin helper
 remains lexical. Union, list, fixed and cached-enumeration paths do not swallow
 this state or manufacture a comparison failure. Required attributes and other
 independent issues survive unavailable scalar/default assessment. An incomplete
-traversal cannot prove an IDREF target absent; existing positive issues remain.
+traversal cannot prove an identity entry unbound; independently proven issues
+remain. Incomplete derivation results are not cached as ordinary false ancestry,
+so repeated lookups cannot invent an xsi:type violation.
 General DTD parsing, fetching, shared budgets, cancellation, and public report or
 session APIs are not introduced.
 
