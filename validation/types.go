@@ -78,8 +78,9 @@ type DeclarationID struct {
 	OwnerOccurrence, Occurrence string
 }
 
-// Selector has exactly one branch. This release executes exact type-component
-// and element-declaration selection; other component kinds are unavailable.
+// Selector has exactly one branch. Exact type-component and element-declaration
+// selection are supported; sealed XSD plans use the exclusive Assembly branch.
+// Other component kinds are unavailable.
 type Selector struct {
 	// Assembly selects the active compiled schema, including unbound nodes.
 	// It is an exclusive branch reserved for sealed XSD plans.

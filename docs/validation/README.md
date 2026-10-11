@@ -1,6 +1,6 @@
 # Validation design and requirements
 
-Status: **PROPOSED architecture with a bounded implemented foundation**.
+Status: **PROPOSED broader architecture with an implemented foundation and explicit source XSD preview**.
 Research snapshot: 8 October 2026.
 
 This directory contains the proposed validation architecture and package-facing
@@ -17,10 +17,11 @@ or a new validation profile complete.
 
 ## Reading order
 
-Start with the [implemented foundation scope and requirement/test bindings](foundation-scope.md)
-for the current `validation` API, finite budgets, inspection inventory and exact
-remaining owners. The proposal pages below describe wider future contracts;
-they do not imply that source/model adapters or a production profile exist.
+Start with the [source assessment scope and complete ownership ledger](source-assessment-scope.md)
+for the current opt-in source preview, then the [foundation scope](foundation-scope.md)
+for generic fact/catalog/report contracts. The proposal pages below describe
+wider future contracts; direct model/package adapters and a production profile
+remain unimplemented.
 
 1. [Architecture proposal](architecture.md): one XML parse, optional strict source
    validation, direct model validation, shared rules, and self-contained diagnostics.

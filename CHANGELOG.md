@@ -9,6 +9,16 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add opt-in single-pass `InspectXML` and `DecodeAssessed` with explicit
+  `ProfileSourceXSDPreview`, original-byte locations, bounded retained facts and
+  independent source-conformance/model-conversion outcomes. This is a source XSD
+  preview, not a complete production MusicXML profile.
+- Reuse one XML-neutral authoritative XSD kernel through immutable schema
+  snapshots and sealed binding/declaration/attribute/scalar/content/identity
+  plans. Composite predicates count once while retaining multiple issue details.
+- Add counted fragmented-input source-scanner fuzzing and require raw-source XSD
+  oracle tests. Linux CI now executes all packages with `GOARCH=386`.
+
 - Add a bounded `validation` fact-stream foundation with immutable compiled
   catalogs, eight sealed plan families, exact values, finite shared budgets,
   causal context/identity outcomes and independently inspectable reports.
@@ -24,6 +34,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   this count).
 
 ### Changed
+
+- Route legacy XML reading through the same original-byte scanner. Reject
+  undeclared prefixes, illegal reserved namespace bindings, malformed local
+  declaration/DTD grammar and contradictory BOM/encoding declarations. Normalize
+  literal attribute whitespace separately from character references. DTD
+  replacement/default semantics remain unsupported; no external DTD is fetched.
 
 - Migrate legacy incomplete-XSD error text from
   `musicxml: incomplete XSD assessment: …` to
