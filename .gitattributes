@@ -12,7 +12,8 @@ testdata/** -text
 schema/** linguist-vendored=true
 testdata/corpus/** linguist-vendored=true
 
-# The reviewed planning data is large; collapse it in GitHub's default diff view.
-docs/validation/plan/*.json linguist-generated=true
+# Preserve exact planning input hashes across Git checkout line-ending policies.
+# The reviewed data is large; collapse it in GitHub's default diff view.
+docs/validation/plan/*.json text eol=lf linguist-generated=true
 # The published deferred source has a checked byte hash on every platform.
 docs/validation/deferred-inventory.md text eol=lf

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 )
@@ -145,5 +146,101 @@ func TestPlanningCommandIsLocalAndOffline(t *testing.T) {
 		if !found {
 			t.Errorf("validator missing offline setting %s", setting)
 		}
+	}
+}
+
+// This uses Git's checkout conversion, rather than manually replacing newlines:
+// exact-byte source hashes must survive the checkout policy used on Windows.
+func TestGenerateInventoryAutocrlfCheckout(t *testing.T) {
+	git, err := exec.LookPath("git")
+	if err != nil {
+		t.Skip("Git is required to exercise real checkout conversion")
+	}
+	root := t.TempDir()
+	runGit := func(args ...string) []byte {
+		t.Helper()
+		cmd := exec.Command(git, args...)
+		cmd.Dir = root
+		out, err := cmd.Output()
+		if err != nil {
+			t.Fatalf("git %v: %v; output: %s", args, err, out)
+		}
+		return out
+	}
+	runGit("init", "--quiet")
+	write := func(name string, data []byte) {
+		t.Helper()
+		path := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, data, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	copySource := func(name string) {
+		t.Helper()
+		data, err := os.ReadFile(filepath.Join("..", "..", filepath.FromSlash(name)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		write(name, data)
+	}
+	copySource(".gitattributes")
+	copySource("docs/validation/deferred-inventory.md")
+	files, err := filepath.Glob(filepath.Join("..", "..", "docs", "validation", "plan", "*.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(files) != 11 {
+		t.Fatalf("expected 11 reviewed planning inputs, got %d", len(files))
+	}
+	var paths []string
+	for _, file := range files {
+		name := "docs/validation/plan/" + filepath.Base(file)
+		paths = append(paths, name)
+		copySource(name)
+	}
+	write("checkout-control.txt", []byte("unprotected text\nsecond line\n"))
+	// Populate an index without creating a commit or changing the real repository.
+	runGit("-c", "core.autocrlf=false", "add", "--all")
+	indexed := map[string][]byte{}
+	for _, path := range paths {
+		indexed[path] = runGit("show", ":"+path)
+	}
+	// Recreate every tracked file: checkout-index can otherwise skip a file
+	// whose index stat information still matches, even with --force.
+	for _, path := range append(append([]string{}, paths...), "checkout-control.txt", ".gitattributes", "docs/validation/deferred-inventory.md") {
+		if err := os.Remove(filepath.Join(root, filepath.FromSlash(path))); err != nil {
+			t.Fatal(err)
+		}
+	}
+	runGit("-c", "core.autocrlf=true", "-c", "core.safecrlf=false", "checkout-index", "--all", "--force")
+	control, err := os.ReadFile(filepath.Join(root, "checkout-control.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(control, []byte("unprotected text\r\nsecond line\r\n")) {
+		t.Fatalf("checkout control did not undergo CRLF conversion: %q", control)
+	}
+	for _, path := range paths {
+		actual, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(actual, indexed[path]) {
+			t.Errorf("autocrlf changed committed planning bytes: %s (index %d bytes, checkout %d)", path, len(indexed[path]), len(actual))
+		}
+	}
+	generated, err := generate(filepath.Join(root, "docs", "validation", "plan"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	committed, err := os.ReadFile(filepath.Join("..", "..", "validation", "zz_generated_inventory.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(generated, committed) {
+		t.Error("autocrlf checkout changed generated inventory; preserve exact source bytes instead of normalizing provenance hashes")
 	}
 }
