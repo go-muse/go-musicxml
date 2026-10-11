@@ -689,6 +689,23 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 	case localDistinct:
 		gap := Decision{Outcome: OutcomePass}
 		count := 0
+		// Values borrow immutable session-owned atoms. Keep the first entry
+		// on the stack so a two-child duplicate can be proved even when no
+		// optional storage is available. Growing scratch is independently
+		// reserved and released; schemaAtomic's session charges stay owned.
+		type entry struct {
+			node  *factNode
+			value Atomic
+		}
+		var first [1]entry
+		values := first[:0]
+		const entryBytes int64 = 128
+		var scratchBytes int64
+		defer func() {
+			if scratchBytes != 0 {
+				_ = s.account.Release(BudgetBufferedBytes, scratchBytes)
+			}
+		}()
 		for i, ch := range n.children {
 			match, selection, e := localMatches(ctx, s, ch, p.Children)
 			if e != nil {
@@ -707,34 +724,48 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 				gap = localWorst(gap, localGap(v))
 				continue
 			}
-			for _, previous := range n.children[:i] {
-				match, _, e := localMatches(ctx, s, previous, p.Children)
-				if e != nil {
-					return d, false, e
-				}
-				if !match {
-					continue
-				}
-				prior, e := s.localScalar(ctx, previous, &p.Attribute)
-				if e != nil {
-					return d, false, e
-				}
-				if prior.State != EvidenceKnown {
-					continue
-				}
-				comparison, e := s.localCompare(ctx, v, prior.Value)
+			for _, previous := range values {
+				comparison, e := s.localCompare(ctx, v, previous.value)
 				if e != nil {
 					return d, false, e
 				}
 				if comparison.Outcome == OutcomePass {
 					duplicate := Decision{Outcome: OutcomeFail, Reason: "duplicate-effective-child-value", Expected: "distinct effective child values", Actual: atomicDisplay(v.Value)}
-					duplicate, e = s.withProvedPlanRelated(n, p, nil, duplicate, previous.header.Location, ch.header.Location)
+					duplicate, e = s.withProvedPlanRelated(n, p, nil, duplicate, previous.node.header.Location, ch.header.Location)
 					return duplicate, false, e
 				}
 				if comparison.Outcome != OutcomeFail {
 					gap = localWorst(gap, comparison)
 				}
 			}
+			// Compare before optional growth so an established duplicate is
+			// never replaced by a scratch-allocation failure. The last child
+			// needs no retained comparison entry.
+			if i+1 == len(n.children) {
+				continue
+			}
+			if len(values) == cap(values) {
+				capacity := cap(values) + min(cap(values), len(n.children)-cap(values))
+				maxBytes := int64(^uint(0) >> 1)
+				if int64(capacity) > maxBytes/entryBytes {
+					return d, false, &ResourceError{Kind: BudgetBufferedBytes, Limit: maxBytes, Requested: maxBytes}
+				}
+				bytes := int64(capacity) * entryBytes
+				if err := s.step(ctx, 1+int64(len(values))); err != nil {
+					return d, false, err
+				}
+				// Both backing arrays are live during the checked copy.
+				if err := s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
+					return d, false, err
+				}
+				grown := make([]entry, len(values), capacity)
+				copy(grown, values)
+				if scratchBytes != 0 {
+					_ = s.account.Release(BudgetBufferedBytes, scratchBytes)
+				}
+				values, scratchBytes = grown, bytes
+			}
+			values = append(values, entry{node: ch, value: v.Value})
 		}
 		if !n.closed || n.end.ChildrenComplete.State != EvidenceKnown || !n.end.ChildrenComplete.Value {
 			gap = localWorst(gap, localIncomplete(n.end.ChildrenComplete, "children-incomplete"))
