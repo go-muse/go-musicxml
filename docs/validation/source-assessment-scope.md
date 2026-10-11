@@ -119,6 +119,7 @@ foundation defaults. Budgets cannot be reset or widened by nested work.
 | Raw token/attribute-attempt events | Scanner before returning/growing tokens |
 | Admitted node/attribute/depth facts | Session ingress exactly once |
 | Retained lexical, observer, fact, index and cache data | Respective owner, before growth |
+| Candidate Go model | Separate logical projected-token allowance through source Finish and acceptance |
 | Scalar item limits | Scanner accumulation, fact ingress and typed-value bridge |
 | XSD operations, graph/grammar/scalar/index work | Shared kernel meter |
 | Identity declarations/references | Kernel before retained identity entries |
