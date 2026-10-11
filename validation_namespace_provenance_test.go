@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"strings"
 	"testing"
@@ -72,12 +73,12 @@ func TestValidationNamespaceDeclarationDoesNotSatisfyRequiredAttribute(t *testin
 		t.Run(test.name, func(t *testing.T) {
 			context := validateAttributeSource(t, schema, test.source)
 			if !test.missing {
-				assert.Empty(t, context.issues)
+				assert.Empty(t, context.Issues)
 				return
 			}
-			require.Len(t, context.issues, 1)
-			assert.Equal(t, "required", context.issues[0].Constraint)
-			assert.Equal(t, "/value/@{xmlns}rubbish", context.issues[0].Path)
+			require.Len(t, context.Issues, 1)
+			assert.Equal(t, "required", context.Issues[0].Constraint)
+			assert.Equal(t, "/value/@{xmlns}rubbish", context.Issues[0].Path)
 		})
 	}
 }
@@ -113,15 +114,19 @@ func TestValidationNamespaceDeclarationProvenanceLength(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			raw := xml.NewDecoder(strings.NewReader(test.source))
-			tokens := &wellFormedXMLTokenReader{source: rawXMLTokenReader{raw}}
+			tokens, err := newSourceXMLTokenReader(strings.NewReader(test.source), sourceXMLConfig{Context: context.Background()})
+			require.NoError(t, err)
+			defer tokens.Close()
 			decoder := xml.NewTokenDecoder(tokens)
 			token, err := decoder.Token()
 			require.NoError(t, err)
 			start, ok := token.(xml.StartElement)
 			require.True(t, ok)
 			// Simulate a future adapter losing alignment after raw capture.
-			tokens.namespaceDeclarations = test.flags
+			tokens.metadata.Attributes = make([]sourceXMLAttribute, len(test.flags))
+			for index, flag := range test.flags {
+				tokens.metadata.Attributes[index].NamespaceDeclaration = flag
+			}
 			var node *validationNode
 			require.NotPanics(t, func() {
 				node, err = readValidationNode(decoder, tokens, start, 1, nil)

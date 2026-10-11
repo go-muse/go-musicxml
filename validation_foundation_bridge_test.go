@@ -13,10 +13,10 @@ func TestIncompleteAssessmentPublicBridge(t *testing.T) {
 	}
 	for _, invalid := range []bool{false, true} {
 		t.Run(map[bool]string{false: "pure", true: "joined"}[invalid], func(t *testing.T) {
-			c := validationContext{}
-			c.incomplete("unsupported exact-domain metadata")
+			c := validationContext{Context: validationKernelContext{}}
+			c.Incomplete("unsupported exact-domain metadata")
 			if invalid {
-				c.issues = append(c.issues, ValidationIssue{Path: "/score-partwise", Constraint: "required", Message: "missing independently proven required attribute"})
+				c.Issues = append(c.Issues, validationKernelIssue{Path: "/score-partwise", Constraint: "required", Message: "missing independently proven required attribute"})
 			}
 			err := c.result()
 			if !errors.Is(err, ErrIncompleteAssessment) {

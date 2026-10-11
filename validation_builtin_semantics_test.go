@@ -73,21 +73,21 @@ func TestValidationBuiltinSemanticsCoverage(t *testing.T) {
 			t.Parallel()
 			semantics := validationBuiltinSemantics(test.name)
 			require.NotNil(t, semantics)
-			assert.Equal(t, test.name, semantics.builtin)
-			assert.Equal(t, test.policy, semantics.whitespace)
-			assert.Equal(t, test.stringValue, semantics.stringValue)
+			assert.Equal(t, test.name, semantics.Builtin)
+			assert.Equal(t, test.policy, semantics.Whitespace)
+			assert.Equal(t, test.stringValue, semantics.StringValue)
 			assert.Nil(t, validateBuiltinValue(test.name, test.value, test.value))
 			schema := &validationSimpleSchema{Form: validationSimpleRestriction,
 				Base: &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: test.name}}}
 			context := newTestValidationContext(&validationSchemaSet{})
-			failure := context.validateSimple(schema, test.value)
+			failure := context.ValidateSimple(schema, test.value)
 			switch test.name {
 			case "anyType", "ENTITY", "ENTITIES":
 				assert.NotNil(t, failure)
-				assert.Error(t, context.assessmentErr)
+				assert.Error(t, context.AssessmentErr)
 			default:
 				assert.Nil(t, failure)
-				assert.NoError(t, context.assessmentErr)
+				assert.NoError(t, context.AssessmentErr)
 			}
 		})
 	}
@@ -95,7 +95,7 @@ func TestValidationBuiltinSemanticsCoverage(t *testing.T) {
 		assert.Nil(t, validationBuiltinSemantics(name), name)
 		failure := validateBuiltinValue(name, "a", "a")
 		require.NotNil(t, failure, name)
-		assert.Equal(t, "schema", failure.constraint, name)
+		assert.Equal(t, "schema", failure.Constraint, name)
 	}
 }
 
@@ -113,7 +113,7 @@ func TestReplaceWhitespaceConcurrent(t *testing.T) {
 			semantics := validationBuiltinSemantics("normalizedString")
 			for range 100 {
 				assert.Equal(t, test.want, normalizeValidationWhitespace("normalizedString", test.input))
-				assert.Equal(t, test.want, semantics.normalize(test.input))
+				assert.Equal(t, test.want, semantics.Normalize(test.input))
 			}
 		})
 	}
@@ -137,8 +137,8 @@ func TestUnresolvedFixedValuesRemainIncomplete(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			context := assessAttributeSource(t, set, test.source)
-			assert.Error(t, context.assessmentErr)
-			assert.Empty(t, context.issues)
+			assert.Error(t, context.AssessmentErr)
+			assert.Empty(t, context.Issues)
 			assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 		})
 	}

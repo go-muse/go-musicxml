@@ -181,7 +181,7 @@ func TestIntegerSourceAndModelConversion(t *testing.T) {
 	t.Parallel()
 	for _, value := range []string{"18446744073709551615", "18446744073709551616"} {
 		source := validationIntegerScore(value)
-		assert.Empty(t, validateAttributeSource(t, &scoreValidationSchema, source).issues)
+		assert.Empty(t, validateAttributeSource(t, &scoreValidationSchema, source).Issues)
 		document, err := Decode(strings.NewReader(source))
 		if value == "18446744073709551616" {
 			require.Error(t, err)
@@ -218,7 +218,7 @@ func TestValidationIntegerExactOperations(t *testing.T) {
 			require.True(t, ok)
 			wantSecond, ok := new(big.Int).SetString(right, 10)
 			require.True(t, ok)
-			assert.Equal(t, wantFirst.Cmp(wantSecond), first.compare(second))
+			assert.Equal(t, wantFirst.Cmp(wantSecond), first.Compare(second))
 		}
 	}
 	for _, invalid := range []string{"", "+", "-", "++1", "+-0", "1 0", "1.0", "1e0", "\u00a01", "١", "1\xff"} {
@@ -228,7 +228,7 @@ func TestValidationIntegerExactOperations(t *testing.T) {
 	value := "-" + strings.Repeat("0", 10000) + strings.Repeat("9", 10000)
 	assert.Zero(t, testing.AllocsPerRun(10, func() {
 		first, ok := parseValidationInteger(value)
-		if !ok || first.compare(first) != 0 {
+		if !ok || first.Compare(first) != 0 {
 			panic("unexpected integer comparison")
 		}
 	}))
@@ -236,7 +236,7 @@ func TestValidationIntegerExactOperations(t *testing.T) {
 
 func TestValidateIntegerArbitraryWidthFacets(t *testing.T) {
 	t.Parallel()
-	context := &validationContext{schema: &validationIntegerGenerated}
+	context := &validationContext{Context: validationKernelContext{Schema: &validationIntegerGenerated}}
 	for _, width := range []int{25, 100, 310, 4096} {
 		bound := "1" + strings.Repeat("0", width)
 		below := strings.Repeat("9", width)
@@ -264,12 +264,12 @@ func TestValidateIntegerArbitraryWidthFacets(t *testing.T) {
 				}
 				for index, value := range []string{lower, equal, upper} {
 					valid := (strings.HasPrefix(facet, "min") && index > 1) || (strings.HasPrefix(facet, "max") && index < 1) || (strings.HasSuffix(facet, "Inclusive") && index == 1)
-					failure := context.validateSimple(schema, value)
+					failure := context.ValidateSimple(schema, value)
 					if valid {
 						assert.Nil(t, failure)
 					} else {
 						require.NotNil(t, failure)
-						assert.Equal(t, facet, failure.constraint)
+						assert.Equal(t, facet, failure.Constraint)
 					}
 				}
 			}
@@ -293,11 +293,11 @@ func TestValidateIntegerArbitraryWidthFacets(t *testing.T) {
 		}
 		failure := validateBounds(schema, "1", "integer")
 		require.NotNil(t, failure)
-		assert.Equal(t, "schema", failure.constraint)
+		assert.Equal(t, "schema", failure.Constraint)
 	}
 	// An integral-valued decimal remains decimal, not an integer lexical type.
 	decimal := &validationSimpleSchema{Form: validationSimpleRestriction, Base: &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}, HasMinInclusive: true, MinInclusive: "1.0"}
-	assert.Nil(t, context.validateSimple(decimal, "1."))
+	assert.Nil(t, context.ValidateSimple(decimal, "1."))
 }
 
 func TestIntegerGeneratedLexemesRemainExact(t *testing.T) {
@@ -313,8 +313,8 @@ func TestIntegerGeneratedLexemesRemainExact(t *testing.T) {
 	root, err := parseValidationDocument([]byte("<fixed> \t+00018446744073709551616 </fixed>"))
 	require.NoError(t, err)
 	before := root.Text.String()
-	context := &validationContext{schema: &validationIntegerGenerated, effective: make(map[*validationComplexSchema]*validationEffectiveComplex), identifiers: make(map[string]string)}
-	context.validateElement(root, fixed, "/fixed")
-	assert.Empty(t, context.issues)
+	context := &validationContext{Context: validationKernelContext{Schema: &validationIntegerGenerated, Effective: make(map[*validationComplexSchema]*validationEffectiveComplex), Identifiers: make(map[string]string)}}
+	context.ValidateElement(root, fixed, "/fixed")
+	assert.Empty(t, context.Issues)
 	assert.Equal(t, before, root.Text.String())
 }

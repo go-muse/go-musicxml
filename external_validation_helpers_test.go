@@ -38,10 +38,9 @@ func validationSchemaFor(name string) *validationSchemaSet {
 
 // newTestValidationContext gives each fixture independent validation state.
 func newTestValidationContext(schema *validationSchemaSet) *validationContext {
-	return &validationContext{
-		schema:      schema,
-		effective:   make(map[*validationComplexSchema]*validationEffectiveComplex),
-		identifiers: make(map[string]string),
+	return &validationContext{Context: validationKernelContext{Schema: schema,
+		Effective:   make(map[*validationComplexSchema]*validationEffectiveComplex),
+		Identifiers: make(map[string]string)},
 	}
 }
 
@@ -63,12 +62,12 @@ func snapshotValidationSchema(t *testing.T, set *validationSchemaSet) map[string
 
 func assertValidationIssues(t *testing.T, context *validationContext, want []string) {
 	t.Helper()
-	require.NoError(t, context.assessmentErr, "assessment is incomplete, not a successful or invalid assessment")
+	require.NoError(t, context.AssessmentErr, "assessment is incomplete, not a successful or invalid assessment")
 	var issues []string
-	for _, issue := range context.issues {
+	for _, issue := range context.Issues {
 		issues = append(issues, issue.Path+":"+issue.Constraint)
 	}
-	assert.ElementsMatch(t, want, issues, "diagnostics: %v", context.issues)
+	assert.ElementsMatch(t, want, issues, "diagnostics: %v", context.Issues)
 }
 
 func assertXMLLintOutcome(t *testing.T, xmllint, schemaFile, catalog, source string, wantValid bool) {
@@ -104,16 +103,16 @@ func TestNewTestValidationContext(t *testing.T) {
 	t.Parallel()
 	schema := &validationSchemaSet{}
 	first, second := newTestValidationContext(schema), newTestValidationContext(schema)
-	assert.Same(t, schema, first.schema)
-	assert.Same(t, schema, second.schema)
-	require.NotNil(t, first.effective)
-	require.NotNil(t, second.effective)
-	require.NotNil(t, first.identifiers)
-	require.NotNil(t, second.identifiers)
-	first.effective[&validationComplexSchema{}] = &validationEffectiveComplex{}
-	first.identifiers["seen"] = "/first"
-	assert.Empty(t, second.effective)
-	assert.Empty(t, second.identifiers)
+	assert.Same(t, schema, first.Schema)
+	assert.Same(t, schema, second.Schema)
+	require.NotNil(t, first.Effective)
+	require.NotNil(t, second.Effective)
+	require.NotNil(t, first.Identifiers)
+	require.NotNil(t, second.Identifiers)
+	first.Effective[&validationComplexSchema{}] = &validationEffectiveComplex{}
+	first.Identifiers["seen"] = "/first"
+	assert.Empty(t, second.Effective)
+	assert.Empty(t, second.Identifiers)
 }
 
 func TestSnapshotValidationSchemaNamespaces(t *testing.T) {

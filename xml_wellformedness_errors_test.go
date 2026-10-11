@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"strings"
 	"testing"
@@ -11,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestXMLWellFormednessWithoutPosition(t *testing.T) {
+func TestXMLWellFormednessSourcePositions(t *testing.T) {
 	t.Parallel()
 	for _, test := range []struct {
 		name    string
@@ -22,15 +23,14 @@ func TestXMLWellFormednessWithoutPosition(t *testing.T) {
 		{"reserved XML target", `<?XmL version="1.0"?><root/>`, `reserved XML processing instruction target "XmL"`},
 		{"lexical duplicate", `<root a="1" a="2"/>`, "duplicate XML attribute {}a"},
 		{"expanded duplicate", `<root xmlns:p="urn:x" xmlns:q="urn:x" p:a="1" q:a="2"/>`, "duplicate XML attribute {urn:x}a"},
-		{"prefix undeclaration", `<root xmlns:p=""/>`, `namespace prefix undeclaring is not allowed: "p"`},
+		{"prefix undeclaration", `<root xmlns:p=""/>`, "namespace prefix undeclaring is not allowed"},
 		{"in-root doctype", `<root><!DOCTYPE root></root>`, "DOCTYPE must precede the root element"},
 		{"repeated doctype", `<!DOCTYPE root><!DOCTYPE root><root/>`, "multiple DOCTYPE declarations"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			reader := &wellFormedXMLTokenReader{
-				source: rawXMLTokenReader{xml.NewDecoder(strings.NewReader(test.input))},
-			}
-			var err error
+			reader, err := newSourceXMLTokenReader(strings.NewReader(test.input), sourceXMLConfig{Context: context.Background()})
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, reader.Close()) })
 			if !assert.NotPanics(t, func() {
 				for err == nil {
 					_, err = reader.Token()
@@ -40,7 +40,7 @@ func TestXMLWellFormednessWithoutPosition(t *testing.T) {
 			}
 			var syntaxError *xml.SyntaxError
 			require.ErrorAs(t, err, &syntaxError)
-			assert.Zero(t, syntaxError.Line)
+			assert.Equal(t, 1, syntaxError.Line)
 			assert.Equal(t, test.message, syntaxError.Msg)
 		})
 	}

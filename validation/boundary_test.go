@@ -19,6 +19,9 @@ func TestFoundationImportBoundary(t *testing.T) {
 	for filename, file := range packages["validation"].Files {
 		for _, imp := range file.Imports {
 			path, _ := strconv.Unquote(imp.Path.Value)
+			if path == "github.com/go-muse/go-musicxml/internal/xsd" {
+				continue
+			}
 			if path == "encoding/xml" || strings.HasPrefix(path, "net/") || path == "net" || strings.HasPrefix(path, "github.com/") {
 				t.Errorf("foundation forbidden import %s in %s", path, filename)
 			}
@@ -30,7 +33,7 @@ func TestFoundationImportBoundary(t *testing.T) {
 		t.Fatalf("go list: %v: %s", err, output)
 	}
 	for _, line := range strings.Fields(string(output)) {
-		if line != "github.com/go-muse/go-musicxml/validation" {
+		if line != "github.com/go-muse/go-musicxml/validation" && line != "github.com/go-muse/go-musicxml/internal/xsd" {
 			t.Errorf("nonstandard dependency %s", line)
 		}
 	}

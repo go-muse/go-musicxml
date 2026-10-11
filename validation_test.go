@@ -284,7 +284,7 @@ func TestValidateDateTimeBuiltins(t *testing.T) {
 				return
 			}
 			require.NotNil(t, failure)
-			assert.Equal(t, "datatype", failure.constraint)
+			assert.Equal(t, "datatype", failure.Constraint)
 		})
 	}
 }

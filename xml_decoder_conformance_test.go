@@ -55,18 +55,18 @@ func TestDecodeUTF16DeclarationPrecedence(t *testing.T) {
 				valid       bool
 			}{
 				{"generic", `<?xml version="1.0" encoding="UTF-16"?>`, bom},
-				{"big endian", `<?xml version="1.0" encoding="UTF-16BE"?>`, bom || order == binary.BigEndian},
-				{"little endian", `<?xml version="1.0" encoding="UTF-16LE"?>`, bom || order == binary.LittleEndian},
-				{"UTF-8", `<?xml version="1.0" encoding="UTF-8"?>`, bom},
-				{"Latin-1", `<?xml version="1.0" encoding="ISO-8859-1"?>`, bom},
+				{"big endian", `<?xml version="1.0" encoding="UTF-16BE"?>`, order == binary.BigEndian},
+				{"little endian", `<?xml version="1.0" encoding="UTF-16LE"?>`, order == binary.LittleEndian},
+				{"UTF-8", `<?xml version="1.0" encoding="UTF-8"?>`, false},
+				{"Latin-1", `<?xml version="1.0" encoding="ISO-8859-1"?>`, false},
 				{"unspecified encoding", `<?xml version="1.0"?>`, bom},
 				{"no declaration", "", bom},
 			} {
 				t.Run(order.String()+"/"+map[bool]string{true: "BOM", false: "no BOM"}[bom]+"/"+test.name, func(t *testing.T) {
 					t.Parallel()
 
-					// With a byte order mark the mark wins over the declaration,
-					// so a non-ASCII title proves the text was not re-decoded.
+					// A BOM selects decoding, but XML 1.0 section 4.3.3 still
+					// requires the declaration to agree with the actual encoding.
 					input := encodeUTF16(test.declaration+
 						`<score-partwise><movement-title>Čajkovskij</movement-title></score-partwise>`,
 						order)

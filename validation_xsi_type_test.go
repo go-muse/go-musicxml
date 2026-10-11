@@ -161,8 +161,8 @@ func TestXSITypeImmutable(t *testing.T) {
 					require.NoError(t, err)
 					saved := snapshotValidationNode(t, node)
 					c := newTestValidationContext(&validationXSIGenerated)
-					c.validateElement(node, validationXSIGenerated.Elements[validationName(node.Name)], "/"+node.Name.Local)
-					c.validateIdentityReferences()
+					c.ValidateElement(node, validationXSIGenerated.Elements[validationName(node.Name)], "/"+node.Name.Local)
+					c.ValidateIdentityReferences()
 					assertValidationIssues(t, c, test.issues)
 					assert.Equal(t, saved, snapshotValidationNode(t, node))
 				}

@@ -133,7 +133,7 @@ func validationDecimalScore(value string) string {
 func TestDecimalSourceAndModelConversion(t *testing.T) {
 	t.Parallel()
 	source := validationDecimalScore(strings.Repeat("9", 310))
-	assert.Empty(t, validateAttributeSource(t, &scoreValidationSchema, source).issues)
+	assert.Empty(t, validateAttributeSource(t, &scoreValidationSchema, source).Issues)
 	document, err := Decode(strings.NewReader(source))
 	require.Error(t, err)
 	assert.Nil(t, document)
@@ -145,7 +145,7 @@ func TestDecimalSourceAndModelConversion(t *testing.T) {
 	// Underflow remains the existing typed transport behavior; source assessment
 	// must still recognize the strictly positive decimal before information is lost.
 	tiny := validationDecimalScore("0." + strings.Repeat("0", 400) + "1")
-	assert.Empty(t, validateAttributeSource(t, &scoreValidationSchema, tiny).issues)
+	assert.Empty(t, validateAttributeSource(t, &scoreValidationSchema, tiny).Issues)
 }
 
 func TestValidateDecimalArbitraryWidthBounds(t *testing.T) {
@@ -176,7 +176,7 @@ func TestValidateDecimalArbitraryWidthBounds(t *testing.T) {
 							if test.accepted[i] {
 								assert.Nil(t, failure)
 							} else if assert.NotNil(t, failure) {
-								assert.Equal(t, test.name, failure.constraint)
+								assert.Equal(t, test.name, failure.Constraint)
 							}
 						})
 					}
@@ -188,20 +188,20 @@ func TestValidateDecimalArbitraryWidthBounds(t *testing.T) {
 
 func TestDecimalArbitraryWidthEquality(t *testing.T) {
 	t.Parallel()
-	context := &validationContext{schema: &validationDecimalGenerated}
+	context := &validationContext{Context: validationKernelContext{Schema: &validationDecimalGenerated}}
 	reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}
 	for _, value := range []string{strings.Repeat("9", 310) + ".125", "0." + strings.Repeat("0", 400) + "1"} {
 		schema := &validationSimpleSchema{Form: validationSimpleRestriction, Base: &validationSimpleMember{Name: reference.Name}, Enumerations: []string{value}}
 		equivalent := "+000" + value + "00"
 		different := value + "1"
-		assert.Nil(t, context.validateSimple(schema, equivalent))
-		failure := context.validateSimple(schema, different)
+		assert.Nil(t, context.ValidateSimple(schema, equivalent))
+		failure := context.ValidateSimple(schema, different)
 		if assert.NotNil(t, failure) {
-			assert.Equal(t, "enumeration", failure.constraint)
+			assert.Equal(t, "enumeration", failure.Constraint)
 		}
-		assert.True(t, context.simpleValuesEqual(reference, value, equivalent))
-		assert.True(t, context.elementFixedValuesEqual(reference, value, equivalent))
-		assert.False(t, context.simpleValuesEqual(reference, value, different))
-		assert.False(t, context.elementFixedValuesEqual(reference, value, different))
+		assert.True(t, context.SimpleValuesEqual(reference, value, equivalent))
+		assert.True(t, context.ElementFixedValuesEqual(reference, value, equivalent))
+		assert.False(t, context.SimpleValuesEqual(reference, value, different))
+		assert.False(t, context.ElementFixedValuesEqual(reference, value, different))
 	}
 }

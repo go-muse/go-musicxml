@@ -10,11 +10,27 @@ below against merged PR 30 and the pinned XSD 1.0 specification. Earlier baselin
 limitations are historical; the later explicitly scoped updates supersede only
 their demonstrated contracts, without closing whole planned stages.
 
+## Shared source scanner update
+
+The historical XML-reader repairs below now run through the one-pass
+[`sourceXMLTokenReader`](../../xml_source.go) and original-byte
+[`sourceXMLCursor`](../../xml_source_cursor.go). The old lexical observer and
+well-formedness token wrapper have been removed rather than retained as a second
+production parser. Ordinary Decode, MXL/container and the legacy validation
+reparse helper share this scanner; meaningful old regressions still exercise the
+public paths or the actual scanner. The source reader records lexical attribute
+provenance before namespace expansion and supports original-byte positions
+across UTF-8, UTF-16 and Latin-1. Its mandatory XML grammar corrections and
+explicit DTD/infoset limitations are documented in
+[source-parser-scope.md](source-parser-scope.md). Earlier implementation details
+below describe the bounded repairs when they landed; this update supersedes
+those parser mechanics, without claiming complete XML or XSD conformance.
+
 ## XML-reading repair update
 
 The duplicate-attribute and DOCTYPE-placement gaps recorded below are now
 repaired in the existing decoding and internal XML-parsing paths by
-[`xml_wellformedness.go`](../../xml_wellformedness.go), with
+[`xml_source.go`](../../xml_source.go), with
 [regressions](../../xml_wellformedness_test.go) covering skipped subtrees and
 MXL paths. This is the existing-reader slice of STAGE-DEF-01. Integration with
 the proposed strict source adapter remains open; the pinned historical review
@@ -24,7 +40,7 @@ and broader deferred contracts below are not a claim of completed validation.
 
 The XML-declaration-ordering follow-up from [PR #14 review](https://github.com/go-muse/go-musicxml/pull/14#pullrequestreview-5459364076)
 is now repaired in the existing readers by
-[`xml_wellformedness.go`](../../xml_wellformedness.go). A declaration must be
+[`xml_source.go`](../../xml_source.go). A declaration must be
 first after any encoding signature; whitespace, comments, processing
 instructions, DOCTYPE and root content may not precede it. Case variants of the
 exact reserved PI target `xml` are rejected, while `xml-stylesheet` and other
@@ -133,24 +149,17 @@ with an XML declaration and DOCTYPE only in their permitted prolog positions.
 Decoded whitespace is insufficient evidence: references and CDATA are different
 lexical constructs. Both remain supported inside the root.
 
-[`xml_lexical.go`](../../xml_lexical.go) observes the innermost decoder's byte
-stream after encoding conversion. It retains only the latest `<` and `&` offsets
-and tests them against each `CharData` token's half-open `InputOffset` span.
-The decoder's lookahead `<` is excluded from the preceding literal text, while
-CDATA's own markup remains within its token even when the section is empty.
-An `io.ByteReader` prevents decoder buffering above the observer; buffering below
-it remains bounded. Latin-1 conversion installs a fresh observer at the current
-decoder offset, so upstream read-ahead and source-byte lengths cannot corrupt
-post-conversion offsets. No document or token copy, second parse, entity expansion
-or resource fetching is added.
+The shared [`sourceXMLTokenReader`](../../xml_source.go) recognizes references
+and CDATA directly while scanning the original input. It retains their origin
+in token metadata and rejects these constructs outside the root, below every
+namespace/model skip. Original-byte cursor positions remain valid when decoded
+runes have different UTF-8 lengths from their source bytes; no auxiliary lexical
+observer, charset handoff or second token parse is needed.
 
-[`wellFormedXMLTokenReader`](../../xml_wellformedness.go) applies this origin check
-only outside its existing element scopes, below namespace/model filtering. New
-failures wrap `*xml.SyntaxError` and report the innermost decoder's detection line
-at the end of the offending token. Literal-character boundary errors retain
-their existing messages; namespace/depth checks and deferred MXL parsing retain
-their existing contracts. The internal validation parser still takes plain UTF-8;
-public readers retain their existing UTF-8, UTF-16 and Latin-1 support.
+Failures wrap `*xml.SyntaxError` with the detection line. All readers retain
+UTF-8, UTF-16 and Latin-1 support. The earlier public before/after-root
+non-whitespace errors now carry syntax-error identity, as recorded in the
+[source-parser scope](source-parser-scope.md).
 
 Executable evidence is in
 [`xml_document_lexical_test.go`](../../xml_document_lexical_test.go): the
@@ -720,7 +729,7 @@ The namespace-provenance follow-up is now repaired in the existing internal
 parser and validator. `encoding/xml` represents namespace declarations with the
 sentinel namespace `xmlns`; an ordinary attribute bound to the literal relative
 namespace URI `xmlns` can have the same expanded name. The
-[`wellFormedXMLTokenReader`](../../xml_wellformedness.go) now records a declaration
+[`sourceXMLTokenReader`](../../xml_source.go) records a declaration
 flag for each attribute from its raw lexical name, before namespace expansion.
 `parseValidationDocument` copies those flags together with the expanded attributes
 into each `validationNode`. `validationNamespaceDeclaration` reads that retained
@@ -1282,7 +1291,7 @@ explicitly below, while other limits remain open.
 - **XML well-formedness** (repaired by [PR #14](https://github.com/go-muse/go-musicxml/pull/14)):
   duplicate attributes and a DOCTYPE inside the root were accepted at the
   pinned review baseline. The existing decoding/internal parsing paths now
-  reject them through [`xml_wellformedness.go`](../../xml_wellformedness.go),
+  reject them through [`xml_source.go`](../../xml_source.go),
   including skipped subtrees. See the [repair update](#xml-reading-repair-update)
   for current coverage; future strict-source integration remains open.
 - **xsi semantics:** The pinned baseline rejected schema-location hints on

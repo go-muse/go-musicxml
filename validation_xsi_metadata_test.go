@@ -56,15 +56,15 @@ func TestXSITypeSelectedAssembly(t *testing.T) {
 	}{{"string", true}, {"integer", false}} {
 		t.Run(test.base, func(t *testing.T) {
 			c := validateAttributeSource(t, makeSchema(test.base), wrapValidationElement("value", ` n:type="shared"`, "1"))
-			assert.Equal(t, test.valid, len(c.issues) == 0)
+			assert.Equal(t, test.valid, len(c.Issues) == 0)
 		})
 	}
 	// A type existing in the other assembly is still unknown in this one.
 	other := makeSchema("string")
 	delete(other.Types, validationQName{Local: "shared"})
 	c := validateAttributeSource(t, other, wrapValidationElement("value", ` n:type="shared"`, "1"))
-	require.Len(t, c.issues, 1)
-	assert.Equal(t, "xsi:type", c.issues[0].Constraint)
+	require.Len(t, c.Issues, 1)
+	assert.Equal(t, "xsi:type", c.Issues[0].Constraint)
 }
 
 func TestXSITypeCacheBounds(t *testing.T) {
@@ -81,17 +81,17 @@ func TestXSITypeCacheBounds(t *testing.T) {
 			declared := &validationElementSchema{Name: validationQName{Local: "value"}, Type: validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "string"}}}
 			node, err := parseValidationDocument([]byte(wrapValidationElement("value", ` n:type="`+base.Local+`"`, "text")))
 			require.NoError(t, err)
-			c.validateElement(node, declared, "/value")
+			c.ValidateElement(node, declared, "/value")
 			require.NoError(t, c.result())
-			metadata, paths, semantics := len(c.typeMetadata), len(c.derivations), len(c.simpleSemantics)
+			metadata, paths, semantics := len(c.TypeMetadata), len(c.Derivations), len(c.SimpleSemantics)
 			assert.LessOrEqual(t, metadata, depth+3)
 			assert.LessOrEqual(t, paths, depth)
 			assert.Equal(t, depth, semantics)
-			allocations := testing.AllocsPerRun(20, func() { c.validateElement(node, declared, "/value") })
+			allocations := testing.AllocsPerRun(20, func() { c.ValidateElement(node, declared, "/value") })
 			require.NoError(t, c.result())
-			assert.Equal(t, metadata, len(c.typeMetadata))
-			assert.Equal(t, paths, len(c.derivations))
-			assert.Equal(t, semantics, len(c.simpleSemantics))
+			assert.Equal(t, metadata, len(c.TypeMetadata))
+			assert.Equal(t, paths, len(c.Derivations))
+			assert.Equal(t, semantics, len(c.SimpleSemantics))
 			assert.Less(t, allocations, float64(8*depth+32))
 			t.Logf("depth=%d metadata=%d derivation-pairs=%d semantics=%d repeated-allocations=%.0f", depth, metadata, paths, semantics, allocations)
 		})

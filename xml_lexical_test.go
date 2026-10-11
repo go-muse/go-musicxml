@@ -1,56 +1,64 @@
 package musicxml
 
 import (
+	"bytes"
+	"context"
 	"encoding/xml"
 	"io"
-	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestXMLLexicalObserverHandoff(t *testing.T) {
+// Encoding selection remains within the same original-byte cursor. Check the
+// lexical origin and byte spans after a non-UTF-8 declaration without relying
+// on the removed decoder/observer handoff implementation.
+func TestXMLLexicalProvenanceAfterEncodingSelection(t *testing.T) {
 	t.Parallel()
-	for _, method := range []string{"Read", "ReadByte"} {
-		t.Run(method, func(t *testing.T) {
-			const remaining = " <root/> &"
-			lexical := newLexicalXMLTokenReader(strings.NewReader("<!--&-->" + remaining))
-			token, err := lexical.Token()
-			require.NoError(t, err)
-			require.IsType(t, xml.Comment{}, token)
-			previous := lexical.input
-			offset, angle, ampersand := previous.offset, previous.angle, previous.ampersand
-			replacement := lexical.switchInput(previous)
-			require.NotSame(t, previous, replacement)
-			assert.Equal(t, lexical.decoder.InputOffset(), lexical.input.offset)
-			assert.EqualValues(t, -1, lexical.input.angle)
-			assert.EqualValues(t, -1, lexical.input.ampersand)
-
-			if method == "Read" {
-				// The charset converter's upstream Read must still deliver
-				// every byte, without maintaining unused old marker state.
-				data, err := io.ReadAll(replacement)
-				require.NoError(t, err)
-				assert.Equal(t, remaining, string(data))
-				assert.Equal(t, offset+int64(len(remaining)), lexical.input.offset)
-				assert.Equal(t, offset+1, lexical.input.angle)
-				assert.Equal(t, offset+int64(len(remaining))-1, lexical.input.ampersand)
-			} else {
-				var data []byte
-				for {
-					value, err := previous.ReadByte()
-					if err == io.EOF {
-						break
-					}
-					require.NoError(t, err)
-					data = append(data, value)
-				}
-				assert.Equal(t, remaining, string(data))
+	input := []byte("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><root>\xe9&#32;<![CDATA[&]]></root>")
+	for _, fragmented := range []bool{false, true} {
+		t.Run(map[bool]string{false: "buffered", true: "one byte"}[fragmented], func(t *testing.T) {
+			var inputReader io.Reader = bytes.NewReader(input)
+			if fragmented {
+				inputReader = iotest.OneByteReader(inputReader)
 			}
-			assert.Equal(t, offset, previous.offset, "superseded observer kept counting bytes")
-			assert.Equal(t, angle, previous.angle, "superseded observer kept tracking angle markers")
-			assert.Equal(t, ampersand, previous.ampersand, "superseded observer kept tracking reference markers")
+			reader, err := newSourceXMLTokenReader(inputReader, sourceXMLConfig{Context: context.Background()})
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, reader.Close()) })
+			var characterTokens int
+			for {
+				token, err := reader.Token()
+				if err == io.EOF {
+					break
+				}
+				require.NoError(t, err)
+				data, ok := token.(xml.CharData)
+				if !ok {
+					continue
+				}
+				meta := reader.Metadata()
+				original := input[meta.Span.Start.ByteOffset:meta.Span.End.ByteOffset]
+				switch characterTokens {
+				case 0:
+					assert.Equal(t, "é ", string(data))
+					assert.Equal(t, "\xe9&#32;", string(original))
+					assert.True(t, meta.Reference)
+					assert.False(t, meta.CDATA)
+				case 1:
+					assert.Equal(t, "&", string(data))
+					assert.Equal(t, "<![CDATA[&]]>", string(original))
+					assert.True(t, meta.CDATA)
+					assert.False(t, meta.Reference)
+				default:
+					t.Errorf("unexpected character token %q", data)
+				}
+				characterTokens++
+			}
+			assert.Equal(t, 2, characterTokens)
+			assert.True(t, reader.Summary().InputComplete)
+			assert.EqualValues(t, len(input), reader.Summary().BytesConsumed)
 		})
 	}
 }

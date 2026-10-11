@@ -13,6 +13,10 @@ and [XSD prerequisite ledger](xsd-prerequisite-scope.md) retain their broader
 obligations. No whole `STAGE-DEF-04`, `STAGE-DEF-10`, or profile is declared ready,
 and no planning JSON status is changed by the tests cited below.
 
+The later [source assessment scope](source-assessment-scope.md) adds the root
+source adapter, sealed XSD plans and shared kernel. Its ownership ledger
+supersedes the batch-4 future-owner statements retained below.
+
 ## Compiled execution and inspection are separate
 
 `NewCatalog` snapshots `RuleDefinition`, `Profile` and `PlanBinding` inputs into
@@ -32,7 +36,8 @@ cannot be labeled available. Omitting an unavailable obligation is not support.
 Selectors distinguish assembly-qualified type components and exact declaration
 or reference-use occurrences. Declaration identity includes assembly, owner and
 use occurrence, so equal local names or QNames need not select the same rule.
-Only exact type-component and element-declaration selectors execute. Other
+Exact type-component and element-declaration selectors execute; the later
+sealed XSD plans also use an exclusive assembly selector. Other
 component kinds, sibling/measure/part/package scopes, musical-position/part
 relations and external services remain unavailable. Node and document scopes,
 and same-node, parent and document rule/fact dependencies, are implemented.
@@ -176,8 +181,10 @@ the bounded fact set retained until finalization.
 `Report` independently records requested profile/target, syntax, conformance,
 assessment completion, input completion, mandatory normative counts, required
 non-normative blockers, diagnostic truncation and terminal infrastructure status.
-`ConversionResult` only supplies separate conversion vocabulary; conversion and
-source/model orchestration are not implemented.
+`ConversionResult` supplies separate conversion vocabulary. The root package
+now implements opt-in source/model orchestration; see the source scope. A clean
+EOF can coexist with `SyntaxIncomplete`, while acceptance still requires both
+input and syntax completion.
 
 A nil operation error from `Close` or `Finish` does not mean acceptance.
 Violations and evidence-only unknown/unsupported outcomes live in the report.
@@ -343,13 +350,13 @@ for the original thirteen deferred stages or seven semantic stages.
 | `STAGE-DEF-12` | 32 | Core API/catalog decisions here; batch 5 profile/local issues, batches 6/7 timeline/context issues, batch 8 package issues, batch 9 external issues and remaining original-field translations. |
 | `STAGE-DEF-13` | 3 | Optional opus replacement, quotations and edit-invalidated snapshots require separate election; retained as optional. |
 
-In particular, the prior PR 30/31 XSD grammar, scalar, dynamic binding and identity
-repairs remain in the root validator. No full XSD runtime operator family has
-been migrated into this fact engine. Batch 4 source binding and batch 5 model
-binding must reuse/refactor those helpers rather than copy a second validator.
-Catalog inspection keeps their runtime plans unbound. General schema validity/UPA,
-opaque anyType and wildcard closure remain unavailable; deliberate
-`processContents=skip` must stay distinct from unimplemented lax/strict behavior.
+The prior PR 30/31 XSD grammar, scalar, dynamic binding and identity repairs
+now live in the shared XML-neutral `internal/xsd` implementation. Root legacy
+validation and sealed source fact-engine operations reuse that implementation.
+The separate inspection inventory remains non-executable research metadata.
+General schema validity/UPA, opaque anyType and wider wildcard closure remain
+unavailable; deliberate `processContents=skip` stays distinct from unimplemented
+lax/strict behavior. Batch 5 retains direct current-model binding.
 
 Batch 9 retains absent optional default/fixed attribute identity participation,
 arbitrary constructed list/union identity closure, DTD ENTITY declaration facts,
@@ -361,12 +368,13 @@ oracle divergences and their independent normative expectations.
 The [28 issue dispositions](open-questions.md) and [deferred inventory](deferred-inventory.md)
 remain gates, not hard-error predicates. No guessed initial context, musical
 position, universal span balance or broad `ProductionMusicXML` profile is added.
-`InspectXML`, `DecodeAssessed`, direct `Assess` and package-assessment entry points
-are intentionally absent until their adapters can satisfy their contracts.
+`InspectXML` and `DecodeAssessed` now expose an explicit developmental source
+preview. Direct `Assess` and package-assessment entry points remain absent until
+their adapters satisfy their contracts.
 
 Required verification remains `make check-all`, the existing required Linux
 external-XSD roots and planning/generation reproducibility. The Linux CI test job
-executes `GOARCH=386 go test -count=1 ./validation` for actual host-width coverage;
+executes `GOARCH=386 go test -count=1 ./...` for actual host-width coverage;
 a cross-build alone does not establish 32-bit runtime coverage. `check-all` runs
 `FuzzReportFieldIsBoundedEscapedUTF8` and `FuzzSessionLifecycle` for 10,000 counted
 executions each by default, configurable with `VALIDATION_FUZZ_TIME`, as documented

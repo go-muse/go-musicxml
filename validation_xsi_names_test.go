@@ -67,12 +67,12 @@ func TestStandardXSINameChecksTypeNomination(t *testing.T) {
 			source := `<value xmlns:i="` + validationXSINamespace + `" xmlns:xs="` + validationXSDNamespace + `" i:type="xs:string" i:schemaLocation="urn:example schema.xsd" i:noNamespaceSchemaLocation="schema.xsd"/>`
 			context := validateAttributeSource(t, schema, source)
 			if test.allowType {
-				assert.Empty(t, context.issues)
+				assert.Empty(t, context.Issues)
 				return
 			}
-			require.Len(t, context.issues, 1)
-			assert.Equal(t, "xsi:type", context.issues[0].Constraint)
-			assert.Equal(t, "/value/@{"+validationXSINamespace+"}type", context.issues[0].Path)
+			require.Len(t, context.Issues, 1)
+			assert.Equal(t, "xsi:type", context.Issues[0].Constraint)
+			assert.Equal(t, "/value/@{"+validationXSINamespace+"}type", context.Issues[0].Path)
 		})
 	}
 }

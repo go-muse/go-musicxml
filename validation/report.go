@@ -260,6 +260,33 @@ func newReportAccumulator(profile Profile, account *Account) *reportAccumulator 
 }
 
 func (a *reportAccumulator) record(rule RuleDefinition, decision Decision, location Location) error {
+	if err := a.recordOutcome(rule, decision); err != nil {
+		return err
+	}
+	return a.storeDiagnostic(rule, decision, location)
+}
+
+// recordCompositeOutcome counts one sealed shared-schema predicate instance.
+// Detail findings are stored separately so early proofs precede budgeted detail
+// work and later identity details can append without recounting the predicate.
+func (a *reportAccumulator) recordCompositeOutcome(rule RuleDefinition, summary Decision, complete bool) error {
+	if !complete && (summary.Outcome == OutcomePass || summary.Outcome == OutcomeNotApplicable) {
+		return contract("composite result", "incomplete work cannot pass or prove exclusion")
+	}
+	if complete && (summary.Outcome == OutcomeUnknown || summary.Outcome == OutcomeUnsupported || summary.Outcome == OutcomeBlocked) {
+		return contract("composite result", "unresolved work cannot be complete")
+	}
+	if err := a.recordOutcome(rule, summary); err != nil {
+		return err
+	}
+	if !complete {
+		a.incomplete()
+		a.report.BlockingProblems++
+	}
+	return nil
+}
+
+func (a *reportAccumulator) recordOutcome(rule RuleDefinition, decision Decision) error {
 	if a.account.Limits().MaxDiagnosticBytes <= 0 {
 		return &ConfigurationError{Field: "Account", Reason: "must be created by NewBudgetAccount"}
 	}
@@ -298,6 +325,10 @@ func (a *reportAccumulator) record(rule RuleDefinition, decision Decision, locat
 			a.report.AssessmentComplete = false
 		}
 	}
+	return nil
+}
+
+func (a *reportAccumulator) storeDiagnostic(rule RuleDefinition, decision Decision, location Location) error {
 	// Pass and proven exclusion are assessment results, not diagnostics. Keep
 	// their authoritative counts above, without measuring or storing payloads,
 	// consuming diagnostic quotas, or marking diagnostic storage truncated.
@@ -433,6 +464,10 @@ func (s *reportStorageSize) rule(rule RuleDefinition) {
 		}
 		s.add(16)
 		s.text(string(target))
+	}
+	if v := rule.Selector.Assembly; v != nil {
+		s.add(16)
+		s.text(string(*v))
 	}
 	if v := rule.Selector.Component; v != nil {
 		s.add(80)

@@ -81,11 +81,11 @@ jobs:
         shell: bash
         run: bash scripts/check-all.sh test
 
-      - name: Execute validation contracts on 32-bit integers
+      - name: Execute source and validation contracts on 32-bit integers
         if: matrix.os == 'ubuntu-latest'
         env:
           GOARCH: "386"
-        run: go test -count=1 ./validation
+        run: go test -count=1 ./...
 
   race:
     name: Race detector
@@ -128,7 +128,7 @@ jobs:
       - name: Validate corpus and raw XML/XSD contracts
         env:
           MUSICXML_REQUIRE_XMLLINT: "1"
-        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema|TestElementAttributeContractsAgainstSchema|TestNilContractsAgainstSchema|TestElementValueConstraintsAgainstSchema|TestFixedElementChildrenAgainstSchema|TestElementOnlyXMLWhitespaceAgainstSchema|TestEmptyComplexContentAgainstSchema|TestXMLDocumentWhitespaceAgainstXMLLint|TestXMLDocumentLexicalAgainstXMLLint|TestIntegerValueSpacesAgainstSchema|TestDecimalComparisonsAgainstSchema|TestDecimalDigitFacetsAgainstSchema|TestSimpleContentRestrictionsAgainstSchema|TestEffectiveWhitespaceAgainstSchema|TestPatternGroupsAgainstSchema|TestBuiltinListLengthsAgainstSchema|TestAggregateValuesAgainstSchema|TestUnionMemberFlatteningAgainstSchema|TestPrimitiveValuesAgainstSchema|TestDatatypeNamesAgainstSchema|TestDatatypeNamesProductionAgainstSchema|TestGrammarParticlesAgainstSchema|TestXSITypeAgainstSchema|TestSchemaHintDatatypesAgainstSchema|TestXSD10IdentityBindingsAgainstSchema)$' .
+        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema|TestElementAttributeContractsAgainstSchema|TestNilContractsAgainstSchema|TestElementValueConstraintsAgainstSchema|TestFixedElementChildrenAgainstSchema|TestElementOnlyXMLWhitespaceAgainstSchema|TestEmptyComplexContentAgainstSchema|TestXMLDocumentWhitespaceAgainstXMLLint|TestXMLDocumentLexicalAgainstXMLLint|TestIntegerValueSpacesAgainstSchema|TestDecimalComparisonsAgainstSchema|TestDecimalDigitFacetsAgainstSchema|TestSimpleContentRestrictionsAgainstSchema|TestEffectiveWhitespaceAgainstSchema|TestPatternGroupsAgainstSchema|TestBuiltinListLengthsAgainstSchema|TestAggregateValuesAgainstSchema|TestUnionMemberFlatteningAgainstSchema|TestPrimitiveValuesAgainstSchema|TestDatatypeNamesAgainstSchema|TestDatatypeNamesProductionAgainstSchema|TestGrammarParticlesAgainstSchema|TestXSITypeAgainstSchema|TestSchemaHintDatatypesAgainstSchema|TestXSD10IdentityBindingsAgainstSchema|TestSourceAssessmentAgainstSchema)$' .
 
   fuzz:
     name: Fuzz smoke

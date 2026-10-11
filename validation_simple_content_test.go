@@ -167,8 +167,8 @@ func TestSimpleContentRestrictionImmutability(t *testing.T) {
 	nodeBefore, err := json.Marshal(node)
 	require.NoError(t, err)
 	context := newTestValidationContext(&validationSimpleContentGenerated)
-	context.validateElement(node, validationSimpleContentGenerated.Elements[validationQName{Local: "digits"}], "/digits")
-	assert.Empty(t, context.issues)
+	context.ValidateElement(node, validationSimpleContentGenerated.Elements[validationQName{Local: "digits"}], "/digits")
+	assert.Empty(t, context.Issues)
 	nodeAfter, err := json.Marshal(node)
 	require.NoError(t, err)
 	assert.Equal(t, string(nodeBefore), string(nodeAfter))
@@ -189,7 +189,7 @@ func TestEffectiveComplexFailureRemainsFailure(t *testing.T) {
 			set := validationSchemaSet{Types: map[validationQName]*validationTypeSchema{{Local: "cycle"}: {Complex: test.schema}}}
 			context := newTestValidationContext(&set)
 			for range 3 {
-				effective, ok := context.effectiveComplex(test.schema)
+				effective, ok := context.EffectiveComplex(test.schema)
 				assert.False(t, ok)
 				assert.Nil(t, effective)
 			}

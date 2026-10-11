@@ -144,7 +144,7 @@ func assertContentWhitespaceCase(t *testing.T, test validationSourceCase) {
 	t.Helper()
 	context := validateAttributeSource(t, validationSchemaFor(test.schema), test.source)
 	assertValidationIssues(t, context, test.issues)
-	for _, issue := range context.issues {
+	for _, issue := range context.Issues {
 		if issue.Constraint == "element-only" {
 			assert.Equal(t, "character data is not allowed", issue.Message)
 		}
@@ -201,16 +201,16 @@ func TestElementOnlyXMLWhitespacePreservesAssessment(t *testing.T) {
 			require.Len(t, root.Children, 1)
 			child := root.Children[0]
 			for range 2 {
-				context := &validationContext{schema: &validationNilGenerated, effective: make(map[*validationComplexSchema]*validationEffectiveComplex), identifiers: make(map[string]string)}
-				context.validateElement(root, validationNilGenerated.Elements[validationQName{Local: "complex"}], "/complex")
-				context.validateIdentityReferences()
+				context := &validationContext{Context: validationKernelContext{Schema: &validationNilGenerated, Effective: make(map[*validationComplexSchema]*validationEffectiveComplex), Identifiers: make(map[string]string)}}
+				context.ValidateElement(root, validationNilGenerated.Elements[validationQName{Local: "complex"}], "/complex")
+				context.ValidateIdentityReferences()
 				want := []string{"/complex:element-only"}
 				if reference == "missing" {
 					want = append(want, "/complex/@ref:IDREF")
 				}
 				assertValidationIssues(t, context, want)
-				assert.Equal(t, map[string]string{"own": "/complex/@id"}, context.identifiers)
-				assert.Equal(t, []validationIdentityReference{{value: reference, path: "/complex/@ref"}}, context.references)
+				assert.Equal(t, map[string]string{"own": "/complex/@id"}, context.Identifiers)
+				assert.Equal(t, []validationIdentityReference{{Value: reference, Path: "/complex/@ref"}}, context.References)
 				assert.Equal(t, originalSource, source)
 				assert.Equal(t, text, root.Text.String())
 				assert.Equal(t, attributes, root.Attrs)
@@ -225,8 +225,8 @@ func TestElementOnlyXMLWhitespacePreservesAssessment(t *testing.T) {
 	source := document.start + "&#xA0;" + document.first + document.second + document.end
 	context := validateAttributeSource(t, &scoreValidationSchema, source)
 	assertValidationIssues(t, context, []string{"/score-partwise:element-only"})
-	assert.Equal(t, map[string]string{"P1": "/score-partwise/part-list/score-part/@id"}, context.identifiers)
-	assert.Equal(t, []validationIdentityReference{{value: "P1", path: "/score-partwise/part/@id"}}, context.references)
+	assert.Equal(t, map[string]string{"P1": "/score-partwise/part-list/score-part/@id"}, context.Identifiers)
+	assert.Equal(t, []validationIdentityReference{{Value: "P1", Path: "/score-partwise/part/@id"}}, context.References)
 }
 
 func TestElementOnlyXMLWhitespacePreservesPublicModels(t *testing.T) {

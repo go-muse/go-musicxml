@@ -55,6 +55,10 @@ func cloneComponent(v ComponentID) ComponentID {
 	return v
 }
 func cloneRule(v RuleDefinition) RuleDefinition {
+	if v.Selector.Assembly != nil {
+		assembly := *v.Selector.Assembly
+		v.Selector.Assembly = &assembly
+	}
 	v.Class = RuleClass(strings.Clone(string(v.Class)))
 	v.Role = RuleRole(strings.Clone(string(v.Role)))
 	v.Category = DiagnosticCategory(strings.Clone(string(v.Category)))

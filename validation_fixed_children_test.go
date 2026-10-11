@@ -134,8 +134,8 @@ func TestFixedElementChildrenPreserveAssessment(t *testing.T) {
 	for _, reference := range []string{"own", "missing"} {
 		source := `<fixed-mixed required="1" id="own" ref="` + reference + `">kept<child>7</child></fixed-mixed>`
 		context := validateAttributeSource(t, &validationNilGenerated, source)
-		assert.Equal(t, map[string]string{"own": "/fixed-mixed/@id"}, context.identifiers)
-		assert.Equal(t, []validationIdentityReference{{value: reference, path: "/fixed-mixed/@ref"}}, context.references)
+		assert.Equal(t, map[string]string{"own": "/fixed-mixed/@id"}, context.Identifiers)
+		assert.Equal(t, []validationIdentityReference{{Value: reference, Path: "/fixed-mixed/@ref"}}, context.References)
 		want := []string{"/fixed-mixed:fixed"}
 		if reference == "missing" {
 			want = append(want, "/fixed-mixed/@ref:IDREF")
@@ -145,22 +145,22 @@ func TestFixedElementChildrenPreserveAssessment(t *testing.T) {
 	// A fixed constraint failure does not stop the ordinary matched-child walk.
 	source := `<fixed-mixed required="1" ref="target">kept<child>7</child><identity>target</identity></fixed-mixed>`
 	context := validateAttributeSource(t, &validationNilGenerated, source)
-	assert.Equal(t, map[string]string{"target": "/fixed-mixed/identity"}, context.identifiers)
-	assert.Equal(t, []validationIdentityReference{{value: "target", path: "/fixed-mixed/@ref"}}, context.references)
+	assert.Equal(t, map[string]string{"target": "/fixed-mixed/identity"}, context.Identifiers)
+	assert.Equal(t, []validationIdentityReference{{Value: "target", Path: "/fixed-mixed/@ref"}}, context.References)
 	assertFixedChildCase(t, validationSourceCase{source: source, issues: []string{"/fixed-mixed:fixed"}})
 	context = validateAttributeSource(t, &validationNilGenerated, `<fixed-mixed required="1">other<child>7</child></fixed-mixed>`)
-	require.Len(t, context.issues, 1)
-	assert.Equal(t, "element with a fixed value must not contain child elements", context.issues[0].Message)
+	require.Len(t, context.Issues, 1)
+	assert.Equal(t, "element with a fixed value must not contain child elements", context.Issues[0].Message)
 	root, err := parseValidationDocument([]byte(`<fixed-mixed required="1">kept<child>7</child></fixed-mixed>`))
 	require.NoError(t, err)
 	require.Len(t, root.Children, 1)
 	child := root.Children[0]
 	originalAttributes := append([]validationAttribute(nil), root.Attrs...)
 	for range 2 {
-		context := validationContext{schema: &validationNilGenerated, effective: make(map[*validationComplexSchema]*validationEffectiveComplex), identifiers: make(map[string]string)}
-		context.validateElement(root, validationNilGenerated.Elements[validationQName{Local: "fixed-mixed"}], "/fixed-mixed")
-		require.Len(t, context.issues, 1)
-		assert.Equal(t, "fixed", context.issues[0].Constraint)
+		context := validationContext{Context: validationKernelContext{Schema: &validationNilGenerated, Effective: make(map[*validationComplexSchema]*validationEffectiveComplex), Identifiers: make(map[string]string)}}
+		context.ValidateElement(root, validationNilGenerated.Elements[validationQName{Local: "fixed-mixed"}], "/fixed-mixed")
+		require.Len(t, context.Issues, 1)
+		assert.Equal(t, "fixed", context.Issues[0].Constraint)
 		assert.Equal(t, "kept", root.Text.String())
 		assert.Equal(t, originalAttributes, root.Attrs)
 		require.Len(t, root.Children, 1)

@@ -75,11 +75,12 @@ func (e *UnsupportedRootError) Error() string {
 func (e *UnsupportedRootError) Unwrap() error { return ErrIncompleteAssessment }
 
 type factNode struct {
-	header     NodeHeader
-	end        NodeEnd
-	closed     bool
-	children   []*factNode
-	attributes []AttributeFact
+	header        NodeHeader
+	end           NodeEnd
+	closed        bool
+	children      []*factNode
+	attributes    []AttributeFact
+	attributeSeal *Evidence[bool]
 }
 type decisionID struct {
 	rule RuleKey
@@ -108,6 +109,7 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	schema                  *schemaSession
 	catalog                 *CompiledCatalog
 	documentID              string
 	profile                 Profile
@@ -171,12 +173,32 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 		return nil, err
 	}
 	s.accumulator = newReportAccumulator(profile, account)
+	if len(e.catalog.schemas[profile.ID]) != 0 {
+		if err := s.retain(512); err != nil {
+			s.cleanup()
+			return nil, err
+		}
+		s.schema = &schemaSession{schemas: e.catalog.schemas[profile.ID], proofRules: make(map[Assembly]map[XSDCheck][]RuleKey)}
+	}
+
 	for _, key := range e.catalog.orders[profile.ID] {
 		if err := s.step(ctx, 1); err != nil {
 			s.cleanup()
 			return nil, &IncompleteError{Reason: "session-initialization", Cause: err}
 		}
 		rule := e.catalog.rules[key]
+		if p := e.catalog.plans[rule.Predicate]; s.schema != nil && p.kind == planXSD && len(rule.Requires) == 0 && e.catalog.supports[profile.ID][key].State == ImplementationAvailable {
+			if err := s.retain(384); err != nil {
+				s.cleanup()
+				return nil, err
+			}
+			groups := s.schema.proofRules[p.schema.assembly]
+			if groups == nil {
+				groups = make(map[XSDCheck][]RuleKey)
+				s.schema.proofRules[p.schema.assembly] = groups
+			}
+			groups[p.xsdCheck] = append(groups[p.xsdCheck], key)
+		}
 		for _, dependency := range rule.Requires {
 			if err := s.step(ctx, 1); err != nil {
 				s.cleanup()
@@ -299,6 +321,17 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 	} else if node.Parent != s.stack[len(s.stack)-1].header.ID {
 		return s.fail(&SessionError{Operation: "Open", Reason: "parent is not current open occurrence"})
 	}
+	if len(s.stack) == 0 && s.schema != nil {
+		for _, schema := range s.schema.schemas {
+			if _, ok := schema.Root(node.Name); ok {
+				s.schema.active = schema
+				break
+			}
+		}
+		if s.schema.active == nil {
+			return s.fail(contract("source schema root", "no selected compiled schema"))
+		}
+	}
 	retained := &factNode{header: cloneHeader(node)}
 	if len(s.stack) == 0 {
 		s.root = retained
@@ -321,7 +354,7 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 		return s.fail(&SessionError{Operation: "Attribute", Reason: "no open owner"})
 	}
 	n := s.stack[len(s.stack)-1]
-	if attribute.Owner != n.header.ID || len(n.children) > 0 {
+	if attribute.Owner != n.header.ID || len(n.children) > 0 || n.attributeSeal != nil {
 		return s.fail(&SessionError{Operation: "Attribute", Reason: "wrong owner or attribute after children"})
 	}
 	if err := s.account.Charge(BudgetAttributes, 1); err != nil {
@@ -345,6 +378,33 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 		}
 	}
 	n.attributes = append(n.attributes, cloneAttribute(attribute))
+	return nil
+}
+
+// CompleteAttributes optionally seals one start-tag attribute phase before
+// children or node closure. It preserves explicit enumeration evidence for an
+// interrupted parent; unknown evidence never establishes absence. Once called,
+// no further Attribute event is allowed on this occurrence. Existing streams
+// may omit this event and supply completeness only in NodeEnd.
+func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Evidence[bool]) error {
+	if err := s.event(ctx, "CompleteAttributes"); err != nil {
+		return err
+	}
+	if len(s.stack) == 0 {
+		return s.fail(&SessionError{Operation: "CompleteAttributes", Reason: "no open owner"})
+	}
+	n := s.stack[len(s.stack)-1]
+	if n.header.ID != id || len(n.children) != 0 || n.attributeSeal != nil {
+		return s.fail(&SessionError{Operation: "CompleteAttributes", Reason: "wrong owner, repeated closure, or children already started"})
+	}
+	if err := validateEvidence(complete, "attribute completeness"); err != nil {
+		return s.fail(err)
+	}
+	if err := s.retain(64 + evidenceLogicalBytes(complete)); err != nil {
+		return s.fail(err)
+	}
+	owned := cloneEvidence(complete)
+	n.attributeSeal = &owned
 	return nil
 }
 
@@ -373,6 +433,9 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 			s.markIdentityIncomplete(name)
 		}
 	}
+	if n.attributeSeal != nil && n.attributeSeal.State == EvidenceKnown && n.attributeSeal.Value && (end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value) {
+		return s.fail(&SessionError{Operation: "Close", Reason: "attribute completeness contradicts sealed start tag"})
+	}
 	n.end = cloneEnd(end)
 	n.closed = true
 	s.stack = s.stack[:len(s.stack)-1]
@@ -380,6 +443,24 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 		return s.fail(err)
 	}
 	s.depth--
+	if s.schema != nil && !s.schema.bound {
+		if n != s.root {
+			return nil
+		}
+		if err := s.bindSourceSchema(ctx); err != nil {
+			return s.fail(err)
+		}
+		// Binding traverses every closed source node before any exact selector
+		// can cache an unavailable result. Evaluate in schema witness order.
+		for _, id := range s.sequence {
+			for _, key := range s.catalog.orders[s.profile.ID] {
+				if err := s.evaluate(ctx, s.nodes[id], key, false); err != nil {
+					return s.fail(err)
+				}
+			}
+		}
+		return nil
+	}
 	for _, key := range s.catalog.orders[s.profile.ID] {
 		if err := s.evaluate(ctx, n, key, false); err != nil {
 			return s.fail(err)
@@ -403,6 +484,7 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 		return Report{}, &SessionError{Operation: "Finish", Reason: "uninitialized session"}
 	}
 	s.finished = true
+	eventsValid := s.terminalCause == nil
 	defer s.cleanup()
 	addCause := func(err error) {
 		if err == nil {
@@ -423,7 +505,16 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 	completionErr := s.validateCompletion(end)
 	addCause(completionErr)
 	malformedSource := completionErr == nil && s.profile.Target == TargetSource && end.Syntax == SyntaxMalformed && end.Cause != nil
-	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && reportSyntaxComplete(s.profile.Target, end.Syntax)
+	// A valid retained prefix can still prove independent violations after an
+	// external parse or I/O failure. Never resume work after cancellation, a
+	// rejected fact event, or exhausted resources.
+	if eventsValid && completionErr == nil && ctx != nil && ctx.Err() == nil && s.schema != nil && !s.schema.bound && s.root != nil && !errors.Is(end.Cause, ErrResourceLimit) {
+		addCause(s.bindSourceSchema(ctx))
+	}
+	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && end.Syntax != SyntaxMalformed
+	if s.terminalCause == nil && s.schema != nil && s.schema.bound {
+		addCause(s.finalizeSourceSchema(ctx))
+	}
 	if s.terminalCause == nil {
 		for _, phase := range s.catalog.phases[s.profile.ID] {
 			s.collectingIdentity = phase.registration
@@ -447,7 +538,8 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 			}
 		}
 	}
-	if !s.inputComplete || s.terminalCause != nil || s.enumerationIncomplete {
+	addCause(s.flushSourceDTDSummaries())
+	if !s.inputComplete || !reportSyntaxComplete(s.profile.Target, end.Syntax) || s.terminalCause != nil || s.enumerationIncomplete {
 		s.accumulator.incomplete()
 	}
 	if s.terminalCause != nil {
@@ -465,8 +557,8 @@ func (s *Session) validateCompletion(end Completion) error {
 		if end.Syntax != SyntaxWellFormed && end.Syntax != SyntaxMalformed && end.Syntax != SyntaxIncomplete {
 			return contract("completion syntax", "source syntax assertion required")
 		}
-		if end.InputComplete && end.Syntax != SyntaxWellFormed {
-			return contract("completion syntax", "complete source requires well-formed syntax")
+		if end.InputComplete && end.Syntax == SyntaxMalformed {
+			return contract("completion syntax", "malformed source cannot assert complete input")
 		}
 	} else if end.Syntax != SyntaxNotAssessed {
 		return contract("completion syntax", "model/package syntax must be not-assessed")
@@ -507,6 +599,10 @@ func terminalClassification(err error, malformedSource bool) (DiagnosticCategory
 	return CategoryCapability, "assessment-interrupted"
 }
 func (s *Session) cleanup() {
+	if s.schema != nil && s.schema.run != nil {
+		_ = s.schema.run.Close()
+	}
+	s.schema = nil
 	if s.depth > 0 {
 		_ = s.account.Release(BudgetDepth, s.depth)
 		s.depth = 0

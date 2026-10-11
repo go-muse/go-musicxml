@@ -74,17 +74,21 @@ validation or strict MusicXML validation. Empty prefixed namespace declarations
 such as `xmlns:p=""` are rejected under Namespaces in XML 1.0; resetting the
 default namespace with `xmlns=""` remains allowed.
 
-Duplicate-attribute, DOCTYPE-placement, XML-declaration-placement,
-reserved-XML-target, empty-prefix-declaration and outside-root reference/CDATA errors wrap
-`*xml.SyntaxError`, available through `errors.As`. Its `Line` is the innermost
-XML decoder's detection position after reading the offending token; for a
-multiline token this is its end line, not the attribute's start line. Existing
-resource-limit and encoding errors retain their separate error contracts.
+The shared source scanner checks XML 1.0 declaration and local DTD grammar,
+namespace closure and original encoding before model filtering. XML defects wrap
+`*xml.SyntaxError`; resource and unavailable-encoding/DTD semantics retain their
+separate typed causes. `xml.SyntaxError.Line` identifies a decoded-source
+recognition position, not an attribute-start location. Source assessment findings
+supply explicit original-byte positions where available.
 
-These are bounded XML-reading checks, not complete prolog or XML-declaration
-pseudo-attribute grammar validation. The declaration's contents and DTD syntax
-remain subject to the existing `encoding/xml` behavior; no DTD is parsed or
-fetched by this additional token check.
+Literal attribute tabs and line endings normalize to spaces, while numeric
+references preserve their referenced whitespace. Contradictory BOM/encoding
+declarations, undeclared prefixes, malformed declaration/DTD grammar and illegal
+reserved namespace bindings are now rejected. DTD defaults and replacement text
+are not implemented or fetched; unsupported declaration WFC/infoset dependencies
+are explicit assessment limitations. See the
+[source parser scope](docs/validation/source-parser-scope.md) for the precise
+syntax, compatibility, encoding and DTD boundary.
 
 When the expected root type is known, `DecodeScorePartwise`,
 `DecodeScoreTimewise`, and `DecodeOpusDocument` return the corresponding
@@ -151,13 +155,15 @@ string unchanged and does not check resource existence or accessibility.
 
 ## Fact-stream validation foundation
 
-The `validation` subpackage exports `NewCatalog`, eight sealed typed-plan
-constructors, `NewEngine`, and explicit-profile fact sessions using `Open`,
-`Attribute`, `Close` and `Finish`. Catalogs are immutable; sessions copy retained
+The `validation` subpackage exports `NewCatalog`, eight generic sealed typed-plan
+constructors plus the sealed shared-schema `NewXSDPlan`, `NewEngine`, and explicit-profile fact sessions using `Open`,
+`Attribute`, optional `CompleteAttributes`, `Close` and `Finish`. The optional
+attribute-closure event seals explicit start-tag enumeration before children;
+it enables truthful prefix assessment when an ancestor never closes. Catalogs are immutable; sessions copy retained
 facts and return independently owned reports. Exact selectors distinguish schema
-assemblies and declaration/use occurrences. There is no default MusicXML profile,
-XML/source adapter, direct model walker, resolver or package-assessment entry
-point. The [exported example](validation/example_test.go) uses synthetic facts.
+assemblies and declaration/use occurrences. There is no default MusicXML profile, direct current-model walker, resolver
+or package-assessment entry point. The root package provides the explicit source
+preview described below. The [exported example](validation/example_test.go) uses synthetic facts.
 
 A profile explicitly names all required and transitive rules, static support,
 supported roots and normative closure. `CompiledCatalog.Schedule` exposes each
@@ -209,6 +215,96 @@ plan boundaries and remaining obligations are documented in the
 [foundation scope](docs/validation/foundation-scope.md). Numeric constructor
 resource limits are not XSD facets. The legacy `Validate` encode/reparse path,
 `DecodeOptions` shape and generated model remain unchanged.
+
+## Opt-in original-source assessment
+
+**Current preview input limit:** an unread external DOCTYPE subset prevents
+source acceptance. The committed official score samples `Chant.musicxml`,
+`MozartTrio.musicxml` and UTF-16 `MozaChloSample.musicxml` therefore produce
+unsupported/incomplete source reports. Strict `DecodeAssessed` returns no
+`Document` for them even though model conversion succeeds. The DOCTYPE-free
+`OpusLink.musicxml` and `OpusScore.musicxml` fixtures are within the currently
+assessable source scope. This is a developmental DTD-independent preview, not
+validation support for the usual external-DOCTYPE MusicXML score exports.
+A familiar public identifier is not treated as proof that an unread DTD is
+infoset-neutral. Removing a DOCTYPE changes the input and is not equivalent
+assessment of the original file. DTD closure remains later work.
+
+`InspectXML(ctx, reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})`
+assesses original XML without creating a Go document. An empty/unknown profile,
+invalid budgets, or an already canceled context fail before the first input read.
+A nil operation error does not imply acceptance: inspect `Report.Satisfied()`.
+Ordinary normative failures return a report with no operational error. Syntax,
+I/O, cancellation, resource and fatal capability failures preserve their causes
+with the best partial report.
+
+`DecodeAssessed(ctx, reader, DecodeAssessmentOptions{...})` returns a
+`DecodeResult` with independent `Source`, `Conversion` and `Document` fields.
+A nonnil `Assessment` requires an explicit profile and strict acceptance; source
+failure or incompleteness discards the returned document. A nil `Assessment`
+keeps permissive model conversion and mandatory XML checks, with no catalog load
+and `Source.Requested == false`. Existing `DecodeOptions` is unchanged.
+
+The observer sees every original element, physical attribute, namespace binding,
+child order and direct character segment before Go-model filtering or skipping.
+The XML parser has one owner. After a recoverable model mapping error, that same
+healthy parser is drained; the failed reflection decoder is never resumed.
+There is no reader replay, second XML parse or model Encode→parse in this path.
+The implementation retains a budgeted fact graph; single-pass input does not
+mean constant-memory processing. The caller retains ownership of the reader.
+
+The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
+64 MiB file or one million nodes can be assessed. For example, the 223,068-byte,
+3,185-element official UTF-16 score needs about 13.94 MiB merely to finish its
+unsupported external-DTD report; the otherwise identical DOCTYPE-removed
+measurement control needs about 27.19 MiB for complete assessment. These are
+fixture-specific logical allowances, not heap/RSS or a universal element limit.
+Ordinary larger scores can exceed the default. Set informed finite overrides in
+`AssessmentOptions.Budgets` where appropriate; all other limits still apply.
+See the source scope's exact measurements and interpretation.
+
+`ConversionConverted` means mapping succeeded under the existing Go model
+contract, including its `float64` precision and field representation. It is not
+an exact lexical or numeric round-trip guarantee. `ConversionUnrepresentable`
+and `ConversionError` preserve machine-range errors without inventing XSD
+invalidity. Strict error chains may include both an actual normative
+`ValidationError` and `validation.IncompleteError` when both axes apply.
+
+`ProfileSourceXSDPreview` is a developmental, source-only profile for
+`score-partwise`, `score-timewise` and `opus`. Six sealed XSD operations cover
+binding, element declarations, attributes, scalars, content grammar and document
+identity, reusing the authoritative shared XSD implementation. Each selected
+operation counts once per applicable subject, regardless of how many diagnostic
+details it emits. A proved failure and incomplete remaining work can coexist.
+A small diagnostic quota cannot turn failure/incompleteness into acceptance.
+Repeated cause-free `dtd-infoset-unavailable` outcomes are displayed as one
+bounded summary per full rule key and document, with the number of summarized
+rule evaluations and the first representative occurrence. All instance counts
+and blockers remain exact. Those summaries are admitted after ordinary details,
+so they cannot consume a fitting later failure's only diagnostic slot. Other
+unsupported reasons and causal blockers are not coalesced. `ValidationError.Issues`
+contains only quota-admitted normative details and may be empty; a truncated
+source error additionally explains the failed-evaluation count and truncation.
+
+This preview is not the first bounded production MusicXML profile. It excludes
+MusicXML prose, direct current-model evidence, local typed musical relations,
+timeline/repeats/context, packages, external documents and dictionaries.
+Reached unverified XSD/DTD capabilities remain unavailable; catalog compilation
+is an immutable bounded snapshot, not general XSD schema validation or UPA
+closure. The [source assessment scope](docs/validation/source-assessment-scope.md)
+defines exact support, ownership, verification and remaining obligations.
+
+Positions use zero-based original-byte offsets, including BOMs, and one-based
+decoded-character lines/columns. CRLF is one line break. If either coordinate
+exceeds the host integer range, both are omitted as `0/0` for the rest of the
+source; original-byte offsets remain available. Physical attribute
+positions survive skipped content and foreign namespace lookalikes. Overlong
+display paths are omitted while occurrence identity/positions remain available.
+Fact identity ceilings (1024 UTF-8 bytes per local name/prefix, 4096 per namespace
+URI and 65536 in-scope bindings) cause incompleteness, not malformed XML.
+Clean input EOF can coexist with incomplete XML well-formedness assessment when
+DTD declaration semantics remain unavailable. Context checks cannot interrupt a
+blocking arbitrary `io.Reader.Read`; use cancellable I/O where needed.
 
 ## MXL packages
 

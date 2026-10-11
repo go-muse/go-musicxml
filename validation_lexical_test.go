@@ -31,8 +31,8 @@ func TestValidateBooleanLexicalForms(t *testing.T) {
 				return
 			}
 			require.NotNil(t, failure)
-			assert.Equal(t, "datatype", failure.constraint)
-			assert.Equal(t, fmt.Sprintf("value %q is not valid for xs:boolean", test.value), failure.message)
+			assert.Equal(t, "datatype", failure.Constraint)
+			assert.Equal(t, fmt.Sprintf("value %q is not valid for xs:boolean", test.value), failure.Message)
 		})
 	}
 }

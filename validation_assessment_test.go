@@ -44,8 +44,8 @@ func TestXSITypeIncompleteAssessment(t *testing.T) {
 				source = `<!DOCTYPE value [<!NOTATION image SYSTEM "image"><!ENTITY image SYSTEM "image" NDATA image>]>` + source
 			}
 			c := assessAttributeSource(t, schema, source)
-			require.Error(t, c.assessmentErr)
-			assert.Empty(t, c.issues)
+			require.Error(t, c.AssessmentErr)
+			assert.Empty(t, c.Issues)
 			assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
 			var invalid *ValidationError
 			assert.False(t, errors.As(c.result(), &invalid))
@@ -57,14 +57,18 @@ func ptrValidationType(ref validationTypeRef) *validationTypeRef { return &ref }
 func TestAssessmentErrorsPreserveIndependentIssues(t *testing.T) {
 	source := `<t:builtin xmlns:t="urn:xsi-contract" xmlns:xs="` + validationXSDNamespace + `" xmlns:i="` + validationXSINamespace + `" i:type="xs:ENTITY" bad="x">image</t:builtin>`
 	c := assessAttributeSource(t, &validationXSIGenerated, source)
-	require.Error(t, c.assessmentErr)
-	require.Len(t, c.issues, 1)
-	assert.Equal(t, "attribute", c.issues[0].Constraint)
+	require.Error(t, c.AssessmentErr)
+	require.Len(t, c.Issues, 1)
+	assert.Equal(t, "attribute", c.Issues[0].Constraint)
 	result := c.result()
 	assert.ErrorIs(t, result, ErrInvalidDocument)
 	var invalid *ValidationError
 	require.ErrorAs(t, result, &invalid)
-	assert.Equal(t, c.issues, invalid.Issues)
+	want := make([]ValidationIssue, len(c.Issues))
+	for i, issue := range c.Issues {
+		want[i] = ValidationIssue(issue)
+	}
+	assert.Equal(t, want, invalid.Issues)
 	assert.Contains(t, result.Error(), "unparsed entity")
 }
 
@@ -86,14 +90,14 @@ func TestEntityAssessmentDoesNotBecomeUnionFallback(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			c := newTestValidationContext(&validationSchemaSet{})
-			_, failure := c.assessSimpleValue(test.simple, test.value, test.value)
+			_, failure := c.AssessSimpleValue(test.simple, test.value, test.value)
 			if test.incomplete {
 				require.NotNil(t, failure)
-				require.Error(t, c.assessmentErr)
+				require.Error(t, c.AssessmentErr)
 				assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
 			} else {
 				assert.Nil(t, failure)
-				assert.NoError(t, c.assessmentErr)
+				assert.NoError(t, c.AssessmentErr)
 			}
 		})
 	}
@@ -106,19 +110,19 @@ func TestEntityLiteralAndFixedAssessment(t *testing.T) {
 		run  func(*validationContext)
 	}{
 		{"literal", func(c *validationContext) {
-			_, ok := c.simpleLiteralValue(c.resolveSimpleSemantics(entityUnion), "image")
+			_, ok := c.SimpleLiteralValue(c.ResolveSimpleSemantics(entityUnion), "image")
 			assert.False(t, ok)
 		}},
 		{"enumeration", func(c *validationContext) {
 			restriction := &validationSimpleSchema{Form: validationSimpleRestriction, Base: &validationSimpleMember{Inline: entityUnion}, Enumerations: []string{"image"}}
-			_, failure := c.assessSimpleValue(restriction, "two words", "two words")
+			_, failure := c.AssessSimpleValue(restriction, "two words", "two words")
 			require.NotNil(t, failure)
 			assert.True(t, validationTechnicalFailure(failure))
 		}},
 		{"fixed attribute", func(c *validationContext) {
 			node, err := parseValidationDocument([]byte(`<value value="two words"/>`))
 			require.NoError(t, err)
-			c.validateAttributes(node, []validationAttributeSchema{{Name: validationQName{Local: "value"}, Type: validationTypeRef{InlineSimple: entityUnion}, Constraint: &validationValueConstraint{Kind: "fixed", Value: "image"}}}, nil, "/value")
+			c.ValidateAttributes(node, []validationAttributeSchema{{Name: validationQName{Local: "value"}, Type: validationTypeRef{InlineSimple: entityUnion}, Constraint: &validationValueConstraint{Kind: "fixed", Value: "image"}}}, nil, "/value")
 		}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -126,8 +130,8 @@ func TestEntityLiteralAndFixedAssessment(t *testing.T) {
 			for range 3 {
 				test.run(c)
 			}
-			assert.Error(t, c.assessmentErr)
-			assert.Empty(t, c.issues)
+			assert.Error(t, c.AssessmentErr)
+			assert.Empty(t, c.Issues)
 			assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
 		})
 	}
@@ -141,9 +145,9 @@ func TestFinalInvalidMetadataIsIncomplete(t *testing.T) {
 		{Form: validationSimpleUnion, Members: []*validationSimpleMember{{Inline: base}}},
 	} {
 		c := newTestValidationContext(&validationSchemaSet{})
-		c.validateType(&validationNode{}, &validationTypeRef{InlineSimple: derived}, "/value", false, &validationNode{})
-		assert.Error(t, c.assessmentErr)
-		assert.Empty(t, c.issues)
+		c.ValidateType(&validationNode{}, &validationTypeRef{InlineSimple: derived}, "/value", false, &validationNode{})
+		assert.Error(t, c.AssessmentErr)
+		assert.Empty(t, c.Issues)
 		assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
 	}
 }
@@ -153,12 +157,12 @@ func TestIncompleteEnumerationCacheDoesNotInventViolations(t *testing.T) {
 	restriction := &validationSimpleSchema{Form: validationSimpleRestriction, Base: &validationSimpleMember{Inline: union}, Enumerations: []string{"image"}}
 	c := newTestValidationContext(&validationSchemaSet{})
 	for range 3 {
-		_, failure := c.assessSimpleValue(restriction, "two words", "two words")
+		_, failure := c.AssessSimpleValue(restriction, "two words", "two words")
 		require.NotNil(t, failure)
 		assert.True(t, validationTechnicalFailure(failure))
-		require.Error(t, c.assessmentErr)
-		assert.Empty(t, c.issues)
-		assert.Len(t, c.enumerationValues, 1)
+		require.Error(t, c.AssessmentErr)
+		assert.Empty(t, c.Issues)
+		assert.Len(t, c.EnumerationValues, 1)
 	}
 }
 
@@ -171,14 +175,14 @@ func TestIncompleteIdentityTraversalDoesNotProveAbsentTarget(t *testing.T) {
 	set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
 	for _, attrs := range []string{"", ` bad="value"`} {
 		c := assessAttributeSource(t, set, `<root`+attrs+`><ref>target</ref><target id="target"/></root>`)
-		require.Error(t, c.assessmentErr)
-		require.Len(t, c.references, 1)
+		require.Error(t, c.AssessmentErr)
+		require.Len(t, c.References, 1)
 		if attrs == "" {
-			assert.Empty(t, c.issues)
+			assert.Empty(t, c.Issues)
 			assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
 		} else {
-			require.Len(t, c.issues, 1)
-			assert.Equal(t, "attribute", c.issues[0].Constraint)
+			require.Len(t, c.Issues, 1)
+			assert.Equal(t, "attribute", c.Issues[0].Constraint)
 			assert.ErrorIs(t, c.result(), ErrInvalidDocument)
 		}
 	}
@@ -188,10 +192,10 @@ func TestIncompleteDefaultPreservesActualAttributes(t *testing.T) {
 	date := validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "date"}}
 	set := &validationSchemaSet{Types: map[validationQName]*validationTypeSchema{{Local: "DateAttrs"}: {Complex: &validationComplexSchema{Form: validationComplexSimpleContentExtension, Base: &date, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "code"}, Type: validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "string"}}, Use: validationAttributeRequired}}}}}, Elements: map[validationQName]*validationElementSchema{{Local: "value"}: {Name: validationQName{Local: "value"}, Type: date, Default: validationString("2024-01-01")}}}
 	c := assessAttributeSource(t, set, wrapValidationElement("value", ` n:type="DateAttrs"`, ""))
-	require.Error(t, c.assessmentErr)
-	require.Len(t, c.issues, 1)
-	assert.Equal(t, "required", c.issues[0].Constraint)
-	assert.Equal(t, "/value/@code", c.issues[0].Path)
+	require.Error(t, c.AssessmentErr)
+	require.Len(t, c.Issues, 1)
+	assert.Equal(t, "required", c.Issues[0].Constraint)
+	assert.Equal(t, "/value/@code", c.Issues[0].Path)
 	assert.ErrorIs(t, c.result(), ErrInvalidDocument)
 }
 
@@ -200,12 +204,12 @@ func TestAssessmentIssueSinkPreservesTechnicalOutcome(t *testing.T) {
 		t.Run(map[bool]string{false: "technical only", true: "joined with proven issue"}[existingIssue], func(t *testing.T) {
 			c := newTestValidationContext(&validationSchemaSet{})
 			if existingIssue {
-				c.addIssue("/value/@bad", "attribute", "attribute is not permitted")
+				c.AddIssue("/value/@bad", "attribute", "attribute is not permitted")
 			}
-			c.addIssue("/value", "assessment", "producer did not record its cause")
-			require.Error(t, c.assessmentErr)
-			assert.Contains(t, c.assessmentErr.Error(), "/value: producer did not record its cause")
-			assert.Equal(t, uint64(1), c.assessmentVersion)
+			c.AddIssue("/value", "assessment", "producer did not record its cause")
+			require.Error(t, c.AssessmentErr)
+			assert.Contains(t, c.AssessmentErr.Error(), "/value: producer did not record its cause")
+			assert.Equal(t, uint64(1), c.AssessmentVersion)
 			result := c.result()
 			require.Error(t, result)
 			assert.Equal(t, existingIssue, errors.Is(result, ErrInvalidDocument))
@@ -215,7 +219,7 @@ func TestAssessmentIssueSinkPreservesTechnicalOutcome(t *testing.T) {
 				require.Len(t, invalid.Issues, 1)
 				assert.Equal(t, "attribute", invalid.Issues[0].Constraint)
 			} else {
-				assert.Empty(t, c.issues)
+				assert.Empty(t, c.Issues)
 			}
 		})
 	}
@@ -223,34 +227,34 @@ func TestAssessmentIssueSinkPreservesTechnicalOutcome(t *testing.T) {
 
 func TestAssessmentIssueSinkDoesNotDuplicateRecordedCause(t *testing.T) {
 	c := newTestValidationContext(&validationSchemaSet{})
-	failure := c.incompleteFailure("original metadata cause")
-	original := c.assessmentErr
-	version := c.assessmentVersion
+	failure := c.IncompleteFailure("original metadata cause")
+	original := c.AssessmentErr
+	version := c.AssessmentVersion
 	for range 2 {
-		c.addIssue("/value", failure.constraint, failure.message)
-		assert.Same(t, original, c.assessmentErr)
-		assert.Equal(t, version, c.assessmentVersion)
+		c.AddIssue("/value", failure.Constraint, failure.Message)
+		assert.Same(t, original, c.AssessmentErr)
+		assert.Equal(t, version, c.AssessmentVersion)
 	}
-	c.addIssue("/other", "schema", "independent missing schema")
-	assert.Equal(t, version+1, c.assessmentVersion)
+	c.AddIssue("/other", "schema", "independent missing schema")
+	assert.Equal(t, version+1, c.AssessmentVersion)
 	assert.Contains(t, c.result().Error(), "original metadata cause")
 	assert.Contains(t, c.result().Error(), "/other: independent missing schema")
-	assert.Empty(t, c.issues)
+	assert.Empty(t, c.Issues)
 	assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
 }
 
 func TestAssessmentFailurePreservesRecordedCause(t *testing.T) {
 	c := newTestValidationContext(&validationSchemaSet{})
-	failure := c.assessmentFailure("missing cause")
+	failure := c.AssessmentFailure("missing cause")
 	require.NotNil(t, failure)
-	assert.Equal(t, "assessment", failure.constraint)
-	assert.Equal(t, "missing cause", failure.message)
-	require.Error(t, c.assessmentErr)
-	original := c.assessmentErr
-	version := c.assessmentVersion
-	failure = c.assessmentFailure("already recorded by metadata")
-	assert.Equal(t, "already recorded by metadata", failure.message)
-	assert.Same(t, original, c.assessmentErr)
-	assert.Equal(t, version, c.assessmentVersion)
+	assert.Equal(t, "assessment", failure.Constraint)
+	assert.Equal(t, "missing cause", failure.Message)
+	require.Error(t, c.AssessmentErr)
+	original := c.AssessmentErr
+	version := c.AssessmentVersion
+	failure = c.AssessmentFailure("already recorded by metadata")
+	assert.Equal(t, "already recorded by metadata", failure.Message)
+	assert.Same(t, original, c.AssessmentErr)
+	assert.Equal(t, version, c.AssessmentVersion)
 	assert.NotErrorIs(t, c.result(), ErrInvalidDocument)
 }

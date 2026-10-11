@@ -122,20 +122,20 @@ func TestDecimalDigitFacetArbitraryWidths(t *testing.T) {
 				value := " \t" + sign + "000" + test.value + "\r\n"
 				t.Run(fmt.Sprintf("%d/%d/%d/%s", width, test.total, test.fraction, sign), func(t *testing.T) {
 					schema := &validationSimpleSchema{Form: validationSimpleRestriction, Base: &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}, HasTotalDigits: true, TotalDigits: test.total, HasFractionDigits: true, FractionDigits: test.fraction}
-					assert.Nil(t, context.validateSimple(schema, value))
+					assert.Nil(t, context.ValidateSimple(schema, value))
 					if test.total > 1 {
 						schema.TotalDigits--
-						failure := context.validateSimple(schema, value)
+						failure := context.ValidateSimple(schema, value)
 						if assert.NotNil(t, failure) {
-							assert.Equal(t, "totalDigits", failure.constraint)
+							assert.Equal(t, "totalDigits", failure.Constraint)
 						}
 						schema.TotalDigits++
 					}
 					if test.fraction > 0 {
 						schema.FractionDigits--
-						failure := context.validateSimple(schema, value)
+						failure := context.ValidateSimple(schema, value)
 						if assert.NotNil(t, failure) {
-							assert.Equal(t, "fractionDigits", failure.constraint)
+							assert.Equal(t, "fractionDigits", failure.Constraint)
 						}
 					}
 				})
@@ -198,7 +198,7 @@ func TestDecimalDigitFacetsRationalOracle(t *testing.T) {
 				failure := validateDigitFacets(schema, literal, "decimal")
 				if limits[0] < total {
 					if assert.NotNil(t, failure, "%q", literal) {
-						assert.Equal(t, "totalDigits", failure.constraint)
+						assert.Equal(t, "totalDigits", failure.Constraint)
 					}
 				} else {
 					assert.Nil(t, failure, "%q", literal)
@@ -207,7 +207,7 @@ func TestDecimalDigitFacetsRationalOracle(t *testing.T) {
 			if fraction > 0 {
 				failure := validateDigitFacets(&validationSimpleSchema{HasFractionDigits: true, FractionDigits: fraction - 1}, literal, "decimal")
 				if assert.NotNil(t, failure, "%q", literal) {
-					assert.Equal(t, "fractionDigits", failure.constraint)
+					assert.Equal(t, "fractionDigits", failure.Constraint)
 				}
 			}
 		}
@@ -224,8 +224,8 @@ func TestDecimalDigitFacetDiagnosticsAndImmutability(t *testing.T) {
 		before := *schema
 		failure := validateDigitFacets(schema, test.value, "decimal")
 		if assert.NotNil(t, failure) {
-			assert.Equal(t, test.constraint, failure.constraint)
-			assert.Equal(t, test.message, failure.message)
+			assert.Equal(t, test.constraint, failure.Constraint)
+			assert.Equal(t, test.message, failure.Message)
 		}
 		assert.Equal(t, before, *schema)
 	}
@@ -234,8 +234,8 @@ func TestDecimalDigitFacetDiagnosticsAndImmutability(t *testing.T) {
 	before := root.Text.String()
 	declaration := validationDecimalGenerated.Elements[validationQName{Local: "digits-scalar"}]
 	context := newTestValidationContext(&validationDecimalGenerated)
-	context.validateElement(root, declaration, "/digits-scalar")
-	assert.Empty(t, context.issues)
+	context.ValidateElement(root, declaration, "/digits-scalar")
+	assert.Empty(t, context.Issues)
 	assert.Equal(t, before, root.Text.String())
 	assert.Equal(t, "+001.2000", root.Attrs[0].Value)
 }
@@ -246,7 +246,7 @@ func TestDecimalDigitFacetsConstantSpace(t *testing.T) {
 	schema := &validationSimpleSchema{HasTotalDigits: true, TotalDigits: 1<<18 + 2, HasFractionDigits: true, FractionDigits: 1<<18 + 1}
 	assert.Zero(t, testing.AllocsPerRun(5, func() {
 		if failure := validateDigitFacets(schema, value, "decimal"); failure != nil {
-			panic(failure.message)
+			panic(failure.Message)
 		}
 	}))
 }
@@ -259,7 +259,7 @@ func TestDecimalDigitFacetDispatchScope(t *testing.T) {
 	for _, value := range []string{"", ".", "1e0", "NaN", "١", "\u00a01"} {
 		failure := validateDigitFacets(&validationSimpleSchema{HasTotalDigits: true, TotalDigits: 3}, value, "decimal")
 		if assert.NotNil(t, failure) {
-			assert.Equal(t, "datatype", failure.constraint)
+			assert.Equal(t, "datatype", failure.Constraint)
 		}
 	}
 	for _, builtin := range []string{"integer", "positiveInteger", "unsignedLong"} {
@@ -270,7 +270,7 @@ func TestDecimalDigitFacetDispatchScope(t *testing.T) {
 	for _, builtin := range []string{"string", "token", "float", "double", ""} {
 		failure := validateDigitFacets(&validationSimpleSchema{HasFractionDigits: true}, "1.000", builtin)
 		if assert.NotNil(t, failure, builtin) {
-			assert.Equal(t, "fractionDigits", failure.constraint)
+			assert.Equal(t, "fractionDigits", failure.Constraint)
 		}
 	}
 	assert.Nil(t, validateDigitFacets(&validationSimpleSchema{HasFractionDigits: true}, "1.000", "decimal"))

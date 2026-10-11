@@ -23,19 +23,19 @@ func TestIncompleteUnionDerivationPreservesTechnicalState(t *testing.T) {
 			require.NoError(t, err)
 			c := newTestValidationContext(schema)
 			for repeat := 0; repeat < 3; repeat++ {
-				c.validateElement(node, declaration, "/value")
-				c.validateIdentityReferences()
-				require.Error(t, c.assessmentErr)
+				c.ValidateElement(node, declaration, "/value")
+				c.ValidateIdentityReferences()
+				require.Error(t, c.AssessmentErr)
 				var invalid *ValidationError
 				if badHint {
-					require.Len(t, c.issues, repeat+1)
-					for _, issue := range c.issues {
+					require.Len(t, c.Issues, repeat+1)
+					for _, issue := range c.Issues {
 						assert.Equal(t, "datatype", issue.Constraint)
 						assert.Equal(t, "/value/@{http://www.w3.org/2001/XMLSchema-instance}schemaLocation", issue.Path)
 					}
 					assert.True(t, errors.As(c.result(), &invalid))
 				} else {
-					assert.Empty(t, c.issues)
+					assert.Empty(t, c.Issues)
 					assert.False(t, errors.Is(c.result(), ErrInvalidDocument))
 					assert.False(t, errors.As(c.result(), &invalid))
 				}
