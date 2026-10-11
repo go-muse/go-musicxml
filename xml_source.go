@@ -3,6 +3,7 @@ package musicxml
 import (
 	"context"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -638,10 +639,17 @@ func (r *sourceXMLTokenReader) start() (xml.Token, error) {
 		return nil, r.syntax("multiple root elements")
 	}
 	if int64(len(r.frames)) >= r.maxDepth {
-		if r.account != nil && int64(r.maxDepth) == r.account.Limits().MaxDepth {
-			return nil, &validation.ResourceError{Kind: validation.BudgetDepth, Limit: int64(r.maxDepth), Used: int64(len(r.frames)), Requested: 1}
+		legacy := fmt.Errorf("%w: maximum is %d elements", ErrXMLTooDeep, r.maxDepth)
+		if r.account != nil {
+			resource := &validation.ResourceError{Kind: validation.BudgetDepth, Limit: r.maxDepth, Used: int64(len(r.frames)), Requested: 1}
+			if r.maxDepth == r.account.Limits().MaxDepth {
+				return nil, resource
+			}
+			// An explicit Decode depth limit remains a resource boundary when
+			// tighter than the assessment account, with its legacy identity intact.
+			return nil, errors.Join(legacy, resource)
 		}
-		return nil, fmt.Errorf("%w: maximum is %d elements", ErrXMLTooDeep, r.maxDepth)
+		return nil, legacy
 	}
 	var attributes []xml.Attr
 	var metadata []sourceXMLAttribute

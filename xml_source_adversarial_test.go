@@ -206,3 +206,54 @@ func TestSourceCursorAvoidsPerCharacterAllocation(t *testing.T) {
 		t.Fatalf("source scan allocated %.0f objects; per-character caching must be allocation-free", allocations)
 	}
 }
+
+func TestSourceDepthLimitPreservesResourceIdentity(t *testing.T) {
+	for _, test := range []struct {
+		name                  string
+		legacy                int
+		account               int64
+		resource, legacyError bool
+	}{
+		{"legacy only", 2, 0, false, true},
+		{"legacy tighter", 2, 3, true, true},
+		{"account tighter", 3, 2, true, false},
+		{"account equal", 2, 2, true, false},
+		{"account only", 0, 2, true, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var account *validation.Account
+			if test.account != 0 {
+				var err error
+				account, err = validation.NewBudgetAccount(validation.Budgets{MaxDepth: test.account})
+				if err != nil {
+					t.Fatal(err)
+				}
+			}
+			reader, err := newSourceXMLTokenReader(strings.NewReader(`<a><b><c/></b></a>`), sourceXMLConfig{Context: context.Background(), MaxDepth: test.legacy, Account: account})
+			if err != nil {
+				t.Fatal(err)
+			}
+			for err == nil {
+				_, err = reader.Token()
+			}
+			var limit *validation.ResourceError
+			if errors.As(err, &limit) != test.resource || errors.Is(err, ErrXMLTooDeep) != test.legacyError {
+				t.Fatalf("wrong error identity: %v", err)
+			}
+			if test.resource && (limit.Kind != validation.BudgetDepth || limit.Limit != 2 || limit.Used != 2 || limit.Requested != 1) {
+				t.Fatalf("wrong limit details: %+v", limit)
+			}
+			if err := reader.Close(); err != nil {
+				t.Fatal(err)
+			}
+			if account != nil {
+				for _, kind := range []validation.BudgetKind{validation.BudgetDepth, validation.BudgetBufferedBytes} {
+					used, _ := account.Usage(kind)
+					if used != 0 {
+						t.Fatalf("%s gauge = %d", kind, used)
+					}
+				}
+			}
+		})
+	}
+}
