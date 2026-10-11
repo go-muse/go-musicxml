@@ -102,6 +102,10 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // a partial model. Nil Assessment retains permissive conversion, legacy depth
 // limits and context checks, and leaves Source.Requested false. The input is
 // never closed. InspectXML documents source coordinates and cancellation limits.
+// A returned ValidationError contains only stored normative failure details;
+// Issues can be empty when the diagnostic budget excludes them. The operation
+// error explains truncation without adding synthetic issues. Source.Counts
+// counts rule evaluations, which need not equal the number of stored details.
 func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	run, err := newSourceAssessmentRun(ctx, reader, options.Decode, options.Assessment, true)
@@ -307,6 +311,12 @@ func sourceAcceptanceError(report validation.Report) error {
 			}
 		}
 		invalid = &ValidationError{Issues: issues}
+		if report.DiagnosticsTruncated {
+			// Counts measure rule evaluations, not individual details. Preserve
+			// only stored details in Issues; a bounded operation summary neither
+			// invents missing locations nor consumes another diagnostic slot.
+			invalid = fmt.Errorf("%w; source assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail)
+		}
 	}
 	if !report.AssessmentComplete || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.BlockingProblems != 0 || report.Terminal != nil {
 		return errors.Join(invalid, &validation.IncompleteError{Reason: "source-profile-not-satisfied"})

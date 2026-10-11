@@ -9,7 +9,12 @@ import (
 	"io"
 )
 
-// ValidationError reports every XSD validation issue found in a document.
+// ValidationError reports XSD validation issues found in a document.
+// For DecodeAssessed, Issues contains only stored normative failure details,
+// bounded by the assessment diagnostic count and byte budgets. It may be empty
+// if every detail was omitted. The returned operation error explains truncation;
+// consult DecodeResult.Source for the independent result and rule-evaluation
+// counts, which do not count individual issue details.
 type ValidationError struct {
 	Issues []ValidationIssue
 }
