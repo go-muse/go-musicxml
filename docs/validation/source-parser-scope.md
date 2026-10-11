@@ -84,7 +84,9 @@ are borrowed until the next token call; retaining consumers copy them first.
 Element/attribute spans use zero-based original-byte offsets including BOMs.
 Lines and columns are one-based decoded source-character coordinates; a CRLF
 pair counts as one line ending, and a supplementary character counts as one
-column even when represented by a UTF-16 surrogate pair. Attribute-value spans
+column even when represented by a UTF-16 surrogate pair. If either coordinate
+exceeds the host-sized integer range, both are omitted as `0/0` for the rest of
+the source; original-byte offsets remain available. Attribute-value spans
 exclude their quote delimiters. Synthetic end tokens for empty tags have an
 explicit flag and a zero-width position after the original tag.
 
