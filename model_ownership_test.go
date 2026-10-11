@@ -76,7 +76,10 @@ func TestModelAssessmentRemainingPerformanceOwner(t *testing.T) {
 }
 
 func modelRemainingProgramSection(data []byte) (string, bool) {
-	_, remaining, ok := strings.Cut(string(data), "## Remaining program\n")
+	// Git may check Markdown out with CRLF on Windows. The heading's logical
+	// line boundary, rather than a platform-specific byte spelling, matters.
+	text := strings.ReplaceAll(string(data), "\r\n", "\n")
+	_, remaining, ok := strings.Cut(text, "## Remaining program\n")
 	return strings.Join(strings.Fields(remaining), " "), ok
 }
 
