@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	"unsafe"
 )
 
 const (
@@ -241,6 +242,8 @@ type IdentityReference struct {
 }
 
 type EffectiveComplex struct {
+	// Run-local immutable absence records, indexed by the effective schema.
+	absent       absentAttributeCache
 	Particle     *ParticleSchema
 	Attributes   []AttributeSchema
 	AnyAttribute *AnyAttributeSchema
@@ -806,7 +809,9 @@ func (c *Context) EffectiveComplex(
 		return cached, cached != nil
 	}
 
-	c.reserve(160)
+	// Preserve the established effective-record/map allowance and separately
+	// admit the host-sized fields added for the run-local absence cache.
+	c.reserve(160 + int64(unsafe.Sizeof(absentAttributeCache{})))
 	c.reserve(c.size(int64(len(schema.Attributes)), 192))
 	c.step(int64(len(schema.Attributes)))
 	result = &EffectiveComplex{

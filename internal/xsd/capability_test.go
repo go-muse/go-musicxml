@@ -2,6 +2,7 @@ package xsd
 
 import (
 	"context"
+	"slices"
 	"testing"
 )
 
@@ -45,7 +46,7 @@ func TestRunAbsentDefaultIdentityBlocksClosure(t *testing.T) {
 	if v.Complete || !v.Valid {
 		t.Fatalf("absent default identity claimed closure: %+v", v)
 	}
-	a := r.Attributes(b)
+	a := slices.Collect(r.Attributes(b))
 	if len(a) != 1 || a[0].Present || !a[0].Scalar.Defaulted || !a[0].Scalar.Known {
 		t.Fatalf("default facts: %+v", a)
 	}
@@ -53,7 +54,7 @@ func TestRunAbsentDefaultIdentityBlocksClosure(t *testing.T) {
 func TestRunIndependentAttributeFactsRemainUsable(t *testing.T) {
 	complex := &ComplexSchema{Form: ComplexDirect, Attributes: []AttributeSchema{{Name: QName{Local: "bad"}, Type: TypeRef{Name: QName{Local: "missing"}}}, {Name: QName{Local: "ok"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "integer"}}}}}
 	r, b := bindSingle(t, TypeRef{InlineComplex: complex}, "", Attribute{Attr: Attr{Name: QName{Local: "bad"}, Value: "x"}, ValueKnown: true}, Attribute{Attr: Attr{Name: QName{Local: "ok"}, Value: "7"}, ValueKnown: true})
-	a := r.Attributes(b)
+	a := slices.Collect(r.Attributes(b))
 	if len(a) != 2 || !a[1].TypeValid || !a[1].Complete || !a[1].Scalar.Known || a[1].Use.Occurrence() == "" {
 		t.Fatalf("unrelated incomplete attribute erased known slot: %+v", a)
 	}

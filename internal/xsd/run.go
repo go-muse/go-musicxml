@@ -3,6 +3,7 @@ package xsd
 import (
 	"context"
 	"errors"
+	"iter"
 	"math"
 	"unsafe"
 )
@@ -120,7 +121,7 @@ type boundState struct {
 	actual, declared                             *TypeRef
 	results                                      NodeResults
 	scalar                                       ScalarResult
-	attributes                                   []AttributeResult
+	attributes                                   []*AttributeResult
 	matches                                      []ElementMatch
 	witnesses                                    []Witness
 	typeValid, declarationValid, identityAllowed bool
@@ -412,11 +413,22 @@ func (r *Run) Scalar(b Binding) ScalarResult {
 	}
 	return b.state.scalar
 }
-func (r *Run) Attributes(b Binding) []AttributeResult {
-	if !r.owns(b) {
-		return nil
+
+// Attributes yields assessed attribute facts in input order, then schema order
+// for known absences. Each result is a read-only value copy. The iterator does
+// not allocate a snapshot; consumers must charge/check each visited result in
+// their operation's meter, just as for the other borrowed result views.
+func (r *Run) Attributes(b Binding) iter.Seq[AttributeResult] {
+	return func(yield func(AttributeResult) bool) {
+		if !r.owns(b) {
+			return
+		}
+		for _, attribute := range b.state.attributes {
+			if !r.owns(b) || !yield(*attribute) {
+				return
+			}
+		}
 	}
-	return b.state.attributes
 }
 func (r *Run) buildWitnesses(s *boundState) {
 	owner, _ := r.typeID(s.actual)
@@ -640,7 +652,9 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	if s.subject.CurrentModel {
 		scalar.Lexeme = ""
 	}
-	s.attributes = appendRetained(c, s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Violation: s.attributeInvalid, Scalar: scalar})
+	c.reserve(int64(unsafe.Sizeof(AttributeResult{})))
+	result := &AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Violation: s.attributeInvalid, Scalar: scalar}
+	s.attributes = appendRetained(c, s.attributes, result)
 }
 
 // size validates arithmetic and host allocation width before any allocation.

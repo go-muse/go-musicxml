@@ -219,7 +219,7 @@ func TestCurrentAttributesKeepSlotResultsAndDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, a := range r.Attributes(b) {
+	for a := range r.Attributes(b) {
 		switch a.Name.Local {
 		case "bad":
 			if a.Complete || a.Scalar.Complete || a.TypeValid {

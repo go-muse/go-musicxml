@@ -403,7 +403,7 @@ func (s *Session) localScalar(ctx context.Context, n *factNode, a *AttributeSele
 			if s.schema.run != nil {
 				bound := s.schema.nodes[n.header.ID]
 				found := false
-				for _, result := range s.schema.run.Attributes(bound.binding) {
+				for result := range s.schema.run.Attributes(bound.binding) {
 					if err := s.step(ctx, 1); err != nil {
 						return Evidence[Atomic]{}, err
 					}

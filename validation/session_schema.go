@@ -319,12 +319,12 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 		}
 		attributes[a.Name] = i
 	}
-	for _, result := range state.run.Attributes(binding) {
-		if !result.Present {
-			continue
-		}
+	for result := range state.run.Attributes(binding) {
 		if err := s.step(ctx, 1); err != nil {
 			return err
+		}
+		if !result.Present {
+			continue
 		}
 		index, exists := attributes[QName{Space: result.Name.Space, Local: result.Name.Local}]
 		if !exists {
@@ -823,7 +823,7 @@ func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attrib
 			return input.Scalar.Value, nil
 		}
 	}
-	for _, result := range s.schema.run.Attributes(bound.binding) {
+	for result := range s.schema.run.Attributes(bound.binding) {
 		if err := s.step(ctx, 1); err != nil {
 			return unknown, err
 		}

@@ -2,6 +2,7 @@ package xsd
 
 import (
 	"context"
+	"slices"
 	"testing"
 )
 
@@ -39,11 +40,11 @@ func TestIndependentCurrentAttributePatternCompleteness(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("aggregate=%+v attribute=%+v", r.Results(b).Attributes, r.Attributes(b))
+	t.Logf("aggregate=%+v attribute=%+v", r.Results(b).Attributes, slices.Collect(r.Attributes(b)))
 	if r.Results(b).Attributes.Complete {
 		t.Fatal("missing aggregate limitation")
 	}
-	for _, attribute := range r.Attributes(b) {
+	for attribute := range r.Attributes(b) {
 		if attribute.Complete || attribute.Scalar.Complete {
 			t.Errorf("unavailable lexical pattern reported complete: %+v", attribute)
 		}
