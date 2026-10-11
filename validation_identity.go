@@ -121,6 +121,12 @@ func (c *validationContext) validateIdentityReferences() {
 		if bindings != nil && len(bindings.owners) > 1 {
 			c.addIssue(bindings.secondPath, "ID", fmt.Sprintf("duplicate ID %q; first bound at %s", entry.value, bindings.firstPath))
 		} else if bindings == nil && c.assessmentErr == nil && !c.identityIncomplete && entry.constraint == "ID" {
+			// XSD 1.0 Second Edition, sic-id (3.15.5), [binding] clause 2
+			// binds the containing element, not the ID-valued item itself.
+			// Thus root ID content has no binding; cvc-id (3.3.4), clause 1
+			// rejects that empty entry even though both tested oracles accept it.
+			// https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id
+			// https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id
 			c.addIssue(entry.path, "ID", fmt.Sprintf("ID %q has no containing element binding in the document", entry.value))
 		}
 	}

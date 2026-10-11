@@ -39,7 +39,6 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   namespace/location pairing belongs to separately scoped schema discovery.
 - Apply the pinned XSD 1.0 datatype-name character repertoire independently of
   XML reading, including Name/NCName/NMTOKEN, list and QName lexical paths.
-
 - Preserve distinct primitive domains in reusable scalar comparisons. Compare
   booleans by truth value, including list/union enumeration and fixed values,
   and apply the XSD whitespace contract to URI fixed values without resolving
@@ -48,7 +47,6 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   greedy false rejections. Memoize child-grammar endpoints, reconstruct one
   deterministic declaration witness, and reject malformed/cyclic particle
   metadata without unbounded recursive matching.
-
 - Apply `length`, `minLength` and `maxLength` to item counts for the built-in
   XSD list types `NMTOKENS`, `IDREFS` and `ENTITIES`, including inherited
   restrictions, attributes and complex simple content.

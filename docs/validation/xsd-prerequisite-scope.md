@@ -87,7 +87,12 @@ those entries through their containing element. Thus a string declaration with
 an admitted actual ID type can bind a separately declared reference without
 creating an entry by itself. Count distinct containing owners, not occurrences:
 two equal ID children of one owner produce one binding. Root ID content has no
-containing element in the assessed scope and cannot bind itself.
+containing element in the assessed scope and cannot bind itself. Specifically,
+XSD 1.0 Second Edition [sic-id, §3.15.5](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id),
+`[binding]` clause 2 selects the element containing the ID-valued attribute or
+child, while [cvc-id, §3.3.4](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-id),
+clause 1 rejects an entry with an empty binding. This is deliberately stricter
+than the two tested engines for root ID content, not a self-owner fallback.
 
 Declaration-local and actual-type success must remain separate. A declaration
 fixed mismatch or abstract element can prevent entry creation while leaving concrete type-valid ID content
@@ -130,6 +135,9 @@ retain the normative internal expectations. Both accept absent attribute-default
 references; those observations are not classified as oracle bugs. The generated
 identity fixture asserts 59 original sources internally and compares 45 complete
 outcomes with libxml2. The other 14 stay explicitly excluded from that parity.
+The named root exclusions are `root ID lacks owner` and
+`root content unrelated attribute`; neither oracle acceptance weakens their
+internal empty-binding expectation.
 Both engines were independently replayed on all 59 unchanged sources; a shared
 invalid outcome alone does not prove every individual identity diagnostic.
 
@@ -209,3 +217,14 @@ Whole-change acceptance also includes reproducible generation, module/format
 checks, full tests and vet, race detection, the standard counted fuzz targets,
 and unchanged pinned-registry planning integrity. Public source/model capability,
 resource and profile acceptance remains with the later owners above.
+
+## Public technical-error follow-through
+
+This prerequisite retains a private technical-error carrier. Batch 3 owns the
+public machine-readable incomplete outcome, sentinel/`errors.Is` policy and
+joined invalid/incomplete result contract, together with the session/report API
+and compatibility bridge. The PR 31 review suggestion to export
+`ErrIncompleteAssessment` is carried into that API review, not silently dropped
+or committed as a new public API by this prerequisite. Resolve the decision and
+its pure/joined-result tests before advertising the new API/profile; see
+[error compatibility](go-contracts.md#error-families-and-legacy-wrappers).

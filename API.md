@@ -128,7 +128,15 @@ nesting deeper than 4096 elements before walking the model recursively.
 
 Use `errors.Is(err, ErrInvalidDocument)` for the category and
 `errors.As(err, *ValidationError)` to inspect every `ValidationIssue`.
-Issue paths use indexed XML-style paths.
+Issue paths use indexed XML-style paths. There is currently no dedicated public
+sentinel for technical incompleteness, including its presence in a joined
+invalid/incomplete result.
+
+Reached `ENTITY`/`ENTITIES` assessment cannot establish unparsed-entity
+declarations at this layer. Lexically valid values therefore produce technical
+incompleteness; lexical violations remain reportable and can reject a value
+before declaration facts are needed. Independent violations elsewhere are still
+reported alongside a reached technical error. Validation never fetches a DTD.
 
 URI values are checked using XSD `anyURI` lexical rules, including XLink
 escaping of spaces and non-ASCII characters. Validation leaves the stored
