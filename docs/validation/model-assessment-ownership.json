@@ -8620,7 +8620,7 @@
         {
           "file": "local_assessment_test.go",
           "name": "TestBoundedLocalProductionClausesBothTargets",
-          "scope": "accordion-present and accordion-empty source/model integration."
+          "scope": "Production source/model high, middle, low, all-three, omitted and empty registration cases, plus all other selected local clause families; exact case scopes are in the table."
         },
         {
           "file": "validation/local_schema_plan_test.go",
@@ -8631,6 +8631,11 @@
           "file": "model_assessment_contract_test.go",
           "name": "TestBoundedLocalStrictAccordionIntegration",
           "scope": "Permissive Decode, XSD-only Validate and preview versus strict source-local/model-local empty accordion."
+        },
+        {
+          "file": "local_assessment_test.go",
+          "name": "TestAccordionInvalidPresentChildKeepsDistinctConsequence",
+          "scope": "Pinned accordion-middle zero is XSD-invalid but still present; source/model reports keep its scalar failure without inventing an empty-registration failure."
         }
       ],
       "disposition": "selected-local-clause",
