@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/big"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -347,5 +348,58 @@ func TestCurrentUnknownNumericAttributeDoesNotHideIdentityOwner(t *testing.T) {
 	}
 	if result.Status != IdentityUnique || result.Owner != 1 {
 		t.Fatalf("numeric value hole hid independent ID owner: %+v", result)
+	}
+}
+
+func TestCurrentAndSourceShareCompiledConcurrently(t *testing.T) {
+	name := QName{Local: "n"}
+	compiled, err := Compile(SchemaData{Elements: map[QName]*ElementSchema{name: {Name: name, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "integer"}}}}}, CompileLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	digest := compiled.Digest()
+	use, _ := compiled.Root(name)
+	var workers sync.WaitGroup
+	for index := range 32 {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			meter := &testMeter{}
+			run, err := NewRun(compiled, meter)
+			if err != nil {
+				t.Error(err)
+				return
+			}
+			subject := Subject{ID: 1, Name: name, TextKnown: true, Text: "+004", ChildrenComplete: true, AttributesComplete: true}
+			if index%2 == 0 {
+				subject.CurrentModel = true
+				subject.Current = CurrentScalar{Known: true, Value: SimpleValue{Domain: NumberDomain, Number: Decimal{Whole: "4"}}}
+				subject.ChildrenOrderKnown = true
+				subject.TextKnown = false
+				subject.Text = ""
+			}
+			bound, err := run.Bind(context.Background(), use, subject)
+			if err != nil {
+				t.Error(err)
+			} else {
+				got := run.Scalar(bound)
+				if !got.Known || !got.Complete || got.Value.Number.Whole != "4" {
+					t.Errorf("scalar=%+v", got)
+				}
+				if subject.CurrentModel && got.Lexeme != "" {
+					t.Error("fabricated model lexeme")
+				}
+			}
+			if err := run.Close(); err != nil {
+				t.Error(err)
+			}
+			if meter.retained != 0 {
+				t.Errorf("retained=%d", meter.retained)
+			}
+		}()
+	}
+	workers.Wait()
+	if compiled.Digest() != digest {
+		t.Fatal("shared schema changed")
 	}
 }
