@@ -7,7 +7,10 @@ import (
 // assessmentErr is private, run-local technical state. It never wraps the
 // public invalid-document sentinel unless independently proved issues exist.
 func (c *Context) Incomplete(message string) {
+	c.step(1)
+	c.reserve(128)
 	c.AssessmentErr = errors.Join(c.AssessmentErr, &TechnicalError{Message: message})
+	c.step(1)
 	c.AssessmentVersion++
 	if c.local != nil {
 		c.local.limit(c.local.family, "xsd-assessment-incomplete", c.AssessmentErr)
@@ -21,6 +24,7 @@ func (c *Context) IncompleteAgain(message string) {
 		c.Incomplete(message)
 		return
 	}
+	c.step(1)
 	c.AssessmentVersion++
 	if c.local != nil {
 		c.local.limit(c.local.family, "xsd-assessment-incomplete", c.AssessmentErr)
@@ -38,6 +42,7 @@ func (c *Context) AssessmentFailure(message string) *SimpleFailure {
 	if c.AssessmentErr == nil {
 		c.Incomplete(message)
 	}
+	c.scratch(48)
 	return &SimpleFailure{Constraint: "assessment", Message: message}
 }
 

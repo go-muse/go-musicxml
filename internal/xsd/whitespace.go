@@ -1,5 +1,10 @@
 package xsd
 
+import (
+	"strings"
+	"unsafe"
+)
+
 // A policy is resolved from actual scalar ancestry, never from the legacy
 // "string" fallback for lists/unions. Zero denotes member-selected union
 // normalization, not collapse and not a successfully resolved atomic policy.
@@ -21,17 +26,29 @@ type SimpleSemantics struct {
 }
 
 func (s *SimpleSemantics) Normalize(value string) string {
+	return s.normalize(value, nil)
+}
+
+func (s *SimpleSemantics) normalize(value string, c *Context) string {
+	c.scalar(int64(len(value)))
+	c.step(1)
 	switch s.Whitespace {
 	case WhitespaceReplace:
-		return NormalizeWhitespace("normalizedString", value)
+		return normalizeWhitespace("normalizedString", value, c)
 	case WhitespaceCollapse:
-		return CollapseWhitespace(value)
+		return collapseWhitespace(value, c)
 	default:
 		return value
 	}
 }
 
 func BuiltinSemantics(name string) *SimpleSemantics {
+	return builtinSemantics(name, nil)
+}
+
+func builtinSemantics(name string, c *Context) *SimpleSemantics {
+	c.step(1)
+	c.scratch(int64(unsafe.Sizeof(SimpleSemantics{})))
 	result := &SimpleSemantics{Builtin: name, Whitespace: WhitespaceCollapse}
 	switch name {
 	case "string":
@@ -54,7 +71,11 @@ func BuiltinSemantics(name string) *SimpleSemantics {
 }
 
 func (c *Context) SimpleTypeSemantics(reference *TypeRef) (result *SimpleSemantics) {
+	c.step(1)
 	defer func() {
+		if stop := recover(); stop != nil {
+			panic(stop)
+		}
 		if result == nil {
 			c.Incomplete("simple type metadata cannot be resolved")
 		}
@@ -66,10 +87,11 @@ func (c *Context) SimpleTypeSemantics(reference *TypeRef) (result *SimpleSemanti
 	if simple != nil {
 		return c.ResolveSimpleSemantics(simple)
 	}
-	return BuiltinSemantics(builtin)
+	return builtinSemantics(builtin, c)
 }
 
 func (c *Context) MemberSemantics(member *SimpleMember) *SimpleSemantics {
+	c.step(1)
 	if member == nil {
 		return nil
 	}
@@ -77,7 +99,7 @@ func (c *Context) MemberSemantics(member *SimpleMember) *SimpleSemantics {
 		return c.ResolveSimpleSemantics(member.Inline)
 	}
 	if member.Name.Space == XSDNamespace {
-		return BuiltinSemantics(member.Name.Local)
+		return builtinSemantics(member.Name.Local, c)
 	}
 	resolved := c.Schema.Types[member.Name]
 	if resolved == nil || resolved.Simple == nil {
@@ -99,6 +121,7 @@ func (c *Context) ResolveSimpleSemantics(schema *SimpleSchema) *SimpleSemantics 
 }
 
 func (c *Context) ResolveSimpleSemanticsUnchecked(schema *SimpleSchema) *SimpleSemantics {
+	c.step(1)
 	if schema == nil {
 		return nil
 	}
@@ -106,8 +129,10 @@ func (c *Context) ResolveSimpleSemanticsUnchecked(schema *SimpleSchema) *SimpleS
 		return known
 	}
 	if c.SimpleSemantics == nil {
+		c.reserve(64)
 		c.SimpleSemantics = make(map[*SimpleSchema]*SimpleSemantics)
 	}
+	c.reserve(64 + int64(unsafe.Sizeof(SimpleSemantics{})))
 	c.SimpleSemantics[schema] = nil
 	var result SimpleSemantics
 	switch schema.Form {
@@ -145,6 +170,7 @@ func (c *Context) ResolveSimpleSemanticsUnchecked(schema *SimpleSchema) *SimpleS
 			return nil
 		}
 		for _, member := range schema.Members {
+			c.step(1)
 			if c.MemberSemantics(member) == nil {
 				return nil
 			}
@@ -172,8 +198,9 @@ type EnumerationValue struct {
 
 func (c *Context) MatchesSimpleEnumeration(schema *SimpleSchema, value SimpleAssessment) bool {
 	for index := range schema.Enumerations {
+		c.step(1)
 		candidate := c.EnumerationValue(schema, index)
-		if candidate.Valid && candidate.Actual.Equal(value.Value) {
+		if candidate.Valid && candidate.Actual.equal(value.Value, c) {
 			return true
 		}
 	}
@@ -181,6 +208,7 @@ func (c *Context) MatchesSimpleEnumeration(schema *SimpleSchema, value SimpleAss
 }
 
 func (c *Context) EnumerationValue(schema *SimpleSchema, index int) EnumerationValue {
+	c.step(1)
 	key := EnumerationKey{Schema: schema, Index: index}
 	if known, found := c.EnumerationValues[key]; found {
 		if known.Incomplete {
@@ -189,8 +217,10 @@ func (c *Context) EnumerationValue(schema *SimpleSchema, index int) EnumerationV
 		return known
 	}
 	if c.EnumerationValues == nil {
+		c.reserve(64)
 		c.EnumerationValues = make(map[EnumerationKey]EnumerationValue)
 	}
+	c.reserve(64 + int64(unsafe.Sizeof(EnumerationValue{})))
 	c.EnumerationValues[key] = EnumerationValue{}
 	// The declaring base, not this restriction or a descendant, determines the
 	// literal's whitespace and value. A pending entry is also a fail-closed guard.
@@ -199,4 +229,24 @@ func (c *Context) EnumerationValue(schema *SimpleSchema, index int) EnumerationV
 	result := EnumerationValue{Value: assessment.Lexical, Actual: assessment.Value, Valid: valid, Incomplete: c.AssessmentVersion != before}
 	c.EnumerationValues[key] = result
 	return result
+}
+
+// Trim only XML whitespace, preserving immutable views of the original string.
+func trimXMLWhitespace(value string, c *Context) string {
+	start, end := 0, len(value)
+	for start < end {
+		c.step(1)
+		if strings.IndexByte(XMLWhitespace, value[start]) < 0 {
+			break
+		}
+		start++
+	}
+	for end > start {
+		c.step(1)
+		if strings.IndexByte(XMLWhitespace, value[end-1]) < 0 {
+			break
+		}
+		end--
+	}
+	return value[start:end]
 }

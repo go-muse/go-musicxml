@@ -1,16 +1,20 @@
 package xsd
 
+import "unsafe"
+
 // Source assessment exposes the prerequisite kernel's documented capability
 // boundaries. Compatibility Context calls leave these guards inactive.
 func (c *Context) capability(family, reason string) {
+	c.step(1)
 	if c.local == nil {
 		return
 	}
 	old := c.local.family
 	c.local.family = family
+	defer func() { c.local.family = old }()
 	for _, limitation := range c.local.result().Limitations {
 		c.step(1)
-		if limitation.Reason == reason {
+		if compareText(limitation.Reason, reason, c) == 0 {
 			c.local.family = old
 			return
 		}
@@ -43,13 +47,15 @@ func (c *Context) wildcard(mode, family string) {
 	c.capability(family, reason)
 	c.IdentityIncomplete = true
 }
-func supportedEquality(value SimpleValue) bool {
+func supportedEquality(value SimpleValue) bool { return controlledSupportedEquality(value, nil) }
+func controlledSupportedEquality(value SimpleValue, c *Context) bool {
+	c.step(1)
 	switch value.Domain {
 	case StringDomain, NumberDomain, BooleanDomain:
 		return true
 	case ListDomain:
 		for _, item := range value.Items {
-			if !supportedEquality(item) {
+			if !controlledSupportedEquality(item, c) {
 				return false
 			}
 		}
@@ -59,16 +65,17 @@ func supportedEquality(value SimpleValue) bool {
 	}
 }
 func (c *Context) equalityAvailable(value SimpleValue) bool {
-	if c.local == nil || supportedEquality(value) {
+	if c.local == nil || controlledSupportedEquality(value, c) {
 		return true
 	}
-	c.Incomplete("value-space equality is unavailable for xs:" + value.Primitive)
+	c.Incomplete(format(c, "value-space equality is unavailable for xs:%s", value.Primitive))
 	return false
 }
 
 // Constructed selected members/items are not derivation ancestry. Their wider
 // identity participation is unverified, so they cannot establish absent targets.
 func (c *Context) constructedIdentity(reference *TypeRef) bool {
+	c.step(1)
 	if c.local == nil {
 		return false
 	}
@@ -90,13 +97,16 @@ func (c *Context) constructedIdentity(reference *TypeRef) bool {
 	if sem == nil || !sem.Aggregate() {
 		return false
 	}
+	c.scratch(64)
 	seen := map[*SimpleSchema]bool{}
 	var member func(*SimpleMember) bool
 	var visit func(*SimpleSchema) bool
 	member = func(m *SimpleMember) bool {
+		c.step(1)
 		if m == nil {
 			return false
 		}
+		c.scratch(int64(unsafe.Sizeof(TypeRef{})))
 		ref := &TypeRef{Name: m.Name, InlineSimple: m.Inline}
 		if c.IdentityBuiltin(ref) != "" {
 			return true
@@ -109,6 +119,7 @@ func (c *Context) constructedIdentity(reference *TypeRef) bool {
 		if s == nil || seen[s] {
 			return false
 		}
+		c.scratch(32)
 		seen[s] = true
 		switch s.Form {
 		case SimpleRestriction:
@@ -117,6 +128,7 @@ func (c *Context) constructedIdentity(reference *TypeRef) bool {
 			return member(s.Item)
 		case SimpleUnion:
 			for _, m := range s.Members {
+				c.step(1)
 				if member(m) {
 					return true
 				}
@@ -133,17 +145,23 @@ func (c *Context) noteConstructedIdentity(reference *TypeRef) {
 	}
 }
 func (r *Run) attributeUse(actual *TypeRef, name QName) Use {
+	r.context.scratch(64)
 	seen := map[TypeID]bool{}
 	id, ok := r.typeID(actual)
 	for ok && !seen[id] {
 		r.step(1)
+		r.context.bytes(len(id.name.Space))
+		r.context.bytes(len(id.name.Local))
+		r.context.bytes(len(id.builtin))
+		r.context.bytes(len(id.path))
+		r.context.scratch(int64(unsafe.Sizeof(TypeID{})) + 32)
 		seen[id] = true
 		if id.complex == nil {
 			return Use{}
 		}
 		for i, attribute := range id.complex.Attributes {
 			r.step(1)
-			if attribute.Name == name {
+			if compareText(attribute.Name.Space, name.Space, &r.context) == 0 && compareText(attribute.Name.Local, name.Local, &r.context) == 0 {
 				return r.schema.attributeUses[attributeUseKey{id, i}]
 			}
 		}
@@ -161,6 +179,8 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 	s := c.local
 	for _, schema := range schemas {
 		c.step(1)
+		c.bytes(len(schema.Name.Space))
+		c.bytes(len(schema.Name.Local))
 		if _, found := present[schema.Name]; found || schema.Use == AttributeProhibited || schema.Use == AttributeRequired {
 			continue
 		}
@@ -174,15 +194,20 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 			continue
 		}
 		value := schema.Constraint.Value
+		c.scalar(int64(len(value)))
 		failure := c.ValidateSimpleType(&schema.Type, value)
 		if failure != nil {
-			c.Incomplete("effective attribute value constraint cannot be assessed: " + failure.Message)
+			c.Incomplete(format(c, "effective attribute value constraint cannot be assessed: %s", failure.Message))
+		}
+		identityFact := c.IdentityBuiltin(&schema.Type) != "" || c.constructedIdentity(&schema.Type)
+		if identityFact {
+			c.identity(1)
 		}
 		c.attributeResult(schema, value, false, failure == nil, failure == nil)
 		last := &s.attributes[len(s.attributes)-1]
 		last.Scalar.Defaulted = true
 		last.Scalar.Lexeme = ""
-		if c.IdentityBuiltin(&schema.Type) != "" || c.constructedIdentity(&schema.Type) {
+		if identityFact {
 			c.capability("attributes", "absent-default-identity-participation-unverified")
 			c.IdentityIncomplete = true
 		}
@@ -194,6 +219,7 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 // when a QName can reach exactly one declaration leaf in the effective grammar.
 // Ambiguous alternatives and wildcards cannot establish that exact-use fact.
 func (c *Context) stablePrefixMatches(particle *ParticleSchema, matches []ElementMatch) []ElementMatch {
+	c.scratch(128)
 	counts := make(map[QName]int)
 	active := make(map[*ParticleSchema]bool)
 	wildcard := false
@@ -204,6 +230,7 @@ func (c *Context) stablePrefixMatches(particle *ParticleSchema, matches []Elemen
 			wildcard = true
 			return
 		}
+		c.scratch(32)
 		active[p] = true
 		defer delete(active, p)
 		switch p.Kind {
@@ -213,11 +240,17 @@ func (c *Context) stablePrefixMatches(particle *ParticleSchema, matches []Elemen
 				wildcard = true
 				return
 			}
+			c.bytes(len(element.Name.Space))
+			c.bytes(len(element.Name.Local))
+			if _, found := counts[element.Name]; !found {
+				c.scratch(80)
+			}
 			counts[element.Name]++
 		case ParticleAny:
 			wildcard = true
 		default:
 			for _, child := range p.Children {
+				c.step(1)
 				walk(child)
 			}
 		}
@@ -229,9 +262,12 @@ func (c *Context) stablePrefixMatches(particle *ParticleSchema, matches []Elemen
 	var result []ElementMatch
 	for _, match := range matches {
 		c.step(1)
+		if match.Schema != nil {
+			c.bytes(len(match.Schema.Name.Space))
+			c.bytes(len(match.Schema.Name.Local))
+		}
 		if match.Schema != nil && counts[match.Schema.Name] == 1 {
-			c.reserve(32)
-			result = append(result, match)
+			result = appendRetained(c, result, match)
 		}
 	}
 	return result

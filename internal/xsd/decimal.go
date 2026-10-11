@@ -1,10 +1,5 @@
 package xsd
 
-import (
-	"fmt"
-	"strings"
-)
-
 // validationDecimal is an immutable view of a checked decimal lexeme. Whole
 // digits have no leading zeros, fractional digits have no trailing zeros, and
 // zero has two empty digit views and is never negative. The views retain the
@@ -17,7 +12,12 @@ type Decimal struct {
 }
 
 func ParseDecimal(value string) (Decimal, bool) {
-	value = strings.Trim(value, XMLWhitespace)
+	return parseDecimal(value, nil)
+}
+
+func parseDecimal(value string, c *Context) (Decimal, bool) {
+	c.scalar(int64(len(value)))
+	value = trimXMLWhitespace(value, c)
 	negative := false
 	if len(value) != 0 && (value[0] == '+' || value[0] == '-') {
 		negative = value[0] == '-'
@@ -26,6 +26,7 @@ func ParseDecimal(value string) (Decimal, bool) {
 	point := -1
 	digits := 0
 	for index := range len(value) {
+		c.step(1)
 		if value[index] == '.' && point == -1 {
 			point = index
 			continue
@@ -42,12 +43,23 @@ func ParseDecimal(value string) (Decimal, bool) {
 	if point != -1 {
 		whole, fraction = value[:point], value[point+1:]
 	}
-	whole = strings.TrimLeft(whole, "0")
-	fraction = strings.TrimRight(fraction, "0")
+	for len(whole) != 0 && whole[0] == '0' {
+		c.step(1)
+		whole = whole[1:]
+	}
+	for len(fraction) != 0 && fraction[len(fraction)-1] == '0' {
+		c.step(1)
+		fraction = fraction[:len(fraction)-1]
+	}
 	return Decimal{Whole: whole, Fraction: fraction, Negative: negative && (whole != "" || fraction != "")}, true
 }
 
 func (value Decimal) Compare(other Decimal) int {
+	return value.compare(other, nil)
+}
+
+func (value Decimal) compare(other Decimal, c *Context) int {
+	c.step(1)
 	if value.Negative != other.Negative {
 		if value.Negative {
 			return -1
@@ -61,11 +73,11 @@ func (value Decimal) Compare(other Decimal) int {
 	case len(value.Whole) > len(other.Whole):
 		result = 1
 	default:
-		result = strings.Compare(value.Whole, other.Whole)
+		result = compareText(value.Whole, other.Whole, c)
 		if result == 0 {
 			// If one fraction is a prefix, its implicit zero suffix is smaller than
 			// the other's remaining suffix, which ends in a nonzero digit.
-			result = strings.Compare(value.Fraction, other.Fraction)
+			result = compareText(value.Fraction, other.Fraction, c)
 		}
 	}
 	if value.Negative {
@@ -75,16 +87,24 @@ func (value Decimal) Compare(other Decimal) int {
 }
 
 func DecimalValuesEqual(left, right string) bool {
-	first, firstOK := ParseDecimal(left)
-	second, secondOK := ParseDecimal(right)
-	return firstOK && secondOK && first.Compare(second) == 0
+	return decimalValuesEqual(left, right, nil)
+}
+
+func decimalValuesEqual(left, right string, c *Context) bool {
+	first, firstOK := parseDecimal(left, c)
+	second, secondOK := parseDecimal(right, c)
+	return firstOK && secondOK && first.compare(second, c) == 0
 }
 
 // Keep bound rules and diagnostics aligned with validateIntegerBounds; parsing is domain-specific.
 func ValidateDecimalBounds(schema *SimpleSchema, value, display string) *SimpleFailure {
-	number, ok := ParseDecimal(value)
+	return validateDecimalBounds(schema, value, display, nil)
+}
+
+func validateDecimalBounds(schema *SimpleSchema, value, display string, c *Context) *SimpleFailure {
+	number, ok := parseDecimal(value, c)
 	if !ok {
-		return &SimpleFailure{Constraint: "datatype", Message: fmt.Sprintf("value %q is not numeric", display)}
+		return &SimpleFailure{Constraint: "datatype", Message: format(c, "value %q is not numeric", display)}
 	}
 	tests := []struct {
 		Enabled            bool
@@ -97,16 +117,17 @@ func ValidateDecimalBounds(schema *SimpleSchema, value, display string) *SimpleF
 		{schema.HasMaxExclusive, "maxExclusive", schema.MaxExclusive, false, true},
 	}
 	for _, test := range tests {
+		c.step(1)
 		if !test.Enabled {
 			continue
 		}
-		limit, ok := ParseDecimal(test.Limit)
+		limit, ok := parseDecimal(test.Limit, c)
 		if !ok {
-			return &SimpleFailure{Constraint: "schema", Message: fmt.Sprintf("invalid %s value %q", test.Constraint, test.Limit)}
+			return &SimpleFailure{Constraint: "schema", Message: format(c, "invalid %s value %q", test.Constraint, test.Limit)}
 		}
-		comparison := number.Compare(limit)
+		comparison := number.compare(limit, c)
 		if (test.Minimum && comparison < 0) || (!test.Minimum && comparison > 0) || (test.Exclusive && comparison == 0) {
-			return &SimpleFailure{Constraint: test.Constraint, Message: fmt.Sprintf("value %q violates %s=%q", display, test.Constraint, test.Limit)}
+			return &SimpleFailure{Constraint: test.Constraint, Message: format(c, "value %q violates %s=%q", display, test.Constraint, test.Limit)}
 		}
 	}
 	return nil

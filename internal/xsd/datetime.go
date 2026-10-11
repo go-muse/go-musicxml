@@ -52,31 +52,34 @@ var (
 )
 
 func ValidXSDDateTime(name string, value string) bool {
+	return validXSDDateTime(name, value, nil)
+}
+
+func validXSDDateTime(name string, value string, c *Context) bool {
+	c.scalar(int64(len(value)))
 	switch name {
 	case "date":
-		return ValidXSDDateMatch(XsdDatePattern.FindStringSubmatch(value))
+		return validXSDDateMatch(scalarPatternSubmatch(XsdDatePattern, value, c), c)
 
 	case "dateTime":
-		return ValidXSDDateMatch(
-			XsdDateTimePattern.FindStringSubmatch(value),
-		)
+		return validXSDDateMatch(scalarPatternSubmatch(XsdDateTimePattern, value, c), c)
 
 	case "duration":
-		return ValidXSDDuration(value)
+		return validXSDDuration(value, c)
 
 	case "time":
-		return XsdTimePattern.MatchString(value)
+		return scalarPatternMatch(XsdTimePattern, value, c)
 
 	case "gYearMonth":
-		match := XsdGYearMonthPattern.FindStringSubmatch(value)
-		return len(match) != 0 && ValidXSDYear(match[1])
+		match := scalarPatternSubmatch(XsdGYearMonthPattern, value, c)
+		return len(match) != 0 && validXSDYear(match[1], c)
 
 	case "gYear":
-		match := XsdGYearPattern.FindStringSubmatch(value)
-		return len(match) != 0 && ValidXSDYear(match[1])
+		match := scalarPatternSubmatch(XsdGYearPattern, value, c)
+		return len(match) != 0 && validXSDYear(match[1], c)
 
 	case "gMonthDay":
-		match := XsdGMonthDayPattern.FindStringSubmatch(value)
+		match := scalarPatternSubmatch(XsdGMonthDayPattern, value, c)
 		if len(match) == 0 {
 			return false
 		}
@@ -85,10 +88,10 @@ func ValidXSDDateTime(name string, value string) bool {
 		return day <= XsdDaysInMonth(month, true)
 
 	case "gDay":
-		return XsdGDayPattern.MatchString(value)
+		return scalarPatternMatch(XsdGDayPattern, value, c)
 
 	case "gMonth":
-		return XsdGMonthPattern.MatchString(value)
+		return scalarPatternMatch(XsdGMonthPattern, value, c)
 
 	default:
 		return false
@@ -96,7 +99,11 @@ func ValidXSDDateTime(name string, value string) bool {
 }
 
 func ValidXSDDateMatch(match []string) bool {
-	if len(match) == 0 || !ValidXSDYear(match[1]) {
+	return validXSDDateMatch(match, nil)
+}
+
+func validXSDDateMatch(match []string, c *Context) bool {
+	if len(match) == 0 || !validXSDYear(match[1], c) {
 		return false
 	}
 
@@ -104,19 +111,34 @@ func ValidXSDDateMatch(match []string) bool {
 	day, _ := strconv.Atoi(match[3])
 	return day <= XsdDaysInMonth(
 		month,
-		XsdYearModulo(match[1], 400)%400 == 0 ||
-			XsdYearModulo(match[1], 4)%4 == 0 &&
-				XsdYearModulo(match[1], 100)%100 != 0,
+		xsdYearModulo(match[1], 400, c)%400 == 0 ||
+			xsdYearModulo(match[1], 4, c)%4 == 0 &&
+				xsdYearModulo(match[1], 100, c)%100 != 0,
 	)
 }
 
 func ValidXSDYear(value string) bool {
-	return strings.Trim(value, "0") != ""
+	return validXSDYear(value, nil)
+}
+
+func validXSDYear(value string, c *Context) bool {
+	for index := range len(value) {
+		c.step(1)
+		if value[index] != '0' {
+			return true
+		}
+	}
+	return false
 }
 
 func XsdYearModulo(value string, modulus int) int {
+	return xsdYearModulo(value, modulus, nil)
+}
+
+func xsdYearModulo(value string, modulus int, c *Context) int {
 	result := 0
 	for _, digit := range value {
+		c.step(1)
 		result = (result*10 + int(digit-'0')) % modulus
 	}
 
@@ -138,19 +160,25 @@ func XsdDaysInMonth(month int, leap bool) int {
 }
 
 func ValidXSDDuration(value string) bool {
-	match := XsdDurationPattern.FindStringSubmatch(value)
+	return validXSDDuration(value, nil)
+}
+
+func validXSDDuration(value string, c *Context) bool {
+	match := scalarPatternSubmatch(XsdDurationPattern, value, c)
 	if len(match) == 0 {
 		return false
 	}
 
 	hasValue := false
 	for index := 1; index < len(match); index++ {
+		c.step(1)
 		hasValue = hasValue || match[index] != ""
 	}
 	if !hasValue {
 		return false
 	}
 
+	c.bytes(len(value))
 	if strings.ContainsRune(value, 'T') {
 		return match[4] != "" || match[5] != "" || match[6] != ""
 	}

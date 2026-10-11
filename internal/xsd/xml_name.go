@@ -16,23 +16,75 @@ var (
 )
 
 func ValidXSDName(value string) bool {
-	return utf8.ValidString(value) && XSDNamePattern.MatchString(value)
+	return validXSDName(value, nil)
+}
+
+func validXSDName(value string, c *Context) bool {
+	c.scalar(int64(len(value)))
+	c.bytes(len(value))
+	valid := utf8.ValidString(value)
+	c.step(0)
+	return valid && scalarPatternMatch(XSDNamePattern, value, c)
 }
 
 func ValidXSDNCName(value string) bool {
-	return !strings.ContainsRune(value, ':') && ValidXSDName(value)
+	return validXSDNCName(value, nil)
+}
+
+func validXSDNCName(value string, c *Context) bool {
+	c.scalar(int64(len(value)))
+	c.bytes(len(value))
+	qualified := strings.ContainsRune(value, ':')
+	c.step(0)
+	return !qualified && validXSDName(value, c)
 }
 
 func ValidXSDNMTOKEN(value string) bool {
-	return utf8.ValidString(value) && XSDNMTOKENPattern.MatchString(value)
+	return validXSDNMTOKEN(value, nil)
+}
+
+func validXSDNMTOKEN(value string, c *Context) bool {
+	c.scalar(int64(len(value)))
+	c.bytes(len(value))
+	valid := utf8.ValidString(value)
+	c.step(0)
+	return valid && scalarPatternMatch(XSDNMTOKENPattern, value, c)
 }
 
 // This checks the QName lexical production only. Namespace bindings and type
 // resolution are separate context-dependent operations.
 func ValidXSDQName(value string) bool {
+	return validXSDQName(value, nil)
+}
+
+func validXSDQName(value string, c *Context) bool {
+	c.scalar(int64(len(value)))
+	c.bytes(len(value))
 	prefix, local, qualified := strings.Cut(value, ":")
+	c.step(0)
 	if !qualified {
-		return ValidXSDNCName(value)
+		return validXSDNCName(value, c)
 	}
-	return ValidXSDNCName(prefix) && ValidXSDNCName(local)
+	return validXSDNCName(prefix, c) && validXSDNCName(local, c)
+}
+
+// The regexp VM cannot be interrupted internally. Bound its lexical work and
+// temporary workspace before entry, then observe cancellation after it returns.
+func scalarPatternMatch(pattern *regexp.Regexp, value string, c *Context) bool {
+	scalarPatternPrepare(pattern, value, c)
+	matched := pattern.MatchString(value)
+	c.step(0)
+	return matched
+}
+func scalarPatternSubmatch(pattern *regexp.Regexp, value string, c *Context) []string {
+	scalarPatternPrepare(pattern, value, c)
+	c.scratch(c.size(c.sum(int64(pattern.NumSubexp()), 1), 32))
+	match := pattern.FindStringSubmatch(value)
+	c.step(0)
+	return match
+}
+func scalarPatternPrepare(pattern *regexp.Regexp, value string, c *Context) {
+	c.scalar(int64(len(value)))
+	c.bytes(len(value))
+	c.scratch(c.sum(256, c.size(int64(len(value)), 16)))
 }

@@ -1,7 +1,6 @@
 package xsd
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -29,6 +28,7 @@ type DerivationKey struct {
 }
 
 func (c *Context) TypeIdentity(ref *TypeRef) (TypeIdentity, bool) {
+	c.step(1)
 	simple, complex, builtin, ok := c.ResolveType(ref)
 	return TypeIdentity{simple, complex, builtin}, ok && (simple != nil || complex != nil || builtin != "")
 }
@@ -91,6 +91,7 @@ func BuiltinBase(name string) string {
 }
 
 func (c *Context) MemberType(member *SimpleMember) (TypeIdentity, bool) {
+	c.step(1)
 	if member == nil {
 		return TypeIdentity{}, false
 	}
@@ -98,6 +99,7 @@ func (c *Context) MemberType(member *SimpleMember) (TypeIdentity, bool) {
 }
 
 func (c *Context) TypeBase(v TypeIdentity) (TypeIdentity, Derivation, bool) {
+	c.step(1)
 	if v.Builtin != "" {
 		base := BuiltinBase(v.Builtin)
 		if base == "" {
@@ -135,7 +137,9 @@ func (c *Context) TypeBase(v TypeIdentity) (TypeIdentity, Derivation, bool) {
 // element content is not a derivation cycle. States and results are per run;
 // source and generated schema objects are never mutated.
 func (c *Context) ValidTypeMetadata(v TypeIdentity) bool {
+	c.step(1)
 	if c.TypeMetadata == nil {
+		c.reserve(64)
 		c.TypeMetadata = make(map[TypeIdentity]uint8)
 	}
 	if state, seen := c.TypeMetadata[v]; seen {
@@ -149,6 +153,7 @@ func (c *Context) ValidTypeMetadata(v TypeIdentity) bool {
 		}
 		return state == 2
 	}
+	c.reserve(80)
 	c.TypeMetadata[v] = 1
 	ok := false
 	defer func() {
@@ -199,6 +204,7 @@ func (c *Context) ValidTypeMetadata(v TypeIdentity) bool {
 				return false
 			}
 			for _, member := range v.Simple.Members {
+				c.step(1)
 				item, found := c.MemberType(member)
 				if !found || !c.ValidTypeMetadata(item) {
 					c.Incomplete("union member type metadata cannot be resolved")
@@ -225,6 +231,7 @@ func (c *Context) ValidTypeMetadata(v TypeIdentity) bool {
 }
 
 func (c *Context) TypeDerived(derived, base TypeIdentity, blocked Derivation) bool {
+	c.step(1)
 	if derived == base {
 		return true
 	}
@@ -233,9 +240,11 @@ func (c *Context) TypeDerived(derived, base TypeIdentity, blocked Derivation) bo
 		return known
 	}
 	if c.Derivations == nil {
+		c.reserve(64)
 		c.Derivations = make(map[DerivationKey]bool)
 	}
 	// Metadata has already been checked acyclic, including all union members.
+	c.reserve(144)
 	c.Derivations[key] = false
 	before := c.AssessmentVersion
 	defer func() {
@@ -257,6 +266,7 @@ func (c *Context) TypeDerived(derived, base TypeIdentity, blocked Derivation) bo
 		}
 		if semantics.Union != nil {
 			for _, member := range semantics.Union.Members {
+				c.step(1)
 				memberType, _ := c.MemberType(member)
 				if c.TypeDerived(derived, memberType, blocked) {
 					c.Derivations[key] = true
@@ -271,10 +281,14 @@ func (c *Context) TypeDerived(derived, base TypeIdentity, blocked Derivation) bo
 }
 
 func InstanceQName(node *Node, lexical string) (QName, bool) {
-	lexical = CollapseWhitespace(lexical)
-	if ValidateBuiltinValue("QName", lexical, lexical) != nil {
+	return instanceQName(node, lexical, nil)
+}
+func instanceQName(node *Node, lexical string, c *Context) (QName, bool) {
+	lexical = collapseWhitespace(lexical, c)
+	if validateBuiltinValue("QName", lexical, lexical, c) != nil {
 		return QName{}, false
 	}
+	c.bytes(len(lexical))
 	prefix, local, qualified := strings.Cut(lexical, ":")
 	if !qualified {
 		return QName{Space: node.Namespaces[""], Local: lexical}, true
@@ -287,10 +301,12 @@ func InstanceQName(node *Node, lexical string) (QName, bool) {
 // nomination. Keep that ordinary assessment so independent errors survive.
 // The boolean reports nomination success separately from fallback type validity.
 func (c *Context) ActualElementType(node *Node, schema *ElementSchema, path string) (*TypeRef, bool) {
+	c.step(1)
 	declared := &schema.Type
 	var value string
 	present := false
 	for _, attr := range node.Attrs {
+		c.step(1)
 		if !attr.NamespaceDeclaration && attr.Name == (QName{Space: XSINamespace, Local: "type"}) {
 			value, present = attr.Value, true
 			break
@@ -299,12 +315,13 @@ func (c *Context) ActualElementType(node *Node, schema *ElementSchema, path stri
 	if !present {
 		return declared, true
 	}
-	issuePath := AttributePath(path, QName{Space: XSINamespace, Local: "type"})
-	name, ok := InstanceQName(node, value)
+	issuePath := attributePath(path, QName{Space: XSINamespace, Local: "type"}, c)
+	name, ok := instanceQName(node, value, c)
 	if !ok {
-		c.AddIssue(issuePath, "xsi:type", fmt.Sprintf("value %q is not a bound QName", value))
+		c.AddIssue(issuePath, "xsi:type", format(c, "value %q is not a bound QName", value))
 		return declared, false
 	}
+	c.reserve(64)
 	nominated := &TypeRef{Name: name}
 	actual, found := c.TypeIdentity(nominated)
 	if !found {
@@ -312,7 +329,7 @@ func (c *Context) ActualElementType(node *Node, schema *ElementSchema, path stri
 			c.Incomplete("nominated type component metadata is missing")
 			return declared, false
 		}
-		c.AddIssue(issuePath, "xsi:type", fmt.Sprintf("type %s cannot be resolved in the selected schema", DisplayQName(name)))
+		c.AddIssue(issuePath, "xsi:type", format(c, "type %s cannot be resolved in the selected schema", displayQName(name, c)))
 		return declared, false
 	}
 	base, found := c.TypeIdentity(declared)

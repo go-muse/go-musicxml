@@ -3,6 +3,8 @@ package xsd
 import (
 	"context"
 	"errors"
+	"math"
+	"unsafe"
 )
 
 // SubjectID identifies a source occurrence; zero denotes no containing owner.
@@ -131,6 +133,7 @@ type Run struct {
 	nodes             map[SubjectID]*Node
 	states            map[SubjectID]*boundState
 	retained          int64
+	scratchRetained   int64
 	closed, finalized bool
 	current           context.Context
 	identityResults   map[SubjectID]Result
@@ -140,14 +143,25 @@ type Run struct {
 	identityOutput    *IdentityResults
 }
 
-func NewRun(schema *Compiled, meter Meter) (*Run, error) {
+func NewRun(schema *Compiled, meter Meter) (out *Run, err error) {
 	if schema == nil || schema.digest == "" || meter == nil {
 		return nil, errors.New("xsd: compiled schema and meter required")
 	}
-	r := &Run{schema: schema, meter: meter, nodes: map[SubjectID]*Node{}, states: map[SubjectID]*boundState{}, identityValid: true}
-	r.context = Context{Schema: &schema.data, Effective: map[*ComplexSchema]*EffectiveComplex{}, Identifiers: map[string]string{}, run: r}
+	r := &Run{schema: schema, meter: meter, identityValid: true}
+	defer func() {
+		if err != nil {
+			_ = r.Close()
+		}
+	}()
+	defer recoverRun(&err)
+	// Reserve all initial map and context allowances before allocating them.
+	r.reserve(1024)
+	r.nodes = make(map[SubjectID]*Node)
+	r.states = make(map[SubjectID]*boundState)
+	r.context = Context{Schema: &schema.data, Effective: make(map[*ComplexSchema]*EffectiveComplex), Identifiers: make(map[string]string), run: r}
 	return r, nil
 }
+
 func (r *Run) Root(name QName) (Use, bool) {
 	if r == nil {
 		return Use{}, false
@@ -164,7 +178,7 @@ func (r *Run) check(ctx context.Context) error {
 	return ctx.Err()
 }
 func (r *Run) reserve(n int64) {
-	if n < 0 {
+	if n < 0 || n > math.MaxInt64-r.retained-r.scratchRetained {
 		panic(runAbort{errors.New("xsd: negative retention")})
 	}
 	if err := r.meter.Reserve(n); err != nil {
@@ -173,6 +187,9 @@ func (r *Run) reserve(n int64) {
 	r.retained += n
 }
 func (r *Run) step(n int64) {
+	if err := r.current.Err(); err != nil {
+		panic(runAbort{err})
+	}
 	if err := r.meter.Step(r.current, n); err != nil {
 		panic(runAbort{err})
 	}
@@ -217,16 +234,20 @@ func (s *boundState) limit(family, reason string, cause error) {
 	s.family = family
 	v := s.result()
 	v.Complete = false
-	s.run.reserve(int64(64 + len(reason)))
-	v.Limitations = append(v.Limitations, Limitation{reason, cause})
+
+	v.Limitations = appendRetained(&s.run.context, v.Limitations, Limitation{reason, cause})
 	s.family = old
 }
 func (s *boundState) detail(path, constraint, message string) {
-	s.run.reserve(int64(160 + len(path) + len(constraint) + len(message)))
+	v := s.result()
+	v.Valid = false
+	s.run.reserve(int64(len(path)))
+	s.run.reserve(int64(len(message)))
 	d := Detail{Issue: Issue{Path: path, Constraint: constraint, Message: message}, Subject: s.subject.ID, Attribute: s.attribute}
 	if d.Attribute == (QName{}) {
 		for _, a := range s.subject.Attributes {
-			if path == AttributePath(s.subject.Path, a.Name) {
+			s.run.step(1)
+			if compareText(path, attributePath(s.subject.Path, a.Name, &s.run.context), &s.run.context) == 0 {
 				d.Attribute = a.Name
 				break
 			}
@@ -235,9 +256,7 @@ func (s *boundState) detail(path, constraint, message string) {
 	if s.issueSubject != 0 {
 		d.Subject = s.issueSubject
 	}
-	v := s.result()
-	v.Valid = false
-	v.Issues = append(v.Issues, d)
+	v.Issues = appendRetained(&s.run.context, v.Issues, d)
 }
 
 // Bind assesses only the subject's local XSD contracts and exact child grammar.
@@ -255,9 +274,12 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	}
 	r.current = ctx
 	defer recoverRun(&err)
+	defer r.releaseScratch()
 	r.step(1)
 	r.scalar(int64(len(subject.Text)))
-	r.reserve(int64(512 + len(subject.Text) + len(subject.Path) + len(subject.Children)*32))
+	r.reserve(int64(unsafe.Sizeof(boundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
+	r.reserve(int64(len(subject.Text)))
+	r.reserve(r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
 	node := r.nodes[subject.ID]
 	if node == nil {
 		node = &Node{}
@@ -267,6 +289,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	node.Name = subject.Name
 	node.Namespaces = subject.Namespaces
 	node.Attrs = subject.Attributes
+	r.context.bytes(len(subject.Text))
 	node.Text.WriteString(subject.Text)
 	node.Children = make([]*Node, len(subject.Children))
 	for i, ch := range subject.Children {
@@ -276,9 +299,9 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 		n := r.nodes[ch.ID]
 		if n == nil {
+			r.reserve(256)
 			n = &Node{ID: ch.ID, Name: ch.Name}
 			r.nodes[ch.ID] = n
-			r.reserve(128)
 		} else if n.Name != ch.Name {
 			return Binding{}, errors.New("xsd: conflicting child name")
 		}
@@ -290,6 +313,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	r.context.local = s
 	defer func() { r.context.local = nil }()
 	for _, a := range subject.Attributes {
+		r.step(1)
 		r.scalar(int64(len(a.Value)))
 	}
 	if !subject.AttributesComplete {
@@ -307,6 +331,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		r.context.IdentityIncomplete = true
 	}
 	for _, a := range subject.Attributes {
+		r.step(1)
 		if !a.NamespaceDeclaration && a.Name.Space == XSINamespace && !a.ValueKnown && (a.Name.Local == "type" || a.Name.Local == "nil") {
 			for _, family := range []string{"binding", "declaration", "attributes", "scalar", "content"} {
 				s.limit(family, "schema-instance-value-unavailable", nil)
@@ -387,13 +412,15 @@ func (r *Run) buildWitnesses(s *boundState) {
 			}
 			r.context.wildcard(m.Particle.Any.ProcessContents, "content")
 			r.reserve(160)
-			s.witnesses = append(s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Mode: mode})
+			s.witnesses = appendRetained(&r.context, s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Mode: mode})
 			continue
 		}
 		uses := r.schema.particleUses[particleUseKey{owner, m.Particle}]
 		if len(uses) == 0 {
 			for key, candidates := range r.schema.particleUses {
+				r.step(1)
 				if key.particle == m.Particle {
+					r.context.scratch(r.context.size(int64(len(candidates)), 256))
 					uses = append(uses, candidates...)
 				}
 			}
@@ -403,14 +430,13 @@ func (r *Run) buildWitnesses(s *boundState) {
 			r.context.IdentityIncomplete = true
 			continue
 		}
-		r.reserve(160)
 		resolved := uses[0]
 		if resolved.original.Reference.Local != "" {
 			if target, ok := r.schema.Root(resolved.original.Reference); ok {
 				resolved = target
 			}
 		}
-		s.witnesses = append(s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: uses[0], ResolvedDeclaration: resolved, Mode: WitnessDeclared})
+		s.witnesses = appendRetained(&r.context, s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: uses[0], ResolvedDeclaration: resolved, Mode: WitnessDeclared})
 	}
 }
 func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (out Completion, err error) {
@@ -422,13 +448,15 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 	}
 	r.current = ctx
 	defer recoverRun(&err)
+	defer r.releaseScratch()
 	s := b.state
 	r.context.local = s
 	defer func() { r.context.local = nil }()
 	var declared []Witness
 	for _, w := range s.witnesses {
+		r.step(1)
 		if w.Mode == WitnessDeclared {
-			declared = append(declared, w)
+			declared = appendScratch(&r.context, declared, w)
 		}
 	}
 	if len(children) != len(declared) {
@@ -457,11 +485,23 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 // Identity reports currently proved identity facts; false completeness suppresses
 // absence. It does not seal the run, so root-closed duplicates survive tail errors.
 func (r *Run) Identity(ctx context.Context, inputComplete bool) (out IdentityResults, err error) {
+	out.Valid = true
+	if r != nil {
+		out.Valid = r.identityValid
+		out.BySubject = r.identityResults
+		out.Issues = r.identityIssues
+	}
 	if err = r.check(ctx); err != nil {
 		return
 	}
 	r.current = ctx
+	defer func() {
+		if err != nil {
+			out.Complete = false
+		}
+	}()
 	defer recoverRun(&err)
+	defer r.releaseScratch()
 	if r.identityResults == nil {
 		r.reserve(256)
 		r.identityResults = make(map[SubjectID]Result)
@@ -492,7 +532,8 @@ func (r *Run) Close() error {
 		return errors.New("xsd: repeated or nil close")
 	}
 	r.closed = true
-	err := r.meter.Release(r.retained)
+	err := r.meter.Release(r.retained + r.scratchRetained)
+	r.scratchRetained = 0
 	r.retained = 0
 	r.nodes = nil
 	r.states = nil
@@ -508,12 +549,12 @@ func (c *Context) setFamily(name string) {
 	}
 }
 func (c *Context) step(n int64) {
-	if c.run != nil {
+	if c != nil && c.run != nil {
 		c.run.step(n)
 	}
 }
 func (c *Context) reserve(n int64) {
-	if c.run != nil {
+	if c != nil && c.run != nil {
 		c.run.reserve(n)
 	}
 }
@@ -539,7 +580,7 @@ func (c *Context) identityDetail(path, constraint, message string) {
 	if r.identitySeen[c.identityDiagnostic] {
 		return
 	}
-	r.reserve(int64(400 + len(path) + len(constraint) + len(message)))
+	r.reserve(c.sum(128, int64(len(path)), int64(len(constraint)), int64(len(message))))
 	id := c.identitySource.subject
 	attribute := c.identitySource.attribute
 	v, ok := r.identityResults[id]
@@ -548,9 +589,10 @@ func (c *Context) identityDetail(path, constraint, message string) {
 	}
 	v.Valid = false
 	detail := Detail{Issue: Issue{path, constraint, message}, Subject: id, Attribute: attribute}
-	v.Issues = append(v.Issues, detail)
+	v.Issues = appendRetained(c, v.Issues, detail)
+	issues := appendRetained(c, r.identityIssues, detail)
 	r.identityResults[id] = v
-	r.identityIssues = append(r.identityIssues, detail)
+	r.identityIssues = issues
 	r.identitySeen[c.identityDiagnostic] = true
 	r.identityOutput.Issues = r.identityIssues
 }
@@ -562,8 +604,81 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	s := c.local
 	use := s.run.attributeUse(s.actual, schema.Name)
 	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
-	s.run.reserve(160)
-	s.attributes = append(s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Scalar: scalar})
+	s.attributes = appendRetained(c, s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Scalar: scalar})
+}
+
+// size validates arithmetic and host allocation width before any allocation.
+func (c *Context) size(count, width int64) int64 {
+	if count < 0 || width < 0 || (width != 0 && count > math.MaxInt64/width) {
+		panic(runAbort{errors.New("xsd: allocation size overflow")})
+	}
+	n := count * width
+	if uint64(n) > uint64(^uint(0)>>1) {
+		panic(runAbort{errors.New("xsd: allocation exceeds host size")})
+	}
+	return n
+}
+
+// scratch accounts operation-local storage, released even if an operation aborts.
+func (c *Context) scratch(n int64) {
+	if c == nil || c.run == nil {
+		return
+	}
+	r := c.run
+	if n < 0 || n > math.MaxInt64-r.scratchRetained || n > math.MaxInt64-r.retained-r.scratchRetained {
+		panic(runAbort{errors.New("xsd: temporary retention overflow")})
+	}
+	if err := r.meter.Reserve(n); err != nil {
+		panic(runAbort{err})
+	}
+	r.scratchRetained += n
+}
+func (r *Run) releaseScratch() {
+	n := r.scratchRetained
+	if n == 0 {
+		return
+	}
+	if err := r.meter.Release(n); err != nil {
+		panic(runAbort{err})
+	}
+	r.scratchRetained = 0
+}
+
+// bytes bounds uninterruptible standard-library scans before entry. Checkpoints
+// also make a large lexical operation cancellable before its library call.
+func (c *Context) bytes(n int) {
+	if c == nil || c.run == nil {
+		return
+	}
+	for n > 0 {
+		chunk := min(n, 256)
+		c.step(int64(chunk))
+		n -= chunk
+	}
+}
+func (c *Context) identity(n int64) {
+	if c != nil && c.run != nil {
+		if err := c.run.meter.Identity(n); err != nil {
+			panic(runAbort{err})
+		}
+	}
+}
+
+func (c *Context) sum(parts ...int64) int64 {
+	var n int64
+	for _, part := range parts {
+		if part < 0 || part > math.MaxInt64-n {
+			panic(runAbort{errors.New("xsd: allocation size overflow")})
+		}
+		n += part
+	}
+	return c.size(n, 1)
+}
+
+func (c *Context) scalar(n int64) {
+	if c != nil && c.run != nil {
+		c.run.scalar(n)
+	}
 }
 
 // Child occurrence identity comes from the grammar position, never display paths.
@@ -573,7 +688,7 @@ func (c *Context) childIssue(node *Node, path string, index int, constraint, mes
 		c.local.issueSubject = node.Children[index].ID
 		defer func() { c.local.issueSubject = old }()
 	}
-	c.AddIssue(IndexedChildPath(path, node.Children, index), constraint, message)
+	c.AddIssue(indexedChildPath(path, node.Children, index, c), constraint, message)
 }
 func (c *Context) proveIdentityFailure() {
 	if c.run != nil && c.run.identityOutput != nil {

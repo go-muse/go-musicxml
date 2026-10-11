@@ -272,6 +272,8 @@ func (c *Context) ValidateElement(
 	schema *ElementSchema,
 	path string,
 ) {
+	c.step(1)
+
 	c.ValidateElementOwned(node, schema, path, nil)
 }
 
@@ -280,6 +282,8 @@ func (c *Context) ValidateElement(
 // independently assessed standard xsi attributes. Neither gate uses document-wide
 // issue state: a parent/sibling failure cannot erase this item's binding facts.
 func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path string, owner *Node) bool {
+	c.step(1)
+
 	original := node
 	c.setFamily("declaration")
 	c.ValidateSchemaLocationHints(node, path)
@@ -300,10 +304,10 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		c.AddIssue(
 			path,
 			"name",
-			fmt.Sprintf(
+			format(c,
 				"got %s, expected %s",
-				DisplayName(node.Name),
-				DisplayQName(schema.Name),
+				displayName(node.Name, c),
+				displayQName(schema.Name, c),
 			),
 		)
 		return false
@@ -338,11 +342,11 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	// forbids all character/element content as well as a fixed constraint.
 	// https://www.w3.org/TR/xmlschema-1/#cvc-elt
 	c.setFamily("declaration")
-	nilValue, nilPresent := NilAttribute(node.Attrs)
+	nilValue, nilPresent := nilAttribute(node.Attrs, c)
 	nilled := false
 	if nilPresent {
-		nilPath := AttributePath(path, QName{Space: XSINamespace, Local: "nil"})
-		if value, failure := ParseBoolean(nilValue); failure != nil {
+		nilPath := attributePath(path, QName{Space: XSINamespace, Local: "nil"}, c)
+		if value, failure := parseBoolean(nilValue, c); failure != nil {
 			c.AddIssue(nilPath, failure.Constraint, failure.Message)
 		} else {
 			nilled = schema.Nillable && value
@@ -378,6 +382,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		}
 		if value != nil {
 			// A fresh builder avoids copying strings.Builder's internal state.
+			c.scratch(128)
 			effective := &Node{Name: node.Name, Attrs: node.Attrs, Children: node.Children, Namespaces: node.Namespaces}
 			lexical := *value
 			if actualType != &schema.Type {
@@ -394,6 +399,8 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 					}
 				}
 			}
+			c.reserve(int64(len(lexical)))
+			c.bytes(len(lexical))
 			effective.Text.WriteString(lexical)
 			defaulted = true
 			if c.local != nil {
@@ -416,7 +423,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 			c.AddIssue(
 				path,
 				"fixed",
-				fmt.Sprintf(
+				format(c,
 					"value %q does not equal fixed value %q",
 					node.Text.String(),
 					*schema.Fixed,
@@ -458,6 +465,8 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 func (c *Context) ResolveElement(
 	schema *ElementSchema,
 ) (*ElementSchema, bool) {
+	c.step(1)
+
 	if schema == nil {
 		return nil, false
 	}
@@ -465,6 +474,8 @@ func (c *Context) ResolveElement(
 		return schema, true
 	}
 
+	c.bytes(len(schema.Reference.Space))
+	c.bytes(len(schema.Reference.Local))
 	resolved, found := c.Schema.Elements[schema.Reference]
 	return resolved, found && resolved != nil
 }
@@ -478,6 +489,8 @@ func (c *Context) ValidateType(
 	nilled bool,
 	subject *Node,
 ) bool {
+	c.step(1)
+
 	simple, complex, builtin, found := c.ResolveType(reference)
 	if !found {
 		c.AddIssue(path, "schema", "type declaration cannot be resolved")
@@ -558,6 +571,8 @@ func (c *Context) ResolveType(
 	string,
 	bool,
 ) {
+	c.step(1)
+
 	if reference == nil {
 		return nil, nil, "", false
 	}
@@ -573,6 +588,8 @@ func (c *Context) ResolveType(
 	if reference.Name.Local == "" {
 		return nil, nil, "", false
 	}
+	c.bytes(len(reference.Name.Space))
+	c.bytes(len(reference.Name.Local))
 	if reference.Name.Space == XSDNamespace {
 		return nil, nil, reference.Name.Local, BuiltinSemantics(reference.Name.Local) != nil
 	}
@@ -592,6 +609,8 @@ func (c *Context) ValidateComplex(
 	nilled bool,
 	subject *Node,
 ) bool {
+	c.step(1)
+
 	if schema.Abstract {
 		c.AddIssue(path, "abstract", "abstract type cannot be used")
 	}
@@ -640,7 +659,7 @@ func (c *Context) ValidateComplex(
 	// nullable particles or the generator's unnormalized empty groups.
 	// Keep the legacy diagnostic and leave the source text unchanged.
 	if (c.local == nil || c.local.subject.TextKnown) && !effective.Mixed && node.Text.Len() != 0 &&
-		(effective.Particle == nil || strings.TrimFunc(node.Text.String(), IsWhitespace) != "") {
+		(effective.Particle == nil || trimXMLWhitespace(node.Text.String(), c) != "") {
 		c.AddIssue(
 			path,
 			"element-only",
@@ -655,9 +674,9 @@ func (c *Context) ValidateComplex(
 			c.childIssue(
 				node, path, 0,
 				"content-model",
-				fmt.Sprintf(
+				format(c,
 					"unexpected element %s",
-					DisplayName(node.Children[0].Name),
+					displayName(node.Children[0].Name, c),
 				),
 			)
 		}
@@ -689,9 +708,9 @@ func (c *Context) ValidateComplex(
 		c.childIssue(
 			node, path, index,
 			"content-model",
-			fmt.Sprintf(
+			format(c,
 				"unexpected element %s",
-				DisplayName(node.Children[index].Name),
+				displayName(node.Children[index].Name, c),
 			),
 		)
 		return false
@@ -701,8 +720,9 @@ func (c *Context) ValidateComplex(
 		c.local.matches = result.Elements
 		return attributesValid && contentValid
 	}
-	paths := ChildPaths(path, node.Children)
+	paths := childPaths(path, node.Children, c)
 	for _, match := range result.Elements {
+		c.step(1)
 		if !c.ValidateElementOwned(
 			node.Children[match.Index],
 			match.Schema,
@@ -718,6 +738,8 @@ func (c *Context) ValidateComplex(
 func (c *Context) EffectiveComplex(
 	schema *ComplexSchema,
 ) (result *EffectiveComplex, ok bool) {
+	c.step(1)
+
 	if schema == nil {
 		return nil, false
 	}
@@ -725,6 +747,9 @@ func (c *Context) EffectiveComplex(
 		return cached, cached != nil
 	}
 
+	c.reserve(160)
+	c.reserve(c.size(int64(len(schema.Attributes)), 192))
+	c.step(int64(len(schema.Attributes)))
 	result = &EffectiveComplex{
 		Particle:     schema.Particle,
 		Attributes:   append([]AttributeSchema(nil), schema.Attributes...),
@@ -763,10 +788,10 @@ func (c *Context) EffectiveComplex(
 				return nil, false
 			}
 			result.Simple = base.Simple
-			result.Attributes = MergeAttributes(
+			result.Attributes = mergeAttributes(
 				base.Attributes,
 				result.Attributes,
-			)
+				c)
 			if schema.Form == ComplexSimpleContentExtension {
 				result.AnyAttribute = MergeAnyAttribute(base.AnyAttribute, result.AnyAttribute)
 			}
@@ -776,6 +801,7 @@ func (c *Context) EffectiveComplex(
 		}
 
 		if schema.Form == ComplexSimpleContentRestriction && schema.SimpleContent != nil {
+			c.reserve(512)
 			local := *schema.SimpleContent
 			if local.Base == nil {
 				local.Base = &SimpleMember{
@@ -801,14 +827,14 @@ func (c *Context) EffectiveComplex(
 			return nil, false
 		}
 
-		result.Particle = Sequence(
+		result.Particle = sequence(
 			base.Particle,
 			result.Particle,
-		)
-		result.Attributes = MergeAttributes(
+			c)
+		result.Attributes = mergeAttributes(
 			base.Attributes,
 			result.Attributes,
-		)
+			c)
 		result.AnyAttribute = MergeAnyAttribute(
 			base.AnyAttribute,
 			result.AnyAttribute,
@@ -834,7 +860,7 @@ func (c *Context) EffectiveComplex(
 		}
 		// Attribute uses omitted by restriction are inherited; explicit local
 		// uses (including prohibited ones) replace the corresponding base uses.
-		result.Attributes = MergeAttributes(base.Attributes, result.Attributes)
+		result.Attributes = mergeAttributes(base.Attributes, result.Attributes, c)
 		// Content and wildcard constraints belong to the restriction itself.
 		return result, true
 
@@ -843,17 +869,24 @@ func (c *Context) EffectiveComplex(
 	}
 }
 
-func MergeAttributes(
-	base []AttributeSchema,
-	derived []AttributeSchema,
-) []AttributeSchema {
+func MergeAttributes(base, derived []AttributeSchema) []AttributeSchema {
+	return mergeAttributes(base, derived, nil)
+}
+func mergeAttributes(base, derived []AttributeSchema, c *Context) []AttributeSchema {
+	c.step(1)
+
+	c.reserve(c.size(c.sum(int64(len(base)), int64(len(derived))), 384))
+	c.scratch(c.size(c.sum(int64(len(base)), int64(len(derived))), 96))
+	c.step(int64(len(base)))
 	result := append([]AttributeSchema(nil), base...)
 	indexes := make(map[QName]int, len(result))
 	for index := range result {
+		c.step(1)
 		indexes[result[index].Name] = index
 	}
 
 	for _, attribute := range derived {
+		c.step(1)
 		if index, found := indexes[attribute.Name]; found {
 			result[index] = attribute
 			continue
@@ -875,16 +908,17 @@ func MergeAnyAttribute(
 	return base
 }
 
-func Sequence(
-	left *ParticleSchema,
-	right *ParticleSchema,
-) *ParticleSchema {
+func Sequence(left, right *ParticleSchema) *ParticleSchema { return sequence(left, right, nil) }
+func sequence(left, right *ParticleSchema, c *Context) *ParticleSchema {
+	c.step(1)
+
 	switch {
 	case left == nil:
 		return right
 	case right == nil:
 		return left
 	default:
+		c.reserve(160)
 		return &ParticleSchema{
 			Kind: ParticleSequence,
 			Occurrence: Occurrence{
@@ -917,8 +951,11 @@ func StandardXSIName(name QName, allowType bool) bool {
 // xsi:nil, xsi:type and hint datatypes.
 // https://www.w3.org/TR/xmlschema-1/#cvc-type
 func (c *Context) ValidateSimpleElementAttributes(node *Node, path string) bool {
+	c.step(1)
+
 	valid := true
 	for _, attribute := range node.Attrs {
+		c.step(1)
 		if NamespaceDeclaration(attribute) {
 			continue
 		}
@@ -927,7 +964,7 @@ func (c *Context) ValidateSimpleElementAttributes(node *Node, path string) bool 
 		}
 		valid = false
 		c.AddIssue(
-			AttributePath(path, attribute.Name),
+			attributePath(path, attribute.Name, c),
 			"attribute",
 			"attribute is not allowed",
 		)
@@ -941,14 +978,19 @@ func (c *Context) ValidateAttributes(
 	anyAttribute *AnyAttributeSchema,
 	path string,
 ) bool {
+	c.step(1)
+
 	valid := true
+	c.scratch(c.sum(128, c.size(int64(len(schemas)), 256), c.size(int64(len(node.Attrs)), 160)))
 	known := make(map[QName]AttributeSchema, len(schemas))
 	present := make(map[QName]Attr, len(node.Attrs))
 	for _, schema := range schemas {
+		c.step(1)
 		known[schema.Name] = schema
 	}
 
 	for _, attribute := range node.Attrs {
+		c.step(1)
 		if NamespaceDeclaration(attribute) {
 			continue
 		}
@@ -965,7 +1007,7 @@ func (c *Context) ValidateAttributes(
 		name := Name(attribute.Name)
 		schema, found := known[name]
 		if !found {
-			if AnyAttributeAllows(anyAttribute, attribute.Name) {
+			if anyAttributeAllows(anyAttribute, attribute.Name, c) {
 				if anyAttribute != nil {
 					c.wildcard(anyAttribute.ProcessContents, "attributes")
 				}
@@ -973,7 +1015,7 @@ func (c *Context) ValidateAttributes(
 			}
 			valid = false
 			c.AddIssue(
-				AttributePath(path, attribute.Name),
+				attributePath(path, attribute.Name, c),
 				"attribute",
 				"attribute is not allowed",
 			)
@@ -984,7 +1026,7 @@ func (c *Context) ValidateAttributes(
 		if schema.Use == AttributeProhibited {
 			valid = false
 			c.AddIssue(
-				AttributePath(path, attribute.Name),
+				attributePath(path, attribute.Name, c),
 				"prohibited",
 				"attribute is prohibited",
 			)
@@ -1010,9 +1052,9 @@ func (c *Context) ValidateAttributes(
 			attributeValid = false
 			valid = false
 			c.AddIssue(
-				AttributePath(path, attribute.Name),
+				attributePath(path, attribute.Name, c),
 				"fixed",
-				fmt.Sprintf(
+				format(c,
 					"value %q does not equal fixed value %q",
 					attribute.Value,
 					schema.Constraint.Value,
@@ -1030,12 +1072,12 @@ func (c *Context) ValidateAttributes(
 		); failure != nil {
 			valid = false
 			c.AddIssue(
-				AttributePath(path, attribute.Name),
+				attributePath(path, attribute.Name, c),
 				failure.Constraint,
 				failure.Message,
 			)
 		} else {
-			attributePath := AttributePath(path, attribute.Name)
+			attributePath := attributePath(path, attribute.Name, c)
 			if attributeValid {
 				c.RecordIdentity(&schema.Type, attribute.Value, attributePath)
 			}
@@ -1048,6 +1090,7 @@ func (c *Context) ValidateAttributes(
 		c.local.attribute = QName{}
 	}
 	for _, schema := range schemas {
+		c.step(1)
 		if schema.Use != AttributeRequired {
 			continue
 		}
@@ -1061,7 +1104,7 @@ func (c *Context) ValidateAttributes(
 
 		valid = false
 		c.AddIssue(
-			AttributeQNamePath(path, schema.Name),
+			attributeQNamePath(path, schema.Name, c),
 			"required",
 			"required attribute is missing",
 		)
@@ -1074,6 +1117,8 @@ func (c *Context) ValidateSimpleType(
 	reference *TypeRef,
 	value string,
 ) *SimpleFailure {
+	c.step(1)
+
 	simple, complex, builtin, found := c.ResolveType(reference)
 	if !found || complex != nil {
 		return c.IncompleteFailure("simple type cannot be resolved")
@@ -1096,6 +1141,8 @@ func (c *Context) SimpleValuesEqual(
 	left string,
 	right string,
 ) bool {
+	c.step(1)
+
 	semantics := c.SimpleTypeSemantics(reference)
 	if semantics == nil {
 		// Deliberately fail closed, even for identical spellings. Ordinary
@@ -1107,7 +1154,7 @@ func (c *Context) SimpleValuesEqual(
 		return c.AggregateValuesEqual(semantics, left, right)
 	}
 	builtin := semantics.Builtin
-	if c.local != nil && !semantics.Aggregate() && !supportedEquality(AtomicValue(semantics, semantics.Normalize(left))) {
+	if c.local != nil && !semantics.Aggregate() && !controlledSupportedEquality(atomicValue(semantics, semantics.normalize(left, c), c), c) {
 		c.Incomplete("value-space equality is unavailable for xs:" + builtin)
 		return false
 	}
@@ -1115,25 +1162,27 @@ func (c *Context) SimpleValuesEqual(
 		return c.AggregateValuesEqual(semantics, left, right)
 	}
 	if _, _, integer := IntegerLimits(builtin); integer {
-		return IntegerValuesEqual(left, right)
+		return integerValuesEqual(left, right, c)
 	}
 	if builtin == "decimal" {
-		return DecimalValuesEqual(left, right)
+		return decimalValuesEqual(left, right, c)
 	}
 	if semantics.StringValue {
-		return semantics.Normalize(left) == semantics.Normalize(right)
+		return compareText(semantics.normalize(left, c), semantics.normalize(right, c), c) == 0
 	}
 	// Preserve existing lexical comparison for other primitive families.
 	if builtin == "" {
 		builtin = "string"
 	}
-	return NormalizeWhitespace(builtin, left) == NormalizeWhitespace(builtin, right)
+	return compareText(normalizeWhitespace(builtin, left, c), normalizeWhitespace(builtin, right, c), c) == 0
 }
 
 // Atomic integer/decimal/string/boolean/URI and supported list/union values
 // use their value contracts. Other primitives retain their lexical path;
 // mixed content compares raw text.
 func (c *Context) ElementFixedValuesEqual(reference *TypeRef, left, right string) bool {
+	c.step(1)
+
 	_, complex, _, _ := c.ResolveType(reference)
 	if complex != nil {
 		effective, ok := c.EffectiveComplex(complex)
@@ -1142,7 +1191,7 @@ func (c *Context) ElementFixedValuesEqual(reference *TypeRef, left, right string
 			return false
 		}
 		if effective.Simple == nil {
-			return left == right
+			return compareText(left, right, c) == 0
 		}
 		reference = effective.Simple
 	}
@@ -1152,7 +1201,7 @@ func (c *Context) ElementFixedValuesEqual(reference *TypeRef, left, right string
 		// additional fixed issue alongside ordinary schema diagnostics.
 		return false
 	}
-	if c.local != nil && !semantics.Aggregate() && !supportedEquality(AtomicValue(semantics, semantics.Normalize(left))) {
+	if c.local != nil && !semantics.Aggregate() && !controlledSupportedEquality(atomicValue(semantics, semantics.normalize(left, c), c), c) {
 		c.Incomplete("value-space equality is unavailable for xs:" + semantics.Builtin)
 		return false
 	}
@@ -1163,27 +1212,31 @@ func (c *Context) ElementFixedValuesEqual(reference *TypeRef, left, right string
 		return c.AggregateValuesEqual(semantics, left, right)
 	}
 	if _, _, integer := IntegerLimits(semantics.Builtin); integer {
-		return IntegerValuesEqual(left, right)
+		return integerValuesEqual(left, right, c)
 	}
 	if semantics.Builtin == "decimal" {
-		return DecimalValuesEqual(left, right)
+		return decimalValuesEqual(left, right, c)
 	}
 	if semantics.StringValue {
-		return semantics.Normalize(left) == semantics.Normalize(right)
+		return compareText(semantics.normalize(left, c), semantics.normalize(right, c), c) == 0
 	}
-	return left == right
+	return compareText(left, right, c) == 0
 }
 
 func (c *Context) ValidateSimple(
 	schema *SimpleSchema,
 	value string,
 ) *SimpleFailure {
+	c.step(1)
+
 	_, failure := c.ValidateSimpleValue(schema, value, value)
 	return failure
 }
 
 // Keep the lexical-returning helper for callers that do not compare values.
 func (c *Context) ValidateSimpleValue(schema *SimpleSchema, value, display string) (string, *SimpleFailure) {
+	c.step(1)
+
 	assessment, failure := c.AssessSimpleValue(schema, value, display)
 	return assessment.Lexical, failure
 }
@@ -1197,6 +1250,8 @@ func (c *Context) AssessSimpleValue(
 	schema *SimpleSchema,
 	value, display string,
 ) (result SimpleAssessment, failure *SimpleFailure) {
+	c.step(1)
+
 	defer func() {
 		if failure != nil && failure.Constraint == "schema" {
 			c.Incomplete(failure.Message)
@@ -1209,7 +1264,7 @@ func (c *Context) AssessSimpleValue(
 	if semantics == nil {
 		return SimpleAssessment{}, &SimpleFailure{Constraint: "schema", Message: "simple type cannot be resolved"}
 	}
-	value = semantics.Normalize(value)
+	value = semantics.normalize(value, c)
 	switch schema.Form {
 	case SimpleRestriction:
 		assessment, failure := c.AssessSimpleMemberValue(schema.Base, value, display)
@@ -1226,7 +1281,7 @@ func (c *Context) AssessSimpleValue(
 		if !enumerationMatch {
 			return SimpleAssessment{}, &SimpleFailure{
 				Constraint: "enumeration",
-				Message: fmt.Sprintf(
+				Message: format(c,
 					"value %q is not one of the allowed values",
 					display,
 				),
@@ -1238,11 +1293,12 @@ func (c *Context) AssessSimpleValue(
 		// so an earlier match or miss cannot conceal an invalid generated pattern.
 		patternsMatched := len(schema.Patterns) == 0
 		for _, pattern := range schema.Patterns {
-			matched, err := MatchPattern(pattern, normalized)
+			c.step(1)
+			matched, err := matchPattern(pattern, normalized, c)
 			if err != nil {
 				return SimpleAssessment{}, &SimpleFailure{
 					Constraint: "schema",
-					Message: fmt.Sprintf(
+					Message: format(c,
 						"invalid generated XSD pattern %q: %v",
 						pattern,
 						err,
@@ -1254,24 +1310,24 @@ func (c *Context) AssessSimpleValue(
 		if !patternsMatched {
 			var message string
 			if len(schema.Patterns) == 1 {
-				message = fmt.Sprintf("value %q does not match XSD pattern %q", display, schema.Patterns[0])
+				message = format(c, "value %q does not match XSD pattern %q", display, schema.Patterns[0])
 			} else {
-				message = fmt.Sprintf("value %q does not match any XSD pattern in %q", display, schema.Patterns)
+				message = format(c, "value %q does not match any XSD pattern in %q", display, schema.Patterns)
 			}
 			return SimpleAssessment{}, &SimpleFailure{Constraint: "pattern", Message: message}
 		}
 
-		if failure := ValidateBoundsValue(schema, normalized, builtin, display); failure != nil {
+		if failure := validateBoundsValue(schema, normalized, builtin, display, c); failure != nil {
 			return SimpleAssessment{}, failure
 		}
-		if failure := ValidateLengthFacets(
+		if failure := validateLengthFacets(
 			schema,
 			normalized,
 			c.SimpleMemberList(schema.Base),
-		); failure != nil {
+			c); failure != nil {
 			return SimpleAssessment{}, failure
 		}
-		if failure := ValidateDigitFacets(schema, normalized, builtin); failure != nil {
+		if failure := validateDigitFacets(schema, normalized, builtin, c); failure != nil {
 			return SimpleAssessment{}, failure
 		}
 
@@ -1279,6 +1335,7 @@ func (c *Context) AssessSimpleValue(
 
 	case SimpleUnion:
 		for _, member := range schema.Members {
+			c.step(1)
 			normalized, failure := c.AssessUnionMemberValue(member, value, display)
 			if failure == nil {
 				return normalized, nil
@@ -1289,17 +1346,18 @@ func (c *Context) AssessSimpleValue(
 		}
 		return SimpleAssessment{}, &SimpleFailure{
 			Constraint: "union",
-			Message:    fmt.Sprintf("value %q does not match any union member", display),
+			Message:    format(c, "value %q does not match any union member", display),
 		}
 
 	case SimpleList:
 		result := SimpleAssessment{Lexical: value, Value: SimpleValue{Domain: ListDomain}}
-		for index, item := range SplitList(value) {
+		for index, item := range splitList(value, c) {
+			c.step(1)
 			assessment, failure := c.AssessSimpleMemberValue(schema.Item, item, item)
 			if failure != nil {
-				return SimpleAssessment{}, &SimpleFailure{Constraint: failure.Constraint, Message: fmt.Sprintf("list item %d: %s", index+1, failure.Message)}
+				return SimpleAssessment{}, &SimpleFailure{Constraint: failure.Constraint, Message: format(c, "list item %d: %s", index+1, failure.Message)}
 			}
-			result.Value.Items = append(result.Value.Items, assessment.Value)
+			result.Value.Items = appendSimpleValue(result.Value.Items, assessment.Value, c)
 		}
 		return result, nil
 
@@ -1313,6 +1371,8 @@ func (c *Context) AssessSimpleValue(
 // skips restriction wrappers: direct union restrictions, list item types and
 // atomic/list members still take their ordinary full assessment paths.
 func (c *Context) AssessUnionMemberValue(member *SimpleMember, value, display string) (SimpleAssessment, *SimpleFailure) {
+	c.step(1)
+
 	semantics := c.MemberSemantics(member)
 	if semantics != nil && semantics.Union != nil {
 		return c.AssessSimpleValue(semantics.Union, value, display)
@@ -1324,6 +1384,8 @@ func (c *Context) AssessSimpleMemberValue(
 	member *SimpleMember,
 	value, display string,
 ) (SimpleAssessment, *SimpleFailure) {
+	c.step(1)
+
 	semantics := c.MemberSemantics(member)
 	if semantics == nil {
 		return SimpleAssessment{}, c.IncompleteFailure("simple type member cannot be resolved")
@@ -1340,12 +1402,16 @@ func (c *Context) AssessSimpleMemberValue(
 func (c *Context) SimpleBuiltin(
 	reference *TypeRef,
 ) string {
+	c.step(1)
+
 	if reference == nil {
 		return ""
 	}
 	if reference.InlineSimple != nil {
 		return c.SimpleSchemaBuiltin(reference.InlineSimple)
 	}
+	c.bytes(len(reference.Name.Space))
+	c.bytes(len(reference.Name.Local))
 	if reference.Name.Space == XSDNamespace {
 		return reference.Name.Local
 	}
@@ -1360,6 +1426,8 @@ func (c *Context) SimpleBuiltin(
 func (c *Context) SimpleSchemaBuiltin(
 	schema *SimpleSchema,
 ) string {
+	c.step(1)
+
 	if schema == nil {
 		return ""
 	}
@@ -1377,6 +1445,8 @@ func (c *Context) SimpleSchemaBuiltin(
 func (c *Context) SimpleMemberBuiltin(
 	member *SimpleMember,
 ) string {
+	c.step(1)
+
 	if member == nil {
 		return ""
 	}
@@ -1397,6 +1467,8 @@ func (c *Context) SimpleMemberBuiltin(
 func (c *Context) SimpleMemberList(
 	member *SimpleMember,
 ) bool {
+	c.step(1)
+
 	if member == nil {
 		return false
 	}
@@ -1419,6 +1491,8 @@ func (c *Context) SimpleMemberList(
 func (c *Context) SimpleSchemaList(
 	schema *SimpleSchema,
 ) bool {
+	c.step(1)
+
 	if schema == nil {
 		return false
 	}
@@ -1440,63 +1514,69 @@ func ValidateBuiltin(
 }
 
 func ValidateBuiltinValue(name, value, display string) *SimpleFailure {
+	return validateBuiltinValue(name, value, display, nil)
+}
+func validateBuiltinValue(name, value, display string, c *Context) *SimpleFailure {
+	c.step(1)
+
 	if name == "boolean" {
-		if _, failure := ParseBoolean(value); failure != nil {
-			return &SimpleFailure{Constraint: "datatype", Message: fmt.Sprintf("value %q is not valid for xs:boolean", display)}
+		if _, failure := parseBoolean(value, c); failure != nil {
+			return &SimpleFailure{Constraint: "datatype", Message: format(c, "value %q is not valid for xs:boolean", display)}
 		}
 		return nil
 	}
-	normalized := NormalizeWhitespace(name, value)
+	normalized := normalizeWhitespace(name, value, c)
+	c.bytes(len(normalized))
 
 	switch name {
 	case "anySimpleType", "string", "normalizedString", "token":
 		return nil
 
 	case "anyURI":
-		if ValidXSDAnyURI(normalized) {
+		if validXSDAnyURI(normalized, c) {
 			return nil
 		}
 
 	case "language":
-		if LanguagePattern.MatchString(normalized) {
+		if scalarPatternMatch(LanguagePattern, normalized, c) {
 			return nil
 		}
 
 	case "Name":
-		if ValidXSDName(normalized) {
+		if validXSDName(normalized, c) {
 			return nil
 		}
 
 	case "NCName", "ID", "IDREF", "ENTITY":
-		if ValidXSDNCName(normalized) {
+		if validXSDNCName(normalized, c) {
 			return nil
 		}
 
 	case "NMTOKEN":
-		if ValidXSDNMTOKEN(normalized) {
+		if validXSDNMTOKEN(normalized, c) {
 			return nil
 		}
 
 	case "NMTOKENS":
-		items := SplitList(normalized)
+		items := splitList(normalized, c)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
-				return !ValidXSDNMTOKEN(item)
+				return !validXSDNMTOKEN(item, c)
 			}) == false {
 			return nil
 		}
 
 	case "IDREFS", "ENTITIES":
-		items := SplitList(normalized)
+		items := splitList(normalized, c)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
-				return !ValidXSDNCName(item)
+				return !validXSDNCName(item, c)
 			}) == false {
 			return nil
 		}
 
 	case "decimal":
-		if DecimalPattern.MatchString(normalized) {
+		if scalarPatternMatch(DecimalPattern, normalized, c) {
 			return nil
 		}
 
@@ -1513,29 +1593,29 @@ func ValidateBuiltinValue(name, value, display string) *SimpleFailure {
 	case "integer", "long", "int", "short", "byte", "nonPositiveInteger",
 		"negativeInteger", "nonNegativeInteger", "positiveInteger", "unsignedLong",
 		"unsignedInt", "unsignedShort", "unsignedByte":
-		if ValidInteger(name, normalized) {
+		if validInteger(name, normalized, c) {
 			return nil
 		}
 
 	case "base64Binary":
-		if Base64Pattern.MatchString(normalized) {
+		if scalarPatternMatch(Base64Pattern, normalized, c) {
 			return nil
 		}
 
 	case "hexBinary":
 		if len(normalized)%2 == 0 &&
-			HexPattern.MatchString(normalized) {
+			scalarPatternMatch(HexPattern, normalized, c) {
 			return nil
 		}
 
 	case "QName", "NOTATION":
-		if ValidXSDQName(normalized) {
+		if validXSDQName(normalized, c) {
 			return nil
 		}
 
 	case "date", "dateTime", "duration", "gDay", "gMonth",
 		"gMonthDay", "gYear", "gYearMonth", "time":
-		if ValidXSDDateTime(name, normalized) {
+		if validXSDDateTime(name, normalized, c) {
 			return nil
 		}
 
@@ -1545,13 +1625,13 @@ func ValidateBuiltinValue(name, value, display string) *SimpleFailure {
 	default:
 		return &SimpleFailure{
 			Constraint: "schema",
-			Message:    fmt.Sprintf("unsupported XSD built-in type %q", name),
+			Message:    format(c, "unsupported XSD built-in type %q", name),
 		}
 	}
 
 	return &SimpleFailure{
 		Constraint: "datatype",
-		Message: fmt.Sprintf(
+		Message: format(c,
 			"value %q is not valid for xs:%s",
 			display,
 			name,
@@ -1561,8 +1641,11 @@ func ValidateBuiltinValue(name, value, display string) *SimpleFailure {
 
 // parseValidationBoolean shares XSD whitespace and lexical handling between
 // ordinary boolean values and the xsi:nil element constraint.
-func ParseBoolean(value string) (bool, *SimpleFailure) {
-	switch NormalizeWhitespace("boolean", value) {
+func ParseBoolean(value string) (bool, *SimpleFailure) { return parseBoolean(value, nil) }
+func parseBoolean(value string, c *Context) (bool, *SimpleFailure) {
+	c.step(1)
+
+	switch normalizeWhitespace("boolean", value, c) {
 	case "true", "1":
 		return true, nil
 	case "false", "0":
@@ -1570,7 +1653,7 @@ func ParseBoolean(value string) (bool, *SimpleFailure) {
 	default:
 		return false, &SimpleFailure{
 			Constraint: "datatype",
-			Message:    fmt.Sprintf("value %q is not valid for xs:boolean", value),
+			Message:    format(c, "value %q is not valid for xs:boolean", value),
 		}
 	}
 }
@@ -1579,24 +1662,52 @@ func ParseBoolean(value string) (bool, *SimpleFailure) {
 // replace-policy views instead of rebuilding it for every value or literal.
 var ReplaceWhitespace = strings.NewReplacer("\t", " ", "\n", " ", "\r", " ")
 
-func NormalizeWhitespace(name string, value string) string {
+func NormalizeWhitespace(name, value string) string { return normalizeWhitespace(name, value, nil) }
+func normalizeWhitespace(name, value string, c *Context) string {
+	c.scalar(int64(len(value)))
+	c.step(1)
+
 	switch name {
 	case "string", "anySimpleType":
 		return value
 	case "normalizedString":
-		return ReplaceWhitespace.Replace(value)
+		c.bytes(len(value))
+		c.reserve(int64(len(value)))
+		out := ReplaceWhitespace.Replace(value)
+		c.step(0)
+		return out
 	default:
-		return CollapseWhitespace(value)
+		return collapseWhitespace(value, c)
 	}
 }
 
-func CollapseWhitespace(value string) string {
+func CollapseWhitespace(value string) string { return collapseWhitespace(value, nil) }
+func collapseWhitespace(value string, c *Context) string {
+	c.scalar(int64(len(value)))
+	c.step(1)
+
 	var result strings.Builder
-	result.Grow(len(value))
+	capacity := int64(len(value))
+	if c != nil && c.run != nil {
+		c.bytes(len(value))
+		valid := utf8.ValidString(value)
+		c.step(0)
+		if !valid {
+			capacity = 0
+			for _, character := range value {
+				c.step(1)
+				capacity = c.sum(capacity, int64(utf8.RuneLen(character)))
+			}
+		}
+		c.scalar(capacity)
+	}
+	c.reserve(capacity)
+	result.Grow(int(capacity))
 	wroteValue := false
 	pendingSpace := false
 
 	for _, character := range value {
+		c.step(1)
 		if IsWhitespace(character) {
 			pendingSpace = wroteValue
 			continue
@@ -1612,13 +1723,22 @@ func CollapseWhitespace(value string) string {
 	return result.String()
 }
 
-func SplitList(value string) []string {
-	normalized := CollapseWhitespace(value)
+func SplitList(value string) []string { return splitList(value, nil) }
+func splitList(value string, c *Context) []string {
+	c.step(1)
+
+	normalized := collapseWhitespace(value, c)
 	if normalized == "" {
 		return nil
 	}
 
-	return strings.Split(normalized, " ")
+	c.bytes(len(normalized))
+	count := strings.Count(normalized, " ") + 1
+	c.reserve(c.size(int64(count), 16))
+	c.bytes(len(normalized))
+	result := strings.Split(normalized, " ")
+	c.step(0)
+	return result
 }
 
 func IsWhitespace(value rune) bool {
@@ -1634,6 +1754,11 @@ func ValidateBounds(
 }
 
 func ValidateBoundsValue(schema *SimpleSchema, value, builtin, display string) *SimpleFailure {
+	return validateBoundsValue(schema, value, builtin, display, nil)
+}
+func validateBoundsValue(schema *SimpleSchema, value, builtin, display string, c *Context) *SimpleFailure {
+	c.step(1)
+
 	if !schema.HasMinInclusive &&
 		!schema.HasMaxInclusive &&
 		!schema.HasMinExclusive &&
@@ -1642,17 +1767,19 @@ func ValidateBoundsValue(schema *SimpleSchema, value, builtin, display string) *
 	}
 
 	if _, _, integer := IntegerLimits(builtin); integer {
-		return ValidateIntegerBounds(schema, value, display)
+		return validateIntegerBounds(schema, value, display, c)
 	}
 	if builtin == "decimal" {
-		return ValidateDecimalBounds(schema, value, display)
+		return validateDecimalBounds(schema, value, display, c)
 	}
 
+	c.bytes(len(value))
 	number, err := strconv.ParseFloat(value, 64)
+	c.step(0)
 	if err != nil || math.IsNaN(number) {
 		return &SimpleFailure{
 			Constraint: "datatype",
-			Message:    fmt.Sprintf("value %q is not numeric", display),
+			Message:    format(c, "value %q is not numeric", display),
 		}
 	}
 
@@ -1676,14 +1803,17 @@ func ValidateBoundsValue(schema *SimpleSchema, value, builtin, display string) *
 		}},
 	}
 	for _, test := range tests {
+		c.step(1)
 		if !test.Enabled {
 			continue
 		}
+		c.bytes(len(test.Limit))
 		limit, err := strconv.ParseFloat(test.Limit, 64)
+		c.step(0)
 		if err != nil {
 			return &SimpleFailure{
 				Constraint: "schema",
-				Message: fmt.Sprintf(
+				Message: format(c,
 					"invalid %s value %q",
 					test.Constraint,
 					test.Limit,
@@ -1693,7 +1823,7 @@ func ValidateBoundsValue(schema *SimpleSchema, value, builtin, display string) *
 		if !test.Valid(number, limit) {
 			return &SimpleFailure{
 				Constraint: test.Constraint,
-				Message: fmt.Sprintf(
+				Message: format(c,
 					"value %q violates %s=%q",
 					display,
 					test.Constraint,
@@ -1706,27 +1836,30 @@ func ValidateBoundsValue(schema *SimpleSchema, value, builtin, display string) *
 	return nil
 }
 
-func ValidateLengthFacets(
-	schema *SimpleSchema,
-	value string,
-	list bool,
-) *SimpleFailure {
+func ValidateLengthFacets(schema *SimpleSchema, value string, list bool) *SimpleFailure {
+	return validateLengthFacets(schema, value, list, nil)
+}
+func validateLengthFacets(schema *SimpleSchema, value string, list bool, c *Context) *SimpleFailure {
+	c.step(1)
+
 	if !schema.HasLength &&
 		!schema.HasMinLength &&
 		!schema.HasMaxLength {
 		return nil
 	}
 
+	c.bytes(len(value))
 	length := uint64(utf8.RuneCountInString(value))
+	c.step(0)
 	if list {
-		length = uint64(len(SplitList(value)))
+		length = uint64(len(splitList(value, c)))
 	}
 
 	switch {
 	case schema.HasLength && length != schema.Length:
 		return &SimpleFailure{
 			Constraint: "length",
-			Message: fmt.Sprintf(
+			Message: format(c,
 				"value length %d does not equal %d",
 				length,
 				schema.Length,
@@ -1735,7 +1868,7 @@ func ValidateLengthFacets(
 	case schema.HasMinLength && length < schema.MinLength:
 		return &SimpleFailure{
 			Constraint: "minLength",
-			Message: fmt.Sprintf(
+			Message: format(c,
 				"value length %d is less than %d",
 				length,
 				schema.MinLength,
@@ -1744,7 +1877,7 @@ func ValidateLengthFacets(
 	case schema.HasMaxLength && length > schema.MaxLength:
 		return &SimpleFailure{
 			Constraint: "maxLength",
-			Message: fmt.Sprintf(
+			Message: format(c,
 				"value length %d is greater than %d",
 				length,
 				schema.MaxLength,
@@ -1755,20 +1888,21 @@ func ValidateLengthFacets(
 	}
 }
 
-func ValidateDigitFacets(
-	schema *SimpleSchema,
-	value string,
-	builtin string,
-) *SimpleFailure {
+func ValidateDigitFacets(schema *SimpleSchema, value, builtin string) *SimpleFailure {
+	return validateDigitFacets(schema, value, builtin, nil)
+}
+func validateDigitFacets(schema *SimpleSchema, value, builtin string, c *Context) *SimpleFailure {
+	c.step(1)
+
 	if !schema.HasTotalDigits && !schema.HasFractionDigits {
 		return nil
 	}
 
 	var total, fraction uint64
 	if builtin == "decimal" {
-		number, ok := ParseDecimal(value)
+		number, ok := parseDecimal(value, c)
 		if !ok {
-			return &SimpleFailure{Constraint: "datatype", Message: fmt.Sprintf("value %q is not numeric", value)}
+			return &SimpleFailure{Constraint: "datatype", Message: format(c, "value %q is not numeric", value)}
 		}
 		// XSD 1.0 totalDigits bounds both coefficient magnitude and scale:
 		// https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-totalDigits
@@ -1780,18 +1914,22 @@ func ValidateDigitFacets(
 		// Integer digit facets count the value's significant digits; the source
 		// spelling is retained separately for lexical patterns and diagnostics.
 		if _, _, integer := IntegerLimits(builtin); integer {
-			if number, ok := ParseInteger(value); ok {
+			if number, ok := parseInteger(value, c); ok {
 				value = number.Digits
 			}
 		}
 		normalized := strings.TrimPrefix(strings.TrimPrefix(value, "+"), "-")
+		c.bytes(len(normalized))
+		c.scratch(32)
 		parts := strings.SplitN(normalized, ".", 2)
 		for _, character := range normalized {
+			c.step(1)
 			if unicode.IsDigit(character) {
 				total++
 			}
 		}
 		if len(parts) == 2 {
+			c.bytes(len(parts[1]))
 			fraction = uint64(utf8.RuneCountInString(parts[1]))
 		}
 	}
@@ -1799,7 +1937,7 @@ func ValidateDigitFacets(
 	if schema.HasTotalDigits && total > schema.TotalDigits {
 		return &SimpleFailure{
 			Constraint: "totalDigits",
-			Message: fmt.Sprintf(
+			Message: format(c,
 				"value has %d digits; maximum is %d",
 				total,
 				schema.TotalDigits,
@@ -1809,7 +1947,7 @@ func ValidateDigitFacets(
 	if schema.HasFractionDigits && fraction > schema.FractionDigits {
 		return &SimpleFailure{
 			Constraint: "fractionDigits",
-			Message: fmt.Sprintf(
+			Message: format(c,
 				"value has %d fraction digits; maximum is %d",
 				fraction,
 				schema.FractionDigits,
@@ -1820,12 +1958,19 @@ func ValidateDigitFacets(
 	return nil
 }
 
-func MatchPattern(pattern string, value string) (bool, error) {
+func MatchPattern(pattern, value string) (bool, error) { return matchPattern(pattern, value, nil) }
+func matchPattern(pattern, value string, c *Context) (bool, error) {
+	c.step(1)
+
+	c.bytes(len(pattern))
+	c.scratch(c.sum(int64(len(pattern)), c.size(int64(strings.Count(pattern, `\c`)), int64(len(XMLNameCharacters)))))
 	translated := strings.ReplaceAll(
 		pattern,
 		`\c`,
 		`[`+XMLNameCharacters+`]`,
 	)
+	c.bytes(len(translated))
+	c.scratch(c.sum(int64(len(translated)), c.size(int64(strings.Count(translated, `\i`)), int64(len(XMLNameStartCharacters)))))
 	translated = strings.ReplaceAll(
 		translated,
 		`\i`,
@@ -1833,39 +1978,56 @@ func MatchPattern(pattern string, value string) (bool, error) {
 	)
 
 	// XSD \d denotes Unicode decimal digits, including inside character classes.
+	c.bytes(len(translated))
+	c.scratch(c.size(int64(len(translated)), 3))
 	translated = strings.ReplaceAll(translated, `\d`, `\p{Nd}`)
 
+	c.bytes(len(translated))
+	c.scratch(c.sum(1024, c.size(int64(len(translated)), 128)))
+	program := regexpAllowance(translated, c)
 	compiled, err := regexp.Compile(`^(?:` + translated + `)$`)
 	if err != nil {
 		return false, err
 	}
 
-	return compiled.MatchString(value), nil
+	c.step(0)
+	c.bytes(len(value))
+	if program > 0 {
+		c.step(c.size(program, int64(len(value))))
+	}
+	c.scratch(c.sum(256, c.size(program, 16), c.size(int64(len(value)), 16)))
+	matched := compiled.MatchString(value)
+	c.step(0)
+	return matched, nil
 }
 
-func BetterFailure(
-	left MatchFailure,
-	right MatchFailure,
-) MatchFailure {
+func BetterFailure(left, right MatchFailure) MatchFailure { return betterFailure(left, right, nil) }
+func betterFailure(left, right MatchFailure, c *Context) MatchFailure {
+	c.step(1)
+
 	switch {
 	case right.Position > left.Position:
 		return right
 	case right.Position < left.Position:
 		return left
 	default:
-		left.Expected = UniqueNames(
+		c.scratch(c.size(c.sum(int64(len(left.Expected)), int64(len(right.Expected))), 32))
+		left.Expected = uniqueNames(
 			slices.Concat(left.Expected, right.Expected),
-		)
+			c)
 		return left
 	}
 }
 
-func UniqueNames(
-	values []QName,
-) []QName {
+func UniqueNames(values []QName) []QName { return uniqueNames(values, nil) }
+func uniqueNames(values []QName, c *Context) []QName {
+	c.step(1)
+
+	c.scratch(c.sum(64, c.size(int64(len(values)), 112)))
 	result := make([]QName, 0, len(values))
 	seen := make(map[QName]struct{}, len(values))
 	for _, value := range values {
+		c.step(1)
 		if value.Local == "" {
 			continue
 		}
@@ -1877,6 +2039,11 @@ func UniqueNames(
 	}
 
 	slices.SortFunc(result, func(left, right QName) int {
+		c.step(1)
+		c.bytes(len(left.Space))
+		c.bytes(len(right.Space))
+		c.bytes(len(left.Local))
+		c.bytes(len(right.Local))
 		if comparison := strings.Compare(left.Space, right.Space); comparison != 0 {
 			return comparison
 		}
@@ -1890,12 +2057,14 @@ func (c *Context) AddContentIssue(
 	path string,
 	failure MatchFailure,
 ) {
+	c.step(1)
+
 	if failure.Schema != "" {
 		c.AddIssue(path, "schema", failure.Schema)
 		return
 	}
 	position := min(failure.Position, len(node.Children))
-	expected := ExpectedNames(failure.Expected)
+	expected := expectedNames(failure.Expected, c)
 
 	if position == len(node.Children) {
 		message := "required child element is missing"
@@ -1906,9 +2075,9 @@ func (c *Context) AddContentIssue(
 		return
 	}
 
-	message := fmt.Sprintf(
+	message := format(c,
 		"unexpected element %s",
-		DisplayName(node.Children[position].Name),
+		displayName(node.Children[position].Name, c),
 	)
 	if expected != "" {
 		message += "; expected " + expected
@@ -1920,14 +2089,25 @@ func (c *Context) AddContentIssue(
 	)
 }
 
-func ExpectedNames(names []QName) string {
+func ExpectedNames(names []QName) string { return expectedNames(names, nil) }
+func expectedNames(names []QName, c *Context) string {
+	c.step(1)
+
 	if len(names) == 0 {
 		return ""
 	}
+	c.scratch(c.size(int64(len(names)), 32))
 	values := make([]string, len(names))
 	for index, name := range names {
-		values[index] = DisplayQName(name)
+		c.step(1)
+		values[index] = displayQName(name, c)
 	}
+	n := int64(0)
+	for _, value := range values {
+		c.bytes(len(value))
+		n = c.sum(n, int64(len(value)), 4)
+	}
+	c.scratch(n)
 	return strings.Join(values, " or ")
 }
 
@@ -1936,8 +2116,13 @@ func (c *Context) AddIssue(
 	constraint string,
 	message string,
 ) {
+	c.step(1)
+
 	if constraint == "schema" || constraint == "assessment" {
 		if constraint == "schema" || c.AssessmentErr == nil {
+			c.reserve(c.sum(int64(len(path)), 2, int64(len(message))))
+			c.bytes(len(path))
+			c.bytes(len(message))
 			c.Incomplete(path + ": " + message)
 		}
 		return
@@ -1957,10 +2142,12 @@ func (c *Context) AddIssue(
 	})
 }
 
-func AnyAttributeAllows(
-	schema *AnyAttributeSchema,
-	name QName,
-) bool {
+func AnyAttributeAllows(schema *AnyAttributeSchema, name QName) bool {
+	return anyAttributeAllows(schema, name, nil)
+}
+func anyAttributeAllows(schema *AnyAttributeSchema, name QName, c *Context) bool {
+	c.step(1)
+
 	if schema == nil {
 		return false
 	}
@@ -1972,7 +2159,10 @@ func AnyAttributeAllows(
 	case "##local":
 		return name.Space == ""
 	default:
+		c.bytes(len(schema.Namespace))
+		c.scratch(c.size(int64(len(schema.Namespace)), 16))
 		for _, namespace := range strings.Fields(schema.Namespace) {
+			c.step(1)
 			if namespace == name.Space {
 				return true
 			}
@@ -1981,10 +2171,12 @@ func AnyAttributeAllows(
 	}
 }
 
-func NilAttribute(
-	attributes []Attribute,
-) (string, bool) {
+func NilAttribute(attributes []Attribute) (string, bool) { return nilAttribute(attributes, nil) }
+func nilAttribute(attributes []Attribute, c *Context) (string, bool) {
+	c.step(1)
+
 	for _, attribute := range attributes {
+		c.step(1)
 		if attribute.Name.Space != XSINamespace ||
 			attribute.Name.Local != "nil" {
 			continue
@@ -2010,11 +2202,14 @@ func String(value string) *string {
 	return &value
 }
 
-func DisplayName(name QName) string {
-	return DisplayQName(Name(name))
-}
+func DisplayName(name QName) string             { return displayName(name, nil) }
+func displayName(name QName, c *Context) string { return displayQName(Name(name), c) }
 
-func DisplayQName(name QName) string {
+func DisplayQName(name QName) string { return displayQName(name, nil) }
+func displayQName(name QName, c *Context) string {
+	c.bytes(len(name.Space))
+	c.bytes(len(name.Local))
+	c.scratch(c.sum(int64(len(name.Space)), int64(len(name.Local)), 6))
 	if name.Space == "" {
 		return "<" + name.Local + ">"
 	}
@@ -2022,6 +2217,12 @@ func DisplayQName(name QName) string {
 }
 
 func Path(parent string, local string, index int) string {
+	return controlledPath(parent, local, index, nil)
+}
+func controlledPath(parent, local string, index int, c *Context) string {
+	c.bytes(len(parent))
+	c.bytes(len(local))
+	c.scratch(c.sum(int64(len(parent)), int64(len(local)), 32))
 	if parent == "" {
 		return "/" + local
 	}
@@ -2031,63 +2232,70 @@ func Path(parent string, local string, index int) string {
 	return fmt.Sprintf("%s/%s[%d]", parent, local, index)
 }
 
-func ChildPath(
-	parent string,
-	child *Node,
-	index int,
-) string {
-	return Path(parent, child.Name.Local, index)
+func ChildPath(parent string, child *Node, index int) string {
+	return controlledChildPath(parent, child, index, nil)
+}
+func controlledChildPath(parent string, child *Node, index int, c *Context) string {
+	return controlledPath(parent, child.Name.Local, index, c)
 }
 
-func ChildPaths(
-	parent string,
-	children []*Node,
-) []string {
+func ChildPaths(parent string, children []*Node) []string { return childPaths(parent, children, nil) }
+func childPaths(parent string, children []*Node, c *Context) []string {
+	c.step(1)
+
+	c.scratch(c.sum(64, c.size(int64(len(children)), 96)))
 	result := make([]string, len(children))
 	counts := make(map[QName]int)
 	for index, child := range children {
+		c.step(1)
 		counts[child.Name]++
-		result[index] = ChildPath(
-			parent,
-			child,
-			counts[child.Name],
-		)
+		result[index] = controlledChildPath(parent, child, counts[child.Name], c)
 	}
 	return result
 }
 
-func IndexedChildPath(
-	parent string,
-	children []*Node,
-	index int,
-) string {
+func IndexedChildPath(parent string, children []*Node, index int) string {
+	return indexedChildPath(parent, children, index, nil)
+}
+func indexedChildPath(parent string, children []*Node, index int, c *Context) string {
+	c.step(1)
+
 	if index < 0 || index >= len(children) {
 		return parent
 	}
 	count := 0
 	for current := 0; current <= index; current++ {
+		c.step(1)
 		if children[current].Name == children[index].Name {
 			count++
 		}
 	}
-	return ChildPath(parent, children[index], count)
+	return controlledChildPath(parent, children[index], count, c)
 }
 
-func AttributePath(parent string, name QName) string {
+func AttributePath(parent string, name QName) string { return attributePath(parent, name, nil) }
+func attributePath(parent string, name QName, c *Context) string {
+	c.step(1)
+
 	if name.Space == "" {
+		c.scratch(c.sum(int64(len(parent)), int64(len(name.Local)), 2))
+		c.bytes(len(parent))
+		c.bytes(len(name.Local))
 		return parent + "/@" + name.Local
 	}
-	return fmt.Sprintf("%s/@{%s}%s", parent, name.Space, name.Local)
+	return format(c, "%s/@{%s}%s", parent, name.Space, name.Local)
 }
 
-func AttributeQNamePath(
-	parent string,
-	name QName,
-) string {
-	return AttributePath(parent, QName{
+func AttributeQNamePath(parent string, name QName) string {
+	return attributeQNamePath(parent, name, nil)
+}
+func attributeQNamePath(parent string, name QName, c *Context) string {
+	c.step(1)
+
+	return attributePath(parent, QName{
 		Space: name.Space,
 		Local: name.Local,
-	})
+	}, c)
 }
 
 var (

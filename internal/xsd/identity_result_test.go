@@ -43,7 +43,7 @@ type identityDetailStopMeter struct {
 }
 
 func (m *identityDetailStopMeter) Reserve(n int64) error {
-	if m.stop && n >= 400 {
+	if m.stop {
 		return errors.New("detail retention exhausted")
 	}
 	return m.testMeter.Reserve(n)
@@ -56,6 +56,9 @@ func TestRunIdentityFailureSurvivesDetailReservationStop(t *testing.T) {
 	}
 	defer r.Close()
 	r.current = context.Background()
+	if _, err := r.IdentityPreview(context.Background()); err != nil {
+		t.Fatal(err)
+	}
 	ref := &TypeRef{Name: QName{Space: XSDNamespace, Local: "ID"}}
 	r.context.RecordIdentity(ref, "same", "/a")
 	r.context.RecordIdentityBinding(ref, "same", "/a", &Node{})
@@ -64,5 +67,19 @@ func TestRunIdentityFailureSurvivesDetailReservationStop(t *testing.T) {
 	result, err := r.IdentityPreview(context.Background())
 	if err == nil || result.Valid || result.Complete {
 		t.Fatalf("known failure erased on stop: %+v, %v", result, err)
+	}
+}
+
+func TestRunIdentityStopDoesNotInventFailure(t *testing.T) {
+	r, err := NewRun(testRunSchema(t), &testMeter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	result, err := r.IdentityPreview(ctx)
+	if err == nil || !result.Valid || result.Complete {
+		t.Fatalf("stop invented failure: %+v, %v", result, err)
 	}
 }
