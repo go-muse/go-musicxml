@@ -128,9 +128,11 @@ nesting deeper than 4096 elements before walking the model recursively.
 
 Use `errors.Is(err, ErrInvalidDocument)` for the category and
 `errors.As(err, *ValidationError)` to inspect every `ValidationIssue`.
-Issue paths use indexed XML-style paths. There is currently no dedicated public
-sentinel for technical incompleteness, including its presence in a joined
-invalid/incomplete result.
+Issue paths use indexed XML-style paths. `ErrIncompleteAssessment` identifies
+technical incompleteness, including its presence in a joined invalid/incomplete
+result. It is the identical sentinel exported by the `validation` subpackage.
+`errors.As` can also retrieve its `*validation.IncompleteError`; pure technical
+incompleteness does not match `ErrInvalidDocument` or `*ValidationError`.
 
 Reached `ENTITY`/`ENTITIES` assessment cannot establish unparsed-entity
 declarations at this layer. Lexically valid values therefore produce technical
@@ -141,6 +143,38 @@ reported alongside a reached technical error. Validation never fetches a DTD.
 URI values are checked using XSD `anyURI` lexical rules, including XLink
 escaping of spaces and non-ASCII characters. Validation leaves the stored
 string unchanged and does not check resource existence or accessibility.
+
+## Fact-stream validation foundation
+
+The `validation` subpackage exports `NewCatalog`, eight sealed typed-plan
+constructors, `NewEngine`, and explicit-profile fact sessions using `Open`,
+`Attribute`, `Close` and `Finish`. Catalogs are immutable; sessions copy retained
+facts and return independently owned reports. Exact selectors distinguish schema
+assemblies and declaration/use occurrences. There is no default MusicXML profile,
+XML/source adapter, direct model walker, resolver or package-assessment entry
+point. The [exported example](validation/example_test.go) uses synthetic facts.
+
+A profile explicitly names all required and transitive rules, static support,
+supported roots and normative closure. `CompiledCatalog.Schedule` exposes each
+rule once in final-evaluation order, after derived context-provider/identity
+phase ordering; these edges do not add rules or semantic dependencies. Catalog
+digests cover canonical metadata and typed plan parameters.
+`MusicXML40Inventory` is a separate pinned inspection snapshot of 2,560 research records, not executable rule coverage.
+
+`Report.Satisfied()` evaluates independent syntax, input/assessment completion,
+conformance and blocker axes. A nil operation error alone is not acceptance.
+Evidence-only limitations and normative findings are report outcomes; terminal
+failures preserve typed incomplete/resource/cancellation causes. Call `Finish`
+exactly once even after an event error to release owned live resources. Required
+model/policy/context blockers do not become normative violations, and diagnostic
+truncation does not erase counts or blockers. Formatting is bounded and offline.
+
+`Budgets` has finite zero defaults; a shared `Account` cannot be reset or widened
+by child sessions. All limits, charging owners, exact-value constructor caps,
+plan boundaries and remaining obligations are documented in the
+[foundation scope](docs/validation/foundation-scope.md). Numeric constructor
+resource limits are not XSD facets. The legacy `Validate` encode/reparse path,
+`DecodeOptions` shape and generated model remain unchanged.
 
 ## MXL packages
 

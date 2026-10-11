@@ -7,6 +7,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Add a bounded `validation` fact-stream foundation with immutable compiled
+  catalogs, eight sealed plan families, exact values, finite shared budgets,
+  causal context/identity outcomes and independently inspectable reports.
+  A separate pinned inspection inventory preserves all 2,560 research records;
+  it does not enable a production MusicXML profile or source/model adapter.
+- Export `ErrIncompleteAssessment` with identical root/core sentinel identity
+  and typed incomplete causes, preserving pure and joined legacy XSD outcomes
+  without changing `Validate`'s encode/reparse path.
+
 ### Changed
 
 - Require Go 1.27 or later.
