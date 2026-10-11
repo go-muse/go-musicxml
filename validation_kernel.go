@@ -1,5 +1,12 @@
 package musicxml
 
+// This file bridges the legacy root validator, generated schema metadata and
+// root XSD parity tests to the authoritative internal/xsd kernel. New assessment
+// production code uses internal/xsd directly rather than adding aliases here.
+// Retire the compatibility aliases when the schema emitter and root parity
+// tests migrate to the kernel API; that migration is outside this source-preview
+// batch. ValidationIssue remains a named public type for API compatibility.
+
 import (
 	"errors"
 	"github.com/go-muse/go-musicxml/internal/xsd"
