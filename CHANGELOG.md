@@ -73,6 +73,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   a legacy sentinel behavior change from serialized-value validation. Check
   invalidity before treating incomplete as a reason to retry. Reports retain
   their separate causal and completion axes, including omitted diagnostics.
+- Disclose the direct `Validate` performance regression: matched warmed
+  MozaChloSample measurements on Go 1.27.2 linux/amd64 have 3.73× the previous
+  Encode/reparse time, 2.85× allocated bytes and 1.47× allocation count. Compact
+  optional-attribute absence records reduce initial direct-path allocated bytes
+  by 26.3%, but do not restore baseline performance. See API budget/performance
+  guidance for the fixture, environment, absolute values and limitations.
 - Keep the developmental source XSD preview's catalog and behavior separate.
   Source-local adds only the selected musical clauses and does not accept unread
   external DTD subsets, strip DOCTYPEs, fetch resources or claim linked content.

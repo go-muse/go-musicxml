@@ -277,6 +277,55 @@ work/retention. No input-byte charge is invented for the existing object graph,
 and the 64 MiB default live-buffer limit is not a model-size or heap guarantee.
 No schema, DTD or linked resource is fetched.
 
+For budget sizing, the following Go 1.27.2 linux/amd64 measurements use the
+shared account and verify success at the exact minimum allowance and resource
+failure one byte/step below it. These are fixture-specific costs after compact
+optional-attribute absence storage, not universal per-node constants:
+
+| Input and target | Nodes | Minimum live-buffer allowance (bytes) | Rule steps |
+| --- | ---: | ---: | ---: |
+| Current `MozartTrio.musicxml` model | 2,516 | 16,321,980 | 2,784,531 |
+| Same model with each part's measures repeated twice | 4,913 | 31,644,150 | 5,441,724 |
+| Current `MozaChloSample.musicxml` model | 3,185 | 20,338,110 | 3,482,930 |
+| Source MozartTrio, DOCTYPE-free measurement control | 2,516 | 18,209,624 | 2,893,122 |
+
+For these current-model fixtures this is about 6.4–6.5 KB and 1,094–1,108 rule
+steps per node; the source control is about 7.2 KB and 1,150 steps per node.
+Thus the default buffer allowance admits roughly 10,000 model nodes or 9,000
+source nodes in this family, before other limits; the step allowance alone
+would admit roughly 18,000 or 17,000 respectively. Real scores can exceed these
+defaults. These estimates are neither guaranteed capacities nor heap/total
+allocation measurements: attributes, text, types, failures and selected local
+rules change the cost. Choose informed finite overrides and handle resource
+outcomes. The legacy `Validate` facade does not inherit these default ceilings.
+
+The source control removes DOCTYPE only to isolate cost in an experiment; it is
+different input, not a supported workaround for assessing the original file.
+The original external-DTD score sources remain incomplete. The shared kernel
+keeps ordered per-occurrence facts; unconstrained absent attribute descriptors
+are shared only within a run and exact type owner. Present/default/fixed results
+remain independently assessed. The session still retains a fact graph, so this
+optimization does not claim constant memory or full conformance.
+
+The direct legacy path has a substantial performance cost versus the preceding
+Encode/reparse implementation. Five alternating warmed samples of the unchanged
+`BenchmarkValidate` on `MozaChloSample.musicxml` (Go 1.27.2, linux/amd64, AMD EPYC
+9V74, `GOMAXPROCS=4`, 750 ms per sample, fixture decode/I/O excluded) measured:
+
+| Implementation | Median time (range) | Median allocated bytes/op | Median allocations/op |
+| --- | ---: | ---: | ---: |
+| Previous Encode/reparse (`511f55b`) | 27.02 ms (25.35–28.00) | 11,705,376 | 123,632 |
+| Direct shared assessment after compaction | 100.73 ms (100.13–108.67) | 33,374,378 | 181,857 |
+
+This is **3.73× time, 2.85× allocated bytes and 1.47× allocations** in this
+measurement, not performance parity. Compaction reduces allocated bytes by
+26.3% from the initial direct implementation's 45,257,229-byte median, while
+allocation count rises slightly. The initial direct-path timing samples had different
+host contention, so that series is not a matched timing comparison. The direct
+path retains schema/session facts and exact current-value/report semantics;
+these measurements disclose the remaining cost rather than promising a
+throughput or memory improvement. Cold initialization adds further cost.
+
 ## Fact-stream validation foundation
 
 The `validation` subpackage exports `NewCatalog`, eight generic sealed typed-plan
@@ -408,14 +457,15 @@ The implementation retains a budgeted fact graph; single-pass input does not
 mean constant-memory processing. The caller retains ownership of the reader.
 
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
-64 MiB file or one million nodes can be assessed. For example, the 223,068-byte,
-3,185-element official UTF-16 score needs about 13.94 MiB merely to finish its
-unsupported external-DTD report; the otherwise identical DOCTYPE-removed
-measurement control needs about 27.19 MiB for complete assessment. These are
-fixture-specific logical allowances, not heap/RSS or a universal element limit.
-Ordinary larger scores can exceed the default. Set informed finite overrides in
-`AssessmentOptions.Budgets` where appropriate; all other limits still apply.
-See the source scope's exact measurements and interpretation.
+64 MiB file or one million nodes can be assessed. The current budget-sizing
+table above measures the DOCTYPE-free MozartTrio source control at 18,209,624
+bytes and 2,893,122 rule steps for 2,516 nodes: about 7.2 KB and 1,150 steps per
+node, or roughly 9,000 such nodes under the default buffer allowance. Those are
+logical accounting estimates, not heap/RSS measurements or a universal element
+limit. Ordinary larger scores can exceed the default. Set informed finite
+overrides in `AssessmentOptions.Budgets`; all other limits still apply. Earlier
+source-scope measurements remain historical evidence for their stated revision,
+before the shared absent-attribute optimization.
 
 `ConversionConverted` means mapping succeeded under the existing Go model
 contract, including its `float64` precision and field representation. It is not
