@@ -64,7 +64,11 @@ func TestAssessmentErrorsPreserveIndependentIssues(t *testing.T) {
 	assert.ErrorIs(t, result, ErrInvalidDocument)
 	var invalid *ValidationError
 	require.ErrorAs(t, result, &invalid)
-	assert.Equal(t, c.Issues, invalid.Issues)
+	want := make([]ValidationIssue, len(c.Issues))
+	for i, issue := range c.Issues {
+		want[i] = ValidationIssue(issue)
+	}
+	assert.Equal(t, want, invalid.Issues)
 	assert.Contains(t, result.Error(), "unparsed entity")
 }
 
