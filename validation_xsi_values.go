@@ -162,16 +162,6 @@ func (c *validationContext) elementConstraintEqual(actual, declared *validationT
 	return c.assessmentVersion != before || firstOK && secondOK && first.value.equal(second.value)
 }
 
-// XSD 1.0 3.15.5 eligibility refers to the declaration's type definition.
-// Choosing xsi:ID on an xs:string declaration must not silently adopt 1.1's
-// wider governing-type rule. Attribute declarations retain their ordinary path.
-func (c *validationContext) recordElementIdentity(declared *validationTypeRef, value, path string) {
-	scalar, ok := c.scalarElementType(declared)
-	if ok && scalar != nil {
-		c.recordIdentity(scalar, value, path)
-	}
-}
-
 // cos-valid-default 2 requires simple content, or mixed content with an
 // emptiable particle. Even the empty string is not a default for empty or
 // element-only complex content. Scalar lexical/facet assessment follows later.

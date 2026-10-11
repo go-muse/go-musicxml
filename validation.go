@@ -320,6 +320,9 @@ type validationContext struct {
 	enumerationValues map[validationEnumerationKey]validationEnumerationValue
 	identifiers       map[string]string
 	references        []validationIdentityReference
+	identityEntries   []validationIdentityEntry
+	identityEntrySeen map[string]bool
+	identityBindings  map[string]*validationIdentityBindings
 }
 
 type validationIdentityReference struct {
@@ -545,6 +548,15 @@ func (c *validationContext) validateElement(
 	schema *validationElementSchema,
 	path string,
 ) {
+	c.validateElementOwned(node, schema, path, nil)
+}
+
+// owner is the original containing element, never an effective default-value view.
+// The returned declaration-local success is distinct from type success and from
+// independently assessed standard xsi attributes. Neither gate uses document-wide
+// issue state: a parent/sibling failure cannot erase this item's binding facts.
+func (c *validationContext) validateElementOwned(node *validationNode, schema *validationElementSchema, path string, owner *validationNode) bool {
+	original := node
 	c.validateSchemaLocationHints(node, path)
 
 	resolved, found := c.resolveElement(schema)
@@ -554,7 +566,7 @@ func (c *validationContext) validateElement(
 			"schema",
 			"element declaration cannot be resolved",
 		)
-		return
+		return false
 	}
 	schema = resolved
 
@@ -569,21 +581,24 @@ func (c *validationContext) validateElement(
 				validationDisplayQName(schema.Name),
 			),
 		)
-		return
+		return false
 	}
 
 	if schema.Abstract {
 		c.addIssue(path, "abstract", "abstract element cannot be used")
-		return
 	}
 
-	actualType := c.actualElementType(node, schema, path)
+	// Nomination validity belongs to cvc-elt.4. The returned fallback type can
+	// still independently validate an ID-bearing item when nomination fails.
+	actualType, declarationValid := c.actualElementType(node, schema, path)
+	declarationValid = declarationValid && !schema.Abstract
 
 	// This is an element constraint, not a scalar constraint: validateType is
 	// also reused for complex simple-content bases whose attributes are legal.
 	simple, _, builtin, _ := c.resolveType(actualType)
+	typeAttributesValid := true
 	if simple != nil || (builtin != "" && builtin != "anyType") {
-		c.validateSimpleElementAttributes(node, path)
+		typeAttributesValid = c.validateSimpleElementAttributes(node, path)
 	}
 
 	// xsi:nil is an xs:boolean regardless of the declared element type.
@@ -600,15 +615,18 @@ func (c *validationContext) validateElement(
 			nilled = schema.Nillable && value
 		}
 		if !schema.Nillable {
+			declarationValid = false
 			c.addIssue(nilPath, "nillable", "element is not nillable")
 		}
 	}
 
 	if nilled {
 		if schema.Fixed != nil {
+			declarationValid = false
 			c.addIssue(path, "fixed", "nil element must not have a fixed value constraint")
 		}
 		if len(node.Children) != 0 || node.Text.Len() != 0 {
+			declarationValid = false
 			c.addIssue(path, "nillable", "nil element must not contain character data or child elements")
 		}
 	}
@@ -649,12 +667,15 @@ func (c *validationContext) validateElement(
 	}
 
 	if !nilled && !defaulted && schema.Fixed != nil {
+		beforeFixed := c.assessmentVersion
 		// XSD 1.0 cvc-elt 5.2.2.1 forbids element children independently
 		// of fixed-value equality, including for mixed content. Report the
 		// structural failure first, but keep ordinary type assessment below.
 		if len(node.Children) != 0 {
+			declarationValid = false
 			c.addIssue(path, "fixed", "element with a fixed value must not contain child elements")
 		} else if !c.elementConstraintEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed) {
+			declarationValid = false
 			c.addIssue(
 				path,
 				"fixed",
@@ -665,11 +686,17 @@ func (c *validationContext) validateElement(
 				),
 			)
 		}
+		declarationValid = declarationValid && c.assessmentVersion == beforeFixed
 	}
 
 	// An unavailable/invalid default blocks dependent scalar/content checks,
 	// while actual-type attribute checks remain independent.
-	c.validateType(node, actualType, path, nilled || constraintBlocked, &schema.Type)
+	typeValid := c.validateType(node, actualType, path, nilled || constraintBlocked, original) && typeAttributesValid
+	declarationValid = declarationValid && typeValid && !constraintBlocked
+	if typeValid && !nilled && !constraintBlocked {
+		c.recordElementIdentity(&schema.Type, actualType, node.Text.String(), path, owner, declarationValid)
+	}
+	return declarationValid
 }
 
 func (c *validationContext) resolveElement(
@@ -693,22 +720,22 @@ func (c *validationContext) validateType(
 	reference *validationTypeRef,
 	path string,
 	nilled bool,
-	identityType *validationTypeRef,
-) {
+	subject *validationNode,
+) bool {
 	simple, complex, builtin, found := c.resolveType(reference)
 	if !found {
 		c.addIssue(path, "schema", "type declaration cannot be resolved")
-		return
+		return false
 	}
 
 	if !c.validTypeMetadata(validationTypeIdentity{simple: simple, complex: complex, builtin: builtin}) {
-		return
+		return false
 	}
 
 	switch {
 	case simple != nil:
 		if nilled {
-			return
+			return true
 		}
 		if len(node.Children) != 0 {
 			c.addIssue(
@@ -716,23 +743,23 @@ func (c *validationContext) validateType(
 				"simple-content",
 				"simple value must not contain child elements",
 			)
-			return
+			return false
 		}
 		if failure := c.validateSimple(simple, node.Text.String()); failure != nil {
 			c.addIssue(path, failure.constraint, failure.message)
 		} else {
-			c.recordElementIdentity(identityType, node.Text.String(), path)
+			return true
 		}
 
 	case complex != nil:
-		c.validateComplex(node, complex, path, nilled, identityType)
+		return c.validateComplex(node, complex, path, nilled, subject)
 
 	case builtin == "anyType":
-		return
+		return true
 
 	case builtin != "":
 		if nilled {
-			return
+			return true
 		}
 		if len(node.Children) != 0 {
 			c.addIssue(
@@ -740,17 +767,18 @@ func (c *validationContext) validateType(
 				"simple-content",
 				"simple value must not contain child elements",
 			)
-			return
+			return false
 		}
 		if _, failure := c.assessBuiltinValue(builtin, node.Text.String(), node.Text.String()); failure != nil {
 			c.addIssue(path, failure.constraint, failure.message)
 		} else {
-			c.recordElementIdentity(identityType, node.Text.String(), path)
+			return true
 		}
 
 	default:
 		c.addIssue(path, "schema", "unsupported type declaration")
 	}
+	return false
 }
 
 func (c *validationContext) resolveType(
@@ -793,26 +821,26 @@ func (c *validationContext) validateComplex(
 	schema *validationComplexSchema,
 	path string,
 	nilled bool,
-	identityType *validationTypeRef,
-) {
+	subject *validationNode,
+) bool {
 	if schema.Abstract {
 		c.addIssue(path, "abstract", "abstract type cannot be used")
-		return
+		return false
 	}
 	effective, ok := c.effectiveComplex(schema)
 	if !ok {
 		c.addIssue(path, "schema", "complex type cannot be resolved")
-		return
+		return false
 	}
 
-	c.validateAttributes(
-		node,
+	attributesValid := c.validateAttributes(
+		subject,
 		effective.attributes,
 		effective.anyAttribute,
 		path,
 	)
 	if nilled {
-		return
+		return attributesValid
 	}
 
 	if effective.simple != nil {
@@ -822,12 +850,12 @@ func (c *validationContext) validateComplex(
 				"simple-content",
 				"simple-content value must not contain child elements",
 			)
-			return
+			return false
 		}
-		c.validateType(node, effective.simple, path, false, identityType)
-		return
+		return c.validateType(node, effective.simple, path, false, subject) && attributesValid
 	}
 
+	contentValid := true
 	// XSD 1.0 cvc-complex-type 2.1 forbids every character in empty
 	// content; 2.3 permits XML S in element-only content. An absent
 	// effective particle identifies the empty types represented here, not
@@ -840,6 +868,7 @@ func (c *validationContext) validateComplex(
 			"element-only",
 			"character data is not allowed",
 		)
+		contentValid = false
 	}
 
 	if effective.particle == nil {
@@ -853,7 +882,7 @@ func (c *validationContext) validateComplex(
 				),
 			)
 		}
-		return
+		return attributesValid && contentValid && len(node.Children) == 0
 	}
 
 	result, failure, matched := c.matchParticle(
@@ -864,7 +893,7 @@ func (c *validationContext) validateComplex(
 	if !matched || result.next != len(node.Children) {
 		if !matched {
 			c.addContentIssue(node, path, failure)
-			return
+			return false
 		}
 
 		index := result.next
@@ -876,17 +905,21 @@ func (c *validationContext) validateComplex(
 				validationDisplayName(node.Children[index].Name),
 			),
 		)
-		return
+		return false
 	}
 
 	paths := validationChildPaths(path, node.Children)
 	for _, match := range result.elements {
-		c.validateElement(
+		if !c.validateElementOwned(
 			node.Children[match.index],
 			match.schema,
 			paths[match.index],
-		)
+			subject,
+		) {
+			contentValid = false
+		}
 	}
+	return attributesValid && contentValid
 }
 
 func (c *validationContext) effectiveComplex(
@@ -1090,7 +1123,8 @@ func validationStandardXSIName(name xml.Name, allowType bool) bool {
 // standard xsi names are permitted here; validateElement separately checks
 // xsi:nil, xsi:type and hint datatypes.
 // https://www.w3.org/TR/xmlschema-1/#cvc-type
-func (c *validationContext) validateSimpleElementAttributes(node *validationNode, path string) {
+func (c *validationContext) validateSimpleElementAttributes(node *validationNode, path string) bool {
+	valid := true
 	for _, attribute := range node.Attrs {
 		if validationNamespaceDeclaration(attribute) {
 			continue
@@ -1098,12 +1132,14 @@ func (c *validationContext) validateSimpleElementAttributes(node *validationNode
 		if validationStandardXSIName(attribute.Name, true) {
 			continue
 		}
+		valid = false
 		c.addIssue(
 			validationAttributePath(path, attribute.Name),
 			"attribute",
 			"attribute is not allowed",
 		)
 	}
+	return valid
 }
 
 func (c *validationContext) validateAttributes(
@@ -1111,7 +1147,8 @@ func (c *validationContext) validateAttributes(
 	schemas []validationAttributeSchema,
 	anyAttribute *validationAnyAttributeSchema,
 	path string,
-) {
+) bool {
+	valid := true
 	known := make(map[validationQName]validationAttributeSchema, len(schemas))
 	present := make(map[validationQName]xml.Attr, len(node.Attrs))
 	for _, schema := range schemas {
@@ -1132,6 +1169,7 @@ func (c *validationContext) validateAttributes(
 			if validationAnyAttributeAllows(anyAttribute, attribute.Name) {
 				continue
 			}
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				"attribute",
@@ -1142,6 +1180,7 @@ func (c *validationContext) validateAttributes(
 		present[name] = attribute.Attr
 
 		if schema.Use == validationAttributeProhibited {
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				"prohibited",
@@ -1150,6 +1189,7 @@ func (c *validationContext) validateAttributes(
 			continue
 		}
 
+		attributeValid := true
 		beforeFixed := c.assessmentVersion
 		if schema.Constraint != nil &&
 			schema.Constraint.Kind == "fixed" &&
@@ -1158,6 +1198,8 @@ func (c *validationContext) validateAttributes(
 				attribute.Value,
 				schema.Constraint.Value,
 			) && c.assessmentVersion == beforeFixed {
+			attributeValid = false
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				"fixed",
@@ -1169,21 +1211,26 @@ func (c *validationContext) validateAttributes(
 			)
 		}
 
+		if c.assessmentVersion != beforeFixed {
+			attributeValid = false
+			valid = false
+		}
 		if failure := c.validateSimpleType(
 			&schema.Type,
 			attribute.Value,
 		); failure != nil {
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				failure.constraint,
 				failure.message,
 			)
 		} else {
-			c.recordIdentity(
-				&schema.Type,
-				attribute.Value,
-				validationAttributePath(path, attribute.Name),
-			)
+			attributePath := validationAttributePath(path, attribute.Name)
+			if attributeValid {
+				c.recordIdentity(&schema.Type, attribute.Value, attributePath)
+			}
+			c.recordIdentityBinding(&schema.Type, attribute.Value, attributePath, node)
 		}
 	}
 
@@ -1195,12 +1242,14 @@ func (c *validationContext) validateAttributes(
 			continue
 		}
 
+		valid = false
 		c.addIssue(
 			validationAttributeQNamePath(path, schema.Name),
 			"required",
 			"required attribute is missing",
 		)
 	}
+	return valid
 }
 
 func (c *validationContext) validateSimpleType(
@@ -1294,74 +1343,6 @@ func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef
 		return semantics.normalize(left) == semantics.normalize(right)
 	}
 	return left == right
-}
-
-func (c *validationContext) recordIdentity(
-	reference *validationTypeRef,
-	value string,
-	path string,
-) {
-	builtin := c.simpleBuiltin(reference)
-	normalized := normalizeValidationWhitespace(builtin, value)
-
-	switch builtin {
-	case "ID":
-		if firstPath, found := c.identifiers[normalized]; found {
-			c.addIssue(
-				path,
-				"ID",
-				fmt.Sprintf(
-					"duplicate ID %q; first declared at %s",
-					normalized,
-					firstPath,
-				),
-			)
-			return
-		}
-		c.identifiers[normalized] = path
-
-	case "IDREF":
-		c.references = append(
-			c.references,
-			validationIdentityReference{
-				value: normalized,
-				path:  path,
-			},
-		)
-
-	case "IDREFS":
-		for _, item := range splitValidationList(normalized) {
-			c.references = append(
-				c.references,
-				validationIdentityReference{
-					value: item,
-					path:  path,
-				},
-			)
-		}
-	}
-}
-
-func (c *validationContext) validateIdentityReferences() {
-	// A missing target is a negative document-scope fact. Technical failure may
-	// have hidden an ID-bearing declaration, so an incomplete index cannot prove
-	// absence. Positive duplicate-ID and other independently proved issues remain.
-	if c.assessmentErr != nil {
-		return
-	}
-	for _, reference := range c.references {
-		if _, found := c.identifiers[reference.value]; found {
-			continue
-		}
-		c.addIssue(
-			reference.path,
-			"IDREF",
-			fmt.Sprintf(
-				"IDREF %q does not identify an element in the document",
-				reference.value,
-			),
-		)
-	}
 }
 
 func (c *validationContext) validateSimple(

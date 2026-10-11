@@ -219,7 +219,12 @@ func TestValidateNilIdentityTypeForms(t *testing.T) {
 			}
 			source := `<` + element + ` xmlns:n="` + validationXSINamespace + `" n:nil="` + value + `"` + attributes + `>` + content + `</` + element + `>`
 			context := validateAttributeSource(t, &schema, source)
-			assert.Empty(t, context.issues)
+			if nilled {
+				assert.Empty(t, context.issues)
+			} else {
+				// A nonnil root content ID has no in-scope containing owner.
+				assertValidationIssues(t, context, []string{"/" + element + ":ID"})
+			}
 			want := map[string]string{}
 			if simpleContent {
 				want["attribute-id"] = "/simple-content/@id"

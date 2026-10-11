@@ -281,7 +281,8 @@ func validationInstanceQName(node *validationNode, lexical string) (validationQN
 
 // cvc-elt 4 explicitly falls back to the declared type after a failed
 // nomination. Keep that ordinary assessment so independent errors survive.
-func (c *validationContext) actualElementType(node *validationNode, schema *validationElementSchema, path string) *validationTypeRef {
+// The boolean reports nomination success separately from fallback type validity.
+func (c *validationContext) actualElementType(node *validationNode, schema *validationElementSchema, path string) (*validationTypeRef, bool) {
 	declared := &schema.Type
 	var value string
 	present := false
@@ -292,31 +293,31 @@ func (c *validationContext) actualElementType(node *validationNode, schema *vali
 		}
 	}
 	if !present {
-		return declared
+		return declared, true
 	}
 	issuePath := validationAttributePath(path, xml.Name{Space: validationXSINamespace, Local: "type"})
 	name, ok := validationInstanceQName(node, value)
 	if !ok {
 		c.addIssue(issuePath, "xsi:type", fmt.Sprintf("value %q is not a bound QName", value))
-		return declared
+		return declared, false
 	}
 	nominated := &validationTypeRef{Name: name}
 	actual, found := c.typeIdentity(nominated)
 	if !found {
 		if _, exists := c.schema.Types[name]; exists {
 			c.incomplete("nominated type component metadata is missing")
-			return declared
+			return declared, false
 		}
 		c.addIssue(issuePath, "xsi:type", fmt.Sprintf("type %s cannot be resolved in the selected schema", validationDisplayQName(name)))
-		return declared
+		return declared, false
 	}
 	base, found := c.typeIdentity(declared)
 	if !found {
 		c.incomplete("declared type metadata cannot be resolved for xsi:type")
-		return declared
+		return declared, false
 	}
 	if !c.validTypeMetadata(actual) || !c.validTypeMetadata(base) {
-		return declared
+		return declared, false
 	}
 	blocked := schema.Block
 	if actual.complex != nil && base.complex != nil {
@@ -325,11 +326,11 @@ func (c *validationContext) actualElementType(node *validationNode, schema *vali
 	before := c.assessmentVersion
 	derived := c.typeDerived(actual, base, blocked)
 	if c.assessmentVersion != before {
-		return declared
+		return declared, false
 	}
 	if !derived {
 		c.addIssue(issuePath, "xsi:type", "nominated type is not an allowed derivation of the declared type")
-		return declared
+		return declared, false
 	}
-	return nominated
+	return nominated, true
 }

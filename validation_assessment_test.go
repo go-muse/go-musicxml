@@ -141,7 +141,7 @@ func TestFinalInvalidMetadataIsIncomplete(t *testing.T) {
 		{Form: validationSimpleUnion, Members: []*validationSimpleMember{{Inline: base}}},
 	} {
 		c := newTestValidationContext(&validationSchemaSet{})
-		c.validateType(&validationNode{}, &validationTypeRef{InlineSimple: derived}, "/value", false, &validationTypeRef{InlineSimple: derived})
+		c.validateType(&validationNode{}, &validationTypeRef{InlineSimple: derived}, "/value", false, &validationNode{})
 		assert.Error(t, c.assessmentErr)
 		assert.Empty(t, c.issues)
 		assert.NotErrorIs(t, c.result(), ErrInvalidDocument)

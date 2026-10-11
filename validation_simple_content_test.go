@@ -114,7 +114,8 @@ func validationSimpleContentCases() []validationSourceCase {
 	add("missing IDREF", "digits", ` code="ok" ref="missing"`, "1.2", false, "/@ref:IDREF")
 	add("ID scalar", "references", "", "<identifier>P1</identifier><reference>P1</reference>", true)
 	add("ID invalid scalar", "references", "", "<identifier>X1</identifier><reference>X1</reference>", true, "/identifier:pattern", "/reference:IDREF")
-	add("ID duplicate", "references", "", "<identifier>P1</identifier><identifier>P1</identifier>", false, "/identifier[2]:ID")
+	// Equal child IDs have one containing owner under XSD 1.0 sic-id.
+	add("ID same-owner set", "references", "", "<identifier>P1</identifier><identifier>P1</identifier>", false)
 	add("sibling scalar layers", "siblings", "", `<digits code="ok">1.2</digits><total code="ok">.001</total>`, true)
 	return tests
 }

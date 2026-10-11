@@ -221,7 +221,8 @@ func TestValidateComplexSimpleContentIdentityOnce(t *testing.T) {
 		},
 	}
 	context := validateAttributeSource(t, schema, `<value id="attribute-id">content-id</value>`)
-	assert.Empty(t, context.issues)
+	// Root scalar IDs seed entries but cannot identify themselves.
+	assertValidationIssues(t, context, []string{"/value:ID"})
 	assert.Equal(t, map[string]string{"attribute-id": "/value/@id", "content-id": "/value"}, context.identifiers)
 }
 

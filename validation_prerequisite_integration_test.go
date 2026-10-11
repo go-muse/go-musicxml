@@ -69,8 +69,9 @@ func TestXSIQNameUsesDatatypeRepertoire(t *testing.T) {
 }
 
 func TestXSITypeIdentityUsesDeclaration(t *testing.T) {
-	// XSD 1.0 sic-id uses declaration-type eligibility. Actual scalar/member
-	// identity must not silently import XSD 1.1 governing-type participation.
+	// XSD 1.0 sic-id separates declaration-type entry eligibility from actual
+	// ID bindings. A root scalar ID seeds an entry but has no in-scope parent
+	// to bind it; dynamically chosen identity types do not seed entries.
 	for _, test := range []struct {
 		declared, actual string
 		ids, refs        int
@@ -89,10 +90,14 @@ func TestXSITypeIdentityUsesDeclaration(t *testing.T) {
 			context := validateAttributeSource(t, set, source)
 			assert.Len(t, context.identifiers, test.ids)
 			assert.Len(t, context.references, test.refs)
+			assert.Len(t, context.identityEntries, test.ids+test.refs)
+			assert.Empty(t, context.identityBindings, "root scalar has no containing owner")
 			if test.ids != 0 {
 				assert.Contains(t, context.identifiers, "target")
 			}
-			if test.refs == 0 {
+			if test.ids != 0 {
+				assertValidationIssues(t, context, []string{"/value:ID"})
+			} else if test.refs == 0 {
 				assertValidationIssues(t, context, nil)
 			} else {
 				assert.Equal(t, "target", context.references[0].value)
