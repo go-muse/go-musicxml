@@ -18,7 +18,7 @@ func TestWhitespaceEnumerationLayeredWork(t *testing.T) {
 	builtin := func(name string) *validationSimpleMember {
 		return &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: name}}
 	}
-	for _, kind := range []string{"atomic", "list", "union", "nested union"} {
+	for _, kind := range []string{"atomic", "list", "union", "nested union", "list of union", "union of list"} {
 		t.Run(kind, func(t *testing.T) {
 			measure := func(depth int) float64 {
 				base := builtin("string")
@@ -27,6 +27,12 @@ func TestWhitespaceEnumerationLayeredWork(t *testing.T) {
 					base = &validationSimpleMember{Inline: &validationSimpleSchema{Form: validationSimpleList, Item: builtin("token")}}
 				case "union", "nested union":
 					base = &validationSimpleMember{Inline: &validationSimpleSchema{Form: validationSimpleUnion, Members: []*validationSimpleMember{builtin("token"), builtin("string")}}}
+				}
+				if kind == "list of union" {
+					base = &validationSimpleMember{Inline: &validationSimpleSchema{Form: validationSimpleList, Item: &validationSimpleMember{Inline: &validationSimpleSchema{Form: validationSimpleUnion, Members: []*validationSimpleMember{builtin("integer"), builtin("token")}}}}}
+				}
+				if kind == "union of list" {
+					base = &validationSimpleMember{Inline: &validationSimpleSchema{Form: validationSimpleUnion, Members: []*validationSimpleMember{{Inline: &validationSimpleSchema{Form: validationSimpleList, Item: builtin("token")}}, builtin("string")}}}
 				}
 				var schema *validationSimpleSchema
 				for range depth {
@@ -109,7 +115,9 @@ func TestWhitespaceEnumerationCacheBound(t *testing.T) {
 		context.validateSimple(schema, strings.Repeat("x", length))
 		assert.Len(t, context.enumerationValues, len(schema.Enumerations))
 	}
-	assert.Equal(t, validationEnumerationValue{value: "", valid: true}, context.enumerationValues[validationEnumerationKey{schema: schema, index: 2}])
+	cached := context.enumerationValues[validationEnumerationKey{schema: schema, index: 2}]
+	assert.True(t, cached.valid)
+	assert.Empty(t, cached.value)
 }
 
 func TestReplaceWhitespaceAllocations(t *testing.T) {

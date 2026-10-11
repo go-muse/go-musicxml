@@ -60,8 +60,20 @@ intersection across restrictions and normalized lexical subjects. Its exact-sour
 matrix compares internal assessment and xmllint on the same bytes; the single
 numeric element-fixed lexical discrepancy remains an internal normative case.
 Malformed and translator-unsupported patterns use separate metadata tests rather
-than weakening the valid-schema oracle. All six test schemas use the local empty
-catalog.
+than weakening the valid-schema oracle. `zz_generated_builtin_list_validation_test.go` uses
+`testdata/validation/builtin-list-contract.xsd` for built-in list item-count facets.
+Its declared unparsed entities exercise attribute values; libxml2 2.9.14
+rejects the corresponding element values before length facets, so all such
+`ENTITIES` element cases remain internal. `zz_generated_aggregate_validation_test.go`
+uses `testdata/validation/aggregate-contract.xsd` for list/union enumeration and
+fixed comparisons in exact numeric and string-derived domains. Boolean and
+other primitive equality remain lexical limitations. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
+code map;
+empty-list enumeration is metadata-only because libxml2 cannot compile it.
+`zz_generated_union_member_validation_test.go` uses
+`testdata/validation/union-member-contract.xsd` for XSD 1.0 union-member
+flattening and its direct-restriction, list-item and atomic/list-member controls.
+All nine test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

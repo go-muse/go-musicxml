@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 fixture, authored for built-in list length contracts. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:simpleType name="tokens-exact"><xs:restriction base="xs:NMTOKENS"><xs:length value="2"/></xs:restriction></xs:simpleType>
+<xs:simpleType name="tokens-exact-inherited"><xs:restriction base="tokens-exact"/></xs:simpleType>
+<xs:complexType name="tokens-exact-base"><xs:simpleContent><xs:extension base="tokens-exact-inherited"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:element name="tokens-exact" type="tokens-exact-base"/>
+<xs:simpleType name="tokens-range"><xs:restriction base="xs:NMTOKENS"><xs:minLength value="2"/><xs:maxLength value="3"/></xs:restriction></xs:simpleType>
+<xs:simpleType name="tokens-range-inherited"><xs:restriction base="tokens-range"/></xs:simpleType>
+<xs:complexType name="tokens-range-base"><xs:simpleContent><xs:extension base="tokens-range-inherited"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:element name="tokens-range" type="tokens-range-base"/>
+<xs:simpleType name="tokens-alias"><xs:restriction base="xs:NMTOKENS"/></xs:simpleType>
+<xs:complexType name="tokens-bridge-base"><xs:simpleContent><xs:extension base="tokens-alias"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:complexType name="tokens-bridge"><xs:simpleContent><xs:restriction base="tokens-bridge-base"><xs:length value="2"/></xs:restriction></xs:simpleContent></xs:complexType>
+<xs:element name="tokens-bridge" type="tokens-bridge"/>
+<xs:simpleType name="refs-exact"><xs:restriction base="xs:IDREFS"><xs:length value="2"/></xs:restriction></xs:simpleType>
+<xs:simpleType name="refs-exact-inherited"><xs:restriction base="refs-exact"/></xs:simpleType>
+<xs:complexType name="refs-exact-base"><xs:simpleContent><xs:extension base="refs-exact-inherited"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:element name="refs-exact" type="refs-exact-base"/>
+<xs:simpleType name="refs-range"><xs:restriction base="xs:IDREFS"><xs:minLength value="2"/><xs:maxLength value="3"/></xs:restriction></xs:simpleType>
+<xs:simpleType name="refs-range-inherited"><xs:restriction base="refs-range"/></xs:simpleType>
+<xs:complexType name="refs-range-base"><xs:simpleContent><xs:extension base="refs-range-inherited"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:element name="refs-range" type="refs-range-base"/>
+<xs:simpleType name="refs-alias"><xs:restriction base="xs:IDREFS"/></xs:simpleType>
+<xs:complexType name="refs-bridge-base"><xs:simpleContent><xs:extension base="refs-alias"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:complexType name="refs-bridge"><xs:simpleContent><xs:restriction base="refs-bridge-base"><xs:length value="2"/></xs:restriction></xs:simpleContent></xs:complexType>
+<xs:element name="refs-bridge" type="refs-bridge"/>
+<xs:simpleType name="entities-exact"><xs:restriction base="xs:ENTITIES"><xs:length value="2"/></xs:restriction></xs:simpleType>
+<xs:simpleType name="entities-exact-inherited"><xs:restriction base="entities-exact"/></xs:simpleType>
+<xs:complexType name="entities-exact-base"><xs:simpleContent><xs:extension base="entities-exact-inherited"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:element name="entities-exact" type="entities-exact-base"/>
+<xs:simpleType name="entities-range"><xs:restriction base="xs:ENTITIES"><xs:minLength value="2"/><xs:maxLength value="3"/></xs:restriction></xs:simpleType>
+<xs:simpleType name="entities-range-inherited"><xs:restriction base="entities-range"/></xs:simpleType>
+<xs:complexType name="entities-range-base"><xs:simpleContent><xs:extension base="entities-range-inherited"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:element name="entities-range" type="entities-range-base"/>
+<xs:simpleType name="entities-alias"><xs:restriction base="xs:ENTITIES"/></xs:simpleType>
+<xs:complexType name="entities-bridge-base"><xs:simpleContent><xs:extension base="entities-alias"><xs:attribute name="a" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+<xs:complexType name="entities-bridge"><xs:simpleContent><xs:restriction base="entities-bridge-base"><xs:length value="2"/></xs:restriction></xs:simpleContent></xs:complexType>
+<xs:element name="entities-bridge" type="entities-bridge"/>
+<xs:element name="attributes"><xs:complexType><xs:attribute name="tokens" type="tokens-exact"/><xs:attribute name="refs" type="refs-range"/><xs:attribute name="entities" type="entities-exact"/><xs:attribute name="a" type="xs:ID"/></xs:complexType></xs:element>
+</xs:schema>

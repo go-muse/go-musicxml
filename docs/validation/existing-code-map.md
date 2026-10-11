@@ -219,7 +219,7 @@ source-assessment or conversion-report API is introduced.
 This is a bounded existing-validator slice of `STAGE-DEF-03` (`DEF03-01/04` and
 integer comparison portions of `DEF03-02`), not completion of that stage.
 Decimal comparisons and digit facets are covered by the later repairs below;
-typed union/list aggregate equality, mixed-base simple-content restrictions,
+aggregate equality outside the bounded repair below, mixed-base simple-content restrictions,
 wider facet semantics, contextual arithmetic,
 session parse-once caching, shared budgets and incomplete/conversion reports
 remain open. No new profile, adapter, public API or resource policy is selected;
@@ -243,10 +243,10 @@ they scan linearly with constant auxiliary space. Existing source storage,
 normalization and diagnostics still allocate proportionally to their input.
 No numeric limit or shared-session budget policy is selected here.
 
-Only builtin ancestry `decimal` selects the new comparison path. Integer,
-float/double, string and aggregate union/list equality retain their previous
-paths; decimal list items and union members benefit from their own atomic bound
-checks without establishing aggregate typed equality. Patterns still see the
+At the decimal-repair checkpoint, only builtin ancestry `decimal` selected the
+new comparison path. Integer, float/double, string and aggregate union/list
+equality retained their previous paths. The later bounded aggregate repair below
+adds exact numeric item/member equality; float/double remain lexical. Patterns still see the
 unchanged normalized source spelling. Fixed-value comparison reuses effective
 simple-content ancestry resolution; generated schema literals and source text
 are never rewritten. The basis is XSD 1.0 [decimal value identity][decimal-domain],
@@ -278,8 +278,8 @@ and cannot recover source precision discarded by model conversion.
 
 This is another bounded existing-validator portion of `STAGE-DEF-03`
 (`REQ-DEF-NUM-EXACT`, `DEF03-02/04`). Decimal digit facets are covered by the
-later repair below. Typed union/list aggregate equality, mixed-base simple-content
-restrictions and wider facet semantics,
+later repair below. Aggregate equality outside the later bounded repair,
+mixed-base simple-content restrictions and wider facet semantics,
 contextual arithmetic, parse-once session caching, resource budgets,
 incomplete/conversion reports and strict-source/direct-model adapters remain
 separate work. No public API, model-decimal interpretation, profile or planning
@@ -415,7 +415,8 @@ full schema-component validity checker or a change to generated fixed helpers.
 Union members retain independent policies and declaration order; the first
 member that validates supplies its normalized lexical view to outer restrictions.
 An outer facet failure does not backtrack to another union member. List lexical
-facets receive collapsed text; aggregate typed equality remains unimplemented.
+facets receive collapsed text. Aggregate typed equality was deferred at this
+checkpoint and is now addressed for the bounded domains in the later update below.
 Enumeration literals use direct atomic/list normalization or ordered union-member
 assessment without reassessing every inherited restriction. Union literal views
 are cached per context by declaring restriction and literal index, including
@@ -428,11 +429,11 @@ prevent exponential repeated base assessment; they do not set a public work budg
 Enumeration candidates are interpreted using the base type of the restriction
 that declares them. They do not inherit a same-level or descendant's stronger
 policy: a padded enumeration declared over `xs:string` can become unreachable
-when the subject is collapsed. Fixed comparisons instead apply the declaration's
-effective type policy to both sides, only for genuinely atomic string-derived
-types. The existing exact integer/decimal comparators and raw mixed-content
+when the subject is collapsed. At that checkpoint, fixed comparisons applied the declaration's effective type
+policy to both sides only for genuinely atomic string-derived types. The existing exact integer/decimal comparators and raw mixed-content
 fixed comparisons retain their domains. Boolean, date/time, QName, URI and
-aggregate value-space equality remain separate work.
+other primitive value-space equality remain separate work. The later aggregate
+update below covers the verified string and exact numeric domains.
 
 Normative basis: XSD 1.0 [whiteSpace][scalar-whitespace],
 [normalization during validation][scalar-normalization],
@@ -471,6 +472,37 @@ strict-source adapter integration remain open.
 [scalar-enumeration]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-enumeration
 [scalar-union]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-union
 [scalar-fixed]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt
+
+## Built-in list length repair update
+
+The existing validator now classifies `NMTOKENS`, `IDREFS` and `ENTITIES` as
+list varieties for `length`, `minLength` and `maxLength`, including named
+restrictions, inherited restrictions, attributes and effective complex
+simple-content scalar bridges. These facets count items after XML whitespace
+collapse, not Unicode characters. Ordinary list lexical validation and document
+IDREF recording keep their existing behavior.
+
+The synthetic [schema](../../testdata/validation/builtin-list-contract.xsd) and
+[`validation_builtin_list_test.go`](../../validation_builtin_list_test.go) cover
+77 exact-source cases, including boundary counts, XML character references,
+split text, invalid and empty values, plus repeated/concurrent source and schema
+immutability, including explicit recursive text snapshots. Of these, 53 run
+against the identical bytes in `xmllint --nonet`. All 24 `ENTITIES` element cases
+are internal-only: libxml2 2.9.14 rejects their declared unparsed-entity values
+before it can establish the length facets. The same entity declarations and
+`ENTITIES` attribute controls pass the oracle. Entity declaration
+validation remains outside this repair. The internal fixture uses an internal
+DTD with unparsed entities and never fetches external resources.
+
+Basis: XSD 1.0 [list datatypes][scalar-list] and
+[item-count length facets][scalar-length]. This bounded existing-validator
+repair contributes to `REQ-DEF-OPS-SCALARS` / `DEF04-06`; the broader plan remains
+proposed/planned. None of the six production schema files declares `xs:list`
+or restricts these built-in lists. Production schemas, public models and API
+are unchanged; the regression establishes reusable operator behavior.
+
+[scalar-list]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#dt-list
+[scalar-length]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#rf-length
 
 ## Same-level pattern alternatives repair update
 
@@ -511,12 +543,128 @@ All six pinned production schemas have no sibling multi-pattern group;
 `musicxml.xsd` has 11 single pattern facets. This is a bounded reusable-operator
 repair under `REQ-DEF-OPS-SCALARS` / `DEF04-06`, not completion of a stage or
 profile. Production schemas/models, public APIs and planning statuses are
-unchanged. Broader regex support, aggregate and other primitive typed equality,
+unchanged. Broader regex support and typed equality outside the bounded aggregate repair below,
 mixed/emptiable-base mapping, wildcard derivation, schema-component validity,
 fixed-facet metadata/facet-width limits, absent-defaulted-IDREF augmentation,
 `xsi:type`/schema hints and catalog/adapter/budget/profile decisions remain open.
 
 [pattern-groups]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#src-multiple-patterns
+
+## Bounded aggregate value repair update
+
+The existing scalar assessor now returns a normalized lexical view and an
+immutable actual value. [`validation_value.go`](../../validation_value.go)
+compares three verified value shapes: atomic string-derived values, exact
+integer/decimal values in their shared decimal domain, and ordered lists of
+those values. A list's count, item order and shape must match; a singleton list
+is not an atomic value. A numeric value never equals a string merely because
+both normalize to the same spelling. Built-in `NMTOKENS`, `IDREFS` and `ENTITIES`
+use their string-derived item values without introducing entity/identity rules.
+
+Union assessment retains the first successful member's value, including a
+list-valued or nested member. It never reselects a member from normalized text.
+Outer patterns still see the selected lexical view, and an outer facet failure
+never retries another member. Enumeration literals use the declaring base;
+fixed operands use the effective declared scalar, including complex simple
+content. Literal conversion skips outer restriction chains to avoid exponential
+reassessment, but fully assesses the effective ordered atomic/list members after XSD 1.0
+union-member expansion, retaining their restrictions.
+A fixed value may equal an instance that separately fails an outer pattern;
+this does not introduce a false `fixed` diagnostic. Mixed-content fixed values
+still compare raw text.
+
+Enumeration results are cached only by declaring schema pointer and literal
+index, including failures and empty results. The cache is per context and
+cannot grow with instance spellings. List carriers allocate in proportion to
+item count; exact numbers retain the existing immutable lexical digit views.
+The existing atomic/list/union/nested-union allocation regression now also
+covers lists of unions and unions of lists, without defining a public budget.
+Malformed/missing/cyclic metadata continues to fail closed. Source text,
+attributes, generated metadata and constraint spellings remain unchanged.
+
+The [synthetic aggregate schema](../../testdata/validation/aggregate-contract.xsd)
+and [`validation_aggregate_test.go`](../../validation_aggregate_test.go) cover
+129 exact-source cases, with 119 in the same-byte `xmllint --nonet` subset:
+named and inherited restrictions, string/numeric domain collisions, large
+integer and close decimal distinctions, member-facet selection, list-of-union,
+union-of-list, nested unions, lexical patterns, element/attribute/complex fixed
+values, default/nil/child interactions, exact diagnostics and repeated/concurrent
+immutability. Original source bytes are assessed directly, never Decode/Encode.
+Arbitrary-width and empty-list enumeration probes remain internal. libxml2
+2.9.14 cannot compile an empty-list enumeration literal (`xmlSchemaCheckFacet:
+value was not computed`). The external subset excludes only demonstrated engine
+divergences: alternate element-fixed spellings and scalar/singleton-list equality. A minimal exact-source
+scalar/list-shape subset is independently supported by OpenJDK 21 Xerces/JAXP;
+this is not a claim that JAXP validated the complete fixture.
+
+This is deliberately not complete typed equality. Boolean, float/double,
+date/time, QName, binary, URI and other unverified primitive families keep a
+shared normalized-lexical fallback within aggregates, including possible
+cross-family lexical collisions. Atomic fixed behavior for these families is
+unchanged. No primitive-identity or value-equality guarantee is made for that
+fallback. The explicit boolean/date compatibility tests are limitations, not
+normative positive claims. No new API, profile, schema-component validity pass,
+resource policy, `xsi:type`/hint semantics or defaulted-IDREF augmentation ships.
+
+Union-valued member composition is handled by the follow-on repair immediately
+below. This dependency matters to value-domain selection; it is not merely a
+separate completeness claim.
+
+Basis: XSD 1.0 [list values][scalar-list], [ordered unions][scalar-union],
+[enumeration][scalar-enumeration] and [element fixed values][scalar-fixed].
+This is bounded `REQ-DEF-OPS-SCALARS` / `DEF04-06` progress. The architecture,
+Go contracts and plan remain proposals with unchanged planning statuses.
+All six production schema files and generated public models are unchanged.
+Production has no explicit lists or built-in list restrictions; its four
+MusicXML unions and one XML-module union gain no new aggregate constraints.
+
+## XSD 1.0 union-member flattening repair update
+
+XSD 1.0 [section 4.1.2.3, union XML mapping][union-member-mapping] replaces
+union-variety member definitions with their own member definitions in order.
+The runtime now applies that expansion only at the union-composition boundary,
+using the resolved underlying union without mutating generated metadata.
+Named, inline and deeply nested members follow the same order. Restrictions on
+a directly assessed union remain operative; so do union restrictions used as
+list item types and all atomic/list member restrictions. Failed effective
+members still allow the next member; an outer facet failure does not backtrack.
+This follows the 1.0 contract, not the different union behavior in XSD 1.1.
+
+The omission existed before this batch, but typed equality also exposed a new
+false acceptance in the intermediate implementation. Let `inner` unite a
+string restricted by `[0-9]+` with decimal, restrict it to enumeration `0`, and
+use that restricted union followed by decimal as members of `outer`. A
+restriction of `outer` with enumeration `1` must reject `<value>+01</value>`:
+after flattening, literal `1` selects string and `+01` selects decimal. The
+pre-batch and task-1 runtimes rejected it lexically; the intermediate typed
+implementation wrongly accepted two numeric values selected through the
+unexpanded graph. The final traversal rejects it for the correct domain reason.
+The exact independent-review instance bytes are retained in the source matrix.
+A complementary numeric-only nested case, previously wrongly rejected, now
+accepts `+02.0` for enumeration `2`. Both libxml2 and Xerces/JAXP support these
+bounded independent counterexamples and their direct-restriction controls.
+
+The [synthetic union-member schema](../../testdata/validation/union-member-contract.xsd)
+and [`validation_union_member_test.go`](../../validation_union_member_test.go)
+cover 61 original-source cases, all checked on identical bytes by required
+`xmllint --nonet`, including enum/fixed selected domains, order, failed-member
+fallback, complex/attribute paths and the nonflattening controls above.
+An independent OpenJDK 21 Xerces/JAXP run also agrees on all 61 identical
+instance byte sequences against the complete union-member fixture, without
+exclusions. This claim is specific to this fixture, not the aggregate fixture
+with its separately documented engine limitations.
+Repeated/concurrent text-inclusive immutability and reached-literal cache tests
+verify that skipped union-wrapper facets neither mutate metadata nor create
+literal-cache entries. Existing malformed/cyclic fail-closed and layered
+allocation tests remain in force. No schema generator expansion or production
+schema/model change is required.
+
+This is an additional bounded `DEF04-06` / `REQ-DEF-OPS-SCALARS` repair, not
+complete schema-component validity, other primitive equality, or a completed
+planning stage. The published deferred inventory and registry snapshots retain
+their original bytes and statuses.
+
+[union-member-mapping]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#element-union
 
 ## Ordinary-attribute repair update
 
