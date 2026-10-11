@@ -380,25 +380,8 @@ func (r *Run) ActualType(b Binding) (TypeID, bool) {
 	}
 	return r.typeID(b.state.actual)
 }
-func (r *Run) typeID(ref *TypeRef) (TypeID, bool) {
-	if ref == nil {
-		return TypeID{}, false
-	}
-	if ref.InlineSimple != nil {
-		v, ok := r.schema.simpleTypes[ref.InlineSimple]
-		return v, ok
-	}
-	if ref.InlineComplex != nil {
-		v, ok := r.schema.complexTypes[ref.InlineComplex]
-		return v, ok
-	}
-	if ref.Name.Space == XSDNamespace {
-		v, ok := r.schema.builtinTypes[ref.Name.Local]
-		return v, ok
-	}
-	v, ok := r.schema.namedTypes[ref.Name]
-	return v, ok
-}
+func (r *Run) typeID(ref *TypeRef) (TypeID, bool) { return r.schema.typeID(ref) }
+
 func (r *Run) owns(b Binding) bool {
 	return r != nil && b.run == r && b.state != nil && r.states[b.state.subject.ID] == b.state
 }
