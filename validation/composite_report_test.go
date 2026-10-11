@@ -23,8 +23,13 @@ func TestCompositeReportPreservesFailureAndIncompleteDetails(t *testing.T) {
 			{Decision: reportTestDecision(OutcomeFail), Location: Location{Target: TargetModel, DocumentID: "doc", Path: "/root/@second"}},
 			{Decision: reportTestDecision(OutcomeUnsupported), Location: Location{Target: TargetModel, DocumentID: "doc", Path: "/root/@third"}},
 		}
-		if err := acc.recordComposite(rule, summary, Location{Target: TargetModel, DocumentID: "doc", Path: "/root"}, details, false); err != nil {
+		if err := acc.recordCompositeOutcome(rule, summary, false); err != nil {
 			t.Fatal(err)
+		}
+		for _, detail := range details {
+			if err := acc.storeDiagnostic(rule, detail.Decision, detail.Location); err != nil {
+				t.Fatal(err)
+			}
 		}
 		report := acc.finish(true, SyntaxNotAssessed)
 		if report.Counts != (Counts{Fail: 1}) || report.Conformance != ConformanceViolated || report.AssessmentComplete || report.BlockingProblems != 1 || report.Satisfied() {
@@ -63,7 +68,10 @@ func TestCompositeReportCompleteAndUnresolvedCounts(t *testing.T) {
 	} {
 		account, _ := NewBudgetAccount(Budgets{})
 		acc := newReportAccumulator(reportTestProfile(), account)
-		if err := acc.recordComposite(reportTestRule(), reportTestDecision(tc.outcome), Location{}, nil, tc.complete); err != nil {
+		if err := acc.recordCompositeOutcome(reportTestRule(), reportTestDecision(tc.outcome), tc.complete); err != nil {
+			t.Fatal(err)
+		}
+		if err := acc.storeDiagnostic(reportTestRule(), reportTestDecision(tc.outcome), Location{}); err != nil {
 			t.Fatal(err)
 		}
 		r := acc.finish(true, SyntaxNotAssessed)

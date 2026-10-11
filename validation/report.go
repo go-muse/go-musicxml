@@ -266,31 +266,9 @@ func (a *reportAccumulator) record(rule RuleDefinition, decision Decision, locat
 	return a.storeDiagnostic(rule, decision, location)
 }
 
-// recordComposite is reserved for sealed shared-schema operations. The summary
-// is one predicate instance; detail findings never increment its counts again.
-// Incomplete required work is an untruncated acceptance blocker even when a
-// proven failure already settles the composite predicate's truth value.
-func (a *reportAccumulator) recordComposite(rule RuleDefinition, summary Decision, location Location, details []Finding, complete bool) error {
-	if err := a.recordCompositeOutcome(rule, summary, complete); err != nil {
-		return err
-	}
-	if len(details) == 0 {
-		return a.storeDiagnostic(rule, summary, location)
-	}
-	for _, detail := range details {
-		if a.report.DiagnosticsTruncated {
-			break
-		}
-		// Kernel details share the composite decision identity; individual
-		// attribute/child occurrences remain explicit in each location.
-		detail.Rule, detail.Subject = summary.Rule, summary.Subject
-		if err := a.storeDiagnostic(rule, detail.Decision, detail.Location); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
+// recordCompositeOutcome counts one sealed shared-schema predicate instance.
+// Detail findings are stored separately so early proofs precede budgeted detail
+// work and later identity details can append without recounting the predicate.
 func (a *reportAccumulator) recordCompositeOutcome(rule RuleDefinition, summary Decision, complete bool) error {
 	if !complete && (summary.Outcome == OutcomePass || summary.Outcome == OutcomeNotApplicable) {
 		return contract("composite result", "incomplete work cannot pass or prove exclusion")
