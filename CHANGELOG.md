@@ -57,11 +57,22 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Migrate legacy `Validate` and root `Validate` methods from Encode/reparse to
   direct current-model XSD assessment. Keep XSD-only scope, ignored `XMLName`,
   nil/unsupported document recognition and legacy cycle/depth sentinels with
-  depth 4096. Other finite assessment budgets now apply. Representation findings
+  depth 4096. Preserve the legacy size/work contract: the new assessment default
+  quotas do not apply to this facade (other quotas use `math.MaxInt64`, with
+  overflow and host-allocation checks retained). Memory/work are not bounded by
+  practical defaults; use explicit finite `AssessModel` budgets for untrusted
+  models. Representation findings
   retain legacy invalid-document recognition; pure unsupported/resource outcomes
   remain incomplete. Decimal edge outcomes intentionally follow current exact
   values rather than serialized spellings. `Decode` and `Encode` stay explicit
   transport operations.
+- A proven model representation failure can now join `ErrIncompleteAssessment`
+  when dependent XSD work is blocked, even without an independent interruption.
+  For example, a NaN measure width matches both `ErrInvalidDocument` and
+  `ErrIncompleteAssessment`; the former remains a definitive rejection. This is
+  a legacy sentinel behavior change from serialized-value validation. Check
+  invalidity before treating incomplete as a reason to retry. Reports retain
+  their separate causal and completion axes, including omitted diagnostics.
 - Keep the developmental source XSD preview's catalog and behavior separate.
   Source-local adds only the selected musical clauses and does not accept unread
   external DTD subsets, strip DOCTYPEs, fetch resources or claim linked content.

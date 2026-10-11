@@ -144,14 +144,19 @@ validate automatically.
 
 Use `errors.Is(err, ErrInvalidDocument)` for the legacy category and
 `errors.As` with a `*ValidationError` target to inspect retained `ValidationIssue`
-details. Details obey finite diagnostic budgets and are not an exhaustive trace.
+details. Individual diagnostic previews are bounded and are not an exhaustive trace.
 Legacy issue locations retain XML-style structural display paths; representation
 messages also identify Go fields. These paths do not describe original XML.
 `ErrNilDocument`, `ErrUnsupportedDocument`, `ErrDocumentCycle` and
 `ErrDocumentTooDeep` remain recognizable where applicable. Depth and cycle errors
 still match `ErrInvalidDocument` in this facade. The legacy depth ceiling remains
-4096; other finite assessment defaults also apply. Use `AssessModel` for explicit
-budgets and independent normative, model and resource outcomes.
+4096. Other assessment default quotas do not apply to this compatibility facade:
+document/scalar/work/diagnostic ceilings use `math.MaxInt64`, while checked
+accounting overflow and host-sized allocation guards remain active. This restores
+the former size/work contract, not a memory or throughput guarantee. Memory and
+work grow with the model. Use `AssessModel` with explicit finite budgets for
+untrusted models and independent normative, model and resource outcomes; its
+finite defaults are unchanged.
 
 This is an intentional value-contract change from validating serialized text:
 finite decimal fields mean their exact current binary rational, including at
@@ -162,8 +167,19 @@ without inventing a source lexeme. No serialization fallback is retained.
 
 `ErrIncompleteAssessment` identifies technical incompleteness, including its presence in a joined invalid/incomplete
 result. It is the identical sentinel exported by the `validation` subpackage.
-`errors.As` can also retrieve its `*validation.IncompleteError`. Independent
-legacy model/XSD failures may be joined with that incomplete result.
+`errors.As` can also retrieve its `*validation.IncompleteError`. A legacy
+model/XSD failure may be joined with either independent incompleteness or
+dependent schema work blocked by that same proven failure. For example, a NaN
+measure width definitely fails model representation, while its XSD attribute
+assessment cannot establish a decimal value. `Validate` then matches both
+`ErrInvalidDocument` and `ErrIncompleteAssessment`, whereas `AssessModel` has a
+nil operation error and a report containing the model failure and causally
+blocked XSD result. This joined legacy sentinel behavior differs from the former
+serialized-value path. Test invalidity first when deciding whether to reject or
+retry; incomplete alone does not mean that a definitive invalidity is absent.
+The facade does not reinterpret the report as complete because a blocked result
+has a known cause: a composite can also contain independent capability limits.
+Diagnostic truncation cannot change these report axes.
 Incomplete-error text and diagnostic wording may change across the direct-walker
 migration. Use `errors.Is`/`errors.As` rather than matching an error-string prefix;
 the public sentinel and typed cause are the compatibility contract.
