@@ -163,3 +163,26 @@ func TestSourceDTDDependentNamespaceIsUnsupported(t *testing.T) {
 		}
 	}
 }
+
+func TestSourceDTDWellFormednessIsNotInvented(t *testing.T) {
+	for _, input := range []string{`<!DOCTYPE a [<!ATTLIST a x CDATA "&missing;">]><a/>`, `<!DOCTYPE a [<!ENTITY e "&e;">]><a/>`} {
+		s, err := newSourceXMLTokenReader(strings.NewReader(input), sourceXMLConfig{Context: context.Background()})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for err == nil {
+			_, err = s.Token()
+		}
+		if err != io.EOF {
+			t.Fatal(err)
+		}
+		summary := s.Summary()
+		if summary.SyntaxComplete {
+			t.Fatalf("unassessed declaration WFCs called complete: %+v", summary)
+		}
+		if !summary.DigestComplete {
+			t.Fatal("valid EOF observation was lost")
+		}
+		s.Close()
+	}
+}

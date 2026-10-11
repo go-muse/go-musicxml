@@ -20,6 +20,9 @@ type sourceDTDInput interface {
 // DTD semantics. Unsupported does not imply that the declaration is malformed.
 // Even when parsing succeeds, declared defaults/entities are not interpreted.
 type sourceDTDInfo struct {
+	// WellFormednessIncomplete distinguishes unassessed declaration WFCs
+	// (for example entity declaration order/recursion) from known token grammar.
+	WellFormednessIncomplete bool
 	Name                     string
 	ExternalSubset           bool
 	HasDeclarations          bool
@@ -125,10 +128,12 @@ func (p *sourceDTDParser) declaration() {
 		p.element()
 	case "ATTLIST":
 		p.info.HasAttributeDeclarations = true
+		p.info.WellFormednessIncomplete = true
 		p.info.Unsupported = true
 		p.attlist()
 	case "ENTITY":
 		p.info.HasEntityDeclarations = true
+		p.info.WellFormednessIncomplete = true
 		p.info.Unsupported = true
 		p.entity()
 	case "NOTATION":

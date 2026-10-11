@@ -26,11 +26,11 @@ type sourceXMLTokenMeta struct {
 	CDATA, Reference, EmptyEnd bool
 }
 type sourceXMLSummary struct {
-	BytesRead, BytesConsumed       int64
-	ReadPrefixSHA256               [32]byte
-	DigestComplete, SyntaxComplete bool
-	Encoding                       string
-	DTD                            sourceDTDInfo
+	BytesRead, BytesConsumed                      int64
+	ReadPrefixSHA256                              [32]byte
+	DigestComplete, InputComplete, SyntaxComplete bool
+	Encoding                                      string
+	DTD                                           sourceDTDInfo
 }
 type sourceXMLBinding struct {
 	uri   string
@@ -86,7 +86,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 }
 func (r *sourceXMLTokenReader) Metadata() sourceXMLTokenMeta { return r.metadata }
 func (r *sourceXMLTokenReader) Summary() sourceXMLSummary {
-	return sourceXMLSummary{BytesRead: r.cursor.reads, BytesConsumed: r.cursor.position.ByteOffset, ReadPrefixSHA256: r.cursor.readDigest(), DigestComplete: r.complete, SyntaxComplete: r.complete, Encoding: r.cursor.encoding, DTD: r.dtd}
+	return sourceXMLSummary{BytesRead: r.cursor.reads, BytesConsumed: r.cursor.position.ByteOffset, ReadPrefixSHA256: r.cursor.readDigest(), DigestComplete: r.complete, InputComplete: r.complete, SyntaxComplete: r.complete && !r.dtd.WellFormednessIncomplete, Encoding: r.cursor.encoding, DTD: r.dtd}
 }
 func (r *sourceXMLTokenReader) Close() error {
 	if r.closed {
