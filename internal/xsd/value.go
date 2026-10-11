@@ -134,7 +134,7 @@ func (c *Context) SimpleLiteralValue(semantics *SimpleSemantics, literal string)
 	literal = semantics.Normalize(literal)
 	if semantics.Union != nil {
 		value, failure := c.AssessSimpleValue(semantics.Union, literal, literal)
-		return value, failure == nil
+		return value, failure == nil && c.equalityAvailable(value.Value)
 	}
 	if semantics.List != nil {
 		result := SimpleAssessment{Lexical: literal, Value: SimpleValue{Domain: ListDomain}}
@@ -148,7 +148,7 @@ func (c *Context) SimpleLiteralValue(semantics *SimpleSemantics, literal string)
 		return result, true
 	}
 	result, failure := c.AssessBuiltinValue(semantics.Builtin, literal, literal)
-	return result, failure == nil
+	return result, failure == nil && c.equalityAvailable(result.Value)
 }
 
 // Fixed comparisons convert both operands per occurrence. Only enumeration

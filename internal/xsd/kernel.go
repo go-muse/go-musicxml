@@ -507,6 +507,7 @@ func (c *Context) ValidateType(
 		return c.ValidateComplex(node, complex, path, nilled, subject)
 
 	case builtin == "anyType":
+		c.opaqueType()
 		return true
 
 	case builtin != "":
@@ -653,14 +654,20 @@ func (c *Context) ValidateComplex(
 		return attributesValid && contentValid && len(node.Children) == 0
 	}
 
-	if c.local != nil && !c.local.subject.ChildrenComplete {
-		return false
-	}
 	result, failure, matched := c.MatchParticle(
 		effective.Particle,
 		node.Children,
 		0,
 	)
+	if c.local != nil && !c.local.subject.ChildrenComplete {
+		// A closed prefix may already fully satisfy this grammar. Recover only
+		// leaves whose exact declaration cannot change with an unknown suffix;
+		// never turn failure of this tentative match into an absence verdict.
+		if matched && result.Next == len(node.Children) {
+			c.local.matches = c.stablePrefixMatches(effective.Particle, result.Elements)
+		}
+		return false
+	}
 	if !matched || result.Next != len(node.Children) {
 		c.SkipIdentityChildren(node)
 		if !matched {
@@ -949,6 +956,9 @@ func (c *Context) ValidateAttributes(
 		schema, found := known[name]
 		if !found {
 			if AnyAttributeAllows(anyAttribute, attribute.Name) {
+				if anyAttribute != nil {
+					c.wildcard(anyAttribute.ProcessContents, "attributes")
+				}
 				continue
 			}
 			valid = false
@@ -1046,6 +1056,7 @@ func (c *Context) ValidateAttributes(
 			"required attribute is missing",
 		)
 	}
+	c.absentAttributeFacts(schemas, present)
 	return valid
 }
 
@@ -1086,6 +1097,10 @@ func (c *Context) SimpleValuesEqual(
 		return c.AggregateValuesEqual(semantics, left, right)
 	}
 	builtin := semantics.Builtin
+	if c.local != nil && !semantics.Aggregate() && !supportedEquality(AtomicValue(semantics, semantics.Normalize(left))) {
+		c.Incomplete("value-space equality is unavailable for xs:" + builtin)
+		return false
+	}
 	if builtin == "ENTITY" {
 		return c.AggregateValuesEqual(semantics, left, right)
 	}
@@ -1125,6 +1140,10 @@ func (c *Context) ElementFixedValuesEqual(reference *TypeRef, left, right string
 	if semantics == nil {
 		// As in simpleValuesEqual, retain fail-closed comparison and its
 		// additional fixed issue alongside ordinary schema diagnostics.
+		return false
+	}
+	if c.local != nil && !semantics.Aggregate() && !supportedEquality(AtomicValue(semantics, semantics.Normalize(left))) {
+		c.Incomplete("value-space equality is unavailable for xs:" + semantics.Builtin)
 		return false
 	}
 	if semantics.Aggregate() || semantics.Builtin == "boolean" || semantics.Builtin == "anyURI" {

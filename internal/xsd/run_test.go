@@ -182,3 +182,32 @@ func TestRunFinishAndCleanupAreSingleUse(t *testing.T) {
 		t.Fatal("second close accepted")
 	}
 }
+
+func TestRunIncompleteEnumerationRetainsSafeFullMatchWitness(t *testing.T) {
+	c := testRunSchema(t)
+	r, err := NewRun(c, &testMeter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	u, _ := c.Root(QName{Local: "root"})
+	b, err := r.Bind(context.Background(), u, Subject{ID: 1, Name: QName{Local: "root"}, Path: "/root", AttributesComplete: true, Children: []Child{{ID: 2, Name: QName{Local: "child"}, Path: "/root/child"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	v := r.Results(b).Content
+	if !v.Valid || v.Complete || len(v.Issues) != 0 {
+		t.Fatalf("unknown suffix invented invalidity: %+v", v)
+	}
+	w := r.Witnesses(b)
+	if len(w) != 1 || w[0].Child != 2 || w[0].Mode != WitnessDeclared {
+		t.Fatalf("safe full-match prefix lost: %+v", w)
+	}
+	child, err := r.Bind(context.Background(), w[0].Use, Subject{ID: 2, Parent: 1, Name: QName{Local: "child"}, Path: "/root/child", Text: "bad", TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Results(child).Scalar.Valid {
+		t.Fatal("closed invalid child was lost")
+	}
+}

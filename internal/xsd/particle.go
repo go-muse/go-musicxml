@@ -528,6 +528,9 @@ func (m *ParticleMatcher) BodyWitness(p *ParticleSchema, start, end int, element
 		*elements = append(*elements, ElementMatch{Index: start, Schema: e, Particle: p})
 		return end == start+1
 	case ParticleAny:
+		if m.Context.local != nil {
+			*elements = append(*elements, ElementMatch{Index: start, Particle: p})
+		}
 		return end == start+1
 	case ParticleChoice:
 		for _, child := range p.Children {

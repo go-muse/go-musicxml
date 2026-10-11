@@ -309,6 +309,9 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		}
 	}
 	r.context.ValidateElementOwned(node, use.original, subject.Path, r.nodes[subject.Parent])
+	if _, ok := r.typeID(s.actual); !ok {
+		s.limit("binding", "actual-type-binding-unavailable", nil)
+	}
 	r.buildWitnesses(s)
 	return bound, nil
 }
@@ -368,6 +371,18 @@ func (r *Run) buildWitnesses(s *boundState) {
 	owner, _ := r.typeID(s.actual)
 	for _, m := range s.matches {
 		r.step(1)
+		if m.Particle != nil && m.Particle.Kind == ParticleAny {
+			mode := WitnessStrict
+			if m.Particle.Any.ProcessContents == "skip" {
+				mode = WitnessSkip
+			} else if m.Particle.Any.ProcessContents == "lax" {
+				mode = WitnessLax
+			}
+			r.context.wildcard(m.Particle.Any.ProcessContents, "content")
+			r.reserve(160)
+			s.witnesses = append(s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Mode: mode})
+			continue
+		}
 		uses := r.schema.particleUses[particleUseKey{owner, m.Particle}]
 		if len(uses) == 0 {
 			for key, candidates := range r.schema.particleUses {
@@ -382,7 +397,13 @@ func (r *Run) buildWitnesses(s *boundState) {
 			continue
 		}
 		r.reserve(160)
-		s.witnesses = append(s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: uses[0], ResolvedDeclaration: uses[0], Mode: WitnessDeclared})
+		resolved := uses[0]
+		if resolved.original.Reference.Local != "" {
+			if target, ok := r.schema.Root(resolved.original.Reference); ok {
+				resolved = target
+			}
+		}
+		s.witnesses = append(s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: uses[0], ResolvedDeclaration: resolved, Mode: WitnessDeclared})
 	}
 }
 func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (out Completion, err error) {
@@ -397,14 +418,20 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 	s := b.state
 	r.context.local = s
 	defer func() { r.context.local = nil }()
-	if len(children) != len(s.witnesses) {
+	var declared []Witness
+	for _, w := range s.witnesses {
+		if w.Mode == WitnessDeclared {
+			declared = append(declared, w)
+		}
+	}
+	if len(children) != len(declared) {
 		return out, errors.New("xsd: child completion count mismatch")
 	}
 	typeValid := s.typeValid
 	complete := s.results.Binding.Complete && s.results.Declaration.Complete && s.results.Attributes.Complete && s.results.Scalar.Complete && s.results.Content.Complete
 	for i, ch := range children {
 		r.step(1)
-		if ch.run != r || ch.subject != s.witnesses[i].Child {
+		if ch.run != r || ch.subject != declared[i].Child {
 			return out, errors.New("xsd: mismatched child completion")
 		}
 		typeValid = typeValid && ch.DeclarationValid
@@ -507,14 +534,7 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 		return
 	}
 	s := c.local
-	owner, _ := s.run.typeID(s.actual)
-	var use Use
-	for key, candidate := range s.run.schema.attributeUses {
-		if key.owner == owner && candidate.Declaration() == schema.Name {
-			use = candidate
-			break
-		}
-	}
+	use := s.run.attributeUse(s.actual, schema.Name)
 	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
 	s.run.reserve(160)
 	s.attributes = append(s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Scalar: scalar})

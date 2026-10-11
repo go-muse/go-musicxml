@@ -63,6 +63,7 @@ func (c *Context) RecordElementIdentity(declared, actual *TypeRef, value, path s
 // Called only after successful local declaration validation; this never checks
 // multiplicity. Dynamic IDs can precede or follow a separately seeded entry.
 func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
+	c.noteConstructedIdentity(reference)
 	builtin := c.IdentityBuiltin(reference)
 	normalized := NormalizeWhitespace(builtin, value)
 	switch builtin {
@@ -98,6 +99,7 @@ func (c *Context) SeedIdentity(value, path, constraint string) {
 // Called only after successful actual type validation and usable scalar content.
 // A root's scalar has no owner inside the validation scope and cannot self-bind.
 func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, owner *Node) {
+	c.noteConstructedIdentity(reference)
 	if owner == nil || c.IdentityBuiltin(reference) != "ID" {
 		return
 	}
