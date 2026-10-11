@@ -39,6 +39,7 @@ type Compiled struct {
 	builtinTypes                         map[string]TypeID
 	namedTypes                           map[QName]TypeID
 	particleUses                         map[particleUseKey][]Use
+	inheritedParticleUses                map[*ParticleSchema]Use
 	attributeUses                        map[attributeUseKey]Use
 	uses                                 []Use
 	components                           []TypeID
@@ -718,6 +719,9 @@ func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 			if err := c.addUse(b, use); err != nil {
 				return err
 			}
+			if err := c.indexInheritedParticleUse(b, p, use); err != nil {
+				return err
+			}
 			key := particleUseKey{owner, p}
 			c.particleUses[key] = append(c.particleUses[key], use)
 		}
@@ -732,5 +736,31 @@ func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 			stack = append(stack, task{p.Children[i], owner.path + c.recordPath(p) + "/children/" + strconv.Itoa(i)})
 		}
 	}
+	return nil
+}
+
+// indexInheritedParticleUse retains the original exact use only when the
+// particle has one structural occurrence across all owners. A zero Use is a
+// permanent ambiguity marker: pointer sharing must never select an arbitrary
+// owner or collapse two distinct use slots. Owner-specific lookups take priority
+// over this index, which is used for particles inherited through effective types.
+func (c *Compiled) indexInheritedParticleUse(b *compileBudget, particle *ParticleSchema, use Use) error {
+	if _, exists := c.inheritedParticleUses[particle]; exists {
+		c.inheritedParticleUses[particle] = Use{}
+		return nil
+	}
+	// Admit the map header and conservative per-entry storage before growth.
+	// The Use's strings and declarations are borrowed from the existing index.
+	bytes := int64(192)
+	if c.inheritedParticleUses == nil {
+		bytes += 64
+	}
+	if err := b.add(bytes, 1, 1); err != nil {
+		return err
+	}
+	if c.inheritedParticleUses == nil {
+		c.inheritedParticleUses = make(map[*ParticleSchema]Use)
+	}
+	c.inheritedParticleUses[particle] = use
 	return nil
 }

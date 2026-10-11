@@ -432,27 +432,28 @@ func (r *Run) buildWitnesses(s *boundState) {
 			continue
 		}
 		uses := r.schema.particleUses[particleUseKey{owner, m.Particle}]
-		if len(uses) == 0 {
-			for key, candidates := range r.schema.particleUses {
-				r.step(1)
-				if key.particle == m.Particle {
-					r.context.scratch(r.context.size(int64(len(candidates)), 256))
-					uses = append(uses, candidates...)
-				}
-			}
+		var use Use
+		if len(uses) == 1 {
+			use = uses[0]
+		} else if len(uses) == 0 {
+			// Effective extension particles retain their base owner's exact use.
+			// The immutable index also remembers ambiguity without scanning or
+			// allocating a candidate list at every source node.
+			r.step(1)
+			use = r.schema.inheritedParticleUses[m.Particle]
 		}
-		if len(uses) != 1 {
+		if use.schema == nil {
 			s.limit("content", "exact-declaration-use-unavailable", nil)
 			r.context.IdentityIncomplete = true
 			continue
 		}
-		resolved := uses[0]
+		resolved := use
 		if resolved.original.Reference.Local != "" {
 			if target, ok := r.schema.Root(resolved.original.Reference); ok {
 				resolved = target
 			}
 		}
-		s.witnesses = appendRetained(&r.context, s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: uses[0], ResolvedDeclaration: resolved, Mode: WitnessDeclared})
+		s.witnesses = appendRetained(&r.context, s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: use, ResolvedDeclaration: resolved, Mode: WitnessDeclared})
 	}
 }
 func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (out Completion, err error) {
