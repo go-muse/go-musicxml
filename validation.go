@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -150,12 +151,11 @@ func validationDocumentPath(document Document) string {
 }
 
 func parseValidationDocument(source []byte) (*validationNode, error) {
-	lexical := newLexicalXMLTokenReader(bytes.NewReader(source))
-	tokens := &wellFormedXMLTokenReader{
-		source:              lexical,
-		position:            lexical.decoder.InputPos,
-		characterDataMarkup: func() bool { return lexical.characterDataMarkup },
+	tokens, err := newSourceXMLTokenReader(bytes.NewReader(source), sourceXMLConfig{Context: context.Background()})
+	if err != nil {
+		return nil, err
 	}
+	defer tokens.Close()
 	decoder := xml.NewTokenDecoder(tokens)
 
 	for {
@@ -187,7 +187,7 @@ func parseValidationDocument(source []byte) (*validationNode, error) {
 
 func readValidationNode(
 	decoder *xml.Decoder,
-	tokens *wellFormedXMLTokenReader,
+	tokens *sourceXMLTokenReader,
 	start xml.StartElement,
 	depth int,
 	namespaces map[string]string,
@@ -200,19 +200,19 @@ func readValidationNode(
 		)
 	}
 
-	flags := tokens.namespaceDeclarations
-	if len(flags) != len(start.Attr) {
+	attributes := tokens.Metadata().Attributes
+	if len(attributes) != len(start.Attr) {
 		return nil, fmt.Errorf(
 			"musicxml: namespace declaration provenance out of sync at %s: got %d flags for %d attributes",
-			validationDisplayName(start.Name), len(flags), len(start.Attr),
+			validationDisplayName(start.Name), len(attributes), len(start.Attr),
 		)
 	}
 
 	result := &validationNode{Name: start.Name, Namespaces: namespaces}
 	// Share unchanged scopes; clone before applying actual declaration attributes.
 	// Name expansion has already happened exactly once in the XML decoder.
-	for _, declaration := range flags {
-		if declaration {
+	for _, attribute := range attributes {
+		if attribute.NamespaceDeclaration {
 			result.Namespaces = make(map[string]string, len(namespaces)+len(start.Attr))
 			for prefix, uri := range namespaces {
 				result.Namespaces[prefix] = uri
@@ -221,7 +221,7 @@ func readValidationNode(
 		}
 	}
 	for index, attribute := range start.Attr {
-		if flags[index] {
+		if attributes[index].NamespaceDeclaration {
 			prefix := ""
 			if attribute.Name.Space == "xmlns" {
 				prefix = attribute.Name.Local
@@ -231,7 +231,7 @@ func readValidationNode(
 	}
 	for index, attribute := range start.Attr {
 		result.Attrs = append(result.Attrs, validationAttribute{
-			Attr: validationRawAttribute{Name: attribute.Name, Value: attribute.Value}, NamespaceDeclaration: flags[index],
+			Attr: validationRawAttribute{Name: attribute.Name, Value: attribute.Value}, NamespaceDeclaration: attributes[index].NamespaceDeclaration,
 		})
 	}
 
