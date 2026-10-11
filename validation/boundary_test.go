@@ -71,3 +71,28 @@ func TestFoundationExportedDeclarationsDocumented(t *testing.T) {
 		}
 	}
 }
+
+func TestFoundationFuzzTargetsAreExecutedByCheckAll(t *testing.T) {
+	data, err := os.ReadFile("../scripts/check-all.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	packages, err := parser.ParseDir(token.NewFileSet(), ".", func(i os.FileInfo) bool { return strings.HasSuffix(i.Name(), "_test.go") }, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	count := 0
+	for _, file := range packages["validation"].Files {
+		for _, decl := range file.Decls {
+			if fn, ok := decl.(*ast.FuncDecl); ok && strings.HasPrefix(fn.Name.Name, "Fuzz") {
+				count++
+				if !strings.Contains(string(data), "-fuzz='^"+fn.Name.Name+"$'") {
+					t.Errorf("fuzz target %s is not invoked by check-all", fn.Name.Name)
+				}
+			}
+		}
+	}
+	if count < 2 {
+		t.Fatalf("foundation fuzz targets=%d, want at least 2", count)
+	}
+}

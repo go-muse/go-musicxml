@@ -105,7 +105,7 @@ stage_fuzz() {
         -fuzztime="$check_mxl_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzMXLLinkResolution$' \
         -fuzztime="$check_fuzz_time" .
-    "$check_go" test -run='^$' -fuzz='^FuzzReportFieldBounded$' \
+    "$check_go" test -run='^$' -fuzz='^FuzzReportFieldIsBoundedEscapedUTF8$' \
         -fuzztime="$check_validation_fuzz_time" ./validation
     "$check_go" test -run='^$' -fuzz='^FuzzSessionLifecycle$' \
         -fuzztime="$check_validation_fuzz_time" ./validation
