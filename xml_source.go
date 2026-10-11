@@ -186,7 +186,7 @@ func (r *sourceXMLTokenReader) spaces() (bool, error) {
 		if !sourceXMLSpace(u.Rune) {
 			return found, nil
 		}
-		if _, err = r.take(); err != nil {
+		if err = r.cursor.discard(); err != nil {
 			return found, err
 		}
 		found = true
@@ -280,7 +280,7 @@ func (r *sourceXMLTokenReader) name() (string, error) {
 		if !sourceXMLNameChar(u.Rune) {
 			break
 		}
-		_, _ = r.take()
+		_ = r.cursor.discard()
 		if err = b.append(u.Rune); err != nil {
 			return "", err
 		}
@@ -367,7 +367,7 @@ func (r *sourceXMLTokenReader) Token() (token xml.Token, err error) {
 	if u.Rune != '<' {
 		token, err = r.text(false)
 	} else {
-		_, _ = r.take()
+		_ = r.cursor.discard()
 		u, err = r.must()
 		if err != nil {
 			return nil, err
@@ -531,7 +531,7 @@ func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
 		if !cdata && u.Rune == '<' {
 			break
 		}
-		_, _ = r.take()
+		_ = r.cursor.discard()
 		c := u.Rune
 		if last2 == ']' && last1 == ']' && c == '>' {
 			if !cdata {
@@ -713,11 +713,11 @@ func (r *sourceXMLTokenReader) start() (xml.Token, error) {
 			return nil, err
 		}
 		if u.Rune == '>' {
-			_, _ = r.take()
+			_ = r.cursor.discard()
 			break
 		}
 		if u.Rune == '/' {
-			_, _ = r.take()
+			_ = r.cursor.discard()
 			if err = r.literal(">"); err != nil {
 				return nil, err
 			}

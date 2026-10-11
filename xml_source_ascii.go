@@ -13,7 +13,7 @@ const (
 )
 
 func (c *sourceXMLCursor) asciiSpan(mode sourceASCIIMode, quote byte, maximum int) []byte {
-	if !c.initialized || c.hasCached || c.hasRawCached || c.rawErr != nil || c.prefixAt < c.prefixN || (c.encoding != "utf8" && c.encoding != "latin1") {
+	if !c.initialized || c.hasCached || c.hasRawCached || c.rawErr != nil || c.prefixAt < c.prefixN || c.wide {
 		return nil
 	}
 	data := c.data[c.at:c.n]

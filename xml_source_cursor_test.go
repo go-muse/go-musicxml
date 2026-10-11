@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -133,7 +134,38 @@ func TestSourceCursorCachedUnitCancellation(t *testing.T) {
 	if _, err = cursor.take(); !errors.Is(err, context.Canceled) {
 		t.Fatalf("cached take: %v", err)
 	}
+	if err := cursor.discard(); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cached discard: %v", err)
+	}
 	if cursor.position.ByteOffset != 0 {
 		t.Fatalf("canceled unit consumed: %+v", cursor.position)
+	}
+}
+
+func TestSourceCursorBufferedASCIIEqualsFragmented(t *testing.T) {
+	for value := rune(0); value < 256; value++ {
+		text := "----" + string(value) + "Z"
+		for _, input := range [][]byte{[]byte(text), encodeUTF16(text, binary.BigEndian), encodeUTF16(text, binary.LittleEndian)} {
+			buffered, err := newSourceXMLCursor(bytes.NewReader(input), context.Background(), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			fragmented, err := newSourceXMLCursor(iotest.OneByteReader(bytes.NewReader(input)), context.Background(), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for {
+				a, ea := buffered.take()
+				b, eb := fragmented.take()
+				if a != b || fmt.Sprint(ea) != fmt.Sprint(eb) {
+					t.Fatalf("U+%04X buffered=%+v/%v fragmented=%+v/%v", value, a, ea, b, eb)
+				}
+				if ea != nil {
+					break
+				}
+			}
+			buffered.close()
+			fragmented.close()
+		}
 	}
 }

@@ -38,28 +38,29 @@ func (e *sourceXMLUnsupportedError) Unwrap() error { return validation.ErrIncomp
 const sourceXMLCursorBytes = 4096
 
 type sourceXMLCursor struct {
-	source            io.Reader
-	ctx               context.Context
-	cancelable        bool
-	account           *validation.Account
-	data              [sourceXMLCursorBytes]byte
-	at, n             int
-	pendingErr        error
-	reads             int64
-	digest            hash.Hash
-	prefix            [4]byte
-	prefixAt, prefixN int
-	initialized       bool
-	encoding          string
-	bom               bool
-	rawOffset         int64
-	position          sourceXMLPosition
-	cached            sourceXMLUnit
-	hasCached         bool
-	rawCached         sourceXMLUnit
-	hasRawCached      bool
-	rawErr            error
-	closed            bool
+	source             io.Reader
+	ctx                context.Context
+	cancelable         bool
+	account            *validation.Account
+	data               [sourceXMLCursorBytes]byte
+	at, n              int
+	pendingErr         error
+	reads              int64
+	digest             hash.Hash
+	prefix             [4]byte
+	prefixAt, prefixN  int
+	initialized        bool
+	encoding           string
+	wide, littleEndian bool
+	bom                bool
+	rawOffset          int64
+	position           sourceXMLPosition
+	cached             sourceXMLUnit
+	hasCached          bool
+	rawCached          sourceXMLUnit
+	hasRawCached       bool
+	rawErr             error
+	closed             bool
 }
 
 func newSourceXMLCursor(r io.Reader, ctx context.Context, a *validation.Account) (*sourceXMLCursor, error) {
@@ -233,6 +234,8 @@ func (c *sourceXMLCursor) initialize() error {
 	case len(p) >= 4 && p[0] == '<' && p[1] == 0 && p[2] == '?' && p[3] == 0:
 		c.encoding = "utf16le"
 	}
+	c.wide = c.encoding == "utf16be" || c.encoding == "utf16le"
+	c.littleEndian = c.encoding == "utf16le"
 	c.rawOffset = int64(c.prefixAt)
 	c.position.ByteOffset = c.rawOffset
 	return nil
@@ -346,6 +349,24 @@ func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
 	if c.hasCached {
 		return c.cached, nil
 	}
+	// Buffered UTF-16 ASCII needs no generic decoding or CR lookahead.
+	// Every refill boundary, control and non-ASCII unit stays on rawRune.
+	if c.wide && !c.hasRawCached && c.rawErr == nil && c.prefixAt == c.prefixN && c.at+1 < c.n {
+		value, padding := c.data[c.at], c.data[c.at+1]
+		if !c.littleEndian {
+			value, padding = padding, value
+		}
+		if padding == 0 && value >= 32 && value < 128 {
+			end := c.position
+			end.ByteOffset += 2
+			end.Column++
+			c.cached = sourceXMLUnit{Rune: rune(value), Start: c.position, End: end}
+			c.hasCached = true
+			c.at += 2
+			c.rawOffset += 2
+			return c.cached, nil
+		}
+	}
 	if err := c.initialize(); err != nil {
 		return sourceXMLUnit{}, err
 	}
@@ -398,4 +419,19 @@ func (c *sourceXMLCursor) take() (sourceXMLUnit, error) {
 }
 func sourceXMLChar(r rune) bool {
 	return r == 9 || r == 10 || r == 13 || r >= 32 && r <= 0xd7ff || r >= 0xe000 && r <= 0xfffd || r >= 0x10000 && r <= 0x10ffff
+}
+
+// discard consumes cached lookahead when the scanner needs only its position.
+// Avoid returning/copying two complete coordinates for an ignored rune value.
+func (c *sourceXMLCursor) discard() error {
+	if c.hasCached {
+		if err := c.contextErr(); err != nil {
+			return err
+		}
+		c.hasCached = false
+		c.position = c.cached.End
+		return nil
+	}
+	_, err := c.take()
+	return err
 }
