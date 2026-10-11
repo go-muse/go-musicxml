@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 // ValidationError reports XSD validation issues found in a document.
@@ -41,60 +43,50 @@ func (e *ValidationError) Unwrap() error {
 	return ErrInvalidDocument
 }
 
-// Validate checks document against the MusicXML 4.0 XSD.
+// Validate checks the current generated Go document against the bounded
+// MusicXML 4.0 XSD model profile. It walks current fields directly; it does not
+// encode the document, invoke XML marshal methods, or assess historical XML.
+// No local musical prose clauses are selected. Decode and Encode remain explicit
+// transport operations and do not invoke validation automatically.
 //
-// Validation is explicit: Decode and Encode remain lossless transport
-// operations and do not invoke it automatically.
+// Genuine XSD and model-representation failures preserve ErrInvalidDocument and
+// ValidationError. A reached unsupported capability or resource interruption is
+// incomplete, not proof of invalidity. The legacy maximum depth is 4096 and its
+// cycle/depth sentinels remain recognizable. Use AssessModel for separate result
+// axes, explicit profiles and configurable finite budgets.
 func Validate(document Document) error {
-	schema, err := validationSchemaForDocument(document)
-	if err != nil {
+	report, status, err := assessModel(context.Background(), document,
+		AssessmentOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxDepth: maximumDocumentDepth}},
+		modelWalkOptions{LegacyPaths: true})
+	if !report.Requested {
 		return err
 	}
-	if err := checkDocumentNesting(document); err != nil {
-		return fmt.Errorf("%w: %w", ErrInvalidDocument, err)
+	var invalid error
+	if report.Conformance == validation.ConformanceViolated || status.HasProblems {
+		issues := make([]ValidationIssue, 0)
+		for _, finding := range report.Findings {
+			if finding.Outcome != validation.OutcomeFail {
+				continue
+			}
+			switch finding.Category {
+			case validation.CategoryNormative:
+				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: string(finding.Reason), Message: finding.Actual})
+			case validation.CategoryModel:
+				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: "representation", Message: finding.Actual})
+			}
+		}
+		invalid = &ValidationError{Issues: issues}
 	}
-
-	var encoded bytes.Buffer
-	if err := Encode(&encoded, document); err != nil {
-		return &ValidationError{Issues: []ValidationIssue{{
-			Path:       validationDocumentPath(document),
-			Constraint: "representation",
-			Message:    fmt.Sprintf("cannot encode typed document: %v", err),
-		}}}
+	if status.HasCycle {
+		invalid = errors.Join(invalid, fmt.Errorf("%w: %w", ErrInvalidDocument, ErrDocumentCycle))
 	}
-
-	root, err := parseValidationDocument(encoded.Bytes())
-	if err != nil {
-		return &ValidationError{Issues: []ValidationIssue{{
-			Path:       validationDocumentPath(document),
-			Constraint: "well-formed",
-			Message:    err.Error(),
-		}}}
+	if status.DepthExceeded {
+		invalid = errors.Join(invalid, fmt.Errorf("%w: %w", ErrInvalidDocument, ErrDocumentTooDeep))
 	}
-
-	rootSchema, found := schema.Elements[validationName(root.Name)]
-	if !found {
-		return &ValidationError{Issues: []ValidationIssue{{
-			Path:       validationPath("", root.Name.Local, 1),
-			Constraint: "root",
-			Message: fmt.Sprintf(
-				"unsupported root element %s",
-				validationDisplayName(root.Name),
-			),
-		}}}
+	if !report.Satisfied() && (!report.InputComplete || !report.AssessmentComplete || report.Terminal != nil) {
+		err = errors.Join(err, &validation.IncompleteError{Reason: "model-xsd-profile-not-satisfied"})
 	}
-
-	context := validationContext{Context: validationKernelContext{Schema: schema,
-		Effective:   make(map[*validationComplexSchema]*validationEffectiveComplex),
-		Identifiers: make(map[string]string)},
-	}
-	context.ValidateElement(
-		root,
-		rootSchema,
-		validationPath("", root.Name.Local, 1),
-	)
-	context.ValidateIdentityReferences()
-	return context.result()
+	return errors.Join(invalid, err)
 }
 
 // Validate checks a partwise score against the MusicXML 4.0 XSD.
