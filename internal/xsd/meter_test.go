@@ -338,3 +338,37 @@ func TestMeterGrammarCancellationAtActualStates(t *testing.T) {
 		})
 	}
 }
+
+func TestMeterIdentityLimitPrecedesEveryIndex(t *testing.T) {
+	for _, binding := range []bool{false, true} {
+		t.Run(fmt.Sprint(binding), func(t *testing.T) {
+			m := &boundaryMeter{identityLimit: 1}
+			r, e := NewRun(testRunSchema(t), m)
+			if e != nil {
+				t.Fatal(e)
+			}
+			defer r.Close()
+			r.current = context.Background()
+			r.context.SeedIdentity("first", "/first", "ID")
+			ref := &TypeRef{Name: QName{Space: XSDNamespace, Local: "ID"}}
+			var stop error
+			func() {
+				defer recoverRun(&stop)
+				if binding {
+					r.context.RecordIdentityBinding(ref, "second", "/second", &Node{})
+				} else {
+					r.context.RecordIdentity(ref, "second", "/second")
+				}
+			}()
+			if !errors.Is(stop, errMeterStop) {
+				t.Fatalf("stop=%v", stop)
+			}
+			if _, exists := r.context.Identifiers["second"]; exists {
+				t.Fatal("declaration mirror retained before identity charge")
+			}
+			if _, exists := r.context.IdentityBindings["second"]; exists {
+				t.Fatal("binding index retained before identity charge")
+			}
+		})
+	}
+}

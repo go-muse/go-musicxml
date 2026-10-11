@@ -77,6 +77,7 @@ func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
 	c.bytes(len(normalized))
 	switch builtin {
 	case "ID":
+		c.SeedIdentity(normalized, path, "ID")
 		if c.Identifiers == nil {
 			c.reserve(64)
 			c.Identifiers = make(map[string]string)
@@ -85,7 +86,6 @@ func (c *Context) RecordIdentity(reference *TypeRef, value, path string) {
 			c.reserve(96)
 			c.Identifiers[normalized] = path
 		}
-		c.SeedIdentity(normalized, path, "ID")
 	case "IDREF":
 		c.identity(1)
 		c.reserve(int64(len(path)))
@@ -132,20 +132,22 @@ func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, 
 	}
 	c.bytes(len(value))
 	bindings := c.IdentityBindings[value]
+	if bindings != nil {
+		if _, seen := bindings.Owners[owner]; seen {
+			return
+		}
+	}
+	c.identity(1)
 	if bindings == nil {
 		c.reserve(c.sum(256, int64(len(path))))
 		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path, firstOrigin: c.origin()}
 		c.IdentityBindings[value] = bindings
-	}
-	if _, seen := bindings.Owners[owner]; seen {
-		return
 	}
 	if len(bindings.Owners) == 1 {
 		c.reserve(int64(len(path)))
 		bindings.SecondPath = path
 		bindings.secondOrigin = c.origin()
 	}
-	c.identity(1)
 	c.reserve(32)
 	bindings.Owners[owner] = struct{}{}
 }
