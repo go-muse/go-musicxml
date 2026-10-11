@@ -11,7 +11,8 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// ValidationError reports XSD validation issues found in a document.
+// ValidationError reports retained normative or model-representation findings.
+// Legacy Validate includes XSD and current-model representation failures.
 // For DecodeAssessed, Issues contains only stored normative failure details,
 // bounded by the assessment diagnostic count and byte budgets. It may be empty
 // if every detail was omitted. The returned operation error explains truncation;
