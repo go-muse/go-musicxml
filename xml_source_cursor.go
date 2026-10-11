@@ -54,8 +54,10 @@ type sourceXMLCursor struct {
 	bom               bool
 	rawOffset         int64
 	position          sourceXMLPosition
-	cached            *sourceXMLUnit
-	rawCached         *sourceXMLUnit
+	cached            sourceXMLUnit
+	hasCached         bool
+	rawCached         sourceXMLUnit
+	hasRawCached      bool
 	rawErr            error
 	closed            bool
 }
@@ -239,9 +241,9 @@ func (c *sourceXMLCursor) encodedByte() (byte, error) {
 	return b, err
 }
 func (c *sourceXMLCursor) rawRune() (sourceXMLUnit, error) {
-	if c.rawCached != nil {
-		u := *c.rawCached
-		c.rawCached = nil
+	if c.hasRawCached {
+		u := c.rawCached
+		c.hasRawCached = false
 		return u, nil
 	}
 	if c.rawErr != nil {
@@ -328,8 +330,8 @@ func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
 	if err := c.ctx.Err(); err != nil {
 		return sourceXMLUnit{}, err
 	}
-	if c.cached != nil {
-		return *c.cached, nil
+	if c.hasCached {
+		return c.cached, nil
 	}
 	if err := c.initialize(); err != nil {
 		return sourceXMLUnit{}, err
@@ -344,7 +346,8 @@ func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
 			if next.Rune == '\n' {
 				u.End.ByteOffset = next.End.ByteOffset
 			} else {
-				c.rawCached = &next
+				c.rawCached = next
+				c.hasRawCached = true
 			}
 		} else {
 			if e != io.EOF {
@@ -360,13 +363,14 @@ func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
 		u.End.Line++
 		u.End.Column = 1
 	}
-	c.cached = &u
+	c.cached = u
+	c.hasCached = true
 	return u, nil
 }
 func (c *sourceXMLCursor) take() (sourceXMLUnit, error) {
 	u, err := c.peek()
 	if err == nil {
-		c.cached = nil
+		c.hasCached = false
 		c.position = u.End
 	}
 	return u, err

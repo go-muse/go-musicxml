@@ -186,3 +186,23 @@ func TestSourceDTDWellFormednessIsNotInvented(t *testing.T) {
 		s.Close()
 	}
 }
+
+func TestSourceCursorAvoidsPerCharacterAllocation(t *testing.T) {
+	input := "<r>" + strings.Repeat("<a>x</a>", 1000) + "</r>"
+	allocations := testing.AllocsPerRun(3, func() {
+		s, err := newSourceXMLTokenReader(strings.NewReader(input), sourceXMLConfig{Context: context.Background()})
+		if err != nil {
+			panic(err)
+		}
+		for err == nil {
+			_, err = s.Token()
+		}
+		if err != io.EOF {
+			panic(err)
+		}
+		s.Close()
+	})
+	if allocations > 12000 {
+		t.Fatalf("source scan allocated %.0f objects; per-character caching must be allocation-free", allocations)
+	}
+}

@@ -369,7 +369,8 @@ func (r *sourceXMLTokenReader) Token() (token xml.Token, err error) {
 			}
 		default:
 			// The first name character is already consumed; preserve its exact unit.
-			r.cursor.cached = &u
+			r.cursor.cached = u
+			r.cursor.hasCached = true
 			r.cursor.position = u.Start
 			token, err = r.start()
 		}
@@ -438,7 +439,8 @@ func (r *sourceXMLTokenReader) reference() (rune, error) {
 		}
 		return rune(value), nil
 	}
-	r.cursor.cached = &u
+	r.cursor.cached = u
+	r.cursor.hasCached = true
 	r.cursor.position = u.Start
 	name, err := r.name()
 	if err != nil {
