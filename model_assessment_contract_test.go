@@ -102,9 +102,11 @@ func TestAssessModelOfficialCorpusAndSourceDTDRemainSeparate(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			model, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelXSD})
-			if err != nil || !model.Satisfied() {
-				t.Fatalf("current XSD corpus: %v %s", err, localFindings(model))
+			for _, profile := range []validation.ProfileID{ProfileModelXSD, ProfileModelLocal} {
+				model, err := AssessModel(context.Background(), doc, AssessmentOptions{Profile: profile})
+				if err != nil || !model.Satisfied() {
+					t.Fatalf("current corpus %s: %v %s", profile, err, localFindings(model))
+				}
 			}
 			source, err := InspectXML(context.Background(), strings.NewReader(string(data)), AssessmentOptions{Profile: ProfileSourceLocal})
 			if err != nil {
