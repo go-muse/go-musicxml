@@ -71,13 +71,13 @@ func TestXMLDocumentWhitespaceLinkedResources(t *testing.T) {
 
 func TestXMLDocumentWhitespaceErrors(t *testing.T) {
 	t.Parallel()
-	for _, test := range []struct{ name, input, decodeError, validationError string }{
-		{"ordinary before", "text<opus/>", "musicxml: unexpected xml.CharData before root element", "unexpected character data before root"},
-		{"ordinary after", "<opus/>text", "musicxml: unexpected xml.CharData after root element", "unexpected xml.CharData after root element"},
-		{"Unicode before", "\u00a0<opus/>", "musicxml: unexpected xml.CharData before root element", "unexpected character data before root"},
-		{"Unicode post declaration", "<?xml version='1.0'?>\u0085<opus/>", "musicxml: unexpected xml.CharData before root element", "unexpected character data before root"},
-		{"Unicode after", "<opus/>\u0085", "musicxml: unexpected xml.CharData after root element", "unexpected xml.CharData after root element"},
-		{"Unicode without root", " \t\u00a0\r\n", "musicxml: unexpected xml.CharData before root element", "unexpected character data before root"},
+	for _, test := range []struct{ name, input string }{
+		{"ordinary before", "text<opus/>"},
+		{"ordinary after", "<opus/>text"},
+		{"Unicode before", "\u00a0<opus/>"},
+		{"Unicode post declaration", "<?xml version='1.0'?>\u0085<opus/>"},
+		{"Unicode after", "<opus/>\u0085"},
+		{"Unicode without root", " \t\u00a0\r\n"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			_, err := Decode(strings.NewReader(test.input))
@@ -86,7 +86,8 @@ func TestXMLDocumentWhitespaceErrors(t *testing.T) {
 			assert.Contains(t, syntaxError.Msg, "character data outside the root element")
 			assert.NotErrorIs(t, err, ErrEmptyDocument)
 			_, err = parseValidationDocument([]byte(test.input))
-			assert.EqualError(t, err, test.validationError)
+			require.ErrorAs(t, err, &syntaxError)
+			assert.Contains(t, syntaxError.Msg, "character data outside the root element")
 			assert.NotErrorIs(t, err, ErrEmptyDocument)
 		})
 	}
