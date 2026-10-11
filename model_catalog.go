@@ -1,6 +1,7 @@
 package musicxml
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -42,7 +43,7 @@ func buildModelAssessmentEngine() (*validation.Engine, error) {
 	modelLocal := validation.Profile{
 		ID: ProfileModelLocal, MusicXMLVersion: "4.0", Target: validation.TargetModel,
 		RegistryCommit: assessmentRegistryCommit, SupportedRoots: append([]validation.QName(nil), modelXSD.SupportedRoots...),
-		NormativeClosure: modelXSD.NormativeClosure + " Additionally includes only the exact local musical and typed same-part reference clauses bound in this catalog. Instrument-link is local-only. Date restrictions and MIDI instrument existence reuse shared predicates. Excluded clauses include timeline/effective state, broader context/intent, repeats/spans, time-only ordering, linked resources, packages, external dictionaries and all remaining normative translations. Score-only clauses are inapplicable to opus, not claims about linked opus content.",
+		NormativeClosure: strings.Replace(modelXSD.NormativeClosure, "MusicXML prose,", "unselected MusicXML prose,", 1) + " Additionally includes only the exact local musical and typed same-part reference clauses bound in this catalog. Instrument-link is local-only. Date restrictions and MIDI instrument existence reuse shared predicates. Excluded clauses include timeline/effective state, broader context/intent, repeats/spans, time-only ordering, linked resources, packages, external dictionaries and all remaining normative translations. Score-only clauses are inapplicable to opus, not claims about linked opus content.",
 	}
 	sourceLocal := validation.Profile{
 		ID: ProfileSourceLocal, MusicXMLVersion: "4.0", Target: validation.TargetSource,

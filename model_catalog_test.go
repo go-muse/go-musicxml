@@ -54,6 +54,9 @@ func TestBoundedCatalogExactProfilesAndSharedRules(t *testing.T) {
 			}
 		}
 	}
+	if strings.Contains(model.NormativeClosure, "spellings, MusicXML prose,") || !strings.Contains(model.NormativeClosure, "unselected MusicXML prose") {
+		t.Fatal("local profile contradicts its selected prose scope")
+	}
 	if !strings.Contains(source.NormativeClosure, "unread external subsets") || !strings.Contains(model.NormativeClosure, "local-only") {
 		t.Fatal("bounded profile limitations omitted")
 	}
