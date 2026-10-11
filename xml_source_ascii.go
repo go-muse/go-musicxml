@@ -46,12 +46,7 @@ func (c *sourceXMLCursor) consumeASCII(data []byte) {
 	c.rawOffset += int64(len(data))
 	c.position.ByteOffset = c.rawOffset
 	for _, b := range data {
-		if b == '\n' {
-			c.position.Line++
-			c.position.Column = 1
-		} else {
-			c.position.Column++
-		}
+		c.position.advanceCoordinates(rune(b))
 	}
 }
 

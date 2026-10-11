@@ -15,10 +15,34 @@ import (
 
 // The cursor's positions describe original bytes, including any encoding
 // signature. Columns count decoded source characters; CRLF is one line break.
+// If either coordinate exceeds the host int range, both are omitted (0/0)
+// for the remaining input. Original-byte offsets remain independent and exact.
 type sourceXMLPosition struct {
 	ByteOffset   int64
 	Line, Column int
 }
+
+// advanceCoordinates consumes one normalized source character. Omission is
+// permanent: a later newline must not manufacture a partial coordinate after
+// either counter has overflowed. Byte offsets are maintained by the cursor.
+func (p *sourceXMLPosition) advanceCoordinates(r rune) {
+	if p.Line == 0 {
+		return
+	}
+	const maximum = int(^uint(0) >> 1)
+	if r == '\n' {
+		if p.Line < maximum {
+			p.Line++
+			p.Column = 1
+			return
+		}
+	} else if p.Column < maximum {
+		p.Column++
+		return
+	}
+	p.Line, p.Column = 0, 0
+}
+
 type sourceXMLSpan struct{ Start, End sourceXMLPosition }
 type sourceXMLUnit struct {
 	Rune       rune
@@ -359,7 +383,7 @@ func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
 		if padding == 0 && value >= 32 && value < 128 {
 			end := c.position
 			end.ByteOffset += 2
-			end.Column++
+			end.advanceCoordinates(rune(value))
 			c.cached = sourceXMLUnit{Rune: rune(value), Start: c.position, End: end}
 			c.hasCached = true
 			c.at += 2
@@ -392,11 +416,8 @@ func (c *sourceXMLCursor) peek() (sourceXMLUnit, error) {
 		u.Rune = '\n'
 	}
 	u.Start.Line, u.Start.Column = c.position.Line, c.position.Column
-	u.End.Line, u.End.Column = c.position.Line, c.position.Column+1
-	if u.Rune == '\n' {
-		u.End.Line++
-		u.End.Column = 1
-	}
+	u.End.Line, u.End.Column = c.position.Line, c.position.Column
+	u.End.advanceCoordinates(u.Rune)
 	c.cached = u
 	c.hasCached = true
 	return u, nil
