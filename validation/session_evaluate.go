@@ -21,6 +21,16 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 		return err
 	}
 	selected := selectorDecision(r.Selector, n.header)
+	if r.Selector.Assembly != nil {
+		selected = Decision{Outcome: OutcomeUnsupported, Reason: "schema-binding-unavailable"}
+		if s.schema != nil && s.schema.active != nil {
+			selected = Decision{Outcome: OutcomeNotApplicable, Reason: "schema-assembly-mismatch"}
+			if *r.Selector.Assembly == s.schema.active.assembly {
+				selected.Outcome, selected.Reason = OutcomePass, ""
+			}
+		}
+	}
+
 	selected.Rule = key
 	selected.Subject = NodeRef{DocumentID: s.documentID, Node: n.header.ID}
 	p, hasPlan := s.catalog.plans[r.Predicate]
@@ -77,6 +87,9 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 			}
 		}
 		return s.record(r, n, dependency)
+	}
+	if p.kind == planXSD {
+		return s.evaluateXSD(ctx, n, r, p, final)
 	}
 	decision, pending, err := s.evaluatePlan(ctx, n, r, p, final)
 	if err != nil {
@@ -162,6 +175,11 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	if err := s.accumulator.record(r, d, n.header.Location); err != nil {
 		return err
 	}
+	return s.cacheDecision(r, n, d)
+}
+
+func (s *Session) cacheDecision(r RuleDefinition, n *factNode, d Decision) error {
+	id := decisionID{r.Key, n.header.ID}
 	if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
 		results := s.successful[r.Key]
 		bytes := int64(32) // NodeID, outcome byte and conservative map allowance.

@@ -23,6 +23,7 @@ type PlanBinding struct {
 // A catalog makes only its profiles' explicit claims; no MusicXML profile is
 // implicitly supplied by this package.
 type CompiledCatalog struct {
+	schemas  map[ProfileID]map[Assembly]*CompiledSchema
 	rules    map[RuleKey]RuleDefinition
 	profiles map[ProfileID]Profile
 	plans    map[string]Plan
@@ -82,6 +83,7 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 		return nil, err
 	}
 	c := &CompiledCatalog{
+		schemas:  make(map[ProfileID]map[Assembly]*CompiledSchema, len(profiles)),
 		rules:    make(map[RuleKey]RuleDefinition, len(rules)),
 		profiles: make(map[ProfileID]Profile, len(profiles)),
 		plans:    make(map[string]Plan, len(plans)),
@@ -89,7 +91,16 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 		phases:   make(map[ProfileID][]catalogPhase, len(profiles)),
 		supports: make(map[ProfileID]map[RuleKey]RuleSupport, len(profiles)),
 	}
+	internedSchemas := make(map[string]*CompiledSchema)
 	for _, binding := range plans {
+		if binding.Plan.kind == planXSD {
+			key := string(binding.Plan.schema.assembly) + ":" + binding.Plan.schema.Digest()
+			if existing := internedSchemas[key]; existing != nil {
+				binding.Plan.schema = existing
+			} else {
+				internedSchemas[key] = binding.Plan.schema
+			}
+		}
 		if !catalogID(binding.ID) {
 			return nil, contract("plan ID", "missing or malformed identity")
 		}
@@ -165,6 +176,38 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 					return nil, fmt.Errorf("catalog rule %q revision %d: %w", key.ID, key.Revision, err)
 				}
 			}
+		}
+		schemas := make(map[Assembly]*CompiledSchema)
+		for key := range closure {
+			rule := c.rules[key]
+			plan, found := c.plans[rule.Predicate]
+			if !found || plan.kind != planXSD {
+				continue
+			}
+			if err := plan.validateFor(rule); err != nil {
+				return nil, err
+			}
+			if profile.Target != TargetSource {
+				return nil, contract("schema profile", "only source target is implemented")
+			}
+			if previous := schemas[plan.schema.assembly]; previous != nil && previous.Digest() != plan.schema.Digest() {
+				return nil, contract("schema profile", "conflicting schemas in one assembly")
+			}
+			schemas[plan.schema.assembly] = plan.schema
+		}
+		if len(schemas) != 0 {
+			for _, name := range profile.SupportedRoots {
+				matches := 0
+				for _, schema := range schemas {
+					if _, ok := schema.Root(name); ok {
+						matches++
+					}
+				}
+				if matches != 1 {
+					return nil, contract("schema profile roots", "each root must identify exactly one selected assembly")
+				}
+			}
+			c.schemas[profile.ID] = schemas
 		}
 		phases, err := catalogProfileOrder(c, closure, &scheduleBudget)
 		if err != nil {
@@ -320,8 +363,21 @@ func catalogValidateRule(r RuleDefinition) error {
 		}
 		targets[target] = true
 	}
-	if (r.Selector.Component == nil) == (r.Selector.Declaration == nil) {
+	branches := 0
+	if r.Selector.Component != nil {
+		branches++
+	}
+	if r.Selector.Declaration != nil {
+		branches++
+	}
+	if r.Selector.Assembly != nil {
+		branches++
+	}
+	if branches != 1 {
 		return contract("rule selector", "exactly one branch required")
+	}
+	if r.Selector.Assembly != nil && !validAssembly(*r.Selector.Assembly) {
+		return contract("rule selector", "invalid schema assembly")
 	}
 	if r.Selector.Component != nil && !catalogComponent(*r.Selector.Component) {
 		return contract("rule selector", "invalid component identity")
@@ -731,6 +787,9 @@ func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []Plan
 		for _, target := range r.Targets {
 			b.identity(string(target))
 		}
+		if a := r.Selector.Assembly; a != nil {
+			b.identity(string(*a))
+		}
 		if d := r.Selector.Declaration; d != nil {
 			b.declaration(*d)
 		}
@@ -804,6 +863,7 @@ func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []Plan
 			b.name(root)
 		}
 	}
+	seenSchemas := make(map[string]bool)
 	for _, binding := range plans {
 		if !b.ok() {
 			break
@@ -811,6 +871,16 @@ func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []Plan
 		b.identity(binding.ID)
 		if err := binding.Plan.valid(); err != nil {
 			return err
+		}
+		if binding.Plan.kind == planXSD {
+			key := string(binding.Plan.schema.assembly) + ":" + binding.Plan.schema.Digest()
+			if !seenSchemas[key] {
+				b.take(binding.Plan.schema.kernel.LogicalBytes())
+				if !b.ok() {
+					break
+				}
+				seenSchemas[key] = true
+			}
 		}
 		b.take(binding.Plan.configSize())
 	}

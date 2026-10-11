@@ -30,6 +30,7 @@ type AttributeSelector struct {
 type planKind string
 
 const (
+	planXSD               planKind = "xsd-composite"
 	planChildren          planKind = "child-count"
 	planAttribute         planKind = "attribute-presence"
 	planAtomic            planKind = "atomic-comparison"
@@ -43,6 +44,8 @@ const (
 // Plan is an immutable sealed typed program. Its zero value is invalid; use a
 // constructor. Plans contain no callback, XML parser, runtime expression or DSL.
 type Plan struct {
+	schema           *CompiledSchema
+	xsdCheck         XSDCheck
 	kind             planKind
 	children         []DeclarationID
 	minimum, maximum int64
@@ -129,6 +132,10 @@ func (p Plan) valid() error {
 		return contract("plan", "parameters exceed the finite configuration bound")
 	}
 	switch p.kind {
+	case planXSD:
+		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) {
+			return contract("XSD plan", "compiled schema and supported operation required")
+		}
 	case planChildren:
 		if len(p.children) == 0 || len(p.children) > 4096 || p.minimum < 0 || p.maximum < -1 || (p.maximum >= 0 && p.maximum < p.minimum) {
 			return contract("child-count plan", "invalid declarations or bounds")
@@ -210,6 +217,21 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
+	if p.kind == planXSD {
+		if r.Selector.Assembly == nil || p.schema == nil || *r.Selector.Assembly != p.schema.assembly || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate {
+			return contract("XSD plan", "matching assembly selector and required normative predicate role required")
+		}
+		for _, target := range r.Targets {
+			if target != TargetSource {
+				return contract("XSD plan", "only source evidence is implemented")
+			}
+		}
+		if (p.xsdCheck == XSDCheckIdentity) != (r.Scope == ScopeDocument) {
+			return contract("XSD plan", "identity requires document scope; other operations require node scope")
+		}
+	} else if r.Selector.Assembly != nil {
+		return contract("plan selector", "assembly selection is reserved for XSD plans")
+	}
 	if err := p.valid(); err != nil {
 		return err
 	}
@@ -232,6 +254,14 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	return nil
 }
 func (p Plan) digestValue() any {
+	if p.kind == planXSD {
+		return struct {
+			Kind           planKind
+			SchemaDigest   string
+			SchemaAssembly Assembly
+			Check          XSDCheck
+		}{p.kind, p.schema.Digest(), p.schema.Assembly(), p.xsdCheck}
+	}
 	type atomicDigest struct {
 		Kind AtomicKind
 		Text string

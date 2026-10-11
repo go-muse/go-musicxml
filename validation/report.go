@@ -480,6 +480,10 @@ func (s *reportStorageSize) rule(rule RuleDefinition) {
 		s.add(16)
 		s.text(string(target))
 	}
+	if v := rule.Selector.Assembly; v != nil {
+		s.add(16)
+		s.text(string(*v))
+	}
 	if v := rule.Selector.Component; v != nil {
 		s.add(80)
 		s.text(string(v.Assembly), v.Name.Space, v.Name.Local, string(v.Kind), v.Occurrence)
