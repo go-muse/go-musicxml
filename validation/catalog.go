@@ -187,8 +187,8 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			if err := plan.validateFor(rule); err != nil {
 				return nil, err
 			}
-			if profile.Target != TargetSource {
-				return nil, contract("schema profile", "only source target is implemented")
+			if profile.Target != TargetSource && profile.Target != TargetModel {
+				return nil, contract("schema profile", "only source or model targets are implemented")
 			}
 			if previous := schemas[plan.schema.assembly]; previous != nil && previous.Digest() != plan.schema.Digest() {
 				return nil, contract("schema profile", "conflicting schemas in one assembly")

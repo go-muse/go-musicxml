@@ -75,12 +75,13 @@ func (e *UnsupportedRootError) Error() string {
 func (e *UnsupportedRootError) Unwrap() error { return ErrIncompleteAssessment }
 
 type factNode struct {
-	header        NodeHeader
-	end           NodeEnd
-	closed        bool
-	children      []*factNode
-	attributes    []AttributeFact
-	attributeSeal *Evidence[bool]
+	modelRepresentation *ModelRepresentationFact
+	header              NodeHeader
+	end                 NodeEnd
+	closed              bool
+	children            []*factNode
+	attributes          []AttributeFact
+	attributeSeal       *Evidence[bool]
 }
 type decisionID struct {
 	rule RuleKey
@@ -285,6 +286,9 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 	if err := s.event(ctx, "Open"); err != nil {
 		return err
 	}
+	if len(s.stack) != 0 && s.stack[len(s.stack)-1].modelRepresentation != nil {
+		return s.fail(&SessionError{Operation: "Open", Reason: "child after model representation seal"})
+	}
 	if len(node.Bindings) > 65536 {
 		return s.fail(contract("bindings", "too many bindings"))
 	}
@@ -354,7 +358,7 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 		return s.fail(&SessionError{Operation: "Attribute", Reason: "no open owner"})
 	}
 	n := s.stack[len(s.stack)-1]
-	if attribute.Owner != n.header.ID || len(n.children) > 0 || n.attributeSeal != nil {
+	if attribute.Owner != n.header.ID || len(n.children) > 0 || n.attributeSeal != nil || n.modelRepresentation != nil {
 		return s.fail(&SessionError{Operation: "Attribute", Reason: "wrong owner or attribute after children"})
 	}
 	if err := s.account.Charge(BudgetAttributes, 1); err != nil {
@@ -394,7 +398,7 @@ func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Ev
 		return s.fail(&SessionError{Operation: "CompleteAttributes", Reason: "no open owner"})
 	}
 	n := s.stack[len(s.stack)-1]
-	if n.header.ID != id || len(n.children) != 0 || n.attributeSeal != nil {
+	if n.header.ID != id || len(n.children) != 0 || n.attributeSeal != nil || n.modelRepresentation != nil {
 		return s.fail(&SessionError{Operation: "CompleteAttributes", Reason: "wrong owner, repeated closure, or children already started"})
 	}
 	if err := validateEvidence(complete, "attribute completeness"); err != nil {
@@ -427,6 +431,9 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 	if err := validateEnd(end, s.profile.Target); err != nil {
 		return s.fail(&SessionError{Operation: "Close", Reason: "invalid closure facts", Cause: err})
 	}
+	if err := s.validateModelRepresentationEnd(ctx, n, end); err != nil {
+		return s.fail(err)
+	}
 	if end.ChildrenComplete.State != EvidenceKnown || !end.ChildrenComplete.Value {
 		s.enumerationIncomplete = true
 		for name := range s.identities {
@@ -443,6 +450,16 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 		return s.fail(err)
 	}
 	s.depth--
+	// Model evidence establishes its real verdict before schema binding can
+	// consume affected scalar/attribute/order facts or cache dependent results.
+	for _, key := range s.catalog.orders[s.profile.ID] {
+		rule := s.catalog.rules[key]
+		if s.catalog.plans[rule.Predicate].kind == planModelRepresentation {
+			if err := s.evaluate(ctx, n, key, false); err != nil {
+				return s.fail(err)
+			}
+		}
+	}
 	if s.schema != nil && !s.schema.bound {
 		if n != s.root {
 			return nil

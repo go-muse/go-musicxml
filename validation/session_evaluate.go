@@ -20,8 +20,11 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
+	p, hasPlan := s.catalog.plans[r.Predicate]
 	selected := selectorDecision(r.Selector, n.header)
-	if r.Selector.Assembly != nil {
+	if r.Selector.Assembly != nil && p.kind == planModelRepresentation {
+		selected = s.modelAssemblyDecision(*r.Selector.Assembly)
+	} else if r.Selector.Assembly != nil {
 		selected = Decision{Outcome: OutcomeUnsupported, Reason: "schema-binding-unavailable"}
 		if s.schema != nil && s.schema.active != nil {
 			selected = Decision{Outcome: OutcomeNotApplicable, Reason: "schema-assembly-mismatch"}
@@ -33,7 +36,6 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 
 	selected.Rule = key
 	selected.Subject = NodeRef{DocumentID: s.documentID, Node: n.header.ID}
-	p, hasPlan := s.catalog.plans[r.Predicate]
 	if selected.Outcome != OutcomePass {
 		if hasPlan && p.kind == planIdentityDeclare && selected.Outcome != OutcomeNotApplicable {
 			s.markIdentityIncomplete(p.key)
@@ -87,6 +89,9 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 			}
 		}
 		return s.record(r, n, dependency)
+	}
+	if p.kind == planModelRepresentation {
+		return s.evaluateModelRepresentation(ctx, n, r)
 	}
 	if p.kind == planXSD {
 		return s.evaluateXSD(ctx, n, r, p, final)
