@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -53,11 +54,13 @@ func (e *ValidationError) Unwrap() error {
 // Genuine XSD and model-representation failures preserve ErrInvalidDocument and
 // ValidationError. A reached unsupported capability or resource interruption is
 // incomplete, not proof of invalidity. The legacy maximum depth is 4096 and its
-// cycle/depth sentinels remain recognizable. Use AssessModel for separate result
-// axes, explicit profiles and configurable finite budgets.
+// cycle/depth sentinels remain recognizable. Other assessment default quotas do
+// not apply to this compatibility facade; memory and work grow with the model.
+// Use AssessModel for untrusted models, separate result axes, explicit profiles
+// and configurable finite budgets.
 func Validate(document Document) error {
 	report, status, err := assessModel(context.Background(), document,
-		AssessmentOptions{Profile: ProfileModelXSD, Budgets: validation.Budgets{MaxDepth: maximumDocumentDepth}},
+		AssessmentOptions{Profile: ProfileModelXSD, Budgets: legacyValidationBudgets()},
 		modelWalkOptions{LegacyPaths: true})
 	if !report.Requested {
 		return err
@@ -88,6 +91,21 @@ func Validate(document Document) error {
 		err = errors.Join(err, &validation.IncompleteError{Reason: "model-xsd-profile-not-satisfied"})
 	}
 	return errors.Join(invalid, err)
+}
+
+// The compatibility facade predates assessment quotas. Do not silently impose
+// the bounded API's default document, scalar, work or diagnostic ceilings here.
+// MaxInt64 keeps the shared account's overflow checks and host allocation guards
+// active; it is not a throughput or available-memory guarantee. New code that
+// handles untrusted models should select explicit AssessModel budgets instead.
+func legacyValidationBudgets() validation.Budgets {
+	return validation.Budgets{
+		MaxInputBytes: math.MaxInt64, MaxExternalBytes: math.MaxInt64, MaxBufferedBytes: math.MaxInt64,
+		MaxDepth: maximumDocumentDepth, MaxNodes: math.MaxInt64, MaxAttributes: math.MaxInt64,
+		MaxEvents: math.MaxInt64, MaxScalarBytes: math.MaxInt64, MaxIDs: math.MaxInt64,
+		MaxRuleSteps: math.MaxInt64, MaxContextFacts: math.MaxInt64, MaxLinkedDocuments: math.MaxInt64,
+		MaxDiagnostics: math.MaxInt64, MaxDiagnosticBytes: math.MaxInt64,
+	}
 }
 
 // Validate checks a partwise score against the MusicXML 4.0 XSD.
