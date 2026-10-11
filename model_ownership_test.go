@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"encoding/json"
+	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -57,11 +58,10 @@ func TestModelAssessmentRemainingPerformanceOwner(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, remaining, ok := strings.Cut(string(data), "## Remaining program\n")
+	remaining, ok := modelRemainingProgramSection(data)
 	if !ok {
 		t.Fatal("missing distinct remaining-program section")
 	}
-	remaining = strings.Join(strings.Fields(remaining), " ")
 	for _, required := range []string{
 		"B5-PERF-01", "shared validation kernel/session", "batch 9",
 		"outstanding", "Run.Bind", "child witnesses", "recordXSDResult",
@@ -72,6 +72,23 @@ func TestModelAssessmentRemainingPerformanceOwner(t *testing.T) {
 		if !strings.Contains(remaining, required) {
 			t.Errorf("remaining performance obligation lost %q", required)
 		}
+	}
+}
+
+func modelRemainingProgramSection(data []byte) (string, bool) {
+	_, remaining, ok := strings.Cut(string(data), "## Remaining program\n")
+	return strings.Join(strings.Fields(remaining), " "), ok
+}
+
+func TestModelRemainingProgramSectionLineEndings(t *testing.T) {
+	for _, newline := range []string{"\n", "\r\n"} {
+		t.Run(fmt.Sprintf("newline-%q", newline), func(t *testing.T) {
+			input := strings.Join([]string{"Historical acceptance", "", "## Remaining program", "", "Owned obligation", ""}, newline)
+			got, ok := modelRemainingProgramSection([]byte(input))
+			if !ok || got != "Owned obligation" {
+				t.Fatalf("section = %q, found=%v", got, ok)
+			}
+		})
 	}
 }
 
