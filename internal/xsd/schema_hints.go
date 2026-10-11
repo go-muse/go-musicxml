@@ -14,6 +14,10 @@ func (c *Context) ValidateSchemaLocationHints(node *Node, path string) {
 		if NamespaceDeclaration(attribute) || attribute.Name.Space != XSINamespace {
 			continue
 		}
+		if c.local != nil && !attribute.ValueKnown && (attribute.Name.Local == "schemaLocation" || attribute.Name.Local == "noNamespaceSchemaLocation") {
+			c.capability("declaration", "schema-hint-value-unavailable")
+			continue
+		}
 		switch attribute.Name.Local {
 		case "schemaLocation":
 			// The shared list helper collapses exactly XML's four whitespace

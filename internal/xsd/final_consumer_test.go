@@ -88,3 +88,44 @@ func TestRunUnknownChildrenKeepFixedFailureWithoutClosure(t *testing.T) {
 		t.Fatalf("fixed known failure/unknown child absence conflated: %+v", v)
 	}
 }
+
+func TestRunIncompleteAttributesDoNotInventXSIControlledFacts(t *testing.T) {
+	value := "7"
+	r, u := textRun(t, &ElementSchema{Name: QName{Local: "n"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "integer"}}, Default: &value, Nillable: true}, &testMeter{})
+	b, err := r.Bind(context.Background(), u, Subject{ID: 1, Name: QName{Local: "n"}, TextKnown: true, ChildrenComplete: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	results := r.Results(b)
+	for _, result := range []Result{results.Binding, results.Declaration, results.Attributes, results.Scalar, results.Content} {
+		if result.Complete || !result.Valid {
+			t.Errorf("unknown attributes fabricated assessment: %+v", result)
+		}
+	}
+	if _, known := r.ActualType(b); known || r.Scalar(b).Known || r.Scalar(b).Defaulted {
+		t.Fatalf("hidden xsi:type/nil invented scalar: %+v", r.Scalar(b))
+	}
+}
+func TestRunIncompleteAttributesDoNotProveDeclaredAttributeProhibition(t *testing.T) {
+	r, u := textRun(t, &ElementSchema{Name: QName{Local: "n"}, Type: TypeRef{InlineComplex: &ComplexSchema{Form: ComplexDirect}}}, &testMeter{})
+	b, err := r.Bind(context.Background(), u, Subject{ID: 1, Name: QName{Local: "n"}, TextKnown: true, ChildrenComplete: true, Attributes: []Attribute{{Attr: Attr{Name: QName{Local: "extension"}, Value: "x"}, ValueKnown: true}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v := r.Results(b).Attributes; !v.Valid || v.Complete {
+		t.Fatalf("hidden derived xsi:type could permit attribute: %+v", v)
+	}
+}
+func TestRunUnknownSchemaHintValueIsIncomplete(t *testing.T) {
+	r, u := textRun(t, &ElementSchema{Name: QName{Local: "n"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "string"}}}, &testMeter{})
+	b, err := r.Bind(context.Background(), u, Subject{ID: 1, Name: QName{Local: "n"}, TextKnown: true, ChildrenComplete: true, AttributesComplete: true, Attributes: []Attribute{{Attr: Attr{Name: QName{Space: XSINamespace, Local: "schemaLocation"}, Value: "http://%invalid"}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v := r.Results(b).Declaration; !v.Valid || v.Complete {
+		t.Fatalf("unknown hint used lexical payload as evidence: %+v", v)
+	}
+	if !r.Results(b).Binding.Complete || !r.Scalar(b).Known {
+		t.Fatal("independent known type/scalar lost")
+	}
+}

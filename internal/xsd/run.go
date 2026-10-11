@@ -338,6 +338,15 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		s.limit("content", "scalar-lexeme-unavailable", nil)
 		r.context.IdentityIncomplete = true
 	}
+	if !subject.AttributesComplete {
+		// An omitted xsi:type or xsi:nil can change all dependent local
+		// contracts. The declared fallback is not an established actual type
+		// until absence of these controls is evidence, not an assumption.
+		for _, family := range []string{"binding", "declaration", "scalar", "content"} {
+			s.limit(family, "schema-instance-enumeration-unavailable", nil)
+		}
+		return bound, nil
+	}
 	for _, a := range subject.Attributes {
 		r.step(1)
 		if !a.NamespaceDeclaration && a.Name.Space == XSINamespace && !a.ValueKnown && (a.Name.Local == "type" || a.Name.Local == "nil") {
