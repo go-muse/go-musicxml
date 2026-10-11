@@ -295,7 +295,9 @@ closure. The [source assessment scope](docs/validation/source-assessment-scope.m
 defines exact support, ownership, verification and remaining obligations.
 
 Positions use zero-based original-byte offsets, including BOMs, and one-based
-decoded-character lines/columns. CRLF is one line break. Physical attribute
+decoded-character lines/columns. CRLF is one line break. If either coordinate
+exceeds the host integer range, both are omitted as `0/0` for the rest of the
+source; original-byte offsets remain available. Physical attribute
 positions survive skipped content and foreign namespace lookalikes. Overlong
 display paths are omitted while occurrence identity/positions remain available.
 Fact identity ceilings (1024 UTF-8 bytes per local name/prefix, 4096 per namespace

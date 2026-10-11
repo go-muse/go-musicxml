@@ -76,6 +76,8 @@ func (e *ConversionError) Unwrap() error {
 //
 // Positions use original, zero-based byte offsets including any BOM, with
 // one-based decoded-character line/column coordinates. CRLF is one line break.
+// If either coordinate exceeds the host integer range, both are omitted as 0/0
+// for the rest of the source; original-byte offsets remain available.
 // Overlong display paths are omitted without dropping occurrence IDs/positions.
 // Context is checked during parsing and evaluation; it cannot interrupt a Read
 // blocked inside an arbitrary reader, which must provide its own cancellation.
