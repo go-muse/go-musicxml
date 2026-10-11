@@ -420,9 +420,9 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 		addCause(ctx.Err())
 	}
 	addCause(end.Cause)
-	if err := s.validateCompletion(end); err != nil {
-		addCause(err)
-	}
+	completionErr := s.validateCompletion(end)
+	addCause(completionErr)
+	malformedSource := completionErr == nil && s.profile.Target == TargetSource && end.Syntax == SyntaxMalformed && end.Cause != nil
 	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && reportSyntaxComplete(s.profile.Target, end.Syntax)
 	if s.terminalCause == nil {
 		for _, phase := range s.catalog.phases[s.profile.ID] {
@@ -451,11 +451,8 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 		s.accumulator.incomplete()
 	}
 	if s.terminalCause != nil {
-		category := terminalCategory(s.terminalCause)
-		if end.Syntax == SyntaxMalformed && category != CategoryResource {
-			category = CategorySyntax
-		}
-		s.accumulator.terminal(s.terminalCause, category, "assessment-interrupted")
+		category, reason := terminalClassification(s.terminalCause, malformedSource)
+		s.accumulator.terminal(s.terminalCause, category, reason)
 	}
 	report := s.accumulator.finish(s.inputComplete, end.Syntax)
 	if s.terminalCause != nil {
@@ -483,15 +480,31 @@ func (s *Session) validateCompletion(end Completion) error {
 	return nil
 }
 
-func terminalCategory(err error) DiagnosticCategory {
-	if errors.Is(err, ErrResourceLimit) {
-		return CategoryResource
+// Classify independently of error wrapping order. Resource interruption dominates
+// malformed syntax; lifecycle wrappers dominate their invalid-argument causes.
+// The report is a bounded summary; Finish retains the entire actual error chain.
+func terminalClassification(err error, malformedSource bool) (DiagnosticCategory, Code) {
+	switch {
+	case errors.Is(err, ErrResourceLimit):
+		return CategoryResource, "resource-limit"
+	case errors.Is(err, context.Canceled):
+		return CategoryResource, "canceled"
+	case errors.Is(err, context.DeadlineExceeded):
+		return CategoryResource, "deadline-exceeded"
+	case malformedSource:
+		return CategorySyntax, "malformed-source"
 	}
 	var root *UnsupportedRootError
 	if errors.As(err, &root) {
-		return CategoryCapability
+		return CategoryCapability, "unsupported-root"
 	}
-	return CategoryPolicy
+	if errors.Is(err, ErrInvalidSession) {
+		return CategoryCapability, "invalid-session"
+	}
+	if errors.Is(err, ErrInvalidConfiguration) {
+		return CategoryCapability, "invalid-configuration"
+	}
+	return CategoryCapability, "assessment-interrupted"
 }
 func (s *Session) cleanup() {
 	if s.depth > 0 {
