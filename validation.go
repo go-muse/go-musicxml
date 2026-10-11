@@ -316,13 +316,14 @@ type validationContext struct {
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
 	// when enumeration literals need immutable lexical and value views.
-	simpleSemantics   map[*validationSimpleSchema]*validationSimpleSemantics
-	enumerationValues map[validationEnumerationKey]validationEnumerationValue
-	identifiers       map[string]string
-	references        []validationIdentityReference
-	identityEntries   []validationIdentityEntry
-	identityEntrySeen map[string]bool
-	identityBindings  map[string]*validationIdentityBindings
+	simpleSemantics    map[*validationSimpleSchema]*validationSimpleSemantics
+	enumerationValues  map[validationEnumerationKey]validationEnumerationValue
+	identifiers        map[string]string
+	references         []validationIdentityReference
+	identityEntries    []validationIdentityEntry
+	identityEntrySeen  map[string]bool
+	identityIncomplete bool
+	identityBindings   map[string]*validationIdentityBindings
 }
 
 type validationIdentityReference struct {
@@ -626,6 +627,7 @@ func (c *validationContext) validateElementOwned(node *validationNode, schema *v
 			c.addIssue(path, "fixed", "nil element must not have a fixed value constraint")
 		}
 		if len(node.Children) != 0 || node.Text.Len() != 0 {
+			c.skipIdentityChildren(node)
 			declarationValid = false
 			c.addIssue(path, "nillable", "nil element must not contain character data or child elements")
 		}
@@ -738,6 +740,7 @@ func (c *validationContext) validateType(
 			return true
 		}
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				path,
 				"simple-content",
@@ -762,6 +765,7 @@ func (c *validationContext) validateType(
 			return true
 		}
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				path,
 				"simple-content",
@@ -825,7 +829,6 @@ func (c *validationContext) validateComplex(
 ) bool {
 	if schema.Abstract {
 		c.addIssue(path, "abstract", "abstract type cannot be used")
-		return false
 	}
 	effective, ok := c.effectiveComplex(schema)
 	if !ok {
@@ -839,12 +842,19 @@ func (c *validationContext) validateComplex(
 		effective.anyAttribute,
 		path,
 	)
+	if schema.Abstract {
+		// Attribute declarations are independently assessable even when their
+		// owner's actual type is abstract. Content recovery remains separate.
+		c.skipIdentityChildren(node)
+		return false
+	}
 	if nilled {
 		return attributesValid
 	}
 
 	if effective.simple != nil {
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				path,
 				"simple-content",
@@ -873,6 +883,7 @@ func (c *validationContext) validateComplex(
 
 	if effective.particle == nil {
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				validationChildPath(path, node.Children[0], 1),
 				"content-model",
@@ -891,6 +902,7 @@ func (c *validationContext) validateComplex(
 		0,
 	)
 	if !matched || result.next != len(node.Children) {
+		c.skipIdentityChildren(node)
 		if !matched {
 			c.addContentIssue(node, path, failure)
 			return false

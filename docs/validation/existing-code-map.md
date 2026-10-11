@@ -1226,17 +1226,21 @@ as positive backtracking evidence.
 
 Generic wildcard namespace/processContents behavior remains unverified and
 unchanged: the legacy wildcard consumes any child without declaration
-assessment. The pinned production schemas have no element wildcards or all
-groups, while the synthetic fixture now proves the supported XSD 1.0 all
-subset. A parent content-model failure still prevents matched-child assessment;
-identity completeness and causal resolution remain separate work.
+assessment; identity closure through accepted opaque anyType or wildcard
+paths is likewise unverified. The pinned production schemas have no element
+wildcards or all groups, while the synthetic fixture now proves the supported XSD 1.0 all
+subset. A parent content-model failure still prevents matched-child assessment.
+The later identity prerequisite records skipped-child incompleteness to suppress
+unproved empty-binding conclusions; partial-child recovery and causal resolution
+remain separate work.
 
 This is a bounded `REQ-DEF-OPS-GRAMMAR` prerequisite, not completion of
 `STAGE-DEF-04`, `REQ-DEF-BUDGET-MATCH`, or source/model adapter integration.
 `MaxRuleSteps`, cancellation, finite resource defaults, typed incomplete results
 and legacy error bridging remain reviewed budget/report dependencies. Optional
 private operation counters used by regression tests do not implement those
-contracts. Generic or typed ID/default behavior is unchanged.
+contracts. This grammar algorithm alone did not change identity/default behavior;
+the later identity prerequisite supplies its separately tested fact gates.
 
 ## Reuse and adaptation
 

@@ -40,7 +40,7 @@ func validationIdentityCases() []validationSourceCase {
 	add("invalid lexical candidate", "root", "", `<item><target i:type="xs:ID">two words</target></item><ref>target</ref>`, true, "/root/item/target:datatype", "/root/ref:IDREF")
 	add("invalid facet candidate", "root", "", `<item><target i:type="RestrictedID">target</target></item><ref>target</ref>`, true, "/root/item/target:pattern", "/root/ref:IDREF")
 	add("invalid simple attribute candidate", "root", "", `<item><target i:type="xs:ID" bad="x">target</target></item><ref>target</ref>`, true, "/root/item/target/@bad:attribute", "/root/ref:IDREF")
-	add("invalid simple children candidate", "root", "", `<item><target i:type="xs:ID">target<child/></target></item><ref>target</ref>`, true, "/root/item/target:simple-content", "/root/ref:IDREF")
+	add("invalid simple children candidate", "root", "", `<item><target i:type="xs:ID">target<child/></target></item><ref>target</ref>`, true, "/root/item/target:simple-content")
 	add("invalid complex attributes candidate", "root", "", `<item><content>target</content></item><ref>target</ref>`, true, "/root/item/content/@code:required", "/root/ref:IDREF")
 	add("valid complex candidate", "root", "", `<item><content code="ok">target</content></item><ref>target</ref>`, true)
 	add("invalid parent preserves child", "root", "", `<item bad="x"><target i:type="xs:ID">target</target></item><ref>target</ref>`, true, "/root/item/@bad:attribute")
@@ -229,4 +229,136 @@ func TestXSD10IdentityStableFinalization(t *testing.T) {
 	assert.Equal(t, "/root/item[4]/@id", first[0].Path)
 	assert.Equal(t, "/root/item[3]/@id", first[1].Path)
 	assert.Equal(t, "/root/refs", first[2].Path)
+}
+
+func TestXSD10IdentitySkippedChildTraversal(t *testing.T) {
+	id := validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "ID"}}
+	ref := validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "IDREF"}}
+	item := &validationElementSchema{Name: validationQName{Local: "item"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "id"}, Type: id}}}}}
+	particle := func(element *validationElementSchema, min, max uint64) *validationParticleSchema {
+		return &validationParticleSchema{Kind: validationParticleElement, Occurrence: validationOccurrence{Min: min, Max: max}, Element: element}
+	}
+	limited := func(name string) *validationElementSchema {
+		return &validationElementSchema{Name: validationQName{Local: name}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Particle: particle(item, 1, 1), Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: ref}}}}}
+	}
+	for _, test := range []struct {
+		name, source                   string
+		emptyType, duplicates, skipped bool
+		constraints                    []string
+	}{
+		{name: "unexpected sibling skips target", source: `<root ref="target"><item id="target"/><unexpected/></root>`, skipped: true, constraints: []string{"content-model"}},
+		{name: "empty type skips target", source: `<root ref="target"><item id="target"/></root>`, emptyType: true, skipped: true, constraints: []string{"content-model"}},
+		{name: "missing required child skips nothing", source: `<root ref="target"/>`, constraints: []string{"content-model", "IDREF"}},
+		{name: "owner text does not skip", source: `<root ref="target">bad<item id="target"/></root>`, constraints: []string{"element-only"}},
+		{name: "owner attributes do not skip", source: `<root ref="target" bad="x"><item id="target"/></root>`, constraints: []string{"attribute"}},
+		{name: "positive duplicates survive skipped subtree", source: `<root ref="target"><item id="target"/><item id="target"/><limited ref="missing"><item id="missing"/><unexpected/></limited></root>`, duplicates: true, skipped: true, constraints: []string{"content-model", "ID"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := limited("root")
+			if test.emptyType {
+				root.Type.InlineComplex.Particle = nil
+			}
+			if test.duplicates {
+				root.Type.InlineComplex.Particle = &validationParticleSchema{Kind: validationParticleSequence, Occurrence: validationOccurrence{Min: 1, Max: 1}, Children: []*validationParticleSchema{particle(item, 2, 2), particle(limited("limited"), 1, 1)}}
+			}
+			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
+			c := validateAttributeSource(t, set, test.source)
+			require.NoError(t, c.assessmentErr, "ordinary invalidity stays separate from technical failure")
+			var constraints []string
+			for _, issue := range c.issues {
+				constraints = append(constraints, issue.Constraint)
+			}
+			assert.Equal(t, test.constraints, constraints)
+			assert.Equal(t, test.skipped, c.identityIncomplete)
+		})
+	}
+}
+
+func TestXSD10IdentitySkippedChildKinds(t *testing.T) {
+	builtin := func(name string) validationTypeRef {
+		return validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
+	}
+	id := builtin("ID")
+	for _, test := range []struct {
+		name           string
+		typ            validationTypeRef
+		attrs, content string
+		want           []string
+		skipped        bool
+	}{
+		{"simple type", builtin("string"), "", `target<hidden/>`, []string{"simple-content"}, true},
+		{"complex simple content", validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexSimpleContentExtension, Base: &id}}, "", `target<hidden/>`, []string{"simple-content"}, true},
+		{"abstract actual type", validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Abstract: true}}, "", `<hidden/>`, []string{"abstract"}, true},
+		{"nil with illegal children", builtin("ID"), ` i:nil="true"`, `<hidden/>`, []string{"nillable"}, true},
+		{"nil without children", builtin("ID"), ` i:nil="true"`, "", []string{"IDREF"}, false},
+		{"abstract without children", validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Abstract: true}}, "", "", []string{"abstract", "IDREF"}, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			value := &validationElementSchema{Name: validationQName{Local: "value"}, Type: test.typ, Nillable: true}
+			root := &validationElementSchema{Name: validationQName{Local: "root"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: builtin("IDREF")}}, Particle: &validationParticleSchema{Kind: validationParticleElement, Occurrence: validationOccurrence{Min: 1, Max: 1}, Element: value}}}}
+			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
+			c := validateAttributeSource(t, set, `<root xmlns:i="`+validationXSINamespace+`" ref="target"><value`+test.attrs+`>`+test.content+`</value></root>`)
+			require.NoError(t, c.assessmentErr)
+			var constraints []string
+			for _, issue := range c.issues {
+				constraints = append(constraints, issue.Constraint)
+			}
+			assert.Equal(t, test.want, constraints)
+			assert.Equal(t, test.skipped, c.identityIncomplete)
+		})
+	}
+}
+
+func TestXSD10IdentityAbstractTypeAttributes(t *testing.T) {
+	builtin := func(name string) validationTypeRef {
+		return validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
+	}
+	for _, test := range []struct {
+		name, attrs string
+		want        []string
+		bindings    int
+	}{
+		{"valid ID attribute binds independently", ` id="target"`, []string{"abstract"}, 1},
+		{"invalid ID attribute cannot bind", ` id="9bad"`, []string{"abstract", "datatype", "IDREF"}, 0},
+		{"IDREF attribute seeds independently", ` id="target" ref="missing"`, []string{"abstract", "IDREF"}, 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			value := &validationElementSchema{Name: validationQName{Local: "value"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Abstract: true, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "id"}, Type: builtin("ID")}, {Name: validationQName{Local: "ref"}, Type: builtin("IDREF")}}}}}
+			root := &validationElementSchema{Name: validationQName{Local: "root"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: builtin("IDREF")}}, Particle: &validationParticleSchema{Kind: validationParticleElement, Occurrence: validationOccurrence{Min: 1, Max: 1}, Element: value}}}}
+			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
+			c := validateAttributeSource(t, set, `<root ref="target"><value`+test.attrs+`/></root>`)
+			require.NoError(t, c.assessmentErr)
+			var constraints []string
+			for _, issue := range c.issues {
+				constraints = append(constraints, issue.Constraint)
+			}
+			assert.Equal(t, test.want, constraints)
+			assert.Len(t, c.identityBindings, test.bindings)
+			assert.False(t, c.identityIncomplete, "attributes were assessed and no children were skipped")
+		})
+	}
+}
+
+func TestXSD10IdentityOpenContentBoundary(t *testing.T) {
+	// Open-content declaration discovery/processContents remains deferred. This
+	// ordinary-invalidity guard must not suppress the only IDREF issue into nil
+	// on an otherwise accepted opaque path; it is not open-content conformance.
+	builtin := func(name string) validationTypeRef {
+		return validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
+	}
+	for _, wildcard := range []bool{false, true} {
+		value := &validationElementSchema{Name: validationQName{Local: "value"}, Type: builtin("anyType")}
+		particle := &validationParticleSchema{Kind: validationParticleElement, Occurrence: validationOccurrence{Min: 1, Max: 1}, Element: value}
+		source := `<root ref="absent"><value><unknown/></value></root>`
+		if wildcard {
+			particle = &validationParticleSchema{Kind: validationParticleAny, Occurrence: validationOccurrence{Min: 1, Max: 1}, Any: &validationAnySchema{Namespace: "##any", ProcessContents: "lax"}}
+			source = `<root ref="absent"><unknown/></root>`
+		}
+		root := &validationElementSchema{Name: validationQName{Local: "root"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: builtin("IDREF")}}, Particle: particle}}}
+		set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
+		c := validateAttributeSource(t, set, source)
+		assert.False(t, c.identityIncomplete)
+		assert.ErrorIs(t, c.result(), ErrInvalidDocument)
+		assertValidationIssues(t, c, []string{"/root/@ref:IDREF"})
+	}
 }

@@ -24,7 +24,7 @@ reopen repairs already present on merged main.
 | REQ-DEF-XSI-TYPE / XSI-NIL | Subject namespace scope, assembly-local type lookup, derivation/block/final/abstract metadata and actual-type assessment composed with declaration nillability | Shared binder/capability profile and source adapter |
 | REQ-DEF-XSI-SCHEMALOC / NONAMESPACE | Actual list(anyURI)/anyURI datatype assessment under the approved fixed-schema disposition | Web discovery/resolution and namespace/location pairing (batch 8); hints never select/fetch a schema here |
 | REQ-DEF-ATTR-COMPLEX / OPS-IDENTITY | Separate declaration-eligible entries from actual-ID bindings and distinct containing owners; preserve physical presence and the default/list/union version boundary | Effective fact production, document-qualified ambiguity/causal outcomes, later typed musical scopes |
-| REQ-DEF-OPS-GRAMMAR | Valid-schema endpoint matching, nullable/repeated occurrence semantics, deterministic witnesses and polynomial-work evidence | General schema-component validity/UPA and unimplemented wildcard semantics |
+| REQ-DEF-OPS-GRAMMAR | Valid-schema endpoint matching, nullable/repeated occurrence semantics, deterministic witnesses and polynomial-work evidence | Catalog/profile capability disposition (batch 3) for general schema-component validity/UPA and unimplemented wildcard semantics |
 | REQ-DEF-BUDGET-MATCH | Algorithmic cost proof and test counters, no loops proportional to huge nullable occurrence bounds | Shared limits, defaults, accounting, cancellation and observable exhaustion in the session/report batch |
 
 ## Required primitive surface
@@ -97,6 +97,15 @@ attributes and unrelated owner failures are not interchangeable with these
 conditions. Effective default views retain the original source item's identity;
 no source or model nodes are changed. Incomplete traversal cannot establish an
 empty binding, although independently established multiple owners remain facts.
+When ordinary structural failure skips existing descendants, a private identity
+completion flag suppresses absence claims without adding a technical error.
+Empty child lists and fully traversed owner errors do not disable closure; full
+partial-child recovery and causal reporting remain later work. Otherwise accepted
+opaque anyType and wildcard paths retain their existing unverified identity
+closure outside the selected surface. The ordinary-invalidity flag does not
+suppress their sole diagnostic and accidentally turn unknown closure into nil.
+Deliberate processContents=skip and unimplemented lax/strict assessment must be
+distinguished by the later catalog/profile capability disposition.
 
 This entry/binding distinction corrects the earlier prerequisite design's
 blanket declaration-only treatment. Preserve genuine complex simple-content

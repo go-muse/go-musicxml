@@ -111,7 +111,9 @@ code map. `zz_generated_identity_validation_test.go` uses
 `testdata/validation/identity-contract.xsd` for XSD 1.0 declaration-seeded ID
 entries, actual-type binding and distinct containing-element ownership. The
 same-byte oracle root runs in Linux CI; documented identity-table divergences
-are retained as internal normative cases. All test schemas use the local empty catalog.
+retain the pinned-version expectations. The selected-member interpretation stays
+explicitly bounded in the scope ledger rather than proving generic closure. All
+test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

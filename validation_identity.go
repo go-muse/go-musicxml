@@ -105,18 +105,28 @@ func (c *validationContext) recordIdentityBinding(reference *validationTypeRef, 
 	bindings.owners[owner] = struct{}{}
 }
 
+// An ordinary invalid content path may skip existing descendants without a
+// technical failure. Do not manufacture an absence fact from that partial walk.
+// Otherwise accepted anyType/wildcard paths retain their existing limitations;
+// expanding their closure requires separate open-content assessment, not this flag.
+func (c *validationContext) skipIdentityChildren(node *validationNode) {
+	if len(node.Children) != 0 {
+		c.identityIncomplete = true
+	}
+}
+
 func (c *validationContext) validateIdentityReferences() {
 	for _, entry := range c.identityEntries {
 		bindings := c.identityBindings[entry.value]
 		if bindings != nil && len(bindings.owners) > 1 {
 			c.addIssue(bindings.secondPath, "ID", fmt.Sprintf("duplicate ID %q; first bound at %s", entry.value, bindings.firstPath))
-		} else if bindings == nil && c.assessmentErr == nil && entry.constraint == "ID" {
+		} else if bindings == nil && c.assessmentErr == nil && !c.identityIncomplete && entry.constraint == "ID" {
 			c.addIssue(entry.path, "ID", fmt.Sprintf("ID %q has no containing element binding in the document", entry.value))
 		}
 	}
 	// Incomplete traversal cannot prove absence. Retain per-reference diagnostic
 	// compatibility, including repeated references, but never duplicate owner errors.
-	if c.assessmentErr != nil {
+	if c.assessmentErr != nil || c.identityIncomplete {
 		return
 	}
 	for _, reference := range c.references {
