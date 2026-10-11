@@ -406,6 +406,8 @@ func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinitio
 	switch p.kind {
 	case planLocal:
 		return s.evaluateLocalPlan(ctx, n, p.local, final)
+	case planTypedReference:
+		return s.evaluateReferencePlan(ctx, n, p.reference, final)
 	case planChildren:
 		count := int64(0)
 		var uncertain *Decision

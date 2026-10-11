@@ -172,6 +172,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 				if rule.Selector.Component != nil && rule.Selector.Component.Kind != ComponentType {
 					return nil, contract("rule selector", "only exact type components or declarations are executable")
 				}
+				if err := plan.validateReferenceRules(c, closure); err != nil {
+					return nil, err
+				}
 				if err := plan.validateFor(rule); err != nil {
 					return nil, fmt.Errorf("catalog rule %q revision %d: %w", key.ID, key.Revision, err)
 				}

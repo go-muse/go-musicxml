@@ -47,6 +47,7 @@ const (
 type Plan struct {
 	modelAssembly    Assembly
 	local            *localPlan
+	reference        *referencePlan
 	schema           *CompiledSchema
 	xsdCheck         XSDCheck
 	kind             planKind
@@ -131,6 +132,9 @@ func (p Plan) valid() error {
 	if p.kind == planLocal && !p.local.bounded() {
 		return contract("local plan", "parameters exceed finite collection bounds")
 	}
+	if p.kind == planTypedReference && !p.reference.bounded() {
+		return contract("typed reference", "parameters exceed finite collection bounds")
+	}
 	if len(p.children) > 4096 {
 		return contract("plan", "too many child declarations")
 	}
@@ -144,6 +148,8 @@ func (p Plan) valid() error {
 		}
 	case planLocal:
 		return p.local.valid()
+	case planTypedReference:
+		return p.reference.valid()
 	case planXSD:
 		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) {
 			return contract("XSD plan", "compiled schema and supported operation required")
@@ -207,6 +213,7 @@ func validateComparison(c Comparison, a Atomic) error {
 }
 func (p Plan) clone() Plan {
 	p.local = p.local.clone()
+	p.reference = p.reference.clone()
 	if p.schema != nil {
 		schema := *p.schema
 		p.schema = &schema
@@ -235,10 +242,10 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
-	if p.kind == planLocal && (r.Scope != ScopeNode || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate) {
+	if (p.kind == planLocal || p.kind == planTypedReference) && (r.Scope != ScopeNode || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate) {
 		return contract("local plan", "required normative node predicate required")
 	}
-	if p.kind == planLocal {
+	if p.kind == planLocal || p.kind == planTypedReference {
 		for _, target := range r.Targets {
 			if target != TargetSource && target != TargetModel {
 				return contract("local plan", "source or model target required")
@@ -297,6 +304,9 @@ func (p Plan) digestValue() any {
 			Assembly Assembly
 		}{p.kind, p.modelAssembly}
 	}
+	if p.kind == planTypedReference {
+		return p.reference.digest()
+	}
 	if p.kind == planLocal {
 		return p.local.digest()
 	}
@@ -333,7 +343,7 @@ func (p Plan) digestValue() any {
 	}{p.kind, p.children, p.minimum, p.maximum, p.attribute, p.required, p.comparison, a, p.key, p.relation}
 }
 func (p Plan) configSize() int64 {
-	n := p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
+	n := p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
 	for _, d := range p.children {
 		n += int64(64 + len(d.OwnerOccurrence) + len(d.Occurrence))
 	}
