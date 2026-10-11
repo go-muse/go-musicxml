@@ -4,10 +4,11 @@ package musicxml
 // Exact declaration uses are selected exclusively by the shared XSD grammar.
 // Field paths come from the final renderer plan, never from runtime XML tags.
 type modelDescriptor struct {
-	Name                 string
-	Root, SchemaType     modelName
-	Scalar               *modelField
-	Attributes, Elements []modelField
+	Name                   string
+	GoFields, MappedFields int
+	Root, SchemaType       modelName
+	Scalar                 *modelField
+	Attributes, Elements   []modelField
 }
 
 type modelName struct{ Space, Local string }

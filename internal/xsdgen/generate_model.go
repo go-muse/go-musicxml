@@ -24,7 +24,17 @@ func (r *complexTypeRenderer) renderModelMetadata(target *bytes.Buffer) error {
 	target.WriteString("// The closed current-model map is generated from the same final field plans.\nfunc init() {\n")
 	for _, name := range names {
 		s := r.structures[name]
-		fmt.Fprintf(target, "modelDescriptors[%q] = &modelDescriptor{Name: %q,", name, name)
+		goFields := len(s.attributes) + len(s.elements)
+		if s.embedded != "" {
+			goFields++
+		}
+		if s.valueType != "" {
+			goFields++
+		}
+		if s.xmlName != nil {
+			goFields++
+		}
+		fmt.Fprintf(target, "modelDescriptors[%q] = &modelDescriptor{Name: %q, GoFields:%d, MappedFields:%d,", name, name, goFields, r.modelMappedFields(s))
 		for _, d := range r.names.Declarations() {
 			n, _ := r.names.Lookup(d)
 			if n == name && d.Kind == DeclarationComplexType {
@@ -188,4 +198,17 @@ func modelKind(kind GoTypeKind, xmlType string) (string, string, error) {
 		}
 	}
 	return "", "", fmt.Errorf("%w: model scalar kind %s/%s", ErrUnsupportedComplexGeneration, kind, xmlType)
+}
+
+// The independent shape seal detects an incomplete descriptor without inferring
+// fields or XML names from the caller's runtime struct.
+func (r *complexTypeRenderer) modelMappedFields(s *complexStructure) int {
+	count := len(s.attributes) + len(s.elements)
+	if s.valueType != "" {
+		count++
+	}
+	if s.embedded != "" {
+		count += r.modelMappedFields(r.structures[s.embedded])
+	}
+	return count
 }
