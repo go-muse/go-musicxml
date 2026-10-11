@@ -36,7 +36,7 @@ func validXSDAnyURI(value string, c *Context) bool {
 	var prepared strings.Builder
 	if c != nil && c.run != nil {
 		capacity := c.size(int64(len(value)), 3)
-		c.scratch(capacity)
+		c.scratch(c.builderAllowance(capacity))
 		prepared.Grow(int(capacity))
 	} else {
 		prepared.Grow(len(value))

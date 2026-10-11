@@ -286,7 +286,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	r.step(1)
 	r.scalar(int64(len(subject.Text)))
 	r.reserve(int64(unsafe.Sizeof(boundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
-	r.reserve(int64(len(subject.Text)))
+	r.reserve(r.context.builderAllowance(int64(len(subject.Text))))
 	r.reserve(r.context.size(int64(len(subject.Children)), int64(unsafe.Sizeof((*Node)(nil)))))
 	node := r.nodes[subject.ID]
 	if node == nil {

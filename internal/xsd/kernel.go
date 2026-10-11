@@ -375,7 +375,18 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	// Use a validation-only view: the source text and model stay unchanged.
 	defaulted := false
 	constraintBlocked := false
-	if !nilled && (c.local == nil || c.local.subject.TextKnown) && len(node.Children) == 0 && node.Text.Len() == 0 {
+	if c.local != nil && !c.local.subject.ChildrenComplete {
+		if nilled || schema.Fixed != nil {
+			c.capability("declaration", "element-child-absence-unavailable")
+		}
+		if !nilled && len(node.Children) == 0 && node.Text.Len() == 0 && (schema.Default != nil || schema.Fixed != nil) {
+			constraintBlocked = true
+			c.capability("declaration", "element-value-constraint-emptiness-unavailable")
+			c.capability("scalar", "element-value-constraint-emptiness-unavailable")
+			c.IdentityIncomplete = true
+		}
+	}
+	if !nilled && !constraintBlocked && (c.local == nil || c.local.subject.TextKnown) && len(node.Children) == 0 && node.Text.Len() == 0 {
 		value := schema.Default
 		if schema.Fixed != nil {
 			value = schema.Fixed
@@ -399,7 +410,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 					}
 				}
 			}
-			c.reserve(int64(len(lexical)))
+			c.reserve(c.builderAllowance(int64(len(lexical))))
 			c.bytes(len(lexical))
 			effective.Text.WriteString(lexical)
 			defaulted = true
@@ -410,7 +421,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		}
 	}
 
-	if !nilled && !defaulted && schema.Fixed != nil && (c.local == nil || c.local.subject.TextKnown) {
+	if !nilled && !defaulted && !constraintBlocked && schema.Fixed != nil && (c.local == nil || c.local.subject.TextKnown) {
 		beforeFixed := c.AssessmentVersion
 		// XSD 1.0 cvc-elt 5.2.2.1 forbids element children independently
 		// of fixed-value equality, including for mixed content. Report the
@@ -1701,7 +1712,7 @@ func collapseWhitespace(value string, c *Context) string {
 		}
 		c.scalar(capacity)
 	}
-	c.reserve(capacity)
+	c.reserve(c.builderAllowance(capacity))
 	result.Grow(int(capacity))
 	wroteValue := false
 	pendingSpace := false

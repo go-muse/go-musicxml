@@ -126,3 +126,19 @@ func sortPositions(positions []int, c *Context) {
 	}
 	slices.SortFunc(positions, func(a, b int) int { c.step(0); return b - a })
 }
+
+// A strings.Builder exposes allocator-rounded backing capacity, even when its
+// first write/Grow requests an exact length. Before any such allocation admit
+// a conservative 2x capacity (at least a minimum size-class allowance). Keep
+// that allowance for the existing retained/scratch lifetime instead of relying
+// on after-allocation measurement. Empty builders allocate and reserve nothing;
+// compatibility nil-run helpers retain their original allocation behavior.
+func (c *Context) builderAllowance(n int64) int64 {
+	if n == 0 {
+		return 0
+	}
+	if c == nil || c.run == nil {
+		return n
+	}
+	return max(64, c.size(n, 2))
+}
