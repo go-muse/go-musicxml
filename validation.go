@@ -1362,7 +1362,7 @@ func (c *validationContext) assessSimpleValue(
 
 	case validationSimpleUnion:
 		for _, member := range schema.Members {
-			if normalized, failure := c.assessSimpleMemberValue(member, value, display); failure == nil {
+			if normalized, failure := c.assessUnionMemberValue(member, value, display); failure == nil {
 				return normalized, nil
 			}
 		}
@@ -1385,6 +1385,18 @@ func (c *validationContext) assessSimpleValue(
 	default:
 		return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "schema", message: "unsupported simple type form"}
 	}
+}
+
+// XSD 1.0 section 4.1.2.3 replaces union-variety member definitions with
+// their own ordered member definitions. Only this union-composition boundary
+// skips restriction wrappers: direct union restrictions, list item types and
+// atomic/list members still take their ordinary full assessment paths.
+func (c *validationContext) assessUnionMemberValue(member *validationSimpleMember, value, display string) (validationSimpleAssessment, *validationSimpleFailure) {
+	semantics := c.memberSemantics(member)
+	if semantics != nil && semantics.union != nil {
+		return c.assessSimpleValue(semantics.union, value, display)
+	}
+	return c.assessSimpleMemberValue(member, value, display)
 }
 
 func (c *validationContext) assessSimpleMemberValue(

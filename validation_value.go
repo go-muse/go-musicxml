@@ -99,10 +99,9 @@ func (c *validationContext) assessBuiltinValue(name, value, display string) (val
 
 // Convert a literal in its declared value space without rechecking the outer
 // restriction chain. Rechecking ancestor enumerations for every literal causes
-// exponential work. Ordered members in the existing stored graph still receive
-// full assessment; atomic/list member restrictions decide the selected value.
-// XSD 1.0 flattening of restricted union-valued members is a separate existing
-// component-construction gap (documented in the validation code map).
+// exponential work. Union traversal expands union-variety members according to
+// XSD 1.0; atomic/list member restrictions still receive full assessment and
+// decide which member supplies the actual value.
 // The same operation obtains fixed operands independently of outer facet
 // failure, so an equal value rejected by a pattern does not invent a fixed issue.
 func (c *validationContext) simpleLiteralValue(semantics *validationSimpleSemantics, literal string) (validationSimpleAssessment, bool) {

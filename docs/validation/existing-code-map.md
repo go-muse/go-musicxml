@@ -567,9 +567,8 @@ Outer patterns still see the selected lexical view, and an outer facet failure
 never retries another member. Enumeration literals use the declaring base;
 fixed operands use the effective declared scalar, including complex simple
 content. Literal conversion skips outer restriction chains to avoid exponential
-reassessment, but fully assesses ordered members in the existing stored graph, retaining
-atomic/list member restrictions. The restricted-union composition limit below
-is unchanged.
+reassessment, but fully assesses the effective ordered atomic/list members after XSD 1.0
+union-member expansion, retaining their restrictions.
 A fixed value may equal an instance that separately fails an outer pattern;
 this does not introduce a false `fixed` diagnostic. Mixed-content fixed values
 still compare raw text.
@@ -607,24 +606,9 @@ fallback. The explicit boolean/date compatibility tests are limitations, not
 normative positive claims. No new API, profile, schema-component validity pass,
 resource policy, `xsi:type`/hint semantics or defaulted-IDREF augmentation ships.
 
-A separate pre-existing gap remains in XSD 1.0 component construction when a
-restricted union is itself a union member. This runtime retains the nested
-union's outer facets instead of implementing 1.0 member flattening. Both libxml2
-and Xerces accept the independently probed flattened case; it is not an oracle
-bug or a normative rejection fixture in this batch. W3C's [union restriction
-issue](https://www.w3.org/Bugs/Public/show_bug.cgi?id=2233#c2) distinguishes 1.0
-flattening from the changed 1.1 behavior. Ordinary nested unions, outer union
-restrictions and inheritance remain covered, but this batch does not claim full
-restricted-union component construction. For the concrete counterexample,
-let `number` be the union of a digits-pattern integer and decimal, `union-enum`
-restrict `number` to enumeration `1`, and `nested-restricted` unite `union-enum`
-with token. Restrict the latter to enumeration `2`. The source
-`<nested-restricted-enum>+02.0</nested-restricted-enum>` is accepted by both
-independent 1.0 engines after flattening; the pre-batch runtime, task-1 runtime
-and final runtime reject it with `enumeration`. The direct `union-enum` control
-still rejects `+02.0` in both engines. That distinction between direct union
-restriction and union-valued member composition is deferred under
-`DEF04-06` / `REQ-DEF-OPS-SCALARS`, not silently treated as supported.
+Union-valued member composition is handled by the follow-on repair immediately
+below. This dependency matters to value-domain selection; it is not merely a
+separate completeness claim.
 
 Basis: XSD 1.0 [list values][scalar-list], [ordered unions][scalar-union],
 [enumeration][scalar-enumeration] and [element fixed values][scalar-fixed].
@@ -633,6 +617,54 @@ Go contracts and plan remain proposals with unchanged planning statuses.
 All six production schema files and generated public models are unchanged.
 Production has no explicit lists or built-in list restrictions; its four
 MusicXML unions and one XML-module union gain no new aggregate constraints.
+
+## XSD 1.0 union-member flattening repair update
+
+XSD 1.0 [section 4.1.2.3, union XML mapping][union-member-mapping] replaces
+union-variety member definitions with their own member definitions in order.
+The runtime now applies that expansion only at the union-composition boundary,
+using the resolved underlying union without mutating generated metadata.
+Named, inline and deeply nested members follow the same order. Restrictions on
+a directly assessed union remain operative; so do union restrictions used as
+list item types and all atomic/list member restrictions. Failed effective
+members still allow the next member; an outer facet failure does not backtrack.
+This follows the 1.0 contract, not the different union behavior in XSD 1.1.
+
+The omission existed before this batch, but typed equality also exposed a new
+false acceptance in the intermediate implementation. Let `inner` unite a
+string restricted by `[0-9]+` with decimal, restrict it to enumeration `0`, and
+use that restricted union followed by decimal as members of `outer`. A
+restriction of `outer` with enumeration `1` must reject `<value>+01</value>`:
+after flattening, literal `1` selects string and `+01` selects decimal. The
+pre-batch and task-1 runtimes rejected it lexically; the intermediate typed
+implementation wrongly accepted two numeric values selected through the
+unexpanded graph. The final traversal rejects it for the correct domain reason.
+The exact independent-review instance bytes are retained in the source matrix.
+A complementary numeric-only nested case, previously wrongly rejected, now
+accepts `+02.0` for enumeration `2`. Both libxml2 and Xerces/JAXP support these
+bounded independent counterexamples and their direct-restriction controls.
+
+The [synthetic union-member schema](../../testdata/validation/union-member-contract.xsd)
+and [`validation_union_member_test.go`](../../validation_union_member_test.go)
+cover 61 original-source cases, all checked on identical bytes by required
+`xmllint --nonet`, including enum/fixed selected domains, order, failed-member
+fallback, complex/attribute paths and the nonflattening controls above.
+An independent OpenJDK 21 Xerces/JAXP run also agrees on all 61 identical
+instance byte sequences against the complete union-member fixture, without
+exclusions. This claim is specific to this fixture, not the aggregate fixture
+with its separately documented engine limitations.
+Repeated/concurrent text-inclusive immutability and reached-literal cache tests
+verify that skipped union-wrapper facets neither mutate metadata nor create
+literal-cache entries. Existing malformed/cyclic fail-closed and layered
+allocation tests remain in force. No schema generator expansion or production
+schema/model change is required.
+
+This is an additional bounded `DEF04-06` / `REQ-DEF-OPS-SCALARS` repair, not
+complete schema-component validity, other primitive equality, or a completed
+planning stage. The published deferred inventory and registry snapshots retain
+their original bytes and statuses.
+
+[union-member-mapping]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#element-union
 
 ## Ordinary-attribute repair update
 

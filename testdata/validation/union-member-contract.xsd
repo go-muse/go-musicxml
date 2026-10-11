@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 fixture, authored for union member component flattening. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="digits-string"><xs:restriction base="xs:string"><xs:pattern value="[0-9]+"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="digits-integer"><xs:restriction base="xs:integer"><xs:pattern value="[0-9]+"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="inner"><xs:union memberTypes="digits-string xs:decimal"/></xs:simpleType>
+  <xs:simpleType name="zero"><xs:restriction base="inner"><xs:enumeration value="0"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="composed"><xs:union memberTypes="zero xs:decimal"/></xs:simpleType>
+  <xs:simpleType name="composed-enum"><xs:restriction base="composed"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:element name="composed-enum" type="composed-enum"/>
+  <xs:element name="value"><xs:simpleType><xs:restriction base="composed"><xs:enumeration value="1"/></xs:restriction></xs:simpleType></xs:element>
+  <xs:element name="composed-fixed" type="composed" fixed="1"/>
+  <xs:simpleType name="inline"><xs:union><xs:simpleType><xs:restriction base="inner"><xs:enumeration value="0"/></xs:restriction></xs:simpleType><xs:simpleType><xs:restriction base="xs:decimal"/></xs:simpleType></xs:union></xs:simpleType>
+  <xs:simpleType name="inline-enum"><xs:restriction base="inline"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:element name="inline-enum" type="inline-enum"/>
+  <xs:simpleType name="deep"><xs:union memberTypes="composed-enum xs:token"/></xs:simpleType>
+  <xs:simpleType name="deep-enum"><xs:restriction base="deep"><xs:enumeration value="2"/></xs:restriction></xs:simpleType>
+  <xs:element name="deep-enum" type="deep-enum"/>
+  <xs:simpleType name="numeric"><xs:union memberTypes="digits-integer xs:decimal"/></xs:simpleType>
+  <xs:simpleType name="one"><xs:restriction base="numeric"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="numeric-composed"><xs:union memberTypes="one xs:token"/></xs:simpleType>
+  <xs:simpleType name="numeric-enum"><xs:restriction base="numeric-composed"><xs:enumeration value="2"/></xs:restriction></xs:simpleType>
+  <xs:element name="numeric-enum" type="numeric-enum"/>
+  <xs:simpleType name="fallback"><xs:union memberTypes="zero xs:token"/></xs:simpleType>
+  <xs:simpleType name="fallback-enum"><xs:restriction base="fallback"><xs:enumeration value="x"/></xs:restriction></xs:simpleType>
+  <xs:element name="fallback-enum" type="fallback-enum"/>
+  <xs:simpleType name="number-first"><xs:union memberTypes="xs:decimal digits-string"/></xs:simpleType>
+  <xs:simpleType name="zero-number"><xs:restriction base="number-first"><xs:enumeration value="0"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="reordered"><xs:union memberTypes="zero-number xs:string"/></xs:simpleType>
+  <xs:simpleType name="reordered-enum"><xs:restriction base="reordered"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:element name="reordered-enum" type="reordered-enum"/>
+  <!-- Restrictions stay operative except when the member's variety is union. -->
+  <xs:element name="direct" type="zero"/>
+  <xs:element name="direct-numeric" type="one"/>
+  <xs:simpleType name="union-list"><xs:list itemType="zero"/></xs:simpleType>
+  <xs:element name="union-list" type="union-list"/>
+  <xs:simpleType name="atomic-zero"><xs:restriction base="xs:string"><xs:enumeration value="0"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="atomic-members"><xs:union memberTypes="atomic-zero xs:decimal"/></xs:simpleType>
+  <xs:simpleType name="atomic-enum"><xs:restriction base="atomic-members"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:element name="atomic-enum" type="atomic-enum"/>
+  <xs:simpleType name="integers"><xs:list itemType="xs:integer"/></xs:simpleType>
+  <xs:simpleType name="pair"><xs:restriction base="integers"><xs:length value="2"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="list-members"><xs:union memberTypes="pair xs:string"/></xs:simpleType>
+  <xs:simpleType name="list-enum"><xs:restriction base="list-members"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:element name="list-enum" type="list-enum"/>
+  <xs:complexType name="complex"><xs:simpleContent><xs:extension base="composed-enum"><xs:attribute name="code" type="xs:token"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:element name="complex" type="complex"/>
+  <xs:element name="attributes"><xs:complexType>
+    <xs:attribute name="composed" type="composed" fixed="1"/>
+    <xs:attribute name="numeric" type="numeric-composed" fixed="2"/>
+  </xs:complexType></xs:element>
+</xs:schema>

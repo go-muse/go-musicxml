@@ -70,7 +70,10 @@ fixed comparisons in exact numeric and string-derived domains. Boolean and
 other primitive equality remain lexical limitations. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
 code map;
 empty-list enumeration is metadata-only because libxml2 cannot compile it.
-All eight test schemas use the local empty catalog.
+`zz_generated_union_member_validation_test.go` uses
+`testdata/validation/union-member-contract.xsd` for XSD 1.0 union-member
+flattening and its direct-restriction, list-item and atomic/list-member controls.
+All nine test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,
