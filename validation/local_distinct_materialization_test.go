@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"unsafe"
 )
 
 func TestLocalDistinctMaterializesEachEffectiveValueOnce(t *testing.T) {
@@ -120,11 +121,20 @@ func distinctScratchFixture(t *testing.T, count int, budgets Budgets) (*Session,
 
 func TestLocalDistinctScratchExactLimitAndCleanup(t *testing.T) {
 	const siblingBytes int64 = 73
+	// Independently measure the actual backing-array entry, including its
+	// node pointer and padding. Accounting must track host layout, not an
+	// assumed logical Atomic slot size.
+	type exactEntry struct {
+		node  *factNode
+		value Atomic
+	}
+	entryBytes := int64(unsafe.Sizeof(exactEntry{}))
+	t.Logf("actual scratch entry bytes: %d", entryBytes)
 	for _, tc := range []struct {
 		count int
 		limit int64
 		fail  bool
-	}{{3, 255, true}, {3, 256, false}, {4, 767, true}, {4, 768, false}} {
+	}{{3, 2*entryBytes - 1, true}, {3, 2 * entryBytes, false}, {4, 6*entryBytes - 1, true}, {4, 6 * entryBytes, false}} {
 		t.Run(fmt.Sprintf("children=%d/bytes=%d", tc.count, tc.limit), func(t *testing.T) {
 			s, n, plan := distinctScratchFixture(t, tc.count, Budgets{MaxBufferedBytes: tc.limit + siblingBytes})
 			if err := s.account.Charge(BudgetBufferedBytes, siblingBytes); err != nil {
