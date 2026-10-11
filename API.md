@@ -119,9 +119,12 @@ nesting deeper than 4096 elements before walking the model recursively.
 
 `Validate` returns:
 
-- `nil` for a valid document;
-- `*ValidationError` for XSD violations;
-- a sentinel argument or document-type error when validation cannot start.
+- `nil` when supported XSD assessment completes without violations;
+- `*ValidationError` for proven XSD violations, possibly joined with a technical error;
+- a sentinel argument or document-type error when validation cannot start;
+- a technical error when required metadata or contextual facts are unavailable.
+  Technical incompleteness alone does not match `ErrInvalidDocument`; it is not
+  evidence that the document is valid or invalid.
 
 Use `errors.Is(err, ErrInvalidDocument)` for the category and
 `errors.As(err, *ValidationError)` to inspect every `ValidationIssue`.

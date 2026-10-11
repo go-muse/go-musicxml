@@ -67,3 +67,37 @@ func TestXSIQNameUsesDatatypeRepertoire(t *testing.T) {
 		assert.False(t, ok, value)
 	}
 }
+
+func TestXSITypeIdentityUsesDeclaration(t *testing.T) {
+	// XSD 1.0 sic-id uses declaration-type eligibility. Actual scalar/member
+	// identity must not silently import XSD 1.1 governing-type participation.
+	for _, test := range []struct {
+		declared, actual string
+		ids, refs        int
+	}{
+		{"string", "ID", 0, 0},
+		{"string", "IDREF", 0, 0},
+		{"anySimpleType", "IDREFS", 0, 0},
+		{"ID", "ID", 1, 0},
+		{"IDREF", "IDREF", 0, 1},
+		{"IDREFS", "IDREFS", 0, 1},
+	} {
+		t.Run(test.declared+"/"+test.actual, func(t *testing.T) {
+			declaration := &validationElementSchema{Name: validationQName{Local: "value"}, Type: validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: test.declared}}}
+			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "value"}: declaration}}
+			source := `<value xmlns:i="` + validationXSINamespace + `" xmlns:xs="` + validationXSDNamespace + `" i:type="xs:` + test.actual + `"> target </value>`
+			context := validateAttributeSource(t, set, source)
+			assert.Len(t, context.identifiers, test.ids)
+			assert.Len(t, context.references, test.refs)
+			if test.ids != 0 {
+				assert.Contains(t, context.identifiers, "target")
+			}
+			if test.refs == 0 {
+				assertValidationIssues(t, context, nil)
+			} else {
+				assert.Equal(t, "target", context.references[0].value)
+				assertValidationIssues(t, context, []string{"/value:IDREF"})
+			}
+		})
+	}
+}

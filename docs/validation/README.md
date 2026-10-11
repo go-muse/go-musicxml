@@ -8,6 +8,11 @@ guides. MusicXML 4.0 requirements evidence is maintained in the separate
 pinned here to commit `3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c`. It is documentation for review, not an implementation,
 a new public API, or a claim of complete validation by the current library.
 
+The [current XSD prerequisite scope and owner ledger](xsd-prerequisite-scope.md)
+reconciles the bounded implementation repairs following PR 30, their reusable
+evidence and explicit remaining obligations. It does not mark the planned stages
+or a new validation profile complete.
+
 ## Reading order
 
 1. [Architecture proposal](architecture.md): one XML parse, optional strict source

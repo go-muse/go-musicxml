@@ -83,9 +83,10 @@ the same-byte external subset retains attribute-fixed and negative controls.
 `zz_generated_datatype_name_validation_test.go` uses
 `testdata/validation/datatype-name-contract.xsd` for XSD 1.0 Second Edition
 name-character lexical contracts, including restricted, list, union and attribute
-paths. QName binding and ENTITY declaration semantics remain separate. Its
-ENTITY/ENTITIES element lexical cases remain internal because libxml2 rejects
-the declared positive element values; equivalent attribute cases use the oracle.
+paths. Contextually reached, lexically valid ENTITY/ENTITIES cases explicitly
+report incomplete assessment and are excluded from complete-outcome parity;
+standalone lexical checks remain covered. General QName/NOTATION context is
+separate from the later xsi:type-specific binding tests.
 `zz_generated_grammar_validation_test.go` uses
 `testdata/validation/grammar-contract.xsd` for nullable and repeated particle
 endpoints, deterministic declaration witnesses and XSD 1.0 all-group controls.

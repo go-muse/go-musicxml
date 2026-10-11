@@ -5,6 +5,11 @@ Status: **PROPOSED**. This mapping is based on repository commit
 this documentation proposal. It identifies reuse candidates and observed limits;
 it is not an implementation plan with a fixed API or an exhaustive validator audit.
 
+The [current prerequisite scope](xsd-prerequisite-scope.md) reconciles the updates
+below against merged PR 30 and the pinned XSD 1.0 specification. Earlier baseline
+limitations are historical; the later explicitly scoped updates supersede only
+their demonstrated contracts, without closing whole planned stages.
+
 ## XML-reading repair update
 
 The duplicate-attribute and DOCTYPE-placement gaps recorded below are now
@@ -1159,13 +1164,16 @@ independent character-boundary examples, production score ID/IDREF values,
 source/schema immutability and concurrent assessment.
 `TestDatatypeNamesAgainstSchema` and `TestDatatypeNamesProductionAgainstSchema`
 compare the same original XML bytes with offline xmllint and are required in
-Linux CI. ENTITY/ENTITIES element lexical cases remain internal because
-libxml2 2.9.14 rejects even their declared positive values; corresponding
-attribute cases retain oracle coverage. An independent OpenJDK 21 JAXP run
-agrees on all 99 identical-source synthetic cases, including those four element
-cases. QName namespace expansion, NOTATION
-declarations and ENTITY unparsed-entity assessment are separate contracts,
-not claims of this lexical repair. Planning statuses remain unchanged.
+Linux CI. All 99 source cases still execute internally. Four lexically valid
+ENTITY/ENTITIES element/attribute cases now explicitly report incomplete
+assessment because the source tree does not retain unparsed declarations;
+standalone builtin tests still prove their lexical contract. The external subset
+contains 93 cases: those four incomplete cases and two ENTITY element negatives
+remain outside complete-outcome parity. The earlier lexical-only audit's 99-case
+JAXP agreement is supplementary lexical evidence, not a claim that the current
+reader supplies ENTITY facts. Ordinary QName/NOTATION contextual validity stays
+separate; xsi:type QName binding is covered by the dynamic-type update. Planning
+statuses remain unchanged.
 ## Bounded particle matching repair update
 
 [`validation_particle.go`](../../validation_particle.go) replaces the single
@@ -1430,8 +1438,10 @@ Other canonical families report technical incompleteness when reached; this is
 not a claim of a complete canonical/PSVI implementation. The production pinned
 schemas have no element value constraints. Existing static schema-literal
 construction is not converted into a general schema validator by this repair;
-legacy synthetic defaults requiring separate e-props-correct.2 review remain a
-schema-metadata obligation, not grounds for inventing instance violations.
+the old patterned default fixture has been corrected under e-props-correct.2:
+pattern `0?[0-9]` admits canonical `7` and stored literal `07`, while explicit
+`+7` still fails. The original fixture's invalid schema metadata is not grounds
+for inventing an instance violation; see the prerequisite scope ledger.
 E1-56 modifies PSVI contributions and does not replace cvc-elt 5.1's validity
 conditions.
 
@@ -1455,8 +1465,11 @@ Executable roots: `TestValidateXSIType`, `TestXSITypeAgainstSchema`,
 `TestEntityLiteralAndFixedAssessment`,
 `TestIncompleteEnumerationCacheDoesNotInventViolations`,
 `TestIncompleteIdentityTraversalDoesNotProveAbsentTarget`,
-`TestIncompleteDefaultPreservesActualAttributes`, `TestXSITypeImmutable`, and
-`TestXSITypeCacheBounds`, plus generator derivation tests. The external root is
+`TestIncompleteDefaultPreservesActualAttributes`, `TestXSITypeImmutable`,
+`TestXSITypeCacheBounds`, `TestGrammarMetadataAssessmentBoundary`,
+`TestXSIQNameUsesDatatypeRepertoire`,
+`TestReferencedNilElementDeclarationIsIncomplete`, and
+`TestFixedUnresolvedComplexTypeIsIncomplete`, plus generator derivation tests. The external root is
 explicitly registered in Linux CI and runs internal assertions before oracle
 checks. Libxml2 2.9.14 differs on normalized xsi QName whitespace, canonical
 numeric defaults/fixed values, and missing IDREF enforcement; supplemental JAXP
@@ -1464,8 +1477,8 @@ confirms those named normative outcomes rather than weakening them for parity.
 
 Cache evidence on restriction chains of 8, 64 and 256 types shows respectively
 11/67/259 metadata entries, 8/64/256 derivation pairs, and 8/64/256 simple-semantic
-entries. Repeated assessment adds no schema cache keys and uses 10 allocations
-at each measured depth. These are bounded task measurements, not a universal
+entries. Repeated assessment adds no schema cache keys; allocation counts remain
+constant across those measured depths (see the executable cache regression). These are bounded task measurements, not a universal
 matcher/resource-budget claim. Generated schema and source immutability are
 checked under repeated and concurrent independent contexts. Future catalog,
 source/model capability binding, adapters, report semantics and stage completion
