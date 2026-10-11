@@ -6,6 +6,16 @@ func (c *Context) capability(family, reason string) {
 	if c.local == nil {
 		return
 	}
+	old := c.local.family
+	c.local.family = family
+	for _, limitation := range c.local.result().Limitations {
+		c.step(1)
+		if limitation.Reason == reason {
+			c.local.family = old
+			return
+		}
+	}
+	c.local.family = old
 	c.local.limit(family, reason, nil)
 }
 func (c *Context) opaqueType() {

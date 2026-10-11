@@ -138,3 +138,42 @@ func TestRunIdentityOriginsDoNotUseDisplayPaths(t *testing.T) {
 		t.Fatalf("duplicate attributed by ambiguous path: %+v", got)
 	}
 }
+
+func TestRunConstructedIdentityIsIncompleteBeforeCompletion(t *testing.T) {
+	typ := TypeRef{InlineSimple: &SimpleSchema{Form: SimpleList, Item: &SimpleMember{Name: QName{Space: XSDNamespace, Local: "IDREF"}}}}
+	r, b := bindSingle(t, typ, "missing")
+	before := r.Results(b).Declaration
+	if before.Complete || !before.Valid {
+		t.Fatalf("constructed identity capability delayed until completion: %+v", before)
+	}
+	completion, err := r.Complete(context.Background(), b, nil)
+	if err != nil || completion.Complete || completion.IdentityClosed {
+		t.Fatalf("constructed identity completion=%+v, %v", completion, err)
+	}
+}
+func TestRunUnverifiedFixedEqualityRemainsIncomplete(t *testing.T) {
+	for _, builtin := range []string{"date", "float", "hexBinary", "QName"} {
+		t.Run(builtin, func(t *testing.T) {
+			values := map[string][2]string{"date": {"2026-10-11", "2026-10-12"}, "float": {"1", "2"}, "hexBinary": {"aa", "bb"}, "QName": {"a", "b"}}
+			fixed := values[builtin][0]
+			c, err := Compile(SchemaData{Elements: map[QName]*ElementSchema{{Local: "n"}: {Name: QName{Local: "n"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: builtin}}, Fixed: &fixed}}}, CompileLimits{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			r, err := NewRun(c, &testMeter{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer r.Close()
+			u, _ := c.Root(QName{Local: "n"})
+			b, err := r.Bind(context.Background(), u, Subject{ID: 1, Name: QName{Local: "n"}, Text: values[builtin][1], TextKnown: true, ChildrenComplete: true, AttributesComplete: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			v := r.Results(b).Declaration
+			if v.Complete || !v.Valid || len(v.Issues) != 0 {
+				t.Fatalf("unverified fixed equality fabricated failure: %+v", v)
+			}
+		})
+	}
+}

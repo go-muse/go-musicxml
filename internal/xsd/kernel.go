@@ -438,6 +438,15 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		c.local.typeValid = typeValid
 		c.local.declarationValid = declarationValid
 		c.local.identityAllowed = !nilled && !constraintBlocked && c.local.subject.TextKnown
+		// Capability is a permanent local fact available immediately at Bind;
+		// postorder completion only gates registration, never discovers it late.
+		if typeValid && c.local.identityAllowed {
+			c.setFamily("declaration")
+			if declarationValid {
+				c.noteConstructedIdentity(&schema.Type)
+			}
+			c.noteConstructedIdentity(actualType)
+		}
 		return declarationValid
 	}
 	if typeValid && !nilled && !constraintBlocked {
