@@ -26,6 +26,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Preserve distinct primitive domains in reusable scalar comparisons. Compare
+  booleans by truth value, including list/union enumeration and fixed values,
+  and apply the XSD whitespace contract to URI fixed values without resolving
+  or canonicalizing URLs. Other unverified primitive equality remains limited.
+
 - Apply `length`, `minLength` and `maxLength` to item counts for the built-in
   XSD list types `NMTOKENS`, `IDREFS` and `ENTITIES`, including inherited
   restrictions, attributes and complex simple content.

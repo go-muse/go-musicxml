@@ -1153,7 +1153,7 @@ func (c *validationContext) simpleValuesEqual(
 		// issue is retained until diagnostic deduplication is addressed.
 		return false
 	}
-	if semantics.aggregate() {
+	if semantics.aggregate() || semantics.builtin == "boolean" || semantics.builtin == "anyURI" {
 		return c.aggregateValuesEqual(semantics, left, right)
 	}
 	builtin := semantics.builtin
@@ -1173,8 +1173,9 @@ func (c *validationContext) simpleValuesEqual(
 	return normalizeValidationWhitespace(builtin, left) == normalizeValidationWhitespace(builtin, right)
 }
 
-// Atomic integer/decimal/string and their list/union aggregates compare values.
-// Other primitives retain their lexical path; mixed content compares raw text.
+// Atomic integer/decimal/string/boolean/URI and supported list/union values
+// use their value contracts. Other primitives retain their lexical path;
+// mixed content compares raw text.
 func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef, left, right string) bool {
 	_, complex, _, _ := c.resolveType(reference)
 	if complex != nil {
@@ -1193,7 +1194,7 @@ func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef
 		// additional fixed issue alongside ordinary schema diagnostics.
 		return false
 	}
-	if semantics.aggregate() {
+	if semantics.aggregate() || semantics.builtin == "boolean" || semantics.builtin == "anyURI" {
 		return c.aggregateValuesEqual(semantics, left, right)
 	}
 	if _, _, integer := validationIntegerLimits(semantics.builtin); integer {

@@ -226,7 +226,7 @@ func TestWhitespaceFixedComparisonScope(t *testing.T) {
 		assert.Equal(t, name != "string-token", context.simpleValuesEqual(reference, " a  b ", "a b"), name)
 		assert.Equal(t, name != "string-token", context.elementFixedValuesEqual(reference, " a  b ", "a b"), name)
 	}
-	for _, name := range []string{"boolean", "date", "dateTime", "anyURI", "QName"} {
+	for _, name := range []string{"boolean", "date", "dateTime", "QName"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
 		assert.False(t, context.elementFixedValuesEqual(reference, " a ", "a"), name)
 	}

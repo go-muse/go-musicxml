@@ -217,15 +217,12 @@ func TestAggregateEnumerationCacheBound(t *testing.T) {
 }
 
 // These are explicit compatibility limitations, not normative equality claims.
-// The bounded carrier does not implement boolean or temporal value equality.
+// The bounded carrier does not implement temporal value equality.
 func TestAggregateUnimplementedPrimitiveEquality(t *testing.T) {
 	t.Parallel()
 	context := newTestValidationContext(&validationAggregateGenerated)
-	for _, builtin := range []string{"boolean", "date"} {
-		first, second := "1", "true"
-		if builtin == "date" {
-			first, second = "2000-01-01Z", "2000-01-01+00:00"
-		}
+	for _, builtin := range []string{"date"} {
+		first, second := "2000-01-01Z", "2000-01-01+00:00"
 		member := &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: builtin}}
 		for _, form := range []validationSimpleForm{validationSimpleList, validationSimpleUnion} {
 			aggregate := &validationSimpleSchema{Form: form, Item: member, Members: []*validationSimpleMember{member}}

@@ -14,18 +14,26 @@ const (
 	validationLexicalDomain validationValueDomain = iota
 	validationStringDomain
 	validationNumberDomain
+	validationBooleanDomain
 	validationListDomain
 )
 
 // Values are immutable and private to an assessment/context. Numeric values use
 // the exact decimal representation shared by XSD integer-derived types. Other
-// primitive families deliberately retain lexical comparison, not a claim of
-// complete boolean, temporal, QName, binary, URI or floating-point value spaces.
+// primitive families retain their distinct primitive identity. Boolean values
+// compare by truth value; URI values retain collapsed spelling without URL
+// equivalence. Temporal, QName, binary and floating-point same-family equality
+// remains lexical, not a claim of complete value-space support. Ur-types remain
+// opaque lexical compatibility carriers rather than additional primitives.
 type validationSimpleValue struct {
 	domain validationValueDomain
-	text   string
-	number validationDecimal
-	items  []validationSimpleValue
+	// primitive distinguishes fallback domains; derived string/integer types
+	// instead share the verified string/decimal domains above.
+	primitive string
+	boolean   bool
+	text      string
+	number    validationDecimal
+	items     []validationSimpleValue
 }
 
 func (value validationSimpleValue) equal(other validationSimpleValue) bool {
@@ -33,6 +41,8 @@ func (value validationSimpleValue) equal(other validationSimpleValue) bool {
 		return false
 	}
 	switch value.domain {
+	case validationBooleanDomain:
+		return value.boolean == other.boolean
 	case validationNumberDomain:
 		return value.number.compare(other.number) == 0
 	case validationListDomain:
@@ -46,7 +56,7 @@ func (value validationSimpleValue) equal(other validationSimpleValue) bool {
 		}
 		return true
 	default:
-		return value.text == other.text
+		return value.primitive == other.primitive && value.text == other.text
 	}
 }
 
@@ -64,14 +74,19 @@ func validationBuiltinListItem(name string) string {
 }
 
 func validationAtomicValue(semantics *validationSimpleSemantics, lexical string) validationSimpleValue {
-	value := validationSimpleValue{text: lexical}
+	value := validationSimpleValue{text: lexical, primitive: semantics.builtin}
 	if semantics.stringValue {
-		value.domain = validationStringDomain
+		value.domain, value.primitive = validationStringDomain, ""
+		return value
+	}
+	if semantics.builtin == "boolean" {
+		value.domain, value.primitive = validationBooleanDomain, ""
+		value.boolean, _ = parseValidationBoolean(lexical)
 		return value
 	}
 	_, _, integer := validationIntegerLimits(semantics.builtin)
 	if integer || semantics.builtin == "decimal" {
-		value.domain = validationNumberDomain
+		value.domain, value.primitive = validationNumberDomain, ""
 		// The caller has already checked this lexical form in its builtin domain.
 		value.number, _ = parseValidationDecimal(lexical)
 	}

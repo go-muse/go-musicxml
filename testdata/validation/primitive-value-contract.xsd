@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 primitive identity, boolean equality and URI fixed contracts. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="booleans"><xs:list itemType="xs:boolean"/></xs:simpleType>
+  <xs:simpleType name="boolean-list-enum"><xs:restriction base="booleans"><xs:enumeration value="true false"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="boolean-number"><xs:union memberTypes="xs:boolean xs:decimal"/></xs:simpleType>
+  <xs:simpleType name="number-boolean"><xs:union memberTypes="xs:decimal xs:boolean"/></xs:simpleType>
+  <xs:simpleType name="boolean-uri"><xs:union memberTypes="xs:boolean xs:anyURI"/></xs:simpleType>
+  <xs:simpleType name="boolean-enum"><xs:restriction base="boolean-number"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="number-enum"><xs:restriction base="number-boolean"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="boolean-uri-enum"><xs:restriction base="boolean-uri"><xs:enumeration value="true"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="boolean-items"><xs:list itemType="boolean-number"/></xs:simpleType>
+  <xs:simpleType name="boolean-items-enum"><xs:restriction base="boolean-items"><xs:enumeration value="true false"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="boolean-pattern"><xs:restriction base="xs:boolean"><xs:pattern value="true"/></xs:restriction></xs:simpleType>
+  <xs:complexType name="boolean-content"><xs:simpleContent><xs:extension base="boolean-list-enum"><xs:attribute name="code" type="xs:token" use="required"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:element name="list" type="boolean-list-enum"/>
+  <xs:element name="boolean-enum" type="boolean-enum"/>
+  <xs:element name="number-enum" type="number-enum"/>
+  <xs:element name="boolean-uri-enum" type="boolean-uri-enum"/>
+  <xs:element name="items" type="boolean-items-enum"/>
+  <xs:element name="boolean-fixed" type="xs:boolean" fixed="true" nillable="true"/>
+  <xs:element name="false-fixed" type="xs:boolean" fixed="false"/>
+  <xs:element name="boolean-default" type="xs:boolean" default="1"/>
+  <xs:element name="list-fixed" type="booleans" fixed="true false"/>
+  <xs:element name="pattern-fixed" type="boolean-pattern" fixed="true"/>
+  <xs:element name="complex" type="boolean-content" fixed="true false" nillable="true"/>
+  <xs:element name="uri-fixed" type="xs:anyURI" fixed="relative/path"/>
+  <xs:element name="attributes"><xs:complexType>
+    <xs:attribute name="boolean" type="xs:boolean" fixed="true"/>
+    <xs:attribute name="false" type="xs:boolean" fixed="false"/>
+    <xs:attribute name="list" type="booleans" fixed="true false"/>
+    <xs:attribute name="union" type="boolean-number" fixed="true"/>
+    <xs:attribute name="uri" type="xs:anyURI" fixed="relative/path"/>
+  </xs:complexType></xs:element>
+  <xs:simpleType name="true-spelling"><xs:restriction base="xs:boolean"><xs:pattern value="true"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="nested-inner"><xs:union memberTypes="true-spelling xs:anyURI"/></xs:simpleType>
+  <xs:simpleType name="nested-boolean"><xs:union memberTypes="nested-inner xs:decimal"/></xs:simpleType>
+  <xs:simpleType name="nested-enum"><xs:restriction base="nested-boolean"><xs:enumeration value="true"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="nested-list"><xs:list itemType="nested-boolean"/></xs:simpleType>
+  <xs:simpleType name="nested-list-enum"><xs:restriction base="nested-list"><xs:enumeration value="true path"/></xs:restriction></xs:simpleType>
+  <xs:element name="nested" type="nested-enum"/>
+  <xs:element name="nested-list" type="nested-list-enum"/>
+  <xs:element name="boolean-value" type="xs:boolean"/>
+  <xs:element name="uri-value" type="xs:anyURI"/>
+  <xs:element name="uri-attributes"><xs:complexType>
+    <xs:attribute name="space" type="xs:anyURI" fixed="foo bar"/>
+    <xs:attribute name="escaped" type="xs:anyURI" fixed="foo%2Fbar"/>
+    <xs:attribute name="unicode" type="xs:anyURI" fixed="https://例.example/楽譜"/>
+    <xs:attribute name="host" type="xs:anyURI" fixed="https://EXAMPLE.com/x"/>
+    <xs:attribute name="scheme" type="xs:anyURI" fixed="HTTP://example.com/x"/>
+    <xs:attribute name="relative" type="xs:anyURI" fixed="foo/./bar"/>
+    <xs:attribute name="tilde" type="xs:anyURI" fixed="foo/%7Ebar"/>
+  </xs:complexType></xs:element>
+</xs:schema>

@@ -66,14 +66,19 @@ Its declared unparsed entities exercise attribute values; libxml2 2.9.14
 rejects the corresponding element values before length facets, so all such
 `ENTITIES` element cases remain internal. `zz_generated_aggregate_validation_test.go`
 uses `testdata/validation/aggregate-contract.xsd` for list/union enumeration and
-fixed comparisons in exact numeric and string-derived domains. Boolean and
-other primitive equality remain lexical limitations. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
+fixed comparisons in exact numeric and string-derived domains. Boolean equality and primitive domain identity are covered by the later
+primitive fixture. Other same-primitive equality limitations remain documented. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
 code map;
 empty-list enumeration is metadata-only because libxml2 cannot compile it.
 `zz_generated_union_member_validation_test.go` uses
 `testdata/validation/union-member-contract.xsd` for XSD 1.0 union-member
 flattening and its direct-restriction, list-item and atomic/list-member controls.
-All nine test schemas use the local empty catalog.
+`zz_generated_primitive_validation_test.go` uses
+`testdata/validation/primitive-value-contract.xsd` for boolean/list/union value
+identity, fixed-value equality and URI whitespace. Six explicit element-fixed
+alternate-spelling cases remain internal because libxml2 compares them lexically;
+the same-byte external subset retains attribute-fixed and negative controls.
+All ten test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,
