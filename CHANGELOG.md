@@ -30,6 +30,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   booleans by truth value, including list/union enumeration and fixed values,
   and apply the XSD whitespace contract to URI fixed values without resolving
   or canonicalizing URLs. Other unverified primitive equality remains limited.
+- Match nullable repeated particles and valid repeated-group partitions without
+  greedy false rejections. Memoize child-grammar endpoints, reconstruct one
+  deterministic declaration witness, and reject malformed/cyclic particle
+  metadata without unbounded recursive matching.
 
 - Apply `length`, `minLength` and `maxLength` to item counts for the built-in
   XSD list types `NMTOKENS`, `IDREFS` and `ENTITIES`, including inherited

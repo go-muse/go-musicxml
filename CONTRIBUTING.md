@@ -84,7 +84,12 @@ name-character lexical contracts, including restricted, list, union and attribut
 paths. QName binding and ENTITY declaration semantics remain separate. Its
 ENTITY/ENTITIES element lexical cases remain internal because libxml2 rejects
 the declared positive element values; equivalent attribute cases use the oracle.
-All eleven test schemas use the local empty catalog.
+`zz_generated_grammar_validation_test.go` uses
+`testdata/validation/grammar-contract.xsd` for nullable and repeated particle
+endpoints, deterministic declaration witnesses and XSD 1.0 all-group controls.
+Its same-byte external test is required in Linux CI. Huge occurrence bounds and
+malformed/cyclic metadata are separate internal tests, not external-schema
+parity claims. All synthetic test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

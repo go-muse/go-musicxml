@@ -1106,6 +1106,67 @@ agrees on all 99 identical-source synthetic cases, including those four element
 cases. QName namespace expansion, NOTATION
 declarations and ENTITY unparsed-entity assessment are separate contracts,
 not claims of this lexical repair. Planning statuses remain unchanged.
+## Bounded particle matching repair update
+
+[`validation_particle.go`](../../validation_particle.go) replaces the single
+locally greedy endpoint with memoized endpoint sets. A sequence can retain a
+shorter earlier match when a later occurrence needs the remaining children.
+Repetition counts remain part of intermediate states. A nullable body can pad
+its minimum with empty occurrences symbolically; consuming occurrences are
+bounded by the remaining input length and the declared finite maximum. Numeric
+min/max magnitudes never drive empty loops or allocations.
+
+Final `(particle, start)` caches retain only unique endpoints, not parse
+histories or copied element-match slices. Once the longest complete endpoint is
+selected, temporary predecessor tables reconstruct one deterministic witness;
+selected choice alternatives follow declaration order. The witness is the only
+source of child declaration bindings used for scalar assessment. Source nodes
+and schema metadata stay unchanged. Structural guards reject missing, cyclic,
+inverted-range and invalid XSD 1.0 all-group metadata. This is not a complete
+schema-validity or UPA pass, and does not authorize ambiguous-schema support.
+
+Let P be particle components, E their child edges, and N the instance child
+count. Each of the particle and body caches has at most P(N+1) entries and
+P(N+1)^2 endpoint positions. Repetition explores at most N consuming-count
+layers with N positions and N body endpoints per layer, giving O(P(N+1)^4)
+transition attempts over all keys; sequence composition adds O(E(N+1)^3).
+Failure-name merging/sorting and endpoint ordering have additional polynomial
+cost. A conservative total bound including those operations is
+O((P+E+1)^2 (N+1)^4 log(P+E+N+2)). Cached failure-name sets add at most
+O(P^2(N+1)) storage to O(P(N+1)^2) endpoint storage. Local reconstruction
+predecessors use O((P+E+1)(N+1)^2) temporary storage; only selected split
+positions remain while recursively emitting the O(N) final witness. These are
+algorithmic bounds, not public resource quotas or practical latency promises.
+
+[`validation_grammar_test.go`](../../validation_grammar_test.go) covers 52
+original-source cases and same-byte `xmllint --nonet` parity using the generated
+[`grammar-contract.xsd`](../../testdata/validation/grammar-contract.xsd): nullable
+sequence/choice with finite/unbounded repetition, zero/min/max/max+1 boundaries,
+the valid `(a{1,2}){2,2}` partition (counts 2/3/4 pass; 1/5 fail), continuation
+requiring shorter early consumption, selected scalar bindings, all-group
+ordering, inactive `maxOccurs=0` leaves sharing an active name, and repeated/concurrent nonmutation.
+[`validation_grammar_work_test.go`](../../validation_grammar_work_test.go)
+checks memo cardinality, transition/allocation growth on a repeated-range
+adversary, symbolic `MaxUint64` nullable bounds, deterministic bindings, and
+malformed/cyclic metadata. An independent whole-word enumerator compares all
+341 words of length 0–4 over four leaf names against each of seven generated
+sequence/choice grammars (2,387 combinations). Huge bounds and malformed schemas are internal
+controls, explicitly outside external parity. Invalid-UPA schemas are not used
+as positive backtracking evidence.
+
+Generic wildcard namespace/processContents behavior remains unverified and
+unchanged: the legacy wildcard consumes any child without declaration
+assessment. The pinned production schemas have no element wildcards or all
+groups, while the synthetic fixture now proves the supported XSD 1.0 all
+subset. A parent content-model failure still prevents matched-child assessment;
+identity completeness and causal resolution remain separate work.
+
+This is a bounded `REQ-DEF-OPS-GRAMMAR` prerequisite, not completion of
+`STAGE-DEF-04`, `REQ-DEF-BUDGET-MATCH`, or source/model adapter integration.
+`MaxRuleSteps`, cancellation, finite resource defaults, typed incomplete results
+and legacy error bridging remain reviewed budget/report dependencies. Optional
+private operation counters used by regression tests do not implement those
+contracts. Generic or typed ID/default behavior is unchanged.
 
 ## Reuse and adaptation
 

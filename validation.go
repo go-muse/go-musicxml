@@ -341,6 +341,7 @@ type validationMatchResult struct {
 }
 
 type validationMatchFailure struct {
+	schema   string
 	position int
 	expected []validationQName
 }
@@ -1923,249 +1924,6 @@ func matchValidationPattern(pattern string, value string) (bool, error) {
 	return compiled.MatchString(value), nil
 }
 
-func (c *validationContext) matchParticle(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	position int,
-) (validationMatchResult, validationMatchFailure, bool) {
-	if particle == nil {
-		return validationMatchResult{next: position}, validationMatchFailure{}, true
-	}
-
-	result := validationMatchResult{next: position}
-	bestFailure := validationMatchFailure{position: position}
-	count := uint64(0)
-	maximum := particle.Occurrence.Max
-	if particle.Occurrence.Unbounded {
-		maximum = uint64(len(children) + 1)
-	}
-
-	for count < maximum {
-		next, failure, matched := c.matchParticleBody(
-			particle,
-			children,
-			result.next,
-		)
-		if !matched {
-			bestFailure = betterValidationFailure(bestFailure, failure)
-			break
-		}
-		if next.next == result.next {
-			// A required sequence whose children are all optional represents
-			// one valid empty occurrence. Count it once, then stop so an
-			// unbounded empty particle cannot loop forever.
-			count++
-			break
-		}
-
-		result.next = next.next
-		result.elements = append(result.elements, next.elements...)
-		count++
-	}
-
-	if count < particle.Occurrence.Min {
-		if len(bestFailure.expected) == 0 {
-			bestFailure.expected = validationParticleFirstNames(particle)
-		}
-		bestFailure.position = max(bestFailure.position, result.next)
-		return validationMatchResult{}, bestFailure, false
-	}
-
-	return result, bestFailure, true
-}
-
-func (c *validationContext) matchParticleBody(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	position int,
-) (validationMatchResult, validationMatchFailure, bool) {
-	switch particle.Kind {
-	case validationParticleElement:
-		element, found := c.resolveElement(particle.Element)
-		if !found {
-			return validationMatchResult{}, validationMatchFailure{
-				position: position,
-			}, false
-		}
-		if position >= len(children) ||
-			validationName(children[position].Name) != element.Name {
-			return validationMatchResult{}, validationMatchFailure{
-				position: position,
-				expected: []validationQName{element.Name},
-			}, false
-		}
-
-		return validationMatchResult{
-			next: position + 1,
-			elements: []validationElementMatch{{
-				index:  position,
-				schema: element,
-			}},
-		}, validationMatchFailure{}, true
-
-	case validationParticleSequence:
-		result := validationMatchResult{next: position}
-		bestFailure := validationMatchFailure{position: position}
-		for _, child := range particle.Children {
-			next, failure, matched := c.matchParticle(
-				child,
-				children,
-				result.next,
-			)
-			bestFailure = betterValidationFailure(bestFailure, failure)
-			if !matched {
-				return validationMatchResult{}, bestFailure, false
-			}
-			result.next = next.next
-			result.elements = append(
-				result.elements,
-				next.elements...,
-			)
-		}
-		return result, bestFailure, true
-
-	case validationParticleChoice:
-		bestFailure := validationMatchFailure{position: position}
-		var empty *validationMatchResult
-		for _, child := range particle.Children {
-			result, failure, matched := c.matchParticle(
-				child,
-				children,
-				position,
-			)
-			bestFailure = betterValidationFailure(bestFailure, failure)
-			if !matched {
-				continue
-			}
-			if result.next > position {
-				return result, bestFailure, true
-			}
-			if empty == nil {
-				copy := result
-				empty = &copy
-			}
-		}
-		if empty != nil {
-			return *empty, bestFailure, true
-		}
-		if len(bestFailure.expected) == 0 {
-			bestFailure.expected = validationParticleFirstNames(particle)
-		}
-		return validationMatchResult{}, bestFailure, false
-
-	case validationParticleAll:
-		return c.matchAllParticle(particle, children, position)
-
-	case validationParticleAny:
-		if position >= len(children) {
-			return validationMatchResult{}, validationMatchFailure{
-				position: position,
-			}, false
-		}
-		return validationMatchResult{
-			next: position + 1,
-		}, validationMatchFailure{}, true
-
-	default:
-		return validationMatchResult{}, validationMatchFailure{
-			position: position,
-		}, false
-	}
-}
-
-func (c *validationContext) matchAllParticle(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	position int,
-) (validationMatchResult, validationMatchFailure, bool) {
-	result := validationMatchResult{next: position}
-	used := make([]bool, len(particle.Children))
-
-	for result.next < len(children) {
-		matchedChild := false
-		for index, child := range particle.Children {
-			if used[index] {
-				continue
-			}
-			next, _, matched := c.matchParticle(
-				child,
-				children,
-				result.next,
-			)
-			if !matched || next.next == result.next {
-				continue
-			}
-
-			used[index] = true
-			result.next = next.next
-			result.elements = append(
-				result.elements,
-				next.elements...,
-			)
-			matchedChild = true
-			break
-		}
-		if !matchedChild {
-			break
-		}
-	}
-
-	var expected []validationQName
-	for index, child := range particle.Children {
-		if used[index] || child.Occurrence.Min == 0 {
-			continue
-		}
-		expected = append(
-			expected,
-			validationParticleFirstNames(child)...,
-		)
-	}
-	if len(expected) != 0 {
-		return validationMatchResult{}, validationMatchFailure{
-			position: result.next,
-			expected: expected,
-		}, false
-	}
-
-	return result, validationMatchFailure{}, true
-}
-
-func validationParticleFirstNames(
-	particle *validationParticleSchema,
-) []validationQName {
-	if particle == nil {
-		return nil
-	}
-
-	switch particle.Kind {
-	case validationParticleElement:
-		if particle.Element == nil {
-			return nil
-		}
-		if particle.Element.Reference.Local != "" {
-			return []validationQName{particle.Element.Reference}
-		}
-		return []validationQName{particle.Element.Name}
-	case validationParticleAll, validationParticleChoice:
-		var result []validationQName
-		for _, child := range particle.Children {
-			result = append(result, validationParticleFirstNames(child)...)
-		}
-		return uniqueValidationNames(result)
-	case validationParticleSequence:
-		var result []validationQName
-		for _, child := range particle.Children {
-			result = append(result, validationParticleFirstNames(child)...)
-			if child.Occurrence.Min > 0 {
-				break
-			}
-		}
-		return uniqueValidationNames(result)
-	default:
-		return nil
-	}
-}
-
 func betterValidationFailure(
 	left validationMatchFailure,
 	right validationMatchFailure,
@@ -2177,7 +1935,7 @@ func betterValidationFailure(
 		return left
 	default:
 		left.expected = uniqueValidationNames(
-			append(left.expected, right.expected...),
+			slices.Concat(left.expected, right.expected),
 		)
 		return left
 	}
@@ -2213,6 +1971,10 @@ func (c *validationContext) addContentIssue(
 	path string,
 	failure validationMatchFailure,
 ) {
+	if failure.schema != "" {
+		c.addIssue(path, "schema", failure.schema)
+		return
+	}
 	position := min(failure.position, len(node.Children))
 	expected := validationExpectedNames(failure.expected)
 
