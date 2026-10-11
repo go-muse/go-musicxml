@@ -153,12 +153,12 @@ lexical path. Cancellation and quota admission precede each bounded span.
 Five interleaved one-second benchmark sets on Go 1.27.2, linux/amd64, AMD EPYC
 9V74 with `GOMAXPROCS=1` measured these fixture-specific medians:
 
-| Fixture | Previous main reader | Initial PR reader | Optimized reader |
+| Fixture | Previous main reader | Initial PR reader | Optimized reader before coordinate guard |
 | --- | ---: | ---: | ---: |
 | MozartTrio (UTF-8) | 6.045 ms | 12.204 ms | 7.871 ms |
 | MozaChloSample (UTF-16BE) | 9.972 ms | 16.461 ms | 12.253 ms |
 
-The optimized reader still costs approximately 30% / 23% more time than the
+That optimized checkpoint still cost approximately 30% / 23% more time than the
 previous main reader on these inputs, while preserving the stronger checks and
 provenance. Allocations per operation are 40,182 versus 39,601 previously for
 UTF-8, and 50,073 versus 160,921 for UTF-16. Allocation bytes remain approximately
@@ -172,3 +172,11 @@ GOMAXPROCS=1 go test -run '^$' -bench '^BenchmarkDecode$' -benchmem -benchtime 1
 
 The paired comparison used the identical benchmark in isolated baseline,
 initial-head and optimized binaries; heavy concurrent verification was paused.
+
+The final host-width coordinate guard was measured separately in five
+alternating-order one-second pairs on the same host: the optimized pre-guard
+reader versus the final guarded reader measured 7.439 / 7.598 ms for UTF-8
+(+2.13%) and 11.077 / 11.569 ms for UTF-16 (+4.44%). Median allocation counts
+were unchanged (40,181 / 50,073). These separate timing windows must not be
+combined into a new claimed baseline percentage. The final guard preserves
+exact-or-omitted source coordinates on both 32-bit and 64-bit hosts.
