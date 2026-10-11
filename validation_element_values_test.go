@@ -72,7 +72,8 @@ func validationElementValueCases() []validationAttributeCase {
 		{"schema hint remains permitted", "defaulted", ` n:noNamespaceSchemaLocation="https://example.invalid/schema.xsd"`, "", "", ""},
 		{"nonnillable default", "default-plain", "", "", "", ""},
 		{"nonnillable false still rejected", "default-plain", ` n:nil="false"`, "", "nillable", "/@{" + validationXSINamespace + "}nil"},
-		{"default does not hide pattern", "default-pattern", "", "7", "pattern", ""},
+		{"default canonical spelling remains valid", "default-pattern", "", "7", "", ""},
+		{"default does not hide pattern", "default-pattern", "", "+7", "pattern", ""},
 	} {
 		add(test.name, test.element, test.attrs, test.content, test.constraint, test.suffix)
 	}
