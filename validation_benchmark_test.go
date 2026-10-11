@@ -18,7 +18,6 @@ func BenchmarkValidate(b *testing.B) {
 		b.Fatal(err)
 	}
 	b.ReportAllocs()
-	b.ResetTimer()
 	for b.Loop() {
 		if err := Validate(document); err != nil {
 			b.Fatal(err)
