@@ -638,7 +638,8 @@ func (c *Context) ResolveType(
 	c.bytes(len(reference.Name.Space))
 	c.bytes(len(reference.Name.Local))
 	if reference.Name.Space == XSDNamespace {
-		return nil, nil, reference.Name.Local, BuiltinSemantics(reference.Name.Local) != nil
+		_, found := builtinSemanticsValue(reference.Name.Local)
+		return nil, nil, reference.Name.Local, found
 	}
 
 	resolved, found := c.Schema.Types[reference.Name]

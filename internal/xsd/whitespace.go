@@ -49,7 +49,17 @@ func BuiltinSemantics(name string) *SimpleSemantics {
 func builtinSemantics(name string, c *Context) *SimpleSemantics {
 	c.step(1)
 	c.scratch(int64(unsafe.Sizeof(SimpleSemantics{})))
-	result := &SimpleSemantics{Builtin: name, Whitespace: WhitespaceCollapse}
+	result, found := builtinSemanticsValue(name)
+	if !found {
+		return nil
+	}
+	return &result
+}
+
+// Lookup-only callers need no temporary descriptor. The pointer-returning
+// entry keeps its existing metering and independently owned result.
+func builtinSemanticsValue(name string) (SimpleSemantics, bool) {
+	result := SimpleSemantics{Builtin: name, Whitespace: WhitespaceCollapse}
 	switch name {
 	case "string":
 		result.Whitespace, result.StringValue = WhitespacePreserve, true
@@ -65,9 +75,9 @@ func builtinSemantics(name string, c *Context) *SimpleSemantics {
 		"hexBinary", "anyURI", "QName", "NOTATION", "date", "dateTime", "duration",
 		"gDay", "gMonth", "gMonthDay", "gYear", "gYearMonth", "time", "anyType":
 	default:
-		return nil
+		return SimpleSemantics{}, false
 	}
-	return result
+	return result, true
 }
 
 func (c *Context) SimpleTypeSemantics(reference *TypeRef) (result *SimpleSemantics) {

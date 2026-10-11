@@ -2,7 +2,6 @@ package validation
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -49,7 +48,10 @@ func validComponent(v ComponentID) bool {
 func validRef(v DecisionRef) bool {
 	return validRuleKey(v.Rule) && validID(v.Subject.DocumentID) && v.Subject.Node != 0
 }
-func validateEvidence[T any](v Evidence[T], field string) error {
+
+// Every ingress payload is comparable; comparing it with its zero value also
+// checks immutable numeric wrappers without boxing values for reflection.
+func validateEvidence[T comparable](v Evidence[T], field string) error {
 	switch v.State {
 	case EvidenceKnown:
 		if v.Cause != nil {
@@ -72,7 +74,7 @@ func validateEvidence[T any](v Evidence[T], field string) error {
 	}
 	if v.State != EvidenceKnown {
 		var zero T
-		if !reflect.DeepEqual(v.Value, zero) {
+		if v.Value != zero {
 			return contract(field, "non-known evidence carries a value")
 		}
 	}
