@@ -89,6 +89,9 @@ func TestSourceAssessmentDTDCompletenessAxes(t *testing.T) {
 		{"empty-subset", `<!DOCTYPE score-partwise [<!-- checked -->]>`, validation.SyntaxWellFormed, true},
 		{"different-doctype-name", `<!DOCTYPE different>`, validation.SyntaxWellFormed, true},
 		{"external-subset", `<!DOCTYPE score-partwise SYSTEM "file:///definitely-not-read.dtd">`, validation.SyntaxWellFormed, false},
+		{"familiar-public-untrusted-system", `<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "file:///definitely-not-read.dtd">`, validation.SyntaxWellFormed, false},
+		{"familiar-public-internal-default", `<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd" [<!ATTLIST score-partwise hidden CDATA "value">]>`, validation.SyntaxIncomplete, false},
+		{"familiar-public-internal-entity", `<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd" [<!ENTITY unused "value">]>`, validation.SyntaxIncomplete, false},
 		{"attribute-declaration", `<!DOCTYPE score-partwise [<!ATTLIST score-partwise hidden CDATA #IMPLIED>]>`, validation.SyntaxIncomplete, false},
 		{"entity-declaration", `<!DOCTYPE score-partwise [<!ENTITY unused "value">]>`, validation.SyntaxIncomplete, false},
 	} {
