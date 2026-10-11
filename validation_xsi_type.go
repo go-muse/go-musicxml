@@ -233,13 +233,25 @@ func (c *validationContext) typeDerived(derived, base validationTypeIdentity, bl
 	}
 	// Metadata has already been checked acyclic, including all union members.
 	c.derivations[key] = false
+	before := c.assessmentVersion
+	defer func() {
+		// Cache only proved answers. A technical failure must be reached again
+		// on subsequent lookups so its cached nil semantics replay incomplete
+		// state rather than becoming an ordinary false derivation result.
+		if c.assessmentVersion != before {
+			delete(c.derivations, key)
+		}
+	}()
 	parent, method, _ := c.typeBase(derived)
 	if method == 0 || blocked&method != 0 {
 		return false
 	}
 	if base.simple != nil && derived.complex == nil {
 		semantics := c.resolveSimpleSemantics(base.simple)
-		if semantics != nil && semantics.union != nil {
+		if semantics == nil {
+			return false
+		}
+		if semantics.union != nil {
 			for _, member := range semantics.union.Members {
 				memberType, _ := c.memberType(member)
 				if c.typeDerived(derived, memberType, blocked) {
@@ -310,7 +322,12 @@ func (c *validationContext) actualElementType(node *validationNode, schema *vali
 	if actual.complex != nil && base.complex != nil {
 		blocked |= base.complex.Block
 	}
-	if !c.typeDerived(actual, base, blocked) {
+	before := c.assessmentVersion
+	derived := c.typeDerived(actual, base, blocked)
+	if c.assessmentVersion != before {
+		return declared
+	}
+	if !derived {
 		c.addIssue(issuePath, "xsi:type", "nominated type is not an allowed derivation of the declared type")
 		return declared
 	}
