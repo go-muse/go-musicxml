@@ -48,6 +48,32 @@ func modelOwnershipRows(t *testing.T, value any, key string) map[string]map[stri
 	return result
 }
 
+// A merge-time performance acceptance does not discharge the retained program
+// obligation. Keep its owner, evidence and closure criteria outside the batch's
+// historical pre-acceptance checklist. This is documentation integrity only,
+// not a benchmark threshold or executable performance-coverage claim.
+func TestModelAssessmentRemainingPerformanceOwner(t *testing.T) {
+	data, err := os.ReadFile("docs/validation/model-assessment-scope.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, remaining, ok := strings.Cut(string(data), "## Remaining program\n")
+	if !ok {
+		t.Fatal("missing distinct remaining-program section")
+	}
+	for _, required := range []string{
+		"B5-PERF-01", "shared validation kernel/session", "batch 9",
+		"outstanding", "Run.Bind", "child witnesses", "recordXSDResult",
+		"Open", "header copies", "cacheDecision", "27.02 ms", "100.73 ms",
+		"11,705,376", "33,374,378", "123,632", "181,857",
+		"matched", "reviewed", "resource", "causal",
+	} {
+		if !strings.Contains(remaining, required) {
+			t.Errorf("remaining performance obligation lost %q", required)
+		}
+	}
+}
+
 // Original planning and five-axis texts are retained evidence, not statuses that
 // an implementation or a successful helper test is allowed to promote.
 func TestModelAssessmentOwnershipPreservesProgram(t *testing.T) {
