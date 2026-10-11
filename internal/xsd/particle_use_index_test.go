@@ -161,18 +161,18 @@ func TestCompileInheritedParticleIndexAdmission(t *testing.T) {
 	particle := &ParticleSchema{}
 	c := &Compiled{}
 	u := Use{schema: c, ownerPath: "/owner", path: "/owner/particle"}
-	b, err := newCompileBudget(CompileLimits{MaxBytes: 255})
+	b, err := newCompileBudget(CompileLimits{MaxBytes: 351})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := c.indexInheritedParticleUse(b, particle, u); err == nil || c.inheritedParticleUses != nil || b.bytes != 0 {
 		t.Fatalf("index allocated before admission: err=%v bytes=%d index=%+v", err, b.bytes, c.inheritedParticleUses)
 	}
-	b, err = newCompileBudget(CompileLimits{MaxBytes: 256, MaxRecords: 1, MaxEdges: 1})
+	b, err = newCompileBudget(CompileLimits{MaxBytes: 352, MaxRecords: 1, MaxEdges: 1})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := c.indexInheritedParticleUse(b, particle, u); err != nil || c.inheritedParticleUses[particle] != u || b.bytes != 256 || b.records != 1 || b.edges != 1 {
+	if err := c.indexInheritedParticleUse(b, particle, u); err != nil || c.inheritedParticleUses[particle] != u || b.bytes != 352 || b.records != 1 || b.edges != 1 {
 		t.Fatalf("exact index admission: err=%v budget=%+v index=%+v", err, b, c.inheritedParticleUses)
 	}
 	if err := c.indexInheritedParticleUse(b, &ParticleSchema{}, u); err == nil || len(c.inheritedParticleUses) != 1 {
@@ -180,7 +180,7 @@ func TestCompileInheritedParticleIndexAdmission(t *testing.T) {
 	}
 	for _, path := range []string{"/owner/other-slot", "/other-owner/particle"} {
 		other := Use{schema: c, ownerPath: "/other-owner", path: path}
-		if err := c.indexInheritedParticleUse(b, particle, other); err != nil || c.inheritedParticleUses[particle] != (Use{}) || b.bytes != 256 {
+		if err := c.indexInheritedParticleUse(b, particle, other); err != nil || c.inheritedParticleUses[particle] != (Use{}) || b.bytes != 352 {
 			t.Fatalf("ambiguity grew storage or selected a use: err=%v budget=%+v index=%+v", err, b, c.inheritedParticleUses)
 		}
 	}

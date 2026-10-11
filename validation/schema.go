@@ -206,3 +206,41 @@ func (s *CompiledSchema) component(kind xsd.TypeID) ComponentID {
 	}
 	return out
 }
+
+// SchemaUse describes one exact immutable declaration use and its type
+// relationships. A QName alone does not distinguish repeated schema positions.
+// The Known fields distinguish unavailable metadata from valid zero-valued names
+// on anonymous types. Global declarations have no OwnerType.
+type SchemaUse struct {
+	Declaration       DeclarationID
+	Name              QName
+	Attribute         bool
+	OwnerType         ComponentID
+	OwnerTypeKnown    bool
+	DeclaredType      ComponentID
+	DeclaredTypeKnown bool
+}
+
+// Uses returns independent value descriptors in the same order as Declarations.
+// Descriptors contain exact existing identities, never mutable schema metadata.
+// Inherited attributes retain their original declaring type as OwnerType.
+func (s *CompiledSchema) Uses() []SchemaUse {
+	if s == nil || s.kernel == nil {
+		return nil
+	}
+	uses := s.kernel.Uses()
+	out := make([]SchemaUse, len(uses))
+	for i, use := range uses {
+		name := use.Declaration()
+		out[i] = SchemaUse{Declaration: s.declaration(use), Name: QName{Space: name.Space, Local: name.Local}, Attribute: use.IsAttribute()}
+		if owner, ok := use.OwnerType(); ok {
+			out[i].OwnerType = s.component(owner)
+			out[i].OwnerTypeKnown = true
+		}
+		if declared, ok := use.DeclaredType(); ok {
+			out[i].DeclaredType = s.component(declared)
+			out[i].DeclaredTypeKnown = true
+		}
+	}
+	return out
+}
