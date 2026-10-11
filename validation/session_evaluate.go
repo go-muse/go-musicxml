@@ -404,6 +404,8 @@ func (s *Session) scanPrerequisite(ctx context.Context, dependency Dependency, c
 func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinition, p Plan, final bool) (Decision, bool, error) {
 	d := Decision{Rule: r.Key, Subject: NodeRef{s.documentID, n.header.ID}, Outcome: OutcomePass}
 	switch p.kind {
+	case planLocal:
+		return s.evaluateLocalPlan(ctx, n, p.local, final)
 	case planChildren:
 		count := int64(0)
 		var uncertain *Decision

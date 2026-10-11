@@ -46,6 +46,7 @@ const (
 // constructor. Plans contain no callback, XML parser, runtime expression or DSL.
 type Plan struct {
 	modelAssembly    Assembly
+	local            *localPlan
 	schema           *CompiledSchema
 	xsdCheck         XSDCheck
 	kind             planKind
@@ -127,6 +128,9 @@ func validAttributeSelector(a AttributeSelector) bool {
 	return validQName(a.Name) && validDeclaration(a.Declaration)
 }
 func (p Plan) valid() error {
+	if p.kind == planLocal && !p.local.bounded() {
+		return contract("local plan", "parameters exceed finite collection bounds")
+	}
 	if len(p.children) > 4096 {
 		return contract("plan", "too many child declarations")
 	}
@@ -138,6 +142,8 @@ func (p Plan) valid() error {
 		if !validAssembly(p.modelAssembly) {
 			return contract("model representation plan", "valid assembly required")
 		}
+	case planLocal:
+		return p.local.valid()
 	case planXSD:
 		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) {
 			return contract("XSD plan", "compiled schema and supported operation required")
@@ -200,6 +206,7 @@ func validateComparison(c Comparison, a Atomic) error {
 	return nil
 }
 func (p Plan) clone() Plan {
+	p.local = p.local.clone()
 	if p.schema != nil {
 		schema := *p.schema
 		p.schema = &schema
@@ -228,6 +235,16 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
+	if p.kind == planLocal && (r.Scope != ScopeNode || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate) {
+		return contract("local plan", "required normative node predicate required")
+	}
+	if p.kind == planLocal {
+		for _, target := range r.Targets {
+			if target != TargetSource && target != TargetModel {
+				return contract("local plan", "source or model target required")
+			}
+		}
+	}
 	if p.kind == planXSD {
 		if r.Selector.Assembly == nil || p.schema == nil || *r.Selector.Assembly != p.schema.assembly || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate {
 			return contract("XSD plan", "matching assembly selector and required normative predicate role required")
@@ -280,6 +297,9 @@ func (p Plan) digestValue() any {
 			Assembly Assembly
 		}{p.kind, p.modelAssembly}
 	}
+	if p.kind == planLocal {
+		return p.local.digest()
+	}
 	if p.kind == planXSD {
 		return struct {
 			Kind           planKind
@@ -313,7 +333,7 @@ func (p Plan) digestValue() any {
 	}{p.kind, p.children, p.minimum, p.maximum, p.attribute, p.required, p.comparison, a, p.key, p.relation}
 }
 func (p Plan) configSize() int64 {
-	n := int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
+	n := p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
 	for _, d := range p.children {
 		n += int64(64 + len(d.OwnerOccurrence) + len(d.Occurrence))
 	}
