@@ -453,12 +453,9 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 	s.depth--
 	// Model evidence establishes its real verdict before schema binding can
 	// consume affected scalar/attribute/order facts or cache dependent results.
-	for _, key := range s.catalog.orders[s.profile.ID] {
-		rule := s.catalog.rules[key]
-		if s.catalog.plans[rule.Predicate].kind == planModelRepresentation {
-			if err := s.evaluate(ctx, n, key, false); err != nil {
-				return s.fail(err)
-			}
+	for _, key := range s.catalog.modelOrders[s.profile.ID] {
+		if err := s.evaluate(ctx, n, key, false); err != nil {
+			return s.fail(err)
 		}
 	}
 	if s.schema != nil && !s.schema.bound {
