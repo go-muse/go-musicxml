@@ -45,6 +45,7 @@ func (c *Context) assessCurrentType(reference *TypeRef, value CurrentScalar) (Si
 	}
 	if !value.Known || value.Absent {
 		c.capability(c.local.family, "model-scalar-value-unavailable")
+		c.scratch(48)
 		return SimpleAssessment{}, &SimpleFailure{Constraint: "assessment", Message: "current scalar value is unavailable"}
 	}
 	if value.Value.Domain == StringDomain {
@@ -61,7 +62,7 @@ func (c *Context) assessCurrentType(reference *TypeRef, value CurrentScalar) (Si
 func (c *Context) assessCurrentBuiltin(builtin string, value SimpleValue) (SimpleAssessment, *SimpleFailure) {
 	c.step(1)
 	bad := func() (SimpleAssessment, *SimpleFailure) {
-		return SimpleAssessment{}, &SimpleFailure{Constraint: "datatype", Message: format(c, "current value is not in xs:%s", builtin)}
+		return SimpleAssessment{}, c.currentFailure("datatype", "current value is not in xs:%s", builtin)
 	}
 	if builtin == "boolean" && value.Domain == BooleanDomain {
 		return SimpleAssessment{Builtin: builtin, Value: value}, nil
@@ -124,6 +125,7 @@ func (c *Context) assessCurrentSimple(schema *SimpleSchema, value SimpleValue) (
 		}
 		if len(schema.Patterns) > 0 {
 			c.capability(c.local.family, "model-lexical-pattern-unavailable")
+			c.scratch(48)
 			baseFailure = &SimpleFailure{Constraint: "model-capability", Message: "current numeric or boolean value has no lexical pattern subject"}
 			for _, pattern := range schema.Patterns {
 				c.step(1)
@@ -137,7 +139,7 @@ func (c *Context) assessCurrentSimple(schema *SimpleSchema, value SimpleValue) (
 			if before != c.AssessmentVersion {
 				return result, c.AssessmentFailure("enumeration literal assessment incomplete")
 			}
-			return result, &SimpleFailure{Constraint: "enumeration", Message: "current value is not one of the allowed values"}
+			return result, c.currentFailure("enumeration", "current value is not one of the allowed values")
 		}
 		if result.Value.Domain == NumberDomain {
 			if failure := validateNumberBounds(schema, result.Value.Number, result.Builtin, c); failure != nil {
@@ -156,7 +158,7 @@ func (c *Context) assessCurrentSimple(schema *SimpleSchema, value SimpleValue) (
 	case SimpleUnion:
 		for _, member := range schema.Members {
 			c.step(1)
-			result, failure := c.assessCurrentMember(member, value, true)
+			result, failure := c.assessCurrentTrial(member, value)
 			if failure == nil {
 				return result, nil
 			}
@@ -164,9 +166,9 @@ func (c *Context) assessCurrentSimple(schema *SimpleSchema, value SimpleValue) (
 				return result, failure
 			}
 		}
-		return SimpleAssessment{}, &SimpleFailure{Constraint: "union", Message: "current value does not match any union member"}
+		return SimpleAssessment{}, c.currentFailure("union", "current value does not match any union member")
 	case SimpleList:
-		return SimpleAssessment{}, &SimpleFailure{Constraint: "datatype", Message: "current numeric or boolean value is not a list"}
+		return SimpleAssessment{}, c.currentFailure("datatype", "current numeric or boolean value is not a list")
 	default:
 		return SimpleAssessment{}, c.IncompleteFailure("unsupported current simple type form")
 	}
@@ -192,7 +194,7 @@ func validateNumberBounds(schema *SimpleSchema, number Decimal, builtin string, 
 		}
 		comparison := number.compare(limit, c)
 		if (test.minimum && comparison < 0) || (!test.minimum && comparison > 0) || (test.exclusive && comparison == 0) {
-			return &SimpleFailure{Constraint: test.constraint, Message: format(c, "current value violates %s=%q", test.constraint, test.literal)}
+			return c.currentFailure(test.constraint, "current value violates %s=%q", test.constraint, test.literal)
 		}
 	}
 	return nil
@@ -202,10 +204,10 @@ func validateNumberDigits(schema *SimpleSchema, number Decimal, c *Context) *Sim
 	fraction := uint64(len(number.Fraction))
 	total := max(1, uint64(len(number.Whole))+fraction)
 	if schema.HasTotalDigits && total > schema.TotalDigits {
-		return &SimpleFailure{Constraint: "totalDigits", Message: format(c, "value has %d digits; maximum is %d", total, schema.TotalDigits)}
+		return c.currentFailure("totalDigits", "value has %d digits; maximum is %d", total, schema.TotalDigits)
 	}
 	if schema.HasFractionDigits && fraction > schema.FractionDigits {
-		return &SimpleFailure{Constraint: "fractionDigits", Message: format(c, "value has %d fraction digits; maximum is %d", fraction, schema.FractionDigits)}
+		return c.currentFailure("fractionDigits", "value has %d fraction digits; maximum is %d", fraction, schema.FractionDigits)
 	}
 	return nil
 }
@@ -240,6 +242,8 @@ func (c *Context) currentLiteralValue(reference *TypeRef, value CurrentScalar) (
 	return result, failure == nil
 }
 func (c *Context) currentFixedEqual(reference *TypeRef, value CurrentScalar, literal string) bool {
+	c.currentTrials++
+	defer func() { c.currentTrials-- }()
 	actual, ok := c.currentLiteralValue(reference, value)
 	if !ok {
 		return false
@@ -315,4 +319,22 @@ func (c *Context) attributeIdentityText(text string) string {
 		return current.Value.Text
 	}
 	return text
+}
+
+// Trial rejection does not establish the enclosing union's verdict. Outside a
+// trial, latch a known violation before allocating its explanatory diagnostic.
+func (c *Context) currentFailure(constraint, message string, args ...any) *SimpleFailure {
+	if c.currentModel() && c.currentTrials == 0 {
+		c.local.result().Valid = false
+	}
+	c.scratch(48)
+	if len(args) > 0 {
+		message = format(c, message, args...)
+	}
+	return &SimpleFailure{Constraint: constraint, Message: message}
+}
+func (c *Context) assessCurrentTrial(member *SimpleMember, value SimpleValue) (SimpleAssessment, *SimpleFailure) {
+	c.currentTrials++
+	defer func() { c.currentTrials-- }()
+	return c.assessCurrentMember(member, value, true)
 }

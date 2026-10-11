@@ -108,6 +108,7 @@ type boundState struct {
 	currentAttributeSet                          bool
 	attributeEpoch                               uint64
 	attributeKnown                               bool
+	attributeLimited                             bool
 	defaulted                                    bool
 	run                                          *Run
 	subject                                      Subject
@@ -627,7 +628,7 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	}
 	s := c.local
 	use := s.run.attributeUse(s.actual, schema.Name)
-	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
+	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && !s.attributeLimited && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
 	if s.subject.CurrentModel {
 		scalar.Lexeme = ""
 	}

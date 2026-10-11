@@ -207,6 +207,7 @@ type Attribute struct {
 }
 
 type Context struct {
+	currentTrials      int
 	identitySource     identityOrigin
 	identityDiagnostic identityDiagnostic
 	run                *Run
@@ -442,8 +443,11 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		if len(node.Children) != 0 {
 			declarationValid = false
 			c.AddIssue(path, "fixed", "element with a fixed value must not contain child elements")
-		} else if !c.elementFixedEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed) {
+		} else if equal := c.elementFixedEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed); !equal && (!c.currentModel() || c.AssessmentVersion == beforeFixed) {
 			declarationValid = false
+			if c.currentModel() {
+				c.local.result().Valid = false
+			}
 			c.AddIssue(
 				path,
 				"fixed",
@@ -1052,6 +1056,7 @@ func (c *Context) ValidateAttributes(
 			c.local.attribute = attribute.Name
 			c.local.attributeEpoch = c.AssessmentVersion
 			c.local.attributeKnown = attribute.ValueKnown
+			c.local.attributeLimited = false
 			c.local.currentAttributeSet = c.currentModel()
 			if c.currentModel() {
 				c.local.currentAttribute = c.checkCurrent(attribute.Current)
@@ -1106,6 +1111,9 @@ func (c *Context) ValidateAttributes(
 			) && c.AssessmentVersion == beforeFixed {
 			attributeValid = false
 			valid = false
+			if c.currentModel() {
+				c.local.result().Valid = false
+			}
 			c.AddIssue(
 				attributePath(path, attribute.Name, c),
 				"fixed",

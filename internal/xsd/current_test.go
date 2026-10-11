@@ -2,6 +2,9 @@ package xsd
 
 import (
 	"context"
+	"errors"
+	"math/big"
+	"strings"
 	"testing"
 )
 
@@ -108,5 +111,192 @@ func TestCurrentStringUnionAndFixed(t *testing.T) {
 	r, b, _ = bindCurrent(t, TypeRef{Name: QName{Space: XSDNamespace, Local: "integer"}}, currentNumber(t, "0"), &zero)
 	if !r.Results(b).Declaration.Valid || r.Scalar(b).Defaulted {
 		t.Fatal("numeric zero treated as empty")
+	}
+}
+
+func TestCurrentRestrictionChainsAndUnionSelection(t *testing.T) {
+	pattern := currentRestriction("integer")
+	pattern.Patterns = []string{"[0-9]+"}
+	outer := &SimpleSchema{Form: SimpleRestriction, Base: &SimpleMember{Inline: pattern}, HasMaxInclusive: true, MaxInclusive: "3"}
+	r, b, _ := bindCurrent(t, TypeRef{InlineSimple: outer}, currentNumber(t, "4"), nil)
+	if got := r.Results(b).Scalar; got.Valid || got.Complete || len(got.Issues) != 1 || got.Issues[0].Constraint != "maxInclusive" {
+		t.Fatalf("lost outer bound: %+v", got)
+	}
+	union := &SimpleSchema{Form: SimpleUnion, Members: []*SimpleMember{{Inline: pattern}, {Name: QName{Space: XSDNamespace, Local: "integer"}}}}
+	r, b, _ = bindCurrent(t, TypeRef{InlineSimple: union}, currentNumber(t, "4"), nil)
+	if got := r.Results(b).Scalar; !got.Valid || got.Complete || r.Scalar(b).Known {
+		t.Fatalf("unresolved first member selected later: %+v", got)
+	}
+	restrictedUnion := &SimpleSchema{Form: SimpleRestriction, Base: &SimpleMember{Inline: &SimpleSchema{Form: SimpleUnion, Members: []*SimpleMember{{Name: QName{Space: XSDNamespace, Local: "integer"}}, {Name: QName{Space: XSDNamespace, Local: "string"}}}}}, Enumerations: []string{"5"}}
+	union = &SimpleSchema{Form: SimpleUnion, Members: []*SimpleMember{{Inline: restrictedUnion}}}
+	r, b, _ = bindCurrent(t, TypeRef{InlineSimple: union}, currentNumber(t, "4"), nil)
+	if got := r.Results(b).Scalar; !got.Valid || !got.Complete {
+		t.Fatalf("union-variety member was not flattened: %+v", got)
+	}
+	r, b, _ = bindCurrent(t, TypeRef{InlineSimple: restrictedUnion}, currentNumber(t, "4"), nil)
+	if got := r.Results(b).Scalar; got.Valid || !got.Complete {
+		t.Fatalf("direct union restriction was ignored: %+v", got)
+	}
+}
+
+func TestCurrentEmptyConstraintAndSourceLaneSeparation(t *testing.T) {
+	for _, value := range []CurrentScalar{{Absent: true}, {Known: true, Value: SimpleValue{Domain: StringDomain, Text: ""}}} {
+		fixed := "x"
+		r, b, _ := bindCurrent(t, TypeRef{Name: QName{Space: XSDNamespace, Local: "string"}}, value, &fixed)
+		if got := r.Results(b); !got.Declaration.Valid || got.Declaration.Complete || got.Scalar.Complete || r.Scalar(b).Defaulted {
+			t.Fatalf("empty current constraint guessed: %+v", got)
+		}
+	}
+	compiled := testRunSchema(t)
+	r, err := NewRun(compiled, &testMeter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	use, _ := compiled.Root(QName{Local: "root"})
+	b, err := r.Bind(context.Background(), use, Subject{ID: 1, Name: QName{Local: "root"}, Current: CurrentScalar{Absent: true}, ChildrenOrderKnown: true, ChildrenComplete: true, AttributesComplete: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Results(b).Scalar.Complete {
+		t.Fatal("source unknown treated as current absent")
+	}
+}
+
+func TestCurrentBooleanAndExactEnumerations(t *testing.T) {
+	yes := "1"
+	r, b, _ := bindCurrent(t, TypeRef{Name: QName{Space: XSDNamespace, Local: "boolean"}}, CurrentScalar{Known: true, Value: SimpleValue{Domain: BooleanDomain, Boolean: true}}, &yes)
+	if got := r.Results(b); !got.Scalar.Valid || !got.Declaration.Valid || !got.Scalar.Complete {
+		t.Fatalf("boolean fixed mismatch: %+v", got)
+	}
+	schema := currentRestriction("decimal")
+	schema.Enumerations = []string{"0.1"}
+	r, b, _ = bindCurrent(t, TypeRef{InlineSimple: schema}, currentNumber(t, "0.1000000000000000055511151231257827021181583404541015625"), nil)
+	if r.Results(b).Scalar.Valid {
+		t.Fatal("binary-exact value matched decimal enumeration")
+	}
+}
+
+func TestCurrentOrderHoleNeverRecoversCompressedWitnesses(t *testing.T) {
+	for _, known := range []bool{true, false} {
+		r, err := NewRun(testRunSchema(t), &testMeter{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer r.Close()
+		use, _ := r.Root(QName{Local: "root"})
+		b, err := r.Bind(context.Background(), use, Subject{ID: 1, Name: QName{Local: "root"}, CurrentModel: true, Current: CurrentScalar{Absent: true}, ChildrenOrderKnown: known, ChildrenComplete: known, AttributesComplete: true, Children: []Child{{ID: 2, Name: QName{Local: "child"}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := r.Results(b).Content
+		if !got.Valid || got.Complete != known || (len(r.Witnesses(b)) == 1) != known {
+			t.Fatalf("known=%v result=%+v witnesses=%+v", known, got, r.Witnesses(b))
+		}
+	}
+}
+
+func TestCurrentAttributesKeepSlotResultsAndDefaults(t *testing.T) {
+	pattern := currentRestriction("integer")
+	pattern.Patterns = []string{"[0-9]+"}
+	data := SchemaData{Elements: map[QName]*ElementSchema{{Local: "root"}: {Name: QName{Local: "root"}, Type: TypeRef{InlineComplex: &ComplexSchema{Form: ComplexDirect, Attributes: []AttributeSchema{
+		{Name: QName{Local: "bad"}, Type: TypeRef{InlineSimple: pattern}},
+		{Name: QName{Local: "good"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "integer"}}},
+		{Name: QName{Local: "default"}, Type: TypeRef{Name: QName{Space: XSDNamespace, Local: "integer"}}, Constraint: &ValueConstraint{Kind: "default", Value: "7"}},
+	}}}}}}
+	c, err := Compile(data, CompileLimits{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r, err := NewRun(c, &testMeter{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	use, _ := r.Root(QName{Local: "root"})
+	b, err := r.Bind(context.Background(), use, Subject{ID: 1, Name: QName{Local: "root"}, CurrentModel: true, Current: CurrentScalar{Absent: true}, ChildrenOrderKnown: true, ChildrenComplete: true, AttributesComplete: true, Attributes: []Attribute{{Attr: Attr{Name: QName{Local: "bad"}}, Current: currentNumber(t, "4")}, {Attr: Attr{Name: QName{Local: "good"}}, Current: currentNumber(t, "5")}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, a := range r.Attributes(b) {
+		switch a.Name.Local {
+		case "bad":
+			if a.Complete || a.Scalar.Complete || a.TypeValid {
+				t.Errorf("incomplete slot marked complete: %+v", a)
+			}
+		case "good":
+			if !a.Complete || !a.TypeValid || !a.Scalar.Known || a.Scalar.Lexeme != "" {
+				t.Errorf("independent slot lost: %+v", a)
+			}
+		case "default":
+			if a.Present || !a.Complete || !a.Scalar.Defaulted || a.Scalar.Value.Number.Whole != "7" || a.Scalar.Lexeme != "" {
+				t.Errorf("default corrupted: %+v", a)
+			}
+		}
+	}
+}
+
+func TestCurrentProvedBoundSurvivesDiagnosticAllocationStop(t *testing.T) {
+	cause := errors.New("diagnostic memory stop")
+	meter := &scalarMeter{reserveFailure: cause}
+	run := &Run{meter: meter, current: context.Background()}
+	state := &boundState{run: run, subject: Subject{CurrentModel: true}, results: freshResults(), family: "scalar"}
+	c := &Context{run: run, local: state}
+	scalarAbort(t, cause, func() {
+		validateNumberBounds(&SimpleSchema{HasMaxInclusive: true, MaxInclusive: "3"}, Decimal{Whole: "4"}, "integer", c)
+	})
+	if state.results.Scalar.Valid {
+		t.Fatal("proved bound failure was lost during diagnostic allocation")
+	}
+}
+
+func TestCurrentIntegerSubtypeEndpoints(t *testing.T) {
+	for _, builtin := range []string{"nonPositiveInteger", "negativeInteger", "nonNegativeInteger", "positiveInteger", "long", "int", "short", "byte", "unsignedLong", "unsignedInt", "unsignedShort", "unsignedByte"} {
+		minimum, maximum, _ := IntegerLimits(builtin)
+		for _, edge := range []struct {
+			value string
+			delta int64
+		}{{minimum, -1}, {maximum, 1}} {
+			if edge.value == "" {
+				continue
+			}
+			for _, outside := range []bool{false, true} {
+				value, _ := new(big.Int).SetString(edge.value, 10)
+				if outside {
+					value.Add(value, big.NewInt(edge.delta))
+				}
+				t.Run(builtin+"/"+value.String(), func(t *testing.T) {
+					r, b, _ := bindCurrent(t, TypeRef{Name: QName{Space: XSDNamespace, Local: builtin}}, currentNumber(t, value.String()), nil)
+					got := r.Results(b).Scalar
+					if got.Valid == outside || !got.Complete {
+						t.Fatalf("edge result=%+v", got)
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestCurrentValueWorkIsBounded(t *testing.T) {
+	cause := errors.New("current component work stopped")
+	meter := &scalarMeter{limit: 64, cause: cause}
+	c := scalarTestContext(meter, context.Background())
+	scalarAbort(t, cause, func() {
+		c.checkCurrent(CurrentScalar{Known: true, Value: SimpleValue{Domain: NumberDomain, Number: Decimal{Fraction: strings.Repeat("1", 4096)}}})
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	meter = &scalarMeter{cancel: cancel, cancelAt: 8}
+	c = scalarTestContext(meter, ctx)
+	scalarAbort(t, context.Canceled, func() {
+		c.checkCurrent(CurrentScalar{Known: true, Value: SimpleValue{Domain: NumberDomain, Number: Decimal{Fraction: strings.Repeat("1", 4096)}}})
+	})
+	cancel()
+}
+
+func TestCurrentUnionTrialFailureDoesNotPolluteSuccess(t *testing.T) {
+	union := &SimpleSchema{Form: SimpleUnion, Members: []*SimpleMember{{Name: QName{Space: XSDNamespace, Local: "boolean"}}, {Name: QName{Space: XSDNamespace, Local: "integer"}}}}
+	r, b, _ := bindCurrent(t, TypeRef{InlineSimple: union}, currentNumber(t, "4"), nil)
+	if got := r.Results(b).Scalar; !got.Valid || !got.Complete || !r.Scalar(b).Known {
+		t.Fatalf("trial failure poisoned success: %+v", got)
 	}
 }

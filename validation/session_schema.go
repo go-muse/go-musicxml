@@ -127,7 +127,7 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		return err
 	}
 	state.nodes = make(map[NodeID]schemaNode, len(s.nodes))
-	if s.root.header.Declaration.State == EvidenceUnsupported || s.root.header.Type.State == EvidenceUnsupported {
+	if s.profile.Target == TargetSource && (s.root.header.Declaration.State == EvidenceUnsupported || s.root.header.Type.State == EvidenceUnsupported) {
 		reason := s.root.header.Declaration.Reason
 		if reason == "" {
 			reason = s.root.header.Type.Reason

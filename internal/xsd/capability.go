@@ -9,6 +9,9 @@ func (c *Context) capability(family, reason string) {
 	if c.local == nil {
 		return
 	}
+	if c.currentModel() && family == "attributes" && c.local.attribute != (QName{}) {
+		c.local.attributeLimited = true
+	}
 	old := c.local.family
 	c.local.family = family
 	defer func() { c.local.family = old }()
@@ -190,6 +193,7 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		s.attribute = schema.Name
 		s.attributeEpoch = c.AssessmentVersion
 		s.attributeKnown = true
+		s.attributeLimited = false
 		s.scalarAssessed = false
 		s.scalarAssessment = SimpleAssessment{}
 		if schema.Constraint == nil {
