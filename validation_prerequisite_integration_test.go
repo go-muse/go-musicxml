@@ -1,0 +1,69 @@
+package musicxml
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestGrammarMetadataAssessmentBoundary(t *testing.T) {
+	for _, dynamicDefault := range []bool{false, true} {
+		for _, independentFailure := range []bool{false, true} {
+			name := "ordinary"
+			if dynamicDefault {
+				name = "dynamic default"
+			}
+			if independentFailure {
+				name += " with independent issue"
+			}
+			t.Run(name, func(t *testing.T) {
+				particle := &validationParticleSchema{Kind: validationParticleSequence, Occurrence: validationOccurrence{Min: 1, Max: 1}}
+				particle.Children = []*validationParticleSchema{particle}
+				complex := &validationComplexSchema{Form: validationComplexDirect, Mixed: true, Particle: particle,
+					Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "IDREF"}}}}}
+				declaration := &validationElementSchema{Name: validationQName{Local: "value"}, Type: validationTypeRef{InlineComplex: complex}}
+				set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "value"}: declaration}}
+				attrs := ` ref="later"`
+				if dynamicDefault {
+					declaration.Type = validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "anyType"}}
+					declaration.Default = validationString("kept")
+					set.Types = map[validationQName]*validationTypeSchema{{Local: "actual"}: {Complex: complex}}
+					attrs += ` xmlns:i="` + validationXSINamespace + `" i:type="actual"`
+				}
+				if independentFailure {
+					attrs += ` bad="value"`
+				}
+				context := assessAttributeSource(t, set, `<value`+attrs+`/>`)
+				require.Error(t, context.assessmentErr)
+				assert.Contains(t, context.assessmentErr.Error(), "content-model")
+				require.Len(t, context.references, 1)
+				if independentFailure {
+					require.Len(t, context.issues, 1)
+					assert.Equal(t, "attribute", context.issues[0].Constraint)
+					assert.Equal(t, "/value/@bad", context.issues[0].Path)
+					assert.ErrorIs(t, context.result(), ErrInvalidDocument)
+				} else {
+					assert.Empty(t, context.issues)
+					assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
+				}
+				assert.Same(t, particle, particle.Children[0])
+			})
+		}
+	}
+}
+
+func TestXSIQNameUsesDatatypeRepertoire(t *testing.T) {
+	// Newer codepoints occur in attribute values, not markup names: the legacy
+	// XML decoder rejects some newer XML names before XSD assessment.
+	source := `<t:builtin xmlns:t="urn:xsi-contract" xmlns:xs="` + validationXSDNamespace + `" xmlns:i="` + validationXSINamespace + `" i:type="xs:Ƞ">ok</t:builtin>`
+	context := validateAttributeSource(t, &validationXSIGenerated, source)
+	require.Len(t, context.issues, 1)
+	assert.Equal(t, "xsi:type", context.issues[0].Constraint)
+	assert.Contains(t, context.issues[0].Message, "not a bound QName")
+	node := &validationNode{Namespaces: map[string]string{"Ƞ": validationXSDNamespace, "xs": validationXSDNamespace}}
+	for _, value := range []string{"Ƞ:token", "xs:Ƞ"} {
+		_, ok := validationInstanceQName(node, value)
+		assert.False(t, ok, value)
+	}
+}

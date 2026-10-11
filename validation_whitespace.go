@@ -53,7 +53,12 @@ func validationBuiltinSemantics(name string) *validationSimpleSemantics {
 	return result
 }
 
-func (c *validationContext) simpleTypeSemantics(reference *validationTypeRef) *validationSimpleSemantics {
+func (c *validationContext) simpleTypeSemantics(reference *validationTypeRef) (result *validationSimpleSemantics) {
+	defer func() {
+		if result == nil {
+			c.incomplete("simple type metadata cannot be resolved")
+		}
+	}()
 	simple, complex, builtin, found := c.resolveType(reference)
 	if !found || complex != nil {
 		return nil
@@ -86,6 +91,14 @@ func (c *validationContext) memberSemantics(member *validationSimpleMember) *val
 // cannot become a usable policy on a repeated lookup. The cache is per context;
 // neither generated definitions nor the effective complex scalar copies change.
 func (c *validationContext) resolveSimpleSemantics(schema *validationSimpleSchema) *validationSimpleSemantics {
+	result := c.resolveSimpleSemanticsUnchecked(schema)
+	if result == nil {
+		c.incomplete("simple type metadata is missing, cyclic or unsupported")
+	}
+	return result
+}
+
+func (c *validationContext) resolveSimpleSemanticsUnchecked(schema *validationSimpleSchema) *validationSimpleSemantics {
 	if schema == nil {
 		return nil
 	}
@@ -151,9 +164,10 @@ type validationEnumerationKey struct {
 }
 
 type validationEnumerationValue struct {
-	value  string
-	actual validationSimpleValue
-	valid  bool
+	value      string
+	actual     validationSimpleValue
+	valid      bool
+	incomplete bool
 }
 
 func (c *validationContext) matchesSimpleEnumeration(schema *validationSimpleSchema, value validationSimpleAssessment) bool {
@@ -169,6 +183,9 @@ func (c *validationContext) matchesSimpleEnumeration(schema *validationSimpleSch
 func (c *validationContext) enumerationValue(schema *validationSimpleSchema, index int) validationEnumerationValue {
 	key := validationEnumerationKey{schema: schema, index: index}
 	if known, found := c.enumerationValues[key]; found {
+		if known.incomplete {
+			c.incomplete("cached enumeration literal assessment is incomplete")
+		}
 		return known
 	}
 	if c.enumerationValues == nil {
@@ -177,8 +194,9 @@ func (c *validationContext) enumerationValue(schema *validationSimpleSchema, ind
 	c.enumerationValues[key] = validationEnumerationValue{}
 	// The declaring base, not this restriction or a descendant, determines the
 	// literal's whitespace and value. A pending entry is also a fail-closed guard.
+	before := c.assessmentVersion
 	assessment, valid := c.simpleLiteralValue(c.memberSemantics(schema.Base), schema.Enumerations[index])
-	result := validationEnumerationValue{value: assessment.lexical, actual: assessment.value, valid: valid}
+	result := validationEnumerationValue{value: assessment.lexical, actual: assessment.value, valid: valid, incomplete: c.assessmentVersion != before}
 	c.enumerationValues[key] = result
 	return result
 }

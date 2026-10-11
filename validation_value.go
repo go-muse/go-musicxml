@@ -95,7 +95,13 @@ func validationAtomicValue(semantics *validationSimpleSemantics, lexical string)
 
 func (c *validationContext) assessBuiltinValue(name, value, display string) (validationSimpleAssessment, *validationSimpleFailure) {
 	if failure := validateBuiltinValue(name, value, display); failure != nil {
+		if failure.constraint == "schema" {
+			c.incomplete(failure.message)
+		}
 		return validationSimpleAssessment{}, failure
+	}
+	if name == "ENTITY" || name == "ENTITIES" {
+		return validationSimpleAssessment{}, c.incompleteFailure("unparsed entity declarations are unavailable for xs:" + name)
 	}
 	semantics := validationBuiltinSemantics(name)
 	lexical := semantics.normalize(value)
@@ -121,6 +127,7 @@ func (c *validationContext) assessBuiltinValue(name, value, display string) (val
 // failure, so an equal value rejected by a pattern does not invent a fixed issue.
 func (c *validationContext) simpleLiteralValue(semantics *validationSimpleSemantics, literal string) (validationSimpleAssessment, bool) {
 	if semantics == nil {
+		c.incomplete("literal type metadata cannot be resolved")
 		return validationSimpleAssessment{}, false
 	}
 	literal = semantics.normalize(literal)

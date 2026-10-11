@@ -24,7 +24,11 @@ func validationBuiltinListCases() []validationSourceCase {
 		if constraint != "" {
 			issues = []string{"/" + element + constraint}
 		}
-		tests = append(tests, validationSourceCase{name: name, source: source, issues: issues, oracleComparable: !strings.HasPrefix(element, "entities")})
+		incomplete := (strings.HasPrefix(element, "entities") || strings.Contains(attributes, "entities=")) && constraint != ":datatype"
+		if incomplete {
+			issues = nil
+		}
+		tests = append(tests, validationSourceCase{name: name, source: source, issues: issues, oracleComparable: !incomplete && !strings.HasPrefix(element, "entities"), assessmentIncomplete: incomplete})
 	}
 	for _, kind := range []string{"tokens", "refs", "entities"} {
 		attrs := ""
@@ -75,7 +79,7 @@ func TestValidateBuiltinListLengths(t *testing.T) {
 	t.Parallel()
 	for _, test := range validationBuiltinListCases() {
 		t.Run(test.name, func(t *testing.T) {
-			assertValidationIssues(t, validateAttributeSource(t, &validationBuiltinListGenerated, test.source), test.issues)
+			assertBuiltinListAssessment(t, assessAttributeSource(t, &validationBuiltinListGenerated, test.source), test)
 		})
 	}
 }
@@ -95,7 +99,7 @@ func TestBuiltinListLengthsAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
-			assertValidationIssues(t, validateAttributeSource(t, &validationBuiltinListGenerated, test.source), test.issues)
+			assertBuiltinListAssessment(t, assessAttributeSource(t, &validationBuiltinListGenerated, test.source), test)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "builtin-list-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})
 	}
@@ -115,7 +119,7 @@ func TestBuiltinListLengthsImmutable(t *testing.T) {
 					context := newTestValidationContext(&validationBuiltinListGenerated)
 					context.validateElement(node, validationBuiltinListGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
 					context.validateIdentityReferences()
-					assertValidationIssues(t, context, test.issues)
+					assertBuiltinListAssessment(t, context, test)
 					after := snapshotValidationNode(t, node)
 					assert.Equal(t, saved, after)
 				}
@@ -136,4 +140,17 @@ func TestBuiltinListLengthDiagnostics(t *testing.T) {
 		require.Len(t, context.issues, 1)
 		assert.Equal(t, ValidationIssue{Path: "/" + test.element, Constraint: test.kind, Message: test.message}, context.issues[0])
 	}
+}
+
+// Datatype-only ENTITY/ENTITIES helpers remain reusable, but source assessment
+// cannot assert membership without unparsed entity declaration facts.
+func assertBuiltinListAssessment(t *testing.T, context *validationContext, test validationSourceCase) {
+	t.Helper()
+	if test.assessmentIncomplete {
+		require.Error(t, context.assessmentErr)
+		assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
+		assert.Empty(t, context.issues)
+		return
+	}
+	assertValidationIssues(t, context, test.issues)
 }

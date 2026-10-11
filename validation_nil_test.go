@@ -383,10 +383,10 @@ func TestValidateNilUnresolvedTypes(t *testing.T) {
 			schema := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{
 				{Local: "value"}: {Name: validationQName{Local: "value"}, Type: test.reference, Nillable: true},
 			}}
-			context := validateAttributeSource(t, schema, `<value xmlns:n="`+validationXSINamespace+`" n:nil="true"/>`)
-			require.Len(t, context.issues, 1)
-			assert.Equal(t, "schema", context.issues[0].Constraint)
-			assert.Equal(t, "/value", context.issues[0].Path)
+			context := assessAttributeSource(t, schema, `<value xmlns:n="`+validationXSINamespace+`" n:nil="true"/>`)
+			assert.Empty(t, context.issues)
+			assert.Error(t, context.assessmentErr)
+			assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 		})
 	}
 }

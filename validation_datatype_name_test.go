@@ -85,7 +85,8 @@ func validationDatatypeNameCases() []validationSourceCase {
 		if suffix != "" {
 			issues = []string{"/" + root + suffix}
 		}
-		result = append(result, validationSourceCase{name: name, source: wrapValidationElement(root, attributes, content), issues: issues, oracleComparable: oracle})
+		incomplete := (strings.HasPrefix(name, "entity/") || strings.HasPrefix(name, "entities/") || strings.HasPrefix(name, "attribute/entity/") || strings.HasPrefix(name, "attribute/entities/")) && suffix == ""
+		result = append(result, validationSourceCase{name: name, source: wrapValidationElement(root, attributes, content), issues: issues, oracleComparable: oracle && !incomplete, assessmentIncomplete: incomplete})
 	}
 	for _, root := range []string{"name", "ncname", "nmtoken", "qname", "restricted", "inline", "content"} {
 		add(root+"/multilingual", root, "", "Ж樂a&#x301;", "", true)
@@ -123,8 +124,9 @@ func validationDatatypeNameCases() []validationSourceCase {
 	add("attribute/refs-accept", "attributes", ` id="Ж" ref="Ж" refs="Ж Ж"`, "", "", true)
 	add("attribute/ref-reject", "attributes", ` ref="Ƞ"`, "", "/@ref:datatype", true)
 	add("attribute/refs-reject", "attributes", ` refs="Ƞ"`, "", "/@refs:datatype", true)
-	// Include actual unparsed declarations in source fixtures. These tests exercise
-	// ENTITY lexical validation only; libxml2 rejects even declared element values.
+	// Retain unparsed declarations in the original source, but the current reader
+	// does not retain their facts. Successful ENTITY lexemes are incomplete, never
+	// complete-valid; lexical negatives remain provable datatype violations.
 	for _, root := range []string{"entity", "entities"} {
 		add(root+"/lexical-accept", root, "", "Ж", "", false)
 		add(root+"/lexical-reject", root, "", "\u0220", ":datatype", false)
@@ -147,11 +149,23 @@ func validationDatatypeNameCases() []validationSourceCase {
 	return result
 }
 
+func assertDatatypeNameAssessment(t *testing.T, context *validationContext, test validationSourceCase) {
+	t.Helper()
+	if test.assessmentIncomplete {
+		require.Error(t, context.assessmentErr)
+		assert.Contains(t, context.assessmentErr.Error(), "unparsed entity")
+		assert.Empty(t, context.issues)
+		assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
+		return
+	}
+	assertValidationIssues(t, context, test.issues)
+}
+
 func TestValidateDatatypeNameSources(t *testing.T) {
 	t.Parallel()
 	for _, test := range validationDatatypeNameCases() {
 		t.Run(test.name, func(t *testing.T) {
-			assertValidationIssues(t, validateAttributeSource(t, &validationDatatypeNameGenerated, test.source), test.issues)
+			assertDatatypeNameAssessment(t, assessAttributeSource(t, &validationDatatypeNameGenerated, test.source), test)
 		})
 	}
 }
@@ -171,7 +185,7 @@ func TestDatatypeNamesAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
-			assertValidationIssues(t, validateAttributeSource(t, &validationDatatypeNameGenerated, test.source), test.issues)
+			assertDatatypeNameAssessment(t, assessAttributeSource(t, &validationDatatypeNameGenerated, test.source), test)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "datatype-name-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})
 	}
@@ -191,7 +205,7 @@ func TestDatatypeNamesImmutable(t *testing.T) {
 					context := newTestValidationContext(&validationDatatypeNameGenerated)
 					context.validateElement(node, validationDatatypeNameGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
 					context.validateIdentityReferences()
-					assertValidationIssues(t, context, test.issues)
+					assertDatatypeNameAssessment(t, context, test)
 					assert.Equal(t, saved, snapshotValidationNode(t, node))
 				}
 			}

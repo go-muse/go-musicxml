@@ -102,12 +102,19 @@ func GenerateValidationSchema(
 			return nil, err
 		}
 
+		block, final, err := elementDerivations(declaration.File, declaration.Element)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %s: %w", ErrInvalidElement, declaration.Name.Local, err)
+		}
+
 		renderValidationQName(&body, declaration.Name)
 		body.WriteString(": ")
 		if err := renderer.renderElementSchema(
 			&body,
 			&ElementPlan{
 				Source: declaration.Element,
+				Block:  block,
+				Final:  final,
 				Name:   declaration.Name,
 				Type:   typePlan,
 			},
@@ -172,6 +179,7 @@ func (r *validationSchemaRenderer) renderSimpleSchema(
 	}
 
 	target.WriteString("&validationSimpleSchema{")
+	renderValidationDerivation(target, "Final", definition.Final)
 	fmt.Fprintf(
 		target,
 		"Form: validationSimpleForm(%s),",
@@ -360,6 +368,11 @@ func (r *validationSchemaRenderer) renderComplexSchema(
 	}
 
 	target.WriteString("&validationComplexSchema{")
+	renderValidationDerivation(target, "Block", definition.Block)
+	renderValidationDerivation(target, "Final", definition.Final)
+	if definition.Source != nil && definition.Source.Abstract {
+		target.WriteString("Abstract: true,")
+	}
 	fmt.Fprintf(
 		target,
 		"Form: validationComplexForm(%s),",
@@ -508,6 +521,8 @@ func (r *validationSchemaRenderer) renderElementSchema(
 	}
 
 	target.WriteString("&validationElementSchema{")
+	renderValidationDerivation(target, "Block", element.Block)
+	renderValidationDerivation(target, "Final", element.Final)
 	target.WriteString("Name: ")
 	renderValidationQName(target, element.Name)
 	target.WriteString(",")
@@ -682,4 +697,12 @@ func validationElementDeclarations(
 		return result[left].Name.Local < result[right].Name.Local
 	})
 	return result
+}
+
+// renderValidationDerivation omits an empty effective set; parsed presence is
+// retained separately in the source and has already overridden schema defaults.
+func renderValidationDerivation(target *bytes.Buffer, field string, value derivationSet) {
+	if value != 0 {
+		fmt.Fprintf(target, "%s: validationDerivation(%d),", field, value)
+	}
 }

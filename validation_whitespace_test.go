@@ -214,7 +214,7 @@ func TestEffectiveWhitespaceDiagnosticsAndImmutability(t *testing.T) {
 func TestWhitespaceFixedComparisonScope(t *testing.T) {
 	t.Parallel()
 	context := newTestValidationContext(&validationWhitespaceGenerated)
-	for _, name := range []string{"string", "normalizedString", "token", "language", "Name", "NCName", "NMTOKEN", "ID", "IDREF", "ENTITY"} {
+	for _, name := range []string{"string", "normalizedString", "token", "language", "Name", "NCName", "NMTOKEN", "ID", "IDREF"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
 		want := name != "string"
 		assert.Equal(t, want, context.simpleValuesEqual(reference, "a\tb", "a b"), name)
@@ -270,8 +270,8 @@ func TestWhitespaceMetadataFailures(t *testing.T) {
 			for range 3 {
 				failure := context.validateSimple(test.schema, " a ")
 				if assert.NotNil(t, failure) {
-					assert.Equal(t, "schema", failure.constraint)
-					assert.Equal(t, "simple type cannot be resolved", failure.message)
+					assert.True(t, validationTechnicalFailure(failure))
+					assert.Error(t, context.assessmentErr)
 				}
 				reference := &validationTypeRef{InlineSimple: test.schema}
 				assert.False(t, context.simpleValuesEqual(reference, " a ", "a"))

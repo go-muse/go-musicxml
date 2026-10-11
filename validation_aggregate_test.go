@@ -238,7 +238,7 @@ func TestAggregateUnimplementedPrimitiveEquality(t *testing.T) {
 func TestAggregateBuiltinListValues(t *testing.T) {
 	t.Parallel()
 	context := newTestValidationContext(&validationAggregateGenerated)
-	for _, builtin := range []string{"NMTOKENS", "IDREFS", "ENTITIES"} {
+	for _, builtin := range []string{"NMTOKENS", "IDREFS"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: builtin}}
 		assert.True(t, context.simpleValuesEqual(reference, " aa\tbb ", "aa bb"), builtin)
 		assert.True(t, context.elementFixedValuesEqual(reference, " aa\tbb ", "aa bb"), builtin)

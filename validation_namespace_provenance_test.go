@@ -124,7 +124,7 @@ func TestValidationNamespaceDeclarationProvenanceLength(t *testing.T) {
 			tokens.namespaceDeclarations = test.flags
 			var node *validationNode
 			require.NotPanics(t, func() {
-				node, err = readValidationNode(decoder, tokens, start, 1)
+				node, err = readValidationNode(decoder, tokens, start, 1, nil)
 			})
 			if test.wantError {
 				assert.ErrorContains(t, err, "namespace declaration provenance out of sync at <value>")

@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:t="urn:xsi-contract" targetNamespace="urn:xsi-contract" elementFormDefault="qualified">
+  <xs:simpleType name="Text"><xs:restriction base="xs:string"/></xs:simpleType>
+  <xs:simpleType name="Token"><xs:restriction base="t:Text"><xs:whiteSpace value="collapse"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="Narrow"><xs:restriction base="t:Token"><xs:enumeration value="ok"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="TextList"><xs:list itemType="t:Text"/></xs:simpleType>
+  <xs:simpleType name="Pair"><xs:restriction base="t:TextList"><xs:length value="2"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="Choice"><xs:union memberTypes="xs:integer t:Text"/></xs:simpleType>
+  <xs:simpleType name="ChoiceRestriction"><xs:restriction base="t:Choice"><xs:enumeration value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="CanonicalInt"><xs:restriction base="xs:integer"><xs:pattern value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="CanonicalDecimal"><xs:restriction base="xs:decimal"><xs:pattern value="1\.0"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="Positive"><xs:restriction base="xs:integer"><xs:minInclusive value="2"/></xs:restriction></xs:simpleType>
+  <xs:complexType name="TextAttrs"><xs:simpleContent><xs:extension base="t:Text"><xs:attribute name="code" type="xs:token" use="required"/><xs:attribute name="id" type="xs:ID"/><xs:attribute name="ref" type="xs:IDREF"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="TextRestrict"><xs:simpleContent><xs:restriction base="t:TextAttrs"><xs:enumeration value="ok"/><xs:attribute name="code" type="xs:token" use="required" fixed="yes"/><xs:attribute name="id" type="xs:ID" use="prohibited"/></xs:restriction></xs:simpleContent></xs:complexType>
+  <xs:complexType name="Base"><xs:sequence><xs:element name="a" type="xs:string" minOccurs="0"/></xs:sequence><xs:attribute name="id" type="xs:ID"/></xs:complexType>
+  <xs:complexType name="Extended"><xs:complexContent><xs:extension base="t:Base"><xs:sequence><xs:element name="b" type="xs:integer"/></xs:sequence><xs:attribute name="code" type="xs:token" use="required"/></xs:extension></xs:complexContent></xs:complexType>
+  <xs:complexType name="Restricted"><xs:complexContent><xs:restriction base="t:Base"><xs:attribute name="id" type="xs:ID" use="prohibited"/></xs:restriction></xs:complexContent></xs:complexType>
+  <xs:complexType name="AttributeBase"><xs:attribute name="code" type="xs:integer" use="required"/><xs:attribute name="label" type="xs:string"/></xs:complexType>
+  <xs:complexType name="AttributeRestriction"><xs:complexContent><xs:restriction base="t:AttributeBase"/></xs:complexContent></xs:complexType>
+  <xs:element name="attribute-base" type="t:AttributeBase" nillable="true"/>
+  <xs:complexType name="Blocked" block="extension"><xs:sequence><xs:element name="a" type="xs:string" minOccurs="0"/></xs:sequence></xs:complexType>
+  <xs:complexType name="BlockedChild"><xs:complexContent><xs:extension base="t:Blocked"/></xs:complexContent></xs:complexType>
+  <xs:complexType name="Abstract" abstract="true"><xs:attribute name="code" type="xs:string" use="required"/></xs:complexType>
+  <xs:complexType name="Concrete"><xs:complexContent><xs:extension base="t:Abstract"/></xs:complexContent></xs:complexType>
+  <xs:complexType name="Final" final="#all"/>
+  <xs:complexType name="Recursive"><xs:sequence><xs:element name="child" type="t:Recursive" minOccurs="0"/></xs:sequence></xs:complexType>
+  <xs:complexType name="Mixed" mixed="true"/>
+  <xs:complexType name="Empty"><xs:complexContent><xs:restriction base="t:Mixed"/></xs:complexContent></xs:complexType>
+  <xs:element name="text" type="t:Text" nillable="true"/>
+  <xs:element name="builtin" type="xs:string" nillable="true"/>
+  <xs:element name="decimal" type="xs:decimal"/>
+  <xs:element name="any" type="xs:anyType"/>
+  <xs:element name="simple" type="xs:anySimpleType"/>
+  <xs:element name="list" type="t:TextList"/>
+  <xs:element name="union" type="t:Choice"/>
+  <xs:element name="base" type="t:Base" nillable="true"/>
+  <xs:element name="block-extension" type="t:Base" block="extension"/>
+  <xs:element name="block-restriction" type="t:Base" block="restriction"/>
+  <xs:element name="block-all" type="t:Base" block="#all"/>
+  <xs:element name="element-final" type="t:Base" final="#all"/>
+  <xs:element name="type-block" type="t:Blocked"/>
+  <xs:element name="abstract-type" type="t:Abstract" nillable="true"/>
+  <xs:element name="abstract-element" type="t:Abstract" abstract="true"/>
+  <xs:element name="final" type="t:Final"/>
+  <xs:element name="recursive" type="t:Recursive"/>
+  <xs:complexType name="WildcardText"><xs:simpleContent><xs:extension base="xs:string"><xs:anyAttribute processContents="lax"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="RestrictedWildcard"><xs:simpleContent><xs:restriction base="t:WildcardText"/></xs:simpleContent></xs:complexType>
+  <xs:element name="wildcard-text" type="t:WildcardText"/>
+  <xs:element name="block-substitution" type="t:Base" block="substitution"/>
+  <xs:element name="blocked-builtin" type="xs:string" block="restriction"/>
+  <xs:element name="attrs" type="t:TextAttrs" nillable="true"/>
+  <xs:element name="default-int" type="xs:integer" default="+01"/>
+  <xs:element name="fixed-int" type="xs:integer" fixed="+01"/>
+  <xs:element name="default-decimal" type="xs:decimal" default="+01.00"/>
+  <xs:complexType name="MixedOptional" mixed="true"><xs:sequence><xs:element name="a" type="xs:string" minOccurs="0"/></xs:sequence></xs:complexType>
+  <xs:complexType name="MixedRequired"><xs:complexContent mixed="true"><xs:restriction base="t:MixedOptional"><xs:sequence><xs:element name="a" type="xs:string"/></xs:sequence></xs:restriction></xs:complexContent></xs:complexType>
+  <xs:element name="default-empty-mixed" type="t:Mixed" default=""/>
+  <xs:element name="default-optional" type="t:MixedOptional" default=""/>
+  <xs:element name="default-mixed" type="t:Mixed" default="text"/>
+  <xs:element name="anonymous"><xs:simpleType><xs:restriction base="xs:string"/></xs:simpleType></xs:element>
+  <xs:element name="scope"><xs:complexType><xs:sequence><xs:element ref="t:text" maxOccurs="unbounded"/></xs:sequence></xs:complexType></xs:element>
+</xs:schema>

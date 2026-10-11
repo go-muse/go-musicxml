@@ -1330,3 +1330,90 @@ and record dependencies/capabilities separately. A mandatory predicate or contex
 fact may itself require external information. Missing required facts produce
 unknown/unsupported assessment, not automatic not-applicable or pass; applicability
 and outcomes depend on the actual document and scope.
+
+## Dynamic type prerequisite and private incomplete assessment (2026-10-11)
+
+The existing source-tree validator now resolves `xsi:type` QNames in immutable
+instance namespace scopes captured from declaration provenance. QName spelling
+uses the datatype helper; element/attribute names are not expanded a second time.
+Named types come only from the selected schema set plus checked XSD builtins;
+anonymous types use their component identity. Missing nominations are genuine
+`xsi:type` issues. Missing/cyclic required metadata instead leaves assessment
+technically incomplete. Ancestry checking excludes content edges, so recursive
+content types remain valid.
+
+`internal/xsdgen` retains effective element/complex block and final, simple final,
+and complex abstract properties, including schema defaults, explicit-empty
+overrides, and declaration ownership through imports/groups. Invalid derivation
+sets and direct type derivations prohibited by final are generation errors.
+Element final does not blanket-block dynamic types; block applies to the
+appropriate restriction/extension path, and same-type nomination remains legal.
+The checked runtime hierarchy also handles builtin bases, simple/complex
+restriction and extension, and list/union relationships.
+
+The actual type supplies attributes and content; the element declaration still
+supplies nillability, element abstractness, and its value constraint. Invalid
+nomination falls back to ordinary declared-type assessment as specified by
+cvc-elt 4, retaining independent failures. Complex-content restrictions inherit
+omitted attribute uses, while restriction wildcards remain local, including
+simple-content restrictions. True nil still requires actual-type attributes.
+XSD 1.0 declaration-type ID/IDREF eligibility remains separate from actual scalar
+selection; this does not adopt XSD 1.1 defaulted/reference or union/list identity
+rules.
+
+For empty elements with an admitted local type, cvc-elt 5.1.1 checks Immediate
+content-category/emptiability requirements and 5.1.2 assesses the declared
+constraint's canonical lexical value against the actual type. Canonical
+integer/decimal/string-derived/boolean/URI and composed list/union paths are
+private validation-only views. Source text and generated literals remain intact.
+Other canonical families report technical incompleteness when reached; this is
+not a claim of a complete canonical/PSVI implementation. The production pinned
+schemas have no element value constraints. Existing static schema-literal
+construction is not converted into a general schema validator by this repair;
+legacy synthetic defaults requiring separate e-props-correct.2 review remain a
+schema-metadata obligation, not grounds for inventing instance violations.
+E1-56 modifies PSVI contributions and does not replace cvc-elt 5.1's validity
+conditions.
+
+`validationContext.assessmentErr` is a private per-run prerequisite seam.
+`Validate` returns this technical error without `ErrInvalidDocument` when no
+violation was proved; when issues coexist, a joined error retains both the
+`ValidationError` and technical error. Source-test helpers explicitly inspect
+technical state. Contextual ENTITY/ENTITIES assessment needs unparsed entity
+declaration facts that the current tree does not retain. Lexically acceptable
+values therefore yield incomplete assessment; the standalone builtin helper
+remains lexical. Union, list, fixed and cached-enumeration paths do not swallow
+this state or manufacture a comparison failure. Required attributes and other
+independent issues survive unavailable scalar/default assessment. An incomplete
+traversal cannot prove an IDREF target absent; existing positive issues remain.
+General DTD parsing, fetching, shared budgets, cancellation, and public report or
+session APIs are not introduced.
+
+Executable roots: `TestValidateXSIType`, `TestXSITypeAgainstSchema`,
+`TestXSITypeGeneratedMetadata`, `TestXSITypeSelectedAssembly`,
+`TestXSITypeIncompleteAssessment`, `TestEntityAssessmentDoesNotBecomeUnionFallback`,
+`TestEntityLiteralAndFixedAssessment`,
+`TestIncompleteEnumerationCacheDoesNotInventViolations`,
+`TestIncompleteIdentityTraversalDoesNotProveAbsentTarget`,
+`TestIncompleteDefaultPreservesActualAttributes`, `TestXSITypeImmutable`, and
+`TestXSITypeCacheBounds`, plus generator derivation tests. The external root is
+explicitly registered in Linux CI and runs internal assertions before oracle
+checks. Libxml2 2.9.14 differs on normalized xsi QName whitespace, canonical
+numeric defaults/fixed values, and missing IDREF enforcement; supplemental JAXP
+confirms those named normative outcomes rather than weakening them for parity.
+
+Cache evidence on restriction chains of 8, 64 and 256 types shows respectively
+11/67/259 metadata entries, 8/64/256 derivation pairs, and 8/64/256 simple-semantic
+entries. Repeated assessment adds no schema cache keys and uses 10 allocations
+at each measured depth. These are bounded task measurements, not a universal
+matcher/resource-budget claim. Generated schema and source immutability are
+checked under repeated and concurrent independent contexts. Future catalog,
+source/model capability binding, adapters, report semantics and stage completion
+remain deferred.
+
+Primary contracts: [cvc-elt](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt),
+[complex derivation](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cos-ct-derived-ok),
+[simple derivation](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cos-st-derived-ok),
+[Immediate default validity](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cos-valid-default),
+[ID/IDREF table](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id), and
+[E1-56](https://www.w3.org/2004/03/xmlschema-errata.html#e1-56).

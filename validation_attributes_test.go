@@ -225,15 +225,15 @@ func TestValidateComplexSimpleContentIdentityOnce(t *testing.T) {
 	assert.Equal(t, map[string]string{"attribute-id": "/value/@id", "content-id": "/value"}, context.identifiers)
 }
 
-func TestValidateUnknownElementTypeRemainsSchemaIssue(t *testing.T) {
+func TestValidateUnknownElementTypeIsIncomplete(t *testing.T) {
 	t.Parallel()
 	schema := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{
 		{Local: "value"}: {Name: validationQName{Local: "value"}, Type: validationTypeRef{Name: validationQName{Local: "unknown"}}},
 	}}
-	context := validateAttributeSource(t, schema, `<value rubbish="x">text</value>`)
-	require.Len(t, context.issues, 1)
-	assert.Equal(t, "schema", context.issues[0].Constraint)
-	assert.Equal(t, "/value", context.issues[0].Path)
+	context := assessAttributeSource(t, schema, `<value rubbish="x">text</value>`)
+	assert.Empty(t, context.issues)
+	assert.Error(t, context.assessmentErr)
+	assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 }
 
 func TestDecodeDoesNotValidateSimpleElementAttributes(t *testing.T) {
@@ -247,6 +247,13 @@ func TestDecodeDoesNotValidateSimpleElementAttributes(t *testing.T) {
 }
 
 func validateAttributeSource(t *testing.T, schema *validationSchemaSet, source string) *validationContext {
+	t.Helper()
+	context := assessAttributeSource(t, schema, source)
+	require.NoError(t, context.assessmentErr)
+	return context
+}
+
+func assessAttributeSource(t *testing.T, schema *validationSchemaSet, source string) *validationContext {
 	t.Helper()
 	root, err := parseValidationDocument([]byte(source))
 	require.NoError(t, err)

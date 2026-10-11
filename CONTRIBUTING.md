@@ -62,9 +62,11 @@ numeric element-fixed lexical discrepancy remains an internal normative case.
 Malformed and translator-unsupported patterns use separate metadata tests rather
 than weakening the valid-schema oracle. `zz_generated_builtin_list_validation_test.go` uses
 `testdata/validation/builtin-list-contract.xsd` for built-in list item-count facets.
-Its declared unparsed entities exercise attribute values; libxml2 2.9.14
-rejects the corresponding element values before length facets, so all such
-`ENTITIES` element cases remain internal. `zz_generated_aggregate_validation_test.go`
+Its declared unparsed entities expose a contextual assessment limitation: the
+current source representation does not retain those declarations. Lexically valid
+`ENTITY`/`ENTITIES` cases are now explicitly incomplete, rather than valid or
+invalid; datatype-only helpers remain lexical. These cases are excluded from
+complete-assessment parity claims. `zz_generated_aggregate_validation_test.go`
 uses `testdata/validation/aggregate-contract.xsd` for list/union enumeration and
 fixed comparisons in exact numeric and string-derived domains. Boolean equality and primitive domain identity are covered by the later
 primitive fixture. Other same-primitive equality limitations remain documented. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
@@ -89,7 +91,16 @@ the declared positive element values; equivalent attribute cases use the oracle.
 endpoints, deterministic declaration witnesses and XSD 1.0 all-group controls.
 Its same-byte external test is required in Linux CI. Huge occurrence bounds and
 malformed/cyclic metadata are separate internal tests, not external-schema
-parity claims. All synthetic test schemas use the local empty catalog.
+parity claims.
+`zz_generated_xsi_validation_test.go` and
+`zz_generated_xsi_defaults_validation_test.go` use `xsi-type-contract.xsd` and
+`xsi-defaults-contract.xsd` for namespace-aware actual type selection, derivation,
+block/final/abstract metadata, canonical dynamic defaults, and independent
+attribute/content checks. `TestXSITypeAgainstSchema` executes internal assertions
+for every case and external checks for the comparable cases; named libxml2
+QName-whitespace, canonical-default/fixed and IDREF divergences retain exact
+source evidence plus supplemental JAXP results. All test schemas use the local
+empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,
