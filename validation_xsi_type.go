@@ -142,6 +142,11 @@ func (c *validationContext) validTypeMetadata(v validationTypeIdentity) bool {
 	if state, seen := c.typeMetadata[v]; seen {
 		if state == 1 {
 			c.incomplete("cyclic type derivation metadata")
+		} else if state == 3 {
+			// A cached unknown is newly reached incomplete work, not a proved
+			// false result. Replay its epoch so fixed/default/enumeration callers
+			// cannot turn a later lookup into an ordinary document violation.
+			c.incomplete("cached type metadata assessment is incomplete")
 		}
 		return state == 2
 	}
