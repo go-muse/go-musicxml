@@ -435,7 +435,7 @@ func TestDirectModelWalkerRejectsIncompleteDescriptor(t *testing.T) {
 	descriptor.Elements = descriptor.Elements[:1]
 	account, _ := validation.NewBudgetAccount(validation.Budgets{})
 	walker := modelWalker{ctx: context.Background(), sink: &modelRecordingSink{}, account: account, documentID: "broken-map"}
-	err := walker.push(reflect.ValueOf(Pitch{}), &descriptor, 0, modelName{Local: "pitch"}, "Pitch", nil)
+	err := walker.push(reflect.ValueOf(Pitch{}), &descriptor, 0, modelName{Local: "pitch"}, "Pitch", "Pitch", nil)
 	if !errors.Is(err, validation.ErrIncompleteAssessment) {
 		t.Fatalf("incomplete descriptor accepted: %v", err)
 	}
@@ -474,6 +474,89 @@ func TestDirectModelWalkerScalarLeafDepthBoundary(t *testing.T) {
 		}
 		if depth == 16 && (!status.DepthExceeded || !errors.Is(err, validation.ErrResourceLimit)) {
 			t.Fatalf("scalar leaf did not count as node depth: %+v %v", status, err)
+		}
+		assertWalkerReleased(t, account)
+	}
+}
+
+func TestDirectModelWalkerLegacyRepresentationKeepsGoPath(t *testing.T) {
+	bad := "a\x00b"
+	for _, tt := range []struct {
+		name               string
+		doc                Document
+		goPath, legacyPath string
+	}{
+		{"element", &ScorePartwise{MovementTitle: &bad}, "ScorePartwise.MovementTitle", "/score-partwise/movement-title"},
+		{"attribute", &ScoreTimewise{Version: &bad}, "ScoreTimewise.Version", "/score-timewise/@version"},
+		{"choice", &OpusDocument{Content: OpusDocumentContents{{Score: &OpusScore{Href: bad}}}}, "OpusDocument.Content[0].Score.Href", "/opus/score/@{http://www.w3.org/1999/xlink}href"},
+		{"named string", &ScorePartwise{Part: []ScorePartwisePart{{Measure: []ScorePartwisePartMeasure{{Text: Ptr(MeasureText(bad))}}}}}, "ScorePartwise.Part[0].Measure[0].Text", "/score-partwise/part/measure/@text"},
+		{"simple content", &ScorePartwise{Credit: []Credit{{Content: CreditContents{{CreditWords: &FormattedTextID{Value: bad}}}}}}, "ScorePartwise.Credit[0].Content[0].CreditWords.Value", "/score-partwise/credit/credit-words"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			a, _ := validation.NewBudgetAccount(validation.Budgets{})
+			sink := &modelRecordingSink{}
+			status, err := walkModel(context.Background(), tt.doc, sink, a, "legacy-representation", modelWalkOptions{LegacyPaths: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !status.HasProblems {
+				t.Fatal("representation defect lost")
+			}
+			found := false
+			for _, fact := range sink.representations {
+				for _, problem := range fact.Problems {
+					if problem.Code == "model-invalid-xml-character" {
+						found = true
+						if !strings.Contains(problem.Actual, tt.goPath) {
+							t.Errorf("actual %q lacks Go field path %q", problem.Actual, tt.goPath)
+						}
+						if problem.Location.Path != tt.legacyPath {
+							t.Errorf("legacy path changed: %s", problem.Location.Path)
+						}
+					}
+				}
+			}
+			if !found {
+				t.Fatal("problem missing")
+			}
+			assertWalkerReleased(t, a)
+		})
+	}
+}
+
+func TestDirectModelWalkerLegacyGoPathBoundsAndCleanup(t *testing.T) {
+	root := &OpusDocument{}
+	next := root
+	for i := 1; i < 1100; i++ {
+		child := &OpusDocument{}
+		next.Content = OpusDocumentContents{{Opus: child}}
+		next = child
+	}
+	bad := "\x00"
+	next.Title = &bad
+	account, _ := validation.NewBudgetAccount(validation.Budgets{MaxDepth: 2000})
+	sink := &modelRecordingSink{account: account}
+	status, err := walkModel(context.Background(), root, sink, account, "deep-legacy", modelWalkOptions{LegacyPaths: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !status.HasProblems {
+		t.Fatal("missing deep defect")
+	}
+	for _, fact := range sink.representations {
+		for _, problem := range fact.Problems {
+			if len(problem.Actual) > 4096 || !strings.Contains(problem.Actual, "node[") || !strings.HasSuffix(problem.Actual, ".Title") {
+				t.Fatalf("unbounded or untruthful current path: %q", problem.Actual)
+			}
+		}
+	}
+	assertWalkerReleased(t, account)
+	for limit := int64(512); limit <= 16000; limit += 512 {
+		account, _ := validation.NewBudgetAccount(validation.Budgets{MaxBufferedBytes: limit})
+		sink := &modelRecordingSink{}
+		_, err := walkModel(context.Background(), &OpusDocument{Content: OpusDocumentContents{{Score: &OpusScore{Href: bad}}}}, sink, account, "limited-legacy", modelWalkOptions{LegacyPaths: true})
+		if err != nil && !errors.Is(err, validation.ErrResourceLimit) {
+			t.Fatal(err)
 		}
 		assertWalkerReleased(t, account)
 	}

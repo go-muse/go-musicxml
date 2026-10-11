@@ -33,6 +33,7 @@ type modelWalkFrame struct {
 	descriptor   *modelDescriptor
 	kind         modelScalarKind
 	path         string
+	goPath       string
 	pointer      modelPointer
 	field, index int
 	names        map[modelName]uint64
@@ -98,7 +99,7 @@ func walkModel(ctx context.Context, document Document, sink modelFactSink, accou
 	if options.LegacyPaths {
 		path = "/" + descriptor.Root.Local
 	}
-	err := w.push(value, descriptor, 0, descriptor.Root, path, nil)
+	err := w.push(value, descriptor, 0, descriptor.Root, path, name, nil)
 	if err == nil {
 		err = w.run()
 	}
@@ -141,7 +142,7 @@ func modelComplete() validation.Evidence[bool] {
 	return validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}
 }
 
-func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kind modelScalarKind, name modelName, path string, parent *modelWalkFrame) error {
+func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kind modelScalarKind, name modelName, path, goPath string, parent *modelWalkFrame) error {
 	if err := w.step(); err != nil {
 		return err
 	}
@@ -157,7 +158,7 @@ func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kin
 			}
 			w.status.HasCycle = true
 			parent.hole = true
-			return w.problem(parent, validation.ModelAxisChildren, "model-cycle", modelName{}, path, "acyclic active path", "pointer already active")
+			return w.problem(parent, validation.ModelAxisChildren, "model-cycle", modelName{}, path, goPath, "acyclic active path", "pointer already active")
 		}
 		value = value.Elem()
 	}
@@ -223,11 +224,19 @@ func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kin
 		w.activeCapacity = size
 		w.release(nil, old)
 	}
-	if err := w.retain(nil, 512+int64(len(path))); err != nil {
+	frameBytes := int64(512 + len(path))
+	if w.options.LegacyPaths {
+		frameBytes += int64(len(goPath))
+	}
+	if err := w.retain(nil, frameBytes); err != nil {
 		return err
 	}
 	w.next++
-	frame := &modelWalkFrame{id: w.next, value: value, descriptor: descriptor, kind: kind, path: strings.Clone(path), pointer: pointer, retained: 512 + int64(len(path))}
+	frame := &modelWalkFrame{id: w.next, value: value, descriptor: descriptor, kind: kind, path: strings.Clone(path), pointer: pointer, retained: frameBytes}
+	frame.goPath = frame.path
+	if w.options.LegacyPaths {
+		frame.goPath = strings.Clone(goPath)
+	}
 	w.stack = append(w.stack, frame)
 	if pointer.address != 0 {
 		w.active[pointer] = true
@@ -310,7 +319,16 @@ func (w *modelWalker) attribute(frame *modelWalkFrame, field modelField) error {
 	}
 	defer w.release(nil, bytes)
 	if scalar.problem != "" {
-		if err = w.problem(frame, validation.ModelAxisAttribute, scalar.problem, field.XML, path, "representable current value", "unrepresentable current value"); err != nil {
+		goPath := path
+		if w.options.LegacyPaths {
+			var retained int64
+			goPath, retained, err = w.goFieldPath(frame, field.Name, -1, "")
+			if err != nil {
+				return err
+			}
+			defer w.release(nil, retained)
+		}
+		if err = w.problem(frame, validation.ModelAxisAttribute, scalar.problem, field.XML, path, goPath, "representable current value", "unrepresentable current value"); err != nil {
 			return err
 		}
 	}
@@ -381,8 +399,17 @@ func (w *modelWalker) run() error {
 					return e
 				}
 				frame.hole = true
-				e = w.problem(frame, validation.ModelAxisChildren, "model-choice-cardinality", modelName{}, path, "exactly one selected variant", strconv.Itoa(count)+" selected variants")
-				w.release(nil, bytes)
+				goPath := path
+				var goBytes int64
+				if w.options.LegacyPaths {
+					goPath, goBytes, e = w.goFieldPath(frame, field.Name, index, "")
+					if e != nil {
+						w.release(nil, bytes)
+						return e
+					}
+				}
+				e = w.problem(frame, validation.ModelAxisChildren, "model-choice-cardinality", modelName{}, path, goPath, "exactly one selected variant", strconv.Itoa(count)+" selected variants")
+				w.release(nil, bytes+goBytes)
 				if e != nil {
 					return e
 				}
@@ -411,8 +438,17 @@ func (w *modelWalker) run() error {
 		if err != nil {
 			return err
 		}
-		err = w.push(value, descriptor, field.Kind, field.XML, path, frame)
-		w.release(nil, bytes)
+		goPath := path
+		var goBytes int64
+		if w.options.LegacyPaths {
+			goPath, goBytes, err = w.goFieldPath(frame, field.Name, index, variant)
+			if err != nil {
+				w.release(nil, bytes)
+				return err
+			}
+		}
+		err = w.push(value, descriptor, field.Kind, field.XML, path, goPath, frame)
+		w.release(nil, bytes+goBytes)
 		if err != nil {
 			return err
 		}
@@ -446,7 +482,16 @@ func (w *modelWalker) close(frame *modelWalkFrame) error {
 			}
 			defer w.release(nil, retained)
 		}
-		if err = w.problem(frame, validation.ModelAxisScalar, scalar.problem, modelName{}, path, "representable current value", "unrepresentable current value"); err != nil {
+		goPath := frame.goPath
+		if w.options.LegacyPaths && frame.descriptor != nil {
+			var retained int64
+			goPath, retained, err = w.goFieldPath(frame, frame.descriptor.Scalar.Name, -1, "")
+			if err != nil {
+				return err
+			}
+			defer w.release(nil, retained)
+		}
+		if err = w.problem(frame, validation.ModelAxisScalar, scalar.problem, modelName{}, path, goPath, "representable current value", "unrepresentable current value"); err != nil {
 			return err
 		}
 	}
@@ -476,7 +521,7 @@ func (w *modelWalker) close(frame *modelWalkFrame) error {
 
 // One representative per axis/code/attribute is enough for the once-per-node
 // integrity decision; repeated bad choice entries never grow an unbounded list.
-func (w *modelWalker) problem(frame *modelWalkFrame, axis validation.ModelAxis, code validation.Code, attribute modelName, path, expected, actual string) error {
+func (w *modelWalker) problem(frame *modelWalkFrame, axis validation.ModelAxis, code validation.Code, attribute modelName, path, goPath, expected, actual string) error {
 	w.status.HasProblems = true
 	for _, problem := range frame.problems {
 		if err := w.step(); err != nil {
@@ -486,8 +531,15 @@ func (w *modelWalker) problem(frame *modelWalkFrame, axis validation.ModelAxis, 
 			return nil
 		}
 	}
-	if err := w.retain(frame, 512+int64(len(path)+len(expected)+len(actual))); err != nil {
+	extra := 0
+	if w.options.LegacyPaths {
+		extra = len(goPath) + 4
+	}
+	if err := w.retain(frame, 512+int64(len(path)+len(expected)+len(actual)+extra)); err != nil {
 		return err
+	}
+	if w.options.LegacyPaths {
+		actual += " at " + goPath
 	}
 	// Explicit exact growth accounts the transient replacement before releasing
 	// the previous backing array. Strings above are retained with the frame.
@@ -561,4 +613,29 @@ func (w *modelWalker) path(frame *modelWalkFrame, field string, index int, varia
 		}
 	}
 	return result, maximum, nil
+}
+
+// goFieldPath preserves representation diagnostics when the legacy facade uses
+// XML-structural display locations. It shares the same bounded traversal and
+// parent occurrence anchors; it never rereads the graph or invokes transport.
+func (w *modelWalker) goFieldPath(frame *modelWalkFrame, field string, index int, variant string) (string, int64, error) {
+	if err := w.step(); err != nil {
+		return "", 0, err
+	}
+	maximum := 4 * int64(len(frame.goPath)+len(field)+len(variant)+128)
+	if err := w.retain(nil, maximum); err != nil {
+		return "", 0, err
+	}
+	prefix := frame.goPath
+	if len(prefix) > 2048 {
+		prefix = "node[" + strconv.FormatUint(uint64(frame.id), 10) + "]"
+	}
+	path := prefix + "." + field
+	if index >= 0 {
+		path += "[" + strconv.Itoa(index) + "]"
+	}
+	if variant != "" {
+		path += "." + variant
+	}
+	return path, maximum, nil
 }
