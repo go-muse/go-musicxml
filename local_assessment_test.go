@@ -94,7 +94,7 @@ func TestBoundedLocalProductionClausesBothTargets(t *testing.T) {
 	}
 	add("accordion-present", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-high/></accordion-registration>`), false)
 	add("accordion-empty", "accordion-at-least-one", localDirection(`<accordion-registration/>`), true)
-	add("accordion-middle-zero-present", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-middle>0</accordion-middle></accordion-registration>`), false)
+	add("accordion-middle-present", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-middle>1</accordion-middle></accordion-registration>`), false)
 	add("accordion-low-present", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-low/></accordion-registration>`), false)
 	add("accordion-all-three", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-high/><accordion-middle>3</accordion-middle><accordion-low/></accordion-registration>`), false)
 	add("accordion-omitted", "accordion-at-least-one", "", false)
@@ -171,4 +171,41 @@ func TestBoundedTypedReferencesBothTargets(t *testing.T) {
 	t.Run("optional-omission", func(t *testing.T) {
 		assessLocalFixture(t, localFixture{suffix: `<midi-device>Device</midi-device>`, body: `<sound><play/></sound>` + localNote(`<instrument id="I1"/><instrument id="I1"/><listen><assess type="yes"/></listen>`)}, "", false)
 	})
+}
+
+// Child presence is independent of its XSD scalar validity. The pinned
+// accordion-middle domain excludes zero; the local register-presence clause
+// must not relabel that present-but-invalid child as a missing registration.
+func TestAccordionInvalidPresentChildKeepsDistinctConsequence(t *testing.T) {
+	source := (localFixture{body: localDirection(`<accordion-registration><accordion-middle>0</accordion-middle></accordion-registration>`)}).xml()
+	doc, err := Decode(strings.NewReader(source))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {
+		var report validation.Report
+		if target == validation.TargetSource {
+			report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLocal})
+		} else {
+			report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelLocal})
+		}
+		if err != nil || report.Conformance != validation.ConformanceViolated || !report.AssessmentComplete {
+			t.Fatalf("%s: %+v %v", target, report, err)
+		}
+		xsdFailure := false
+		for _, finding := range report.Findings {
+			if finding.Outcome != validation.OutcomeFail {
+				continue
+			}
+			if finding.Rule.ID == "MX40-LOCAL-accordion-at-least-one" {
+				t.Fatalf("%s: present child treated as absent", target)
+			}
+			if finding.Rule.ID == "MX40-XSD-musicxml-scalar" && finding.Reason == "datatype" {
+				xsdFailure = true
+			}
+		}
+		if !xsdFailure {
+			t.Fatalf("%s: lost independent child domain failure", target)
+		}
+	}
 }
