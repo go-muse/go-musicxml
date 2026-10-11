@@ -116,9 +116,9 @@ func TestAggregateValuesAgainstSchema(t *testing.T) {
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {
-			t.Fatal(err)
+			t.Fatal("xmllint is required but was not found in PATH")
 		}
-		t.Skip("xmllint not installed")
+		t.Skip("xmllint is not installed; Linux CI requires this external XSD test")
 	}
 	directory, err := filepath.Abs("testdata/validation")
 	require.NoError(t, err)
@@ -127,6 +127,7 @@ func TestAggregateValuesAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
+			assertValidationIssues(t, validateAttributeSource(t, &validationAggregateGenerated, test.source), test.issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "aggregate-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})
 	}

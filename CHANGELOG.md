@@ -26,6 +26,19 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Apply `length`, `minLength` and `maxLength` to item counts for the built-in
+  XSD list types `NMTOKENS`, `IDREFS` and `ENTITIES`, including inherited
+  restrictions, attributes and complex simple content.
+
+- Compare list and union enumeration and fixed values in the bounded value
+  domains of strings, exact integers/decimals and ordered lists of those values.
+  Preserve the first successful union member's value and distinguish list shape
+  and numeric/string domains. Other primitive families retain lexical equality.
+
+- Expand union-variety members at XSD 1.0 union-composition boundaries, preserving
+  member order and atomic/list member restrictions. Direct union restrictions
+  and restrictions on unions used as list item types remain operative.
+
 - Treat XSD patterns declared in one restriction as alternatives, while retaining
   intersection with inherited restriction groups. Every local alternative is
   checked for malformed or unsupported patterns, even after a match or miss;
@@ -39,7 +52,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Atomic string-derived fixed values now use the effective whitespace policy,
   including complex simple content. Source text and schema literals stay intact;
   scalar diagnostics retain source spelling. Pattern alternatives are repaired
-  above; aggregate equality and other primitive typed equality remain separate work.
+  above, alongside bounded aggregate equality; other primitive typed equality
+  remains separate work.
 
 - Retain and apply supported scalar restriction facets on complex simple-content
   types, including optional inline scalar bases and inherited restrictions.

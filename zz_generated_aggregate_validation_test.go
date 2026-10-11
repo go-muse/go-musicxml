@@ -4,7 +4,6 @@ package musicxml
 
 var validationAggregateGenerated = validationSchemaSet{
 	Types: map[validationQName]*validationTypeSchema{
-		validationQName{Space: "", Local: "booleans"}:             {Simple: &validationSimpleSchema{Form: validationSimpleForm("list"), Item: &validationSimpleMember{Name: validationQName{Space: "http://www.w3.org/2001/XMLSchema", Local: "boolean"}}}},
 		validationQName{Space: "", Local: "bounded-enum"}:         {Simple: &validationSimpleSchema{Form: validationSimpleForm("restriction"), Base: &validationSimpleMember{Name: validationQName{Space: "", Local: "bounded-list"}}, Enumerations: []string{"1 2"}}},
 		validationQName{Space: "", Local: "bounded-item"}:         {Simple: &validationSimpleSchema{Form: validationSimpleForm("restriction"), Base: &validationSimpleMember{Name: validationQName{Space: "http://www.w3.org/2001/XMLSchema", Local: "integer"}}, MinInclusive: "1", HasMinInclusive: true, MaxInclusive: "3", HasMaxInclusive: true}},
 		validationQName{Space: "", Local: "bounded-list"}:         {Simple: &validationSimpleSchema{Form: validationSimpleForm("list"), Item: &validationSimpleMember{Name: validationQName{Space: "", Local: "bounded-item"}}}},

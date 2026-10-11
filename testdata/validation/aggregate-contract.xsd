@@ -4,7 +4,6 @@
   <xs:simpleType name="integers"><xs:list itemType="xs:integer"/></xs:simpleType>
   <xs:simpleType name="decimals"><xs:list itemType="xs:decimal"/></xs:simpleType>
   <xs:simpleType name="tokens"><xs:list itemType="xs:token"/></xs:simpleType>
-  <xs:simpleType name="booleans"><xs:list itemType="xs:boolean"/></xs:simpleType>
   <xs:simpleType name="digits-string"><xs:restriction base="xs:string"><xs:pattern value="[0-9]+"/></xs:restriction></xs:simpleType>
   <xs:simpleType name="digits-integer"><xs:restriction base="xs:integer"><xs:pattern value="[0-9]+"/></xs:restriction></xs:simpleType>
   <xs:simpleType name="digits-list"><xs:restriction base="integers"><xs:pattern value="[0-9]+"/></xs:restriction></xs:simpleType>

@@ -1485,12 +1485,7 @@ func (c *validationContext) simpleMemberList(
 	if member.Name.Space == validationXSDNamespace {
 		// Built-in list varieties retain item-count facets through restrictions
 		// and the effective complex simple-content scalar bridge.
-		switch member.Name.Local {
-		case "NMTOKENS", "IDREFS", "ENTITIES":
-			return true
-		default:
-			return false
-		}
+		return validationBuiltinListItem(member.Name.Local) != ""
 	}
 
 	resolved, found := c.schema.Types[member.Name]

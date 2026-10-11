@@ -128,6 +128,8 @@ func (c *validationContext) simpleLiteralValue(semantics *validationSimpleSemant
 	return result, failure == nil
 }
 
+// Fixed comparisons convert both operands per occurrence. Only enumeration
+// literals use the schema-keyed cache; instance spellings are never cache keys.
 func (c *validationContext) aggregateValuesEqual(semantics *validationSimpleSemantics, left, right string) bool {
 	first, firstOK := c.simpleLiteralValue(semantics, left)
 	second, secondOK := c.simpleLiteralValue(semantics, right)
