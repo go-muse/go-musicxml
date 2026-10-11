@@ -29,6 +29,9 @@ func (r *recordingSourceFacts) Attribute(_ context.Context, a validation.Attribu
 	r.attributes = append(r.attributes, a)
 	return nil
 }
+func (r *recordingSourceFacts) CompleteAttributes(context.Context, validation.NodeID, validation.Evidence[bool]) error {
+	return nil
+}
 func (r *recordingSourceFacts) Close(_ context.Context, e validation.NodeEnd) error {
 	r.ends = append(r.ends, e)
 	return nil

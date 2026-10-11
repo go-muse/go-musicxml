@@ -157,7 +157,9 @@ string unchanged and does not check resource existence or accessibility.
 
 The `validation` subpackage exports `NewCatalog`, eight generic sealed typed-plan
 constructors plus the sealed shared-schema `NewXSDPlan`, `NewEngine`, and explicit-profile fact sessions using `Open`,
-`Attribute`, `Close` and `Finish`. Catalogs are immutable; sessions copy retained
+`Attribute`, optional `CompleteAttributes`, `Close` and `Finish`. The optional
+attribute-closure event seals explicit start-tag enumeration before children;
+it enables truthful prefix assessment when an ancestor never closes. Catalogs are immutable; sessions copy retained
 facts and return independently owned reports. Exact selectors distinguish schema
 assemblies and declaration/use occurrences. There is no default MusicXML profile, direct current-model walker, resolver
 or package-assessment entry point. The root package provides the explicit source

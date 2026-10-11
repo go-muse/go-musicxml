@@ -543,3 +543,12 @@ func TestAssessedModelRetentionSurvivesSourceFinalization(t *testing.T) {
 		t.Fatalf("candidate leaked %d bytes", used)
 	}
 }
+
+func TestSourceAssessmentKeepsClosedFailureWithUnclosedAncestors(t *testing.T) {
+	input := strings.TrimSuffix(assessedScore("bad", ""), "</attributes></measure></part></score-partwise>")
+	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
+	var syntax *xml.SyntaxError
+	if !errors.As(err, &syntax) || report.Conformance != validation.ConformanceViolated || report.AssessmentComplete || report.InputComplete {
+		t.Fatalf("closed scalar proof lost under unclosed ancestors: %+v / %v", report, err)
+	}
+}

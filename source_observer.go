@@ -22,6 +22,7 @@ const sourceXMLNSNamespace = "http://www.w3.org/2000/xmlns/"
 type sourceFactSink interface {
 	Open(context.Context, validation.NodeHeader) error
 	Attribute(context.Context, validation.AttributeFact) error
+	CompleteAttributes(context.Context, validation.NodeID, validation.Evidence[bool]) error
 	Close(context.Context, validation.NodeEnd) error
 }
 
@@ -277,7 +278,11 @@ func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMet
 			return err
 		}
 	}
-	return nil
+	complete := validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}
+	if o.dtdUnavailable {
+		complete = validation.Evidence[bool]{State: validation.EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
+	}
+	return o.sink.CompleteAttributes(o.ctx, frame.id, complete)
 }
 
 func (o *sourceFactObserver) attribute(frame *sourceObserverFrame, attr xml.Attr, meta sourceXMLAttribute, state validation.EvidenceState, reason validation.Code) error {

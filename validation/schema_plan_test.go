@@ -193,6 +193,9 @@ func TestSourceSchemaClosedChildFailureSurvivesUnclosedParent(t *testing.T) {
 	if err := session.Open(ctx, root); err != nil {
 		t.Fatal(err)
 	}
+	if err := session.CompleteAttributes(ctx, root.ID, Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
+		t.Fatal(err)
+	}
 	child := schemaPendingHeader()
 	child.ID = 2
 	child.Parent = 1

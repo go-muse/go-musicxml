@@ -42,7 +42,9 @@ schema validity/UPA certification and does not erase cycles or alias identity.
 
 Source facts retain expanded names, physical attribute presence, copied
 namespace scopes, direct XML-normalized text, child order, occurrence IDs and
-original-byte locations. Source lexemes are never replaced by XSD whitespace
+original-byte locations. The explicit optional `CompleteAttributes` event seals
+start-tag enumeration before children. A generic unsealed/incomplete attribute
+set cannot exclude hidden `xsi:type` or `xsi:nil` controls. Source lexemes are never replaced by XSD whitespace
 normalization, selected union members or effective defaults. Kernel results keep
 physical/defaulted status and effective values separately. Generic `Atomic`
 facts are published only where its exact value vocabulary can represent the

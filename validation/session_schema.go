@@ -45,6 +45,9 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 		return xsd.Subject{}, err
 	}
 	out := xsd.Subject{ID: xsd.SubjectID(n.header.ID), Parent: xsd.SubjectID(n.header.Parent), Name: xsd.QName{Space: n.header.Name.Space, Local: n.header.Name.Local}, Path: n.header.Location.Path, Text: n.end.Scalar.Lexeme.Value, TextKnown: n.closed && n.end.Scalar.Lexeme.State == EvidenceKnown, AttributesComplete: n.closed && n.end.AttributesComplete.State == EvidenceKnown && n.end.AttributesComplete.Value, ChildrenComplete: n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value && n.end.Order.State == EvidenceKnown && n.end.Order.Value == OrderSource}
+	if !n.closed && n.attributeSeal != nil {
+		out.AttributesComplete = n.attributeSeal.State == EvidenceKnown && n.attributeSeal.Value
+	}
 	out.Namespaces = make(map[string]string, len(n.header.Bindings))
 	for _, b := range n.header.Bindings {
 		if err := s.step(ctx, 1); err != nil {

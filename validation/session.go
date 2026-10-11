@@ -75,11 +75,12 @@ func (e *UnsupportedRootError) Error() string {
 func (e *UnsupportedRootError) Unwrap() error { return ErrIncompleteAssessment }
 
 type factNode struct {
-	header     NodeHeader
-	end        NodeEnd
-	closed     bool
-	children   []*factNode
-	attributes []AttributeFact
+	header        NodeHeader
+	end           NodeEnd
+	closed        bool
+	children      []*factNode
+	attributes    []AttributeFact
+	attributeSeal *Evidence[bool]
 }
 type decisionID struct {
 	rule RuleKey
@@ -353,7 +354,7 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 		return s.fail(&SessionError{Operation: "Attribute", Reason: "no open owner"})
 	}
 	n := s.stack[len(s.stack)-1]
-	if attribute.Owner != n.header.ID || len(n.children) > 0 {
+	if attribute.Owner != n.header.ID || len(n.children) > 0 || n.attributeSeal != nil {
 		return s.fail(&SessionError{Operation: "Attribute", Reason: "wrong owner or attribute after children"})
 	}
 	if err := s.account.Charge(BudgetAttributes, 1); err != nil {
@@ -377,6 +378,33 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 		}
 	}
 	n.attributes = append(n.attributes, cloneAttribute(attribute))
+	return nil
+}
+
+// CompleteAttributes optionally seals one start-tag attribute phase before
+// children or node closure. It preserves explicit enumeration evidence for an
+// interrupted parent; unknown evidence never establishes absence. Once called,
+// no further Attribute event is allowed on this occurrence. Existing streams
+// may omit this event and supply completeness only in NodeEnd.
+func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Evidence[bool]) error {
+	if err := s.event(ctx, "CompleteAttributes"); err != nil {
+		return err
+	}
+	if len(s.stack) == 0 {
+		return s.fail(&SessionError{Operation: "CompleteAttributes", Reason: "no open owner"})
+	}
+	n := s.stack[len(s.stack)-1]
+	if n.header.ID != id || len(n.children) != 0 || n.attributeSeal != nil {
+		return s.fail(&SessionError{Operation: "CompleteAttributes", Reason: "wrong owner, repeated closure, or children already started"})
+	}
+	if err := validateEvidence(complete, "attribute completeness"); err != nil {
+		return s.fail(err)
+	}
+	if err := s.retain(64 + evidenceLogicalBytes(complete)); err != nil {
+		return s.fail(err)
+	}
+	owned := cloneEvidence(complete)
+	n.attributeSeal = &owned
 	return nil
 }
 
@@ -404,6 +432,9 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 		for name := range s.identities {
 			s.markIdentityIncomplete(name)
 		}
+	}
+	if n.attributeSeal != nil && n.attributeSeal.State == EvidenceKnown && n.attributeSeal.Value && (end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value) {
+		return s.fail(&SessionError{Operation: "Close", Reason: "attribute completeness contradicts sealed start tag"})
 	}
 	n.end = cloneEnd(end)
 	n.closed = true
