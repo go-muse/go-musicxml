@@ -680,7 +680,7 @@ func (p *sourceDTDParser) fail(message string) {
 func (p *sourceDTDParser) unsupported(feature string) {
 	if p.err == nil {
 		p.info.Unsupported = true
-		p.err = &sourceXMLUnsupportedError{Feature: feature}
+		p.err = &sourceXMLUnsupportedError{Feature: feature, Reason: "xml-dtd-unavailable"}
 	}
 }
 

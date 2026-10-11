@@ -31,6 +31,11 @@ func (r *namespaceXMLTokenReader) Token() (xml.Token, error) {
 		}
 		switch value := token.(type) {
 		case xml.StartElement:
+			// Reject a foreign root before a model decoder can reinterpret a
+			// literal namespace URI such as "xml" as a reserved prefix.
+			if !r.started && value.Name.Space != "" {
+				return nil, &UnsupportedRootError{Name: value.Name}
+			}
 			if r.started && value.Name.Space != "" {
 				if err := r.source.Skip(); err != nil {
 					return nil, err

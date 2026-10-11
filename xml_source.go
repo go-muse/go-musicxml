@@ -465,9 +465,12 @@ func (r *sourceXMLTokenReader) reference() (rune, error) {
 	if r.dtd.ExternalSubset || r.dtd.HasEntityDeclarations || r.dtd.HasParameterReferences {
 		return 0, &sourceXMLUnsupportedError{Feature: "DTD entity expansion", Reason: "dtd-entity-expansion"}
 	}
-	return 0, r.syntax("undeclared XML entity " + name)
+	return 0, r.syntax("undeclared XML entity " + sourceXMLDiagnosticValue(name))
 }
 func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
+	if cdata {
+		return r.cdata()
+	}
 	b := sourceXMLBuilder{r: r}
 	var last1, last2 rune
 	for {
@@ -514,6 +517,41 @@ func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
 	}
 	return xml.CharData(b.data), nil
 }
+func (r *sourceXMLTokenReader) cdata() (xml.Token, error) {
+	b := sourceXMLBuilder{r: r}
+	brackets := 0
+	for {
+		u, err := r.must()
+		if err != nil {
+			return nil, err
+		}
+		if u.Rune == ']' {
+			if brackets == 2 {
+				if err = b.append(']'); err != nil {
+					return nil, err
+				}
+			} else {
+				brackets++
+			}
+			continue
+		}
+		if u.Rune == '>' && brackets == 2 {
+			if len(r.frames) == 0 {
+				return nil, r.syntax("references and CDATA are not allowed outside the root element")
+			}
+			return xml.CharData(b.data), nil
+		}
+		for brackets > 0 {
+			if err = b.append(']'); err != nil {
+				return nil, err
+			}
+			brackets--
+		}
+		if err = b.append(u.Rune); err != nil {
+			return nil, err
+		}
+	}
+}
 func (r *sourceXMLTokenReader) comment() (xml.Token, error) {
 	b := sourceXMLBuilder{r: r}
 	dashes := 0
@@ -526,12 +564,16 @@ func (r *sourceXMLTokenReader) comment() (xml.Token, error) {
 			if u.Rune != '>' {
 				return nil, r.syntax(`invalid sequence "--" not allowed in comments`)
 			}
-			b.data = b.data[:len(b.data)-2]
 			return xml.Comment(b.data), nil
 		}
 		if u.Rune == '-' {
 			dashes++
-		} else {
+			continue
+		}
+		if dashes != 0 {
+			if err = b.append('-'); err != nil {
+				return nil, err
+			}
 			dashes = 0
 		}
 		if err = b.append(u.Rune); err != nil {
@@ -724,8 +766,11 @@ func (r *sourceXMLTokenReader) open(name xml.Name, attributes []xml.Attr) error 
 	}
 	lexical := make(map[xml.Name]bool, len(attributes))
 	for _, a := range attributes {
+		if err := r.cursor.ctx.Err(); err != nil {
+			return err
+		}
 		if lexical[a.Name] {
-			return r.syntax(fmt.Sprintf("duplicate XML attribute {%s}%s", a.Name.Space, a.Name.Local))
+			return r.syntax(fmt.Sprintf("duplicate XML attribute {%s}%s", sourceXMLDiagnosticValue(a.Name.Space), sourceXMLDiagnosticValue(a.Name.Local)))
 		}
 		lexical[a.Name] = true
 		if a.Name.Space != "xmlns" && !(a.Name.Space == "" && a.Name.Local == "xmlns") {
@@ -771,11 +816,14 @@ func (r *sourceXMLTokenReader) open(name xml.Name, attributes []xml.Attr) error 
 	}
 	if name.Space != "" {
 		if _, bound := r.lookup(name.Space); !bound {
-			return r.syntax("undeclared XML namespace prefix " + name.Space)
+			return r.unboundPrefix(name.Space)
 		}
 	}
 	expanded := make(map[xml.Name]bool, len(attributes))
 	for _, a := range attributes {
+		if err := r.cursor.ctx.Err(); err != nil {
+			return err
+		}
 		if a.Name.Space == "xmlns" || a.Name.Space == "" && a.Name.Local == "xmlns" {
 			continue
 		}
@@ -783,12 +831,12 @@ func (r *sourceXMLTokenReader) open(name xml.Name, attributes []xml.Attr) error 
 		if a.Name.Space != "" {
 			uri, bound := r.lookup(a.Name.Space)
 			if !bound {
-				return r.syntax("undeclared XML namespace prefix " + a.Name.Space)
+				return r.unboundPrefix(a.Name.Space)
 			}
 			expandedName.Space = uri
 		}
 		if expanded[expandedName] {
-			return r.syntax(fmt.Sprintf("duplicate XML attribute {%s}%s", expandedName.Space, expandedName.Local))
+			return r.syntax(fmt.Sprintf("duplicate XML attribute {%s}%s", sourceXMLDiagnosticValue(expandedName.Space), sourceXMLDiagnosticValue(expandedName.Local)))
 		}
 		expanded[expandedName] = true
 	}
@@ -859,25 +907,32 @@ func (r *sourceXMLTokenReader) instruction(first bool) (xml.Token, error) {
 		return nil, r.syntax("processing instruction data requires whitespace")
 	}
 	b := sourceXMLBuilder{r: r}
-	last := rune(0)
+	question := false
 	for {
 		u, err = r.must()
 		if err != nil {
 			return nil, err
 		}
-		if last == '?' && u.Rune == '>' {
-			b.data = b.data[:len(b.data)-1]
-			return xml.ProcInst{Target: target, Inst: b.data}, nil
+		if question {
+			if u.Rune == '>' {
+				return xml.ProcInst{Target: target, Inst: b.data}, nil
+			}
+			if !separated {
+				return nil, r.syntax("processing instruction data requires whitespace")
+			}
+			if err = b.append('?'); err != nil {
+				return nil, err
+			}
 		}
-		if !separated && last == '?' {
-			return nil, r.syntax("processing instruction data requires whitespace")
+		question = u.Rune == '?'
+		if !question {
+			if err = b.append(u.Rune); err != nil {
+				return nil, err
+			}
 		}
-		if err = b.append(u.Rune); err != nil {
-			return nil, err
-		}
-		last = u.Rune
 	}
 }
+
 func (r *sourceXMLTokenReader) declaration(first bool) (xml.Token, error) {
 	separated, err := r.spaces()
 	if err != nil {
@@ -1009,7 +1064,7 @@ func (r *sourceXMLTokenReader) selectEncoding(declared string) error {
 	case "utf16", "utf16be", "utf16le":
 		return r.syntax("XML encoding declaration does not match source bytes")
 	}
-	return &sourceXMLUnsupportedError{Feature: "encoding " + declared, Reason: "xml-encoding-unavailable"}
+	return &sourceXMLUnsupportedError{Feature: "encoding " + sourceXMLDiagnosticValue(declared), Reason: "xml-encoding-unavailable"}
 }
 
 // These methods are the streaming, no-fetch DTD reader boundary. The grammar
@@ -1062,4 +1117,22 @@ func (r *sourceXMLTokenReader) ReleaseDTDBytes(n int64) {
 		_ = r.account.Release(validation.BudgetBufferedBytes, n)
 	}
 	r.tokenOwned -= n
+}
+
+func (r *sourceXMLTokenReader) unboundPrefix(prefix string) error {
+	if r.dtd.HasAttributeDeclarations || r.dtd.ExternalSubset || r.dtd.HasParameterReferences {
+		return &sourceXMLUnsupportedError{Feature: "namespace bindings requiring DTD default attributes", Reason: "dtd-namespace-binding-unavailable"}
+	}
+	return r.syntax("undeclared XML namespace prefix " + sourceXMLDiagnosticValue(prefix))
+}
+func sourceXMLDiagnosticValue(value string) string {
+	const maximum = 160
+	if len(value) <= maximum {
+		return value
+	}
+	end := maximum
+	for end > 0 && !utf8.RuneStart(value[end]) {
+		end--
+	}
+	return value[:end] + "…"
 }
