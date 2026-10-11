@@ -12,6 +12,16 @@ func (c *validationContext) incomplete(message string) {
 	c.assessmentVersion++
 }
 
+// A cache hit revisits an existing incomplete fact. Preserve the original cause
+// while advancing the event epoch used by value-comparison callers.
+func (c *validationContext) incompleteAgain(message string) {
+	if c.assessmentErr == nil {
+		c.incomplete(message)
+		return
+	}
+	c.assessmentVersion++
+}
+
 func (c *validationContext) result() error {
 	if len(c.issues) == 0 {
 		return c.assessmentErr
