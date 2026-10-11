@@ -4,9 +4,15 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 var (
+	// ErrIncompleteAssessment identifies unfinished technical assessment, not an
+	// XSD violation. It shares its identity with validation.ErrIncompleteAssessment.
+	ErrIncompleteAssessment = validation.ErrIncompleteAssessment
+
 	// ErrNilReader reports a nil input reader.
 	ErrNilReader = errors.New("musicxml: nil reader")
 

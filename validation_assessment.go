@@ -2,13 +2,14 @@ package musicxml
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 // assessmentErr is private, run-local technical state. It never wraps the
 // public invalid-document sentinel unless independently proved issues exist.
 func (c *validationContext) incomplete(message string) {
-	c.assessmentErr = errors.Join(c.assessmentErr, fmt.Errorf("musicxml: incomplete XSD assessment: %s", message))
+	c.assessmentErr = errors.Join(c.assessmentErr, &validation.IncompleteError{Reason: "incomplete XSD assessment: " + message})
 	c.assessmentVersion++
 }
 

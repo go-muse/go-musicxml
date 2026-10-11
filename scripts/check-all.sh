@@ -19,6 +19,7 @@ check_gofmt="${GOFMT:-gofmt}"
 # a race in the fuzz coordinator (go.dev/issue/75804, fixed in Go 1.27).
 check_fuzz_time="${FUZZ_TIME:-50000x}"
 check_mxl_fuzz_time="${MXL_FUZZ_TIME:-10000x}"
+check_validation_fuzz_time="${VALIDATION_FUZZ_TIME:-10000x}"
 
 all_stages=(mod generate format test vet race fuzz)
 
@@ -104,6 +105,10 @@ stage_fuzz() {
         -fuzztime="$check_mxl_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzMXLLinkResolution$' \
         -fuzztime="$check_fuzz_time" .
+    "$check_go" test -run='^$' -fuzz='^FuzzReportFieldIsBoundedEscapedUTF8$' \
+        -fuzztime="$check_validation_fuzz_time" ./validation
+    "$check_go" test -run='^$' -fuzz='^FuzzSessionLifecycle$' \
+        -fuzztime="$check_validation_fuzz_time" ./validation
 }
 
 if [[ $# -eq 0 ]]; then

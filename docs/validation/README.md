@@ -1,12 +1,14 @@
 # Validation design and requirements
 
-Status: **PROPOSED**. Research snapshot: 8 October 2026.
+Status: **PROPOSED architecture with a bounded implemented foundation**.
+Research snapshot: 8 October 2026.
 
 This directory contains the proposed validation architecture and package-facing
 guides. MusicXML 4.0 requirements evidence is maintained in the separate
 [go-musicxml-registry repository](https://github.com/go-muse/go-musicxml-registry/tree/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c),
-pinned here to commit `3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c`. It is documentation for review, not an implementation,
-a new public API, or a claim of complete validation by the current library.
+pinned here to commit `3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c`. The broader
+design remains documentation for review, not a claim of complete validation by
+the current library.
 
 The [current XSD prerequisite scope and owner ledger](xsd-prerequisite-scope.md)
 reconciles the bounded implementation repairs following PR 30, their reusable
@@ -14,6 +16,11 @@ evidence and explicit remaining obligations. It does not mark the planned stages
 or a new validation profile complete.
 
 ## Reading order
+
+Start with the [implemented foundation scope and requirement/test bindings](foundation-scope.md)
+for the current `validation` API, finite budgets, inspection inventory and exact
+remaining owners. The proposal pages below describe wider future contracts;
+they do not imply that source/model adapters or a production profile exist.
 
 1. [Architecture proposal](architecture.md): one XML parse, optional strict source
    validation, direct model validation, shared rules, and self-contained diagnostics.

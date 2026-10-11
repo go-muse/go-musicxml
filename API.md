@@ -128,9 +128,16 @@ nesting deeper than 4096 elements before walking the model recursively.
 
 Use `errors.Is(err, ErrInvalidDocument)` for the category and
 `errors.As(err, *ValidationError)` to inspect every `ValidationIssue`.
-Issue paths use indexed XML-style paths. There is currently no dedicated public
-sentinel for technical incompleteness, including its presence in a joined
-invalid/incomplete result.
+Issue paths use indexed XML-style paths. `ErrIncompleteAssessment` identifies
+technical incompleteness, including its presence in a joined invalid/incomplete
+result. It is the identical sentinel exported by the `validation` subpackage.
+`errors.As` can also retrieve its `*validation.IncompleteError`; pure technical
+incompleteness does not match `ErrInvalidDocument` or `*ValidationError`.
+The legacy incomplete-error text intentionally changes from
+`musicxml: incomplete XSD assessment: …` to
+`validation: incomplete assessment: incomplete XSD assessment: …`.
+Use `errors.Is`/`errors.As` for recognition rather than matching an error-string
+prefix; the public sentinel and typed cause are the compatibility contract.
 
 Reached `ENTITY`/`ENTITIES` assessment cannot establish unparsed-entity
 declarations at this layer. Lexically valid values therefore produce technical
@@ -141,6 +148,67 @@ reported alongside a reached technical error. Validation never fetches a DTD.
 URI values are checked using XSD `anyURI` lexical rules, including XLink
 escaping of spaces and non-ASCII characters. Validation leaves the stored
 string unchanged and does not check resource existence or accessibility.
+
+## Fact-stream validation foundation
+
+The `validation` subpackage exports `NewCatalog`, eight sealed typed-plan
+constructors, `NewEngine`, and explicit-profile fact sessions using `Open`,
+`Attribute`, `Close` and `Finish`. Catalogs are immutable; sessions copy retained
+facts and return independently owned reports. Exact selectors distinguish schema
+assemblies and declaration/use occurrences. There is no default MusicXML profile,
+XML/source adapter, direct model walker, resolver or package-assessment entry
+point. The [exported example](validation/example_test.go) uses synthetic facts.
+
+A profile explicitly names all required and transitive rules, static support,
+supported roots and normative closure. `CompiledCatalog.Schedule` exposes each
+rule once in final-evaluation order, after derived context-provider/identity
+phase ordering; these edges do not add rules or semantic dependencies. Catalog
+digests cover canonical metadata and typed plan parameters.
+`MusicXML40Inventory` is a separate pinned inspection snapshot of 2,560 research records, not executable rule coverage.
+
+`Report.Satisfied()` evaluates independent syntax, input/assessment completion,
+conformance and blocker axes. A nil operation error alone is not acceptance.
+Evidence-only limitations and normative findings are report outcomes; terminal
+failures preserve typed incomplete/resource/cancellation causes. Call `Finish`
+exactly once even after an event error to release owned live resources. Required
+model/policy/context blockers do not become normative violations, and diagnostic
+truncation does not erase counts or blockers. Formatting is bounded and offline.
+
+`Report.Findings` stores only fail, unknown, unsupported and blocked diagnostics;
+`Report.Rules` contains metadata only for those stored diagnostics. Pass and
+not-applicable outcomes still contribute to applicable `Counts` and are retained
+compactly for dependency execution, but never consume diagnostic quotas or set
+`DiagnosticsTruncated`. There is no all-decisions trace option. The compact
+per-rule success/not-applicable tables and document-prerequisite aggregates have
+separate live-buffer charges. A `RelationDocument` rule-prerequisite aggregate is
+computed lazily once after its prerequisite's final evaluation phase and reused
+by consumers. This does not remove rules-times-nodes dispatch or make the retained
+fact session a constant-memory stream.
+
+The identity plans accept upstream-domain-validated string keys. A well-formed
+known atomic value in another family produces a per-rule unsupported outcome,
+not a terminal event error. An unsupported declaration makes its index incomplete
+so an unresolved reference cannot fabricate a missing-target violation; malformed
+atomic payloads remain terminal fact-contract failures.
+
+Terminal summaries use deterministic precedence across joined causes:
+resource-limit, cancellation and deadline exhaustion are resource failures;
+otherwise a valid source completion asserting malformed syntax with an explicit
+cause is syntax; unsupported root, invalid session, invalid configuration and
+unknown infrastructure failures are capability
+failures. Each has its own reason code, listed in the
+[terminal disposition table](docs/validation/foundation-scope.md#terminal-disposition).
+Invalid or contradictory completion assertions remain capability contract or
+lifecycle failures rather than proving malformed XML. Policy remains an explicit
+rule category. Selecting one terminal summary does
+not discard the underlying causes available through `errors.Is`/`errors.As`.
+
+`Budgets` has finite zero defaults; a shared `Account` cannot be reset or widened
+by child sessions. All limits, charging owners, exact-value constructor caps,
+plan boundaries and remaining obligations are documented in the
+[foundation scope](docs/validation/foundation-scope.md). Numeric constructor
+resource limits are not XSD facets. The legacy `Validate` encode/reparse path,
+`DecodeOptions` shape and generated model remain unchanged.
 
 ## MXL packages
 
