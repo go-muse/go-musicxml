@@ -10,14 +10,28 @@ below against merged PR 30 and the pinned XSD 1.0 specification. Earlier baselin
 limitations are historical; the later explicitly scoped updates supersede only
 their demonstrated contracts, without closing whole planned stages.
 
+## Direct model and local assessment update
+
+The [batch-5 scope and evidence](model-assessment-scope.md) supersedes the
+historical Encode/reparse and absent-direct-adapter descriptions below.
+`AssessModel` now traverses generated fields directly; legacy `Validate` uses
+that same walker with an XSD-only profile. Neither route encodes or parses XML,
+and neither reconstructs information lost by permissive decoding. The generated
+`Assess` type is preserved; it is not the new function name. Explicit model/local
+and source/local profiles are bounded implementations under final verification,
+with unchanged source-preview/DTD limitations and named later owners.
+Links to moved scalar/grammar helpers point to their current `internal/xsd`
+locations. Earlier sections retain the source/acceptance evidence from their original
+repair slices; they do not describe the present `Validate` call graph.
+
 ## Shared source scanner update
 
 The historical XML-reader repairs below now run through the one-pass
 [`sourceXMLTokenReader`](../../xml_source.go) and original-byte
 [`sourceXMLCursor`](../../xml_source_cursor.go). The old lexical observer and
 well-formedness token wrapper have been removed rather than retained as a second
-production parser. Ordinary Decode, MXL/container and the legacy validation
-reparse helper share this scanner; meaningful old regressions still exercise the
+production parser. Ordinary Decode, MXL/container and internal source-fixture
+parsing share this scanner; public `Validate` no longer calls the reparse helper; meaningful old regressions still exercise the
 public paths or the actual scanner. The source reader records lexical attribute
 provenance before namespace expansion and supports original-byte positions
 across UTF-8, UTF-16 and Latin-1. Its mandatory XML grammar corrections and
@@ -190,7 +204,7 @@ separate work. Planning JSON retains `status: planned`.
 The existing validator now separates all 13 XSD integer-family domains from Go
 conversion. The five unbounded families accept arbitrary finite ASCII-digit
 lexemes; the eight bounded families retain their normative XSD ranges. The
-[integer helper](../../validation_integer.go) uses immutable sign/digit views
+[integer helper](../../internal/xsd/integer.go) uses immutable sign/digit views
 with leading zeros removed for comparison and a single zero value. Parsing and
 comparison scan linearly with constant auxiliary space; existing normalization,
 source storage and diagnostics still allocate in proportion to their input.
@@ -248,7 +262,7 @@ planning JSON retains `status: planned`.
 The existing validator now compares atomic decimal-derived values exactly for
 all four inclusive/exclusive bound facets, enumeration, and fixed constraints
 on attributes, simple elements and resolved complex simple-content elements.
-The [decimal helper](../../validation_decimal.go) uses immutable sign, whole-digit
+The [decimal helper](../../internal/xsd/decimal.go) uses immutable sign, whole-digit
 and fractional-digit views. Leading whole zeros and trailing fractional zeros
 are omitted from the views, and every signed zero compares equally. Lexical
 acceptance remains the existing XSD decimal contract. Comparisons do not convert
@@ -422,7 +436,7 @@ and exact numeric values. Patterns, enumerations, builtin datatype and numeric
 bound diagnostics retain the original source spelling, including inherited
 failures; digit/length messages continue to report measured counts.
 
-[`validation_whitespace.go`](../../validation_whitespace.go) resolves policy and
+[`validation_whitespace.go`](../../internal/xsd/whitespace.go) resolves policy and
 genuine atomic string ancestry with a per-context cache. Missing, invalid-policy
 and cyclic dependencies fail closed, including repeated lookups. This is not a
 full schema-component validity checker or a change to generated fixed helpers.
@@ -538,7 +552,7 @@ member's view. Numeric equality does not canonicalize the pattern subject:
 `01.20` and `+1.2` can satisfy a group while equal-valued `1.2` fails it. Failed
 groups report their alternatives together and retain original display spelling.
 The exact single-pattern diagnostic and no-pattern behavior are unchanged.
-The [existing regex translator](../../validation_pattern.go) is unchanged;
+The [existing regex translator](../../internal/xsd/pattern.go) is unchanged;
 unsupported constructs such as Unicode block escapes are not newly supported.
 
 [`validation_pattern_groups_test.go`](../../validation_pattern_groups_test.go)
@@ -569,7 +583,7 @@ fixed-facet metadata/facet-width limits, absent-defaulted-IDREF augmentation,
 ## Bounded aggregate value repair update
 
 The existing scalar assessor now returns a normalized lexical view and an
-immutable actual value. [`validation_value.go`](../../validation_value.go)
+immutable actual value. [`validation_value.go`](../../internal/xsd/value.go)
 compares three verified value shapes: atomic string-derived values, exact
 integer/decimal values in their shared decimal domain, and ordered lists of
 those values. A list's count, item order and shape must match; a singleton list
@@ -1157,7 +1171,7 @@ category normalization and the other deferred validation contracts remain open.
 
 The existing scalar validator now uses the pinned XSD 1.0 XML 1.0 Second Edition
 name repertoire for Name, NCName, NMTOKEN, their ID/IDREF/ENTITY derivatives,
-built-in lists and QName/NOTATION lexical checks. The [name helpers](../../validation_xml_name.go)
+built-in lists and QName/NOTATION lexical checks. The [name helpers](../../internal/xsd/xml_name.go)
 share the existing XSD pattern `\i`/`\c` character inventory instead of the
 broader Fifth Edition ranges. The helpers are explicitly named `validXSD*`;
 XML parsing, namespace declaration reading and permissive Decode are unchanged.
@@ -1187,7 +1201,7 @@ separate; xsi:type QName binding is covered by the dynamic-type update. Planning
 statuses remain unchanged.
 ## Bounded particle matching repair update
 
-[`validation_particle.go`](../../validation_particle.go) replaces the single
+[`validation_particle.go`](../../internal/xsd/particle.go) replaces the single
 locally greedy endpoint with memoized endpoint sets. A sequence can retain a
 shorter earlier match when a later occurrence needs the remaining children.
 Repetition counts remain part of intermediate states. A nullable body can pad

@@ -10,6 +10,14 @@ signature proposals concrete while leaving them unimplemented and open to API
 review. The deferred items below describe this architecture document's original
 boundary; the follow-on contract proposal does not freeze or ship them.
 
+Current implementation: this page preserves its original proposal/status and
+illustrative contracts. The [bounded model/local scope](model-assessment-scope.md)
+and [public API](../../API.md#direct-current-model-assessment) describe the later
+`AssessModel` implementation and direct XSD-only `Validate` migration, under final
+verification. The proposed name `Assess` was not used because the generated model
+already exports that type. Broader timeline, package/link and external contracts
+below remain future work; the original planning statuses are unchanged.
+
 ## Decisions proposed now and work deferred
 
 Proposed decisions:

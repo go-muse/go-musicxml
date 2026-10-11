@@ -9,6 +9,22 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add direct `AssessModel` with explicit `ProfileModelXSD` and
+  `ProfileModelLocal`, plus `ProfileSourceLocal` for the same bounded local
+  clauses on original input. Preserve the existing generated `Assess` type.
+  Model reports use current field/index evidence without original XML positions;
+  finite `float64` decimals mean their exact binary rational value.
+- Add generated representation metadata, bounded iterative traversal,
+  model-representation facts and sealed local/typed-reference plans sharing
+  the authoritative XSD kernel and actual-ID owner resolution. The selected
+  scope has 22 local runtime bindings for 19 whole candidate clauses plus one
+  local instrument-link split; date and MIDI existence share existing
+  consequences. These counts are not conformance coverage.
+- Publish the bounded model/local scope and executable-evidence ledger with
+  unchanged planning contracts and remaining batches 6–9. Final combined review,
+  aggregate checks and exact-head CI evidence remain pending; this entry does
+  not claim production readiness or actual 386 execution on the local host.
+
 - Add opt-in single-pass `InspectXML` and `DecodeAssessed` with explicit
   `ProfileSourceXSDPreview`, original-byte locations, bounded retained facts and
   independent source-conformance/model-conversion outcomes. This is a source XSD
@@ -29,7 +45,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   it does not enable a production MusicXML profile or source/model adapter.
 - Export `ErrIncompleteAssessment` with identical root/core sentinel identity
   and typed incomplete causes, preserving pure and joined legacy XSD outcomes
-  without changing `Validate`'s encode/reparse path.
+  independently of the later direct-model `Validate` migration below.
 - Execute `GOARCH=386 go test -count=1 ./validation` in the Linux CI test job
   for actual 32-bit host-width coverage. Add the validation-core fuzz targets
   `FuzzReportFieldIsBoundedEscapedUTF8` and `FuzzSessionLifecycle` to `check-all`,
@@ -37,6 +53,18 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   this count).
 
 ### Changed
+
+- Migrate legacy `Validate` and root `Validate` methods from Encode/reparse to
+  direct current-model XSD assessment. Keep XSD-only scope, ignored `XMLName`,
+  nil/unsupported document recognition and legacy cycle/depth sentinels with
+  depth 4096. Other finite assessment budgets now apply. Representation findings
+  retain legacy invalid-document recognition; pure unsupported/resource outcomes
+  remain incomplete. Decimal edge outcomes intentionally follow current exact
+  values rather than serialized spellings. `Decode` and `Encode` stay explicit
+  transport operations.
+- Keep the developmental source XSD preview's catalog and behavior separate.
+  Source-local adds only the selected musical clauses and does not accept unread
+  external DTD subsets, strip DOCTYPEs, fetch resources or claim linked content.
 
 - Route legacy XML reading through the same original-byte scanner. Reject
   undeclared prefixes, illegal reserved namespace bindings, malformed local

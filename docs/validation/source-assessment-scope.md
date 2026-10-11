@@ -1,5 +1,11 @@
 # Single-pass source assessment scope
 
+This page retains the batch-4 developmental source-XSD preview contract and
+source obligations. The later [bounded model/local scope](model-assessment-scope.md)
+adds explicit `ProfileSourceLocal` using this same source pipeline and adds
+`AssessModel`/direct XSD-only `Validate` for current objects. It does not change
+this preview's required keys or source/DTD limits; broader readiness is separate.
+
 ## Contract and architecture
 
 **Practical input scope:** this preview cannot accept files with an unread

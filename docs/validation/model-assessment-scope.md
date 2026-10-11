@@ -1,38 +1,40 @@
 # Direct model and bounded local assessment scope
 
-Status: **reviewed implementation plan; batch-5 execution evidence pending**.
+Status: **bounded implementation under final verification; batch-5 acceptance pending**.
 Base: `511f55b4fa01dee1dd7542414ccd1eb5ad7ec6bf`.
 
-This document freezes the batch before implementation. Its obligation manifest is
+This document records the frozen scope and its bounded implementation. Its
+obligation manifest is
 [model-assessment-ownership.json](model-assessment-ownership.json): all 95
 engineering requirements, 28 unchanged issue gates, 29 individual candidate
 dispositions and 42 retained source contracts. Original planning statuses and
-acceptance/five-axis contracts are preserved. Planned bindings and test lists
-are not executed coverage. The nine-batch program remains a packaging target,
-not permission to omit a requirement.
+acceptance/five-axis contracts are preserved. New runtime bindings and inspected
+executable-test references are recorded separately. Original planned test IDs,
+generic/parameterized axes and research counts are not executed coverage. The
+nine-batch program remains a packaging target, not permission to omit a requirement.
 
 ## Reviewed decisions
 
 Independent scope, adapter, kernel and architectural critiques identified the
-following required design corrections before product coding:
+following design corrections, now reflected in the implementation:
 
 - The proposed function `Assess` collides with the existing generated type
-  `Assess`. The additive root API will be `AssessModel(context.Context,
+  `Assess`. The additive root API is `AssessModel(context.Context,
   Document, AssessmentOptions) (validation.Report, error)`.
 - Source-only `Scalar.Lexeme` and `OrderSource` cannot stand in for current
-  model evidence. Add an explicit current-value lane to the authoritative
+  model evidence. An explicit current-value lane connects the authoritative
   `internal/xsd` kernel and target-aware session bridge.
 - Current generated field order and valid `Content` order are sufficient for
   current-structure grammar. They never reconstruct historical XML order.
 - A generated variant can represent repeated same-name schema positions.
-  Generate Go representation metadata; let the shared grammar witnesses bind
-  exact declaration uses. Never independently manufacture compiled use IDs.
+  Generated Go representation metadata supplies fields; shared grammar witnesses
+  bind exact declaration uses, rather than independently manufactured use IDs.
 - Fixed root names come from concrete generated root types. `XMLName` is ignored
   transport metadata, preserving the established public Encode contract.
-- Local representation problems need bounded, causal model evidence. Add an
-  optional once-per-node `ModelRepresentation` event before closure and a sealed
-  required model plan. Missing evidence is not implicit success. Avoid changing
-  existing `NodeEnd` fields merely to carry this new event.
+- Local representation problems use bounded causal evidence: the optional
+  once-per-node `ModelRepresentation` event precedes closure, and a sealed
+  required model plan consumes it. Missing evidence is not implicit success.
+  Existing `NodeEnd` fields are unchanged.
 - An invalid middle `Content` entry is a hole, not a truncated prefix. It cannot
   be compacted away and fed to prefix-witness recovery. Independent known axes
   continue; affected child order/binding remains explicitly unavailable.
@@ -42,23 +44,23 @@ following required design corrections before product coding:
 
 ## Frozen target profiles and boundaries
 
-The intended explicit profiles are:
+The public explicit profiles are:
 
-- `musicxml-4.0/model-xsd`: current generated score-partwise, score-timewise and
+- `ProfileModelXSD` (`musicxml-4.0/model-xsd`): current generated score-partwise, score-timewise and
   opus structure/value XSD assessment, with required model representation checks.
   This is also the private semantic scope of the legacy XSD-only `Validate`
   facade after direct migration.
-- `musicxml-4.0/model-local`: the same three generated roots, shared current-model
+- `ProfileModelLocal` (`musicxml-4.0/model-local`): the same three generated roots, shared current-model
   XSD and representation checks, plus the frozen local musical clauses below.
   Score-only clauses are provably inapplicable to opus; linked opus/score content
   is outside this profile's claim.
-- `musicxml-4.0/source-local`: original single-pass source XSD on those three
+- `ProfileSourceLocal` (`musicxml-4.0/source-local`): original single-pass source XSD on those three
   roots plus the same local clauses and semantic rule revisions. Source syntax
   remains separate from format conformance.
 
 These are bounded target-specific claims, not unqualified MusicXML validity.
-They are activated only after the frozen obligations and their actual evidence
-pass review. The existing `musicxml-4.0/source-xsd-preview` retains its exact
+They are available through explicit selection, but final combined review and
+acceptance evidence remain pending. The existing `musicxml-4.0/source-xsd-preview` retains its exact
 scope, IDs and source behavior. No profile becomes an implicit default.
 
 All source profiles remain unable to accept unread external-DOCTYPE subsets,
@@ -70,6 +72,34 @@ outside this batch.
 
 The selected schema is pinned MusicXML 4.0; `version` remains its actual XSD
 value/default contract, not an invented enumeration containing only `4.0`.
+
+### Catalog inventory and selection
+
+The model-XSD profile requires 14 rule keys: six shared XSD operations for each
+of the musicxml and opus assemblies, plus one required model-representation rule
+per assembly. Model-local requires those 14 plus 22 local rule keys (36 total).
+Source-local requires the 12 shared XSD keys plus those same 22 local keys
+(34 total), without model-representation rules. The isolated developmental
+source-XSD preview retains its original 12 `MX40-SOURCE-XSD-*` keys.
+`TestBoundedCatalogExactProfilesAndSharedRules` checks those exact inventories,
+revisions, support entries, roots and catalog separation.
+
+The new XSD keys are `MX40-XSD-{musicxml,opus}-{binding,declaration,attributes,scalar,content,identity}`,
+all at revision 1. Model representation uses
+`MX40-MODEL-REPRESENTATION-{musicxml,opus}`, revision 1. These assembly-selected
+composites are not one predicate for every research record. Runtime counts are
+selected normative predicate instances; model blockers are a separate axis.
+`Report.Profile` carries the target, registry commit, catalog digest, required
+keys, support and normative closure.
+
+Use `AssessModel` with a model profile and `InspectXML`/strict `DecodeAssessed`
+with a source profile. Empty, unknown or wrong-target selection fails preflight;
+there is no default-profile fallback. A nil `DecodeAssessmentOptions.Assessment`
+still selects permissive conversion with mandatory XML/security checks. A present
+empty accordion registration is XSD-valid but locally invalid: `Validate` and
+the preview retain the XSD result, while strict source-local withholds the model
+and model-local reports the added violation. See `TestBoundedLocalStrictAccordionIntegration`
+and the runnable [AssessModel example](../../model_assessment_example_test.go).
 
 ## Selected musical obligations
 
@@ -120,6 +150,40 @@ falsely described as requiring a repeat graph. Underlying XSD checks remain.
 Exclusion defines this profile's claim; it is not a runtime pass or proof that
 an omitted obligation is inapplicable.
 
+### Executable local bindings
+
+The following exact runtime IDs are revision 1 on both local profiles. Their
+selectors come from authoritative assembly-qualified compiled declaration/use
+or type descriptors. The table does not promote the original research status or
+claim that every original five-axis recipe is independently instantiated.
+Detailed test file/function/case scopes are in the ownership JSON.
+
+| Selected clause | Runtime rule ID(s) |
+| --- | --- |
+| Accordion presence | `MX40-LOCAL-accordion-at-least-one` |
+| Beam uniqueness | `MX40-LOCAL-beam-number-distinct` |
+| Second Bézier control | `MX40-LOCAL-bezier-second-control/slur`, `MX40-LOCAL-bezier-second-control/tied` |
+| for-part concert marker | `MX40-LOCAL-for-part-requires-concert` |
+| Key-octave cancellation | `MX40-LOCAL-key-octave-cancel-exists` |
+| Metronome relation | `MX40-LOCAL-metronome-relation-value` |
+| Sound flags | `MX40-LOCAL-sound-dacapo-yes`, `MX40-LOCAL-sound-forward-repeat-yes` |
+| Pedal range | `MX40-LOCAL-sound-pedal-range/damper-pedal`, `/soft-pedal`, `/sostenuto-pedal` under the same prefix |
+| Concert-score transpose | `MX40-LOCAL-concert-score-transpose` |
+| Part targets | `MX40-LOCAL-part-id-target/use-1`, `MX40-LOCAL-part-id-target/use-2` |
+| Instrument/player targets | `MX40-LOCAL-midi-device-target`, `MX40-LOCAL-midi-instrument-target`, `MX40-LOCAL-instrument-change-target`, `MX40-LOCAL-instrument-note-target`, `MX40-LOCAL-play-instrument-target`, `MX40-LOCAL-assess-player-target` |
+| Instrument-link local target | `MX40-LOCAL-instrument-link-target/local` |
+| Date/no-timezone provenance | `MX40-XSD-musicxml-scalar`, no additional local predicate |
+| MIDI corresponding-instrument existence | `MX40-LOCAL-midi-instrument-target`, shared evidence/consequence |
+
+The two part use IDs distinguish the partwise/timewise declaration uses. Bézier
+owners and the three pedal attributes have distinct bindings, explaining why
+19 whole candidate records plus one local split produce 22 local rules rather
+than twenty independent new predicates. Date/prose provenance is attached to the
+shared XSD scalar operation. MIDI channel/bank/program existence is discharged by
+the required typed assignment in these profiles; it does not create a second
+missing-ID failure. The conditional-only shared constructor is separately tested.
+None of 22, 36, 34, 29 or 2,560 is a complete-conformance coverage denominator.
+
 ## Current-model evidence contract
 
 The adapter never calls Encode, marshal methods, an XML parser or a user
@@ -156,6 +220,36 @@ invalid evidence. A bad attribute affects that slot, a bad scalar affects that
 scalar, and an invalid Content wrapper affects child sequence evidence. It does
 not turn unrelated known facts into missing data or fabricate grammar defects.
 
+### Field and obligation capability matrix
+
+`TestModelMetadataCoversEveryReachableField` checks every generated reachable
+field and choice variant against the closed metadata map; generator tests check
+that the map comes from the same render plans. Metadata describes Go
+representation, not an independently guessed schema use ID. Shared grammar
+witnesses bind exact declaration uses, including repeated/group/anonymous cases.
+
+| Generated representation | Evidence available to selected obligations | Evidence not supplied |
+| --- | --- | --- |
+| Optional pointer | Current nil/present state; present zero/empty is preserved; absence may enable an attribute default | Historical source presence or spelling |
+| Required nonpointer scalar/struct | Current represented occurrence and value, including zero/empty | Whether the original source had a required child or repeated singleton |
+| Repeated slice | Current count and per-index occurrences | Discarded unknown source occurrences |
+| Valid ordered `Content` | Current selected branch and interleaving | Historical order after lossy decoding |
+| Fixed generated fields | Current generated field order | Original cross-field XML order |
+| Signed/unsigned numeric field | Exact current Go integer and XSD value-space checks | Unrepresentable source integers that never entered the model |
+| Finite `float64` decimal field | Exact current binary rational for bounds, equality, fixed/enumeration and digits | Original decimal precision or numeric lexical pattern subject |
+| String-derived field (`YYYYMMDD`, `YesNoNumber`, etc.) | Current string assessed through the resolved shared whitespace/domain/union plan | Prior validation or original XML lexeme |
+| Root concrete type | Fixed root identity and assembly | Authority from `XMLName`; that field is ignored |
+| Noncyclic shared pointer | Distinct occurrence each time, charged again | Pointer identity as document identity |
+| Invalid choice/cycle/value | Scoped representation blocker and causal invalid evidence | Fabricated children, default values or XML syntax defects |
+| Namespace/xsi/unknown source data absent from public fields | Only current representable static declaration evidence | Lost namespace declarations, xsi:type/nil/hints, unknown attributes, DTD infoset |
+
+A missing applicable capability stays unknown/unsupported; exclusion from the
+profile is a separately documented scope decision. It cannot be inferred from a
+missing field. Numeric lexical patterns and general empty-model element value
+constraints remain reached limitations. Existing wider primitive equality,
+constructed identity, wildcard/general schema and DTD limitations remain with
+the source/XSD ledgers and batch 9 unless explicitly covered here.
+
 ## Compatibility, resources and diagnostics
 
 `AssessModel` returns ordinary normative/model failures in its report with nil
@@ -181,7 +275,7 @@ explanation, provenance, actual/expected and related owner evidence. Truncation
 cannot erase normative counts, model blockers, causal state or legacy cycle/depth
 recognition. The original research/status inventory remains an inspection artifact.
 
-## Ordered logical implementation and acceptance tasks
+## Frozen logical implementation and acceptance tasks
 
 Each production task uses authentic failing focused tests before its correction,
 then focused regression checks. Commits remain logically separated:
@@ -202,12 +296,62 @@ then focused regression checks. Commits remain logically separated:
 - B5-14: independent combined-diff QA, all local stages, actual 386, real xmllint,
   one draft PR, exact remote head/CI verification and the retained reviewer loop
 
-Baseline all-package tests passed on Go 1.27.2 before implementation. No future
-stage is claimed passed here. Final acceptance requires all seven check-all
-stages, reproducible generation/planning, race and counted fuzzing, required
-same-byte external oracle roots, actual all-package 386 execution, and all nine
-exact-head CI jobs. Official corpus results supplement clause-specific tests;
-they are not a denominator for conformance coverage.
+### Execution evidence and pending acceptance
+
+Focused adapter, current-value/kernel, representation, local relation,
+typed-reference, catalog and public API suites have passed at their implementation
+revisions. The evidence below identifies inspected committed tests, not planned
+test IDs or an assertion that all original five-axis recipes are complete.
+`TestModelAssessmentOwnershipPreservesProgram` verifies the unchanged original
+95 requirements, 28 gates, all 29 candidate contracts and 42 source contracts;
+`TestModelAssessmentOwnershipExecutableEvidence` resolves listed executable names
+against Go source and runtime bindings against actual required profile keys.
+These integrity tests do not prove that a named test ran or covers every clause.
+
+| Evidence | Scope |
+| --- | --- |
+| `TestBoundedLocalProductionClausesBothTargets`, `TestBoundedTypedReferencesBothTargets` | Concrete production source/model positives and violations for selected local clauses and reference kinds/scopes |
+| `TestLocalSchemaClauseMatrixBothTargets`, `TestLocalSchemaDefaultsAndInvalidSlotCausality` | Shared exact-declaration synthetic boundary/missing-fact/default/causal controls; not every production occurrence |
+| `TestTypedReferenceAuthoritativeResolutionBothTargets`, `TestTypedReferenceIncompleteAndUnselectedOwner`, `TestTypedReferenceOptionalAndRepeatedScopes` | Authoritative owner lookup, forward/missing/invalid/ambiguous references, incomplete providers and repeated/optional scope controls |
+| `TestBoundedDateReusesScalarConsequenceBothTargets`, `TestTypedReferenceConditionalUsesSameConsequence` | Date and MIDI shared consequences without duplicate predicates |
+| `TestDirectModelScalarExactCurrentValues`, `TestCurrentNumericFacetsAndPattern`, `TestCurrentStringUnionAndFixed` | Exact current numeric/string value bridge and explicit lexical limitations |
+| `TestModelRepresentationTruncationPreservesBlockersAndCauses`, `TestLocalFailureSurvivesDiagnosticTruncationAndReleasesAccount` | Required blockers/causes and normative counts survive storage truncation; live resources release |
+| `TestAssessModelFiniteResourcesAndIndependentAxes`, `TestDirectModelWalkerBudgetsCancellationAndDepth` | Public resource categories, bounded traversal, cancellation, cycle/depth and partial reports |
+| `TestLocalSchemaConjunctFailureSurvivesInvalidSibling`, `TestLocalMarkerValuesIndependentConjuncts` | Known local counterexample survives another unavailable/invalid conjunct |
+| `TestLocalPublicSessionFailureSurvivesPostProofStorageStop`, `TestTypedReferenceNestedOwnerProofIsNotCountedForConsumer` | Optional diagnostic/cache storage interruption preserves established failures and exact provider attribution; resource axes stay incomplete |
+| `TestBoundedProfilesConcurrentIndependentReports`, `ExampleAssessModel` | Independent unchanged-model reads and public external-package usage |
+| `TestAssessModelOfficialCorpusAndSourceDTDRemainSeparate` | Five unchanged official fixtures satisfy both current-model profiles; three external-DTD score sources remain incomplete, two DOCTYPE-free opus sources satisfy source-local |
+| `FuzzAssessCurrentModel` | Direct caller-created values/shapes under finite budgets, determinism/non-mutation and model target axes; focused counted run passed 10,018 executions against a 10,000 minimum |
+
+Independent core review at `681f1cb2e429566085202f75a796d3c9d53e69f7`
+reproduced and verified fixes for unavailable-union fixed comparison, per-slot
+attribute completeness and lost causal evidence. Its all-package tests with real
+xmllint, focused core race and vet passed. That core-only review does not accept
+the later adapter/local/catalog/API integration. Subsequent combined review has
+also driven allocation and local-conjunct regression corrections; final combined
+acceptance remains pending.
+
+An earlier integrated revision, `1a6af41e93fa7d17507729f3a142e3bd84f757aa`,
+passed all seven local `check-all` stages. Its separately required real-xmllint
+selection executed 27 oracle roots and 8,548 subtests with no skips or failures.
+Those results predate later corrections and this documentation reconciliation;
+they are preliminary evidence, not final-head acceptance or conformance counts.
+
+Still required before a readiness/merge claim:
+
+- Final combined-diff independent QA, including rechecking all corrections
+- All seven `check-all` stages (`mod`, `generate`, `format`, `test`, `vet`, `race`,
+  `fuzz`) on the final integrated revision, with reproducible generation/planning
+  and required original-byte xmllint oracle roots actually executed
+- Actual `GOARCH=386 go test -count=1 ./...` execution. Native 386 compilation
+  succeeded, but this local host rejected execution with `exec format error`;
+  that is missing runtime evidence, not a pass
+- Exact published-head verification, all nine required CI jobs, and the retained
+  reviewer loop. CI run/artifact links for that exact head are pending
+
+The public ownership manifest carries these pending evidence fields explicitly.
+Official corpus and fuzz results supplement clause-specific tests; neither
+supplies a conformance denominator or replaces final acceptance.
 
 Remaining program: batch 6 exact timeline/effective state; batch 7 broader
 contexts/repeats/spans/intent and gated local ordering; batch 8 MXL, links,
