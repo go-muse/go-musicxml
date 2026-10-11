@@ -117,8 +117,8 @@ func TestBuiltinListLengthsImmutable(t *testing.T) {
 					require.NoError(t, err)
 					saved := snapshotValidationNode(t, node)
 					context := newTestValidationContext(&validationBuiltinListGenerated)
-					context.validateElement(node, validationBuiltinListGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
-					context.validateIdentityReferences()
+					context.ValidateElement(node, validationBuiltinListGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
+					context.ValidateIdentityReferences()
 					assertBuiltinListAssessment(t, context, test)
 					after := snapshotValidationNode(t, node)
 					assert.Equal(t, saved, after)
@@ -137,8 +137,8 @@ func TestBuiltinListLengthDiagnostics(t *testing.T) {
 		{"tokens-range", "aa bb cc aa", "maxLength", "value length 4 is greater than 3"},
 	} {
 		context := validateAttributeSource(t, &validationBuiltinListGenerated, wrapValidationElement(test.element, "", test.value))
-		require.Len(t, context.issues, 1)
-		assert.Equal(t, ValidationIssue{Path: "/" + test.element, Constraint: test.kind, Message: test.message}, context.issues[0])
+		require.Len(t, context.Issues, 1)
+		assert.Equal(t, ValidationIssue{Path: "/" + test.element, Constraint: test.kind, Message: test.message}, context.Issues[0])
 	}
 }
 
@@ -147,9 +147,9 @@ func TestBuiltinListLengthDiagnostics(t *testing.T) {
 func assertBuiltinListAssessment(t *testing.T, context *validationContext, test validationSourceCase) {
 	t.Helper()
 	if test.assessmentIncomplete {
-		require.Error(t, context.assessmentErr)
+		require.Error(t, context.AssessmentErr)
 		assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
-		assert.Empty(t, context.issues)
+		assert.Empty(t, context.Issues)
 		return
 	}
 	assertValidationIssues(t, context, test.issues)

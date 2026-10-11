@@ -209,10 +209,10 @@ func TestPatternGroupMetadataErrors(t *testing.T) {
 						Patterns: patterns,
 					}
 					before := append([]string(nil), patterns...)
-					failure := context.validateSimple(schema, value)
+					failure := context.ValidateSimple(schema, value)
 					if assert.NotNil(t, failure) {
-						assert.Equal(t, "schema", failure.constraint)
-						assert.Contains(t, failure.message, "invalid generated XSD pattern")
+						assert.Equal(t, "schema", failure.Constraint)
+						assert.Contains(t, failure.Message, "invalid generated XSD pattern")
 					}
 					assert.Equal(t, before, patterns)
 				})
@@ -229,10 +229,10 @@ func TestPatternGroupDiagnostics(t *testing.T) {
 		Base:     &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: "string"}},
 		Patterns: []string{"A1"},
 	}
-	failure := context.validateSimple(schema, "B2")
+	failure := context.ValidateSimple(schema, "B2")
 	if assert.NotNil(t, failure) {
-		assert.Equal(t, "pattern", failure.constraint)
-		assert.Equal(t, `value "B2" does not match XSD pattern "A1"`, failure.message)
+		assert.Equal(t, "pattern", failure.Constraint)
+		assert.Equal(t, `value "B2" does not match XSD pattern "A1"`, failure.Message)
 	}
 	// Group failures name every alternative, using original source spelling even
 	// though matching uses the effective normalized lexical view.
@@ -244,13 +244,13 @@ func TestPatternGroupDiagnostics(t *testing.T) {
 			WhiteSpace: "collapse",
 		}
 		value := " \tC3\n"
-		failure := context.validateSimple(schema, value)
+		failure := context.ValidateSimple(schema, value)
 		require.NotNil(t, failure)
-		assert.Equal(t, "pattern", failure.constraint)
+		assert.Equal(t, "pattern", failure.Constraint)
 		if len(patterns) == 1 {
-			assert.Equal(t, fmt.Sprintf("value %q does not match XSD pattern %q", value, patterns[0]), failure.message)
+			assert.Equal(t, fmt.Sprintf("value %q does not match XSD pattern %q", value, patterns[0]), failure.Message)
 		} else {
-			assert.Equal(t, fmt.Sprintf("value %q does not match any XSD pattern in %q", value, patterns), failure.message)
+			assert.Equal(t, fmt.Sprintf("value %q does not match any XSD pattern in %q", value, patterns), failure.Message)
 		}
 	}
 }
@@ -269,8 +269,8 @@ func TestPatternGroupMetadataAndSourceImmutability(t *testing.T) {
 			element := validationPatternGenerated.Elements[validationName(root.Name)]
 			require.NotNil(t, element)
 			for range 3 {
-				context.issues = nil
-				context.validateElement(root, element, "/"+root.Name.Local)
+				context.Issues = nil
+				context.ValidateElement(root, element, "/"+root.Name.Local)
 				assertValidationIssues(t, context, test.issues)
 			}
 			assert.Equal(t, textBefore, root.Text.String(), test.name)
@@ -296,12 +296,12 @@ func TestPatternGroupValidPermutations(t *testing.T) {
 			Patterns: patterns,
 		}
 		for _, value := range []string{"A1", "B2", "C3"} {
-			assert.Nil(t, context.validateSimple(schema, value), "%v / %q", patterns, value)
+			assert.Nil(t, context.ValidateSimple(schema, value), "%v / %q", patterns, value)
 		}
 		for _, value := range []string{"D4", ""} {
-			failure := context.validateSimple(schema, value)
+			failure := context.ValidateSimple(schema, value)
 			if assert.NotNil(t, failure) {
-				assert.Equal(t, "pattern", failure.constraint)
+				assert.Equal(t, "pattern", failure.Constraint)
 			}
 		}
 	}
@@ -311,14 +311,14 @@ func TestPatternGroupValidPermutations(t *testing.T) {
 			Base:     &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: "string"}},
 			Patterns: patterns,
 		}
-		assert.Nil(t, context.validateSimple(schema, ""))
-		assert.Nil(t, context.validateSimple(schema, "x"))
+		assert.Nil(t, context.ValidateSimple(schema, ""))
+		assert.Nil(t, context.ValidateSimple(schema, "x"))
 		if len(patterns) == 0 {
-			assert.Nil(t, context.validateSimple(schema, "anything"))
+			assert.Nil(t, context.ValidateSimple(schema, "anything"))
 		} else {
-			failure := context.validateSimple(schema, "y")
+			failure := context.ValidateSimple(schema, "y")
 			if assert.NotNil(t, failure) {
-				assert.Equal(t, "pattern", failure.constraint)
+				assert.Equal(t, "pattern", failure.Constraint)
 			}
 		}
 	}

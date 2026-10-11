@@ -51,11 +51,11 @@ func TestGrammarFailureDiagnosticsStable(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			for range 3 {
-				_, failure, ok := newTestValidationContext(&validationSchemaSet{}).matchParticle(test.particle, grammarTestNodes(test.count), 0)
+				_, failure, ok := newTestValidationContext(&validationSchemaSet{}).MatchParticle(test.particle, grammarTestNodes(test.count), 0)
 				assert.False(t, ok)
-				assert.Empty(t, failure.schema)
-				assert.Equal(t, test.position, failure.position)
-				assert.Equal(t, test.expected, failure.expected)
+				assert.Empty(t, failure.Schema)
+				assert.Equal(t, test.position, failure.Position)
+				assert.Equal(t, test.expected, failure.Expected)
 			}
 		})
 	}
@@ -68,14 +68,14 @@ func TestGrammarSuccessfulMatchesDeferDiagnostics(t *testing.T) {
 	}}
 	for _, count := range []int{1, 2} {
 		m := newValidationParticleMatcher(newTestValidationContext(&validationSchemaSet{}), grammarTestNodes(count))
-		result, failure, ok := m.run(p, 0)
+		result, failure, ok := m.Run(p, 0)
 		require.True(t, ok)
-		assert.Equal(t, 1, result.next) // A successful prefix also needs no diagnostics.
+		assert.Equal(t, 1, result.Next) // A successful prefix also needs no diagnostics.
 		assert.Empty(t, failure)
-		assert.False(t, m.diagnostics)
-		for _, entries := range []map[validationParticleKey]validationParticleEndpoints{m.particles, m.bodies} {
+		assert.False(t, m.Diagnostics)
+		for _, entries := range []map[validationParticleKey]validationParticleEndpoints{m.Particles, m.Bodies} {
 			for _, entry := range entries {
-				assert.Nil(t, entry.failure)
+				assert.Nil(t, entry.Failure)
 			}
 		}
 	}
@@ -85,36 +85,36 @@ func TestGrammarPreparationCacheIsValidationLocal(t *testing.T) {
 	t.Parallel()
 	p := grammarTestLeaf("a", 1, 1)
 	first := newTestValidationContext(&validationSchemaSet{})
-	result, _, ok := first.matchParticle(p, grammarTestNodes(1), 0)
+	result, _, ok := first.MatchParticle(p, grammarTestNodes(1), 0)
 	require.True(t, ok)
-	require.Len(t, result.elements, 1)
-	assert.Same(t, p.Element, result.elements[0].schema)
-	assert.Contains(t, first.particleNullable, p)
+	require.Len(t, result.Elements, 1)
+	assert.Same(t, p.Element, result.Elements[0].Schema)
+	assert.Contains(t, first.ParticleNullable, p)
 
 	// A schema change between independent validations must be guarded again.
 	// A validationContext, like its effective-type cache, is scoped to one
 	// immutable schema assessment and is not reused across Validate calls.
 	p.Occurrence = validationOccurrence{Min: 2, Max: 1}
 	second := newTestValidationContext(&validationSchemaSet{})
-	_, failure, ok := second.matchParticle(p, grammarTestNodes(1), 0)
+	_, failure, ok := second.MatchParticle(p, grammarTestNodes(1), 0)
 	assert.False(t, ok)
-	assert.NotEmpty(t, failure.schema)
-	assert.NotContains(t, second.particleNullable, p)
-	assert.Contains(t, first.particleNullable, p)
+	assert.NotEmpty(t, failure.Schema)
+	assert.NotContains(t, second.ParticleNullable, p)
+	assert.Contains(t, first.ParticleNullable, p)
 }
 
 func TestGrammarSingletonViewsPreserveAlternatives(t *testing.T) {
 	t.Parallel()
 	m := newValidationParticleMatcher(newTestValidationContext(&validationSchemaSet{}), grammarTestNodes(2))
 	p := grammarTestLeaf("a", 0, 1)
-	require.True(t, m.prepare(p, make(map[*validationParticleSchema]bool)))
-	first := m.match(p, 0)
-	second := m.match(p, 1)
-	assert.Equal(t, []int{1, 0}, first.ends)
-	assert.Equal(t, []int{2, 1}, second.ends)
-	assert.Equal(t, len(first.ends), cap(first.ends))
-	assert.Equal(t, len(second.ends), cap(second.ends))
-	assert.Equal(t, []int{2}, m.match(p, 2).ends)
-	assert.Equal(t, []int{1, 0}, first.ends)
-	assert.Equal(t, []int{2, 1}, second.ends)
+	require.True(t, m.Prepare(p, make(map[*validationParticleSchema]bool)))
+	first := m.Match(p, 0)
+	second := m.Match(p, 1)
+	assert.Equal(t, []int{1, 0}, first.Ends)
+	assert.Equal(t, []int{2, 1}, second.Ends)
+	assert.Equal(t, len(first.Ends), cap(first.Ends))
+	assert.Equal(t, len(second.Ends), cap(second.Ends))
+	assert.Equal(t, []int{2}, m.Match(p, 2).Ends)
+	assert.Equal(t, []int{1, 0}, first.Ends)
+	assert.Equal(t, []int{2, 1}, second.Ends)
 }

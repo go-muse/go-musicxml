@@ -1,4 +1,4 @@
-package musicxml
+package xsd
 
 // XSD 1.0 regular-expression \i and \c use XML 1.0 Second Edition's
 // Letter and NameChar productions, rather than ASCII-only approximations or
@@ -6,7 +6,7 @@ package musicxml
 // https://www.w3.org/TR/xmlschema-2/#charcter-classes
 // https://www.w3.org/TR/2000/REC-xml-20001006#CharClasses
 const (
-	validationXSDBaseCharCharacters = `\x{0041}-\x{005A}\x{0061}-\x{007A}\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}` +
+	XSDBaseCharCharacters = `\x{0041}-\x{005A}\x{0061}-\x{007A}\x{00C0}-\x{00D6}\x{00D8}-\x{00F6}` +
 		`\x{00F8}-\x{00FF}\x{0100}-\x{0131}\x{0134}-\x{013E}\x{0141}-\x{0148}` +
 		`\x{014A}-\x{017E}\x{0180}-\x{01C3}\x{01CD}-\x{01F0}\x{01F4}-\x{01F5}` +
 		`\x{01FA}-\x{0217}\x{0250}-\x{02A8}\x{02BB}-\x{02C1}\x{0386}\x{0388}-\x{038A}` +
@@ -48,8 +48,8 @@ const (
 		`\x{1FE0}-\x{1FEC}\x{1FF2}-\x{1FF4}\x{1FF6}-\x{1FFC}\x{2126}\x{212A}-\x{212B}` +
 		`\x{212E}\x{2180}-\x{2182}\x{3041}-\x{3094}\x{30A1}-\x{30FA}\x{3105}-\x{312C}` +
 		`\x{AC00}-\x{D7A3}`
-	validationXSDIdeographicCharacters   = `\x{4E00}-\x{9FA5}\x{3007}\x{3021}-\x{3029}`
-	validationXSDCombiningCharCharacters = `\x{0300}-\x{0345}\x{0360}-\x{0361}\x{0483}-\x{0486}\x{0591}-\x{05A1}` +
+	XSDIdeographicCharacters   = `\x{4E00}-\x{9FA5}\x{3007}\x{3021}-\x{3029}`
+	XSDCombiningCharCharacters = `\x{0300}-\x{0345}\x{0360}-\x{0361}\x{0483}-\x{0486}\x{0591}-\x{05A1}` +
 		`\x{05A3}-\x{05B9}\x{05BB}-\x{05BD}\x{05BF}\x{05C1}-\x{05C2}\x{05C4}` +
 		`\x{064B}-\x{0652}\x{0670}\x{06D6}-\x{06DC}\x{06DD}-\x{06DF}\x{06E0}-\x{06E4}` +
 		`\x{06E7}-\x{06E8}\x{06EA}-\x{06ED}\x{0901}-\x{0903}\x{093C}\x{093E}-\x{094C}` +
@@ -68,15 +68,15 @@ const (
 		`\x{0F18}-\x{0F19}\x{0F35}\x{0F37}\x{0F39}\x{0F3E}\x{0F3F}\x{0F71}-\x{0F84}` +
 		`\x{0F86}-\x{0F8B}\x{0F90}-\x{0F95}\x{0F97}\x{0F99}-\x{0FAD}\x{0FB1}-\x{0FB7}` +
 		`\x{0FB9}\x{20D0}-\x{20DC}\x{20E1}\x{302A}-\x{302F}\x{3099}\x{309A}`
-	validationXSDDigitCharacters = `\x{0030}-\x{0039}\x{0660}-\x{0669}\x{06F0}-\x{06F9}\x{0966}-\x{096F}` +
+	XSDDigitCharacters = `\x{0030}-\x{0039}\x{0660}-\x{0669}\x{06F0}-\x{06F9}\x{0966}-\x{096F}` +
 		`\x{09E6}-\x{09EF}\x{0A66}-\x{0A6F}\x{0AE6}-\x{0AEF}\x{0B66}-\x{0B6F}` +
 		`\x{0BE7}-\x{0BEF}\x{0C66}-\x{0C6F}\x{0CE6}-\x{0CEF}\x{0D66}-\x{0D6F}` +
 		`\x{0E50}-\x{0E59}\x{0ED0}-\x{0ED9}\x{0F20}-\x{0F29}`
-	validationXSDExtenderCharacters = `\x{00B7}\x{02D0}\x{02D1}\x{0387}\x{0640}\x{0E46}\x{0EC6}\x{3005}` +
+	XSDExtenderCharacters = `\x{00B7}\x{02D0}\x{02D1}\x{0387}\x{0640}\x{0E46}\x{0EC6}\x{3005}` +
 		`\x{3031}-\x{3035}\x{309D}-\x{309E}\x{30FC}-\x{30FE}`
-	validationXMLNameStartCharacters = ":_" + validationXSDBaseCharCharacters +
-		validationXSDIdeographicCharacters
-	validationXMLNameCharacters = validationXMLNameStartCharacters + `\-.` +
-		validationXSDCombiningCharCharacters + validationXSDDigitCharacters +
-		validationXSDExtenderCharacters
+	XMLNameStartCharacters = ":_" + XSDBaseCharCharacters +
+		XSDIdeographicCharacters
+	XMLNameCharacters = XMLNameStartCharacters + `\-.` +
+		XSDCombiningCharCharacters + XSDDigitCharacters +
+		XSDExtenderCharacters
 )

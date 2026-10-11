@@ -123,16 +123,16 @@ func TestValidateElementAttributeContracts(t *testing.T) {
 			}
 			context := validateAttributeSource(t, schema, test.source)
 			if test.constraint == "" {
-				assert.Empty(t, context.issues)
+				assert.Empty(t, context.Issues)
 				return
 			}
 			wantIssues := 1
 			if test.constraint == "fixed" {
 				wantIssues = 2 // The fixed value also violates the XLink enumeration.
 			}
-			require.Len(t, context.issues, wantIssues)
-			assert.Equal(t, test.constraint, context.issues[0].Constraint)
-			assert.Equal(t, test.path, context.issues[0].Path)
+			require.Len(t, context.Issues, wantIssues)
+			assert.Equal(t, test.constraint, context.Issues[0].Constraint)
+			assert.Equal(t, test.path, context.Issues[0].Path)
 		})
 	}
 }
@@ -166,9 +166,9 @@ func TestValidateSimpleElementTypeForms(t *testing.T) {
 			} {
 				t.Run(input.name, func(t *testing.T) {
 					context := validateAttributeSource(t, schema, input.source)
-					require.Len(t, context.issues, 1)
-					assert.Equal(t, "attribute", context.issues[0].Constraint)
-					assert.Equal(t, "/value/@rubbish", context.issues[0].Path)
+					require.Len(t, context.Issues, 1)
+					assert.Equal(t, "attribute", context.Issues[0].Constraint)
+					assert.Equal(t, "/value/@rubbish", context.Issues[0].Path)
 				})
 			}
 		})
@@ -185,9 +185,9 @@ func TestValidateSimpleElementAttributeAndContentIssues(t *testing.T) {
 	} {
 		source := strings.Replace(validationAttributeScore, "<step>C</step>", `<step rubbish="x">`+test.content+`</step>`, 1)
 		context := validateAttributeSource(t, &scoreValidationSchema, source)
-		require.Len(t, context.issues, 2)
-		assert.Equal(t, "attribute", context.issues[0].Constraint)
-		assert.Equal(t, test.constraint, context.issues[1].Constraint)
+		require.Len(t, context.Issues, 2)
+		assert.Equal(t, "attribute", context.Issues[0].Constraint)
+		assert.Equal(t, test.constraint, context.Issues[1].Constraint)
 	}
 }
 
@@ -200,7 +200,7 @@ func TestValidateAnyTypeAttributesUnchanged(t *testing.T) {
 		},
 	}}
 	context := validateAttributeSource(t, schema, `<value rubbish="x" xmlns:p="urn:foreign" p:other="y"><child/></value>`)
-	assert.Empty(t, context.issues)
+	assert.Empty(t, context.Issues)
 }
 
 func TestValidateComplexSimpleContentIdentityOnce(t *testing.T) {
@@ -223,7 +223,7 @@ func TestValidateComplexSimpleContentIdentityOnce(t *testing.T) {
 	context := validateAttributeSource(t, schema, `<value id="attribute-id">content-id</value>`)
 	// Root scalar IDs seed entries but cannot identify themselves.
 	assertValidationIssues(t, context, []string{"/value:ID"})
-	assert.Equal(t, map[string]string{"attribute-id": "/value/@id", "content-id": "/value"}, context.identifiers)
+	assert.Equal(t, map[string]string{"attribute-id": "/value/@id", "content-id": "/value"}, context.Identifiers)
 }
 
 func TestValidateUnknownElementTypeIsIncomplete(t *testing.T) {
@@ -232,8 +232,8 @@ func TestValidateUnknownElementTypeIsIncomplete(t *testing.T) {
 		{Local: "value"}: {Name: validationQName{Local: "value"}, Type: validationTypeRef{Name: validationQName{Local: "unknown"}}},
 	}}
 	context := assessAttributeSource(t, schema, `<value rubbish="x">text</value>`)
-	assert.Empty(t, context.issues)
-	assert.Error(t, context.assessmentErr)
+	assert.Empty(t, context.Issues)
+	assert.Error(t, context.AssessmentErr)
 	assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 }
 
@@ -250,7 +250,7 @@ func TestDecodeDoesNotValidateSimpleElementAttributes(t *testing.T) {
 func validateAttributeSource(t *testing.T, schema *validationSchemaSet, source string) *validationContext {
 	t.Helper()
 	context := assessAttributeSource(t, schema, source)
-	require.NoError(t, context.assessmentErr)
+	require.NoError(t, context.AssessmentErr)
 	return context
 }
 
@@ -260,12 +260,11 @@ func assessAttributeSource(t *testing.T, schema *validationSchemaSet, source str
 	require.NoError(t, err)
 	declaration, found := schema.Elements[validationName(root.Name)]
 	require.True(t, found)
-	context := &validationContext{
-		schema: schema, effective: make(map[*validationComplexSchema]*validationEffectiveComplex),
-		identifiers: make(map[string]string),
+	context := &validationContext{Context: validationKernelContext{Schema: schema, Effective: make(map[*validationComplexSchema]*validationEffectiveComplex),
+		Identifiers: make(map[string]string)},
 	}
-	context.validateElement(root, declaration, "/"+root.Name.Local)
-	context.validateIdentityReferences()
+	context.ValidateElement(root, declaration, "/"+root.Name.Local)
+	context.ValidateIdentityReferences()
 	return context
 }
 
@@ -308,9 +307,9 @@ func TestValidateNamespaceDeclarationLookalike(t *testing.T) {
 		"/score-partwise/part/measure/attributes/staves/@{xmlns}rubbish",
 		"/score-partwise/part/measure/note/pitch/step/@{xmlns}rubbish",
 	}
-	require.Len(t, context.issues, len(want))
+	require.Len(t, context.Issues, len(want))
 	for index, path := range want {
-		assert.Equal(t, "attribute", context.issues[index].Constraint)
-		assert.Equal(t, path, context.issues[index].Path)
+		assert.Equal(t, "attribute", context.Issues[index].Constraint)
+		assert.Equal(t, path, context.Issues[index].Path)
 	}
 }

@@ -144,12 +144,12 @@ func TestPrimitiveValueDomains(t *testing.T) {
 		{"anyURI", "relative/path", "anyURI", "relative/./path", false},
 	} {
 		t.Run(test.leftType+"/"+test.left+"/"+test.rightType+"/"+test.right, func(t *testing.T) {
-			left, failure := context.assessBuiltinValue(test.leftType, test.left, test.left)
+			left, failure := context.AssessBuiltinValue(test.leftType, test.left, test.left)
 			require.Nil(t, failure)
-			right, failure := context.assessBuiltinValue(test.rightType, test.right, test.right)
+			right, failure := context.AssessBuiltinValue(test.rightType, test.right, test.right)
 			require.Nil(t, failure)
-			assert.Equal(t, test.equal, left.value.equal(right.value))
-			assert.Equal(t, test.equal, right.value.equal(left.value))
+			assert.Equal(t, test.equal, left.Value.Equal(right.Value))
+			assert.Equal(t, test.equal, right.Value.Equal(left.Value))
 		})
 	}
 }
@@ -165,8 +165,8 @@ func TestPrimitiveValueImmutability(t *testing.T) {
 			before := snapshotValidationNode(t, node)
 			for range 3 {
 				context := newTestValidationContext(&validationPrimitiveGenerated)
-				context.validateElement(node, validationPrimitiveGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
-				context.validateIdentityReferences()
+				context.ValidateElement(node, validationPrimitiveGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
+				context.ValidateIdentityReferences()
 				assertValidationIssues(t, context, test.issues)
 				assert.Equal(t, before, snapshotValidationNode(t, node))
 			}

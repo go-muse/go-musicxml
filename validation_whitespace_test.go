@@ -197,9 +197,9 @@ func TestEffectiveWhitespaceDiagnosticsAndImmutability(t *testing.T) {
 		attrs := append([]validationAttribute(nil), node.Attrs...)
 		context := newTestValidationContext(&validationWhitespaceGenerated)
 		name := validationName(node.Name)
-		context.validateElement(node, validationWhitespaceGenerated.Elements[name], "/"+name.Local)
+		context.ValidateElement(node, validationWhitespaceGenerated.Elements[name], "/"+name.Local)
 		var messages []string
-		for _, issue := range context.issues {
+		for _, issue := range context.Issues {
 			messages = append(messages, issue.Message)
 		}
 		assert.Equal(t, test.messages, messages)
@@ -217,23 +217,23 @@ func TestWhitespaceFixedComparisonScope(t *testing.T) {
 	for _, name := range []string{"string", "normalizedString", "token", "language", "Name", "NCName", "NMTOKEN", "ID", "IDREF"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
 		want := name != "string"
-		assert.Equal(t, want, context.simpleValuesEqual(reference, "a\tb", "a b"), name)
-		assert.Equal(t, want, context.elementFixedValuesEqual(reference, "a\tb", "a b"), name)
+		assert.Equal(t, want, context.SimpleValuesEqual(reference, "a\tb", "a b"), name)
+		assert.Equal(t, want, context.ElementFixedValuesEqual(reference, "a\tb", "a b"), name)
 	}
 	// Aggregate comparison follows the selected member or list item values.
 	for _, name := range []string{"list-type", "token-string", "string-token"} {
 		reference := &validationTypeRef{Name: validationQName{Local: name}}
-		assert.Equal(t, name != "string-token", context.simpleValuesEqual(reference, " a  b ", "a b"), name)
-		assert.Equal(t, name != "string-token", context.elementFixedValuesEqual(reference, " a  b ", "a b"), name)
+		assert.Equal(t, name != "string-token", context.SimpleValuesEqual(reference, " a  b ", "a b"), name)
+		assert.Equal(t, name != "string-token", context.ElementFixedValuesEqual(reference, " a  b ", "a b"), name)
 	}
 	for _, name := range []string{"boolean", "date", "dateTime", "QName"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
-		assert.False(t, context.elementFixedValuesEqual(reference, " a ", "a"), name)
+		assert.False(t, context.ElementFixedValuesEqual(reference, " a ", "a"), name)
 	}
-	assert.True(t, context.simpleValuesEqual(&validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}, " +001.200 ", "1.2"))
-	assert.True(t, context.elementFixedValuesEqual(&validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "integer"}}, " +001 ", "1"))
-	assert.False(t, context.elementFixedValuesEqual(&validationTypeRef{Name: validationQName{Local: "replace-type"}}, " a b ", "a b"))
-	assert.True(t, context.elementFixedValuesEqual(&validationTypeRef{Name: validationQName{Local: "inherited-type"}}, " a\tb ", "a b"))
+	assert.True(t, context.SimpleValuesEqual(&validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}, " +001.200 ", "1.2"))
+	assert.True(t, context.ElementFixedValuesEqual(&validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "integer"}}, " +001 ", "1"))
+	assert.False(t, context.ElementFixedValuesEqual(&validationTypeRef{Name: validationQName{Local: "replace-type"}}, " a b ", "a b"))
+	assert.True(t, context.ElementFixedValuesEqual(&validationTypeRef{Name: validationQName{Local: "inherited-type"}}, " a\tb ", "a b"))
 }
 
 // Failure-safe metadata probes intentionally include cycles, so the pre-repair
@@ -268,22 +268,22 @@ func TestWhitespaceMetadataFailures(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			context := newTestValidationContext(&validationSchemaSet{Types: map[validationQName]*validationTypeSchema{{Local: "named-cycle"}: {Simple: test.schema}}})
 			for range 3 {
-				failure := context.validateSimple(test.schema, " a ")
+				failure := context.ValidateSimple(test.schema, " a ")
 				if assert.NotNil(t, failure) {
 					assert.True(t, validationTechnicalFailure(failure))
-					assert.Error(t, context.assessmentErr)
+					assert.Error(t, context.AssessmentErr)
 				}
 				reference := &validationTypeRef{InlineSimple: test.schema}
-				assert.False(t, context.simpleValuesEqual(reference, " a ", "a"))
-				assert.False(t, context.elementFixedValuesEqual(reference, " a ", "a"))
+				assert.False(t, context.SimpleValuesEqual(reference, " a ", "a"))
+				assert.False(t, context.ElementFixedValuesEqual(reference, " a ", "a"))
 			}
 		})
 	}
 	// Valid siblings following a failed lookup remain independently usable.
 	context := newTestValidationContext(&validationWhitespaceGenerated)
 	for range 3 {
-		assert.NotNil(t, context.validateSimple(cycle, "a"))
-		assert.Nil(t, context.validateSimple(validationWhitespaceGenerated.Types[validationQName{Local: "pattern-collapse"}].Simple, " a  b "))
+		assert.NotNil(t, context.ValidateSimple(cycle, "a"))
+		assert.Nil(t, context.ValidateSimple(validationWhitespaceGenerated.Types[validationQName{Local: "pattern-collapse"}].Simple, " a  b "))
 	}
 	assert.Equal(t, "a\u00a0b\u0085c", collapseValidationWhitespace(" a\u00a0b\u0085c "))
 	assert.Equal(t, "a b", collapseValidationWhitespace(strings.Repeat(" \t\r\n", 100)+"a\tb"))
@@ -298,14 +298,14 @@ func TestWhitespaceInheritedNumericDiagnostics(t *testing.T) {
 			HasMinExclusive: true, MinExclusive: "2"}
 		derived := &validationSimpleSchema{Form: validationSimpleRestriction, Base: &validationSimpleMember{Inline: base}}
 		value := " \t001 \n"
-		failure := context.validateSimple(derived, value)
+		failure := context.ValidateSimple(derived, value)
 		require.NotNil(t, failure)
-		assert.Equal(t, "minExclusive", failure.constraint)
-		assert.Equal(t, fmt.Sprintf("value %q violates minExclusive=%q", value, "2"), failure.message)
+		assert.Equal(t, "minExclusive", failure.Constraint)
+		assert.Equal(t, fmt.Sprintf("value %q violates minExclusive=%q", value, "2"), failure.Message)
 		value = " \tinvalid \n"
-		failure = context.validateSimple(derived, value)
+		failure = context.ValidateSimple(derived, value)
 		require.NotNil(t, failure)
-		assert.Equal(t, "datatype", failure.constraint)
-		assert.Equal(t, fmt.Sprintf("value %q is not valid for xs:%s", value, builtin), failure.message)
+		assert.Equal(t, "datatype", failure.Constraint)
+		assert.Equal(t, fmt.Sprintf("value %q is not valid for xs:%s", value, builtin), failure.Message)
 	}
 }

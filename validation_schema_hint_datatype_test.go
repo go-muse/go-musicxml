@@ -176,8 +176,8 @@ func TestSchemaHintDatatypeNamespacesAndOrdinaryErrors(t *testing.T) {
 	})
 	for _, attribute := range []string{`schemaLocation="%"`, `xmlns:f="urn:foreign" f:schemaLocation="%"`, `n:SchemaLocation="%"`, `n:unrecognized="%"`} {
 		context := validateAttributeSource(t, &validationSchemaHintGenerated, wrapValidationElement("locations", " "+attribute, ""))
-		require.Len(t, context.issues, 1)
-		assert.Equal(t, "attribute", context.issues[0].Constraint)
+		require.Len(t, context.Issues, 1)
+		assert.Equal(t, "attribute", context.Issues[0].Constraint)
 	}
 	// Ordinary required and scalar failures are still reported beside bad hints.
 	source = strings.Replace(validationAttributeScore, ` number="1"`, ` xmlns:n="`+validationXSINamespace+`" n:schemaLocation="%" width="bad"`, 1)
@@ -199,7 +199,7 @@ func TestSchemaHintDatatypeImmutability(t *testing.T) {
 				saved := snapshotValidationNode(t, node)
 				for range 3 {
 					context := newTestValidationContext(&validationSchemaHintGenerated)
-					context.validateElement(node, validationSchemaHintGenerated.Elements[validationName(node.Name)], "/"+node.Name.Local)
+					context.ValidateElement(node, validationSchemaHintGenerated.Elements[validationName(node.Name)], "/"+node.Name.Local)
 					assertValidationIssues(t, context, test.issues)
 					assert.Equal(t, saved, snapshotValidationNode(t, node))
 				}

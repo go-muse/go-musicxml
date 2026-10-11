@@ -1,7 +1,7 @@
-package musicxml
+package xsd
 
 import (
-	"net"
+	"net/netip"
 	"net/url"
 	"strings"
 	"unicode/utf8"
@@ -14,7 +14,7 @@ import (
 // and fragment delimiters unchecked.
 // https://www.w3.org/TR/xmlschema-2/#anyURI
 // https://www.w3.org/TR/2001/REC-xlink-20010627/#link-locators
-func validXSDAnyURI(value string) bool {
+func ValidXSDAnyURI(value string) bool {
 	if !utf8.ValidString(value) || strings.Count(value, "#") > 1 {
 		return false
 	}
@@ -25,8 +25,8 @@ func validXSDAnyURI(value string) bool {
 	for index := 0; index < len(value); index++ {
 		character := value[index]
 		if character == '%' {
-			if index+2 >= len(value) || !validationURIHex(value[index+1]) ||
-				!validationURIHex(value[index+2]) {
+			if index+2 >= len(value) || !URIHex(value[index+1]) ||
+				!URIHex(value[index+2]) {
 				return false
 			}
 			prepared.WriteString(value[index : index+3])
@@ -42,8 +42,8 @@ func validXSDAnyURI(value string) bool {
 	}
 
 	reference := prepared.String()
-	if start, end := validationURIAuthority(reference); start >= 0 {
-		if !validValidationURIAuthority(reference[start:end]) {
+	if start, end := URIAuthority(reference); start >= 0 {
+		if !ValidURIAuthority(reference[start:end]) {
 			return false
 		}
 		// RFC 2396 permits registry-based authorities, including colons and
@@ -75,7 +75,7 @@ func validXSDAnyURI(value string) bool {
 	if parsed.Scheme != "" {
 		path = path[len(parsed.Scheme)+1:]
 	}
-	if start, end := validationURIAuthority(path); start >= 0 {
+	if start, end := URIAuthority(path); start >= 0 {
 		path = path[end:]
 	}
 	if index := strings.IndexAny(path, "?#"); index >= 0 {
@@ -88,7 +88,7 @@ func validXSDAnyURI(value string) bool {
 // percent-escape checks. Without brackets, the remaining characters all belong
 // to RFC 2396's reg_name; the empty authority is permitted by server. Brackets
 // instead require RFC 2732's [IPv6address], with optional userinfo and port.
-func validValidationURIAuthority(authority string) bool {
+func ValidURIAuthority(authority string) bool {
 	if !strings.ContainsAny(authority, "[]") {
 		return true
 	}
@@ -103,7 +103,7 @@ func validValidationURIAuthority(authority string) bool {
 		return false
 	}
 	address, port, closed := strings.Cut(host[1:], "]")
-	if !closed || !validValidationIPv6(address) {
+	if !closed || !ValidIPv6(address) {
 		return false
 	}
 	if port == "" {
@@ -125,7 +125,7 @@ func validValidationURIAuthority(authority string) bool {
 // incorporates. Its embedded IPv4 octets permit 1-3 decimal digits, including
 // leading zeros. net.ParseIP deliberately rejects those zeros, so remove them
 // from a checked temporary representation without changing the original URI.
-func validValidationIPv6(address string) bool {
+func ValidIPv6(address string) bool {
 	if !strings.ContainsRune(address, ':') {
 		return false
 	}
@@ -152,10 +152,11 @@ func validValidationIPv6(address string) bool {
 		address = address[:colon+1] + strings.Join(octets, ".")
 	}
 	// Keep net.ParseIP's address-width and octet-range checks.
-	return net.ParseIP(address) != nil
+	parsed, err := netip.ParseAddr(address)
+	return err == nil && parsed.Is6() && parsed.Zone() == ""
 }
 
-func validationURIAuthority(value string) (start, end int) {
+func URIAuthority(value string) (start, end int) {
 	start = 0
 	if index := strings.IndexAny(value, ":/?#"); index >= 0 && value[index] == ':' {
 		start = index + 1
@@ -171,7 +172,7 @@ func validationURIAuthority(value string) (start, end int) {
 	return start, end
 }
 
-func validationURIHex(value byte) bool {
+func URIHex(value byte) bool {
 	return '0' <= value && value <= '9' ||
 		'A' <= value && value <= 'F' ||
 		'a' <= value && value <= 'f'

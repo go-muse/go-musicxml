@@ -134,7 +134,7 @@ func TestElementValueConstraintsAgainstSchema(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			context := validateAttributeSource(t, &validationNilGenerated, test.source)
 			wantValid := test.constraint == ""
-			assert.Equal(t, wantValid, len(context.issues) == 0, "internal validation: %v", context.issues)
+			assert.Equal(t, wantValid, len(context.Issues) == 0, "internal validation: %v", context.Issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "nil-contract.xsd"),
 				filepath.Join(directory, "catalog.xml"), test.source, wantValid)
 		})
@@ -158,19 +158,19 @@ func TestElementValueConstraintIdentityTracking(t *testing.T) {
 					}
 					source := `<value-items xmlns:n="` + validationXSINamespace + `"><` + element + attributes + nilAttribute + `/>` + targets + `</value-items>`
 					context := validateAttributeSource(t, &validationNilGenerated, source)
-					want := []validationIdentityReference{{value: "target", path: "/value-items/" + element}}
+					want := []validationIdentityReference{{Value: "target", Path: "/value-items/" + element}}
 					if strings.HasSuffix(element, "refs") {
-						want = append(want, validationIdentityReference{value: "other", path: "/value-items/" + element})
+						want = append(want, validationIdentityReference{Value: "other", Path: "/value-items/" + element})
 					}
-					assert.Equal(t, want, context.references)
+					assert.Equal(t, want, context.References)
 					if strings.HasSuffix(element, "content") {
-						assert.Equal(t, "/value-items/"+element+"/@id", context.identifiers["own"])
+						assert.Equal(t, "/value-items/"+element+"/@id", context.Identifiers["own"])
 					}
 					if resolved {
-						assert.Empty(t, context.issues)
+						assert.Empty(t, context.Issues)
 					} else {
-						require.Len(t, context.issues, len(want))
-						for _, issue := range context.issues {
+						require.Len(t, context.Issues, len(want))
+						for _, issue := range context.Issues {
 							assert.Equal(t, "IDREF", issue.Constraint)
 							assert.Equal(t, "/value-items/"+element, issue.Path)
 						}
@@ -186,15 +186,15 @@ func TestElementValueConstraintIdentityTracking(t *testing.T) {
 		}
 		context := validateAttributeSource(t, &validationNilGenerated, `<`+element+` xmlns:n="`+validationXSINamespace+`" n:nil="true"`+attributes+`/>`)
 		if strings.HasPrefix(element, "fixed") {
-			require.Len(t, context.issues, 1)
-			assert.Equal(t, "fixed", context.issues[0].Constraint)
+			require.Len(t, context.Issues, 1)
+			assert.Equal(t, "fixed", context.Issues[0].Constraint)
 		} else {
-			assert.Empty(t, context.issues)
+			assert.Empty(t, context.Issues)
 		}
-		assert.Empty(t, context.references, "true nil must not record a value constraint")
+		assert.Empty(t, context.References, "true nil must not record a value constraint")
 	}
 	context := validateAttributeSource(t, &validationNilGenerated, `<value-items/>`)
-	assert.Empty(t, context.references, "absent elements must not contribute default references")
+	assert.Empty(t, context.References, "absent elements must not contribute default references")
 }
 
 func TestElementValueConstraintsPreservePublicModels(t *testing.T) {
@@ -227,9 +227,9 @@ func TestElementValueConstraintsPreserveSourceNodes(t *testing.T) {
 		require.NoError(t, err)
 		originalAttributes := append([]validationAttribute(nil), root.Attrs...)
 		for range 2 {
-			context := validationContext{schema: &validationNilGenerated, effective: make(map[*validationComplexSchema]*validationEffectiveComplex), identifiers: make(map[string]string)}
-			context.validateElement(root, validationNilGenerated.Elements[validationQName{Local: element}], "/"+element)
-			assert.Empty(t, context.issues)
+			context := validationContext{Context: validationKernelContext{Schema: &validationNilGenerated, Effective: make(map[*validationComplexSchema]*validationEffectiveComplex), Identifiers: make(map[string]string)}}
+			context.ValidateElement(root, validationNilGenerated.Elements[validationQName{Local: element}], "/"+element)
+			assert.Empty(t, context.Issues)
 			assert.Zero(t, root.Text.Len(), "effective value must not replace original source text")
 			assert.Empty(t, root.Children)
 			assert.Equal(t, originalAttributes, root.Attrs)

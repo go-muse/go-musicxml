@@ -27,7 +27,7 @@ func TestValidateDatatypeNameRepertoire(t *testing.T) {
 			for _, value := range []string{"\u0220x", "a\u0220", "\u200cx", "a\u200c", "\U00010000x", "a\U00010000", "\ufffda", "a\ufffd", "a\u00a0", "a\u0085", "a\u2000", "a/", "a\x00", "a\xff", ""} {
 				failure := validateBuiltin(builtin, value)
 				if assert.NotNil(t, failure, "%s %q", builtin, value) {
-					assert.Equal(t, "datatype", failure.constraint)
+					assert.Equal(t, "datatype", failure.Constraint)
 				}
 			}
 		})
@@ -152,9 +152,9 @@ func validationDatatypeNameCases() []validationSourceCase {
 func assertDatatypeNameAssessment(t *testing.T, context *validationContext, test validationSourceCase) {
 	t.Helper()
 	if test.assessmentIncomplete {
-		require.Error(t, context.assessmentErr)
-		assert.Contains(t, context.assessmentErr.Error(), "unparsed entity")
-		assert.Empty(t, context.issues)
+		require.Error(t, context.AssessmentErr)
+		assert.Contains(t, context.AssessmentErr.Error(), "unparsed entity")
+		assert.Empty(t, context.Issues)
 		assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 		return
 	}
@@ -203,8 +203,8 @@ func TestDatatypeNamesImmutable(t *testing.T) {
 					require.NoError(t, err)
 					saved := snapshotValidationNode(t, node)
 					context := newTestValidationContext(&validationDatatypeNameGenerated)
-					context.validateElement(node, validationDatatypeNameGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
-					context.validateIdentityReferences()
+					context.ValidateElement(node, validationDatatypeNameGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
+					context.ValidateIdentityReferences()
 					assertDatatypeNameAssessment(t, context, test)
 					assert.Equal(t, saved, snapshotValidationNode(t, node))
 				}

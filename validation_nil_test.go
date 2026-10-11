@@ -138,12 +138,12 @@ func assertValidationNilCase(t *testing.T, schema *validationSchemaSet, test val
 	t.Helper()
 	context := validateAttributeSource(t, schema, test.source)
 	if test.constraint == "" {
-		assert.Empty(t, context.issues)
+		assert.Empty(t, context.Issues)
 		return
 	}
-	require.Len(t, context.issues, 1)
-	assert.Equal(t, test.constraint, context.issues[0].Constraint)
-	assert.Equal(t, test.path, context.issues[0].Path)
+	require.Len(t, context.Issues, 1)
+	assert.Equal(t, test.constraint, context.Issues[0].Constraint)
+	assert.Equal(t, test.path, context.Issues[0].Path)
 }
 
 // Identity checks are independently asserted: xmllint/libxml2 does not reliably
@@ -160,16 +160,16 @@ func TestValidateNilIdentityTracking(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			context := validateAttributeSource(t, &validationNilGenerated, test.source)
 			if test.constraint != "" {
-				require.Len(t, context.issues, 1)
-				assert.Equal(t, test.constraint, context.issues[0].Constraint)
-				assert.Equal(t, test.path, context.issues[0].Path)
+				require.Len(t, context.Issues, 1)
+				assert.Equal(t, test.constraint, context.Issues[0].Constraint)
+				assert.Equal(t, test.path, context.Issues[0].Path)
 				return
 			}
-			assert.Empty(t, context.issues)
-			assert.Equal(t, map[string]string{"later": "/items/item[2]/@id"}, context.identifiers)
-			require.NotEmpty(t, context.references)
-			for _, reference := range context.references {
-				assert.Equal(t, "later", reference.value)
+			assert.Empty(t, context.Issues)
+			assert.Equal(t, map[string]string{"later": "/items/item[2]/@id"}, context.Identifiers)
+			require.NotEmpty(t, context.References)
+			for _, reference := range context.References {
+				assert.Equal(t, "later", reference.Value)
 			}
 		})
 	}
@@ -181,11 +181,11 @@ func TestValidateNilIdentityTypeForms(t *testing.T) {
 		t.Run(element, func(t *testing.T) {
 			source := `<` + element + ` xmlns:n="` + validationXSINamespace + `" n:nil="true" required="1" id=" &#x9;known&#xA; " ref="known" refs="known&#x9;known"/>`
 			context := validateAttributeSource(t, &validationNilGenerated, source)
-			assert.Empty(t, context.issues)
-			assert.Equal(t, map[string]string{"known": "/" + element + "/@id"}, context.identifiers)
-			require.Len(t, context.references, 3)
-			for _, reference := range context.references {
-				assert.Equal(t, "known", reference.value)
+			assert.Empty(t, context.Issues)
+			assert.Equal(t, map[string]string{"known": "/" + element + "/@id"}, context.Identifiers)
+			require.Len(t, context.References, 3)
+			for _, reference := range context.References {
+				assert.Equal(t, "known", reference.Value)
 			}
 		})
 	}
@@ -220,7 +220,7 @@ func TestValidateNilIdentityTypeForms(t *testing.T) {
 			source := `<` + element + ` xmlns:n="` + validationXSINamespace + `" n:nil="` + value + `"` + attributes + `>` + content + `</` + element + `>`
 			context := validateAttributeSource(t, &schema, source)
 			if nilled {
-				assert.Empty(t, context.issues)
+				assert.Empty(t, context.Issues)
 			} else {
 				// A nonnil root content ID has no in-scope containing owner.
 				assertValidationIssues(t, context, []string{"/" + element + ":ID"})
@@ -232,7 +232,7 @@ func TestValidateNilIdentityTypeForms(t *testing.T) {
 			if !nilled {
 				want["content-id"] = "/" + element
 			}
-			assert.Equal(t, want, context.identifiers, "simpleContent=%t nilled=%t", simpleContent, nilled)
+			assert.Equal(t, want, context.Identifiers, "simpleContent=%t nilled=%t", simpleContent, nilled)
 		}
 	}
 }
@@ -266,10 +266,10 @@ func TestValidateNilBooleanDiagnostic(t *testing.T) {
 	t.Parallel()
 	source := `<simple xmlns:n="` + validationXSINamespace + `" n:nil="&#x9;maybe&#xA;"/>`
 	context := validateAttributeSource(t, &validationNilGenerated, source)
-	require.Len(t, context.issues, 1)
-	assert.Equal(t, "datatype", context.issues[0].Constraint)
-	assert.Equal(t, "/simple/@{"+validationXSINamespace+"}nil", context.issues[0].Path)
-	assert.Equal(t, `value "\tmaybe\n" is not valid for xs:boolean`, context.issues[0].Message)
+	require.Len(t, context.Issues, 1)
+	assert.Equal(t, "datatype", context.Issues[0].Constraint)
+	assert.Equal(t, "/simple/@{"+validationXSINamespace+"}nil", context.Issues[0].Path)
+	assert.Equal(t, `value "\tmaybe\n" is not valid for xs:boolean`, context.Issues[0].Message)
 }
 
 func validationMusicXMLNilCases() []validationAttributeCase {
@@ -359,7 +359,7 @@ func TestNilContractsAgainstSchema(t *testing.T) {
 					}
 					context := validateAttributeSource(t, schema, test.source)
 					wantValid := test.constraint == ""
-					assert.Equal(t, wantValid, len(context.issues) == 0, "internal validation: %v", context.issues)
+					assert.Equal(t, wantValid, len(context.Issues) == 0, "internal validation: %v", context.Issues)
 					assertXMLLintOutcome(t, xmllint, schemaFile, filepath.Join(directory, "catalog.xml"), test.source, wantValid)
 				})
 			}
@@ -389,8 +389,8 @@ func TestValidateNilUnresolvedTypes(t *testing.T) {
 				{Local: "value"}: {Name: validationQName{Local: "value"}, Type: test.reference, Nillable: true},
 			}}
 			context := assessAttributeSource(t, schema, `<value xmlns:n="`+validationXSINamespace+`" n:nil="true"/>`)
-			assert.Empty(t, context.issues)
-			assert.Error(t, context.assessmentErr)
+			assert.Empty(t, context.Issues)
+			assert.Error(t, context.AssessmentErr)
 			assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 		})
 	}

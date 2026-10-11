@@ -42,20 +42,20 @@ func TestGrammarMetadataFailures(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			context := newTestValidationContext(&validationSchemaSet{})
-			result, failure, ok := context.matchParticle(p, nil, 0)
+			result, failure, ok := context.MatchParticle(p, nil, 0)
 			assert.False(t, ok)
-			assert.NotEmpty(t, failure.schema)
-			assert.Empty(t, result.elements)
+			assert.NotEmpty(t, failure.Schema)
+			assert.Empty(t, result.Elements)
 		})
 	}
 	for _, position := range []int{-1, 1} {
-		_, failure, ok := newTestValidationContext(&validationSchemaSet{}).matchParticle(grammarTestLeaf("a", 1, 1), nil, position)
+		_, failure, ok := newTestValidationContext(&validationSchemaSet{}).MatchParticle(grammarTestLeaf("a", 1, 1), nil, position)
 		assert.False(t, ok)
-		assert.NotEmpty(t, failure.schema)
+		assert.NotEmpty(t, failure.Schema)
 	}
-	_, failure, ok := newTestValidationContext(&validationSchemaSet{}).matchParticle(grammarTestLeaf("a", 1, 1), []*validationNode{nil}, 0)
+	_, failure, ok := newTestValidationContext(&validationSchemaSet{}).MatchParticle(grammarTestLeaf("a", 1, 1), []*validationNode{nil}, 0)
 	assert.False(t, ok)
-	assert.NotEmpty(t, failure.schema)
+	assert.NotEmpty(t, failure.Schema)
 }
 
 func TestGrammarNullableSymbolicCounts(t *testing.T) {
@@ -66,29 +66,29 @@ func TestGrammarNullableSymbolicCounts(t *testing.T) {
 			for _, count := range []int{0, 1, 4} {
 				context := newTestValidationContext(&validationSchemaSet{})
 				m := newValidationParticleMatcher(context, grammarTestNodes(count))
-				m.work = &validationParticleWork{}
-				result, failure, ok := m.run(p, 0)
+				m.Work = &validationParticleWork{}
+				result, failure, ok := m.Run(p, 0)
 				require.True(t, ok, "min=%d unbounded=%v failure=%+v", minimum, unbounded, failure)
-				assert.Equal(t, count, result.next)
-				assert.Len(t, result.elements, count)
-				assert.LessOrEqual(t, m.work.transitions, int64(100*(count+1)*(count+1)), "work must not depend on numeric occurrence magnitude")
+				assert.Equal(t, count, result.Next)
+				assert.Len(t, result.Elements, count)
+				assert.LessOrEqual(t, m.Work.Transitions, int64(100*(count+1)*(count+1)), "work must not depend on numeric occurrence magnitude")
 			}
 		}
 	}
 	// A zero maximum accepts no occurrence, even if the body would consume.
 	p := grammarTestLeaf("a", 0, 0)
-	result, _, ok := newTestValidationContext(&validationSchemaSet{}).matchParticle(p, grammarTestNodes(1), 0)
+	result, _, ok := newTestValidationContext(&validationSchemaSet{}).MatchParticle(p, grammarTestNodes(1), 0)
 	require.True(t, ok)
-	assert.Zero(t, result.next)
-	assert.Empty(t, result.elements)
+	assert.Zero(t, result.Next)
+	assert.Empty(t, result.Elements)
 	// A huge nonnullable minimum fails after input-bounded work.
 	p = grammarTestLeaf("a", math.MaxUint64, math.MaxUint64)
 	m := newValidationParticleMatcher(newTestValidationContext(&validationSchemaSet{}), grammarTestNodes(4))
-	m.work = &validationParticleWork{}
-	_, _, ok = m.run(p, 0)
+	m.Work = &validationParticleWork{}
+	_, _, ok = m.Run(p, 0)
 	assert.False(t, ok)
 	// Invalid content can require one diagnostic replay of the input-bounded DP.
-	assert.LessOrEqual(t, m.work.transitions, int64(8))
+	assert.LessOrEqual(t, m.Work.Transitions, int64(8))
 }
 
 func TestGrammarWitnessBindingsAndCache(t *testing.T) {
@@ -96,20 +96,20 @@ func TestGrammarWitnessBindingsAndCache(t *testing.T) {
 	root, err := parseValidationDocument([]byte(`<branches><a>1</a><b/><c>true</c><d/><a>2</a></branches>`))
 	require.NoError(t, err)
 	context := newTestValidationContext(&validationGrammarGenerated)
-	_, complex, _, _ := context.resolveType(&validationGrammarGenerated.Elements[validationQName{Local: "branches"}].Type)
+	_, complex, _, _ := context.ResolveType(&validationGrammarGenerated.Elements[validationQName{Local: "branches"}].Type)
 	for range 3 {
 		m := newValidationParticleMatcher(context, root.Children)
-		result, _, ok := m.run(complex.Particle, 0)
+		result, _, ok := m.Run(complex.Particle, 0)
 		require.True(t, ok)
-		require.Len(t, result.elements, len(root.Children))
-		for index, match := range result.elements {
-			assert.Equal(t, index, match.index)
-			assert.Equal(t, validationName(root.Children[index].Name), match.schema.Name)
+		require.Len(t, result.Elements, len(root.Children))
+		for index, match := range result.Elements {
+			assert.Equal(t, index, match.Index)
+			assert.Equal(t, validationName(root.Children[index].Name), match.Schema.Name)
 		}
-		for _, entries := range []map[validationParticleKey]validationParticleEndpoints{m.particles, m.bodies} {
+		for _, entries := range []map[validationParticleKey]validationParticleEndpoints{m.Particles, m.Bodies} {
 			for _, entry := range entries {
-				for index := 1; index < len(entry.ends); index++ {
-					assert.Greater(t, entry.ends[index-1], entry.ends[index])
+				for index := 1; index < len(entry.Ends); index++ {
+					assert.Greater(t, entry.Ends[index-1], entry.Ends[index])
 				}
 			}
 		}
@@ -118,12 +118,12 @@ func TestGrammarWitnessBindingsAndCache(t *testing.T) {
 	p := grammarTestLeaf("a", 1, 1)
 	p.Element.Name.Space = "urn:expected"
 	nodes := grammarTestNodes(1)
-	_, _, ok := context.matchParticle(p, nodes, 0)
+	_, _, ok := context.MatchParticle(p, nodes, 0)
 	assert.False(t, ok)
 	nodes[0].Name.Space = "urn:expected"
-	result, _, ok := context.matchParticle(p, nodes, 0)
+	result, _, ok := context.MatchParticle(p, nodes, 0)
 	require.True(t, ok)
-	assert.Same(t, p.Element, result.elements[0].schema)
+	assert.Same(t, p.Element, result.Elements[0].Schema)
 }
 
 func TestGrammarMatchingWorkBound(t *testing.T) {
@@ -139,34 +139,34 @@ func TestGrammarMatchingWorkBound(t *testing.T) {
 			var work validationParticleWork
 			allocations := testing.AllocsPerRun(3, func() {
 				m := newValidationParticleMatcher(newTestValidationContext(&validationSchemaSet{}), nodes)
-				m.work = &validationParticleWork{}
-				result, failure, ok := m.run(p, 0)
+				m.Work = &validationParticleWork{}
+				result, failure, ok := m.Run(p, 0)
 				if valid {
 					require.True(t, ok, "%+v", failure)
-					require.Equal(t, len(nodes), result.next)
-					require.Len(t, result.elements, len(nodes))
+					require.Equal(t, len(nodes), result.Next)
+					require.Len(t, result.Elements, len(nodes))
 				} else {
 					require.False(t, ok)
 				}
-				work = *m.work
+				work = *m.Work
 				// Exactly four particle components, at most N+1 starts each; every memo
 				// entry stores at most N+1 endpoints and no retained witness/history.
 				bound := 4 * (len(nodes) + 1)
-				require.LessOrEqual(t, len(m.particles), bound)
-				require.LessOrEqual(t, len(m.bodies), bound)
+				require.LessOrEqual(t, len(m.Particles), bound)
+				require.LessOrEqual(t, len(m.Bodies), bound)
 				positions := 0
-				for _, entry := range m.particles {
-					positions += len(entry.ends)
+				for _, entry := range m.Particles {
+					positions += len(entry.Ends)
 				}
-				for _, entry := range m.bodies {
-					positions += len(entry.ends)
+				for _, entry := range m.Bodies {
+					positions += len(entry.Ends)
 				}
 				require.LessOrEqual(t, positions, 2*bound*(len(nodes)+1))
 				N := int64(len(nodes) + 1)
-				require.LessOrEqual(t, work.transitions, 8*N*N*N*N)
-				require.LessOrEqual(t, work.repeatStates, 4*N*N*N)
+				require.LessOrEqual(t, work.Transitions, 8*N*N*N*N)
+				require.LessOrEqual(t, work.RepeatStates, 4*N*N*N)
 			})
-			t.Logf("valid=%v children=%d allocations=%.0f particle states=%d body states=%d transitions=%d repetition states=%d witness states=%d", valid, n, allocations, work.particles, work.bodies, work.transitions, work.repeatStates, work.witnessStates)
+			t.Logf("valid=%v children=%d allocations=%.0f particle states=%d body states=%d transitions=%d repetition states=%d witness states=%d", valid, n, allocations, work.Particles, work.Bodies, work.Transitions, work.RepeatStates, work.WitnessStates)
 			return allocations
 		}
 		small, large := measure(16), measure(32)
@@ -249,20 +249,20 @@ func TestGrammarExhaustiveShortLanguages(t *testing.T) {
 	for _, name := range []string{"nullable-sequence", "nullable-choice", "nullable-unbounded", "nullable-zero", "partition-fixed", "partition-continuation", "branches"} {
 		t.Run(name, func(t *testing.T) {
 			context := newTestValidationContext(&validationGrammarGenerated)
-			_, complex, _, _ := context.resolveType(&validationGrammarGenerated.Elements[validationQName{Local: name}].Type)
+			_, complex, _, _ := context.ResolveType(&validationGrammarGenerated.Elements[validationQName{Local: name}].Type)
 			want := grammarTestLanguage(t, complex.Particle, 4)
 			for _, word := range words {
 				nodes := make([]*validationNode, len(word))
 				for index, letter := range word {
 					nodes[index] = &validationNode{Name: xml.Name{Local: string(letter)}}
 				}
-				result, _, ok := context.matchParticle(complex.Particle, nodes, 0)
-				assert.Equal(t, want[word], ok && result.next == len(nodes), "word %q", word)
+				result, _, ok := context.MatchParticle(complex.Particle, nodes, 0)
+				assert.Equal(t, want[word], ok && result.Next == len(nodes), "word %q", word)
 				if ok {
-					assert.Len(t, result.elements, result.next)
-					for index, match := range result.elements {
-						assert.Equal(t, index, match.index)
-						assert.Equal(t, nodes[index].Name.Local, match.schema.Name.Local)
+					assert.Len(t, result.Elements, result.Next)
+					for index, match := range result.Elements {
+						assert.Equal(t, index, match.Index)
+						assert.Equal(t, nodes[index].Name.Local, match.Schema.Name.Local)
 					}
 				}
 			}

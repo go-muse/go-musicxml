@@ -35,16 +35,16 @@ func TestGrammarMetadataAssessmentBoundary(t *testing.T) {
 					attrs += ` bad="value"`
 				}
 				context := assessAttributeSource(t, set, `<value`+attrs+`/>`)
-				require.Error(t, context.assessmentErr)
-				assert.Contains(t, context.assessmentErr.Error(), "content-model")
-				require.Len(t, context.references, 1)
+				require.Error(t, context.AssessmentErr)
+				assert.Contains(t, context.AssessmentErr.Error(), "content-model")
+				require.Len(t, context.References, 1)
 				if independentFailure {
-					require.Len(t, context.issues, 1)
-					assert.Equal(t, "attribute", context.issues[0].Constraint)
-					assert.Equal(t, "/value/@bad", context.issues[0].Path)
+					require.Len(t, context.Issues, 1)
+					assert.Equal(t, "attribute", context.Issues[0].Constraint)
+					assert.Equal(t, "/value/@bad", context.Issues[0].Path)
 					assert.ErrorIs(t, context.result(), ErrInvalidDocument)
 				} else {
-					assert.Empty(t, context.issues)
+					assert.Empty(t, context.Issues)
 					assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 				}
 				assert.Same(t, particle, particle.Children[0])
@@ -58,9 +58,9 @@ func TestXSIQNameUsesDatatypeRepertoire(t *testing.T) {
 	// XML decoder rejects some newer XML names before XSD assessment.
 	source := `<t:builtin xmlns:t="urn:xsi-contract" xmlns:xs="` + validationXSDNamespace + `" xmlns:i="` + validationXSINamespace + `" i:type="xs:Ƞ">ok</t:builtin>`
 	context := validateAttributeSource(t, &validationXSIGenerated, source)
-	require.Len(t, context.issues, 1)
-	assert.Equal(t, "xsi:type", context.issues[0].Constraint)
-	assert.Contains(t, context.issues[0].Message, "not a bound QName")
+	require.Len(t, context.Issues, 1)
+	assert.Equal(t, "xsi:type", context.Issues[0].Constraint)
+	assert.Contains(t, context.Issues[0].Message, "not a bound QName")
 	node := &validationNode{Namespaces: map[string]string{"Ƞ": validationXSDNamespace, "xs": validationXSDNamespace}}
 	for _, value := range []string{"Ƞ:token", "xs:Ƞ"} {
 		_, ok := validationInstanceQName(node, value)
@@ -88,19 +88,19 @@ func TestXSITypeIdentityUsesDeclaration(t *testing.T) {
 			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "value"}: declaration}}
 			source := `<value xmlns:i="` + validationXSINamespace + `" xmlns:xs="` + validationXSDNamespace + `" i:type="xs:` + test.actual + `"> target </value>`
 			context := validateAttributeSource(t, set, source)
-			assert.Len(t, context.identifiers, test.ids)
-			assert.Len(t, context.references, test.refs)
-			assert.Len(t, context.identityEntries, test.ids+test.refs)
-			assert.Empty(t, context.identityBindings, "root scalar has no containing owner")
+			assert.Len(t, context.Identifiers, test.ids)
+			assert.Len(t, context.References, test.refs)
+			assert.Len(t, context.IdentityEntries, test.ids+test.refs)
+			assert.Empty(t, context.IdentityBindings, "root scalar has no containing owner")
 			if test.ids != 0 {
-				assert.Contains(t, context.identifiers, "target")
+				assert.Contains(t, context.Identifiers, "target")
 			}
 			if test.ids != 0 {
 				assertValidationIssues(t, context, []string{"/value:ID"})
 			} else if test.refs == 0 {
 				assertValidationIssues(t, context, nil)
 			} else {
-				assert.Equal(t, "target", context.references[0].value)
+				assert.Equal(t, "target", context.References[0].Value)
 				assertValidationIssues(t, context, []string{"/value:IDREF"})
 			}
 		})

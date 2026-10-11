@@ -1,4 +1,4 @@
-package musicxml
+package xsd
 
 import (
 	"fmt"
@@ -10,53 +10,53 @@ import (
 // and comparison take linear time and constant auxiliary space: no machine
 // conversion, big-number allocation, exponent expansion or arithmetic is needed.
 // The caller still owns the input/normalization and diagnostic allocations.
-type validationInteger struct {
-	digits   string
-	negative bool
+type Integer struct {
+	Digits   string
+	Negative bool
 }
 
 // Keep lexical acceptance aligned with parseXMLUnsignedInteger; that transport
 // helper separately preserves machine-conversion values and strconv error details.
-func parseValidationInteger(value string) (validationInteger, bool) {
-	value = strings.Trim(value, xmlWhitespace)
+func ParseInteger(value string) (Integer, bool) {
+	value = strings.Trim(value, XMLWhitespace)
 	negative := false
 	if len(value) != 0 && (value[0] == '+' || value[0] == '-') {
 		negative = value[0] == '-'
 		value = value[1:]
 	}
 	if value == "" {
-		return validationInteger{}, false
+		return Integer{}, false
 	}
 	first := len(value) - 1
 	for index := range len(value) {
 		if value[index] < '0' || value[index] > '9' {
-			return validationInteger{}, false
+			return Integer{}, false
 		}
 		if value[index] != '0' && index < first {
 			first = index
 		}
 	}
 	value = value[first:]
-	return validationInteger{digits: value, negative: negative && value != "0"}, true
+	return Integer{Digits: value, Negative: negative && value != "0"}, true
 }
 
-func (value validationInteger) compare(other validationInteger) int {
-	if value.negative != other.negative {
-		if value.negative {
+func (value Integer) Compare(other Integer) int {
+	if value.Negative != other.Negative {
+		if value.Negative {
 			return -1
 		}
 		return 1
 	}
 	result := 0
 	switch {
-	case len(value.digits) < len(other.digits):
+	case len(value.Digits) < len(other.Digits):
 		result = -1
-	case len(value.digits) > len(other.digits):
+	case len(value.Digits) > len(other.Digits):
 		result = 1
 	default:
-		result = strings.Compare(value.digits, other.digits)
+		result = strings.Compare(value.Digits, other.Digits)
 	}
-	if value.negative {
+	if value.Negative {
 		return -result
 	}
 	return result
@@ -64,7 +64,7 @@ func (value validationInteger) compare(other validationInteger) int {
 
 // The bounds are XSD value-space restrictions, not Go representation policy.
 // Signed spellings of the unsigned types preserve the existing library contract.
-func validationIntegerLimits(name string) (minimum, maximum string, integer bool) {
+func IntegerLimits(name string) (minimum, maximum string, integer bool) {
 	switch name {
 	case "integer":
 		return "", "", true
@@ -97,46 +97,46 @@ func validationIntegerLimits(name string) (minimum, maximum string, integer bool
 	}
 }
 
-func validValidationInteger(name, value string) bool {
-	number, ok := parseValidationInteger(value)
+func ValidInteger(name, value string) bool {
+	number, ok := ParseInteger(value)
 	if !ok {
 		return false
 	}
-	minimum, maximum, integer := validationIntegerLimits(name)
+	minimum, maximum, integer := IntegerLimits(name)
 	if !integer {
 		return false
 	}
 	if minimum != "" {
-		limit, _ := parseValidationInteger(minimum)
-		if number.compare(limit) < 0 {
+		limit, _ := ParseInteger(minimum)
+		if number.Compare(limit) < 0 {
 			return false
 		}
 	}
 	if maximum != "" {
-		limit, _ := parseValidationInteger(maximum)
-		if number.compare(limit) > 0 {
+		limit, _ := ParseInteger(maximum)
+		if number.Compare(limit) > 0 {
 			return false
 		}
 	}
 	return true
 }
 
-func validationIntegerValuesEqual(left, right string) bool {
-	first, firstOK := parseValidationInteger(left)
-	second, secondOK := parseValidationInteger(right)
-	return firstOK && secondOK && first.compare(second) == 0
+func IntegerValuesEqual(left, right string) bool {
+	first, firstOK := ParseInteger(left)
+	second, secondOK := ParseInteger(right)
+	return firstOK && secondOK && first.Compare(second) == 0
 }
 
 // Keep bound rules and diagnostics aligned with validateDecimalBounds; parsing is domain-specific.
-func validateIntegerBounds(schema *validationSimpleSchema, value, display string) *validationSimpleFailure {
-	number, ok := parseValidationInteger(value)
+func ValidateIntegerBounds(schema *SimpleSchema, value, display string) *SimpleFailure {
+	number, ok := ParseInteger(value)
 	if !ok {
-		return &validationSimpleFailure{constraint: "datatype", message: fmt.Sprintf("value %q is not numeric", display)}
+		return &SimpleFailure{Constraint: "datatype", Message: fmt.Sprintf("value %q is not numeric", display)}
 	}
 	tests := []struct {
-		enabled            bool
-		constraint, limit  string
-		minimum, exclusive bool
+		Enabled            bool
+		Constraint, Limit  string
+		Minimum, Exclusive bool
 	}{
 		{schema.HasMinInclusive, "minInclusive", schema.MinInclusive, true, false},
 		{schema.HasMaxInclusive, "maxInclusive", schema.MaxInclusive, false, false},
@@ -144,16 +144,16 @@ func validateIntegerBounds(schema *validationSimpleSchema, value, display string
 		{schema.HasMaxExclusive, "maxExclusive", schema.MaxExclusive, false, true},
 	}
 	for _, test := range tests {
-		if !test.enabled {
+		if !test.Enabled {
 			continue
 		}
-		limit, ok := parseValidationInteger(test.limit)
+		limit, ok := ParseInteger(test.Limit)
 		if !ok {
-			return &validationSimpleFailure{constraint: "schema", message: fmt.Sprintf("invalid %s value %q", test.constraint, test.limit)}
+			return &SimpleFailure{Constraint: "schema", Message: fmt.Sprintf("invalid %s value %q", test.Constraint, test.Limit)}
 		}
-		comparison := number.compare(limit)
-		if (test.minimum && comparison < 0) || (!test.minimum && comparison > 0) || (test.exclusive && comparison == 0) {
-			return &validationSimpleFailure{constraint: test.constraint, message: fmt.Sprintf("value %q violates %s=%q", display, test.constraint, test.limit)}
+		comparison := number.Compare(limit)
+		if (test.Minimum && comparison < 0) || (!test.Minimum && comparison > 0) || (test.Exclusive && comparison == 0) {
+			return &SimpleFailure{Constraint: test.Constraint, Message: fmt.Sprintf("value %q violates %s=%q", display, test.Constraint, test.Limit)}
 		}
 	}
 	return nil

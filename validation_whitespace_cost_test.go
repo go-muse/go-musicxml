@@ -45,7 +45,7 @@ func TestWhitespaceEnumerationLayeredWork(t *testing.T) {
 				start := time.Now()
 				allocations := testing.AllocsPerRun(3, func() {
 					context := newTestValidationContext(&validationSchemaSet{})
-					if failure := context.validateSimple(schema, "a"); failure != nil {
+					if failure := context.ValidateSimple(schema, "a"); failure != nil {
 						t.Fatal(failure)
 					}
 				})
@@ -85,12 +85,12 @@ func TestWhitespaceEnumerationLiteralViews(t *testing.T) {
 			schema := &validationSimpleSchema{Form: validationSimpleRestriction, Base: test.base, Enumerations: []string{test.literal}}
 			for range 3 {
 				for _, value := range test.accepted {
-					assert.Nil(t, context.validateSimple(schema, value), "%q", value)
+					assert.Nil(t, context.ValidateSimple(schema, value), "%q", value)
 				}
 				for _, value := range test.rejected {
-					failure := context.validateSimple(schema, value)
+					failure := context.ValidateSimple(schema, value)
 					if assert.NotNil(t, failure, "%q", value) {
-						assert.Equal(t, "enumeration", failure.constraint)
+						assert.Equal(t, "enumeration", failure.Constraint)
 					}
 				}
 			}
@@ -107,17 +107,17 @@ func TestWhitespaceEnumerationCacheBound(t *testing.T) {
 			Members: []*validationSimpleMember{{Name: validationQName{Space: validationXSDNamespace, Local: "token"}}, {Name: validationQName{Space: validationXSDNamespace, Local: "string"}}}}},
 		Enumerations: []string{" a ", " b ", " \t "}}
 	for _, value := range []string{"not-listed", " a ", "a", "", " ", "b", " b "} {
-		context.validateSimple(schema, value)
-		assert.Len(t, context.enumerationValues, len(schema.Enumerations))
+		context.ValidateSimple(schema, value)
+		assert.Len(t, context.EnumerationValues, len(schema.Enumerations))
 	}
 	// Unboundedly varied instance spellings must not grow the literal cache.
 	for length := 1; length <= 100; length++ {
-		context.validateSimple(schema, strings.Repeat("x", length))
-		assert.Len(t, context.enumerationValues, len(schema.Enumerations))
+		context.ValidateSimple(schema, strings.Repeat("x", length))
+		assert.Len(t, context.EnumerationValues, len(schema.Enumerations))
 	}
-	cached := context.enumerationValues[validationEnumerationKey{schema: schema, index: 2}]
-	assert.True(t, cached.valid)
-	assert.Empty(t, cached.value)
+	cached := context.EnumerationValues[validationEnumerationKey{Schema: schema, Index: 2}]
+	assert.True(t, cached.Valid)
+	assert.Empty(t, cached.Value)
 }
 
 func TestReplaceWhitespaceAllocations(t *testing.T) {

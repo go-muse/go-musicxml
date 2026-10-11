@@ -28,7 +28,7 @@ func TestValidationDecimalExactOperations(t *testing.T) {
 		require.True(t, ok)
 		wantSecond, ok := new(big.Rat).SetString(right)
 		require.True(t, ok)
-		assert.Equal(t, wantFirst.Cmp(wantSecond), first.compare(second), "left=%q right=%q", left, right)
+		assert.Equal(t, wantFirst.Cmp(wantSecond), first.Compare(second), "left=%q right=%q", left, right)
 		assert.Equal(t, wantFirst.Cmp(wantSecond) == 0, validationDecimalValuesEqual(left, right))
 	}
 	for _, left := range values {
@@ -99,7 +99,7 @@ func TestValidationDecimalConstantSpace(t *testing.T) {
 	value := "-" + strings.Repeat("0", 1<<18) + strings.Repeat("9", 1<<18) + "." + strings.Repeat("0", 1<<18) + "1" + strings.Repeat("0", 1<<18)
 	assert.Zero(t, testing.AllocsPerRun(5, func() {
 		first, ok := parseValidationDecimal(value)
-		if !ok || first.compare(first) != 0 {
+		if !ok || first.Compare(first) != 0 {
 			panic("unexpected decimal comparison")
 		}
 	}))
@@ -117,8 +117,8 @@ func TestDecimalGeneratedLexemesRemainExact(t *testing.T) {
 	require.NoError(t, err)
 	before := root.Text.String()
 	context := newTestValidationContext(&validationDecimalGenerated)
-	context.validateElement(root, fixed, "/fixed")
-	assert.Empty(t, context.issues)
+	context.ValidateElement(root, fixed, "/fixed")
+	assert.Empty(t, context.Issues)
 	assert.Equal(t, before, root.Text.String())
 	assert.Equal(t, "+0001.2500", *fixed.Fixed)
 	assert.Equal(t, []string{"+0001.2500", "-000.00"}, enum.Simple.Enumerations)
@@ -133,13 +133,13 @@ func TestValidateDecimalInvalidBoundLiterals(t *testing.T) {
 		} {
 			failure := validateBounds(schema, "1", "decimal")
 			if assert.NotNil(t, failure, "%q", literal) {
-				assert.Equal(t, "schema", failure.constraint)
+				assert.Equal(t, "schema", failure.Constraint)
 			}
 		}
 	}
 	failure := validateBounds(&validationSimpleSchema{HasMinInclusive: true, MinInclusive: "0"}, "1e0", "decimal")
 	if assert.NotNil(t, failure) {
-		assert.Equal(t, "datatype", failure.constraint)
+		assert.Equal(t, "datatype", failure.Constraint)
 	}
 }
 
@@ -148,14 +148,14 @@ func TestDecimalComparisonDispatchScope(t *testing.T) {
 	context := newTestValidationContext(&validationDecimalGenerated)
 	for _, builtin := range []string{"string", "token", "float", "double"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: builtin}}
-		assert.False(t, context.simpleValuesEqual(reference, "1.0", "1.00"), builtin)
-		assert.False(t, context.elementFixedValuesEqual(reference, "1.0", "1.00"), builtin)
+		assert.False(t, context.SimpleValuesEqual(reference, "1.0", "1.00"), builtin)
+		assert.False(t, context.ElementFixedValuesEqual(reference, "1.0", "1.00"), builtin)
 	}
 	assert.NotNil(t, validateBuiltin("integer", "1.0"))
 	assert.Nil(t, validateBounds(&validationSimpleSchema{HasMinInclusive: true, MinInclusive: "1e0"}, "1e0", "double"))
 	for _, form := range []validationSimpleForm{validationSimpleUnion, validationSimpleList} {
 		reference := &validationTypeRef{InlineSimple: &validationSimpleSchema{Form: form, Members: []*validationSimpleMember{{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}}, Item: &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}}}
-		assert.True(t, context.simpleValuesEqual(reference, "1.0", "1.00"), form)
-		assert.True(t, context.elementFixedValuesEqual(reference, "1.0", "1.00"), form)
+		assert.True(t, context.SimpleValuesEqual(reference, "1.0", "1.00"), form)
+		assert.True(t, context.ElementFixedValuesEqual(reference, "1.0", "1.00"), form)
 	}
 }

@@ -119,8 +119,8 @@ func TestXSD10IdentitySharedInput(t *testing.T) {
 		workers.Go(func() {
 			for range 8 {
 				c := newTestValidationContext(&validationIdentityGenerated)
-				c.validateElement(root, validationIdentityGenerated.Elements[validationQName{Local: "root"}], "/root")
-				c.validateIdentityReferences()
+				c.ValidateElement(root, validationIdentityGenerated.Elements[validationQName{Local: "root"}], "/root")
+				c.ValidateIdentityReferences()
 				assert.NoError(t, c.result())
 			}
 		})
@@ -153,8 +153,8 @@ func TestXSD10IdentityLocalGates(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			source := `<root xmlns:i="` + validationXSINamespace + `" xmlns:xs="` + validationXSDNamespace + `"><item>` + test.content + `</item></root>`
 			c := validateAttributeSource(t, &validationIdentityGenerated, source)
-			assert.Len(t, c.identityEntries, test.seeds)
-			assert.Len(t, c.identityBindings, test.bindings)
+			assert.Len(t, c.IdentityEntries, test.seeds)
+			assert.Len(t, c.IdentityBindings, test.bindings)
 		})
 	}
 }
@@ -163,11 +163,11 @@ func TestXSD10IdentityOriginalDefaultOwner(t *testing.T) {
 	root, err := parseValidationDocument([]byte(`<default-content id="target"/>`))
 	require.NoError(t, err)
 	c := newTestValidationContext(&validationIdentityGenerated)
-	c.validateElement(root, validationIdentityGenerated.Elements[validationQName{Local: "default-content"}], "/default-content")
-	c.validateIdentityReferences()
+	c.ValidateElement(root, validationIdentityGenerated.Elements[validationQName{Local: "default-content"}], "/default-content")
+	c.ValidateIdentityReferences()
 	require.NoError(t, c.result())
-	require.NotNil(t, c.identityBindings["target"])
-	assert.Contains(t, c.identityBindings["target"].owners, root, "effective scalar view must not become an owner")
+	require.NotNil(t, c.IdentityBindings["target"])
+	assert.Contains(t, c.IdentityBindings["target"].Owners, root, "effective scalar view must not become an owner")
 	assert.Empty(t, root.Text.String())
 }
 
@@ -186,9 +186,9 @@ func TestXSD10IdentityIncompleteTraversal(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			c := assessAttributeSource(t, &set, `<root xmlns:i="`+validationXSINamespace+`" xmlns:xs="`+validationXSDNamespace+`">`+test.content+`</root>`)
-			require.Error(t, c.assessmentErr)
-			assert.Len(t, c.issues, test.duplicates)
-			for _, issue := range c.issues {
+			require.Error(t, c.AssessmentErr)
+			assert.Len(t, c.Issues, test.duplicates)
+			for _, issue := range c.Issues {
 				assert.Equal(t, "ID", issue.Constraint)
 			}
 		})
@@ -210,9 +210,9 @@ func TestXSD10IdentityOwnerNamespaceCollision(t *testing.T) {
 	set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
 	c := validateAttributeSource(t, set, `<root xmlns:a="urn:first" xmlns:b="urn:second"><a:item><target>T1</target></a:item><b:item><target>T1</target></b:item></root>`)
 	assertValidationIssues(t, c, []string{"/root/item/target:ID"})
-	require.NotNil(t, c.identityBindings["T1"])
-	assert.Len(t, c.identityBindings["T1"].owners, 2)
-	assert.Equal(t, c.identityBindings["T1"].firstPath, c.identityBindings["T1"].secondPath)
+	require.NotNil(t, c.IdentityBindings["T1"])
+	assert.Len(t, c.IdentityBindings["T1"].Owners, 2)
+	assert.Equal(t, c.IdentityBindings["T1"].FirstPath, c.IdentityBindings["T1"].SecondPath)
 }
 
 func TestXSD10IdentityStableFinalization(t *testing.T) {
@@ -221,9 +221,9 @@ func TestXSD10IdentityStableFinalization(t *testing.T) {
 	for run := 0; run < 20; run++ {
 		c := validateAttributeSource(t, &validationIdentityGenerated, source)
 		if run == 0 {
-			first = c.issues
+			first = c.Issues
 		}
-		assert.Equal(t, first, c.issues)
+		assert.Equal(t, first, c.Issues)
 	}
 	require.Len(t, first, 3)
 	assert.Equal(t, "/root/item[4]/@id", first[0].Path)
@@ -263,13 +263,13 @@ func TestXSD10IdentitySkippedChildTraversal(t *testing.T) {
 			}
 			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
 			c := validateAttributeSource(t, set, test.source)
-			require.NoError(t, c.assessmentErr, "ordinary invalidity stays separate from technical failure")
+			require.NoError(t, c.AssessmentErr, "ordinary invalidity stays separate from technical failure")
 			var constraints []string
-			for _, issue := range c.issues {
+			for _, issue := range c.Issues {
 				constraints = append(constraints, issue.Constraint)
 			}
 			assert.Equal(t, test.constraints, constraints)
-			assert.Equal(t, test.skipped, c.identityIncomplete)
+			assert.Equal(t, test.skipped, c.IdentityIncomplete)
 		})
 	}
 }
@@ -298,13 +298,13 @@ func TestXSD10IdentitySkippedChildKinds(t *testing.T) {
 			root := &validationElementSchema{Name: validationQName{Local: "root"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: builtin("IDREF")}}, Particle: &validationParticleSchema{Kind: validationParticleElement, Occurrence: validationOccurrence{Min: 1, Max: 1}, Element: value}}}}
 			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
 			c := validateAttributeSource(t, set, `<root xmlns:i="`+validationXSINamespace+`" ref="target"><value`+test.attrs+`>`+test.content+`</value></root>`)
-			require.NoError(t, c.assessmentErr)
+			require.NoError(t, c.AssessmentErr)
 			var constraints []string
-			for _, issue := range c.issues {
+			for _, issue := range c.Issues {
 				constraints = append(constraints, issue.Constraint)
 			}
 			assert.Equal(t, test.want, constraints)
-			assert.Equal(t, test.skipped, c.identityIncomplete)
+			assert.Equal(t, test.skipped, c.IdentityIncomplete)
 		})
 	}
 }
@@ -327,14 +327,14 @@ func TestXSD10IdentityAbstractTypeAttributes(t *testing.T) {
 			root := &validationElementSchema{Name: validationQName{Local: "root"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: builtin("IDREF")}}, Particle: &validationParticleSchema{Kind: validationParticleElement, Occurrence: validationOccurrence{Min: 1, Max: 1}, Element: value}}}}
 			set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
 			c := validateAttributeSource(t, set, `<root ref="target"><value`+test.attrs+`/></root>`)
-			require.NoError(t, c.assessmentErr)
+			require.NoError(t, c.AssessmentErr)
 			var constraints []string
-			for _, issue := range c.issues {
+			for _, issue := range c.Issues {
 				constraints = append(constraints, issue.Constraint)
 			}
 			assert.Equal(t, test.want, constraints)
-			assert.Len(t, c.identityBindings, test.bindings)
-			assert.False(t, c.identityIncomplete, "attributes were assessed and no children were skipped")
+			assert.Len(t, c.IdentityBindings, test.bindings)
+			assert.False(t, c.IdentityIncomplete, "attributes were assessed and no children were skipped")
 		})
 	}
 }
@@ -357,7 +357,7 @@ func TestXSD10IdentityOpenContentBoundary(t *testing.T) {
 		root := &validationElementSchema{Name: validationQName{Local: "root"}, Type: validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect, Attributes: []validationAttributeSchema{{Name: validationQName{Local: "ref"}, Type: builtin("IDREF")}}, Particle: particle}}}
 		set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{{Local: "root"}: root}}
 		c := validateAttributeSource(t, set, source)
-		assert.False(t, c.identityIncomplete)
+		assert.False(t, c.IdentityIncomplete)
 		assert.ErrorIs(t, c.result(), ErrInvalidDocument)
 		assertValidationIssues(t, c, []string{"/root/@ref:IDREF"})
 	}

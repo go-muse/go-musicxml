@@ -32,14 +32,14 @@ func TestXSD10DynamicIDBinding(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			source := `<root xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema">` + test.content + `</root>`
 			context := assessAttributeSource(t, schema, source)
-			require.NoError(t, context.assessmentErr)
+			require.NoError(t, context.AssessmentErr)
 			if test.violation == "" {
-				assert.Empty(t, context.issues)
+				assert.Empty(t, context.Issues)
 				assert.NoError(t, context.result())
 			} else {
 				assert.ErrorIs(t, context.result(), ErrInvalidDocument)
 				var kinds []string
-				for _, issue := range context.issues {
+				for _, issue := range context.Issues {
 					kinds = append(kinds, issue.Constraint)
 				}
 				assert.Equal(t, []string{test.violation}, kinds)

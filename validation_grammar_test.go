@@ -90,8 +90,8 @@ func TestGrammarParticlesPreserveInputs(t *testing.T) {
 	require.NoError(t, err)
 	for range 3 {
 		context := newTestValidationContext(&validationGrammarGenerated)
-		context.validateElement(root, validationGrammarGenerated.Elements[validationQName{Local: "partition-fixed"}], "/partition-fixed")
-		assert.Empty(t, context.issues)
+		context.ValidateElement(root, validationGrammarGenerated.Elements[validationQName{Local: "partition-fixed"}], "/partition-fixed")
+		assert.Empty(t, context.Issues)
 		assert.Equal(t, "1", root.Children[0].Text.String())
 		assert.Equal(t, "2", root.Children[1].Text.String())
 	}
@@ -111,8 +111,8 @@ func TestGrammarParticlesConcurrentInputs(t *testing.T) {
 		t.Run(fmt.Sprint(index), func(t *testing.T) {
 			t.Parallel()
 			context := newTestValidationContext(&validationGrammarGenerated)
-			context.validateElement(root, validationGrammarGenerated.Elements[validationQName{Local: "partition-continuation"}], "/partition-continuation")
-			assert.Empty(t, context.issues)
+			context.ValidateElement(root, validationGrammarGenerated.Elements[validationQName{Local: "partition-continuation"}], "/partition-continuation")
+			assert.Empty(t, context.Issues)
 		})
 	}
 }

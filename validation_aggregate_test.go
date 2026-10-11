@@ -145,8 +145,8 @@ func TestAggregateValuesImmutable(t *testing.T) {
 					require.NoError(t, err)
 					saved := snapshotValidationNode(t, node)
 					context := newTestValidationContext(&validationAggregateGenerated)
-					context.validateElement(node, validationAggregateGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
-					context.validateIdentityReferences()
+					context.ValidateElement(node, validationAggregateGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
+					context.ValidateIdentityReferences()
 					assertValidationIssues(t, context, test.issues)
 					after := snapshotValidationNode(t, node)
 					assert.Equal(t, saved, after)
@@ -160,13 +160,13 @@ func TestAggregateValuesImmutable(t *testing.T) {
 func TestAggregateDiagnosticSpelling(t *testing.T) {
 	t.Parallel()
 	context := validateAttributeSource(t, &validationAggregateGenerated, `<integer-enum> +0001 -0 18446744073709551617 </integer-enum>`)
-	require.Len(t, context.issues, 1)
-	assert.Equal(t, `value " +0001 -0 18446744073709551617 " is not one of the allowed values`, context.issues[0].Message)
+	require.Len(t, context.Issues, 1)
+	assert.Equal(t, `value " +0001 -0 18446744073709551617 " is not one of the allowed values`, context.Issues[0].Message)
 	context = validateAttributeSource(t, &validationAggregateGenerated, `<integer-fixed> +0001 -0 </integer-fixed>`)
-	assert.Empty(t, context.issues)
+	assert.Empty(t, context.Issues)
 	context = validateAttributeSource(t, &validationAggregateGenerated, `<integer-fixed> +0001 -01 </integer-fixed>`)
-	require.Len(t, context.issues, 1)
-	assert.Equal(t, `value " +0001 -01 " does not equal fixed value "1 0"`, context.issues[0].Message)
+	require.Len(t, context.Issues, 1)
+	assert.Equal(t, `value " +0001 -01 " does not equal fixed value "1 0"`, context.Issues[0].Message)
 }
 
 // Internal-only exact-width contract; libxml2's numeric implementation is not
@@ -177,10 +177,10 @@ func TestAggregateWideExactValues(t *testing.T) {
 	context := newTestValidationContext(&validationAggregateGenerated)
 	list := &validationSimpleMember{Name: validationQName{Local: "integers"}}
 	schema := &validationSimpleSchema{Form: validationSimpleRestriction, Base: list, Enumerations: []string{huge + " 0"}}
-	assert.Nil(t, context.validateSimple(schema, "+0"+huge+" -0"))
-	failure := context.validateSimple(schema, huge+" 1")
+	assert.Nil(t, context.ValidateSimple(schema, "+0"+huge+" -0"))
+	failure := context.ValidateSimple(schema, huge+" 1")
 	require.NotNil(t, failure)
-	assert.Equal(t, "enumeration", failure.constraint)
+	assert.Equal(t, "enumeration", failure.Constraint)
 }
 
 func TestAggregateEmptyListEnumeration(t *testing.T) {
@@ -192,12 +192,12 @@ func TestAggregateEmptyListEnumeration(t *testing.T) {
 		Base: &validationSimpleMember{Name: validationQName{Local: "integers"}}, Enumerations: []string{""}}
 	for range 3 {
 		for _, value := range []string{"", " ", "\t\n"} {
-			assert.Nil(t, context.validateSimple(schema, value))
+			assert.Nil(t, context.ValidateSimple(schema, value))
 		}
 		for _, value := range []string{"0", "1 2"} {
-			failure := context.validateSimple(schema, value)
+			failure := context.ValidateSimple(schema, value)
 			require.NotNil(t, failure)
-			assert.Equal(t, "enumeration", failure.constraint)
+			assert.Equal(t, "enumeration", failure.Constraint)
 		}
 	}
 }
@@ -209,8 +209,8 @@ func TestAggregateEnumerationCacheBound(t *testing.T) {
 			context := newTestValidationContext(&validationAggregateGenerated)
 			schema := validationAggregateGenerated.Types[validationQName{Local: name}].Simple
 			for count := 1; count <= 100; count++ {
-				context.validateSimple(schema, strings.Repeat("1 ", count))
-				assert.Len(t, context.enumerationValues, len(schema.Enumerations), "cache keys must name schema literals, never instance values")
+				context.ValidateSimple(schema, strings.Repeat("1 ", count))
+				assert.Len(t, context.EnumerationValues, len(schema.Enumerations), "cache keys must name schema literals, never instance values")
 			}
 		})
 	}
@@ -227,10 +227,10 @@ func TestAggregateUnimplementedPrimitiveEquality(t *testing.T) {
 		for _, form := range []validationSimpleForm{validationSimpleList, validationSimpleUnion} {
 			aggregate := &validationSimpleSchema{Form: form, Item: member, Members: []*validationSimpleMember{member}}
 			schema := &validationSimpleSchema{Form: validationSimpleRestriction, Base: &validationSimpleMember{Inline: aggregate}, Enumerations: []string{first}}
-			assert.Nil(t, context.validateSimple(schema, first))
-			failure := context.validateSimple(schema, second)
+			assert.Nil(t, context.ValidateSimple(schema, first))
+			failure := context.ValidateSimple(schema, second)
 			require.NotNil(t, failure)
-			assert.Equal(t, "enumeration", failure.constraint)
+			assert.Equal(t, "enumeration", failure.Constraint)
 		}
 	}
 }
@@ -240,10 +240,10 @@ func TestAggregateBuiltinListValues(t *testing.T) {
 	context := newTestValidationContext(&validationAggregateGenerated)
 	for _, builtin := range []string{"NMTOKENS", "IDREFS"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: builtin}}
-		assert.True(t, context.simpleValuesEqual(reference, " aa\tbb ", "aa bb"), builtin)
-		assert.True(t, context.elementFixedValuesEqual(reference, " aa\tbb ", "aa bb"), builtin)
-		assert.False(t, context.simpleValuesEqual(reference, "aa bb", "bb aa"), builtin)
-		assert.False(t, context.simpleValuesEqual(reference, "aa bb", "aa bb aa"), builtin)
-		assert.False(t, context.simpleValuesEqual(reference, "", ""), builtin)
+		assert.True(t, context.SimpleValuesEqual(reference, " aa\tbb ", "aa bb"), builtin)
+		assert.True(t, context.ElementFixedValuesEqual(reference, " aa\tbb ", "aa bb"), builtin)
+		assert.False(t, context.SimpleValuesEqual(reference, "aa bb", "bb aa"), builtin)
+		assert.False(t, context.SimpleValuesEqual(reference, "aa bb", "aa bb aa"), builtin)
+		assert.False(t, context.SimpleValuesEqual(reference, "", ""), builtin)
 	}
 }

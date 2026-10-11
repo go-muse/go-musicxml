@@ -72,12 +72,12 @@ func TestValidationNamespaceDeclarationDoesNotSatisfyRequiredAttribute(t *testin
 		t.Run(test.name, func(t *testing.T) {
 			context := validateAttributeSource(t, schema, test.source)
 			if !test.missing {
-				assert.Empty(t, context.issues)
+				assert.Empty(t, context.Issues)
 				return
 			}
-			require.Len(t, context.issues, 1)
-			assert.Equal(t, "required", context.issues[0].Constraint)
-			assert.Equal(t, "/value/@{xmlns}rubbish", context.issues[0].Path)
+			require.Len(t, context.Issues, 1)
+			assert.Equal(t, "required", context.Issues[0].Constraint)
+			assert.Equal(t, "/value/@{xmlns}rubbish", context.Issues[0].Path)
 		})
 	}
 }

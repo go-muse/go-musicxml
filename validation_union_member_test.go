@@ -96,7 +96,7 @@ func TestUnionMemberFlatteningImmutable(t *testing.T) {
 					require.NoError(t, err)
 					saved := snapshotValidationNode(t, node)
 					context := newTestValidationContext(&validationUnionMemberGenerated)
-					context.validateElement(node, validationUnionMemberGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
+					context.ValidateElement(node, validationUnionMemberGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
 					assertValidationIssues(t, context, test.issues)
 					assert.Equal(t, saved, snapshotValidationNode(t, node))
 				}
@@ -112,15 +112,15 @@ func TestUnionMemberFlatteningReachedLiteralCache(t *testing.T) {
 	schema := validationUnionMemberGenerated.Types[validationQName{Local: "composed-enum"}].Simple
 	skipped := validationUnionMemberGenerated.Types[validationQName{Local: "zero"}].Simple
 	for range 20 {
-		assert.Nil(t, context.validateSimple(schema, "1"))
-		failure := context.validateSimple(schema, "+01")
+		assert.Nil(t, context.ValidateSimple(schema, "1"))
+		failure := context.ValidateSimple(schema, "+01")
 		require.NotNil(t, failure)
-		assert.Equal(t, "enumeration", failure.constraint)
-		assert.Len(t, context.enumerationValues, 1)
-		_, found := context.enumerationValues[validationEnumerationKey{schema: skipped, index: 0}]
+		assert.Equal(t, "enumeration", failure.Constraint)
+		assert.Len(t, context.EnumerationValues, 1)
+		_, found := context.EnumerationValues[validationEnumerationKey{Schema: skipped, Index: 0}]
 		assert.False(t, found, "flattened union-wrapper facets are not reached")
 	}
 	// The same restricted union remains operative when directly assessed.
-	assert.Nil(t, context.validateSimple(skipped, "0"))
-	assert.Len(t, context.enumerationValues, 2)
+	assert.Nil(t, context.ValidateSimple(skipped, "0"))
+	assert.Len(t, context.EnumerationValues, 2)
 }

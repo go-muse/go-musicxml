@@ -1,4 +1,4 @@
-package musicxml
+package xsd
 
 import (
 	"fmt"
@@ -11,13 +11,13 @@ import (
 // input's storage without copying or expanding a scale. Parsing and comparison
 // take linear time and constant auxiliary space; caller normalization, document
 // storage and diagnostic allocations are separate.
-type validationDecimal struct {
-	whole, fraction string
-	negative        bool
+type Decimal struct {
+	Whole, Fraction string
+	Negative        bool
 }
 
-func parseValidationDecimal(value string) (validationDecimal, bool) {
-	value = strings.Trim(value, xmlWhitespace)
+func ParseDecimal(value string) (Decimal, bool) {
+	value = strings.Trim(value, XMLWhitespace)
 	negative := false
 	if len(value) != 0 && (value[0] == '+' || value[0] == '-') {
 		negative = value[0] == '-'
@@ -31,12 +31,12 @@ func parseValidationDecimal(value string) (validationDecimal, bool) {
 			continue
 		}
 		if value[index] < '0' || value[index] > '9' {
-			return validationDecimal{}, false
+			return Decimal{}, false
 		}
 		digits++
 	}
 	if digits == 0 {
-		return validationDecimal{}, false
+		return Decimal{}, false
 	}
 	whole, fraction := value, ""
 	if point != -1 {
@@ -44,52 +44,52 @@ func parseValidationDecimal(value string) (validationDecimal, bool) {
 	}
 	whole = strings.TrimLeft(whole, "0")
 	fraction = strings.TrimRight(fraction, "0")
-	return validationDecimal{whole: whole, fraction: fraction, negative: negative && (whole != "" || fraction != "")}, true
+	return Decimal{Whole: whole, Fraction: fraction, Negative: negative && (whole != "" || fraction != "")}, true
 }
 
-func (value validationDecimal) compare(other validationDecimal) int {
-	if value.negative != other.negative {
-		if value.negative {
+func (value Decimal) Compare(other Decimal) int {
+	if value.Negative != other.Negative {
+		if value.Negative {
 			return -1
 		}
 		return 1
 	}
 	result := 0
 	switch {
-	case len(value.whole) < len(other.whole):
+	case len(value.Whole) < len(other.Whole):
 		result = -1
-	case len(value.whole) > len(other.whole):
+	case len(value.Whole) > len(other.Whole):
 		result = 1
 	default:
-		result = strings.Compare(value.whole, other.whole)
+		result = strings.Compare(value.Whole, other.Whole)
 		if result == 0 {
 			// If one fraction is a prefix, its implicit zero suffix is smaller than
 			// the other's remaining suffix, which ends in a nonzero digit.
-			result = strings.Compare(value.fraction, other.fraction)
+			result = strings.Compare(value.Fraction, other.Fraction)
 		}
 	}
-	if value.negative {
+	if value.Negative {
 		return -result
 	}
 	return result
 }
 
-func validationDecimalValuesEqual(left, right string) bool {
-	first, firstOK := parseValidationDecimal(left)
-	second, secondOK := parseValidationDecimal(right)
-	return firstOK && secondOK && first.compare(second) == 0
+func DecimalValuesEqual(left, right string) bool {
+	first, firstOK := ParseDecimal(left)
+	second, secondOK := ParseDecimal(right)
+	return firstOK && secondOK && first.Compare(second) == 0
 }
 
 // Keep bound rules and diagnostics aligned with validateIntegerBounds; parsing is domain-specific.
-func validateDecimalBounds(schema *validationSimpleSchema, value, display string) *validationSimpleFailure {
-	number, ok := parseValidationDecimal(value)
+func ValidateDecimalBounds(schema *SimpleSchema, value, display string) *SimpleFailure {
+	number, ok := ParseDecimal(value)
 	if !ok {
-		return &validationSimpleFailure{constraint: "datatype", message: fmt.Sprintf("value %q is not numeric", display)}
+		return &SimpleFailure{Constraint: "datatype", Message: fmt.Sprintf("value %q is not numeric", display)}
 	}
 	tests := []struct {
-		enabled            bool
-		constraint, limit  string
-		minimum, exclusive bool
+		Enabled            bool
+		Constraint, Limit  string
+		Minimum, Exclusive bool
 	}{
 		{schema.HasMinInclusive, "minInclusive", schema.MinInclusive, true, false},
 		{schema.HasMaxInclusive, "maxInclusive", schema.MaxInclusive, false, false},
@@ -97,16 +97,16 @@ func validateDecimalBounds(schema *validationSimpleSchema, value, display string
 		{schema.HasMaxExclusive, "maxExclusive", schema.MaxExclusive, false, true},
 	}
 	for _, test := range tests {
-		if !test.enabled {
+		if !test.Enabled {
 			continue
 		}
-		limit, ok := parseValidationDecimal(test.limit)
+		limit, ok := ParseDecimal(test.Limit)
 		if !ok {
-			return &validationSimpleFailure{constraint: "schema", message: fmt.Sprintf("invalid %s value %q", test.constraint, test.limit)}
+			return &SimpleFailure{Constraint: "schema", Message: fmt.Sprintf("invalid %s value %q", test.Constraint, test.Limit)}
 		}
-		comparison := number.compare(limit)
-		if (test.minimum && comparison < 0) || (!test.minimum && comparison > 0) || (test.exclusive && comparison == 0) {
-			return &validationSimpleFailure{constraint: test.constraint, message: fmt.Sprintf("value %q violates %s=%q", display, test.constraint, test.limit)}
+		comparison := number.Compare(limit)
+		if (test.Minimum && comparison < 0) || (!test.Minimum && comparison > 0) || (test.Exclusive && comparison == 0) {
+			return &SimpleFailure{Constraint: test.Constraint, Message: fmt.Sprintf("value %q violates %s=%q", display, test.Constraint, test.Limit)}
 		}
 	}
 	return nil

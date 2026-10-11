@@ -144,7 +144,7 @@ func TestValidateEmptyComplexContent(t *testing.T) {
 			t.Parallel()
 			context := validateAttributeSource(t, validationSchemaFor(test.schema), test.source)
 			assertValidationIssues(t, context, test.issues)
-			for _, issue := range context.issues {
+			for _, issue := range context.Issues {
 				if issue.Constraint == "element-only" {
 					assert.Equal(t, "character data is not allowed", issue.Message)
 				}
@@ -190,16 +190,16 @@ func TestEmptyComplexContentPreservesAssessment(t *testing.T) {
 			text := root.Text.String()
 			attributes := append([]validationAttribute(nil), root.Attrs...)
 			for range 2 {
-				context := &validationContext{schema: &validationNilGenerated, effective: make(map[*validationComplexSchema]*validationEffectiveComplex), identifiers: make(map[string]string)}
-				context.validateElement(root, validationNilGenerated.Elements[validationQName{Local: root.Name.Local}], "/empty-extended")
-				context.validateIdentityReferences()
+				context := &validationContext{Context: validationKernelContext{Schema: &validationNilGenerated, Effective: make(map[*validationComplexSchema]*validationEffectiveComplex), Identifiers: make(map[string]string)}}
+				context.ValidateElement(root, validationNilGenerated.Elements[validationQName{Local: root.Name.Local}], "/empty-extended")
+				context.ValidateIdentityReferences()
 				want := []string{"/empty-extended:element-only"}
 				if reference == "missing" {
 					want = append(want, "/empty-extended/@ref:IDREF")
 				}
 				assertValidationIssues(t, context, want)
-				assert.Equal(t, map[string]string{"own": "/empty-extended/@id"}, context.identifiers)
-				assert.Equal(t, []validationIdentityReference{{value: reference, path: "/empty-extended/@ref"}}, context.references)
+				assert.Equal(t, map[string]string{"own": "/empty-extended/@id"}, context.Identifiers)
+				assert.Equal(t, []validationIdentityReference{{Value: reference, Path: "/empty-extended/@ref"}}, context.References)
 				assert.Equal(t, original, source)
 				assert.Equal(t, text, root.Text.String())
 				assert.Equal(t, attributes, root.Attrs)
@@ -238,14 +238,14 @@ func TestEmptyComplexContentCategoryControls(t *testing.T) {
 		{"mixedEmpty", false, true}, {"mixedEmptyExtended", false, true},
 	} {
 		t.Run(test.typeName, func(t *testing.T) {
-			context := &validationContext{schema: &validationNilGenerated, effective: make(map[*validationComplexSchema]*validationEffectiveComplex)}
+			context := &validationContext{Context: validationKernelContext{Schema: &validationNilGenerated, Effective: make(map[*validationComplexSchema]*validationEffectiveComplex)}}
 			definition := validationNilGenerated.Types[validationQName{Local: test.typeName}]
 			require.NotNil(t, definition)
-			effective, ok := context.effectiveComplex(definition.Complex)
+			effective, ok := context.EffectiveComplex(definition.Complex)
 			require.True(t, ok)
-			assert.Equal(t, test.hasParticle, effective.particle != nil)
-			assert.Equal(t, test.mixed, effective.mixed)
-			assert.Nil(t, effective.simple)
+			assert.Equal(t, test.hasParticle, effective.Particle != nil)
+			assert.Equal(t, test.mixed, effective.Mixed)
+			assert.Nil(t, effective.Simple)
 		})
 	}
 	// An absent document child is not proof that its declared particle is empty.
