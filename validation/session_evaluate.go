@@ -7,7 +7,7 @@ import (
 
 func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final bool) error {
 	id := decisionID{rule: key, node: n.header.ID}
-	if _, done := s.decisions[id]; done {
+	if _, done := s.lookupDecision(id); done {
 		return nil
 	}
 	r := s.catalog.rules[key]
@@ -135,14 +135,57 @@ func evidenceDecision(state EvidenceState, reason Code, cause *DecisionRef, abse
 	}
 	return d
 }
+
+// lookupDecision is the only reader of per-subject outcomes. Reconstructed
+// Pass/NA results preserve their identity without retaining diagnostic payloads.
+func (s *Session) lookupDecision(id decisionID) (Decision, bool) {
+	if result := s.successful[id.rule][id.node]; result != 0 {
+		outcome := OutcomePass
+		if result == successfulNotApplicable {
+			outcome = OutcomeNotApplicable
+		}
+		return Decision{Rule: id.rule, Subject: NodeRef{s.documentID, id.node}, Outcome: outcome}, true
+	}
+	d, ok := s.decisions[id]
+	return d, ok
+}
+
 func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	id := decisionID{r.Key, n.header.ID}
-	if _, exists := s.decisions[id]; exists {
+	if _, exists := s.lookupDecision(id); exists {
 		return nil
 	}
 	d.Rule = r.Key
 	d.Subject = NodeRef{s.documentID, n.header.ID}
-	// Dependency caches need only the exact outcome and cause, not copied
+	// Once established, a finding remains authoritative even if retaining its
+	// dependency-cache entry exhausts the session buffer afterwards.
+	if err := s.accumulator.record(r, d, n.header.Location); err != nil {
+		return err
+	}
+	if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
+		results := s.successful[r.Key]
+		bytes := int64(32) // NodeID, outcome byte and conservative map allowance.
+		if results == nil {
+			bytes += int64(128 + len(r.Key.ID)) // Both map levels and per-rule state.
+		}
+		if err := s.retain(bytes); err != nil {
+			return err
+		}
+		if results == nil {
+			if s.successful == nil {
+				s.successful = make(map[RuleKey]map[NodeID]successfulOutcome)
+			}
+			results = make(map[NodeID]successfulOutcome)
+			s.successful[r.Key] = results
+		}
+		result := successfulPass
+		if d.Outcome == OutcomeNotApplicable {
+			result = successfulNotApplicable
+		}
+		results[n.header.ID] = result
+		return nil
+	}
+	// Problem dependencies retain only outcome, reason and cause, not copied
 	// attacker-controlled value text or diagnostic location lists.
 	cached := d
 	cached.Expected = ""
@@ -151,11 +194,6 @@ func (s *Session) record(r RuleDefinition, n *factNode, d Decision) error {
 	bytes := int64(384 + len(cached.Rule.ID) + len(cached.Subject.DocumentID) + len(cached.Reason))
 	if cached.Cause != nil {
 		bytes += int64(128 + len(cached.Cause.Rule.ID) + len(cached.Cause.Subject.DocumentID))
-	}
-	// Once established, a finding remains authoritative even if retaining its
-	// dependency-cache entry exhausts the session buffer afterwards.
-	if err := s.accumulator.record(r, d, n.header.Location); err != nil {
-		return err
 	}
 	if err := s.retain(bytes); err != nil {
 		return err
@@ -260,19 +298,39 @@ func (s *Session) dependency(ctx context.Context, n *factNode, dependency Depend
 		if !final {
 			return Decision{}, true, nil
 		}
+		prerequisite := s.documentPrerequisites[dependency.Rule]
+		if prerequisite == nil || !prerequisite.finalized {
+			return Decision{}, false, contract("document prerequisite", "final evaluation phase not established")
+		}
+		if prerequisite.ready {
+			return prerequisite.decision, false, nil
+		}
 		if s.catalog.rules[dependency.Rule].Scope == ScopeDocument {
-			candidates = []NodeID{s.root.header.ID}
+			if s.root != nil {
+				candidates = []NodeID{s.root.header.ID}
+			}
 		} else {
 			candidates = s.sequence
 		}
+		d, pending, err := s.scanPrerequisite(ctx, dependency, candidates, true)
+		if err == nil && !pending {
+			prerequisite.decision, prerequisite.ready = d, true
+		}
+		return d, pending, err
 	}
+	return s.scanPrerequisite(ctx, dependency, candidates, final)
+}
+
+// Keep subject-order causal priority identical for singleton and document
+// prerequisites. Only finalized document aggregates are memoized by the caller.
+func (s *Session) scanPrerequisite(ctx context.Context, dependency Dependency, candidates []NodeID, final bool) (Decision, bool, error) {
 	seenApplicable := false
 	var unresolved *Decision
 	for _, subject := range candidates {
 		if err := s.step(ctx, 1); err != nil {
 			return Decision{}, false, err
 		}
-		d, ok := s.decisions[decisionID{dependency.Rule, subject}]
+		d, ok := s.lookupDecision(decisionID{dependency.Rule, subject})
 		if !ok {
 			if !final {
 				return Decision{}, true, nil

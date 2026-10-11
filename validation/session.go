@@ -86,6 +86,23 @@ type decisionID struct {
 	node NodeID
 }
 
+// Successful outcomes do not need diagnostic payloads. Zero is deliberately not
+// a result: an absent entry must never be confused with proven non-applicability.
+type successfulOutcome uint8
+
+const (
+	successfulPass successfulOutcome = iota + 1
+	successfulNotApplicable
+)
+
+// A document prerequisite can be read only after its final evaluation phase.
+// The first actual consumer computes the aggregate; excluded consumers do not
+// cause a document scan merely because their catalog lists the prerequisite.
+type documentPrerequisite struct {
+	finalized, ready bool
+	decision         Decision
+}
+
 // Session consumes validated facts synchronously. It retains a bounded fact set
 // until Finish (not a streaming constant-memory promise). Every event error is
 // terminal; call Finish exactly once even on cancellation to release live gauges.
@@ -100,6 +117,8 @@ type Session struct {
 	sequence                []NodeID
 	stack                   []*factNode
 	decisions               map[decisionID]Decision
+	successful              map[RuleKey]map[NodeID]successfulOutcome
+	documentPrerequisites   map[RuleKey]*documentPrerequisite
 	contexts                map[ContextKey]ContextFact
 	identities              map[string]*identityIndex
 	registered              map[decisionID]bool
@@ -153,7 +172,30 @@ func (e *Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error) {
 	}
 	s.accumulator = newReportAccumulator(profile, account)
 	for _, key := range e.catalog.orders[profile.ID] {
+		if err := s.step(ctx, 1); err != nil {
+			s.cleanup()
+			return nil, &IncompleteError{Reason: "session-initialization", Cause: err}
+		}
 		rule := e.catalog.rules[key]
+		for _, dependency := range rule.Requires {
+			if err := s.step(ctx, 1); err != nil {
+				s.cleanup()
+				return nil, &IncompleteError{Reason: "session-initialization", Cause: err}
+			}
+			if dependency.Kind != DependencyRule || dependency.Relation != RelationDocument || s.documentPrerequisites[dependency.Rule] != nil {
+				continue
+			}
+			// Includes the map slot, aggregate Decision and optional causal ref.
+			// Aggregates borrow immutable strings from the owned decision cache.
+			if err := s.retain(int64(512 + len(dependency.Rule.ID))); err != nil {
+				s.cleanup()
+				return nil, err
+			}
+			if s.documentPrerequisites == nil {
+				s.documentPrerequisites = make(map[RuleKey]*documentPrerequisite)
+			}
+			s.documentPrerequisites[dependency.Rule] = &documentPrerequisite{}
+		}
 		if plan, ok := e.catalog.plans[rule.Predicate]; ok && plan.kind == planIdentityDeclare {
 			if err := s.markIdentityProvider(plan.key); err != nil {
 				s.cleanup()
@@ -398,6 +440,11 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 			if s.terminalCause != nil {
 				break
 			}
+			if !phase.registration {
+				if prerequisite := s.documentPrerequisites[phase.rule]; prerequisite != nil {
+					prerequisite.finalized = true
+				}
+			}
 		}
 	}
 	if !s.inputComplete || s.terminalCause != nil || s.enumerationIncomplete {
@@ -435,6 +482,7 @@ func (s *Session) validateCompletion(end Completion) error {
 	}
 	return nil
 }
+
 func terminalCategory(err error) DiagnosticCategory {
 	if errors.Is(err, ErrResourceLimit) {
 		return CategoryResource
@@ -459,6 +507,8 @@ func (s *Session) cleanup() {
 	s.stack = nil
 	s.root = nil
 	s.decisions = nil
+	s.successful = nil
+	s.documentPrerequisites = nil
 	s.contexts = nil
 	s.identities = nil
 	s.registered = nil
