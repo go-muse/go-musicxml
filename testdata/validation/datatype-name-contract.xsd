@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic XSD 1.0 datatype-name lexical contracts; no complete ENTITY/QName context claim. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="restricted-name"><xs:restriction base="xs:Name"><xs:minLength value="1"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="name-list"><xs:list itemType="xs:NCName"/></xs:simpleType>
+  <xs:simpleType name="name-or-number"><xs:union memberTypes="xs:NCName xs:integer"/></xs:simpleType>
+  <xs:element name="name" type="xs:Name"/>
+  <xs:element name="ncname" type="xs:NCName"/>
+  <xs:element name="nmtoken" type="xs:NMTOKEN"/>
+  <xs:element name="qname" type="xs:QName"/>
+  <xs:element name="entity" type="xs:ENTITY"/>
+  <xs:element name="entities" type="xs:ENTITIES"/>
+  <xs:element name="tokens" type="xs:NMTOKENS"/>
+  <xs:element name="restricted" type="restricted-name"/>
+  <xs:element name="inline"><xs:simpleType><xs:restriction base="xs:NCName"/></xs:simpleType></xs:element>
+  <xs:element name="list" type="name-list"/>
+  <xs:element name="union" type="name-or-number"/>
+  <xs:complexType name="name-content"><xs:simpleContent><xs:extension base="restricted-name"><xs:attribute name="code" type="xs:NCName"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:element name="content" type="name-content"/>
+  <xs:element name="attributes"><xs:complexType>
+    <xs:attribute name="name" type="xs:Name"/>
+    <xs:attribute name="ncname" type="xs:NCName"/>
+    <xs:attribute name="nmtoken" type="xs:NMTOKEN"/>
+    <xs:attribute name="qname" type="xs:QName"/>
+    <xs:attribute name="entity" type="xs:ENTITY"/>
+    <xs:attribute name="entities" type="xs:ENTITIES"/>
+    <xs:attribute name="tokens" type="xs:NMTOKENS"/>
+    <xs:attribute name="id" type="xs:ID"/>
+    <xs:attribute name="ref" type="xs:IDREF"/>
+    <xs:attribute name="refs" type="xs:IDREFS"/>
+  </xs:complexType></xs:element>
+  <xs:element name="identities"><xs:complexType><xs:sequence>
+    <xs:element name="id" type="xs:ID" minOccurs="0"/>
+    <xs:element name="ref" type="xs:IDREF" minOccurs="0"/>
+    <xs:element name="refs" type="xs:IDREFS" minOccurs="0"/>
+  </xs:sequence></xs:complexType></xs:element>
+</xs:schema>

@@ -117,11 +117,7 @@ func Validate(document Document) error {
 		validationPath("", root.Name.Local, 1),
 	)
 	context.validateIdentityReferences()
-	if len(context.issues) == 0 {
-		return nil
-	}
-
-	return &ValidationError{Issues: context.issues}
+	return context.result()
 }
 
 // Validate checks a partwise score against the MusicXML 4.0 XSD.
@@ -169,6 +165,7 @@ const (
 )
 
 type validationSimpleSchema struct {
+	Final        validationDerivation
 	Form         validationSimpleForm
 	Base         *validationSimpleMember
 	Enumerations []string
@@ -214,6 +211,8 @@ const (
 )
 
 type validationComplexSchema struct {
+	Block, Final validationDerivation
+	Abstract     bool
 	// SimpleContent is a local restriction layer. A missing scalar Base is
 	// bound to the inherited effective scalar in a per-context copy.
 	SimpleContent *validationSimpleSchema
@@ -280,20 +279,22 @@ type validationAnySchema struct {
 }
 
 type validationElementSchema struct {
-	Name      validationQName
-	Reference validationQName
-	Type      validationTypeRef
-	Default   *string
-	Fixed     *string
-	Nillable  bool
-	Abstract  bool
+	Block, Final validationDerivation
+	Name         validationQName
+	Reference    validationQName
+	Type         validationTypeRef
+	Default      *string
+	Fixed        *string
+	Nillable     bool
+	Abstract     bool
 }
 
 type validationNode struct {
-	Name     xml.Name
-	Attrs    []validationAttribute
-	Text     strings.Builder
-	Children []*validationNode
+	Namespaces map[string]string
+	Name       xml.Name
+	Attrs      []validationAttribute
+	Text       strings.Builder
+	Children   []*validationNode
 }
 
 // validationAttribute retains lexical declaration provenance because an ordinary
@@ -305,16 +306,25 @@ type validationAttribute struct {
 }
 
 type validationContext struct {
-	schema    *validationSchemaSet
-	issues    []ValidationIssue
-	effective map[*validationComplexSchema]*validationEffectiveComplex
+	assessmentErr     error
+	assessmentVersion uint64
+	typeMetadata      map[validationTypeIdentity]uint8
+	derivations       map[validationDerivationKey]bool
+	schema            *validationSchemaSet
+	issues            []ValidationIssue
+	effective         map[*validationComplexSchema]*validationEffectiveComplex
+	particleNullable  map[*validationParticleSchema]bool // prepared immutable metadata, scoped to this validation
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
 	// when enumeration literals need immutable lexical and value views.
-	simpleSemantics   map[*validationSimpleSchema]*validationSimpleSemantics
-	enumerationValues map[validationEnumerationKey]validationEnumerationValue
-	identifiers       map[string]string
-	references        []validationIdentityReference
+	simpleSemantics    map[*validationSimpleSchema]*validationSimpleSemantics
+	enumerationValues  map[validationEnumerationKey]validationEnumerationValue
+	identifiers        map[string]string
+	references         []validationIdentityReference
+	identityEntries    []validationIdentityEntry
+	identityEntrySeen  map[string]bool
+	identityIncomplete bool
+	identityBindings   map[string]*validationIdentityBindings
 }
 
 type validationIdentityReference struct {
@@ -341,6 +351,7 @@ type validationMatchResult struct {
 }
 
 type validationMatchFailure struct {
+	schema   string
 	position int
 	expected []validationQName
 }
@@ -413,7 +424,7 @@ func parseValidationDocument(source []byte) (*validationNode, error) {
 
 		switch value := token.(type) {
 		case xml.StartElement:
-			root, err := readValidationNode(decoder, tokens, value, 1)
+			root, err := readValidationNode(decoder, tokens, value, 1, map[string]string{"xml": "http://www.w3.org/XML/1998/namespace"})
 			if err != nil {
 				return nil, err
 			}
@@ -434,6 +445,7 @@ func readValidationNode(
 	tokens *wellFormedXMLTokenReader,
 	start xml.StartElement,
 	depth int,
+	namespaces map[string]string,
 ) (*validationNode, error) {
 	if depth > maximumDocumentDepth {
 		return nil, fmt.Errorf(
@@ -451,7 +463,27 @@ func readValidationNode(
 		)
 	}
 
-	result := &validationNode{Name: start.Name}
+	result := &validationNode{Name: start.Name, Namespaces: namespaces}
+	// Share unchanged scopes; clone before applying actual declaration attributes.
+	// Name expansion has already happened exactly once in the XML decoder.
+	for _, declaration := range flags {
+		if declaration {
+			result.Namespaces = make(map[string]string, len(namespaces)+len(start.Attr))
+			for prefix, uri := range namespaces {
+				result.Namespaces[prefix] = uri
+			}
+			break
+		}
+	}
+	for index, attribute := range start.Attr {
+		if flags[index] {
+			prefix := ""
+			if attribute.Name.Space == "xmlns" {
+				prefix = attribute.Name.Local
+			}
+			result.Namespaces[prefix] = attribute.Value
+		}
+	}
 	for index, attribute := range start.Attr {
 		result.Attrs = append(result.Attrs, validationAttribute{
 			Attr: attribute, NamespaceDeclaration: flags[index],
@@ -470,7 +502,7 @@ func readValidationNode(
 
 		switch value := token.(type) {
 		case xml.StartElement:
-			child, err := readValidationNode(decoder, tokens, value, depth+1)
+			child, err := readValidationNode(decoder, tokens, value, depth+1, result.Namespaces)
 			if err != nil {
 				return nil, err
 			}
@@ -518,6 +550,17 @@ func (c *validationContext) validateElement(
 	schema *validationElementSchema,
 	path string,
 ) {
+	c.validateElementOwned(node, schema, path, nil)
+}
+
+// owner is the original containing element, never an effective default-value view.
+// The returned declaration-local success is distinct from type success and from
+// independently assessed standard xsi attributes. Neither gate uses document-wide
+// issue state: a parent/sibling failure cannot erase this item's binding facts.
+func (c *validationContext) validateElementOwned(node *validationNode, schema *validationElementSchema, path string, owner *validationNode) bool {
+	original := node
+	c.validateSchemaLocationHints(node, path)
+
 	resolved, found := c.resolveElement(schema)
 	if !found {
 		c.addIssue(
@@ -525,7 +568,7 @@ func (c *validationContext) validateElement(
 			"schema",
 			"element declaration cannot be resolved",
 		)
-		return
+		return false
 	}
 	schema = resolved
 
@@ -540,19 +583,24 @@ func (c *validationContext) validateElement(
 				validationDisplayQName(schema.Name),
 			),
 		)
-		return
+		return false
 	}
 
 	if schema.Abstract {
 		c.addIssue(path, "abstract", "abstract element cannot be used")
-		return
 	}
+
+	// Nomination validity belongs to cvc-elt.4. The returned fallback type can
+	// still independently validate an ID-bearing item when nomination fails.
+	actualType, declarationValid := c.actualElementType(node, schema, path)
+	declarationValid = declarationValid && !schema.Abstract
 
 	// This is an element constraint, not a scalar constraint: validateType is
 	// also reused for complex simple-content bases whose attributes are legal.
-	simple, _, builtin, _ := c.resolveType(&schema.Type)
+	simple, _, builtin, _ := c.resolveType(actualType)
+	typeAttributesValid := true
 	if simple != nil || (builtin != "" && builtin != "anyType") {
-		c.validateSimpleElementAttributes(node, path)
+		typeAttributesValid = c.validateSimpleElementAttributes(node, path)
 	}
 
 	// xsi:nil is an xs:boolean regardless of the declared element type.
@@ -569,15 +617,19 @@ func (c *validationContext) validateElement(
 			nilled = schema.Nillable && value
 		}
 		if !schema.Nillable {
+			declarationValid = false
 			c.addIssue(nilPath, "nillable", "element is not nillable")
 		}
 	}
 
 	if nilled {
 		if schema.Fixed != nil {
+			declarationValid = false
 			c.addIssue(path, "fixed", "nil element must not have a fixed value constraint")
 		}
 		if len(node.Children) != 0 || node.Text.Len() != 0 {
+			c.skipIdentityChildren(node)
+			declarationValid = false
 			c.addIssue(path, "nillable", "nil element must not contain character data or child elements")
 		}
 	}
@@ -586,6 +638,8 @@ func (c *validationContext) validateElement(
 	// when there are no character or element children and the element is not
 	// nilled. Whitespace is character content; comments and PIs are not.
 	// Use a validation-only view: the source text and model stay unchanged.
+	defaulted := false
+	constraintBlocked := false
 	if !nilled && len(node.Children) == 0 && node.Text.Len() == 0 {
 		value := schema.Default
 		if schema.Fixed != nil {
@@ -593,19 +647,38 @@ func (c *validationContext) validateElement(
 		}
 		if value != nil {
 			// A fresh builder avoids copying strings.Builder's internal state.
-			effective := &validationNode{Name: node.Name, Attrs: node.Attrs, Children: node.Children}
-			effective.Text.WriteString(*value)
+			effective := &validationNode{Name: node.Name, Attrs: node.Attrs, Children: node.Children, Namespaces: node.Namespaces}
+			lexical := *value
+			if actualType != &schema.Type {
+				var ok bool
+				lexical, ok = c.canonicalElementConstraint(&schema.Type, *value)
+				if !ok {
+					constraintBlocked = true
+				}
+				before := c.assessmentVersion
+				if !c.elementDefaultImmediate(actualType) {
+					constraintBlocked = true
+					if c.assessmentVersion == before {
+						c.addIssue(path, "default", "value constraint is not valid for the actual content type")
+					}
+				}
+			}
+			effective.Text.WriteString(lexical)
+			defaulted = true
 			node = effective
 		}
 	}
 
-	if !nilled && schema.Fixed != nil {
+	if !nilled && !defaulted && schema.Fixed != nil {
+		beforeFixed := c.assessmentVersion
 		// XSD 1.0 cvc-elt 5.2.2.1 forbids element children independently
 		// of fixed-value equality, including for mixed content. Report the
 		// structural failure first, but keep ordinary type assessment below.
 		if len(node.Children) != 0 {
+			declarationValid = false
 			c.addIssue(path, "fixed", "element with a fixed value must not contain child elements")
-		} else if !c.elementFixedValuesEqual(&schema.Type, node.Text.String(), *schema.Fixed) {
+		} else if !c.elementConstraintEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed) {
+			declarationValid = false
 			c.addIssue(
 				path,
 				"fixed",
@@ -616,9 +689,17 @@ func (c *validationContext) validateElement(
 				),
 			)
 		}
+		declarationValid = declarationValid && c.assessmentVersion == beforeFixed
 	}
 
-	c.validateType(node, &schema.Type, path, nilled)
+	// An unavailable/invalid default blocks dependent scalar/content checks,
+	// while actual-type attribute checks remain independent.
+	typeValid := c.validateType(node, actualType, path, nilled || constraintBlocked, original) && typeAttributesValid
+	declarationValid = declarationValid && typeValid && !constraintBlocked
+	if typeValid && !nilled && !constraintBlocked {
+		c.recordElementIdentity(&schema.Type, actualType, node.Text.String(), path, owner, declarationValid)
+	}
+	return declarationValid
 }
 
 func (c *validationContext) resolveElement(
@@ -632,7 +713,7 @@ func (c *validationContext) resolveElement(
 	}
 
 	resolved, found := c.schema.Elements[schema.Reference]
-	return resolved, found
+	return resolved, found && resolved != nil
 }
 
 // nilled suppresses scalar and element content validation only. Type resolution
@@ -642,59 +723,67 @@ func (c *validationContext) validateType(
 	reference *validationTypeRef,
 	path string,
 	nilled bool,
-) {
+	subject *validationNode,
+) bool {
 	simple, complex, builtin, found := c.resolveType(reference)
 	if !found {
 		c.addIssue(path, "schema", "type declaration cannot be resolved")
-		return
+		return false
+	}
+
+	if !c.validTypeMetadata(validationTypeIdentity{simple: simple, complex: complex, builtin: builtin}) {
+		return false
 	}
 
 	switch {
 	case simple != nil:
 		if nilled {
-			return
+			return true
 		}
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				path,
 				"simple-content",
 				"simple value must not contain child elements",
 			)
-			return
+			return false
 		}
 		if failure := c.validateSimple(simple, node.Text.String()); failure != nil {
 			c.addIssue(path, failure.constraint, failure.message)
 		} else {
-			c.recordIdentity(reference, node.Text.String(), path)
+			return true
 		}
 
 	case complex != nil:
-		c.validateComplex(node, complex, path, nilled)
+		return c.validateComplex(node, complex, path, nilled, subject)
 
 	case builtin == "anyType":
-		return
+		return true
 
 	case builtin != "":
 		if nilled {
-			return
+			return true
 		}
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				path,
 				"simple-content",
 				"simple value must not contain child elements",
 			)
-			return
+			return false
 		}
-		if failure := validateBuiltin(builtin, node.Text.String()); failure != nil {
+		if _, failure := c.assessBuiltinValue(builtin, node.Text.String(), node.Text.String()); failure != nil {
 			c.addIssue(path, failure.constraint, failure.message)
 		} else {
-			c.recordIdentity(reference, node.Text.String(), path)
+			return true
 		}
 
 	default:
 		c.addIssue(path, "schema", "unsupported type declaration")
 	}
+	return false
 }
 
 func (c *validationContext) resolveType(
@@ -708,6 +797,9 @@ func (c *validationContext) resolveType(
 	if reference == nil {
 		return nil, nil, "", false
 	}
+	if reference.InlineSimple != nil && reference.InlineComplex != nil {
+		return nil, nil, "", false
+	}
 	if reference.InlineSimple != nil {
 		return reference.InlineSimple, nil, "", true
 	}
@@ -718,7 +810,7 @@ func (c *validationContext) resolveType(
 		return nil, nil, "", false
 	}
 	if reference.Name.Space == validationXSDNamespace {
-		return nil, nil, reference.Name.Local, true
+		return nil, nil, reference.Name.Local, validationBuiltinSemantics(reference.Name.Local) != nil
 	}
 
 	resolved, found := c.schema.Types[reference.Name]
@@ -734,36 +826,47 @@ func (c *validationContext) validateComplex(
 	schema *validationComplexSchema,
 	path string,
 	nilled bool,
-) {
+	subject *validationNode,
+) bool {
+	if schema.Abstract {
+		c.addIssue(path, "abstract", "abstract type cannot be used")
+	}
 	effective, ok := c.effectiveComplex(schema)
 	if !ok {
 		c.addIssue(path, "schema", "complex type cannot be resolved")
-		return
+		return false
 	}
 
-	c.validateAttributes(
-		node,
+	attributesValid := c.validateAttributes(
+		subject,
 		effective.attributes,
 		effective.anyAttribute,
 		path,
 	)
+	if schema.Abstract {
+		// Attribute declarations are independently assessable even when their
+		// owner's actual type is abstract. Content recovery remains separate.
+		c.skipIdentityChildren(node)
+		return false
+	}
 	if nilled {
-		return
+		return attributesValid
 	}
 
 	if effective.simple != nil {
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				path,
 				"simple-content",
 				"simple-content value must not contain child elements",
 			)
-			return
+			return false
 		}
-		c.validateType(node, effective.simple, path, false)
-		return
+		return c.validateType(node, effective.simple, path, false, subject) && attributesValid
 	}
 
+	contentValid := true
 	// XSD 1.0 cvc-complex-type 2.1 forbids every character in empty
 	// content; 2.3 permits XML S in element-only content. An absent
 	// effective particle identifies the empty types represented here, not
@@ -776,10 +879,12 @@ func (c *validationContext) validateComplex(
 			"element-only",
 			"character data is not allowed",
 		)
+		contentValid = false
 	}
 
 	if effective.particle == nil {
 		if len(node.Children) != 0 {
+			c.identityIncomplete = true
 			c.addIssue(
 				validationChildPath(path, node.Children[0], 1),
 				"content-model",
@@ -789,7 +894,7 @@ func (c *validationContext) validateComplex(
 				),
 			)
 		}
-		return
+		return attributesValid && contentValid && len(node.Children) == 0
 	}
 
 	result, failure, matched := c.matchParticle(
@@ -798,9 +903,10 @@ func (c *validationContext) validateComplex(
 		0,
 	)
 	if !matched || result.next != len(node.Children) {
+		c.skipIdentityChildren(node)
 		if !matched {
 			c.addContentIssue(node, path, failure)
-			return
+			return false
 		}
 
 		index := result.next
@@ -812,17 +918,21 @@ func (c *validationContext) validateComplex(
 				validationDisplayName(node.Children[index].Name),
 			),
 		)
-		return
+		return false
 	}
 
 	paths := validationChildPaths(path, node.Children)
 	for _, match := range result.elements {
-		c.validateElement(
+		if !c.validateElementOwned(
 			node.Children[match.index],
 			match.schema,
 			paths[match.index],
-		)
+			subject,
+		) {
+			contentValid = false
+		}
 	}
+	return attributesValid && contentValid
 }
 
 func (c *validationContext) effectiveComplex(
@@ -877,10 +987,9 @@ func (c *validationContext) effectiveComplex(
 				base.attributes,
 				result.attributes,
 			)
-			result.anyAttribute = mergeValidationAnyAttribute(
-				base.anyAttribute,
-				result.anyAttribute,
-			)
+			if schema.Form == validationComplexSimpleContentExtension {
+				result.anyAttribute = mergeValidationAnyAttribute(base.anyAttribute, result.anyAttribute)
+			}
 			result.mixed = result.mixed || base.mixed
 		default:
 			return nil, false
@@ -929,6 +1038,24 @@ func (c *validationContext) effectiveComplex(
 		return result, true
 
 	case validationComplexComplexContentRestriction:
+		_, baseComplex, builtin, found := c.resolveType(schema.Base)
+		if !found {
+			return nil, false
+		}
+		if builtin == "anyType" {
+			return result, true
+		}
+		if baseComplex == nil {
+			return nil, false
+		}
+		base, ok := c.effectiveComplex(baseComplex)
+		if !ok {
+			return nil, false
+		}
+		// Attribute uses omitted by restriction are inherited; explicit local
+		// uses (including prohibited ones) replace the corresponding base uses.
+		result.attributes = mergeValidationAttributes(base.attributes, result.attributes)
+		// Content and wildcard constraints belong to the restriction itself.
 		return result, true
 
 	default:
@@ -989,12 +1116,9 @@ func validationSequence(
 	}
 }
 
-// validationStandardXSIName recognizes the standard schema-instance names
-// exempted by XSD 1.0 cvc-type 3.1.1 and cvc-complex-type 3. allowType preserves
-// the current simple/complex name-allowance difference: permitting xsi:type on
-// simple elements does not resolve or apply that type. xsi:nil is checked by
-// validateElement; hint values and xsi:type semantics remain separate work.
-// Hints never select or fetch a schema here.
+// validationStandardXSIName recognizes standard schema-instance names permitted
+// by cvc-type and cvc-complex-type. validateElement checks type, nil and hint
+// values; hints do not select or fetch schemas.
 func validationStandardXSIName(name xml.Name, allowType bool) bool {
 	if name.Space != validationXSINamespace {
 		return false
@@ -1010,9 +1134,10 @@ func validationStandardXSIName(name xml.Name, allowType bool) bool {
 
 // validateSimpleElementAttributes enforces XSD 1.0 cvc-type 3.1.1. The four
 // standard xsi names are permitted here; validateElement separately checks
-// xsi:nil. Hint-value and xsi:type semantics remain separate work.
+// xsi:nil, xsi:type and hint datatypes.
 // https://www.w3.org/TR/xmlschema-1/#cvc-type
-func (c *validationContext) validateSimpleElementAttributes(node *validationNode, path string) {
+func (c *validationContext) validateSimpleElementAttributes(node *validationNode, path string) bool {
+	valid := true
 	for _, attribute := range node.Attrs {
 		if validationNamespaceDeclaration(attribute) {
 			continue
@@ -1020,12 +1145,14 @@ func (c *validationContext) validateSimpleElementAttributes(node *validationNode
 		if validationStandardXSIName(attribute.Name, true) {
 			continue
 		}
+		valid = false
 		c.addIssue(
 			validationAttributePath(path, attribute.Name),
 			"attribute",
 			"attribute is not allowed",
 		)
 	}
+	return valid
 }
 
 func (c *validationContext) validateAttributes(
@@ -1033,7 +1160,8 @@ func (c *validationContext) validateAttributes(
 	schemas []validationAttributeSchema,
 	anyAttribute *validationAnyAttributeSchema,
 	path string,
-) {
+) bool {
+	valid := true
 	known := make(map[validationQName]validationAttributeSchema, len(schemas))
 	present := make(map[validationQName]xml.Attr, len(node.Attrs))
 	for _, schema := range schemas {
@@ -1044,7 +1172,7 @@ func (c *validationContext) validateAttributes(
 		if validationNamespaceDeclaration(attribute) {
 			continue
 		}
-		if validationStandardXSIName(attribute.Name, false) {
+		if validationStandardXSIName(attribute.Name, true) {
 			continue
 		}
 
@@ -1054,6 +1182,7 @@ func (c *validationContext) validateAttributes(
 			if validationAnyAttributeAllows(anyAttribute, attribute.Name) {
 				continue
 			}
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				"attribute",
@@ -1064,6 +1193,7 @@ func (c *validationContext) validateAttributes(
 		present[name] = attribute.Attr
 
 		if schema.Use == validationAttributeProhibited {
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				"prohibited",
@@ -1072,13 +1202,17 @@ func (c *validationContext) validateAttributes(
 			continue
 		}
 
+		attributeValid := true
+		beforeFixed := c.assessmentVersion
 		if schema.Constraint != nil &&
 			schema.Constraint.Kind == "fixed" &&
 			!c.simpleValuesEqual(
 				&schema.Type,
 				attribute.Value,
 				schema.Constraint.Value,
-			) {
+			) && c.assessmentVersion == beforeFixed {
+			attributeValid = false
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				"fixed",
@@ -1090,21 +1224,26 @@ func (c *validationContext) validateAttributes(
 			)
 		}
 
+		if c.assessmentVersion != beforeFixed {
+			attributeValid = false
+			valid = false
+		}
 		if failure := c.validateSimpleType(
 			&schema.Type,
 			attribute.Value,
 		); failure != nil {
+			valid = false
 			c.addIssue(
 				validationAttributePath(path, attribute.Name),
 				failure.constraint,
 				failure.message,
 			)
 		} else {
-			c.recordIdentity(
-				&schema.Type,
-				attribute.Value,
-				validationAttributePath(path, attribute.Name),
-			)
+			attributePath := validationAttributePath(path, attribute.Name)
+			if attributeValid {
+				c.recordIdentity(&schema.Type, attribute.Value, attributePath)
+			}
+			c.recordIdentityBinding(&schema.Type, attribute.Value, attributePath, node)
 		}
 	}
 
@@ -1116,12 +1255,14 @@ func (c *validationContext) validateAttributes(
 			continue
 		}
 
+		valid = false
 		c.addIssue(
 			validationAttributeQNamePath(path, schema.Name),
 			"required",
 			"required attribute is missing",
 		)
 	}
+	return valid
 }
 
 func (c *validationContext) validateSimpleType(
@@ -1130,15 +1271,16 @@ func (c *validationContext) validateSimpleType(
 ) *validationSimpleFailure {
 	simple, complex, builtin, found := c.resolveType(reference)
 	if !found || complex != nil {
-		return &validationSimpleFailure{
-			constraint: "schema",
-			message:    "simple type cannot be resolved",
-		}
+		return c.incompleteFailure("simple type cannot be resolved")
+	}
+	if !c.validTypeMetadata(validationTypeIdentity{simple: simple, builtin: builtin}) {
+		return c.assessmentFailure("simple type metadata incomplete")
 	}
 	if simple != nil {
 		return c.validateSimple(simple, value)
 	}
-	return validateBuiltin(builtin, value)
+	_, failure := c.assessBuiltinValue(builtin, value, value)
+	return failure
 }
 
 func (c *validationContext) simpleValuesEqual(
@@ -1153,10 +1295,13 @@ func (c *validationContext) simpleValuesEqual(
 		// issue is retained until diagnostic deduplication is addressed.
 		return false
 	}
-	if semantics.aggregate() {
+	if semantics.aggregate() || semantics.builtin == "boolean" || semantics.builtin == "anyURI" {
 		return c.aggregateValuesEqual(semantics, left, right)
 	}
 	builtin := semantics.builtin
+	if builtin == "ENTITY" {
+		return c.aggregateValuesEqual(semantics, left, right)
+	}
 	if _, _, integer := validationIntegerLimits(builtin); integer {
 		return validationIntegerValuesEqual(left, right)
 	}
@@ -1173,13 +1318,15 @@ func (c *validationContext) simpleValuesEqual(
 	return normalizeValidationWhitespace(builtin, left) == normalizeValidationWhitespace(builtin, right)
 }
 
-// Atomic integer/decimal/string and their list/union aggregates compare values.
-// Other primitives retain their lexical path; mixed content compares raw text.
+// Atomic integer/decimal/string/boolean/URI and supported list/union values
+// use their value contracts. Other primitives retain their lexical path;
+// mixed content compares raw text.
 func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef, left, right string) bool {
 	_, complex, _, _ := c.resolveType(reference)
 	if complex != nil {
 		effective, ok := c.effectiveComplex(complex)
 		if !ok {
+			c.incomplete("fixed-value complex content metadata cannot be resolved")
 			return false
 		}
 		if effective.simple == nil {
@@ -1193,7 +1340,10 @@ func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef
 		// additional fixed issue alongside ordinary schema diagnostics.
 		return false
 	}
-	if semantics.aggregate() {
+	if semantics.aggregate() || semantics.builtin == "boolean" || semantics.builtin == "anyURI" {
+		return c.aggregateValuesEqual(semantics, left, right)
+	}
+	if semantics.builtin == "ENTITY" {
 		return c.aggregateValuesEqual(semantics, left, right)
 	}
 	if _, _, integer := validationIntegerLimits(semantics.builtin); integer {
@@ -1206,68 +1356,6 @@ func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef
 		return semantics.normalize(left) == semantics.normalize(right)
 	}
 	return left == right
-}
-
-func (c *validationContext) recordIdentity(
-	reference *validationTypeRef,
-	value string,
-	path string,
-) {
-	builtin := c.simpleBuiltin(reference)
-	normalized := normalizeValidationWhitespace(builtin, value)
-
-	switch builtin {
-	case "ID":
-		if firstPath, found := c.identifiers[normalized]; found {
-			c.addIssue(
-				path,
-				"ID",
-				fmt.Sprintf(
-					"duplicate ID %q; first declared at %s",
-					normalized,
-					firstPath,
-				),
-			)
-			return
-		}
-		c.identifiers[normalized] = path
-
-	case "IDREF":
-		c.references = append(
-			c.references,
-			validationIdentityReference{
-				value: normalized,
-				path:  path,
-			},
-		)
-
-	case "IDREFS":
-		for _, item := range splitValidationList(normalized) {
-			c.references = append(
-				c.references,
-				validationIdentityReference{
-					value: item,
-					path:  path,
-				},
-			)
-		}
-	}
-}
-
-func (c *validationContext) validateIdentityReferences() {
-	for _, reference := range c.references {
-		if _, found := c.identifiers[reference.value]; found {
-			continue
-		}
-		c.addIssue(
-			reference.path,
-			"IDREF",
-			fmt.Sprintf(
-				"IDREF %q does not identify an element in the document",
-				reference.value,
-			),
-		)
-	}
 }
 
 func (c *validationContext) validateSimple(
@@ -1292,7 +1380,15 @@ func (c *validationContext) validateSimpleValue(schema *validationSimpleSchema, 
 func (c *validationContext) assessSimpleValue(
 	schema *validationSimpleSchema,
 	value, display string,
-) (validationSimpleAssessment, *validationSimpleFailure) {
+) (result validationSimpleAssessment, failure *validationSimpleFailure) {
+	defer func() {
+		if failure != nil && failure.constraint == "schema" {
+			c.incomplete(failure.message)
+		}
+	}()
+	if !c.validTypeMetadata(validationTypeIdentity{simple: schema}) {
+		return validationSimpleAssessment{}, c.assessmentFailure("simple derivation metadata incomplete")
+	}
 	semantics := c.resolveSimpleSemantics(schema)
 	if semantics == nil {
 		return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "schema", message: "simple type cannot be resolved"}
@@ -1306,7 +1402,12 @@ func (c *validationContext) assessSimpleValue(
 		}
 		normalized := assessment.lexical
 		builtin := semantics.builtin
-		if len(schema.Enumerations) != 0 && !c.matchesSimpleEnumeration(schema, assessment) {
+		beforeEnumeration := c.assessmentVersion
+		enumerationMatch := len(schema.Enumerations) == 0 || c.matchesSimpleEnumeration(schema, assessment)
+		if c.assessmentVersion != beforeEnumeration {
+			return validationSimpleAssessment{}, c.assessmentFailure("enumeration literal assessment incomplete")
+		}
+		if !enumerationMatch {
 			return validationSimpleAssessment{}, &validationSimpleFailure{
 				constraint: "enumeration",
 				message: fmt.Sprintf(
@@ -1362,8 +1463,12 @@ func (c *validationContext) assessSimpleValue(
 
 	case validationSimpleUnion:
 		for _, member := range schema.Members {
-			if normalized, failure := c.assessUnionMemberValue(member, value, display); failure == nil {
+			normalized, failure := c.assessUnionMemberValue(member, value, display)
+			if failure == nil {
 				return normalized, nil
+			}
+			if validationTechnicalFailure(failure) {
+				return validationSimpleAssessment{}, failure
 			}
 		}
 		return validationSimpleAssessment{}, &validationSimpleFailure{
@@ -1405,7 +1510,7 @@ func (c *validationContext) assessSimpleMemberValue(
 ) (validationSimpleAssessment, *validationSimpleFailure) {
 	semantics := c.memberSemantics(member)
 	if semantics == nil {
-		return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "schema", message: "simple type member cannot be resolved"}
+		return validationSimpleAssessment{}, c.incompleteFailure("simple type member cannot be resolved")
 	}
 	if member.Inline != nil {
 		return c.assessSimpleValue(member.Inline, value, display)
@@ -1542,17 +1647,17 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		}
 
 	case "Name":
-		if validXMLName(normalized) {
+		if validXSDName(normalized) {
 			return nil
 		}
 
 	case "NCName", "ID", "IDREF", "ENTITY":
-		if validXMLNCName(normalized) {
+		if validXSDNCName(normalized) {
 			return nil
 		}
 
 	case "NMTOKEN":
-		if validXMLNMTOKEN(normalized) {
+		if validXSDNMTOKEN(normalized) {
 			return nil
 		}
 
@@ -1560,7 +1665,7 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		items := splitValidationList(normalized)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
-				return !validXMLNMTOKEN(item)
+				return !validXSDNMTOKEN(item)
 			}) == false {
 			return nil
 		}
@@ -1569,7 +1674,7 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		items := splitValidationList(normalized)
 		if len(items) != 0 &&
 			slices.ContainsFunc(items, func(item string) bool {
-				return !validXMLNCName(item)
+				return !validXSDNCName(item)
 			}) == false {
 			return nil
 		}
@@ -1608,7 +1713,7 @@ func validateBuiltinValue(name, value, display string) *validationSimpleFailure 
 		}
 
 	case "QName", "NOTATION":
-		if validXMLQName(normalized) {
+		if validXSDQName(normalized) {
 			return nil
 		}
 
@@ -1922,249 +2027,6 @@ func matchValidationPattern(pattern string, value string) (bool, error) {
 	return compiled.MatchString(value), nil
 }
 
-func (c *validationContext) matchParticle(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	position int,
-) (validationMatchResult, validationMatchFailure, bool) {
-	if particle == nil {
-		return validationMatchResult{next: position}, validationMatchFailure{}, true
-	}
-
-	result := validationMatchResult{next: position}
-	bestFailure := validationMatchFailure{position: position}
-	count := uint64(0)
-	maximum := particle.Occurrence.Max
-	if particle.Occurrence.Unbounded {
-		maximum = uint64(len(children) + 1)
-	}
-
-	for count < maximum {
-		next, failure, matched := c.matchParticleBody(
-			particle,
-			children,
-			result.next,
-		)
-		if !matched {
-			bestFailure = betterValidationFailure(bestFailure, failure)
-			break
-		}
-		if next.next == result.next {
-			// A required sequence whose children are all optional represents
-			// one valid empty occurrence. Count it once, then stop so an
-			// unbounded empty particle cannot loop forever.
-			count++
-			break
-		}
-
-		result.next = next.next
-		result.elements = append(result.elements, next.elements...)
-		count++
-	}
-
-	if count < particle.Occurrence.Min {
-		if len(bestFailure.expected) == 0 {
-			bestFailure.expected = validationParticleFirstNames(particle)
-		}
-		bestFailure.position = max(bestFailure.position, result.next)
-		return validationMatchResult{}, bestFailure, false
-	}
-
-	return result, bestFailure, true
-}
-
-func (c *validationContext) matchParticleBody(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	position int,
-) (validationMatchResult, validationMatchFailure, bool) {
-	switch particle.Kind {
-	case validationParticleElement:
-		element, found := c.resolveElement(particle.Element)
-		if !found {
-			return validationMatchResult{}, validationMatchFailure{
-				position: position,
-			}, false
-		}
-		if position >= len(children) ||
-			validationName(children[position].Name) != element.Name {
-			return validationMatchResult{}, validationMatchFailure{
-				position: position,
-				expected: []validationQName{element.Name},
-			}, false
-		}
-
-		return validationMatchResult{
-			next: position + 1,
-			elements: []validationElementMatch{{
-				index:  position,
-				schema: element,
-			}},
-		}, validationMatchFailure{}, true
-
-	case validationParticleSequence:
-		result := validationMatchResult{next: position}
-		bestFailure := validationMatchFailure{position: position}
-		for _, child := range particle.Children {
-			next, failure, matched := c.matchParticle(
-				child,
-				children,
-				result.next,
-			)
-			bestFailure = betterValidationFailure(bestFailure, failure)
-			if !matched {
-				return validationMatchResult{}, bestFailure, false
-			}
-			result.next = next.next
-			result.elements = append(
-				result.elements,
-				next.elements...,
-			)
-		}
-		return result, bestFailure, true
-
-	case validationParticleChoice:
-		bestFailure := validationMatchFailure{position: position}
-		var empty *validationMatchResult
-		for _, child := range particle.Children {
-			result, failure, matched := c.matchParticle(
-				child,
-				children,
-				position,
-			)
-			bestFailure = betterValidationFailure(bestFailure, failure)
-			if !matched {
-				continue
-			}
-			if result.next > position {
-				return result, bestFailure, true
-			}
-			if empty == nil {
-				copy := result
-				empty = &copy
-			}
-		}
-		if empty != nil {
-			return *empty, bestFailure, true
-		}
-		if len(bestFailure.expected) == 0 {
-			bestFailure.expected = validationParticleFirstNames(particle)
-		}
-		return validationMatchResult{}, bestFailure, false
-
-	case validationParticleAll:
-		return c.matchAllParticle(particle, children, position)
-
-	case validationParticleAny:
-		if position >= len(children) {
-			return validationMatchResult{}, validationMatchFailure{
-				position: position,
-			}, false
-		}
-		return validationMatchResult{
-			next: position + 1,
-		}, validationMatchFailure{}, true
-
-	default:
-		return validationMatchResult{}, validationMatchFailure{
-			position: position,
-		}, false
-	}
-}
-
-func (c *validationContext) matchAllParticle(
-	particle *validationParticleSchema,
-	children []*validationNode,
-	position int,
-) (validationMatchResult, validationMatchFailure, bool) {
-	result := validationMatchResult{next: position}
-	used := make([]bool, len(particle.Children))
-
-	for result.next < len(children) {
-		matchedChild := false
-		for index, child := range particle.Children {
-			if used[index] {
-				continue
-			}
-			next, _, matched := c.matchParticle(
-				child,
-				children,
-				result.next,
-			)
-			if !matched || next.next == result.next {
-				continue
-			}
-
-			used[index] = true
-			result.next = next.next
-			result.elements = append(
-				result.elements,
-				next.elements...,
-			)
-			matchedChild = true
-			break
-		}
-		if !matchedChild {
-			break
-		}
-	}
-
-	var expected []validationQName
-	for index, child := range particle.Children {
-		if used[index] || child.Occurrence.Min == 0 {
-			continue
-		}
-		expected = append(
-			expected,
-			validationParticleFirstNames(child)...,
-		)
-	}
-	if len(expected) != 0 {
-		return validationMatchResult{}, validationMatchFailure{
-			position: result.next,
-			expected: expected,
-		}, false
-	}
-
-	return result, validationMatchFailure{}, true
-}
-
-func validationParticleFirstNames(
-	particle *validationParticleSchema,
-) []validationQName {
-	if particle == nil {
-		return nil
-	}
-
-	switch particle.Kind {
-	case validationParticleElement:
-		if particle.Element == nil {
-			return nil
-		}
-		if particle.Element.Reference.Local != "" {
-			return []validationQName{particle.Element.Reference}
-		}
-		return []validationQName{particle.Element.Name}
-	case validationParticleAll, validationParticleChoice:
-		var result []validationQName
-		for _, child := range particle.Children {
-			result = append(result, validationParticleFirstNames(child)...)
-		}
-		return uniqueValidationNames(result)
-	case validationParticleSequence:
-		var result []validationQName
-		for _, child := range particle.Children {
-			result = append(result, validationParticleFirstNames(child)...)
-			if child.Occurrence.Min > 0 {
-				break
-			}
-		}
-		return uniqueValidationNames(result)
-	default:
-		return nil
-	}
-}
-
 func betterValidationFailure(
 	left validationMatchFailure,
 	right validationMatchFailure,
@@ -2176,7 +2038,7 @@ func betterValidationFailure(
 		return left
 	default:
 		left.expected = uniqueValidationNames(
-			append(left.expected, right.expected...),
+			slices.Concat(left.expected, right.expected),
 		)
 		return left
 	}
@@ -2212,6 +2074,10 @@ func (c *validationContext) addContentIssue(
 	path string,
 	failure validationMatchFailure,
 ) {
+	if failure.schema != "" {
+		c.addIssue(path, "schema", failure.schema)
+		return
+	}
 	position := min(failure.position, len(node.Children))
 	expected := validationExpectedNames(failure.expected)
 
@@ -2254,6 +2120,12 @@ func (c *validationContext) addIssue(
 	constraint string,
 	message string,
 ) {
+	if constraint == "schema" || constraint == "assessment" {
+		if constraint == "schema" || c.assessmentErr == nil {
+			c.incomplete(path + ": " + message)
+		}
+		return
+	}
 	c.issues = append(c.issues, ValidationIssue{
 		Path:       path,
 		Constraint: constraint,

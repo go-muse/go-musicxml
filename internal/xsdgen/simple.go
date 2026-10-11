@@ -31,6 +31,7 @@ type SimpleTypePlan struct {
 type SimpleTypeDefinition struct {
 	Form         SimpleTypeForm
 	Source       *SimpleType
+	Final        derivationSet
 	Base         *SimpleTypeMember
 	Enumerations []EnumerationPlan
 	Members      []SimpleTypeMember
@@ -156,14 +157,25 @@ func (p *simpleTypePlanner) plan(
 		)
 	}
 
+	_, fallback := schemaDerivationDefaults(p.file)
+	final, err := effectiveDerivations(source.Final, fallback, simpleDerivations, schemaFinals)
+	if err != nil {
+		return nil, p.invalid(err.Error())
+	}
+	var definition *SimpleTypeDefinition
 	switch {
 	case source.Restriction != nil:
-		return p.planRestriction(source)
+		definition, err = p.planRestriction(source)
 	case source.Union != nil:
-		return p.planUnion(source)
+		definition, err = p.planUnion(source)
 	default:
-		return p.planList(source)
+		definition, err = p.planList(source)
 	}
+	if err != nil {
+		return nil, err
+	}
+	definition.Final = final
+	return definition, nil
 }
 
 func (p *simpleTypePlanner) planRestriction(
@@ -177,6 +189,10 @@ func (p *simpleTypePlanner) planRestriction(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if err := checkSimpleMemberDerivation(base, derivationRestriction); err != nil {
+		return nil, p.invalid(err.Error())
 	}
 
 	enumerations := make(
@@ -261,6 +277,12 @@ func (p *simpleTypePlanner) planUnion(
 		members = append(members, SimpleTypeMember{Inline: inline})
 	}
 
+	for index := range members {
+		if err := checkSimpleMemberDerivation(&members[index], derivationUnion); err != nil {
+			return nil, p.invalid(err.Error())
+		}
+	}
+
 	return &SimpleTypeDefinition{
 		Form:    SimpleTypeUnion,
 		Source:  source,
@@ -278,6 +300,10 @@ func (p *simpleTypePlanner) planList(
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if err := checkSimpleMemberDerivation(item, derivationList); err != nil {
+		return nil, p.invalid(err.Error())
 	}
 
 	return &SimpleTypeDefinition{

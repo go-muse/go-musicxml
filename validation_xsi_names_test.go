@@ -40,7 +40,7 @@ func TestValidationStandardXSIName(t *testing.T) {
 	}
 }
 
-func TestStandardXSINamePreservesTypeAllowance(t *testing.T) {
+func TestStandardXSINameChecksTypeNomination(t *testing.T) {
 	t.Parallel()
 	text := validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: "string"}}
 	for _, test := range []struct {
@@ -52,7 +52,7 @@ func TestStandardXSINamePreservesTypeAllowance(t *testing.T) {
 		{"inline simple", validationTypeRef{InlineSimple: &validationSimpleSchema{
 			Form: validationSimpleRestriction,
 			Base: &validationSimpleMember{Name: text.Name},
-		}}, true},
+		}}, false},
 		{"complex content", validationTypeRef{InlineComplex: &validationComplexSchema{Form: validationComplexDirect}}, false},
 		{"complex simple content", validationTypeRef{InlineComplex: &validationComplexSchema{
 			Form: validationComplexSimpleContentExtension, Base: &text,
@@ -63,8 +63,7 @@ func TestStandardXSINamePreservesTypeAllowance(t *testing.T) {
 			schema := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{
 				{Local: "value"}: {Name: validationQName{Local: "value"}, Type: test.reference},
 			}}
-			// This compatibility check is about name allowance only, not QName
-			// resolution or substitution of the requested type.
+			// The name is permitted on every type; an invalid nomination has its own constraint.
 			source := `<value xmlns:i="` + validationXSINamespace + `" xmlns:xs="` + validationXSDNamespace + `" i:type="xs:string" i:schemaLocation="urn:example schema.xsd" i:noNamespaceSchemaLocation="schema.xsd"/>`
 			context := validateAttributeSource(t, schema, source)
 			if test.allowType {
@@ -72,7 +71,7 @@ func TestStandardXSINamePreservesTypeAllowance(t *testing.T) {
 				return
 			}
 			require.Len(t, context.issues, 1)
-			assert.Equal(t, "attribute", context.issues[0].Constraint)
+			assert.Equal(t, "xsi:type", context.issues[0].Constraint)
 			assert.Equal(t, "/value/@{"+validationXSINamespace+"}type", context.issues[0].Path)
 		})
 	}

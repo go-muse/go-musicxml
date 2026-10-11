@@ -228,6 +228,9 @@ func (i *Index) addFile(file *SchemaFile) error {
 	if file == nil || file.Schema == nil || file.Path == "" {
 		return ErrInvalidSchemaFile
 	}
+	if err := validateSchemaDerivations(file.Schema); err != nil {
+		return fmt.Errorf("%w: %s: %w", ErrInvalidSchemaFile, file.Path, err)
+	}
 
 	namespace := file.Schema.TargetNamespace
 

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Original XSD 1.0 fixtures for declaration-seeded entries and actual-ID owner bindings. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="RestrictedID"><xs:restriction base="xs:ID"><xs:pattern value="T[0-9]+"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="RestrictedRef"><xs:restriction base="xs:IDREF"><xs:pattern value="T[0-9]+"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="RestrictedRefs"><xs:restriction base="xs:IDREFS"><xs:length value="2"/></xs:restriction></xs:simpleType>
+  <xs:simpleType name="IDUnion"><xs:union memberTypes="xs:ID xs:integer"/></xs:simpleType>
+  <xs:simpleType name="IDList"><xs:list itemType="xs:ID"/></xs:simpleType>
+  <xs:simpleType name="RefUnion"><xs:union memberTypes="xs:IDREF xs:integer"/></xs:simpleType>
+  <xs:simpleType name="RefList"><xs:list itemType="xs:IDREF"/></xs:simpleType>
+  <xs:complexType name="IDContent"><xs:simpleContent><xs:extension base="xs:ID">
+    <xs:attribute name="code" type="xs:string" use="required"/>
+    <xs:attribute name="id" type="xs:ID"/>
+  </xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="AbstractIDContent" abstract="true"><xs:simpleContent><xs:extension base="xs:ID"/></xs:simpleContent></xs:complexType>
+  <xs:complexType name="StringContent"><xs:simpleContent><xs:extension base="xs:string"><xs:attribute name="id" type="xs:ID"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="RefContent"><xs:simpleContent><xs:extension base="xs:IDREF"/></xs:simpleContent></xs:complexType>
+  <xs:complexType name="Item"><xs:choice minOccurs="0" maxOccurs="unbounded">
+    <xs:element name="target" type="xs:string" nillable="true"/>
+    <xs:element ref="abstract-id"/>
+    <xs:element name="abstract-content" type="AbstractIDContent"/>
+    <xs:element name="nonnil" type="xs:ID"/>
+    <xs:element name="declared" type="xs:ID" nillable="true"/>
+    <xs:element name="restricted" type="RestrictedID"/>
+    <xs:element name="content" type="IDContent" nillable="true"/>
+    <xs:element name="fixed" type="xs:string" fixed="fixed"/>
+    <xs:element name="defaulted" type="xs:string" default="target"/>
+    <xs:element name="union" type="IDUnion"/>
+    <xs:element name="list" type="IDList"/>
+  </xs:choice>
+    <xs:attribute name="id" type="xs:ID"/>
+    <xs:attribute name="ref" type="xs:IDREF"/>
+    <xs:attribute name="refs" type="xs:IDREFS"/>
+    <xs:attribute name="fixed-ref" type="xs:IDREF" fixed="fixed"/>
+    <xs:attribute name="default-ref" type="xs:IDREF" default="absent"/>
+  </xs:complexType>
+  <xs:element name="root"><xs:complexType><xs:choice minOccurs="0" maxOccurs="unbounded">
+    <xs:element name="item" type="Item" nillable="true"/>
+    <xs:element name="ref" type="xs:IDREF"/>
+    <xs:element name="refs" type="xs:IDREFS"/>
+    <xs:element name="restricted-ref" type="RestrictedRef"/>
+    <xs:element name="restricted-refs" type="RestrictedRefs"/>
+    <xs:element name="content-ref" type="RefContent"/>
+    <xs:element name="fixed-ref" type="xs:IDREF" fixed="fixed"/>
+    <xs:element name="dynamic" type="xs:anySimpleType"/>
+    <xs:element name="ref-union" type="RefUnion"/>
+    <xs:element name="ref-list" type="RefList"/>
+  </xs:choice></xs:complexType></xs:element>
+  <xs:element name="id" type="xs:ID"/>
+  <xs:element name="abstract-id" type="xs:ID" abstract="true"/>
+  <xs:element name="nullable-id" type="xs:ID" nillable="true"/>
+  <xs:element name="default-content" type="StringContent" default="text"/>
+  <xs:element name="ref" type="xs:IDREF"/>
+  <xs:element name="text" type="xs:string"/>
+  <xs:element name="content" type="IDContent"/>
+</xs:schema>

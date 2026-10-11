@@ -53,5 +53,7 @@ func TestSimpleContentMixedBaseRemainsUnavailable(t *testing.T) {
 	node, err := parseValidationDocument([]byte(`<value>10</value>`))
 	require.NoError(t, err)
 	context.validateElement(node, &validationElementSchema{Name: validationQName{Local: "value"}, Type: validationTypeRef{Name: validationQName{Local: "restricted"}}}, "/value")
-	assertValidationIssues(t, context, []string{"/value:schema"})
+	assert.Error(t, context.assessmentErr)
+	assert.Empty(t, context.issues)
+	assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 }

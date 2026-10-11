@@ -61,8 +61,9 @@
   </xs:element>
   <xs:element name="default-empty" type="xs:string" default="" nillable="true"/>
   <xs:element name="default-plain" type="xs:int" default="7"/>
+  <!-- e-props-correct.2 also requires canonical integer 7 to satisfy the type. -->
   <xs:element name="default-pattern" default="07" nillable="true">
-    <xs:simpleType><xs:restriction base="xs:int"><xs:pattern value="0[0-9]"/></xs:restriction></xs:simpleType>
+    <xs:simpleType><xs:restriction base="xs:int"><xs:pattern value="0?[0-9]"/></xs:restriction></xs:simpleType>
   </xs:element>
   <xs:element name="default-content" type="simpleDerived" default="7" nillable="true"/>
   <xs:complexType name="optionalMixed" mixed="true">

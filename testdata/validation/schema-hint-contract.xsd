@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 datatype carriers for the two built-in hint declarations.
+     These ordinary attributes expose datatype checks to fixed-schema oracles
+     that do not assess the standard xsi hint values. No discovery is modeled. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:simpleType name="uri-list"><xs:list itemType="xs:anyURI"/></xs:simpleType>
+  <xs:element name="locations"><xs:complexType>
+    <xs:attribute name="value" type="uri-list"/>
+  </xs:complexType></xs:element>
+  <xs:element name="location"><xs:complexType>
+    <xs:attribute name="value" type="xs:anyURI"/>
+  </xs:complexType></xs:element>
+</xs:schema>

@@ -1,88 +1,38 @@
 package musicxml
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
 
-func validXMLName(value string) bool {
-	return validXMLNameValue(value, true)
+// XSD 1.0 datatype names use XML 1.0 Second Edition's productions, just like
+// the XSD pattern escapes \i and \c. These predicates validate scalar values;
+// they do not define the repertoire accepted by the XML document reader.
+// https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#Name
+var (
+	validationXSDNamePattern    = regexp.MustCompile(`^[` + validationXMLNameStartCharacters + `][` + validationXMLNameCharacters + `]*$`)
+	validationXSDNMTOKENPattern = regexp.MustCompile(`^[` + validationXMLNameCharacters + `]+$`)
+)
+
+func validXSDName(value string) bool {
+	return utf8.ValidString(value) && validationXSDNamePattern.MatchString(value)
 }
 
-func validXMLNCName(value string) bool {
-	return validXMLNameValue(value, false)
+func validXSDNCName(value string) bool {
+	return !strings.ContainsRune(value, ':') && validXSDName(value)
 }
 
-func validXMLNameValue(value string, allowColon bool) bool {
-	if value == "" || !utf8.ValidString(value) {
-		return false
-	}
-
-	for index, character := range value {
-		if character == ':' && !allowColon {
-			return false
-		}
-		if index == 0 {
-			if !xmlNameStartCharacter(character) {
-				return false
-			}
-			continue
-		}
-		if !xmlNameCharacter(character) {
-			return false
-		}
-	}
-
-	return true
+func validXSDNMTOKEN(value string) bool {
+	return utf8.ValidString(value) && validationXSDNMTOKENPattern.MatchString(value)
 }
 
-func validXMLNMTOKEN(value string) bool {
-	if value == "" || !utf8.ValidString(value) {
-		return false
-	}
-	for _, character := range value {
-		if !xmlNameCharacter(character) {
-			return false
-		}
-	}
-
-	return true
-}
-
-func validXMLQName(value string) bool {
+// This checks the QName lexical production only. Namespace bindings and type
+// resolution are separate context-dependent operations.
+func validXSDQName(value string) bool {
 	prefix, local, qualified := strings.Cut(value, ":")
 	if !qualified {
-		return validXMLNCName(value)
+		return validXSDNCName(value)
 	}
-
-	return validXMLNCName(prefix) && validXMLNCName(local)
-}
-
-func xmlNameStartCharacter(value rune) bool {
-	return value == ':' ||
-		value == '_' ||
-		'A' <= value && value <= 'Z' ||
-		'a' <= value && value <= 'z' ||
-		0xC0 <= value && value <= 0xD6 ||
-		0xD8 <= value && value <= 0xF6 ||
-		0xF8 <= value && value <= 0x2FF ||
-		0x370 <= value && value <= 0x37D ||
-		0x37F <= value && value <= 0x1FFF ||
-		0x200C <= value && value <= 0x200D ||
-		0x2070 <= value && value <= 0x218F ||
-		0x2C00 <= value && value <= 0x2FEF ||
-		0x3001 <= value && value <= 0xD7FF ||
-		0xF900 <= value && value <= 0xFDCF ||
-		0xFDF0 <= value && value <= 0xFFFD ||
-		0x10000 <= value && value <= 0xEFFFF
-}
-
-func xmlNameCharacter(value rune) bool {
-	return xmlNameStartCharacter(value) ||
-		value == '-' ||
-		value == '.' ||
-		'0' <= value && value <= '9' ||
-		value == 0xB7 ||
-		0x300 <= value && value <= 0x36F ||
-		0x203F <= value && value <= 0x2040
+	return validXSDNCName(prefix) && validXSDNCName(local)
 }

@@ -26,6 +26,27 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Resolve schema-instance type QNames within captured instance namespace scopes,
+  enforce supported type derivation/block/final/abstract contracts, and compose
+  actual-type assessment with nil and element value constraints. Missing required
+  metadata or ENTITY declaration facts return technical errors without inventing
+  document violations; independently proven issues remain inspectable.
+- Separate declaration-based identity-table entries from successful actual-ID
+  bindings, counting distinct containing elements. Retain dynamic-ID resolution,
+  root ownership and local validation gates without mutating source nodes.
+- Validate standard schema-location hint datatypes without fetching or selecting
+  schemas. Odd list lengths alone remain valid at this fixed-schema layer;
+  namespace/location pairing belongs to separately scoped schema discovery.
+- Apply the pinned XSD 1.0 datatype-name character repertoire independently of
+  XML reading, including Name/NCName/NMTOKEN, list and QName lexical paths.
+- Preserve distinct primitive domains in reusable scalar comparisons. Compare
+  booleans by truth value, including list/union enumeration and fixed values,
+  and apply the XSD whitespace contract to URI fixed values without resolving
+  or canonicalizing URLs. Other unverified primitive equality remains limited.
+- Match nullable repeated particles and valid repeated-group partitions without
+  greedy false rejections. Memoize child-grammar endpoints, reconstruct one
+  deterministic declaration witness, and reject malformed/cyclic particle
+  metadata without unbounded recursive matching.
 - Apply `length`, `minLength` and `maxLength` to item counts for the built-in
   XSD list types `NMTOKENS`, `IDREFS` and `ENTITIES`, including inherited
   restrictions, attributes and complex simple content.

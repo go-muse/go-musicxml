@@ -5,6 +5,11 @@ Status: **PROPOSED**. This mapping is based on repository commit
 this documentation proposal. It identifies reuse candidates and observed limits;
 it is not an implementation plan with a fixed API or an exhaustive validator audit.
 
+The [current prerequisite scope](xsd-prerequisite-scope.md) reconciles the updates
+below against merged PR 30 and the pinned XSD 1.0 specification. Earlier baseline
+limitations are historical; the later explicitly scoped updates supersede only
+their demonstrated contracts, without closing whole planned stages.
+
 ## XML-reading repair update
 
 The duplicate-attribute and DOCTYPE-placement gaps recorded below are now
@@ -486,13 +491,15 @@ The synthetic [schema](../../testdata/validation/builtin-list-contract.xsd) and
 [`validation_builtin_list_test.go`](../../validation_builtin_list_test.go) cover
 77 exact-source cases, including boundary counts, XML character references,
 split text, invalid and empty values, plus repeated/concurrent source and schema
-immutability, including explicit recursive text snapshots. Of these, 53 run
-against the identical bytes in `xmllint --nonet`. All 24 `ENTITIES` element cases
-are internal-only: libxml2 2.9.14 rejects their declared unparsed-entity values
-before it can establish the length facets. The same entity declarations and
-`ENTITIES` attribute controls pass the oracle. Entity declaration
-validation remains outside this repair. The internal fixture uses an internal
-DTD with unparsed entities and never fetches external resources.
+immutability, including explicit recursive text snapshots. In the composed
+prerequisite tree, 51 run against identical bytes in `xmllint --nonet`. All 24
+`ENTITIES` element cases and two lexically valid ENTITIES attribute cases stay
+outside complete-outcome parity. The earlier lexical-only checkpoint compared
+53 cases, but the later technical-assessment seam now explicitly reports
+incompleteness when successful ENTITY lexemes need unparsed-declaration facts.
+Lexical negatives remain provable datatype violations. The internal fixture
+retains its original DTD bytes, but the current tree does not retain those entity
+declarations and never fetches external resources.
 
 Basis: XSD 1.0 [list datatypes][scalar-list] and
 [item-count length facets][scalar-length]. This bounded existing-validator
@@ -741,7 +748,7 @@ full schema-instance semantics and machine-readable partial-implementation
 evidence remain separate work. The planning JSON's `status: planned` semantics
 are unchanged; these regressions do not complete `STAGE-DEF-01` or `STAGE-DEF-02`.
 
-## Schema-location hint name repair update
+## Schema-location hint name repair update (historical checkpoint)
 
 The existing internal validator now permits the exact expanded names
 `{http://www.w3.org/2001/XMLSchema-instance}schemaLocation` and
@@ -780,7 +787,7 @@ helper modes across exact/case-variant/unknown names and matching/unqualified/
 foreign namespace URIs, plus the preserved `xsi:type` name allowance on builtin,
 inline simple, complex and complex simple-content types.
 
-### Deferred hint-value reconciliation
+### Hint-value reconciliation (historical deferral, resolved below)
 
 [XSD 1.0 section 3.2.7][xsi-declarations] defines `schemaLocation` as a list of
 `anyURI`, and `noNamespaceSchemaLocation` as `anyURI`.
@@ -800,6 +807,66 @@ acceptance as a compatibility requirement. Implementing hint lexical/pair
 semantics, reconciling the oracle evidence with the cited normative rules,
 full `xsi:type` handling, its interaction with nil, strict-source integration
 and checked machine-readable implementation evidence remain separate work.
+
+
+### Schema-location hint datatype repair
+
+The later prerequisite repair resolves the above deferral for the existing
+fixed-schema validator. `validation_schema_hints.go` checks the exact expanded
+standard hint names on each assessed element, before element-type branching.
+It reuses `collapseValidationWhitespace` and the reviewed `validXSDAnyURI`;
+no parallel URL policy or URI equality/canonicalization is introduced.
+`schemaLocation` is a facet-free list of `anyURI`; its empty, odd and even lengths
+are accepted when all items are legal. `noNamespaceSchemaLocation` is `anyURI`,
+including an empty value. Only XML whitespace splits list items. Invalid values
+produce one `datatype` issue per attribute at its expanded-name attribute path.
+Ordinary attribute/content errors, nil checks and source/model immutability
+remain independent. Hints perform no I/O and never select another schema.
+
+This is the reviewed fixed-schema interpretation of [section 3.2.7][xsi-declarations]
+and the separate discovery layer in [section 4.3.2][xsi-location-pairs]. The
+latter's namespace/location pairing is **not** an even-length datatype facet.
+The two conflicting planned odd-count failures, `TEST-DEF-XSI-SCHEMALOC` and
+`TEST-XSD-LANG-XSI-LOCATION`, now reflect that separation; their related
+requirements/check retain planned status, IDs, axes and source/model limits.
+Batch 8's schema-discovery/resolver owner still owes pairing tests, including an
+unmatched final URI and its discovery-specific outcome. No resolver or future
+catalog/report implementation is completed by this repair. XML reading, XSD
+assessment and MusicXML semantic validation remain separate stages.
+
+`validation_schema_hint_datatype_test.go` supplies raw-source datatype cases,
+prefix aliases/rebinding, ordinary-error interactions, nilled elements,
+anyType at the assessed-element boundary, repeated/concurrent nonmutation,
+and mandatory-XML malformed-character/duplicate-attribute controls. Existing
+name tests remain in place. The live HTTP counter in
+`TestSchemaLocationHintsDoNotFetch` now covers even/odd and malformed hints with
+ordinary failures. Public Decode still drops unsupported attributes: public
+Validate cannot recover an invalid hint discarded by Decode. This repair does
+not claim a strict-source API or new schema roots.
+
+`TestSchemaHintDatatypesAgainstSchema` is explicitly in the Linux CI selector.
+The synthetic `schema-hint-contract.xsd` declares ordinary attribute carriers
+with the same two datatypes. Internal and external validation receive the same
+original carrier bytes, including character references, with no model round trip.
+The test also checks same-byte positive standard hints. **Negative standard
+hint parity is excluded:** libxml2 2.9.14 with an explicit schema accepts the
+malformed hint values, whereas the ordinary typed carriers reject them. This is
+a known oracle assessment omission, not normative approval of those values.
+Two existing URI-grammar discrepancies are also bounded explicitly in each
+matrix: `http://host:abc` is a legal registry authority and `scheme:` is an
+illegal empty absolute URI under the reviewed RFC 2396/2732 contract. They are
+internal normative controls rather than claimed libxml2 agreement. A separately
+recorded OpenJDK 21.0.12.1 JAXP/Xerces probe agrees on all 104 exact-source hint
+and carrier documents, including those four carrier discrepancies. It does not
+add a JAXP CI dependency. No generic external-conformance closure is inferred.
+
+The datatype basis is [XSD 1.0 Part 2 anyURI][hint-anyuri] and
+[list datatypes][hint-list]; the existing URI helper retains its RFC/XLink
+provenance. Mandatory namespace-layer completeness, full anyType subtree
+assessment and strict-source integration retain their separate owners.
+
+[hint-anyuri]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#anyURI
+[hint-list]: https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#list-datatypes
 
 [xsi-name-rule]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-complex-type
 [xsi-declarations]: https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation
@@ -1077,6 +1144,104 @@ violations; public `Validate` assesses Encode/reparse output and cannot recover
 text discarded by Decode. Strict-source/direct-model adapters, full content
 category normalization and the other deferred validation contracts remain open.
 
+## XSD datatype-name repertoire repair update
+
+The existing scalar validator now uses the pinned XSD 1.0 XML 1.0 Second Edition
+name repertoire for Name, NCName, NMTOKEN, their ID/IDREF/ENTITY derivatives,
+built-in lists and QName/NOTATION lexical checks. The [name helpers](../../validation_xml_name.go)
+share the existing XSD pattern `\i`/`\c` character inventory instead of the
+broader Fifth Edition ranges. The helpers are explicitly named `validXSD*`;
+XML parsing, namespace declaration reading and permissive Decode are unchanged.
+
+Previously accepted scalar values containing U+0220, U+200C or supplementary
+U+10000 now fail their datatype contract. Multilingual letters in the pinned
+repertoire, permitted combining marks/extenders and XML whitespace normalization
+remain supported. The basis is XSD 1.0 [Name/NCName](https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#Name)
+and the referenced [Second Edition character productions](https://www.w3.org/TR/2000/REC-xml-20001006#CharClasses).
+
+The [synthetic schema](../../testdata/validation/datatype-name-contract.xsd) and
+[regressions](../../validation_datatype_name_test.go) cover atomic, restricted,
+inline, union, list, complex simple-content, element and attribute paths,
+independent character-boundary examples, production score ID/IDREF values,
+source/schema immutability and concurrent assessment.
+`TestDatatypeNamesAgainstSchema` and `TestDatatypeNamesProductionAgainstSchema`
+compare the same original XML bytes with offline xmllint and are required in
+Linux CI. All 99 source cases still execute internally. Four lexically valid
+ENTITY/ENTITIES element/attribute cases now explicitly report incomplete
+assessment because the source tree does not retain unparsed declarations;
+standalone builtin tests still prove their lexical contract. The external subset
+contains 93 cases: those four incomplete cases and two ENTITY element negatives
+remain outside complete-outcome parity. The earlier lexical-only audit's 99-case
+JAXP agreement is supplementary lexical evidence, not a claim that the current
+reader supplies ENTITY facts. Ordinary QName/NOTATION contextual validity stays
+separate; xsi:type QName binding is covered by the dynamic-type update. Planning
+statuses remain unchanged.
+## Bounded particle matching repair update
+
+[`validation_particle.go`](../../validation_particle.go) replaces the single
+locally greedy endpoint with memoized endpoint sets. A sequence can retain a
+shorter earlier match when a later occurrence needs the remaining children.
+Repetition counts remain part of intermediate states. A nullable body can pad
+its minimum with empty occurrences symbolically; consuming occurrences are
+bounded by the remaining input length and the declared finite maximum. Numeric
+min/max magnitudes never drive empty loops or allocations.
+
+Final `(particle, start)` caches retain only unique endpoints, not parse
+histories or copied element-match slices. Once the longest complete endpoint is
+selected, temporary predecessor tables reconstruct one deterministic witness;
+selected choice alternatives follow declaration order. The witness is the only
+source of child declaration bindings used for scalar assessment. Source nodes
+and schema metadata stay unchanged. Structural guards reject missing, cyclic,
+inverted-range and invalid XSD 1.0 all-group metadata. This is not a complete
+schema-validity or UPA pass, and does not authorize ambiguous-schema support.
+
+Let P be particle components, E their child edges, and N the instance child
+count. Each of the particle and body caches has at most P(N+1) entries and
+P(N+1)^2 endpoint positions. Repetition explores at most N consuming-count
+layers with N positions and N body endpoints per layer, giving O(P(N+1)^4)
+transition attempts over all keys; sequence composition adds O(E(N+1)^3).
+Failure-name merging/sorting and endpoint ordering have additional polynomial
+cost. A conservative total bound including those operations is
+O((P+E+1)^2 (N+1)^4 log(P+E+N+2)). Cached failure-name sets add at most
+O(P^2(N+1)) storage to O(P(N+1)^2) endpoint storage. Local reconstruction
+predecessors use O((P+E+1)(N+1)^2) temporary storage; only selected split
+positions remain while recursively emitting the O(N) final witness. These are
+algorithmic bounds, not public resource quotas or practical latency promises.
+
+[`validation_grammar_test.go`](../../validation_grammar_test.go) covers 52
+original-source cases and same-byte `xmllint --nonet` parity using the generated
+[`grammar-contract.xsd`](../../testdata/validation/grammar-contract.xsd): nullable
+sequence/choice with finite/unbounded repetition, zero/min/max/max+1 boundaries,
+the valid `(a{1,2}){2,2}` partition (counts 2/3/4 pass; 1/5 fail), continuation
+requiring shorter early consumption, selected scalar bindings, all-group
+ordering, inactive `maxOccurs=0` leaves sharing an active name, and repeated/concurrent nonmutation.
+[`validation_grammar_work_test.go`](../../validation_grammar_work_test.go)
+checks memo cardinality, transition/allocation growth on a repeated-range
+adversary, symbolic `MaxUint64` nullable bounds, deterministic bindings, and
+malformed/cyclic metadata. An independent whole-word enumerator compares all
+341 words of length 0–4 over four leaf names against each of seven generated
+sequence/choice grammars (2,387 combinations). Huge bounds and malformed schemas are internal
+controls, explicitly outside external parity. Invalid-UPA schemas are not used
+as positive backtracking evidence.
+
+Generic wildcard namespace/processContents behavior remains unverified and
+unchanged: the legacy wildcard consumes any child without declaration
+assessment; identity closure through accepted opaque anyType or wildcard
+paths is likewise unverified. The pinned production schemas have no element
+wildcards or all groups, while the synthetic fixture now proves the supported XSD 1.0 all
+subset. A parent content-model failure still prevents matched-child assessment.
+The later identity prerequisite records skipped-child incompleteness to suppress
+unproved empty-binding conclusions; partial-child recovery and causal resolution
+remain separate work.
+
+This is a bounded `REQ-DEF-OPS-GRAMMAR` prerequisite, not completion of
+`STAGE-DEF-04`, `REQ-DEF-BUDGET-MATCH`, or source/model adapter integration.
+`MaxRuleSteps`, cancellation, finite resource defaults, typed incomplete results
+and legacy error bridging remain reviewed budget/report dependencies. Optional
+private operation counters used by regression tests do not implement those
+contracts. This grammar algorithm alone did not change identity/default behavior;
+the later identity prerequisite supplies its separately tested fact gates.
+
 ## Reuse and adaptation
 
 | Existing component | Proposed use | Required adaptation or verification |
@@ -1239,3 +1404,100 @@ and record dependencies/capabilities separately. A mandatory predicate or contex
 fact may itself require external information. Missing required facts produce
 unknown/unsupported assessment, not automatic not-applicable or pass; applicability
 and outcomes depend on the actual document and scope.
+
+## Dynamic type prerequisite and private incomplete assessment (2026-10-11)
+
+The existing source-tree validator now resolves `xsi:type` QNames in immutable
+instance namespace scopes captured from declaration provenance. QName spelling
+uses the datatype helper; element/attribute names are not expanded a second time.
+Named types come only from the selected schema set plus checked XSD builtins;
+anonymous types use their component identity. Missing nominations are genuine
+`xsi:type` issues. Missing/cyclic required metadata instead leaves assessment
+technically incomplete. Ancestry checking excludes content edges, so recursive
+content types remain valid.
+
+`internal/xsdgen` retains effective element/complex block and final, simple final,
+and complex abstract properties, including schema defaults, explicit-empty
+overrides, and declaration ownership through imports/groups. Invalid derivation
+sets and direct type derivations prohibited by final are generation errors.
+Element final does not blanket-block dynamic types; block applies to the
+appropriate restriction/extension path, and same-type nomination remains legal.
+The checked runtime hierarchy also handles builtin bases, simple/complex
+restriction and extension, and list/union relationships.
+
+The actual type supplies attributes and content; the element declaration still
+supplies nillability, element abstractness, and its value constraint. Invalid
+nomination falls back to ordinary declared-type assessment as specified by
+cvc-elt 4, retaining independent failures. Complex-content restrictions inherit
+omitted attribute uses, while restriction wildcards remain local, including
+simple-content restrictions. True nil still requires actual-type attributes.
+XSD 1.0 declaration-type entry eligibility remains separate from actual-ID
+binding eligibility. Bindings identify distinct containing source elements, not
+ID occurrences or display paths; root content has no parent binding. Declaration
+and actual-type success have separate gates. The [current scope ledger](xsd-prerequisite-scope.md#identity-entries-bindings-and-version-disposition)
+supersedes the earlier blanket declaration-only interpretation. This does not
+add XSD 1.1 absent-default or generic constructed-member participation.
+
+For empty elements with an admitted local type, cvc-elt 5.1.1 checks Immediate
+content-category/emptiability requirements and 5.1.2 assesses the declared
+constraint's canonical lexical value against the actual type. Canonical
+integer/decimal/string-derived/boolean/URI and composed list/union paths are
+private validation-only views. Source text and generated literals remain intact.
+Other canonical families report technical incompleteness when reached; this is
+not a claim of a complete canonical/PSVI implementation. The production pinned
+schemas have no element value constraints. Existing static schema-literal
+construction is not converted into a general schema validator by this repair;
+the old patterned default fixture has been corrected under e-props-correct.2:
+pattern `0?[0-9]` admits canonical `7` and stored literal `07`, while explicit
+`+7` still fails. The original fixture's invalid schema metadata is not grounds
+for inventing an instance violation; see the prerequisite scope ledger.
+E1-56 modifies PSVI contributions and does not replace cvc-elt 5.1's validity
+conditions.
+
+`validationContext.assessmentErr` is a private per-run prerequisite seam.
+`Validate` returns this technical error without `ErrInvalidDocument` when no
+violation was proved; when issues coexist, a joined error retains both the
+`ValidationError` and technical error. Source-test helpers explicitly inspect
+technical state. Contextual ENTITY/ENTITIES assessment needs unparsed entity
+declaration facts that the current tree does not retain. Lexically acceptable
+values therefore yield incomplete assessment; the standalone builtin helper
+remains lexical. Union, list, fixed and cached-enumeration paths do not swallow
+this state or manufacture a comparison failure. Required attributes and other
+independent issues survive unavailable scalar/default assessment. An incomplete
+traversal cannot prove an identity entry unbound; independently proven issues
+remain. Incomplete derivation results are not cached as ordinary false ancestry,
+so repeated lookups cannot invent an xsi:type violation.
+General DTD parsing, fetching, shared budgets, cancellation, and public report or
+session APIs are not introduced.
+
+Executable roots: `TestValidateXSIType`, `TestXSITypeAgainstSchema`,
+`TestXSITypeGeneratedMetadata`, `TestXSITypeSelectedAssembly`,
+`TestXSITypeIncompleteAssessment`, `TestEntityAssessmentDoesNotBecomeUnionFallback`,
+`TestEntityLiteralAndFixedAssessment`,
+`TestIncompleteEnumerationCacheDoesNotInventViolations`,
+`TestIncompleteIdentityTraversalDoesNotProveAbsentTarget`,
+`TestIncompleteDefaultPreservesActualAttributes`, `TestXSITypeImmutable`,
+`TestXSITypeCacheBounds`, `TestGrammarMetadataAssessmentBoundary`,
+`TestXSIQNameUsesDatatypeRepertoire`,
+`TestReferencedNilElementDeclarationIsIncomplete`, and
+`TestFixedUnresolvedComplexTypeIsIncomplete`, plus generator derivation tests. The external root is
+explicitly registered in Linux CI and runs internal assertions before oracle
+checks. Libxml2 2.9.14 differs on normalized xsi QName whitespace, canonical
+numeric defaults/fixed values, and missing IDREF enforcement; supplemental JAXP
+confirms those named normative outcomes rather than weakening them for parity.
+
+Cache evidence on restriction chains of 8, 64 and 256 types shows respectively
+11/67/259 metadata entries, 8/64/256 derivation pairs, and 8/64/256 simple-semantic
+entries. Repeated assessment adds no schema cache keys; allocation counts remain
+constant across those measured depths (see the executable cache regression). These are bounded task measurements, not a universal
+matcher/resource-budget claim. Generated schema and source immutability are
+checked under repeated and concurrent independent contexts. Future catalog,
+source/model capability binding, adapters, report semantics and stage completion
+remain deferred.
+
+Primary contracts: [cvc-elt](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cvc-elt),
+[complex derivation](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cos-ct-derived-ok),
+[simple derivation](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cos-st-derived-ok),
+[Immediate default validity](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#cos-valid-default),
+[ID/IDREF table](https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#sic-id), and
+[E1-56](https://www.w3.org/2004/03/xmlschema-errata.html#e1-56).

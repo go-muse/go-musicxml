@@ -102,6 +102,8 @@ type ComplexTypePlan struct {
 // restriction; Base remains the distinct parent complex type declaration.
 type ComplexTypeDefinition struct {
 	Source            *ComplexType
+	Block             derivationSet
+	Final             derivationSet
 	Form              ComplexTypeForm
 	Base              *Declaration
 	SimpleContentBase *SimpleTypeDefinition
@@ -138,6 +140,8 @@ type ParticlePlan struct {
 // elements.
 type ElementPlan struct {
 	Source    *Element
+	Block     derivationSet
+	Final     derivationSet
 	Name      QName
 	Reference *Declaration
 	Type      *TypePlan
@@ -319,6 +323,16 @@ func (p *complexTypePlanner) plan(
 		)
 	}
 
+	blockDefault, finalDefault := schemaDerivationDefaults(p.file)
+	block, err := effectiveDerivations(source.Block, blockDefault, complexDerivations, elementBlocks)
+	if err != nil {
+		return nil, p.invalid(err.Error())
+	}
+	final, err := effectiveDerivations(source.Final, finalDefault, complexDerivations, schemaFinals)
+	if err != nil {
+		return nil, p.invalid(err.Error())
+	}
+
 	form := ComplexTypeDirect
 	body := bodyFromComplexType(source)
 	var base *Declaration
@@ -403,6 +417,16 @@ func (p *complexTypePlanner) plan(
 		}
 	}
 
+	if base != nil {
+		method := derivationRestriction
+		if form == ComplexTypeSimpleContentExtension || form == ComplexTypeComplexContentExtension {
+			method = derivationExtension
+		}
+		if err := checkDeclarationDerivation(base, method); err != nil {
+			return nil, p.invalid(err.Error())
+		}
+	}
+
 	particle, err := p.planBodyParticle(body)
 	if err != nil {
 		return nil, p.wrap("plan content particle", err)
@@ -448,6 +472,8 @@ func (p *complexTypePlanner) plan(
 
 	return &ComplexTypeDefinition{
 		Source:            source,
+		Block:             block,
+		Final:             final,
 		Form:              form,
 		Base:              base,
 		SimpleContentBase: simpleContentBase,
@@ -716,7 +742,14 @@ func (p *complexTypePlanner) planElement(
 		return nil, err
 	}
 
+	block, final, err := elementDerivations(p.file, source)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %w", ErrInvalidElement, err)
+	}
+
 	return &ElementPlan{
+		Block:  block,
+		Final:  final,
 		Source: source,
 		Name:   name,
 		Type:   typePlan,

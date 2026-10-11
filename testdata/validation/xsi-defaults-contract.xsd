@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" blockDefault="extension" finalDefault="extension list union">
+ <xs:complexType name="Base" block="" final=""/>
+ <xs:complexType name="Derived" block="" final=""><xs:complexContent><xs:extension base="Base"/></xs:complexContent></xs:complexType>
+ <xs:complexType name="Blocked" final=""/>
+ <xs:complexType name="BlockedChild" block="" final=""><xs:complexContent><xs:extension base="Blocked"/></xs:complexContent></xs:complexType>
+ <xs:complexType name="FinalInherited" block=""/>
+ <xs:complexType name="FinalRestricted" block=""><xs:complexContent><xs:restriction base="FinalInherited"/></xs:complexContent></xs:complexType>
+ <xs:simpleType name="FinalText"><xs:restriction base="xs:string"/></xs:simpleType>
+ <xs:simpleType name="RestrictedText"><xs:restriction base="FinalText"/></xs:simpleType>
+ <xs:element name="blocked" type="Base"/>
+ <xs:element name="clear" type="Base" block="" final=""/>
+ <xs:element name="type-blocked" type="Blocked" block=""/>
+ <xs:element name="final" type="FinalInherited" block=""/>
+ <xs:element name="simple" type="FinalText" block=""/>
+</xs:schema>

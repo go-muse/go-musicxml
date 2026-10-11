@@ -12,6 +12,8 @@ type Schema struct {
 	TargetNamespace      string            `xml:"targetNamespace,attr"`
 	ElementFormDefault   string            `xml:"elementFormDefault,attr"`
 	AttributeFormDefault string            `xml:"attributeFormDefault,attr"`
+	BlockDefault         string            `xml:"blockDefault,attr"`
+	FinalDefault         string            `xml:"finalDefault,attr"`
 	Namespaces           NamespaceBindings `xml:"-"`
 
 	Annotations     []Annotation     `xml:"http://www.w3.org/2001/XMLSchema annotation"`
@@ -69,6 +71,7 @@ type AppInfo struct {
 
 type SimpleType struct {
 	Name        string       `xml:"name,attr"`
+	Final       *string      `xml:"final,attr"`
 	Annotation  *Annotation  `xml:"http://www.w3.org/2001/XMLSchema annotation"`
 	Restriction *Restriction `xml:"http://www.w3.org/2001/XMLSchema restriction"`
 	Union       *Union       `xml:"http://www.w3.org/2001/XMLSchema union"`
@@ -124,8 +127,8 @@ type ComplexType struct {
 	Name       string      `xml:"name,attr"`
 	Mixed      bool        `xml:"mixed,attr"`
 	Abstract   bool        `xml:"abstract,attr"`
-	Block      string      `xml:"block,attr"`
-	Final      string      `xml:"final,attr"`
+	Block      *string     `xml:"block,attr"`
+	Final      *string     `xml:"final,attr"`
 	Annotation *Annotation `xml:"http://www.w3.org/2001/XMLSchema annotation"`
 
 	SimpleContent  *SimpleContent  `xml:"http://www.w3.org/2001/XMLSchema simpleContent"`
@@ -235,8 +238,8 @@ type Element struct {
 	Default           *string      `xml:"default,attr"`
 	Fixed             *string      `xml:"fixed,attr"`
 	Form              string       `xml:"form,attr"`
-	Block             string       `xml:"block,attr"`
-	Final             string       `xml:"final,attr"`
+	Block             *string      `xml:"block,attr"`
+	Final             *string      `xml:"final,attr"`
 	SubstitutionGroup string       `xml:"substitutionGroup,attr"`
 	Nillable          bool         `xml:"nillable,attr"`
 	Abstract          bool         `xml:"abstract,attr"`

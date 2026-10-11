@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// This matrix checks name permissibility, not the deferred value semantics of
-// schema-instance hints. The same original bytes are supplied to xmllint by
+// This matrix checks name permissibility. The separate datatype matrix checks
+// schema-instance hint values. The same original bytes are supplied to xmllint by
 // TestElementAttributeContractsAgainstSchema.
 func validationSchemaHintCases() []validationAttributeCase {
 	const opus = `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="score.musicxml"/></opus>`
@@ -112,17 +112,24 @@ func TestSchemaLocationHintsDoNotFetch(t *testing.T) {
 	require.EqualValues(t, 1, requests.Load(), "HTTP request counter must be live")
 	requests.Store(0)
 
-	for _, extra := range []string{"", ` rubbish="x"`} {
-		source := `<opus xmlns:i="` + validationXSINamespace + `" i:schemaLocation="urn:example ` + server.URL + `/namespaced.xsd" i:noNamespaceSchemaLocation="` + server.URL + `/opus.xsd"` + extra + `/>`
-		context := validateAttributeSource(t, &opusValidationSchema, source)
-		if extra == "" {
-			assert.Empty(t, context.issues)
-		} else {
-			require.Len(t, context.issues, 1)
-			assert.Equal(t, "attribute", context.issues[0].Constraint)
-			assert.Equal(t, "/opus/@rubbish", context.issues[0].Path)
+	for _, hint := range []struct{ suffix, constraint string }{
+		{"", ""}, {" orphan.xsd", ""}, {" %", "datatype"},
+	} {
+		for _, extra := range []string{"", ` rubbish="x"`} {
+			source := `<opus xmlns:i="` + validationXSINamespace + `" i:schemaLocation="urn:example ` + server.URL + `/namespaced.xsd` + hint.suffix + `" i:noNamespaceSchemaLocation="` + server.URL + `/opus.xsd"` + extra + `/>`
+			context := validateAttributeSource(t, &opusValidationSchema, source)
+			var issues []string
+			if hint.constraint != "" {
+				issues = append(issues, "/opus/@{"+validationXSINamespace+"}schemaLocation:datatype")
+			}
+			if extra != "" {
+				issues = append(issues, "/opus/@rubbish:attribute")
+			}
+			assertValidationIssues(t, context, issues)
 		}
 	}
+	source := `<opus xmlns:n="` + validationXSINamespace + `" n:noNamespaceSchemaLocation="` + server.URL + `/%"/>`
+	assertValidationIssues(t, validateAttributeSource(t, &opusValidationSchema, source), []string{"/opus/@{" + validationXSINamespace + "}noNamespaceSchemaLocation:datatype"})
 	assert.Zero(t, requests.Load(), "schema-location hints must not trigger HTTP requests")
 }
 
@@ -130,7 +137,7 @@ func TestSchemaLocationHintsPreservePublicModelValidation(t *testing.T) {
 	t.Parallel()
 	// Decode still drops unsupported source attributes. Neither accepting hint
 	// names internally nor public Validate adds a strict-source validation API.
-	source := `<opus xmlns:i="` + validationXSINamespace + `" i:noNamespaceSchemaLocation="https://example.invalid/opus.xsd" rubbish="x"/>`
+	source := `<opus xmlns:i="` + validationXSINamespace + `" i:noNamespaceSchemaLocation="%" rubbish="x"/>`
 	document, err := Decode(strings.NewReader(source))
 	require.NoError(t, err)
 	assert.NoError(t, Validate(document))

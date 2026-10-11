@@ -487,7 +487,7 @@
     },
     {
       "id": "REQ-DEF-XSI-SCHEMALOC",
-      "title": "Validate xsi:schemaLocation pairs without fetching",
+      "title": "Validate xsi:schemaLocation datatype without fetching",
       "role": "predicate",
       "inputs": [
         "xsi:schemaLocation lexical list"
@@ -502,7 +502,8 @@
       "normative_provenance": [
         "docs/validation/go-contracts.md",
         "docs/validation/existing-code-map.md",
-        "https://www.w3.org/TR/xmlschema-1/#Instance_Document_Constructions"
+        "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation",
+        "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc"
       ],
       "test_contracts": [
         "TEST-DEF-XSI-SCHEMALOC"
@@ -510,7 +511,8 @@
       "stage": "STAGE-DEF-02",
       "status": "planned",
       "acceptance": [
-        "Validate the standard namespace/location list contract; a hint is not a fetch instruction."
+        "Assess the built-in facet-free list(anyURI) datatype using XML whitespace; zero, odd and even item counts pass when each item is valid. A hint never changes the selected schema or causes I/O.",
+        "Retain namespace/location pair-shape handling as a separate batch 8 schema-discovery/resolver obligation under XSD 1.0 section 4.3.2, including tests for an unmatched final URI. Pair shape is not a datatype failure in this fixed-schema assessment."
       ],
       "source_bullets": [
         "DEF02-03",
@@ -535,7 +537,8 @@
       "normative_provenance": [
         "docs/validation/go-contracts.md",
         "docs/validation/existing-code-map.md",
-        "https://www.w3.org/TR/xmlschema-1/#Instance_Document_Constructions"
+        "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#xsi.schemaLocation",
+        "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#anyURI"
       ],
       "test_contracts": [
         "TEST-DEF-XSI-NONAMESPACE"
@@ -543,7 +546,7 @@
       "stage": "STAGE-DEF-02",
       "status": "planned",
       "acceptance": [
-        "Recognize the standard attribute and validate its actual datatype instead of rejecting it as unallowed or accepting all xsi values."
+        "Recognize the exact expanded attribute name and assess xs:anyURI after XML whitespace collapse, preserving empty values and valid relative/escaped/Unicode URI references. Neither this hint nor schemaLocation changes the selected schema or causes I/O."
       ],
       "source_bullets": [
         "DEF02-03",
@@ -4116,22 +4119,23 @@
       ],
       "cases": {
         "positive": [
-          "A valid namespace/location pair or multiple complete pairs passes its lexical contract."
+          "Valid URI lists with zero, one, two, three and four items pass the facet-free datatype contract, including odd counts."
         ],
         "negative": [
-          "An odd number of namespace/location tokens fails the pair contract."
+          "An invalid anyURI item at the beginning or end of the list produces an attribute-path datatype failure; multiple bad items do not require duplicate attribute diagnostics."
         ],
         "boundary": [
-          "Whitespace normalization and a reviewed empty-list boundary have explicit tests against the pinned XSD-instance contract."
+          "Only XML whitespace separates list items; NBSP, NEL and em space remain in the URI item. Empty lists and XML-whitespace-only values pass.",
+          "The later batch 8 schema-discovery/resolver owner must test complete namespace/location pairs and an unmatched final URI separately from fixed-schema datatype validity; retain that obligation without implementing a resolver here."
         ],
         "missing_fact": [
           "An unreachable hint does not produce a network failure because no lookup is attempted."
         ],
         "interaction": [
-          "Fetch spies remain unused when strict validation also encounters valid ordinary attributes."
+          "Live fetch counters remain unused for valid, odd-count and lexically invalid hints alongside ordinary valid/invalid attributes. Prefix aliases/rebinding use exact expanded names; hints do not hide ordinary errors, mutate input, or select another schema."
         ]
       },
-      "oracle": "Review against the cited pinned contracts. These are planned test specifications, not executed production tests or a new normative claim.",
+      "oracle": "XSD 1.0 Part 1 section 3.2.7 and Part 2 anyURI/list datatypes. Same original bytes support positive standard-hint and ordinary typed-carrier oracle comparisons; libxml2 fixed-schema hint assessment omits lexical failures, so its acceptance is not negative-hint validity evidence. Section 4.3.2 pairing belongs to the separately retained batch 8 discovery/resolver contract. These planning records do not claim completed source/model catalog implementation.",
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",
@@ -4155,7 +4159,7 @@
         ],
         "negative": [
           "An unbound xsi prefix is rejected by the mandatory namespace layer; recognizing noNamespaceSchemaLocation does not legalize a sibling xsi:unrecognized=\"x\" attribute.",
-          "Use candidate URI lexemes \"%\" and \"http://[invalid\" for independent pinned-XSD anyURI oracle comparison; record the oracle outcome before assigning a datatype expectation, rather than borrowing stricter generic-URL rules."
+          "Malformed percent escapes and malformed bracketed authorities fail the reviewed anyURI datatype. Verify ordinary anyURI carrier fixtures with an independent raw-source XSD oracle; fixed-schema libxml2 acceptance of the standard hint does not establish lexical validity."
         ],
         "boundary": [
           "Empty and whitespace-containing values use actual XSD anyURI behavior, not an invented generic URL validator."
@@ -4167,7 +4171,7 @@
           "Neither this hint nor schemaLocation changes the caller-selected pinned schema/profile or triggers I/O."
         ]
       },
-      "oracle": "Pinned standard xsi:noNamespaceSchemaLocation and XSD 1.0 anyURI contracts, plus independent raw-source XSD oracle. The planned malformed-URI candidates require oracle verification and are not asserted normative failures by this plan.",
+      "oracle": "Pinned XSD 1.0 Part 1 section 3.2.7 and Part 2 anyURI contracts. Same-byte ordinary anyURI carriers supply independent lexical evidence where the standard-hint oracle omits datatype assessment; bounded URI-parser discrepancies remain explicit. These planning records do not claim completed source/model catalog implementation.",
       "status": "planned",
       "axis_status": {
         "positive": "record_specific",

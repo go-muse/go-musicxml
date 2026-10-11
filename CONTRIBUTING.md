@@ -62,18 +62,58 @@ numeric element-fixed lexical discrepancy remains an internal normative case.
 Malformed and translator-unsupported patterns use separate metadata tests rather
 than weakening the valid-schema oracle. `zz_generated_builtin_list_validation_test.go` uses
 `testdata/validation/builtin-list-contract.xsd` for built-in list item-count facets.
-Its declared unparsed entities exercise attribute values; libxml2 2.9.14
-rejects the corresponding element values before length facets, so all such
-`ENTITIES` element cases remain internal. `zz_generated_aggregate_validation_test.go`
+Its declared unparsed entities expose a contextual assessment limitation: the
+current source representation does not retain those declarations. Lexically valid
+`ENTITY`/`ENTITIES` cases are now explicitly incomplete, rather than valid or
+invalid; datatype-only helpers remain lexical. These cases are excluded from
+complete-assessment parity claims. `zz_generated_aggregate_validation_test.go`
 uses `testdata/validation/aggregate-contract.xsd` for list/union enumeration and
-fixed comparisons in exact numeric and string-derived domains. Boolean and
-other primitive equality remain lexical limitations. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
+fixed comparisons in exact numeric and string-derived domains. Boolean equality and primitive domain identity are covered by the later
+primitive fixture. Other same-primitive equality limitations remain documented. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
 code map;
 empty-list enumeration is metadata-only because libxml2 cannot compile it.
 `zz_generated_union_member_validation_test.go` uses
 `testdata/validation/union-member-contract.xsd` for XSD 1.0 union-member
 flattening and its direct-restriction, list-item and atomic/list-member controls.
-All nine test schemas use the local empty catalog.
+`zz_generated_primitive_validation_test.go` uses
+`testdata/validation/primitive-value-contract.xsd` for boolean/list/union value
+identity, fixed-value equality and URI whitespace. Six explicit element-fixed
+alternate-spelling cases remain internal because libxml2 compares them lexically;
+the same-byte external subset retains attribute-fixed and negative controls.
+`zz_generated_datatype_name_validation_test.go` uses
+`testdata/validation/datatype-name-contract.xsd` for XSD 1.0 Second Edition
+name-character lexical contracts, including restricted, list, union and attribute
+paths. Contextually reached, lexically valid ENTITY/ENTITIES cases explicitly
+report incomplete assessment and are excluded from complete-outcome parity;
+standalone lexical checks remain covered. General QName/NOTATION context is
+separate from the later xsi:type-specific binding tests.
+`zz_generated_grammar_validation_test.go` uses
+`testdata/validation/grammar-contract.xsd` for nullable and repeated particle
+endpoints, deterministic declaration witnesses and XSD 1.0 all-group controls.
+Its same-byte external test is required in Linux CI. Huge occurrence bounds and
+malformed/cyclic metadata are separate internal tests, not external-schema
+parity claims.
+`zz_generated_xsi_validation_test.go` and
+`zz_generated_xsi_defaults_validation_test.go` use `xsi-type-contract.xsd` and
+`xsi-defaults-contract.xsd` for namespace-aware actual type selection, derivation,
+block/final/abstract metadata, canonical dynamic defaults, and independent
+attribute/content checks. `TestXSITypeAgainstSchema` executes internal assertions
+for every case and external checks for the comparable cases; named libxml2
+QName-whitespace, canonical-default/fixed and IDREF divergences retain exact
+source evidence plus supplemental JAXP results.
+`zz_generated_schema_hint_validation_test.go` uses
+`testdata/validation/schema-hint-contract.xsd` for ordinary attribute carriers
+of the standard hint datatypes: facet-free list(anyURI) and anyURI. Same-byte
+carrier comparisons supply lexical evidence because libxml2 fixed-schema
+validation does not assess malformed standard hint values. Exact URI-parser
+exclusions and the separately retained discovery-pairing obligation are in the
+code map. `zz_generated_identity_validation_test.go` uses
+`testdata/validation/identity-contract.xsd` for XSD 1.0 declaration-seeded ID
+entries, actual-type binding and distinct containing-element ownership. The
+same-byte oracle root runs in Linux CI; documented identity-table divergences
+retain the pinned-version expectations. The selected-member interpretation stays
+explicitly bounded in the scope ledger rather than proving generic closure. All
+test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,

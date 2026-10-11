@@ -1570,22 +1570,23 @@
       ],
       "cases": {
         "positive": [
-          "schemaLocation URI pairs and noNamespace URI."
+          "schemaLocation is a facet-free list(anyURI): valid zero-, odd- and even-item lists pass fixed-schema datatype assessment; noNamespaceSchemaLocation is anyURI."
         ],
         "negative": [
-          "Odd schemaLocation URI list."
+          "Malformed anyURI item or noNamespaceSchemaLocation value fails at its attribute path, independently of list cardinality."
         ],
         "boundary": [
-          "Empty and whitespace according to XSD."
+          "Empty values and XML whitespace follow the declared datatypes; NBSP/NEL/em space do not split list items.",
+          "Preserve batch 8 schema-discovery/resolver pair-shape tests, including an unmatched final URI, as a separate obligation under section 4.3.2; do not promote that shape into a facet on the fixed-schema datatype."
         ],
         "missing_fact": [
           "Lexeme missing."
         ],
         "interaction": [
-          "No external retrieval from hints."
+          "No external retrieval or schema selection from valid, odd-count or malformed hints; retain ordinary errors, namespace scoping and source immutability."
         ]
       },
-      "oracle": "Pinned XSD 1.0 semantics and exact source parameters; compare original-source xmllint where applicable and current-model facts separately. These are test contracts, not executed product tests.",
+      "oracle": "Pinned XSD 1.0 Part 1 section 3.2.7 and Part 2 anyURI/list semantics. Compare the same original bytes for positive standard hints and ordinary typed carriers; libxml2 fixed-schema standard-hint acceptance is not evidence for negative lexical cases. Document URI-parser exclusions. Section 4.3.2 discovery pairing stays with batch 8. These are planning contracts, not a claim of implemented source/model catalog evidence.",
       "status": "planned",
       "instantiation": "Apply every case axis to every linked record; enumerate each actual facet, branch, member and cardinality. An irrelevant axis needs a reviewed per-instance reason, never silent omission.",
       "axis_status": {

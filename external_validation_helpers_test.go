@@ -15,6 +15,7 @@ type validationSourceCase struct {
 	name, source, schema string
 	issues               []string
 	oracleComparable     bool
+	assessmentIncomplete bool
 }
 
 // wrapValidationElement assembles an original-source fixture, not serialized
@@ -62,6 +63,7 @@ func snapshotValidationSchema(t *testing.T, set *validationSchemaSet) map[string
 
 func assertValidationIssues(t *testing.T, context *validationContext, want []string) {
 	t.Helper()
+	require.NoError(t, context.assessmentErr, "assessment is incomplete, not a successful or invalid assessment")
 	var issues []string
 	for _, issue := range context.issues {
 		issues = append(issues, issue.Path+":"+issue.Constraint)

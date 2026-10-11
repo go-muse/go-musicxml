@@ -79,7 +79,16 @@ func TestValidationBuiltinSemanticsCoverage(t *testing.T) {
 			assert.Nil(t, validateBuiltinValue(test.name, test.value, test.value))
 			schema := &validationSimpleSchema{Form: validationSimpleRestriction,
 				Base: &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: test.name}}}
-			assert.Nil(t, newTestValidationContext(&validationSchemaSet{}).validateSimple(schema, test.value))
+			context := newTestValidationContext(&validationSchemaSet{})
+			failure := context.validateSimple(schema, test.value)
+			switch test.name {
+			case "anyType", "ENTITY", "ENTITIES":
+				assert.NotNil(t, failure)
+				assert.Error(t, context.assessmentErr)
+			default:
+				assert.Nil(t, failure)
+				assert.NoError(t, context.assessmentErr)
+			}
 		})
 	}
 	for _, name := range []string{"unknown", "", "String", "xs:string"} {
@@ -110,7 +119,7 @@ func TestReplaceWhitespaceConcurrent(t *testing.T) {
 	}
 }
 
-func TestUnresolvedFixedValuesRemainFailClosed(t *testing.T) {
+func TestUnresolvedFixedValuesRemainIncomplete(t *testing.T) {
 	t.Parallel()
 	broken := validationTypeRef{InlineSimple: &validationSimpleSchema{Form: validationSimpleRestriction}}
 	set := &validationSchemaSet{Elements: map[validationQName]*validationElementSchema{
@@ -127,8 +136,10 @@ func TestUnresolvedFixedValuesRemainFailClosed(t *testing.T) {
 		{"attribute", `<container code="same"/>`, "/container/@code"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			context := validateAttributeSource(t, set, test.source)
-			assertValidationIssues(t, context, []string{test.path + ":schema", test.path + ":fixed"})
+			context := assessAttributeSource(t, set, test.source)
+			assert.Error(t, context.assessmentErr)
+			assert.Empty(t, context.issues)
+			assert.NotErrorIs(t, context.result(), ErrInvalidDocument)
 		})
 	}
 }
