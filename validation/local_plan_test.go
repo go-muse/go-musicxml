@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -378,5 +379,34 @@ func TestLocalDocumentCacheBudgetAndCancellation(t *testing.T) {
 	s.account = a
 	if _, _, e = s.evaluateLocalPlan(context.Background(), root, p.local, true); !errors.Is(e, ErrResourceLimit) {
 		t.Fatalf("work limit ignored %v", e)
+	}
+}
+
+func TestLocalPlanCanonicalSetDigestAndQNameIdentity(t *testing.T) {
+	p, e := NewScalarOneOfPlan([]Atomic{localString("equals"), localString("")})
+	if e != nil {
+		t.Fatal(e)
+	}
+	q, e := NewScalarOneOfPlan([]Atomic{localString(""), localString("equals")})
+	if e != nil {
+		t.Fatal(e)
+	}
+	left, _ := json.Marshal(p.digestValue())
+	right, _ := json.Marshal(q.digestValue())
+	if string(left) != string(right) {
+		t.Errorf("set order changed digest %s != %s", left, right)
+	}
+	p, e = NewScalarOneOfPlan([]Atomic{{Kind: AtomicQName, Name: QName{Space: "a}b", Local: "c"}}})
+	if e != nil {
+		t.Fatal(e)
+	}
+	q, e = NewScalarOneOfPlan([]Atomic{{Kind: AtomicQName, Name: QName{Space: "a", Local: "b}c"}}})
+	if e != nil {
+		t.Fatal(e)
+	}
+	left, _ = json.Marshal(p.digestValue())
+	right, _ = json.Marshal(q.digestValue())
+	if string(left) == string(right) {
+		t.Fatal("different QName identities collided")
 	}
 }

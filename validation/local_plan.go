@@ -251,16 +251,30 @@ func cloneDeclarationSet(ds []DeclarationID) []DeclarationID {
 	for i, d := range ds {
 		out[i] = cloneDeclaration(d)
 	}
-	slices.SortFunc(out, func(a, b DeclarationID) int {
-		if c := strings.Compare(string(a.Assembly), string(b.Assembly)); c != 0 {
-			return c
-		}
-		if c := strings.Compare(a.OwnerOccurrence, b.OwnerOccurrence); c != 0 {
-			return c
-		}
-		return strings.Compare(a.Occurrence, b.Occurrence)
-	})
+	slices.SortFunc(out, compareLocalDeclaration)
 	return out
+}
+
+func compareLocalDeclaration(a, b DeclarationID) int {
+	if c := strings.Compare(string(a.Assembly), string(b.Assembly)); c != 0 {
+		return c
+	}
+	if c := strings.Compare(a.OwnerOccurrence, b.OwnerOccurrence); c != 0 {
+		return c
+	}
+	return strings.Compare(a.Occurrence, b.Occurrence)
+}
+func compareLocalAtomic(a, b Atomic) int {
+	if c := strings.Compare(string(a.Kind), string(b.Kind)); c != 0 {
+		return c
+	}
+	if c := strings.Compare(a.Name.Space, b.Name.Space); c != 0 {
+		return c
+	}
+	if c := strings.Compare(a.Name.Local, b.Name.Local); c != 0 {
+		return c
+	}
+	return strings.Compare(atomicDisplay(a), atomicDisplay(b))
 }
 func (p *localPlan) clone() *localPlan {
 	if p == nil {
@@ -282,6 +296,22 @@ func (p *localPlan) clone() *localPlan {
 	for i, r := range p.Requirements {
 		q.Requirements[i] = ChildValueRequirement{Child: cloneDeclaration(r.Child), Expected: cloneAtomic(r.Expected), AllowAbsent: r.AllowAbsent}
 	}
+	switch q.Operation {
+	case localScalarSet, localAttributeSet:
+		slices.SortFunc(q.Values, compareLocalAtomic)
+	case localNumberTokens:
+		slices.SortFunc(q.Values[2:], compareLocalAtomic)
+	}
+	slices.SortFunc(q.Triggers, func(a, b AttributeSelector) int {
+		if c := compareLocalDeclaration(a.Declaration, b.Declaration); c != 0 {
+			return c
+		}
+		if c := strings.Compare(a.Name.Space, b.Name.Space); c != 0 {
+			return c
+		}
+		return strings.Compare(a.Name.Local, b.Name.Local)
+	})
+	slices.SortFunc(q.Requirements, func(a, b ChildValueRequirement) int { return compareLocalDeclaration(a.Child, b.Child) })
 	return &q
 }
 func (p *localPlan) digest() any {
@@ -291,6 +321,7 @@ func (p *localPlan) digest() any {
 	type value struct {
 		Kind  AtomicKind
 		Value string
+		Name  QName
 	}
 	type requirement struct {
 		Child       DeclarationID
@@ -308,14 +339,20 @@ func (p *localPlan) digest() any {
 		Requirements []requirement
 	}{Operation: p.Operation, Children: p.Children, Attribute: p.Attribute, Triggers: p.Triggers, Owner: p.Owner, Relation: p.Relation}
 	for _, v := range p.Values {
-		out.Values = append(out.Values, value{v.Kind, atomicDisplay(v)})
+		out.Values = append(out.Values, value{v.Kind, localDigestText(v), v.Name})
 	}
 	for _, r := range p.Requirements {
-		out.Requirements = append(out.Requirements, requirement{r.Child, value{r.Expected.Kind, atomicDisplay(r.Expected)}, r.AllowAbsent})
+		out.Requirements = append(out.Requirements, requirement{r.Child, value{r.Expected.Kind, localDigestText(r.Expected), r.Expected.Name}, r.AllowAbsent})
 	}
 	return out
 }
 
+func localDigestText(a Atomic) string {
+	if a.Kind == AtomicQName {
+		return ""
+	}
+	return atomicDisplay(a)
+}
 func localGap[T any](e Evidence[T]) Decision {
 	return evidenceDecision(e.State, e.Reason, e.Cause, false)
 }

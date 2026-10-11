@@ -95,7 +95,7 @@ func (p *referencePlan) clone() *referencePlan {
 		q.OwnerReferences[i] = ReferenceOwner{Declaration: cloneDeclaration(r.Declaration), Attribute: cloneLocalAttribute(r.Attribute), Rule: RuleKey{ID: RuleID(strings.Clone(string(r.Rule.ID))), Revision: r.Rule.Revision}}
 	}
 	slices.SortFunc(q.OwnerReferences, func(a, b ReferenceOwner) int {
-		return strings.Compare(a.Declaration.OwnerOccurrence+"\x00"+a.Declaration.Occurrence, b.Declaration.OwnerOccurrence+"\x00"+b.Declaration.Occurrence)
+		return compareLocalDeclaration(a.Declaration, b.Declaration)
 	})
 	return &q
 }
