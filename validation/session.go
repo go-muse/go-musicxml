@@ -437,6 +437,7 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 		return Report{}, &SessionError{Operation: "Finish", Reason: "uninitialized session"}
 	}
 	s.finished = true
+	eventsValid := s.terminalCause == nil
 	defer s.cleanup()
 	addCause := func(err error) {
 		if err == nil {
@@ -457,6 +458,12 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 	completionErr := s.validateCompletion(end)
 	addCause(completionErr)
 	malformedSource := completionErr == nil && s.profile.Target == TargetSource && end.Syntax == SyntaxMalformed && end.Cause != nil
+	// A valid retained prefix can still prove independent violations after an
+	// external parse or I/O failure. Never resume work after cancellation, a
+	// rejected fact event, or exhausted resources.
+	if eventsValid && completionErr == nil && ctx != nil && ctx.Err() == nil && s.schema != nil && !s.schema.bound && s.root != nil && !errors.Is(end.Cause, ErrResourceLimit) {
+		addCause(s.bindSourceSchema(ctx))
+	}
 	s.inputComplete = end.InputComplete && len(s.stack) == 0 && s.root != nil && end.Syntax != SyntaxMalformed
 	if s.terminalCause == nil && s.schema != nil && s.schema.bound {
 		addCause(s.finalizeSourceSchema(ctx))

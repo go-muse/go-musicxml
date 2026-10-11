@@ -194,6 +194,10 @@ func validateComparison(c Comparison, a Atomic) error {
 	return nil
 }
 func (p Plan) clone() Plan {
+	if p.schema != nil {
+		schema := *p.schema
+		p.schema = &schema
+	}
 	p.children = append([]DeclarationID(nil), p.children...)
 	for i := range p.children {
 		p.children[i] = cloneDeclaration(p.children[i])

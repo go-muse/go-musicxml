@@ -271,18 +271,8 @@ func (a *reportAccumulator) record(rule RuleDefinition, decision Decision, locat
 // Incomplete required work is an untruncated acceptance blocker even when a
 // proven failure already settles the composite predicate's truth value.
 func (a *reportAccumulator) recordComposite(rule RuleDefinition, summary Decision, location Location, details []Finding, complete bool) error {
-	if !complete && (summary.Outcome == OutcomePass || summary.Outcome == OutcomeNotApplicable) {
-		return contract("composite result", "incomplete work cannot pass or prove exclusion")
-	}
-	if complete && (summary.Outcome == OutcomeUnknown || summary.Outcome == OutcomeUnsupported || summary.Outcome == OutcomeBlocked) {
-		return contract("composite result", "unresolved work cannot be complete")
-	}
-	if err := a.recordOutcome(rule, summary); err != nil {
+	if err := a.recordCompositeOutcome(rule, summary, complete); err != nil {
 		return err
-	}
-	if !complete {
-		a.incomplete()
-		a.report.BlockingProblems++
 	}
 	if len(details) == 0 {
 		return a.storeDiagnostic(rule, summary, location)
@@ -297,6 +287,23 @@ func (a *reportAccumulator) recordComposite(rule RuleDefinition, summary Decisio
 		if err := a.storeDiagnostic(rule, detail.Decision, detail.Location); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (a *reportAccumulator) recordCompositeOutcome(rule RuleDefinition, summary Decision, complete bool) error {
+	if !complete && (summary.Outcome == OutcomePass || summary.Outcome == OutcomeNotApplicable) {
+		return contract("composite result", "incomplete work cannot pass or prove exclusion")
+	}
+	if complete && (summary.Outcome == OutcomeUnknown || summary.Outcome == OutcomeUnsupported || summary.Outcome == OutcomeBlocked) {
+		return contract("composite result", "unresolved work cannot be complete")
+	}
+	if err := a.recordOutcome(rule, summary); err != nil {
+		return err
+	}
+	if !complete {
+		a.incomplete()
+		a.report.BlockingProblems++
 	}
 	return nil
 }

@@ -16,10 +16,16 @@ type schemaSession struct {
 	nodes         map[NodeID]schemaNode
 	identity      xsd.IdentityResults
 	identityReady bool
+	recorded      map[decisionID]schemaRecord
+}
+type schemaRecord struct {
+	details  int
+	complete bool
 }
 type schemaNode struct {
 	binding   xsd.Binding
 	available bool
+	skipped   bool
 	reason    Code
 	cause     *DecisionRef
 }
@@ -36,7 +42,7 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 	if err := s.retain(bytes); err != nil {
 		return xsd.Subject{}, err
 	}
-	out := xsd.Subject{ID: xsd.SubjectID(n.header.ID), Parent: xsd.SubjectID(n.header.Parent), Name: xsd.QName{Space: n.header.Name.Space, Local: n.header.Name.Local}, Path: n.header.Location.Path, Text: n.end.Scalar.Lexeme.Value, TextKnown: n.closed && n.end.Scalar.Lexeme.State == EvidenceKnown, AttributesComplete: n.closed && n.end.AttributesComplete.State == EvidenceKnown && n.end.AttributesComplete.Value, ChildrenComplete: n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value}
+	out := xsd.Subject{ID: xsd.SubjectID(n.header.ID), Parent: xsd.SubjectID(n.header.Parent), Name: xsd.QName{Space: n.header.Name.Space, Local: n.header.Name.Local}, Path: n.header.Location.Path, Text: n.end.Scalar.Lexeme.Value, TextKnown: n.closed && n.end.Scalar.Lexeme.State == EvidenceKnown, AttributesComplete: n.closed && n.end.AttributesComplete.State == EvidenceKnown && n.end.AttributesComplete.Value, ChildrenComplete: n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value && n.end.Order.State == EvidenceKnown && n.end.Order.Value == OrderSource}
 	out.Namespaces = make(map[string]string, len(n.header.Bindings))
 	for _, b := range n.header.Bindings {
 		if err := s.step(ctx, 1); err != nil {
@@ -44,12 +50,21 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 		}
 		out.Namespaces[b.Prefix] = b.URI
 	}
-	out.Attributes = make([]xsd.Attribute, len(n.attributes))
-	for i, a := range n.attributes {
+	out.Attributes = make([]xsd.Attribute, 0, len(n.attributes))
+	for _, a := range n.attributes {
 		if err := s.step(ctx, 1); err != nil {
 			return out, err
 		}
-		out.Attributes[i] = xsd.Attribute{Attr: xsd.Attr{Name: xsd.QName{Space: a.Name.Space, Local: a.Name.Local}, Value: a.Scalar.Lexeme.Value}, ValueKnown: a.Scalar.Lexeme.State == EvidenceKnown, NamespaceDeclaration: a.Name.Space == "http://www.w3.org/2000/xmlns/"}
+		if a.Presence.State == EvidenceAbsent {
+			continue
+		}
+		if a.Presence.State != EvidenceKnown || !a.Presence.Value {
+			out.AttributesComplete = false
+			if a.Name.Space != xsd.XSINamespace || (a.Name.Local != "type" && a.Name.Local != "nil") {
+				continue
+			}
+		}
+		out.Attributes = append(out.Attributes, xsd.Attribute{Attr: xsd.Attr{Name: xsd.QName{Space: a.Name.Space, Local: a.Name.Local}, Value: a.Scalar.Lexeme.Value}, ValueKnown: a.Presence.State == EvidenceKnown && a.Presence.Value && a.Scalar.Lexeme.State == EvidenceKnown, NamespaceDeclaration: a.Name.Space == "http://www.w3.org/2000/xmlns/"})
 	}
 	out.Children = make([]xsd.Child, len(n.children))
 	for i, ch := range n.children {
@@ -139,6 +154,14 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		if f.next < len(f.witnesses) {
 			witness := f.witnesses[f.next]
 			f.next++
+			if witness.Mode != xsd.WitnessDeclared {
+				child := s.nodes[NodeID(witness.Child)]
+				if child == nil {
+					return contract("schema witness", "unknown child occurrence")
+				}
+				state.nodes[child.header.ID] = schemaNode{skipped: witness.Mode == xsd.WitnessSkip, reason: Code(witness.Mode)}
+				continue
+			}
 			child := s.nodes[NodeID(witness.Child)]
 			if child == nil {
 				return contract("schema witness", "unknown child occurrence")
@@ -170,6 +193,11 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		ancestor := s.nodes[n.header.Parent]
 		for ancestor != nil {
 			if bound, ok := state.nodes[ancestor.header.ID]; ok {
+				if bound.skipped {
+					item.skipped = true
+					item.reason = "wildcard-skip"
+					break
+				}
 				if bound.cause != nil {
 					item.cause = bound.cause
 					break
@@ -208,9 +236,17 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.Use, binding xsd.Binding) error {
 	state := s.schema
 	declaration := state.active.declaration(use)
-	n.header.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: declaration}
+	n.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "declaration-identity-unavailable"}
+	if validDeclaration(declaration) {
+		n.header.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: declaration}
+	}
 	if kind, known := state.run.ActualType(binding); known {
-		n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: state.active.component(kind)}
+		component := state.active.component(kind)
+		if validComponent(component) {
+			n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: component}
+		} else {
+			n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "type-identity-unavailable"}
+		}
 	} else {
 		n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "actual-type-unavailable"}
 	}
@@ -219,25 +255,48 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 		return err
 	}
 	n.end.Scalar.Value = scalar
-	for _, result := range state.run.Attributes(binding) {
-		for i := range n.attributes {
-			a := &n.attributes[i]
-			if a.Name != (QName{Space: result.Name.Space, Local: result.Name.Local}) {
-				continue
-			}
-			if result.Use.Occurrence() != "" {
-				a.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: state.active.declaration(result.Use)}
-			} else {
-				a.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "attribute-use-unavailable"}
-			}
-			value, err := s.schemaAtomic(ctx, result.Scalar)
-			if err != nil {
-				return err
-			}
-			a.Scalar.Value = value
-			break
-		}
+	if err := s.retain(int64(len(n.attributes)) * 96); err != nil {
+		return err
 	}
+	attributes := make(map[QName]int, len(n.attributes))
+	for i := range n.attributes {
+		if n.attributes[i].Presence.State == EvidenceAbsent {
+			continue
+		}
+		n.attributes[i].Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "attribute-use-unavailable"}
+		n.attributes[i].Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "typed-scalar-unavailable"}
+	}
+	for i, a := range n.attributes {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		attributes[a.Name] = i
+	}
+	for _, result := range state.run.Attributes(binding) {
+		if !result.Present {
+			continue
+		}
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		index, exists := attributes[QName{Space: result.Name.Space, Local: result.Name.Local}]
+		if !exists {
+			continue
+		}
+		a := &n.attributes[index]
+		declaration := state.active.declaration(result.Use)
+		if validDeclaration(declaration) {
+			a.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: declaration}
+		} else {
+			a.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "attribute-use-unavailable"}
+		}
+		value, err := s.schemaAtomic(ctx, result.Scalar)
+		if err != nil {
+			return err
+		}
+		a.Scalar.Value = value
+	}
+
 	return nil
 }
 
@@ -259,14 +318,20 @@ func (s *Session) schemaAtomic(ctx context.Context, value xsd.ScalarResult) (Evi
 		}
 	case xsd.NumberDomain:
 		number := value.Value.Number
-		size := int64(len(number.Whole)) + int64(len(number.Fraction)) + 3
+		size := int64(max(1, len(number.Whole)))
+		if len(number.Fraction) > 0 {
+			size += 1 + int64(len(number.Fraction))
+		}
+		if number.Negative {
+			size++
+		}
 		if err := checkExactSize(size); err != nil {
 			return unavailable, err
 		}
 		if err := s.account.Check(BudgetScalarBytes, size); err != nil {
 			return unavailable, err
 		}
-		if err := s.step(ctx, 1+size); err != nil {
+		if err := s.step(ctx, 1+size+size*(size/64)); err != nil {
 			return unavailable, err
 		}
 		// Includes bounded big-number temporaries and their independently owned copy.
@@ -320,6 +385,9 @@ func (s *Session) schemaAtomic(ctx context.Context, value xsd.ScalarResult) (Evi
 func (s *Session) schemaResult(n *factNode, check XSDCheck) xsd.Result {
 	state := s.schema
 	bound := state.nodes[n.header.ID]
+	if bound.skipped {
+		return xsd.Result{Applicable: false, Valid: true, Complete: true}
+	}
 	if !bound.available {
 		return xsd.Result{Applicable: true, Valid: true, Complete: false, Limitations: []xsd.Limitation{{Reason: string(bound.reason)}}}
 	}
@@ -334,15 +402,22 @@ func (s *Session) schemaResult(n *factNode, check XSDCheck) xsd.Result {
 	case XSDCheckScalar:
 		return results.Scalar
 	case XSDCheckContent:
+		if n.closed && (n.end.Order.State != EvidenceKnown || n.end.Order.Value != OrderSource) {
+			results.Content.Complete = false
+			results.Content.Limitations = append(results.Content.Limitations, xsd.Limitation{Reason: "original-order-unavailable"})
+		}
 		return results.Content
 	}
 	return xsd.Result{}
 }
 func (s *Session) recordXSDProvedFailures(ctx context.Context, n *factNode) error {
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
 		r := s.catalog.rules[key]
 		p := s.catalog.plans[r.Predicate]
-		if p.kind != planXSD || p.xsdCheck == XSDCheckIdentity || p.schema.assembly != s.schema.active.assembly || s.catalog.supports[s.profile.ID][key].State != ImplementationAvailable {
+		if p.kind != planXSD || p.xsdCheck == XSDCheckIdentity || len(r.Requires) > 0 || p.schema.assembly != s.schema.active.assembly || s.catalog.supports[s.profile.ID][key].State != ImplementationAvailable {
 			continue
 		}
 		result := s.schemaResult(n, p.xsdCheck)
@@ -359,24 +434,25 @@ func (s *Session) evaluateXSD(ctx context.Context, n *factNode, r RuleDefinition
 		if !final {
 			return nil
 		}
-		result := xsd.Result{Applicable: true, Valid: true, Complete: s.schema.identityReady && s.schema.identity.Complete}
+		result := xsd.Result{Applicable: true, Valid: s.schema.identity.Valid, Complete: s.schema.identityReady && s.schema.identity.Complete, Issues: s.schema.identity.Issues}
+		if s.schema.run == nil {
+			result.Valid = true
+		}
 		if !result.Complete {
 			result.Limitations = []xsd.Limitation{{Reason: "identity-scope-incomplete"}}
 		}
-		for _, id := range s.sequence {
-			if local, ok := s.schema.identity.BySubject[xsd.SubjectID(id)]; ok {
-				result.Valid = result.Valid && local.Valid
-				result.Issues = append(result.Issues, local.Issues...)
-			}
+		if !s.schema.identityReady && !result.Valid {
+			result.Complete = true
 		}
+
 		return s.recordXSDResult(ctx, n, r, result)
 	}
 	return s.recordXSDResult(ctx, n, r, s.schemaResult(n, p.xsdCheck))
 }
 func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefinition, result xsd.Result) error {
-	if _, done := s.lookupDecision(decisionID{r.Key, n.header.ID}); done {
-		return nil
-	}
+	id := decisionID{r.Key, n.header.ID}
+	existing, done := s.lookupDecision(id)
+	previous := s.schema.recorded[id]
 	d := Decision{Rule: r.Key, Subject: NodeRef{s.documentID, n.header.ID}, Outcome: OutcomePass}
 	if !result.Applicable {
 		d.Outcome = OutcomeNotApplicable
@@ -395,20 +471,38 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 			d.Cause = bound.cause
 		}
 	}
-	if err := s.retain(int64(len(result.Issues)) * 384); err != nil {
+	if done {
+		// A previously proved failure can acquire further details and a permanent
+		// incompleteness blocker, without counting the predicate a second time.
+		if existing.Outcome != OutcomeFail || d.Outcome != OutcomeFail {
+			return nil
+		}
+		if previous.complete && !result.Complete {
+			s.accumulator.incomplete()
+			s.accumulator.report.BlockingProblems++
+		}
+	} else if err := s.accumulator.recordCompositeOutcome(r, d, result.Complete); err != nil {
 		return err
 	}
-	details := make([]Finding, 0, len(result.Issues))
-	for _, issue := range result.Issues {
+	// The verdict above precedes any diagnostic work, allocation, cancellation or
+	// cache retention. Display quotas cannot erase a proved normative violation.
+	for i := previous.details; i < len(result.Issues); i++ {
+		if s.accumulator.report.DiagnosticsTruncated {
+			break
+		}
 		if err := s.step(ctx, 1); err != nil {
 			return err
 		}
+		issue := result.Issues[i]
 		location := n.header.Location
 		owner := s.nodes[NodeID(issue.Subject)]
 		if owner != nil {
 			location = owner.header.Location
 			if issue.Attribute != (xsd.QName{}) {
 				for _, a := range owner.attributes {
+					if err := s.step(ctx, 1); err != nil {
+						return err
+					}
 					if a.Name == (QName{Space: issue.Attribute.Space, Local: issue.Attribute.Local}) {
 						location = a.Location
 						break
@@ -416,33 +510,53 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 				}
 			}
 		}
-		detail := Finding{Decision: d, Category: r.Category, Location: location}
+		detail := d
 		detail.Reason = Code(issue.Constraint)
 		detail.Actual = issue.Message
-		for _, id := range issue.RelatedSubjects {
-			if related := s.nodes[NodeID(id)]; related != nil {
+		if err := s.retain(int64(len(issue.RelatedSubjects)) * 128); err != nil {
+			return err
+		}
+		for _, relatedID := range issue.RelatedSubjects {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			if related := s.nodes[NodeID(relatedID)]; related != nil {
 				detail.Related = append(detail.Related, related.header.Location)
 			}
 		}
-		details = append(details, detail)
+		if err := s.accumulator.storeDiagnostic(r, detail, location); err != nil {
+			return err
+		}
 	}
-	if err := s.accumulator.recordComposite(r, d, n.header.Location, details, result.Complete); err != nil {
+	if !done && len(result.Issues) == 0 {
+		if err := s.accumulator.storeDiagnostic(r, d, n.header.Location); err != nil {
+			return err
+		}
+	}
+	if err := s.retain(64); err != nil {
 		return err
+	}
+	if s.schema.recorded == nil {
+		s.schema.recorded = make(map[decisionID]schemaRecord)
+	}
+	s.schema.recorded[id] = schemaRecord{details: len(result.Issues), complete: result.Complete && (!done || previous.complete)}
+	if done {
+		return nil
 	}
 	return s.cacheDecision(r, n, d)
 }
+
 func (s *Session) recordXSDIdentityFailure(ctx context.Context) error {
-	hasFailure := false
-	for _, result := range s.schema.identity.BySubject {
-		hasFailure = hasFailure || !result.Valid
-	}
-	if !hasFailure {
+	if s.schema.identity.Valid {
 		return nil
 	}
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
 		r := s.catalog.rules[key]
 		p := s.catalog.plans[r.Predicate]
-		if p.kind == planXSD && p.xsdCheck == XSDCheckIdentity && p.schema.assembly == s.schema.active.assembly && s.catalog.supports[s.profile.ID][key].State == ImplementationAvailable {
+		if p.kind == planXSD && p.xsdCheck == XSDCheckIdentity && len(r.Requires) == 0 && p.schema.assembly == s.schema.active.assembly && s.catalog.supports[s.profile.ID][key].State == ImplementationAvailable {
 			if err := s.evaluateXSD(ctx, s.root, r, p, true); err != nil {
 				return err
 			}
@@ -458,5 +572,8 @@ func (s *Session) finalizeSourceSchema(ctx context.Context) error {
 	identity, err := state.run.Finalize(ctx, s.inputComplete)
 	state.identity = identity
 	state.identityReady = true
-	return err
+	if err != nil {
+		return err
+	}
+	return s.recordXSDIdentityFailure(ctx)
 }
