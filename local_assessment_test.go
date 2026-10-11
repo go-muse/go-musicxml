@@ -94,9 +94,15 @@ func TestBoundedLocalProductionClausesBothTargets(t *testing.T) {
 	}
 	add("accordion-present", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-high/></accordion-registration>`), false)
 	add("accordion-empty", "accordion-at-least-one", localDirection(`<accordion-registration/>`), true)
+	add("accordion-middle-zero-present", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-middle>0</accordion-middle></accordion-registration>`), false)
+	add("accordion-low-present", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-low/></accordion-registration>`), false)
+	add("accordion-all-three", "accordion-at-least-one", localDirection(`<accordion-registration><accordion-high/><accordion-middle>3</accordion-middle><accordion-low/></accordion-registration>`), false)
+	add("accordion-omitted", "accordion-at-least-one", "", false)
 	add("beam-default-distinct", "beam-number-distinct", localNote(`<beam>begin</beam><beam number="2">begin</beam>`), false)
 	add("beam-default-duplicate", "beam-number-distinct", localNote(`<beam>begin</beam><beam number="1">end</beam>`), true)
 	add("beam-level-eight", "beam-number-distinct", localNote(`<beam number="8">begin</beam>`), false)
+	add("beam-equivalent-lexical-values", "beam-number-distinct", localNote(`<beam number="01">begin</beam><beam number="1">end</beam>`), true)
+	add("bezier-no-second-controls", "bezier-second-control", localNote(`<notations><slur type="start"/><tied type="continue"/></notations>`), false)
 	for _, attr := range []string{"bezier-x2", "bezier-y2", "bezier-offset2"} {
 		add("slur-continue-"+attr, "bezier-second-control", localNote(`<notations><slur type="continue" `+attr+`="0"/></notations>`), false)
 		add("slur-start-"+attr, "bezier-second-control", localNote(`<notations><slur type="start" `+attr+`="0"/></notations>`), true)
