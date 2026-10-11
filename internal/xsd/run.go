@@ -13,6 +13,9 @@ type SubjectID uint64
 // Subject contains XML-neutral borrowed facts. The caller keeps their storage
 // unchanged until Close. Incomplete axes never imply an empty value or absence.
 type Subject struct {
+	CurrentModel                         bool
+	Current                              CurrentScalar
+	ChildrenOrderKnown                   bool
 	ID, Parent                           SubjectID
 	Name                                 QName
 	Path                                 string
@@ -101,6 +104,8 @@ type Meter interface {
 }
 
 type boundState struct {
+	currentAttribute                             CurrentScalar
+	currentAttributeSet                          bool
 	attributeEpoch                               uint64
 	attributeKnown                               bool
 	defaulted                                    bool
@@ -127,20 +132,21 @@ type boundState struct {
 
 // Run contains only run-local state. Compiled schema handles remain immutable.
 type Run struct {
-	schema            *Compiled
-	meter             Meter
-	context           Context
-	nodes             map[SubjectID]*Node
-	states            map[SubjectID]*boundState
-	retained          int64
-	scratchRetained   int64
-	closed, finalized bool
-	current           context.Context
-	identityResults   map[SubjectID]Result
-	identityIssues    []Detail
-	identitySeen      map[identityDiagnostic]bool
-	identityValid     bool
-	identityOutput    *IdentityResults
+	schema                *Compiled
+	meter                 Meter
+	context               Context
+	nodes                 map[SubjectID]*Node
+	states                map[SubjectID]*boundState
+	retained              int64
+	scratchRetained       int64
+	closed, finalized     bool
+	identityInputComplete bool
+	current               context.Context
+	identityResults       map[SubjectID]Result
+	identityIssues        []Detail
+	identitySeen          map[identityDiagnostic]bool
+	identityValid         bool
+	identityOutput        *IdentityResults
 }
 
 func NewRun(schema *Compiled, meter Meter) (out *Run, err error) {
@@ -284,6 +290,10 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	defer recoverRun(&err)
 	defer r.releaseScratch()
 	r.step(1)
+	r.identityInputComplete = false
+	if subject.CurrentModel {
+		subject.Current = r.context.checkCurrent(subject.Current)
+	}
 	r.scalar(int64(len(subject.Text)))
 	r.reserve(int64(unsafe.Sizeof(boundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
 	r.reserve(r.context.builderAllowance(int64(len(subject.Text))))
@@ -332,7 +342,7 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		s.limit("content", "child-enumeration-incomplete", nil)
 		r.context.IdentityIncomplete = true
 	}
-	if !subject.TextKnown {
+	if (!subject.CurrentModel && !subject.TextKnown) || (subject.CurrentModel && !subject.Current.Known && !subject.Current.Absent) {
 		s.limit("scalar", "scalar-lexeme-unavailable", nil)
 		s.limit("declaration", "scalar-lexeme-unavailable", nil)
 		s.limit("content", "scalar-lexeme-unavailable", nil)
@@ -531,6 +541,7 @@ func (r *Run) Identity(ctx context.Context, inputComplete bool) (out IdentityRes
 		r.identityResults = make(map[SubjectID]Result)
 		r.identitySeen = make(map[identityDiagnostic]bool)
 	}
+	r.identityInputComplete = inputComplete
 	out = IdentityResults{BySubject: r.identityResults, Issues: r.identityIssues, Valid: r.identityValid, Complete: inputComplete && !r.context.IdentityIncomplete && r.context.AssessmentErr == nil}
 	r.identityOutput = &out
 	defer func() { r.identityOutput = nil }()
@@ -591,6 +602,9 @@ func (c *Context) observeScalar(assessment SimpleAssessment, valid bool) {
 	s.scalarAssessed = valid
 	if s.attribute == (QName{}) {
 		s.scalar = ScalarResult{Known: valid, Complete: s.results.Scalar.Complete, Defaulted: s.defaulted, Lexeme: s.subject.Text, EffectiveLexeme: assessment.Lexical, Builtin: assessment.Builtin, Value: assessment.Value}
+		if s.subject.CurrentModel {
+			s.scalar.Lexeme = ""
+		}
 	}
 }
 func (c *Context) identityDetail(path, constraint, message string) {
@@ -631,6 +645,9 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	s := c.local
 	use := s.run.attributeUse(s.actual, schema.Name)
 	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
+	if s.subject.CurrentModel {
+		scalar.Lexeme = ""
+	}
 	s.attributes = appendRetained(c, s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Scalar: scalar})
 }
 

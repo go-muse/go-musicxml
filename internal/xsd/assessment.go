@@ -47,5 +47,5 @@ func (c *Context) AssessmentFailure(message string) *SimpleFailure {
 }
 
 func TechnicalFailure(failure *SimpleFailure) bool {
-	return failure != nil && (failure.Constraint == "assessment" || failure.Constraint == "schema")
+	return failure != nil && (failure.Constraint == "assessment" || failure.Constraint == "schema" || failure.Constraint == "model-capability")
 }
