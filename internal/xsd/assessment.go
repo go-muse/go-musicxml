@@ -8,7 +8,7 @@ import (
 // public invalid-document sentinel unless independently proved issues exist.
 func (c *Context) Incomplete(message string) {
 	c.step(1)
-	c.reserve(128)
+	c.reserve(c.sum(128, int64(len(message))))
 	c.AssessmentErr = errors.Join(c.AssessmentErr, &TechnicalError{Message: message})
 	c.step(1)
 	c.AssessmentVersion++

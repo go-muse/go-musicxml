@@ -203,6 +203,9 @@ func TestMeterBindExactWorkBoundaryAndCause(t *testing.T) {
 				if !r.owns(b) {
 					t.Fatal("partial binding lost")
 				}
+				if r.Results(b).Content.Complete || r.Results(b).Declaration.Complete {
+					t.Fatal("aborted binding claimed complete local evidence")
+				}
 			} else if e != nil {
 				t.Fatal(e)
 			}
@@ -370,5 +373,35 @@ func TestMeterIdentityLimitPrecedesEveryIndex(t *testing.T) {
 				t.Fatal("binding index retained before identity charge")
 			}
 		})
+	}
+}
+
+func TestMeterEndpointSortWorkIsDeterministic(t *testing.T) {
+	for _, predecessors := range []bool{false, true} {
+		var want int64
+		for trial := range 64 {
+			m := &boundaryMeter{}
+			r := &Run{meter: m, current: context.Background()}
+			c := &Context{run: r}
+			if predecessors {
+				p := &ParticlePredecessors{Many: map[int]int{}}
+				for i := range 37 {
+					p.Many[i] = i
+				}
+				p.Ordered(&ParticleMatcher{Context: c})
+			} else {
+				seen := map[int]bool{}
+				for i := range 37 {
+					seen[i] = true
+				}
+				orderedPositions(seen, c)
+			}
+			r.releaseScratch()
+			if trial == 0 {
+				want = m.work
+			} else if m.work != want {
+				t.Fatalf("random map order changed work: predecessors=%v trial=%d got=%d want=%d", predecessors, trial, m.work, want)
+			}
+		}
 	}
 }

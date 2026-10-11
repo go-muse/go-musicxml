@@ -148,12 +148,15 @@ func (r *Run) attributeUse(actual *TypeRef, name QName) Use {
 	r.context.scratch(64)
 	seen := map[TypeID]bool{}
 	id, ok := r.typeID(actual)
-	for ok && !seen[id] {
+	for ok {
 		r.step(1)
 		r.context.bytes(len(id.name.Space))
 		r.context.bytes(len(id.name.Local))
 		r.context.bytes(len(id.builtin))
 		r.context.bytes(len(id.path))
+		if seen[id] {
+			break
+		}
 		r.context.scratch(int64(unsafe.Sizeof(TypeID{})) + 32)
 		seen[id] = true
 		if id.complex == nil {

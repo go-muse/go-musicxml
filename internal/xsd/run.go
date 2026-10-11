@@ -273,6 +273,14 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		return Binding{}, errors.New("xsd: duplicate bound subject")
 	}
 	r.current = ctx
+	defer func() {
+		if err != nil {
+			r.context.IdentityIncomplete = true
+			if r.owns(bound) {
+				bound.state.abort()
+			}
+		}
+	}()
 	defer recoverRun(&err)
 	defer r.releaseScratch()
 	r.step(1)
@@ -411,7 +419,6 @@ func (r *Run) buildWitnesses(s *boundState) {
 				mode = WitnessLax
 			}
 			r.context.wildcard(m.Particle.Any.ProcessContents, "content")
-			r.reserve(160)
 			s.witnesses = appendRetained(&r.context, s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Mode: mode})
 			continue
 		}
@@ -447,6 +454,13 @@ func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (o
 		return out, errors.New("xsd: invalid or repeated node completion")
 	}
 	r.current = ctx
+	defer func() {
+		if err != nil {
+			r.context.IdentityIncomplete = true
+			b.state.abort()
+			b.state.done = true
+		}
+	}()
 	defer recoverRun(&err)
 	defer r.releaseScratch()
 	s := b.state
@@ -580,11 +594,14 @@ func (c *Context) identityDetail(path, constraint, message string) {
 	if r.identitySeen[c.identityDiagnostic] {
 		return
 	}
-	r.reserve(c.sum(128, int64(len(path)), int64(len(constraint)), int64(len(message))))
+	r.reserve(c.sum(int64(len(path)), int64(len(constraint)), int64(len(message))))
+	// Distinct permanent map entries are admitted before either index mutates.
+	r.reserve(64 + int64(unsafe.Sizeof(identityDiagnostic{})))
 	id := c.identitySource.subject
 	attribute := c.identitySource.attribute
 	v, ok := r.identityResults[id]
 	if !ok {
+		r.reserve(64 + int64(unsafe.Sizeof(SubjectID(0))) + int64(unsafe.Sizeof(Result{})))
 		v = freshResult()
 	}
 	v.Valid = false
@@ -694,5 +711,13 @@ func (c *Context) proveIdentityFailure() {
 	if c.run != nil && c.run.identityOutput != nil {
 		c.run.identityValid = false
 		c.run.identityOutput.Valid = false
+	}
+}
+
+// A stopped local operation cannot publish its untouched pass defaults as
+// completed evidence. Proved failures and exact scalar facts remain available.
+func (s *boundState) abort() {
+	for _, result := range []*Result{&s.results.Binding, &s.results.Declaration, &s.results.Attributes, &s.results.Scalar, &s.results.Content} {
+		result.Complete = false
 	}
 }

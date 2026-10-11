@@ -1,7 +1,5 @@
 package xsd
 
-import "slices"
-
 // Content matching retains endpoints, not parse histories. Occurrence counts
 // belong to intermediate repetition states; only a fully constrained particle
 // can be memoized by (particle, start). Empty occurrences are padded symbolically.
@@ -47,6 +45,7 @@ func (c *Context) MatchParticle(particle *ParticleSchema, children []*Node, posi
 	// Like effective complex types, this is immutable schema information.
 	// Reuse it across elements of one validation, never across documents.
 	if c.ParticleNullable == nil {
+		c.reserve(64)
 		c.ParticleNullable = m.Nullable
 	} else {
 		m.Nullable = c.ParticleNullable
@@ -217,7 +216,7 @@ func orderedPositions(seen map[int]bool, c *Context) []int {
 		c.step(1)
 		positions = append(positions, position)
 	}
-	slices.SortFunc(positions, func(a, b int) int { c.step(1); return b - a })
+	sortPositions(positions, c)
 	return positions
 }
 
@@ -518,7 +517,7 @@ func (p *ParticlePredecessors) Ordered(m *ParticleMatcher) []int {
 			m.Context.step(1)
 			positions = append(positions, end)
 		}
-		slices.SortFunc(positions, func(a, b int) int { m.Context.step(1); return b - a })
+		sortPositions(positions, m.Context)
 		return positions
 	}
 	if p.HasFirst {
@@ -592,7 +591,7 @@ func (m *ParticleMatcher) BodyWitness(p *ParticleSchema, start, end int, element
 		return end == start+1
 	case ParticleAny:
 		if m.Context.local != nil {
-			*elements = append(*elements, ElementMatch{Index: start, Particle: p})
+			*elements = appendRetained(m.Context, *elements, ElementMatch{Index: start, Particle: p})
 		}
 		return end == start+1
 	case ParticleChoice:

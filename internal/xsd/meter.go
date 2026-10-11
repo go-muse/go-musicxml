@@ -2,7 +2,9 @@ package xsd
 
 import (
 	"fmt"
+	"math/bits"
 	"regexp/syntax"
+	"slices"
 	"unsafe"
 )
 
@@ -109,4 +111,18 @@ func regexpAllowance(pattern string, c *Context) int64 {
 	c.step(n)
 	c.scratch(c.size(n, 128))
 	return n
+}
+
+// Endpoint maps have randomized iteration order. Budgeting the library sort's
+// observed comparisons would make identical source documents need different
+// limits. Admit a deterministic conservative O(n log n) comparison allowance
+// before the opaque sort, then check cancellation in every real comparator.
+// SortFunc's introspective partition/heapsort algorithm is bounded by this
+// allowance; this changes admission only, never the selected endpoint ordering.
+func sortPositions(positions []int, c *Context) {
+	if c != nil && c.run != nil && len(positions) > 1 {
+		n := int64(len(positions))
+		c.step(c.size(c.size(n, 8), int64(bits.Len64(uint64(n))+1)))
+	}
+	slices.SortFunc(positions, func(a, b int) int { c.step(0); return b - a })
 }
