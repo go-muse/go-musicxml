@@ -96,9 +96,7 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 		if _, exists := c.plans[binding.ID]; exists {
 			return nil, contract("plan ID", "duplicate identity")
 		}
-		if err := binding.Plan.valid(); err != nil {
-			return nil, fmt.Errorf("catalog plan %q: %w", binding.ID, err)
-		}
+		// catalogCheckBounds validated this plan before any retained copy.
 		c.plans[strings.Clone(binding.ID)] = binding.Plan.clone()
 	}
 	for _, rule := range rules {

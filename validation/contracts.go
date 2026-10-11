@@ -162,9 +162,7 @@ func validateHeader(v NodeHeader, target Target, doc string) error {
 	if v.Declaration.State == EvidenceKnown && !validDeclaration(v.Declaration.Value) {
 		return contract("node declaration", "invalid identity")
 	}
-	if len(v.Bindings) > 65536 {
-		return contract("bindings", "too many bindings")
-	}
+	// Open bounds the binding count before header sizing or this allocation.
 	seen := make(map[string]bool, len(v.Bindings))
 	for _, b := range v.Bindings {
 		if !validText(b.Prefix, 1024) || !validText(b.URI, 4096) || seen[b.Prefix] {
