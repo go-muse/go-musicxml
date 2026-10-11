@@ -155,7 +155,7 @@ func TestDecimalComparisonDispatchScope(t *testing.T) {
 	assert.Nil(t, validateBounds(&validationSimpleSchema{HasMinInclusive: true, MinInclusive: "1e0"}, "1e0", "double"))
 	for _, form := range []validationSimpleForm{validationSimpleUnion, validationSimpleList} {
 		reference := &validationTypeRef{InlineSimple: &validationSimpleSchema{Form: form, Members: []*validationSimpleMember{{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}}, Item: &validationSimpleMember{Name: validationQName{Space: validationXSDNamespace, Local: "decimal"}}}}
-		assert.False(t, context.simpleValuesEqual(reference, "1.0", "1.00"), form)
-		assert.False(t, context.elementFixedValuesEqual(reference, "1.0", "1.00"), form)
+		assert.True(t, context.simpleValuesEqual(reference, "1.0", "1.00"), form)
+		assert.True(t, context.elementFixedValuesEqual(reference, "1.0", "1.00"), form)
 	}
 }

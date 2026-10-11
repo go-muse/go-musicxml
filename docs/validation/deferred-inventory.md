@@ -197,6 +197,13 @@ scopes.
 
 Basis: [existing reuse and adaptation contracts][reuse].
 
+Implementation note: the [bounded aggregate repair](existing-code-map.md#bounded-aggregate-value-repair-update)
+now covers built-in list length facets and list/union enumeration and fixed
+comparison for string-derived and exact integer/decimal values in the existing
+validator. Other primitive value spaces, the shared engine and profile-level
+coverage remain future work. This does not close `DEF04-06` or change the
+planning statuses.
+
 The 2,560 research records do not equal 2,560 independent rules. For a claimed
 profile, every mandatory applicable obligation must have a check or an explicitly
 stated assessment limit.

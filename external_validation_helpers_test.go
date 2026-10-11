@@ -146,3 +146,35 @@ func TestSnapshotValidationSchemaNamespaces(t *testing.T) {
 	}
 	assert.Equal(t, before, snapshotValidationSchema(t, schema))
 }
+
+// Include text explicitly: strings.Builder has no exported JSON fields.
+func snapshotValidationNode(t *testing.T, node *validationNode) string {
+	t.Helper()
+	var texts []string
+	var visit func(*validationNode)
+	visit = func(node *validationNode) {
+		texts = append(texts, node.Text.String())
+		for _, child := range node.Children {
+			visit(child)
+		}
+	}
+	visit(node)
+	encoded, err := json.Marshal(struct {
+		Node  *validationNode
+		Texts []string
+	}{node, texts})
+	require.NoError(t, err)
+	return string(encoded)
+}
+
+func TestSnapshotValidationNodeText(t *testing.T) {
+	t.Parallel()
+	node, err := parseValidationDocument([]byte(`<root>before<child>child text</child>after</root>`))
+	require.NoError(t, err)
+	before := snapshotValidationNode(t, node)
+	node.Children[0].Text.WriteString("changed")
+	assert.NotEqual(t, before, snapshotValidationNode(t, node))
+	before = snapshotValidationNode(t, node)
+	node.Text.WriteString("changed")
+	assert.NotEqual(t, before, snapshotValidationNode(t, node))
+}

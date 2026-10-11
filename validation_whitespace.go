@@ -17,6 +17,7 @@ type validationSimpleSemantics struct {
 	builtin     string
 	stringValue bool
 	union       *validationSimpleSchema
+	list        *validationSimpleSchema
 }
 
 func (s *validationSimpleSemantics) normalize(value string) string {
@@ -124,7 +125,7 @@ func (c *validationContext) resolveSimpleSemantics(schema *validationSimpleSchem
 		if c.memberSemantics(schema.Item) == nil {
 			return nil
 		}
-		result = validationSimpleSemantics{whitespace: validationWhitespaceCollapse}
+		result = validationSimpleSemantics{whitespace: validationWhitespaceCollapse, list: schema}
 	case validationSimpleUnion:
 		result.union = schema
 		if len(schema.Members) == 0 {
@@ -142,63 +143,42 @@ func (c *validationContext) resolveSimpleSemantics(schema *validationSimpleSchem
 	return &result
 }
 
-// Keys identify schema literals, never XML instance values. Each context can
-// retain at most one entry per reached union-derived enumeration declaration.
-// The declaration/index also fixes the original literal and its exact base.
+// Keys identify schema literals, never XML instance values. Cache growth is
+// bounded by reached declarations/indices, including failed and empty literals.
 type validationEnumerationKey struct {
 	schema *validationSimpleSchema
 	index  int
 }
 
 type validationEnumerationValue struct {
-	value string
-	valid bool
+	value  string
+	actual validationSimpleValue
+	valid  bool
 }
 
-func (c *validationContext) matchesSimpleEnumeration(schema *validationSimpleSchema, value, builtin string) bool {
-	for index, candidate := range schema.Enumerations {
-		if _, _, integer := validationIntegerLimits(builtin); integer {
-			if validationIntegerValuesEqual(candidate, value) {
-				return true
-			}
-		} else if builtin == "decimal" {
-			if validationDecimalValuesEqual(candidate, value) {
-				return true
-			}
-		} else if normalized, valid := c.normalizedEnumeration(schema, index); valid && normalized == value {
+func (c *validationContext) matchesSimpleEnumeration(schema *validationSimpleSchema, value validationSimpleAssessment) bool {
+	for index := range schema.Enumerations {
+		candidate := c.enumerationValue(schema, index)
+		if candidate.valid && candidate.actual.equal(value.value) {
 			return true
 		}
 	}
 	return false
 }
 
-func (c *validationContext) normalizedEnumeration(schema *validationSimpleSchema, index int) (string, bool) {
-	base := c.memberSemantics(schema.Base)
-	if base == nil {
-		return "", false
-	}
-	literal := schema.Enumerations[index]
-	if base.whitespace != validationWhitespaceMember {
-		// Facet literals denote values in the declaring restriction's base.
-		// Their schema-component validity is a separate concern: reassessing
-		// inherited facets here doubles work at every enumeration layer.
-		return base.normalize(literal), true
-	}
+func (c *validationContext) enumerationValue(schema *validationSimpleSchema, index int) validationEnumerationValue {
 	key := validationEnumerationKey{schema: schema, index: index}
 	if known, found := c.enumerationValues[key]; found {
-		return known.value, known.valid
+		return known
 	}
 	if c.enumerationValues == nil {
 		c.enumerationValues = make(map[validationEnumerationKey]validationEnumerationValue)
 	}
 	c.enumerationValues[key] = validationEnumerationValue{}
-	// Restrictions of a union retain its ordered members. Only those members
-	// choose the literal's view; outer restriction facets cannot retry member
-	// selection. Each member still receives full datatype/facet validation,
-	// including any restricted nested union. Cache both success and failure;
-	// the empty normalized string is a valid result, not a cache sentinel.
-	value, failure := c.validateSimpleValue(base.union, literal, literal)
-	result := validationEnumerationValue{value: value, valid: failure == nil}
+	// The declaring base, not this restriction or a descendant, determines the
+	// literal's whitespace and value. A pending entry is also a fail-closed guard.
+	assessment, valid := c.simpleLiteralValue(c.memberSemantics(schema.Base), schema.Enumerations[index])
+	result := validationEnumerationValue{value: assessment.lexical, actual: assessment.value, valid: valid}
 	c.enumerationValues[key] = result
-	return result.value, result.valid
+	return result
 }

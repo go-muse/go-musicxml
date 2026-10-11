@@ -310,7 +310,7 @@ type validationContext struct {
 	effective map[*validationComplexSchema]*validationEffectiveComplex
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
-	// when union-derived enumeration literals need normalized member views.
+	// when enumeration literals need immutable lexical and value views.
 	simpleSemantics   map[*validationSimpleSchema]*validationSimpleSemantics
 	enumerationValues map[validationEnumerationKey]validationEnumerationValue
 	identifiers       map[string]string
@@ -1153,6 +1153,9 @@ func (c *validationContext) simpleValuesEqual(
 		// issue is retained until diagnostic deduplication is addressed.
 		return false
 	}
+	if semantics.aggregate() {
+		return c.aggregateValuesEqual(semantics, left, right)
+	}
 	builtin := semantics.builtin
 	if _, _, integer := validationIntegerLimits(builtin); integer {
 		return validationIntegerValuesEqual(left, right)
@@ -1163,17 +1166,15 @@ func (c *validationContext) simpleValuesEqual(
 	if semantics.stringValue {
 		return semantics.normalize(left) == semantics.normalize(right)
 	}
-	// Preserve existing comparison for other primitives and aggregates.
-	// An aggregate's old builtin fallback was string, not its item/member.
+	// Preserve existing lexical comparison for other primitive families.
 	if builtin == "" {
 		builtin = "string"
 	}
 	return normalizeValidationWhitespace(builtin, left) == normalizeValidationWhitespace(builtin, right)
 }
 
-// Atomic integer, decimal and string-derived fixed constraints compare values.
-// Other element fixed semantics retain their existing path; aggregate typed
-// equality is separate, and mixed content still compares the initial text.
+// Atomic integer/decimal/string and their list/union aggregates compare values.
+// Other primitives retain their lexical path; mixed content compares raw text.
 func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef, left, right string) bool {
 	_, complex, _, _ := c.resolveType(reference)
 	if complex != nil {
@@ -1191,6 +1192,9 @@ func (c *validationContext) elementFixedValuesEqual(reference *validationTypeRef
 		// As in simpleValuesEqual, retain fail-closed comparison and its
 		// additional fixed issue alongside ordinary schema diagnostics.
 		return false
+	}
+	if semantics.aggregate() {
+		return c.aggregateValuesEqual(semantics, left, right)
 	}
 	if _, _, integer := validationIntegerLimits(semantics.builtin); integer {
 		return validationIntegerValuesEqual(left, right)
@@ -1274,29 +1278,36 @@ func (c *validationContext) validateSimple(
 	return failure
 }
 
-// Return a successful normalized lexical view as well as failure. The most
+// Keep the lexical-returning helper for callers that do not compare values.
+func (c *validationContext) validateSimpleValue(schema *validationSimpleSchema, value, display string) (string, *validationSimpleFailure) {
+	assessment, failure := c.assessSimpleValue(schema, value, display)
+	return assessment.lexical, failure
+}
+
+// Return both the normalized lexical view and its actual value. The most
 // derived atomic/list policy runs before inherited lexical facets. A union
 // instead supplies each member the same input and returns the first success's
 // view; a later OUTER facet failure never restarts union member selection.
 // Display is kept separately so inherited diagnostics retain source spelling.
-func (c *validationContext) validateSimpleValue(
+func (c *validationContext) assessSimpleValue(
 	schema *validationSimpleSchema,
 	value, display string,
-) (string, *validationSimpleFailure) {
+) (validationSimpleAssessment, *validationSimpleFailure) {
 	semantics := c.resolveSimpleSemantics(schema)
 	if semantics == nil {
-		return "", &validationSimpleFailure{constraint: "schema", message: "simple type cannot be resolved"}
+		return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "schema", message: "simple type cannot be resolved"}
 	}
 	value = semantics.normalize(value)
 	switch schema.Form {
 	case validationSimpleRestriction:
-		normalized, failure := c.validateSimpleMemberValue(schema.Base, value, display)
+		assessment, failure := c.assessSimpleMemberValue(schema.Base, value, display)
 		if failure != nil {
-			return "", failure
+			return validationSimpleAssessment{}, failure
 		}
+		normalized := assessment.lexical
 		builtin := semantics.builtin
-		if len(schema.Enumerations) != 0 && !c.matchesSimpleEnumeration(schema, normalized, builtin) {
-			return "", &validationSimpleFailure{
+		if len(schema.Enumerations) != 0 && !c.matchesSimpleEnumeration(schema, assessment) {
+			return validationSimpleAssessment{}, &validationSimpleFailure{
 				constraint: "enumeration",
 				message: fmt.Sprintf(
 					"value %q is not one of the allowed values",
@@ -1312,7 +1323,7 @@ func (c *validationContext) validateSimpleValue(
 		for _, pattern := range schema.Patterns {
 			matched, err := matchValidationPattern(pattern, normalized)
 			if err != nil {
-				return "", &validationSimpleFailure{
+				return validationSimpleAssessment{}, &validationSimpleFailure{
 					constraint: "schema",
 					message: fmt.Sprintf(
 						"invalid generated XSD pattern %q: %v",
@@ -1330,66 +1341,67 @@ func (c *validationContext) validateSimpleValue(
 			} else {
 				message = fmt.Sprintf("value %q does not match any XSD pattern in %q", display, schema.Patterns)
 			}
-			return "", &validationSimpleFailure{constraint: "pattern", message: message}
+			return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "pattern", message: message}
 		}
 
 		if failure := validateBoundsValue(schema, normalized, builtin, display); failure != nil {
-			return "", failure
+			return validationSimpleAssessment{}, failure
 		}
 		if failure := validateLengthFacets(
 			schema,
 			normalized,
 			c.simpleMemberList(schema.Base),
 		); failure != nil {
-			return "", failure
+			return validationSimpleAssessment{}, failure
 		}
 		if failure := validateDigitFacets(schema, normalized, builtin); failure != nil {
-			return "", failure
+			return validationSimpleAssessment{}, failure
 		}
 
-		return normalized, nil
+		return assessment, nil
 
 	case validationSimpleUnion:
 		for _, member := range schema.Members {
-			if normalized, failure := c.validateSimpleMemberValue(member, value, display); failure == nil {
+			if normalized, failure := c.assessSimpleMemberValue(member, value, display); failure == nil {
 				return normalized, nil
 			}
 		}
-		return "", &validationSimpleFailure{
+		return validationSimpleAssessment{}, &validationSimpleFailure{
 			constraint: "union",
 			message:    fmt.Sprintf("value %q does not match any union member", display),
 		}
 
 	case validationSimpleList:
+		result := validationSimpleAssessment{lexical: value, value: validationSimpleValue{domain: validationListDomain}}
 		for index, item := range splitValidationList(value) {
-			if _, failure := c.validateSimpleMemberValue(schema.Item, item, item); failure != nil {
-				return "", &validationSimpleFailure{
-					constraint: failure.constraint,
-					message:    fmt.Sprintf("list item %d: %s", index+1, failure.message),
-				}
+			assessment, failure := c.assessSimpleMemberValue(schema.Item, item, item)
+			if failure != nil {
+				return validationSimpleAssessment{}, &validationSimpleFailure{constraint: failure.constraint, message: fmt.Sprintf("list item %d: %s", index+1, failure.message)}
 			}
+			result.value.items = append(result.value.items, assessment.value)
 		}
-		return value, nil
+		return result, nil
+
 	default:
-		return "", &validationSimpleFailure{constraint: "schema", message: "unsupported simple type form"}
+		return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "schema", message: "unsupported simple type form"}
 	}
 }
 
-func (c *validationContext) validateSimpleMemberValue(
+func (c *validationContext) assessSimpleMemberValue(
 	member *validationSimpleMember,
 	value, display string,
-) (string, *validationSimpleFailure) {
+) (validationSimpleAssessment, *validationSimpleFailure) {
 	semantics := c.memberSemantics(member)
 	if semantics == nil {
-		return "", &validationSimpleFailure{constraint: "schema", message: "simple type member cannot be resolved"}
+		return validationSimpleAssessment{}, &validationSimpleFailure{constraint: "schema", message: "simple type member cannot be resolved"}
 	}
 	if member.Inline != nil {
-		return c.validateSimpleValue(member.Inline, value, display)
+		return c.assessSimpleValue(member.Inline, value, display)
 	}
 	if member.Name.Space == validationXSDNamespace {
-		return semantics.normalize(value), validateBuiltinValue(member.Name.Local, value, display)
+		return c.assessBuiltinValue(member.Name.Local, value, display)
 	}
-	return c.validateSimpleValue(c.schema.Types[member.Name].Simple, value, display)
+	return c.assessSimpleValue(c.schema.Types[member.Name].Simple, value, display)
 }
 
 func (c *validationContext) simpleBuiltin(

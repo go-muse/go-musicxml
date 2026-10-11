@@ -220,13 +220,13 @@ func TestWhitespaceFixedComparisonScope(t *testing.T) {
 		assert.Equal(t, want, context.simpleValuesEqual(reference, "a\tb", "a b"), name)
 		assert.Equal(t, want, context.elementFixedValuesEqual(reference, "a\tb", "a b"), name)
 	}
-	// Do not infer an atomic string value space from the legacy builtin fallback.
+	// Aggregate comparison follows the selected member or list item values.
 	for _, name := range []string{"list-type", "token-string", "string-token"} {
 		reference := &validationTypeRef{Name: validationQName{Local: name}}
-		assert.False(t, context.simpleValuesEqual(reference, " a  b ", "a b"), name)
-		assert.False(t, context.elementFixedValuesEqual(reference, " a  b ", "a b"), name)
+		assert.Equal(t, name != "string-token", context.simpleValuesEqual(reference, " a  b ", "a b"), name)
+		assert.Equal(t, name != "string-token", context.elementFixedValuesEqual(reference, " a  b ", "a b"), name)
 	}
-	for _, name := range []string{"boolean", "date", "dateTime", "anyURI", "QName", "IDREFS"} {
+	for _, name := range []string{"boolean", "date", "dateTime", "anyURI", "QName"} {
 		reference := &validationTypeRef{Name: validationQName{Space: validationXSDNamespace, Local: name}}
 		assert.False(t, context.elementFixedValuesEqual(reference, " a ", "a"), name)
 	}

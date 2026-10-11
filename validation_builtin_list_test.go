@@ -1,7 +1,6 @@
 package musicxml
 
 import (
-	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,14 +17,14 @@ func validationBuiltinListCases() []validationSourceCase {
 		source := wrapValidationElement(element, attributes, value)
 		if strings.HasPrefix(element, "entities") || strings.Contains(attributes, "entities=") {
 			// libxml2 2.9.14 rejects declared ENTITY values in element simpleContent;
-			// the equivalent ENTITIES attribute passes. Keep those positives internal.
+			// the equivalent ENTITIES attribute passes. Keep all such element cases internal: datatype rejection masks facets.
 			source = `<!DOCTYPE ` + element + ` [<!NOTATION image SYSTEM "image"><!ENTITY aa SYSTEM "aa" NDATA image><!ENTITY bb SYSTEM "bb" NDATA image><!ENTITY cc SYSTEM "cc" NDATA image><!ENTITY ab SYSTEM "ab" NDATA image>]>` + source
 		}
 		var issues []string
 		if constraint != "" {
 			issues = []string{"/" + element + constraint}
 		}
-		tests = append(tests, validationSourceCase{name: name, source: source, issues: issues, oracleComparable: !strings.HasPrefix(element, "entities") || constraint != ""})
+		tests = append(tests, validationSourceCase{name: name, source: source, issues: issues, oracleComparable: !strings.HasPrefix(element, "entities")})
 	}
 	for _, kind := range []string{"tokens", "refs", "entities"} {
 		attrs := ""
@@ -111,18 +110,29 @@ func TestBuiltinListLengthsImmutable(t *testing.T) {
 				for _, test := range validationBuiltinListCases() {
 					node, err := parseValidationDocument([]byte(test.source))
 					require.NoError(t, err)
-					saved, err := json.Marshal(node)
-					require.NoError(t, err)
+					saved := snapshotValidationNode(t, node)
 					context := newTestValidationContext(&validationBuiltinListGenerated)
 					context.validateElement(node, validationBuiltinListGenerated.Elements[validationQName{Local: node.Name.Local}], "/"+node.Name.Local)
 					context.validateIdentityReferences()
 					assertValidationIssues(t, context, test.issues)
-					after, err := json.Marshal(node)
-					require.NoError(t, err)
+					after := snapshotValidationNode(t, node)
 					assert.Equal(t, saved, after)
 				}
 			}
 			assert.Equal(t, before, snapshotValidationSchema(t, &validationBuiltinListGenerated))
 		})
+	}
+}
+
+func TestBuiltinListLengthDiagnostics(t *testing.T) {
+	t.Parallel()
+	for _, test := range []struct{ element, value, kind, message string }{
+		{"tokens-exact", " ab ", "length", "value length 1 does not equal 2"},
+		{"tokens-range", " ab ", "minLength", "value length 1 is less than 2"},
+		{"tokens-range", "aa bb cc aa", "maxLength", "value length 4 is greater than 3"},
+	} {
+		context := validateAttributeSource(t, &validationBuiltinListGenerated, wrapValidationElement(test.element, "", test.value))
+		require.Len(t, context.issues, 1)
+		assert.Equal(t, ValidationIssue{Path: "/" + test.element, Constraint: test.kind, Message: test.message}, context.issues[0])
 	}
 }

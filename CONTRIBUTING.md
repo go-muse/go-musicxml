@@ -63,8 +63,14 @@ Malformed and translator-unsupported patterns use separate metadata tests rather
 than weakening the valid-schema oracle. `zz_generated_builtin_list_validation_test.go` uses
 `testdata/validation/builtin-list-contract.xsd` for built-in list item-count facets.
 Its declared unparsed entities exercise attribute values; libxml2 2.9.14
-rejects the corresponding valid element values, which remain internal cases.
-All seven test schemas use the local empty catalog.
+rejects the corresponding element values before length facets, so all such
+`ENTITIES` element cases remain internal. `zz_generated_aggregate_validation_test.go`
+uses `testdata/validation/aggregate-contract.xsd` for list/union enumeration and
+fixed comparisons in exact numeric and string-derived domains. Boolean and
+other primitive equality remain lexical limitations. Concrete libxml2 fixed and singleton-list discrepancies are documented in the
+code map;
+empty-list enumeration is metadata-only because libxml2 cannot compile it.
+All eight test schemas use the local empty catalog.
 
 Do not edit generated files directly. Change the schema generator under
 `internal/xsdgen`, its configuration in `generate.go`, or the schema inputs,
