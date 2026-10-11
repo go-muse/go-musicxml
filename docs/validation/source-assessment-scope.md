@@ -152,6 +152,32 @@ number conversion reserves bounded temporary/storage allowances and work before
 big-number construction. Blocking arbitrary `io.Reader.Read` requires
 caller-provided cancellable I/O; context checks cannot preempt an arbitrary read.
 
+### Practical default retention limit
+
+The 64 MiB buffered-data default can stop source assessment well before the
+one-million-node limit. Input bytes, element counts and logical retained bytes
+are different budgets; a small serialized score can retain much more metadata.
+They do not define a universal per-element cost or a promised score-size ceiling.
+
+For the committed UTF-16BE `MozaChloSample.musicxml`, which contains **3,185
+elements**, the current Go 1.27.2 implementation was measured by binary-searching
+`MaxBufferedBytes`, then verifying one below, exact and one above each boundary:
+
+| Input | Original bytes | Minimum buffered allowance to finish | Result |
+| --- | ---: | ---: | --- |
+| Unchanged official file | 223,068 | 14,618,930 bytes (13.94 MiB) | EOF, six capability summaries; unsupported/incomplete |
+| Controlled input with only its external DOCTYPE removed | 222,824 | 28,513,746 bytes (27.19 MiB) | Complete and satisfied for this changed input |
+
+Both inputs contain the same 3,185 elements. The latter is a measurement control,
+not equivalent assessment of the original file or a recommended silent rewrite.
+These fixture-specific costs are approximately 4,590 and 8,953 logical bytes per element respectively; they are
+neither heap/RSS measurements nor general constants. Active schema execution
+retains more state than the unavailable-DTD path. The default can therefore be
+exhausted on ordinary larger scores, far below `MaxNodes`; other budgets can also
+stop work independently. Callers may select informed, finite larger limits via
+`AssessmentOptions.Budgets`. Defaults are not increased or derived from input
+bytes because representation cost depends on input shape and assessed operations.
+
 Every successfully begun assessment is finished exactly once, including fatal,
 I/O and cancellation paths. Cleanup releases owned live gauges, never cumulative
 work, and never closes the caller's reader. Known closed-prefix failures are

@@ -43,6 +43,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   declaration/DTD grammar and contradictory BOM/encoding declarations. Normalize
   literal attribute whitespace separately from character references. DTD
   replacement/default semantics remain unsupported; no external DTD is fetched.
+- Add official UTF-8/UTF-16 `Decode` benchmarks and reduce the new scanner's
+  transport overhead. Same-host paired medians remain about 30% / 23% above the
+  previous reader (down from about 102% / 65%); UTF-16 allocations are about 69%
+  lower. These are fixture/toolchain/host-specific measurements, not throughput
+  guarantees; stronger mandatory checks and original-source provenance remain.
+- Document the source preview's practical 64 MiB retention cap with measured
+  official-fixture boundaries; serialized bytes and node limits do not guarantee
+  assessment fits the live-buffer limit. Default limits are unchanged.
 
 - Migrate legacy incomplete-XSD error text from
   `musicxml: incomplete XSD assessment: …` to

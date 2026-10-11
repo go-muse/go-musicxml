@@ -253,6 +253,16 @@ There is no reader replay, second XML parse or model Encode→parse in this path
 The implementation retains a budgeted fact graph; single-pass input does not
 mean constant-memory processing. The caller retains ownership of the reader.
 
+The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
+64 MiB file or one million nodes can be assessed. For example, the 223,068-byte,
+3,185-element official UTF-16 score needs about 13.94 MiB merely to finish its
+unsupported external-DTD report; the otherwise identical DOCTYPE-removed
+measurement control needs about 27.19 MiB for complete assessment. These are
+fixture-specific logical allowances, not heap/RSS or a universal element limit.
+Ordinary larger scores can exceed the default. Set informed finite overrides in
+`AssessmentOptions.Budgets` where appropriate; all other limits still apply.
+See the source scope's exact measurements and interpretation.
+
 `ConversionConverted` means mapping succeeded under the existing Go model
 contract, including its `float64` precision and field representation. It is not
 an exact lexical or numeric round-trip guarantee. `ConversionUnrepresentable`

@@ -138,3 +138,35 @@ or MusicXML production conformance or replace independent normative review.
 - [XML 1.0 Fifth Edition](https://www.w3.org/TR/2008/REC-xml-20081126/): document and declaration productions, characters/names, encoding, attribute normalization and processor duties
 - [Namespaces in XML 1.0 Third Edition](https://www.w3.org/TR/REC-xml-names/): QName/binding/uniqueness rules and section 8's URI-reference-checking exception
 - [Go encoding/xml token API](https://pkg.go.dev/encoding/xml#NewTokenDecoder): token-stream transport; its namespace behavior is not itself proof of full namespace constraint checking
+
+## Legacy Decode performance
+
+`BenchmarkDecode` measures the committed official UTF-8 and UTF-16 scores,
+including model construction and mandatory XML checks but excluding fixture I/O
+and opt-in assessment. The cursor and scanner reuse bounded scratch storage,
+scan eligible ASCII spans within one charged refill, and avoid UTF-16 per-unit
+allocations; delimiters, CR/CRLF, non-ASCII and invalid controls retain the normal
+lexical path. Cancellation and quota admission precede each bounded span.
+
+Five interleaved one-second benchmark sets on Go 1.27.2, linux/amd64, AMD EPYC
+9V74 with `GOMAXPROCS=1` measured these fixture-specific medians:
+
+| Fixture | Previous main reader | Initial PR reader | Optimized reader |
+| --- | ---: | ---: | ---: |
+| MozartTrio (UTF-8) | 6.045 ms | 12.204 ms | 7.871 ms |
+| MozaChloSample (UTF-16BE) | 9.972 ms | 16.461 ms | 12.253 ms |
+
+The optimized reader still costs approximately 30% / 23% more time than the
+previous main reader on these inputs, while preserving the stronger checks and
+provenance. Allocations per operation are 40,182 versus 39,601 previously for
+UTF-8, and 50,073 versus 160,921 for UTF-16. Allocation bytes remain approximately
+25% / 12% higher. This is an explicitly disclosed compatibility cost, not a
+zero-overhead claim or a portable throughput guarantee. Timing is not asserted
+in CI. Reproduce the current benchmark with:
+
+```sh
+GOMAXPROCS=1 go test -run '^$' -bench '^BenchmarkDecode$' -benchmem -benchtime 1s -count 5 .
+```
+
+The paired comparison used the identical benchmark in isolated baseline,
+initial-head and optimized binaries; heavy concurrent verification was paused.
