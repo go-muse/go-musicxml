@@ -27,7 +27,7 @@ func TestGenerateMusicXMLElements(t *testing.T) {
 	index, err := NewIndex(set)
 	require.NoError(t, err)
 
-	actual, err := GenerateElements(
+	actual, err := GenerateElementsWithModelMetadata(
 		index,
 		"musicxml",
 		QName{Local: "score-partwise"},

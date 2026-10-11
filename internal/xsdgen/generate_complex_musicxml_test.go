@@ -31,7 +31,7 @@ func TestGenerateMusicXMLComplexTypes(t *testing.T) {
 	actual, err := GenerateComplexTypesWithOptions(
 		index,
 		"musicxml",
-		ComplexGenerationOptions{
+		ComplexGenerationOptions{ModelMetadata: true,
 			OrderedContentTypes: []QName{
 				{Local: "credit"},
 				{Local: "lyric"},

@@ -27,6 +27,15 @@ func GenerateElements(
 	packageName string,
 	elements ...QName,
 ) ([]byte, error) {
+	return generateElements(index, packageName, false, elements...)
+}
+
+// GenerateElementsWithModelMetadata also emits the private current-model map.
+func GenerateElementsWithModelMetadata(index *Index, packageName string, elements ...QName) ([]byte, error) {
+	return generateElements(index, packageName, true, elements...)
+}
+
+func generateElements(index *Index, packageName string, modelMetadata bool, elements ...QName) ([]byte, error) {
 	if index == nil {
 		return nil, ErrNilIndex
 	}
@@ -203,6 +212,12 @@ func GenerateElements(
 
 	if _, err := renderer.renderNumericXML(&body); err != nil {
 		return nil, err
+	}
+
+	if modelMetadata {
+		if err := renderer.renderModelMetadata(&body); err != nil {
+			return nil, err
+		}
 	}
 
 	var source bytes.Buffer

@@ -30,7 +30,7 @@ func TestGenerateMusicXMLOpusDocument(t *testing.T) {
 	actual, err := GenerateDocument(
 		index,
 		"musicxml",
-		DocumentGenerationOptions{
+		DocumentGenerationOptions{ModelMetadata: true,
 			Element: QName{Local: "opus"},
 			GoName:  "OpusDocument",
 			TypeNames: []TypeNameOverride{{
