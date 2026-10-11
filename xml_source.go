@@ -168,6 +168,14 @@ func sourceXMLSpace(c rune) bool { return c == ' ' || c == '\t' || c == '\n' || 
 func (r *sourceXMLTokenReader) spaces() (bool, error) {
 	found := false
 	for {
+		if err := r.cursor.contextErr(); err != nil {
+			return found, err
+		}
+		if span := r.cursor.asciiSpan(sourceASCIISpace, 0, sourceXMLCursorBytes); len(span) > 0 {
+			r.cursor.consumeASCII(span)
+			found = true
+			continue
+		}
 		u, err := r.peek()
 		if err == io.EOF {
 			return found, nil
@@ -196,7 +204,13 @@ func (b *sourceXMLBuilder) append(c rune) error {
 	if size < 0 {
 		return b.r.syntax("invalid character")
 	}
-	n := int64(len(b.data)) + int64(size)
+	if err := b.grow(int64(len(b.data)) + int64(size)); err != nil {
+		return err
+	}
+	b.data = utf8.AppendRune(b.data, c)
+	return nil
+}
+func (b *sourceXMLBuilder) grow(n int64) error {
 	if err := b.r.checkScalar(n); err != nil {
 		return err
 	}
@@ -230,7 +244,6 @@ func (b *sourceXMLBuilder) append(c rune) error {
 		}
 		b.borrowed = false
 	}
-	b.data = utf8.AppendRune(b.data, c)
 	return nil
 }
 func (b *sourceXMLBuilder) string() (string, error) {
@@ -252,6 +265,11 @@ func (r *sourceXMLTokenReader) name() (string, error) {
 		return "", r.syntax("expected XML name")
 	}
 	for {
+		if consumed, err := r.appendASCII(&b, sourceASCIIName, 0); err != nil {
+			return "", err
+		} else if consumed {
+			continue
+		}
 		u, err = r.peek()
 		if err == io.EOF {
 			break
@@ -490,6 +508,16 @@ func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
 	b := sourceXMLBuilder{r: r, data: r.valueScratch[:0], borrowed: true}
 	var last1, last2 rune
 	for {
+		mode := sourceASCIIText
+		if len(r.frames) == 0 {
+			mode = sourceASCIISpace
+		}
+		if consumed, err := r.appendASCII(&b, mode, 0); err != nil {
+			return nil, err
+		} else if consumed {
+			last1, last2 = 0, 0
+			continue
+		}
 		u, err := r.peek()
 		if err != nil {
 			if err == io.EOF && !cdata {
@@ -610,6 +638,11 @@ func (r *sourceXMLTokenReader) quoted(normalize, references bool) (string, sourc
 	span.Start = r.cursor.position
 	b := sourceXMLBuilder{r: r, data: r.valueScratch[:0], borrowed: true}
 	for {
+		if consumed, err := r.appendASCII(&b, sourceASCIIQuoted, byte(quote)); err != nil {
+			return "", span, err
+		} else if consumed {
+			continue
+		}
 		u, err = r.must()
 		if err != nil {
 			return "", span, err
