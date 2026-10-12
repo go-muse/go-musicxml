@@ -114,7 +114,9 @@ func TestTimelineRuntimePublishesPlaybackAndFigureUnits(t *testing.T) {
 	if len(svc.Playback.Notes) != 1 || len(svc.Playback.Sounds) != 1 || len(svc.Playback.Barlines) != 1 {
 		t.Fatalf("missing playback maps notes=%d sounds=%d bars=%d", len(svc.Playback.Notes), len(svc.Playback.Sounds), len(svc.Playback.Barlines))
 	}
-	tempo, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, statePosition(t, 0, 1, 1))
+	at := svc.Facts[30].Position.Value
+	at.Offset = mustRational(t, 1, 1)
+	tempo, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, at)
 	if err != nil || tempo.Value.State != EvidenceKnown || tempo.Value.Value.String() != "120" {
 		t.Fatalf("tempo=%+v %v", tempo, err)
 	}

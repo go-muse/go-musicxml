@@ -124,9 +124,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			continue
 		}
 		movement := timelineMovement{Subject: NodeRef{s.documentID, event.header.ID}, Kind: timelineMovementOther, Chord: Evidence[bool]{State: EvidenceKnown, Value: false}, Grace: Evidence[bool]{State: EvidenceKnown, Value: false}, Duration: Evidence[Rational]{State: EvidenceAbsent}}
-		selectedNoteUnits := units
+		selectedUnits := units
 		if unitGap.State != EvidenceAbsent {
-			selectedNoteUnits = unitGap
+			selectedUnits = unitGap
 		}
 		switch {
 		case r.matches(event, timelineRoleNote):
@@ -150,10 +150,10 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 						return e
 					}
 					if !same {
-						selectedNoteUnits = Evidence[Decimal]{State: EvidenceUnsupported, Reason: "chord-divisions-placement-unresolved"}
+						selectedUnits = Evidence[Decimal]{State: EvidenceUnsupported, Reason: "chord-divisions-placement-unresolved"}
 					}
 				}
-				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, selectedNoteUnits)
+				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, selectedUnits)
 				if err != nil {
 					return err
 				}
@@ -206,6 +206,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			return err
 		}
 		fact.Position = timelineAt(block, cursorFact.Position)
+		fact.Units = selectedUnits
 		fact.Duration = cursorFact.Duration
 		fact.Principal = cursorFact.Principal
 		fact.PrincipalDuration = cursorFact.PrincipalDuration
@@ -216,19 +217,27 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			case movement.Chord.State == EvidenceKnown && !movement.Chord.Value:
 				fact.End = timelineAt(block, cursor.Position)
 			}
-			if err := service.readNoteOrigins(ctx, s, b, event, fact, selectedNoteUnits); err != nil {
+			if err := service.readNoteOrigins(ctx, s, b, event, fact, selectedUnits); err != nil {
+				return err
+			}
+			if err := service.Playback.readNote(ctx, s, b, event, block, fact); err != nil {
+				return err
+			}
+		}
+		if r.matches(event, timelineRoleBarline) {
+			if err := service.Playback.readBarline(ctx, s, b, event, block, fact); err != nil {
 				return err
 			}
 		}
 		base := fact.Position
 		if r.matches(event, timelineRoleSound) {
-			if err := service.readSoundAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
+			if err := service.readSoundAt(ctx, s, b, event, block, base, selectedUnits, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
 				return err
 			}
 			continue // readSoundAt retains the independently addressable fact.
 		}
 		if r.matches(event, timelineRoleListening) {
-			if err := service.readListeningAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
+			if err := service.readListeningAt(ctx, s, b, event, block, base, selectedUnits, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
 				return err
 			}
 			continue
@@ -245,7 +254,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				offset = stateDecimalValue(r.scalar(offsetNode))
 				sound = stateYesNo(r.attribute(offsetNode, timelineRoleOffsetSound))
 			}
-			fact.Position, err = s.offsetPosition(ctx, base, offset, units)
+			fact.Position, err = s.offsetPosition(ctx, base, offset, selectedUnits)
 			if err != nil {
 				return err
 			}
@@ -258,9 +267,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 					}
 					switch {
 					case r.matches(child, timelineRoleDirectionSound):
-						err = service.readSoundAt(ctx, s, b, child, block, base, units, offset, sound)
+						err = service.readSoundAt(ctx, s, b, child, block, base, selectedUnits, offset, sound)
 					case r.matches(child, timelineRoleDirectionListening):
-						err = service.readListeningAt(ctx, s, b, child, block, base, units, offset, sound)
+						err = service.readListeningAt(ctx, s, b, child, block, base, selectedUnits, offset, sound)
 					}
 					if err != nil {
 						return err

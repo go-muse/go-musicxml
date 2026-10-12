@@ -88,11 +88,15 @@ func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *
 			return err
 		}
 	}
-	return service.storeFact(ctx, s, sound.header.ID, timelineEventFact{
-		Part: block.part, Position: position,
+	fact := timelineEventFact{
+		Part: block.part, Position: position, Units: units,
 		Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent},
 		Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: Evidence[NodeRef]{State: EvidenceAbsent}, PrincipalDuration: Evidence[Rational]{State: EvidenceAbsent},
-	})
+	}
+	if err := service.Playback.readSound(ctx, s, b, sound, block, fact); err != nil {
+		return err
+	}
+	return service.storeFact(ctx, s, sound.header.ID, fact)
 }
 
 // playbackOffsetPosition is shared by sound and listening. Both local offset
@@ -150,7 +154,7 @@ func (service *timelineService) readListeningAt(ctx context.Context, s *Session,
 		return err
 	}
 	return service.storeFact(ctx, s, listening.header.ID, timelineEventFact{
-		Part: block.part, Position: position,
+		Part: block.part, Position: position, Units: units,
 		Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent},
 		Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: Evidence[NodeRef]{State: EvidenceAbsent}, PrincipalDuration: Evidence[Rational]{State: EvidenceAbsent},
 	})

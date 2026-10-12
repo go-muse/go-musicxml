@@ -6,6 +6,7 @@ import "context"
 // Final denotes completed publication, not universal availability of each fact.
 type timelineService struct {
 	State              timelineState
+	Playback           timelinePlaybackContext
 	NoteOrigins        map[NodeID]noteTimingOrigin
 	FiguredBassOrigins map[NodeID]figuredBassTimingOrigin
 	Facts              map[NodeID]timelineEventFact
@@ -58,6 +59,9 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 		return err
 	}
 	if fact.End, err = stateOwnEvidence(ctx, s, fact.End); err != nil {
+		return err
+	}
+	if fact.Units, err = stateOwnEvidence(ctx, s, fact.Units); err != nil {
 		return err
 	}
 	if fact.Duration, err = stateOwnEvidence(ctx, s, fact.Duration); err != nil {
