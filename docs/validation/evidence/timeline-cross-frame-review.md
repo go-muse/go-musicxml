@@ -202,6 +202,17 @@ before the tentative landing point. A conservative proof must cover applicable
 regions, unavailable publications and the independent placement of its bounds.
 The backup/forward recommendations remain advice, not a newly enforced error.
 
+Stopping an excursion also invalidates later normalization that depended on its
+lexical departure units. A new measure start remains an independent coordinate,
+but an explicit divisions declaration there is a repair only if the complete
+effective-state history proves it wins over every potentially applicable displaced
+publisher. The converse matters too: a later serialized negative excursion may
+carry an unavailable divisions update that can reach an earlier frame. Earlier
+notes must not retain known normalized duration or derived following onsets when
+the completed history leaves their required divisions unavailable. Sequential
+read-time queries alone cannot establish this dependency closure. Raw duration
+scalars and independently fixed structural origins remain separate facts.
+
 Direction/figured-bass first-following-note associations and grace donor queries
 also depend on cross-frame order. An unproved cursor candidate cannot borrow
 canonical order from its containing measure label. Exact same-frame comparisons
