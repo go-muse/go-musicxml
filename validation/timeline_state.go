@@ -512,9 +512,15 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 			if e = s.step(ctx, 1); e != nil {
 				return out, e
 			}
-			if g.Position != nil && g.Position.UnprovedFrame {
-				partial = true
-				break
+			if g.Part == pos.Part && g.Position != nil && g.Position.UnprovedFrame {
+				applies, err := stateApplies(ctx, s, g.Scope, staff)
+				if err != nil {
+					return out, err
+				}
+				if applies {
+					partial = true
+					break
+				}
 			}
 		}
 		for _, gaps := range extra {
@@ -522,9 +528,15 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 				if e = s.step(ctx, 1); e != nil {
 					return out, e
 				}
-				if g.Position != nil && g.Position.UnprovedFrame {
-					partial = true
-					break
+				if g.Part == pos.Part && g.Position != nil && g.Position.UnprovedFrame {
+					applies, err := stateApplies(ctx, s, g.Scope, staff)
+					if err != nil {
+						return out, err
+					}
+					if applies {
+						partial = true
+						break
+					}
 				}
 			}
 		}
