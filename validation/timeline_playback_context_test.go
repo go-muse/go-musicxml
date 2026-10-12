@@ -210,3 +210,103 @@ func TestPlaybackQuotaCancellationAndNoPublication(t *testing.T) {
 		})
 	}
 }
+
+func TestPlaybackMissingFactsStayScopedAndDoNotInventDefaults(t *testing.T) {
+	s, p, b, block, fact := playbackFixture(t)
+	h := &timelineState{}
+	stateClose(t, s, h, 2)
+	n := stateNode(b, timelineRoleSound, 50, stateAbsent[Atomic]())
+	stateAttribute(b, n, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 77, 1)})
+	cause := &DecisionRef{Rule: RuleKey{ID: "duration", Revision: 2}, Subject: NodeRef{"d", 40}}
+	fact.Position = Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "duration-invalid", Cause: cause}
+	if err := p.readSound(context.Background(), s, b, n, block, fact); err != nil {
+		t.Fatal(err)
+	}
+	cause.Subject.Node = 999
+	got, err := p.effectiveTempo(context.Background(), s, h, statePosition(t, 0, 2, 1))
+	if err != nil || got.Value.State != EvidenceInvalid || got.Value.Cause.Subject.Node != 40 {
+		t.Fatalf("missing position %+v,%v", got, err)
+	}
+	dynamics, err := p.effectiveDynamics(context.Background(), s, h, statePosition(t, 0, 2, 1))
+	if err != nil || dynamics.Value.State != EvidenceKnown {
+		t.Fatalf("unrelated absent family %+v,%v", dynamics, err)
+	}
+	// A confirmed publisher in a later closed measure establishes a new suffix.
+	block.ordinal = 1
+	block.measure.header.ID = 11
+	fact.Position = stateKnown(statePosition(t, 1, 0, 1))
+	next := stateNode(b, timelineRoleSound, 60, stateAbsent[Atomic]())
+	stateAttribute(b, next, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 80, 1)})
+	if err := p.readSound(context.Background(), s, b, next, block, fact); err != nil {
+		t.Fatal(err)
+	}
+	got, err = p.effectiveTempo(context.Background(), s, h, statePosition(t, 1, 1, 1))
+	if err != nil || got.Value.State != EvidenceKnown || got.Value.Value.String() != "80" {
+		t.Fatalf("suffix did not recover %+v,%v", got, err)
+	}
+	other := statePosition(t, 1, 1, 1)
+	other.Part.Node = 2
+	got, err = p.effectiveTempo(context.Background(), s, h, other)
+	if err != nil || got.Value.State != EvidenceUnknown {
+		t.Fatalf("part scope leaked %+v,%v", got, err)
+	}
+}
+func TestPlaybackHierarchyGapPreventsFalseDefaultsAndPreservesPrefix(t *testing.T) {
+	s, p, _, _, _ := playbackFixture(t)
+	h := &timelineState{}
+	stateClose(t, s, h, 2)
+	cause := &DecisionRef{Rule: RuleKey{ID: "owner", Revision: 1}, Subject: NodeRef{"d", 90}}
+	bad := Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "owner-unresolved", Cause: cause}
+	if err := p.gapAll(context.Background(), s, NodeRef{"d", 1}, 1, bad); err != nil {
+		t.Fatal(err)
+	}
+	cause.Subject.Node = 91
+	before, err := p.effectiveDynamics(context.Background(), s, h, statePosition(t, 0, 0, 1))
+	if err != nil || before.Value.State != EvidenceKnown {
+		t.Fatalf("proved prefix lost %+v,%v", before, err)
+	}
+	after, err := p.effectiveDynamics(context.Background(), s, h, statePosition(t, 1, 0, 1))
+	if err != nil || after.Value.State != EvidenceInvalid || after.Value.Cause.Subject.Node != 90 {
+		t.Fatalf("false default after gap %+v,%v", after, err)
+	}
+	after.Value.Cause.Subject.Node = 92
+	again, err := p.effectivePizzicato(context.Background(), s, h, statePosition(t, 1, 0, 1))
+	if err != nil || again.Value.Cause.Subject.Node != 90 {
+		t.Fatalf("cross-family borrowed gap %+v,%v", again, err)
+	}
+}
+func TestPlaybackSamePositionConflictAndExplicitZero(t *testing.T) {
+	s, p, b, block, fact := playbackFixture(t)
+	h := &timelineState{}
+	stateClose(t, s, h, 0)
+	for i, value := range []int64{0, 90} {
+		n := stateNode(b, timelineRoleSound, NodeID(50+i), stateAbsent[Atomic]())
+		stateAttribute(b, n, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, value, 1)})
+		if err := p.readSound(context.Background(), s, b, n, block, fact); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := p.effectiveTempo(context.Background(), s, h, statePosition(t, 0, 2, 1))
+	if err != nil || got.Value.State != EvidenceUnknown || got.Value.Reason != "timeline-state-conflict" {
+		t.Fatalf("invented tie winner %+v,%v", got, err)
+	}
+	if p.Sounds[50].Tempo.Value.String() != "0" {
+		t.Fatal("zero became tempo default")
+	}
+}
+func TestPlaybackUnknownLocationAndExactBinding(t *testing.T) {
+	s, p, b, block, fact := playbackFixture(t)
+	bar := stateNode(b, timelineRoleBarline, 50, stateAbsent[Atomic]())
+	bar.end.AttributesComplete = stateUnknown[bool]("attributes-not-observed")
+	if err := p.readBarline(context.Background(), s, b, bar, block, fact); err != nil {
+		t.Fatal(err)
+	}
+	if p.Barlines[50].Location.State != EvidenceUnknown || p.Barlines[50].LocationDefaulted {
+		t.Fatal("unknown location became right default")
+	}
+	fake := stateNode(b, timelineRoleSound, 60, stateAbsent[Atomic]())
+	fake.header.Name = QName{Local: "barline"}
+	if err := p.readBarline(context.Background(), s, b, fake, block, fact); !errors.Is(err, ErrInvalidConfiguration) || len(p.Barlines) != 1 {
+		t.Fatalf("matched runtime local name %v", err)
+	}
+}
