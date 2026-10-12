@@ -85,6 +85,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		unitGap = unitGate.Gap
 	}
 	principalUnits := Evidence[Decimal]{State: EvidenceAbsent}
+	lastDivisionPosition := Evidence[musicalPosition]{State: EvidenceAbsent}
 	if block.complete.State != EvidenceKnown || !block.complete.Value {
 		cursor.interrupt(block.complete)
 		units = stateUnavailable[bool, Decimal](block.complete)
@@ -231,7 +232,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			}
 		}
 		if r.matches(event, timelineRoleAttributes) {
-			current := stateDecimalValue(r.childScalar(event, timelineRoleAttributesDivisions))
+			current := timelineAttributeUnits(r, event)
 			if fact.Position.State == EvidenceKnown {
 				if err := service.State.readAttributes(ctx, s, b, event, fact.Position.Value); err != nil {
 					return err
@@ -243,14 +244,33 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			}
 			if current.State != EvidenceAbsent {
 				if fact.Position.State == EvidenceKnown {
-					result, err := service.State.effectiveDivisions(ctx, s, fact.Position.Value)
-					if err != nil {
-						return err
+					samePosition := false
+					if lastDivisionPosition.State == EvidenceKnown {
+						cmp, err := stateComparePosition(ctx, s, lastDivisionPosition.Value, fact.Position.Value)
+						if err != nil {
+							return err
+						}
+						samePosition = cmp == 0
 					}
-					units = result.Value
+					if samePosition {
+						if units.State == EvidenceKnown && current.State == EvidenceKnown {
+							same, err := s.sameTimelineUnits(ctx, units, current)
+							if err != nil {
+								return err
+							}
+							if !same {
+								units = stateUnknown[Decimal]("timeline-state-conflict")
+							}
+						} else {
+							units = timelineUnitWorst(units, current)
+						}
+					} else {
+						units = current
+					}
 				} else {
 					units = stateUnavailable[musicalPosition, Decimal](fact.Position)
 				}
+				lastDivisionPosition = fact.Position
 			}
 		}
 		if r.matches(event, timelineRoleSound) && fact.Position.State == EvidenceKnown {

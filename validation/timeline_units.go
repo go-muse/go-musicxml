@@ -22,6 +22,10 @@ type timelineUnitGate struct {
 // the proven high-water mark; a rewind must remain entirely within that region.
 // No provisional coordinates escape this complete preflight.
 func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inherited Evidence[Decimal]) (timelineUnitGate, error) {
+	needed, err := timelineNeedsUnitPreflight(r, block, inherited)
+	if err != nil || !needed {
+		return timelineUnitGate{}, err
+	}
 	current := inherited
 	cursor := newTimelineCursor()
 	high, region := timelineZero, timelineZero
@@ -34,7 +38,7 @@ func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inheri
 			return timelineUnitGate{}, r.err
 		}
 		if r.matches(event, timelineRoleAttributes) {
-			next := stateDecimalValue(r.childScalar(event, timelineRoleAttributesDivisions))
+			next := timelineAttributeUnits(r, event)
 			if next.State == EvidenceAbsent {
 				continue
 			}
@@ -135,4 +139,92 @@ func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inheri
 		return timelineUnitGate{}, r.err
 	}
 	return timelineUnitGate{}, nil
+}
+
+// Only this attribute family is relevant to unit interpretation. An unrelated
+// malformed key/time child cannot masquerade as a divisions publication.
+func timelineAttributeUnits(r *stateReader, n *factNode) Evidence[Decimal] {
+	complete := r.enumerated(n)
+	if complete.State != EvidenceKnown || !complete.Value {
+		return timelineGapAs[bool, Decimal](complete, "timeline-divisions-enumeration-unavailable")
+	}
+	value := Evidence[Decimal]{State: EvidenceAbsent}
+	seen := false
+	for _, ch := range n.children {
+		if !r.step(1) {
+			return stateUnknown[Decimal]("timeline-interrupted")
+		}
+		if ch.header.Declaration.State != EvidenceKnown {
+			if r.potential(ch, timelineRoleAttributesDivisions) {
+				gap := timelineGapAs[DeclarationID, Decimal](ch.header.Declaration, "timeline-divisions-declaration-unavailable")
+				value = timelineUnitWorst(value, gap)
+			}
+			continue
+		}
+		if !r.matches(ch, timelineRoleAttributesDivisions) {
+			continue
+		}
+		next := stateDecimalValue(r.scalar(ch))
+		if seen {
+			next = timelineUnitWorst(next, stateUnknown[Decimal]("timeline-divisions-child-ambiguous"))
+		}
+		seen = true
+		if value.State == EvidenceAbsent {
+			value = next
+		} else {
+			value = timelineUnitWorst(value, next)
+		}
+	}
+	return value
+}
+func timelineUnitWorst(a, b Evidence[Decimal]) Evidence[Decimal] {
+	rank := func(v Evidence[Decimal]) int {
+		switch v.State {
+		case EvidenceInvalid:
+			return 3
+		case EvidenceUnsupported:
+			return 2
+		case EvidenceUnknown:
+			return 1
+		}
+		return 0
+	}
+	if rank(b) > rank(a) {
+		return b
+	}
+	return a
+}
+
+// Skip exact reconstruction preflight where no varying units are rewound. This
+// is a logical proof shortcut, not reduced arithmetic precision or wider limits.
+func timelineNeedsUnitPreflight(r *stateReader, block timelineMeasureBlock, inherited Evidence[Decimal]) (bool, error) {
+	current := inherited
+	moved, changed, backup := false, false, false
+	for _, event := range block.content.children {
+		if !r.step(1) {
+			return false, r.err
+		}
+		if r.matches(event, timelineRoleBackup) {
+			backup = true
+			moved = true
+		}
+		if r.matches(event, timelineRoleNote) || r.matches(event, timelineRoleForward) {
+			moved = true
+		}
+		if r.matches(event, timelineRoleAttributes) {
+			next := timelineAttributeUnits(r, event)
+			if next.State == EvidenceAbsent {
+				continue
+			}
+			same, err := r.s.sameTimelineUnits(r.ctx, current, next)
+			if err != nil {
+				return false, err
+			}
+			if moved && !same {
+				changed = true
+			}
+			current = next
+		}
+	}
+	return backup && changed, r.err
 }
