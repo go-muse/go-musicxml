@@ -407,8 +407,9 @@ func TestIndependentTimelineOriginContextQuota(t *testing.T) {
 		note := runtimeNote(t, b, 300, 1, false)
 		service.Facts[100], service.Facts[200], service.Facts[300] = fact, fact, fact
 		err := service.resolveFiguredBassOrigins(context.Background(), s, b, runtimeBlock(b, 0, first, second, note))
-		if !errors.Is(err, ErrResourceLimit) || !errors.Is(err, ErrIncompleteAssessment) || len(service.FiguredBassOrigins) != 1 || rationalUsage(t, s, BudgetContextFacts) != 1 {
-			t.Fatalf("figured bass quota bypass: err=%v entries=%d context=%d", err, len(service.FiguredBassOrigins), rationalUsage(t, s, BudgetContextFacts))
+		if !errors.Is(err, ErrResourceLimit) || !errors.Is(err, ErrIncompleteAssessment) || len(service.FiguredBassOrigins) != 0 || rationalUsage(t, s, BudgetContextFacts) != 1 {
+			// Document-wide finalization publishes only after every record is admitted.
+			t.Fatalf("figured bass quota bypass or partial transaction: err=%v entries=%d context=%d", err, len(service.FiguredBassOrigins), rationalUsage(t, s, BudgetContextFacts))
 		}
 	})
 }
