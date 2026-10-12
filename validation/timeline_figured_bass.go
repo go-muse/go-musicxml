@@ -513,6 +513,11 @@ func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimin
 // anchor and independent duration survive when chain membership is unproved.
 func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pending map[NodeID]figuredBassTimingOrigin, ids []NodeID) error {
 	counts := map[NodeID]int{}
+	// Unknown anchors retain IDs only: on 64-bit hosts each map entry is
+	// NodeRef24 + slice24, conservatively 4*48 bytes, plus 32 bytes per ID
+	// for append backing overlap and 8 for the finalizer's exact ID list.
+	// The resulting 232 bytes/figure fits the chain scratch allowance; the
+	// known-anchor count entry is disjoint and narrower. Positions stay shared.
 	partGaps := map[NodeRef][]NodeID{}
 	globalGap := Evidence[NodeRef]{State: EvidenceKnown}
 	for _, id := range ids {
