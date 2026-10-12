@@ -310,3 +310,29 @@ func TestPlaybackUnknownLocationAndExactBinding(t *testing.T) {
 		t.Fatalf("matched runtime local name %v", err)
 	}
 }
+
+func TestPlaybackRawAttributePresenceIsNotSharedXSDDefault(t *testing.T) {
+	for _, target := range []Target{TargetSource, TargetModel} {
+		t.Run(string(target), func(t *testing.T) {
+			schema := localSchema(t)
+			engine := localEngine(t, schema, target)
+			// The shared schema's beam@number default supplies a real effective scalar,
+			// without inventing an explicit input fact. The raw reader must preserve that
+			// distinction for every defaulted declaration, including barline@location.
+			s := localAdmit(t, engine, target, lt("root", lt("note", lt("beam"))), nil)
+			defer s.cleanup()
+			b := stateBindings()
+			use := localUse(t, schema, "beam", "number", true)
+			b.Roles[timelineRoleBarlineLocation] = []SchemaUse{use}
+			r := &stateReader{ctx: context.Background(), s: s, b: b}
+			effective := r.attribute(s.nodes[3], timelineRoleBarlineLocation)
+			if r.err != nil || effective.State != EvidenceKnown || effective.Value.Integer.String() != "1" {
+				t.Fatalf("fixture lacks XSD default: %+v,%v", effective, r.err)
+			}
+			raw := r.playbackRawAttribute(s.nodes[3], timelineRoleBarlineLocation)
+			if r.err != nil || raw.State != EvidenceAbsent {
+				t.Fatalf("default presented as explicit: %+v,%v", raw, r.err)
+			}
+		})
+	}
+}
