@@ -51,3 +51,9 @@ var (
 	_ [timelineKeyPresenceCertificateBytes - 4*int64(unsafe.Sizeof(int(0))+unsafe.Sizeof(stateProvenance{}))]struct{}
 	_ [timelineKeyPresenceGapScratchBytes - int64(unsafe.Sizeof(stateGap{}))]struct{}
 )
+
+var (
+	_ [timelineDivisionsValueCertificateBytes - 4*int64(unsafe.Sizeof(int(0))+unsafe.Sizeof(divisionsValueCertificate{}))]struct{}
+	_ [timelineDivisionsValueGapScratchBytes - int64(unsafe.Sizeof(stateGap{}))]struct{}
+	_ [timelineNormalizationGateBytes - 4*int64(unsafe.Sizeof(NodeID(0))+unsafe.Sizeof(timelineNormalizationGate{})) - 128]struct{}
+)
