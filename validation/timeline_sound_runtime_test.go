@@ -121,3 +121,33 @@ func TestTimelineRuntimePublishesPlaybackAndFigureUnits(t *testing.T) {
 		t.Fatalf("tempo=%+v %v", tempo, err)
 	}
 }
+
+func TestTimelineRuntimeUnknownPublisherGapsOnlyPotentialFamilies(t *testing.T) {
+	for _, role := range []timelineRole{timelineRoleSound, timelineRoleDirection, timelineRoleAttributes} {
+		t.Run(string(rune(role)), func(t *testing.T) {
+			s, svc, b := runtimeFixture(t)
+			ctx := context.Background()
+			typ := ComponentID{Kind: ComponentComplexType, Name: QName{Local: "test-publisher"}}
+			b.Roles[role][0].DeclaredTypeKnown = true
+			b.Roles[role][0].DeclaredType = typ
+			unknown := stateNode(b, role, 50, stateAbsent[Atomic]())
+			unknown.header.Declaration = stateUnknown[DeclarationID]("unbound-publisher")
+			unknown.header.Type = stateKnown(typ)
+			if err := svc.readMeasure(ctx, s, b, runtimeBlock(b, 0, unknown)); err != nil {
+				t.Fatal(err)
+			}
+			if role == timelineRoleAttributes {
+				if len(svc.State.InstrumentGaps) != 0 || len(svc.Playback.Tempo.Gaps) != 0 {
+					t.Fatal("attribute-only publisher damaged sound/instrument state")
+				}
+				return
+			}
+			if len(svc.State.Keys.Gaps) != 0 || len(svc.State.Divisions.Gaps) != 0 {
+				t.Fatal("sound-only publisher damaged attribute state")
+			}
+			if len(svc.State.InstrumentGaps) != 1 || len(svc.Playback.Tempo.Gaps) != 1 {
+				t.Fatalf("missing possible sound gap: instruments=%d tempo=%d", len(svc.State.InstrumentGaps), len(svc.Playback.Tempo.Gaps))
+			}
+		})
+	}
+}
