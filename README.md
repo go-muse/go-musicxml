@@ -168,7 +168,7 @@ complete the measured source/current-model cases. Source measurements remove
 only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
 are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
 source assessment contract.
-See [matched resource evidence](docs/validation/evidence/context-round1-resource-acceptance.md)
+See [matched resource evidence](docs/validation/evidence/context-round3-resource-acceptance.md)
 for exact minima and outcomes. Exhaustion is incomplete assessment, not a
 MusicXML violation or a readiness success.
 

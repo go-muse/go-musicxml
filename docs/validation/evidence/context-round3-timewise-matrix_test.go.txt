@@ -1,0 +1,102 @@
+package musicxml
+
+import (
+	"github.com/go-muse/go-musicxml/validation"
+	"os"
+	"strings"
+	"testing"
+)
+
+// This new matrix preserves every byte of the accepted partwise synthetic other
+// than the root name and measure/part hierarchy. Original round-one helpers and
+// all official-fixture handling remain unchanged in their separately hashed file.
+func r3TimewiseFixtures(t *testing.T) []r1ResourceFixture {
+	t.Helper()
+	out := make([]r1ResourceFixture, 0, 2)
+	for _, count := range []int{100, 1000} {
+		name := "timewise100"
+		if count == 1000 {
+			name = "timewise1000"
+		}
+		original := independentTimelineScore(count, false, "1")
+		original = strings.ReplaceAll(original, "score-partwise", "score-timewise")
+		original = strings.Replace(original, `<part id="P1"><measure number="1">`, `<measure number="1"><part id="P1">`, 1)
+		original = strings.Replace(original, `</measure></part></score-timewise>`, `</part></measure></score-timewise>`, 1)
+		doc, err := Decode(strings.NewReader(original))
+		if err != nil {
+			t.Fatal(err)
+		}
+		out = append(out, r1ResourceFixture{name, original, original, doc})
+	}
+	return out
+}
+
+func TestRound3IndependentTimewiseResourceMatrix(t *testing.T) {
+	expanded := validation.Budgets{MaxRuleSteps: 1 << 34, MaxBufferedBytes: 512 << 20}
+	for _, f := range r3TimewiseFixtures(t) {
+		for _, path := range []string{"source", "model"} {
+			if filter := os.Getenv("RESOURCE_PATHS"); filter != "" && !strings.Contains(","+filter+",", ","+path+",") {
+				continue
+			}
+			t.Run(f.name+"/"+path, func(t *testing.T) {
+				if os.Getenv("RESOURCE_MINIMUMS") != "only" {
+					for _, c := range []struct {
+						name     string
+						limits   validation.Budgets
+						timeline bool
+					}{{"defaults", validation.Budgets{}, false}, {"expanded", expanded, false}, {"work-expanded-only", validation.Budgets{MaxRuleSteps: 1 << 34}, false}, {"timeline-expanded", expanded, true}} {
+						o, _ := r1ResourceRun(t, f, path, c.timeline, c.limits, c.name, true)
+						r1ResourceEmit(t, o)
+					}
+				}
+				if os.Getenv("RESOURCE_MINIMUMS") == "" {
+					return
+				}
+				complete, _ := r1ResourceRun(t, f, path, false, expanded, "expanded-minimum-control", false)
+				if complete.Error != "" || !complete.AssessmentComplete {
+					t.Fatalf("expanded run cannot establish minima: %+v", complete)
+				}
+				low, high := int64(1), int64(512<<20)
+				for low < high {
+					mid := low + (high-low)/2
+					limits := expanded
+					limits.MaxBufferedBytes = mid
+					o, _ := r1ResourceRun(t, f, path, false, limits, "search-buffered", false)
+					if o.Error == "" && o.AssessmentComplete {
+						high = mid
+					} else if o.ResourceError != nil && o.ResourceError.Kind == validation.BudgetBufferedBytes {
+						low = mid + 1
+					} else {
+						t.Fatalf("unexpected binary search result: %+v", o)
+					}
+				}
+				for _, kind := range []string{"buffered", "steps", "facts"} {
+					for _, delta := range []int64{0, -1} {
+						limits := expanded
+						switch kind {
+						case "buffered":
+							limits.MaxBufferedBytes = low + delta
+						case "steps":
+							limits.MaxRuleSteps = complete.Usage[validation.BudgetRuleSteps] + delta
+						case "facts":
+							limits.MaxContextFacts = complete.Usage[validation.BudgetContextFacts] + delta
+						}
+						config := kind + "-exact"
+						if delta < 0 {
+							config = kind + "-one-under"
+						}
+						o, _ := r1ResourceRun(t, f, path, false, limits, config, false)
+						o.MinimumBufferedBytes = low
+						r1ResourceEmit(t, o)
+						if delta == 0 && (o.Error != "" || !o.AssessmentComplete || o.Records != complete.Records) {
+							t.Errorf("exact admission failed: %+v", o)
+						}
+						if delta < 0 && (o.ResourceError == nil || o.AssessmentComplete || o.Satisfied) {
+							t.Errorf("one-under admission failed to refuse: %+v", o)
+						}
+					}
+				}
+			})
+		}
+	}
+}

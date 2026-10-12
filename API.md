@@ -510,6 +510,21 @@ This does not define or reject the remaining numeric lexical domain.
 marker; `Guard` records pass-selection evidence. Neither field is a realized
 playback count. Traversal extent remains separately described by `Complete`;
 ambiguous mixed jump/repeat control preserves an unavailable bounded prefix.
+Ordinary sound/listening updates retain stable encoded order at a shared
+position; they do not create a competing navigation-control boundary. For an
+ordinary sound update, an absent pass selector has a Known true `Guard`,
+independently of traversal completeness. Listening statements retain their own
+activation evidence; jump-specific selector defaults remain separate.
+
+Span correspondence preserves exact part and identity boundaries. Refused
+same-note tied interpretations withhold their exact identity run in every
+document order. Duplicate wholly unnamed lyric lines withhold that unnamed
+identity within the part; no default verse or reset boundary is inferred.
+Graphical beat-repeat comparison without an explicit stop uses the documented
+same-final-measure encoded cursor extent. A trailing forward contributes to that
+extent just like other positive non-backup advancement; this comparison does
+not establish measure capacity or endpoint containment. See the
+[bounded terminal-range contract](docs/validation/context-assessment-scope.md#graphical-beat-repeat-terminal-extent).
 
 Catalog users can bind the same sealed contracts with `NewLocalContextPlan`,
 `NewSpanContextPlan`, `NewRepeatContextPlan`, `NewNavigationContextPlan`,
@@ -542,11 +557,14 @@ only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
 are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
 source assessment contract.
 
-The corrected Mozart model run uses 40,509,894 shared steps, 12,874 facts and
-11,105 records; its measured minimum buffered limit is 90,509,904 bytes.
-The MozaChlo model run uses 46,226,065 steps, 14,161 facts and 12,337 records,
-with a 97,906,233-byte minimum. These are fixture-specific results, not a
-score-size guarantee. See [matched resource evidence](docs/validation/evidence/context-round1-resource-acceptance.md)
+The corrected Mozart model run uses 40,569,928 shared steps, 13,808 facts and
+11,105 records; its measured minimum buffered limit is 94,263,641 bytes.
+The MozaChlo model run uses 46,302,398 steps, 15,488 facts and 12,337 records,
+with a 103,134,552-byte minimum. These are fixture-specific results, not a
+score-size guarantee. Correcting false passive-control ambiguity reaches more
+encoded navigation occurrences and retains their owned state snapshots; the
+higher official-sample cost is included in these measurements.
+See [matched resource evidence](docs/validation/evidence/context-round3-resource-acceptance.md)
 for source minima, exact/one-under controls and cleanup.
 
 See [scope and limits](docs/validation/context-assessment-scope.md) for the

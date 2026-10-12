@@ -1,0 +1,39 @@
+package musicxml
+
+import (
+	"github.com/go-muse/go-musicxml/validation"
+	"strings"
+	"testing"
+)
+
+func TestRound3IndependentNavigationAttribution(t *testing.T) {
+	for _, f := range r1ResourceFixtures(t) {
+		if !strings.HasSuffix(f.name, ".musicxml") {
+			continue
+		}
+		o, report := r1ResourceRun(t, f, "model", false, validation.Budgets{MaxRuleSteps: 1 << 34, MaxBufferedBytes: 512 << 20}, "navigation-attribution", false)
+		if o.Error != "" || !o.AssessmentComplete {
+			t.Fatal(o.Error)
+		}
+		total, navRows, initialInstruments := 0, 0, 0
+		runs := []map[string]any{}
+		for _, row := range report.Context {
+			if row.Navigation == nil {
+				continue
+			}
+			navRows++
+			v := row.Navigation
+			if v.Kind != validation.NavigationTraversal {
+				continue
+			}
+			total += len(v.Traversal)
+			firstInstruments := 0
+			if len(v.Traversal) > 0 {
+				firstInstruments = len(v.Traversal[0].Instruments)
+				initialInstruments += firstInstruments
+			}
+			runs = append(runs, map[string]any{"part": v.Part, "complete": v.Complete, "occurrences": len(v.Traversal), "initial_instruments": firstInstruments})
+		}
+		r1ResourceEmit(t, map[string]any{"fixture": f.name, "context_facts": o.Usage[validation.BudgetContextFacts], "rule_steps": o.Usage[validation.BudgetRuleSteps], "context_records": o.Records, "navigation_rows": navRows, "nested_navigation_occurrences": total, "initial_instrument_states_for_started_traversals": initialInstruments, "traversals": runs})
+	}
+}

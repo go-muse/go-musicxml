@@ -1,0 +1,27 @@
+package validation
+
+import (
+	"context"
+	"errors"
+	"testing"
+)
+
+func TestIndependentRound3LayoutCancellationAfterSelection(t *testing.T) {
+	measure := localNode(1, 0, "measure")
+	r := layoutRound1Reader(t, measure)
+	account, err := NewBudgetAccount(Budgets{MaxBufferedBytes: 512})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.s.account = account
+	r.ctx = &rationalCancelContext{Context: context.Background(), at: 2}
+	l := layoutScopes{r: r, key: RuleKey{"layout", 1}, staffOverrides: map[NodeID]map[string]layoutStaffBucket{2: {}}, staffGaps: map[NodeID]Evidence[bool]{}}
+	err = l.publishStaffLayouts(timelineMeasureBlock{measure: measure, content: measure, part: stateKnown(NodeRef{"score", 2})}, Evidence[layoutStaffRef]{State: EvidenceAbsent}, layoutFrame{})
+	t.Logf("returned=%v reader=%v retained=%d live=%d", err, r.err, r.s.retained, rationalUsage(t, r.s, BudgetBufferedBytes))
+	if !errors.Is(err, context.Canceled) {
+		t.Errorf("lost first cancellation: %v", err)
+	}
+	if r.s.retained != 0 || rationalUsage(t, r.s, BudgetBufferedBytes) != 0 {
+		t.Error("manufactured retained gap after interrupted selection")
+	}
+}

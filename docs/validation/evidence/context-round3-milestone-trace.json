@@ -1,0 +1,75 @@
+{
+  "baseline": "0821afd31cc0c783db53b351096ea9e76bd060dc",
+  "status": "Independent semantic/resource acceptance passed on exact production; packaged seven-stage and remote exact-head CI remain separate release gates",
+  "milestones": [
+    {
+      "family": "causal/cache",
+      "author_commit": "d560bf07403750d308e287e9aa35cddb2d230996",
+      "integration_commit": "2f3c534cd3833d221f124641872279923b64040e"
+    },
+    {
+      "family": "navigation",
+      "author_commit": "f78c181a5ea1c651340776093b39ce3204716638",
+      "integration_commit": "dbf63596e5bf598c76ecb3d7631e9d38bf5a9fd7"
+    },
+    {
+      "family": "spans",
+      "author_commit": "5dc09cdb0f89595c370ed82713f24369f548aa6a",
+      "integration_commit": "2a5b8670646ed6cd4d8f225fdb4ed7d1a4c13b60"
+    },
+    {
+      "family": "layout",
+      "author_commit": "0765e65d9fe671d6fed6cc489a0efcb43c3f6afb",
+      "integration_commit": "a7ba9b7ffa8aa3bee15d27f03f97f1864420fb6f"
+    },
+    {
+      "family": "repeat coverage",
+      "author_commit": "bbe3d03a24b2c113f4eb68e00c56a0c9a611287e",
+      "integration_commit": "e3c29d3b6df2c9e127c2fbdb413031deec8f71dd"
+    }
+  ],
+  "endpoint_argument": "https://github.com/go-muse/go-musicxml/pull/36#discussion_r4251043369",
+  "independent_followups": [
+    {
+      "author": "fde1139840909ab477cab8955cfb07760aec4aee",
+      "integration": "d26f662cd552cf4032589866890b9138b34b2140"
+    },
+    {
+      "author": "73ebf31346154b33a52349f466e08b854b64cbf2",
+      "integration": "b152397e832b789d8f04ef5ee68b2d0853e5e675"
+    },
+    {
+      "author": "2c346aab4a1b3d678ccce79d3fb8f103ffb99c8a",
+      "integration": "64285b299d567df56534813dcd06fad10bd5cf70"
+    }
+  ],
+  "packaging": {
+    "original": "64285b299d567df56534813dcd06fad10bd5cf70",
+    "preserved_ref": "refs/heads/preserve/context-batch7-round3-unpackaged",
+    "packaged": "115b030ff450d067e51a5ee1ee985afb27967704",
+    "identical_tree": "7c44d9c60cdc4c7f35a6841983cc8ced35dfaaa3",
+    "note": "Three independently found identity/causal/interrupt corrections become one coherent private milestone. Published baseline and author commits are preserved."
+  },
+  "production_fingerprint": "b11b9a7c933a611f58bed23120306c0598567498532223f8cd1634c7a7d070d7",
+  "authentic_red_logs_sha256": {
+    "layout-round3-conflict-red.log": "f8e6cff57fbefa5093290cdf29b7b61eaf7f19e1253a21337e740ebf98bb105b",
+    "layout-round3-selection-red.log": "20a5a79595227e38fb6056f290733c7176bf69f3d5489dda0d578c0fb36f2c0a",
+    "layout-round3-red.log": "e597b40600c15f8c26b18a8b8e32ee78e0db62d34deb43c9c16ef2e306d21314",
+    "layout-round3-resource-cause-red.log": "3a55f1ae60232bd07db34aecd038d95a8c04a3a48c19fc7203d94c8c529948c5",
+    "round3-repeat-terminal-red.log": "532ad0d9f01f48e44fa789aa638f882ffb0f440ab7d32c4371c9ab090db35fd4",
+    "layout-round3-nil-owner-red.log": "927f24d4fd3c300eaa2c1445e96701dac55b20de1a0be0da590dd82726ba06fa",
+    "spans-round3-red.log": "cfc79cdb21a3bc0b78ee281e28d592247f6cc09f578671e66c78270ffad54729",
+    "round3-independent-semantic-extra-red.log": "babe8a9ea7c0741fc8dc0e56651d0e45c85adfdeec12830e8f0c4d3b630085c7",
+    "layout-round3-cancel-sweep-red.log": "d7607bae7d61cb1e7dd4ff944f4664b4fbda633b32e7d930f7de387d1394d2e3",
+    "spans-round3-final-contract-red.log": "b4683186abf35497629d62808a3ac31a80aee025d78581e8fc21618962d19278",
+    "round3-causal-red.log": "eb05f3657f80949cc16cf291295bbbe9a5661bf6274cbf3034cc16c9254239fc",
+    "spans-round3-partial-sibling-red.log": "22042250bb777571002ca447fab7e215623c7b19e4af7aaad63525ffc812d99b",
+    "layout-round3-stronger-cause-red.log": "68e15af5cc5b6d08a25ba61955ddb4f47f3264eb07402117972ecb1e2f5ce6ec",
+    "round3-repeat-red.log": "b0b60640bb0fdd45c134c31a9ff9ed4963439e3ad7403c7b001a88dcf4eee707",
+    "spans-round3-partial-identity-red.log": "c475117db4fd9dc46e452955be8d689c8326deb32ea3d2a4c173e4f69e218373",
+    "layout-round3-divider-provenance-red.log": "4eff035b72b05d74b182fa70ddff0fbbea1b1f6fbe4a7667a82b756f9bd837da",
+    "layout-round3-cause-red.log": "b68385b018c9349c5f3136537cd32e0ab5a12dea965e562ff8c91d7c8316d10b",
+    "round3-navigation-before.log": "f579b7adb0c87d9c7ccd7154546550144d29f78b4d07e82db68e5a99f1349c7e",
+    "round3-resource-qa/layout-cancel-probe-red.log": "3c6ad1b508cca417bab96bd34ea7bf55bd8f4300a13f387c158c804108792f06"
+  }
+}

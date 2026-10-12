@@ -118,11 +118,14 @@ only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
 are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
 source assessment contract.
 
-The corrected Mozart model run requires 40,509,894 steps and a measured
-90,509,904-byte buffer minimum; MozaChlo requires 46,226,065 steps and
-97,906,233 bytes. [Matched Round 1 resource acceptance](evidence/context-round1-resource-acceptance.md)
+The corrected Mozart model run requires 40,569,928 steps and a measured
+94,263,641-byte buffer minimum; MozaChlo requires 46,302,398 steps and
+103,134,552 bytes. [Matched Round 3 resource acceptance](evidence/context-round3-resource-acceptance.md)
 records baseline/final results, exact finite configuration, source treatment,
-public outcomes, one-under controls and post-Finish cleanup. These two official
+public outcomes, one-under controls and post-Finish cleanup. Corrected passive
+navigation handling reaches additional encoded occurrences and retains their
+owned state snapshots; the official-sample work/fact increase is reconciled
+against those actual occurrences rather than hidden by larger defaults. These two official
 files and synthetic fixtures do not establish replicated-score or universal
 throughput guarantees.
 
@@ -132,5 +135,5 @@ limit before exhausting default work (source: 12,994,218 steps; model:
 13,699,811 steps). Raising work alone does not remove that retention limit. Explicit
 finite limits of `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20` allow
 that measured fixture to finish. This is bounded-profile evidence, not an
-unrestricted score-size guarantee. See [current resource acceptance evidence](evidence/context-round1-resource-acceptance.md)
+unrestricted score-size guarantee. See [current resource acceptance evidence](evidence/context-round3-resource-acceptance.md)
 for exact counts, budget outcomes and remaining output-size costs.
