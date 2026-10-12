@@ -67,3 +67,26 @@ func TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch(t *testing.T) {
 		})
 	}
 }
+
+func TestIndependentTimelineClosureAndGraceIdentityWork(t *testing.T) {
+	for _, kind := range []string{"closure", "grace"} {
+		s := rationalSession(t, Budgets{MaxRuleSteps: 32})
+		a, b := statePosition(t, 0, 0, 1), statePosition(t, 1, 0, 1)
+		doc := strings.Repeat("canonical-document-", 1024)
+		a.Part.DocumentID = strings.Clone(doc)
+		a.Measure.DocumentID = a.Part.DocumentID
+		b.Part.DocumentID = strings.Clone(doc)
+		b.Measure.DocumentID = b.Part.DocumentID
+		var err error
+		if kind == "closure" {
+			h := &timelineState{Closures: []stateClosure{{Part: a.Part, Through: 2, Complete: stateKnown(true)}}}
+			_, err = h.closure(context.Background(), s, b)
+		} else {
+			_, err = s.gracePositionOrder(context.Background(), a, b)
+		}
+		if !errors.Is(err, ErrResourceLimit) {
+			t.Errorf("%s compared%d-byte IDs with%d work: %v", kind, len(doc), rationalUsage(t, s, BudgetRuleSteps), err)
+		}
+		s.cleanup()
+	}
+}
