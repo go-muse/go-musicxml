@@ -498,7 +498,13 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 		}
 		return project(p.Value.Value)
 	}
+	if e = s.step(ctx, selected.bytes); e != nil {
+		return stateResult[V]{}, e
+	}
 	out.Value = projectValue(selected)
+	if e = s.step(ctx, 1); e != nil {
+		return stateResult[V]{}, e
+	}
 	initial := out.Value
 	conflict := false
 	for _, p := range history.Publications {
@@ -530,6 +536,9 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 			return stateResult[V]{}, e
 		}
 		candidate := projectValue(p)
+		if e = s.step(ctx, 1); e != nil {
+			return stateResult[V]{}, e
+		}
 		if !reflect.DeepEqual(initial, candidate) {
 			conflict = true
 		}
@@ -713,4 +722,71 @@ func (v transposeState) contributions(ctx context.Context, s *Session) (Evidence
 	// Doubling is independent notation and is deliberately not added to either
 	// base transposition contribution. Absent diatonic remains absent spelling.
 	return c, d, e
+}
+
+// stateEncodingComponent returns availability without reparsing or strengthening
+// the scalar's domain. Optional absence is admissible; unknown is never presence.
+func stateEncodingComponent[T any](v Evidence[T], required bool) Evidence[bool] {
+	if v.State == EvidenceKnown || v.State == EvidenceAbsent && !required {
+		return Evidence[bool]{State: EvidenceKnown, Value: true}
+	}
+	if v.State == EvidenceAbsent {
+		return stateUnknown[bool]("timeline-required-key-component-absent")
+	}
+	if v.State == "" {
+		return stateUnknown[bool]("timeline-key-component-unavailable")
+	}
+	return stateUnavailable[T, bool](v)
+}
+
+// encodingEvidence is a projection over already budgeted state. queryState
+// charges the entire typed payload before invoking it and polls again afterward.
+func (v keyState) encodingEvidence() Evidence[bool] {
+	check := func(e Evidence[bool]) bool { return e.State == EvidenceKnown && e.Value }
+	required := stateEncodingComponent(v.Fifths, v.Traditional)
+	if !check(required) {
+		return required
+	}
+	if e := stateEncodingComponent(v.Mode, false); !check(e) {
+		return e
+	}
+	if e := stateEncodingComponent(v.Cancel, false); !check(e) {
+		return e
+	}
+	if e := stateEncodingComponent(v.CancelLocation, false); !check(e) {
+		return e
+	}
+	for _, a := range v.Alterations {
+		if e := stateEncodingComponent(a.Step, true); !check(e) {
+			return e
+		}
+		if e := stateEncodingComponent(a.Alter, true); !check(e) {
+			return e
+		}
+		if e := stateEncodingComponent(a.Accidental, false); !check(e) {
+			return e
+		}
+		if e := stateEncodingComponent(a.SMuFL, false); !check(e) {
+			return e
+		}
+	}
+	for _, o := range v.Octaves {
+		if e := stateEncodingComponent(o.Number, true); !check(e) {
+			return e
+		}
+		if e := stateEncodingComponent(o.Octave, true); !check(e) {
+			return e
+		}
+		if e := stateEncodingComponent(o.Cancel, false); !check(e) {
+			return e
+		}
+	}
+	return Evidence[bool]{State: EvidenceKnown, Value: true}
+}
+func (h *timelineState) effectiveKeyPresence(ctx context.Context, s *Session, pos musicalPosition, staff Evidence[Integer]) (stateResult[bool], error) {
+	staff, e := h.resolveStaff(ctx, s, pos, staff)
+	if e != nil {
+		return stateResult[bool]{}, e
+	}
+	return queryState(ctx, s, h, &h.Keys, pos, staff, func(v keyState) Evidence[bool] { return v.encodingEvidence() })
 }
