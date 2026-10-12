@@ -736,26 +736,32 @@ func queryStateAtScope[T, V any](ctx context.Context, s *Session, h *timelineSta
 			if cmp != 0 {
 				continue
 			}
-			candidate := projectValue(p)
-			candidateCost := p.bytes
-			if !ownedResult {
-				candidateCost, e = stateMeasure(ctx, s, reflect.ValueOf(candidate))
-				if e != nil {
+			// The selected immutable publication was already projected and admitted.
+			// Reuse that exact value, but preserve this iteration's causal precedence
+			// and provenance below, even after distinct candidates changed out.Value.
+			candidate := initialValue
+			if publicationIndex != best {
+				candidate = projectValue(p)
+				candidateCost := p.bytes
+				if !ownedResult {
+					candidateCost, e = stateMeasure(ctx, s, reflect.ValueOf(candidate))
+					if e != nil {
+						return stateResult[V]{}, e
+					}
+				}
+				compareCost, x := rationalCheckedAdd(BudgetRuleSteps, candidateCost, selectedCost)
+				if x != nil {
+					return stateResult[V]{}, x
+				}
+				if e = s.step(ctx, compareCost); e != nil {
 					return stateResult[V]{}, e
 				}
-			}
-			compareCost, x := rationalCheckedAdd(BudgetRuleSteps, candidateCost, selectedCost)
-			if x != nil {
-				return stateResult[V]{}, x
-			}
-			if e = s.step(ctx, compareCost); e != nil {
-				return stateResult[V]{}, e
-			}
-			if e = s.step(ctx, 1); e != nil {
-				return stateResult[V]{}, e
-			}
-			if !reflect.DeepEqual(initialValue, candidate) {
-				conflict = true
+				if e = s.step(ctx, 1); e != nil {
+					return stateResult[V]{}, e
+				}
+				if !reflect.DeepEqual(initialValue, candidate) {
+					conflict = true
+				}
 			}
 			// Preserve an actual invalid/unsupported publication's causal evidence rather
 			// than replacing it with an invented conflict cause.

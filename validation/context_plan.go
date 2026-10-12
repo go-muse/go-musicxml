@@ -70,8 +70,9 @@ func NewTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planTimeOnlyOrder, ContextPlanSpec{Schema: schema})
 }
 
-// NewFigureNumberNumericPlan preserves the unreviewed numeric-grammar gate
-// for the exact figure-number declaration without inventing a lexical grammar.
+// NewFigureNumberNumericPlan accepts the sufficient nonempty ASCII-digit subset
+// for the exact figure-number declaration. Other spellings retain the unreviewed
+// numeric-grammar gate rather than asserting a complete lexical grammar.
 func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planFigureNumberNumeric, ContextPlanSpec{Schema: schema})
 }
@@ -145,7 +146,7 @@ func (p *contextPlan) digest(kind planKind) any {
 		Assembly     Assembly
 		Timeline     RuleKey
 		Provider     RuleKey
-		Bindings     any
+		Bindings     string
 	}{kind, p.revision, p.Schema.Digest(), p.Schema.Assembly(), p.Timeline, p.Provider, p.Bindings.digest()}
 }
 func (p Plan) validateContextFor(r RuleDefinition) error {

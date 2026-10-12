@@ -2,6 +2,9 @@ package validation
 
 import (
 	"cmp"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"slices"
 	"strings"
 	"sync"
@@ -27,7 +30,16 @@ type contextAttributeRole struct {
 	role     contextRole
 	selector AttributeSelector
 }
+type contextAttributeTable struct {
+	selectors map[contextRole]AttributeSelector
+	roles     []contextRole
+}
+
 type contextBindings struct {
+	ElementRoles   map[DeclarationID][]contextRole
+	OwnerTables    map[ComponentID]*contextAttributeTable
+	assembly       Assembly
+	bindingDigest  string
 	Elements       map[contextRole]map[DeclarationID]struct{}
 	AttributeRoles map[DeclarationID][]contextAttributeRole
 	Roles          map[contextRole][]SchemaUse
@@ -108,7 +120,7 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 			index[k] = append(index[k], u)
 		}
 	}
-	b := &contextBindings{Elements: make(map[contextRole]map[DeclarationID]struct{}), AttributeRoles: make(map[DeclarationID][]contextAttributeRole), Roles: make(map[contextRole][]SchemaUse), Attributes: make(map[contextRole]map[ComponentID]AttributeSelector), AttributeUses: make(map[contextRole]map[DeclarationID]AttributeSelector), RequiredAttributes: make(map[AttributeSelector]ComponentID), requiredSchemaDigest: schema.Digest(), bytes: 640 + int64(len(schema.Digest()))}
+	b := &contextBindings{ElementRoles: make(map[DeclarationID][]contextRole), OwnerTables: make(map[ComponentID]*contextAttributeTable), assembly: schema.assembly, Elements: make(map[contextRole]map[DeclarationID]struct{}), AttributeRoles: make(map[DeclarationID][]contextAttributeRole), Roles: make(map[contextRole][]SchemaUse), Attributes: make(map[contextRole]map[ComponentID]AttributeSelector), AttributeUses: make(map[contextRole]map[DeclarationID]AttributeSelector), RequiredAttributes: make(map[AttributeSelector]ComponentID), requiredSchemaDigest: schema.Digest(), bytes: 640 + int64(len(schema.Digest()))}
 	for _, spec := range specs {
 		if spec.Role == "" || spec.Name == "" || spec.Type == "" || (spec.Count < 1 && spec.Count != -1) || (spec.Count == -1 && spec.Owner != "") {
 			return nil, contract("context binding spec", "exact fixed role or declared-type family required")
@@ -157,6 +169,15 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 					return nil, contract("context attribute role", "ambiguous exact owner slot")
 				}
 				owners[u.OwnerType] = a
+				table := b.OwnerTables[u.OwnerType]
+				if table == nil {
+					table = &contextAttributeTable{selectors: make(map[contextRole]AttributeSelector)}
+					b.OwnerTables[u.OwnerType] = table
+					b.bytes += 384 + contextComponentBytes(u.OwnerType)
+				}
+				table.selectors[spec.Role] = a
+				table.roles = append(table.roles, spec.Role)
+				b.bytes += 256 + int64(len(spec.Role))
 				declarations[u.Declaration] = a
 				b.bytes += 512
 			}
@@ -171,6 +192,8 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 			elements := make(map[DeclarationID]struct{}, len(bound))
 			for _, u := range bound {
 				elements[u.Declaration] = struct{}{}
+				b.ElementRoles[u.Declaration] = append(b.ElementRoles[u.Declaration], spec.Role)
+				b.bytes += 128 + contextDeclarationBytes(u.Declaration) + int64(len(spec.Role))
 				b.bytes += 256 + contextDeclarationBytes(u.Declaration)
 			}
 			b.Elements[spec.Role] = elements
@@ -180,6 +203,17 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 			return nil, contract("context bindings", "finite configuration allowance exceeded")
 		}
 	}
+	for _, roles := range b.ElementRoles {
+		slices.Sort(roles)
+	}
+	for _, table := range b.OwnerTables {
+		slices.Sort(table.roles)
+	}
+	b.bindingDigest = b.hash()
+	b.bytes += int64(len(b.bindingDigest))
+	if b.bytes > 4<<20 {
+		return nil, contract("context bindings", "finite configuration allowance exceeded")
+	}
 	return b, nil
 }
 func (b *contextBindings) size() int64 {
@@ -188,25 +222,43 @@ func (b *contextBindings) size() int64 {
 	}
 	return b.bytes
 }
-func (b *contextBindings) digest() any {
+
+// digest hashes the complete canonical binding table once during compilation.
+// Only new context plans embed this hash; earlier profile digests are unchanged.
+func (b *contextBindings) digest() string {
+	if b == nil {
+		return ""
+	}
+	if b.bindingDigest != "" {
+		return b.bindingDigest
+	}
+	return b.hash()
+}
+func (b *contextBindings) hash() string {
 	type entry struct {
 		Role contextRole
 		Uses []SchemaUse
 	}
 	if b == nil {
-		return []entry(nil)
+		return ""
 	}
 	out := make([]entry, 0, len(b.Roles))
 	for k, v := range b.Roles {
 		out = append(out, entry{k, v})
 	}
 	slices.SortFunc(out, func(a, b entry) int { return cmp.Compare(a.Role, b.Role) })
-	return out
+	h := sha256.New()
+	// All fields are closed structs and strings, so the encoder cannot fail.
+	_ = json.NewEncoder(h).Encode(struct {
+		Assembly Assembly
+		Schema   string
+		Roles    []entry
+	}{b.assembly, b.requiredSchemaDigest, out})
+	return hex.EncodeToString(h.Sum(nil))
 }
 func contextDeclarationBytes(d DeclarationID) int64 {
 	return int64(1 + len(d.Assembly) + len(d.OwnerOccurrence) + len(d.Occurrence))
 }
 func contextComponentBytes(c ComponentID) int64 {
-	return int64(1 + len(c.Assembly) + len(c.Name.Space) + len(c.Name.Local) + len(c.Occurrence))
+	return int64(1 + len(c.Assembly) + len(c.Kind) + len(c.Name.Space) + len(c.Name.Local) + len(c.Occurrence))
 }
-func contextRoleOwned(r contextRole) contextRole { return contextRole(strings.Clone(string(r))) }

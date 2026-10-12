@@ -911,6 +911,10 @@ func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []Plan
 		}
 	}
 	seenSchemas := make(map[string]bool)
+	// Context plans really share this immutable owned table through snapshots.
+	// Count pointer identity only: equal hashes on distinct retained tables do
+	// not permit either allocation to escape the finite configuration budget.
+	var seenContextBindings map[*contextBindings]bool
 	for _, binding := range plans {
 		if !b.ok() {
 			break
@@ -929,7 +933,25 @@ func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []Plan
 				seenSchemas[key] = true
 			}
 		}
-		b.take(binding.Plan.configSize())
+		size := binding.Plan.configSize()
+		if p := binding.Plan.context; p != nil && p.Bindings != nil {
+			if seenContextBindings[p.Bindings] {
+				size -= p.Bindings.size()
+			} else {
+				if seenContextBindings == nil {
+					b.take(128)
+				}
+				b.slots(1)
+				if !b.ok() {
+					break
+				}
+				if seenContextBindings == nil {
+					seenContextBindings = make(map[*contextBindings]bool)
+				}
+				seenContextBindings[p.Bindings] = true
+			}
+		}
+		b.take(size)
 	}
 	if !b.ok() {
 		return contract("catalog size", "bounded string, collection or total configuration limit exceeded")
