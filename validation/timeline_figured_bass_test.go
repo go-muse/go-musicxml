@@ -208,3 +208,47 @@ func TestFiguredBassDurationUsesOnlyEqualReviewedUnits(t *testing.T) {
 		}
 	}
 }
+
+func TestFiguredBassFinalDivisionsOverrideEventRegister(t *testing.T) {
+	s, v, b, block := figuredOriginFixture(t, OrderSource)
+	block.content.children[0].children = append(block.content.children[0].children, stateNode(b, timelineRoleFiguredBassDuration, 12, stateAtomicDecimal(t, 1, 1)))
+	for _, id := range []NodeID{10, 40} {
+		f := v.Facts[id]
+		f.Units = stateKnown(stateDecimal(t, 3, 1))
+		v.Facts[id] = f
+	}
+	stateClose(t, s, &v.State, 0)
+	statePublish(t, s, &v.State.Divisions, timelineAt(block, stateKnown(timelineZero)).Value, stateScope{AllStaves: true}, stateKnown(stateDecimal(t, 3, 1)), 100)
+	statePublish(t, s, &v.State.Divisions, v.Facts[10].Position.Value, stateScope{AllStaves: true}, stateKnown(stateDecimal(t, 4, 1)), 101)
+	if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+		t.Fatal(err)
+	}
+	got := v.FiguredBassOrigins[10]
+	if got.CursorUnits.Value.String() != "4" || got.AnchorUnits.Value.String() != "4" || got.Duration.Value.String() != "1/4" {
+		t.Fatalf("stale lexical units: %+v", got)
+	}
+	noteOriginCheckPosition(t, got.End, "9/4")
+}
+
+func TestFiguredBassFollowingNoteCanCrossCompleteMeasures(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		s, v, b, first := figuredOriginFixture(t, order)
+		second := runtimeBlock(b, 1, first.content.children[3])
+		second.content.end.Order = stateKnown(order)
+		first.content.children = first.content.children[:1]
+		first.content.children[0].children = append(first.content.children[0].children, stateNode(b, timelineRoleFiguredBassDuration, 12, stateAtomicDecimal(t, 1, 1)))
+		f := v.Facts[40]
+		f.Position = timelineAt(second, stateKnown(timelineZero))
+		v.Facts[40] = f
+		stateClose(t, s, &v.State, 1)
+		statePublish(t, s, &v.State.Divisions, timelineAt(first, stateKnown(timelineZero)).Value, stateScope{AllStaves: true}, stateKnown(stateDecimal(t, 3, 1)), 100)
+		if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{first, second}); err != nil {
+			t.Fatal(err)
+		}
+		got := v.FiguredBassOrigins[10]
+		if got.Anchor.State != EvidenceKnown || got.Anchor.Value.Node != 40 || got.Position.Value.Measure.Node != second.measure.header.ID || got.End.Value.Measure.Node != second.measure.header.ID {
+			t.Fatalf("barline anchor: %+v", got)
+		}
+		noteOriginCheckPosition(t, got.End, "1/3")
+	}
+}
