@@ -48,6 +48,33 @@ analysis-key origin evidence. Invalid source data may still have an independent
 XSD finding. Truly unavailable origin, staff, identity, history or units retain
 their precise causal availability; they do not become defaults or success.
 
+## Local coordinates and cross-frame applicability
+
+An exact signed coordinate is relative to its measure origin. It is not proof
+of the elapsed distance to another measure, and a displaced publisher cannot
+obtain chronological precedence just from its serialized measure ordinal.
+Same-frame rational comparison remains exact. Two independently contained score
+positions retain the canonical structural order of their measures, including
+the documented end-of-measure current location; this is score-order scope, not
+a claim that absolute elapsed times are strictly separated.
+
+The [cross-frame source review](evidence/timeline-cross-frame-review.md) records
+the selected sufficient-proof boundary. An observed, established unshifted
+current-location origin can bound a displaced coordinate inside its measure.
+An ordinary-note prefix can establish such an observed origin; a terminal note
+end alone cannot. Backup/forward outside an already proved interval suspends
+that prefix proof. No nominal-meter, maximum-note-end, final-cursor, graphical
+barline or shifted-position rule invents a measure length or certifies its own
+containment.
+
+Effective continuing-state queries must consider whether a displaced candidate
+can apply and whether it can supersede an established statement. Proven later
+or unrelated-property candidates do not erase independently known state.
+Unsettled competing relations retain local unavailable evidence and causes;
+they do not reject the document, clamp/wrap the offset, or affect the independent
+unshifted numeral-key query. Concrete implemented proof cases and limitations
+are recorded in the ownership ledger separately from this source contract.
+
 ## Independently worked expectations
 
 - No encoded key before q=2; harmony origin q=1 with visual offset +2: the

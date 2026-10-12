@@ -363,6 +363,9 @@ Exact established regions remain usable when another region is incomplete.
 Unknown same-time conflicts, missing staff/voice/anchor evidence, and unsettled
 cursor movement across divisions boundaries retain their specific causes;
 they are not silently defaulted or turned into new musical violations.
+Signed offsets remain exact local coordinates; continuing-state selection across
+measure frames also needs established containment/order evidence. No measure
+length is invented from meter or a terminal note endpoint.
 Grace donor identity does not establish continuous playback time. Figured-bass
 consecutive-chain positions are explicitly derived context, not a sum-duration
 restriction. Instrument state means latest applicable encoded statements, with
