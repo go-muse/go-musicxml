@@ -791,7 +791,7 @@ func TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof(t *testing.T) {
 				}
 				movement, note := svc.Facts[movementID], svc.Facts[noteID]
 				if changed {
-					if movement.Duration.State == EvidenceKnown || note.Position.State == EvidenceKnown {
+					if movement.Duration.State == EvidenceKnown || note.Position.State == EvidenceKnown || note.Duration.State == EvidenceKnown {
 						t.Fatalf("per-measure cache chose units across an unresolved different-unit region: movement=%+v note=%+v", movement, note)
 					}
 				} else if movement.Duration.State != EvidenceKnown || movement.Duration.Value.String() != wantDuration || note.Position.State != EvidenceKnown || note.Position.Value.Offset.String() != wantPosition {
