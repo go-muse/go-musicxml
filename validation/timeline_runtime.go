@@ -7,151 +7,9 @@ type timelineMeasureBlock struct {
 	part             Evidence[NodeRef]
 	ordinal          uint64
 	complete         Evidence[bool]
+	coverage         Evidence[bool]
 }
 
-// timelineEnumeration checks enumeration evidence, without turning an unrelated
-// invalid sibling into a fabricated loss of every exactly bound child.
-func timelineEnumeration(n *factNode) Evidence[bool] {
-	if n == nil || !n.closed {
-		return stateUnknown[bool]("timeline-enumeration-open")
-	}
-	v := n.end.ChildrenComplete
-	if v.State != EvidenceKnown || !v.Value {
-		if v.State == EvidenceKnown || v.State == EvidenceAbsent {
-			return stateUnknown[bool]("timeline-enumeration-incomplete")
-		}
-		return v
-	}
-	return Evidence[bool]{State: EvidenceKnown, Value: true}
-}
-func timelineDecisionEvidence[T any](d Decision) Evidence[T] {
-	state := EvidenceUnknown
-	if d.Outcome == OutcomeUnsupported {
-		state = EvidenceUnsupported
-	}
-	if d.Outcome == OutcomeBlocked {
-		state = EvidenceInvalid
-	}
-	return Evidence[T]{State: state, Reason: d.Reason, Cause: d.Cause}
-}
-func (s *Session) timelinePart(ctx context.Context, n *factNode, p *timelinePlan) (Evidence[NodeRef], error) {
-	for _, owner := range p.PartOwners {
-		if err := s.step(ctx, 1); err != nil {
-			return Evidence[NodeRef]{}, err
-		}
-		if n.header.Declaration.State != EvidenceKnown {
-			return stateUnavailable[DeclarationID, NodeRef](n.header.Declaration), nil
-		}
-		if n.header.Declaration.Value != owner.Declaration {
-			continue
-		}
-		if err := s.evaluate(ctx, n, owner.Rule, true); err != nil {
-			return Evidence[NodeRef]{}, err
-		}
-		d, ok := s.lookupDecision(decisionID{owner.Rule, n.header.ID})
-		if !ok {
-			return stateUnknown[NodeRef]("timeline-part-owner-unavailable"), nil
-		}
-		if d.Outcome == OutcomeFail {
-			return Evidence[NodeRef]{State: EvidenceInvalid, Reason: "timeline-part-owner-invalid", Cause: &DecisionRef{Rule: owner.Rule, Subject: NodeRef{s.documentID, n.header.ID}}}, nil
-		}
-		if d.Outcome != OutcomePass {
-			return timelineDecisionEvidence[NodeRef](d), nil
-		}
-		target, d, err := s.referenceResolution(ctx, n, owner.Attribute)
-		if err != nil {
-			return Evidence[NodeRef]{}, err
-		}
-		if d.Outcome != OutcomePass {
-			return timelineDecisionEvidence[NodeRef](d), nil
-		}
-		return Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{s.documentID, target.header.ID}}, nil
-	}
-	return Evidence[NodeRef]{State: EvidenceUnsupported, Reason: "timeline-part-binding-unavailable"}, nil
-}
-func (s *Session) timelineBlocks(ctx context.Context, p *timelinePlan) ([]timelineMeasureBlock, error) {
-	r := &stateReader{ctx: ctx, s: s, b: p.Bindings}
-	hierarchy := -1
-	for i, h := range p.Bindings.Hierarchies {
-		if err := s.step(ctx, 1); err != nil {
-			return nil, err
-		}
-		if s.root.header.Declaration.State == EvidenceKnown && s.root.header.Declaration.Value == h.Root.Declaration {
-			hierarchy = i
-			break
-		}
-	}
-	if hierarchy < 0 {
-		return nil, nil
-	} // Opus has no local score timeline.
-	var blocks []timelineMeasureBlock
-	add := func(content, measure *factNode, part Evidence[NodeRef], ordinal uint64) error {
-		if err := s.retain(512); err != nil {
-			return err
-		}
-		complete := timelineEnumeration(content)
-		if content.end.Order.State != EvidenceKnown {
-			complete = stateUnavailable[OrderKind, bool](content.end.Order)
-		} else if content.end.Order.Value != OrderSource && content.end.Order.Value != OrderModelContent {
-			complete = stateUnknown[bool]("timeline-event-order-unavailable")
-		}
-		blocks = append(blocks, timelineMeasureBlock{content: content, measure: measure, part: part, ordinal: ordinal, complete: complete})
-		return nil
-	}
-	h := p.Bindings.Hierarchies[hierarchy]
-	ordinal := uint64(0)
-	for _, outer := range s.root.children {
-		if !r.step(1) {
-			return nil, r.err
-		}
-		if outer.header.Declaration.State != EvidenceKnown {
-			continue
-		}
-		if hierarchy == 0 {
-			if outer.header.Declaration.Value != h.Part.Declaration {
-				continue
-			}
-			part, err := s.timelinePart(ctx, outer, p)
-			if err != nil {
-				return nil, err
-			}
-			ordinal = 0
-			for _, measure := range outer.children {
-				if !r.step(1) {
-					return nil, r.err
-				}
-				if measure.header.Declaration.State != EvidenceKnown || measure.header.Declaration.Value != h.Measure.Declaration {
-					continue
-				}
-				if err = add(measure, measure, part, ordinal); err != nil {
-					return nil, err
-				}
-				ordinal++
-			}
-		} else {
-			if outer.header.Declaration.Value != h.Measure.Declaration {
-				continue
-			}
-			for _, partNode := range outer.children {
-				if !r.step(1) {
-					return nil, r.err
-				}
-				if partNode.header.Declaration.State != EvidenceKnown || partNode.header.Declaration.Value != h.Part.Declaration {
-					continue
-				}
-				part, err := s.timelinePart(ctx, partNode, p)
-				if err != nil {
-					return nil, err
-				}
-				if err = add(partNode, outer, part, ordinal); err != nil {
-					return nil, err
-				}
-			}
-			ordinal++
-		}
-	}
-	return blocks, r.err
-}
 func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey, p *timelinePlan, final bool) (Decision, bool, error) {
 	if !final {
 		return Decision{}, true, nil
@@ -167,68 +25,28 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 	if err != nil {
 		return Decision{}, false, err
 	}
-	// Canonical identities come only from selected shared typed-reference proofs.
-	// Repeated timewise part references are expected; duplicate occurrence domains
-	// do not acquire an arbitrary concatenation order.
-	type partInfo struct {
-		through  uint64
-		count    map[uint64]int
-		complete Evidence[bool]
+	index, err := service.prepareTimelineParts(ctx, s, blocks)
+	if err != nil {
+		return Decision{}, false, err
 	}
-	parts := map[NodeID]*partInfo{}
-	for _, block := range blocks {
-		if err = s.step(ctx, 1); err != nil {
-			return Decision{}, false, err
-		}
-		if block.part.State != EvidenceKnown {
-			continue
-		}
-		id := block.part.Value.Node
-		info := parts[id]
-		if info == nil {
-			if err = s.retain(512); err != nil {
-				return Decision{}, false, err
-			}
-			info = &partInfo{count: map[uint64]int{}, complete: Evidence[bool]{State: EvidenceKnown, Value: true}}
-			parts[id] = info
-		}
-		if _, exists := info.count[block.ordinal]; !exists {
-			if err = s.retain(64); err != nil {
-				return Decision{}, false, err
-			}
-		}
-		info.count[block.ordinal]++
-		if block.ordinal > info.through {
-			info.through = block.ordinal
-		}
-	}
-	// Iterate blocks, not a map, so interruption and evidence are deterministic.
-	initialized := map[NodeID]bool{}
-	for _, block := range blocks {
-		if err = s.step(ctx, 1); err != nil {
-			return Decision{}, false, err
-		}
-		if block.part.State != EvidenceKnown {
-			continue
-		}
-		id := block.part.Value.Node
-		if initialized[id] {
-			continue
-		}
-		if err = s.retain(32); err != nil {
-			return Decision{}, false, err
-		}
-		initialized[id] = true
-		if err = service.State.closePart(ctx, s, block.part.Value, parts[id].through, parts[id].complete); err != nil {
-			return Decision{}, false, err
-		}
-		if err = service.State.readInstrumentDefinitions(ctx, s, p.Bindings, s.nodes[id], block.part.Value); err != nil {
+	for _, part := range index.Parts {
+		if err = service.State.readInstrumentDefinitions(ctx, s, p.Bindings, s.nodes[part.Node], part); err != nil {
 			return Decision{}, false, err
 		}
 	}
 	for _, block := range blocks {
-		if block.part.State == EvidenceKnown && parts[block.part.Value.Node].count[block.ordinal] > 1 {
+		if block.part.State == EvidenceKnown && index.Counts[timelineDomain{block.part.Value.Node, block.ordinal}] > 1 {
 			block.complete = stateUnknown[bool]("timeline-duplicate-part-measure-domain")
+		}
+		if block.part.State != EvidenceKnown {
+			for _, part := range index.Parts {
+				if err = s.step(ctx, 1); err != nil {
+					return Decision{}, false, err
+				}
+				if err = service.State.gapAll(ctx, s, part, block.ordinal, timelineGapAs[NodeRef, musicalPosition](block.part, "timeline-part-owner-unavailable")); err != nil {
+					return Decision{}, false, err
+				}
+			}
 		}
 		if err = service.readMeasure(ctx, s, p.Bindings, block); err != nil {
 			return Decision{}, false, err
