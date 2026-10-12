@@ -367,7 +367,9 @@ Grace donor identity does not establish continuous playback time. Figured-bass
 consecutive-chain positions are explicitly derived context, not a sum-duration
 restriction. Instrument state means latest applicable encoded statements, with
 exclusive solo/ensemble and atomic virtual descriptors, not a reconstructed
-synthesizer configuration. The reviewed
+synthesizer configuration. A sound `time-only` guard is retained on raw updates;
+without repeat-pass evidence, only its stated effective properties become
+unavailable, and omitted properties make no update. The reviewed
 [offset](docs/validation/timeline-offset-interpretation.md),
 [note-origin](docs/validation/timeline-note-origin-interpretation.md), and
 [instrument](docs/validation/timeline-instrument-statements.md) contracts state

@@ -61,6 +61,25 @@ previous note's choice is never implicitly inherited.
 
 ## Availability and provenance
 
+The [sound reference](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/sound/)
+and pinned `sound` annotation (schema line 4141), together with `time-only`
+(lines 581–587), restrict the sound element to the specified repeat passes.
+This applies to its instrument-change, MIDI and device updates, not just its
+scalar tempo or navigation attributes. The provider retains each raw encoded
+value and its original `TimeOnly` evidence independently. Without established
+repeat-pass evidence, an effective property stated by a conditional publisher
+is unavailable; the provider does not assume that the first or current pass
+matches. A known omitted property still makes no update, so a guard cannot
+erase an unrelated earlier statement merely through omission.
+
+Invalid field or condition evidence retains its original cause ahead of a
+synthetic repeat-pass-unavailable result. A later unguarded statement for the
+same property can restore known effective evidence; a different property's
+update cannot. Same-position competition preserves the established conflict
+and causal-precedence rules rather than inventing lexical order. These are
+bounded provider evidence rules, not repeat execution, pass-number ordering
+validation or a new musical rejection predicate.
+
 A malformed, unsupported or hidden possible update is not omission. It retains
 the original cause for the affected property. A later update to another property
 does not repair it; a proved later update to that property can restore the
@@ -82,6 +101,10 @@ provenance and exact comparisons remain session-accounted and cancellable.
 - Invalid program, then pan-only update: program cause retained, pan independent
 - Older instrument-specific device, then later id-less device: later scoped
   all-instruments statement participates without arbitrary count enumeration
+- Guarded program-only update: program needs repeat-pass evidence, while an
+  omitted channel preserves its independent earlier statement
+- Guarded invalid value: preserve its actual cause; a later unconditional update
+  repairs only the same property
 
 Exact executable cases and the inspected implementation snapshot are recorded in
 [timeline-assessment-ownership.json](timeline-assessment-ownership.json).
