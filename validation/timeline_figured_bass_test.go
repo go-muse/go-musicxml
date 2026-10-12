@@ -360,3 +360,33 @@ func TestFiguredBassAllTransactionalScratchAndLongChain(t *testing.T) {
 		t.Fatalf("ordinary score allocated %d", got-before)
 	}
 }
+
+func TestFiguredBassThousandDistinctOriginsDefaultBudget(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		s := rationalSession(t, Budgets{})
+		s.documentID = "d"
+		defer s.cleanup()
+		b := noteOriginBindings()
+		v := &timelineService{Facts: map[NodeID]timelineEventFact{}}
+		block := runtimeBlock(b, 0)
+		block.content.end.Order = stateKnown(order)
+		for i := 0; i < 1000; i++ {
+			id := NodeID(1000 + i*10)
+			figure := stateNode(b, timelineRoleFiguredBass, id, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, id+1, stateAbsent[Atomic]()), stateNode(b, timelineRoleFiguredBassDuration, id+2, stateAtomicDecimal(t, 1, 1)))
+			note := runtimeNote(t, b, id+5, 3, false)
+			block.content.children = append(block.content.children, figure, note)
+			for _, node := range []*factNode{figure, note} {
+				v.Facts[node.header.ID] = timelineEventFact{Position: timelineAt(block, stateKnown(mustRational(t, int64(i), 1))), Part: block.part, Staff: stateAbsent[Integer](), Voice: stateAbsent[string]()}
+			}
+		}
+		stateClose(t, s, &v.State, 0)
+		statePublish(t, s, &v.State.Divisions, timelineAt(block, stateKnown(timelineZero)).Value, stateScope{AllStaves: true}, stateKnown(stateDecimal(t, 3, 1)), 100)
+		if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+			t.Fatal(err)
+		}
+		if len(v.FiguredBassOrigins) != 1000 {
+			t.Fatal(len(v.FiguredBassOrigins))
+		}
+		t.Logf("%s steps=%d bytes=%d", order, rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes))
+	}
+}
