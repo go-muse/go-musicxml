@@ -110,6 +110,7 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	timeline                map[RuleKey]*timelineService
 	localDocuments          map[*localPlan]localDocumentResult
 	schema                  *schemaSession
 	catalog                 *CompiledCatalog
@@ -619,6 +620,7 @@ func (s *Session) cleanup() {
 	}
 	s.schema = nil
 	s.localDocuments = nil
+	s.timeline = nil
 	if s.depth > 0 {
 		_ = s.account.Release(BudgetDepth, s.depth)
 		s.depth = 0
