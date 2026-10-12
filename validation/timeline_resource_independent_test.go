@@ -483,3 +483,18 @@ func TestIndependentTimelineNoteOriginCausalPrecedence(t *testing.T) {
 		}
 	})
 }
+
+func TestTimelineNormalizationPreservesStrongestRequiredCause(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	cause := &DecisionRef{Rule: RuleKey{"invalid-units", 1}, Subject: NodeRef{"d", 9}}
+	invalid := Evidence[Decimal]{State: EvidenceInvalid, Cause: cause}
+	got, err := s.normalizeTimelineDuration(context.Background(), stateUnknown[Decimal]("raw-unknown"), invalid)
+	if err != nil || got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != *cause {
+		t.Fatalf("normalized=%+v %v", got, err)
+	}
+	optional, err := s.noteTimingDelta(context.Background(), stateAbsent[Decimal](), invalid)
+	if err != nil || optional.Delta.State != EvidenceAbsent {
+		t.Fatalf("irrelevant units=%+v %v", optional, err)
+	}
+}
