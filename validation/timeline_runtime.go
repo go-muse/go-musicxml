@@ -209,25 +209,51 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		fact.Duration = cursorFact.Duration
 		fact.Principal = cursorFact.Principal
 		fact.PrincipalDuration = cursorFact.PrincipalDuration
+		base := fact.Position
+		if r.matches(event, timelineRoleSound) {
+			if err := service.readSoundAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
+				return err
+			}
+			continue // readSoundAt retains the independently addressable fact.
+		}
+		if r.matches(event, timelineRoleListening) {
+			if err := service.readListeningAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
+				return err
+			}
+			continue
+		}
 		if r.matches(event, timelineRoleHarmony) || r.matches(event, timelineRoleDirection) {
 			role := timelineRoleHarmonyOffset
 			if r.matches(event, timelineRoleDirection) {
 				role = timelineRoleDirectionOffset
 			}
-			offset := stateDecimalValue(r.childScalar(event, role))
-			if offset.State != EvidenceAbsent {
-				delta, err := s.normalizeTimelineDuration(ctx, offset, units)
-				if err != nil {
-					return err
-				}
-				if fact.Position.State == EvidenceKnown && delta.State == EvidenceKnown {
-					sum, err := s.rationalAdd(ctx, fact.Position.Value.Offset, delta.Value)
+			offsetNode, offsetPresence := r.child(event, role)
+			offset := stateUnavailable[bool, Decimal](offsetPresence)
+			sound := stateUnavailable[bool, bool](offsetPresence)
+			if offsetPresence.State == EvidenceKnown {
+				offset = stateDecimalValue(r.scalar(offsetNode))
+				sound = stateYesNo(r.attribute(offsetNode, timelineRoleOffsetSound))
+			}
+			fact.Position, err = s.offsetPosition(ctx, base, offset, units)
+			if err != nil {
+				return err
+			}
+			if r.matches(event, timelineRoleDirection) {
+				// Read exact children independently: a malformed parent offset
+				// cannot erase a valid local sound/listening override.
+				for _, child := range event.children {
+					if !r.step(1) {
+						return r.err
+					}
+					switch {
+					case r.matches(child, timelineRoleDirectionSound):
+						err = service.readSoundAt(ctx, s, b, child, block, base, units, offset, sound)
+					case r.matches(child, timelineRoleDirectionListening):
+						err = service.readListeningAt(ctx, s, b, child, block, base, units, offset, sound)
+					}
 					if err != nil {
 						return err
 					}
-					fact.Position.Value.Offset = sum
-				} else if delta.State != EvidenceKnown {
-					fact.Position = stateUnavailable[Rational, musicalPosition](delta)
 				}
 			}
 		}
@@ -271,11 +297,6 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 					units = stateUnavailable[musicalPosition, Decimal](fact.Position)
 				}
 				lastDivisionPosition = fact.Position
-			}
-		}
-		if r.matches(event, timelineRoleSound) && fact.Position.State == EvidenceKnown {
-			if err := service.State.readInstrumentChanges(ctx, s, b, event, fact.Position.Value); err != nil {
-				return err
 			}
 		}
 		if err := service.storeFact(ctx, s, event.header.ID, fact); err != nil {

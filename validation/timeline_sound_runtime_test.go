@@ -31,3 +31,40 @@ func TestIndependentReviewNestedSound(t *testing.T) {
 		t.Fatalf("nested sound records=%d; want 1", len(svc.State.Play))
 	}
 }
+
+func TestTimelineRuntimeDirectionOffsetsKeepIndependentOrigins(t *testing.T) {
+	for _, kind := range []timelineRole{timelineRoleDirectionSound, timelineRoleDirectionListening} {
+		for _, tc := range []struct {
+			name, flag string
+			own        bool
+			want       string
+		}{{"default", "", false, "2"}, {"no", "no", false, "2"}, {"yes", "yes", false, "3"}, {"override-default", "", true, "4"}, {"override-no", "no", true, "4"}, {"override-yes", "yes", true, "4"}} {
+			t.Run(string(rune(kind))+tc.name, func(t *testing.T) {
+				s, svc, b := runtimeFixture(t)
+				attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)))
+				offset := stateNode(b, timelineRoleDirectionOffset, 41, stateAtomicDecimal(t, 2, 1))
+				if tc.flag != "" {
+					stateAttribute(b, offset, timelineRoleOffsetSound, Atomic{Kind: AtomicString, Text: tc.flag})
+				}
+				child := stateNode(b, kind, 50, stateAbsent[Atomic]())
+				if tc.own {
+					role := timelineRoleSoundOffset
+					if kind == timelineRoleDirectionListening {
+						role = timelineRoleListeningOffset
+					}
+					child.children = []*factNode{stateNode(b, role, 51, stateAtomicDecimal(t, 4, 1))}
+				}
+				direction := stateNode(b, timelineRoleDirection, 40, stateAbsent[Atomic](), offset, child)
+				if err := svc.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, attrs, runtimeNote(t, b, 30, 4, false), direction, runtimeNote(t, b, 60, 2, false))); err != nil {
+					t.Fatal(err)
+				}
+				for node, want := range map[NodeID]string{40: "3", 50: tc.want, 60: "2"} {
+					got := svc.Facts[node].Position
+					if got.State != EvidenceKnown || got.Value.Offset.String() != want {
+						t.Fatalf("node %d=%+v want %s", node, got, want)
+					}
+				}
+			})
+		}
+	}
+}
