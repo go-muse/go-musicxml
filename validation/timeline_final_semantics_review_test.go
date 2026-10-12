@@ -327,3 +327,90 @@ func TestTimelineFinalReviewCrossMeasureOffsetCannotClaimKnownChronology(t *test
 		t.Fatalf("ordinal order fabricated cross-frame chronology without measure span: %+v", got)
 	}
 }
+
+func TestTimelineFinalReviewOffsetContainmentPositiveControls(t *testing.T) {
+	for _, tc := range []struct {
+		name               string
+		offset, lead, tail int64
+	}{
+		{"negative-contained-by-own-origin", -1, 2, 0},
+		{"positive-contained-by-later-origin", 1, 1, 2},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s, svc, b := runtimeFixture(t)
+			attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+			sound := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundOffset, 41, stateAtomicDecimal(t, tc.offset, 1)))
+			stateAttribute(b, sound, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+			events := []*factNode{attrs, runtimeNote(t, b, 30, tc.lead, false), sound}
+			if tc.tail > 0 {
+				events = append(events, runtimeNote(t, b, 50, tc.tail, false), runtimeNote(t, b, 60, 1, false))
+			}
+			first, second := runtimeBlock(b, 0, events...), runtimeBlock(b, 1, runtimeNote(t, b, 70, 1, false))
+			for _, block := range []timelineMeasureBlock{first, second} {
+				if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := svc.finalizeTimingOrigins(context.Background(), s, b, []timelineMeasureBlock{first, second}); err != nil {
+				t.Fatal(err)
+			}
+			got, err := svc.Playback.effectiveTempo(context.Background(), s, &svc.State, svc.Facts[70].Position.Value)
+			if err != nil || got.Value.State != EvidenceKnown || got.Value.Value.String() != "120" {
+				t.Fatalf("proved-contained offset lost ordinary carry: %+v err=%v", got, err)
+			}
+		})
+	}
+}
+
+func TestTimelineFinalReviewPositiveOverflowMayCompeteInNextFrame(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	delayed := stateNode(b, timelineRoleSound, 30, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundOffset, 31, stateAtomicDecimal(t, 10, 1)))
+	stateAttribute(b, delayed, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
+	next := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic]())
+	stateAttribute(b, next, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	first, second := runtimeBlock(b, 0, attrs, delayed, runtimeNote(t, b, 35, 1, false)), runtimeBlock(b, 1, next, runtimeNote(t, b, 50, 1, false), runtimeNote(t, b, 60, 1, false))
+	for _, block := range []timelineMeasureBlock{first, second} {
+		if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(context.Background(), s, b, []timelineMeasureBlock{first, second}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := svc.Playback.effectiveTempo(context.Background(), s, &svc.State, svc.Facts[60].Position.Value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Value.State == EvidenceKnown {
+		t.Fatalf("earlier-frame positive overflow was silently superseded: %+v", got)
+	}
+}
+
+func TestTimelineFinalReviewFloatingSoundSameFrameRepairAndPropertyIsolation(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	initial := stateNode(b, timelineRoleSound, 25, stateAbsent[Atomic]())
+	stateAttribute(b, initial, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
+	floating := stateNode(b, timelineRoleSound, 30, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundOffset, 31, stateAtomicDecimal(t, -2, 1)))
+	stateAttribute(b, floating, timelineRoleSoundDynamics, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 50, 1)})
+	repair := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic]())
+	stateAttribute(b, repair, timelineRoleSoundDynamics, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 90, 1)})
+	first, second := runtimeBlock(b, 0, attrs, initial, runtimeNote(t, b, 50, 1, false)), runtimeBlock(b, 1, floating, repair, runtimeNote(t, b, 60, 1, false))
+	for _, block := range []timelineMeasureBlock{first, second} {
+		if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(context.Background(), s, b, []timelineMeasureBlock{first, second}); err != nil {
+		t.Fatal(err)
+	}
+	tempo, err := svc.Playback.effectiveTempo(context.Background(), s, &svc.State, svc.Facts[50].Position.Value)
+	if err != nil || tempo.Value.State != EvidenceKnown || tempo.Value.Value.String() != "60" {
+		t.Fatalf("unrelated floating dynamics erased tempo: %+v err=%v", tempo, err)
+	}
+	dynamics, err := svc.Playback.effectiveDynamics(context.Background(), s, &svc.State, svc.Facts[60].Position.Value)
+	if err != nil || dynamics.Value.State != EvidenceKnown || dynamics.Value.Value.String() != "90" {
+		t.Fatalf("same-frame unconditional repair lost: %+v err=%v", dynamics, err)
+	}
+}
