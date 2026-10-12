@@ -25,6 +25,7 @@ type graceNeighborTiming struct {
 const (
 	timelineGraceScratchPerNote  int64 = 4096
 	timelineGraceScratchPerBlock int64 = 4096
+	timelineGraceScratchFixed    int64 = 8192
 )
 
 type graceStreamKey struct {
@@ -201,7 +202,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	if err != nil {
 		return err
 	}
-	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, 8192)
+	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, timelineGraceScratchFixed)
 	if err != nil {
 		return err
 	}
