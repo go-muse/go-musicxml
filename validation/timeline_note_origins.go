@@ -20,6 +20,12 @@ type noteTimingPercent struct {
 	Raw, Percent     Evidence[Decimal]
 	Origin, Position Evidence[musicalPosition]
 }
+
+// Closed bend records reserve at least three record widths for old/new
+// append backing-array overlap, plus map/allocator headroom. Independent tests
+// verify observed capacities and record sizes on supported architectures.
+const timelineBendReserveBytes int64 = 8192
+
 type bendTimingOrigin struct {
 	Bend                      NodeRef
 	OriginalNote              Evidence[musicalPosition]
@@ -243,7 +249,7 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 				if !r.step(1) {
 					return r.err
 				}
-				if err := s.retain(4096); err != nil {
+				if err := s.retain(timelineBendReserveBytes); err != nil {
 					return err
 				}
 				value := r.noteBend(bend, fact, units)
