@@ -433,12 +433,12 @@ func (service *timelineService) figuredBassUnits(ctx context.Context, s *Session
 	if units, found := cache[key]; found {
 		return units, nil
 	}
-	result, err := service.State.effectiveDivisions(ctx, s, at.Value)
+	result, err := service.State.effectiveDivisionsEvidence(ctx, s, at.Value)
 	if err != nil {
 		return Evidence[Decimal]{}, err
 	}
-	cache[key] = result.Value
-	return result.Value, nil
+	cache[key] = result
+	return result, nil
 }
 
 // Duration is expressed in divisions. Where cursor-time and anchor-time unit
