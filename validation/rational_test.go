@@ -428,3 +428,84 @@ func TestRationalComparisonAndConversionMetering(t *testing.T) {
 	}
 	s.cleanup()
 }
+
+func TestRationalDefaultBudgetOrdinaryModelTrajectory(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	ctx := context.Background()
+	durationDecimal, err := NewDecimal(new(big.Rat).SetFloat64(0.1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	divisionsDecimal, err := NewDecimal(big.NewRat(3, 1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	divisions, err := s.rationalFromDecimal(ctx, divisionsDecimal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	position := mustRational(t, 0, 1)
+	for note := 1; note <= 1000; note++ {
+		duration, err := s.rationalFromDecimal(ctx, durationDecimal)
+		if err != nil {
+			t.Fatalf("note %d duration: %v", note, err)
+		}
+		increment, err := s.rationalQuo(ctx, duration, divisions)
+		if err != nil {
+			t.Fatalf("note %d quotient: %v", note, err)
+		}
+		position, err = s.rationalAdd(ctx, position, increment)
+		if err != nil {
+			t.Fatalf("note %d cursor: %v", note, err)
+		}
+	}
+	// 1000 * exact float64(0.1) / 3, reduced by hand. This intentionally differs
+	// from the source decimal 0.1 trajectory's 100/3.
+	if position.String() != "450359962737049625/13510798882111488" {
+		t.Fatalf("exact final position=%s", position)
+	}
+	if work := rationalUsage(t, s, BudgetRuleSteps); work > 10_000_000 {
+		t.Fatalf("ordinary model arithmetic leaves insufficient default-budget headroom: %d", work)
+	}
+	if rationalUsage(t, s, BudgetBufferedBytes) != s.retained {
+		t.Fatal("trajectory leaked scratch")
+	}
+}
+
+func TestRationalWorkScalingKeepsLargeFractionsBounded(t *testing.T) {
+	for _, op := range []rationalOperation{rationalCopyOp, rationalAddOp, rationalSubOp, rationalMulOp, rationalQuoOp, rationalCmpOp} {
+		var previous int64
+		for _, bits := range []int64{256, 512, 1024, 2048, 4096, 8192} {
+			other := rationalWidths{bits, bits}
+			if op == rationalCopyOp {
+				other = rationalWidths{}
+			}
+			cost, err := rationalPlan(op, rationalWidths{bits, bits}, other)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if previous != 0 && (cost.work < 3*previous || cost.work > 5*previous) {
+				t.Fatalf("operation %d doubling widths does not retain conservative quadratic scale: %d => %d", op, previous, cost.work)
+			}
+			previous = cost.work
+		}
+	}
+	// Coprime Mersenne numerator and power-of-two denominator are large exact
+	// fractions. Dividing equal values reduces to one, but cannot skip precharged
+	// magnitude-dependent normalization work.
+	numerator := new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 8192), big.NewInt(1))
+	denominator := new(big.Int).Lsh(big.NewInt(1), 8191)
+	value, err := NewRational(new(big.Rat).SetFrac(numerator, denominator))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := rationalSession(t, Budgets{})
+	result, err := s.rationalQuo(context.Background(), value, value)
+	if !errors.Is(err, ErrResourceLimit) || !errors.Is(err, ErrIncompleteAssessment) || result.Valid() {
+		t.Fatalf("large cancellation bypassed work cap: %v,%v", result, err)
+	}
+	if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+		t.Fatal("large rejection retained scratch")
+	}
+}
