@@ -445,11 +445,22 @@ func (h *timelineState) closure(ctx context.Context, s *Session, p musicalPositi
 	}
 	return best, nil
 }
-func stateComparePosition(ctx context.Context, s *Session, a, b musicalPosition) (int, error) {
-	if e := s.step(ctx, 1); e != nil {
-		return 0, e
+
+// Canonical references contain caller-sized document IDs. Charge their full
+// comparison work before either equality or an early mismatch result.
+func stateSameRef(ctx context.Context, s *Session, a, b NodeRef) (bool, error) {
+	if err := s.step(ctx, 1+int64(len(a.DocumentID))+int64(len(b.DocumentID))); err != nil {
+		return false, err
 	}
-	if a.Part != b.Part {
+	return a == b, nil
+}
+
+func stateComparePosition(ctx context.Context, s *Session, a, b musicalPosition) (int, error) {
+	same, err := stateSameRef(ctx, s, a.Part, b.Part)
+	if err != nil {
+		return 0, err
+	}
+	if !same {
 		return 0, contract("timeline position", "different canonical parts")
 	}
 	if a.MeasureOrdinal < b.MeasureOrdinal {
@@ -458,7 +469,11 @@ func stateComparePosition(ctx context.Context, s *Session, a, b musicalPosition)
 	if a.MeasureOrdinal > b.MeasureOrdinal {
 		return 1, nil
 	}
-	if a.Measure != b.Measure {
+	same, err = stateSameRef(ctx, s, a.Measure, b.Measure)
+	if err != nil {
+		return 0, err
+	}
+	if !same {
 		return 0, contract("timeline position", "same ordinal has different measure occurrences")
 	}
 	return s.rationalCmp(ctx, a.Offset, b.Offset)

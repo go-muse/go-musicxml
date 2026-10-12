@@ -128,10 +128,11 @@ func stateCompareSum(ctx context.Context, s *Session, a, b, c Rational) (int, er
 	return cmp, nil
 }
 func (h *timelineState) positionOrder(ctx context.Context, s *Session, a, b musicalPosition) (statePositionOrder, error) {
-	if err := s.step(ctx, 1); err != nil {
+	same, err := stateSameRef(ctx, s, a.Part, b.Part)
+	if err != nil {
 		return 0, err
 	}
-	if a.Part != b.Part {
+	if !same {
 		return 0, contract("timeline position", "different canonical parts")
 	}
 	if a.MeasureOrdinal == b.MeasureOrdinal {
