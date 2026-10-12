@@ -327,3 +327,34 @@ func TestTimelineStateMergeManyProvenanceBeforeAllocation(t *testing.T) {
 		t.Fatal("query aliases history")
 	}
 }
+
+func TestTimelineStateEncodedKeyPresenceProjectsPastConflict(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 0)
+	at := statePosition(t, 0, 0, 1)
+	all := stateScope{AllStaves: true}
+	staff := stateKnown(stateInt(t, 1))
+	key := keyState{Traditional: true, Fifths: stateKnown(stateInt(t, 0)), Mode: stateAbsent[string](), Cancel: stateAbsent[Integer](), CancelLocation: stateAbsent[string]()}
+	statePublish(t, s, &h.Keys, at, all, stateKnown(key), 1)
+	key.Fifths = stateKnown(stateInt(t, 4))
+	statePublish(t, s, &h.Keys, at, all, stateKnown(key), 2)
+	r, e := h.effectiveKeyPresence(context.Background(), s, at, staff)
+	if e != nil || r.Value.State != EvidenceKnown || !r.Value.Value || len(r.Provenance) != 2 {
+		t.Fatalf("presence lost on content conflict %+v,%v", r, e)
+	}
+	cause := &DecisionRef{Rule: RuleKey{ID: "scalar", Revision: 1}, Subject: NodeRef{DocumentID: "d", Node: 3}}
+	key.Mode = Evidence[string]{State: EvidenceInvalid, Reason: "bad-mode", Cause: cause}
+	statePublish(t, s, &h.Keys, statePosition(t, 0, 1, 1), all, stateKnown(key), 3)
+	r, e = h.effectiveKeyPresence(context.Background(), s, statePosition(t, 0, 1, 1), staff)
+	if e != nil || r.Value.State != EvidenceInvalid || r.Value.Cause == nil || *r.Value.Cause != *cause {
+		t.Fatalf("invalid field proved encoded key %+v,%v", r, e)
+	}
+	empty := keyState{Fifths: stateAbsent[Integer](), Mode: stateAbsent[string](), Cancel: stateAbsent[Integer](), CancelLocation: stateAbsent[string]()}
+	statePublish(t, s, &h.Keys, statePosition(t, 0, 2, 1), all, stateKnown(empty), 4)
+	r, e = h.effectiveKeyPresence(context.Background(), s, statePosition(t, 0, 2, 1), staff)
+	if e != nil || r.Value.State != EvidenceKnown || !r.Value.Value {
+		t.Fatalf("empty nontraditional key lost %+v,%v", r, e)
+	}
+}
