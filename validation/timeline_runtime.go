@@ -289,7 +289,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				}
 			}
 			if cursor.Position.State != EvidenceKnown {
-				cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, block.part, rawMovement, movement.Kind == timelineMovementBackup)
+				cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, block.part, rawMovement, movement.Kind == timelineMovementBackup, service.unitGates[event.header.ID].PositiveDirection)
 			}
 		} else if movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && !movement.Chord.Value && movement.Grace.State == EvidenceKnown && !movement.Grace.Value && cursor.Position.State != EvidenceKnown && cursorPlacement.Displaced {
 			// An ordinary note advances the unknown cursor. A prior upper

@@ -16,7 +16,10 @@ type timelineUnitExcursion struct {
 	Backwards, Locked bool
 	Availability      Evidence[Decimal]
 }
-type timelineExcursionGate struct{ Availability Evidence[Decimal] }
+type timelineExcursionGate struct {
+	Availability      Evidence[Decimal]
+	PositiveDirection bool
+}
 type timelineUnitPublisher struct {
 	Node    NodeID
 	Part    Evidence[NodeRef]
@@ -54,9 +57,13 @@ func (v *timelineService) recordUnitExcursion(ctx context.Context, s *Session, i
 
 // A directional bound survives unavailable normalization only after a complete
 // positive-unit-domain proof. No sign is inferred from an unavailable scalar.
-func (v *timelineService) movementPlacement(origin Evidence[musicalPosition], prior stateGapPlacement, part Evidence[NodeRef], raw Evidence[Decimal], back bool) stateGapPlacement {
+func (v *timelineService) movementPlacement(origin Evidence[musicalPosition], prior stateGapPlacement, part Evidence[NodeRef], raw Evidence[Decimal], back bool, positiveDirection ...bool) stateGapPlacement {
 	out := stateGapPlacement{Displaced: true}
-	if part.State != EvidenceKnown || !v.unitPositive[part.Value] || raw.State != EvidenceKnown || raw.Value.value.Sign() < 0 {
+	positive := len(positiveDirection) != 0 && positiveDirection[0]
+	if part.State == EvidenceKnown && v.unitPositive[part.Value] {
+		positive = true
+	}
+	if !positive || raw.State != EvidenceKnown || raw.Value.value.Sign() < 0 {
 		return out
 	}
 	if raw.Value.value.Sign() == 0 {
@@ -214,7 +221,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 		}
 		positive[exc.Part] = domain && seen
 		if !uniform || exc.Locked {
-			gates[exc.Node] = timelineExcursionGate{Availability: gap}
+			gates[exc.Node] = timelineExcursionGate{Availability: gap, PositiveDirection: domain && seen}
 		}
 	}
 	if len(gates) == 0 {
@@ -229,7 +236,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 		return err
 	}
 	for {
-		removed := 0
+		progress := 0
 		for _, exc := range v.unitExcursions {
 			if err = s.step(ctx, 1); err != nil {
 				return err
@@ -243,7 +250,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 			}
 			if proved && !exc.Locked {
 				delete(gates, exc.Node)
-				removed++
+				progress++
 			} else {
 				gap := exc.Availability
 				if cause.State != EvidenceAbsent && cause.State != EvidenceKnown && cause.State != "" {
@@ -253,10 +260,22 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 						gap = cause
 					}
 				}
-				gates[exc.Node] = timelineExcursionGate{Availability: gap}
+				gate := gates[exc.Node]
+				gate.Availability = gap
+				if !gate.PositiveDirection {
+					positive, e := stage.proveExcursionDirection(ctx, s, exc, publishers)
+					if e != nil {
+						return e
+					}
+					if positive {
+						gate.PositiveDirection = true
+						progress++
+					}
+				}
+				gates[exc.Node] = gate
 			}
 		}
-		if removed == 0 {
+		if progress == 0 {
 			break
 		}
 		stage, err = v.rebuildUnitStage(ctx, s, b, blocks, gates, positive)
@@ -483,4 +502,49 @@ func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *t
 		}
 	}
 	return out, nil
+}
+
+// Direction is a weaker certificate than normalization. Its premises are read
+// only from the previous stopped stage; a newly qualified bound cannot certify
+// itself during the same pass.
+func (v *timelineService) proveExcursionDirection(ctx context.Context, s *Session, exc timelineUnitExcursion, publishers []timelineUnitPublisher) (bool, error) {
+	fact, ok := v.Facts[exc.Node]
+	if !ok || fact.Origin.State != EvidenceKnown || exc.Raw.State != EvidenceKnown || exc.Raw.Value.value.Sign() < 0 {
+		return false, nil
+	}
+	departure := fact.Origin.Value
+	units, err := v.State.effectiveDivisionsEvidence(ctx, s, departure)
+	if err != nil {
+		return false, err
+	}
+	if units.State != EvidenceKnown || units.Value.value.Sign() <= 0 {
+		return false, nil
+	}
+	for _, pub := range publishers {
+		if err = s.step(ctx, 1+int64(len(exc.Part.DocumentID))+int64(len(pub.Part.Value.DocumentID))); err != nil {
+			return false, err
+		}
+		if !unitPublisherApplies(pub, exc.Part) || pub.Value.State == EvidenceKnown && pub.Value.Value.value != nil && pub.Value.Value.value.Sign() > 0 {
+			continue
+		}
+		gap := pub.gap(v, exc.Part)
+		if exc.Backwards {
+			applies, e := v.State.gapCouldApply(ctx, s, gap, departure, true)
+			if e != nil {
+				return false, e
+			}
+			if applies {
+				return false, nil
+			}
+		} else {
+			before, e := v.State.gapStrictlyBefore(ctx, s, gap, departure)
+			if e != nil {
+				return false, e
+			}
+			if !before {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
 }
