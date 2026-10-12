@@ -197,12 +197,15 @@ func TestTimelineReadSoundUnplacedChangeCannotLeaveInitialStateEffective(t *test
 	if err := service.readSoundAt(context.Background(), s, b, sound, runtimeBlock(b, 1), stateUnknown[musicalPosition]("unknown-cursor"), stateAbsent[Decimal](), stateAbsent[Decimal](), stateAbsent[bool]()); err != nil {
 		t.Fatal(err)
 	}
-	got, err := service.State.effectiveInstrument(context.Background(), s, statePosition(t, 2, 0, 1), instrument)
+	got, err := service.State.effectiveInstrumentStatements(context.Background(), s, statePosition(t, 2, 0, 1), instrument)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Value.State != EvidenceInvalid || got.Value.Reason != "invalid-change-reference" || got.Value.Cause == nil || *got.Value.Cause != *cause {
-		t.Errorf("unplaced change left initial state effective: %+v", got.Value)
+	if got.Sound.Value.State != EvidenceInvalid || got.Sound.Value.Reason != "invalid-change-reference" || got.Sound.Value.Cause == nil || *got.Sound.Value.Cause != *cause {
+		t.Errorf("unplaced change left initial state effective: %+v", got.Sound.Value)
+	}
+	if got.Performance.Value.State != EvidenceAbsent || got.Virtual.Value.State != EvidenceAbsent {
+		t.Error("unplaced Sound change poisoned omitted properties")
 	}
 	if len(service.State.Play) != 1 || service.State.Play[0].Position.State != EvidenceUnknown {
 		t.Error("instrument gap erased independent raw play record")

@@ -104,6 +104,9 @@ func retainRecordStatement[T any](ctx context.Context, s *Session, store *record
 			return err
 		}
 	}
+	if record.Position.State == EvidenceKnown && record.Position.Value.Part != record.Part {
+		return contract("instrument record", "matching positioned part required")
+	}
 	if record.Position.State == EvidenceKnown && target.State == EvidenceKnown {
 		p := statePublication[T]{Position: record.Position.Value, TimeOnly: record.TimeOnly, Scope: scope, Value: record.Value, Provenance: []stateProvenance{{Node: record.Source, Kind: stateExplicit}}}
 		if record.Position.Value.Part != record.Part {
@@ -137,6 +140,9 @@ func retainRecordStatement[T any](ctx context.Context, s *Session, store *record
 		}
 		value = stateConditionalValue(value, record.TimeOnly)
 		gap := stateGap{Part: record.Part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: scope, Availability: availability}
+		if record.Position.State == EvidenceKnown {
+			gap.Position = &record.Position.Value
+		}
 		if value.State != EvidenceKnown {
 			gap.Availability = stateMergeGap(gap.Availability, value)
 		}
@@ -203,7 +209,7 @@ func recordStatement[T, V any](ctx context.Context, s *Session, h *timelineState
 	} else {
 		defer func() { stateDiscardIndex(s, view.index) }()
 	}
-	out, err := queryStatementView(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: key}, project, [2][]stateGap{h.MIDIUnknownGaps, gaps})
+	out, err := queryStatementView(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: key}, project, h.MIDIUnknownGaps, gaps)
 	if err != nil || out.Value.State != EvidenceAbsent {
 		return out, err
 	}

@@ -342,15 +342,22 @@ func TestTimelineStateInstrumentGapsPreserveStrongestCause(t *testing.T) {
 	position := Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "duration-invalid", Cause: cause}
 	for _, incomplete := range []bool{false, true} {
 		h := &timelineState{}
-		sound := stateNode(b, timelineRoleSound, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundInstrumentChange, 21, stateAbsent[Atomic]()))
+		sound := stateNode(b, timelineRoleSound, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundInstrumentChange, 21, stateAbsent[Atomic](), stateNode(b, timelineRoleInstrumentChangeInstrumentSound, 22, stateAtomicText("stated"))))
 		if incomplete {
 			sound.end.ChildrenComplete = stateUnknown[bool]("children-unavailable")
 		}
 		if e := h.gapInstrumentChanges(context.Background(), s, b, sound, part, 1, position); e != nil {
 			t.Fatal(e)
 		}
-		if len(h.InstrumentGaps) != 1 || h.InstrumentGaps[0].Availability.State != EvidenceInvalid || h.InstrumentGaps[0].Availability.Cause == nil || *h.InstrumentGaps[0].Availability.Cause != *cause {
-			t.Fatalf("stronger position cause hidden %+v", h.InstrumentGaps)
+		gaps := h.InstrumentGaps
+		if !incomplete {
+			gaps = h.InstrumentPropertyGaps[0]
+			if len(h.InstrumentGaps) != 0 || len(h.InstrumentPropertyGaps[1]) != 0 || len(h.InstrumentPropertyGaps[2]) != 0 {
+				t.Fatal("proved absent properties were gapped")
+			}
+		}
+		if len(gaps) != 1 || gaps[0].Availability.State != EvidenceInvalid || gaps[0].Availability.Cause == nil || *gaps[0].Availability.Cause != *cause {
+			t.Fatalf("stronger position cause hidden %+v", gaps)
 		}
 	}
 	h := &timelineState{}
@@ -358,7 +365,10 @@ func TestTimelineStateInstrumentGapsPreserveStrongestCause(t *testing.T) {
 	if e := h.readInstrumentChanges(context.Background(), s, b, sound, statePosition(t, 0, 0, 1)); e != nil {
 		t.Fatal(e)
 	}
-	if len(h.InstrumentGaps) != 1 || h.InstrumentGaps[0].Availability.State != EvidenceUnknown || h.InstrumentGaps[0].Availability.Reason != "timeline-required-instrument-id-absent" {
-		t.Fatalf("missing required ID became absence %+v", h.InstrumentGaps)
+	if len(h.UnresolvedInstrumentChanges) != 1 || h.UnresolvedInstrumentChanges[0].Instrument.State != EvidenceUnknown || h.UnresolvedInstrumentChanges[0].Instrument.Reason != "timeline-required-instrument-id-absent" {
+		t.Fatalf("missing required ID became absence %+v", h.UnresolvedInstrumentChanges)
+	}
+	if len(h.InstrumentGaps) != 0 || len(h.InstrumentPropertyGaps[0]) != 0 || len(h.InstrumentPropertyGaps[1]) != 0 || len(h.InstrumentPropertyGaps[2]) != 0 {
+		t.Fatal("empty bad-target record published a property update")
 	}
 }

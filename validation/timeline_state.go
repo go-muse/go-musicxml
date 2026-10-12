@@ -44,6 +44,8 @@ type statePublication[T any] struct {
 	bytes      int64
 }
 type stateGap struct {
+	// Position bounds a known publisher exactly; nil retains interval uncertainty.
+	Position                  *musicalPosition
 	Part                      NodeRef
 	FirstMeasure, LastMeasure uint64
 	Scope                     stateScope
@@ -153,6 +155,8 @@ type timelineState struct {
 	NoteInstruments                          []noteInstrumentSet
 	InstrumentChanges                        []instrumentChanges
 	InstrumentGaps                           []stateGap
+	InstrumentPropertyGaps                   [3][]stateGap
+	UnresolvedInstrumentChanges              []instrumentRecord[instrumentState]
 	MIDI                                     []instrumentRecord[midiState]
 	midiStatements                           *recordStatementStore[midiState]
 	deviceStatements                         *recordStatementStore[midiDeviceState]
@@ -241,7 +245,7 @@ func stateMeasure(ctx context.Context, s *Session, v reflect.Value) (int64, erro
 		}
 	case reflect.Pointer:
 		if !v.IsNil() {
-			if v.Type() != reflect.TypeFor[*DecisionRef]() && v.Type() != reflect.TypeFor[*Evidence[string]]() {
+			if v.Type() != reflect.TypeFor[*DecisionRef]() && v.Type() != reflect.TypeFor[*Evidence[string]]() && v.Type() != reflect.TypeFor[*musicalPosition]() {
 				return 0, contract("timeline state", "unexpected mutable pointer")
 			}
 			if e := add(stateMeasure(ctx, s, v.Elem())); e != nil {
@@ -383,6 +387,9 @@ func addStateGap[T any](ctx context.Context, s *Session, h *stateHistory[T], g s
 	if g.Part.Node == 0 || g.FirstMeasure > g.LastMeasure || !stateValidScope(g.Scope) || g.Availability.State == EvidenceKnown || g.Availability.State == EvidenceAbsent {
 		return contract("timeline gap", "bounded affected interval and causal unavailable evidence required")
 	}
+	if g.Position != nil && (!stateValidPosition(*g.Position) || g.Position.Part != g.Part || g.FirstMeasure != g.Position.MeasureOrdinal || g.LastMeasure != g.Position.MeasureOrdinal) {
+		return contract("timeline gap", "exact point must match its part and interval")
+	}
 	if _, e := stateReserve(ctx, s, g); e != nil {
 		return e
 	}
@@ -491,6 +498,14 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 		return out, e
 	}
 	best := selection.Best
+	gapAvailability := Evidence[bool]{State: EvidenceKnown, Value: true}
+	var repairPosition *musicalPosition
+	if len(history.Gaps) != 0 {
+		repairPosition, e = stateRepairPosition(ctx, s, history, staff.Value, selection)
+		if e != nil {
+			return out, e
+		}
+	}
 	for _, g := range history.Gaps {
 		if e = s.step(ctx, 1); e != nil {
 			return out, e
@@ -505,11 +520,18 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 		if !applies {
 			continue
 		}
-		if best < 0 || history.Publications[best].Position.MeasureOrdinal <= g.LastMeasure {
-			return stateUnavailableResult[bool, V](ctx, s, g.Availability)
+		unrepaired, err := stateGapUnrepaired(ctx, s, g, pos, repairPosition, inclusive)
+		if err != nil {
+			return out, err
+		}
+		if unrepaired {
+			gapAvailability = stateMergeGap(gapAvailability, g.Availability)
 		}
 	}
 	if best < 0 {
+		if gapAvailability.State != EvidenceKnown {
+			return stateUnavailableResult[bool, V](ctx, s, gapAvailability)
+		}
 		out.Value = Evidence[V]{State: EvidenceAbsent}
 		return out, nil
 	}
@@ -611,6 +633,9 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 	}
 	if conflict && (out.Value.State == EvidenceKnown || out.Value.State == EvidenceAbsent) {
 		out.Value = stateUnknown[V]("timeline-state-conflict")
+	}
+	if stateAvailabilityRank(gapAvailability.State) > stateAvailabilityRank(out.Value.State) {
+		out.Value = stateUnavailable[bool, V](gapAvailability)
 	}
 	if ownedResult {
 		if e = stateRetainCopy(ctx, s, out.Value); e != nil {

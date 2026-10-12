@@ -118,7 +118,7 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 
 // Extra gaps are checked against the selected property's publication rather
 // than the latest unrelated whole-record publication.
-func queryStatementView[T, V any](ctx context.Context, s *Session, h *timelineState, view *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], extra [2][]stateGap) (stateResult[V], error) {
+func queryStatementView[T, V any](ctx context.Context, s *Session, h *timelineState, view *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], extra ...[]stateGap) (stateResult[V], error) {
 	if !stateValidPosition(pos) {
 		return stateResult[V]{}, contract("statement query", "known musical position required")
 	}
@@ -137,6 +137,16 @@ func queryStatementView[T, V any](ctx context.Context, s *Session, h *timelineSt
 		return stateResult[V]{}, err
 	}
 	gap := Evidence[bool]{State: EvidenceKnown, Value: true}
+	var repairPosition *musicalPosition
+	for _, gaps := range extra {
+		if len(gaps) != 0 {
+			repairPosition, err = stateRepairPosition(ctx, s, view, staff.Value, selection)
+			if err != nil {
+				return stateResult[V]{}, err
+			}
+			break
+		}
+	}
 	for _, gaps := range extra {
 		for _, g := range gaps {
 			if err = s.step(ctx, 1); err != nil {
@@ -152,15 +162,23 @@ func queryStatementView[T, V any](ctx context.Context, s *Session, h *timelineSt
 			if !applies {
 				continue
 			}
-			if selection.Best < 0 || view.Publications[selection.Best].Position.MeasureOrdinal <= g.LastMeasure {
+			unrepaired, err := stateGapUnrepaired(ctx, s, g, pos, repairPosition, true)
+			if err != nil {
+				return stateResult[V]{}, err
+			}
+			if unrepaired {
 				gap = stateMergeGap(gap, g.Availability)
 			}
 		}
 	}
-	if gap.State != EvidenceKnown {
+	out, err := queryState(ctx, s, h, view, pos, staff, project)
+	if err != nil {
+		return out, err
+	}
+	if stateAvailabilityRank(gap.State) > stateAvailabilityRank(out.Value.State) {
 		return stateUnavailableResult[bool, V](ctx, s, gap)
 	}
-	return queryState(ctx, s, h, view, pos, staff, project)
+	return out, nil
 }
 func instrumentStatement[T any](ctx context.Context, s *Session, h *timelineState, pos musicalPosition, id NodeRef, field int, project func(instrumentState) Evidence[T]) (stateResult[T], error) {
 	if id.Node == 0 || id.DocumentID != pos.Part.DocumentID {
@@ -191,7 +209,7 @@ func instrumentStatement[T any](ctx context.Context, s *Session, h *timelineStat
 	if selected == nil {
 		defer func() { stateDiscardIndex(s, view.index) }()
 	}
-	out, err := queryStatementView(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, project, [2][]stateGap{h.InstrumentGaps, local})
+	out, err := queryStatementView(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, project, h.InstrumentGaps, h.InstrumentPropertyGaps[field], local)
 	if err != nil || out.Value.State != EvidenceAbsent {
 		return out, err
 	}
@@ -296,6 +314,9 @@ func (h *timelineState) effectiveInstrument(ctx context.Context, s *Session, pos
 
 // An unplaced observed change can only affect properties it actually states.
 func (v *instrumentChanges) addStatementGap(ctx context.Context, s *Session, gap stateGap, value Evidence[instrumentState]) error {
+	return addInstrumentStatementGaps(ctx, s, &v.statementGaps, gap, value)
+}
+func addInstrumentStatementGaps(ctx context.Context, s *Session, gaps *[3][]stateGap, gap stateGap, value Evidence[instrumentState]) error {
 	fields := [3]Evidence[bool]{stateUnavailable[instrumentState, bool](value), stateUnavailable[instrumentState, bool](value), stateUnavailable[instrumentState, bool](value)}
 	if value.State == EvidenceKnown {
 		fields = [3]Evidence[bool]{stateUnavailable[string, bool](instrumentSoundStatement(value.Value)), stateUnavailable[instrumentPerformanceState, bool](instrumentPerformanceStatement(value.Value)), stateUnavailable[virtualInstrumentState, bool](instrumentVirtualStatement(value.Value))}
@@ -311,7 +332,7 @@ func (v *instrumentChanges) addStatementGap(ctx context.Context, s *Session, gap
 		if _, err := stateReserve(ctx, s, g); err != nil {
 			return err
 		}
-		v.statementGaps[field] = append(v.statementGaps[field], stateClone(g))
+		gaps[field] = append(gaps[field], stateClone(g))
 	}
 	return nil
 }

@@ -365,7 +365,8 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 			return r.err
 		}
 		if id.State != EvidenceKnown {
-			if e := gap(stateUnavailable[NodeRef, bool](id)); e != nil {
+			record := instrumentRecord[instrumentState]{Part: pos.Part, Source: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Instrument: id, Position: Evidence[musicalPosition]{State: EvidenceKnown, Value: pos}, Value: value, TimeOnly: condition}
+			if e := h.addUnresolvedInstrumentChange(ctx, s, record, pos.MeasureOrdinal); e != nil {
 				return e
 			}
 			continue
@@ -412,17 +413,21 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 	}
 	for _, ch := range children {
 		id := r.reference(ch, timelineRoleInstrumentChangeID, part)
+		value := r.instrument(ch, true)
 		if r.err != nil {
 			return r.err
 		}
+		record := instrumentRecord[instrumentState]{Part: part, Source: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Instrument: id, Position: availability, Value: value, TimeOnly: condition}
 		if id.State != EvidenceKnown {
-			bad := g
-			bad.Availability = stateMergeGap(g.Availability, stateUnavailable[NodeRef, bool](id))
-			if e := global(bad); e != nil {
+			if e := h.addUnresolvedInstrumentChange(ctx, s, record, ordinal); e != nil {
 				return e
 			}
 			continue
 		}
+		if _, e := stateReserve(ctx, s, record); e != nil {
+			return e
+		}
+		h.UnresolvedInstrumentChanges = append(h.UnresolvedInstrumentChanges, stateClone(record))
 		at := -1
 		for i := range h.InstrumentChanges {
 			if e := s.step(ctx, 1); e != nil {
@@ -438,12 +443,12 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 				return e
 			}
 			item := instrumentChanges{Instrument: id.Value}
-			if e := item.addStatementGap(ctx, s, g, r.instrument(ch, true)); e != nil {
+			if e := item.addStatementGap(ctx, s, g, value); e != nil {
 				return e
 			}
 			h.InstrumentChanges = append(h.InstrumentChanges, item)
 		} else {
-			if e := h.InstrumentChanges[at].addStatementGap(ctx, s, g, r.instrument(ch, true)); e != nil {
+			if e := h.InstrumentChanges[at].addStatementGap(ctx, s, g, value); e != nil {
 				return e
 			}
 		}

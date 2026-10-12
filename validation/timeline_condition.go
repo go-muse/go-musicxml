@@ -5,7 +5,7 @@ package validation
 // Stronger actual scalar/condition failures take precedence over repeat unknown.
 // The returned evidence borrows causes; the publication/query owner must copy it.
 func stateConditionalValue[T any](value Evidence[T], condition *Evidence[string]) Evidence[T] {
-	if value.State == EvidenceAbsent || value.State == "" || condition == nil || condition.State == EvidenceAbsent || condition.State == "" {
+	if value.State == EvidenceAbsent || value.State == "" || stateUnconditional(condition) {
 		return value
 	}
 	unavailable := stateUnavailable[string, bool](*condition)
@@ -26,4 +26,8 @@ func (r *stateReader) soundCondition(n *factNode) *Evidence[string] {
 		return nil
 	}
 	return &condition
+}
+
+func stateUnconditional(condition *Evidence[string]) bool {
+	return condition == nil || condition.State == EvidenceAbsent || condition.State == ""
 }
