@@ -487,7 +487,7 @@ func TestTimelinePlanRejectsWrongNamedScalarFamilies(t *testing.T) {
 }
 
 func TestTimelinePlanRequiresRetainedCompositeDiscriminators(t *testing.T) {
-	for _, tc := range []struct{ owner, name string }{{"other-play", "type"}, {"line-detail", "line"}, {"staff-size", "scaling"}} {
+	for _, tc := range []struct{ owner, name string }{{"other-play", "type"}, {"line-detail", "line"}, {"staff-size", "scaling"}, {"staff-details", "show-frets"}, {"staff-details", "print-object"}, {"staff-details", "print-spacing"}, {"line-detail", "width"}, {"line-detail", "color"}, {"line-detail", "line-type"}, {"line-detail", "print-object"}} {
 		t.Run(tc.owner+"/"+tc.name, func(t *testing.T) {
 			schema := timelineContractVariantSchema(t, func(data *validation.SchemaData) {
 				key := validation.SchemaName{Local: tc.owner}
