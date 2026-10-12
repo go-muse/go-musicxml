@@ -270,3 +270,172 @@ func timelineContractDigest(c *validation.CompiledCatalog) string {
 	p, _ := c.Profile("timeline.contract")
 	return p.CatalogDigest
 }
+
+func timelineContractVariantSchema(t *testing.T, change func(*validation.SchemaData)) *validation.CompiledSchema {
+	t.Helper()
+	data := scoreValidationSchema
+	data.Types = make(map[validation.SchemaName]*validation.SchemaType, len(scoreValidationSchema.Types))
+	for k, v := range scoreValidationSchema.Types {
+		data.Types[k] = v
+	}
+	change(&data)
+	s, err := validation.CompileSchema(validation.AssemblyMusicXML, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+func timelineContractChangedSchema(t *testing.T) *validation.CompiledSchema {
+	return timelineContractVariantSchema(t, func(data *validation.SchemaData) {
+		key := validation.SchemaName{Local: "mode"}
+		typ := *data.Types[key]
+		simple := *typ.Simple
+		simple.Enumerations = []string{"contract-variant"}
+		typ.Simple = &simple
+		data.Types[key] = &typ
+	})
+}
+func timelineContractRewriteParticle(p *validation.SchemaParticle, name, typ string, duplicate bool) *validation.SchemaParticle {
+	if p == nil {
+		return nil
+	}
+	q := *p
+	q.Children = make([]*validation.SchemaParticle, 0, len(p.Children))
+	for _, child := range p.Children {
+		copy := timelineContractRewriteParticle(child, name, typ, duplicate)
+		q.Children = append(q.Children, copy)
+		if duplicate && child.Element != nil && child.Element.Name.Local == name {
+			q.Children = append(q.Children, copy)
+		}
+	}
+	if p.Element != nil {
+		e := *p.Element
+		if e.Name.Local == name && typ != "" {
+			e.Type = validation.SchemaTypeRef{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: typ}}
+		}
+		q.Element = &e
+	}
+	return &q
+}
+func TestTimelinePlanRejectsMalformedPinnedRoleShapes(t *testing.T) {
+	for _, tc := range []struct {
+		name, owner, child, typ string
+		duplicate               bool
+	}{
+		{name: "wrong scalar type", owner: "note", child: "duration", typ: "string"},
+		{name: "wrong state type", owner: "attributes", child: "key", typ: "string"},
+		{name: "ambiguous same-owner role", owner: "time", child: "beats", duplicate: true},
+		{name: "wrong local-key type", owner: "numeral-key", child: "numeral-mode", typ: "string"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := timelineContractVariantSchema(t, func(data *validation.SchemaData) {
+				key := validation.SchemaName{Local: tc.owner}
+				typ := *data.Types[key]
+				complex := *typ.Complex
+				complex.Particle = timelineContractRewriteParticle(complex.Particle, tc.child, tc.typ, tc.duplicate)
+				typ.Complex = &complex
+				data.Types[key] = &typ
+			})
+			if _, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: timelineContractOwners(t, s)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
+				t.Fatalf("accepted malformed role shape: %v", err)
+			}
+		})
+	}
+}
+func TestTimelineCatalogSelectionSchemaAndImplicitCycles(t *testing.T) {
+	s := timelineContractSchema(t)
+	other := timelineContractChangedSchema(t)
+	for _, tc := range []struct {
+		name   string
+		change func([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding)
+	}{
+		{"unselected owner", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			p[0].Required = slices.Delete(p[0].Required, 2, 3)
+			p[0].Support = slices.Delete(p[0].Support, 2, 3)
+			return r, p, b
+		}},
+		{"owner revision", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			owners := timelineContractOwners(t, s)
+			owners[0].Rule.Revision++
+			b[1].Plan, _ = validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: s, PartOwners: owners})
+			return r, p, b
+		}},
+		{"owner target mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			r[2].Targets = []validation.Target{validation.TargetSource}
+			return r, p, b
+		}},
+		{"implicit owner cycle", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			r[2].Requires = []validation.Dependency{{Kind: validation.DependencyRule, Rule: r[1].Key, Relation: validation.RelationDocument}}
+			return r, p, b
+		}},
+		{"unselected schema", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			p[0].Required = p[0].Required[:4]
+			p[0].Support = p[0].Support[:4]
+			return r, p, b
+		}},
+		{"consumer schema mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			b[0].Plan, _ = validation.NewChordDurationPlan(validation.TimelineConsumerSpec{Schema: other, Provider: r[1].Key})
+			return r, p, b
+		}},
+		{"selected XSD schema mismatch", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			checks := []validation.XSDCheck{validation.XSDCheckBinding, validation.XSDCheckDeclaration, validation.XSDCheckAttributes, validation.XSDCheckScalar, validation.XSDCheckContent, validation.XSDCheckIdentity}
+			for i, check := range checks {
+				b[4+i].Plan, _ = validation.NewXSDPlan(other, check)
+			}
+			return r, p, b
+		}},
+		{"two selected services", func(r []validation.RuleDefinition, p []validation.Profile, b []validation.PlanBinding) ([]validation.RuleDefinition, []validation.Profile, []validation.PlanBinding) {
+			copy := r[1]
+			copy.Key.ID = "second-service"
+			copy.Predicate = "second-service"
+			r = append(r, copy)
+			b = append(b, validation.PlanBinding{ID: copy.Predicate, Plan: b[1].Plan})
+			p[0].Required = append(p[0].Required, copy.Key)
+			p[0].Support = append(p[0].Support, validation.RuleSupport{Rule: copy.Key, State: validation.ImplementationAvailable})
+			return r, p, b
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			provider, consumer := timelineContractPlans(t, s, false)
+			r, p, b := timelineContractCatalog(t, s, provider, consumer, false)
+			r, p, b = tc.change(r, p, b)
+			if _, err := validation.NewCatalog(r, p, b); !errors.Is(err, validation.ErrInvalidConfiguration) {
+				t.Fatalf("accepted invalid profile: %v", err)
+			}
+		})
+	}
+}
+func TestTimelinePlansSnapshotSchemaHandlesAndProviderRevision(t *testing.T) {
+	s := timelineContractSchema(t)
+	provider, consumer := timelineContractPlans(t, s, false)
+	r, p, b := timelineContractCatalog(t, s, provider, consumer, false)
+	c, err := validation.NewCatalog(r, p, b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	replacement := r[1].Key
+	replacement.Revision++
+	b[0].Plan, err = validation.NewChordDurationPlan(validation.TimelineConsumerSpec{Schema: s, Provider: replacement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r[1].Key = replacement
+	r[0].Requires[0].Rule = replacement
+	p[0].Required[1] = replacement
+	p[0].Support[1].Rule = replacement
+	revised, err := validation.NewCatalog(r, p, b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if timelineContractDigest(c) == timelineContractDigest(revised) {
+		t.Fatal("exact provider revision absent from digest")
+	}
+	*s = validation.CompiledSchema{}
+	independent, err := validation.NewCatalog(r, p, b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if timelineContractDigest(revised) != timelineContractDigest(independent) {
+		t.Fatal("plan retained caller schema handle")
+	}
+}
