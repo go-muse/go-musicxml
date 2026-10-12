@@ -38,3 +38,11 @@ var (
 	_ [timelineGraceScratchPerNote - int64(independentGraceNoteShape)]struct{}
 	_ [timelineGraceScratchPerBlock - int64(independentGraceBlockShape)]struct{}
 )
+
+var (
+	_ [timelineExcursionReserveBytes - 3*int64(unsafe.Sizeof(timelineUnitExcursion{}))]struct{}
+	_ [timelineUnitPublisherBytes - int64(unsafe.Sizeof(timelineUnitPublisher{}))]struct{}
+	_ [timelineUnitGateBytes - 4*int64(unsafe.Sizeof(NodeID(0))+unsafe.Sizeof(timelineExcursionGate{}))]struct{}
+	_ [timelineUnitGateBytes - 4*int64(unsafe.Sizeof(NodeRef{})+unsafe.Sizeof(bool(false)))]struct{}
+	_ [timelineUnitStageBytes - int64(unsafe.Sizeof(timelineService{})) - 512]struct{}
+)
