@@ -1175,3 +1175,32 @@ func TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedN
 		})
 	}
 }
+
+func TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	attrs := func(id NodeID, units int64) *factNode {
+		return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, stateAtomicDecimal(t, units, 1)))
+	}
+	forward := stateNode(b, timelineRoleForward, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 51, stateAtomicDecimal(t, 10, 1)))
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, 2), runtimeNote(t, b, 30, 2, false)), runtimeBlock(b, 1, attrs(40, 1), runtimeNote(t, b, 45, 1, false), forward, attrs(60, 1)), runtimeBlock(b, 2, attrs(80, 1), runtimeNote(t, b, 90, 1, false), runtimeNote(t, b, 100, 1, false))}
+	for _, block := range blocks {
+		if err := svc.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if movement := svc.Facts[50]; movement.Duration.State != EvidenceKnown || movement.Duration.Value.String() != "10" {
+		t.Fatalf("same-unit descendant erased independently constant-unit forward proof: %+v", movement)
+	}
+	first, next := svc.Facts[90], svc.Facts[100]
+	effective, err := svc.State.effectiveDivisions(ctx, s, first.Position.Value)
+	if err != nil || effective.Value.State != EvidenceKnown || effective.Value.Value.String() != "1" {
+		t.Fatalf("restored unit publishers lost same-value consensus: %+v err=%v", effective, err)
+	}
+	if first.Duration.State != EvidenceKnown || first.Duration.Value.String() != "1" || next.Position.State != EvidenceKnown || next.Position.Value.Offset.String() != "1" {
+		t.Fatalf("temporary context gates survived independent excursion restoration: first=%+v next=%+v", first, next)
+	}
+}
