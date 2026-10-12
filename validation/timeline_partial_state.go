@@ -138,7 +138,7 @@ func queryPartialState[T, V any](ctx context.Context, s *Session, h *timelineSta
 			for _, pr := range provenance {
 				duplicate := false
 				for _, old := range out.Provenance {
-					if e = s.step(ctx, 1); e != nil {
+					if e = s.step(ctx, 1+int64(len(old.Node.DocumentID))+int64(len(pr.Node.DocumentID))); e != nil {
 						return e
 					}
 					if old == pr {
@@ -218,7 +218,7 @@ func queryPartialState[T, V any](ctx context.Context, s *Session, h *timelineSta
 	gapAvailability := Evidence[bool]{State: EvidenceKnown, Value: true}
 	visitGaps := func(gaps []stateGap) error {
 		for _, gap := range gaps {
-			if err := s.step(ctx, 1); err != nil {
+			if err := s.step(ctx, 1+int64(len(gap.Part.DocumentID))+int64(len(pos.Part.DocumentID))); err != nil {
 				return err
 			}
 			if gap.Part != pos.Part {

@@ -18,7 +18,15 @@ func (h *timelineState) gapCouldApply(ctx context.Context, s *Session, gap state
 		member, err := h.frameMember(ctx, s, query)
 		return !member || gap.FirstMeasure <= query.MeasureOrdinal, err
 	}
-	if !stateValidPosition(*gap.Position) || gap.Position.Part != gap.Part || gap.FirstMeasure != gap.Position.MeasureOrdinal || gap.LastMeasure != gap.Position.MeasureOrdinal {
+	valid, err := statePositionValid(ctx, s, *gap.Position)
+	if err != nil {
+		return false, err
+	}
+	same, err := stateSameRef(ctx, s, gap.Position.Part, gap.Part)
+	if err != nil {
+		return false, err
+	}
+	if !valid || !same || gap.FirstMeasure != gap.Position.MeasureOrdinal || gap.LastMeasure != gap.Position.MeasureOrdinal {
 		return false, contract("timeline gap", "exact point must match its part and interval")
 	}
 	order, err := h.positionOrder(ctx, s, *gap.Position, query)
@@ -55,8 +63,18 @@ func (h *timelineState) addUnresolvedInstrumentChange(ctx context.Context, s *Se
 	if record.Instrument.State == EvidenceKnown {
 		return contract("instrument gap", "unresolved instrument required")
 	}
-	if record.Position.State == EvidenceKnown && (!stateValidPosition(record.Position.Value) || record.Position.Value.Part != record.Part) {
-		return contract("instrument gap", "matching positioned part required")
+	if record.Position.State == EvidenceKnown {
+		valid, err := statePositionValid(ctx, s, record.Position.Value)
+		if err != nil {
+			return err
+		}
+		same, err := stateSameRef(ctx, s, record.Position.Value.Part, record.Part)
+		if err != nil {
+			return err
+		}
+		if !valid || !same {
+			return contract("instrument gap", "matching positioned part required")
+		}
 	}
 	gap := stateGap{Placement: record.Placement, Part: record.Part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[NodeRef, bool](record.Instrument)}
 	if record.Position.State == EvidenceKnown {

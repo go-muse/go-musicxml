@@ -210,6 +210,14 @@ func stateUnavailableResult[T, U any](ctx context.Context, s *Session, v Evidenc
 func stateUnknown[T any](reason Code) Evidence[T] {
 	return Evidence[T]{State: EvidenceUnknown, Reason: reason}
 }
+func statePositionValid(ctx context.Context, s *Session, p musicalPosition) (bool, error) {
+	if err := s.step(ctx, 1+int64(len(p.Part.DocumentID))+int64(len(p.Measure.DocumentID))); err != nil {
+		return false, err
+	}
+	return stateValidPosition(p), nil
+}
+
+// The pure predicate requires caller admission for its variable string comparison.
 func stateValidPosition(p musicalPosition) bool {
 	return p.Part.Node != 0 && p.Measure.Node != 0 && p.Part.DocumentID != "" && p.Part.DocumentID == p.Measure.DocumentID && p.Offset.Valid()
 }
@@ -374,7 +382,11 @@ func stateReserve(ctx context.Context, s *Session, value any) (int64, error) {
 	return n, nil
 }
 func publishState[T any](ctx context.Context, s *Session, h *stateHistory[T], p statePublication[T]) error {
-	if !stateValidPosition(p.Position) || !stateValidScope(p.Scope) {
+	valid, err := statePositionValid(ctx, s, p.Position)
+	if err != nil {
+		return err
+	}
+	if !valid || !stateValidScope(p.Scope) {
 		return contract("timeline state", "known position and exact scope required")
 	}
 	// Measure the public fields only; the private accounting cache is not copied.
@@ -405,12 +417,33 @@ func addStateGap[T any](ctx context.Context, s *Session, h *stateHistory[T], g s
 		return contract("timeline gap", "bounded affected interval and causal unavailable evidence required")
 	}
 	for _, bound := range [2]*musicalPosition{g.Placement.Lower, g.Placement.Upper} {
-		if bound != nil && (!g.Placement.Displaced || !stateValidPosition(*bound) || bound.Part != g.Part) {
+		if bound == nil {
+			continue
+		}
+		valid, err := statePositionValid(ctx, s, *bound)
+		if err != nil {
+			return err
+		}
+		same, err := stateSameRef(ctx, s, bound.Part, g.Part)
+		if err != nil {
+			return err
+		}
+		if !g.Placement.Displaced || !valid || !same {
 			return contract("timeline gap", "displaced bound must match canonical part")
 		}
 	}
-	if g.Position != nil && (!stateValidPosition(*g.Position) || g.Position.Part != g.Part || g.FirstMeasure != g.Position.MeasureOrdinal || g.LastMeasure != g.Position.MeasureOrdinal) {
-		return contract("timeline gap", "exact point must match its part and interval")
+	if g.Position != nil {
+		valid, err := statePositionValid(ctx, s, *g.Position)
+		if err != nil {
+			return err
+		}
+		same, err := stateSameRef(ctx, s, g.Position.Part, g.Part)
+		if err != nil {
+			return err
+		}
+		if !valid || !same || g.FirstMeasure != g.Position.MeasureOrdinal || g.LastMeasure != g.Position.MeasureOrdinal {
+			return contract("timeline gap", "exact point must match its part and interval")
+		}
 	}
 	if _, e := stateReserve(ctx, s, g); e != nil {
 		return e
@@ -429,10 +462,11 @@ func (h *timelineState) closePart(ctx context.Context, s *Session, part NodeRef,
 func (h *timelineState) closure(ctx context.Context, s *Session, p musicalPosition) (Evidence[bool], error) {
 	best := stateUnknown[bool]("timeline-scope-open")
 	for _, c := range h.Closures {
-		if e := s.step(ctx, 1); e != nil {
-			return Evidence[bool]{}, e
+		same, err := stateSameRef(ctx, s, c.Part, p.Part)
+		if err != nil {
+			return Evidence[bool]{}, err
 		}
-		if c.Part != p.Part || c.Through < p.MeasureOrdinal {
+		if !same || c.Through < p.MeasureOrdinal {
 			continue
 		}
 		if c.Complete.State == EvidenceKnown && c.Complete.Value {
@@ -516,7 +550,11 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 		return stateResult[V]{}, contract("timeline query", "evidence-only mode requires immutable Decimal")
 	}
 	out := stateResult[V]{}
-	if !stateValidPosition(pos) {
+	valid, err := statePositionValid(ctx, s, pos)
+	if err != nil {
+		return out, err
+	}
+	if !valid {
 		return out, contract("timeline query", "known musical position required")
 	}
 	closure, e := h.closure(ctx, s, pos)
@@ -540,7 +578,7 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 	if !partial {
 		checkGaps := func(gaps []stateGap) error {
 			for _, g := range gaps {
-				if err := s.step(ctx, 1); err != nil {
+				if err := s.step(ctx, 1+int64(len(g.Part.DocumentID))+int64(len(pos.Part.DocumentID))); err != nil {
 					return err
 				}
 				if g.Part != pos.Part || !(g.Placement.Displaced || g.Position != nil && g.Position.UnprovedFrame) {
@@ -588,7 +626,7 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 	}
 	visitGaps := func(gaps []stateGap) error {
 		for _, g := range gaps {
-			if e = s.step(ctx, 1); e != nil {
+			if e = s.step(ctx, 1+int64(len(g.Part.DocumentID))+int64(len(pos.Part.DocumentID))); e != nil {
 				return e
 			}
 			if g.Part != pos.Part || g.FirstMeasure > pos.MeasureOrdinal {
@@ -657,7 +695,7 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 	for _, group := range selection.Groups {
 		for _, publicationIndex := range group {
 			p := history.Publications[publicationIndex]
-			if e = s.step(ctx, 1); e != nil {
+			if e = s.step(ctx, 1+int64(len(p.Position.Part.DocumentID))+int64(len(pos.Part.DocumentID))); e != nil {
 				return stateResult[V]{}, e
 			}
 			if p.Position.Part != pos.Part {
@@ -709,7 +747,7 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 				}
 				duplicate := false
 				for _, prior := range out.Provenance {
-					if e = s.step(ctx, 1); e != nil {
+					if e = s.step(ctx, 1+int64(len(prior.Node.DocumentID))+int64(len(pr.Node.DocumentID))); e != nil {
 						return stateResult[V]{}, e
 					}
 					if prior == pr {
