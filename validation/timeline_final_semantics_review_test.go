@@ -446,3 +446,54 @@ func TestTimelineFinalReviewGraceDonorsUseKnownScoreOrder(t *testing.T) {
 		t.Fatalf("lexical disorder hid unique score-order donors: %+v", got)
 	}
 }
+
+// Initial score-part statements are definite baselines, even when a positioned
+// change might or might not yet apply. Equal values can prove an effective value
+// by consensus, but the proof must not invent a definite floating source.
+func TestTimelineFinalReviewFloatingDeviceIncludesInitialBaseline(t *testing.T) {
+	for _, changedName := range []string{"initial-device", "different-device"} {
+		t.Run(changedName, func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			initial := instrumentRecord[midiDeviceState]{Part: NodeRef{"d", 1}, Source: NodeRef{"d", 10}, Instrument: stateAbsent[NodeRef](), Position: stateAbsent[musicalPosition](), Value: stateKnown(midiDeviceState{Name: stateKnown("initial-device"), Port: stateKnown(stateInt(t, 3))})}
+			if err := svc.State.addMIDIDeviceRecord(ctx, s, initial, 0); err != nil {
+				t.Fatal(err)
+			}
+			attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+			device := stateNode(b, timelineRoleSoundMidiDevice, 41, stateAtomicText(changedName))
+			sound := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic](), device, stateNode(b, timelineRoleSoundOffset, 42, stateAtomicDecimal(t, 10, 1)))
+			first, second := runtimeBlock(b, 0, attrs, sound, runtimeNote(t, b, 50, 1, false)), runtimeBlock(b, 1, runtimeNote(t, b, 60, 1, false), runtimeNote(t, b, 70, 1, false))
+			for _, block := range []timelineMeasureBlock{first, second} {
+				if err := svc.readMeasure(ctx, s, b, block); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, []timelineMeasureBlock{first, second}); err != nil {
+				t.Fatal(err)
+			}
+			got, err := svc.State.effectiveMIDIDeviceStatements(ctx, s, svc.Facts[70].Position.Value, NodeRef{"d", 71})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Port.Value.State != EvidenceKnown || got.Port.Value.Value.String() != "3" {
+				t.Fatalf("omitted floating property erased initial port: %+v", got.Port)
+			}
+			if changedName != "initial-device" {
+				if got.Name.Value.State == EvidenceKnown {
+					t.Fatalf("floating change fabricated definite supersession of initial value: %+v", got.Name)
+				}
+				return
+			}
+			if got.Name.Value.State != EvidenceKnown || got.Name.Value.Value != "initial-device" {
+				t.Fatalf("same-value initial baseline consensus lost: %+v", got.Name)
+			}
+			initialSource := false
+			for _, source := range got.Name.Provenance {
+				initialSource = initialSource || source.Node == initial.Source
+			}
+			if !initialSource {
+				t.Fatalf("consensus hid the required initial-source proof: %+v", got.Name)
+			}
+		})
+	}
+}
