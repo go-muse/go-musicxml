@@ -151,3 +151,62 @@ func TestTimelineRuntimeUnknownPublisherGapsOnlyPotentialFamilies(t *testing.T) 
 		})
 	}
 }
+
+func TestTimelineRuntimeOffsetsUseFinalOriginUnits(t *testing.T) {
+	for _, role := range []timelineRole{timelineRoleHarmony, timelineRoleDirection, timelineRoleSound, timelineRoleListening} {
+		t.Run(string(rune(role)), func(t *testing.T) {
+			s, svc, b := runtimeFixture(t)
+			d2 := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)))
+			d4 := stateNode(b, timelineRoleAttributes, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 61, stateAtomicDecimal(t, 4, 1)))
+			offrole := map[timelineRole]timelineRole{timelineRoleHarmony: timelineRoleHarmonyOffset, timelineRoleDirection: timelineRoleDirectionOffset, timelineRoleSound: timelineRoleSoundOffset, timelineRoleListening: timelineRoleListeningOffset}[role]
+			off := stateNode(b, offrole, 41, stateAtomicDecimal(t, 2, 1))
+			event := stateNode(b, role, 40, stateAbsent[Atomic](), off)
+			if role == timelineRoleDirection {
+				stateAttribute(b, off, timelineRoleOffsetSound, Atomic{Kind: AtomicString, Text: "yes"})
+				event.children = append(event.children, stateNode(b, timelineRoleDirectionSound, 50, stateAbsent[Atomic]()), stateNode(b, timelineRoleDirectionListening, 55, stateAbsent[Atomic]()))
+			}
+			if err := svc.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, d2, runtimeNote(t, b, 30, 2, false), event, d4, runtimeNote(t, b, 70, 4, false))); err != nil {
+				t.Fatal(err)
+			}
+			ids := []NodeID{40}
+			if role == timelineRoleDirection {
+				ids = append(ids, 50, 55)
+			}
+			for _, id := range ids {
+				fact := svc.Facts[id]
+				if fact.Position.State != EvidenceKnown || fact.Position.Value.Offset.String() != "3/2" || fact.Origin.State != EvidenceKnown || fact.Origin.Value.Offset.String() != "1" || fact.Units.State != EvidenceKnown || fact.Units.Value.String() != "4" {
+					t.Fatalf("node%d=%+v", id, fact)
+				}
+			}
+			if got := svc.Facts[70].Position; got.State != EvidenceKnown || got.Value.Offset.String() != "1" {
+				t.Fatalf("offset moved cursor %+v", got)
+			}
+		})
+	}
+}
+
+func TestTimelineRuntimeScalarOffsetCanCrossKnownUnitBoundary(t *testing.T) {
+	for _, forward := range []bool{false, true} {
+		t.Run(map[bool]string{true: "forward", false: "backward"}[forward], func(t *testing.T) {
+			s, svc, b := runtimeFixture(t)
+			d2 := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)))
+			d4 := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 41, stateAtomicDecimal(t, 4, 1)))
+			offset, want := int64(-3), "3/4"
+			if forward {
+				offset, want = 2, "3/2"
+			}
+			harmony := stateNode(b, timelineRoleHarmony, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleHarmonyOffset, 61, stateAtomicDecimal(t, offset, 1)))
+			events := []*factNode{d2, runtimeNote(t, b, 30, 2, false), d4, runtimeNote(t, b, 50, 2, false), harmony}
+			if forward {
+				events = []*factNode{d2, runtimeNote(t, b, 30, 1, false), harmony, runtimeNote(t, b, 35, 1, false), d4}
+			}
+			if err := svc.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, events...)); err != nil {
+				t.Fatal(err)
+			}
+			got := svc.Facts[60].Position
+			if got.State != EvidenceKnown || got.Value.Offset.String() != want {
+				t.Fatalf("crossing scalar %+v want%s", got, want)
+			}
+		})
+	}
+}

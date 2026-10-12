@@ -202,7 +202,7 @@ func TestTimelineConsumerNumeralEffectiveKeyEvidence(t *testing.T) {
 		}, OutcomeBlocked, true},
 		{"position-gap", func(_ *testing.T, _ *Session, v *timelineService) {
 			f := v.Facts[1]
-			f.Position = Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "bad-position", Cause: cause}
+			f.Origin = Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "bad-position", Cause: cause}
 			v.Facts[1] = f
 		}, OutcomeBlocked, true},
 		{"staff-gap", func(_ *testing.T, _ *Session, v *timelineService) {
@@ -217,7 +217,7 @@ func TestTimelineConsumerNumeralEffectiveKeyEvidence(t *testing.T) {
 			v := s.timeline[p.Provider]
 			h := consumerNode(s, 1, nil, "harmony")
 			n := consumerNode(s, 2, h, "numeral")
-			v.Facts[1] = timelineEventFact{Position: stateKnown(statePosition(t, 0, 1, 1)), Staff: stateKnown(stateInt(t, 1))}
+			v.Facts[1] = timelineEventFact{Origin: stateKnown(statePosition(t, 0, 1, 1)), Staff: stateKnown(stateInt(t, 1))}
 			stateClose(t, s, &v.State, 0)
 			if tc.prepare != nil {
 				tc.prepare(t, s, v)
@@ -430,7 +430,7 @@ func TestTimelineConsumerFailureSurvivesRelatedRetentionStop(t *testing.T) {
 				n.header.Declaration = stateKnown(localDecl("numeral"))
 				h := consumerNode(s, 2, nil, "harmony")
 				n.header.Parent = 2
-				s.timeline[p.Provider].Facts[h.header.ID] = timelineEventFact{Position: stateKnown(statePosition(t, 0, 0, 1)), Staff: stateKnown(stateInt(t, 1))}
+				s.timeline[p.Provider].Facts[h.header.ID] = timelineEventFact{Origin: stateKnown(statePosition(t, 0, 0, 1)), Staff: stateKnown(stateInt(t, 1))}
 				stateClose(t, s, &s.timeline[p.Provider].State, 0)
 				d = consumerEvaluate(t, s, n, p, kind)
 			}

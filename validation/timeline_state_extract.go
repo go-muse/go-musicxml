@@ -585,7 +585,7 @@ func (h *timelineState) attributePotentialGap(r *stateReader, n *factNode, p mus
 
 // gapAll is reserved for a genuinely unobserved music-data publisher. Known
 // note duration failure alone does not authorize this broad history gap.
-func (h *timelineState) gapAll(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
+func (h *timelineState) gapAttributeFamilies(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
 	g := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
 	if e := addStateGap(ctx, s, &h.StaffDetails, g); e != nil {
 		return e
@@ -620,6 +620,19 @@ func (h *timelineState) gapAll(ctx context.Context, s *Session, part NodeRef, me
 	if e := addStateGap(ctx, s, &h.CreatedPartTranspose, g); e != nil {
 		return e
 	}
+	return nil
+}
+
+func (h *timelineState) gapAll(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
+	if err := h.gapAttributeFamilies(ctx, s, part, measureOrdinal, availability); err != nil {
+		return err
+	}
+	return h.gapInstrumentPublisher(ctx, s, part, measureOrdinal, availability)
+}
+
+func (h *timelineState) gapInstrumentPublisher(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
+	g := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+
 	if _, e := stateReserve(ctx, s, g); e != nil {
 		return e
 	}

@@ -89,7 +89,7 @@ func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *
 		}
 	}
 	fact := timelineEventFact{
-		Part: block.part, Position: position, Units: units,
+		Part: block.part, Origin: base, Position: position, Units: units,
 		Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent},
 		Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: Evidence[NodeRef]{State: EvidenceAbsent}, PrincipalDuration: Evidence[Rational]{State: EvidenceAbsent},
 	}
@@ -154,7 +154,7 @@ func (service *timelineService) readListeningAt(ctx context.Context, s *Session,
 		return err
 	}
 	return service.storeFact(ctx, s, listening.header.ID, timelineEventFact{
-		Part: block.part, Position: position, Units: units,
+		Part: block.part, Origin: base, Position: position, Units: units,
 		Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent},
 		Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: Evidence[NodeRef]{State: EvidenceAbsent}, PrincipalDuration: Evidence[Rational]{State: EvidenceAbsent},
 	})

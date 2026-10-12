@@ -35,22 +35,28 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 		}
 	}
 	for _, block := range blocks {
-		if block.part.State == EvidenceKnown && index.Counts[timelineDomain{block.part.Value.Node, block.ordinal}] > 1 {
-			block.complete = stateUnknown[bool]("timeline-duplicate-part-measure-domain")
-		}
 		if block.part.State != EvidenceKnown {
 			for _, part := range index.Parts {
 				if err = s.step(ctx, 1); err != nil {
 					return Decision{}, false, err
 				}
-				if err = service.State.gapAll(ctx, s, part, block.ordinal, timelineGapAs[NodeRef, musicalPosition](block.part, "timeline-part-owner-unavailable")); err != nil {
+				if err = service.gapAllPublishers(ctx, s, part, block.ordinal, timelineGapAs[NodeRef, musicalPosition](block.part, "timeline-part-owner-unavailable")); err != nil {
 					return Decision{}, false, err
 				}
 			}
 		}
+	}
+	for _, block := range blocks {
+		if block.part.State == EvidenceKnown && index.Counts[timelineDomain{block.part.Value.Node, block.ordinal}] > 1 {
+			block.complete = stateUnknown[bool]("timeline-duplicate-part-measure-domain")
+		}
+
 		if err = service.readMeasure(ctx, s, p.Bindings, block); err != nil {
 			return Decision{}, false, err
 		}
+	}
+	if err := service.resolveDirectionOrigins(ctx, s, p.Bindings, blocks); err != nil {
+		return Decision{}, false, err
 	}
 	service.Final = true
 	return Decision{Outcome: OutcomePass}, false, nil
@@ -66,6 +72,11 @@ func timelineAt(block timelineMeasureBlock, offset Evidence[Rational]) Evidence[
 }
 func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *timelineBindings, block timelineMeasureBlock) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
+	pending, releasePending, err := newTimelinePendingOffsets(r, block)
+	if err != nil {
+		return err
+	}
+	defer releasePending()
 	cursor := newTimelineCursor()
 	units := Evidence[Decimal]{State: EvidenceAbsent}
 	origin := timelineAt(block, cursor.Position)
@@ -90,7 +101,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		cursor.interrupt(block.complete)
 		units = stateUnavailable[bool, Decimal](block.complete)
 		if block.part.State == EvidenceKnown {
-			if err := service.State.gapAll(ctx, s, block.part.Value, block.ordinal, stateUnavailable[bool, musicalPosition](block.complete)); err != nil {
+			if err := service.gapAllPublishers(ctx, s, block.part.Value, block.ordinal, stateUnavailable[bool, musicalPosition](block.complete)); err != nil {
 				return err
 			}
 		}
@@ -112,11 +123,17 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				return err
 			}
 			fact.Position = stateUnavailable[DeclarationID, musicalPosition](event.header.Declaration)
+			fact.Origin = fact.Position
 			if block.part.State == EvidenceKnown && r.potential(event, timelineRoleAttributes) {
-				if err := service.State.gapAll(ctx, s, block.part.Value, block.ordinal, fact.Position); err != nil {
+				if err := service.State.gapAttributeFamilies(ctx, s, block.part.Value, block.ordinal, fact.Position); err != nil {
 					return err
 				}
 				units = stateUnavailable[musicalPosition, Decimal](fact.Position)
+			}
+			if block.part.State == EvidenceKnown && (r.potential(event, timelineRoleSound) || r.potential(event, timelineRoleDirection)) {
+				if err := service.gapSoundPublishers(ctx, s, block.part.Value, block.ordinal, fact.Position); err != nil {
+					return err
+				}
 			}
 			if err := service.storeFact(ctx, s, event.header.ID, fact); err != nil {
 				return err
@@ -206,6 +223,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			return err
 		}
 		fact.Position = timelineAt(block, cursorFact.Position)
+		fact.Origin = fact.Position
 		fact.Units = selectedUnits
 		fact.Duration = cursorFact.Duration
 		fact.Principal = cursorFact.Principal
@@ -229,53 +247,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				return err
 			}
 		}
-		base := fact.Position
-		if r.matches(event, timelineRoleSound) {
-			if err := service.readSoundAt(ctx, s, b, event, block, base, selectedUnits, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
-				return err
-			}
-			continue // readSoundAt retains the independently addressable fact.
-		}
-		if r.matches(event, timelineRoleListening) {
-			if err := service.readListeningAt(ctx, s, b, event, block, base, selectedUnits, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
-				return err
-			}
+		if timelineOffsetEvent(r, event) {
+			pending = append(pending, timelinePendingOffset{Event: event, Fact: fact})
 			continue
-		}
-		if r.matches(event, timelineRoleHarmony) || r.matches(event, timelineRoleDirection) {
-			role := timelineRoleHarmonyOffset
-			if r.matches(event, timelineRoleDirection) {
-				role = timelineRoleDirectionOffset
-			}
-			offsetNode, offsetPresence := r.child(event, role)
-			offset := stateUnavailable[bool, Decimal](offsetPresence)
-			sound := stateUnavailable[bool, bool](offsetPresence)
-			if offsetPresence.State == EvidenceKnown {
-				offset = stateDecimalValue(r.scalar(offsetNode))
-				sound = stateYesNo(r.attribute(offsetNode, timelineRoleOffsetSound))
-			}
-			fact.Position, err = s.offsetPosition(ctx, base, offset, selectedUnits)
-			if err != nil {
-				return err
-			}
-			if r.matches(event, timelineRoleDirection) {
-				// Read exact children independently: a malformed parent offset
-				// cannot erase a valid local sound/listening override.
-				for _, child := range event.children {
-					if !r.step(1) {
-						return r.err
-					}
-					switch {
-					case r.matches(child, timelineRoleDirectionSound):
-						err = service.readSoundAt(ctx, s, b, child, block, base, selectedUnits, offset, sound)
-					case r.matches(child, timelineRoleDirectionListening):
-						err = service.readListeningAt(ctx, s, b, child, block, base, selectedUnits, offset, sound)
-					}
-					if err != nil {
-						return err
-					}
-				}
-			}
 		}
 		if r.matches(event, timelineRoleAttributes) {
 			current := timelineAttributeUnits(r, event)
@@ -325,6 +299,11 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 	}
 	if r.err != nil {
 		return r.err
+	}
+	for _, item := range pending {
+		if err := service.finalizeOffsetEvent(ctx, s, b, block, item.Event, item.Fact); err != nil {
+			return err
+		}
 	}
 	return service.resolveFiguredBassOrigins(ctx, s, b, block)
 }

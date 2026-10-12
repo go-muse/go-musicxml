@@ -272,12 +272,12 @@ func (s *Session) timelineNumeralKey(ctx context.Context, n *factNode, p *timeli
 	if !ok {
 		return Decision{Outcome: OutcomeUnknown, Reason: "timeline-harmony-unavailable"}, nil
 	}
-	if fact.Position.State != EvidenceKnown {
-		return localGap(timelineGapAs[musicalPosition, musicalPosition](fact.Position, "harmony-position-unavailable")), nil
+	if fact.Origin.State != EvidenceKnown {
+		return localGap(timelineGapAs[musicalPosition, musicalPosition](fact.Origin, "harmony-position-unavailable")), nil
 	}
 	// This clause needs valid encoded-key existence, not one uniquely resolved
 	// tonal value. The component-aware projection preserves malformed fields.
-	result, err := service.State.effectiveKeyPresence(ctx, s, fact.Position.Value, fact.Staff)
+	result, err := service.State.effectiveKeyPresence(ctx, s, fact.Origin.Value, fact.Staff)
 	if err != nil {
 		return Decision{}, err
 	}
