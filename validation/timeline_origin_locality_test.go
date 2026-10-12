@@ -89,3 +89,88 @@ func TestFiguredBassChainGapUsesExactScoreLowerBound(t *testing.T) {
 		}
 	}
 }
+
+func TestGraceLaterUnavailableEvidencePreservesBoundedDonors(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		for _, mode := range []string{"later-voice", "earlier-voice", "same-voice-position", "between-voice", "later-absent-voice", "same-absent-voice", "later-kind", "later-position-unknown", "same-position-unknown", "later-overlap"} {
+			for _, before := range []bool{false, true} {
+				t.Run(string(order)+"/"+mode+map[bool]string{false: "/last", true: "/first"}[before], func(t *testing.T) {
+					s, v, b, blocks := graceNeighborFixture(t, order, stateKnown("a"))
+					block := blocks[0]
+					extra := runtimeNote(t, b, 60, 3, false)
+					n := v.NoteOrigins[40]
+					n.Note.Node = 60
+					n.ScoreOnset = timelineAt(block, stateKnown(mustRational(t, 5, 1)))
+					n.ScoreEnd = timelineAt(block, stateKnown(mustRational(t, 6, 1)))
+					cause := &DecisionRef{Rule: RuleKey{"later", 1}, Subject: NodeRef{"d", 60}}
+					unavailable := Evidence[string]{State: EvidenceInvalid, Reason: "unavailable-voice", Cause: cause}
+					n.Voice = unavailable
+					switch mode {
+					case "earlier-voice":
+						n.ScoreOnset.Value.Offset = mustRational(t, -1, 1)
+					case "same-voice-position":
+						n.ScoreOnset.Value.Offset = mustRational(t, 1, 1)
+					case "between-voice":
+						n.ScoreOnset.Value.Offset = mustRational(t, 1, 2)
+					case "later-absent-voice":
+						n.Voice = stateAbsent[string]()
+					case "same-absent-voice":
+						n.Voice = stateAbsent[string]()
+						n.ScoreOnset.Value.Offset = mustRational(t, 1, 1)
+					case "later-kind":
+						n.Voice = stateKnown("a")
+						n.Grace = Evidence[bool]{State: EvidenceInvalid, Reason: "unavailable-kind", Cause: cause}
+					case "later-position-unknown":
+						later := runtimeBlock(b, 1, extra)
+						n.Voice = stateKnown("a")
+						n.ScoreOnset = Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "unplaced-later-note", Cause: cause}
+						blocks = append(blocks, later)
+					case "same-position-unknown":
+						n.Voice = stateKnown("a")
+						n.ScoreOnset = Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "unplaced-note", Cause: cause}
+					case "later-overlap":
+						n.Voice = stateKnown("a")
+						n.ScoreEnd.Value.Offset = mustRational(t, 8, 1)
+						other := n
+						other.Note.Node = 70
+						other.ScoreOnset.Value.Offset = mustRational(t, 6, 1)
+						other.ScoreEnd.Value.Offset = mustRational(t, 7, 1)
+						v.NoteOrigins[70] = other
+						block.content.children = append(block.content.children, runtimeNote(t, b, 70, 3, false))
+					}
+					v.NoteOrigins[60] = n
+					if mode != "later-position-unknown" {
+						if before {
+							block.content.children = append([]*factNode{extra, stateNode(b, timelineRoleBackup, 80, stateAbsent[Atomic]())}, block.content.children...)
+						} else {
+							block.content.children = append(block.content.children, stateNode(b, timelineRoleForward, 80, stateAbsent[Atomic]()), extra)
+						}
+					}
+					if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+						t.Fatal(err)
+					}
+					got := v.GraceNeighbors[20]
+					prevGap := mode == "same-voice-position" || mode == "same-absent-voice" || mode == "same-position-unknown" || mode == "between-voice"
+					nextGap := mode == "same-voice-position" || mode == "same-absent-voice" || mode == "same-position-unknown"
+					for _, side := range []struct {
+						value  graceDonorTiming
+						gap    bool
+						id     NodeID
+						amount string
+					}{{got.Previous, prevGap, 10, "1/4"}, {got.Following, nextGap, 40, "1/5"}} {
+						if side.gap {
+							if side.value.Note.State == EvidenceKnown {
+								t.Fatalf("ignored relevant candidate: %+v", got)
+							}
+						} else if side.value.Note.State != EvidenceKnown || side.value.Note.Value.Node != side.id || side.value.StolenDuration.Value.String() != side.amount {
+							t.Fatalf("unrelated gap erased bounded donor: %+v", got)
+						}
+						if side.gap && mode != "same-absent-voice" && (side.value.Note.State != EvidenceInvalid || side.value.Note.Cause == nil || *side.value.Note.Cause != *cause || side.value.Note.Cause == cause) {
+							t.Fatalf("relevant gap cause not owned: %+v", got)
+						}
+					}
+				})
+			}
+		}
+	}
+}
