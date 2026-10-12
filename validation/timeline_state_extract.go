@@ -450,7 +450,20 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 		case timelineRoleAttributesStaffDetails:
 			r.err = addStateGap(ctx, s, &h.StaffDetails, g)
 		case timelineRoleAttributesDivisions:
+			value := Evidence[Decimal]{State: EvidenceUnknown}
+			if ch != nil && r.matches(ch, timelineRoleAttributesDivisions) {
+				value = stateDecimalValue(r.scalar(ch))
+				if value.State != EvidenceKnown {
+					g.Availability = stateMergeGap(g.Availability, stateUnavailable[Decimal, bool](value))
+				}
+			}
+			if r.err != nil {
+				return
+			}
 			r.err = addStateGap(ctx, s, &h.Divisions, g)
+			if r.err == nil && value.State == EvidenceKnown && value.Value.value.Sign() > 0 {
+				r.err = h.certifyDivisionsValueGap(ctx, s, len(h.Divisions.Gaps)-1, value.Value, NodeRef{s.documentID, ch.header.ID})
+			}
 		case timelineRoleAttributesKey:
 			preserves := false
 			if ch != nil && r.matches(ch, timelineRoleAttributesKey) {

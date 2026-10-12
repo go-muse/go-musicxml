@@ -160,6 +160,7 @@ type instrumentChanges struct {
 type timelineState struct {
 	frameBounds                              map[timelineFrame]Rational
 	keyPresenceGaps                          map[int]stateProvenance
+	divisionsValueGaps                       map[int]divisionsValueCertificate
 	StaffDetails                             stateHistory[staffDetailsState]
 	Divisions                                stateHistory[Decimal]
 	Keys                                     stateHistory[keyState]
@@ -779,13 +780,13 @@ func (h *timelineState) effectiveKey(ctx context.Context, s *Session, pos musica
 	return queryState(ctx, s, h, &h.Keys, pos, staff, stateWhole[keyState])
 }
 func (h *timelineState) effectiveDivisions(ctx context.Context, s *Session, pos musicalPosition) (stateResult[Decimal], error) {
-	return queryState(ctx, s, h, &h.Divisions, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal])
+	return h.queryDivisions(ctx, s, pos, true)
 }
 
 // effectiveDivisionsEvidence supplies normalization without retaining a second
 // provenance vector. The authoritative publications retain that provenance.
 func (h *timelineState) effectiveDivisionsEvidence(ctx context.Context, s *Session, pos musicalPosition) (Evidence[Decimal], error) {
-	result, err := queryStateAtMode(ctx, s, h, &h.Divisions, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal], true, false)
+	result, err := h.queryDivisions(ctx, s, pos, false)
 	return result.Value, err
 }
 
