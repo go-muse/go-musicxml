@@ -927,3 +927,75 @@ func TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound(t *testing.T) {
 		})
 	}
 }
+
+func TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses(t *testing.T) {
+	for _, mode := range []string{"valid", "invalid-content", "hidden-content", "unknown-scope"} {
+		t.Run(mode, func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			initialKey := stateNode(b, timelineRoleAttributesKey, 22, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 23, stateAtomicInteger(t, 0)))
+			attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)), initialKey)
+			changed := stateNode(b, timelineRoleAttributes, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 61, stateAtomicDecimal(t, 2, 1)))
+			backup := stateNode(b, timelineRoleBackup, 70, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 71, stateAtomicDecimal(t, 8, 1)))
+			cause := &DecisionRef{Rule: RuleKey{"review-invalid-unplaced-key", 1}, Subject: NodeRef{"d", 82}}
+			fifths := stateAtomicInteger(t, 3)
+			if mode == "invalid-content" {
+				fifths = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-key-fifths", Cause: cause}
+			}
+			key := stateNode(b, timelineRoleAttributesKey, 81, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 82, fifths))
+			if mode == "hidden-content" {
+				key.end.ChildrenComplete = stateUnknown[bool]("key-content-unavailable")
+			}
+			if mode == "unknown-scope" {
+				stateAttribute(b, key, timelineRoleKeyNumber, Atomic{Kind: AtomicInteger, Integer: stateInt(t, 1)})
+				key.attributes[0].Scalar.Value = stateUnknown[Atomic]("key-scope-unavailable")
+			}
+			unplaced := stateNode(b, timelineRoleAttributes, 80, stateAbsent[Atomic](), key)
+			blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, runtimeNote(t, b, 30, 1, false), runtimeNote(t, b, 40, 1, false), changed, backup, unplaced)}
+			if err := svc.readMeasure(ctx, s, b, blocks[0]); err != nil {
+				t.Fatal(err)
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+				t.Fatal(err)
+			}
+			at := svc.Facts[40].Position.Value
+			got, err := svc.State.effectiveKeyPresence(ctx, s, at, stateAbsent[Integer]())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if mode != "valid" {
+				if got.Value.State == EvidenceKnown {
+					t.Fatalf("unproved key or scope was accepted as invariant valid presence: %+v", got)
+				}
+				if mode == "invalid-content" && (got.Value.State != EvidenceInvalid || got.Value.Cause == nil || *got.Value.Cause != *cause) {
+					t.Fatalf("actual invalid key content lost behind position uncertainty: %+v", got)
+				}
+				return
+			}
+			if got.Value.State != EvidenceKnown || !got.Value.Value || got.Inherited || !got.InheritanceUnproved {
+				t.Fatalf("invariant presence or truthful inheritance proof lost: %+v", got)
+			}
+			seen := map[NodeID]bool{}
+			for _, witness := range got.Provenance {
+				seen[witness.Node.Node] = true
+			}
+			if len(seen) != 2 || !seen[22] || !seen[81] {
+				t.Fatalf("presence consensus lost its valid publisher witnesses: %+v", got)
+			}
+			concrete, err := svc.State.effectiveKey(ctx, s, at, stateAbsent[Integer]())
+			if err != nil || concrete.Value.State == EvidenceKnown {
+				t.Fatalf("presence consensus fabricated a concrete positioned key: %+v err=%v", concrete, err)
+			}
+			got.Provenance[0].Node.Node = 999
+			again, err := svc.State.effectiveKeyPresence(ctx, s, at, stateAbsent[Integer]())
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, witness := range again.Provenance {
+				if witness.Node.Node == 999 {
+					t.Fatal("returned presence provenance aliases retained certificate state")
+				}
+			}
+		})
+	}
+}
