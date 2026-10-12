@@ -181,6 +181,9 @@ func (service *timelineService) resolveFiguredBassOrigins(ctx context.Context, s
 		if _, exists := service.FiguredBassOrigins[event.header.ID]; exists {
 			return contract("figured bass origins", "duplicate publication")
 		}
+		if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+			return err
+		}
 		if err := s.retain(2048); err != nil {
 			return err
 		}
@@ -220,6 +223,9 @@ func (service *timelineService) resolveFiguredBassOrigins(ctx context.Context, s
 			return r.err
 		}
 		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
+		if err := ownOrigin(ctx, s, &out); err != nil {
 			return err
 		}
 		if service.FiguredBassOrigins == nil {

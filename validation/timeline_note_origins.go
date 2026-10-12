@@ -176,7 +176,10 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 	if _, exists := service.NoteOrigins[note.header.ID]; exists {
 		return contract("note timing origins", "duplicate publication")
 	}
-	// Admit fixed record and map storage before retaining any new collection.
+	// Admit the context fact and fixed record before retaining any collection.
+	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+		return err
+	}
 	if err := s.retain(4096); err != nil {
 		return err
 	}
@@ -249,6 +252,9 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 		return r.err
 	}
 	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if err := ownOrigin(ctx, s, &out); err != nil {
 		return err
 	}
 	if service.NoteOrigins == nil {

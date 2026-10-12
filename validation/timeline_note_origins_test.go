@@ -96,7 +96,7 @@ func TestNoteOriginsAbsentZeroInvalidAndUnitsRemainDistinct(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := service.NoteOrigins[20]
-	if got.Release.Position.State != EvidenceInvalid || got.Release.Position.Cause != cause {
+	if got.Release.Position.State != EvidenceInvalid || got.Release.Position.Cause == nil || *got.Release.Position.Cause != *cause {
 		t.Fatalf("cause lost: %+v", got.Release)
 	}
 	noteOriginCheckPosition(t, got.Attack.Position, "2")
