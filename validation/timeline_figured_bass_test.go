@@ -432,3 +432,28 @@ func TestFiguredBassChainKeepsAnchorBasedDurationsAcrossLaterDivisions(t *testin
 	noteOriginCheckPosition(t, got.ChainEnd, "3")
 	noteOriginCheckPosition(t, v.FiguredBassOrigins[70].ChainPosition, "3")
 }
+
+func TestFiguredBassUnavailableAnchorCauseAndRawAbsence(t *testing.T) {
+	for _, present := range []bool{false, true} {
+		s, v, b, block := figuredOriginFixture(t, OrderSource)
+		cause := &DecisionRef{Rule: RuleKey{"measure", 1}, Subject: NodeRef{"d", block.measure.header.ID}}
+		block.complete = Evidence[bool]{State: EvidenceInvalid, Reason: "invalid-measure-domain", Cause: cause}
+		if present {
+			block.content.children[0].children = append(block.content.children[0].children, stateNode(b, timelineRoleFiguredBassDuration, 12, stateAtomicDecimal(t, 1, 1)))
+		}
+		if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+			t.Fatal(err)
+		}
+		got := v.FiguredBassOrigins[10]
+		if got.Anchor.State != EvidenceInvalid || got.Anchor.Cause == nil || *got.Anchor.Cause != *cause || got.Anchor.Cause == cause {
+			t.Fatalf("anchor cause not owned: %+v", got)
+		}
+		if present {
+			if got.Duration.State != EvidenceInvalid || got.Duration.Cause == nil || *got.Duration.Cause != *cause || got.Duration.Cause == cause {
+				t.Fatalf("duration anchor cause lost: %+v", got)
+			}
+		} else if got.Duration.State != EvidenceAbsent || got.End.State != EvidenceAbsent {
+			t.Fatalf("missing duration fabricated from bad anchor: %+v", got)
+		}
+	}
+}
