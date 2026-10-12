@@ -1094,3 +1094,40 @@ func TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair(t *testing.T)
 		})
 	}
 }
+
+func TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	attrs := func(id NodeID, value Evidence[Atomic]) *factNode {
+		return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, value))
+	}
+	initial := stateNode(b, timelineRoleSound, 25, stateAbsent[Atomic]())
+	stateAttribute(b, initial, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
+	backup := stateNode(b, timelineRoleBackup, 70, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 71, stateAtomicDecimal(t, 8, 1)))
+	unplaced := stateNode(b, timelineRoleSound, 80, stateAbsent[Atomic]())
+	stateAttribute(b, unplaced, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	repair := stateNode(b, timelineRoleSound, 90, stateAbsent[Atomic]())
+	stateAttribute(b, repair, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 90, 1)})
+	cause := &DecisionRef{Rule: RuleKey{"review-unrelated-future-unit-invalid", 1}, Subject: NodeRef{"d", 111}}
+	invalid := Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-excluded-future-units", Cause: cause}
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, stateAtomicDecimal(t, 1, 1)), initial, runtimeNote(t, b, 30, 1, false), runtimeNote(t, b, 40, 1, false)), runtimeBlock(b, 1, runtimeNote(t, b, 50, 2, false), attrs(60, stateAtomicDecimal(t, 2, 1)), backup, unplaced), runtimeBlock(b, 2, repair, runtimeNote(t, b, 100, 1, false)), runtimeBlock(b, 3, attrs(110, invalid))}
+	for _, block := range blocks {
+		if err := svc.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if got := svc.Facts[80].Position; got.State == EvidenceKnown {
+		t.Fatalf("different-unit backwards movement must remain gated: %+v", got)
+	}
+	earlier, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[40].Position.Value)
+	if err != nil || earlier.Value.State != EvidenceUnsupported || earlier.Value.Reason != "divisions-rewind-placement-unresolved" {
+		t.Fatalf("earlier ambiguity lost its actual local unit gate: %+v err=%v", earlier, err)
+	}
+	later, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[100].Position.Value)
+	if err != nil || later.Value.State != EvidenceKnown || later.Value.Value.String() != "90" {
+		t.Fatalf("excluded future invalid units erased independently proved backwards upper-bound repair: %+v err=%v", later, err)
+	}
+}
