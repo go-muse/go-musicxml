@@ -280,10 +280,12 @@ work/retention. No input-byte charge is invented for the existing object graph,
 and the 64 MiB default live-buffer limit is not a model-size or heap guarantee.
 No schema, DTD or linked resource is fetched.
 
-For budget sizing, the following Go 1.27.2 linux/amd64 measurements use the
-shared account and verify success at the exact minimum allowance and resource
-failure one byte/step below it. These are fixture-specific costs after compact
-optional-attribute absence storage, not universal per-node constants:
+For XSD-only budget sizing, the following Go 1.27.2 linux/amd64 measurements
+use `ProfileModelXSD` or `ProfileSourceXSDPreview`, with a shared account and
+verified success at the exact minimum allowance and resource failure one
+byte/step below it. These are fixture-specific costs after compact
+optional-attribute absence storage, not universal per-node constants or
+local/timeline-profile measurements:
 
 | Input and target | Nodes | Minimum live-buffer allowance (bytes) | Rule steps |
 | --- | ---: | ---: | ---: |
@@ -417,10 +419,71 @@ Contained state histories use indexed lookup; exceptional ambiguous cross-frame
 candidate comparisons can be quadratic under those same limits. Exceptional
 reconstruction can retain both old and staged services until session cleanup;
 that conservative cost remains charged, with no automatic budget increase.
-Earlier XSD/local cost measurements above are not timeline capacity promises. B5-PERF-01 remains
-outstanding with the shared validation kernel/session workstream and final
-batch-9 reconciliation. Timeline-specific improvements do not close that older
-matched-performance obligation.
+The earlier XSD-only costs are not timeline capacity promises. A matched
+same-head budget probe at published `632a969` decoded the unchanged
+`MozartTrio.musicxml` once, then assessed its **2,516 model nodes** under each
+profile. Exact minimum buffer/step limits pass; one byte/step below fails with
+the corresponding typed resource error. Both profiles also pass defaults.
+
+| Resource | `ProfileModelLocal` | `ProfileModelTimeline` | Timeline increment | Increment per node |
+| --- | ---: | ---: | ---: | ---: |
+| Minimum `MaxBufferedBytes` (logical live bytes) | 18,155,049 | 21,077,650 | 2,922,601 (+16.1%) | 1,161.61 bytes |
+| Minimum `MaxRuleSteps` | 2,848,163 | 4,193,534 | 1,345,371 (+47.2%) | 534.73 steps |
+| Cumulative context facts consumed | 0 | 1,199 | 1,199 | 0.476550 facts |
+
+The respective local/timeline totals are **7,215.84 / 8,377.44 logical bytes**
+and **1,132.02 / 1,666.75 steps per node** for this fixture. The timeline requires
+`MaxContextFacts=1199`; 1198 fails. Local consumes no context facts here: 1 is
+merely its smallest expressible positive limit, because 0 selects the default.
+A local session with zero remaining context allowance also succeeds. These
+per-node averages are sizing observations, not universal coefficients: scalar
+size, types, attributes, diagnostics, state histories and ambiguous cross-frame
+reconstruction change the work, retained scratch and publication counts.
+
+`MaxBufferedBytes` accounts for conservatively admitted logical live retained
+data and scratch, including overlapping old/staged services. The minimum above
+is found by successful-run boundary search; it is not the account's usage after
+`Finish`, when this fixture's live gauge is zero. Cumulative allocated bytes
+(`B/op` or a `TotalAlloc` difference) also count temporary allocations released
+within a run; neither metric is process RSS or a Go heap ceiling. Compiled
+metadata, runtime caches, allocator overhead and the caller's model are not a
+promise made by the session's live-buffer allowance. Defaults remain **64 MiB
+live buffer, 20 million rule steps and one million context facts**. Size finite
+overrides for the selected profile and handle resource incompleteness.
+
+Matched warmed **1,000-note** results at production `22ae68a` (the same production
+code as `632a969`) disclose the incremental timeline cost:
+
+| Target | Local median time | Timeline median time | Time ratio | Allocated bytes/op, local → timeline |
+| --- | ---: | ---: | ---: | ---: |
+| Source | 211.05 ms | 292.55 ms | 1.39× | 52,677,464 → 78,759,784 (1.50×) |
+| Model | 211.73 ms | 263.81 ms | 1.25× | 48,341,472 → 74,423,784 (1.54×) |
+
+These are five separate warmed runs per case, Go 1.27.2 linux/amd64,
+`GOMAXPROCS=4`, 200 ms per sample, with finite timing-only limits of 512 MiB
+buffer and 2^34 steps. Source includes parsing; model reuses a decoded model.
+The [independent resource checkpoint](docs/validation/evidence/timeline-resource-independent-checkpoint.md)
+records ranges, allocation counts and controls. Shared-host timing noise remains;
+the medians do not establish universal throughput or default-budget capacity.
+
+The [PR 35 review](https://github.com/go-muse/go-musicxml/pull/35#discussion_r4246488604)
+additionally reported these matched local/timeline figures at `632a969`:
+
+| Model fixture | Local time | Timeline time | Cumulative allocation, local → timeline |
+| --- | ---: | ---: | ---: |
+| `MozaChloSample.musicxml` | 68 ms | 76 ms | Not reported |
+| `MozartTrio.musicxml`, measures repeated 10× | 0.61 s | 0.71 s | 269 MB → 344 MB |
+| Same, 50× | 3.88 s | 4.50 s | 1.44 GB → 1.83 GB |
+
+The replicated cases used lifted budgets. These timing/allocation values are
+reviewer-reported, not independently remeasured here; their exact budget values,
+sampling method and MB/GB convention were not supplied. The independently
+reproduced budget boundaries, finite probe limits, raw output and procedure are
+in the [PR 35 budget evidence](docs/validation/evidence/pr35-timeline-budget-costs.md).
+**B5-PERF-01 remains outstanding** with the shared validation kernel/session
+workstream and final batch-9 reconciliation. Incremental timeline measurements
+and initialization improvements do not close the older matched-performance
+obligation.
 
 ## Fact-stream validation foundation
 
