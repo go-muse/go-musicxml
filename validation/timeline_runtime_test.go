@@ -161,3 +161,22 @@ func TestTimelineRuntimeIncompleteContainerDoesNotInventStateAbsence(t *testing.
 		t.Fatalf("omitted state became absence=%+v,%v", key, err)
 	}
 }
+
+func TestTimelineRuntimeBoundaryGapPreservesProvenPrefix(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	d1 := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	d2 := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 41, stateAtomicDecimal(t, 2, 1)))
+	backup := stateNode(b, timelineRoleBackup, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 51, stateAtomicDecimal(t, 2, 1)))
+	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, d1, runtimeNote(t, b, 30, 4, false), d2, backup, runtimeNote(t, b, 60, 1, false))); err != nil {
+		t.Fatal(err)
+	}
+	if got := service.Facts[30].Duration; got.State != EvidenceKnown || got.Value.String() != "4" {
+		t.Fatalf("proven prefix poisoned=%+v", got)
+	}
+	if got := service.Facts[40].Position; got.State != EvidenceKnown || got.Value.Offset.String() != "4" {
+		t.Fatalf("change position poisoned=%+v", got)
+	}
+	if got := service.Facts[60].Position; got.State == EvidenceKnown {
+		t.Fatalf("ambiguous suffix chosen=%+v", got)
+	}
+}
