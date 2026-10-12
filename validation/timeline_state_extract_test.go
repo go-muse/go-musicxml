@@ -210,3 +210,34 @@ func TestTimelineStateUnresolvedInstrumentChangeMasksOlderChange(t *testing.T) {
 		t.Fatalf("instrument recovery %+v,%v", r, e)
 	}
 }
+
+func TestTimelineStateModelFieldsAreStructuralNotChronology(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	s.documentID = "d"
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 0)
+	b := stateBindings()
+	key := stateNode(b, timelineRoleAttributesKey, 21, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 22, stateAtomicInteger(t, 0)))
+	key.end.Order = stateKnown(OrderModelFields)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), key)
+	attrs.end.Order = stateKnown(OrderModelFields)
+	if e := h.readAttributes(context.Background(), s, b, attrs, statePosition(t, 0, 0, 1)); e != nil {
+		t.Fatal(e)
+	}
+	r := stateQuery(t, s, h, &h.Keys, statePosition(t, 0, 0, 1), stateKnown(stateInt(t, 1)))
+	if r.Value.State != EvidenceKnown || r.Value.Value.Fifths.Value.String() != "0" {
+		t.Fatalf("model structural fields rejected %+v", r)
+	}
+	reader := &stateReader{ctx: context.Background(), s: s, b: b}
+	before := rationalUsage(t, s, BudgetBufferedBytes)
+	for range 100 {
+		reader.child(key, timelineRoleKeyMode)
+	}
+	if reader.err != nil {
+		t.Fatal(reader.err)
+	}
+	if after := rationalUsage(t, s, BudgetBufferedBytes); after != before {
+		t.Fatalf("singleton field scans retained %d bytes", after-before)
+	}
+}
