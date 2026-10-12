@@ -64,17 +64,67 @@ func (s *Session) gracePositionOrder(ctx context.Context, a, b musicalPosition) 
 // only when all notes of the complete part have absent voice and the resulting
 // sequence is proven linear; no synthetic voice identity is installed.
 //
-// Score coordinates must corroborate sequence order. Consecutive grace notes
-// are skipped when finding ordinary neighbors, rather than treated as zero-
-// duration donors. Adjacent measure boundaries use canonical part and ordinal
-// identities, with an exact zero position on the later side.
+// Score coordinates corroborate sequence order. Consecutive grace notes are
+// skipped when finding ordinary neighbors, rather than treated as zero-duration
+// donors. These are chronological identities, even across a forward gap or a
+// complete measure boundary; no continuous performed-time interval is asserted.
 func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Session, b *timelineBindings, blocks []timelineMeasureBlock) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
+	// First count without allocating: ordinary scores need no neighbor index.
+	hasGrace := false
+	var noteCount int64
+	for _, block := range blocks {
+		if !r.step(1) {
+			return r.err
+		}
+		for _, event := range block.content.children {
+			if !r.matches(event, timelineRoleNote) {
+				continue
+			}
+			var err error
+			noteCount, err = rationalCheckedAdd(BudgetBufferedBytes, noteCount, 1)
+			if err != nil {
+				return err
+			}
+			n := service.NoteOrigins[event.header.ID]
+			if n.Grace.State == EvidenceKnown && n.Grace.Value {
+				hasGrace = true
+			}
+		}
+	}
+	if r.err != nil {
+		return r.err
+	}
+	if !hasGrace {
+		return s.step(ctx, 1)
+	}
+	// Conservative live-peak bound includes old+new append backing (at least
+	// 32 bytes per NodeID), stream/map buckets, part domains and fixed scratch.
+	// Scratch is not retained with the resulting immutable provider records.
+	scratch, err := rationalCheckedMul(BudgetBufferedBytes, noteCount, 1024)
+	if err != nil {
+		return err
+	}
+	blockBytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(blocks)), 1024)
+	if err != nil {
+		return err
+	}
+	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, blockBytes)
+	if err != nil {
+		return err
+	}
+	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, 8192)
+	if err != nil {
+		return err
+	}
+	if err := s.account.Charge(BudgetBufferedBytes, scratch); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, scratch) }()
 	streams := []graceStream{}
 	indices := map[graceStreamKey]int{}
 	parts := map[NodeID]*gracePartDomain{}
 	global := Evidence[NodeRef]{State: EvidenceKnown}
-	hasGrace := false
 	for _, block := range blocks {
 		if !r.step(1) {
 			return r.err
@@ -85,9 +135,6 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 		}
 		part := parts[block.part.Value.Node]
 		if part == nil {
-			if err := s.retain(512); err != nil {
-				return err
-			}
 			part = &gracePartDomain{gap: Evidence[NodeRef]{State: EvidenceKnown}}
 			parts[block.part.Value.Node] = part
 		}
@@ -98,6 +145,9 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 		complete := block.complete
 		if complete.State == EvidenceKnown && complete.Value {
 			complete = r.complete(block.content)
+		}
+		if block.coverage.State != "" && (block.coverage.State != EvidenceKnown || !block.coverage.Value) {
+			part.gap = graceStronger(part.gap, timelineGapAs[bool, NodeRef](block.coverage, "grace-part-coverage-unavailable"))
 		}
 		if complete.State != EvidenceKnown || !complete.Value {
 			part.gap = graceStronger(part.gap, timelineGapAs[bool, NodeRef](complete, "grace-domain-incomplete"))
@@ -114,9 +164,6 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				part.gap = graceStronger(part.gap, stateUnknown[NodeRef]("grace-note-origin-unavailable"))
 				continue
 			}
-			if n.Grace.State == EvidenceKnown && n.Grace.Value {
-				hasGrace = true
-			}
 			if n.Voice.State != EvidenceKnown && n.Voice.State != EvidenceAbsent {
 				part.gap = graceStronger(part.gap, timelineGapAs[string, NodeRef](n.Voice, "grace-voice-unavailable"))
 			}
@@ -131,9 +178,6 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			}
 			i, found := indices[key]
 			if !found {
-				if err := s.retain(512); err != nil {
-					return err
-				}
 				i = len(streams)
 				indices[key] = i
 				streams = append(streams, graceStream{key: key, gap: Evidence[NodeRef]{State: EvidenceKnown}})
@@ -149,17 +193,11 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 					stream.gap = graceStronger(stream.gap, timelineGapAs[bool, NodeRef](marker, "grace-note-kind-unavailable"))
 				}
 			}
-			if err := s.retain(16); err != nil {
-				return err
-			}
 			stream.notes = append(stream.notes, event.header.ID)
 		}
 	}
 	if r.err != nil {
 		return r.err
-	}
-	if !hasGrace {
-		return s.step(ctx, 1)
 	}
 	pending := map[NodeID]graceNeighborTiming{}
 	for i := range streams {
@@ -295,36 +333,6 @@ func (service *timelineService) graceDonor(ctx context.Context, s *Session, stre
 			next := service.NoteOrigins[stream.notes[index+1]]
 			if next.Grace.State == EvidenceKnown && !next.Grace.Value && next.Chord.State == EvidenceKnown && next.Chord.Value {
 				out.Note = graceStronger(out.Note, stateUnknown[NodeRef]("grace-chord-donor-unresolved"))
-			}
-		}
-		base := donor.ScoreOnset
-		if previous {
-			base = donor.ScoreEnd
-		}
-		if base.State != EvidenceKnown {
-			out.Note = graceStronger(out.Note, timelineGapAs[musicalPosition, NodeRef](base, "grace-donor-boundary-unavailable"))
-		} else if n.ScoreOnset.State == EvidenceKnown {
-			a, z := base.Value, n.ScoreOnset.Value
-			if graceSameMeasure(a, z) {
-				cmp, err := s.rationalCmp(ctx, a.Offset, z.Offset)
-				if err != nil {
-					return out, err
-				}
-				if cmp != 0 {
-					out.Note = graceStronger(out.Note, stateUnknown[NodeRef]("grace-donor-boundary-unresolved"))
-				}
-			} else {
-				later, earlier := a, z
-				if previous {
-					later, earlier = z, a
-				}
-				cmp, err := s.rationalCmp(ctx, later.Offset, timelineZero)
-				if err != nil {
-					return out, err
-				}
-				if later.Part != earlier.Part || later.MeasureOrdinal <= earlier.MeasureOrdinal || later.MeasureOrdinal-earlier.MeasureOrdinal != 1 || cmp != 0 {
-					out.Note = graceStronger(out.Note, stateUnknown[NodeRef]("grace-measure-boundary-unresolved"))
-				}
 			}
 		}
 		if out.Note.State == EvidenceKnown {
