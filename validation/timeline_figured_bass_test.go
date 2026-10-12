@@ -257,3 +257,57 @@ func TestFiguredBassFollowingNoteCanCrossCompleteMeasures(t *testing.T) {
 		noteOriginCheckPosition(t, got.End, "1/3")
 	}
 }
+
+func figuredChainFixture(t *testing.T, order OrderKind) (*Session, *timelineService, *timelineBindings, timelineMeasureBlock) {
+	t.Helper()
+	s, v, b, block := figuredOriginFixture(t, order)
+	first := block.content.children[0]
+	first.children = append(first.children, stateNode(b, timelineRoleFiguredBassDuration, 12, stateAtomicDecimal(t, 2, 1)))
+	nodes := []*factNode{first}
+	for _, id := range []NodeID{60, 70} {
+		nodes = append(nodes, stateNode(b, timelineRoleFiguredBass, id, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, id+1, stateAbsent[Atomic]()), stateNode(b, timelineRoleFiguredBassDuration, id+2, stateAtomicDecimal(t, 1, 1))))
+		v.Facts[id] = v.Facts[10]
+	}
+	block.content.children = append(nodes, block.content.children[1:]...)
+	stateClose(t, s, &v.State, 0)
+	statePublish(t, s, &v.State.Divisions, timelineAt(block, stateKnown(timelineZero)).Value, stateScope{AllStaves: true}, stateKnown(stateDecimal(t, 3, 1)), 100)
+	return s, v, b, block
+}
+
+func TestFiguredBassConsecutiveChainKeepsIndependentAnchorAndDuration(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		s, v, b, block := figuredChainFixture(t, order)
+		if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+			t.Fatal(err)
+		}
+		for i, id := range []NodeID{10, 60, 70} {
+			got := v.FiguredBassOrigins[id]
+			noteOriginCheckPosition(t, got.AnchorPosition, "2")
+			noteOriginCheckPosition(t, got.ChainPosition, []string{"2", "8/3", "3"}[i])
+			noteOriginCheckPosition(t, got.ChainEnd, []string{"8/3", "3", "10/3"}[i])
+			if got.GroupStart.State != EvidenceKnown || got.GroupStart.Value.Node != 10 || got.ChainInterpretation != "consecutive-figured-bass-duration-chain" {
+				t.Fatalf("chain provenance: %+v", got)
+			}
+		}
+		noteOriginCheckPosition(t, v.FiguredBassOrigins[60].End, "7/3")
+	}
+}
+
+func TestFiguredBassChainAmbiguityAndAbsentDurationAreIndependent(t *testing.T) {
+	for _, mode := range []string{"interleaved", "absent-first-duration"} {
+		s, v, b, block := figuredChainFixture(t, OrderSource)
+		if mode == "interleaved" {
+			nodes := block.content.children
+			block.content.children = append([]*factNode{nodes[0], stateNode(b, timelineRoleDirection, 80, stateAbsent[Atomic]())}, nodes[1:]...)
+		} else {
+			block.content.children[0].children = block.content.children[0].children[:1]
+		}
+		if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+			t.Fatal(err)
+		}
+		got := v.FiguredBassOrigins[60]
+		if got.Anchor.State != EvidenceKnown || got.Duration.State != EvidenceKnown || got.ChainPosition.State != EvidenceUnknown || got.ChainEnd.State != EvidenceUnknown {
+			t.Fatalf("chain ambiguity hid independent facts: %+v", got)
+		}
+	}
+}
