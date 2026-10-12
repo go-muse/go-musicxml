@@ -63,3 +63,34 @@ func TestIndependentTimelineOriginFixedPeakAdmission(t *testing.T) {
 		}
 	}
 }
+
+func TestIndependentTimelineEventFactFixedPeakAdmission(t *testing.T) {
+	if timelineFactReserveBytes < int64(unsafe.Sizeof(timelineEventFact{}))+512 {
+		t.Fatal("event fact allowance lost map headroom")
+	}
+	for _, short := range []bool{false, true} {
+		limit := 2 * timelineFactReserveBytes
+		if short {
+			limit--
+		}
+		s := rationalSession(t, Budgets{MaxBufferedBytes: limit})
+		defer s.cleanup()
+		v := &timelineService{Facts: make(map[NodeID]timelineEventFact)}
+		err := v.storeFact(context.Background(), s, 1, timelineEventFact{})
+		if short {
+			if !errors.Is(err, ErrResourceLimit) || len(v.Facts) != 0 {
+				t.Fatalf("fact peak-1 published or wrong error: %v", err)
+			}
+		} else {
+			if err != nil || len(v.Facts) != 1 {
+				t.Fatalf("exact event peak failed: %v", err)
+			}
+			if got := rationalUsage(t, s, BudgetBufferedBytes); got != timelineFactReserveBytes {
+				t.Fatalf("fixed temporary retained: got%d want%d", got, timelineFactReserveBytes)
+			}
+		}
+		if rationalUsage(t, s, BudgetBufferedBytes) != s.retained {
+			t.Fatal("event scratch leaked")
+		}
+	}
+}
