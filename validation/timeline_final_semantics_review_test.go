@@ -1049,3 +1049,48 @@ func TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence(t *testing.T) {
 		})
 	}
 }
+
+func TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair(t *testing.T) {
+	for _, descendantPublisher := range []bool{false, true} {
+		t.Run(map[bool]string{false: "independent-repair-control", true: "displaced-publisher-still-competes"}[descendantPublisher], func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			attrs := func(id NodeID, units int64) *factNode {
+				return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, stateAtomicDecimal(t, units, 1)))
+			}
+			forward := stateNode(b, timelineRoleForward, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 41, stateAtomicDecimal(t, 10, 1)))
+			children := []*factNode{attrs(20, 1), runtimeNote(t, b, 30, 1, false), forward}
+			if descendantPublisher {
+				children = append(children, attrs(50, 2))
+			}
+			children = append(children, runtimeNote(t, b, 60, 2, false))
+			blocks := []timelineMeasureBlock{runtimeBlock(b, 0, children...), runtimeBlock(b, 1, attrs(80, 3), runtimeNote(t, b, 90, 3, false), runtimeNote(t, b, 100, 3, false))}
+			for _, block := range blocks {
+				if err := svc.readMeasure(ctx, s, b, block); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+				t.Fatal(err)
+			}
+			first, next := svc.Facts[90], svc.Facts[100]
+			if first.Position.State != EvidenceKnown || first.Position.Value.Offset.String() != "0" {
+				t.Fatalf("structural measure-start origin lost independently of units: %+v", first)
+			}
+			effective, err := svc.State.effectiveDivisions(ctx, s, first.Position.Value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if descendantPublisher {
+				if effective.Value.State == EvidenceKnown {
+					t.Fatalf("fixture lost potentially competing displaced unit declaration: %+v", effective)
+				}
+				if first.Duration.State == EvidenceKnown || next.Position.State == EvidenceKnown {
+					t.Fatalf("new lexical declaration fabricated effective unit repair: effective=%+v first=%+v next=%+v", effective, first, next)
+				}
+			} else if first.Duration.State != EvidenceKnown || first.Duration.Value.String() != "1" || next.Position.State != EvidenceKnown || next.Position.Value.Offset.String() != "1" {
+				t.Fatalf("independent new-frame unit repair lost: first=%+v next=%+v", first, next)
+			}
+		})
+	}
+}
