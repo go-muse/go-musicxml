@@ -6,16 +6,19 @@ import "context"
 // explicit; do not manufacture staff 1 or use XML order to select between
 // simultaneous regular notes. Figures retain their stated top-to-bottom order.
 type figuredBassTimingOrigin struct {
-	FiguredBass            NodeRef
-	Part                   Evidence[NodeRef]
-	Staff                  Evidence[Integer]
-	CursorOrigin, Position Evidence[musicalPosition]
-	Anchor                 Evidence[NodeRef]
-	AnchorStaff            Evidence[Integer]
-	AnchorVoice            Evidence[string]
-	DurationRaw            Evidence[Decimal]
-	Figures                []NodeRef
-	FiguresComplete        Evidence[bool]
+	FiguredBass                             NodeRef
+	Part                                    Evidence[NodeRef]
+	Staff                                   Evidence[Integer]
+	CursorOrigin, Position                  Evidence[musicalPosition]
+	Anchor                                  Evidence[NodeRef]
+	AnchorStaff                             Evidence[Integer]
+	AnchorVoice                             Evidence[string]
+	DurationRaw                             Evidence[Decimal]
+	CursorUnits, AnchorUnits, DurationUnits Evidence[Decimal]
+	Duration                                Evidence[Rational]
+	End                                     Evidence[musicalPosition]
+	Figures                                 []NodeRef
+	FiguresComplete                         Evidence[bool]
 }
 
 func (service *timelineService) figuredBassAnchor(r *stateReader, block timelineMeasureBlock, origin timelineEventFact, complete Evidence[bool]) (Evidence[NodeRef], timelineEventFact) {
@@ -25,9 +28,6 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, block timeline
 	}
 	if origin.Position.State != EvidenceKnown {
 		return timelineGapAs[musicalPosition, NodeRef](origin.Position, "figured-bass-position-unavailable"), empty
-	}
-	if origin.Staff.State != EvidenceKnown && origin.Staff.State != EvidenceAbsent {
-		return stateUnavailable[Integer, NodeRef](origin.Staff), empty
 	}
 	var best *factNode
 	bestFact := empty
@@ -94,20 +94,6 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, block timeline
 		}
 		if cmp < 0 {
 			continue
-		}
-		if origin.Staff.State == EvidenceKnown {
-			if fact.Staff.State != EvidenceKnown {
-				addGap(timelineGapAs[Integer, NodeRef](fact.Staff, "figured-bass-note-staff-unavailable"), fact.Position)
-				continue
-			}
-			applies, err := stateApplies(r.ctx, r.s, stateScope{Staff: origin.Staff.Value}, fact.Staff)
-			if err != nil {
-				r.err = err
-				return stateUnknown[NodeRef]("timeline-interrupted"), empty
-			}
-			if !applies {
-				continue
-			}
 		}
 		if grace.State != EvidenceAbsent {
 			addGap(stateUnavailable[bool, NodeRef](grace), fact.Position)
@@ -191,7 +177,7 @@ func (service *timelineService) resolveFiguredBassOrigins(ctx context.Context, s
 		if !found {
 			fact = timelineEventFact{Position: stateUnknown[musicalPosition]("figured-bass-position-unavailable"), Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}}
 		}
-		out := figuredBassTimingOrigin{FiguredBass: NodeRef{s.documentID, event.header.ID}, Part: fact.Part, Staff: fact.Staff, CursorOrigin: fact.Position, DurationRaw: stateDecimalValue(r.childScalar(event, timelineRoleFiguredBassDuration))}
+		out := figuredBassTimingOrigin{FiguredBass: NodeRef{s.documentID, event.header.ID}, Part: fact.Part, Staff: fact.Staff, CursorOrigin: fact.Position, CursorUnits: fact.Units, DurationRaw: stateDecimalValue(r.childScalar(event, timelineRoleFiguredBassDuration))}
 		figures, enumerated := r.children(event, timelineRoleFiguredBassFigure)
 		out.FiguresComplete = enumerated
 		bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(figures)), 32)
@@ -214,13 +200,18 @@ func (service *timelineService) resolveFiguredBassOrigins(ctx context.Context, s
 			out.Position = anchorFact.Position
 			out.AnchorStaff = anchorFact.Staff
 			out.AnchorVoice = anchorFact.Voice
+			out.AnchorUnits = anchorFact.Units
 		} else {
 			out.Position = stateUnavailable[NodeRef, musicalPosition](anchor)
 			out.AnchorStaff = stateUnavailable[NodeRef, Integer](anchor)
 			out.AnchorVoice = stateUnavailable[NodeRef, string](anchor)
+			out.AnchorUnits = stateUnavailable[NodeRef, Decimal](anchor)
 		}
 		if r.err != nil {
 			return r.err
+		}
+		if err = s.figuredBassDuration(ctx, &out); err != nil {
+			return err
 		}
 		if err = s.step(ctx, 1); err != nil {
 			return err
@@ -234,4 +225,42 @@ func (service *timelineService) resolveFiguredBassOrigins(ctx context.Context, s
 		service.FiguredBassOrigins[event.header.ID] = out
 	}
 	return r.err
+}
+
+// Duration is expressed in divisions. Where cursor-time and anchor-time unit
+// interpretations agree, normalization is exact without choosing an unstated
+// precedence. Disputed or missing unit evidence remains explicit.
+func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimingOrigin) error {
+	out.DurationUnits = out.CursorUnits
+	if out.CursorUnits.State != EvidenceKnown || out.AnchorUnits.State != EvidenceKnown {
+		out.DurationUnits = Evidence[Decimal]{State: EvidenceKnown}
+		for _, value := range []Evidence[Decimal]{out.CursorUnits, out.AnchorUnits} {
+			if value.State != EvidenceKnown {
+				gap := timelineGapAs[Decimal, Decimal](value, "figured-bass-units-unavailable")
+				if stateAvailabilityRank(gap.State) > stateAvailabilityRank(out.DurationUnits.State) {
+					out.DurationUnits = gap
+				}
+			}
+		}
+	} else {
+		same, err := s.sameTimelineUnits(ctx, out.CursorUnits, out.AnchorUnits)
+		if err != nil {
+			return err
+		}
+		if !same {
+			out.DurationUnits = stateUnknown[Decimal]("figured-bass-duration-unit-origin-unresolved")
+		}
+	}
+	out.Duration = Evidence[Rational]{State: EvidenceAbsent}
+	out.End = Evidence[musicalPosition]{State: EvidenceAbsent}
+	if out.DurationRaw.State == EvidenceAbsent {
+		return nil
+	}
+	var err error
+	out.Duration, err = s.normalizeTimelineDuration(ctx, out.DurationRaw, out.DurationUnits)
+	if err != nil {
+		return err
+	}
+	out.End, err = s.noteTimingShift(ctx, out.Position, out.Duration)
+	return err
 }

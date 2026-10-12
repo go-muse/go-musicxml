@@ -15,6 +15,7 @@ type timelineEventFact struct {
 	Position, End               Evidence[musicalPosition]
 	Duration, PrincipalDuration Evidence[Rational]
 	Principal                   Evidence[NodeRef]
+	Units                       Evidence[Decimal]
 	Staff                       Evidence[Integer]
 	Voice                       Evidence[string]
 	Part                        Evidence[NodeRef]
