@@ -479,3 +479,18 @@ func TestTimelineConsumerWideLocalScanUsesWorkBudget(t *testing.T) {
 		t.Fatalf("unmetered or fabricated result %+v %v", d, e)
 	}
 }
+
+func TestTimelineConsumerLocalKeyInvalidComponentSurvivesEarlierGap(t *testing.T) {
+	s, p := consumerFixture(t)
+	defer s.cleanup()
+	h := consumerNode(s, 1, nil, "harmony")
+	n := consumerNode(s, 2, h, "numeral")
+	consumerLocalKey(t, s, n)
+	s.nodes[31].end.Scalar.Value = stateUnknown[Atomic]("fifths-unavailable")
+	cause := &DecisionRef{Rule: RuleKey{"xsd.scalar", 1}, Subject: NodeRef{"d", 32}}
+	s.nodes[32].end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-mode", Cause: cause}
+	d, yes, e := s.localNumeralKeyProof(context.Background(), n, p)
+	if e != nil || !yes || d.Outcome != OutcomeBlocked || d.Cause == nil || *d.Cause != *cause {
+		t.Fatalf("known scalar violation hidden by earlier gap %+v %v %v", d, yes, e)
+	}
+}
