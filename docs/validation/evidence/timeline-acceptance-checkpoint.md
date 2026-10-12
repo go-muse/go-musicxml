@@ -1,8 +1,8 @@
 # Batch 6 acceptance checkpoint (not final)
 
-Reconciliation snapshot: `d381b50402b1a26a44f042288d21a3f2c8f0d0de`.
-Production code is unchanged since `1f7797b`; the later snapshot adds independent
-regressions and checkpoint reports. Individual accepted runs are pinned below.
+Reconciliation snapshot: `8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a`.
+Individual accepted runs are pinned below; independent review of the latest
+complete-history and equal-value certificate integration remains pending.
 This report does not claim final batch acceptance, completion of all repository
 stages, or any exact-head CI result. The public profiles remain bounded and opt-in.
 
@@ -21,6 +21,15 @@ stages, or any exact-head CI result. The public profiles remain bounded and opt-
   plus `TestTimelineOwnership*` passed across `./...` using an exact anchored
   union and `-count=1`. Evidence: `reconcile-declared-d381b50.log`. The pending
   groups below are excluded from this selected pass.
+- At `8237597`, all `TestTimelineFinalReview*` functions and
+  `TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue` pass across
+  `./...`; required real xmllint fixture controls execute. Evidence:
+  `reconcile-final-review-8237597.log`. This is a selected local run, not final
+  independent review or the whole repository.
+- At `8237597`, all 229 distinct declared functions plus ownership checks pass
+  across `./...` using an exact anchored union. Evidence:
+  `reconcile-declared-8237597.log`. The open long-identity work-meter regression
+  is not included in this pass.
 - Runtime profile metadata and actual binding revisions match the compiled engine.
   All original source, translation, selection and later-owner integrity checks pass.
 - The 121 selected clauses, 20 split/shared contracts, 135 original source records,
@@ -55,7 +64,10 @@ are separate from the worker implementation history.
 | Cross-frame downstream association and nearer chord barrier | `acd674c`/`0abef6b` → `dbb5f8f`; worker `6415978` → `f000fe1` (integrated `1ed3400`) |
 | Unavailable association Placement | Worker `525445b` → `44ffd16`; integrated `3408d7a` → `c7dda33` |
 | Attribute and service-adapter Placement forwarding | `4643b97` → `aea97d8`; `775165b`/`2b1731b` → `1f7797b` (forwarding correction only; unit-dependent public cases remain open) |
-| Full ownership and acceptance reconciliation | `5ba0bd1` → `f1958a9`; final unit/key acceptance remains pending |
+| Well-founded unit reconstruction, causes and directional bounds | `22a6c77`/`5f52cb0`/`87196b2` → `23bd0a0`; `d381975`/`b029b8c`/`8e9ccef` → `c52c9ce`; `9227daf` → `3124dcc` |
+| Complete-history normalization and equal-value restoration | `743e74c` → `6c633a0`; `13ce21c`/`12a9fe1` → `8237597` (latest local regression pass; independent refresh pending) |
+| Invariant key-presence projection | `f34dc1e` → `121cbcf`, independently accepted at `d4071ae` |
+| Full ownership and acceptance reconciliation | `5ba0bd1` → `f1958a9`; final semantic/resource acceptance remains pending |
 
 
 Cross-frame continuing-state implementation reached the separately reviewed
@@ -83,6 +95,14 @@ because a later unrelated test command completed.
   grace regressions, and unavailable sound-offset actual cause all pass. Evidence:
   `final-semantic-associations-44ffd16-green.log`. This does not accept later
   unit-region staging or mandatory public key projection.
+- Key-presence implementation `121cbcf` is independently accepted at `d4071ae`:
+  valid-baseline presence remains known while missing/invalid/hidden/scope cases
+  retain their proper uncertainty and actual sources.
+- Causal/directional unit implementation `58f1a43` plus `e6a0ed4` is independently
+  accepted at `e89fe4e`, including locked prior Invalid causes, actual new-frame
+  repair and excluded-future positivity/bounds. Evidence:
+  `final-semantic-unit-58f1a43-e6a0ed4.log`. This earlier component snapshot does
+  not accept the later complete-history closure or raw-divisions certificates.
 - Resource refresh `904c7cf` passes all 32 public practical direction/figure/grace
   variants. At production `1f7797b`, independent tests `e7cf607` pass separate
   ownership of 16 publisher families, 880 observed cancellation polls, literal
@@ -97,41 +117,33 @@ failed the public displaced-key consumer, cross-frame unit-proof and local-unit
 placement-bound groups (`pre-unit-certificate-whole-repository.log`). A later
 unrelated pass cannot erase those recorded failures.
 
-## Concrete remaining batch-6 implementation groups
+## Remaining implementation and acceptance work
 
-1. Acyclic least-proof unit-region reconstruction remains required for structural-
-   start, inherited/later-frame and differing-divisions excursions. Derived
-   positions or containment bounds must not certify the ancestors that supplied
-   their units. Preserve independently established prefixes, exact contained
-   returns and valid directional placement bounds; do not turn unavailable
-   reconstruction into a must-reject boundary rule. Outstanding tests include
-   `TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof`,
-   `TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds` and circular-
-   ancestor/bound regression `22a6c77` (worker `5aced4b`). Owner: cursor/effective-
-   divisions provider and staged runtime integration.
-2. Public source/current-model mandatory key projection must preserve uncertain
-   cross-frame applicability without a false failure, while independently valid
-   own numeral keys and invariant encoded-key presence remain sufficient.
-   `TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters` and
-   regression `f34dc1e` (worker `128fb6c`) remain acceptance gates. Owner: key-state
-   projection and mandatory numeral consumer.
+The concrete semantic regression groups above pass locally at `8237597`,
+including complete-history invalidation and independent safe restoration. That
+execution does not replace independent review of the new certificate and closure.
 
-The previously open association and unavailable signed-offset groups have
-concrete component acceptance above. Their unit-dependent public integration
-is still covered by these remaining groups; the forwarding fix alone does not
-close it.
+- The canonical document-identity work-meter regression `1b03ac8`
+  (`TestIndependentTimelinePositionIdentityWorkBeforeComparison`) remains open:
+  long identity bytes must be charged before ordering/comparison. Owner: batch-6
+  timeline resource-accounting integration. This is distinct from B5-PERF-01.
+- Independent semantic/resource review of the complete-history closure and new
+  divisions certificates, including transactional staged-service failure,
+  admission/cancellation and final practical profile costs, remains pending.
+- The original source-dependent donor/group ambiguities remain exact evidence
+  boundaries; full five-axis clause acceptance is not inferred from a named
+  regression or from returning Unsupported.
 
-The ledger maps these groups to affected original clause IDs. Separate genuine
-source-dependent donor/group ambiguities remain precise availability boundaries;
-Unsupported never closes a mandatory clause by itself. Rendering/span consumers
-remain with batch 7, including graphical Bezier selection; batch 6 retains exact
+The ledger maps implemented contributions and precise remaining source-dependent
+cases to the original clause IDs. Unsupported never closes a mandatory clause
+by itself. Rendering/span consumers remain with batch 7, including graphical Bezier selection; batch 6 retains exact
 origins and units. Later batches 8–9 retain their original external/link/dictionary
 and final-reconciliation ownership.
 
 ## Acceptance still required
 
-After the production fixes, refresh the actual profile snapshot and complete
-named-test binding, rerun selected and whole-repository tests, and obtain refreshed
+After the remaining corrections and independent reviews, refresh the actual
+profile snapshot and complete named-test binding, rerun selected and whole-repository tests, and obtain refreshed
 independent semantic/resource reviews at that exact implementation. All seven
 repository-local stages and all nine exact-head CI jobs remain pending until
 explicit results are supplied. Cross-compilation is not actual 386 execution;

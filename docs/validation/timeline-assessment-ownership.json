@@ -1108,7 +1108,7 @@
   },
   "execution_evidence": {
     "status": "reconciled-contributions-acceptance-open",
-    "implementation_commit": "d381b50402b1a26a44f042288d21a3f2c8f0d0de",
+    "implementation_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
     "timeline_semantic_revision": 2,
     "whole_batch_closed": false,
     "runtime_bindings": [
@@ -1220,6 +1220,11 @@
         "file": "validation/timeline_state_test.go",
         "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
         "scope": "Invalid required or optional key components preserve strongest original cause."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+        "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
       },
       {
         "file": "validation/timeline_state_extract_test.go",
@@ -1477,6 +1482,16 @@
         "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
       },
       {
+        "file": "timeline_final_semantics_integration_test.go",
+        "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+        "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+      },
+      {
+        "file": "timeline_final_semantics_integration_test.go",
+        "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+        "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
+      },
+      {
         "file": "timeline_plan_contract_test.go",
         "name": "TestTimelinePlanRejectsWrongNamedScalarFamilies",
         "scope": "Configuration rejects named scalar spoofing despite retained type names."
@@ -1730,6 +1745,46 @@
         "file": "validation/timeline_gap_placement_resource_independent_test.go",
         "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
         "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+      },
+      {
+        "file": "validation/timeline_excursion_resource_independent_test.go",
+        "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+        "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+      },
+      {
+        "file": "validation/timeline_excursion_resource_independent_test.go",
+        "name": "TestIndependentTimelineExcursionClosedShape",
+        "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+      },
+      {
+        "file": "validation/timeline_excursion_resource_independent_test.go",
+        "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+        "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+      },
+      {
+        "file": "validation/timeline_excursion_resource_independent_test.go",
+        "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+        "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+      },
+      {
+        "file": "validation/timeline_key_presence_resource_independent_test.go",
+        "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+        "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+      },
+      {
+        "file": "validation/timeline_key_presence_resource_independent_test.go",
+        "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+        "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+      },
+      {
+        "file": "validation/timeline_key_presence_resource_independent_test.go",
+        "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+        "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+      },
+      {
+        "file": "timeline_excursion_scale_independent_test.go",
+        "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+        "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
       },
       {
         "file": "validation/timeline_display_state_test.go",
@@ -2190,6 +2245,66 @@
         "file": "validation/timeline_attribute_placement_test.go",
         "name": "TestTimelinePublisherServiceGapPlacement",
         "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits",
+        "scope": "A structural-start backup cannot borrow changed departure divisions across an unproved boundary; prefix controls remain exact."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof",
+        "scope": "Inherited backward and later-frame forward differing-unit regions remain relevant; uniform-unit controls preserve exact arithmetic."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof",
+        "scope": "An independently contained exact return restores ordinary prefix proof without using a guessed measure length."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds",
+        "scope": "An unavailable local unit result retains independently justified directional bounds for downstream state repair."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound",
+        "scope": "A return and bound derived from an unresolved ancestor excursion cannot discharge that ancestor gate."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence",
+        "scope": "Opposite-side independently excluded publishers do not invalidate a movement; relevant actual stronger causes survive locked local gates."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair",
+        "scope": "A new positioned units declaration restores duration normalization only if it repairs the effective history, not merely the lexical register."
+      },
+      {
+        "file": "validation/timeline_excursion_units_test.go",
+        "name": "TestTimelineExcursionGatePreservesDescendantUnitUnavailability",
+        "scope": "A globally gated excursion also prevents descendant lexical duration normalization from becoming falsely known."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits",
+        "scope": "An independently unreachable later invalid unit publisher cannot erase a prior backward upper-bound repair; earlier ambiguity keeps its actual local gate."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes",
+        "scope": "Complete-history unavailable effective units invalidate an earlier provisional duration and derived onsets; removing the displaced publisher preserves the known prefix."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization",
+        "scope": "Independent same-unit excursion proof restores later exact normalization without a permanently locked provisional gap."
+      },
+      {
+        "file": "validation/timeline_divisions_consensus_test.go",
+        "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
+        "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
       }
     ],
     "evidence_groups": [
@@ -2336,6 +2451,11 @@
             "file": "validation/timeline_state_test.go",
             "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
             "scope": "Invalid required or optional key components preserve strongest original cause."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
@@ -2729,6 +2849,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
@@ -3018,6 +3148,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
@@ -3611,6 +3781,79 @@
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
+      },
+      {
+        "id": "unit-region-reconstruction",
+        "scope": "Well-founded staged reconstruction of potential cursor excursions: independently positioned applicable unit regions can discharge a gate, while ancestor-derived bounds cannot certify their own movement. Actual causes and directional placement envelopes survive unresolved gates.",
+        "runtime_bindings": [
+          {
+            "id": "MX40-TIMELINE-effective-state",
+            "revision": 1
+          }
+        ],
+        "executable_tests": [
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits",
+            "scope": "A structural-start backup cannot borrow changed departure divisions across an unproved boundary; prefix controls remain exact."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof",
+            "scope": "Inherited backward and later-frame forward differing-unit regions remain relevant; uniform-unit controls preserve exact arithmetic."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof",
+            "scope": "An independently contained exact return restores ordinary prefix proof without using a guessed measure length."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds",
+            "scope": "An unavailable local unit result retains independently justified directional bounds for downstream state repair."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound",
+            "scope": "A return and bound derived from an unresolved ancestor excursion cannot discharge that ancestor gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence",
+            "scope": "Opposite-side independently excluded publishers do not invalidate a movement; relevant actual stronger causes survive locked local gates."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair",
+            "scope": "A new positioned units declaration restores duration normalization only if it repairs the effective history, not merely the lexical register."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionGatePreservesDescendantUnitUnavailability",
+            "scope": "A globally gated excursion also prevents descendant lexical duration normalization from becoming falsely known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits",
+            "scope": "An independently unreachable later invalid unit publisher cannot erase a prior backward upper-bound repair; earlier ambiguity keeps its actual local gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes",
+            "scope": "Complete-history unavailable effective units invalidate an earlier provisional duration and derived onsets; removing the displaced publisher preserves the known prefix."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization",
+            "scope": "Independent same-unit excursion proof restores later exact normalization without a permanently locked provisional gap."
+          },
+          {
+            "file": "validation/timeline_divisions_consensus_test.go",
+            "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
+            "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
+          }
+        ],
+        "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
       }
     ],
     "verification": [
@@ -3672,6 +3915,29 @@
         "implementation_commit": "d381b50402b1a26a44f042288d21a3f2c8f0d0de",
         "artifact": "reconcile-declared-d381b50.log",
         "scope": "Selected checkpoint suite only. Pending unit reconstruction, public numeral-key projection, all-stage repository and exact-head CI acceptance remain separate."
+      },
+      {
+        "command": "MUSICXML_REQUIRE_XMLLINT=1 go test -count=1 ./... -run \"$UNIT_KEY_CHECKPOINT_REGEX\"",
+        "selection": "Exact anchored union of 14 new unit-reconstruction, key-presence, public adapter and real xmllint schema-control functions.",
+        "result": "passed",
+        "implementation_commit": "c52c9cee9a71e3fbc17927af9d78bd4ec628ba15",
+        "artifact": "reconcile-unit-key-c52c9ce.log",
+        "scope": "Selected checkpoint suite only; excludes newly isolated 9227daf directional-bound regression and final staged-rebuild/key-certificate resource acceptance."
+      },
+      {
+        "command": "MUSICXML_REQUIRE_XMLLINT=1 go test -count=1 ./... -run '^(TestTimelineFinalReview|TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue)'",
+        "result": "passed",
+        "implementation_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
+        "artifact": "reconcile-final-review-8237597.log",
+        "scope": "All final-review prefix tests and exact equal-value divisions test; required real xmllint schema controls included. Selected local pass, not independent final acceptance or whole-repository pass."
+      },
+      {
+        "command": "go test -count=1 ./... -run \"$DECLARED_TEST_REGEX|^TestTimelineOwnership\"",
+        "selection": "Exact anchored union of all 229 distinct declared executable functions plus TestTimelineOwnership checks.",
+        "result": "passed",
+        "implementation_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
+        "artifact": "reconcile-declared-8237597.log",
+        "scope": "Selected checkpoint suite; excludes the open long-identity work-meter regression. Independent final semantic/resource review and seven/nine acceptance gates remain separate."
       }
     ],
     "remaining_acceptance": [
@@ -3716,42 +3982,52 @@
       ]
     },
     "independent_semantic_review": {
-      "status": "independent-association-checkpoint-green-final-unit-and-key-integration-open",
+      "status": "latest-local-regressions-green-independent-review-and-resource-meter-open",
       "accepted_component_commit": "b6623ae53da1caea80887aaa6993643ab9533fe3",
       "accepted_component_scope": "Previously accepted instrument/MIDI, figure-prefix, grace-locality and conditional-cause cases plus continuing-state cross-frame/containment/initial-default-consensus controls. Separate association review below extends this scope; neither is final semantic acceptance.",
       "pending_cases": [
-        "Acyclic least-proof unit-region reconstruction for structural-start, inherited/later-frame and differing-unit excursions; circular ancestor/bound self-certification must be rejected, independent prefixes and directional bounds preserved.",
-        "Public source/current-model numeral-key consumers must retain displaced publisher uncertainty without false failure, while invariant valid-key presence and valid own local numeral keys stay independently sufficient.",
-        "Final integrated semantic/resource review and exact-head repository/CI acceptance remain open."
+        "Independent semantic review of complete-history closure and independently equal raw-divisions certificates at 8237597 remains pending despite all named final-review regressions passing locally.",
+        "Canonical DocumentID comparison metering regression 1b03ac8 remains open; final staged-rebuild/certificate resource refresh is also pending.",
+        "All seven repository-local stages and nine exact-head CI jobs require separately supplied results."
       ],
       "earlier_report_is_final_evidence": false,
       "whole_repository_pass_claimed": false,
-      "pending_clause_work": [
-        {
-          "clause_ids": [
-            "duration-cursor",
-            "divisions-tuplet-units",
-            "backup-no-boundary-cross"
-          ],
-          "case": "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule.",
-          "owner": "Batch 6 cursor/effective-divisions provider and staged runtime integration.",
-          "test": "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof"
-        },
-        {
-          "clause_ids": [
-            "numeral-requires-key"
-          ],
-          "case": "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient.",
-          "owner": "Batch 6 key-state projection and mandatory numeral consumer.",
-          "test": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters"
-        }
-      ],
+      "pending_clause_work": [],
       "association_review": {
         "worker_commit": "44ffd16",
         "independent_review_commit": "1b13767",
         "artifact": "final-semantic-associations-44ffd16-green.log",
         "result": "passed",
         "scope": "All unavailable-position displacement/bounds controls, original direction/figure/grace cross-frame regressions and unavailable sound-offset actual-cause control. This is selected component acceptance, not whole-repository acceptance."
+      },
+      "key_presence_review": {
+        "worker_commit": "121cbcf",
+        "independent_review_commit": "d4071ae",
+        "result": "passed",
+        "scope": "Invariant key-presence projection with owned witnesses, invalid/hidden/scope controls, public source/current-model known-baseline and no-baseline cases. Not final whole-batch acceptance."
+      },
+      "unit_direction_review": {
+        "production_commits": [
+          "58f1a43",
+          "e6a0ed4"
+        ],
+        "independent_review_commit": "e89fe4e",
+        "artifact": "final-semantic-unit-58f1a43-e6a0ed4.log",
+        "result": "passed",
+        "scope": "Locked prior invalid unit cause, actual new-frame effective repair, excluded future invalid-unit positivity and local backward upper-bound repair. Complete-history invalidation/restoration remains separate."
+      },
+      "pending_resource_cases": [
+        {
+          "test": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+          "regression_commit": "1b03ac8",
+          "scope": "Canonical position comparisons must charge long document-identity bytes before comparison; this is a current timeline work-meter defect distinct from the retained B5-PERF-01 obligation."
+        }
+      ],
+      "latest_local_checkpoint": {
+        "implementation_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
+        "artifact": "reconcile-final-review-8237597.log",
+        "result": "passed",
+        "scope": "All TestTimelineFinalReview functions plus TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue across ./... with required real xmllint fixture controls. Independent latest-head semantic acceptance and complete resource verification remain pending."
       }
     },
     "non_cursor_interpretation": {
@@ -18386,6 +18662,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Selected normative principal duration bound and exact anchor, without pairwise ordering or invented orphan errors.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.",
@@ -18574,6 +18860,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           }
         ],
         "completed_contribution": "Selected normative principal duration bound and exact anchor, without pairwise ordering or invented orphan errors.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.",
@@ -19381,6 +19677,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Selected normative principal duration bound and exact anchor, without pairwise ordering or invented orphan errors.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.",
@@ -20210,6 +20516,46 @@
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           },
           {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
             "file": "timeline_assessment_test.go",
             "name": "TestTimelineMandatoryMilestonesBothTargets",
             "scope": "Production source/model principal 4, tone 1 then 3 passes; tone exceeding principal fails; cross-staff and fractional controls."
@@ -20248,6 +20594,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.; Selected normative principal duration bound and exact anchor, without pairwise ordering or invented orphan errors.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.",
@@ -20617,6 +20973,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -21311,6 +21707,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -21764,6 +22200,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           },
           {
             "file": "validation/rational_test.go",
@@ -22344,6 +22820,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           },
           {
             "file": "validation/rational_test.go",
@@ -23108,6 +23624,46 @@
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           },
           {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
             "file": "validation/rational_test.go",
             "name": "TestRationalSessionExactOperations",
             "scope": "Hand-computed exact arithmetic; shared session unit tests, including nonterminating rational results."
@@ -23510,6 +24066,46 @@
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           },
           {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
             "file": "validation/rational_test.go",
             "name": "TestRationalSessionExactOperations",
             "scope": "Hand-computed exact arithmetic; shared session unit tests, including nonterminating rational results."
@@ -23900,6 +24496,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           },
           {
             "file": "validation/rational_test.go",
@@ -24576,6 +25212,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -25091,6 +25767,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -25464,6 +26180,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -25845,6 +26601,46 @@
             "file": "validation/timeline_gap_placement_resource_independent_test.go",
             "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
             "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionPartHashWorkAdmission",
+            "scope": "Excursion scope document-ID bytes are charged before map hashing, including adversarial long identifiers."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionClosedShape",
+            "scope": "Excursion append/map/staged-service coefficients cover independently measured fixed shapes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineExcursionStageEveryCancellationBoundary",
+            "scope": "Every observed staged rebuild and certificate loop poll cancels without publishing partial replacement services or refunding unrelated bytes."
+          },
+          {
+            "file": "validation/timeline_excursion_resource_independent_test.go",
+            "name": "TestIndependentTimelineUnitPublisherScratchAndCancellation",
+            "scope": "Unit-publisher inventory scratch is pre-counted and admitted before traversal/allocation; cancellation and cleanup preserve owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceShapeAndCertificateAdmission",
+            "scope": "Key-presence certificates have independently checked closed shapes and context/byte admission before retained map publication."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceQueryOwnershipAndCancellation",
+            "scope": "Presence queries copy witness provenance and retain truthful inheritance while every observed query poll cancels with owned accounting."
+          },
+          {
+            "file": "validation/timeline_key_presence_resource_independent_test.go",
+            "name": "TestIndependentTimelineKeyPresenceFilteredScratchBeforeAllocation",
+            "scope": "Filtered-gap query capacity is host-checked and admitted before its allocation; rejection does not consume unadmitted scratch."
+          },
+          {
+            "file": "timeline_excursion_scale_independent_test.go",
+            "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
+            "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -26071,6 +26867,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Selected normative principal duration bound and exact anchor, without pairwise ordering or invented orphan errors.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.",
@@ -32933,6 +33739,11 @@
             "scope": "Invalid required or optional key components preserve strongest original cause."
           },
           {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
+          },
+          {
             "file": "timeline_assessment_test.go",
             "name": "TestTimelineMandatoryMilestonesBothTargets",
             "scope": "Production source/model explicit fifths 0, valid own local key without divisions, known complete absence fails."
@@ -32951,6 +33762,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           },
           {
             "file": "validation/timeline_sound_runtime_test.go",
@@ -33009,11 +33830,9 @@
           }
         ],
         "completed_contribution": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
-        "exact_remaining": [
-          "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient. Owner: Batch 6 key-state projection and mandatory numeral consumer. Outstanding regression: TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters."
-        ],
+        "exact_remaining": [],
         "evidence_scope": "Contribution only; original requirement acceptance, hard_error_basis and five-axis recipes are unchanged. All original named remaining owners are retained.",
-        "remaining_scope": "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient. Owner: Batch 6 key-state projection and mandatory numeral consumer. Outstanding regression: TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters."
+        "remaining_scope": "Exact original remaining scope and named owners are preserved in previous_ownership; no new broader closure claim."
       }
     },
     {
@@ -42420,7 +43239,7 @@
       },
       "original_source_reference": "MX40-PROSE-backup-no-boundary-cross",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -42495,17 +43314,76 @@
             "file": "validation/timeline_semantic_qa_test.go",
             "name": "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice",
             "scope": "Shared runtime exact 1/3 coordinates, principal identity and genuinely absent voice."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits",
+            "scope": "A structural-start backup cannot borrow changed departure divisions across an unproved boundary; prefix controls remain exact."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof",
+            "scope": "Inherited backward and later-frame forward differing-unit regions remain relevant; uniform-unit controls preserve exact arithmetic."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof",
+            "scope": "An independently contained exact return restores ordinary prefix proof without using a guessed measure length."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds",
+            "scope": "An unavailable local unit result retains independently justified directional bounds for downstream state repair."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound",
+            "scope": "A return and bound derived from an unresolved ancestor excursion cannot discharge that ancestor gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence",
+            "scope": "Opposite-side independently excluded publishers do not invalidate a movement; relevant actual stronger causes survive locked local gates."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair",
+            "scope": "A new positioned units declaration restores duration normalization only if it repairs the effective history, not merely the lexical register."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionGatePreservesDescendantUnitUnavailability",
+            "scope": "A globally gated excursion also prevents descendant lexical duration normalization from becoming falsely known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits",
+            "scope": "An independently unreachable later invalid unit publisher cannot erase a prior backward upper-bound repair; earlier ambiguity keeps its actual local gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes",
+            "scope": "Complete-history unavailable effective units invalidate an earlier provisional duration and derived onsets; removing the displaced publisher preserves the known prefix."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization",
+            "scope": "Independent same-unit excursion proof restores later exact normalization without a permanently locked provisional gap."
+          },
+          {
+            "file": "validation/timeline_divisions_consensus_test.go",
+            "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
+            "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
           }
         ],
         "evidence_groups": [
           "exact-arithmetic",
-          "chronology"
+          "chronology",
+          "unit-region-reconstruction"
         ],
-        "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.",
+        "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.; Well-founded staged reconstruction of potential cursor excursions: independently positioned applicable unit regions can discharge a gate, while ancestor-derived bounds cannot certify their own movement. Actual causes and directional placement envelopes survive unresolved gates.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule. Owner: Batch 6 cursor/effective-divisions provider and staged runtime integration. Outstanding regression: TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof."
-        ],
+        "batch6_remaining": [],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
     },
@@ -44844,6 +45722,11 @@
             "scope": "Invalid required or optional key components preserve strongest original cause."
           },
           {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
+          },
+          {
             "file": "validation/timeline_display_state_test.go",
             "name": "TestTimelineDisplayStateDocumentedDefaultsAndMidmeasureApplicability",
             "scope": "Shared state: absent cancel location left, before-barline start versus middle, absent cancel, unavailable position, inactive midmeasure clef and retained invalid cause. This is a projection, never an added mandatory recommendation violation."
@@ -45045,6 +45928,11 @@
             "file": "validation/timeline_state_test.go",
             "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
             "scope": "Invalid required or optional key components preserve strongest original cause."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
           }
         ],
         "evidence_groups": [
@@ -47986,7 +48874,7 @@
       },
       "original_source_reference": "MX40-PROSE-divisions-tuplet-units",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -48060,17 +48948,76 @@
             "file": "validation/timeline_semantic_qa_test.go",
             "name": "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice",
             "scope": "Shared runtime exact 1/3 coordinates, principal identity and genuinely absent voice."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits",
+            "scope": "A structural-start backup cannot borrow changed departure divisions across an unproved boundary; prefix controls remain exact."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof",
+            "scope": "Inherited backward and later-frame forward differing-unit regions remain relevant; uniform-unit controls preserve exact arithmetic."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof",
+            "scope": "An independently contained exact return restores ordinary prefix proof without using a guessed measure length."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds",
+            "scope": "An unavailable local unit result retains independently justified directional bounds for downstream state repair."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound",
+            "scope": "A return and bound derived from an unresolved ancestor excursion cannot discharge that ancestor gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence",
+            "scope": "Opposite-side independently excluded publishers do not invalidate a movement; relevant actual stronger causes survive locked local gates."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair",
+            "scope": "A new positioned units declaration restores duration normalization only if it repairs the effective history, not merely the lexical register."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionGatePreservesDescendantUnitUnavailability",
+            "scope": "A globally gated excursion also prevents descendant lexical duration normalization from becoming falsely known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits",
+            "scope": "An independently unreachable later invalid unit publisher cannot erase a prior backward upper-bound repair; earlier ambiguity keeps its actual local gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes",
+            "scope": "Complete-history unavailable effective units invalidate an earlier provisional duration and derived onsets; removing the displaced publisher preserves the known prefix."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization",
+            "scope": "Independent same-unit excursion proof restores later exact normalization without a permanently locked provisional gap."
+          },
+          {
+            "file": "validation/timeline_divisions_consensus_test.go",
+            "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
+            "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
           }
         ],
         "evidence_groups": [
           "exact-arithmetic",
-          "chronology"
+          "chronology",
+          "unit-region-reconstruction"
         ],
-        "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.",
+        "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.; Well-founded staged reconstruction of potential cursor excursions: independently positioned applicable unit regions can discharge a gate, while ancestor-derived bounds cannot certify their own movement. Actual causes and directional placement envelopes survive unresolved gates.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule. Owner: Batch 6 cursor/effective-divisions provider and staged runtime integration. Outstanding regression: TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof."
-        ],
+        "batch6_remaining": [],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
     },
@@ -48814,7 +49761,7 @@
       },
       "original_source_reference": "MX40-PROSE-duration-cursor",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -48888,17 +49835,76 @@
             "file": "validation/timeline_semantic_qa_test.go",
             "name": "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice",
             "scope": "Shared runtime exact 1/3 coordinates, principal identity and genuinely absent voice."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits",
+            "scope": "A structural-start backup cannot borrow changed departure divisions across an unproved boundary; prefix controls remain exact."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof",
+            "scope": "Inherited backward and later-frame forward differing-unit regions remain relevant; uniform-unit controls preserve exact arithmetic."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof",
+            "scope": "An independently contained exact return restores ordinary prefix proof without using a guessed measure length."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds",
+            "scope": "An unavailable local unit result retains independently justified directional bounds for downstream state repair."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound",
+            "scope": "A return and bound derived from an unresolved ancestor excursion cannot discharge that ancestor gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence",
+            "scope": "Opposite-side independently excluded publishers do not invalidate a movement; relevant actual stronger causes survive locked local gates."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair",
+            "scope": "A new positioned units declaration restores duration normalization only if it repairs the effective history, not merely the lexical register."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionGatePreservesDescendantUnitUnavailability",
+            "scope": "A globally gated excursion also prevents descendant lexical duration normalization from becoming falsely known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits",
+            "scope": "An independently unreachable later invalid unit publisher cannot erase a prior backward upper-bound repair; earlier ambiguity keeps its actual local gate."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes",
+            "scope": "Complete-history unavailable effective units invalidate an earlier provisional duration and derived onsets; removing the displaced publisher preserves the known prefix."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization",
+            "scope": "Independent same-unit excursion proof restores later exact normalization without a permanently locked provisional gap."
+          },
+          {
+            "file": "validation/timeline_divisions_consensus_test.go",
+            "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
+            "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
           }
         ],
         "evidence_groups": [
           "exact-arithmetic",
-          "chronology"
+          "chronology",
+          "unit-region-reconstruction"
         ],
-        "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.",
+        "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.; Well-founded staged reconstruction of potential cursor excursions: independently positioned applicable unit regions can discharge a gate, while ancestor-derived bounds cannot certify their own movement. Actual causes and directional placement envelopes survive unresolved gates.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule. Owner: Batch 6 cursor/effective-divisions provider and staged runtime integration. Outstanding regression: TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof."
-        ],
+        "batch6_remaining": [],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
     },
@@ -51684,6 +52690,11 @@
             "file": "validation/timeline_state_test.go",
             "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
             "scope": "Invalid required or optional key components preserve strongest original cause."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
           }
         ],
         "evidence_groups": [
@@ -53369,6 +54380,11 @@
             "file": "validation/timeline_state_test.go",
             "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
             "scope": "Invalid required or optional key components preserve strongest original cause."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
           }
         ],
         "evidence_groups": [
@@ -53567,6 +54583,11 @@
             "file": "validation/timeline_state_test.go",
             "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
             "scope": "Invalid required or optional key components preserve strongest original cause."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
           },
           {
             "file": "validation/timeline_display_state_test.go",
@@ -56401,6 +57422,11 @@
             "file": "validation/timeline_state_test.go",
             "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
             "scope": "Invalid required or optional key components preserve strongest original cause."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
           }
         ],
         "evidence_groups": [
@@ -58106,7 +59132,7 @@
       },
       "original_source_reference": "MX40-PROSE-numeral-requires-key",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -58157,6 +59183,11 @@
             "scope": "Invalid required or optional key components preserve strongest original cause."
           },
           {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+            "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
+          },
+          {
             "file": "timeline_assessment_test.go",
             "name": "TestTimelineMandatoryMilestonesBothTargets",
             "scope": "Production source/model explicit fifths 0, valid own local key without divisions, known complete absence fails."
@@ -58175,6 +59206,16 @@
             "file": "validation/timeline_consumer_test.go",
             "name": "TestTimelineConsumerNumeralEffectiveKeyEvidence",
             "scope": "Shared consumer encoded absence versus missing staff/history/invalid publisher evidence."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters",
+            "scope": "Public InspectXML/AssessModel in partwise/timewise: no-baseline floating or unit-gated keys remain unknown/unsupported without a false failure; own valid numeral-key stays sufficient."
+          },
+          {
+            "file": "timeline_final_semantics_integration_test.go",
+            "name": "TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence",
+            "scope": "Public source/current-model partwise/timewise fixtures: independently valid encoded-key baseline and valid unplaced update preserve the mandatory presence predicate."
           },
           {
             "file": "validation/timeline_sound_runtime_test.go",
@@ -58240,9 +59281,7 @@
         ],
         "implemented_contribution": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient. Owner: Batch 6 key-state projection and mandatory numeral consumer. Outstanding regression: TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters."
-        ],
+        "batch6_remaining": [],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
     },
@@ -70328,6 +71367,11 @@
           "file": "validation/timeline_state_test.go",
           "name": "TestTimelineStateKeyProjectionPreservesStrongestComponentCause",
           "scope": "Invalid required or optional key components preserve strongest original cause."
+        },
+        {
+          "file": "validation/timeline_final_semantics_review_test.go",
+          "name": "TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses",
+          "scope": "A valid positioned baseline plus valid unplaced replacement preserves boolean presence with both witnesses and ambiguous inheritance; invalid/hidden content and unknown scope remain causal, and concrete key stays unavailable."
         },
         {
           "file": "validation/timeline_display_state_test.go",

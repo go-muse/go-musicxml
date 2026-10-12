@@ -254,6 +254,46 @@ causal evidence. The public source/model regression
 `TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence` distinguishes
 this positive case from the no-baseline unavailable-key regression.
 
+## Complete-history units and independently equal raw values
+
+The [attributes score-order clause](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/attributes/)
+and [divisions unit definition](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/divisions/)
+require a normalization's units to agree with the completed effective history.
+A later-serialized displaced divisions publisher can therefore invalidate an
+earlier provisional duration and the onsets derived from it. Retaining the old
+exact quotient while the corresponding effective-unit query is unavailable
+would contradict that dependency. This is a consistency requirement, not a new
+MusicXML rule rejecting boundary excursions.
+
+The implemented sufficient proof is staged and well-founded. First close each
+candidate history against all its retained divisions publishers. Stop dependent
+normalizations whose earlier unit premises no longer hold, preserving actual
+causes and placement envelopes; their descendants cannot provide the bounds
+that justify their ancestors. Restore a normalization only from an independently
+retained origin and known units in the preceding closed stage. Finite admitted
+gate transitions bound progress; resource exhaustion remains incomplete. This
+does not enumerate all possible timelines or select a fixed-point/importer
+convention. Exact unresolved cases still require their own source evidence.
+
+An independently validated raw positive divisions value remains meaningful
+when only its position is unavailable. A definitely applicable, independently
+known baseline plus only potentially replacing raw values proved exactly equal
+to that baseline establishes the same units regardless of their positions.
+This is value consensus over the documented scalar units, not a new initial
+unit default. A certificate cannot supply a missing baseline, locate a publisher,
+repair hidden/invalid content, or ignore a different possible value. Independently
+excluded or strictly repaired publishers retain the existing scope/order rules.
+The query retains actual source witnesses and marks inheritance unproved when
+the latest source cannot be established. Primitive unit queries and full
+provenance queries must agree on the resulting availability/value.
+
+Regression `12a9fe1` and implementation `8237597` exercise same/different values,
+missing baseline, invalid/hidden publishers, independent exclusion/repair,
+owned witnesses and safe restoration after an excursion. The complete-history
+invalidation and restoration cases have separate retained regressions
+`743e74c` and `13ce21c`. These are implementation evidence, not final semantic or
+resource acceptance; see the [acceptance checkpoint](timeline-acceptance-checkpoint.md).
+
 ## Evidence still required for acceptance
 
 The RED test establishes the missing chronology gate. A fix needs explicit
