@@ -78,11 +78,15 @@ func (s *Session) noteTimingShift(ctx context.Context, origin Evidence[musicalPo
 	if err := s.step(ctx, 1); err != nil {
 		return Evidence[musicalPosition]{}, err
 	}
-	if delta.State != EvidenceKnown {
-		return timelineGapAs[Rational, musicalPosition](delta, "note-timing-delta-unavailable"), nil
-	}
-	if origin.State != EvidenceKnown {
-		return timelineGapAs[musicalPosition, musicalPosition](origin, "note-timing-origin-unavailable"), nil
+	if delta.State != EvidenceKnown || origin.State != EvidenceKnown {
+		gap := Evidence[musicalPosition]{State: EvidenceKnown}
+		if origin.State != EvidenceKnown {
+			gap = timelineGapAs[musicalPosition, musicalPosition](origin, "note-timing-origin-unavailable")
+		}
+		if delta.State != EvidenceKnown {
+			gap = timelinePositionDependency(gap, timelineGapAs[Rational, musicalPosition](delta, "note-timing-delta-unavailable"))
+		}
+		return gap, nil
 	}
 	sum, err := s.rationalAdd(ctx, origin.Value.Offset, delta.Value)
 	if err != nil {
@@ -123,7 +127,9 @@ func (r *stateReader) notePercent(n *factNode, role timelineRole, defaultValue D
 	}
 	delta := duration
 	if fraction.State != EvidenceKnown {
-		delta = stateUnavailable[Rational, Rational](fraction)
+		if stateAvailabilityRank(fraction.State) > stateAvailabilityRank(delta.State) {
+			delta = fraction
+		}
 	} else if duration.State == EvidenceKnown {
 		value, e := r.s.rationalMul(r.ctx, duration.Value, fraction.Value)
 		if e != nil {

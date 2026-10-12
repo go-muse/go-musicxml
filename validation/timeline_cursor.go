@@ -72,11 +72,18 @@ func (s *Session) normalizeTimelineDuration(ctx context.Context, raw, units Evid
 	if err := s.step(ctx, 1); err != nil {
 		return Evidence[Rational]{}, err
 	}
-	if raw.State != EvidenceKnown {
-		return timelineGapAs[Decimal, Rational](raw, "duration-unavailable"), nil
-	}
-	if units.State != EvidenceKnown {
-		return timelineGapAs[Decimal, Rational](units, "initial-divisions-unavailable"), nil
+	if raw.State != EvidenceKnown || units.State != EvidenceKnown {
+		gap := Evidence[Rational]{State: EvidenceKnown}
+		if raw.State != EvidenceKnown {
+			gap = timelineGapAs[Decimal, Rational](raw, "duration-unavailable")
+		}
+		if units.State != EvidenceKnown {
+			unitGap := timelineGapAs[Decimal, Rational](units, "initial-divisions-unavailable")
+			if stateAvailabilityRank(unitGap.State) > stateAvailabilityRank(gap.State) {
+				gap = unitGap
+			}
+		}
+		return gap, nil
 	}
 	if !raw.Value.Valid() || !units.Value.Valid() {
 		return Evidence[Rational]{}, contract("timeline normalization", "initialized exact decimal inputs required")
