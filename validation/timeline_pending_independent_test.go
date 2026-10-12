@@ -96,3 +96,23 @@ func TestIndependentTimelineDeferredEveryCancellationBoundary(t *testing.T) {
 	}
 	t.Logf("interrupted every one of %d cursor/deferred finalization polls", calls)
 }
+
+func TestIndependentTimelinePendingReleaseIsIdempotent(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	b := stateBindings()
+	other := 4 * timelinePendingOffsetBytes
+	if err := s.retain(other); err != nil {
+		t.Fatal(err)
+	}
+	block := runtimeBlock(b, 0, stateNode(b, timelineRoleHarmony, 10, stateAbsent[Atomic]()))
+	_, release, err := newTimelinePendingOffsets(&stateReader{ctx: context.Background(), s: s, b: b}, block)
+	if err != nil {
+		t.Fatal(err)
+	}
+	release()
+	release()
+	if got := rationalUsage(t, s, BudgetBufferedBytes); got != other || s.retained != other {
+		t.Fatalf("second release refunded another live owner: gauge%d retained%d want%d", got, s.retained, other)
+	}
+}
