@@ -23,7 +23,7 @@ func (r *stateReader) matches(n *factNode, role timelineRole) bool {
 	}
 	return r.b.matches(role, n.header.Declaration.Value)
 }
-func (r *stateReader) complete(n *factNode) Evidence[bool] {
+func (r *stateReader) enumerated(n *factNode) Evidence[bool] {
 	if n == nil || !n.closed {
 		return stateUnknown[bool]("timeline-node-open")
 	}
@@ -42,6 +42,13 @@ func (r *stateReader) complete(n *factNode) Evidence[bool] {
 	}
 	if n.end.Order.Value != OrderSource && n.end.Order.Value != OrderModelContent && n.end.Order.Value != OrderModelFields {
 		return stateUnknown[bool]("timeline-content-order-unavailable")
+	}
+	return Evidence[bool]{State: EvidenceKnown, Value: true}
+}
+func (r *stateReader) complete(n *factNode) Evidence[bool] {
+	e := r.enumerated(n)
+	if e.State != EvidenceKnown || !e.Value {
+		return e
 	}
 	if r.s.schema != nil {
 		cause, err := r.s.schemaResultCause(r.ctx, n, XSDCheckContent)
@@ -359,7 +366,7 @@ func (h *timelineState) readAttributes(ctx context.Context, s *Session, b *timel
 		}
 		return contract("timeline attributes", "exact attributes declaration required")
 	}
-	complete := r.complete(n)
+	complete := r.enumerated(n)
 	if complete.State != EvidenceKnown {
 		h.attributeGap(r, n, pos, complete)
 		return r.err
@@ -367,7 +374,7 @@ func (h *timelineState) readAttributes(ctx context.Context, s *Session, b *timel
 	all := Evidence[stateScope]{State: EvidenceKnown, Value: stateScope{AllStaves: true}}
 	for _, ch := range n.children {
 		if ch.header.Declaration.State != EvidenceKnown {
-			h.attributeGap(r, n, pos, stateUnavailable[DeclarationID, bool](ch.header.Declaration))
+			h.attributePotentialGap(r, ch, pos, stateUnavailable[DeclarationID, bool](ch.header.Declaration))
 			continue
 		}
 		switch {
@@ -429,7 +436,7 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 		return contract("timeline attribute gap", "unavailable position evidence required")
 	}
 	r := &stateReader{ctx: ctx, s: s, b: b}
-	complete := r.complete(n)
+	complete := r.enumerated(n)
 	generic := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](position)}
 	if complete.State != EvidenceKnown {
 		generic.Availability = complete
@@ -533,4 +540,75 @@ func (r *stateReader) potential(n *factNode, role timelineRole) bool {
 		}
 	}
 	return false
+}
+
+func (h *timelineState) attributePotentialGap(r *stateReader, n *factNode, p musicalPosition, gap Evidence[bool]) {
+	all := Evidence[stateScope]{State: EvidenceKnown, Value: stateScope{AllStaves: true}}
+	if r.potential(n, timelineRoleAttributesDivisions) {
+		stateEmit(r, &h.Divisions, n, p, all, stateUnavailable[bool, Decimal](gap))
+	}
+	if r.potential(n, timelineRoleAttributesKey) {
+		stateEmit(r, &h.Keys, n, p, all, stateUnavailable[bool, keyState](gap))
+	}
+	if r.potential(n, timelineRoleAttributesTime) {
+		stateEmit(r, &h.Times, n, p, all, stateUnavailable[bool, timeState](gap))
+	}
+	if r.potential(n, timelineRoleAttributesStaves) {
+		stateEmit(r, &h.Staves, n, p, all, stateUnavailable[bool, Integer](gap))
+	}
+	if r.potential(n, timelineRoleAttributesInstruments) {
+		stateEmit(r, &h.Instruments, n, p, all, stateUnavailable[bool, Integer](gap))
+	}
+	if r.potential(n, timelineRoleAttributesClef) {
+		stateEmit(r, &h.Clefs, n, p, all, stateUnavailable[bool, clefState](gap))
+		stateEmit(r, &h.AdditionalClefs, n, p, all, stateUnavailable[bool, clefState](gap))
+	}
+	if r.potential(n, timelineRoleAttributesTranspose) {
+		stateEmit(r, &h.Transpose, n, p, all, stateUnavailable[bool, transposeState](gap))
+	}
+	if r.potential(n, timelineRoleAttributesForPart) {
+		stateEmit(r, &h.CreatedPartClefs, n, p, all, stateUnavailable[bool, clefState](gap))
+		stateEmit(r, &h.CreatedPartTranspose, n, p, all, stateUnavailable[bool, transposeState](gap))
+	}
+}
+
+// gapAll is reserved for a genuinely unobserved music-data publisher. Known
+// note duration failure alone does not authorize this broad history gap.
+func (h *timelineState) gapAll(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
+	g := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+	if e := addStateGap(ctx, s, &h.Divisions, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.Keys, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.Times, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.Staves, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.Instruments, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.Clefs, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.AdditionalClefs, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.Transpose, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.CreatedPartClefs, g); e != nil {
+		return e
+	}
+	if e := addStateGap(ctx, s, &h.CreatedPartTranspose, g); e != nil {
+		return e
+	}
+	if _, e := stateReserve(ctx, s, g); e != nil {
+		return e
+	}
+	h.InstrumentGaps = append(h.InstrumentGaps, stateClone(g))
+	return nil
 }
