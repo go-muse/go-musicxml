@@ -418,20 +418,26 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 			}
 			frames = frames[:len(frames)-1]
 		case NavigationDaCapo, NavigationDalSegno, NavigationToCoda, NavigationFine:
+			if guard.State == EvidenceKnown && !guard.Value {
+				pc++
+				continue
+			}
+			if event.Kind != NavigationFine && event.Target.State != EvidenceKnown {
+				// Resolving a selector cannot establish a missing destination. Keep
+				// its evidence without inventing a pass domain; stronger guard
+				// defects still win, while a proved false guard above skips the edge.
+				out.Complete = stateUnavailable[int, bool](event.Target)
+				if guard.State != EvidenceKnown {
+					out.Complete = stateMergeGap(out.Complete, guard)
+				}
+				return out, nil
+			}
 			if guard.State != EvidenceKnown {
 				out.Complete = guard
 				return out, nil
 			}
-			if !guard.Value {
-				pc++
-				continue
-			}
 			if event.Kind == NavigationFine {
 				out.Complete = stateUnknown[bool]("navigation-fine-activation-unresolved")
-				return out, nil
-			}
-			if event.Target.State != EvidenceKnown {
-				out.Complete = stateUnavailable[int, bool](event.Target)
 				return out, nil
 			}
 			if event.Target.Value < 0 || event.Target.Value >= len(events) {

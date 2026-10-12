@@ -595,14 +595,14 @@ func TestRepeatAdaptersInactiveAttributesAndInvalidDefaults(t *testing.T) {
 }
 
 func TestRepeatAdaptersLaterAmbiguityPreservesPrefix(t *testing.T) {
-	repeatAssessBoth(t, `<attributes><divisions>1</divisions></attributes><note><rest/><duration>1</duration></note><sound tempo="80"/><sound tempo="90"/>`, func(t *testing.T, r validation.Report) {
+	repeatAssessBoth(t, `<attributes><divisions>1</divisions></attributes><note><rest/><duration>1</duration></note><sound dalsegno="S"/><barline><repeat direction="backward"/></barline>`, func(t *testing.T, r validation.Report) {
 		found := false
 		for _, c := range r.Context {
 			if c.Navigation == nil || c.Navigation.Kind != validation.NavigationTraversal {
 				continue
 			}
 			found = true
-			if c.Navigation.Complete.State != validation.EvidenceUnknown || len(c.Navigation.Traversal) != 1 {
+			if c.Navigation.Complete.State != validation.EvidenceUnknown || c.Navigation.Complete.Reason != "navigation-simultaneous-control-unresolved" || len(c.Navigation.Traversal) != 1 {
 				t.Fatalf("lost prefix before simultaneous controls %+v", c.Navigation)
 			}
 		}

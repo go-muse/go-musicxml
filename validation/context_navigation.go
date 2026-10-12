@@ -164,7 +164,7 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 			}
 			kind, label, available := navigationSoundKind(sound.Navigation)
 			guard, defaulted := navigationDefaultGuard(kind, sound.TimeOnly)
-			row := contextNavigationNode{event: navigationEvent{Source: sound.Origin.Source, Kind: kind, Play: play, Guard: guard, Tempo: sound.Tempo, Dynamics: sound.Dynamics, Pizzicato: sound.Pizzicato, Control: available}, part: sound.Origin.Part, position: sound.Origin.Position, value: NavigationContextResult{Kind: kind, Directives: directives, Play: play, Part: sound.Origin.Part, Label: label, TimeOnly: guard, Defaulted: defaulted, Guard: stateUnknown[bool]("navigation-pass-domain-unavailable")}}
+			row := contextNavigationNode{event: navigationEvent{Source: sound.Origin.Source, Kind: kind, Play: play, Guard: guard, Tempo: sound.Tempo, Dynamics: sound.Dynamics, Pizzicato: sound.Pizzicato, Control: available}, part: sound.Origin.Part, position: sound.Origin.Position, value: NavigationContextResult{Kind: kind, Directives: directives, Play: play, Part: sound.Origin.Part, Label: label, TimeOnly: guard, Defaulted: defaulted}}
 			if kind == NavigationFine {
 				if label.State == EvidenceKnown && label.Value == "yes" {
 					row.value.DurationUnchanged = navigationKnownBool(true)
@@ -280,6 +280,19 @@ func navigationPriority(kind NavigationKind) int {
 	return 0
 }
 
+// Only encoded navigation boundaries and transfers compete for control order.
+// Ordinary playback/listening updates and inactive barline markers (demoted to
+// NavigationSound) retain their stable source order at the same position.
+func navigationControlKind(kind NavigationKind) bool {
+	switch kind {
+	case NavigationForward, NavigationBackward, NavigationEnding,
+		NavigationSegno, NavigationCoda, NavigationDaCapo, NavigationDalSegno,
+		NavigationToCoda, NavigationFine:
+		return true
+	}
+	return false
+}
+
 // Sorting is a candidate arrangement only. Every adjacent relation is checked
 // afterward using the exact partial-order service; an unresolved relation never
 // becomes a deterministic playback order from the sorting fallback.
@@ -322,6 +335,7 @@ func navigationOrder(ctx context.Context, s *Session, timeline *timelineService,
 	if compareErr != nil {
 		return Evidence[bool]{}, compareErr
 	}
+	controlSeen := len(rows) > 0 && navigationControlKind(rows[0].event.Kind)
 	for i := 1; i < len(rows); i++ {
 		order, err := timeline.State.positionOrder(ctx, s, rows[i-1].position.Value, rows[i].position.Value)
 		if err != nil {
@@ -330,8 +344,15 @@ func navigationOrder(ctx context.Context, s *Session, timeline *timelineService,
 		if order != stateBefore && order != stateEqual {
 			available = stateMergeGap(available, stateUnknown[bool]("navigation-position-order-unresolved"))
 		}
-		if order == stateEqual && navigationRowPriority(rows[i-1]) == navigationRowPriority(rows[i]) && rows[i].event.Kind != NavigationNote {
-			available = stateMergeGap(available, stateUnknown[bool]("navigation-simultaneous-control-unresolved"))
+		if order != stateEqual || navigationRowPriority(rows[i-1]) != navigationRowPriority(rows[i]) {
+			controlSeen = false
+		}
+		if navigationControlKind(rows[i].event.Kind) {
+			// Passive rows must not hide two competing controls in the same run.
+			if controlSeen {
+				available = stateMergeGap(available, stateUnknown[bool]("navigation-simultaneous-control-unresolved"))
+			}
+			controlSeen = true
 		}
 	}
 	return available, nil
@@ -453,6 +474,7 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 			ambiguous := false
 			if row.value.Label.State != EvidenceKnown {
 				row.event.Target = stateUnavailable[string, int](row.value.Label)
+				row.value.Target = stateUnavailable[string, NodeRef](row.value.Label)
 				break
 			}
 			if err = s.step(ctx, 1+int64(len(row.value.Label.Value))); err != nil {

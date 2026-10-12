@@ -82,7 +82,7 @@ func navigationLinearPrefix(ctx context.Context, s *Session, timeline *timelineS
 			if order == stateBefore {
 				continue
 			}
-			if order == stateEqual && (navigationRowPriority(a) < navigationRowPriority(b) || a.event.Kind == NavigationNote && b.event.Kind == NavigationNote) {
+			if order == stateEqual && (navigationRowPriority(a) < navigationRowPriority(b) || navigationRowPriority(a) == navigationRowPriority(b) && (!navigationControlKind(a.event.Kind) || !navigationControlKind(b.event.Kind))) {
 				continue
 			}
 			return i, nil
