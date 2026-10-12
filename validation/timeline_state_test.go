@@ -358,3 +358,12 @@ func TestTimelineStateEncodedKeyPresenceProjectsPastConflict(t *testing.T) {
 		t.Fatalf("empty nontraditional key lost %+v,%v", r, e)
 	}
 }
+
+func TestTimelineStateKeyProjectionPreservesStrongestComponentCause(t *testing.T) {
+	cause := &DecisionRef{Rule: RuleKey{ID: "cancel", Revision: 1}, Subject: NodeRef{DocumentID: "d", Node: 2}}
+	key := keyState{Traditional: true, Fifths: stateUnknown[Integer]("fifths-unavailable"), Cancel: Evidence[Integer]{State: EvidenceInvalid, Reason: "cancel-invalid", Cause: cause}}
+	got := key.encodingEvidence()
+	if got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != *cause {
+		t.Fatalf("later actual cause hidden %+v", got)
+	}
+}

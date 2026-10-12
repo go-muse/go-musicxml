@@ -277,3 +277,51 @@ func TestTimelineStateUnknownPublisherGapsAllButKnownTypeNarrows(t *testing.T) {
 		t.Fatal("known exact key type poisoned other families")
 	}
 }
+
+func TestTimelineStateRawInstrumentFieldsRemainTyped(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	s.documentID = "d"
+	defer s.cleanup()
+	b := stateBindings()
+	empty := stateAbsent[Atomic]()
+	r := &stateReader{ctx: context.Background(), s: s, b: b}
+	for _, role := range []timelineRole{timelineRoleOtherPlayType, timelineRoleMidiDevicePort, timelineRoleMidiDeviceID, timelineRoleMidiInstrumentID, timelineRolePlayID} {
+		b.Roles[role][0].Attribute = true
+		b.Roles[role][0].Name = QName{Local: string(rune(1000 + role))}
+	}
+	other := stateNode(b, timelineRolePlayOtherPlay, 81, stateAtomicText("bow-on-bridge"))
+	stateAttribute(b, other, timelineRoleOtherPlayType, Atomic{Kind: AtomicString, Text: "bow-position"})
+	play := stateNode(b, timelineRoleSoundPlay, 80, empty, stateNode(b, timelineRolePlayIpa, 82, stateAtomicText("a")), other)
+	got := r.play(play)
+	if r.err != nil || got.State != EvidenceKnown || len(got.Value.Techniques) != 2 || got.Value.Techniques[1].Kind != playOther || got.Value.Techniques[1].Type.Value != "bow-position" {
+		t.Fatalf("raw play %+v %v", got, r.err)
+	}
+	midi := stateNode(b, timelineRoleSoundMidiInstrument, 90, empty, stateNode(b, timelineRoleMidiInstrumentMidiProgram, 91, stateAtomicInteger(t, 71)), stateNode(b, timelineRoleMidiInstrumentVolume, 92, stateAtomicDecimal(t, 125, 2)))
+	m := r.midi(midi)
+	if r.err != nil || m.Value.Program.Value.String() != "71" || m.Value.Volume.Value.String() != "62.5" || m.Value.Channel.State != EvidenceAbsent {
+		t.Fatalf("raw midi %+v %v", m, r.err)
+	}
+	h := &timelineState{}
+	score := stateNode(b, timelineRoleScorePart, 1, empty, stateNode(b, timelineRoleScoreInstrument, 20, empty, stateNode(b, timelineRoleScoreInstrumentInstrumentName, 21, stateAtomicText("Oboe")), stateNode(b, timelineRoleScoreInstrumentInstrumentAbbreviation, 22, stateAtomicText("Ob."))))
+	if e := h.readInstrumentDefinitions(context.Background(), s, b, score, NodeRef{DocumentID: "d", Node: 1}); e != nil {
+		t.Fatal(e)
+	}
+	if len(h.Definitions) != 1 || h.Definitions[0].Name.Value != "Oboe" || h.Definitions[0].Abbreviation.Value != "Ob." {
+		t.Fatalf("declaration data lost %+v", h.Definitions)
+	}
+}
+func TestTimelineStateUnplacedSoundWithoutChangesDoesNotMaskVirtualState(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	s.documentID = "d"
+	defer s.cleanup()
+	b := stateBindings()
+	h := &timelineState{}
+	sound := stateNode(b, timelineRoleSound, 20, stateAbsent[Atomic]())
+	part := statePosition(t, 0, 0, 1).Part
+	if e := h.gapInstrumentChanges(context.Background(), s, b, sound, part, 1, stateUnknown[musicalPosition]("sound-position-unavailable")); e != nil {
+		t.Fatal(e)
+	}
+	if len(h.InstrumentGaps) != 0 || len(h.InstrumentChanges) != 0 {
+		t.Fatal("sound without virtual publisher erased instruments")
+	}
+}
