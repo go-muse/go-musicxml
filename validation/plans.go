@@ -222,10 +222,7 @@ func (p Plan) clone() Plan {
 	p.timelineConsumer = p.timelineConsumer.clone()
 	p.local = p.local.clone()
 	p.reference = p.reference.clone()
-	if p.schema != nil {
-		schema := *p.schema
-		p.schema = &schema
-	}
+	p.schema = p.schema.snapshot()
 	p.children = append([]DeclarationID(nil), p.children...)
 	for i := range p.children {
 		p.children[i] = cloneDeclaration(p.children[i])

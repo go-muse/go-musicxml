@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
@@ -447,6 +448,33 @@ func timelineNamedType(name string) ComponentID {
 func timelineShapeError(owner, name string) error {
 	return contract("timeline schema roles", fmt.Sprintf("missing, ambiguous or incompatible exact %s/%s declaration shape", owner, name))
 }
+
+// This construction cache belongs to one compiled schema, never a global
+// digest map. Its pointer may be copied with a caller's immutable schema handle;
+// its sync.Once must not be copied. Plans retain only Bindings, not this cache.
+type timelineBindingsCache struct {
+	once     sync.Once
+	bindings *timelineBindings
+	err      error
+}
+
+func (schema *CompiledSchema) sharedTimelineBindings() (*timelineBindings, error) {
+	if schema == nil || schema.timeline == nil {
+		return compileTimelineBindings(schema)
+	}
+	cache := schema.timeline
+	cache.once.Do(func() {
+		cache.bindings, cache.err = compileTimelineBindings(schema)
+	})
+	// ConfigurationError is public and caller-mutable. Do not expose the
+	// memoized error itself, even on the first unsuccessful construction.
+	if config, ok := cache.err.(*ConfigurationError); ok {
+		copy := *config
+		return nil, &copy
+	}
+	return cache.bindings, cache.err
+}
+
 func compileTimelineBindings(schema *CompiledSchema) (*timelineBindings, error) {
 	if schema == nil || schema.kernel == nil || schema.assembly != AssemblyMusicXML {
 		return nil, contract("timeline schema", "compiled MusicXML assembly required")
@@ -571,6 +599,11 @@ func compileTimelineBindings(schema *CompiledSchema) (*timelineBindings, error) 
 		out.Roles[shape.role] = append(out.Roles[shape.role], us...)
 	}
 	for i := range out.Roles {
+		// Preserve the canonical empty collections previously produced by plan
+		// cloning: immutable sharing must not change sealed plan digests.
+		if out.Roles[i] == nil {
+			out.Roles[i] = []SchemaUse{}
+		}
 		slices.SortFunc(out.Roles[i], func(a, b SchemaUse) int { return compareLocalDeclaration(a.Declaration, b.Declaration) })
 	}
 	return out, nil
@@ -608,29 +641,6 @@ func (b *timelineBindings) declarations(role timelineRole) []DeclarationID {
 		out[i] = u.Declaration
 	}
 	return out
-}
-func cloneTimelineUse(u SchemaUse) SchemaUse {
-	u.Declaration = cloneDeclaration(u.Declaration)
-	u.Name = QName{strings.Clone(u.Name.Space), strings.Clone(u.Name.Local)}
-	u.OwnerType = cloneComponent(u.OwnerType)
-	u.DeclaredType = cloneComponent(u.DeclaredType)
-	return u
-}
-func (b *timelineBindings) clone() *timelineBindings {
-	if b == nil {
-		return nil
-	}
-	out := *b
-	for i, us := range b.Roles {
-		out.Roles[i] = make([]SchemaUse, len(us))
-		for j, u := range us {
-			out.Roles[i][j] = cloneTimelineUse(u)
-		}
-	}
-	for i, h := range b.Hierarchies {
-		out.Hierarchies[i] = timelineHierarchy{Root: cloneTimelineUse(h.Root), Part: cloneTimelineUse(h.Part), Measure: cloneTimelineUse(h.Measure), Content: cloneComponent(h.Content), PartID: cloneLocalAttribute(h.PartID)}
-	}
-	return &out
 }
 func timelineUseSize(u SchemaUse) int64 {
 	return int64(512 + len(u.Name.Space) + len(u.Name.Local) + len(u.Declaration.OwnerOccurrence) + len(u.Declaration.Occurrence) + len(u.OwnerType.Name.Space) + len(u.OwnerType.Name.Local) + len(u.OwnerType.Occurrence) + len(u.DeclaredType.Name.Space) + len(u.DeclaredType.Name.Local) + len(u.DeclaredType.Occurrence))

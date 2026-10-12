@@ -50,7 +50,7 @@ func NewTimelinePlan(spec TimelinePlanSpec) (Plan, error) {
 	if len(spec.PartOwners) != 2 {
 		return Plan{}, contract("timeline part owners", "both exact score hierarchy owner references required")
 	}
-	bindings, err := compileTimelineBindings(spec.Schema)
+	bindings, err := spec.Schema.sharedTimelineBindings()
 	if err != nil {
 		return Plan{}, err
 	}
@@ -72,7 +72,7 @@ func newTimelineConsumer(kind planKind, spec TimelineConsumerSpec) (Plan, error)
 	if !catalogKey(spec.Provider) {
 		return Plan{}, contract("timeline consumer", "exact provider rule revision required")
 	}
-	bindings, err := compileTimelineBindings(spec.Schema)
+	bindings, err := spec.Schema.sharedTimelineBindings()
 	if err != nil {
 		return Plan{}, err
 	}
@@ -111,11 +111,9 @@ func (p *timelinePlan) clone() *timelinePlan {
 		return nil
 	}
 	q := *p
-	if p.Schema != nil {
-		s := *p.Schema
-		q.Schema = &s
-	}
-	q.Bindings = p.Bindings.clone()
+	q.Schema = p.Schema.snapshot()
+	// Bindings are compiled, private and immutable; only caller-supplied owner
+	// references need their own retained copy.
 	q.PartOwners = make([]ReferenceOwner, len(p.PartOwners))
 	for i, r := range p.PartOwners {
 		q.PartOwners[i] = ReferenceOwner{Declaration: cloneDeclaration(r.Declaration), Attribute: cloneLocalAttribute(r.Attribute), Rule: cloneKey(r.Rule)}
@@ -128,12 +126,8 @@ func (p *timelineConsumerPlan) clone() *timelineConsumerPlan {
 		return nil
 	}
 	q := *p
-	if p.Schema != nil {
-		s := *p.Schema
-		q.Schema = &s
-	}
+	q.Schema = p.Schema.snapshot()
 	q.Provider = cloneKey(p.Provider)
-	q.Bindings = p.Bindings.clone()
 	return &q
 }
 func (p *timelinePlan) size() int64 {
@@ -305,7 +299,8 @@ func (p Plan) timelineConsumerSchema() *CompiledSchema {
 }
 
 // boundSchema accounts and interns every retained schema handle, including plans
-// that are not selected by a profile. Timeline bindings remain plan-owned.
+// that are not selected by a profile. Immutable timeline bindings are shared,
+// but remain conservatively accounted for by every plan that retains them.
 func (p Plan) boundSchema() *CompiledSchema {
 	if p.kind == planXSD {
 		return p.schema

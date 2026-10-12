@@ -37,6 +37,7 @@ type assessmentDefinitions struct {
 	rules    []validation.RuleDefinition
 	profiles []validation.Profile
 	plans    []validation.PlanBinding
+	schemas  map[validation.Assembly]*validation.CompiledSchema
 }
 
 func buildModelAssessmentEngine() (*validation.Engine, error) {
@@ -76,6 +77,7 @@ func buildModelAssessmentDefinitions() (*assessmentDefinitions, error) {
 	}
 	var rules []validation.RuleDefinition
 	var plans []validation.PlanBinding
+	schemas := make(map[validation.Assembly]*validation.CompiledSchema)
 	for _, input := range []struct {
 		assembly validation.Assembly
 		data     validation.SchemaData
@@ -88,6 +90,7 @@ func buildModelAssessmentDefinitions() (*assessmentDefinitions, error) {
 		if err != nil {
 			return nil, err
 		}
+		schemas[input.assembly] = schema
 		for _, operation := range []struct {
 			check                       validation.XSDCheck
 			title, explanation, locator string
@@ -159,5 +162,5 @@ func buildModelAssessmentDefinitions() (*assessmentDefinitions, error) {
 			plans = append(plans, local.plans...)
 		}
 	}
-	return &assessmentDefinitions{rules: rules, profiles: []validation.Profile{modelXSD, modelLocal, sourceLocal}, plans: plans}, nil
+	return &assessmentDefinitions{rules: rules, profiles: []validation.Profile{modelXSD, modelLocal, sourceLocal}, plans: plans, schemas: schemas}, nil
 }

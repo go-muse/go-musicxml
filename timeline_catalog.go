@@ -42,10 +42,7 @@ func buildTimelineAssessmentEngine() (*validation.Engine, error) {
 		p.NormativeClosure = "Explicit bounded MusicXML 4.0 source or current-model XSD, local clauses and shared exact musical timeline/effective-state assessment. The timeline provider finalizes typed part/measure/event and state evidence; its pass does not assert that every optional or ambiguous musical fact is known. The selected mandatory consumers are principal-note chord duration bounds and explicit numeral-key or applicable encoded effective-key presence at the harmony's unshifted score origin. Ordinary exact rational positions are not rounded. Ambiguous, missing, invalid or unsupported dependent evidence remains incomplete. Existing target-specific XSD, current-model representation, source syntax and unread external-DTD limits remain active. Broader repeat/span/intent/layout/playback consumers, packages, linked scores, external dictionaries and remaining normative closure are excluded. Opus selection assesses only that document, never linked scores. Counts are selected predicate instances, not complete MusicXML coverage."
 		profiles = append(profiles, p)
 	}
-	schema, err := validation.CompileSchema(validation.AssemblyMusicXML, scoreValidationSchema)
-	if err != nil {
-		return nil, err
-	}
+	schema := d.schemas[validation.AssemblyMusicXML]
 	b := newLocalCatalogBuilder(schema)
 	parts := b.namedElementUses("part")
 	if len(parts) != 2 {
