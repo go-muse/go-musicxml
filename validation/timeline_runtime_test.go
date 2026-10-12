@@ -94,3 +94,37 @@ func TestTimelineRuntimeChordDoesNotBorrowLaterDivisions(t *testing.T) {
 		t.Fatalf("chord chose unapproved normalization %s", got.Value)
 	}
 }
+
+func TestTimelineRuntimeChangedUnitsWithinProvenRegion(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	d1 := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	d2 := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 41, stateAtomicDecimal(t, 2, 1)))
+	backup := stateNode(b, timelineRoleBackup, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 61, stateAtomicDecimal(t, 2, 1)))
+	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, d1, runtimeNote(t, b, 30, 4, false), d2, runtimeNote(t, b, 50, 4, false), backup, runtimeNote(t, b, 70, 2, false))); err != nil {
+		t.Fatal(err)
+	}
+	for id, want := range map[NodeID]string{30: "0", 40: "4", 50: "4", 60: "6", 70: "5"} {
+		got := service.Facts[id].Position
+		if got.State != EvidenceKnown || got.Value.Offset.String() != want {
+			t.Errorf("node%d=%+v,want%s", id, got, want)
+		}
+	}
+}
+func TestTimelineRuntimeSamePositionDivisionsConflict(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	var events []*factNode
+	for i, value := range []int64{1, 2, 1} {
+		id := NodeID(20 + i*10)
+		events = append(events, stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, stateAtomicDecimal(t, value, 1))))
+	}
+	events = append(events, runtimeNote(t, b, 60, 2, false), runtimeNote(t, b, 70, 1, false))
+	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, events...)); err != nil {
+		t.Fatal(err)
+	}
+	if got := service.Facts[60].Duration; got.State != EvidenceUnknown {
+		t.Fatalf("sameposition conflict normalized=%+v", got)
+	}
+	if got := service.Facts[70].Position; got.State != EvidenceUnknown {
+		t.Fatalf("sameposition conflict advanced=%+v", got)
+	}
+}
