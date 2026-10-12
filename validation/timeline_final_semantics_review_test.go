@@ -167,3 +167,27 @@ func TestTimelineFinalReviewConditionalInstrumentProperties(t *testing.T) {
 		}
 	}
 }
+
+// Figured-bass anchors follow regular notes in score order. An unresolved
+// trailing figure at q=2 cannot belong to a proved earlier group anchored at
+// q=0, so it cannot erase that group's independent chain origin.
+func TestTimelineFinalReviewLaterFigureGapKeepsEarlierChain(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	first := stateNode(b, timelineRoleFiguredBass, 25, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, 27, stateAbsent[Atomic]()), stateNode(b, timelineRoleFiguredBassDuration, 26, stateAtomicDecimal(t, 1, 1)))
+	trailing := stateNode(b, timelineRoleFiguredBass, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, 42, stateAbsent[Atomic]()), stateNode(b, timelineRoleFiguredBassDuration, 41, stateAtomicDecimal(t, 1, 1)))
+	block := runtimeBlock(b, 0, attrs, first, runtimeNote(t, b, 30, 2, false), trailing)
+	if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.finalizeTimingOrigins(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+		t.Fatal(err)
+	}
+	early, late := svc.FiguredBassOrigins[25], svc.FiguredBassOrigins[40]
+	if early.Anchor.State != EvidenceKnown || early.Anchor.Value.Node != 30 || early.AnchorPosition.Value.Offset.String() != "0" || late.CursorOrigin.Value.Offset.String() != "2" {
+		t.Fatalf("fixture facts wrong: early=%+v late=%+v", early, late)
+	}
+	if early.ChainPosition.State != EvidenceKnown || early.ChainPosition.Value.Offset.String() != "0" || early.ChainEnd.State != EvidenceKnown || early.ChainEnd.Value.Offset.String() != "1" {
+		t.Fatalf("later unrelated anchor gap erased proved prefix chain: %+v", early)
+	}
+}
