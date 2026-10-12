@@ -46,7 +46,15 @@ type statePublication[T any] struct {
 	Provenance []stateProvenance
 	bytes      int64
 }
+
+// Displaced gaps do not inherit the source measure's interval confinement.
+// Optional exact lower/upper witnesses constrain applicability and repair.
+type stateGapPlacement struct {
+	Displaced    bool
+	Lower, Upper *musicalPosition
+}
 type stateGap struct {
+	Placement stateGapPlacement
 	// Position bounds a known publisher exactly; nil retains interval uncertainty.
 	Position                  *musicalPosition
 	Part                      NodeRef
@@ -394,6 +402,11 @@ func addStateGap[T any](ctx context.Context, s *Session, h *stateHistory[T], g s
 	if g.Part.Node == 0 || g.FirstMeasure > g.LastMeasure || !stateValidScope(g.Scope) || g.Availability.State == EvidenceKnown || g.Availability.State == EvidenceAbsent {
 		return contract("timeline gap", "bounded affected interval and causal unavailable evidence required")
 	}
+	for _, bound := range [2]*musicalPosition{g.Placement.Lower, g.Placement.Upper} {
+		if bound != nil && (!g.Placement.Displaced || !stateValidPosition(*bound) || bound.Part != g.Part) {
+			return contract("timeline gap", "displaced bound must match canonical part")
+		}
+	}
 	if g.Position != nil && (!stateValidPosition(*g.Position) || g.Position.Part != g.Part || g.FirstMeasure != g.Position.MeasureOrdinal || g.LastMeasure != g.Position.MeasureOrdinal) {
 		return contract("timeline gap", "exact point must match its part and interval")
 	}
@@ -508,36 +521,31 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 		return out, e
 	}
 	if !partial {
-		for _, g := range history.Gaps {
-			if e = s.step(ctx, 1); e != nil {
-				return out, e
-			}
-			if g.Part == pos.Part && g.Position != nil && g.Position.UnprovedFrame {
+		checkGaps := func(gaps []stateGap) error {
+			for _, g := range gaps {
+				if err := s.step(ctx, 1); err != nil {
+					return err
+				}
+				if g.Part != pos.Part || !(g.Placement.Displaced || g.Position != nil && g.Position.UnprovedFrame) {
+					continue
+				}
 				applies, err := stateApplies(ctx, s, g.Scope, staff)
 				if err != nil {
-					return out, err
+					return err
 				}
 				if applies {
 					partial = true
 					break
 				}
 			}
+			return nil
+		}
+		if e = checkGaps(history.Gaps); e != nil {
+			return out, e
 		}
 		for _, gaps := range extra {
-			for _, g := range gaps {
-				if e = s.step(ctx, 1); e != nil {
-					return out, e
-				}
-				if g.Part == pos.Part && g.Position != nil && g.Position.UnprovedFrame {
-					applies, err := stateApplies(ctx, s, g.Scope, staff)
-					if err != nil {
-						return out, err
-					}
-					if applies {
-						partial = true
-						break
-					}
-				}
+			if e = checkGaps(gaps); e != nil {
+				return out, e
 			}
 		}
 	}

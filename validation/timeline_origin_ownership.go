@@ -39,10 +39,13 @@ func ownOriginCauses(ctx context.Context, s *Session, value reflect.Value) error
 		if value.IsNil() {
 			return nil
 		}
-		if value.Type() != reflect.TypeFor[*DecisionRef]() {
+		cost := int64(128)
+		if value.Type() == reflect.TypeFor[*musicalPosition]() {
+			cost = 512
+		} else if value.Type() != reflect.TypeFor[*DecisionRef]() {
 			return contract("timeline origin", "unexpected mutable pointer")
 		}
-		if err := s.retain(128); err != nil {
+		if err := s.retain(cost); err != nil {
 			return err
 		}
 		copy := reflect.New(value.Type().Elem())

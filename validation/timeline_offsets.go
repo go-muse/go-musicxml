@@ -25,6 +25,10 @@ func (s *Session) offsetPosition(ctx context.Context, base Evidence[musicalPosit
 	if offset.State == EvidenceAbsent {
 		return base, nil
 	}
+	if offset.State == EvidenceKnown && offset.Value.Valid() && offset.Value.value.Sign() == 0 {
+		// Zero displacement is independent of an unavailable unit scale.
+		return base, nil
+	}
 	position := base
 	if offset.State != EvidenceKnown {
 		position = timelinePositionDependency(position, timelineGapAs[Decimal, musicalPosition](offset, "timeline-offset-unavailable"))
@@ -87,17 +91,24 @@ func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *
 	if err = service.State.proveFramePosition(ctx, s, &position); err != nil {
 		return err
 	}
+	var placement stateGapPlacement
+	if position.State != EvidenceKnown {
+		placement, err = s.playbackGapPlacement(ctx, base, own, units, directionOffset, directionSound)
+		if err != nil {
+			return err
+		}
+	}
 	if block.part.State == EvidenceKnown {
 		if position.State == EvidenceKnown {
 			err = service.State.readInstrumentChanges(ctx, s, b, sound, position.Value)
 		} else {
-			err = service.State.gapInstrumentChanges(ctx, s, b, sound, block.part.Value, block.ordinal, position)
+			err = service.State.gapInstrumentChanges(ctx, s, b, sound, block.part.Value, block.ordinal, position, placement)
 		}
 		if err != nil {
 			return err
 		}
 	}
-	fact := timelineEventFact{
+	fact := timelineEventFact{Placement: placement,
 		Part: block.part, Origin: base, Position: position, Units: units,
 		Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent},
 		Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: Evidence[NodeRef]{State: EvidenceAbsent}, PrincipalDuration: Evidence[Rational]{State: EvidenceAbsent},
@@ -112,6 +123,15 @@ func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *
 // declarations override their parent direction offset relative to the original
 // cursor. This is only score placement, not interpretation of a performance.
 func (s *Session) playbackOffsetPosition(ctx context.Context, base Evidence[musicalPosition], own, units, directionOffset Evidence[Decimal], directionSound Evidence[bool]) (Evidence[musicalPosition], error) {
+	offset, flag := playbackOffsetChoice(own, directionOffset, directionSound)
+	position, err := s.offsetPosition(ctx, base, offset, units)
+	if err != nil {
+		return Evidence[musicalPosition]{}, err
+	}
+	return timelinePositionDependency(position, flag), nil
+}
+
+func playbackOffsetChoice(own, directionOffset Evidence[Decimal], directionSound Evidence[bool]) (Evidence[Decimal], Evidence[musicalPosition]) {
 	offset := own
 	flag := Evidence[musicalPosition]{State: EvidenceKnown}
 	if own.State == EvidenceAbsent {
@@ -129,11 +149,45 @@ func (s *Session) playbackOffsetPosition(ctx context.Context, base Evidence[musi
 			}
 		}
 	}
-	position, err := s.offsetPosition(ctx, base, offset, units)
-	if err != nil {
-		return Evidence[musicalPosition]{}, err
+	return offset, flag
+}
+
+// An unavailable selected signed displacement does not inherit the source
+// measure's confinement. When only an unknown sound flag prevents placement,
+// the independently known unchanged and shifted points bound both alternatives.
+// No direction is inferred from a missing/unavailable positive-units proof.
+func (s *Session) playbackGapPlacement(ctx context.Context, base Evidence[musicalPosition], own, units, directionOffset Evidence[Decimal], directionSound Evidence[bool]) (stateGapPlacement, error) {
+	if err := s.step(ctx, 1); err != nil {
+		return stateGapPlacement{}, err
 	}
-	return timelinePositionDependency(position, flag), nil
+	offset, flag := playbackOffsetChoice(own, directionOffset, directionSound)
+	if offset.State == EvidenceAbsent || offset.State == EvidenceKnown && offset.Value.Valid() && offset.Value.value.Sign() == 0 {
+		return stateGapPlacement{}, nil
+	}
+	bounds := stateGapPlacement{Displaced: true}
+	if base.State != EvidenceKnown || offset.State != EvidenceKnown || units.State != EvidenceKnown || flag.State == EvidenceKnown {
+		return bounds, nil
+	}
+	if !units.Value.Valid() || units.Value.value.Sign() <= 0 {
+		return bounds, nil
+	}
+	shifted, err := s.offsetPosition(ctx, base, offset, units)
+	if err != nil {
+		return bounds, err
+	}
+	if shifted.State != EvidenceKnown {
+		return bounds, nil
+	}
+	lower, upper := base.Value, shifted.Value
+	cmp, err := s.rationalCmp(ctx, lower.Offset, upper.Offset)
+	if err != nil {
+		return bounds, err
+	}
+	if cmp > 0 {
+		lower, upper = upper, lower
+	}
+	bounds.Lower, bounds.Upper = &lower, &upper
+	return bounds, nil
 }
 
 // readListeningAt retains an independently addressable listening origin without
@@ -165,7 +219,14 @@ func (service *timelineService) readListeningAt(ctx context.Context, s *Session,
 	if err = service.State.proveFramePosition(ctx, s, &position); err != nil {
 		return err
 	}
-	return service.storeFact(ctx, s, listening.header.ID, timelineEventFact{
+	var placement stateGapPlacement
+	if position.State != EvidenceKnown {
+		placement, err = s.playbackGapPlacement(ctx, base, own, units, directionOffset, directionSound)
+		if err != nil {
+			return err
+		}
+	}
+	return service.storeFact(ctx, s, listening.header.ID, timelineEventFact{Placement: placement,
 		Part: block.part, Origin: base, Position: position, Units: units,
 		Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent},
 		Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: Evidence[NodeRef]{State: EvidenceAbsent}, PrincipalDuration: Evidence[Rational]{State: EvidenceAbsent},

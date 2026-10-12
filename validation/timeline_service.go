@@ -20,6 +20,7 @@ type timelineService struct {
 const timelineFactReserveBytes int64 = 1536
 
 type timelineEventFact struct {
+	Placement stateGapPlacement
 	// Origin is the unshifted cursor/onset coordinate. Position may describe
 	// a direction/harmony display displacement or a sound/listening effect.
 	Origin                      Evidence[musicalPosition]
@@ -67,6 +68,11 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 	defer func() { _ = s.account.Release(BudgetBufferedBytes, timelineFactReserveBytes) }()
 	if err := s.retain(timelineFactReserveBytes); err != nil {
 		return err
+	}
+	if fact.Placement.Lower != nil || fact.Placement.Upper != nil {
+		if err := ownOrigin(ctx, s, &fact.Placement); err != nil {
+			return err
+		}
 	}
 	var err error
 	if fact.Origin, err = stateOwnEvidence(ctx, s, fact.Origin); err != nil {

@@ -139,7 +139,7 @@ func retainRecordStatement[T any](ctx context.Context, s *Session, store *record
 			continue
 		}
 		value = stateConditionalValue(value, record.TimeOnly)
-		gap := stateGap{Part: record.Part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: scope, Availability: availability}
+		gap := stateGap{Placement: record.Placement, Part: record.Part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: scope, Availability: availability}
 		if record.Position.State == EvidenceKnown {
 			gap.Position = &record.Position.Value
 		}

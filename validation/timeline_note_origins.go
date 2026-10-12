@@ -47,6 +47,7 @@ type graceTimingOrigin struct {
 	MakeTime                      noteTimingDelta
 }
 type noteTimingOrigin struct {
+	Placement            stateGapPlacement
 	Note                 NodeRef
 	Part                 Evidence[NodeRef]
 	Staff                Evidence[Integer]
@@ -210,7 +211,7 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 	if err := s.retain(timelineNoteReserveBytes); err != nil {
 		return err
 	}
-	out := noteTimingOrigin{Note: NodeRef{s.documentID, note.header.ID}, Part: fact.Part, Staff: fact.Staff, Voice: fact.Voice, ScoreOnset: fact.Position, Duration: fact.Duration, GraceTiming: Evidence[graceTimingOrigin]{State: EvidenceAbsent}}
+	out := noteTimingOrigin{Placement: fact.Placement, Note: NodeRef{s.documentID, note.header.ID}, Part: fact.Part, Staff: fact.Staff, Voice: fact.Voice, ScoreOnset: fact.Position, Duration: fact.Duration, GraceTiming: Evidence[graceTimingOrigin]{State: EvidenceAbsent}}
 	_, chord := r.child(note, timelineRoleNoteChord)
 	out.Chord = noteTimingPresence(chord)
 	grace, present := r.child(note, timelineRoleNoteGrace)

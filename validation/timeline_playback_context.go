@@ -14,6 +14,7 @@ const (
 )
 
 type playbackOrigin struct {
+	Placement       stateGapPlacement
 	Source, Measure NodeRef
 	Part            Evidence[NodeRef]
 	MeasureOrdinal  uint64
@@ -82,7 +83,7 @@ type timelinePlaybackContext struct {
 }
 
 func playbackOriginAt(s *Session, n *factNode, block timelineMeasureBlock, fact timelineEventFact) playbackOrigin {
-	return playbackOrigin{Source: NodeRef{s.documentID, n.header.ID}, Measure: NodeRef{s.documentID, block.measure.header.ID}, Part: fact.Part, MeasureOrdinal: block.ordinal, Position: fact.Position, Staff: fact.Staff, Voice: fact.Voice, Order: n.end.Order, MeasureComplete: block.complete}
+	return playbackOrigin{Placement: fact.Placement, Source: NodeRef{s.documentID, n.header.ID}, Measure: NodeRef{s.documentID, block.measure.header.ID}, Part: fact.Part, MeasureOrdinal: block.ordinal, Position: fact.Position, Staff: fact.Staff, Voice: fact.Voice, Order: n.end.Order, MeasureComplete: block.complete}
 }
 
 // Only these freshly assembled record types may transfer their owned slices to
@@ -287,7 +288,7 @@ func playbackPublish[T any](ctx context.Context, s *Session, h *stateHistory[T],
 			gap = stateUnknown[bool]("playback-position-unavailable")
 		}
 		gap = stateMergeGap(gap, stateUnavailable[T, bool](stateConditionalValue(value, &condition)))
-		return addStateGap(ctx, s, h, stateGap{Part: origin.Part.Value, FirstMeasure: origin.MeasureOrdinal, LastMeasure: origin.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: gap})
+		return addStateGap(ctx, s, h, stateGap{Placement: origin.Placement, Part: origin.Part.Value, FirstMeasure: origin.MeasureOrdinal, LastMeasure: origin.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: gap})
 	}
 	// Keep the guard on the publication so conditional changes cannot repair
 	// prior unavailable state. Projection belongs to the property query.

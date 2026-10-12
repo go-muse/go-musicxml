@@ -8,6 +8,13 @@ import "context"
 // unplaced publishers retain the existing conservative interval behavior.
 func (h *timelineState) gapCouldApply(ctx context.Context, s *Session, gap stateGap, query musicalPosition, inclusive bool) (bool, error) {
 	if gap.Position == nil {
+		if gap.Placement.Displaced {
+			if gap.Placement.Lower == nil {
+				return true, s.step(ctx, 1)
+			}
+			order, err := h.positionOrder(ctx, s, *gap.Placement.Lower, query)
+			return order.possiblyApplies(inclusive), err
+		}
 		member, err := h.frameMember(ctx, s, query)
 		return !member || gap.FirstMeasure <= query.MeasureOrdinal, err
 	}
@@ -19,6 +26,13 @@ func (h *timelineState) gapCouldApply(ctx context.Context, s *Session, gap state
 }
 func (h *timelineState) gapStrictlyBefore(ctx context.Context, s *Session, gap stateGap, selected musicalPosition) (bool, error) {
 	if gap.Position == nil {
+		if gap.Placement.Displaced {
+			if gap.Placement.Upper == nil {
+				return false, s.step(ctx, 1)
+			}
+			order, err := h.positionOrder(ctx, s, *gap.Placement.Upper, selected)
+			return order == stateBefore, err
+		}
 		member, err := h.frameMember(ctx, s, selected)
 		return member && selected.MeasureOrdinal > gap.LastMeasure, err
 	}
@@ -44,7 +58,7 @@ func (h *timelineState) addUnresolvedInstrumentChange(ctx context.Context, s *Se
 	if record.Position.State == EvidenceKnown && (!stateValidPosition(record.Position.Value) || record.Position.Value.Part != record.Part) {
 		return contract("instrument gap", "matching positioned part required")
 	}
-	gap := stateGap{Part: record.Part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[NodeRef, bool](record.Instrument)}
+	gap := stateGap{Placement: record.Placement, Part: record.Part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[NodeRef, bool](record.Instrument)}
 	if record.Position.State == EvidenceKnown {
 		gap.Position = &record.Position.Value
 		gap.FirstMeasure = record.Position.Value.MeasureOrdinal
