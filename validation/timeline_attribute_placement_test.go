@@ -109,3 +109,42 @@ func TestTimelineBroadGapPlacementPropagation(t *testing.T) {
 		})
 	}
 }
+
+func TestTimelinePublisherServiceGapPlacement(t *testing.T) {
+	for _, all := range []bool{false, true} {
+		t.Run(map[bool]string{false: "sound-only", true: "all-families"}[all], func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			service := &timelineService{}
+			at := statePosition(t, 0, 1, 1)
+			placement := stateGapPlacement{Displaced: true, Upper: &at}
+			gap := Evidence[musicalPosition]{State: EvidenceUnsupported, Reason: "unit-excursion"}
+			var err error
+			if all {
+				err = service.gapAllPublishers(context.Background(), s, at.Part, 1, gap, placement)
+			} else {
+				err = service.gapSoundPublishers(context.Background(), s, at.Part, 1, gap, placement)
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			groups := [][]stateGap{service.State.InstrumentGaps, service.State.MIDIUnknownGaps, service.Playback.Tempo.Gaps, service.Playback.Dynamics.Gaps, service.Playback.Pizzicato.Gaps}
+			if all {
+				groups = append(groups, service.State.Keys.Gaps)
+			} else if len(service.State.Keys.Gaps) != 0 {
+				t.Fatal("sound-only gap affected key")
+			}
+			for i, g := range groups {
+				if len(g) != 1 || !g[0].Placement.Displaced || g[0].Placement.Upper == nil || g[0].Placement.Upper == &at {
+					t.Fatalf("family%d lost owned placement: %+v", i, g)
+				}
+			}
+			at.Offset = mustRational(t, 99, 1)
+			for i, g := range groups {
+				if g[0].Placement.Upper.Offset.String() != "1" {
+					t.Fatalf("family%d aliases caller", i)
+				}
+			}
+		})
+	}
+}
