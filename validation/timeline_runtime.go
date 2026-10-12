@@ -258,9 +258,13 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		}
 		units = inherited.Value
 	}
-	unitGap, err := timelineUnitPlacementGap(r, block, units)
+	unitGate, err := timelineUnitPlacementGap(r, block, units)
 	if err != nil {
 		return err
+	}
+	unitGap := Evidence[Decimal]{State: EvidenceAbsent}
+	if unitGate.From == 0 && unitGate.Gap.State != "" {
+		unitGap = unitGate.Gap
 	}
 	principalUnits := Evidence[Decimal]{State: EvidenceAbsent}
 	if block.complete.State != EvidenceKnown || !block.complete.Value {
@@ -278,6 +282,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		}
 		if block.complete.State != EvidenceKnown || !block.complete.Value {
 			cursor.interrupt(block.complete)
+		}
+		if unitGate.From == event.header.ID && unitGate.Gap.State != "" {
+			unitGap = unitGate.Gap
 		}
 		fact := timelineEventFact{Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: stateUnknown[NodeRef]("timeline-principal-unavailable"), PrincipalDuration: stateUnknown[Rational]("timeline-principal-unavailable")}
 		if event.header.Declaration.State != EvidenceKnown {

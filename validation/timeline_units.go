@@ -12,21 +12,26 @@ func (s *Session) sameTimelineUnits(ctx context.Context, a, b Evidence[Decimal])
 	return a.Value.text == b.Value.text, nil
 }
 
+type timelineUnitGate struct {
+	Gap  Evidence[Decimal]
+	From NodeID // Zero means a late publisher can affect earlier non-origin facts.
+}
+
 // This detector proves a sufficient region-local class without choosing how
 // durations cross differing units. A changed declaration may start a region at
 // the proven high-water mark; a rewind must remain entirely within that region.
 // No provisional coordinates escape this complete preflight.
-func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inherited Evidence[Decimal]) (Evidence[Decimal], error) {
+func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inherited Evidence[Decimal]) (timelineUnitGate, error) {
 	current := inherited
 	cursor := newTimelineCursor()
 	high, region := timelineZero, timelineZero
 	regionChanged := false
-	unavailable := func() Evidence[Decimal] {
-		return Evidence[Decimal]{State: EvidenceUnsupported, Reason: "divisions-rewind-placement-unresolved"}
+	unavailable := func(from NodeID) timelineUnitGate {
+		return timelineUnitGate{Gap: Evidence[Decimal]{State: EvidenceUnsupported, Reason: "divisions-rewind-placement-unresolved"}, From: from}
 	}
 	for _, event := range block.content.children {
 		if !r.step(1) {
-			return Evidence[Decimal]{}, r.err
+			return timelineUnitGate{}, r.err
 		}
 		if r.matches(event, timelineRoleAttributes) {
 			next := stateDecimalValue(r.childScalar(event, timelineRoleAttributesDivisions))
@@ -35,23 +40,23 @@ func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inheri
 			}
 			same, err := r.s.sameTimelineUnits(r.ctx, current, next)
 			if err != nil {
-				return Evidence[Decimal]{}, err
+				return timelineUnitGate{}, err
 			}
 			if !same && current.State == EvidenceKnown && next.State == EvidenceKnown {
 				if cursor.Position.State != EvidenceKnown {
-					return stateUnavailable[Rational, Decimal](cursor.Position), nil
+					return timelineUnitGate{}, nil
 				}
 				cmp, err := r.s.rationalCmp(r.ctx, cursor.Position.Value, high)
 				if err != nil {
-					return Evidence[Decimal]{}, err
+					return timelineUnitGate{}, err
 				}
 				if cmp < 0 {
-					return unavailable(), nil
+					return unavailable(0), nil
 				}
 				region = cursor.Position.Value
 				atOrigin, err := r.s.rationalCmp(r.ctx, region, timelineZero)
 				if err != nil {
-					return Evidence[Decimal]{}, err
+					return timelineUnitGate{}, err
 				}
 				regionChanged = atOrigin != 0
 			}
@@ -86,40 +91,40 @@ func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inheri
 		var err error
 		movement.Duration, err = r.s.normalizeTimelineDuration(r.ctx, raw, current)
 		if err != nil {
-			return Evidence[Decimal]{}, err
+			return timelineUnitGate{}, err
 		}
 		departure := cursor.Position
 		if _, err = cursor.advance(r.ctx, r.s, movement); err != nil {
-			return Evidence[Decimal]{}, err
+			return timelineUnitGate{}, err
 		}
 		if movement.Kind == timelineMovementBackup && regionChanged {
 			if departure.State != EvidenceKnown || cursor.Position.State != EvidenceKnown {
-				return timelineGapAs[Rational, Decimal](cursor.Position, "timeline-position-unavailable"), nil
+				return timelineUnitGate{}, nil
 			}
 			// A zero displacement is invariant; otherwise both interior departure and
 			// landing at or above the region start are necessary for this proof.
 			zero, err := r.s.rationalCmp(r.ctx, movement.Duration.Value, timelineZero)
 			if err != nil {
-				return Evidence[Decimal]{}, err
+				return timelineUnitGate{}, err
 			}
 			if zero != 0 {
 				from, err := r.s.rationalCmp(r.ctx, departure.Value, region)
 				if err != nil {
-					return Evidence[Decimal]{}, err
+					return timelineUnitGate{}, err
 				}
 				to, err := r.s.rationalCmp(r.ctx, cursor.Position.Value, region)
 				if err != nil {
-					return Evidence[Decimal]{}, err
+					return timelineUnitGate{}, err
 				}
 				if from <= 0 || to < 0 {
-					return unavailable(), nil
+					return unavailable(event.header.ID), nil
 				}
 			}
 		}
 		if cursor.Position.State == EvidenceKnown {
 			cmp, err := r.s.rationalCmp(r.ctx, cursor.Position.Value, high)
 			if err != nil {
-				return Evidence[Decimal]{}, err
+				return timelineUnitGate{}, err
 			}
 			if cmp > 0 {
 				high = cursor.Position.Value
@@ -127,7 +132,7 @@ func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inheri
 		}
 	}
 	if r.err != nil {
-		return Evidence[Decimal]{}, r.err
+		return timelineUnitGate{}, r.err
 	}
-	return Evidence[Decimal]{State: EvidenceAbsent}, nil
+	return timelineUnitGate{}, nil
 }
