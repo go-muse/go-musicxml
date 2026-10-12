@@ -174,3 +174,82 @@ func TestGraceLaterUnavailableEvidencePreservesBoundedDonors(t *testing.T) {
 		}
 	}
 }
+
+func TestGraceBoundedDonorsUseScoreOrderDespiteEarlierSerialization(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		s, v, b, blocks := graceNeighborFixture(t, order, stateKnown("a"))
+		block := blocks[0]
+		following := v.NoteOrigins[40]
+		following.ScoreEnd = timelineAt(block, stateKnown(mustRational(t, 2, 1)))
+		following.Duration = stateKnown(mustRational(t, 1, 1))
+		v.NoteOrigins[40] = following
+		later := following
+		later.Note.Node = 60
+		later.ScoreOnset = timelineAt(block, stateKnown(mustRational(t, 2, 1)))
+		later.ScoreEnd = timelineAt(block, stateKnown(mustRational(t, 3, 1)))
+		v.NoteOrigins[60] = later
+		block.content.children = append([]*factNode{
+			stateNode(b, timelineRoleForward, 70, stateAbsent[Atomic]()), runtimeNote(t, b, 60, 3, false),
+			stateNode(b, timelineRoleBackup, 80, stateAbsent[Atomic]()),
+		}, block.content.children...)
+		if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+			t.Fatal(err)
+		}
+		got := v.GraceNeighbors[20]
+		if got.Previous.Note.State != EvidenceKnown || got.Previous.Note.Value.Node != 10 || got.Following.Note.State != EvidenceKnown || got.Following.Note.Value.Node != 40 {
+			t.Fatalf("serialization hid exact score neighbors: %+v", got)
+		}
+	}
+}
+
+func TestGraceUnplacedMixedVoiceGapKeepsCanonicalMeasureScope(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		for _, explicit := range []bool{false, true} {
+			for _, ordinal := range []uint64{0, 1} {
+				voice, otherVoice := stateAbsent[string](), stateKnown("a")
+				if explicit {
+					voice, otherVoice = otherVoice, voice
+				}
+				s, v, b, blocks := graceNeighborFixture(t, order, voice)
+				extra := runtimeNote(t, b, 60, 3, false)
+				bad := v.NoteOrigins[40]
+				bad.Note.Node, bad.Voice = 60, otherVoice
+				bad.ScoreOnset = stateUnknown[musicalPosition]("unplaced-mixed-note")
+				v.NoteOrigins[60] = bad
+				if ordinal == 0 {
+					blocks[0].content.children = append(blocks[0].content.children, extra)
+				} else {
+					blocks = append(blocks, runtimeBlock(b, ordinal, extra))
+				}
+				if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+					t.Fatal(err)
+				}
+				got := v.GraceNeighbors[20]
+				for _, side := range []graceDonorTiming{got.Previous, got.Following} {
+					if (side.Note.State == EvidenceKnown) != (ordinal == 1) {
+						t.Fatalf("wrong mixed-presence scope, explicit=%v ordinal=%d: %+v", explicit, ordinal, got)
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestGraceDuplicateCanonicalMeasureDomainIsCausalNotContract(t *testing.T) {
+	s, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	extra := runtimeNote(t, b, 60, 3, false)
+	duplicate := runtimeBlock(b, 0, extra)
+	duplicate.measure.header.ID = 900
+	n := v.NoteOrigins[40]
+	n.Note.Node = 60
+	n.ScoreOnset = timelineAt(duplicate, stateKnown(timelineZero))
+	n.ScoreEnd = timelineAt(duplicate, stateKnown(mustRational(t, 1, 1)))
+	v.NoteOrigins[60] = n
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, append(blocks, duplicate)); err != nil {
+		t.Fatal(err)
+	}
+	got := v.GraceNeighbors[20]
+	if got.Previous.Note.State == EvidenceKnown || got.Following.Note.State == EvidenceKnown {
+		t.Fatalf("duplicate canonical domain fabricated donor: %+v", got)
+	}
+}

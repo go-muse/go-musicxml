@@ -223,15 +223,29 @@ func TestGraceNeighborsLongGroupDefaultBudgetsAndAtomicFailure(t *testing.T) {
 			t.Fatalf("retained after cleanup: %d", got)
 		}
 	}
-	for _, at := range []int{10, 50, 100, 250} {
-		_, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
-		s := rationalSession(t, Budgets{})
-		defer s.cleanup()
+	// Derive the interruption grid from this implementation's successful path.
+	// Fixed poll counts silently stop testing cancellation when work is reduced.
+	baselineSession, baseline, bindings, domain := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	measured := &rationalCancelContext{Context: context.Background(), at: int(^uint(0) >> 1)}
+	if err := baseline.resolveGraceNeighbors(measured, baselineSession, bindings, domain); err != nil {
+		t.Fatal(err)
+	}
+	baselineSession.cleanup()
+	if measured.calls == 0 {
+		t.Fatal("successful finalization did not poll cancellation")
+	}
+	for at := 1; at <= measured.calls; at++ {
+		s, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
 		ctx := &rationalCancelContext{Context: context.Background(), at: at}
 		if err := v.resolveGraceNeighbors(ctx, s, b, blocks); !errors.Is(err, context.Canceled) || len(v.GraceNeighbors) != 0 {
-			t.Fatalf("partial publication at %d: %v", at, err)
+			t.Fatalf("partial publication at %d/%d: %v", at, measured.calls, err)
+		}
+		s.cleanup()
+		if got := rationalUsage(t, s, BudgetBufferedBytes); got != 0 {
+			t.Fatalf("cancellation retained %d bytes at %d", got, at)
 		}
 	}
+	t.Logf("checked every cancellation poll: %d", measured.calls)
 	_, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
 	s := rationalSession(t, Budgets{MaxContextFacts: 1})
 	defer s.cleanup()
