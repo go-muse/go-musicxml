@@ -441,30 +441,11 @@ func (service *timelineService) figuredBassUnits(ctx context.Context, s *Session
 	return result, nil
 }
 
-// Duration is expressed in divisions. Where cursor-time and anchor-time unit
-// interpretations agree, normalization is exact without choosing an unstated
-// precedence. Disputed or missing unit evidence remains explicit.
+// Figured bass takes its score position from its regular-note anchor. Duration
+// uses the divisions effective at that documented position; the serialization
+// cursor's units remain provenance and are not a competing unit origin.
 func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimingOrigin, cache map[figuredBassDurationKey]Evidence[Rational]) error {
-	out.DurationUnits = out.CursorUnits
-	if out.CursorUnits.State != EvidenceKnown || out.AnchorUnits.State != EvidenceKnown {
-		out.DurationUnits = Evidence[Decimal]{State: EvidenceKnown}
-		for _, value := range []Evidence[Decimal]{out.CursorUnits, out.AnchorUnits} {
-			if value.State != EvidenceKnown {
-				gap := timelineGapAs[Decimal, Decimal](value, "figured-bass-units-unavailable")
-				if stateAvailabilityRank(gap.State) > stateAvailabilityRank(out.DurationUnits.State) {
-					out.DurationUnits = gap
-				}
-			}
-		}
-	} else {
-		same, err := s.sameTimelineUnits(ctx, out.CursorUnits, out.AnchorUnits)
-		if err != nil {
-			return err
-		}
-		if !same {
-			out.DurationUnits = stateUnknown[Decimal]("figured-bass-duration-unit-origin-unresolved")
-		}
-	}
+	out.DurationUnits = out.AnchorUnits
 	out.Duration = Evidence[Rational]{State: EvidenceAbsent}
 	out.End = Evidence[musicalPosition]{State: EvidenceAbsent}
 	if out.DurationRaw.State == EvidenceAbsent {
