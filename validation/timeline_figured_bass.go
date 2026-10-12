@@ -513,7 +513,7 @@ func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimin
 // anchor and independent duration survive when chain membership is unproved.
 func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pending map[NodeID]figuredBassTimingOrigin, ids []NodeID) error {
 	counts := map[NodeID]int{}
-	partGaps := map[NodeID]Evidence[NodeRef]{}
+	partGaps := map[NodeRef][]NodeID{}
 	globalGap := Evidence[NodeRef]{State: EvidenceKnown}
 	for _, id := range ids {
 		if !r.step(1) {
@@ -523,13 +523,16 @@ func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pendi
 		if out.Anchor.State == EvidenceKnown {
 			counts[out.Anchor.Value.Node]++
 		} else if out.Part.State == EvidenceKnown {
-			gap := partGaps[out.Part.Value.Node]
-			if gap.State == "" {
-				gap.State = EvidenceKnown
+			if !r.step(int64(len(out.Part.Value.DocumentID))) {
+				return r.err
 			}
-			partGaps[out.Part.Value.Node] = graceStronger(gap, timelineGapAs[NodeRef, NodeRef](out.Anchor, "figured-bass-chain-anchor-unavailable"))
+			// Only IDs are indexed here; positions and causes remain in the
+			// already admitted private staged record. Append peak is covered
+			// by the finalizer's per-figure scratch reservation.
+			partGaps[out.Part.Value] = append(partGaps[out.Part.Value], id)
 		} else {
 			globalGap = graceStronger(globalGap, timelineGapAs[NodeRef, NodeRef](out.Part, "figured-bass-chain-part-unavailable"))
+			globalGap = graceStronger(globalGap, timelineGapAs[NodeRef, NodeRef](out.Anchor, "figured-bass-chain-anchor-unavailable"))
 		}
 	}
 	for _, domain := range domains {
@@ -564,8 +567,21 @@ func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pendi
 			}
 			group = graceStronger(group, globalGap)
 			if first.Part.State == EvidenceKnown {
-				if gap, ok := partGaps[first.Part.Value.Node]; ok {
-					group = graceStronger(group, gap)
+				if !r.step(int64(len(first.Part.Value.DocumentID))) {
+					return r.err
+				}
+				for _, id := range partGaps[first.Part.Value] {
+					if !r.step(1) {
+						return r.err
+					}
+					other := pending[id]
+					relevant, err := figuredBassChainGapRelevant(r, other, first.AnchorPosition)
+					if err != nil {
+						return err
+					}
+					if relevant {
+						group = graceStronger(group, timelineGapAs[NodeRef, NodeRef](other.Anchor, "figured-bass-chain-anchor-unavailable"))
+					}
 				}
 			}
 			position := first.AnchorPosition
@@ -602,4 +618,29 @@ func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pendi
 		}
 	}
 	return r.err
+}
+
+// The first following regular note cannot precede a figure's proved cursor
+// position. Thus a strictly later gap cannot share an earlier known anchor,
+// regardless of XML serialization order. An unplaced or incoherently owned gap
+// still may be relevant and is never discarded by a lexical guess.
+func figuredBassChainGapRelevant(r *stateReader, gap figuredBassTimingOrigin, anchor Evidence[musicalPosition]) (bool, error) {
+	if !r.step(1) {
+		return false, r.err
+	}
+	if gap.Part.State != EvidenceKnown || gap.CursorOrigin.State != EvidenceKnown || anchor.State != EvidenceKnown {
+		return true, nil
+	}
+	at, target := gap.CursorOrigin.Value, anchor.Value
+	if !stateValidPosition(at) || !stateValidPosition(target) || at.Part != gap.Part.Value {
+		return true, nil
+	}
+	if at.Part != target.Part {
+		return false, nil
+	}
+	if at.MeasureOrdinal == target.MeasureOrdinal && at.Measure != target.Measure {
+		return true, nil
+	}
+	cmp, err := figuredBassScoreCompare(r.ctx, r.s, at, target)
+	return cmp <= 0, err
 }
