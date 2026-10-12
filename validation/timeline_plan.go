@@ -9,7 +9,7 @@ const (
 	planChordDuration planKind = "musicxml-chord-duration"
 	planNumeralKey    planKind = "musicxml-numeral-key"
 	// Changing the sealed role set or reviewed semantics requires a new revision.
-	timelineSemanticRevision uint32 = 1
+	timelineSemanticRevision uint32 = 2
 )
 
 // TimelinePlanSpec binds the sealed MusicXML timeline service to one immutable

@@ -56,6 +56,9 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 	if fact.Position, err = stateOwnEvidence(ctx, s, fact.Position); err != nil {
 		return err
 	}
+	if fact.End, err = stateOwnEvidence(ctx, s, fact.End); err != nil {
+		return err
+	}
 	if fact.Duration, err = stateOwnEvidence(ctx, s, fact.Duration); err != nil {
 		return err
 	}

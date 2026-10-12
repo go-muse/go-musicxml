@@ -124,6 +124,10 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			continue
 		}
 		movement := timelineMovement{Subject: NodeRef{s.documentID, event.header.ID}, Kind: timelineMovementOther, Chord: Evidence[bool]{State: EvidenceKnown, Value: false}, Grace: Evidence[bool]{State: EvidenceKnown, Value: false}, Duration: Evidence[Rational]{State: EvidenceAbsent}}
+		selectedNoteUnits := units
+		if unitGap.State != EvidenceAbsent {
+			selectedNoteUnits = unitGap
+		}
 		switch {
 		case r.matches(event, timelineRoleNote):
 			movement.Kind = timelineMovementNote
@@ -140,20 +144,16 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				movement.Duration = Evidence[Rational]{State: EvidenceAbsent}
 			} else {
 				var err error
-				selectedUnits := units
-				if unitGap.State != EvidenceAbsent {
-					selectedUnits = unitGap
-				}
 				if movement.Chord.State == EvidenceKnown && movement.Chord.Value && principalUnits.State == EvidenceKnown {
 					same, e := s.sameTimelineUnits(ctx, principalUnits, units)
 					if e != nil {
 						return e
 					}
 					if !same {
-						selectedUnits = Evidence[Decimal]{State: EvidenceUnsupported, Reason: "chord-divisions-placement-unresolved"}
+						selectedNoteUnits = Evidence[Decimal]{State: EvidenceUnsupported, Reason: "chord-divisions-placement-unresolved"}
 					}
 				}
-				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, selectedUnits)
+				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, selectedNoteUnits)
 				if err != nil {
 					return err
 				}
@@ -209,6 +209,17 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		fact.Duration = cursorFact.Duration
 		fact.Principal = cursorFact.Principal
 		fact.PrincipalDuration = cursorFact.PrincipalDuration
+		if movement.Kind == timelineMovementNote {
+			switch {
+			case movement.Grace.State == EvidenceKnown && movement.Grace.Value:
+				fact.End = Evidence[musicalPosition]{State: EvidenceAbsent}
+			case movement.Chord.State == EvidenceKnown && !movement.Chord.Value:
+				fact.End = timelineAt(block, cursor.Position)
+			}
+			if err := service.readNoteOrigins(ctx, s, b, event, fact, selectedNoteUnits); err != nil {
+				return err
+			}
+		}
 		base := fact.Position
 		if r.matches(event, timelineRoleSound) {
 			if err := service.readSoundAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
@@ -303,5 +314,8 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			return err
 		}
 	}
-	return r.err
+	if r.err != nil {
+		return r.err
+	}
+	return service.resolveFiguredBassOrigins(ctx, s, b, block)
 }
