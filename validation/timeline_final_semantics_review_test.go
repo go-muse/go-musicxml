@@ -999,3 +999,49 @@ func TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses(t *testing.T) {
 		})
 	}
 }
+
+func TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence(t *testing.T) {
+	for _, mode := range []string{"negative-ignores-future-change", "positive-ignores-repaired-past", "positive-keeps-future-invalid-cause"} {
+		t.Run(mode, func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			attrs := func(id NodeID, value Evidence[Atomic]) *factNode {
+				return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, value))
+			}
+			cause := &DecisionRef{Rule: RuleKey{"review-invalid-excursion-units", 1}, Subject: NodeRef{"d", 81}}
+			var blocks []timelineMeasureBlock
+			wantDuration, wantPosition := "10", "11"
+			switch mode {
+			case "negative-ignores-future-change":
+				backup := stateNode(b, timelineRoleBackup, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 51, stateAtomicDecimal(t, 4, 1)))
+				blocks = []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, stateAtomicDecimal(t, 1, 1)), runtimeNote(t, b, 30, 2, false)), runtimeBlock(b, 1, backup, runtimeNote(t, b, 60, 1, false)), runtimeBlock(b, 2, attrs(80, stateAtomicDecimal(t, 2, 1)), runtimeNote(t, b, 90, 2, false))}
+				wantDuration, wantPosition = "4", "-4"
+			case "positive-ignores-repaired-past":
+				forward := stateNode(b, timelineRoleForward, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 51, stateAtomicDecimal(t, 10, 1)))
+				blocks = []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, stateAtomicDecimal(t, 2, 1)), runtimeNote(t, b, 30, 2, false)), runtimeBlock(b, 1, attrs(40, stateAtomicDecimal(t, 1, 1)), runtimeNote(t, b, 45, 1, false), forward, runtimeNote(t, b, 60, 1, false)), runtimeBlock(b, 2, attrs(80, stateAtomicDecimal(t, 1, 1)), runtimeNote(t, b, 90, 1, false))}
+			case "positive-keeps-future-invalid-cause":
+				forward := stateNode(b, timelineRoleForward, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 51, stateAtomicDecimal(t, 10, 1)))
+				invalid := Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-future-divisions", Cause: cause}
+				blocks = []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, stateAtomicDecimal(t, 1, 1)), runtimeNote(t, b, 30, 1, false), forward, runtimeNote(t, b, 60, 1, false)), runtimeBlock(b, 1, attrs(80, invalid))}
+			}
+			for _, block := range blocks {
+				if err := svc.readMeasure(ctx, s, b, block); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+				t.Fatal(err)
+			}
+			movement, note := svc.Facts[50], svc.Facts[60]
+			if mode == "positive-keeps-future-invalid-cause" {
+				for label, got := range map[string]Evidence[bool]{"duration": stateUnavailable[Rational, bool](movement.Duration), "descendant": stateUnavailable[musicalPosition, bool](note.Position)} {
+					if got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != *cause {
+						t.Fatalf("%s lost actual potentially reached unit cause: %+v", label, got)
+					}
+				}
+			} else if movement.Duration.State != EvidenceKnown || movement.Duration.Value.String() != wantDuration || note.Position.State != EvidenceKnown || note.Position.Value.Offset.String() != wantPosition {
+				t.Fatalf("opposite-side different units erased a directional constant-unit proof: movement=%+v note=%+v", movement, note)
+			}
+		})
+	}
+}
