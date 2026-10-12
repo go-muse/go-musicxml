@@ -448,3 +448,38 @@ func TestIndependentTimelineOriginCausalOwnership(t *testing.T) {
 		}
 	})
 }
+
+func TestIndependentTimelineNoteOriginCausalPrecedence(t *testing.T) {
+	originCause := &DecisionRef{Rule: RuleKey{ID: "origin-proof", Revision: 1}, Subject: NodeRef{"d", 77}}
+	durationCause := &DecisionRef{Rule: RuleKey{ID: "duration-proof", Revision: 1}, Subject: NodeRef{"d", 78}}
+	for _, tc := range []struct {
+		name   string
+		origin Evidence[musicalPosition]
+		delta  Evidence[Rational]
+		want   *DecisionRef
+	}{
+		{"invalid-origin-unknown-delta", Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "invalid-origin", Cause: originCause}, stateUnknown[Rational]("unknown-delta"), originCause},
+		{"invalid-origin-absent-delta", Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "invalid-origin", Cause: originCause}, stateAbsent[Rational](), originCause},
+		{"unknown-origin-invalid-delta", stateUnknown[musicalPosition]("unknown-origin"), Evidence[Rational]{State: EvidenceInvalid, Reason: "invalid-duration", Cause: durationCause}, durationCause},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			got, err := s.noteTimingShift(context.Background(), tc.origin, tc.delta)
+			if err != nil || got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != *tc.want {
+				t.Fatalf("strong causal failure lost: got=%+v err=%v want=%+v", got, err, tc.want)
+			}
+		})
+	}
+	t.Run("unknown-percentage-invalid-duration", func(t *testing.T) {
+		s, _, b, fact := independentOriginFixture(t, Budgets{})
+		bend := stateNode(b, timelineRoleTechnicalBend, 100, stateAbsent[Atomic]())
+		stateAttribute(b, bend, timelineRoleBendFirstBeat, stateAtomicDecimal(t, 25, 1).Value)
+		bend.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceUnknown, Reason: "unknown-percentage"}
+		r := &stateReader{ctx: context.Background(), s: s, b: b}
+		got := r.notePercent(bend, timelineRoleBendFirstBeat, noteTimingFirstBeat, fact.Position, Evidence[Rational]{State: EvidenceInvalid, Reason: "invalid-duration", Cause: durationCause})
+		if r.err != nil || got.Position.State != EvidenceInvalid || got.Position.Cause == nil || *got.Position.Cause != *durationCause {
+			t.Fatalf("invalid duration replaced by unknown percentage: got=%+v err=%v", got.Position, r.err)
+		}
+	})
+}
