@@ -253,3 +253,45 @@ func TestGraceDuplicateCanonicalMeasureDomainIsCausalNotContract(t *testing.T) {
 		t.Fatalf("duplicate canonical domain fabricated donor: %+v", got)
 	}
 }
+
+func TestGracePotentialDeclarationGapsAggregateWithinCanonicalBlock(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		for _, later := range []bool{false, true} {
+			_, v, b, blocks := graceNeighborFixture(t, order, stateKnown("a"))
+			s := rationalSession(t, Budgets{MaxBufferedBytes: 64 << 10})
+			s.documentID = "d"
+			defer s.cleanup()
+			block := blocks[0]
+			if later {
+				block = runtimeBlock(b, 1)
+				blocks = append(blocks, block)
+			}
+			cause := &DecisionRef{Rule: RuleKey{"declaration", 1}, Subject: NodeRef{"d", 9000}}
+			for i := 0; i < 512; i++ {
+				node := stateNode(b, timelineRoleNote, NodeID(10000+i), stateAbsent[Atomic]())
+				node.header.Declaration = stateUnknown[DeclarationID]("unavailable-note-declaration")
+				if i == 511 {
+					node.header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-note-declaration", Cause: cause}
+				}
+				block.content.children = append(block.content.children, node)
+			}
+			if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+				t.Fatal(err)
+			}
+			got := v.GraceNeighbors[20]
+			for _, side := range []graceDonorTiming{got.Previous, got.Following} {
+				if later {
+					if side.Note.State != EvidenceKnown {
+						t.Fatalf("later declarations erased local donor: %+v", got)
+					}
+				} else if side.Note.State != EvidenceInvalid || side.Note.Cause == nil || *side.Note.Cause != *cause || side.Note.Cause == cause {
+					t.Fatalf("aggregated strongest cause lost ownership: %+v", got)
+				}
+			}
+			s.cleanup()
+			if got := rationalUsage(t, s, BudgetBufferedBytes); got != 0 {
+				t.Fatalf("scratch retained after cleanup: %d", got)
+			}
+		}
+	}
+}

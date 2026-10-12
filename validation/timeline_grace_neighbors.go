@@ -18,9 +18,13 @@ type graceNeighborTiming struct {
 	Previous, Following graceDonorTiming
 }
 
+// Closed shapes are guarded in TestGraceNeighborScratchAdmissionCoversClosedShape.
+// Each exact note contributes at most one semantic/overlap gap plus one mixed-
+// presence gap. Each block contributes sequence, coverage, and one aggregated
+// completeness/declaration gap, including blocks without exact note facts.
 const (
 	timelineGraceScratchPerNote  int64 = 4096
-	timelineGraceScratchPerBlock int64 = 2048
+	timelineGraceScratchPerBlock int64 = 4096
 )
 
 type graceStreamKey struct {
@@ -210,6 +214,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	defer func() { _ = s.account.Release(BudgetBufferedBytes, scratch) }()
 	streams := []graceStream{}
 	indices := map[graceStreamKey]int{}
+	sequence := map[NodeID]int{}
 	parts := map[NodeRef]*gracePartDomain{}
 	orphanIDs := []NodeID{}
 	orphanGaps := map[NodeID]Evidence[NodeRef]{}
@@ -246,13 +251,17 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 		if complete.State == EvidenceKnown && complete.Value {
 			complete = r.complete(block.content)
 		}
+		blockGap := Evidence[NodeRef]{State: EvidenceKnown}
 		if complete.State != EvidenceKnown || !complete.Value {
-			part.gaps = append(part.gaps, graceScopedGap{Value: timelineGapAs[bool, NodeRef](complete, "grace-domain-incomplete"), From: block.ordinal, Through: block.ordinal})
+			blockGap = timelineGapAs[bool, NodeRef](complete, "grace-domain-incomplete")
 		}
 		for _, event := range block.content.children {
 			if !r.matches(event, timelineRoleNote) {
 				if event.header.Declaration.State != EvidenceKnown && r.potential(event, timelineRoleNote) {
-					part.gaps = append(part.gaps, graceScopedGap{Value: timelineGapAs[DeclarationID, NodeRef](event.header.Declaration, "grace-note-declaration-unavailable"), From: block.ordinal, Through: block.ordinal})
+					// Potential notes were not counted as exact note allocations.
+					// Their common canonical measure is one scoped dependency;
+					// retain its strongest cause without growing per-event scratch.
+					blockGap = graceStronger(blockGap, timelineGapAs[DeclarationID, NodeRef](event.header.Declaration, "grace-note-declaration-unavailable"))
 				}
 				continue
 			}
@@ -320,7 +329,11 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				indices[key] = i
 				streams = append(streams, graceStream{key: key})
 			}
+			sequence[id] = len(sequence)
 			streams[i].notes = append(streams[i].notes, id)
+		}
+		if blockGap.State != EvidenceKnown {
+			part.gaps = append(part.gaps, graceScopedGap{Value: blockGap, From: block.ordinal, Through: block.ordinal})
 		}
 	}
 	if r.err != nil {
@@ -347,7 +360,8 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 		}
 	}
 	// Score order, not backup/forward serialization, defines the local stream.
-	// Stable equal-position ordering retains the encoded grace-run sequence.
+	// Explicit original-sequence ties preserve encoded grace runs while ordinary
+	// sorting keeps both comparisons and the post-cancellation drain O(n log n).
 	for i := range streams {
 		stream := &streams[i]
 		levels := int64(1)
@@ -366,7 +380,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			return r.err
 		}
 		var interrupted error
-		sort.SliceStable(stream.notes, func(i, j int) bool {
+		sort.Slice(stream.notes, func(i, j int) bool {
 			if interrupted != nil {
 				return false
 			}
@@ -380,7 +394,13 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			}
 			var cmp int
 			cmp, interrupted = s.gracePositionOrder(ctx, a, z)
-			return interrupted == nil && cmp < 0
+			if interrupted != nil {
+				return false
+			}
+			if cmp == 0 {
+				return sequence[stream.notes[i]] < sequence[stream.notes[j]]
+			}
+			return cmp < 0
 		})
 		if interrupted != nil {
 			return interrupted
