@@ -291,3 +291,16 @@ func TestGraceNeighborIdentityDoesNotClaimContinuousTime(t *testing.T) {
 		t.Fatalf("chronological donor lost across forward gap: %+v", got)
 	}
 }
+
+func TestGraceNeighborsForeignPositionIsGapNotProviderContract(t *testing.T) {
+	s, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	n := v.NoteOrigins[10]
+	n.ScoreOnset.Value.Part.Node = 999
+	v.NoteOrigins[10] = n
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+		t.Fatalf("assessed foreign position escaped as provider contract: %v", err)
+	}
+	if got := v.GraceNeighbors[20].Previous.Note; got.State != EvidenceUnknown {
+		t.Fatalf("foreign donor: %+v", got)
+	}
+}
