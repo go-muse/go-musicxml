@@ -15,7 +15,7 @@ type layoutStaffBucket struct {
 func (l *layoutScopes) readStaffLayouts(owner *factNode, buckets map[string]layoutStaffBucket, scratch *int64) (Evidence[bool], error) {
 	gap := Evidence[bool]{State: EvidenceAbsent}
 	if owner == nil {
-		return gap, nil
+		return gap, l.r.err
 	}
 	r := l.r
 	complete := r.enumerated(owner)
@@ -98,6 +98,9 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		localScratch = &scratch
 	}
 	print, selected := l.child(b.content, "print")
+	if r.err != nil {
+		return r.err
+	}
 	part := b.part.Value.Node
 	local, ok := l.staffOverrides[part]
 	if b.part.State != EvidenceKnown {
@@ -132,6 +135,11 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 				gap = layoutMergeSelection(gap, more)
 			}
 		}
+	}
+	// A last failed candidate match has no next loop iteration to expose the
+	// sticky error. Do not turn that interrupted read into retained gap state.
+	if r.err != nil {
+		return r.err
 	}
 	if gap.State != EvidenceAbsent && b.part.State == EvidenceKnown {
 		if l.staffGaps == nil {

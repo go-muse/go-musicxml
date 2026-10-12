@@ -66,8 +66,17 @@ withhold only that identity in the same musical part. The result is identical
 whether the duplicate note occurs before, between, or after the extend endpoints.
 There is no inferred line reset at an extend start, note, or measure boundary.
 An unproved part domain can compete with unnamed runs in all musical parts.
-Unavailable lyric identity evidence can also be unnamed; its exact evidence and
-cause propagate instead of becoming a synthetic duplicate diagnosis.
+Unavailable lyric identity evidence can also be unnamed when neither attribute
+independently excludes absence; its exact evidence and cause propagate instead
+of becoming a synthetic duplicate diagnosis. A separately Known string number
+or name excludes the wholly unnamed identity even when the other attribute is
+unavailable. This includes an explicitly empty name, but not a mistyped Known
+atomic value. The affected endpoint's full identity remains unavailable with its
+own causal evidence; the independent exclusion does not repair that identity.
+Unavailable lyrics contribute their own evidence to the unnamed candidate rather
+than a shared endpoint-local wildcard bucket, which can contain independently
+excluded siblings. Inserting excluded named siblings before or after the actual
+possible candidate cannot change the candidate's evidence state or cause.
 
 This is a bounded correspondence policy, not a declaration that such lyrics are
 invalid. Independently explicit name/number identities retain the existing exact

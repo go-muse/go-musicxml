@@ -254,3 +254,110 @@ func TestSpanRound3ExplicitDuplicateRemainsEndpointLocal(t *testing.T) {
 		}
 	}
 }
+
+func TestSpanRound3PartialExplicitLyricIdentityExcludesUnnamed(t *testing.T) {
+	engine, profiles := spanTestEngine(t, true)
+	for _, hierarchy := range []string{"partwise", "timewise"} {
+		for _, name := range []string{"absent", `name="verse"`, `name=""`} {
+			t.Run(hierarchy+"/"+name, func(t *testing.T) {
+				attrs := `number=""`
+				if name != "absent" {
+					attrs += " " + name
+				}
+				body := `<attributes><divisions>1</divisions></attributes>` + timelineNote("1", "", `<lyric><text>a</text><extend type="start"/></lyric>`) + timelineNote("1", "", `<lyric `+attrs+`><text>x</text></lyric>`) + timelineNote("1", "", `<lyric><extend type="stop"/></lyric>`)
+				spanBothWithEngine(t, engine, profiles, spanRound3Score(hierarchy, body), true, "", func(t *testing.T, r validation.Report) {
+					es := spanResults(r, validation.SpanLyricExtend)
+					if len(es) != 2 {
+						t.Fatal(es)
+					}
+					for _, e := range es {
+						if name == "absent" {
+							if e.Association.State != validation.EvidenceInvalid || e.Association.Cause == nil || len(e.Members) != 0 {
+								t.Errorf("possibly unnamed cause lost: %+v", e)
+							}
+						} else if e.Association.State != validation.EvidenceKnown || len(e.Members) != 2 {
+							t.Errorf("known name cannot match wholly unnamed: %+v", e)
+						}
+					}
+					invalidFound := false
+					for _, finding := range r.Findings {
+						if finding.Outcome == validation.OutcomeFail {
+							invalidFound = true
+						}
+					}
+					if !invalidFound {
+						t.Fatal("invalid explicit lyric scalar was erased")
+					}
+				})
+			})
+		}
+	}
+}
+
+func TestSpanRound3PartialNamedExtendPreservesOwnCause(t *testing.T) {
+	engine, profiles := spanTestEngine(t, true)
+	for _, hierarchy := range []string{"partwise", "timewise"} {
+		for _, name := range []string{`name="verse"`, `name=""`} {
+			t.Run(hierarchy+"/"+name, func(t *testing.T) {
+				body := `<attributes><divisions>1</divisions></attributes>` + timelineNote("1", "", `<lyric number="" `+name+`><text>a</text><extend type="start"/></lyric>`) + timelineNote("1", "", `<lyric number="1" `+name+`><extend type="stop"/></lyric>`)
+				spanBothWithEngine(t, engine, profiles, spanRound3Score(hierarchy, body), true, "", func(t *testing.T, r validation.Report) {
+					es := spanResults(r, validation.SpanLyricExtend)
+					if len(es) != 2 {
+						t.Fatal(es)
+					}
+					for _, e := range es {
+						if e.Association.State != validation.EvidenceInvalid || e.Association.Cause == nil || len(e.Members) != 0 {
+							t.Fatal("partial named endpoint cause lost", e)
+						}
+						found := false
+						for _, f := range r.Findings {
+							if f.Rule == e.Association.Cause.Rule && f.Subject == e.Association.Cause.Subject && f.Outcome == validation.OutcomeFail {
+								found = true
+							}
+						}
+						if !found {
+							t.Fatal("dangling named endpoint cause", e)
+						}
+					}
+				})
+			})
+		}
+	}
+}
+
+func TestSpanRound3ExcludedSiblingCannotSupplyUnnamedCause(t *testing.T) {
+	engine, profiles := spanTestEngine(t, true)
+	for _, hierarchy := range []string{"partwise", "timewise"} {
+		for _, name := range []string{`name="verse"`, `name=""`} {
+			for _, excludedFirst := range []bool{false, true} {
+				t.Run(hierarchy+"/"+name+"/"+map[bool]string{false: "possible-first", true: "excluded-first"}[excludedFirst], func(t *testing.T) {
+					excluded := `<lyric number="" ` + name + `><text>x</text></lyric>`
+					possible := `<lyric number=""><text>y</text></lyric>`
+					middle := possible + excluded
+					wantedSyllable := 1
+					if excludedFirst {
+						middle = excluded + possible
+						wantedSyllable = 2
+					}
+					body := `<attributes><divisions>1</divisions></attributes>` + timelineNote("1", "", `<lyric><text>a</text><extend type="start"/></lyric>`) + timelineNote("1", "", middle) + timelineNote("1", "", `<lyric><extend type="stop"/></lyric>`)
+					spanBothWithEngine(t, engine, profiles, spanRound3Score(hierarchy, body), true, "", func(t *testing.T, r validation.Report) {
+						syllables := spanResults(r, validation.SpanLyricSyllable)
+						if len(syllables) != 3 {
+							t.Fatal("lyric owner fixtures", syllables)
+						}
+						want := syllables[wantedSyllable].Domain.Value
+						es := spanResults(r, validation.SpanLyricExtend)
+						if len(es) != 2 {
+							t.Fatal(es)
+						}
+						for _, e := range es {
+							if e.Association.State != validation.EvidenceInvalid || e.Association.Cause == nil || e.Association.Cause.Subject != want || len(e.Members) != 0 {
+								t.Errorf("excluded sibling supplied cause: %+v want owner %+v", e.Association, want)
+							}
+						}
+					})
+				})
+			}
+		}
+	}
+}

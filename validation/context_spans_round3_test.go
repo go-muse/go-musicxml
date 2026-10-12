@@ -360,3 +360,122 @@ func TestSpanRound3LyricDomainIndexScratchAndCancellation(t *testing.T) {
 		}
 	}
 }
+
+func TestSpanRound3PartialLyricIdentityRetainsKnownAxis(t *testing.T) {
+	for _, state := range []EvidenceState{EvidenceInvalid, EvidenceUnknown, EvidenceUnsupported} {
+		for _, knownAxis := range []contextRole{spanRole_lyric_name, spanRole_lyric_number} {
+			texts := []string{"verse", ""}
+			if knownAxis == spanRole_lyric_number {
+				texts = []string{"1", "01"}
+			}
+			for _, knownText := range texts {
+				t.Run(string(state)+"/"+string(knownAxis)+"/"+knownText, func(t *testing.T) {
+					r := spanUnitReader(t)
+					note := spanUnitNode(r, spanRole_note, nil)
+					lyric := spanUnitNode(r, spanRole_noteLyric, note)
+					part := NodeRef{r.s.documentID, 1001}
+					scratch := spanScratch{s: r.s}
+					defer scratch.release()
+					index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}
+					unavailableAxis := spanRole_lyric_number
+					if knownAxis == spanRole_lyric_number {
+						unavailableAxis = spanRole_lyric_name
+					}
+					cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: NodeRef{r.s.documentID, lyric.header.ID}}
+					value := Evidence[Atomic]{State: state, Reason: "partial-identity-gap", Cause: cause}
+					spanUnitAttribute(r, lyric, knownAxis, spanString(knownText))
+					spanUnitAttribute(r, lyric, unavailableAxis, value)
+					index.record(r, lyric)
+					if r.err != nil {
+						t.Fatal(r.err)
+					}
+					if gap, ok := index.unnamed[part]; ok {
+						t.Errorf("independent known axis discarded: %+v", gap)
+					}
+					identity, available := index.endpoint(r, lyric)
+					if identity != "" || available.State != state || available.Reason != value.Reason || available.Cause == nil || *available.Cause != *cause {
+						t.Errorf("affected exact identity lost its cause: %q %+v", identity, available)
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestSpanRound3PartialLyricIdentityNeedsKnownStringAxis(t *testing.T) {
+	for _, axis := range []contextRole{spanRole_lyric_name, spanRole_lyric_number} {
+		for _, kind := range []AtomicKind{AtomicBoolean, AtomicInteger, ""} {
+			t.Run(string(axis)+"/"+string(kind), func(t *testing.T) {
+				r := spanUnitReader(t)
+				note := spanUnitNode(r, spanRole_note, nil)
+				lyric := spanUnitNode(r, spanRole_noteLyric, note)
+				part := NodeRef{r.s.documentID, 1001}
+				scratch := spanScratch{s: r.s}
+				defer scratch.release()
+				index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}
+				unavailableAxis := spanRole_lyric_number
+				if axis == spanRole_lyric_number {
+					unavailableAxis = spanRole_lyric_name
+				}
+				cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: NodeRef{r.s.documentID, lyric.header.ID}}
+				spanUnitAttribute(r, lyric, axis, Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: kind}})
+				spanUnitAttribute(r, lyric, unavailableAxis, Evidence[Atomic]{State: EvidenceInvalid, Reason: "partial-invalid", Cause: cause})
+				index.record(r, lyric)
+				if r.err != nil {
+					t.Fatal(r.err)
+				}
+				gap, ok := index.unnamed[part]
+				if !ok || gap.State != EvidenceInvalid || gap.Cause == nil || *gap.Cause != *cause {
+					t.Fatalf("mistyped Known axis invented exclusion: %+v present=%t", gap, ok)
+				}
+			})
+		}
+	}
+}
+
+func TestSpanRound3ExcludedUnavailableSiblingKeepsUnnamedCauseIndependent(t *testing.T) {
+	for _, state := range []EvidenceState{EvidenceUnknown, EvidenceInvalid, EvidenceUnsupported} {
+		for _, excludedFirst := range []bool{false, true} {
+			t.Run(string(state)+fmt.Sprint(excludedFirst), func(t *testing.T) {
+				r := spanUnitReader(t)
+				note := spanUnitNode(r, spanRole_note, nil)
+				part := NodeRef{r.s.documentID, 1001}
+				scratch := spanScratch{s: r.s}
+				defer scratch.release()
+				index := spanLyricIndex{scratch: &scratch, domains: map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: part}}}
+				var excluded []*factNode
+				for _, named := range []struct {
+					axis contextRole
+					text string
+				}{{spanRole_lyric_name, "verse"}, {spanRole_lyric_name, ""}, {spanRole_lyric_number, "1"}} {
+					n := spanUnitNode(r, spanRole_noteLyric, note)
+					unavailableAxis := spanRole_lyric_number
+					if named.axis == spanRole_lyric_number {
+						unavailableAxis = spanRole_lyric_name
+					}
+					cause := &DecisionRef{Rule: RuleKey{"excluded-identity", 1}, Subject: NodeRef{r.s.documentID, n.header.ID}}
+					spanUnitAttribute(r, n, unavailableAxis, Evidence[Atomic]{State: EvidenceInvalid, Reason: "excluded-identity", Cause: cause})
+					spanUnitAttribute(r, n, named.axis, spanString(named.text))
+					excluded = append(excluded, n)
+				}
+				possible := spanUnitNode(r, spanRole_noteLyric, note)
+				wantedCause := &DecisionRef{Rule: RuleKey{"possible-number", 1}, Subject: NodeRef{r.s.documentID, possible.header.ID}}
+				spanUnitAttribute(r, possible, spanRole_lyric_number, Evidence[Atomic]{State: state, Reason: "possibly-unnamed", Cause: wantedCause})
+				nodes := append([]*factNode{possible}, excluded...)
+				if excludedFirst {
+					nodes = append(excluded, possible)
+				}
+				for _, n := range nodes {
+					index.record(r, n)
+				}
+				if r.err != nil {
+					t.Fatal(r.err)
+				}
+				got := index.unnamed[part]
+				if got.State != state || got.Reason != "possibly-unnamed" || got.Cause == nil || *got.Cause != *wantedCause {
+					t.Fatalf("excluded sibling leaked into unnamed scope: %+v", got)
+				}
+			})
+		}
+	}
+}

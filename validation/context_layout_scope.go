@@ -235,6 +235,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			return err
 		}
 		var pageBreak, systemBreak Evidence[bool]
+		var breakValues [2]uint8
 		blanks := Evidence[Atomic]{State: EvidenceAbsent}
 		blanksSeen := false
 		breakPosition := Evidence[Rational]{State: EvidenceAbsent}
@@ -252,8 +253,8 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			}
 			print, e := r.child(b.content, layoutRole("print"))
 			if e.State != EvidenceKnown && e.State != EvidenceAbsent {
-				pageBreak = stateUnavailable[bool, bool](e)
-				systemBreak = pageBreak
+				pageBreak, _ = layoutMergeBreak(pageBreak, e)
+				systemBreak, _ = layoutMergeBreak(systemBreak, e)
 				breakSelection = layoutMergeSelection(breakSelection, e)
 				pageSelection = layoutMergeSelection(pageSelection, e)
 				if first.State != EvidenceKnown || b.part.State != EvidenceKnown || first.Value == b.part.Value {
@@ -277,6 +278,20 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				// Every page boundary starts a system; an unavailable page
 				// attribute can therefore invalidate a negative system break.
 				sb, _ = layoutMergeBreak(sb, pb)
+			}
+			// Keep observed yes/no statements independently of unavailable
+			// consensus: an early Invalid must not hide a later disagreement.
+			if !r.step(2) {
+				return r.err
+			}
+			for i, v := range [2]Evidence[bool]{pb, sb} {
+				if v.State == EvidenceKnown {
+					bit := uint8(1)
+					if v.Value {
+						bit = 2
+					}
+					breakValues[i] |= bit
+				}
 			}
 			if print != nil && ((pb.State == EvidenceKnown && pb.Value) || (sb.State == EvidenceKnown && sb.Value)) {
 				breakDeclarations++
@@ -337,14 +352,13 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		// Consensus is transactional: disputed boundaries never clear live
 		// overrides or advance page parity as though a break had been proved.
 		if breakSelection.State != EvidenceAbsent {
-			pageBreak = breakSelection
-			systemBreak = breakSelection
+			pageBreak, _ = layoutMergeBreak(pageBreak, breakSelection)
+			systemBreak, _ = layoutMergeBreak(systemBreak, breakSelection)
 		}
-		conflict = conflict || (breakDeclarations > 1 && breakPositionUnknown)
+		conflict = conflict || breakValues[0] == 3 || breakValues[1] == 3 || (breakDeclarations > 1 && breakPositionUnknown)
 		if conflict {
-			pageBreak = stateUnknown[bool]("parallel-print-break-disagreement")
+			pageBreak = layoutDisputedBreak(pageBreak, systemBreak)
 			systemBreak = pageBreak
-			blanks = Evidence[Atomic]{State: EvidenceAbsent}
 		}
 		initial := start == 0
 		if initial {
@@ -408,10 +422,10 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		if conflict {
 			frame.pageCertain = false
 			frame.systemCertain = false
-			frame.parity = stateUnknown[bool]("parallel-print-break-disagreement")
-			frame.page = stateUnknown[NodeRef]("parallel-print-break-disagreement")
-			frame.system = frame.page
-			frame.first = stateUnknown[bool]("parallel-print-break-disagreement")
+			frame.parity = layoutDisputedBreak(frame.parity, pageBreak)
+			frame.page = stateUnavailable[bool, NodeRef](pageBreak)
+			frame.system = stateUnavailable[bool, NodeRef](systemBreak)
+			frame.first = systemBreak
 		}
 		if pagePublisher != nil {
 			frame.pageLayout = pagePublisher
@@ -431,11 +445,8 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			frame.systemSelection = systemSelection
 		}
 		systemStart := systemBreak
-		if initial {
+		if initial && !conflict {
 			systemStart = Evidence[bool]{State: EvidenceKnown, Value: true}
-		}
-		if conflict || (breakDeclarations > 1 && breakPositionUnknown) {
-			systemStart = stateUnknown[bool]("parallel-print-break-disagreement")
 		}
 		for _, b := range group {
 			if err = layoutStateMeasure(ctx, s, key, b, r, p, systemStart); err != nil {
@@ -470,7 +481,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			}
 
 			if conflict {
-				if err = l.publish(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, stateUnknown[Atomic]("parallel-print-rendering-unspecified"), active, ref, frame, nil, b.part); err != nil {
+				if err = l.publish(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, layoutBoundaryGap[Atomic](systemBreak, "parallel-print-rendering-unspecified"), active, ref, frame, nil, b.part); err != nil {
 					return err
 				}
 			}
@@ -598,4 +609,22 @@ func layoutBlankPageConsensus(a, b Evidence[Atomic]) Evidence[Atomic] {
 		return stateUnknown[Atomic]("parallel-blank-page-disagreement")
 	}
 	return layoutConsensusPair(a, b)
+}
+
+// Disagreement is unavailable evidence, never permission to erase an assessed
+// defect or its cause. Known booleans are ignored here because the caller has
+// already proved a contradictory boundary set, independently of fold order.
+func layoutDisputedBreak(a, b Evidence[bool]) Evidence[bool] {
+	gap := stateUnknown[bool]("parallel-print-break-disagreement")
+	for _, v := range [2]Evidence[bool]{a, b} {
+		if v.State == EvidenceKnown || v.State == EvidenceAbsent || v.State == "" {
+			continue
+		}
+		if gap.State == EvidenceUnknown && gap.Cause == nil && v.State == EvidenceUnknown && v.Cause != nil {
+			gap = v
+		} else {
+			gap = timelineMergeAvailability(gap, v)
+		}
+	}
+	return gap
 }

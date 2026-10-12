@@ -94,6 +94,14 @@ remain Absent and leave the bounded parity projection unchanged. An unavailable
 encoded page break also keeps initial-page parity unavailable, preserving its
 cause; ordinary missing break-support metadata alone does not discard the initial
 structural page when there is no blank-page adjustment.
+Parallel yes/no disagreement is tracked independently of unavailable evidence,
+so encounter order cannot hide a contradiction. Its Unknown rendering boundary
+cannot replace an existing Invalid or Unsupported cause; page/system membership,
+parity, system-start applicability and width-disagreement rows retain that cause.
+An independently unavailable print-layout publisher may still leave an initial
+effective margin Unknown: a possible explicit override need not depend on page
+parity. Clearing that selection gap exposes the preserved parity evidence;
+stronger states are not propagated across unproved dependencies.
 
 The [system-layout publisher rule](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/system-layout/)
 selects the first visible part. If all staves are proven cutaways, an observed

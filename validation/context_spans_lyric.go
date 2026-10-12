@@ -14,27 +14,35 @@ type spanLyricScopeKey struct {
 
 // Absence is an unnamed lyric identity, not verse 1. The presence markers also
 // distinguish an absent name from an explicitly empty xs:token name.
-func spanLyricIdentity(r *contextReader, n *factNode, scratch *spanScratch) (string, Evidence[bool]) {
+func spanLyricIdentity(r *contextReader, n *factNode, scratch *spanScratch) spanLyricIdentityValue {
 	number, name := r.attribute(n, spanRole_lyric_number), r.attribute(n, spanRole_lyric_name)
-	available := Evidence[bool]{State: EvidenceKnown, Value: true}
+	value := spanLyricIdentityValue{available: Evidence[bool]{State: EvidenceKnown, Value: true}}
 	for _, v := range []Evidence[Atomic]{number, name} {
+		// One independently known explicit string axis cannot equal absence,
+		// even if the other axis is unavailable. Empty name is an explicit token;
+		// a mistyped Known atomic value establishes no such identity proof.
+		if v.State == EvidenceKnown && v.Value.Kind == AtomicString {
+			value.excludesUnnamed = true
+		}
 		if v.State != EvidenceKnown && v.State != EvidenceAbsent {
-			available = timelineMergeAvailability(available, stateUnavailable[Atomic, bool](v))
+			value.available = timelineMergeAvailability(value.available, stateUnavailable[Atomic, bool](v))
 		} else if v.State == EvidenceKnown && v.Value.Kind != AtomicString {
-			available = timelineMergeAvailability(available, stateUnknown[bool]("span-lyric-identity-unavailable"))
+			value.available = timelineMergeAvailability(value.available, stateUnknown[bool]("span-lyric-identity-unavailable"))
 		}
 	}
-	if available.State != EvidenceKnown {
-		return "", available
+	if value.available.State != EvidenceKnown {
+		return value
 	}
 	bytes := int64(len(number.Value.Text)) + int64(len(name.Value.Text)) + 128
 	if !r.step(bytes) {
-		return "", stateUnknown[bool]("context-interrupted")
+		value.available = stateUnknown[bool]("context-interrupted")
+		return value
 	}
 	allocation, err := AllocationSize(bytes - 64)
 	if err != nil {
 		r.err = err
-		return "", stateUnknown[bool]("context-interrupted")
+		value.available = stateUnknown[bool]("context-interrupted")
+		return value
 	}
 	if scratch == nil {
 		r.err = r.s.retain(bytes)
@@ -42,7 +50,8 @@ func spanLyricIdentity(r *contextReader, n *factNode, scratch *spanScratch) (str
 		r.err = scratch.reserve(bytes)
 	}
 	if r.err != nil {
-		return "", stateUnknown[bool]("context-interrupted")
+		value.available = stateUnknown[bool]("context-interrupted")
+		return value
 	}
 	var key strings.Builder
 	key.Grow(allocation)
@@ -56,13 +65,16 @@ func spanLyricIdentity(r *contextReader, n *factNode, scratch *spanScratch) (str
 		key.WriteByte(':')
 		key.WriteString(v.Value.Text)
 	}
-	return key.String(), available
+	value.key = key.String()
+	return value
 }
 
 type spanLyricIdentityValue struct {
 	key       string
 	available Evidence[bool]
 	retained  bool
+	// excludesUnnamed is independent of full identity availability.
+	excludesUnnamed bool
 }
 
 type spanLyricIndex struct {
@@ -84,7 +96,8 @@ func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 	if r.err != nil {
 		return
 	}
-	identity, available := spanLyricIdentity(r, n, index.scratch)
+	value := spanLyricIdentity(r, n, index.scratch)
+	identity, available := value.key, value.available
 	note := spanAncestor(r, n, spanRole_note)
 	if r.err != nil || note == nil {
 		return
@@ -99,7 +112,7 @@ func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 		index.identities = make(map[NodeID]spanLyricIdentityValue)
 		index.scopes = make(map[spanLyricScopeKey]Evidence[bool])
 	}
-	index.identities[n.header.ID] = spanLyricIdentityValue{key: identity, available: available}
+	index.identities[n.header.ID] = value
 	key := spanLyricScopeKey{note: NodeRef{r.s.documentID, note.header.ID}, identity: identity}
 	if old, ok := index.scopes[key]; ok {
 		if old.State == EvidenceKnown && available.State == EvidenceKnown {
@@ -116,12 +129,20 @@ func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 		}
 		index.scopes[key] = available
 	}
-	gap := index.scopes[key]
-	if (identity != spanUnnamedLyricIdentity && available.State == EvidenceKnown) || (gap.State == EvidenceKnown && gap.Value) {
+	// Unavailable identities share an endpoint-local wildcard bucket. That
+	// bucket may include independently excluded explicit identities, so it
+	// cannot supply evidence for the part-wide unnamed candidate. Only complete
+	// unnamed identities use the sibling bucket to detect actual duplicates.
+	gap := available
+	if available.State == EvidenceKnown {
+		gap = index.scopes[key]
+	}
+	if value.excludesUnnamed || (gap.State == EvidenceKnown && gap.Value) {
 		return
 	}
-	// An unavailable identity could also be unnamed. Keep its original evidence
-	// rather than replacing a malformed attribute's cause with ambiguity.
+	// An unavailable identity can compete with the wholly unnamed identity only
+	// when neither axis independently excludes absence. Preserve the cause of
+	// that actual uncertainty rather than synthesizing duplicate ambiguity.
 	domain := spanInheritedDomain(r, note, index.domains)
 	if r.err != nil {
 		return
@@ -151,7 +172,8 @@ func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 
 func (index *spanLyricIndex) endpoint(r *contextReader, lyric *factNode) (string, Evidence[bool]) {
 	if index == nil || lyric == nil {
-		return spanLyricIdentity(r, lyric, nil)
+		value := spanLyricIdentity(r, lyric, nil)
+		return value.key, value.available
 	}
 	if !r.step(1) {
 		return "", stateUnknown[bool]("context-interrupted")
