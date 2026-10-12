@@ -154,6 +154,27 @@ type timelineState struct {
 func stateUnavailable[T, U any](v Evidence[T]) Evidence[U] {
 	return Evidence[U]{State: v.State, Reason: v.Reason, Cause: v.Cause}
 }
+
+// Evidence values are immutable except for their optional causal reference.
+// Copy that fixed record before returning/retaining an independently owned fact.
+func stateOwnEvidence[T any](ctx context.Context, s *Session, v Evidence[T]) (Evidence[T], error) {
+	if v.Cause == nil {
+		return v, nil
+	}
+	if err := s.step(ctx, 1); err != nil {
+		return Evidence[T]{}, err
+	}
+	if err := s.retain(128); err != nil {
+		return Evidence[T]{}, err
+	}
+	cause := *v.Cause
+	v.Cause = &cause
+	return v, nil
+}
+func stateUnavailableResult[T, U any](ctx context.Context, s *Session, v Evidence[T]) (stateResult[U], error) {
+	value, err := stateOwnEvidence(ctx, s, stateUnavailable[T, U](v))
+	return stateResult[U]{Value: value}, err
+}
 func stateUnknown[T any](reason Code) Evidence[T] {
 	return Evidence[T]{State: EvidenceUnknown, Reason: reason}
 }
@@ -433,13 +454,12 @@ func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, h
 		return out, e
 	}
 	if closure.State != EvidenceKnown || !closure.Value {
-		out.Value = stateUnavailable[bool, V](closure)
-		return out, nil
+		return stateUnavailableResult[bool, V](ctx, s, closure)
 	}
 	if staff.State != EvidenceKnown || !staff.Value.Valid() {
 		out.Value = stateUnknown[V]("timeline-staff-unresolved")
 		if staff.State != EvidenceAbsent && staff.State != EvidenceKnown {
-			out.Value = stateUnavailable[Integer, V](staff)
+			return stateUnavailableResult[Integer, V](ctx, s, staff)
 		}
 		return out, nil
 	}
@@ -463,8 +483,7 @@ func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, h
 			continue
 		}
 		if best < 0 || history.Publications[best].Position.MeasureOrdinal <= g.LastMeasure {
-			out.Value = stateUnavailable[bool, V](g.Availability)
-			return out, nil
+			return stateUnavailableResult[bool, V](ctx, s, g.Availability)
 		}
 	}
 	if best < 0 {
@@ -590,7 +609,7 @@ func (h *timelineState) effectiveInstruments(ctx context.Context, s *Session, po
 }
 func (h *timelineState) resolveStaff(ctx context.Context, s *Session, pos musicalPosition, staff Evidence[Integer]) (Evidence[Integer], error) {
 	if staff.State != EvidenceAbsent {
-		return staff, nil
+		return stateOwnEvidence(ctx, s, staff)
 	}
 	count, e := h.effectiveStaves(ctx, s, pos)
 	if e != nil {

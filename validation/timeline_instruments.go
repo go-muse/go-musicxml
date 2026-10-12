@@ -101,8 +101,7 @@ func (h *timelineState) effectiveInstrument(ctx context.Context, s *Session, pos
 		return out, e
 	}
 	if closure.State != EvidenceKnown {
-		out.Value = stateUnavailable[bool, instrumentState](closure)
-		return out, nil
+		return stateUnavailableResult[bool, instrumentState](ctx, s, closure)
 	}
 	var history *stateHistory[instrumentState]
 	for i := range h.InstrumentChanges {
@@ -149,8 +148,7 @@ func (h *timelineState) effectiveInstrument(ctx context.Context, s *Session, pos
 			return out, e
 		}
 		if g.Part == pos.Part && g.FirstMeasure <= pos.MeasureOrdinal && (latest == nil || latest.MeasureOrdinal <= g.LastMeasure) {
-			out.Value = stateUnavailable[bool, instrumentState](g.Availability)
-			return out, nil
+			return stateUnavailableResult[bool, instrumentState](ctx, s, g.Availability)
 		}
 	}
 	if history != nil {

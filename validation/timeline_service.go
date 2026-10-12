@@ -44,7 +44,32 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 	if _, exists := service.Facts[id]; exists {
 		return contract("timeline fact", "duplicate publication")
 	}
+	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+		return err
+	}
 	if err := s.retain(1024); err != nil {
+		return err
+	}
+	var err error
+	if fact.Position, err = stateOwnEvidence(ctx, s, fact.Position); err != nil {
+		return err
+	}
+	if fact.Duration, err = stateOwnEvidence(ctx, s, fact.Duration); err != nil {
+		return err
+	}
+	if fact.PrincipalDuration, err = stateOwnEvidence(ctx, s, fact.PrincipalDuration); err != nil {
+		return err
+	}
+	if fact.Principal, err = stateOwnEvidence(ctx, s, fact.Principal); err != nil {
+		return err
+	}
+	if fact.Staff, err = stateOwnEvidence(ctx, s, fact.Staff); err != nil {
+		return err
+	}
+	if fact.Voice, err = stateOwnEvidence(ctx, s, fact.Voice); err != nil {
+		return err
+	}
+	if fact.Part, err = stateOwnEvidence(ctx, s, fact.Part); err != nil {
 		return err
 	}
 	service.Facts[id] = fact
