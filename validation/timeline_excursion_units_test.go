@@ -2,6 +2,8 @@ package validation
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"testing"
 )
 
@@ -27,5 +29,30 @@ func TestTimelineExcursionGatePreservesDescendantUnitUnavailability(t *testing.T
 	}
 	if first := v.Facts[30]; first.Duration.State != EvidenceKnown {
 		t.Fatalf("earlier independently proved duration lost: %+v", first)
+	}
+}
+
+func TestTimelineExcursionStageFallbackReferenceWork(t *testing.T) {
+	for _, kind := range []string{"definition", "midi", "device"} {
+		t.Run(kind, func(t *testing.T) {
+			s := rationalSession(t, Budgets{MaxRuleSteps: 64})
+			defer s.cleanup()
+			doc := strings.Repeat("document-id-", 1024)
+			part := NodeRef{DocumentID: doc, Node: 1}
+			other := NodeRef{DocumentID: strings.Clone(doc), Node: 2}
+			v := &timelineService{State: timelineState{Closures: []stateClosure{{Part: part}}}}
+			switch kind {
+			case "definition":
+				v.State.Definitions = []instrumentDefinition{{Part: other}}
+			case "midi":
+				v.State.MIDI = []instrumentRecord[midiState]{{Part: other, Position: stateAbsent[musicalPosition]()}}
+			case "device":
+				v.State.MIDIDevices = []instrumentRecord[midiDeviceState]{{Part: other, Position: stateAbsent[musicalPosition]()}}
+			}
+			_, err := v.rebuildUnitStage(context.Background(), s, stateBindings(), nil, nil, nil)
+			if !errors.Is(err, ErrResourceLimit) {
+				t.Fatalf("fallback reference comparison used%d work: %v", rationalUsage(t, s, BudgetRuleSteps), err)
+			}
+		})
 	}
 }
