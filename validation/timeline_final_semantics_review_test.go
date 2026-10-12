@@ -414,3 +414,35 @@ func TestTimelineFinalReviewFloatingSoundSameFrameRepairAndPropertyIsolation(t *
 		t.Fatalf("same-frame unconditional repair lost: %+v err=%v", dynamics, err)
 	}
 }
+
+func TestTimelineFinalReviewGraceDonorsUseKnownScoreOrder(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	voiced := func(id NodeID, duration int64) *factNode {
+		n := runtimeNote(t, b, id, duration, false)
+		n.children = append(n.children, stateNode(b, timelineRoleNoteVoice, id+3, stateAtomicText("one")))
+		return n
+	}
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	forward := stateNode(b, timelineRoleForward, 25, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 26, stateAtomicDecimal(t, 2, 1)))
+	backup := stateNode(b, timelineRoleBackup, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 41, stateAtomicDecimal(t, 3, 1)))
+	grace := stateNode(b, timelineRoleNoteGrace, 61, stateAbsent[Atomic]())
+	stateAttribute(b, grace, timelineRoleGraceStealPrevious, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 25, 1)})
+	stateAttribute(b, grace, timelineRoleGraceStealFollowing, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 25, 1)})
+	note := stateNode(b, timelineRoleNote, 60, stateAbsent[Atomic](), grace, stateNode(b, timelineRoleNoteVoice, 63, stateAtomicText("one")))
+	block := runtimeBlock(b, 0, attrs, forward, voiced(30, 1), backup, voiced(50, 1), note, voiced(70, 1))
+	if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	for id, want := range map[NodeID]string{30: "2", 50: "0", 60: "1", 70: "1"} {
+		if f := svc.Facts[id]; f.Position.State != EvidenceKnown || f.Position.Value.Offset.String() != want {
+			t.Fatalf("fixture origin%d=%+v want%s", id, f.Position, want)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+		t.Fatal(err)
+	}
+	got := svc.GraceNeighbors[60]
+	if got.Previous.Note.State != EvidenceKnown || got.Previous.Note.Value.Node != 50 || got.Following.Note.State != EvidenceKnown || got.Following.Note.Value.Node != 70 {
+		t.Fatalf("lexical disorder hid unique score-order donors: %+v", got)
+	}
+}
