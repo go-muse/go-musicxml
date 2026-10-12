@@ -155,3 +155,58 @@ func TestTimelineStateInstrumentIdentitySetsAndContinuingChanges(t *testing.T) {
 		t.Fatalf("invented property reset %+v,%v", r, e)
 	}
 }
+
+func TestTimelineStateUnplacedAttributesGapOnlyAffectedFamilies(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	s.documentID = "d"
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 2)
+	b := stateBindings()
+	empty := stateAbsent[Atomic]()
+	all := stateScope{AllStaves: true}
+	part := statePosition(t, 0, 0, 1).Part
+	staff := stateKnown(stateInt(t, 1))
+	statePublish(t, s, &h.Divisions, statePosition(t, 0, 0, 1), all, stateKnown(stateDecimal(t, 4, 1)), 1)
+	statePublish(t, s, &h.Keys, statePosition(t, 0, 0, 1), all, stateKnown(keyState{Traditional: true, Fifths: stateKnown(stateInt(t, 0))}), 2)
+	attrs := stateNode(b, timelineRoleAttributes, 10, empty, stateNode(b, timelineRoleAttributesKey, 11, empty, stateNode(b, timelineRoleKeyFifths, 12, stateAtomicInteger(t, 2))))
+	cause := &DecisionRef{Rule: RuleKey{ID: "duration", Revision: 1}, Subject: NodeRef{DocumentID: "d", Node: 9}}
+	unavailable := Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "duration-invalid", Cause: cause}
+	if e := h.gapAttributes(context.Background(), s, b, attrs, part, 1, unavailable); e != nil {
+		t.Fatal(e)
+	}
+	key := stateQuery(t, s, h, &h.Keys, statePosition(t, 2, 0, 1), staff)
+	if key.Value.State != EvidenceInvalid || *key.Value.Cause != *cause {
+		t.Fatalf("missing causal key gap %+v", key)
+	}
+	divisions := stateQuery(t, s, h, &h.Divisions, statePosition(t, 2, 0, 1), staff)
+	if divisions.Value.State != EvidenceKnown || divisions.Value.Value.String() != "4" || len(h.Divisions.Gaps) != 0 {
+		t.Fatalf("unrelated divisions gap %+v", divisions)
+	}
+}
+func TestTimelineStateUnresolvedInstrumentChangeMasksOlderChange(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 3)
+	id := NodeRef{DocumentID: "d", Node: 20}
+	p := statePublication[instrumentState]{Position: statePosition(t, 0, 0, 1), Scope: stateScope{AllStaves: true}, Value: stateKnown(instrumentState{Sound: stateKnown("old")})}
+	if e := h.addInstrumentChange(context.Background(), s, id, p); e != nil {
+		t.Fatal(e)
+	}
+	cause := &DecisionRef{Rule: RuleKey{ID: "identity", Revision: 1}, Subject: NodeRef{DocumentID: "d", Node: 21}}
+	h.InstrumentGaps = []stateGap{{Part: p.Position.Part, FirstMeasure: 1, LastMeasure: 1, Scope: stateScope{AllStaves: true}, Availability: Evidence[bool]{State: EvidenceInvalid, Reason: "unknown-instrument-id", Cause: cause}}}
+	r, e := h.effectiveInstrument(context.Background(), s, statePosition(t, 2, 0, 1), id)
+	if e != nil || r.Value.State != EvidenceInvalid || r.Value.Cause == nil || *r.Value.Cause != *cause {
+		t.Fatalf("instrument gap bypass %+v,%v", r, e)
+	}
+	p.Position = statePosition(t, 2, 0, 1)
+	p.Value.Value.Sound = stateKnown("replacement")
+	if e := h.addInstrumentChange(context.Background(), s, id, p); e != nil {
+		t.Fatal(e)
+	}
+	r, e = h.effectiveInstrument(context.Background(), s, statePosition(t, 3, 0, 1), id)
+	if e != nil || r.Value.State != EvidenceKnown || r.Value.Value.Sound.Value != "replacement" {
+		t.Fatalf("instrument recovery %+v,%v", r, e)
+	}
+}

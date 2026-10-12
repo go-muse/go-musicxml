@@ -277,3 +277,53 @@ func TestTimelineStateResourceAndCancellationAtomicity(t *testing.T) {
 		t.Fatalf("cancel %v", e)
 	}
 }
+
+func TestTimelineStateQueryRetainsOnlyMatchingProvenance(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 0)
+	staff := stateKnown(stateInt(t, 1))
+	all := stateScope{AllStaves: true}
+	for i := range 100 {
+		statePublish(t, s, &h.Staves, statePosition(t, 0, int64(i), 1), all, stateKnown(stateInt(t, int64(i))), NodeID(i+20))
+	}
+	before := rationalUsage(t, s, BudgetBufferedBytes)
+	for i := range 10 {
+		r := stateQuery(t, s, h, &h.Staves, statePosition(t, 0, int64(i), 1), staff)
+		if r.Value.State != EvidenceKnown {
+			t.Fatal(r)
+		}
+	}
+	if retained := rationalUsage(t, s, BudgetBufferedBytes) - before; retained > 40000 {
+		t.Fatalf("query retained global history capacity: %d", retained)
+	}
+}
+func TestTimelineStateMergeManyProvenanceBeforeAllocation(t *testing.T) {
+	s := rationalSession(t, Budgets{MaxBufferedBytes: 1 << 20})
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 0)
+	at := statePosition(t, 0, 0, 1)
+	for i := range 4 {
+		p := statePublication[Integer]{Position: at, Scope: stateScope{AllStaves: true}, Value: stateKnown(stateInt(t, 1))}
+		for j := range 40 {
+			p.Provenance = append(p.Provenance, stateProvenance{Node: NodeRef{DocumentID: "d", Node: NodeID(i*40 + j + 20)}, Kind: stateExplicit})
+		}
+		if e := publishState(context.Background(), s, &h.Staves, p); e != nil {
+			t.Fatal(e)
+		}
+	}
+	before := rationalUsage(t, s, BudgetBufferedBytes)
+	r := stateQuery(t, s, h, &h.Staves, at, stateKnown(stateInt(t, 1)))
+	delta := rationalUsage(t, s, BudgetBufferedBytes) - before
+	if len(r.Provenance) != 160 || delta < int64(len(r.Provenance))*64 {
+		t.Fatalf("unmetered provenance=%d retained=%d", len(r.Provenance), delta)
+	}
+	r.Provenance[0].Node.Node = 999
+	r.Value.Value = stateInt(t, 99)
+	next := stateQuery(t, s, h, &h.Staves, at, stateKnown(stateInt(t, 1)))
+	if next.Value.Value.String() != "1" || next.Provenance[0].Node.Node == 999 {
+		t.Fatal("query aliases history")
+	}
+}
