@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"strconv"
 	"testing"
 )
 
@@ -269,5 +270,55 @@ func TestIndependentTimelineSharedAccountCleanupIsolation(t *testing.T) {
 	b.cleanup()
 	if b.timeline != nil || rationalUsage(t, b, BudgetBufferedBytes) != 0 {
 		t.Fatal("cleanup left timeline gauge")
+	}
+}
+
+func TestIndependentTimelineLiteralEmbeddingInteractions(t *testing.T) {
+	// For integer 2: input bytes=2, outer embedding allowance=2+128=130.
+	// One-limb numerator/denominator in and out + one four-byte text chunk +
+	// fixed unit => 4*(1+1+1+1+1+1)^2 = 144 rational work units.
+	// Rational scalar envelope is two magnitude bytes plus two text bytes=4.
+	// Scratch is 4096+64*(1+1+0+0+2+2+1)=4544; no production cost helper.
+	for _, work := range []int64{129, 130, 273, 274, 275} {
+		s := rationalSession(t, Budgets{MaxRuleSteps: work})
+		v, err := s.stateRationalInteger(context.Background(), stateInt(t, 2))
+		if work < 274 {
+			if !errors.Is(err, ErrResourceLimit) || v.Valid() || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+				t.Fatalf("work%d output=%s err=%v", work, v, err)
+			}
+		} else if err != nil || v.String() != "2" || rationalUsage(t, s, BudgetRuleSteps) != 274 {
+			t.Fatalf("literal work%d result=%s err=%v charged=%d", work, v, err, rationalUsage(t, s, BudgetRuleSteps))
+		}
+		s.cleanup()
+	}
+	for _, scalar := range []int64{1, 2, 3, 4, 5} {
+		s := rationalSession(t, Budgets{MaxScalarBytes: scalar})
+		v, err := s.stateRationalInteger(context.Background(), stateInt(t, 2))
+		if scalar < 4 {
+			if !errors.Is(err, ErrResourceLimit) || v.Valid() || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+				t.Fatalf("scalar%d result=%s err=%v", scalar, v, err)
+			}
+		} else if err != nil || v.String() != "2" {
+			t.Fatalf("scalar%d result=%s err=%v", scalar, v, err)
+		}
+		s.cleanup()
+	}
+	raw := new(big.Rat).Set(new(big.Rat).SetInt(big.NewInt(2)))
+	output := int64(cap(raw.Num().Bits())+cap(raw.Denom().Bits()))*int64(strconv.IntSize/8) + 129
+	peak := int64(130+4544) + output
+	for _, limit := range []int64{peak - 1, peak, peak + 1} {
+		s := rationalSession(t, Budgets{MaxBufferedBytes: limit})
+		v, err := s.stateRationalInteger(context.Background(), stateInt(t, 2))
+		if limit < peak {
+			if !errors.Is(err, ErrResourceLimit) || v.Valid() || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+				t.Fatalf("peak%d result=%s err=%v", limit, v, err)
+			}
+		} else if err != nil || v.String() != "2" || rationalUsage(t, s, BudgetBufferedBytes) != output {
+			t.Fatalf("peak%d result=%s err=%v bytes=%d", limit, v, err, rationalUsage(t, s, BudgetBufferedBytes))
+		}
+		if rationalUsage(t, s, BudgetRuleSteps) != 274 {
+			t.Fatalf("peak%d refunded work", limit)
+		}
+		s.cleanup()
 	}
 }
