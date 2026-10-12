@@ -801,3 +801,39 @@ func TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof(t *testing.T) {
 		}
 	}
 }
+
+func TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	backup := stateNode(b, timelineRoleBackup, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 41, stateAtomicDecimal(t, 3, 1)))
+	forward := stateNode(b, timelineRoleForward, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 51, stateAtomicDecimal(t, 2, 1)))
+	sound := stateNode(b, timelineRoleSound, 70, stateAbsent[Atomic]())
+	stateAttribute(b, sound, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, runtimeNote(t, b, 30, 2, false), backup, forward, runtimeNote(t, b, 60, 2, false), sound), runtimeBlock(b, 1, runtimeNote(t, b, 80, 1, false))}
+	for _, block := range blocks {
+		if err := svc.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	for id, offset := range map[NodeID]string{40: "2", 50: "-1", 60: "1", 70: "3"} {
+		if pos := svc.Facts[id].Position; pos.State != EvidenceKnown || pos.Value.Offset.String() != offset {
+			t.Fatalf("exact uniform-unit position%d lost: %+v", id, pos)
+		}
+	}
+	member, err := svc.State.frameMember(ctx, s, svc.Facts[70].Origin.Value)
+	if err != nil || !member {
+		t.Fatalf("independently contained q1 return failed to restore subsequent ordinary-prefix witnessq3: member=%v err=%v", member, err)
+	}
+	excursionMember, err := svc.State.frameMember(ctx, s, svc.Facts[50].Position.Value)
+	if err != nil || excursionMember {
+		t.Fatalf("recovery retroactively confined negative excursion: member=%v err=%v", excursionMember, err)
+	}
+	got, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[80].Position.Value)
+	if err != nil || got.Value.State != EvidenceKnown || got.Value.Value.String() != "120" {
+		t.Fatalf("restored-prefix statement lost contained carry: %+v err=%v", got, err)
+	}
+}

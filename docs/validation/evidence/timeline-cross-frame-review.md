@@ -117,7 +117,10 @@ Backup/forward movement must not extend this bound from its destination merely
 because it is serialized inside the measure. The source only recommends avoiding
 boundary crossing. A movement with both endpoints inside an already proved
 interval preserves membership; a destination outside that interval suspends
-this prefix proof. Exact recovery at structural zero can resume it. An origin
+this prefix proof. An exact return to any independently proved point in that
+interval can resume the ordinary prefix; structural zero is sufficient, not
+uniquely required. The return must itself have known unit reconstruction, and
+unproved descendants cannot bootstrap the recovery bound. An origin
 reached through unknown units, invalid duration, or an unproved movement cannot
 bootstrap a new bound. Neither chord/grace endpoints, attack/release endpoints,
 figured-bass chain sums, shifted coordinates, nor unassessed right-barline
