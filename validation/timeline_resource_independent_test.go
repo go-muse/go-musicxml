@@ -322,3 +322,32 @@ func TestIndependentTimelineLiteralEmbeddingInteractions(t *testing.T) {
 		s.cleanup()
 	}
 }
+
+func TestIndependentTimelineRuntimeExactModelTenth(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	attributes := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 3, 1)))
+	decimal, err := NewDecimal(new(big.Rat).SetFloat64(0.1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	events := []*factNode{attributes}
+	for i := 0; i < 1000; i++ {
+		id := NodeID(100 + i*10)
+		events = append(events, stateNode(b, timelineRoleNote, id, stateAbsent[Atomic](), stateNode(b, timelineRoleNoteDuration, id+1, stateKnown(Atomic{Kind: AtomicDecimal, Decimal: decimal}))))
+	}
+	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, events...)); err != nil {
+		t.Fatal(err)
+	}
+	// Expectations from the independent standard-library value, not normalization
+	// or any timeline cost/selection implementation.
+	increment := new(big.Rat).Quo(new(big.Rat).SetFloat64(0.1), big.NewRat(3, 1))
+	last := service.Facts[100+999*10]
+	want := new(big.Rat).Mul(increment, big.NewRat(999, 1)).RatString()
+	if last.Position.State != EvidenceKnown || last.Position.Value.Offset.String() != want || last.Duration.Value.String() != increment.RatString() {
+		t.Fatalf("model exactness lost: got=%s duration=%s want=%s increment=%s", last.Position.Value.Offset, last.Duration.Value, want, increment)
+	}
+	if last.Position.Value.Offset.String() == "333/10" {
+		t.Fatal("model float silently rounded to source decimal")
+	}
+	t.Logf("1000 exact-model notes: work=%d retained=%d last=%s", rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes), want)
+}
