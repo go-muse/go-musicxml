@@ -115,3 +115,63 @@ Log: `resource-independent-ab8da72-profile-bench.log`.
 - Final repository seven-stage checks, required external xmllint execution,
   semantic prefix/cross-frame review, and scope-ledger reconciliation remain
   assigned workstream gates. No whole-batch or publication approval is asserted.
+
+## Cross-frame and displacement refresh (2026-10-12)
+
+The original benchmark above remains pinned to `ab8da72`; it has not been
+promoted to a later implementation. The following independently executed
+checkpoints extend the resource evidence without closing the remaining gates.
+
+At production **904c7cf**, all root `TestIndependentTimeline*` cases pass,
+including all **32** practical direction/figure/grace variants. The additional
+16 grace variants cover 1,000 total notes with 100 spaced grace notes and a
+1,000-grace group between two regular donors, across source/model,
+local/timeline, and default/buffer-only-diagnostic profiles. The selected private
+resource, grace, point-gap, conditional-repair and cross-frame suites also pass.
+The composite-attribute fixture continues to hit the shared local/timeline
+64 MiB limit. Logs: `resource-independent-904c7cf-public.log` and
+`resource-independent-904c7cf-private.log`.
+
+At production **1f7797bb3f4e5070c769ff16eef66756f46675d0**, independently added
+publisher-Placement tests (`e7cf607`) establish:
+
+- All 16 attribute/instrument/MIDI/playback gap publications own separate
+  mutable endpoint records and causes, including separation between families.
+- Context quotas 1, 7 and 15 stop after exactly that many admitted publications.
+  The first closed gap's 3,262-byte admission minus one rejects before any
+  publication; cumulative context accounting is not refunded.
+- Every one of 880 observed all-family cancellation polls preserves borrowed
+  inputs, leaves no unreleased scratch, and returns live bytes to zero on
+  session cleanup. A partially completed multi-family operation may retain its
+  already admitted independent publications until cleanup.
+- Floating two-pass association searches pass all 1,113 direction and 1,240
+  figure cancellation polls without retained query scratch or raw mutation.
+  These are measured fixture counts, not fixed cancellation latency promises.
+- Grace's closed scratch shape is 4,072 bytes/note and 3,656 bytes/block against
+  separately admitted 4,096-byte coefficients. The independent actual slice
+  growth test covers up to 4,096 empty blocks. Compile-time width constraints
+  also enforce these margins in architecture-only builds.
+
+The selected private independent/grace/Placement suite, focused race run,
+`go vet ./validation ./internal/xsd`, and validation-package GOARCH=386 test
+binary compilation pass at that production snapshot with the independent tests.
+Logs: `resource-independent-1f7797b-placement.log`,
+`resource-independent-1f7797b-private.log`, and
+`resource-independent-1f7797b-race-vet-386.log`. The 386 binary was compiled,
+not executed.
+
+Other independently tested cross-frame safeguards include 216 exact sum/order
+oracle triples through 4,096 bits; literal nested arithmetic scratch, scalar and
+work boundaries; transactional partial-query scratch admission and cancellation;
+separate owned unavailable causes; and index/frame closed-shape bounds. An
+unrelated floating gap initially forced 128 ordinary publications from 4,211
+work units to about 2.734 million. Independent RED `593383a` is green after
+scoping the exceptional-path trigger to the queried part/staff (`a55aee9`). The
+ordinary indexed path is therefore tested independently of exceptional history.
+
+Still pending: global unit-region reconstruction's staged-service admission,
+progress and cancellation review; the selected final-head full practical rerun,
+matched costs, race/vet and 386 compilation; and the parent workstream's full
+repository checks and semantic reconciliation. Actual 386 execution remains a
+CI gate. **B5-PERF-01 remains outstanding with shared kernel/session ownership
+and batch 9 reconciliation.**
