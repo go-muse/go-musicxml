@@ -4114,19 +4114,23 @@
     "remaining_acceptance": [
       "Exact implementation or source-evidence cases listed under clauses[].ownership.batch6_remaining retain batch-6 ownership; supported unavailability is not a blanket exception or a false known result.",
       "Integrated final-head full tests, race, vet, reproducible generation, counted fuzz, actual 386 execution and required real xmllint.",
-      "Independent semantic/resource review refresh on the exact final implementation."
+      "Independent semantic/resource acceptance is pinned to production 22ae68a; any subsequent production-code change requires renewed review."
     ],
     "interpretation": "Qualified executable contributions are distinct from full clause or batch acceptance. Integrity tests establish traceability only. Source/current-model entry points and synthetic shared-fact controls are labeled separately. Original statuses, reviewed translations, frozen profile digests and later owners are unchanged.",
     "independent_resource_checkpoint": {
-      "implementation_commit": "ab8da72c1c538946945d4c06cb8139360714b1e7",
+      "implementation_commit": "22ae68a731ddc26e15f988fb59232e2dd9d572e6",
       "document": "evidence/timeline-resource-independent-checkpoint.md",
-      "result": "passed-scoped-resource-checkpoint",
+      "result": "accepted-final-production-resource-scope",
       "artifacts": [
-        "resource-independent-ab8da72-public.log",
-        "resource-independent-ab8da72-focused.log"
+        "resource-independent-22ae68a-public.log",
+        "resource-independent-22ae68a-private.log",
+        "resource-independent-22ae68a-validation-full.log",
+        "resource-independent-22ae68a-new-guards.log",
+        "resource-independent-22ae68a-race-vet-386.log",
+        "resource-independent-22ae68a-profile-bench.log"
       ],
-      "scope": "All root TestIndependentTimeline cases and focused independent validation/rational checks. All eight direction and all eight figured-bass public variants pass, including default 64 MiB source/current-model timeline cases with 1000 notes and 1000 candidate events. Ordinary 100/1000 exact trajectories, repeated divisions, sparse exact staff, parallel profiles/report ownership and failure-preserving diagnostic quotas remain covered.",
-      "final_head_refresh_required": true,
+      "scope": "All public independent defaults including 32 direction/figure/grace and 16 uniform-excursion variants; full validation package; certificate and normalization quota, ownership and cancellation guards; focused race, vet, root and validation 386 compilation; five warmed matched passes covering 60 benchmark samples. Compilation is not actual execution. B5-PERF-01 remains outstanding.",
+      "final_head_refresh_required": false,
       "actual_386_execution_claimed": false,
       "b5_perf_01_closed": false,
       "later_scoped_refreshes": [
@@ -4150,15 +4154,19 @@
             "resource-independent-1f7797b-race-vet-386.log"
           ]
         }
-      ]
+      ],
+      "historical_implementation_commit": "ab8da72c1c538946945d4c06cb8139360714b1e7",
+      "historical_scope": "All root TestIndependentTimeline cases and focused independent validation/rational checks. All eight direction and all eight figured-bass public variants pass, including default 64 MiB source/current-model timeline cases with 1000 notes and 1000 candidate events. Ordinary 100/1000 exact trajectories, repeated divisions, sparse exact staff, parallel profiles/report ownership and failure-preserving diagnostic quotas remain covered.",
+      "independent_test_commit": "38b77a3",
+      "acceptance_report_commit": "8fb81fc9484dcc38c5b2d88d00e08d4497ca4023",
+      "refresh_condition": "Any subsequent production-code change requires renewed resource acceptance; exact final test/document integration still requires aggregate stages and CI."
     },
     "independent_semantic_review": {
-      "status": "final-code-semantic-checkpoint-accepted-resource-refresh-and-aggregate-gates-open",
+      "status": "final-production-semantic-and-resource-checkpoints-accepted-aggregate-ci-gates-open",
       "accepted_component_commit": "b6623ae53da1caea80887aaa6993643ab9533fe3",
       "accepted_component_scope": "Previously accepted instrument/MIDI, figure-prefix, grace-locality and conditional-cause cases plus continuing-state cross-frame/containment/initial-default-consensus controls. Separate association review below extends this scope; neither is final semantic acceptance.",
       "pending_cases": [
-        "Final independent resource/certificate lifecycle review and matched costs remain pending at the frozen production checkpoint.",
-        "All seven local stages after final documentation/tests and all nine exact-head CI jobs still require separately supplied evidence."
+        "All seven local stages after final documentation/tests and all nine exact-head CI jobs require separately supplied exact-head evidence."
       ],
       "earlier_report_is_final_evidence": false,
       "whole_repository_pass_claimed": false,

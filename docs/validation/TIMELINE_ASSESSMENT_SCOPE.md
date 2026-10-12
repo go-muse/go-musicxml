@@ -243,21 +243,21 @@ Verification entries pin completed commands to their exact implementation
 snapshots; a named test reference is not itself an execution pass. The ledger distinguishes direct
 source/current-model entry points from synthetic shared-fact unit fixtures.
 A unit test that reads typed time or staff fields does not prove every production
-adapter occurrence. Final whole-repository stages, refreshed independent review,
-actual 386 execution and required real xmllint remain separate acceptance gates.
+adapter occurrence. Independent semantic and resource acceptance are pinned to production `22ae68a`.
+Final integrated repository stages and exact-head CI, including actual 386
+execution and required real xmllint, remain separate acceptance gates.
 
 The [independent resource checkpoint](evidence/timeline-resource-independent-checkpoint.md)
-records the accepted `ab8da72` default-budget controls and matched incremental
-measurements. That scoped snapshot is distinct from final semantic-head
-verification and does not close B5-PERF-01.
+records accepted `22ae68a` default-budget, certificate/normalization lifecycle
+controls and all 60 warmed matched benchmark samples. Historical `ab8da72`
+measurements remain separately pinned. This does not close B5-PERF-01.
 
 Every group below links exact file/function names and asserted case scope in the
 machine ledger. The original five-axis recipes remain unchanged and are not
 marked executed merely because a related provider test passes.
 
-Independent semantic review is still open for these concrete cases; earlier-head reports do not discharge them:
-
-- Final independent resource/certificate lifecycle review and matched costs remain pending at the frozen production checkpoint.
+Both independent reviews accept the named production snapshot. Remaining
+integration gates are distinct from those reviewed code results:
 - All seven local stages after final documentation/tests and all nine exact-head CI jobs still require separately supplied evidence.
 
 - `exact-arithmetic`: Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.

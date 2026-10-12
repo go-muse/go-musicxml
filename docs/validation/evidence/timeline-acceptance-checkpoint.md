@@ -2,8 +2,8 @@
 
 Frozen production code: `22ae68a731ddc26e15f988fb59232e2dd9d572e6`, tree
 `440f9d3cabffd535efb127bbbaeecb22e3185a27`. Independent semantic acceptance is
-complete for this code checkpoint. Final resource review and aggregate/CI gates
-are separately recorded below; individual historical runs retain their pins.
+complete for this code checkpoint, as is independent resource/API acceptance.
+Aggregate/CI gates are separately recorded below; historical runs retain their pins.
 This report does not claim final batch acceptance, completion of all repository
 stages, or any exact-head CI result. The public profiles remain bounded and opt-in.
 
@@ -77,18 +77,18 @@ are separate from the worker implementation history.
 | Cross-frame continuing-state proof and consensus | `310dbae`/`1d8a2ce`/`f4338b5`/`f962eb3` → `f0b11ee` (integrated checkpoint `b6623ae`) |
 | Cross-frame downstream association and nearer chord barrier | `acd674c`/`0abef6b` → `dbb5f8f`; worker `6415978` → `f000fe1` (integrated `1ed3400`) |
 | Unavailable association Placement | Worker `525445b` → `44ffd16`; integrated `3408d7a` → `c7dda33` |
-| Attribute and service-adapter Placement forwarding | `4643b97` → `aea97d8`; `775165b`/`2b1731b` → `1f7797b` (forwarding correction only; unit-dependent public cases remain open) |
+| Attribute and service-adapter Placement forwarding | `4643b97` → `aea97d8`; `775165b`/`2b1731b` → `1f7797b` (forwarding correction; later unit/projection fixes are recorded below) |
 | Well-founded unit reconstruction, causes and directional bounds | `22a6c77`/`5f52cb0`/`87196b2` → `23bd0a0`; `d381975`/`b029b8c`/`8e9ccef` → `c52c9ce`; `9227daf` → `3124dcc` |
-| Complete-history normalization and equal-value restoration | `743e74c` → `6c633a0`; `13ce21c`/`12a9fe1` → `8237597` (latest local regression pass; independent refresh pending) |
+| Complete-history normalization and equal-value restoration | `743e74c` → `6c633a0`; `13ce21c`/`12a9fe1` → `8237597` (independently accepted at production `22ae68a`) |
 | Invariant key-presence projection | `f34dc1e` → `121cbcf`, independently accepted at `d4071ae` |
 | Canonical-identity work before comparison | `56a3b8d` → `94a56df`; `2224b66` → `4a3fe68`; `2921866` → `4543c44`; `65ecf3f`/`1d21eb8` → `22ae68a` |
-| Full ownership and acceptance reconciliation | `5ba0bd1` → `f1958a9`; final semantic/resource acceptance remains pending |
+| Full ownership and acceptance reconciliation | `5ba0bd1` → `f1958a9`; final code semantic report `bfb4b6a`, resource report `8fb81fc`, 243-case reconciliation `2f7cb90` |
 
 
 Cross-frame continuing-state implementation reached the separately reviewed
 `b6623ae` checkpoint; downstream associations subsequently reached the separately
-reviewed worker `44ffd16` checkpoint. The final row remains open for the pending
-groups below. Its [implementation report](timeline-cross-frame-implementation.md)
+reviewed worker `44ffd16` checkpoint. Final test/document integration and CI remain separately gated
+below. Its [implementation report](timeline-cross-frame-implementation.md)
 preserves the initial counterexamples, exact sufficient-proof boundary and
 bounded exceptional-query cost. A RED commit is not promoted to a pass merely
 because a later unrelated test command completed.
@@ -102,9 +102,15 @@ because a later unrelated test command completed.
   coverage denominator. The [final semantic report](timeline-final-semantic-review.md)
   records the exact commands, logs and reviewed proof matrix. Subsequent code
   changes require a refresh. This semantic acceptance does not substitute for
-  final resource review or exact-final-head aggregate/CI verification.
+  the separate resource report or exact-final-head aggregate/CI verification.
 
-- Resource checkpoint `ab8da72c1c538946945d4c06cb8139360714b1e7` accepted all eight
+- Final resource/API acceptance at production `22ae68a`, with independent guards
+  `38b77a3` and report `8fb81fc`, passes all public independent defaults, full
+  validation tests, focused race, vet, root/validation 386 compilation and all
+  60 warmed matched benchmark samples. Certificate and normalization admission,
+  ownership, cancellation and cleanup controls pass. No concrete resource/API
+  blocker remains in that reviewed code; actual 386 execution remains a CI gate.
+- Historical resource checkpoint `ab8da72c1c538946945d4c06cb8139360714b1e7` accepted all eight
   public direction and all eight public figured-bass variants, including default
   source/model budgets, plus independent arithmetic, cancellation, ownership and
   ordinary-trajectory controls. The [resource report](timeline-resource-independent-checkpoint.md)
@@ -148,8 +154,6 @@ bounded matrix at `22ae68a`. The earlier complete-history, safe restoration,
 projection and canonical-identity regressions have actual implementation and
 executed evidence above. No earlier RED is retroactively relabeled as a pass.
 
-- Final independent resource/certificate lifecycle review and matched practical
-  profile costs remain pending at this frozen code checkpoint.
 - The exact final documentation/test integration requires all seven local
   repository stages, followed by all nine exact-head CI jobs when publication
   is authorized. The final head does not exist until that integration completes.
@@ -165,9 +169,9 @@ and final-reconciliation ownership.
 
 ## Acceptance still required
 
-After the remaining independent review and test/document integration, refresh the actual
-profile snapshot and complete named-test binding. Independent semantic acceptance
-and the initial seven-stage run above remain pinned to their tested code. All
+The profile snapshot and 243-case named-test binding are reconciled. Independent
+semantic/resource acceptance and the initial seven-stage run above remain pinned
+to their tested production code. All
 seven repository-local stages on the final documentation/test integration and
 all nine exact-head CI jobs remain pending until explicit results are supplied. Cross-compilation is not actual 386 execution;
 the latter remains a CI requirement. Real xmllint evidence concerns XSD controls,
