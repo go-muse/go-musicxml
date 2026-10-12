@@ -179,6 +179,20 @@ const (
 	timelineRoleListening
 	timelineRoleDirectionListening
 	timelineRoleListeningOffset
+	timelineRoleNoteAttack
+	timelineRoleNoteRelease
+	timelineRoleNoteNotations
+	timelineRoleNotationsTechnical
+	timelineRoleTechnicalBend
+	timelineRoleBendRelease
+	timelineRoleBendReleaseOffset
+	timelineRoleBendFirstBeat
+	timelineRoleBendLastBeat
+	timelineRoleBendBeats
+	timelineRoleBendAccelerate
+	timelineRoleGraceStealPrevious
+	timelineRoleGraceStealFollowing
+	timelineRoleGraceMakeTime
 	timelineRoleLimit
 )
 
@@ -212,6 +226,21 @@ var timelineRoleShapes = [...]timelineRoleShape{
 	{timelineRoleLineDetailColor, "line-detail", "color", "color", 1, true},
 	{timelineRoleLineDetailLineType, "line-detail", "line-type", "line-type", 1, true},
 	{timelineRoleLineDetailPrintObject, "line-detail", "print-object", "yes-no", 1, true},
+	{timelineRoleNoteAttack, "note", "attack", "divisions", 1, true},
+	{timelineRoleNoteRelease, "note", "release", "divisions", 1, true},
+	{timelineRoleNoteNotations, "note", "notations", "notations", 1, false},
+	{timelineRoleNotationsTechnical, "notations", "technical", "technical", 1, false},
+	{timelineRoleTechnicalBend, "technical", "bend", "bend", 1, false},
+	{timelineRoleBendRelease, "bend", "release", "release", 1, false},
+	{timelineRoleBendReleaseOffset, "release", "offset", "divisions", 1, true},
+	{timelineRoleBendFirstBeat, "bend", "first-beat", "percent", 1, true},
+	{timelineRoleBendLastBeat, "bend", "last-beat", "percent", 1, true},
+	{timelineRoleBendBeats, "bend", "beats", "trill-beats", 1, true},
+	{timelineRoleBendAccelerate, "bend", "accelerate", "yes-no", 1, true},
+	{timelineRoleGraceStealPrevious, "grace", "steal-time-previous", "percent", 1, true},
+	{timelineRoleGraceStealFollowing, "grace", "steal-time-following", "percent", 1, true},
+	{timelineRoleGraceMakeTime, "grace", "make-time", "divisions", 1, true},
+
 	{timelineRoleLineDetailLine, "line-detail", "line", "staff-line", 1, true},
 	{timelineRoleStaffSizeScaling, "staff-size", "scaling", "non-negative-decimal", 1, true},
 	{timelineRoleOtherPlayType, "other-play", "type", "xs:token", 1, true},
@@ -578,7 +607,7 @@ func (b *timelineBindings) size() int64 {
 // when its underlying graph has been changed to another value family.
 func timelineExpectedShape(name string) (xsd.TypeContentShape, bool) {
 	switch name {
-	case "", "attributes", "note", "backup", "forward", "direction", "harmony", "clef", "double", "empty", "for-part", "grace", "instrument", "instrument-change", "interchangeable", "key", "line-detail", "listening", "midi-instrument", "numeral", "numeral-key", "part-clef", "part-list", "part-transpose", "play", "score-instrument", "score-part", "sound", "staff-details", "staff-tuning", "swing", "time", "transpose", "virtual-instrument":
+	case "", "attributes", "note", "backup", "forward", "direction", "harmony", "clef", "double", "empty", "for-part", "grace", "instrument", "instrument-change", "interchangeable", "key", "line-detail", "listening", "midi-instrument", "numeral", "numeral-key", "part-clef", "part-list", "part-transpose", "play", "score-instrument", "score-part", "sound", "staff-details", "staff-tuning", "swing", "time", "transpose", "virtual-instrument", "bend", "notations", "technical", "release":
 		return xsd.ShapeComplex | xsd.ShapeElements, true
 	case "cancel", "key-octave":
 		return xsd.ShapeComplex | xsd.ShapeInteger, true
@@ -588,7 +617,7 @@ func timelineExpectedShape(name string) (xsd.TypeContentShape, bool) {
 		return xsd.ShapeComplex | xsd.ShapeString, true
 	case "fifths", "midi-128", "midi-16", "midi-16384", "octave", "staff-line", "staff-line-position", "staff-number", "xs:integer", "xs:positiveInteger", "xs:nonNegativeInteger":
 		return xsd.ShapeInteger, true
-	case "tenths", "divisions", "non-negative-decimal", "percent", "positive-divisions", "rotation-degrees", "semitones", "xs:decimal":
+	case "tenths", "divisions", "non-negative-decimal", "percent", "positive-divisions", "rotation-degrees", "semitones", "xs:decimal", "trill-beats":
 		return xsd.ShapeDecimal, true
 	case "positive-integer-or-empty":
 		return xsd.ShapeUnion | xsd.ShapeInteger | xsd.ShapeString, true
