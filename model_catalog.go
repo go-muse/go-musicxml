@@ -33,7 +33,27 @@ func newModelAssessmentEngine() (*validation.Engine, error) { return modelAssess
 
 // The preview catalog remains separate so adding target-specific local profiles
 // cannot silently change its obligation list or catalog digest.
+type assessmentDefinitions struct {
+	rules    []validation.RuleDefinition
+	profiles []validation.Profile
+	plans    []validation.PlanBinding
+}
+
 func buildModelAssessmentEngine() (*validation.Engine, error) {
+	d, err := buildModelAssessmentDefinitions()
+	if err != nil {
+		return nil, err
+	}
+	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	if err != nil {
+		return nil, err
+	}
+	return validation.NewEngine(catalog)
+}
+
+// Reusing definition construction does not broaden the frozen compiled catalog.
+// Each target family receives an independent catalog and therefore its own digest.
+func buildModelAssessmentDefinitions() (*assessmentDefinitions, error) {
 	modelXSD := validation.Profile{
 		ID: ProfileModelXSD, MusicXMLVersion: "4.0", Target: validation.TargetModel,
 		RegistryCommit:   assessmentRegistryCommit,
@@ -139,9 +159,5 @@ func buildModelAssessmentEngine() (*validation.Engine, error) {
 			plans = append(plans, local.plans...)
 		}
 	}
-	catalog, err := validation.NewCatalog(rules, []validation.Profile{modelXSD, modelLocal, sourceLocal}, plans)
-	if err != nil {
-		return nil, err
-	}
-	return validation.NewEngine(catalog)
+	return &assessmentDefinitions{rules: rules, profiles: []validation.Profile{modelXSD, modelLocal, sourceLocal}, plans: plans}, nil
 }

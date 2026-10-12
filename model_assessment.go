@@ -36,7 +36,7 @@ func assessModel(ctx context.Context, document Document, options AssessmentOptio
 	if err := ctx.Err(); err != nil {
 		return validation.Report{}, modelWalkStatus{}, &validation.IncompleteError{Reason: "canceled-before-model", Cause: err}
 	}
-	if options.Profile != ProfileModelXSD && options.Profile != ProfileModelLocal {
+	if options.Profile != ProfileModelXSD && options.Profile != ProfileModelLocal && options.Profile != ProfileModelTimeline {
 		return validation.Report{}, modelWalkStatus{}, &validation.ConfigurationError{Field: "profile", Reason: "unknown, empty or incompatible explicit model profile"}
 	}
 	account, err := validation.NewBudgetAccount(options.Budgets)
@@ -47,7 +47,12 @@ func assessModel(ctx context.Context, document Document, options AssessmentOptio
 	if _, err := validationSchemaForDocument(document); err != nil {
 		return validation.Report{}, modelWalkStatus{}, err
 	}
-	engine, err := newModelAssessmentEngine()
+	var engine *validation.Engine
+	if options.Profile == ProfileModelTimeline {
+		engine, err = newTimelineAssessmentEngine()
+	} else {
+		engine, err = newModelAssessmentEngine()
+	}
 	if err != nil {
 		return validation.Report{}, modelWalkStatus{}, err
 	}

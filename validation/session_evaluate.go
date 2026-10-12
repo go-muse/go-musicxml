@@ -70,6 +70,17 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 		_, _, err := evaluateIdentityPlan(ctx, s, n, r, p, false)
 		return err
 	}
+	// A valid local numeral-key is a complete independent alternative. Retain
+	// its result before waiting for document timeline finalization or resources.
+	if p.kind == planNumeralKey {
+		d, conclusive, err := s.localNumeralKeyProof(ctx, n, p.timelineConsumer)
+		if err != nil {
+			return s.recordProvedPlanInterruption(r, n, p, err)
+		}
+		if conclusive {
+			return s.record(r, n, d)
+		}
+	}
 	dependency, pending, err := s.dependencies(ctx, n, r, final)
 	if err != nil {
 		return err
@@ -404,11 +415,10 @@ func (s *Session) scanPrerequisite(ctx context.Context, dependency Dependency, c
 func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinition, p Plan, final bool) (Decision, bool, error) {
 	d := Decision{Rule: r.Key, Subject: NodeRef{s.documentID, n.header.ID}, Outcome: OutcomePass}
 	switch p.kind {
-	case planTimeline, planChordDuration, planNumeralKey:
-		if !final {
-			return Decision{}, true, nil
-		}
-		return Decision{Outcome: OutcomeUnsupported, Reason: "timeline-runtime-unavailable"}, false, nil
+	case planTimeline:
+		return s.evaluateTimeline(ctx, n, r.Key, p.timeline, final)
+	case planChordDuration, planNumeralKey:
+		return s.evaluateTimelineConsumer(ctx, n, p.timelineConsumer, p.kind, final)
 	case planLocal:
 		return s.evaluateLocalPlan(ctx, n, p.local, final)
 	case planTypedReference:
