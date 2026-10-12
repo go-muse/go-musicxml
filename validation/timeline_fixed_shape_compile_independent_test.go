@@ -46,3 +46,8 @@ var (
 	_ [timelineUnitGateBytes - 4*int64(unsafe.Sizeof(NodeRef{})+unsafe.Sizeof(bool(false)))]struct{}
 	_ [timelineUnitStageBytes - int64(unsafe.Sizeof(timelineService{})) - 512]struct{}
 )
+
+var (
+	_ [timelineKeyPresenceCertificateBytes - 4*int64(unsafe.Sizeof(int(0))+unsafe.Sizeof(stateProvenance{}))]struct{}
+	_ [timelineKeyPresenceGapScratchBytes - int64(unsafe.Sizeof(stateGap{}))]struct{}
+)
