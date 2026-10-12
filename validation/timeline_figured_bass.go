@@ -24,6 +24,8 @@ type figuredBassTimingOrigin struct {
 	FiguresComplete                         Evidence[bool]
 }
 
+type figuredBassDurationKey struct{ raw, units string }
+
 type figuredBassAnchorKey struct {
 	part, measure NodeID
 	ordinal       uint64
@@ -248,6 +250,8 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	defer func() { _ = s.account.Release(BudgetBufferedBytes, scratch) }()
 	pending := make(map[NodeID]figuredBassTimingOrigin)
 	anchorCache := make(map[figuredBassAnchorKey]figuredBassAnchorFact)
+	unitCache := make(map[figuredBassAnchorKey]Evidence[Decimal])
+	durationCache := make(map[figuredBassDurationKey]Evidence[Rational])
 	ids := make([]NodeID, 0, int(figureCount))
 	domains := make([]figuredBassDomain, 0)
 	counts := make(map[timelineDomain]int)
@@ -281,6 +285,11 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	if r.err != nil {
 		return r.err
 	}
+	noteIndex, releaseIndex, err := service.buildFiguredBassNoteIndex(r, domains)
+	if err != nil {
+		return err
+	}
+	defer releaseIndex()
 	for _, domain := range domains {
 		block, complete := domain.block, domain.complete
 		for _, event := range block.content.children {
@@ -313,6 +322,9 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if err = s.retain(bytes); err != nil {
 				return err
 			}
+			if _, err = AllocationSize(bytes); err != nil {
+				return err
+			}
 			out.Figures = make([]NodeRef, len(figures))
 			for i, figure := range figures {
 				if !r.step(1) {
@@ -330,7 +342,14 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 				}
 				cached, found := anchorCache[key]
 				if !found {
-					cached.anchor, cached.fact = service.figuredBassAnchor(r, domains, fact, complete)
+					var used bool
+					cached.anchor, cached.fact, used, err = noteIndex.anchor(ctx, s, service, fact)
+					if err != nil {
+						return err
+					}
+					if !used {
+						cached.anchor, cached.fact = service.figuredBassAnchor(r, domains, fact, complete)
+					}
 					if r.err != nil {
 						return r.err
 					}
@@ -355,13 +374,13 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if r.err != nil {
 				return r.err
 			}
-			if out.CursorUnits, err = service.figuredBassUnits(ctx, s, out.CursorOrigin); err != nil {
+			if out.CursorUnits, err = service.figuredBassUnits(ctx, s, out.CursorOrigin, unitCache); err != nil {
 				return err
 			}
-			if out.AnchorUnits, err = service.figuredBassUnits(ctx, s, out.Position); err != nil {
+			if out.AnchorUnits, err = service.figuredBassUnits(ctx, s, out.Position, unitCache); err != nil {
 				return err
 			}
-			if err = s.figuredBassDuration(ctx, &out); err != nil {
+			if err = s.figuredBassDuration(ctx, &out, durationCache); err != nil {
 				return err
 			}
 			if err = s.step(ctx, 1); err != nil {
@@ -402,18 +421,30 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	return r.err
 }
 
-func (service *timelineService) figuredBassUnits(ctx context.Context, s *Session, at Evidence[musicalPosition]) (Evidence[Decimal], error) {
+func (service *timelineService) figuredBassUnits(ctx context.Context, s *Session, at Evidence[musicalPosition], cache map[figuredBassAnchorKey]Evidence[Decimal]) (Evidence[Decimal], error) {
 	if at.State != EvidenceKnown {
 		return timelineGapAs[musicalPosition, Decimal](at, "figured-bass-unit-position-unavailable"), nil
 	}
+	value := at.Value
+	key := figuredBassAnchorKey{part: value.Part.Node, measure: value.Measure.Node, ordinal: value.MeasureOrdinal, offset: value.Offset.text}
+	if err := s.step(ctx, 1+int64(len(key.offset))); err != nil {
+		return Evidence[Decimal]{}, err
+	}
+	if units, found := cache[key]; found {
+		return units, nil
+	}
 	result, err := service.State.effectiveDivisions(ctx, s, at.Value)
-	return result.Value, err
+	if err != nil {
+		return Evidence[Decimal]{}, err
+	}
+	cache[key] = result.Value
+	return result.Value, nil
 }
 
 // Duration is expressed in divisions. Where cursor-time and anchor-time unit
 // interpretations agree, normalization is exact without choosing an unstated
 // precedence. Disputed or missing unit evidence remains explicit.
-func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimingOrigin) error {
+func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimingOrigin, cache map[figuredBassDurationKey]Evidence[Rational]) error {
 	out.DurationUnits = out.CursorUnits
 	if out.CursorUnits.State != EvidenceKnown || out.AnchorUnits.State != EvidenceKnown {
 		out.DurationUnits = Evidence[Decimal]{State: EvidenceKnown}
@@ -440,9 +471,25 @@ func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimin
 		return nil
 	}
 	var err error
-	out.Duration, err = s.normalizeTimelineDuration(ctx, out.DurationRaw, out.DurationUnits)
-	if err != nil {
-		return err
+	if out.DurationRaw.State == EvidenceKnown && out.DurationUnits.State == EvidenceKnown && out.DurationRaw.Value.Valid() && out.DurationUnits.Value.Valid() {
+		key := figuredBassDurationKey{raw: out.DurationRaw.Value.text, units: out.DurationUnits.Value.text}
+		if err := s.step(ctx, 1+int64(len(key.raw))+int64(len(key.units))); err != nil {
+			return err
+		}
+		var found bool
+		out.Duration, found = cache[key]
+		if !found {
+			out.Duration, err = s.normalizeTimelineDuration(ctx, out.DurationRaw, out.DurationUnits)
+			if err != nil {
+				return err
+			}
+			cache[key] = out.Duration
+		}
+	} else {
+		out.Duration, err = s.normalizeTimelineDuration(ctx, out.DurationRaw, out.DurationUnits)
+		if err != nil {
+			return err
+		}
 	}
 	out.End, err = s.noteTimingShift(ctx, out.Position, out.Duration)
 	return err
@@ -513,6 +560,7 @@ func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pendi
 			if group.State != EvidenceKnown {
 				position = timelineGapAs[NodeRef, musicalPosition](group, "figured-bass-chain-unavailable")
 			}
+			start := at
 			for ; at < end; at++ {
 				if !r.step(1) {
 					return r.err
@@ -524,7 +572,9 @@ func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pendi
 					out.ChainInterpretation = "consecutive-figured-bass-duration-chain"
 				}
 				out.ChainEnd = Evidence[musicalPosition]{State: EvidenceAbsent}
-				if out.DurationRaw.State != EvidenceAbsent {
+				if at == start && group.State == EvidenceKnown {
+					out.ChainEnd = out.End
+				} else if out.DurationRaw.State != EvidenceAbsent {
 					var err error
 					out.ChainEnd, err = r.s.noteTimingShift(r.ctx, out.ChainPosition, out.Duration)
 					if err != nil {
