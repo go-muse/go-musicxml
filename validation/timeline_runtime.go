@@ -302,6 +302,10 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			return err
 		}
 	}
+	// No deferred offset record is live beyond this point. Release the logical
+	// scratch before constructing the independently owned note-origin records.
+	pending = nil
+	releasePending()
 	if err := service.finalizeNoteOrigins(ctx, s, b, block); err != nil {
 		return err
 	}

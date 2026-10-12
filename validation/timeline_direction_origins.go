@@ -2,6 +2,9 @@ package validation
 
 import "context"
 
+// Indirect map record plus at least 512 bytes of map growth headroom.
+const timelineDirectionReserveBytes int64 = 1536
+
 // This is the optional note association described by the direction annotation,
 // not a command to attach every direction or a replacement for its visual or
 // playback position. Staff is retained, but is not an attachment filter: the
@@ -210,46 +213,58 @@ func (service *timelineService) resolveDirectionOrigins(ctx context.Context, s *
 				}
 				continue
 			}
-			if _, exists := service.DirectionOrigins[event.header.ID]; exists {
-				return contract("direction origins", "duplicate publication")
-			}
-			if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+			if err := service.resolveDirectionOrigin(r, event, block, blocks, index); err != nil {
 				return err
 			}
-			if err := s.retain(2048); err != nil {
-				return err
-			}
-			fact, found := service.Facts[event.header.ID]
-			if !found {
-				fact = timelineEventFact{Part: block.part, Origin: stateUnknown[musicalPosition]("direction-origin-unavailable"), Position: stateUnknown[musicalPosition]("direction-display-position-unavailable"), Staff: stateUnknown[Integer]("direction-staff-unavailable"), Voice: stateUnknown[string]("direction-voice-unavailable")}
-			}
-			out := directionTimingOrigin{Direction: NodeRef{s.documentID, event.header.ID}, Part: fact.Part, Staff: fact.Staff, Voice: fact.Voice, CursorOrigin: fact.Origin, DisplayPosition: fact.Position}
-			anchor, anchorFact, proved, err := index.anchor(ctx, s, service, fact)
-			if err != nil {
-				return err
-			}
-			if !proved {
-				anchor, anchorFact = service.directionAnchor(r, fact, blocks)
-			}
-			out.Anchor = anchor
-			if anchor.State == EvidenceKnown {
-				out.AnchorPosition, out.AnchorStaff, out.AnchorVoice = anchorFact.Position, anchorFact.Staff, anchorFact.Voice
-			} else {
-				out.AnchorPosition = stateUnavailable[NodeRef, musicalPosition](anchor)
-				out.AnchorStaff = stateUnavailable[NodeRef, Integer](anchor)
-				out.AnchorVoice = stateUnavailable[NodeRef, string](anchor)
-			}
-			if r.err != nil {
-				return r.err
-			}
-			if err := ownOrigin(ctx, s, &out); err != nil {
-				return err
-			}
-			if service.DirectionOrigins == nil {
-				service.DirectionOrigins = make(map[NodeID]directionTimingOrigin)
-			}
-			service.DirectionOrigins[event.header.ID] = out
 		}
 	}
+	return r.err
+}
+
+func (service *timelineService) resolveDirectionOrigin(r *stateReader, event *factNode, block timelineMeasureBlock, blocks []timelineMeasureBlock, index directionNoteIndex) error {
+	ctx, s := r.ctx, r.s
+	if _, exists := service.DirectionOrigins[event.header.ID]; exists {
+		return contract("direction origins", "duplicate publication")
+	}
+	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+		return err
+	}
+	if err := s.account.Charge(BudgetBufferedBytes, timelineDirectionReserveBytes); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, timelineDirectionReserveBytes) }()
+	if err := s.retain(timelineDirectionReserveBytes); err != nil {
+		return err
+	}
+	fact, found := service.Facts[event.header.ID]
+	if !found {
+		fact = timelineEventFact{Part: block.part, Origin: stateUnknown[musicalPosition]("direction-origin-unavailable"), Position: stateUnknown[musicalPosition]("direction-display-position-unavailable"), Staff: stateUnknown[Integer]("direction-staff-unavailable"), Voice: stateUnknown[string]("direction-voice-unavailable")}
+	}
+	out := directionTimingOrigin{Direction: NodeRef{s.documentID, event.header.ID}, Part: fact.Part, Staff: fact.Staff, Voice: fact.Voice, CursorOrigin: fact.Origin, DisplayPosition: fact.Position}
+	anchor, anchorFact, proved, err := index.anchor(ctx, s, service, fact)
+	if err != nil {
+		return err
+	}
+	if !proved {
+		anchor, anchorFact = service.directionAnchor(r, fact, blocks)
+	}
+	out.Anchor = anchor
+	if anchor.State == EvidenceKnown {
+		out.AnchorPosition, out.AnchorStaff, out.AnchorVoice = anchorFact.Position, anchorFact.Staff, anchorFact.Voice
+	} else {
+		out.AnchorPosition = stateUnavailable[NodeRef, musicalPosition](anchor)
+		out.AnchorStaff = stateUnavailable[NodeRef, Integer](anchor)
+		out.AnchorVoice = stateUnavailable[NodeRef, string](anchor)
+	}
+	if r.err != nil {
+		return r.err
+	}
+	if err := ownOrigin(ctx, s, &out); err != nil {
+		return err
+	}
+	if service.DirectionOrigins == nil {
+		service.DirectionOrigins = make(map[NodeID]directionTimingOrigin)
+	}
+	service.DirectionOrigins[event.header.ID] = out
 	return r.err
 }

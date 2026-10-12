@@ -5,6 +5,11 @@ import (
 	"math/big"
 )
 
+// Large map records are indirect. This includes the fixed record and at least
+// 512 bytes for map/key/control growth; a separate equal scratch allowance
+// covers the temporary record during owned-cause publication.
+const timelineNoteReserveBytes int64 = 3072
+
 // These are score-relative timing origins, not a rendered performance. In
 // particular, swing and grace stealing are later playback transformations.
 // Raw absence survives even where omission means no adjustment.
@@ -192,7 +197,11 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
 		return err
 	}
-	if err := s.retain(4096); err != nil {
+	if err := s.account.Charge(BudgetBufferedBytes, timelineNoteReserveBytes); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, timelineNoteReserveBytes) }()
+	if err := s.retain(timelineNoteReserveBytes); err != nil {
 		return err
 	}
 	out := noteTimingOrigin{Note: NodeRef{s.documentID, note.header.ID}, Part: fact.Part, Staff: fact.Staff, Voice: fact.Voice, ScoreOnset: fact.Position, Duration: fact.Duration, GraceTiming: Evidence[graceTimingOrigin]{State: EvidenceAbsent}}

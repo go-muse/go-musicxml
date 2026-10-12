@@ -43,7 +43,12 @@ func newTimelinePendingOffsets(r *stateReader, block timelineMeasureBlock) ([]ti
 	if err = r.s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
 		return nil, func() {}, err
 	}
-	release := func() { _ = r.s.account.Release(BudgetBufferedBytes, bytes) }
+	release := func() {
+		if bytes != 0 {
+			_ = r.s.account.Release(BudgetBufferedBytes, bytes)
+			bytes = 0
+		}
+	}
 	return make([]timelinePendingOffset, 0, count), release, nil
 }
 
