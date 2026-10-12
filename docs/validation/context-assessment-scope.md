@@ -84,6 +84,28 @@ contracts, source interpretation evidence and actual tests must be reconciled
 separately. Counts of rules, projected facts or fixtures are not a MusicXML
 coverage denominator.
 
+## Graphical beat-repeat terminal extent
+
+An absent stop can be bounded by complete encoded part closure only when the
+start and the final encoded extent are in the same structural measure. This
+existing bounded interpretation uses the maximum unshifted event origin plus
+positive non-backup duration: ordinary notes and forwards contribute
+symmetrically, while a backup does not add its duration and cannot erase an
+already observed extent. Display/effect offsets and nominal meter do not extend
+this bound. A synthesized duration endpoint retains `UnprovedFrame`.
+
+This is an encoded-content comparison bound, not proof of measure capacity,
+frame containment, sounding silence, or the author's intent when padding a
+voice. A trailing forward can therefore expose an empty repeated beat and yield
+`ContentEquivalent = Known(false)` and the encoded-repeat-content consumer's
+failure, even without independent containment of the forward destination.
+Ordinary terminal note endpoints have the same bounded treatment. Cross-measure
+part-end ranges, incomplete part closure, unavailable extent and nonintegral
+beat windows retain unavailable evidence. No required stop, meter-fill rule or
+forward-exclusion policy is introduced. The [source argument and exact
+fixtures](evidence/context-round3-repeat-review.md) distinguish this comparison
+from the unchanged timeline endpoint/frame contract.
+
 ## Practical default limits
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)

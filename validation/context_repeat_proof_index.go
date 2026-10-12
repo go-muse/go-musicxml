@@ -10,11 +10,11 @@ type contextRepeatMeasureKey struct {
 }
 type contextRepeatProofIndex struct {
 	rows          map[NodeRef]int
-	origins       map[contextRepeatMeasureKey]musicalPosition
 	ends          map[contextRepeatMeasureKey]Evidence[musicalPosition]
 	closures      map[NodeRef]stateClosure
 	coverage      map[NodeRef]Evidence[bool]
 	unknown       Evidence[bool]
+	all           Evidence[bool]
 	parts         map[NodeRef][]contextRepeatNote
 	scopes        map[contextRepeatProofScopeKey]*contextRepeatProofScope
 	releases      []func()
@@ -39,8 +39,8 @@ func contextRepeatScratch(ctx context.Context, s *Session, count int, size int64
 	}
 	return func() { _ = s.account.Release(BudgetBufferedBytes, bytes) }, nil
 }
-func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, rows []contextRepeatRecord) (*contextRepeatProofIndex, func(), error) {
-	free, err := contextRepeatScratch(r.ctx, r.s, len(r.s.sequence)+len(rows)+len(timeline.State.Closures), 768)
+func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, rows []contextRepeatRecord, plans ...*timelinePlan) (*contextRepeatProofIndex, func(), error) {
+	free, err := contextRepeatScratch(r.ctx, r.s, len(r.s.sequence)+len(rows)+len(timeline.State.Closures), 640)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -50,10 +50,11 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 			free()
 		}
 	}()
-	x := &contextRepeatProofIndex{coverageOrder: make(map[NodeRef]int), unknownOrder: -1, endGaps: make(map[NodeRef]Evidence[bool]), parts: make(map[NodeRef][]contextRepeatNote), scopes: make(map[contextRepeatProofScopeKey]*contextRepeatProofScope), rows: make(map[NodeRef]int), origins: make(map[contextRepeatMeasureKey]musicalPosition), ends: make(map[contextRepeatMeasureKey]Evidence[musicalPosition]), closures: make(map[NodeRef]stateClosure), coverage: make(map[NodeRef]Evidence[bool]), unknown: navigationKnownBool(true)}
+	x := &contextRepeatProofIndex{coverageOrder: make(map[NodeRef]int), unknownOrder: -1, endGaps: make(map[NodeRef]Evidence[bool]), parts: make(map[NodeRef][]contextRepeatNote), scopes: make(map[contextRepeatProofScopeKey]*contextRepeatProofScope), rows: make(map[NodeRef]int), ends: make(map[contextRepeatMeasureKey]Evidence[musicalPosition]), closures: make(map[NodeRef]stateClosure), coverage: make(map[NodeRef]Evidence[bool]), unknown: navigationKnownBool(true), all: navigationKnownBool(true)}
 	type scope struct {
-		part Evidence[NodeRef]
-		note bool
+		part  Evidence[NodeRef]
+		note  bool
+		level uint8
 	}
 	scopes := make(map[NodeID]scope)
 	type ancestorKey struct {
@@ -66,6 +67,8 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 		if gap.State == EvidenceKnown && gap.Value {
 			return
 		}
+		// Unknown-part rows enumerate every note; aggregate once in source order.
+		x.all = stateMergeGap(x.all, gap)
 		if part.State != EvidenceKnown {
 			if stateAvailabilityRank(gap.State) > stateAvailabilityRank(x.unknown.State) {
 				x.unknownOrder = order
@@ -82,6 +85,20 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 		}
 		x.coverage[part.Value] = stateMergeGap(old, gap)
 	}
+	// Borrow the selected timeline's exact hierarchy and canonical part resolver.
+	// Events do not enumerate containers that have no representable children.
+	var plan *timelinePlan
+	var hierarchy timelineHierarchy
+	hierarchyIndex := -1
+	if len(plans) != 0 && plans[0] != nil && plans[0].Bindings != nil && r.s.root != nil {
+		plan = plans[0]
+		for i, h := range plan.Bindings.Hierarchies {
+			if r.s.root.header.Declaration.State == EvidenceKnown && r.sameDeclaration(r.s.root.header.Declaration.Value, h.Root.Declaration) {
+				hierarchy, hierarchyIndex = h, i
+				break
+			}
+		}
+	}
 	for ordinal, id := range r.s.sequence {
 		order = ordinal
 		if !r.step(1) {
@@ -89,6 +106,60 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 		}
 		n := r.s.nodes[id]
 		v := scopes[n.header.Parent]
+		parentLevel := v.level
+		v.level = 0
+		if hierarchyIndex >= 0 {
+			container, partContainer := false, false
+			var declaration DeclarationID
+			var potential timelineRole
+			switch {
+			case n == r.s.root:
+				v.level, container = 1, true
+			case parentLevel == 1:
+				declaration, potential = hierarchy.Part.Declaration, timelineRolePart
+				if hierarchyIndex == 1 {
+					declaration, potential = hierarchy.Measure.Declaration, timelineRoleMeasure
+				}
+			case parentLevel == 2:
+				declaration, potential = hierarchy.Measure.Declaration, timelineRoleMeasure
+				if hierarchyIndex == 1 {
+					declaration, potential = hierarchy.Part.Declaration, timelineRolePart
+				}
+			}
+			if declaration != (DeclarationID{}) {
+				if n.header.Declaration.State == EvidenceKnown {
+					container = r.sameDeclaration(n.header.Declaration.Value, declaration)
+				} else {
+					reader := stateReader{ctx: r.ctx, s: r.s, b: plan.Bindings}
+					container = reader.potential(n, potential)
+					r.err = reader.err
+				}
+				if container {
+					v.level = parentLevel + 1
+					partContainer = potential == timelineRolePart
+				}
+			}
+			if r.err != nil {
+				return nil, nil, r.err
+			}
+			if container {
+				if partContainer {
+					var err error
+					v.part, err = r.s.timelinePart(r.ctx, n, plan)
+					if err != nil {
+						return nil, nil, err
+					}
+				}
+				if !r.step(1 + 4*int64(len(v.part.Value.DocumentID))) {
+					return nil, nil, r.err
+				}
+				merge(v.part, r.enumerated(n))
+				if n.header.Declaration.State != EvidenceKnown {
+					merge(v.part, stateUnavailable[DeclarationID, bool](n.header.Declaration))
+				}
+				checked[ancestorKey{v.part.Value, id}] = true
+			}
+		}
 		fact, isEvent := timeline.Facts[id]
 		if isEvent {
 			if !r.step(1 + 4*int64(len(fact.Part.Value.DocumentID))) {
@@ -134,17 +205,6 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 			if n.header.Declaration.State != EvidenceKnown {
 				merge(v.part, stateUnavailable[DeclarationID, bool](n.header.Declaration))
 			}
-			for _, pos := range []Evidence[musicalPosition]{fact.Origin, fact.Position} {
-				if !r.step(1) {
-					return nil, nil, r.err
-				}
-				if pos.State == EvidenceKnown && pos.Value.Offset.Valid() && pos.Value.Offset.value.Sign() == 0 {
-					k := contextRepeatMeasureKey{pos.Value.Part, pos.Value.MeasureOrdinal}
-					if _, exists := x.origins[k]; !exists {
-						x.origins[k] = pos.Value
-					}
-				}
-			}
 			// A displaced display/effect position cannot extend encoded music.
 			// Closure uses the unshifted cursor and its actual movement only.
 			if fact.Origin.State == EvidenceKnown && fact.Origin.Value.Offset.Valid() {
@@ -157,6 +217,9 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 				}
 				if !backup && fact.Duration.State == EvidenceKnown && fact.Duration.Value.Valid() && fact.Duration.Value.value.Sign() > 0 {
 					end.Value.Offset, err = r.s.rationalAdd(r.ctx, pos.Offset, fact.Duration.Value)
+					// This is encoded same-measure extent, not a contained endpoint.
+					// Notes and forwards preserve the same timeline uncertainty.
+					end.Value.UnprovedFrame = true
 					if err != nil {
 						return nil, nil, err
 					}
@@ -191,13 +254,6 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 			return nil, nil, r.err
 		}
 		x.rows[row.source] = i
-		if row.position.State == EvidenceKnown && row.position.Value.Offset.Valid() && row.position.Value.Offset.value.Sign() == 0 {
-			p := row.position.Value
-			k := contextRepeatMeasureKey{p.Part, p.MeasureOrdinal}
-			if _, found := x.origins[k]; !found {
-				x.origins[k] = p
-			}
-		}
 	}
 	order = len(r.s.sequence)
 	for _, c := range timeline.State.Closures {
@@ -216,14 +272,15 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 	}, nil
 }
 func (x *contextRepeatProofIndex) partCoverage(part Evidence[NodeRef]) Evidence[bool] {
+	if part.State != EvidenceKnown {
+		return x.all
+	}
 	out := x.unknown
-	if part.State == EvidenceKnown {
-		if local, ok := x.coverage[part.Value]; ok {
-			if x.unknownOrder < 0 || x.coverageOrder[part.Value] < x.unknownOrder {
-				out = stateMergeGap(local, out)
-			} else {
-				out = stateMergeGap(out, local)
-			}
+	if local, ok := x.coverage[part.Value]; ok {
+		if x.unknownOrder < 0 || x.coverageOrder[part.Value] < x.unknownOrder {
+			out = stateMergeGap(local, out)
+		} else {
+			out = stateMergeGap(out, local)
 		}
 	}
 	return out
@@ -234,6 +291,9 @@ func (x *contextRepeatProofIndex) stopRows(rows []contextRepeatRecord, stop Node
 	}
 	return nil
 }
+
+// partEnd supplies only a same-measure encoded-content bound to the beat
+// comparison. It never observes a frame origin or establishes measure capacity.
 func (x *contextRepeatProofIndex) partEnd(start musicalPosition) Evidence[musicalPosition] {
 	if gap, ok := x.endGaps[start.Part]; ok {
 		return stateUnavailable[bool, musicalPosition](gap)

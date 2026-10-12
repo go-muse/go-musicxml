@@ -301,7 +301,12 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 	defer freeNotes()
 	notes := make([]contextRepeatNote, 0, len(timeline.Playback.Notes))
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
-	index, freeIndex, err := contextRepeatBuildProofIndex(r, timeline, rows)
+	var hierarchyPlan *timelinePlan
+	if s.catalog != nil {
+		rule := s.catalog.rules[p.Timeline]
+		hierarchyPlan = s.catalog.plans[rule.Predicate].timeline
+	}
+	index, freeIndex, err := contextRepeatBuildProofIndex(r, timeline, rows, hierarchyPlan)
 	if err != nil {
 		return err
 	}
