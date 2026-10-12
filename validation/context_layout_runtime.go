@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"math/bits"
 	"strconv"
 )
 
@@ -31,6 +32,9 @@ func evaluateContextLayout(ctx context.Context, s *Session, n *factNode, key Rul
 	if !final {
 		return Decision{}, true, nil
 	}
+	if len(layoutConstantRules) > layoutConstantDispatchCapacity {
+		return Decision{}, false, contract("layout dispatch", "constant table exceeds dispatch capacity")
+	}
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
 	formatting, err := newLayoutFormatting(r, key)
 	if err != nil {
@@ -44,32 +48,53 @@ func evaluateContextLayout(ctx context.Context, s *Session, n *factNode, key Rul
 		if node == nil {
 			continue
 		}
-		if err := layoutStateNode(ctx, s, key, node, r, p); err != nil {
-			return Decision{}, false, err
+		dispatch := layoutDispatchRoles(r.roles(node), r.attributeRoles(node))
+		if r.err != nil {
+			return Decision{}, false, r.err
 		}
-		if err := layoutStatic(r, key, node, p); err != nil {
-			return Decision{}, false, err
-		}
-		if err := formatting.resolve(node); err != nil {
-			return Decision{}, false, err
-		}
-		for i, rule := range layoutConstantRules {
-			base := "constant." + strconv.Itoa(i)
-			if rule.Element != "" {
-				if !r.matches(node, layoutRole(base+".element")) {
-					continue
-				}
-			} else if !r.attributeOwner(node, layoutRole(base+".attribute")) {
-				continue
+		if dispatch.has(layoutStateFamily) {
+			if err := layoutStateNode(ctx, s, key, node, r, p); err != nil {
+				return Decision{}, false, err
 			}
-			raw := r.scalar(node)
+		}
+		// A direction-type child can publish a directive without proving any role
+		// of its own. In particular, an unavailable child declaration is not absence.
+		static := dispatch.has(layoutStaticFamily)
+		if !static {
+			static = r.matches(s.nodes[node.header.Parent], layoutRole("direction-type"))
+		}
+		if r.err != nil {
+			return Decision{}, false, r.err
+		}
+		if static {
+			if err := layoutStatic(r, key, node, p); err != nil {
+				return Decision{}, false, err
+			}
+		}
+		if dispatch.has(layoutFormatFamily) {
+			if err := formatting.resolve(node); err != nil {
+				return Decision{}, false, err
+			}
+		}
+		// Enumerate selected constants in the original rule order, independent of
+		// lexicographic role order and of the element/attribute dispatch axis.
+		for selected := dispatch.constants; selected != 0; selected &= selected - 1 {
+			if !r.step(1) {
+				return Decision{}, false, r.err
+			}
+			i := bits.TrailingZeros64(selected)
+			rule := layoutConstantRules[i]
+			base := "constant." + strconv.Itoa(i)
+			var raw Evidence[Atomic]
 			if rule.Attribute != "" {
-				raw = r.attribute(node, layoutRole(base+".attribute"))
+				raw = localRawAttribute(r, node, layoutRole(base+".attribute"))
+			} else {
+				raw = r.scalar(node)
 			}
 			if r.err != nil {
 				return Decision{}, false, r.err
 			}
-			if err := localPublish(ctx, s, key, node, ContextProperty("layout."+rule.Property), raw, localConstantEffective(rule, raw), Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{}, ContextUnitNone); err != nil {
+			if err := localPublishWithProvenance(ctx, s, key, node, ContextProperty("layout."+rule.Property), raw, localConstantEffective(rule, raw), Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{}, ContextUnitNone, localConstantProvenance(rule, raw)); err != nil {
 				return Decision{}, false, err
 			}
 		}

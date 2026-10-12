@@ -39,24 +39,43 @@ func evaluateContextLocal(ctx context.Context, s *Session, n *factNode, key Rule
 		if node == nil {
 			continue
 		}
-		for i, rule := range localConstantRules {
-			if !rule.Layout {
-				if err := localPublishConstant(ctx, s, key, node, r, i); err != nil {
-					return Decision{}, false, err
+		elements, attributes := r.roles(node), r.attributeRoles(node)
+		if r.err != nil {
+			return Decision{}, false, r.err
+		}
+		var families localFamilyMask
+		for _, roles := range [][]contextRole{elements, attributes} {
+			for _, role := range roles {
+				families |= localDispatchFamilies[role]
+				if i, ok := localDispatchConstants[role]; ok {
+					if err := localPublishConstant(ctx, s, key, node, r, i); err != nil {
+						return Decision{}, false, err
+					}
 				}
 			}
 		}
-		if err := localPrintNode(ctx, s, key, node, r); err != nil {
-			return Decision{}, false, err
+		if node.header.Parent == 0 {
+			families |= localStructuralFamily | localAdvisoryFamily
 		}
-		if err := localGlyphFacts(r, key, node); err != nil {
-			return Decision{}, false, err
+		if families&localPrintFamily != 0 {
+			if err := localPrintNode(ctx, s, key, node, r); err != nil {
+				return Decision{}, false, err
+			}
 		}
-		if err := localStructuralNode(ctx, s, key, node, r); err != nil {
-			return Decision{}, false, err
+		if families&localGlyphFamily != 0 {
+			if err := localGlyphFacts(r, key, node); err != nil {
+				return Decision{}, false, err
+			}
 		}
-		if err := localAdvisoryNode(ctx, s, key, node, r); err != nil {
-			return Decision{}, false, err
+		if families&localStructuralFamily != 0 {
+			if err := localStructuralNode(ctx, s, key, node, r); err != nil {
+				return Decision{}, false, err
+			}
+		}
+		if families&localAdvisoryFamily != 0 {
+			if err := localAdvisoryNode(ctx, s, key, node, r); err != nil {
+				return Decision{}, false, err
+			}
 		}
 	}
 	return Decision{Outcome: OutcomePass}, false, r.err
@@ -86,24 +105,38 @@ func localPresence(r *contextReader, n *factNode, role contextRole) Evidence[boo
 }
 func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r *contextReader) error {
 	active := Evidence[bool]{State: EvidenceKnown, Value: true}
-	if r.matches(n, localNote) {
+	if r.matches(n, localNote) || r.matches(n, localFiguredBass) {
 		raw := []Evidence[Atomic]{localRawAttribute(r, n, localPrintObject), localRawAttribute(r, n, localPrintDot), localRawAttribute(r, n, localPrintLyric), localRawAttribute(r, n, localPrintLeger)}
-		values := localPrinting(stateYesNo(raw[0]), stateYesNo(raw[1]), stateYesNo(raw[2]), stateYesNo(raw[3]), localPresence(r, n, localRest))
+		isNote := r.matches(n, localNote)
+		rest := Evidence[bool]{State: EvidenceKnown, Value: false}
+		if isNote {
+			rest = localPresence(r, n, localRest)
+		}
+		values := localPrinting(stateYesNo(raw[0]), stateYesNo(raw[1]), stateYesNo(raw[2]), stateYesNo(raw[3]), rest)
 		fields := []Evidence[bool]{values.Object, values.Dot, values.Lyric, values.Leger}
 		properties := []ContextProperty{ContextPrintObject, ContextPrintDot, ContextPrintLyric, ContextPrintLeger}
 		for i, v := range fields {
+			if i == 3 && !isNote {
+				continue
+			}
+			if r.err != nil {
+				return r.err
+			}
 			a := active
 			if i == 3 {
 				a = values.LegerActive
 			}
-			if err := localPublish(ctx, s, key, n, properties[i], raw[i], localBoolAtomic(v), a, NodeRef{}, ContextUnitNone); err != nil {
+			if err := localPublishDefaulted(ctx, s, key, n, properties[i], raw[i], localBoolAtomic(v), a, NodeRef{}, ContextUnitNone); err != nil {
 				return err
 			}
 		}
 		spacingRaw := localRawAttribute(r, n, localPrintSpacing)
 		spacing := localDefault(stateYesNo(spacingRaw), true)
 		applicability := localSpacingActive(r, n, values)
-		if err := localPublish(ctx, s, key, n, ContextPrintSpacing, spacingRaw, localBoolAtomic(spacing), applicability, NodeRef{}, ContextUnitNone); err != nil {
+		if r.err != nil {
+			return r.err
+		}
+		if err := localPublishDefaulted(ctx, s, key, n, ContextPrintSpacing, spacingRaw, localBoolAtomic(spacing), applicability, NodeRef{}, ContextUnitNone); err != nil {
 			return err
 		}
 	} else if r.attributeOwner(n, localPrintObject) {
@@ -117,12 +150,15 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 				value = localInheritedBool(stateYesNo(localRawAttribute(r, parent, localPrintLyric)), localDefault(stateYesNo(localRawAttribute(r, parent, localPrintObject)), true))
 			}
 		}
+		if r.err != nil {
+			return r.err
+		}
 		var err error
 		parent := s.nodes[n.header.Parent]
 		if r.matches(n, localLyric) && raw.State == EvidenceAbsent && parent != nil && r.matches(parent, localNote) {
 			err = localPublishAtOrigin(ctx, s, key, n, parent, ContextPrintObject, raw, localBoolAtomic(value), active, ContextInherited)
 		} else {
-			err = localPublish(ctx, s, key, n, ContextPrintObject, raw, localBoolAtomic(value), active, NodeRef{}, ContextUnitNone)
+			err = localPublishDefaulted(ctx, s, key, n, ContextPrintObject, raw, localBoolAtomic(value), active, NodeRef{}, ContextUnitNone)
 		}
 		if err != nil {
 			return err
@@ -136,7 +172,10 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 			grace, cue = localPresence(r, parent, localGrace), localPresence(r, parent, localCue)
 		}
 		value := localNoteSize(stateText(raw), grace, cue)
-		if err := localPublish(ctx, s, key, n, ContextNoteTypeSize, raw, localStringAtomic(value), active, NodeRef{}, ContextUnitNone); err != nil {
+		if r.err != nil {
+			return r.err
+		}
+		if err := localPublishDefaulted(ctx, s, key, n, ContextNoteTypeSize, raw, localStringAtomic(value), active, NodeRef{}, ContextUnitNone); err != nil {
 			return err
 		}
 	}
@@ -160,7 +199,10 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 				}
 			}
 		}
-		if err := localPublish(ctx, s, key, n, ContextNoteheadFilled, raw, value, applicable, NodeRef{}, ContextUnitNone); err != nil {
+		if r.err != nil {
+			return r.err
+		}
+		if err := localPublishDefaulted(ctx, s, key, n, ContextNoteheadFilled, raw, value, applicable, NodeRef{}, ContextUnitNone); err != nil {
 			return err
 		}
 	}
@@ -228,4 +270,14 @@ func localNoteheadFill(noteType Evidence[Atomic]) Evidence[Atomic] {
 		return Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "yes"}}
 	}
 	return stateUnknown[Atomic]("notehead-note-type-unavailable")
+}
+
+// Only source-defined defaulting call sites use this helper. Unavailable
+// dependencies remain causal evidence rather than becoming application choice.
+func localPublishDefaulted(ctx context.Context, s *Session, key RuleKey, n *factNode, property ContextProperty, raw, value Evidence[Atomic], active Evidence[bool], scope NodeRef, unit ContextUnit) error {
+	provenance := ContextExplicit
+	if raw.State == EvidenceAbsent && value.State == EvidenceKnown {
+		provenance = ContextDocumentedDefault
+	}
+	return localPublishWithProvenance(ctx, s, key, n, property, raw, value, active, scope, unit, provenance)
 }

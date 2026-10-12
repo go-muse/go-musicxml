@@ -37,4 +37,5 @@ var localConstantRules = []localConstantRule{
 	{Element: "stopped", Type: "empty-placement-smufl", Attribute: "smufl", AttributeType: "smufl-glyph-name", Property: "stopped-smufl", Default: "brassMuteClosed", Kind: AtomicString},
 	{Element: "open", Type: "empty-placement-smufl", Attribute: "smufl", AttributeType: "smufl-glyph-name", Property: "open-smufl", Default: "brassMuteOpen", Kind: AtomicString},
 	{Element: "half-muted", Type: "empty-placement-smufl", Attribute: "smufl", AttributeType: "smufl-glyph-name", Property: "half-muted-smufl", Default: "brassMuteHalfClosed", Kind: AtomicString},
+	{Element: "root-alter", Type: "harmony-alter", Attribute: "location", AttributeType: "left-right", Property: "root-alter-location", Default: "right", Kind: AtomicString},
 }

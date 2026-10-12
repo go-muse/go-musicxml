@@ -22,7 +22,11 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 	s := r.s
 	ref := NodeRef{s.documentID, n.header.ID}
 	yes := Evidence[bool]{State: EvidenceKnown, Value: true}
-	publish := func(property string, raw, value Evidence[Atomic], active Evidence[bool], unit ContextUnit, basis string) error {
+	publish := func(property string, raw, value Evidence[Atomic], active Evidence[bool], unit ContextUnit, basis string, selectedProvenance ...ContextProvenance) error {
+		provenance := ContextExplicit
+		if len(selectedProvenance) != 0 {
+			provenance = selectedProvenance[0]
+		}
 		scope := ref
 		if property == "system" && value.State == EvidenceKnown && value.Value.Text == "none" {
 			if timeline := s.timeline[p.Timeline]; timeline != nil {
@@ -37,7 +41,10 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 				}
 			}
 		}
-		return s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: ContextExplicit, Basis: basis}})
+		if r.err != nil {
+			return r.err
+		}
+		return s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: provenance, Basis: basis}})
 	}
 	if r.matches(n, layoutRole("staff-layout")) {
 		raw := localRawAttribute(r, n, layoutRole("staff-layout.@number"))
@@ -45,7 +52,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 		if raw.State == EvidenceAbsent {
 			value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: localOne}}
 		}
-		if err := publish("staff-number", raw, value, yes, ContextUnitNone, "within-part-top-to-bottom-default-one"); err != nil {
+		if err := publish("staff-number", raw, value, yes, ContextUnitNone, "within-part-top-to-bottom-default-one", localAbsentProvenance(raw, ContextDocumentedDefault)); err != nil {
 			return err
 		}
 	}
@@ -195,7 +202,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 	}
 	if r.matches(n, layoutRole("lyric")) {
 		raw := layoutAttribute(r, n, "placement")
-		if err := publish("lyric-placement", raw, layoutDefault(raw, "below"), yes, ContextUnitNone, "lyric-below-default"); err != nil {
+		if err := publish("lyric-placement", raw, layoutDefault(raw, "below"), yes, ContextUnitNone, "lyric-below-default", localAbsentProvenance(raw, ContextDocumentedDefault)); err != nil {
 			return err
 		}
 	}
@@ -238,7 +245,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 				basis = "second-below-and-right-slash-separator"
 			}
 		}
-		if err := publish("arrangement", raw, value, yes, ContextUnitNone, basis); err != nil {
+		if err := publish("arrangement", raw, value, yes, ContextUnitNone, basis, localAbsentProvenance(raw, ContextApplicationChoice)); err != nil {
 			return err
 		}
 	}
@@ -325,7 +332,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 		} else {
 			conversion = stateUnavailable[Atomic, Rational](tenths)
 		}
-		if err := s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: "layout.millimeters-per-tenth", Value: stateUnknown[Atomic]("exact-rational-in-layout-conversion"), Layout: &LayoutContextResult{Scope: ref, Origin: ref, Raw: tenths, Applicability: yes, Conversion: conversion, Unit: ContextUnitMillimeters, Basis: "millimeters-per-global-tenth"}}); err != nil {
+		if err := s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: "layout.millimeters-per-tenth", Value: stateUnknown[Atomic]("exact-rational-in-layout-conversion"), Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Scope: ref, Origin: ref, Raw: tenths, Applicability: yes, Conversion: conversion, Unit: ContextUnitMillimeters, Basis: "millimeters-per-global-tenth"}}); err != nil {
 			return err
 		}
 	}

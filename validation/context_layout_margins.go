@@ -58,14 +58,12 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 	r := l.r
 	ref := NodeRef{r.s.documentID, b.measure.header.ID}
 	yes := Evidence[bool]{State: EvidenceKnown, Value: true}
-	sysOverride, _ := l.child(frame.systemLayout, "system-margins")
-	sysDefaults, _ := l.child(systemDefaults, "system-margins")
 	for _, name := range []string{"left-margin", "right-margin", "top-margin", "bottom-margin"} {
 		raw := l.frameMargin(frame, name)
 		value := raw
 		origin := frame.pageLayout
 		if !frame.pageCertain && raw.State != EvidenceAbsent {
-			value = stateUnknown[Atomic]("page-margin-lifetime-unavailable")
+			value = layoutLifetimeValue[Atomic](frame.page, "page-margin-lifetime-unavailable")
 		}
 		if value.State == EvidenceAbsent {
 			value = l.pageMargin(pageDefaults, name, frame.parity, false)
@@ -78,7 +76,7 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 		if name != "left-margin" && name != "right-margin" {
 			continue
 		}
-		sysRaw, sysValue, origin := l.effective(sysOverride, sysDefaults, name, frame.systemCertain)
+		sysRaw, sysValue, origin := l.effectiveSystemMargin(frame, systemDefaults, name)
 		if err := l.publish(b.measure, "system-"+name, sysRaw, sysValue, yes, ref, frame, origin, b.part); err != nil {
 			return err
 		}
@@ -100,7 +98,7 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 		} else if system.State != EvidenceKnown {
 			sum = system
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout.effective-" + name), Value: layoutRationalScalar(sum), Layout: &LayoutContextResult{Part: b.part, Scope: ref, Origin: ref, Raw: sysRaw, Applicability: yes, Page: frame.page, System: frame.system, Conversion: sum, Unit: ContextUnitTenths, Basis: "page-margin-plus-signed-system-inset"}}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout.effective-" + name), Value: layoutRationalScalar(sum), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: ref, Raw: sysRaw, Applicability: yes, Page: frame.page, System: frame.system, Conversion: sum, Unit: ContextUnitTenths, Basis: "page-margin-plus-signed-system-inset"}}); err != nil {
 			return err
 		}
 	}
@@ -119,13 +117,16 @@ func (l *layoutScopes) effectivePage(frame layoutFrame, defaults *factNode, name
 	}
 	value := raw
 	if !frame.pageCertain && raw.State != EvidenceAbsent {
-		value = stateUnknown[Atomic]("page-override-lifetime-unavailable")
+		value = layoutLifetimeValue[Atomic](frame.page, "page-override-lifetime-unavailable")
 	}
 	if value.State == EvidenceAbsent {
 		value = l.scalar(defaults, name)
 		origin = defaults
 	}
-	return raw, layoutUnknownDefault(value, "application-page-layout"), origin
+	if frame.pageSelection.State != "" && frame.pageSelection.State != EvidenceKnown && frame.pageSelection.State != EvidenceAbsent {
+		origin = nil
+	}
+	return layoutSelectionValue(raw, frame.pageSelection), layoutSelectionValue(layoutUnknownDefault(value, "application-page-layout"), frame.pageSelection), origin
 }
 func (l *layoutScopes) frameMargin(frame layoutFrame, name string) Evidence[Atomic] {
 	raw := Evidence[Atomic]{State: EvidenceAbsent}
@@ -136,5 +137,5 @@ func (l *layoutScopes) frameMargin(frame layoutFrame, name string) Evidence[Atom
 		}
 		raw = layoutConsensusPair(raw, value)
 	}
-	return raw
+	return layoutSelectionValue(raw, frame.pageSelection)
 }

@@ -1,6 +1,10 @@
 package validation
 
-import "context"
+import (
+	"context"
+	"strings"
+	"unsafe"
+)
 
 // ContextUnit identifies the source-defined unit of a layout scalar.
 type ContextUnit string
@@ -21,6 +25,8 @@ type ContextProvenance string
 
 // Supported context origins distinguish explicit, default and inherited values.
 const (
+	// ContextExplicit marks a direct encoded observation, including observed
+	// absence; it does not assert that an effective value exists.
 	ContextExplicit          ContextProvenance = "explicit"
 	ContextDocumentedDefault ContextProvenance = "documented-default"
 	ContextInherited         ContextProvenance = "inherited"
@@ -56,14 +62,84 @@ func cloneLayoutContext(ctx context.Context, s *Session, p *LayoutContextResult)
 	if value.Part.State == "" {
 		value.Part.State = EvidenceAbsent
 	}
-	if err := contextRetainProjection(ctx, s, value); err != nil {
+	size, work, err := layoutContextSize(value)
+	if err != nil {
 		return nil, err
 	}
-	q := stateClone(value)
+	if err = s.step(ctx, work); err != nil {
+		return nil, err
+	}
+	if _, err = AllocationSize(size); err != nil {
+		return nil, err
+	}
+	if err = s.retain(size); err != nil {
+		return nil, err
+	}
+	q := cloneLayoutContextValue(value)
 	return &q, nil
 }
 
+// layoutContextSize counts the flat object once, every owned string/cause, and
+// the immutable numeric storage retained by all four wrappers. The fixed 512
+// byte allowance covers numeric object headers and allocator rounding; report
+// backing-array growth is independently covered by publishContextResult.
+func layoutContextSize(p LayoutContextResult) (size, work int64, err error) {
+	size = int64(unsafe.Sizeof(LayoutContextResult{})) + 512
+	work = 16
+	add := func(n int64) {
+		if err != nil {
+			return
+		}
+		size, err = rationalCheckedAdd(BudgetBufferedBytes, size, n)
+		if err == nil {
+			work, err = rationalCheckedAdd(BudgetRuleSteps, work, n)
+		}
+	}
+	for _, v := range []string{p.Scope.DocumentID, p.Origin.DocumentID, p.Part.Value.DocumentID, p.Page.Value.DocumentID, p.System.Value.DocumentID, p.Basis, string(p.Unit), string(p.Provenance), string(p.Raw.Value.Kind)} {
+		add(int64(len(v)))
+	}
+	add(layoutEvidenceBytes(p.Part))
+	add(layoutEvidenceBytes(p.Page))
+	add(layoutEvidenceBytes(p.System))
+	add(layoutEvidenceBytes(p.Staff))
+	add(layoutEvidenceBytes(p.Conversion))
+	add(layoutEvidenceBytes(p.Raw))
+	add(layoutEvidenceBytes(p.Applicability))
+	add(p.Staff.Value.ByteSize())
+	add(p.Conversion.Value.ByteSize())
+	add(atomicLogicalBytes(p.Raw.Value))
+	return
+}
+func layoutEvidenceBytes[T any](v Evidence[T]) int64 {
+	return int64(len(v.State)) + evidenceLogicalBytes(v)
+}
+
+// Numeric wrappers are immutable and may be shared; all editable causes and
+// every string, including values carried by unavailable evidence, are owned.
+func cloneLayoutContextValue(p LayoutContextResult) LayoutContextResult {
+	q := p
+	q.Scope.DocumentID = strings.Clone(p.Scope.DocumentID)
+	q.Origin.DocumentID = strings.Clone(p.Origin.DocumentID)
+	q.Part = cloneEvidence(p.Part)
+	q.Part.Value.DocumentID = strings.Clone(p.Part.Value.DocumentID)
+	q.Page = cloneEvidence(p.Page)
+	q.Page.Value.DocumentID = strings.Clone(p.Page.Value.DocumentID)
+	q.System = cloneEvidence(p.System)
+	q.System.Value.DocumentID = strings.Clone(p.System.Value.DocumentID)
+	q.Staff = cloneEvidence(p.Staff)
+	q.Conversion = cloneEvidence(p.Conversion)
+	q.Basis = strings.Clone(p.Basis)
+	q.Raw = cloneEvidence(p.Raw)
+	q.Raw.Value = cloneAtomic(p.Raw.Value)
+	q.Applicability = cloneEvidence(p.Applicability)
+	q.Unit = ContextUnit(strings.Clone(string(p.Unit)))
+	q.Provenance = ContextProvenance(strings.Clone(string(p.Provenance)))
+	return q
+}
+
 type contextLayoutService struct {
-	Final bool
-	State *layoutStateIndex
+	Final       bool
+	State       *layoutStateIndex
+	Blocks      []timelineMeasureBlock
+	BlocksReady bool
 }

@@ -33,7 +33,7 @@ func evaluateContextOpusLayout(ctx context.Context, s *Session, _ *factNode, key
 			if r.err != nil {
 				return Decision{}, false, r.err
 			}
-			if err := localPublish(ctx, s, key, n, "layout.opus-version", raw, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{s.documentID, n.header.ID}, ContextUnitNone); err != nil {
+			if err := localPublishDefaulted(ctx, s, key, n, "layout.opus-version", raw, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{s.documentID, n.header.ID}, ContextUnitNone); err != nil {
 				return Decision{}, false, err
 			}
 		}
@@ -45,7 +45,11 @@ func evaluateContextOpusLayout(ctx context.Context, s *Session, _ *factNode, key
 		if r.err != nil {
 			return Decision{}, false, r.err
 		}
-		if err := localPublish(ctx, s, key, n, "layout.opus-new-page", raw, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{s.documentID, n.header.Parent}, ContextUnitNone); err != nil {
+		provenance := ContextExplicit
+		if raw.State == EvidenceAbsent {
+			provenance = ContextApplicationChoice
+		}
+		if err := localPublishWithProvenance(ctx, s, key, n, "layout.opus-new-page", raw, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{s.documentID, n.header.Parent}, ContextUnitNone, provenance); err != nil {
 			return Decision{}, false, err
 		}
 	}

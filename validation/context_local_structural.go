@@ -214,6 +214,10 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 			}
 			if line.State == EvidenceAbsent {
 				switch {
+				// The dashes element itself denotes dashes; this is not an
+				// omitted line-type default (dashes has no such attribute).
+				// Official dashes example explicitly uses both formatting lengths:
+				// https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/dashes-element/
 				case r.matches(n, localDashes):
 					line = localKnownText("dashed")
 				case r.matches(n, localBracket) || r.matches(n, localWedge) || r.matches(n, localSlide):
@@ -237,7 +241,10 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 		raw := localRawAttribute(r, n, localColor)
 		if raw.State != EvidenceAbsent {
 			rgb, alpha := raw, raw
-			if raw.State == EvidenceKnown && raw.Value.Kind == AtomicString {
+			if raw.State == EvidenceKnown {
+				rgb, alpha = stateUnknown[Atomic]("color-value-unavailable"), stateUnknown[Atomic]("color-value-unavailable")
+			}
+			if raw.State == EvidenceKnown && raw.Value.Kind == AtomicString && localColorLexicalValid(raw.Value.Text) {
 				text := raw.Value.Text
 				av := "FF"
 				if len(text) == 9 {
@@ -247,8 +254,8 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 				if len(text) == 7 {
 					rgb = localKnownText(text)
 					a, e := strconv.ParseInt(av, 16, 16)
-					if e != nil {
-						return contract("local color", "validated color magnitude unavailable")
+					if e != nil || a < 0 || a > 255 {
+						return contract("local color", "admitted hexadecimal byte invariant")
 					}
 					num := localByteIntegers[a]
 					alpha = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: num}}
@@ -274,11 +281,15 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 			if err := publish(ContextFontFamilyOrder, raw, value, active); err != nil {
 				return err
 			}
-			categories, err := localFontCategories(ctx, s, raw)
+			categories, release, err := localFontCategoriesOwned(ctx, s, raw)
 			if err != nil {
 				return err
 			}
-			if err = publish(ContextFontFamilyCategories, raw, categories, active); err != nil {
+			err = publish(ContextFontFamilyCategories, raw, categories, active)
+			if release != nil {
+				release()
+			}
+			if err != nil {
 				return err
 			}
 		}
@@ -341,9 +352,15 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 			role     contextRole
 			property ContextProperty
 		}{{localPartNameDisplay, ContextPartNameDisplay}, {localPartAbbreviationDisplay, ContextPartAbbreviationDisplay}} {
-			presence := localPresence(r, n, q.role)
-			value := localBoolAtomic(presence)
 			origin, exists := r.child(n, q.role)
+			presence := exists
+			if presence.State == EvidenceAbsent {
+				presence = Evidence[bool]{State: EvidenceKnown, Value: false}
+			}
+			value := localBoolAtomic(presence)
+			if r.err != nil {
+				return r.err
+			}
 			var err error
 			if exists.State == EvidenceKnown {
 				err = localPublishAtOrigin(ctx, s, key, n, origin, q.property, Evidence[Atomic]{State: EvidenceAbsent}, value, active, ContextExplicit)
@@ -358,7 +375,10 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 	if r.matches(n, localFret) {
 		raw := r.scalar(n)
 		value := stateUnavailable[Atomic, bool](raw)
-		if raw.State == EvidenceKnown && raw.Value.Kind == AtomicInteger {
+		if raw.State == EvidenceKnown {
+			value = stateUnknown[bool]("fret-integer-value-unavailable")
+		}
+		if raw.State == EvidenceKnown && raw.Value.Kind == AtomicInteger && raw.Value.Integer.Valid() {
 			zero := localByteIntegers[0]
 			cmp, e := raw.Value.Integer.Cmp(zero)
 			if e != nil {
@@ -371,11 +391,15 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 		}
 	}
 	if r.matches(n, localLine) || r.attributeOwner(n, localLineNumber) {
-		raw := r.scalar(n)
+		var raw Evidence[Atomic]
+		label := "one-is-bottom-line"
 		if r.attributeOwner(n, localLineNumber) {
 			raw = localRawAttribute(r, n, localLineNumber)
+		} else {
+			raw = r.scalar(n)
+			label = "one-is-bottom-line-unbounded-by-line-count"
 		}
-		if err := publish(ContextStaffLineBasis, raw, localSemanticLabel(raw, "one-is-bottom-line-unbounded-by-line-count"), active); err != nil {
+		if err := publish(ContextStaffLineBasis, raw, localSemanticLabel(raw, label), active); err != nil {
 			return err
 		}
 	}
@@ -410,6 +434,9 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 	if r.matches(n, localFrameNote) {
 		raw := r.childScalar(n, localFrameString)
 		scope := NodeRef{DocumentID: s.documentID, Node: n.header.Parent}
+		if r.err != nil {
+			return r.err
+		}
 		if err := localPublish(ctx, s, key, n, ContextFrameString, raw, raw, active, scope, ContextUnitNone); err != nil {
 			return err
 		}
@@ -489,4 +516,18 @@ func localSemanticLabel(raw Evidence[Atomic], label string) Evidence[Atomic] {
 		return raw
 	}
 	return localKnownText(label)
+}
+
+// Admit the ASCII hexadecimal subset of the XSD color domain before indexing.
+func localColorLexicalValid(v string) bool {
+	if (len(v) != 7 && len(v) != 9) || v[0] != '#' {
+		return false
+	}
+	for i := 1; i < len(v); i++ {
+		c := v[i]
+		if !(c >= '0' && c <= '9' || c >= 'A' && c <= 'F') {
+			return false
+		}
+	}
+	return true
 }

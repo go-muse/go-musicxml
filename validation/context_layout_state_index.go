@@ -22,6 +22,9 @@ type layoutStateIndex struct {
 }
 
 func layoutGetStateIndex(r *contextReader, key RuleKey, p *contextPlan) (*layoutStateIndex, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
 	service, e := r.s.newContextService(r.ctx, key)
 	if e != nil {
 		return nil, e
@@ -36,20 +39,14 @@ func layoutGetStateIndex(r *contextReader, key RuleKey, p *contextPlan) (*layout
 	if service.Layout == nil {
 		service.Layout = &contextLayoutService{}
 	}
-	service.Layout.State = index
-	rule, ok := r.s.catalog.rules[p.Timeline]
-	if !ok {
-		index.Availability = stateUnknown[bool]("layout-timeline-unavailable")
-		return index, nil
-	}
-	plan := r.s.catalog.plans[rule.Predicate].timeline
-	if plan == nil {
-		index.Availability = stateUnknown[bool]("layout-timeline-unavailable")
-		return index, nil
-	}
-	blocks, e := r.s.timelineBlocks(r.ctx, plan)
+	blocks, available, e := layoutGetBlocks(r, key, p)
 	if e != nil {
 		return nil, e
+	}
+	if available.State != EvidenceKnown {
+		index.Availability = available
+		service.Layout.State = index
+		return index, nil
 	}
 	current := make(map[NodeID]layoutNumberingSnapshot)
 	for _, b := range blocks {
@@ -164,7 +161,11 @@ func layoutGetStateIndex(r *contextReader, key RuleKey, p *contextPlan) (*layout
 	if sortErr != nil {
 		return nil, sortErr
 	}
-	return index, r.err
+	if r.err != nil {
+		return nil, r.err
+	}
+	service.Layout.State = index
+	return index, nil
 }
 func (index *layoutStateIndex) symbolGap(r *contextReader, b timelineMeasureBlock, availability Evidence[bool], facts ...timelineEventFact) error {
 	availability = timelineGapAs[bool, bool](availability, "layout-publisher-evidence-unavailable")
@@ -203,4 +204,44 @@ func layoutLastGlobalGap(ctx context.Context, s *Session, gaps []layoutStateGlob
 		return nil, nil
 	}
 	return &gaps[lo-1], nil
+}
+
+// layoutGetBlocks shares the accepted hierarchy projection between visual
+// scopes and the state index. timelineBlocks already owns and accounts for the
+// immutable slice; caching it does not copy or retain every block a second time.
+func layoutGetBlocks(r *contextReader, key RuleKey, p *contextPlan) ([]timelineMeasureBlock, Evidence[bool], error) {
+	unavailable := stateUnknown[bool]("layout-timeline-unavailable")
+	if r.err != nil {
+		return nil, unavailable, r.err
+	}
+	if p.Timeline == (RuleKey{}) || r.s.catalog == nil {
+		return nil, unavailable, nil
+	}
+	rule, ok := r.s.catalog.rules[p.Timeline]
+	if !ok {
+		return nil, unavailable, nil
+	}
+	plan := r.s.catalog.plans[rule.Predicate].timeline
+	if plan == nil {
+		return nil, unavailable, nil
+	}
+	service, err := r.s.newContextService(r.ctx, key)
+	if err != nil {
+		return nil, unavailable, err
+	}
+	if service.Layout == nil {
+		if err = r.s.retain(256); err != nil {
+			return nil, unavailable, err
+		}
+		service.Layout = &contextLayoutService{}
+	}
+	if !service.Layout.BlocksReady {
+		blocks, err := r.s.timelineBlocks(r.ctx, plan)
+		if err != nil {
+			return nil, unavailable, err
+		}
+		service.Layout.Blocks = blocks
+		service.Layout.BlocksReady = true
+	}
+	return service.Layout.Blocks, Evidence[bool]{State: EvidenceKnown, Value: true}, nil
 }

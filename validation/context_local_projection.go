@@ -48,19 +48,19 @@ func localConstantEffective(rule localConstantRule, raw Evidence[Atomic]) Eviden
 	}
 	return raw
 }
+
+// localPublish records a direct input observation, including observed absence.
+// It does not assert that an effective value exists or a default was applied.
 func localPublish(ctx context.Context, s *Session, key RuleKey, n *factNode, property ContextProperty, raw, value Evidence[Atomic], active Evidence[bool], scope NodeRef, unit ContextUnit) error {
-	provenance := ContextExplicit
-	if raw.State == EvidenceAbsent || (raw.State == EvidenceKnown && raw.Value.Kind == AtomicString && raw.Value.Text == "" && value.State == EvidenceKnown && value.Value.Text != "") {
-		provenance = ContextDocumentedDefault
-	}
-	if value.State == EvidenceUnknown && raw.State == EvidenceAbsent {
-		provenance = ContextApplicationChoice
-	}
+	return localPublishWithProvenance(ctx, s, key, n, property, raw, value, active, scope, unit, ContextExplicit)
+}
+
+func localPublishWithProvenance(ctx context.Context, s *Session, key RuleKey, n *factNode, property ContextProperty, raw, value Evidence[Atomic], active Evidence[bool], scope NodeRef, unit ContextUnit, provenance ContextProvenance) error {
 	ref := NodeRef{DocumentID: s.documentID, Node: n.header.ID}
 	if scope.Node == 0 {
 		scope = ref
 	}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: provenance}})
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: provenance}})
 }
 func localPublishConstant(ctx context.Context, s *Session, key RuleKey, n *factNode, r *contextReader, i int) error {
 	spec := localConstantRules[i]
@@ -85,7 +85,7 @@ func localPublishConstant(ctx context.Context, s *Session, key RuleKey, n *factN
 		return r.err
 	}
 	value := localConstantEffective(spec, raw)
-	return localPublish(ctx, s, key, n, roles.property, raw, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{}, ContextUnitNone)
+	return localPublishWithProvenance(ctx, s, key, n, roles.property, raw, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{}, ContextUnitNone, localConstantProvenance(spec, raw))
 }
 
 // localRawAttribute preserves physical omission before applying reviewed
@@ -111,5 +111,24 @@ func localRawAttribute(r *contextReader, n *factNode, role contextRole) Evidence
 func localPublishAtOrigin(ctx context.Context, s *Session, key RuleKey, n, origin *factNode, property ContextProperty, raw, value Evidence[Atomic], active Evidence[bool], provenance ContextProvenance) error {
 	ref := NodeRef{s.documentID, n.header.ID}
 	from := NodeRef{s.documentID, origin.header.ID}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location, origin.header.Location}, Layout: &LayoutContextResult{Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: provenance}})
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location, origin.header.Location}, Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: provenance}})
+}
+
+func localConstantProvenance(spec localConstantRule, raw Evidence[Atomic]) ContextProvenance {
+	if raw.State == EvidenceAbsent || (spec.Empty && raw.State == EvidenceKnown && raw.Value.Kind == AtomicString && raw.Value.Text == "") {
+		if spec.Unknown != "" {
+			return ContextApplicationChoice
+		}
+		return ContextDocumentedDefault
+	}
+	return ContextExplicit
+}
+
+// Callers identify the source-defined absence branch; unavailable evidence is
+// never inferred to be an application choice or documented default.
+func localAbsentProvenance(raw Evidence[Atomic], absent ContextProvenance) ContextProvenance {
+	if raw.State == EvidenceAbsent {
+		return absent
+	}
+	return ContextExplicit
 }

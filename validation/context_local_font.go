@@ -20,16 +20,18 @@ func localFontCategory(name string) string {
 		return "specific"
 	}
 }
-func localFontCategories(ctx context.Context, s *Session, raw Evidence[Atomic]) (Evidence[Atomic], error) {
+
+// The production caller keeps the admitted builder live through owned publication.
+func localFontCategoriesOwned(ctx context.Context, s *Session, raw Evidence[Atomic]) (Evidence[Atomic], func(), error) {
 	if raw.State != EvidenceKnown {
-		return raw, nil
+		return raw, nil, nil
 	}
 	if raw.Value.Kind != AtomicString {
-		return stateUnknown[Atomic]("font-family-value-unavailable"), nil
+		return stateUnknown[Atomic]("font-family-value-unavailable"), nil, nil
 	}
 	text := raw.Value.Text
 	if err := s.step(ctx, int64(len(text))+1); err != nil {
-		return Evidence[Atomic]{}, err
+		return Evidence[Atomic]{}, nil, err
 	}
 	cost := int64(0)
 	for rest := text; ; {
@@ -37,7 +39,7 @@ func localFontCategories(ctx context.Context, s *Session, raw Evidence[Atomic]) 
 		var err error
 		cost, err = rationalCheckedAdd(BudgetBufferedBytes, cost, int64(len(localFontCategory(part)))+1)
 		if err != nil {
-			return Evidence[Atomic]{}, err
+			return Evidence[Atomic]{}, nil, err
 		}
 		if !more {
 			break
@@ -46,19 +48,20 @@ func localFontCategories(ctx context.Context, s *Session, raw Evidence[Atomic]) 
 	}
 	cost--
 	if err := s.account.Check(BudgetScalarBytes, cost); err != nil {
-		return Evidence[Atomic]{}, err
+		return Evidence[Atomic]{}, nil, err
 	}
 	reservation, err := rationalCheckedAdd(BudgetBufferedBytes, cost, 256)
 	if err != nil {
-		return Evidence[Atomic]{}, err
+		return Evidence[Atomic]{}, nil, err
 	}
 	if err = s.account.Charge(BudgetBufferedBytes, reservation); err != nil {
-		return Evidence[Atomic]{}, err
+		return Evidence[Atomic]{}, nil, err
 	}
-	defer func() { _ = s.account.Release(BudgetBufferedBytes, reservation) }()
+	release := func() { _ = s.account.Release(BudgetBufferedBytes, reservation) }
 	size, err := AllocationSize(cost)
 	if err != nil {
-		return Evidence[Atomic]{}, err
+		release()
+		return Evidence[Atomic]{}, nil, err
 	}
 	var builder strings.Builder
 	builder.Grow(size)
@@ -71,8 +74,5 @@ func localFontCategories(ctx context.Context, s *Session, raw Evidence[Atomic]) 
 		builder.WriteByte(',')
 		rest = tail
 	}
-	if err = s.retain(cost + 128); err != nil {
-		return Evidence[Atomic]{}, err
-	}
-	return localKnownText(builder.String()), nil
+	return localKnownText(builder.String()), release, nil
 }

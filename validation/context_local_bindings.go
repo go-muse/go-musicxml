@@ -1,6 +1,7 @@
 package validation
 
 const (
+	localFiguredBass  contextRole = "local.figured-bass"
 	localNote         contextRole = "local.note"
 	localLyric        contextRole = "local.lyric"
 	localGrace        contextRole = "local.grace"
@@ -20,6 +21,7 @@ const (
 
 func contextLocalBindingSpecs() []contextBindingSpec {
 	specs := []contextBindingSpec{
+		{Role: localFiguredBass, Name: "figured-bass", Type: "figured-bass", Count: -1},
 		{Role: localNote, Name: "note", Type: "note", Count: -1},
 		{Role: localLyric, Name: "lyric", Type: "lyric", Count: -1},
 		{Role: localGrace, Name: "grace", Type: "grace", Count: -1},

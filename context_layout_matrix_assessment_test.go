@@ -918,7 +918,7 @@ func TestLayoutMatrixStaffOverrideLifetime(t *testing.T) {
 		{"positive", `<print new-system="yes"/>`, lmk("12")},
 		{"negative", `<print new-system="no"/>`, lmk("22")},
 		{"boundary", `<print new-page="yes"/>`, lmk("12")},
-		{"missing_fact", `<print new-system="invalid"/>`, lmu()},
+		{"missing_fact", `<print new-system="invalid"/>`, lmi()},
 		{"interaction", `<print new-system="yes"><staff-layout><staff-distance>32</staff-distance></staff-layout></print>`, lmk("32")},
 	} {
 		t.Run(tc.axis, func(t *testing.T) {

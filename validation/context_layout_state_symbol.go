@@ -63,7 +63,10 @@ func layoutStatePartSymbol(ctx context.Context, s *Session, key RuleKey, n *fact
 		if property == "part-symbol-barline-scope-change" {
 			basis = "partial-symbol-coverage-implies-matching-common-barline-scope-change; false-does-not-mean-no-common-barlines"
 		}
-		return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: from, Raw: raw, Applicability: app, Unit: ContextUnitNone, Provenance: provenance, Basis: basis}})
+		if r.err != nil {
+			return r.err
+		}
+		return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: from, Raw: raw, Applicability: app, Unit: ContextUnitNone, Provenance: provenance, Basis: basis}})
 	}
 	if e := publish("part-symbol", raw, value, active); e != nil {
 		return e

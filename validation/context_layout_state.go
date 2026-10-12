@@ -11,7 +11,16 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		return localRawAttribute(r, n, layoutStateRole(owner+".@"+name))
 	}
 	pub := func(property string, raw, value Evidence[Atomic], app Evidence[bool], unit ContextUnit) error {
+		if r.err != nil {
+			return r.err
+		}
 		return localPublish(ctx, s, key, n, ContextProperty("layout."+property), raw, value, app, NodeRef{}, unit)
+	}
+	pubDefault := func(property string, raw, value Evidence[Atomic], app Evidence[bool], unit ContextUnit) error {
+		if r.err != nil {
+			return r.err
+		}
+		return localPublishDefaulted(ctx, s, key, n, ContextProperty("layout."+property), raw, value, app, NodeRef{}, unit)
 	}
 	child := func(name string) Evidence[Atomic] { return r.childScalar(n, layoutStateRole(name)) }
 	matches := func(name string) bool { return r.matches(n, layoutStateRole(name)) }
@@ -26,7 +35,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		if raw.State == EvidenceAbsent {
 			value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: localOne}}
 		}
-		if e := pub("clef-staff", raw, value, active, ContextUnitNone); e != nil {
+		if e := pubDefault("clef-staff", raw, value, active, ContextUnitNone); e != nil {
 			return e
 		}
 		additional := localDefault(stateYesNo(attr("clef", "additional")), false)
@@ -37,7 +46,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 			return e
 		}
 		eligible := layoutStateAnd(localDefault(stateYesNo(attr("clef", "print-object")), true), layoutStateNot(additional))
-		if e := pub("clef-system-print", attr("clef", "print-object"), localBoolAtomic(eligible), active, ContextUnitNone); e != nil {
+		if e := pubDefault("clef-system-print", attr("clef", "print-object"), localBoolAtomic(eligible), active, ContextUnitNone); e != nil {
 			return e
 		}
 		fact := layoutStateFact(r, p, n)
@@ -51,7 +60,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 	}
 	if matches("key") {
 		raw := attr("key", "print-object")
-		if e := pub("key-system-print", raw, localBoolAtomic(localDefault(stateYesNo(raw), true)), active, ContextUnitNone); e != nil {
+		if e := pubDefault("key-system-print", raw, localBoolAtomic(localDefault(stateYesNo(raw), true)), active, ContextUnitNone); e != nil {
 			return e
 		}
 	}
@@ -61,7 +70,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		if raw.State == EvidenceAbsent {
 			value = known("all-staves-of-created-part")
 		}
-		if e := pub("created-part-staff-scope", raw, value, active, ContextUnitNone); e != nil {
+		if e := pubDefault("created-part-staff-scope", raw, value, active, ContextUnitNone); e != nil {
 			return e
 		}
 	}
@@ -71,14 +80,14 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		if e := pub("hidden-line-coordinate", raw, known("included-in-clef-and-display-coordinates"), layoutStateNot(visible), ContextUnitNone); e != nil {
 			return e
 		}
-		if e := pub("hidden-line-layout-count", raw, localBoolAtomic(visible), active, ContextUnitNone); e != nil {
+		if e := pubDefault("hidden-line-layout-count", raw, localBoolAtomic(visible), active, ContextUnitNone); e != nil {
 			return e
 		}
 	}
 	if matches("staff-details") {
 		object := attr("staff-details", "print-object")
 		spacing := attr("staff-details", "print-spacing")
-		if e := pub("staff-cutaway", object, localBoolAtomic(layoutStateCutaway(localDefault(stateYesNo(object), true), localDefault(stateYesNo(spacing), true))), active, ContextUnitNone); e != nil {
+		if e := pubDefault("staff-cutaway", object, localBoolAtomic(layoutStateCutaway(localDefault(stateYesNo(object), true), localDefault(stateYesNo(spacing), true))), active, ContextUnitNone); e != nil {
 			return e
 		}
 		typ := localDefault(stateText(child("staff-type")), "regular")
@@ -86,7 +95,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		if typ.State == EvidenceKnown {
 			alt = Evidence[bool]{State: EvidenceKnown, Value: typ.Value == "alternate"}
 		}
-		if e := pub("alternate-staff-playback", child("staff-type"), localBoolAtomic(layoutStateNot(alt)), active, ContextUnitNone); e != nil {
+		if e := pubDefault("alternate-staff-playback", child("staff-type"), localBoolAtomic(layoutStateNot(alt)), active, ContextUnitNone); e != nil {
 			return e
 		}
 		source := stateUnavailable[bool, Atomic](alt)
@@ -112,9 +121,8 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 				return e
 			}
 		}
-		size, has := r.child(n, layoutStateRole("staff-size"))
-		_ = size
-		if has.State == EvidenceAbsent {
+		_, has := r.child(n, layoutStateRole("staff-size"))
+		if has.State != EvidenceKnown {
 			value := stateUnavailable[string, Atomic](typ)
 			if typ.State == EvidenceKnown {
 				switch typ.Value {
@@ -123,6 +131,9 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 				default:
 					value = stateUnknown[Atomic]("staff-size-not-encoded")
 				}
+			}
+			if has.State != EvidenceAbsent {
+				value = stateUnavailable[bool, Atomic](has)
 			}
 			if e := pub("staff-size-range", child("staff-type"), value, active, ContextUnitPercent); e != nil {
 				return e

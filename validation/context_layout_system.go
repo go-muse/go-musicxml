@@ -12,12 +12,12 @@ func layoutRationalScalar(value Evidence[Rational]) Evidence[Atomic] {
 }
 func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame, defaults *factNode) error {
 	r := l.r
-	explicit, e := l.child(frame.systemLayout, "system-dividers")
+	explicit, e := l.selectedChild(frame.systemLayout, frame.systemSelection, "system-dividers")
 	fallback, fe := l.child(defaults, "system-dividers")
 	if e.State == EvidenceAbsent && fe.State == EvidenceAbsent {
 		return nil
 	}
-	_, distance, _ := l.effective(frame.systemLayout, defaults, "system-distance", frame.systemCertain)
+	_, distance, _ := l.effectiveSystem(frame, defaults, "system-distance")
 	half, err := l.rational(distance)
 	if err != nil {
 		return err
@@ -29,9 +29,9 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 		}
 	}
 	for _, side := range []string{"left", "right"} {
-		divider, de := l.child(explicit, side+"-divider")
+		divider, de := l.selectedChild(explicit, e, side+"-divider")
 		if de.State == EvidenceAbsent {
-			divider, de = l.child(fallback, side+"-divider")
+			divider, de = l.selectedChild(fallback, fe, side+"-divider")
 		}
 		ref := NodeRef{r.s.documentID, b.measure.header.ID}
 		from := ref
@@ -53,7 +53,10 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 		if de.State != EvidenceKnown && de.State != EvidenceAbsent {
 			value = stateUnavailable[bool, Rational](de)
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-y"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "midway-between-current-and-previous-system-above-current-top"}}); err != nil {
+		if r.err != nil {
+			return r.err
+		}
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-y"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "midway-between-current-and-previous-system-above-current-top"}}); err != nil {
 			return err
 		}
 		raw = layoutAttribute(r, divider, "default-x")
@@ -62,15 +65,19 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 			return err
 		}
 		if raw.State == EvidenceAbsent {
-			sys, _ := l.child(frame.systemLayout, "system-margins")
-			def, _ := l.child(defaults, "system-margins")
-			_, v, _ := l.effective(sys, def, side+"-margin", frame.systemCertain)
+			_, v, _ := l.effectiveSystemMargin(frame, defaults, side+"-margin")
 			value, err = l.rational(v)
 			if err != nil {
 				return err
 			}
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-x"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "corresponding-system-margin"}}); err != nil {
+		if de.State != EvidenceKnown && de.State != EvidenceAbsent {
+			value = stateUnavailable[bool, Rational](de)
+		}
+		if r.err != nil {
+			return r.err
+		}
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-x"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "corresponding-system-margin"}}); err != nil {
 			return err
 		}
 	}
@@ -91,17 +98,15 @@ func (l *layoutScopes) systemWidth(frame layoutFrame, pageDefaults, systemDefaul
 	if err != nil {
 		return out, err
 	}
-	sys, _ := l.child(frame.systemLayout, "system-margins")
-	def, _ := l.child(systemDefaults, "system-margins")
 	for _, side := range []string{"left-margin", "right-margin"} {
 		page := l.frameMargin(frame, side)
 		if !frame.pageCertain && page.State != EvidenceAbsent {
-			page = stateUnknown[Atomic]("page-margin-lifetime-unavailable")
+			page = layoutLifetimeValue[Atomic](frame.page, "page-margin-lifetime-unavailable")
 		}
 		if page.State == EvidenceAbsent {
 			page = l.pageMargin(pageDefaults, side, frame.parity, false)
 		}
-		_, system, _ := l.effective(sys, def, side, frame.systemCertain)
+		_, system, _ := l.effectiveSystemMargin(frame, systemDefaults, side)
 		for _, v := range []Evidence[Atomic]{page, system} {
 			margin, e := l.rational(v)
 			if e != nil {
@@ -120,11 +125,22 @@ func (l *layoutScopes) systemWidth(frame layoutFrame, pageDefaults, systemDefaul
 	return out, nil
 }
 func (l *layoutScopes) addWidth(b timelineMeasureBlock, frame layoutFrame, first Evidence[NodeRef], pageDefaults, systemDefaults *factNode) error {
-	if first.State != EvidenceKnown || b.part.State != EvidenceKnown || first.Value != b.part.Value || frame.system.State != EvidenceKnown {
+	if !l.r.step(1) {
+		return l.r.err
+	}
+	if first.State != EvidenceKnown || b.part.State != EvidenceKnown || frame.system.State != EvidenceKnown {
+		if v, ok := l.widths[l.openWidth]; ok {
+			v.Complete = false
+			l.widths[l.openWidth] = v
+		}
+		return l.r.err
+	}
+	if first.Value != b.part.Value {
 		return nil
 	}
 	r := l.r
 	k := frame.system.Value.Node
+	l.openWidth = k
 	v, ok := l.widths[k]
 	if !ok {
 		if err := r.s.retain(2048); err != nil {

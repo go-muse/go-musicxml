@@ -312,7 +312,10 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 		if value.Value.State == EvidenceAbsent && i < 4 && f.defaults != nil && lyric == nil && layoutWordFontConsumer(r, n) {
 			font, e := r.child(f.defaults, layoutRole("word-font"))
 			if e.State == EvidenceKnown {
-				value = layoutFormatField{Value: layoutAttribute(r, font, name), Origin: NodeRef{r.s.documentID, font.header.ID}}
+				component := layoutAttribute(r, font, name)
+				if component.State != EvidenceAbsent {
+					value = layoutFormatField{Value: component, Origin: NodeRef{r.s.documentID, font.header.ID}}
+				}
 			} else if e.State != EvidenceAbsent {
 				value.Value = stateUnavailable[bool, Atomic](e)
 			}
@@ -372,7 +375,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 				provenance = ContextApplicationChoice
 			}
 		}
-		payload := &LayoutContextResult{Raw: raw, Applicability: Evidence[bool]{State: EvidenceKnown, Value: true}, Scope: ref, Origin: value.Origin, Provenance: provenance}
+		payload := &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Raw: raw, Applicability: Evidence[bool]{State: EvidenceKnown, Value: true}, Scope: ref, Origin: value.Origin, Provenance: provenance}
 		if name == "rotation" {
 			payload.Basis = "positive-clockwise-about-alignment-point"
 		}

@@ -7,23 +7,24 @@ import (
 
 // Sparse observed staff selectors. The encoded staff count is never expanded.
 type layoutStaffBucket struct {
-	Number  Evidence[Atomic]
-	Nodes   []*factNode
-	Unknown bool
+	Number Evidence[Atomic]
+	Nodes  []*factNode
+	Epoch  uint64
 }
 
-func (l *layoutScopes) readStaffLayouts(owner *factNode, buckets map[string]layoutStaffBucket) error {
+func (l *layoutScopes) readStaffLayouts(owner *factNode, buckets map[string]layoutStaffBucket) (Evidence[bool], error) {
+	gap := Evidence[bool]{State: EvidenceAbsent}
 	if owner == nil {
-		return nil
+		return gap, nil
 	}
 	r := l.r
 	complete := r.enumerated(owner)
 	if complete.State != EvidenceKnown || !complete.Value {
-		l.staffUnknown = true
+		gap = timelineGapAs[bool, bool](complete, "staff-layout-selector-unavailable")
 	}
 	for _, n := range owner.children {
 		if !r.step(1) {
-			return r.err
+			return gap, r.err
 		}
 		if !r.matches(n, layoutRole("staff-layout")) {
 			continue
@@ -33,23 +34,34 @@ func (l *layoutScopes) readStaffLayouts(owner *factNode, buckets map[string]layo
 			number = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: localOne}}
 		}
 		if number.State != EvidenceKnown {
-			l.staffUnknown = true
+			gap = layoutMergeSelection(gap, stateUnavailable[Atomic, bool](number))
+			continue
+		}
+		if number.Value.Kind != AtomicInteger || !number.Value.Integer.Valid() {
+			gap = layoutMergeSelection(gap, stateUnknown[bool]("staff-layout-selector-unavailable"))
 			continue
 		}
 		if !r.step(1 + number.Value.Integer.ByteSize()) {
-			return r.err
+			return gap, r.err
 		}
 		k := number.Value.Integer.String()
 		bucket := buckets[k]
 		if err := r.s.retain(768 + int64(len(k))); err != nil {
-			return err
+			return gap, err
 		}
 		bucket.Number = number
+		// Fresh explicit publishers establish current-system applicability, but do
+		// not resolve competing statements retained for that same observed selector.
+		if bucket.Epoch != l.staffEpoch {
+			bucket.Nodes = nil
+		}
+		bucket.Epoch = l.staffEpoch
 		bucket.Nodes = append(bucket.Nodes, n)
 		buckets[k] = bucket
 	}
-	return r.err
+	return gap, r.err
 }
+
 func (l *layoutScopes) staffConsensus(bucket layoutStaffBucket) Evidence[Atomic] {
 	result := Evidence[Atomic]{State: EvidenceAbsent}
 	for _, n := range bucket.Nodes {
@@ -66,21 +78,65 @@ func (l *layoutScopes) staffConsensus(bucket layoutStaffBucket) Evidence[Atomic]
 }
 func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidence[layoutStaffRef], frame layoutFrame) error {
 	r := l.r
-	print, _ := l.child(b.content, "print")
-	if b.part.State != EvidenceKnown {
-		return nil
-	}
+	print, selected := l.child(b.content, "print")
 	part := b.part.Value.Node
 	local, ok := l.staffOverrides[part]
+	if b.part.State != EvidenceKnown {
+		local, ok = nil, false
+	}
 	if !ok {
 		if err := r.s.retain(512); err != nil {
 			return err
 		}
 		local = make(map[string]layoutStaffBucket)
-		l.staffOverrides[part] = local
+		if b.part.State == EvidenceKnown {
+			l.staffOverrides[part] = local
+		}
 	}
-	if err := l.readStaffLayouts(print, local); err != nil {
+	gap, err := l.readStaffLayouts(print, local)
+	if err != nil {
 		return err
+	}
+	if selected.State != EvidenceKnown && selected.State != EvidenceAbsent {
+		gap = layoutMergeSelection(gap, selected)
+		// A repeated print selection is unresolved, but its observed sparse
+		// staff identities are still useful subjects for unavailable rows.
+		for _, candidate := range b.content.children {
+			if !r.step(1) {
+				return r.err
+			}
+			if r.matches(candidate, layoutRole("print")) {
+				more, err := l.readStaffLayouts(candidate, local)
+				if err != nil {
+					return err
+				}
+				gap = layoutMergeSelection(gap, more)
+			}
+		}
+	}
+	if gap.State != EvidenceAbsent && b.part.State == EvidenceKnown {
+		if l.staffGaps == nil {
+			if err := r.s.retain(512); err != nil {
+				return err
+			}
+			l.staffGaps = make(map[NodeID]Evidence[bool])
+		}
+		if _, found := l.staffGaps[part]; !found {
+			if err := r.s.retain(256); err != nil {
+				return err
+			}
+		}
+		previous := l.staffGaps[part]
+		if previous.State == "" {
+			previous.State = EvidenceAbsent
+		}
+		l.staffGaps[part] = layoutMergeSelection(previous, gap)
+	}
+	partGap := gap
+	if b.part.State == EvidenceKnown {
+		partGap = l.staffGaps[part]
+	} else {
+		partGap = layoutMergeSelection(partGap, stateUnavailable[NodeRef, bool](b.part))
 	}
 	if err := r.s.retain(512 + int64(len(l.staffDefaults)+len(local))*128); err != nil {
 		return err
@@ -98,10 +154,27 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		}
 		keys[k] = true
 	}
+	// An unresolved selector still denotes an observed layout statement. Do
+	// not make it disappear merely because no valid selector/default exists.
+	selectorGap := layoutMergeSelection(partGap, l.staffDefaultGap)
+	if len(keys) == 0 && selectorGap.State != "" && selectorGap.State != EvidenceAbsent && selectorGap.State != EvidenceKnown {
+		if r.err != nil {
+			return r.err
+		}
+		ref := NodeRef{r.s.documentID, b.measure.header.ID}
+		from := ref
+		if print != nil {
+			from.Node = print.header.ID
+		}
+		return r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: "layout.staff-distance", Value: stateUnavailable[bool, Atomic](selectorGap), Layout: &LayoutContextResult{Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Raw: stateUnavailable[bool, Atomic](selectorGap), Applicability: stateUnavailable[bool, bool](selectorGap), Page: frame.page, System: frame.system, Staff: stateUnavailable[bool, Integer](selectorGap), Unit: ContextUnitTenths, Provenance: ContextExplicit, Basis: "previous-system-staff-bottom-to-current-staff-top"}})
+	}
 	// Deterministic publication order is numeric-independent and does not expand
 	// gaps between sparse identifiers; score semantics never rely on map order.
 	order := make([]string, 0, len(keys))
 	for k := range keys {
+		if !r.step(1) {
+			return r.err
+		}
 		order = append(order, k)
 	}
 	if err := layoutSortStrings(r, order); err != nil {
@@ -113,22 +186,31 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		raw := l.staffConsensus(bucket)
 		value := raw
 		number := bucket.Number
+		if number.State == "" {
+			number = def.Number
+		}
 		origin := (*factNode)(nil)
 		if len(bucket.Nodes) > 0 {
 			origin = bucket.Nodes[0]
 		}
 		if value.State == EvidenceAbsent {
 			value = l.staffConsensus(def)
-			number = def.Number
+			if number.State == "" {
+				number = def.Number
+			}
 			if len(def.Nodes) > 0 {
 				origin = def.Nodes[0]
 			}
 		}
-		if !frame.systemCertain && len(bucket.Nodes) > 0 && raw.State != EvidenceAbsent {
-			value = stateUnknown[Atomic]("staff-override-lifetime-unavailable")
+		if bucket.Epoch != l.staffEpoch && len(bucket.Nodes) > 0 && raw.State != EvidenceAbsent {
+			value = layoutLifetimeValue[Atomic](frame.system, "staff-override-lifetime-unavailable")
 		}
-		if l.staffUnknown {
-			value = stateUnknown[Atomic]("staff-layout-selector-unavailable")
+		if raw.State == EvidenceAbsent {
+			value = layoutSelectionValue(value, l.staffDefaultGap)
+		}
+		value = layoutSelectionValue(value, partGap)
+		if number.State == "" {
+			number = Evidence[Atomic]{State: EvidenceAbsent}
 		}
 		active := stateUnknown[bool]("first-visible-staff-unavailable")
 		if first.State == EvidenceKnown && number.State == EvidenceKnown && frame.system.State == EvidenceKnown {
@@ -139,7 +221,10 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		if origin != nil {
 			from.Node = origin.header.ID
 		}
-		payload := &LayoutContextResult{Part: b.part, Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitTenths, Page: frame.page, System: frame.system, Staff: stateInteger(number), Provenance: ContextInherited, Basis: "previous-system-staff-bottom-to-current-staff-top"}
+		if r.err != nil {
+			return r.err
+		}
+		payload := &LayoutContextResult{Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitTenths, Page: frame.page, System: frame.system, Staff: stateInteger(number), Provenance: ContextInherited, Basis: "previous-system-staff-bottom-to-current-staff-top"}
 		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: "layout.staff-distance", Value: value, Layout: payload}); err != nil {
 			return err
 		}

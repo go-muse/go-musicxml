@@ -22,3 +22,12 @@ func TestLocalFontGenericCategoriesPreservePreferenceOrder(t *testing.T) {
 		}
 	}
 }
+
+// Test adapter consumes the temporary immediately; production owns its release.
+func localFontCategories(ctx context.Context, s *Session, raw Evidence[Atomic]) (Evidence[Atomic], error) {
+	value, release, err := localFontCategoriesOwned(ctx, s, raw)
+	if release != nil {
+		defer release()
+	}
+	return value, err
+}

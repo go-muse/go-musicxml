@@ -133,7 +133,7 @@ func TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode(t *testing.T) {
 
 func TestContextFigureNumberRetainsUnreviewedGrammarGate(t *testing.T) {
 	for _, timewise := range []bool{false, true} {
-		for _, value := range []string{"6", "Ⅵ", "6½", "not-a-number"} {
+		for _, value := range []string{"6", "10", "Ⅵ", "6½", "not-a-number"} {
 			xml := contextFixtureXML(`<figured-bass><figure><figure-number>`+value+`</figure-number></figure></figured-bass>`, timewise)
 			doc, err := Decode(strings.NewReader(xml))
 			if err != nil {
@@ -158,7 +158,11 @@ func TestContextFigureNumberRetainsUnreviewedGrammarGate(t *testing.T) {
 						}
 					}
 				}
-				if !found || r.Satisfied() {
+				if value == "6" || value == "10" {
+					if found {
+						t.Errorf("sufficient numeric subset stayed unavailable: %q %s", value, localFindings(r))
+					}
+				} else if !found || r.Satisfied() {
 					t.Errorf("figure grammar silently closed: %q %s", value, localFindings(r))
 				}
 			}

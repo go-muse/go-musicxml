@@ -78,16 +78,6 @@ func localGlyphFacts(r *contextReader, key RuleKey, n *factNode) error {
 	}
 	if r.matches(n, "glyph.local") {
 		typ := r.attribute(n, "glyph.type")
-		presence := r.presence(n, "glyph.type")
-		if r.s.schema != nil && (presence.State == EvidenceAbsent || presence.State == EvidenceKnown && !presence.Value) {
-			invalid, err := r.s.schemaInvalidValue(r.ctx, n, XSDCheckAttributes)
-			if err != nil {
-				return err
-			}
-			if invalid.State == EvidenceInvalid {
-				typ = invalid
-			}
-		}
 		name := r.scalar(n)
 		for _, v := range []struct {
 			p          ContextProperty

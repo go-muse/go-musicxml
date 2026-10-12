@@ -142,7 +142,10 @@ func layoutStatePosition(ctx context.Context, s *Session, key RuleKey, n *factNo
 		value = localBoolAtomic(applicable)
 	}
 	ref := NodeRef{s.documentID, n.header.ID}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: ref, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: ContextExplicit, Staff: fact.Staff, Basis: "diatonic-half-space-offset-from-bottom-staff-line; hidden-lines-included; no-sounding-pitch"}})
+	if r.err != nil {
+		return r.err
+	}
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: ref, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: ContextExplicit, Staff: fact.Staff, Basis: "diatonic-half-space-offset-from-bottom-staff-line; hidden-lines-included; no-sounding-pitch"}})
 }
 func layoutStateStaffStep(ctx context.Context, s *Session, step Evidence[string], octave Evidence[Integer], clef clefState) (Evidence[Integer], error) {
 	if step.State != EvidenceKnown {
@@ -170,6 +173,12 @@ func layoutStateStaffStep(ctx context.Context, s *Session, step Evidence[string]
 	case "C":
 		refStep, refOct = 0, 4
 	case "percussion":
+		// MusicXML 4.0 tutorial, "Percussion", Staff Lines: percussion uses
+		// the treble display reference G4 on line two, including fewer-line
+		// staves. This is a display-coordinate rule, not clef-glyph placement.
+		// https://www.w3.org/2021/06/musicxml40/tutorial/percussion/
+		// Pinned musicxml.xsd L6268–6270 limits pitch-positioning line values
+		// to G, F and C signs. The encoded line remains separately projected.
 		refStep, refOct = 4, 4
 		line = Evidence[Integer]{State: EvidenceKnown, Value: localByteIntegers[2]}
 		change = Evidence[Integer]{State: EvidenceKnown, Value: localByteIntegers[0]}

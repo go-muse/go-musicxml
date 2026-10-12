@@ -33,7 +33,10 @@ func layoutStateMeasure(ctx context.Context, s *Session, key RuleKey, b timeline
 		scope = b.part.Value
 	}
 	ref := NodeRef{s.documentID, b.measure.header.ID}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: "layout.measure-number-display", Value: localBoolAtomic(value), Origins: []Location{origin.header.Location, b.measure.header.Location}, Layout: &LayoutContextResult{Part: b.part, Scope: scope, Origin: NodeRef{s.documentID, origin.header.ID}, Raw: implicitRaw, Applicability: Evidence[bool]{State: EvidenceKnown, Value: true}, Unit: ContextUnitNone, Provenance: ContextInherited}})
+	if r.err != nil {
+		return r.err
+	}
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: "layout.measure-number-display", Value: localBoolAtomic(value), Origins: []Location{origin.header.Location, b.measure.header.Location}, Layout: &LayoutContextResult{Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: b.part, Scope: scope, Origin: NodeRef{s.documentID, origin.header.ID}, Raw: implicitRaw, Applicability: Evidence[bool]{State: EvidenceKnown, Value: true}, Unit: ContextUnitNone, Provenance: ContextInherited}})
 }
 func layoutStateNumberingPolicy(r *contextReader, key RuleKey, p *contextPlan, b timelineMeasureBlock) (*factNode, Evidence[string]) {
 	if b.part.State != EvidenceKnown {
