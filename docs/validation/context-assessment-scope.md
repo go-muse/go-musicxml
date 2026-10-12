@@ -55,7 +55,13 @@ Resource exhaustion is incomplete assessment, never a MusicXML defect.
 
 Span families have separate identities and applicability. There is no universal
 balance test, LIFO pairing rule, or staff/voice partition. Encoded document order
-and musical endpoint order are separate. Graphical repetition is separate from
+and musical endpoint order are separate. Refused same-note tied interpretations
+withhold their exact identity run regardless of document placement. Duplicate
+wholly unnamed lyric lines withhold that unnamed identity within the musical
+part; explicit name/number identities remain separately scoped. These are
+conservative correspondence limits, with no invented verse default or line reset.
+[Span scope repair evidence](evidence/span-round3-scope.md) records source rationale,
+causal boundaries, and controls. Graphical repetition is separate from
 playback navigation. Unproved repeat/jump policy retains unavailable evidence;
 there is no invented absent `times=2` or `after-jump=no` rule.
 

@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const spanUnnamedLyricIdentity = "a:a:"
+
 type spanLyricScopeKey struct {
 	note     NodeRef
 	identity string
@@ -67,10 +69,17 @@ type spanLyricIndex struct {
 	scratch    *spanScratch
 	identities map[NodeID]spanLyricIdentityValue
 	scopes     map[spanLyricScopeKey]Evidence[bool]
+	domains    map[NodeID]Evidence[NodeRef]
+	unnamed    map[NodeRef]Evidence[bool]
 }
 
 // Include every lyric, even one without an extend. Multiple unnamed lyrics on
 // one note cannot silently turn into one established line on the next note.
+// Number and name have no default (MusicXML 4.0 lyric type). For the wholly
+// unnamed identity, no source-defined line-selection or reset rule distinguishes
+// duplicate siblings, even before or after an extend. Conservatively withhold
+// that identity across its part; this is not a rule that rejects the document.
+// Explicit identities retain their separate, endpoint-local duplicate check.
 func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 	if r.err != nil {
 		return
@@ -107,6 +116,37 @@ func (index *spanLyricIndex) record(r *contextReader, n *factNode) {
 		}
 		index.scopes[key] = available
 	}
+	gap := index.scopes[key]
+	if (identity != spanUnnamedLyricIdentity && available.State == EvidenceKnown) || (gap.State == EvidenceKnown && gap.Value) {
+		return
+	}
+	// An unavailable identity could also be unnamed. Keep its original evidence
+	// rather than replacing a malformed attribute's cause with ambiguity.
+	domain := spanInheritedDomain(r, note, index.domains)
+	if r.err != nil {
+		return
+	}
+	var part NodeRef
+	if domain.State == EvidenceKnown {
+		part = domain.Value
+	}
+	if !r.step(1 + int64(len(part.DocumentID))) {
+		return
+	}
+	if old, ok := index.unnamed[part]; ok {
+		index.unnamed[part] = timelineMergeAvailability(old, gap)
+		return
+	}
+	if r.err = index.scratch.reserve(256 + int64(len(part.DocumentID))); r.err != nil {
+		return
+	}
+	if index.unnamed == nil {
+		if r.err = index.scratch.reserve(512); r.err != nil {
+			return
+		}
+		index.unnamed = make(map[NodeRef]Evidence[bool])
+	}
+	index.unnamed[part] = gap
 }
 
 func (index *spanLyricIndex) endpoint(r *contextReader, lyric *factNode) (string, Evidence[bool]) {

@@ -574,7 +574,7 @@ func TestContextSpanMissingEnumerationBothAdapters(t *testing.T) {
 		{"slur-domain", "measure", timelineNote("1", "", `<notations><slur type="start"/></notations>`) + timelineNote("1", "", `<notations><slur type="stop"/></notations>`), validation.SpanSlur},
 		{"note-vertical", "note", timelineNote("1", "", `<notations><arpeggiate/></notations>`), validation.SpanArpeggiate},
 		{"local-let-ring-survives", "measure", timelineNote("1", "", `<notations><tied type="let-ring"/></notations>`), validation.SpanTied},
-		{"local-tie-stub-survives", "measure", timelineNote("1", "", `<notations><tied type="start"/><tied type="stop"/></notations>`), validation.SpanTied},
+		{"local-tie-stub-needs-domain-enumeration", "measure", timelineNote("1", "", `<notations><tied type="start"/><tied type="stop"/></notations>`), validation.SpanTied},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			spanBothWithGap(t, (localFixture{body: `<attributes><divisions>1</divisions></attributes>` + tc.body}).xml(), true, false, tc.gap, func(t *testing.T, r validation.Report) {
@@ -583,6 +583,9 @@ func TestContextSpanMissingEnumerationBothAdapters(t *testing.T) {
 					t.Fatal("no projections")
 				}
 				for _, e := range es {
+					if tc.name == "local-tie-stub-needs-domain-enumeration" && (e.Association.State != validation.EvidenceUnsupported || e.Association.Reason != "identity-scope-incomplete" || len(e.Members) != 0) {
+						t.Fatal("stub bypassed adapter identity gate", e)
+					}
 					if strings.Contains(tc.name, "survives") {
 						if e.Association.State != validation.EvidenceKnown {
 							t.Fatal(e)

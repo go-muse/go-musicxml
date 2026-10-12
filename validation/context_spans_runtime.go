@@ -401,7 +401,7 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 	localGaps := make(map[NodeRef]Evidence[bool])
 	scratch := spanScratch{s: s}
 	defer scratch.release()
-	lyrics := &spanLyricIndex{scratch: &scratch}
+	lyrics := &spanLyricIndex{scratch: &scratch, domains: domains}
 	var metronomeSide NodeID
 	for order, id := range s.sequence {
 		node := s.nodes[id]
@@ -535,13 +535,23 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 			}
 		}
 	}
-	if err = spanLocalTiePairs(ctx, s, out.endpoints); err != nil {
-		return Decision{}, false, err
-	}
 
 	for _, e := range out.endpoints {
 		if !r.step(1) {
 			return Decision{}, false, r.err
+		}
+		if e.payload.Family == SpanLyricExtend && e.lyric == spanUnnamedLyricIdentity {
+			if !r.step(1 + int64(len(e.payload.Domain.Value.DocumentID))) {
+				return Decision{}, false, r.err
+			}
+			if e.payload.Domain.State == EvidenceKnown {
+				if gap, ok := lyrics.unnamed[e.payload.Domain.Value]; ok {
+					e.complete = timelineMergeAvailability(e.complete, gap)
+				}
+			}
+			if gap, ok := lyrics.unnamed[NodeRef{}]; ok {
+				e.complete = timelineMergeAvailability(e.complete, gap)
+			}
 		}
 		if e.payload.Domain.State == EvidenceKnown {
 			if gap, ok := gaps[e.payload.Domain.Value]; ok {
@@ -555,6 +565,9 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 				e.complete = timelineMergeAvailability(e.complete, gap)
 			}
 		}
+	}
+	if err = spanLocalTiePairs(ctx, s, out.endpoints); err != nil {
+		return Decision{}, false, err
 	}
 	if err = associateSpanEndpoints(ctx, s, out.endpoints, timeline); err != nil {
 		return Decision{}, false, err

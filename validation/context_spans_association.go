@@ -261,6 +261,23 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 			}
 			continue
 		}
+		// A refused one-note interpretation cannot be discarded as if it were
+		// proved isolated. Check the entire exact tied identity before publishing
+		// any pairs, so placing that ambiguity before or after another candidate
+		// has the same result. Other identities/domains remain independent.
+		ambiguousTied, err := spanTiedRunAmbiguous(ctx, s, es, run.indices)
+		if err != nil {
+			return err
+		}
+		if ambiguousTied {
+			for _, i := range run.indices {
+				if err := s.step(ctx, 1); err != nil {
+					return err
+				}
+				es[i].payload.Association = stateUnknown[bool]("span-tied-local-interpretation-ambiguous")
+			}
+			continue
+		}
 		pending := -1
 		from := 0
 		ambiguous := false
@@ -327,6 +344,54 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 	}
 	return nil
 }
+
+// spanTiedRunAmbiguous does not infer a visual stub or recover musical chains.
+// It only detects an unresolved same-note start/stop spelling anywhere in this
+// already-keyed run. Known positions alone do not prove a different visual
+// interpretation, and no missing boundaries or sound evidence are synthesized.
+func spanTiedRunAmbiguous(ctx context.Context, s *Session, es []*spanEndpoint, indices []int) (bool, error) {
+	if err := s.step(ctx, 1); err != nil {
+		return false, err
+	}
+	if len(indices) == 0 || es[indices[0]].payload.Family != SpanTied {
+		return false, nil
+	}
+	scratch := spanScratch{s: s}
+	defer scratch.release()
+	var started map[NodeRef]bool
+	for _, i := range indices {
+		e := es[i]
+		if err := s.step(ctx, 1+int64(len(e.payload.Anchor.Value.DocumentID))); err != nil {
+			return false, err
+		}
+		if e.payload.Anchor.State != EvidenceKnown || e.payload.Role.State != EvidenceKnown {
+			continue
+		}
+		anchor := e.payload.Anchor.Value
+		switch e.payload.Role.Value {
+		case "start":
+			if started[anchor] {
+				continue
+			}
+			if err := scratch.reserve(256 + int64(len(anchor.DocumentID))); err != nil {
+				return false, err
+			}
+			if started == nil {
+				if err := scratch.reserve(512); err != nil {
+					return false, err
+				}
+				started = make(map[NodeRef]bool)
+			}
+			started[anchor] = true
+		case "stop":
+			if started[anchor] {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 func spanSetAssociation(ctx context.Context, s *Session, e *spanEndpoint, members []NodeRef) error {
 	if err := s.step(ctx, int64(len(members))+1); err != nil {
 		return err
