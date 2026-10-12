@@ -54,11 +54,11 @@ func (service *timelineService) finalizeOffsetEvent(ctx context.Context, s *Sess
 	r := &stateReader{ctx: ctx, s: s, b: b}
 	units := fact.Units
 	if fact.Origin.State == EvidenceKnown {
-		selected, err := service.State.effectiveDivisions(ctx, s, fact.Origin.Value)
+		selected, err := service.State.effectiveDivisionsEvidence(ctx, s, fact.Origin.Value)
 		if err != nil {
 			return err
 		}
-		units = selected.Value
+		units = selected
 	} else {
 		gap := timelineGapAs[musicalPosition, Decimal](fact.Origin, "timeline-position-unavailable")
 		if stateAvailabilityRank(gap.State) > stateAvailabilityRank(units.State) {

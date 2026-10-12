@@ -294,11 +294,11 @@ func (service *timelineService) finalizeNoteOrigins(ctx context.Context, s *Sess
 		}
 		units := fact.Units
 		if fact.Origin.State == EvidenceKnown {
-			selected, err := service.State.effectiveDivisions(ctx, s, fact.Origin.Value)
+			selected, err := service.State.effectiveDivisionsEvidence(ctx, s, fact.Origin.Value)
 			if err != nil {
 				return err
 			}
-			units = selected.Value
+			units = selected
 		}
 		if err := service.readNoteOrigins(ctx, s, b, note, fact, units); err != nil {
 			return err

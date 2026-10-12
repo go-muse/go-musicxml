@@ -448,6 +448,16 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 	return queryStateAt(ctx, s, h, history, pos, staff, project, true)
 }
 func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive bool) (stateResult[V], error) {
+	return queryStateAtMode(ctx, s, h, history, pos, staff, project, inclusive, true)
+}
+
+// The evidence-only mode is restricted to immutable Decimal payloads and owns
+// causal pointers. Full compound/provenance queries keep their original copying
+// contract. This is not a borrowed compound-state escape hatch.
+func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive, ownedResult bool) (stateResult[V], error) {
+	if !ownedResult && reflect.TypeFor[V]() != reflect.TypeFor[Decimal]() {
+		return stateResult[V]{}, contract("timeline query", "evidence-only mode requires immutable Decimal")
+	}
 	out := stateResult[V]{}
 	if !stateValidPosition(pos) {
 		return out, contract("timeline query", "known musical position required")
@@ -500,10 +510,17 @@ func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, h
 		}
 		return project(p.Value.Value)
 	}
-	if e = s.step(ctx, selected.bytes); e != nil {
+	out.Value = projectValue(selected)
+	selectedCost := selected.bytes
+	if !ownedResult {
+		selectedCost, e = stateMeasure(ctx, s, reflect.ValueOf(out.Value))
+		if e != nil {
+			return stateResult[V]{}, e
+		}
+	}
+	if e = s.step(ctx, selectedCost); e != nil {
 		return stateResult[V]{}, e
 	}
-	out.Value = projectValue(selected)
 	if e = s.step(ctx, 1); e != nil {
 		return stateResult[V]{}, e
 	}
@@ -532,14 +549,21 @@ func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, h
 			if cmp != 0 {
 				continue
 			}
-			compareCost, x := rationalCheckedAdd(BudgetRuleSteps, p.bytes, selected.bytes)
+			candidate := projectValue(p)
+			candidateCost := p.bytes
+			if !ownedResult {
+				candidateCost, e = stateMeasure(ctx, s, reflect.ValueOf(candidate))
+				if e != nil {
+					return stateResult[V]{}, e
+				}
+			}
+			compareCost, x := rationalCheckedAdd(BudgetRuleSteps, candidateCost, selectedCost)
 			if x != nil {
 				return stateResult[V]{}, x
 			}
 			if e = s.step(ctx, compareCost); e != nil {
 				return stateResult[V]{}, e
 			}
-			candidate := projectValue(p)
 			if e = s.step(ctx, 1); e != nil {
 				return stateResult[V]{}, e
 			}
@@ -552,6 +576,9 @@ func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, h
 				out.Value = candidate
 			}
 			for _, pr := range p.Provenance {
+				if !ownedResult {
+					break
+				}
 				duplicate := false
 				for _, prior := range out.Provenance {
 					if e = s.step(ctx, 1); e != nil {
@@ -574,10 +601,17 @@ func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, h
 	if conflict && (out.Value.State == EvidenceKnown || out.Value.State == EvidenceAbsent) {
 		out.Value = stateUnknown[V]("timeline-state-conflict")
 	}
-	if e = stateRetainCopy(ctx, s, out.Value); e != nil {
-		return stateResult[V]{}, e
+	if ownedResult {
+		if e = stateRetainCopy(ctx, s, out.Value); e != nil {
+			return stateResult[V]{}, e
+		}
+		out.Value = stateClone(out.Value)
+	} else {
+		out.Value, e = stateOwnEvidence(ctx, s, out.Value)
+		if e != nil {
+			return stateResult[V]{}, e
+		}
 	}
-	out.Value = stateClone(out.Value)
 	cmp, e := stateComparePosition(ctx, s, selected.Position, pos)
 	if e != nil {
 		return stateResult[V]{}, e
@@ -636,6 +670,14 @@ func (h *timelineState) effectiveKey(ctx context.Context, s *Session, pos musica
 func (h *timelineState) effectiveDivisions(ctx context.Context, s *Session, pos musicalPosition) (stateResult[Decimal], error) {
 	return queryState(ctx, s, h, &h.Divisions, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal])
 }
+
+// effectiveDivisionsEvidence supplies normalization without retaining a second
+// provenance vector. The authoritative publications retain that provenance.
+func (h *timelineState) effectiveDivisionsEvidence(ctx context.Context, s *Session, pos musicalPosition) (Evidence[Decimal], error) {
+	result, err := queryStateAtMode(ctx, s, h, &h.Divisions, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal], true, false)
+	return result.Value, err
+}
+
 func (v clefState) activeLine() Evidence[Integer] {
 	if v.Additional.State == EvidenceKnown && v.Additional.Value {
 		return Evidence[Integer]{State: EvidenceAbsent}
