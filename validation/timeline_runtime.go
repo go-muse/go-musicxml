@@ -254,7 +254,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				if e != nil {
 					return e
 				}
-				prefix = prefix && member
+				prefix = member
 			} else {
 				prefix = false
 			}
