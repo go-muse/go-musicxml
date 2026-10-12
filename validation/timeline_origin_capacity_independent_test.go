@@ -29,3 +29,14 @@ func TestIndependentTimelineOriginCapacityAllowance(t *testing.T) {
 		}
 	}
 }
+
+// Map values of this size are indirect in the current Go runtime, so table
+// growth does not duplicate whole event records. Preserve the provider's
+// conservative fixed-record plus map/allocation headroom as the record grows.
+func TestIndependentTimelineFactCapacityAllowance(t *testing.T) {
+	width := int64(unsafe.Sizeof(timelineEventFact{}))
+	t.Logf("event fact fixed width=%d", width)
+	if timelineFactReserveBytes < width+256 {
+		t.Fatalf("event fact allowance %d is below fixed record plus map headroom %d", timelineFactReserveBytes, width+256)
+	}
+}
