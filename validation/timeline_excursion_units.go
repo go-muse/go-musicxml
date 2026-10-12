@@ -234,20 +234,24 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 			if err = s.step(ctx, 1); err != nil {
 				return err
 			}
-			if _, ok := gates[exc.Node]; !ok || exc.Locked {
+			if _, ok := gates[exc.Node]; !ok {
 				continue
 			}
 			proved, cause, e := stage.proveExcursion(ctx, s, exc, publishers)
 			if e != nil {
 				return e
 			}
-			if proved {
+			if proved && !exc.Locked {
 				delete(gates, exc.Node)
 				removed++
 			} else {
 				gap := exc.Availability
 				if cause.State != EvidenceAbsent && cause.State != EvidenceKnown && cause.State != "" {
-					gap = cause
+					if exc.Locked {
+						gap = timelineUnitWorst(gap, cause)
+					} else {
+						gap = cause
+					}
 				}
 				gates[exc.Node] = timelineExcursionGate{Availability: gap}
 			}
@@ -273,7 +277,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 func (v *timelineService) proveExcursion(ctx context.Context, s *Session, exc timelineUnitExcursion, publishers []timelineUnitPublisher) (bool, Evidence[Decimal], error) {
 	fact, ok := v.Facts[exc.Node]
 	cause := Evidence[Decimal]{State: EvidenceAbsent}
-	if !ok || fact.Origin.State != EvidenceKnown || fact.Units.State != EvidenceKnown {
+	if !ok || fact.Origin.State != EvidenceKnown || fact.Units.State != EvidenceKnown && !exc.Locked {
 		return false, cause, nil
 	}
 	departure := fact.Origin.Value
@@ -288,10 +292,11 @@ func (v *timelineService) proveExcursion(ctx context.Context, s *Session, exc ti
 	if err != nil {
 		return false, cause, err
 	}
-	if !sameUnits {
+	if !sameUnits && !exc.Locked {
 		return false, cause, nil
 	}
-	duration, err := s.normalizeTimelineDuration(ctx, exc.Raw, fact.Units)
+	units := selected
+	duration, err := s.normalizeTimelineDuration(ctx, exc.Raw, units)
 	if err != nil {
 		return false, cause, err
 	}
@@ -320,7 +325,7 @@ func (v *timelineService) proveExcursion(ctx context.Context, s *Session, exc ti
 		if !unitPublisherApplies(pub, exc.Part) {
 			continue
 		}
-		same, e := s.sameTimelineUnits(ctx, fact.Units, pub.Value)
+		same, e := s.sameTimelineUnits(ctx, units, pub.Value)
 		if e != nil {
 			return false, cause, e
 		}
@@ -359,7 +364,7 @@ func (v *timelineService) proveExcursion(ctx context.Context, s *Session, exc ti
 				if repair.Part.State != EvidenceKnown || repair.Part.Value != exc.Part {
 					continue
 				}
-				same, e := s.sameTimelineUnits(ctx, fact.Units, repair.Value)
+				same, e := s.sameTimelineUnits(ctx, units, repair.Value)
 				if e != nil {
 					return false, cause, e
 				}

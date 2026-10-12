@@ -198,6 +198,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			rawMovement = raw
 			if gate, found := service.unitGates[event.header.ID]; found {
 				movement.Duration = stateUnavailable[Decimal, Rational](gate.Availability)
+				units = gate.Availability
 			} else {
 				var err error
 				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, units)
@@ -214,6 +215,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			rawMovement = raw
 			if gate, found := service.unitGates[event.header.ID]; found {
 				movement.Duration = stateUnavailable[Decimal, Rational](gate.Availability)
+				units = gate.Availability
 			} else {
 				var err error
 				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, units)
@@ -376,6 +378,14 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 					units = stateUnavailable[musicalPosition, Decimal](fact.Position)
 				}
 				lastDivisionPosition = fact.Position
+				if service.unitGates != nil && fact.Position.State == EvidenceKnown {
+					// An explicit declaration cannot repair an older unconfined
+					// publisher solely by its XML serialization or measure ordinal.
+					units, err = service.State.effectiveDivisionsEvidence(ctx, s, fact.Position.Value)
+					if err != nil {
+						return err
+					}
+				}
 			}
 		}
 		if err := service.storeFact(ctx, s, event.header.ID, fact); err != nil {

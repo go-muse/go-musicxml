@@ -109,3 +109,11 @@ At this checkpoint, `go test ./validation -count=1 -skip
 'TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote'`
 is GREEN. The one skipped association group belongs to the parallel association
 implementation and is not claimed fixed by this state/runtime checkpoint.
+
+The follow-up causal controls `6c6bac5`, `8f41082`, and
+`TestTimelineExcursionGatePreservesDescendantUnitUnavailability` exposed three
+additional REDs. Locked local gates now collect stronger reachable causes while
+remaining locked; global gates also stop descendant lexical normalization; and a
+new positioned divisions statement must actually repair the effective history
+before it restores duration units. These groups and the complete validation
+suite (apart from the separately owned association group above) are GREEN.
