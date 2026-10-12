@@ -62,3 +62,42 @@ func TestTimelineDisplayStateDocumentedDefaultsAndMidmeasureApplicability(t *tes
 		t.Fatalf("absentcancel=%+v %v", got, err)
 	}
 }
+
+func TestTimelinePrintObjectRawAndDocumentedProjection(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	b := stateBindings()
+	ctx := context.Background()
+	for _, tc := range []struct {
+		role, attr timelineRole
+		read       func(*stateReader, *factNode) Evidence[bool]
+	}{
+		{timelineRoleAttributesKey, timelineRoleKeyPrintObject, func(r *stateReader, n *factNode) Evidence[bool] { return r.key(n).Value.PrintObject }},
+		{timelineRoleAttributesTime, timelineRoleTimePrintObject, func(r *stateReader, n *factNode) Evidence[bool] { return r.time(n).Value.PrintObject }},
+		{timelineRoleAttributesClef, timelineRoleClefPrintObject, func(r *stateReader, n *factNode) Evidence[bool] { return r.clef(n, false).Value.PrintObject }},
+	} {
+		for _, raw := range []string{"", "yes", "no"} {
+			n := stateNode(b, tc.role, 12, stateAbsent[Atomic]())
+			if raw != "" {
+				stateAttribute(b, n, tc.attr, Atomic{Kind: AtomicString, Text: raw})
+			}
+			r := &stateReader{ctx: ctx, s: s, b: b}
+			got := tc.read(r, n)
+			if r.err != nil {
+				t.Fatal(r.err)
+			}
+			if raw == "" && got.State != EvidenceAbsent {
+				t.Fatalf("absence lost %+v", got)
+			}
+			actual, err := printObjectDefault(ctx, s, got)
+			if err != nil || actual.State != EvidenceKnown || actual.Value != (raw != "no") {
+				t.Fatalf("default %+v %v", actual, err)
+			}
+		}
+	}
+	cause := &DecisionRef{Rule: RuleKey{"bad-print", 1}, Subject: NodeRef{"d", 12}}
+	got, err := printObjectDefault(ctx, s, Evidence[bool]{State: EvidenceInvalid, Cause: cause})
+	if err != nil || got.State != EvidenceInvalid || got.Cause == nil || got.Cause == cause || *got.Cause != *cause {
+		t.Fatalf("cause %+v %v", got, err)
+	}
+}
