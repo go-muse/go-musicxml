@@ -223,6 +223,9 @@ func (r *stateReader) instrument(n *factNode, change bool) Evidence[instrumentSt
 }
 func (r *stateReader) reference(n *factNode, idRole timelineRole, part NodeRef) Evidence[NodeRef] {
 	id := r.attribute(n, idRole)
+	if id.State == EvidenceAbsent && idRole != timelineRoleMidiDeviceID && idRole != timelineRolePlayID {
+		return stateUnknown[NodeRef]("timeline-required-instrument-id-absent")
+	}
 	if id.State != EvidenceKnown {
 		return stateUnavailable[Atomic, NodeRef](id)
 	}
@@ -440,7 +443,7 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 		return r.err
 	}
 	if complete.State != EvidenceKnown {
-		g.Availability = complete
+		g.Availability = stateMergeGap(g.Availability, complete)
 		return global(g)
 	}
 	for _, ch := range children {
@@ -449,8 +452,9 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 			return r.err
 		}
 		if id.State != EvidenceKnown {
-			g.Availability = stateUnavailable[NodeRef, bool](id)
-			if e := global(g); e != nil {
+			bad := g
+			bad.Availability = stateMergeGap(g.Availability, stateUnavailable[NodeRef, bool](id))
+			if e := global(bad); e != nil {
 				return e
 			}
 			continue

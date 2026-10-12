@@ -14,6 +14,12 @@ func stateBindings() *timelineBindings {
 		b.Roles[role][0].Attribute = true
 		b.Roles[role][0].Name = QName{Local: string(rune(1000 + role))}
 	}
+	for _, shape := range timelineRoleShapes {
+		if shape.attribute {
+			b.Roles[shape.role][0].Attribute = true
+			b.Roles[shape.role][0].Name = QName{Local: string(rune(1000 + shape.role))}
+		}
+	}
 	return b
 }
 func stateNode(b *timelineBindings, role timelineRole, id NodeID, scalar Evidence[Atomic], children ...*factNode) *factNode {

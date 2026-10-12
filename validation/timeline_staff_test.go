@@ -21,6 +21,10 @@ func TestTimelineStateStaffDetailsTypedSparseAndInherited(t *testing.T) {
 	stateAttribute(b, tuning, timelineRoleStaffTuningLine, Atomic{Kind: AtomicInteger, Integer: stateInt(t, 2)})
 	line := stateNode(b, timelineRoleStaffDetailsLineDetail, 38, empty)
 	stateAttribute(b, line, timelineRoleLineDetailLine, Atomic{Kind: AtomicInteger, Integer: stateInt(t, 2)})
+	stateAttribute(b, line, timelineRoleLineDetailWidth, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 1, 2)})
+	stateAttribute(b, line, timelineRoleLineDetailColor, Atomic{Kind: AtomicString, Text: "#123456"})
+	stateAttribute(b, line, timelineRoleLineDetailLineType, Atomic{Kind: AtomicString, Text: "dashed"})
+	stateAttribute(b, line, timelineRoleLineDetailPrintObject, Atomic{Kind: AtomicString, Text: "no"})
 	size := stateNode(b, timelineRoleStaffDetailsStaffSize, 39, stateAtomicDecimal(t, 80, 1))
 	stateAttribute(b, size, timelineRoleStaffSizeScaling, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
 	details := stateNode(b, timelineRoleAttributesStaffDetails, 30, empty, stateNode(b, timelineRoleStaffDetailsStaffType, 31, stateAtomicText("ossia")), stateNode(b, timelineRoleStaffDetailsStaffLines, 32, stateAtomicInteger(t, 0)), line, tuning, stateNode(b, timelineRoleStaffDetailsCapo, 33, stateAtomicInteger(t, 2)), size)
@@ -33,7 +37,7 @@ func TestTimelineStateStaffDetailsTypedSparseAndInherited(t *testing.T) {
 		t.Fatalf("staff details %+v,%v", r, e)
 	}
 	v := r.Value.Value
-	if v.Type.Value != "ossia" || v.Lines.Value.String() != "0" || v.Tunings[0].Alter.Value.String() != "-0.5" || v.Tunings[0].Line.Value.String() != "2" || v.Capo.Value.String() != "2" || v.Size.Value.Scaling.Value.String() != "60" {
+	if v.Type.Value != "ossia" || v.Lines.Value.String() != "0" || v.Tunings[0].Alter.Value.String() != "-0.5" || v.Tunings[0].Line.Value.String() != "2" || v.Capo.Value.String() != "2" || v.Size.Value.Scaling.Value.String() != "60" || v.LineDetails[0].Width.Value.String() != "0.5" || v.LineDetails[0].Color.Value != "#123456" || v.LineDetails[0].LineType.Value != "dashed" || v.LineDetails[0].PrintObject.Value {
 		t.Fatalf("lost components %+v", v)
 	}
 	other, e := h.effectiveStaffDetails(context.Background(), s, statePosition(t, 1, 0, 1), stateKnown(stateInt(t, 2)))

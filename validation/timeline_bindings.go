@@ -169,6 +169,13 @@ const (
 	timelineRoleScoreInstrumentInstrumentAbbreviation
 	timelineRoleLineDetailLine
 	timelineRoleStaffSizeScaling
+	timelineRoleStaffDetailsShowFrets
+	timelineRoleStaffDetailsPrintObject
+	timelineRoleStaffDetailsPrintSpacing
+	timelineRoleLineDetailWidth
+	timelineRoleLineDetailColor
+	timelineRoleLineDetailLineType
+	timelineRoleLineDetailPrintObject
 	timelineRoleLimit
 )
 
@@ -195,6 +202,13 @@ type timelineRoleShape struct {
 // This finite table is a configuration-time binding contract against MusicXML
 // 4.0 metadata. Runtime readers use only the copied exact descriptors.
 var timelineRoleShapes = [...]timelineRoleShape{
+	{timelineRoleStaffDetailsShowFrets, "staff-details", "show-frets", "show-frets", 1, true},
+	{timelineRoleStaffDetailsPrintObject, "staff-details", "print-object", "yes-no", 1, true},
+	{timelineRoleStaffDetailsPrintSpacing, "staff-details", "print-spacing", "yes-no", 1, true},
+	{timelineRoleLineDetailWidth, "line-detail", "width", "tenths", 1, true},
+	{timelineRoleLineDetailColor, "line-detail", "color", "color", 1, true},
+	{timelineRoleLineDetailLineType, "line-detail", "line-type", "line-type", 1, true},
+	{timelineRoleLineDetailPrintObject, "line-detail", "print-object", "yes-no", 1, true},
 	{timelineRoleLineDetailLine, "line-detail", "line", "staff-line", 1, true},
 	{timelineRoleStaffSizeScaling, "staff-size", "scaling", "non-negative-decimal", 1, true},
 	{timelineRoleOtherPlayType, "other-play", "type", "xs:token", 1, true},
@@ -569,13 +583,13 @@ func timelineExpectedShape(name string) (xsd.TypeContentShape, bool) {
 		return xsd.ShapeComplex | xsd.ShapeString, true
 	case "fifths", "midi-128", "midi-16", "midi-16384", "octave", "staff-line", "staff-line-position", "staff-number", "xs:integer", "xs:positiveInteger", "xs:nonNegativeInteger":
 		return xsd.ShapeInteger, true
-	case "divisions", "non-negative-decimal", "percent", "positive-divisions", "rotation-degrees", "semitones", "xs:decimal":
+	case "tenths", "divisions", "non-negative-decimal", "percent", "positive-divisions", "rotation-degrees", "semitones", "xs:decimal":
 		return xsd.ShapeDecimal, true
 	case "positive-integer-or-empty":
 		return xsd.ShapeUnion | xsd.ShapeInteger | xsd.ShapeString, true
 	case "yes-no-number":
 		return xsd.ShapeUnion | xsd.ShapeDecimal | xsd.ShapeString, true
-	case "cancel-location", "clef-sign", "mode", "mute", "numeral-mode", "semi-pitched", "smufl-accidental-glyph-name", "staff-type", "step", "symbol-size", "time-relation", "time-separator", "time-symbol", "yes-no", "xs:string", "xs:token", "xs:ID", "xs:IDREF":
+	case "color", "line-type", "show-frets", "cancel-location", "clef-sign", "mode", "mute", "numeral-mode", "semi-pitched", "smufl-accidental-glyph-name", "staff-type", "step", "symbol-size", "time-relation", "time-separator", "time-symbol", "yes-no", "xs:string", "xs:token", "xs:ID", "xs:IDREF":
 		return xsd.ShapeString, true
 	}
 	return 0, false

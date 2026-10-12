@@ -26,6 +26,7 @@ type stateProvenanceKind uint8
 const (
 	stateExplicit stateProvenanceKind = iota + 1
 	stateInitialDefault
+	stateDocumentedDefault
 )
 
 type stateProvenance struct {
@@ -46,6 +47,7 @@ type stateGap struct {
 	Availability              Evidence[bool]
 }
 type stateHistory[T any] struct {
+	index        *stateHistoryIndex
 	Publications []statePublication[T]
 	Gaps         []stateGap
 }
@@ -132,6 +134,7 @@ type instrumentChanges struct {
 }
 
 type timelineState struct {
+	StaffDetails                             stateHistory[staffDetailsState]
 	Divisions                                stateHistory[Decimal]
 	Keys                                     stateHistory[keyState]
 	Times                                    stateHistory[timeState]
@@ -338,6 +341,8 @@ func publishState[T any](ctx context.Context, s *Session, h *stateHistory[T], p 
 	p.Provenance = stateClone(p.Provenance)
 	p.bytes = n
 	h.Publications = append(h.Publications, p)
+	stateDiscardIndex(s, h.index)
+	h.index = nil
 	return nil
 }
 func addStateGap[T any](ctx context.Context, s *Session, h *stateHistory[T], g stateGap) error {
@@ -416,6 +421,9 @@ func stateApplies(ctx context.Context, s *Session, scope stateScope, staff Evide
 // a tie. Projection happens before comparison, so an independent known component
 // can survive a conflict elsewhere in the compound state.
 func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V]) (stateResult[V], error) {
+	return queryStateAt(ctx, s, h, history, pos, staff, project, true)
+}
+func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive bool) (stateResult[V], error) {
 	out := stateResult[V]{}
 	if !stateValidPosition(pos) {
 		return out, contract("timeline query", "known musical position required")
@@ -435,40 +443,11 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 		}
 		return out, nil
 	}
-	best := -1
-	for i, p := range history.Publications {
-		if e = s.step(ctx, 1); e != nil {
-			return out, e
-		}
-		if p.Position.Part != pos.Part {
-			continue
-		}
-		applies, x := stateApplies(ctx, s, p.Scope, staff)
-		if x != nil {
-			return out, x
-		}
-		if !applies {
-			continue
-		}
-		cmp, x := stateComparePosition(ctx, s, p.Position, pos)
-		if x != nil {
-			return out, x
-		}
-		if cmp > 0 {
-			continue
-		}
-		if best < 0 {
-			best = i
-			continue
-		}
-		cmp, x = stateComparePosition(ctx, s, p.Position, history.Publications[best].Position)
-		if x != nil {
-			return out, x
-		}
-		if cmp > 0 {
-			best = i
-		}
+	selection, e := selectState(ctx, s, history, pos, staff.Value, inclusive)
+	if e != nil {
+		return out, e
 	}
+	best := selection.Best
 	for _, g := range history.Gaps {
 		if e = s.step(ctx, 1); e != nil {
 			return out, e
@@ -508,62 +487,65 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 	}
 	initial := out.Value
 	conflict := false
-	for _, p := range history.Publications {
-		if e = s.step(ctx, 1); e != nil {
-			return stateResult[V]{}, e
-		}
-		if p.Position.Part != pos.Part {
-			continue
-		}
-		applies, x := stateApplies(ctx, s, p.Scope, staff)
-		if x != nil {
-			return stateResult[V]{}, x
-		}
-		if !applies {
-			continue
-		}
-		cmp, x := stateComparePosition(ctx, s, p.Position, selected.Position)
-		if x != nil {
-			return stateResult[V]{}, x
-		}
-		if cmp != 0 {
-			continue
-		}
-		compareCost, x := rationalCheckedAdd(BudgetRuleSteps, p.bytes, selected.bytes)
-		if x != nil {
-			return stateResult[V]{}, x
-		}
-		if e = s.step(ctx, compareCost); e != nil {
-			return stateResult[V]{}, e
-		}
-		candidate := projectValue(p)
-		if e = s.step(ctx, 1); e != nil {
-			return stateResult[V]{}, e
-		}
-		if !reflect.DeepEqual(initial, candidate) {
-			conflict = true
-		}
-		// Preserve an actual invalid/unsupported publication's causal evidence rather
-		// than replacing it with an invented conflict cause.
-		if candidate.State == EvidenceInvalid || (candidate.State == EvidenceUnsupported && out.Value.State != EvidenceInvalid) || (candidate.State == EvidenceUnknown && out.Value.State == EvidenceKnown) {
-			out.Value = candidate
-		}
-		for _, pr := range p.Provenance {
-			duplicate := false
-			for _, prior := range out.Provenance {
-				if e = s.step(ctx, 1); e != nil {
-					return stateResult[V]{}, e
-				}
-				if prior == pr {
-					duplicate = true
-					break
-				}
+	for _, group := range selection.Groups {
+		for _, publicationIndex := range group {
+			p := history.Publications[publicationIndex]
+			if e = s.step(ctx, 1); e != nil {
+				return stateResult[V]{}, e
 			}
-			if !duplicate {
-				if e = stateRetainCopy(ctx, s, pr); e != nil {
-					return stateResult[V]{}, e
+			if p.Position.Part != pos.Part {
+				continue
+			}
+			applies, x := stateApplies(ctx, s, p.Scope, staff)
+			if x != nil {
+				return stateResult[V]{}, x
+			}
+			if !applies {
+				continue
+			}
+			cmp, x := stateComparePosition(ctx, s, p.Position, selected.Position)
+			if x != nil {
+				return stateResult[V]{}, x
+			}
+			if cmp != 0 {
+				continue
+			}
+			compareCost, x := rationalCheckedAdd(BudgetRuleSteps, p.bytes, selected.bytes)
+			if x != nil {
+				return stateResult[V]{}, x
+			}
+			if e = s.step(ctx, compareCost); e != nil {
+				return stateResult[V]{}, e
+			}
+			candidate := projectValue(p)
+			if e = s.step(ctx, 1); e != nil {
+				return stateResult[V]{}, e
+			}
+			if !reflect.DeepEqual(initial, candidate) {
+				conflict = true
+			}
+			// Preserve an actual invalid/unsupported publication's causal evidence rather
+			// than replacing it with an invented conflict cause.
+			if candidate.State == EvidenceInvalid || (candidate.State == EvidenceUnsupported && out.Value.State != EvidenceInvalid) || (candidate.State == EvidenceUnknown && out.Value.State == EvidenceKnown) {
+				out.Value = candidate
+			}
+			for _, pr := range p.Provenance {
+				duplicate := false
+				for _, prior := range out.Provenance {
+					if e = s.step(ctx, 1); e != nil {
+						return stateResult[V]{}, e
+					}
+					if prior == pr {
+						duplicate = true
+						break
+					}
 				}
-				out.Provenance = append(out.Provenance, stateClone(pr))
+				if !duplicate {
+					if e = stateRetainCopy(ctx, s, pr); e != nil {
+						return stateResult[V]{}, e
+					}
+					out.Provenance = append(out.Provenance, stateClone(pr))
+				}
 			}
 		}
 	}
@@ -788,4 +770,17 @@ func (h *timelineState) effectiveKeyPresence(ctx context.Context, s *Session, po
 		return stateResult[bool]{}, e
 	}
 	return queryState(ctx, s, h, &h.Keys, pos, staff, func(v keyState) Evidence[bool] { return v.encodingEvidence() })
+}
+
+func stateMergeGap(a, b Evidence[bool]) Evidence[bool] {
+	if b.State == EvidenceAbsent || b.State == "" {
+		b = stateUnknown[bool]("timeline-gap-availability-unresolved")
+	}
+	if a.State == EvidenceAbsent || a.State == "" {
+		a = stateUnknown[bool]("timeline-gap-availability-unresolved")
+	}
+	if stateAvailabilityRank(b.State) > stateAvailabilityRank(a.State) {
+		return b
+	}
+	return a
 }

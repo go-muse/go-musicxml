@@ -347,6 +347,7 @@ func (r *stateReader) transpose(n *factNode, created bool) Evidence[transposeSta
 }
 func (h *timelineState) attributeGap(r *stateReader, n *factNode, p musicalPosition, gap Evidence[bool]) {
 	all := Evidence[stateScope]{State: EvidenceKnown, Value: stateScope{AllStaves: true}}
+	stateEmit(r, &h.StaffDetails, n, p, all, stateUnavailable[bool, staffDetailsState](gap))
 	stateEmit(r, &h.Divisions, n, p, all, stateUnavailable[bool, Decimal](gap))
 	stateEmit(r, &h.Keys, n, p, all, stateUnavailable[bool, keyState](gap))
 	stateEmit(r, &h.Times, n, p, all, stateUnavailable[bool, timeState](gap))
@@ -388,6 +389,8 @@ func (h *timelineState) readAttributes(ctx context.Context, s *Session, b *timel
 			stateEmit(r, &h.Keys, ch, pos, r.scope(ch, timelineRoleKeyNumber, false), r.key(ch))
 		case r.matches(ch, timelineRoleAttributesTime):
 			stateEmit(r, &h.Times, ch, pos, r.scope(ch, timelineRoleTimeNumber, false), r.time(ch))
+		case r.matches(ch, timelineRoleAttributesStaffDetails):
+			stateEmit(r, &h.StaffDetails, ch, pos, r.scope(ch, timelineRoleStaffDetailsNumber, true), r.staffDetails(ch))
 		case r.matches(ch, timelineRoleAttributesTranspose):
 			stateEmit(r, &h.Transpose, ch, pos, r.scope(ch, timelineRoleTransposeNumber, false), r.transpose(ch, false))
 		case r.matches(ch, timelineRoleAttributesClef):
@@ -439,10 +442,12 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 	complete := r.enumerated(n)
 	generic := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](position)}
 	if complete.State != EvidenceKnown {
-		generic.Availability = complete
+		generic.Availability = stateMergeGap(generic.Availability, complete)
 	}
 	publish := func(ch *factNode, role timelineRole, g stateGap) {
 		switch role {
+		case timelineRoleAttributesStaffDetails:
+			r.err = addStateGap(ctx, s, &h.StaffDetails, g)
 		case timelineRoleAttributesDivisions:
 			r.err = addStateGap(ctx, s, &h.Divisions, g)
 		case timelineRoleAttributesKey:
@@ -476,7 +481,7 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 			}
 		}
 	}
-	roles := [...]timelineRole{timelineRoleAttributesDivisions, timelineRoleAttributesKey, timelineRoleAttributesTime, timelineRoleAttributesStaves, timelineRoleAttributesInstruments, timelineRoleAttributesClef, timelineRoleAttributesTranspose, timelineRoleAttributesForPart}
+	roles := [...]timelineRole{timelineRoleAttributesStaffDetails, timelineRoleAttributesDivisions, timelineRoleAttributesKey, timelineRoleAttributesTime, timelineRoleAttributesStaves, timelineRoleAttributesInstruments, timelineRoleAttributesClef, timelineRoleAttributesTranspose, timelineRoleAttributesForPart}
 	if complete.State != EvidenceKnown {
 		for _, role := range roles {
 			publish(nil, role, generic)
@@ -494,6 +499,8 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 			g := generic
 			scopeRole := timelineRoleInvalid
 			switch role {
+			case timelineRoleAttributesStaffDetails:
+				scopeRole = timelineRoleStaffDetailsNumber
 			case timelineRoleAttributesKey:
 				scopeRole = timelineRoleKeyNumber
 			case timelineRoleAttributesTime:
@@ -506,15 +513,15 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 				scopeRole = timelineRoleForPartNumber
 			}
 			if scopeRole != timelineRoleInvalid && ch.header.Declaration.State == EvidenceKnown {
-				scope := r.scope(ch, scopeRole, role == timelineRoleAttributesClef)
+				scope := r.scope(ch, scopeRole, role == timelineRoleAttributesClef || role == timelineRoleAttributesStaffDetails)
 				if scope.State == EvidenceKnown {
 					g.Scope = scope.Value
 				} else {
-					g.Availability = stateUnavailable[stateScope, bool](scope)
+					g.Availability = stateMergeGap(g.Availability, stateUnavailable[stateScope, bool](scope))
 				}
 			}
 			if ch.header.Declaration.State != EvidenceKnown {
-				g.Availability = stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+				g.Availability = stateMergeGap(g.Availability, stateUnavailable[DeclarationID, bool](ch.header.Declaration))
 			}
 			publish(ch, role, g)
 			if r.err != nil {
@@ -544,6 +551,9 @@ func (r *stateReader) potential(n *factNode, role timelineRole) bool {
 
 func (h *timelineState) attributePotentialGap(r *stateReader, n *factNode, p musicalPosition, gap Evidence[bool]) {
 	all := Evidence[stateScope]{State: EvidenceKnown, Value: stateScope{AllStaves: true}}
+	if r.potential(n, timelineRoleAttributesStaffDetails) {
+		stateEmit(r, &h.StaffDetails, n, p, all, stateUnavailable[bool, staffDetailsState](gap))
+	}
 	if r.potential(n, timelineRoleAttributesDivisions) {
 		stateEmit(r, &h.Divisions, n, p, all, stateUnavailable[bool, Decimal](gap))
 	}
@@ -576,6 +586,9 @@ func (h *timelineState) attributePotentialGap(r *stateReader, n *factNode, p mus
 // note duration failure alone does not authorize this broad history gap.
 func (h *timelineState) gapAll(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
 	g := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+	if e := addStateGap(ctx, s, &h.StaffDetails, g); e != nil {
+		return e
+	}
 	if e := addStateGap(ctx, s, &h.Divisions, g); e != nil {
 		return e
 	}
