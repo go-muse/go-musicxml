@@ -1001,7 +1001,7 @@ func TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses(t *testing.T) {
 }
 
 func TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence(t *testing.T) {
-	for _, mode := range []string{"negative-ignores-future-change", "positive-ignores-repaired-past", "positive-keeps-future-invalid-cause"} {
+	for _, mode := range []string{"negative-ignores-future-change", "positive-ignores-repaired-past", "positive-keeps-future-invalid-cause", "locked-backup-keeps-prior-invalid-cause"} {
 		t.Run(mode, func(t *testing.T) {
 			ctx := context.Background()
 			s, svc, b := runtimeFixture(t)
@@ -1019,6 +1019,10 @@ func TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence(t *testing.T) {
 			case "positive-ignores-repaired-past":
 				forward := stateNode(b, timelineRoleForward, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 51, stateAtomicDecimal(t, 10, 1)))
 				blocks = []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, stateAtomicDecimal(t, 2, 1)), runtimeNote(t, b, 30, 2, false)), runtimeBlock(b, 1, attrs(40, stateAtomicDecimal(t, 1, 1)), runtimeNote(t, b, 45, 1, false), forward, runtimeNote(t, b, 60, 1, false)), runtimeBlock(b, 2, attrs(80, stateAtomicDecimal(t, 1, 1)), runtimeNote(t, b, 90, 1, false))}
+			case "locked-backup-keeps-prior-invalid-cause":
+				backup := stateNode(b, timelineRoleBackup, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 51, stateAtomicDecimal(t, 8, 1)))
+				invalid := Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-prior-divisions", Cause: cause}
+				blocks = []timelineMeasureBlock{runtimeBlock(b, 0, attrs(80, invalid)), runtimeBlock(b, 1, attrs(20, stateAtomicDecimal(t, 1, 1)), runtimeNote(t, b, 30, 2, false), attrs(40, stateAtomicDecimal(t, 2, 1)), backup, runtimeNote(t, b, 60, 1, false))}
 			case "positive-keeps-future-invalid-cause":
 				forward := stateNode(b, timelineRoleForward, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, 51, stateAtomicDecimal(t, 10, 1)))
 				invalid := Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-future-divisions", Cause: cause}
@@ -1033,7 +1037,7 @@ func TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence(t *testing.T) {
 				t.Fatal(err)
 			}
 			movement, note := svc.Facts[50], svc.Facts[60]
-			if mode == "positive-keeps-future-invalid-cause" {
+			if mode == "positive-keeps-future-invalid-cause" || mode == "locked-backup-keeps-prior-invalid-cause" {
 				for label, got := range map[string]Evidence[bool]{"duration": stateUnavailable[Rational, bool](movement.Duration), "descendant": stateUnavailable[musicalPosition, bool](note.Position)} {
 					if got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != *cause {
 						t.Fatalf("%s lost actual potentially reached unit cause: %+v", label, got)
