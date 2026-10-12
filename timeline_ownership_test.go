@@ -4,11 +4,17 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 func timelineOwnershipJSON(t *testing.T, path string) map[string]any {
@@ -50,6 +56,14 @@ func timelineOwnershipNonempty(value any) bool {
 	return ok && strings.TrimSpace(text) != ""
 }
 
+func timelineOwnershipQualifiedStatus(value any) bool {
+	switch value {
+	case "evidenced-contribution-acceptance-pending", "partial-contribution-open-subclauses", "existing-prerequisite-retained", "retained-later-owner", "evidenced-contribution-open-requirement", "retained-not-promoted":
+		return true
+	}
+	return false
+}
+
 // These are provenance/ownership checks, not executable musical coverage.
 // The original research statuses and five-axis recipes must survive new work.
 func TestTimelineOwnershipPreservesProgram(t *testing.T) {
@@ -80,7 +94,7 @@ func TestTimelineOwnershipPreservesProgram(t *testing.T) {
 				t.Errorf("original ownership or planning evidence changed: %s", id)
 			}
 			owner, ok := row["batch6_ownership"].(map[string]any)
-			if !ok || owner["status"] != "planned" || !timelineOwnershipNonempty(owner["scope"]) || !reflect.DeepEqual(owner["remaining_batches"], prior["remaining_batches"]) {
+			if !ok || !timelineOwnershipQualifiedStatus(owner["status"]) || !timelineOwnershipNonempty(owner["scope"]) || !reflect.DeepEqual(owner["remaining_batches"], prior["remaining_batches"]) {
 				t.Errorf("unqualified closure or lost owner: %s", id)
 			}
 		}
@@ -121,6 +135,7 @@ func TestTimelineOwnershipCompleteClauseSelection(t *testing.T) {
 	if len(clauses) != 121 || len(expected) != len(clauses) {
 		t.Fatalf("selected scope: got %d, expected %d", len(clauses), len(expected))
 	}
+	laterOwners := map[string][]int{}
 	var selectedIDs []string
 	for id := range clauses {
 		selectedIDs = append(selectedIDs, id)
@@ -184,13 +199,20 @@ func TestTimelineOwnershipCompleteClauseSelection(t *testing.T) {
 			}
 		}
 		ownership := row["ownership"].(map[string]any)
-		if ownership["status"] != "planned" || !timelineOwnershipNonempty(ownership["implementation_target"]) || !timelineOwnershipNonempty(ownership["batch6_scope"]) || !timelineOwnershipNonempty(ownership["closure_evidence_required"]) {
-			t.Errorf("missing planned scope/evidence: %s", id)
+		if !timelineOwnershipQualifiedStatus(ownership["status"]) || !timelineOwnershipNonempty(ownership["implementation_target"]) || !timelineOwnershipNonempty(ownership["batch6_scope"]) || !timelineOwnershipNonempty(ownership["closure_evidence_required"]) {
+			t.Errorf("missing qualified scope/evidence: %s", id)
 		}
 		remaining, ok := ownership["remaining_batches"].([]any)
 		if !ok || !timelineOwnershipNonempty(ownership["remaining_owner"]) {
 			t.Errorf("remaining clause owner omitted: %s", id)
 		}
+		laterOwners[id] = []int{}
+		for _, batch := range remaining {
+			if batch.(float64) > 6 {
+				laterOwners[id] = append(laterOwners[id], int(batch.(float64)))
+			}
+		}
+		sort.Ints(laterOwners[id])
 		kind := row["batch6_proposal"].(map[string]any)["classification"]
 		if kind != "existing-shared-prerequisite" {
 			containsSix := false
@@ -201,12 +223,20 @@ func TestTimelineOwnershipCompleteClauseSelection(t *testing.T) {
 				t.Errorf("uncompleted batch-6 contribution removed: %s", id)
 			}
 		}
-		if len(ownership["runtime_bindings"].([]any)) != 0 || len(ownership["executable_tests"].([]any)) != 0 {
-			t.Errorf("unreconciled runtime evidence: %s", id)
+		if !timelineOwnershipNonempty(ownership["evidence_scope"]) {
+			t.Errorf("unqualified runtime contribution: %s", id)
 		}
 		if !reflect.DeepEqual(ownership["targets"], []any{"source", "model"}) {
 			t.Errorf("target omitted: %s", id)
 		}
+	}
+	ownerBytes, err := json.Marshal(laterOwners)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerSum := sha256.Sum256(ownerBytes)
+	if hex.EncodeToString(ownerSum[:]) != "8ca7d07f735874ae9de68371ff29c97dd7e02574dd3c194825d9092e6498b187" {
+		t.Fatal("a reviewed later clause owner was removed or changed")
 	}
 	split := timelineOwnershipRows(t, ledger["split_shared_checks"], "id")
 	if len(split) != 20 {
@@ -258,7 +288,7 @@ func TestTimelineOwnershipCompleteClauseSelection(t *testing.T) {
 		if id == "CHECK-context-xlink-show-default" || id == "CHECK-context-image-resource-type" {
 			wantOwners = []any{float64(8), float64(9)}
 		}
-		if row["status"] != "planned" || !timelineOwnershipNonempty(row["closure_evidence_required"]) || !reflect.DeepEqual(row["remaining_batches"], wantOwners) {
+		if !timelineOwnershipQualifiedStatus(row["status"]) || !timelineOwnershipNonempty(row["closure_evidence_required"]) || !reflect.DeepEqual(row["remaining_batches"], wantOwners) {
 			t.Errorf("split check closure or ownership drift: %s", id)
 		}
 	}
@@ -374,8 +404,8 @@ func TestTimelineOwnershipKeepsOpenGatesAndFrozenProfiles(t *testing.T) {
 		t.Fatal("retained performance owner changed")
 	}
 	evidence := ledger["execution_evidence"].(map[string]any)
-	if evidence["status"] != "not-yet-reconciled" || evidence["implementation_commit"] != nil {
-		t.Fatal("unverified implementation claim")
+	if evidence["status"] != "reconciled-contributions-acceptance-open" || !timelineOwnershipNonempty(evidence["implementation_commit"]) || evidence["whole_batch_closed"] != false {
+		t.Fatal("unverified whole-batch implementation claim")
 	}
 	data, err := os.ReadFile("docs/validation/TIMELINE_ASSESSMENT_SCOPE.md")
 	if err != nil {
@@ -396,6 +426,29 @@ func TestTimelineOwnershipKeepsOpenGatesAndFrozenProfiles(t *testing.T) {
 	for _, id := range ids {
 		if !strings.Contains(text, id) {
 			t.Errorf("readable clause omitted: %s", id)
+		}
+	}
+}
+
+func TestTimelineOwnershipPublicProfilesAreDocumented(t *testing.T) {
+	for _, file := range []string{"API.md", "README.md", "CHANGELOG.md"} {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, required := range []string{"ProfileModelTimeline", "ProfileSourceTimeline", "B5-PERF-01"} {
+			if !strings.Contains(string(data), required) {
+				t.Errorf("%s omits actual opt-in scope or retained obligation %s", file, required)
+			}
+		}
+	}
+	data, err := os.ReadFile("API.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, required := range []string{"NewTimelinePlan", "NewChordDurationPlan", "NewNumeralKeyPlan", string(ProfileModelTimeline), string(ProfileSourceTimeline), "timeline-assessment-ownership.json"} {
+		if !strings.Contains(string(data), required) {
+			t.Errorf("API.md omits public contract %s", required)
 		}
 	}
 }
@@ -454,5 +507,155 @@ func TestTimelineOwnershipCapabilityAndSelectionIndex(t *testing.T) {
 		if d := context[id]; d != nil && translation["original_translation_status"] != d["translation"] {
 			t.Errorf("original pending translation status changed: %s", id)
 		}
+	}
+}
+
+// Concrete declaration checks prevent a planning recipe, missing test function,
+// stale profile claim, or provider pass from masquerading as musical coverage.
+func TestTimelineOwnershipReconciledExecutableEvidence(t *testing.T) {
+	ledger := timelineOwnershipJSON(t, "docs/validation/timeline-assessment-ownership.json")
+	engine, err := buildTimelineAssessmentEngine()
+	if err != nil {
+		t.Fatal(err)
+	}
+	profiles := map[string]validation.Profile{}
+	required := map[validation.RuleKey]bool{}
+	for _, id := range []validation.ProfileID{ProfileModelTimeline, ProfileSourceTimeline} {
+		p := catalogProfile(t, engine, id)
+		profiles[string(id)] = p
+		for _, k := range p.Required {
+			required[k] = true
+		}
+	}
+	for _, raw := range ledger["planned_profiles"].([]any) {
+		row := raw.(map[string]any)
+		id := row["id_proposal"].(string)
+		if row["status"] != "available-bounded-profile-acceptance-open" {
+			t.Errorf("profile availability drift: %s", id)
+		}
+		data, err := json.Marshal(profiles[id])
+		if err != nil {
+			t.Fatal(err)
+		}
+		var want any
+		if err = json.Unmarshal(data, &want); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(row["runtime_profile"], want) {
+			t.Errorf("runtime profile metadata drift: %s", id)
+		}
+	}
+	functions := map[string]map[string]bool{}
+	checkTest := func(id string, row map[string]any) {
+		t.Helper()
+		file, _ := row["file"].(string)
+		name, _ := row["name"].(string)
+		if !strings.HasSuffix(file, "_test.go") || filepath.IsAbs(file) || strings.Contains(file, "..") || !strings.HasPrefix(name, "Test") || !timelineOwnershipNonempty(row["scope"]) {
+			t.Fatalf("invalid test declaration: %s: %v", id, row)
+		}
+		if functions[file] == nil {
+			parsed, err := parser.ParseFile(token.NewFileSet(), file, nil, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+			functions[file] = map[string]bool{}
+			for _, decl := range parsed.Decls {
+				if fn, ok := decl.(*ast.FuncDecl); ok && fn.Recv == nil {
+					functions[file][fn.Name.Name] = true
+				}
+			}
+		}
+		if !functions[file][name] {
+			t.Errorf("missing executable evidence for %s: %s/%s", id, file, name)
+		}
+		if strings.HasPrefix(name, "TestTimelineOwnership") {
+			t.Errorf("integrity test claimed as musical evidence: %s", id)
+		}
+	}
+	checkEvidence := func(id string, row map[string]any) {
+		t.Helper()
+		bindings, ok := row["runtime_bindings"].([]any)
+		if !ok {
+			t.Fatalf("binding array omitted: %s", id)
+		}
+		for _, raw := range bindings {
+			b := raw.(map[string]any)
+			rev, ok := b["revision"].(float64)
+			if !ok || rev < 1 || rev != float64(uint32(rev)) {
+				t.Fatalf("bad runtime revision: %s", id)
+			}
+			key := validation.RuleKey{ID: validation.RuleID(b["id"].(string)), Revision: uint32(rev)}
+			if !required[key] {
+				t.Errorf("unselected runtime binding: %s: %+v", id, key)
+			}
+		}
+		tests, ok := row["executable_tests"].([]any)
+		if !ok {
+			t.Fatalf("executable array omitted: %s", id)
+		}
+		for _, raw := range tests {
+			checkTest(id, raw.(map[string]any))
+		}
+		if len(bindings) > 0 && len(tests) == 0 {
+			t.Errorf("binding lacks qualified executable evidence: %s", id)
+		}
+	}
+	checkEvidence("execution_evidence", ledger["execution_evidence"].(map[string]any))
+	for _, raw := range ledger["clauses"].([]any) {
+		row := raw.(map[string]any)
+		id := row["research_id"].(string)
+		owner := row["ownership"].(map[string]any)
+		checkEvidence(id, owner)
+		if _, ok := owner["batch6_remaining"].([]any); !ok {
+			t.Errorf("missing explicit batch6 remainder: %s", id)
+		}
+		if owner["status"] == "partial-contribution-open-subclauses" && len(owner["batch6_remaining"].([]any)) == 0 {
+			t.Errorf("partial clause lacks exact open cases: %s", id)
+		}
+	}
+	for _, section := range []string{"requirements", "issue_gates", "candidate_dispositions"} {
+		for _, raw := range ledger[section].([]any) {
+			row := raw.(map[string]any)
+			id, _ := row["id"].(string)
+			if id == "" {
+				id = row["research_id"].(string)
+			}
+			checkEvidence(id, row["batch6_ownership"].(map[string]any))
+		}
+	}
+	for _, raw := range ledger["split_shared_checks"].([]any) {
+		row := raw.(map[string]any)
+		checkEvidence(row["id"].(string), row)
+	}
+}
+
+func TestTimelineOwnershipInterpretationsStayQualified(t *testing.T) {
+	ledger := timelineOwnershipJSON(t, "docs/validation/timeline-assessment-ownership.json")
+	evidence := ledger["execution_evidence"].(map[string]any)
+	for _, section := range []string{"non_cursor_interpretation", "instrument_statement_interpretation", "note_origin_interpretation"} {
+		row, ok := evidence[section].(map[string]any)
+		if !ok || row["status"] != "reviewed-clause-derived-profile-interpretation" || row["importer_behavior_is_normative_authority"] != false {
+			t.Fatalf("unqualified interpretation: %s", section)
+		}
+		doc, _ := row["document"].(string)
+		if filepath.Base(doc) != doc || !strings.HasSuffix(doc, ".md") {
+			t.Fatalf("invalid interpretation document: %s", section)
+		}
+		data, err := os.ReadFile(filepath.Join("docs", "validation", doc))
+		if err != nil || len(data) == 0 {
+			t.Fatalf("missing interpretation document: %s: %v", section, err)
+		}
+	}
+	offset := evidence["non_cursor_interpretation"].(map[string]any)
+	if offset["express_full_crossing_algorithm_in_musicxml40"] != false || offset["cursor_rewind_gate_settled"] != false || offset["signed_local_coordinate_implies_crossframe_order"] != false {
+		t.Fatal("derived noncursor contract silently settled express semantics or cursor rewind")
+	}
+	instrument := evidence["instrument_statement_interpretation"].(map[string]any)
+	if instrument["virtual_descriptor"] != "atomic-current-composite" || instrument["physical_playback_state_claimed"] != false {
+		t.Fatal("encoded instrument statement promoted to physical playback or recursive patch merging")
+	}
+	note := evidence["note_origin_interpretation"].(map[string]any)
+	if note["same_measure_figure_restriction"] != false || note["figure_sum_le_note_restriction"] != false || note["donor_identity_proves_continuous_time"] != false || note["cursor_anchor_equality_required"] != false {
+		t.Fatal("unapproved grace or figured-bass restriction introduced")
 	}
 }
