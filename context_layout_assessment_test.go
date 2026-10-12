@@ -240,6 +240,11 @@ func TestLayoutScalarDefaultsUseSpecificFields(t *testing.T) {
 		name, body, header, property, text string
 		state                              validation.EvidenceState
 	}{
+
+		{"image-valign", `<direction><direction-type><image source="image.png" type="image/png"/></direction-type></direction>`, "", "image-valign", "", validation.EvidenceUnknown},
+		{"editorial-parentheses", `<direction><direction-type><words>x</words></direction-type><level>ed</level></direction>`, "", "editorial-parentheses", "", validation.EvidenceUnknown},
+		{"unplayed-string", `<harmony><root><root-step>C</root-step></root><kind>major</kind><frame><frame-strings>6</frame-strings><frame-frets>4</frame-frets><frame-note><string>1</string><fret>0</fret></frame-note></frame></harmony>`, "", "unplayed-string", "", validation.EvidenceUnknown},
+		{"numeral-root", `<harmony><numeral><numeral-root>1</numeral-root><numeral-key><numeral-fifths>0</numeral-fifths><numeral-mode>major</numeral-mode></numeral-key></numeral><kind>major</kind></harmony>`, "", "numeral-root-text", "", validation.EvidenceUnknown},
 		{"valign", `<direction><direction-type><words>text</words></direction-type></direction>`, "", "valign", "", validation.EvidenceUnknown},
 		{"font-app", `<direction><direction-type><words>text</words></direction-type></direction>`, "", "font-family", "", validation.EvidenceUnknown},
 		{"line-height", `<direction><direction-type><words>text</words></direction-type></direction>`, "", "line-height", "normal", validation.EvidenceKnown},
@@ -401,5 +406,219 @@ func TestLayoutSystemSelectorsAndAdvisoriesRemainContext(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+func TestLayoutZeroScalingAndLyricAlignmentAreIndependent(t *testing.T) {
+	layoutReports(t, `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><lyric><text>la</text></lyric></note>`, `<defaults><scaling><millimeters>7</millimeters><tenths>0</tenths></scaling></defaults>`, func(t *testing.T, r validation.Report) {
+		scaling := layoutFacts(r, "millimeters-per-tenth")
+		if len(scaling) != 1 || scaling[0].Layout.Conversion.State != validation.EvidenceUnknown || scaling[0].Layout.Conversion.Reason != "zero-scaling-denominator" {
+			t.Fatalf("zero scaling %+v", scaling)
+		}
+		for _, tc := range []struct{ property, want string }{{"justify", "center"}, {"halign", "center"}, {"valign", "baseline"}} {
+			found := false
+			for _, v := range layoutFacts(r, tc.property) {
+				if v.Value.State == validation.EvidenceKnown && v.Value.Value.Text == tc.want {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("lyric %s", tc.property)
+			}
+		}
+		for _, f := range r.Findings {
+			if f.Outcome == validation.OutcomeFail && strings.HasPrefix(string(f.Rule.ID), "MX40-CONTEXT-") {
+				t.Fatalf("zero scaling invented a defect %+v", f)
+			}
+		}
+	})
+}
+func TestLayoutCreditInheritanceAndPhysicalPage(t *testing.T) {
+	layoutReports(t, `<print new-page="yes" page-number="99"/>`, `<credit><credit-words font-family="CreditFont" default-x="5" default-y="10">first</credit-words><credit-words>second</credit-words></credit>`, func(t *testing.T, r validation.Report) {
+		page := layoutFacts(r, "credit-page")
+		if len(page) != 1 || page[0].Value.Value.Integer.String() != "1" {
+			t.Fatalf("printed label changed physical page %+v", page)
+		}
+		inherited := false
+		for _, v := range layoutFacts(r, "font-family") {
+			if v.Value.Value.Text == "CreditFont" && v.Layout.Provenance == validation.ContextInherited {
+				inherited = true
+			}
+		}
+		if !inherited {
+			t.Fatal("credit inheritance missing")
+		}
+		lowerLeft := false
+		absentPosition := false
+		for _, v := range layoutFacts(r, "default-x") {
+			if v.Layout.Basis == "physical-page-lower-left" {
+				lowerLeft = true
+				if v.Value.State == validation.EvidenceAbsent {
+					absentPosition = true
+				}
+			}
+		}
+		if !lowerLeft || !absentPosition {
+			t.Fatal("credit positional inheritance or origin wrong")
+		}
+	})
+}
+func TestLayoutWidthComparisonFiveAxes(t *testing.T) {
+	defaults := `<identification><encoding><supports element="print" attribute="new-page" value="yes" type="yes"/><supports element="print" attribute="new-system" value="yes" type="yes"/></encoding></identification><defaults><page-layout><page-height>100</page-height><page-width>100</page-width><page-margins><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins></page-layout><system-layout><system-margins><left-margin>0</left-margin><right-margin>0</right-margin></system-margins></system-layout></defaults>`
+	for _, tc := range []struct {
+		name, width string
+		known       bool
+	}{{"positive", "80", true}, {"negative", "70", false}, {"boundary", "80.000", true}, {"missing_fact", "", false}, {"interaction", "-80", false}} {
+		for _, tw := range []bool{false, true} {
+			for _, model := range []bool{false, true} {
+				source := contextFixtureXML(`<print/>`, tw)
+				source = strings.Replace(source, "<part-list>", defaults+"<part-list>", 1)
+				if tc.width != "" {
+					source = strings.Replace(source, `<measure number="A">`, `<measure number="A" width="`+tc.width+`">`, 1)
+				}
+				var r validation.Report
+				var err error
+				if model {
+					doc, e := Decode(strings.NewReader(source))
+					if e != nil {
+						t.Fatal(e)
+					}
+					r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+				} else {
+					r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
+				values := layoutFacts(r, "width-outcome")
+				if len(values) != 1 {
+					t.Fatalf("%s %+v", tc.name, values)
+				}
+				if (values[0].Value.State == validation.EvidenceKnown) != tc.known {
+					t.Errorf("%s tw%v model%v %+v", tc.name, tw, model, values[0])
+				}
+			}
+		}
+	}
+}
+func TestLayoutBlankPagesUsePhysicalParity(t *testing.T) {
+	header := `<defaults><page-layout><page-margins type="odd"><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins><page-margins type="even"><left-margin>20</left-margin><right-margin>20</right-margin><top-margin>20</top-margin><bottom-margin>20</bottom-margin></page-margins></page-layout></defaults>`
+	layoutReports(t, `<print new-page="yes" blank-page="1" page-number="99"/>`, header, func(t *testing.T, r validation.Report) {
+		v := layoutFacts(r, "page-left-margin")
+		if len(v) != 1 || v[0].Value.State != validation.EvidenceKnown || v[0].Value.Value.Decimal.String() != "20" {
+			t.Fatalf("physical parity %+v", v)
+		}
+	})
+}
+func TestLayoutGroupDisplayPriorityAndExplicitOverride(t *testing.T) {
+	for _, abbrev := range []bool{false, true} {
+		name, display := "group-name", "group-name-display"
+		if abbrev {
+			name, display = "group-abbreviation", "group-abbreviation-display"
+		}
+		for _, present := range []bool{false, true} {
+			for _, tw := range []bool{false, true} {
+				for _, model := range []bool{false, true} {
+					body := `<part-group type="start" number="1"><` + name + ` font-family="Deprecated">Group</` + name + `>`
+					if present {
+						body += `<` + display + `><display-text font-family="Preferred">Shown</display-text></` + display + `>`
+					}
+					body += `</part-group>`
+					source := contextFixtureXML(`<print/>`, tw)
+					source = strings.Replace(source, `<part-list>`, `<part-list>`+body, 1)
+					source = strings.Replace(source, `</part-list>`, `<part-group type="stop" number="1"/></part-list>`, 1)
+					var r validation.Report
+					var err error
+					if model {
+						doc, e := Decode(strings.NewReader(source))
+						if e != nil {
+							t.Fatal(e)
+						}
+						r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+					} else {
+						r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+					}
+					if err != nil {
+						t.Fatal(err)
+					}
+					values := layoutFacts(r, "display-active")
+					if len(values) != 1 || values[0].Layout.Applicability.State != validation.EvidenceKnown || values[0].Layout.Applicability.Value == present {
+						t.Fatalf("display=%v values=%+v", present, values)
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestLayoutWordFontDoesNotCrossNotationDomains(t *testing.T) {
+	body := `<direction><direction-type><dynamics><p/></dynamics></direction-type></direction><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type><notehead>normal</notehead></note><direction><direction-type><symbol>segno</symbol></direction-type></direction><direction><direction-type><words>dolce</words></direction-type></direction>`
+	layoutReports(t, body, `<defaults><music-font font-size="20"/><word-font font-family="Words"/></defaults>`, func(t *testing.T, r validation.Report) {
+		facts := layoutFacts(r, "font-family")
+		if len(facts) != 8 {
+			t.Fatalf("font domains: expected eight exact consumers, got %d", len(facts))
+		}
+		// Document order: two publishers, part name, dynamics, note, notehead,
+		// symbol, words. The note and its symbol must not acquire a word font.
+		for _, i := range []int{0, 3, 4, 5, 6} {
+			if facts[i].Value.State == validation.EvidenceKnown {
+				t.Errorf("non-word domain %d acquired %+v", i, facts[i].Value)
+			}
+		}
+		for _, i := range []int{1, 2, 7} {
+			if facts[i].Value.State != validation.EvidenceKnown || facts[i].Value.Value.Text != "Words" {
+				t.Errorf("word domain %d: %+v", i, facts[i].Value)
+			}
+		}
+	})
+}
+
+func TestLayoutParallelPrintPositionsUseMusicalOffsets(t *testing.T) {
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			for _, different := range []bool{false, true} {
+				header := `<defaults><page-layout><page-height>100</page-height><page-width>80</page-width></page-layout></defaults><part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>`
+				prefix := `<attributes><divisions>1</divisions></attributes>`
+				note := `<note><rest/><duration>1</duration></note>`
+				a := prefix + `<print new-page="yes"/>` + note
+				b := a
+				if different {
+					b = prefix + note + `<print new-page="yes"/>`
+				}
+				source := `<score-partwise>` + header + `<part id="P1"><measure number="1">` + a + `</measure></part><part id="P2"><measure number="1">` + b + `</measure></part></score-partwise>`
+				if tw {
+					source = `<score-timewise>` + header + `<measure number="1"><part id="P1">` + a + `</part><part id="P2">` + b + `</part></measure></score-timewise>`
+				}
+				var report validation.Report
+				var err error
+				if model {
+					doc, e := Decode(strings.NewReader(source))
+					if e != nil {
+						t.Fatal(e)
+					}
+					report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+				} else {
+					report, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
+				facts := layoutFacts(report, "page-height")
+				if len(facts) != 2 {
+					t.Fatalf("expected two parallel blocks, got %d", len(facts))
+				}
+				for _, f := range facts {
+					if f.Value.State != validation.EvidenceKnown || f.Value.Value.Decimal.String() != "100" {
+						t.Errorf("independent default lost: %+v", f.Value)
+					}
+					want := validation.EvidenceKnown
+					if different {
+						want = validation.EvidenceUnknown
+					}
+					if f.Layout.Page.State != want {
+						t.Errorf("timewise=%t model=%t different=%t page=%+v", tw, model, different, f.Layout.Page)
+					}
+				}
+			}
+		}
 	}
 }

@@ -555,3 +555,199 @@ func TestContextSpanBeamContinuationFanCause(t *testing.T) {
 		t.Fatal(got)
 	}
 }
+
+func TestContextSpanSingleAndLetRingAssociationAxes(t *testing.T) {
+	for _, tc := range []struct {
+		family SpanFamily
+		role   string
+	}{{SpanTied, "let-ring"}, {SpanOtherNotation, "single"}, {SpanGrouping, "single"}, {SpanTremolo, "single"}} {
+		t.Run(string(tc.family), func(t *testing.T) {
+			for _, axis := range []string{"positive", "negative", "boundary", "missing-fact", "interaction"} {
+				t.Run(axis, func(t *testing.T) {
+					s := rationalSession(t, Budgets{})
+					defer s.cleanup()
+					e := spanTestEndpoint(t, 1, tc.family, tc.role, 1)
+					es := []*spanEndpoint{e}
+					want := EvidenceKnown
+					if axis == "negative" || axis == "missing-fact" {
+						want = EvidenceInvalid
+						if axis == "missing-fact" {
+							want = EvidenceUnsupported
+						}
+						cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: e.ref}
+						e.payload.Role = Evidence[string]{State: want, Reason: "endpoint-type-unavailable", Cause: cause}
+						e.complete = Evidence[bool]{State: want, Reason: "endpoint-type-unavailable", Cause: cause}
+					}
+					if axis == "boundary" {
+						e.payload.Role.Value = "start"
+						want = EvidenceUnknown
+					}
+					if axis == "interaction" {
+						es = append(es, spanTestEndpoint(t, 2, tc.family, tc.role, 1))
+					}
+					if err := associateSpanEndpoints(context.Background(), s, es, nil); err != nil {
+						t.Fatal(err)
+					}
+					if e.payload.Association.State != want {
+						t.Fatal(e.payload)
+					}
+					if want == EvidenceKnown && len(e.payload.Members) != 1 {
+						t.Fatal(e.payload)
+					}
+					if len(es) == 2 && es[0].payload.Members[0] == es[1].payload.Members[0] {
+						t.Fatal("single marks merged")
+					}
+				})
+			}
+		})
+	}
+}
+func TestContextSpanUnmeasuredMarksScalarAxes(t *testing.T) {
+	for _, axis := range []string{"zero", "nonzero", "invalid", "missing", "separate-note"} {
+		t.Run(axis, func(t *testing.T) {
+			r := spanUnitReader(t)
+			n := spanUnitNode(r, spanRole_tremolo, nil)
+			e := spanTestEndpoint(t, n.header.ID, SpanTremolo, "unmeasured", 1)
+			n.end.Scalar.Value = spanInteger(0)
+			want := spanBool(true)
+			switch axis {
+			case "nonzero":
+				n.end.Scalar.Value = spanInteger(8)
+				want = spanBool(false)
+			case "invalid":
+				want = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-marks", Cause: &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: e.ref}}
+				n.end.Scalar.Value = want
+			case "missing":
+				want = stateUnknown[Atomic]("missing-marks")
+				n.end.Scalar.Value = want
+			case "separate-note":
+				other := spanUnitNode(r, spanRole_tremolo, nil)
+				other.end.Scalar.Value = spanInteger(8)
+			}
+			spanLocalFacts(r, RuleKey{"spans", 1}, n, nil, e)
+			got := spanUnitValue(t, r, ContextPropertySpanTremoloMarksRecommended)
+			if got.State != want.State || got.State == EvidenceKnown && got.Value.Text != want.Value.Text {
+				t.Fatalf("%+v want %+v", got, want)
+			}
+			if want.Cause != nil && (got.Cause == nil || *got.Cause != *want.Cause) {
+				t.Fatal("cause lost")
+			}
+		})
+	}
+}
+
+func TestContextSpanDoubleTremoloRatioDurationAxes(t *testing.T) {
+	for _, axis := range []string{"positive", "invalid-ratio", "invalid-type", "nested-ratio", "missing-modification", "missing-timing", "separate-note"} {
+		t.Run(axis, func(t *testing.T) {
+			r := spanUnitReader(t)
+			note := spanUnitNode(r, spanRole_note, nil)
+			typ := spanUnitNode(r, spanRole_noteType, note)
+			typ.end.Scalar.Value = spanString("quarter")
+			var actual *factNode
+			if axis != "missing-modification" {
+				mod := spanUnitNode(r, spanRole_noteModification, note)
+				actual = spanUnitNode(r, spanRole_actualNotes, mod)
+				actual.end.Scalar.Value = spanInteger(2)
+				normal := spanUnitNode(r, spanRole_normalNotes, mod)
+				normal.end.Scalar.Value = spanInteger(1)
+			}
+			n := spanUnitNode(r, spanRole_tremolo, note)
+			e := spanTestEndpoint(t, n.header.ID, SpanTremolo, "start", 1)
+			duration, _ := NewRational(big.NewRat(1, 2))
+			ts := &timelineService{Facts: map[NodeID]timelineEventFact{note.header.ID: {Duration: Evidence[Rational]{State: EvidenceKnown, Value: duration}}}}
+			cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: e.ref}
+			switch axis {
+			case "invalid-ratio":
+				actual.end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-ratio", Cause: cause}
+			case "invalid-type":
+				typ.end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-type", Cause: cause}
+			case "nested-ratio":
+				actual.end.Scalar.Value = spanInteger(3)
+			case "missing-timing":
+				ts = nil
+			case "separate-note":
+				other := spanUnitNode(r, spanRole_note, nil)
+				ot := spanUnitNode(r, spanRole_noteType, other)
+				ot.end.Scalar.Value = spanString("half")
+			}
+			spanTremoloFacts(r, RuleKey{"spans", 1}, n, e, ts)
+			ratio := spanUnitValue(t, r, ContextPropertySpanTremoloRatioRecommended)
+			d := spanUnitValue(t, r, ContextPropertySpanTremoloDurationRecommended)
+			switch axis {
+			case "invalid-ratio":
+				if ratio.State != EvidenceInvalid || ratio.Cause == nil || d.State != EvidenceInvalid || d.Cause == nil {
+					t.Fatalf("%+v %+v", ratio, d)
+				}
+			case "invalid-type":
+				if d.State != EvidenceInvalid || d.Cause == nil {
+					t.Fatal(d)
+				}
+			case "nested-ratio":
+				if ratio.State != EvidenceUnknown || d.State != EvidenceUnknown {
+					t.Fatalf("%+v %+v", ratio, d)
+				}
+			case "missing-modification":
+				if ratio.Value.Text != "false" || d.Value.Text != "true" {
+					t.Fatalf("%+v %+v", ratio, d)
+				}
+			case "missing-timing":
+				if ratio.Value.Text != "true" || d.State != EvidenceUnknown {
+					t.Fatalf("%+v %+v", ratio, d)
+				}
+			default:
+				if ratio.Value.Text != "true" || d.Value.Text != "true" {
+					t.Fatalf("%+v %+v", ratio, d)
+				}
+			}
+		})
+	}
+}
+
+func TestContextSpanHistoricalVersionCause(t *testing.T) {
+	for _, state := range []EvidenceState{EvidenceInvalid, EvidenceUnknown, EvidenceUnsupported} {
+		t.Run(string(state), func(t *testing.T) {
+			r := spanUnitReader(t)
+			root := spanUnitNode(r, spanRole_note, nil)
+			u := r.b.Roles[spanRole_version][0]
+			r.b.Attributes[spanRole_version][root.header.Type.Value] = AttributeSelector{Name: u.Name, Declaration: u.Declaration}
+			cause := &DecisionRef{Rule: RuleKey{"version-owner", 1}, Subject: NodeRef{r.s.documentID, root.header.ID}}
+			spanUnitAttribute(r, root, spanRole_version, Evidence[Atomic]{State: state, Reason: "version-unavailable", Cause: cause})
+			lyric := spanUnitNode(r, spanRole_noteLyric, root)
+			n := spanUnitNode(r, spanRole_lyricExtend, lyric)
+			var b spanFamilyBinding
+			for _, v := range spanFamilies {
+				if v.family == SpanLyricExtend {
+					b = v
+					break
+				}
+			}
+			e := spanExtract(r, RuleKey{"spans", 1}, n, b, nil, nil, 1)
+			if r.err != nil {
+				t.Fatal(r.err)
+			}
+			if e.payload.Role.State != state || e.payload.Role.Cause == nil || *e.payload.Role.Cause != *cause {
+				t.Fatal(e.payload.Role)
+			}
+		})
+	}
+}
+
+func TestContextSpanOctaveSizeInterpretations(t *testing.T) {
+	for _, c := range []struct{ size, want int }{{8, 1}, {15, 2}, {22, 3}, {17, 0}} {
+		t.Run(spanSmallIntegers[c.size].String(), func(t *testing.T) {
+			r := spanUnitReader(t)
+			n := spanUnitNode(r, spanRole_octaveShift, nil)
+			spanUnitAttribute(r, n, spanRole_octave_shift_size, spanInteger(c.size))
+			e := spanTestEndpoint(t, n.header.ID, SpanOctaveShift, "down", 1)
+			spanLocalFacts(r, RuleKey{"spans", 1}, n, nil, e)
+			v := spanUnitValue(t, r, ContextPropertySpanDisplayOctaves)
+			if c.want == 0 {
+				if v.State != EvidenceUnknown {
+					t.Fatal("closed positive integer domain", v)
+				}
+			} else if v.State != EvidenceKnown || v.Value.Integer.String() != spanSmallIntegers[c.want].String() {
+				t.Fatal(v)
+			}
+		})
+	}
+}

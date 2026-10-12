@@ -570,3 +570,125 @@ func TestLocalStructuralInvalidPrerequisitesRemainCausal(t *testing.T) {
 		}
 	}
 }
+
+func TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting(t *testing.T) {
+	engine := localContextTestEngine(t)
+	body := `<attributes><divisions>0.5</divisions><key><cancel location="before-barline">1</cancel><fifths>0</fifths></key><clef><sign>none</sign></clef></attributes><harmony><root><root-step>C</root-step></root><kind>none</kind></harmony><direction><direction-type><harp-pedals><pedal-tuning><pedal-step>A</pedal-step><pedal-alter>0</pedal-alter></pedal-tuning><pedal-tuning><pedal-step>D</pedal-step><pedal-alter>0</pedal-alter></pedal-tuning></harp-pedals></direction-type></direction><direction><direction-type><principal-voice type="stop" symbol="Hauptstimme">analysis</principal-voice></direction-type></direction><note><rest/><duration>1</duration><lyric><text>well-known</text></lyric></note><barline location="left"/>`
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			source := localContextFixture(body, tw)
+			source = strings.Replace(source, `<part-list>`, `<identification><creator>A</creator><encoding><encoder>X</encoder><encoder>Y</encoder></encoding></identification><part-list>`, 1)
+			report := localContextAssess(t, engine, source, model)
+			if !report.Satisfied() {
+				t.Fatalf("advisory forms rejected: %s", localFindings(report))
+			}
+			expected := map[string]string{
+				"integral-divisions": "prefer-integral-divisions-for-MIDI-interoperability-and-roundoff", "cancel-midmeasure": "treat-before-barline-as-left-when-midmeasure", "deprecated-clef": "prefer-clef-print-object-over-deprecated-none-sign", "harmony-none-root": "set-root-step-text-to-empty-to-suppress-root", "measure-text-hide": "use-implicit-yes-to-hide-measure-number-rather-than-empty-text", "measure-label-alignment": "aligned-partwise-measures-prefer-equal-labels-nonnumeric-and-repeated-labels-remain-permitted", "barline-order": "prefer-first-musical-element-except-print-bookmark-link", "harp-pedal-order": "prefer-D-C-B-E-F-G-A-for-easiest-reading", "principal-analysis": "analysis-only-principal-voice-prefers-symbol-none", "principal-stop": "visible-principal-voice-stop-prefers-symbol-plain", "creator-role": "prefer-creator-type-even-for-one-creator-open-role-vocabulary", "encoder-role": "multiple-encoders-can-use-open-contribution-role-types", "supports-reporting": "report-supported-accidental-beam-stem-encoding-to-interpret-omissions", "lyric-literal-hyphen": "reserve-literal-hyphens-for-actually-hyphenated-words-use-syllabic-for-syllable-separation"}
+			for name, want := range expected {
+				var rows []validation.ContextResult
+				for _, row := range report.Context {
+					if row.Property == validation.ContextProperty("local.advisory-"+name) {
+						rows = append(rows, row)
+					}
+				}
+				count := 1
+				if name == "integral-divisions" || name == "encoder-role" {
+					count = 2
+				}
+				if len(rows) != count {
+					t.Fatalf("%s rows%d want%d", name, len(rows), count)
+				}
+				for i, row := range rows {
+					if row.Value.State != validation.EvidenceKnown || row.Value.Value.Text != want {
+						t.Fatalf("%s %+v", name, row)
+					}
+					app := row.Layout.Applicability
+					if name == "cancel-midmeasure" || name == "principal-analysis" || name == "measure-label-alignment" && !tw {
+						if app.State != validation.EvidenceUnknown {
+							t.Fatalf("%s unresolved antecedent %+v", name, app)
+						}
+					} else {
+						wantActive := true
+						if name == "measure-label-alignment" && tw || name == "integral-divisions" && i == 1 {
+							wantActive = false
+						}
+						if app.State != validation.EvidenceKnown || app.Value != wantActive {
+							t.Fatalf("%s applicability %+v", name, app)
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestLocalAdvisoryFalseConditionsAndNumericDomains(t *testing.T) {
+	engine := localContextTestEngine(t)
+	body := `<attributes><divisions>1</divisions><key><cancel>1</cancel><fifths>0</fifths></key><clef><sign>G</sign><line>0</line></clef></attributes><harmony><root><root-step>C</root-step></root><kind>major</kind></harmony><direction><direction-type><principal-voice type="stop" symbol="none">analysis</principal-voice></direction-type></direction><note><pitch><step>C</step><alter>0.5</alter><octave>0</octave></pitch><duration>1</duration><lyric><text>hello</text></lyric></note><note><pitch><step>B</step><octave>9</octave></pitch><duration>1</duration></note><barline location="middle"/>`
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			source := strings.Replace(localContextFixture(body, tw), `<part-list>`, `<identification><encoding><encoder>One</encoder></encoding></identification><part-list>`, 1)
+			report := localContextAssess(t, engine, source, model)
+			if !report.Satisfied() {
+				t.Fatal(localFindings(report))
+			}
+			seen := map[string]bool{}
+			for _, row := range report.Context {
+				name := strings.TrimPrefix(string(row.Property), "local.advisory-")
+				switch name {
+				case "integral-divisions", "cancel-midmeasure", "deprecated-clef", "harmony-none-root", "barline-order", "principal-stop", "encoder-role", "lyric-literal-hyphen":
+					seen[name] = true
+					if row.Layout.Applicability.State != validation.EvidenceKnown || row.Layout.Applicability.Value {
+						t.Fatalf("false condition %s %+v", name, row)
+					}
+				}
+			}
+			if len(seen) != 8 {
+				t.Fatalf("missing controls %+v", seen)
+			}
+			count := 0
+			for _, row := range report.Context {
+				if row.Property == validation.ContextOctaveBasis {
+					count++
+					if row.Value.State != validation.EvidenceKnown {
+						t.Fatal(row)
+					}
+				}
+				if row.Property == validation.ContextStaffLineBasis && row.Value.State != validation.EvidenceKnown {
+					t.Fatalf("line zero is permitted: %+v", row)
+				}
+			}
+			if count != 2 {
+				t.Fatalf("octave boundaries%d", count)
+			}
+		}
+	}
+}
+func TestLocalAdvisoryInvalidInputsRemainCausal(t *testing.T) {
+	engine := localContextTestEngine(t)
+	body := `<attributes><divisions>0</divisions><clef><sign>wrong</sign></clef></attributes><direction><direction-type><principal-voice type="stop" symbol="wrong"/></direction-type></direction><note><rest/><duration>1</duration></note>`
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			report := localContextAssess(t, engine, localContextFixture(body, tw), model)
+			seen := map[string]bool{}
+			for _, row := range report.Context {
+				name := strings.TrimPrefix(string(row.Property), "local.advisory-")
+				switch name {
+				case "integral-divisions":
+					if row.Layout.Raw.State != validation.EvidenceInvalid {
+						continue
+					}
+					fallthrough
+				case "deprecated-clef", "principal-analysis", "principal-stop":
+					seen[name] = true
+					if row.Layout.Applicability.State != validation.EvidenceInvalid || row.Layout.Applicability.Cause == nil {
+						t.Fatalf("causal advisory %s %+v", name, row)
+					}
+				}
+			}
+			if len(seen) != 4 {
+				t.Fatalf("missing causal advice %+v", seen)
+			}
+		}
+	}
+}

@@ -81,7 +81,7 @@ func cloneSpanContext(ctx context.Context, s *Session, p *SpanContextResult) (*S
 	// The payload is a closed value graph: only Evidence's causal pointers occur.
 	// The existing measured copy owns strings, slices and causes and admits all
 	// immutable numeric magnitudes before copying.
-	if err := stateRetainCopy(ctx, s, *p); err != nil {
+	if err := contextRetainProjection(ctx, s, *p); err != nil {
 		return nil, err
 	}
 	q := stateClone(*p)
@@ -93,6 +93,7 @@ type spanEndpoint struct {
 	relationSide        NodeID
 	payload             SpanContextResult
 	complete            Evidence[bool]
+	pitchAvailable      Evidence[bool]
 	pitch, guard, lyric string
 	grace, cue          bool
 	categoryKnown       bool

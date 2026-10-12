@@ -135,7 +135,37 @@ func contextRepeatSameScope(ctx context.Context, s *Session, a, b RepeatContextR
 // Pair only an established next transition in the same style scope. No stack
 // discipline or same-time lexical winner is inferred from serialization order.
 func contextRepeatPairRanges(ctx context.Context, s *Session, timeline *timelineService, rows []contextRepeatRecord) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if len(rows) == 0 {
+		return nil
+	}
+	release, err := contextRepeatIndexReserve(ctx, s, len(rows), len(timeline.State.Closures))
+	if err != nil {
+		return err
+	}
+	defer release()
+	groups, unknown, all, err := contextRepeatRowGroups(ctx, s, rows)
+	if err != nil {
+		return err
+	}
+	fast, err := contextRepeatFastRanges(ctx, s, timeline, rows, groups, unknown)
+	if err != nil {
+		return err
+	}
+	closures := make(map[NodeRef]Evidence[bool])
+	for _, closure := range timeline.State.Closures {
+		if err = s.step(ctx, 1+int64(len(closure.Part.DocumentID))); err != nil {
+			return err
+		}
+		closures[closure.Part] = closure.Complete
+	}
+
 	for i := range rows {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
 		a := &rows[i]
 		if a.value.Type.State != EvidenceKnown || a.value.Type.Value != "start" {
 			continue
@@ -147,7 +177,37 @@ func contextRepeatPairRanges(ctx context.Context, s *Session, timeline *timeline
 		}
 		best := -1
 		gap := Evidence[bool]{State: EvidenceKnown, Value: true}
-		for j := range rows {
+		if err = s.step(ctx, 1+int64(len(a.value.Part.Value.DocumentID)+len(a.value.Kind))); err != nil {
+			return err
+		}
+		local := groups[contextRepeatPartKind{a.value.Part.Value, a.value.Kind}]
+		extra := unknown
+		if a.value.Part.State != EvidenceKnown {
+			local = all
+			extra = nil
+		}
+		if candidate, ok := fast[i]; ok {
+			if candidate.ambiguous {
+				gap = stateUnknown[bool]("context-repeat-transition-order-unresolved")
+				local = nil
+				extra = nil
+			} else if candidate.next < 0 {
+				local = nil
+				extra = nil
+			} else {
+				local = []int{candidate.next}
+				extra = nil
+			}
+		}
+		for left, right := 0, 0; left < len(local) || right < len(extra); {
+			j := 0
+			if right == len(extra) || left < len(local) && local[left] < extra[right] {
+				j = local[left]
+				left++
+			} else {
+				j = extra[right]
+				right++
+			}
 			if i == j {
 				continue
 			}
@@ -218,13 +278,11 @@ func contextRepeatPairRanges(ctx context.Context, s *Session, timeline *timeline
 			stop.value.Complete = a.value.Complete
 		} else {
 			a.value.Complete = stateUnknown[bool]("context-repeat-part-end-unavailable")
-			for _, closure := range timeline.State.Closures {
-				if err := s.step(ctx, 1); err != nil {
-					return err
-				}
-				if closure.Part == a.value.Part.Value {
-					a.value.Complete = closure.Complete
-				}
+			if err = s.step(ctx, 1+int64(len(a.value.Part.Value.DocumentID))); err != nil {
+				return err
+			}
+			if complete, ok := closures[a.value.Part.Value]; ok {
+				a.value.Complete = complete
 			}
 			if a.value.Complete.State == EvidenceKnown && a.value.Complete.Value {
 				a.value.Stop = Evidence[NodeRef]{State: EvidenceAbsent}

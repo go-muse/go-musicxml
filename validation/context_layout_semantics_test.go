@@ -54,56 +54,51 @@ func TestLayoutComponentConsensusFiveAxes(t *testing.T) {
 	}
 }
 
-// Every static layout rule is exercised independently. These tests concern
-// already assessed evidence; adapter fixtures separately prove exact use sites.
+// Every static layout rule is exercised independently against assessed
+// evidence. These target-neutral transformations are not adapter fixtures.
 func TestLayoutEveryConstantFiveAxes(t *testing.T) {
 	for _, rule := range layoutConstantRules {
 		t.Run(rule.Property, func(t *testing.T) {
-			explicit := Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "explicit"}}
-			for _, target := range []Target{TargetSource, TargetModel} {
-				for _, hierarchy := range []string{"partwise", "timewise"} {
-					t.Run(string(target)+"-"+hierarchy, func(t *testing.T) {
-						t.Run("positive", func(t *testing.T) {
-							v := localConstantEffective(rule, explicit)
-							if v.State != EvidenceKnown || v.Value.Text != "explicit" {
-								t.Fatalf("explicit %+v", v)
-							}
-						})
-						t.Run("negative", func(t *testing.T) {
-							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceAbsent})
-							if rule.Unknown != "" {
-								if v.State != EvidenceUnknown {
-									t.Fatalf("invented application default %+v", v)
-								}
-							} else if v.State != EvidenceKnown {
-								t.Fatalf("lost known default %+v", v)
-							}
-						})
-						t.Run("boundary", func(t *testing.T) {
-							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: ""}})
-							if !rule.Empty && v.State != EvidenceKnown {
-								t.Fatalf("empty explicit %+v", v)
-							}
-							if rule.Empty && rule.Unknown != "" && v.State != EvidenceUnknown {
-								t.Fatalf("empty symbol %+v", v)
-							}
-						})
-						t.Run("missing_fact", func(t *testing.T) {
-							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceUnknown, Reason: "adapter-field-unavailable"})
-							if v.State != EvidenceUnknown || v.Reason != "adapter-field-unavailable" {
-								t.Fatalf("unknown became default %+v", v)
-							}
-						})
-						t.Run("interaction", func(t *testing.T) {
-							cause := &DecisionRef{Rule: RuleKey{"xsd-field", 1}, Subject: NodeRef{"score", 1}}
-							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceInvalid, Reason: "xsd", Cause: cause})
-							if v.State != EvidenceInvalid || v.Cause != cause {
-								t.Fatalf("invalid became default %+v", v)
-							}
-						})
-					})
+			t.Run("positive", func(t *testing.T) {
+				raw := Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "explicit"}}
+				got := localConstantEffective(rule, raw)
+				if got.State != EvidenceKnown || got.Value.Text != "explicit" {
+					t.Fatalf("explicit %+v", got)
 				}
-			}
+			})
+			t.Run("negative", func(t *testing.T) {
+				got := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceAbsent})
+				want := EvidenceKnown
+				if rule.Unknown != "" {
+					want = EvidenceUnknown
+				}
+				if got.State != want {
+					t.Fatalf("absence %+v", got)
+				}
+			})
+			t.Run("boundary", func(t *testing.T) {
+				got := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: ""}})
+				want := EvidenceKnown
+				if rule.Empty && rule.Unknown != "" {
+					want = EvidenceUnknown
+				}
+				if got.State != want {
+					t.Fatalf("empty %+v", got)
+				}
+			})
+			t.Run("missing_fact", func(t *testing.T) {
+				got := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceUnknown, Reason: "field-unavailable"})
+				if got.State != EvidenceUnknown || got.Reason != "field-unavailable" {
+					t.Fatalf("missing %+v", got)
+				}
+			})
+			t.Run("interaction", func(t *testing.T) {
+				cause := &DecisionRef{Rule: RuleKey{"xsd-field", 1}, Subject: NodeRef{"score", 1}}
+				got := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceInvalid, Reason: "xsd", Cause: cause})
+				if got.State != EvidenceInvalid || got.Cause != cause {
+					t.Fatalf("invalid %+v", got)
+				}
+			})
 		})
 	}
 }

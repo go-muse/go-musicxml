@@ -229,7 +229,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 			role = layoutRole("elision.@smufl")
 		}
 		owns := r.attributeOwner(n, role)
-		if name == "language" {
+		if name == "language" || ((name == "halign" || name == "valign") && r.matches(n, layoutRole("lyric"))) {
 			owns = true
 		}
 		if !owns {
@@ -309,7 +309,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 			}
 			value = f.lyricValue(lyric, component)
 		}
-		if value.Value.State == EvidenceAbsent && i < 4 && f.defaults != nil && lyric == nil {
+		if value.Value.State == EvidenceAbsent && i < 4 && f.defaults != nil && lyric == nil && layoutWordFontConsumer(r, n) {
 			font, e := r.child(f.defaults, layoutRole("word-font"))
 			if e.State == EvidenceKnown {
 				value = layoutFormatField{Value: layoutAttribute(r, font, name), Origin: NodeRef{r.s.documentID, font.header.ID}}
@@ -394,4 +394,16 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 		f.previous[parent.header.Parent] = n
 	}
 	return r.err
+}
+
+// A shared font attribute group does not establish a shared font domain.
+// Only proved word-bearing declarations consume word-font. Symbol, notation,
+// and default-publisher declarations retain their independent application choice.
+func layoutWordFontConsumer(r *contextReader, n *factNode) bool {
+	for _, role := range []string{"words", "rehearsal", "credit-words", "display-text", "footnote", "part-name", "part-abbreviation", "group-name", "group-abbreviation", "per-minute"} {
+		if r.matches(n, layoutRole(role)) {
+			return true
+		}
+	}
+	return false
 }

@@ -187,6 +187,9 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		}
 		var pageBreak, systemBreak Evidence[bool]
 		blanks := Evidence[Atomic]{State: EvidenceAbsent}
+		breakPosition := Evidence[Rational]{State: EvidenceAbsent}
+		breakPositionUnknown := false
+		breakDeclarations := 0
 		var pagePublisher, systemPublisher *factNode
 		var pagePeers []*factNode
 		conflict := false
@@ -208,6 +211,23 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				}
 				blanks = layoutConsensusPair(blanks, bv)
 				sb = pb
+			}
+			if print != nil && ((pb.State == EvidenceKnown && pb.Value) || (sb.State == EvidenceKnown && sb.Value)) {
+				breakDeclarations++
+				fact, ok := l.timeline.Facts[print.header.ID]
+				if !ok || fact.Origin.State != EvidenceKnown || fact.Origin.Value.UnprovedFrame {
+					breakPositionUnknown = true
+				} else if breakPosition.State == EvidenceAbsent {
+					breakPosition = Evidence[Rational]{State: EvidenceKnown, Value: fact.Origin.Value.Offset}
+				} else {
+					cmp, e := s.rationalCmp(ctx, breakPosition.Value, fact.Origin.Value.Offset)
+					if e != nil {
+						return e
+					}
+					if cmp != 0 {
+						conflict = true
+					}
+				}
 			}
 			for _, pair := range [][2]Evidence[bool]{{pageBreak, pb}, {systemBreak, sb}} {
 				if pair[0].State == EvidenceKnown && pair[1].State == EvidenceKnown && pair[0].Value != pair[1].Value {
@@ -290,7 +310,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		} else if blanks.State != EvidenceAbsent && blanks.State != EvidenceKnown {
 			frame.parity = stateUnavailable[Atomic, bool](blanks)
 		}
-		if conflict {
+		if conflict || (breakDeclarations > 1 && breakPositionUnknown) {
 			frame.pageCertain = false
 			frame.systemCertain = false
 			frame.page = stateUnknown[NodeRef]("parallel-print-break-disagreement")
@@ -310,10 +330,13 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		if initial {
 			systemStart = Evidence[bool]{State: EvidenceKnown, Value: true}
 		}
-		if conflict {
+		if conflict || (breakDeclarations > 1 && breakPositionUnknown) {
 			systemStart = stateUnknown[bool]("parallel-print-break-disagreement")
 		}
 		for _, b := range group {
+			if err = layoutStateMeasure(ctx, s, key, b, r, p, systemStart); err != nil {
+				return err
+			}
 			if err = l.nameUpdates(b, frame, systemStart); err != nil {
 				return err
 			}
@@ -342,14 +365,6 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				return err
 			}
 
-			if blanks.State == EvidenceKnown && frame.parity.State == EvidenceKnown {
-				text := blanks.Value.Integer.String()
-				if len(text) > 0 && (text[len(text)-1]-'0')%2 == 1 {
-					frame.parity.Value = !frame.parity.Value
-				}
-			} else if blanks.State != EvidenceAbsent && blanks.State != EvidenceKnown {
-				frame.parity = stateUnavailable[Atomic, bool](blanks)
-			}
 			if conflict {
 				if err = l.publish(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, stateUnknown[Atomic]("parallel-print-rendering-unspecified"), active, ref, frame, nil); err != nil {
 					return err

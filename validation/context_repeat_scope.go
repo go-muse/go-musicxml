@@ -11,7 +11,51 @@ type RepeatNoteScope struct {
 }
 
 func contextRepeatNoteScopes(ctx context.Context, s *Session, timeline *timelineService, rows []contextRepeatRecord) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if len(rows) == 0 {
+		return nil
+	}
+	release, err := contextRepeatIndexReserve(ctx, s, len(rows), len(s.sequence))
+	if err != nil {
+		return err
+	}
+	defer release()
+	stops := make(map[NodeRef]Evidence[musicalPosition])
+	for _, row := range rows {
+		if err = s.step(ctx, 1+int64(len(row.source.DocumentID))); err != nil {
+			return err
+		}
+		if _, exists := stops[row.source]; !exists {
+			stops[row.source] = row.position
+		}
+	}
+	notes := make(map[NodeRef][]int)
+	var unknown, all []int
+	for index, id := range s.sequence {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
+		note, ok := timeline.Playback.Notes[id]
+		if !ok {
+			continue
+		}
+		all = append(all, index)
+		if note.Origin.Part.State != EvidenceKnown {
+			unknown = append(unknown, index)
+			continue
+		}
+		if err = s.step(ctx, 1+int64(len(note.Origin.Part.Value.DocumentID))); err != nil {
+			return err
+		}
+		notes[note.Origin.Part.Value] = append(notes[note.Origin.Part.Value], index)
+	}
+
 	for i := range rows {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
 		row := &rows[i]
 		if row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" {
 			continue
@@ -19,19 +63,33 @@ func contextRepeatNoteScopes(ctx context.Context, s *Session, timeline *timeline
 		stop := Evidence[musicalPosition]{State: EvidenceAbsent}
 		if row.value.Stop.State == EvidenceKnown {
 			stop = stateUnknown[musicalPosition]("context-repeat-stop-position-unavailable")
-			for _, other := range rows {
-				if err := s.step(ctx, 1); err != nil {
-					return err
-				}
-				if other.source == row.value.Stop.Value {
-					stop = other.position
-					break
-				}
+			if err = s.step(ctx, 1+int64(len(row.value.Stop.Value.DocumentID))); err != nil {
+				return err
+			}
+			if pos, ok := stops[row.value.Stop.Value]; ok {
+				stop = pos
 			}
 		} else if row.value.Stop.State != EvidenceAbsent {
 			stop = stateUnavailable[NodeRef, musicalPosition](row.value.Stop)
 		}
-		for _, id := range s.sequence {
+		if err = s.step(ctx, 1+int64(len(row.value.Part.Value.DocumentID))); err != nil {
+			return err
+		}
+		local, extra := notes[row.value.Part.Value], unknown
+		if row.value.Part.State != EvidenceKnown {
+			local = all
+			extra = nil
+		}
+		for left, right := 0, 0; left < len(local) || right < len(extra); {
+			index := 0
+			if right == len(extra) || left < len(local) && local[left] < extra[right] {
+				index = local[left]
+				left++
+			} else {
+				index = extra[right]
+				right++
+			}
+			id := s.sequence[index]
 			if err := s.step(ctx, 1); err != nil {
 				return err
 			}

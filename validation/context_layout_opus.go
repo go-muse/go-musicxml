@@ -3,6 +3,7 @@ package validation
 import "context"
 
 const (
+	layoutOpusVersion contextRole = "layout.opus.version"
 	layoutOpusScore   contextRole = "layout.opus.score"
 	layoutOpusNewPage contextRole = "layout.opus.new-page"
 )
@@ -11,6 +12,7 @@ const (
 // link declaration. No linked score is opened or needed for this local hint.
 func contextOpusLayoutBindingSpecs() []contextBindingSpec {
 	return []contextBindingSpec{
+		{Role: layoutOpusVersion, Owner: "opus", Name: "version", Type: "xs:token", Attribute: true, Count: 1},
 		{Role: layoutOpusScore, Owner: "opus", Name: "score", Type: "score", Count: 1},
 		{Role: layoutOpusNewPage, Owner: "score", Name: "new-page", Type: "yes-no", Attribute: true, Count: 1},
 	}
@@ -25,6 +27,16 @@ func evaluateContextOpusLayout(ctx context.Context, s *Session, _ *factNode, key
 			return Decision{}, false, r.err
 		}
 		n := s.nodes[id]
+		if r.attributeOwner(n, layoutOpusVersion) {
+			raw := localRawAttribute(r, n, layoutOpusVersion)
+			value := localDefault(raw, Atomic{Kind: AtomicString, Text: "1.0"})
+			if r.err != nil {
+				return Decision{}, false, r.err
+			}
+			if err := localPublish(ctx, s, key, n, "layout.opus-version", raw, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{s.documentID, n.header.ID}, ContextUnitNone); err != nil {
+				return Decision{}, false, err
+			}
+		}
 		if !r.matches(n, layoutOpusScore) {
 			continue
 		}

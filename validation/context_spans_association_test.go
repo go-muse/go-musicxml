@@ -128,3 +128,24 @@ func TestContextSpanCompetingUnprovedIdentityBlocksPair(t *testing.T) {
 		})
 	}
 }
+
+func TestContextBeamUnavailableVoicePreservesCause(t *testing.T) {
+	for _, state := range []EvidenceState{EvidenceInvalid, EvidenceUnknown, EvidenceUnsupported} {
+		t.Run(string(state), func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			a := spanTestEndpoint(t, 1, SpanBeam, "begin", 1)
+			b := spanTestEndpoint(t, 2, SpanBeam, "end", 1)
+			cause := &DecisionRef{Rule: RuleKey{"voice-owner", 1}, Subject: b.ref}
+			b.payload.Voice = Evidence[string]{State: state, Reason: "voice-unavailable", Cause: cause}
+			if err := associateSpanEndpoints(context.Background(), s, []*spanEndpoint{a, b}, nil); err != nil {
+				t.Fatal(err)
+			}
+			for _, e := range []*spanEndpoint{a, b} {
+				if e.payload.Association.State != state || e.payload.Association.Cause == nil || *e.payload.Association.Cause != *cause {
+					t.Fatal(e.payload.Association)
+				}
+			}
+		})
+	}
+}

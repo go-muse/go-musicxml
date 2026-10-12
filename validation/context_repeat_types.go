@@ -17,6 +17,8 @@ const (
 // Start/Stop are established half-open range endpoints; absent Stop may mean
 // continuation to part end only when Complete is known. AllStaves is symbolic.
 type RepeatContextResult struct {
+	// NoteScopesComplete describes enumeration of Notes independently of range closure.
+	NoteScopesComplete        Evidence[bool]
 	RawUseDots, RawUseStems   Evidence[bool]
 	Notes                     []RepeatNoteScope
 	Kind                      RepeatStyleKind

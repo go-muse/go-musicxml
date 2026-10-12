@@ -475,6 +475,9 @@ func TestRepeatAdaptersSlashVoiceAndStopScope(t *testing.T) {
 			}
 			found = true
 			rows := c.Repeat.Notes
+			if c.Repeat.NoteScopesComplete.State != validation.EvidenceKnown || !c.Repeat.NoteScopesComplete.Value {
+				t.Fatalf("scope enumeration %+v", c.Repeat.NoteScopesComplete)
+			}
 			if len(rows) != 3 {
 				t.Fatalf("scope rows %+v", rows)
 			}

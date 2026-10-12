@@ -14,6 +14,10 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 	partOrder := int64(0)
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
 	service := s.timeline[p.Timeline]
+	adviceIndex, err := buildPerformanceAdviceIndex(ctx, s, service)
+	if err != nil {
+		return Decision{}, false, err
+	}
 	swingHistory, err := performanceBuildSwing(r, service)
 	if err != nil {
 		return Decision{}, false, err
@@ -136,7 +140,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			}
 		}
 		if publish && service != nil && service.Final && r.err == nil {
-			r.err = performanceStateAdvice(ctx, s, service, n, &out)
+			r.err = performanceStateAdvice(ctx, s, adviceIndex, n, &out)
 		}
 		if r.err != nil {
 			break

@@ -180,6 +180,9 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 			} else if e.payload.Voice.State != EvidenceKnown && e.payload.Voice.State != EvidenceAbsent && e.payload.Family == SpanBeam {
 				v = stateUnavailable[string, bool](e.payload.Voice)
 			}
+			if e.pitch == "" && e.pitchAvailable.State != "" && (e.payload.Family == SpanTie || e.payload.Identity == SpanIdentityImpliedTie) {
+				v = timelineMergeAvailability(v, e.pitchAvailable)
+			}
 			v = timelineMergeAvailability(v, e.complete)
 			if old, found := gaps[g]; found {
 				gaps[g] = timelineMergeAvailability(old, v)

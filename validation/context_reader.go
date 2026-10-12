@@ -1,14 +1,18 @@
 package validation
 
-import "context"
+import (
+	"context"
+	"github.com/go-muse/go-musicxml/internal/xsd"
+)
 
 // contextReader borrows admitted schema facts. It owns only its first error;
 // callers propagate err at every provider boundary, never substitute absence.
 type contextReader struct {
-	ctx context.Context
-	s   *Session
-	b   *contextBindings
-	err error
+	ctx            context.Context
+	s              *Session
+	b              *contextBindings
+	err            error
+	attributeCache map[xsd.Binding]map[contextRole]AttributeSelector
 }
 
 func (r *contextReader) step(n int64) bool {
@@ -26,6 +30,13 @@ func (r *contextReader) sameDeclaration(a, b DeclarationID) bool {
 func (r *contextReader) matches(n *factNode, role contextRole) bool {
 	if n == nil || r.b == nil || !r.step(1) || n.header.Declaration.State != EvidenceKnown {
 		return false
+	}
+	if r.b.Elements != nil {
+		if !r.step(int64(len(role)) + contextDeclarationBytes(n.header.Declaration.Value)) {
+			return false
+		}
+		_, ok := r.b.Elements[role][n.header.Declaration.Value]
+		return ok
 	}
 	for _, u := range r.b.Roles[role] {
 		if !u.Attribute && r.sameDeclaration(n.header.Declaration.Value, u.Declaration) {
@@ -105,6 +116,54 @@ func (r *contextReader) attributeSelector(n *factNode, role contextRole) (Attrib
 	}
 	if r.s.schema != nil && r.s.schema.run != nil {
 		bound := r.s.schema.nodes[n.header.ID]
+		if r.b.AttributeRoles != nil {
+			if !r.step(1 + int64(len(role))) {
+				return AttributeSelector{}, false
+			}
+			selectors, ready := r.attributeCache[bound.binding]
+			if !ready {
+				if !r.step(1) {
+					return AttributeSelector{}, false
+				}
+				if r.err = r.s.retain(512); r.err != nil {
+					return AttributeSelector{}, false
+				}
+				selectors = make(map[contextRole]AttributeSelector)
+				for attr := range r.s.schema.run.Attributes(bound.binding) {
+					d := r.s.schema.active.declaration(attr.Use)
+					if !r.step(contextDeclarationBytes(d)) {
+						return AttributeSelector{}, false
+					}
+					for _, selected := range r.b.AttributeRoles[d] {
+						if !r.step(1 + int64(len(selected.role))) {
+							return AttributeSelector{}, false
+						}
+						if _, exists := selectors[selected.role]; exists {
+							continue
+						}
+						if r.err = r.s.retain(256 + int64(len(selected.role))); r.err != nil {
+							return AttributeSelector{}, false
+						}
+						selectors[selected.role] = selected.selector
+					}
+				}
+				if !r.step(1) {
+					return AttributeSelector{}, false
+				}
+				if r.attributeCache == nil {
+					if r.err = r.s.retain(128); r.err != nil {
+						return AttributeSelector{}, false
+					}
+					r.attributeCache = make(map[xsd.Binding]map[contextRole]AttributeSelector)
+				}
+				if r.err = r.s.retain(128); r.err != nil {
+					return AttributeSelector{}, false
+				}
+				r.attributeCache[bound.binding] = selectors
+			}
+			a, ok := selectors[role]
+			return a, ok
+		}
 		for attr := range r.s.schema.run.Attributes(bound.binding) {
 			d := r.s.schema.active.declaration(attr.Use)
 			if !r.step(contextDeclarationBytes(d)) {

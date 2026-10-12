@@ -23,11 +23,17 @@ type contextBindingSpec struct {
 	// exact Name/Space/Type uses across owners; -1 accepts a nonempty set.
 	Count int
 }
+type contextAttributeRole struct {
+	role     contextRole
+	selector AttributeSelector
+}
 type contextBindings struct {
-	Roles         map[contextRole][]SchemaUse
-	Attributes    map[contextRole]map[ComponentID]AttributeSelector
-	AttributeUses map[contextRole]map[DeclarationID]AttributeSelector
-	bytes         int64
+	Elements       map[contextRole]map[DeclarationID]struct{}
+	AttributeRoles map[DeclarationID][]contextAttributeRole
+	Roles          map[contextRole][]SchemaUse
+	Attributes     map[contextRole]map[ComponentID]AttributeSelector
+	AttributeUses  map[contextRole]map[DeclarationID]AttributeSelector
+	bytes          int64
 }
 type contextBindingsCache struct {
 	once     sync.Once
@@ -93,7 +99,7 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 			index[k] = append(index[k], u)
 		}
 	}
-	b := &contextBindings{Roles: make(map[contextRole][]SchemaUse), Attributes: make(map[contextRole]map[ComponentID]AttributeSelector), AttributeUses: make(map[contextRole]map[DeclarationID]AttributeSelector), bytes: 512}
+	b := &contextBindings{Elements: make(map[contextRole]map[DeclarationID]struct{}), AttributeRoles: make(map[DeclarationID][]contextAttributeRole), Roles: make(map[contextRole][]SchemaUse), Attributes: make(map[contextRole]map[ComponentID]AttributeSelector), AttributeUses: make(map[contextRole]map[DeclarationID]AttributeSelector), bytes: 512}
 	for _, spec := range specs {
 		if spec.Role == "" || spec.Name == "" || spec.Type == "" || (spec.Count < 1 && spec.Count != -1) || (spec.Count == -1 && spec.Owner != "") {
 			return nil, contract("context binding spec", "exact fixed role or declared-type family required")
@@ -139,8 +145,20 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 				declarations[u.Declaration] = a
 				b.bytes += 512
 			}
+			for d, a := range declarations {
+				b.AttributeRoles[d] = append(b.AttributeRoles[d], contextAttributeRole{spec.Role, a})
+				b.bytes += 256 + contextDeclarationBytes(d) + int64(len(spec.Role))
+			}
 			b.Attributes[spec.Role] = owners
 			b.AttributeUses[spec.Role] = declarations
+		}
+		if !spec.Attribute {
+			elements := make(map[DeclarationID]struct{}, len(bound))
+			for _, u := range bound {
+				elements[u.Declaration] = struct{}{}
+				b.bytes += 256 + contextDeclarationBytes(u.Declaration)
+			}
+			b.Elements[spec.Role] = elements
 		}
 		b.bytes += int64(128 + len(spec.Role))
 		if b.bytes > 4<<20 {

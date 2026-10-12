@@ -50,11 +50,14 @@ func cloneLayoutContext(ctx context.Context, s *Session, p *LayoutContextResult)
 	if p == nil {
 		return nil, nil
 	}
-	if err := stateRetainCopy(ctx, s, *p); err != nil {
+	if err := contextRetainProjection(ctx, s, *p); err != nil {
 		return nil, err
 	}
 	q := stateClone(*p)
 	return &q, nil
 }
 
-type contextLayoutService struct{ Final bool }
+type contextLayoutService struct {
+	Final bool
+	State *layoutStateIndex
+}

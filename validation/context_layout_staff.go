@@ -216,6 +216,16 @@ func (l *layoutScopes) firstSystemStaff(blocks []timelineMeasureBlock, slots boo
 }
 func (l *layoutScopes) staffCandidates(part NodeRef, count Integer) ([]Integer, error) {
 	r := l.r
+	if !r.step(1 + count.ByteSize()) {
+		return nil, r.err
+	}
+	cmp, err := count.Cmp(localOne)
+	if err != nil {
+		return nil, err
+	}
+	if cmp < 0 {
+		return nil, nil
+	}
 	if l.candidateCache == nil {
 		if err := r.s.retain(1024); err != nil {
 			return nil, err

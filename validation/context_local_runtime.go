@@ -24,7 +24,7 @@ func contextLocalPropertyValid(p ContextProperty) bool {
 			return true
 		}
 	}
-	return localStructuralPropertyValid(p) || layoutPropertyValid(p) || contextGlyphPropertyValid(p)
+	return localStructuralPropertyValid(p) || localAdvisoryPropertyValid(p) || layoutPropertyValid(p) || contextGlyphPropertyValid(p)
 }
 func evaluateContextLocal(ctx context.Context, s *Session, n *factNode, key RuleKey, p *contextPlan, final bool) (Decision, bool, error) {
 	if !final {
@@ -53,6 +53,9 @@ func evaluateContextLocal(ctx context.Context, s *Session, n *factNode, key Rule
 			return Decision{}, false, err
 		}
 		if err := localStructuralNode(ctx, s, key, node, r); err != nil {
+			return Decision{}, false, err
+		}
+		if err := localAdvisoryNode(ctx, s, key, node, r); err != nil {
 			return Decision{}, false, err
 		}
 	}

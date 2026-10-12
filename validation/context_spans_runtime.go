@@ -121,16 +121,22 @@ func spanInheritedDomain(r *contextReader, n *factNode, domains map[NodeID]Evide
 	}
 	return stateUnknown[NodeRef]("span-part-unavailable")
 }
-func spanPitch(r *contextReader, note *factNode) string {
+func spanPitch(r *contextReader, note *factNode) (string, Evidence[bool]) {
 	pitch, pe := r.child(note, spanRole_notePitch)
+	if pe.State == EvidenceAbsent {
+		return "", stateUnknown[bool]("span-pitched-coordinate-unavailable")
+	}
 	if pe.State != EvidenceKnown {
-		return ""
+		return "", stateUnavailable[bool, bool](pe)
 	}
 	step := r.childScalar(pitch, spanRole_pitchStep)
 	oct := stateInteger(r.childScalar(pitch, spanRole_pitchOctave))
 	alt := r.childScalar(pitch, spanRole_pitchAlter)
-	if step.State != EvidenceKnown || oct.State != EvidenceKnown {
-		return ""
+	if step.State != EvidenceKnown {
+		return "", stateUnavailable[Atomic, bool](step)
+	}
+	if oct.State != EvidenceKnown {
+		return "", stateUnavailable[Integer, bool](oct)
 	}
 	var semitone int64
 	switch step.Value.Text {
@@ -149,41 +155,41 @@ func spanPitch(r *contextReader, note *factNode) string {
 	case "B":
 		semitone = 11
 	default:
-		return ""
+		return "", stateUnknown[bool]("span-pitch-unavailable")
 	}
 
 	if err := r.s.step(r.ctx, oct.Value.ByteSize()+256); err != nil {
 		r.err = err
-		return ""
+		return "", stateUnknown[bool]("span-pitch-unavailable")
 	}
 	if err := r.s.retain(oct.Value.ByteSize()*2 + 512); err != nil {
 		r.err = err
-		return ""
+		return "", stateUnknown[bool]("span-pitch-unavailable")
 	}
 	base := new(big.Int).Mul(oct.Value.value, big.NewInt(12))
 	base.Add(base, big.NewInt(semitone))
 	q, err := r.s.rationalResult(r.ctx, new(big.Rat).SetInt(base))
 	if err != nil {
 		r.err = err
-		return ""
+		return "", stateUnknown[bool]("span-pitch-unavailable")
 	}
 	if alt.State != EvidenceAbsent {
 		d := stateDecimalValue(alt)
 		if d.State != EvidenceKnown {
-			return ""
+			return "", stateUnavailable[Decimal, bool](d)
 		}
 		a, err := r.s.rationalFromDecimal(r.ctx, d.Value)
 		if err != nil {
 			r.err = err
-			return ""
+			return "", stateUnknown[bool]("span-pitch-unavailable")
 		}
 		q, err = r.s.rationalAdd(r.ctx, q, a)
 		if err != nil {
 			r.err = err
-			return ""
+			return "", stateUnknown[bool]("span-pitch-unavailable")
 		}
 	}
-	return q.String()
+	return q.String(), Evidence[bool]{State: EvidenceKnown, Value: true}
 }
 func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding, t *timelineService, domains map[NodeID]Evidence[NodeRef], order uint64) *spanEndpoint {
 	if err := r.s.retain(3072); err != nil {
@@ -244,7 +250,7 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 		e.categoryKnown = (g.State == EvidenceKnown || g.State == EvidenceAbsent) && (c.State == EvidenceKnown || c.State == EvidenceAbsent)
 		e.complete = timelineMergeAvailability(e.complete, r.enumerated(note))
 		if b.family == SpanTied || b.family == SpanTie {
-			e.pitch = spanPitch(r, note)
+			e.pitch, e.pitchAvailable = spanPitch(r, note)
 		}
 	}
 	if b.family == SpanTie {
@@ -320,7 +326,9 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 	}
 	if (b.family == SpanLyricExtend || b.family == SpanFigureExtend) && p.Role.State == EvidenceAbsent {
 		version := spanDefault(r.attribute(r.s.root, spanRole_version), spanString("1.0"))
-		if spanIs(version, "1.0") || spanIs(version, "1.1") || spanIs(version, "2.0") {
+		if version.State != EvidenceKnown {
+			p.Role = stateUnavailable[Atomic, string](version)
+		} else if spanIs(version, "1.0") || spanIs(version, "1.1") || spanIs(version, "2.0") {
 			p.Role = Evidence[string]{State: EvidenceKnown, Value: "start"}
 		} else {
 			p.Role = stateUnknown[string]("span-extend-type-unspecified")

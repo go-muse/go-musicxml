@@ -176,7 +176,91 @@ func performanceMovement(r *contextReader, service *timelineService, n *factNode
 	return true
 }
 
-func performanceStateAdvice(ctx context.Context, s *Session, service *timelineService, n *factNode, out *TimingContextResult) error {
+type performanceDivisionAdvice struct {
+	count    int
+	initial  bool
+	complete Evidence[bool]
+}
+type performanceAdviceIndex struct {
+	divisions   map[NodeRef]performanceDivisionAdvice
+	instruments map[NodeID]Evidence[bool]
+}
+
+// Build invariant part and note advice once. Entries borrow immutable timeline
+// evidence during this provider; publication makes the owned report copy.
+func buildPerformanceAdviceIndex(ctx context.Context, s *Session, service *timelineService) (*performanceAdviceIndex, error) {
+	if err := s.step(ctx, 1); err != nil {
+		return nil, err
+	}
+	if err := s.retain(256); err != nil {
+		return nil, err
+	}
+	x := &performanceAdviceIndex{divisions: make(map[NodeRef]performanceDivisionAdvice), instruments: make(map[NodeID]Evidence[bool])}
+	if service == nil {
+		return x, nil
+	}
+	charge := func(p NodeRef) error {
+		if err := s.step(ctx, 1+int64(len(p.DocumentID))); err != nil {
+			return err
+		}
+		if _, ok := x.divisions[p]; !ok {
+			return s.retain(512 + int64(len(p.DocumentID)))
+		}
+		return nil
+	}
+	for _, v := range service.State.Divisions.Publications {
+		p := v.Position.Part
+		if err := charge(p); err != nil {
+			return nil, err
+		}
+		d, ok := x.divisions[p]
+		if !ok {
+			d.complete = Evidence[bool]{State: EvidenceKnown}
+		}
+		d.count++
+		d.initial = v.Position.MeasureOrdinal == 0 && !v.Position.UnprovedFrame && v.Position.Offset.value.Sign() == 0
+		if v.Value.State != EvidenceKnown {
+			d.complete = stateUnavailable[Decimal, bool](v.Value)
+		}
+		x.divisions[p] = d
+	}
+	for _, g := range service.State.Divisions.Gaps {
+		if err := charge(g.Part); err != nil {
+			return nil, err
+		}
+		d := x.divisions[g.Part]
+		d.complete = g.Availability
+		x.divisions[g.Part] = d
+	}
+	for _, set := range service.State.NoteInstruments {
+		if err := s.step(ctx, 1); err != nil {
+			return nil, err
+		}
+		if _, ok := x.instruments[set.Note.Node]; ok {
+			continue
+		}
+		if err := s.retain(512); err != nil {
+			return nil, err
+		}
+		identified := set.Complete
+		if identified.State == EvidenceKnown {
+			identified.Value = len(set.References) > 0
+			for _, ref := range set.References {
+				if err := s.step(ctx, 1); err != nil {
+					return nil, err
+				}
+				if ref.State != EvidenceKnown {
+					identified = stateUnavailable[NodeRef, bool](ref)
+					break
+				}
+			}
+		}
+		x.instruments[set.Note.Node] = identified
+	}
+	return x, nil
+}
+
+func performanceStateAdvice(ctx context.Context, s *Session, index *performanceAdviceIndex, n *factNode, out *TimingContextResult) error {
 	if out.Part.State != EvidenceKnown {
 		return nil
 	}
@@ -186,28 +270,13 @@ func performanceStateAdvice(ctx context.Context, s *Session, service *timelineSe
 			if out.Instruments.Value.value.Cmp(stateOne().value) <= 0 {
 				identified = Evidence[bool]{State: EvidenceAbsent}
 			} else {
-				identified = stateUnknown[bool]("note-instrument-enumeration-unavailable")
-				for _, set := range service.State.NoteInstruments {
-					if err := s.step(ctx, 1); err != nil {
-						return err
-					}
-					if set.Note.Node != n.header.ID {
-						continue
-					}
-					identified = set.Complete
-					if identified.State == EvidenceKnown {
-						identified.Value = len(set.References) > 0
-						for _, ref := range set.References {
-							if err := s.step(ctx, 1); err != nil {
-								return err
-							}
-							if ref.State != EvidenceKnown {
-								identified = stateUnavailable[NodeRef, bool](ref)
-								break
-							}
-						}
-					}
-					break
+				if err := s.step(ctx, 1); err != nil {
+					return err
+				}
+				var ok bool
+				identified, ok = index.instruments[n.header.ID]
+				if !ok {
+					identified = stateUnknown[bool]("note-instrument-enumeration-unavailable")
 				}
 			}
 		}
@@ -216,40 +285,16 @@ func performanceStateAdvice(ctx context.Context, s *Session, service *timelineSe
 		}
 	}
 	if out.Kind == "note" || out.Kind == "event" {
-		count := 0
-		initial := false
-		complete := Evidence[bool]{State: EvidenceKnown, Value: true}
-		for _, v := range service.State.Divisions.Publications {
-			if err := s.step(ctx, 1); err != nil {
-				return err
-			}
-			same, err := stateSameRef(ctx, s, v.Position.Part, out.Part.Value)
-			if err != nil {
-				return err
-			}
-			if !same {
-				continue
-			}
-			count++
-			initial = v.Position.MeasureOrdinal == 0 && !v.Position.UnprovedFrame && v.Position.Offset.value.Sign() == 0
-			if v.Value.State != EvidenceKnown {
-				complete = stateUnavailable[Decimal, bool](v.Value)
-			}
+		if err := s.step(ctx, 1+int64(len(out.Part.Value.DocumentID))); err != nil {
+			return err
 		}
-		for _, g := range service.State.Divisions.Gaps {
-			if err := s.step(ctx, 1); err != nil {
-				return err
+		d, ok := index.divisions[out.Part.Value]
+		complete := Evidence[bool]{State: EvidenceKnown, Value: false}
+		if ok {
+			complete = d.complete
+			if complete.State == EvidenceKnown {
+				complete.Value = d.count == 1 && d.initial
 			}
-			same, err := stateSameRef(ctx, s, g.Part, out.Part.Value)
-			if err != nil {
-				return err
-			}
-			if same {
-				complete = g.Availability
-			}
-		}
-		if complete.State == EvidenceKnown {
-			complete.Value = count == 1 && initial
 		}
 		if err := performanceAdvice(ctx, s, out, "one-initial-divisions-per-part", complete); err != nil {
 			return err

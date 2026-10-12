@@ -16,6 +16,9 @@ type spanVerticalRun struct {
 // spanVerticalMembership groups simultaneous notation marks, not horizontal
 // starts and stops. Staff and voice do not split explicitly coordinated chords.
 func spanVerticalMembership(ctx context.Context, s *Session, es []*spanEndpoint) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
 	if err := s.retain(512); err != nil {
 		return err
 	}

@@ -76,7 +76,7 @@ func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planFigureNumberNumeric, ContextPlanSpec{Schema: schema})
 }
 
-// NewOpusLayoutContextPlan projects only locally encoded Opus pagination hints.
+// NewOpusLayoutContextPlan projects local Opus version defaults and pagination hints.
 // It never resolves score links or supplies application-dependent page choices.
 func NewOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextOpusLayout, ContextPlanSpec{Schema: schema})

@@ -10,6 +10,32 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
+type spanGapSink struct {
+	*validation.Session
+	headers map[validation.NodeID]validation.NodeHeader
+	gapName string
+}
+
+func (s *spanGapSink) Open(ctx context.Context, n validation.NodeHeader) error {
+	s.headers[n.ID] = n
+	return s.Session.Open(ctx, n)
+}
+func (s *spanGapSink) CompleteAttributes(ctx context.Context, id validation.NodeID, v validation.Evidence[bool]) error {
+	if "@"+s.headers[id].Name.Local == s.gapName {
+		v = validation.Evidence[bool]{State: validation.EvidenceUnknown, Reason: "test-span-attributes-gap"}
+	}
+	return s.Session.CompleteAttributes(ctx, id, v)
+}
+func (s *spanGapSink) Close(ctx context.Context, n validation.NodeEnd) error {
+	if s.headers[n.ID].Name.Local == s.gapName {
+		n.ChildrenComplete = validation.Evidence[bool]{State: validation.EvidenceUnknown, Reason: "test-span-enumeration-gap"}
+	}
+	if "@"+s.headers[n.ID].Name.Local == s.gapName {
+		n.AttributesComplete = validation.Evidence[bool]{State: validation.EvidenceUnknown, Reason: "test-span-attributes-gap"}
+	}
+	return s.Session.Close(ctx, n)
+}
+
 func spanTestEngine(t *testing.T, withTimeline bool) (*validation.Engine, []validation.Profile) {
 	t.Helper()
 	d, err := buildModelAssessmentDefinitions()
@@ -100,7 +126,7 @@ func spanBothWithGap(t *testing.T, source string, withTimeline, allowFailures bo
 			if err != nil {
 				t.Fatal(err)
 			}
-			sink := &timelineGapSink{Session: session, headers: map[validation.NodeID]validation.NodeHeader{}, gapName: gapName}
+			sink := &spanGapSink{Session: session, headers: map[validation.NodeID]validation.NodeHeader{}, gapName: gapName}
 			var report validation.Report
 			if profile.Target == validation.TargetModel {
 				doc, err := Decode(strings.NewReader(source))
@@ -569,6 +595,334 @@ func TestContextSpanMissingEnumerationBothAdapters(t *testing.T) {
 		for _, e := range spanResults(r, validation.SpanPartGroup) {
 			if e.Association.State == validation.EvidenceKnown || len(e.Included) > 0 {
 				t.Fatal("incomplete group interval", e)
+			}
+		}
+	})
+}
+
+func TestContextSpanInvalidPitchRetainsCausalAdvisory(t *testing.T) {
+	body := `<attributes><divisions>1</divisions></attributes>` + timelineNote("1", "", `<notations><tied type="start" number="1"/></notations>`) + `<note><pitch><step>C</step><octave>99</octave></pitch><duration>1</duration><notations><tied type="stop" number="1"/></notations></note>`
+	spanBothWithFailures(t, (localFixture{body: body}).xml(), true, true, func(t *testing.T, r validation.Report) {
+		advice := spanProperty(r, validation.ContextPropertySpanPitchEquivalentRecommended)
+		if len(advice) != 1 || advice[0].State != validation.EvidenceInvalid || advice[0].Cause == nil {
+			t.Fatal(advice)
+		}
+		for _, e := range spanResults(r, validation.SpanTied) {
+			if e.Association.State != validation.EvidenceKnown {
+				t.Fatal("explicit graphical identity unnecessarily erased", e)
+			}
+		}
+	})
+}
+
+func TestContextSpanLyricGrammarOwnerAndMissingFacts(t *testing.T) {
+	body := timelineNote("1", "", `<lyric><syllabic>begin</syllabic><text>one</text><syllabic>end</syllabic><text>two</text></lyric>`)
+	spanBothWithFailures(t, (localFixture{body: body}).xml(), false, true, func(t *testing.T, r validation.Report) {
+		if r.Counts.Fail == 0 {
+			t.Fatal("missing shared grammar owner")
+		}
+		for _, v := range r.Context {
+			if v.Property == validation.ContextPropertySpanLyricSyllable && v.Span != nil && v.Span.Association.State == validation.EvidenceKnown {
+				t.Fatal("grouped malformed lyric", v)
+			}
+		}
+	})
+	body = timelineNote("1", "", `<lyric><text>one</text><elision> </elision><text>two</text></lyric>`)
+	spanBothWithGap(t, (localFixture{body: body}).xml(), false, false, "lyric", func(t *testing.T, r validation.Report) {
+		v := spanResults(r, validation.SpanLyricSyllable)
+		if len(v) != 1 || v[0].Association.State != validation.EvidenceUnknown {
+			t.Fatal(v)
+		}
+	})
+}
+
+func TestContextSpanLocalDefaultAxesBothAdapters(t *testing.T) {
+	for _, c := range []struct {
+		name, element, attribute, def, explicit string
+		property                                validation.ContextProperty
+		direction                               bool
+	}{
+		{"octave-size", "octave-shift", "size", "8", "15", validation.ContextPropertySpanSize, true},
+		{"bracket-line", "bracket", "line-type", "solid", "dashed", validation.ContextPropertySpanLineType, true},
+		{"pedal-line", "pedal", "line", "no", "yes", validation.ContextPropertySpanPedalLine, true},
+		{"wedge-niente", "wedge", "niente", "no", "yes", validation.ContextPropertySpanWedgeNiente, true},
+		{"glissando", "glissando", "line-type", "wavy", "solid", validation.ContextPropertySpanLineType, false},
+		{"slide", "slide", "line-type", "solid", "wavy", validation.ContextPropertySpanLineType, false},
+		{"tuplet-number-display", "tuplet", "show-number", "actual", "both", validation.ContextPropertySpanTupletShowNumber, false},
+		{"tuplet-type-display", "tuplet", "show-type", "none", "actual", validation.ContextPropertySpanTupletShowType, false},
+		{"tuplet-shape", "tuplet", "line-shape", "straight", "curved", validation.ContextPropertySpanLineShape, false},
+		{"arpeggio-direction", "arpeggiate", "direction", "up", "down", validation.ContextPropertySpanArpeggioDirection, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			for _, axis := range []string{"positive", "negative", "boundary", "missing-fact", "interaction"} {
+				t.Run(axis, func(t *testing.T) {
+					role := ` type="start"`
+					if c.element == "octave-shift" {
+						role = ` type="down"`
+					}
+					if c.element == "wedge" {
+						role = ` type="crescendo"`
+					}
+					if c.element == "arpeggiate" {
+						role = ""
+					}
+					if c.element == "bracket" {
+						role += ` line-end="up"`
+					}
+					attr := ""
+					want := c.def
+					if axis == "boundary" {
+						attr = ` ` + c.attribute + `="` + c.explicit + `"`
+						want = c.explicit
+					}
+					if axis == "negative" {
+						bad := "invalid-value"
+						if c.attribute == "size" {
+							bad = "0"
+						}
+						attr = ` ` + c.attribute + `="` + bad + `"`
+					}
+					mark := `<` + c.element + role + attr + `/>`
+
+					body := ""
+					if c.direction {
+						body = `<direction><direction-type>` + mark + `</direction-type></direction>`
+					} else {
+						body = timelineNote("1", "", `<notations>`+mark+`</notations>`)
+					}
+					if axis == "interaction" {
+						other := `<` + c.element + role + ` ` + c.attribute + `="` + c.explicit + `"/>`
+						if c.direction {
+							body += `<direction><direction-type>` + other + `</direction-type></direction>`
+						} else {
+							body += timelineNote("1", "", `<notations>`+other+`</notations>`)
+						}
+					}
+					gap := ""
+					if axis == "missing-fact" {
+						gap = "@" + c.element
+					}
+					spanBothWithGap(t, (localFixture{body: body}).xml(), false, axis == "negative", gap, func(t *testing.T, r validation.Report) {
+						vs := spanProperty(r, c.property)
+						if len(vs) == 0 {
+							t.Fatal("missing property")
+						}
+						v := vs[0]
+						if axis == "negative" {
+							if v.State != validation.EvidenceInvalid || v.Cause == nil {
+								t.Fatal(v)
+							}
+							return
+						}
+						if axis == "missing-fact" {
+							if v.State != validation.EvidenceUnknown && v.State != validation.EvidenceUnsupported {
+								t.Fatal(v)
+							}
+							return
+						}
+						got := v.Value.Text
+						if v.Value.Kind == validation.AtomicInteger {
+							got = v.Value.Integer.String()
+						}
+						if v.State != validation.EvidenceKnown || got != want {
+							t.Fatalf("%+v want %s", v, want)
+						}
+						if axis == "interaction" {
+							if len(vs) != 2 {
+								t.Fatal(vs)
+							}
+							got = vs[1].Value.Text
+							if vs[1].Value.Kind == validation.AtomicInteger {
+								got = vs[1].Value.Integer.String()
+							}
+							if got != c.explicit {
+								t.Fatal(vs)
+							}
+						}
+					})
+				})
+			}
+		})
+	}
+}
+
+func TestContextSpanContinuationAssociationAxesBothAdapters(t *testing.T) {
+	for _, axis := range []string{"positive", "negative", "boundary", "missing-fact", "interaction"} {
+		t.Run(axis, func(t *testing.T) {
+			number := "1"
+			if axis == "negative" {
+				number = "99"
+			}
+			start := `<slur type="start"/>`
+			middle := `<slur type="continue" number="` + number + `"/>`
+			stop := `<slur type="stop"/>`
+			if axis == "boundary" {
+				start, stop = stop, start
+			}
+			if axis == "interaction" {
+				start += `<slur type="start" number="2"/>`
+				middle += `<slur type="continue" number="2"/>`
+				stop += `<slur type="stop" number="2"/>`
+			}
+			body := `<attributes><divisions>1</divisions></attributes>` + timelineNote("1", "", `<notations>`+start+`</notations>`) + timelineNote("1", "", `<notations>`+middle+`</notations>`) + timelineNote("1", "", `<notations>`+stop+`</notations>`)
+			// Reverse XML roles deliberately use no timeline: local endpoint roles remain
+			// preserved, while chronology and part identity remain unavailable.
+			timeline := axis != "boundary"
+			gap := ""
+			if axis == "missing-fact" {
+				gap = "notations"
+			}
+			spanBothWithGap(t, (localFixture{body: body}).xml(), timeline, axis == "negative", gap, func(t *testing.T, r validation.Report) {
+				es := spanResults(r, validation.SpanSlur)
+				if len(es) < 3 {
+					t.Fatal(es)
+				}
+				for _, e := range es {
+					if axis == "negative" {
+						if e.Association.State != validation.EvidenceInvalid || e.Association.Cause == nil {
+							t.Fatal(e)
+						}
+						continue
+					}
+					if axis == "missing-fact" || axis == "boundary" {
+						if e.Association.State == validation.EvidenceKnown {
+							t.Fatal("unknown domain or enumeration", e)
+						}
+						continue
+					}
+					if e.Association.State != validation.EvidenceKnown || len(e.Members) != 2 {
+						t.Fatal(e)
+					}
+				}
+				if axis == "positive" && es[1].Members[0] != es[0].Members[0] {
+					t.Fatal("continuation identity lost")
+				}
+				if axis == "interaction" && es[0].Members[0] == es[1].Members[0] {
+					t.Fatal("number overlap merged")
+				}
+			})
+		})
+	}
+}
+
+func TestContextSpanPitchUnavailableDoesNotInventEquality(t *testing.T) {
+	note := func(role string) string {
+		return `<note><unpitched><display-step>C</display-step><display-octave>4</display-octave></unpitched><duration>1</duration><notations><tied type="` + role + `" number="1"/></notations></note>`
+	}
+	spanBoth(t, (localFixture{body: `<attributes><divisions>1</divisions></attributes>` + note("start") + note("stop")}).xml(), true, func(t *testing.T, r validation.Report) {
+		v := spanProperty(r, validation.ContextPropertySpanPitchEquivalentRecommended)
+		if len(v) != 1 || v[0].State != validation.EvidenceUnknown {
+			t.Fatal(v)
+		}
+	})
+}
+
+func TestContextSpanBeamLevelRepeaterAndMissingVoice(t *testing.T) {
+	for _, number := range []string{"8", "9"} {
+		t.Run(number, func(t *testing.T) {
+			body := `<attributes><divisions>1</divisions><staves>2</staves></attributes>` + timelineNote("1", "", `<staff>1</staff><beam number="`+number+`" repeater="yes">begin</beam>`) + timelineNote("1", "", `<staff>2</staff><beam number="`+number+`">continue</beam>`) + timelineNote("1", "", `<staff>2</staff><beam number="`+number+`">end</beam>`)
+			spanBothWithFailures(t, (localFixture{body: body}).xml(), true, number == "9", func(t *testing.T, r validation.Report) {
+				es := spanResults(r, validation.SpanBeam)
+				if len(es) != 3 {
+					t.Fatal(es)
+				}
+				for _, e := range es {
+					if number == "9" {
+						if e.Number.State != validation.EvidenceInvalid || e.Association.State != validation.EvidenceInvalid {
+							t.Fatal(e)
+						}
+					} else if e.Association.State != validation.EvidenceKnown || len(e.Members) != 2 {
+						t.Fatal(e)
+					}
+				}
+				repeat := spanProperty(r, validation.ContextPropertySpanRepeater)
+				if repeat[0].Value.Text != "yes" || repeat[1].State != validation.EvidenceAbsent || repeat[2].State != validation.EvidenceAbsent {
+					t.Fatal("inherited repeater", repeat)
+				}
+			})
+		})
+	}
+}
+
+func TestContextSpanHistoricalExtendRequiresVersionEvidence(t *testing.T) {
+	body := timelineNote("1", "", `<lyric number="A"><text>la</text><extend/></lyric>`)
+	spanBothWithGap(t, (localFixture{body: body}).xml(), false, false, "@score-partwise", func(t *testing.T, r validation.Report) {
+		es := spanResults(r, validation.SpanLyricExtend)
+		for _, e := range es {
+			if e.Role.State == validation.EvidenceKnown {
+				t.Fatal("fabricated historical type", es)
+			}
+		}
+	})
+}
+
+func TestContextSpanTieAdjustmentPresenceAxesBothAdapters(t *testing.T) {
+	for _, axis := range []string{"positive", "zero-present", "missing-fact", "interaction"} {
+		t.Run(axis, func(t *testing.T) {
+			attrs := ""
+			if axis == "zero-present" || axis == "interaction" {
+				attrs = ` attack="0" release="0"`
+			}
+			note := func(a string) string {
+				return `<note` + a + `><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><tie type="stop"/><tie type="start"/></note>`
+			}
+			body := note(attrs)
+			if axis == "interaction" {
+				body += note("")
+			}
+			gap := ""
+			if axis == "missing-fact" {
+				gap = "@note"
+			}
+			spanBothWithGap(t, (localFixture{body: body}).xml(), false, false, gap, func(t *testing.T, r validation.Report) {
+				for _, p := range []validation.ContextProperty{validation.ContextPropertySpanTieAttackRecommended, validation.ContextPropertySpanTieReleaseRecommended} {
+					vs := spanProperty(r, p)
+					if len(vs) == 0 {
+						if axis == "missing-fact" {
+							continue
+						}
+						t.Fatal("no advice")
+					}
+					v := vs[0]
+					if axis == "missing-fact" {
+						if v.State != validation.EvidenceUnknown && v.State != validation.EvidenceUnsupported {
+							t.Fatal(v)
+						}
+						continue
+					}
+					want := "true"
+					if attrs != "" {
+						want = "false"
+					}
+					if v.State != validation.EvidenceKnown || v.Value.Text != want {
+						t.Fatal(v)
+					}
+					if axis == "interaction" && (len(vs) != 2 || vs[1].Value.Text != "true") {
+						t.Fatal("adjustment presence leaked", vs)
+					}
+				}
+			})
+		})
+	}
+}
+
+func TestContextSpanMetronomeMissingEnumeration(t *testing.T) {
+	body := `<direction><direction-type><metronome><metronome-note><metronome-type>quarter</metronome-type><metronome-tied type="start"/></metronome-note><metronome-note><metronome-type>quarter</metronome-type><metronome-tied type="stop"/></metronome-note></metronome></direction-type></direction>`
+	spanBothWithGap(t, (localFixture{body: body}).xml(), false, false, "metronome", func(t *testing.T, r validation.Report) {
+		for _, e := range spanResults(r, validation.SpanMetronomeTied) {
+			if e.Association.State == validation.EvidenceKnown {
+				t.Fatal("incomplete metronome association", e)
+			}
+		}
+	})
+}
+
+func TestContextSpanPartGroupReverseIsUnresolved(t *testing.T) {
+	source := `<score-partwise version="4.0"><part-list><part-group type="stop"/><score-part id="P1"><part-name>Piano</part-name></score-part><part-group type="start"/></part-list><part id="P1"><measure number="1"/></part></score-partwise>`
+	spanBoth(t, source, false, func(t *testing.T, r validation.Report) {
+		for _, e := range spanResults(r, validation.SpanPartGroup) {
+			if e.Association.State != validation.EvidenceUnknown || len(e.Included) != 0 {
+				t.Fatal("reversed group interval", e)
 			}
 		}
 	})

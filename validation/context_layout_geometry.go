@@ -187,9 +187,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 		value := raw
 		if direction := layoutAncestor(r, s.nodes[n.header.Parent], "direction"); direction != nil {
 			parent := layoutAttribute(r, direction, "placement")
-			if parent.State != EvidenceAbsent {
-				value = parent
-			}
+			value = layoutUnknownDefault(parent, "application-direction-placement")
 		}
 		if err := publish("placement", raw, value, yes, ContextUnitNone, "containing-direction-placement-overrides"); err != nil {
 			return err

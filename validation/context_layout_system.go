@@ -94,6 +94,9 @@ func (l *layoutScopes) systemWidth(frame layoutFrame, pageDefaults, systemDefaul
 	def, _ := l.child(systemDefaults, "system-margins")
 	for _, side := range []string{"left-margin", "right-margin"} {
 		page := l.frameMargin(frame, side)
+		if !frame.pageCertain && page.State != EvidenceAbsent {
+			page = stateUnknown[Atomic]("page-margin-lifetime-unavailable")
+		}
 		if page.State == EvidenceAbsent {
 			page = l.pageMargin(pageDefaults, side, frame.parity, false)
 		}

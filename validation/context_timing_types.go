@@ -350,7 +350,10 @@ func cloneTimingContextResult(p TimingContextResult) TimingContextResult {
 	for i, v := range p.Bends {
 		q.Bends[i] = cloneTimingBend(v)
 	}
-	q.Figures = append([]NodeRef(nil), p.Figures...)
+	if p.Figures != nil {
+		q.Figures = make([]NodeRef, len(p.Figures))
+		copy(q.Figures, p.Figures)
+	}
 	q.Tunings = make([]TimingTuning, len(p.Tunings))
 	for i, v := range p.Tunings {
 		q.Tunings[i] = cloneTimingTuning(v)
@@ -361,7 +364,7 @@ func cloneTimingContext(ctx context.Context, s *Session, p *TimingContextResult)
 	if p == nil {
 		return nil, nil
 	}
-	if err := stateRetainCopy(ctx, s, *p); err != nil {
+	if err := contextRetainProjection(ctx, s, *p); err != nil {
 		return nil, err
 	}
 	q := cloneTimingContextResult(*p)

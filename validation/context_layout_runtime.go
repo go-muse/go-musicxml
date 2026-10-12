@@ -22,10 +22,10 @@ func layoutPropertyValid(p ContextProperty) bool {
 		}
 	}
 	switch p {
-	case "layout.name-display-onset", "layout.kind-text-placement", "layout.opus-new-page", "layout.language", "layout.lyric-placement", "layout.scope", "layout.page-height", "layout.page-width", "layout.system-distance", "layout.top-system-distance", "layout.staff-distance", "layout.measure-distance", "layout.left-margin", "layout.right-margin", "layout.top-margin", "layout.bottom-margin", "layout.staff-number", "layout.margin-type", "layout.millimeters", "layout.tenths", "layout.millimeters-per-tenth", "layout.first-system-on-page", "layout.first-visible-staff", "layout.physical-page", "layout.system", "layout.breaks-complete", "layout.display", "layout.horizontal-anchor", "layout.geometry", "layout.width-outcome", "layout.display-active", "layout.page-left-margin", "layout.page-right-margin", "layout.page-top-margin", "layout.page-bottom-margin", "layout.system-left-margin", "layout.system-right-margin", "layout.effective-left-margin", "layout.effective-right-margin", "layout.left-divider-x", "layout.left-divider-y", "layout.right-divider-x", "layout.right-divider-y":
+	case "layout.name-display-onset", "layout.kind-text-placement", "layout.opus-new-page", "layout.opus-version", "layout.language", "layout.lyric-placement", "layout.scope", "layout.page-height", "layout.page-width", "layout.system-distance", "layout.top-system-distance", "layout.staff-distance", "layout.measure-distance", "layout.left-margin", "layout.right-margin", "layout.top-margin", "layout.bottom-margin", "layout.staff-number", "layout.margin-type", "layout.millimeters", "layout.tenths", "layout.millimeters-per-tenth", "layout.first-system-on-page", "layout.first-visible-staff", "layout.physical-page", "layout.system", "layout.breaks-complete", "layout.display", "layout.horizontal-anchor", "layout.geometry", "layout.width-outcome", "layout.display-active", "layout.page-left-margin", "layout.page-right-margin", "layout.page-top-margin", "layout.page-bottom-margin", "layout.system-left-margin", "layout.system-right-margin", "layout.effective-left-margin", "layout.effective-right-margin", "layout.left-divider-x", "layout.left-divider-y", "layout.right-divider-x", "layout.right-divider-y":
 		return true
 	}
-	return false
+	return layoutStatePropertyValid(p)
 }
 func evaluateContextLayout(ctx context.Context, s *Session, n *factNode, key RuleKey, p *contextPlan, final bool) (Decision, bool, error) {
 	if !final {
@@ -43,6 +43,9 @@ func evaluateContextLayout(ctx context.Context, s *Session, n *factNode, key Rul
 		node := s.nodes[id]
 		if node == nil {
 			continue
+		}
+		if err := layoutStateNode(ctx, s, key, node, r, p); err != nil {
+			return Decision{}, false, err
 		}
 		if err := layoutStatic(r, key, node, p); err != nil {
 			return Decision{}, false, err

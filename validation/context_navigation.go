@@ -302,7 +302,14 @@ func navigationOrder(ctx context.Context, s *Session, timeline *timelineService,
 }
 
 func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigationNode) error {
-	bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(rows)), 16)
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(rows)), 512)
+	if err != nil {
+		return err
+	}
+	bytes, err = rationalSum(BudgetBufferedBytes, bytes, 512)
 	if err != nil {
 		return err
 	}
@@ -311,6 +318,35 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 	}
 	defer func() { _ = s.account.Release(BudgetBufferedBytes, bytes) }()
 	stack := make([]int, 0, len(rows))
+	type markerKey struct {
+		kind  NavigationKind
+		label string
+	}
+	type markerValue struct{ index, count int }
+	markers := make(map[markerKey]markerValue)
+	unknownMarkers := make(map[NavigationKind]bool)
+	endingBarlines := make(map[NodeID]bool)
+	for i, row := range rows {
+		if err = s.step(ctx, 1+int64(len(row.value.Label.Value))); err != nil {
+			return err
+		}
+		if row.event.Kind == NavigationEnding {
+			if node := s.nodes[row.event.Source.Node]; node != nil {
+				endingBarlines[node.header.Parent] = true
+			}
+		}
+		if row.event.Kind == NavigationSegno || row.event.Kind == NavigationCoda {
+			if row.value.Label.State != EvidenceKnown {
+				unknownMarkers[row.event.Kind] = true
+				continue
+			}
+			key := markerKey{row.event.Kind, row.value.Label.Value}
+			value := markers[key]
+			value.index = i
+			value.count++
+			markers[key] = value
+		}
+	}
 	hasRepeat, hasEnding, hasDS := false, false, false
 	for _, row := range rows {
 		if err = s.step(ctx, 1); err != nil {
@@ -351,13 +387,8 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 				ending.Value = endingDepth > 0
 				// A stop/discontinue on this same barline owns its trailing repeat even
 				// though its ending interval is otherwise half-open.
-				for j := range rows {
-					if err = s.step(ctx, 1); err != nil {
-						return err
-					}
-					if rows[j].event.Kind == NavigationEnding && s.nodes[rows[j].event.Source.Node] != nil && s.nodes[row.event.Source.Node] != nil && s.nodes[rows[j].event.Source.Node].header.Parent == s.nodes[row.event.Source.Node].header.Parent {
-						ending.Value = true
-					}
+				if node := s.nodes[row.event.Source.Node]; node != nil && endingBarlines[node.header.Parent] {
+					ending.Value = true
 				}
 			}
 			row.value.AttributesActive = navigationBackwardApplicability(row.value.Direction, ending)
@@ -387,29 +418,14 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 				row.event.Target = stateUnavailable[string, int](row.value.Label)
 				break
 			}
-			for j := range rows {
-				if err = s.step(ctx, 1); err != nil {
-					return err
-				}
-				candidate := rows[j]
-				if candidate.event.Kind != kind {
-					continue
-				}
-				if candidate.value.Label.State != EvidenceKnown {
-					ambiguous = true
-					continue
-				}
-				if err = s.step(ctx, int64(len(candidate.value.Label.Value)+len(row.value.Label.Value))); err != nil {
-					return err
-				}
-				if candidate.value.Label.Value != row.value.Label.Value {
-					continue
-				}
-				if found >= 0 {
-					ambiguous = true
-				}
-				found = j
+			if err = s.step(ctx, 1+int64(len(row.value.Label.Value))); err != nil {
+				return err
 			}
+			candidate := markers[markerKey{kind, row.value.Label.Value}]
+			if candidate.count > 0 {
+				found = candidate.index
+			}
+			ambiguous = unknownMarkers[kind] || candidate.count > 1
 			if ambiguous || found < 0 || row.event.Kind == NavigationDalSegno && found >= i || row.event.Kind == NavigationToCoda && found <= i {
 				row.event.Target = stateUnknown[int]("navigation-target-unresolved")
 				row.value.Target = stateUnknown[NodeRef]("navigation-target-unresolved")
@@ -445,6 +461,9 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 		}
 	} else if jumpCount > 1 {
 		for i := range rows {
+			if err = s.step(ctx, 1); err != nil {
+				return err
+			}
 			rows[i].event.PassDomain = navigationUnknownPass
 		}
 	}

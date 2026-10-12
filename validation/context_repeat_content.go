@@ -307,6 +307,7 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 	}
 	for i := range rows {
 		row := &rows[i]
+		row.value.NoteScopesComplete = coverage
 		if coverage.State != EvidenceKnown || !coverage.Value {
 			row.value.ContentEquivalent = coverage
 			continue

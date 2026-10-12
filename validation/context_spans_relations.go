@@ -7,6 +7,9 @@ import (
 
 // A local visual stub is independent of score timing and remote enumeration.
 func spanLocalTiePairs(ctx context.Context, s *Session, es []*spanEndpoint) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
 	if err := s.retain(512); err != nil {
 		return err
 	}
@@ -60,6 +63,9 @@ type spanPartListMember struct {
 }
 
 func spanPartGroupMembers(r *contextReader, es []*spanEndpoint) error {
+	if !r.step(1) {
+		return r.err
+	}
 	if err := r.s.retain(1024); err != nil {
 		return err
 	}
@@ -144,10 +150,18 @@ func spanModificationFacts(r *contextReader, key RuleKey, n *factNode) {
 	spanPublish(r, key, n, ContextPropertySpanNormalType, spanDefault(r.childScalar(n, spanRole_normalType), typ))
 	spanPublish(r, key, n, ContextPropertySpanNormalDots, spanEffectiveNormalDots(r, n, spanCountChildren(r, note, spanRole_noteDot)))
 }
+func spanLyricUnavailable(r *contextReader, key RuleKey, n *factNode, v Evidence[bool]) {
+	if v.State == EvidenceKnown {
+		v = stateUnknown[bool]("span-lyric-enumeration-incomplete")
+	}
+	p := SpanContextResult{Family: SpanLyricSyllable, Role: stateUnavailable[bool, string](v), Domain: spanRef(r.s, n), Anchor: spanRef(r.s, spanAncestor(r, n, spanRole_note)), Number: Evidence[Atomic]{State: EvidenceAbsent}, NumberExplicit: Evidence[bool]{State: EvidenceAbsent}, Identity: SpanIdentityLyric, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Position: Evidence[SpanPosition]{State: EvidenceAbsent}, Association: v}
+	r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: ContextPropertySpanLyricSyllable, Span: &p, Origins: []Location{n.header.Location}})
+}
+
 func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
 	complete := r.complete(n)
 	if complete.State != EvidenceKnown || !complete.Value {
-		spanPublish(r, key, n, ContextPropertySpanLyricSyllable, stateUnavailable[bool, Atomic](complete))
+		spanLyricUnavailable(r, key, n, complete)
 		return
 	}
 	var members []NodeRef
@@ -164,7 +178,7 @@ func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
 			return
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
-			spanPublish(r, key, n, ContextPropertySpanLyricSyllable, stateUnavailable[DeclarationID, Atomic](ch.header.Declaration))
+			spanLyricUnavailable(r, key, n, stateUnavailable[DeclarationID, bool](ch.header.Declaration))
 			return
 		}
 		if r.matches(ch, spanRole_lyricElision) {
@@ -183,6 +197,9 @@ func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
 // Recommendations remain context projections. A false recommendation is not a
 // failed normative predicate or an invented span-closure obligation.
 func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, timeline *timelineService) {
+	if !r.step(1) {
+		return
+	}
 	if r.err = r.s.retain(1024); r.err != nil {
 		return
 	}
@@ -261,6 +278,16 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 			stop := byRef[e.payload.Members[1]]
 			if stop != nil && start.payload.Anchor.State == EvidenceKnown && stop.payload.Anchor.State == EvidenceKnown && start.payload.Anchor.Value != stop.payload.Anchor.Value {
 				value := stateUnknown[Atomic]("span-tie-pitch-unavailable")
+				availability := Evidence[bool]{State: EvidenceKnown, Value: true}
+				if start.pitchAvailable.State != "" {
+					availability = timelineMergeAvailability(availability, start.pitchAvailable)
+				}
+				if stop.pitchAvailable.State != "" {
+					availability = timelineMergeAvailability(availability, stop.pitchAvailable)
+				}
+				if availability.State != EvidenceKnown {
+					value = stateUnavailable[bool, Atomic](availability)
+				}
 				if start.pitch != "" && stop.pitch != "" {
 					if !r.step(int64(len(start.pitch)+len(stop.pitch)) + 1) {
 						return
@@ -341,6 +368,9 @@ func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, e *spanEndpoin
 	}
 	spanPublish(r, key, n, ContextPropertySpanTremoloRatioRecommended, ratio)
 	duration := stateUnknown[Atomic]("span-tremolo-duration-context-required")
+	if ratio.State != EvidenceKnown {
+		duration = stateUnavailable[Atomic, Atomic](ratio)
+	}
 	if timeline != nil && note != nil && (ordinary || me.State == EvidenceAbsent) {
 		fact, ok := timeline.Facts[note.header.ID]
 		typ := spanText(r.childScalar(note, spanRole_noteType))
@@ -420,6 +450,10 @@ func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, e *spanEndpoin
 			}
 		} else if ok && fact.Duration.State != EvidenceKnown {
 			duration = stateUnavailable[Rational, Atomic](fact.Duration)
+		} else if typ.State != EvidenceKnown {
+			duration = stateUnavailable[string, Atomic](typ)
+		} else if dots.State != EvidenceKnown {
+			duration = stateUnavailable[Atomic, Atomic](dots)
 		}
 	}
 	spanPublish(r, key, n, ContextPropertySpanTremoloDurationRecommended, duration)

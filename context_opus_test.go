@@ -88,7 +88,7 @@ func TestContextOpusAssemblyContract(t *testing.T) {
 		} else {
 			r, err = InspectXML(context.Background(), strings.NewReader(`<opus/>`), AssessmentOptions{Profile: ProfileSourceContext})
 		}
-		if err != nil || !r.Satisfied() || len(r.Context) != 0 {
+		if err != nil || !r.Satisfied() || len(r.Context) != 1 || r.Context[0].Property != "layout.opus-version" {
 			t.Fatalf("empty opus fabricated context: %v %+v", err, r)
 		}
 	}
@@ -128,5 +128,53 @@ func TestContextOpusProjectionOwnershipAndLimits(t *testing.T) {
 	cancel()
 	if _, err = InspectXML(ctx, strings.NewReader(xml), AssessmentOptions{Profile: ProfileSourceContext}); !errors.Is(err, context.Canceled) {
 		t.Fatalf("cancellation lost: %v", err)
+	}
+}
+
+func TestContextOpusVersionDefaultIsLocal(t *testing.T) {
+	for _, attr := range []string{"", ` version="4.0"`, ` version=" future   revision "`, ` version=""`} {
+		xml := `<opus` + attr + `><opus version="2.0"/></opus>`
+		doc, err := Decode(strings.NewReader(xml))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, model := range []bool{false, true} {
+			var r validation.Report
+			if model {
+				r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+			} else {
+				r, err = InspectXML(context.Background(), strings.NewReader(xml), AssessmentOptions{Profile: ProfileSourceContext})
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			var values []validation.ContextResult
+			for _, v := range r.Context {
+				if v.Property == "layout.opus-version" {
+					values = append(values, v)
+				}
+			}
+			if len(values) != 2 {
+				t.Fatalf("model%t %q: version facts=%d", model, attr, len(values))
+			}
+			want := "1.0"
+			switch attr {
+			case ` version="4.0"`:
+				want = "4.0"
+			case ` version=" future   revision "`:
+				want = "future revision"
+			case ` version=""`:
+				want = ""
+			}
+			if values[0].Value.State != validation.EvidenceKnown || values[0].Value.Value.Text != want {
+				t.Fatalf("version %+v want%q", values[0].Value, want)
+			}
+			if values[1].Value.Value.Text != "2.0" || values[0].Subject == values[1].Subject {
+				t.Fatal("nested version scope lost")
+			}
+			if attr == "" && (values[0].Layout.Raw.State != validation.EvidenceAbsent || values[0].Layout.Provenance != validation.ContextDocumentedDefault) {
+				t.Fatalf("default provenance %+v", values[0].Layout)
+			}
+		}
 	}
 }
