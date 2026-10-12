@@ -39,7 +39,7 @@ func buildTimelineAssessmentEngine() (*validation.Engine, error) {
 		} else {
 			p.ID = ProfileSourceTimeline
 		}
-		p.NormativeClosure = "Explicit bounded MusicXML 4.0 source or current-model XSD, local clauses and shared exact musical timeline/effective-state assessment. The timeline provider finalizes typed part/measure/event and state evidence; its pass does not assert that every optional or ambiguous musical fact is known. The selected mandatory consumers are principal-note chord duration bounds and explicit numeral-key or applicable encoded effective-key presence. Ordinary exact rational positions are not rounded. Ambiguous, missing, invalid or unsupported dependent evidence remains incomplete. Existing target-specific XSD, current-model representation, source syntax and unread external-DTD limits remain active. Broader repeat/span/intent/layout/playback consumers, packages, linked scores, external dictionaries and remaining normative closure are excluded. Opus selection assesses only that document, never linked scores. Counts are selected predicate instances, not complete MusicXML coverage."
+		p.NormativeClosure = "Explicit bounded MusicXML 4.0 source or current-model XSD, local clauses and shared exact musical timeline/effective-state assessment. The timeline provider finalizes typed part/measure/event and state evidence; its pass does not assert that every optional or ambiguous musical fact is known. The selected mandatory consumers are principal-note chord duration bounds and explicit numeral-key or applicable encoded effective-key presence at the harmony's unshifted score origin. Ordinary exact rational positions are not rounded. Ambiguous, missing, invalid or unsupported dependent evidence remains incomplete. Existing target-specific XSD, current-model representation, source syntax and unread external-DTD limits remain active. Broader repeat/span/intent/layout/playback consumers, packages, linked scores, external dictionaries and remaining normative closure are excluded. Opus selection assesses only that document, never linked scores. Counts are selected predicate instances, not complete MusicXML coverage."
 		profiles = append(profiles, p)
 	}
 	schema, err := validation.CompileSchema(validation.AssemblyMusicXML, scoreValidationSchema)
@@ -86,7 +86,7 @@ func buildTimelineAssessmentEngine() (*validation.Engine, error) {
 		plan                            func(validation.TimelineConsumerSpec) (validation.Plan, error)
 	}{
 		{"chord-duration-bound", "note", "Principal-note chord duration bound", "Each duration-bearing chord tone must be no longer than its established principal non-chord note in exact common units. This does not impose pairwise decreasing chord-tone durations.", 6497, validation.NewChordDurationPlan},
-		{"numeral-requires-key", "numeral", "Explicit key for a numeral", "A numeral requires a valid local numeral-key or an applicable explicitly encoded key at its enclosing harmony's musical position and staff. No initial C-major key is invented.", 3889, validation.NewNumeralKeyPlan},
+		{"numeral-requires-key", "numeral", "Explicit key for a numeral", "A numeral requires a valid local numeral-key or an applicable explicitly encoded key at its enclosing harmony's unshifted score origin and staff. No initial C-major key is invented.", 3889, validation.NewNumeralKeyPlan},
 	} {
 		plan, err := spec.plan(validation.TimelineConsumerSpec{Schema: schema, Provider: provider})
 		if err != nil {

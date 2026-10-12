@@ -55,7 +55,7 @@ func (s *Session) evaluateTimeline(ctx context.Context, n *factNode, key RuleKey
 			return Decision{}, false, err
 		}
 	}
-	if err := service.resolveDirectionOrigins(ctx, s, p.Bindings, blocks); err != nil {
+	if err := service.finalizeTimingOrigins(ctx, s, p.Bindings, blocks); err != nil {
 		return Decision{}, false, err
 	}
 	service.Final = true
@@ -309,5 +309,17 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 	if err := service.finalizeNoteOrigins(ctx, s, b, block); err != nil {
 		return err
 	}
-	return service.resolveFiguredBassOrigins(ctx, s, b, block)
+	return nil
+}
+
+// Position-dependent associations run after every canonical measure has
+// published its facts and effective-state history, including later voices.
+func (service *timelineService) finalizeTimingOrigins(ctx context.Context, s *Session, b *timelineBindings, blocks []timelineMeasureBlock) error {
+	if err := service.resolveFiguredBassOriginsAll(ctx, s, b, blocks); err != nil {
+		return err
+	}
+	if err := service.resolveGraceNeighbors(ctx, s, b, blocks); err != nil {
+		return err
+	}
+	return service.resolveDirectionOrigins(ctx, s, b, blocks)
 }
