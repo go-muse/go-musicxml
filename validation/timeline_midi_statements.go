@@ -105,7 +105,7 @@ func retainRecordStatement[T any](ctx context.Context, s *Session, store *record
 		}
 	}
 	if record.Position.State == EvidenceKnown && target.State == EvidenceKnown {
-		p := statePublication[T]{Position: record.Position.Value, Scope: scope, Value: record.Value, Provenance: []stateProvenance{{Node: record.Source, Kind: stateExplicit}}}
+		p := statePublication[T]{Position: record.Position.Value, TimeOnly: record.TimeOnly, Scope: scope, Value: record.Value, Provenance: []stateProvenance{{Node: record.Source, Kind: stateExplicit}}}
 		if record.Position.Value.Part != record.Part {
 			return contract("instrument record", "matching positioned part required")
 		}
@@ -135,6 +135,7 @@ func retainRecordStatement[T any](ctx context.Context, s *Session, store *record
 		if value.State == EvidenceAbsent {
 			continue
 		}
+		value = stateConditionalValue(value, record.TimeOnly)
 		gap := stateGap{Part: record.Part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: scope, Availability: availability}
 		if value.State != EvidenceKnown {
 			gap.Availability = stateMergeGap(gap.Availability, value)
@@ -222,6 +223,7 @@ func recordStatement[T, V any](ctx context.Context, s *Session, h *timelineState
 		if value.State == EvidenceAbsent {
 			continue
 		}
+		value = stateConditionalValue(value, record.TimeOnly)
 		target := recordTargetScope(record, omittedAll)
 		if target.State == EvidenceKnown {
 			if !target.Value.AllInstruments && target.Value.Instrument != id {

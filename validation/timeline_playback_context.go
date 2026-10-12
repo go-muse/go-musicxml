@@ -278,11 +278,7 @@ func playbackPublish[T any](ctx context.Context, s *Session, h *stateHistory[T],
 	if value.State == EvidenceAbsent {
 		return s.step(ctx, 1)
 	}
-	if condition.State == EvidenceKnown {
-		value = stateUnavailable[bool, T](stateMergeGap(stateUnavailable[T, bool](value), stateUnknown[bool]("playback-repeat-pass-unavailable")))
-	} else if condition.State != EvidenceAbsent {
-		value = stateUnavailable[bool, T](stateMergeGap(stateUnavailable[T, bool](value), stateUnavailable[string, bool](condition)))
-	}
+	value = stateConditionalValue(value, &condition)
 	if origin.Part.State != EvidenceKnown {
 		return s.step(ctx, 1)
 	}

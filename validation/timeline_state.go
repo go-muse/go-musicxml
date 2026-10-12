@@ -34,6 +34,9 @@ type stateProvenance struct {
 	Kind stateProvenanceKind
 }
 type statePublication[T any] struct {
+	// TimeOnly is optional source-sound repeat metadata. Nil means unconditional.
+	// The owned raw value remains unchanged; queries project the condition.
+	TimeOnly   *Evidence[string]
 	Position   musicalPosition
 	Scope      stateScope
 	Value      Evidence[T]
@@ -238,7 +241,7 @@ func stateMeasure(ctx context.Context, s *Session, v reflect.Value) (int64, erro
 		}
 	case reflect.Pointer:
 		if !v.IsNil() {
-			if v.Type() != reflect.TypeFor[*DecisionRef]() {
+			if v.Type() != reflect.TypeFor[*DecisionRef]() && v.Type() != reflect.TypeFor[*Evidence[string]]() {
 				return 0, contract("timeline state", "unexpected mutable pointer")
 			}
 			if e := add(stateMeasure(ctx, s, v.Elem())); e != nil {
@@ -355,15 +358,17 @@ func publishState[T any](ctx context.Context, s *Session, h *stateHistory[T], p 
 	}
 	// Measure the public fields only; the private accounting cache is not copied.
 	v := struct {
+		TimeOnly   *Evidence[string]
 		Position   musicalPosition
 		Scope      stateScope
 		Value      Evidence[T]
 		Provenance []stateProvenance
-	}{p.Position, p.Scope, p.Value, p.Provenance}
+	}{p.TimeOnly, p.Position, p.Scope, p.Value, p.Provenance}
 	n, e := stateReserve(ctx, s, v)
 	if e != nil {
 		return e
 	}
+	p.TimeOnly = stateClone(p.TimeOnly)
 	p.Position = stateClone(p.Position)
 	p.Scope = stateClone(p.Scope)
 	p.Value = stateClone(p.Value)
@@ -510,10 +515,11 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 	}
 	selected := history.Publications[best]
 	projectValue := func(p statePublication[T]) Evidence[V] {
-		if p.Value.State != EvidenceKnown {
-			return stateUnavailable[T, V](p.Value)
+		value := stateUnavailable[T, V](p.Value)
+		if p.Value.State == EvidenceKnown {
+			value = project(p.Value.Value)
 		}
-		return project(p.Value.Value)
+		return stateConditionalValue(value, p.TimeOnly)
 	}
 	out.Value = projectValue(selected)
 	selectedCost := selected.bytes

@@ -30,6 +30,7 @@ type playTechnique struct {
 }
 type playState struct{ Techniques []playTechnique }
 type instrumentRecord[T any] struct {
+	TimeOnly           *Evidence[string]
 	Part, Source, Note NodeRef
 	Instrument         Evidence[NodeRef]
 	Position           Evidence[musicalPosition]
@@ -196,11 +197,15 @@ func (r *stateReader) play(n *factNode) Evidence[playState] {
 	return Evidence[playState]{State: EvidenceKnown, Value: v}
 }
 func (h *timelineState) rawInstrumentRecords(r *stateReader, n *factNode, part, note NodeRef, pos Evidence[musicalPosition], midi, device, play timelineRole, ordinal uint64) {
+	condition := r.soundCondition(n)
+	if r.err != nil {
+		return
+	}
 	for _, ch := range n.children {
 		source := NodeRef{DocumentID: r.s.documentID, Node: ch.header.ID}
 		switch {
 		case midi != timelineRoleInvalid && r.matches(ch, midi):
-			record := instrumentRecord[midiState]{Part: part, Source: source, Note: note, Position: pos, Instrument: r.reference(ch, timelineRoleMidiInstrumentID, part), Value: r.midi(ch)}
+			record := instrumentRecord[midiState]{Part: part, Source: source, Note: note, Position: pos, TimeOnly: condition, Instrument: r.reference(ch, timelineRoleMidiInstrumentID, part), Value: r.midi(ch)}
 			if r.err != nil {
 				return
 			}
@@ -208,7 +213,7 @@ func (h *timelineState) rawInstrumentRecords(r *stateReader, n *factNode, part, 
 				return
 			}
 		case device != timelineRoleInvalid && r.matches(ch, device):
-			record := instrumentRecord[midiDeviceState]{Part: part, Source: source, Note: note, Position: pos, Instrument: r.reference(ch, timelineRoleMidiDeviceID, part), Value: Evidence[midiDeviceState]{State: EvidenceKnown, Value: midiDeviceState{Name: stateText(r.scalar(ch)), Port: stateInteger(r.attribute(ch, timelineRoleMidiDevicePort))}}}
+			record := instrumentRecord[midiDeviceState]{Part: part, Source: source, Note: note, Position: pos, TimeOnly: condition, Instrument: r.reference(ch, timelineRoleMidiDeviceID, part), Value: Evidence[midiDeviceState]{State: EvidenceKnown, Value: midiDeviceState{Name: stateText(r.scalar(ch)), Port: stateInteger(r.attribute(ch, timelineRoleMidiDevicePort))}}}
 			if r.err != nil {
 				return
 			}
@@ -216,7 +221,7 @@ func (h *timelineState) rawInstrumentRecords(r *stateReader, n *factNode, part, 
 				return
 			}
 		case play != timelineRoleInvalid && r.matches(ch, play):
-			record := instrumentRecord[playState]{Part: part, Source: source, Note: note, Position: pos, Instrument: r.reference(ch, timelineRolePlayID, part), Value: r.play(ch)}
+			record := instrumentRecord[playState]{Part: part, Source: source, Note: note, Position: pos, TimeOnly: condition, Instrument: r.reference(ch, timelineRolePlayID, part), Value: r.play(ch)}
 			if r.err != nil {
 				return
 			}
@@ -289,8 +294,10 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 		}
 		return contract("instrument changes", "exact sound declaration required")
 	}
+	condition := r.soundCondition(n)
 	children, complete := r.children(n, timelineRoleSoundInstrumentChange)
 	gap := func(availability Evidence[bool]) error {
+		availability = stateConditionalValue(availability, condition)
 		g := stateGap{Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: availability}
 		if _, e := stateReserve(ctx, s, g); e != nil {
 			return e
@@ -302,7 +309,7 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 		if r.err != nil {
 			return r.err
 		}
-		if err := h.gapMIDIStatements(ctx, s, stateGap{Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: complete}); err != nil {
+		if err := h.gapMIDIStatements(ctx, s, stateGap{Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateConditionalValue(complete, condition)}); err != nil {
 			return err
 		}
 		return gap(complete)
@@ -319,7 +326,7 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 			}
 			continue
 		}
-		if e := h.addInstrumentChange(ctx, s, id.Value, statePublication[instrumentState]{Position: pos, Scope: stateScope{AllStaves: true}, Value: value, Provenance: []stateProvenance{{Node: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Kind: stateExplicit}}}); e != nil {
+		if e := h.addInstrumentChange(ctx, s, id.Value, statePublication[instrumentState]{Position: pos, TimeOnly: condition, Scope: stateScope{AllStaves: true}, Value: value, Provenance: []stateProvenance{{Node: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Kind: stateExplicit}}}); e != nil {
 			return e
 		}
 	}
@@ -338,7 +345,9 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 		}
 		return contract("instrument gap", "exact sound declaration required")
 	}
+	condition := r.soundCondition(n)
 	g := stateGap{Part: part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+	g.Availability = stateConditionalValue(g.Availability, condition)
 	global := func(g stateGap) error {
 		if _, e := stateReserve(ctx, s, g); e != nil {
 			return e
