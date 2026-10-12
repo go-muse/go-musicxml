@@ -459,7 +459,11 @@ func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *t
 				if err := s.step(ctx, 1); err != nil {
 					return nil, err
 				}
-				if def.Part == closure.Part {
+				same, err := stateSameRef(ctx, s, def.Part, closure.Part)
+				if err != nil {
+					return nil, err
+				}
+				if same {
 					if err := out.State.addInstrumentDefinition(ctx, s, def); err != nil {
 						return nil, err
 					}
@@ -469,7 +473,11 @@ func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *t
 				if err := s.step(ctx, 1); err != nil {
 					return nil, err
 				}
-				if record.Part == closure.Part && record.Position.State == EvidenceAbsent {
+				same, err := stateSameRef(ctx, s, record.Part, closure.Part)
+				if err != nil {
+					return nil, err
+				}
+				if same && record.Position.State == EvidenceAbsent {
 					if err := out.State.addMIDIRecord(ctx, s, record, 0); err != nil {
 						return nil, err
 					}
@@ -479,7 +487,11 @@ func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *t
 				if err := s.step(ctx, 1); err != nil {
 					return nil, err
 				}
-				if record.Part == closure.Part && record.Position.State == EvidenceAbsent {
+				same, err := stateSameRef(ctx, s, record.Part, closure.Part)
+				if err != nil {
+					return nil, err
+				}
+				if same && record.Position.State == EvidenceAbsent {
 					if err := out.State.addMIDIDeviceRecord(ctx, s, record, 0); err != nil {
 						return nil, err
 					}
