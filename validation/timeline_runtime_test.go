@@ -180,3 +180,17 @@ func TestTimelineRuntimeBoundaryGapPreservesProvenPrefix(t *testing.T) {
 		t.Fatalf("ambiguous suffix chosen=%+v", got)
 	}
 }
+
+func TestTimelinePartClosureCarriesHierarchyAvailability(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	service.State.Closures = nil
+	block := runtimeBlock(b, 0)
+	block.coverage = Evidence[bool]{State: EvidenceUnknown, Reason: "measure-list-incomplete"}
+	if _, err := service.prepareTimelineParts(context.Background(), s, []timelineMeasureBlock{block}); err != nil {
+		t.Fatal(err)
+	}
+	key, err := service.State.effectiveKey(context.Background(), s, statePosition(t, 0, 0, 1), stateKnown(stateInt(t, 1)))
+	if err != nil || key.Value.State != EvidenceUnknown || key.Value.Reason != "measure-list-incomplete" {
+		t.Fatalf("incomplete hierarchy proved absence=%+v,%v", key, err)
+	}
+}
