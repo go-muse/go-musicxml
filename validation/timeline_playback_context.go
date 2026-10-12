@@ -348,11 +348,15 @@ func (p *timelinePlaybackContext) effectivePizzicato(ctx context.Context, s *Ses
 // gapAll is used only when hierarchy/enumeration loss can hide a sound publisher.
 // A single unplaced known sound instead gaps its actually encoded families in
 // playbackPublish. Earlier established measures retain their independent facts.
-func (p *timelinePlaybackContext) gapAll(ctx context.Context, s *Session, part NodeRef, ordinal uint64, availability Evidence[musicalPosition]) error {
+func (p *timelinePlaybackContext) gapAll(ctx context.Context, s *Session, part NodeRef, ordinal uint64, availability Evidence[musicalPosition], placement ...stateGapPlacement) error {
 	if availability.State == EvidenceKnown || availability.State == EvidenceAbsent || availability.State == "" {
 		return contract("playback gap", "causal unavailable evidence required")
 	}
-	gap := stateGap{Part: part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+	var bounds stateGapPlacement
+	if len(placement) != 0 {
+		bounds = placement[0]
+	}
+	gap := stateGap{Placement: bounds, Part: part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
 	if err := addStateGap(ctx, s, &p.Tempo, gap); err != nil {
 		return err
 	}
