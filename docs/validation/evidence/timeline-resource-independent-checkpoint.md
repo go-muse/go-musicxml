@@ -1,4 +1,142 @@
-# Independent timeline resource/API checkpoint
+# Independent timeline resource/API acceptance
+
+Latest selected production: **22ae68a731ddc26e15f988fb59232e2dd9d572e6**.
+Independent added guards: **38b77a3**. Date: 2026-10-12.
+
+The production-source diff between the independent worktree and this selected
+head is empty. The results below apply to this production snapshot; historical
+checkpoints and their measurements are retained separately below. Resource/API
+acceptance is scoped to the reviewed providers and executed tests. It does not
+claim whole-batch closure or external publication approval. **B5-PERF-01 remains
+outstanding**, owned by the **shared validation kernel/session workstream** with
+**batch 9 reconciliation**.
+
+## Selected-head executed controls
+
+- The complete root `TestIndependent` selection passes. This includes all 32
+  practical source/model, local/timeline, default/buffer-only-diagnostic variants
+  for 1,000 directions, 1,000 figures and both grace fixtures, plus all 16
+  100/1,000-movement uniform-unit excursion variants. Ordinary 100/1,000 notes,
+  exact model float64 tenths, repeated divisions, huge exact staff identities,
+  parallel immutable-profile sharing and diagnostic failure preservation pass.
+- The full validation package passes (10.603 seconds), including the private
+  independent and final-review tests. These retain
+  checked host/int64 arithmetic, admission-before-allocation, owned causal
+  pointers and borrowed vectors, transactional indices, and cleanup controls.
+- The 1,000 composite-attribute fixture still stops at the shared 64 MiB limit in
+  all four local/timeline source/model profiles. Its incomplete-resource outcome
+  remains explicit and does not fabricate a musical failure.
+- Independent RED identity guards showed that long canonical DocumentID equality
+  could run before work admission. Parent core fixes and the narrowly authorized
+  provider fix `4b639a8` now charge comparisons and validity checks before using
+  those strings. All eight provider guards and the position/closure guards pass;
+  a separate semantic reviewer inspected the production patch for equivalence.
+
+### New raw-divisions certificate controls
+
+`TestIndependentTimelineDivisionsValue*` tests establish a closed map/gap shape,
+context-fact admission, byte/work admission before publication, and exact
+upfront scratch admission for 32 filtered gap rows. The test certificate retains
+1,322 logical bytes; all 9 observed insertion cancellation boundaries leave no
+published certificate. All 126 owned-query boundaries preserve the raw gaps,
+certificate map and borrowed original index, with scratch released on failure.
+
+Primitive and owned results agree for both same-value consensus and different-
+value fallback. Each primitive case passes all 112 observed cancellation
+boundaries. Primitive queries retain only the original result's 128-byte owned
+causal record, with no unused numeric/provenance copies. Returned witnesses and
+fallback causes are independently owned. Same-value certificates never supply a
+missing baseline; semantic controls separately cover invalid/hidden publishers,
+repair and exclusion.
+
+### Expanded normalization lifecycle controls
+
+`TestIndependentTimelineNormalization*` tests measure the closed map/cause shape
+against the named 512-byte gate allowance, reject before map admission at one
+byte below that allowance, and verify independently owned actual invalid causes.
+A direct stopped-stage control restores a gate exactly once using an independent
+known origin and unit publisher, without retaining a duplicate gate/result.
+All 47 direct restoration cancellation boundaries preserve the uncommitted gate
+and allow a successful retry.
+
+A complete-history fixture explicitly verifies that new normalization gates
+exist, then sweeps all 4,460 observed staged-reconstruction cancellation
+boundaries. The original service, facts and frame bounds remain unchanged;
+selected retries succeed. Exhaustion of the shared context quota cannot
+partially swap the original service. All observed scratch gauges reconcile to
+session-retained bytes and return to zero on session cleanup. Finite progress is
+restricted to admitted per-event gates, strict finite cause-rank upgrades, one
+restoration, and per-excursion qualification/removal transitions.
+
+Architecture compile-time guards now include certificate map/gap widths and
+normalization map/cause widths, in addition to all prior closed record, frame,
+index, grace and excursion shapes. Logical live/retained accounting is not a
+formal process-RSS bound. No default quota was increased.
+
+Logs in the batch-6 evidence bundle:
+`resource-independent-22ae68a-public.log`,
+`resource-independent-22ae68a-private.log`,
+`resource-independent-22ae68a-validation-full.log`, and
+`resource-independent-22ae68a-new-guards.log`.
+
+## Selected-head race, architecture and matched costs
+
+Focused race checks pass for certificate/normalization, staged reconstruction,
+Placement ownership, floating associations, key presence and reference-work
+controls (validation 89.778 seconds), plus the parallel-profile/owned-report and
+diagnostic-cap public controls (1.857 seconds). `go vet ./validation ./internal/xsd`
+and both root and validation `GOARCH=386 go test -c` compilations succeed. The
+compiled binaries are identified as 32-bit Intel386 ELF. **No 386 execution was
+performed**: the earlier host `exec format error` remains an external CI gate.
+Log: `resource-independent-22ae68a-race-vet-386.log`.
+
+The refreshed cancellation fixtures additionally cover 3,384 stopped-stage and
+7,205 restored-stage reconstruction polls, 34 inventory polls with idempotent
+release, 936 all-family Placement polls, and 1,532 direction / 1,528 figure
+floating-association polls. These counts describe the observed fixture at this
+revision, not a universal cancellation latency guarantee.
+
+Five separate warmed matched runs used Go1.27.2 linux/amd64, GOMAXPROCS4,
+`-benchtime=200ms -count=1 -benchmem`. Each local/timeline pair uses the same
+selected production and fixture. Source includes XML parsing; model reuses a
+decoded model. Timing-only budgets are 512 MiB and 2^34 steps, with successful
+fixture assertions. Default-budget acceptance is established by the separate
+public tests above. No other coordinated heavy test/build ran during this
+interval; shared-host timing noise remains visible and must not be read as a
+throughput guarantee.
+
+| Fixture / target | Local median ms (range) | Timeline median ms (range) | Median bytes local → timeline | Median allocs local → timeline |
+| --- | ---: | ---: | ---: | ---: |
+| 100 notes / source | 21.40 (18.94–35.69) | 26.11 (23.34–41.67) | 5,895,383 → 8,521,459 | 32,278 → 64,655 |
+| 100 notes / model | 20.12 (19.78–28.77) | 25.24 (23.46–29.59) | 5,449,500 → 8,075,763 | 19,877 → 52,254 |
+| 1,000 notes / source | 211.05 (202.49–308.64) | 292.55 (254.86–334.04) | 52,677,464 → 78,759,784 | 300,862 → 621,638 |
+| 1,000 notes / model | 211.73 (186.00–248.60) | 263.81 (249.80–291.17) | 48,341,472 → 74,423,784 | 181,418 → 502,194 |
+| 100 attribute sets / source | 59.49 (53.73–68.22) | 71.07 (63.96–77.28) | 15,954,008 → 20,765,028 | 92,150 → 149,562 |
+| 100 attribute sets / model | 67.16 (52.99–69.15) | 70.52 (67.41–81.99) | 14,748,365 → 19,547,405 | 60,155 → 117,566 |
+
+For 1,000 ordinary notes, the measured median timeline/local time ratio is
+1.39× source and 1.25× model; cumulative allocation ratios are 1.50× / 1.54×
+bytes and 2.07× / 2.77× allocation counts. B/op is cumulative allocation, not
+simultaneous retained bytes or process RSS. These are incremental profile costs
+at the selected implementation. They do not remeasure the earlier B5 legacy
+baseline or close B5-PERF-01.
+Log: `resource-independent-22ae68a-profile-bench.log` (all 60 samples passed).
+
+## Acceptance boundary and remaining integration gates
+
+No concrete resource/API blocker remains in the reviewed production snapshot.
+The exact final documentation/test integration still requires the parent's
+aggregate seven-stage check and scope reconciliation. The parent separately
+reports its initial production `22ae68a` seven-stage run green; that is not
+substituted for a final integrated-head result here. Actual 386 execution remains
+an external CI requirement. Whole-batch completion and external publication are
+outside this resource checkpoint. **B5-PERF-01 stays outstanding under shared
+kernel/session ownership and batch 9 reconciliation.**
+
+
+---
+
+# Historical checkpoint: ab8da72
 
 Reviewed production: **ab8da72c1c538946945d4c06cb8139360714b1e7**. Date: 2026-10-12.
 
@@ -82,7 +220,7 @@ redundant ownership copies. Default budgets were not increased. Buffer-only
   original causal scans on independent position/voice/owner/domain controls.
   Exact typed-reference gaps remain explicitly unavailable, never inferred Pass.
 
-## Matched incremental profile costs
+## Historical matched incremental profile costs (ab8da72)
 
 Five separate warmed runs at the pinned head, Go1.27.2 linux/amd64, GOMAXPROCS4,
 `-benchtime=200ms -count=1 -benchmem`. Both profiles use the same head and fixture.
@@ -106,7 +244,7 @@ wall-clock noise is visible; this is not a general throughput guarantee. B/op
 measures cumulative allocations, not simultaneous live budget usage or RSS.
 Log: `resource-independent-ab8da72-profile-bench.log`.
 
-## Remaining gates
+## Gates remaining at the ab8da72 checkpoint
 
 - Refresh the exact final semantic integration head, including matched costs,
   focused race/vet and 386 compilation. Earlier-head checks are not promoted.
