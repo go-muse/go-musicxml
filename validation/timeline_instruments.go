@@ -335,6 +335,9 @@ func (h *timelineState) rawInstrumentRecords(r *stateReader, n *factNode, part, 
 func (h *timelineState) readInstrumentDefinitions(ctx context.Context, s *Session, b *timelineBindings, n *factNode, part NodeRef) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
 	if !r.matches(n, timelineRoleScorePart) || n.header.ID != part.Node {
+		if r.err != nil {
+			return r.err
+		}
 		return contract("instrument definitions", "exact canonical score-part required")
 	}
 	children, complete := r.children(n, timelineRoleScoreInstrument)
@@ -361,6 +364,9 @@ func (h *timelineState) readInstrumentDefinitions(ctx context.Context, s *Sessio
 func (h *timelineState) readNoteInstruments(ctx context.Context, s *Session, b *timelineBindings, n *factNode, part NodeRef) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
 	if !r.matches(n, timelineRoleNote) {
+		if r.err != nil {
+			return r.err
+		}
 		return contract("note instruments", "exact note declaration required")
 	}
 	children, complete := r.children(n, timelineRoleNoteInstrument)
@@ -383,6 +389,9 @@ func (h *timelineState) readNoteInstruments(ctx context.Context, s *Session, b *
 func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b *timelineBindings, n *factNode, pos musicalPosition) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
 	if !r.matches(n, timelineRoleSound) && !r.matches(n, timelineRoleDirectionSound) {
+		if r.err != nil {
+			return r.err
+		}
 		return contract("instrument changes", "exact sound declaration required")
 	}
 	children, complete := r.children(n, timelineRoleSoundInstrumentChange)
@@ -426,6 +435,9 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 	}
 	r := &stateReader{ctx: ctx, s: s, b: b}
 	if !r.matches(n, timelineRoleSound) && !r.matches(n, timelineRoleDirectionSound) {
+		if r.err != nil {
+			return r.err
+		}
 		return contract("instrument gap", "exact sound declaration required")
 	}
 	g := stateGap{Part: part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}

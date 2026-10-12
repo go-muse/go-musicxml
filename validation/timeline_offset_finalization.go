@@ -15,6 +15,8 @@ func timelineOffsetEvent(r *stateReader, n *factNode) bool {
 
 // Allocate only actual deferred events, with a checked scratch admission. Notes
 // do not get a duplicate measure-sized fact array. Every exit releases scratch.
+func timelineNoScratch() {}
+
 func newTimelinePendingOffsets(r *stateReader, block timelineMeasureBlock) ([]timelinePendingOffset, func(), error) {
 	count := 0
 	for _, event := range block.content.children {
@@ -27,6 +29,9 @@ func newTimelinePendingOffsets(r *stateReader, block timelineMeasureBlock) ([]ti
 	}
 	if r.err != nil {
 		return nil, func() {}, r.err
+	}
+	if count == 0 {
+		return nil, timelineNoScratch, nil
 	}
 	bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(count), timelinePendingOffsetBytes)
 	if err != nil {
