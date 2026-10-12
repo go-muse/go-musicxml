@@ -95,13 +95,46 @@ func navigationReadListening(r *contextReader, n *factNode, part Evidence[NodeRe
 // Updates are stored as sparse symbolic all-player baselines and specific
 // overrides. An unknown player cannot silently become all players.
 func navigationApplyListening(ctx context.Context, s *Session, current []NavigationListeningStatement, updates []NavigationListeningStatement, pass uint64) ([]NavigationListeningStatement, error) {
-	for _, raw := range updates {
+	for index, raw := range updates {
 		guard, err := navigationPassApplies(ctx, s, raw.TimeOnly, pass)
 		if err != nil {
 			return nil, err
 		}
 		if guard.State == EvidenceKnown && !guard.Value {
 			continue
+		}
+		for _, prior := range updates[:index] {
+			if err = s.step(ctx, 1); err != nil {
+				return nil, err
+			}
+			if prior.Kind != raw.Kind {
+				continue
+			}
+			if raw.Kind == NavigationListeningOther && prior.Type.State == EvidenceKnown && raw.Type.State == EvidenceKnown {
+				if err = s.step(ctx, int64(len(prior.Type.Value)+len(raw.Type.Value))); err != nil {
+					return nil, err
+				}
+				if prior.Type.Value != raw.Type.Value {
+					continue
+				}
+			}
+			before, e := navigationPassApplies(ctx, s, prior.TimeOnly, pass)
+			if e != nil {
+				return nil, e
+			}
+			if before.State == EvidenceKnown && !before.Value {
+				continue
+			}
+			if prior.PlayerTarget.State == EvidenceKnown && raw.PlayerTarget.State == EvidenceKnown {
+				same, e := stateSameRef(ctx, s, prior.PlayerTarget.Value, raw.PlayerTarget.Value)
+				if e != nil {
+					return nil, e
+				}
+				if !same {
+					continue
+				}
+			}
+			guard = stateMergeGap(guard, stateUnknown[bool]("navigation-simultaneous-listening-precedence-unresolved"))
 		}
 		next := raw
 		next.Active = guard

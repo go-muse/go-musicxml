@@ -532,3 +532,152 @@ func TestPerformanceInvalidLocalContextMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestPerformanceMordentLongLocalDefault(t *testing.T) {
+	for _, attr := range []string{"", ` long="yes"`, ` long="no"`, ` long="invalid"`} {
+		performanceReports(t, `<attributes><divisions>1</divisions></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><notations><ornaments><mordent`+attr+`/></ornaments></notations></note>`, func(t *testing.T, r validation.Report) {
+			found := false
+			for _, c := range r.Context {
+				if c.Property != "perf-mordent-long" {
+					continue
+				}
+				found = true
+				if attr == ` long="invalid"` {
+					if c.Value.State != validation.EvidenceInvalid || c.Value.Cause == nil {
+						t.Error("invalid long missing cause")
+					}
+				} else {
+					want := "no"
+					if attr == ` long="yes"` {
+						want = "yes"
+					}
+					if c.Value.State != validation.EvidenceKnown || c.Value.Value.Text != want {
+						t.Error("long default/explicit override")
+					}
+				}
+			}
+			if !found {
+				t.Error("missing mordent long local fact")
+			}
+		})
+	}
+}
+func TestPerformanceTablatureDoesNotWaiveOrdinaryDuration(t *testing.T) {
+	for _, tc := range []struct {
+		note    string
+		missing bool
+	}{{`<note><pitch><step>C</step><octave>4</octave></pitch></note>`, true}, {`<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`, false}, {`<note><grace/><pitch><step>C</step><octave>4</octave></pitch></note>`, false}} {
+		performanceReports(t, `<attributes><divisions>1</divisions><clef><sign>TAB</sign></clef><staff-details><staff-lines>6</staff-lines></staff-details></attributes>`+tc.note, func(t *testing.T, r validation.Report) {
+			failed := false
+			for _, f := range r.Findings {
+				if strings.HasPrefix(string(f.Rule.ID), "MX40-XSD-") && f.Outcome == validation.OutcomeFail {
+					failed = true
+				}
+			}
+			if failed != tc.missing {
+				t.Errorf("tablature shared XSD duration: fail%t want%t %s", failed, tc.missing, localFindings(r))
+			}
+			for _, f := range r.Findings {
+				if f.Rule.ID == "MX40-CONTEXT-performance" && f.Outcome == validation.OutcomeFail {
+					t.Error("invented tablature notation/type obligation")
+				}
+			}
+		})
+	}
+}
+
+func TestPerformanceDefaultInvalidFieldMatrix(t *testing.T) {
+	note := func(inside string) string {
+		return `<attributes><divisions>1</divisions></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><notations>` + inside + `</notations></note>`
+	}
+	cases := []struct {
+		property validation.ContextProperty
+		body     string
+	}{
+		{"perf-fingering-substitution", note(`<technical><fingering substitution="invalid">2</fingering></technical>`)},
+		{"perf-empty-trill-sound-beats", note(`<ornaments><trill-mark beats="-1"/></ornaments>`)},
+		{"perf-mordent-start-note", note(`<ornaments><mordent start-note="invalid"/></ornaments>`)},
+		{"perf-level-reference", `<attributes><level reference="invalid">editorial</level><divisions>1</divisions></attributes>`},
+		{"perf-stick-parentheses", `<direction><direction-type><percussion><stick parentheses="invalid"><stick-type>snare</stick-type><stick-material>wood</stick-material></stick></percussion></direction-type></direction>`},
+		{"perf-root-alter-location", `<harmony><root><root-step>C</root-step><root-alter location="invalid">1</root-alter></root><kind>major</kind></harmony>`},
+	}
+	for _, tc := range cases {
+		t.Run(string(tc.property), func(t *testing.T) {
+			performanceReports(t, tc.body, func(t *testing.T, r validation.Report) {
+				found := false
+				for _, c := range r.Context {
+					if c.Property == tc.property {
+						found = true
+						if c.Value.State != validation.EvidenceInvalid || c.Value.Cause == nil {
+							t.Errorf("invalid prerequisite defaulted: %+v", c.Value)
+						}
+					}
+				}
+				if !found {
+					t.Error("missing invalid field evidence")
+				}
+			})
+		})
+	}
+}
+func TestPerformanceSoundInvalidAndNoInitialState(t *testing.T) {
+	performanceReports(t, `<attributes><divisions>1</divisions></attributes><sound tempo="-1" dynamics="-1"/><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><staff>0</staff></note>`, func(t *testing.T, r validation.Report) {
+		sound := performanceTiming(r, "sound")
+		if len(sound) != 1 || sound[0].Tempo.State != validation.EvidenceInvalid || sound[0].ReferenceVelocity.State != validation.EvidenceInvalid || sound[0].ReferenceVelocity.Cause == nil {
+			t.Error("invalid sound facts")
+		}
+		note := performanceTiming(r, "note")
+		if len(note) != 1 || note[0].Staff.State != validation.EvidenceInvalid || note[0].StaffExists.State == validation.EvidenceKnown {
+			t.Error("invalid staff invented")
+		}
+	})
+	performanceReports(t, `<attributes><divisions>1</divisions></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`, func(t *testing.T, r validation.Report) {
+		n := performanceTiming(r, "note")[0]
+		if n.Staves.Value.String() != "1" || n.Instruments.Value.String() != "1" || n.KeyFifths.State != validation.EvidenceAbsent || n.TimeSymbol.State != validation.EvidenceAbsent || n.ClefSign.State != validation.EvidenceAbsent || n.Voice.State != validation.EvidenceAbsent || n.EffectiveTempo.State != validation.EvidenceAbsent {
+			t.Error("invented unspecified initial state")
+		}
+	})
+}
+
+func TestPerformanceDirectionAssociationAndOriginalBendOrigin(t *testing.T) {
+	body := `<attributes><divisions>4</divisions></attributes><direction><direction-type><words>Voice V</words></direction-type><voice>V</voice></direction><note><pitch><step>C</step><octave>4</octave></pitch><duration>4</duration><voice>other</voice></note><note attack="2" release="-1"><pitch><step>D</step><octave>4</octave></pitch><duration>4</duration><voice>V</voice><notations><technical><bend><bend-alter>2</bend-alter></bend><bend first-beat="25" last-beat="75"><bend-alter>-2</bend-alter><release offset="2"/></bend></technical></notations></note>`
+	performanceReports(t, body, func(t *testing.T, r validation.Report) {
+		d := performanceTiming(r, "direction")
+		n := performanceTiming(r, "note")
+		if len(d) != 1 || len(n) != 2 {
+			t.Fatal("missing direction/note")
+		}
+		if d[0].Anchor.State != validation.EvidenceKnown || d[0].Anchor.Value != n[1].Principal.Value || d[0].AnchorPosition.Value.Offset.String() != "1" {
+			t.Error("voice-qualified first following note")
+		}
+		b := n[1].Bends
+		if len(b) != 2 || b[1].OriginalNote.Value.Offset.String() != "1" || b[1].Release.Position.Value.Offset.String() != "3/2" || b[1].FirstBeat.Origin.Value.Offset.String() != "1" || b[1].FirstBeat.Position.Value.Offset.String() != "5/4" || b[1].LastBeat.Position.Value.Offset.String() != "7/4" {
+			t.Error("bend percentages shifted with release origin")
+		}
+		if n[1].Attack.Position.Value.Offset.String() != "3/2" || n[1].Release.Position.Value.Offset.String() != "7/4" {
+			t.Error("note attack/release independent origins")
+		}
+	})
+}
+func TestPerformanceConditionalFrettedRolesAndTrillCount(t *testing.T) {
+	body := `<attributes><divisions>1</divisions></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><notations><ornaments><trill-mark beats="3.5" two-note-turn="whole"/></ornaments><technical><fingering>2</fingering><pluck>p</pluck><fret>1</fret></technical></notations></note>`
+	performanceReports(t, body, func(t *testing.T, r validation.Report) {
+		roles := map[string]bool{}
+		for _, c := range r.Context {
+			if c.Property == "performance-fretted-instrument-role" && c.Value.State == validation.EvidenceKnown {
+				roles[c.Value.Value.Text] = true
+			}
+		}
+		if !roles["stopping-finger"] || !roles["plucking-finger"] {
+			t.Error("conditional fretted roles")
+		}
+		trill := performanceTiming(r, "trill")
+		if len(trill) != 1 || !trill[0].TrillIncludesInitialSound.Value || !trill[0].TrillExcludesClosingTurn.Value {
+			t.Error("trill count excludes closing turn and includes first sound")
+		}
+		fret := performanceTiming(r, "fret")
+		if len(fret) != 1 || fret[0].FretOpenString.State != validation.EvidenceKnown || fret[0].FretOpenString.Value {
+			t.Error("first stopped fret is not open string")
+		}
+	})
+}

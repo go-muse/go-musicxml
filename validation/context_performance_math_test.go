@@ -111,3 +111,88 @@ func TestPerformanceSwingFalseAntecedentDominatesUnknown(t *testing.T) {
 		t.Errorf("known nominal mismatch must be ineligible: %+v %v", got, err)
 	}
 }
+
+func TestPerformanceEveryDefaultEvidenceAxes(t *testing.T) {
+	for _, d := range performanceDefaults {
+		for _, state := range []EvidenceState{EvidenceAbsent, EvidenceKnown, EvidenceUnknown, EvidenceUnsupported, EvidenceInvalid} {
+			t.Run(string(d.role)+"/"+string(state), func(t *testing.T) {
+				s := rationalSession(t, Budgets{})
+				defer s.cleanup()
+				s.documentID = "d"
+				owner := contextNamedType(d.owner)
+				decl := localDecl("perf-attribute")
+				attr := AttributeSelector{Name: QName{Local: d.name}, Declaration: decl}
+				element := localDecl("perf-element")
+				b := &contextBindings{Roles: map[contextRole][]SchemaUse{"perf-root-alter": {{Declaration: element}}}, Attributes: map[contextRole]map[ComponentID]AttributeSelector{d.role: {owner: attr}}}
+				n := &factNode{header: NodeHeader{ID: 1, Type: stateKnown(owner), Declaration: stateKnown(element)}, closed: true, end: NodeEnd{AttributesComplete: stateKnown(true), ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+				cause := &DecisionRef{Rule: RuleKey{"test-cause", 1}, Subject: NodeRef{"d", 1}}
+				if state != EvidenceAbsent {
+					value := Evidence[Atomic]{State: state, Value: d.fallback}
+					if state != EvidenceKnown {
+						value.Value = Atomic{}
+						value.Cause = cause
+						value.Reason = "test-field-unavailable"
+					}
+					n.attributes = []AttributeFact{{Owner: 1, Name: attr.Name, Declaration: stateKnown(decl), Presence: stateKnown(true), Scalar: Scalar{Value: value}}}
+				}
+				r := &contextReader{ctx: context.Background(), s: s, b: b}
+				performanceStatic(r, RuleKey{"test-performance", 1}, n)
+				if r.err != nil {
+					t.Fatal(r.err)
+				}
+				if len(s.contextResults) != 1 {
+					t.Fatalf("got %d fields", len(s.contextResults))
+				}
+				v := s.contextResults[0].Value
+				want := state
+				if state == EvidenceAbsent {
+					want = EvidenceKnown
+				}
+				if v.State != want {
+					t.Fatalf("got%s want%s", v.State, want)
+				}
+				if state != EvidenceAbsent && state != EvidenceKnown && (v.Cause == nil || v.Cause.Rule.ID != "test-cause") {
+					t.Fatal("lost unavailable cause")
+				}
+				if state == EvidenceAbsent && v.Reason != "documented-default" {
+					t.Fatal("default provenance missing")
+				}
+			})
+		}
+	}
+}
+func TestPerformanceTimelineProjectionEvidenceAxes(t *testing.T) {
+	for _, st := range []EvidenceState{EvidenceKnown, EvidenceAbsent, EvidenceUnknown, EvidenceUnsupported, EvidenceInvalid} {
+		s := rationalSession(t, Budgets{})
+		s.documentID = "d"
+		cause := &DecisionRef{Rule: RuleKey{"timeline-cause", 1}, Subject: NodeRef{"d", 1}}
+		c := cause
+		if st == EvidenceKnown || st == EvidenceAbsent {
+			c = nil
+		}
+		pos := Evidence[musicalPosition]{State: st, Cause: c, Value: statePosition(t, 0, 0, 1)}
+		rational := Evidence[Rational]{State: st, Cause: c, Value: performanceRatio(1, 1)}
+		integer := Evidence[Integer]{State: st, Cause: c, Value: stateOne()}
+		decimal := Evidence[Decimal]{State: st, Cause: c, Value: noteTimingBeats}
+		ref := Evidence[NodeRef]{State: st, Cause: c, Value: NodeRef{"d", 2}}
+		voice := Evidence[string]{State: st, Cause: c, Value: "V"}
+		service := &timelineService{Facts: map[NodeID]timelineEventFact{1: {Origin: pos, Position: pos, End: pos, Duration: rational, PrincipalDuration: rational, Principal: ref, Units: decimal, Staff: integer, Voice: voice, Part: ref}}}
+		n := &factNode{header: NodeHeader{ID: 1}}
+		out, ok, err := performanceTimelineFact(context.Background(), s, service, n)
+		if err != nil || !ok {
+			t.Fatal(ok, err)
+		}
+		if out.Origin.State != st || out.Duration.State != st || out.Staff.State != st || out.Voice.State != st || out.Units.State != st || out.Principal.State != st {
+			t.Errorf("timeline projection changed state%s", st)
+		}
+		if st == EvidenceUnknown || st == EvidenceUnsupported || st == EvidenceInvalid {
+			if err := performanceEffectiveState(context.Background(), s, service, &out); err != nil {
+				t.Fatal(err)
+			}
+			if out.KeyFifths.State != st || out.TimeSymbol.State != st || out.Staves.State != st || out.TranspositionChromatic.State != st || out.EffectiveTempo.State != st {
+				t.Errorf("unavailable chronology became omission: state%s key%s time%s staves%s transpose%s tempo%s", st, out.KeyFifths.State, out.TimeSymbol.State, out.Staves.State, out.TranspositionChromatic.State, out.EffectiveTempo.State)
+			}
+		}
+		s.cleanup()
+	}
+}

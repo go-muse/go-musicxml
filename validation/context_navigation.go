@@ -127,14 +127,27 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 				return nil, err
 			}
 		}
-		if sound, ok := timeline.Playback.Sounds[id]; ok {
+		sound, soundKnown := timeline.Playback.Sounds[id]
+		if !soundKnown && r.matches(node, contextNavRawSound) {
+			var e error
+			sound, e = navigationRawSound(r, node, timeline)
+			if e != nil {
+				return nil, e
+			}
+			soundKnown = true
+		}
+		if soundKnown {
+			directives, e := navigationRawDirectives(r, sound.Navigation)
+			if e != nil {
+				return nil, e
+			}
 			play, e := performancePlayInstructions(ctx, s, sound.Play)
 			if e != nil {
 				return nil, e
 			}
 			kind, label, available := navigationSoundKind(sound.Navigation)
 			guard, defaulted := navigationDefaultGuard(kind, sound.TimeOnly)
-			row := contextNavigationNode{event: navigationEvent{Source: sound.Origin.Source, Kind: kind, Play: play, Guard: guard, Tempo: sound.Tempo, Dynamics: sound.Dynamics, Pizzicato: sound.Pizzicato, Control: available}, part: sound.Origin.Part, position: sound.Origin.Position, value: NavigationContextResult{Kind: kind, Play: play, Part: sound.Origin.Part, Label: label, TimeOnly: guard, Defaulted: defaulted, Guard: stateUnknown[bool]("navigation-pass-domain-unavailable")}}
+			row := contextNavigationNode{event: navigationEvent{Source: sound.Origin.Source, Kind: kind, Play: play, Guard: guard, Tempo: sound.Tempo, Dynamics: sound.Dynamics, Pizzicato: sound.Pizzicato, Control: available}, part: sound.Origin.Part, position: sound.Origin.Position, value: NavigationContextResult{Kind: kind, Directives: directives, Play: play, Part: sound.Origin.Part, Label: label, TimeOnly: guard, Defaulted: defaulted, Guard: stateUnknown[bool]("navigation-pass-domain-unavailable")}}
 			if kind == NavigationFine {
 				if label.State == EvidenceKnown && label.Value == "yes" {
 					row.value.DurationUnchanged = navigationKnownBool(true)
@@ -189,6 +202,15 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 				row.event.Times = row.value.Times
 				row.event.AfterJump = row.value.AfterJump
 				row.value.AttributesActive = navigationBackwardApplicability(direction, stateUnknown[bool]("navigation-ending-membership-unavailable"))
+				if direction.State == EvidenceKnown && direction.Value == "backward" {
+					ending, present := r.child(s.nodes[node.header.Parent], contextBarlineEnding)
+					if present.State == EvidenceKnown {
+						typ := stateText(r.attribute(ending, contextEndingType))
+						if typ.State == EvidenceKnown && (typ.Value == "stop" || typ.Value == "discontinue") {
+							row.value.AttributesActive = navigationKnownBool(false)
+						}
+					}
+				}
 				if direction.State != EvidenceKnown {
 					row.event.Control = stateUnavailable[string, bool](direction)
 				}
@@ -503,31 +525,24 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 			if e = navigationBuildEdges(ctx, s, partRows); e != nil {
 				return Decision{}, false, e
 			}
-			bytes, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(partRows)), 1024)
-			if e != nil {
-				return Decision{}, false, e
-			}
-			if e = s.account.Charge(BudgetBufferedBytes, bytes); e != nil {
-				return Decision{}, false, e
-			}
-			events := make([]navigationEvent, len(partRows))
-			for i := range partRows {
-				events[i] = partRows[i].event
-			}
-			initial, e := navigationAttachInstrumentUpdates(ctx, s, timeline, partRows)
-			if e != nil {
-				_ = s.account.Release(BudgetBufferedBytes, bytes)
-				return Decision{}, false, e
-			}
-			for i := range partRows {
-				events[i] = partRows[i].event
-			}
-			traversal, e = runNavigation(ctx, s, events, initial)
-			_ = s.account.Release(BudgetBufferedBytes, bytes)
+			traversal, e = navigationRunRows(ctx, s, timeline, partRows)
 			if e != nil {
 				return Decision{}, false, e
 			}
 			traversal.Part = row.part
+		} else {
+			count, e := navigationLinearPrefix(ctx, s, timeline, partRows)
+			if e != nil {
+				return Decision{}, false, e
+			}
+			if count > 0 {
+				traversal, e = navigationRunRows(ctx, s, timeline, partRows[:count])
+				if e != nil {
+					return Decision{}, false, e
+				}
+				traversal.Part = row.part
+				traversal.Complete = available
+			}
 		}
 		for i := range partRows {
 			v := &partRows[i]

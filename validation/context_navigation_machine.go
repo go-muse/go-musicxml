@@ -56,6 +56,7 @@ type NavigationOccurrence struct {
 // NavigationContextResult preserves encoded values, applicability, target and
 // bounded occurrence evidence. Complete describes traversal extent only.
 type NavigationContextResult struct {
+	Directives []NavigationDirective
 	// PlaybackSoundNeeded is advice for a graphic; LocalPlaybackSound is its labelled sibling, if established.
 	PlaybackSoundNeeded                Evidence[bool]
 	LocalPlaybackSound                 Evidence[NodeRef]

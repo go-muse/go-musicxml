@@ -53,5 +53,6 @@ func contextLocalBindingSpecs() []contextBindingSpec {
 		}
 	}
 	specs = append(specs, localStructuralBindingSpecs()...)
+	specs = append(specs, contextGlyphBindingSpecs()...)
 	return append(specs, contextLayoutBindingSpecs()...)
 }

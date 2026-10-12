@@ -12,6 +12,7 @@ type performanceDefault struct {
 }
 
 var performanceDefaults = []performanceDefault{
+	{"perf-mordent-long", "mordent", "long", "yes-no", Atomic{Kind: AtomicString, Text: "no"}},
 	{"perf-bend-accelerate", "bend", "accelerate", "yes-no", Atomic{Kind: AtomicString, Text: "no"}},
 	{"perf-bend-beats", "bend", "beats", "trill-beats", performanceDecimalConstant(4)},
 	{"perf-bend-first-beat", "bend", "first-beat", "percent", performanceDecimalConstant(25)},
@@ -67,7 +68,7 @@ func performanceDecimalConstant(n int64) Atomic {
 func contextPerformanceBindingSpecs() []contextBindingSpec {
 	out := make([]contextBindingSpec, 0, len(performanceDefaults)+len(performanceElements))
 	for _, d := range performanceDefaults {
-		out = append(out, contextBindingSpec{Role: d.role, Owner: performanceDefaultOwner(d.owner), Name: d.name, Type: d.typ, Attribute: true, Count: 1})
+		out = append(out, contextBindingSpec{Role: d.role, Owner: performanceDefaultOwner(d.owner, d.name), Name: d.name, Type: d.typ, Attribute: true, Count: 1})
 	}
 	out = append(out, performanceElements...)
 	return out
@@ -129,7 +130,10 @@ func publishPerformanceScalar(r *contextReader, key RuleKey, n *factNode, proper
 		r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: v, Origins: []Location{n.header.Location}})
 	}
 }
-func performanceDefaultOwner(owner string) string {
+func performanceDefaultOwner(owner, name string) string {
+	if owner == "mordent" && name == "long" {
+		return "mordent"
+	}
 	if owner == "root-alter" {
 		return "harmony-alter"
 	}

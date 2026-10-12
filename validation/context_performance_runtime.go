@@ -55,6 +55,9 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			performanceNoteSwing(r, service, &swingHistory, n, &out)
 		}
 		if r.matches(n, "perf-sound") {
+			if !publish {
+				out.PlayComplete = Evidence[bool]{State: EvidenceUnsupported, Reason: "timeline-service-unavailable"}
+			}
 			publish = true
 			out.Kind = "sound"
 			out.Tempo = stateDecimalValue(r.attribute(n, "perf-tempo"))
@@ -167,6 +170,7 @@ func performanceUnavailableEvent(s *Session, key RuleKey, out *TimingContextResu
 	out.End = out.Origin
 	out.ScoreOnset = out.Origin
 	out.ScoreEnd = out.Origin
+	out.PlayComplete = gap
 	out.Duration = stateUnavailable[bool, Rational](gap)
 	out.PrincipalDuration = out.Duration
 	out.Principal = stateUnavailable[bool, NodeRef](gap)

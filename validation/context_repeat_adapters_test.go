@@ -489,3 +489,123 @@ func TestRepeatAdaptersSlashVoiceAndStopScope(t *testing.T) {
 		}
 	})
 }
+
+func TestRepeatAdaptersMultipleSoundDirectivesRetainRaw(t *testing.T) {
+	repeatAssessBoth(t, `<sound segno="S" coda="C" dacapo="yes" time-only="2"/>`, func(t *testing.T, r validation.Report) {
+		found := false
+		for _, c := range r.Context {
+			if c.Navigation == nil || len(c.Navigation.Directives) == 0 {
+				continue
+			}
+			found = true
+			v := c.Navigation
+			if len(v.Directives) != 3 {
+				t.Fatalf("discarded raw directives %+v", v.Directives)
+			}
+			for _, d := range v.Directives {
+				if d.TimeOnly.State != validation.EvidenceKnown || d.TimeOnly.Value != "2" || d.Defaulted {
+					t.Fatalf("explicit pass lost %+v", d)
+				}
+			}
+		}
+		if !found {
+			t.Fatal("missing directives")
+		}
+	})
+}
+
+func TestRepeatAdaptersNamedJumpTargetsAndDefaults(t *testing.T) {
+	for _, mode := range []string{"unique", "missing", "duplicate"} {
+		marker := `<sound segno="S"/>`
+		if mode == "missing" {
+			marker = ""
+		}
+		duplicate := ""
+		if mode == "duplicate" {
+			duplicate = `<sound segno="S"/>`
+		}
+		repeatAssessBoth(t, `<attributes><divisions>1</divisions></attributes>`+marker+`<note><rest/><duration>1</duration></note>`+duplicate+`<note><rest/><duration>1</duration></note><sound dalsegno="S"/>`, func(t *testing.T, r validation.Report) {
+			found, trace := false, false
+			for _, c := range r.Context {
+				if c.Navigation == nil {
+					continue
+				}
+				v := c.Navigation
+				if v.Kind == validation.NavigationDalSegno {
+					found = true
+					if v.TimeOnly.State != validation.EvidenceKnown || v.TimeOnly.Value != "1" || !v.Defaulted || (v.Target.State == validation.EvidenceKnown) != (mode == "unique") {
+						t.Fatalf("mode=%s target/default %+v", mode, v)
+					}
+				}
+				if v.Kind == validation.NavigationTraversal {
+					trace = true
+					if (v.Complete.State == validation.EvidenceKnown) != (mode == "unique") {
+						t.Fatalf("mode=%s extent %+v", mode, v)
+					}
+					if len(v.Traversal) == 0 {
+						t.Fatal("lost known prefix")
+					}
+				}
+			}
+			if !found || !trace {
+				t.Fatalf("found=%v trace=%v", found, trace)
+			}
+		})
+	}
+}
+
+func TestRepeatAdaptersInactiveAttributesAndInvalidDefaults(t *testing.T) {
+	repeatAssessBoth(t, `<attributes><divisions>1</divisions><measure-style><slash type="start" use-stems="yes" use-dots="yes"><slash-type>quarter</slash-type></slash></measure-style></attributes><barline location="left"><ending number="1" type="start"/></barline><note><rest/><duration>1</duration></note><barline><ending number="1" type="stop"/><repeat direction="backward" times="2" after-jump="yes"/></barline>`, func(t *testing.T, r validation.Report) {
+		slash, repeat := false, false
+		for _, c := range r.Context {
+			if c.Repeat != nil && c.Repeat.Kind == validation.RepeatStyleSlash {
+				slash = true
+				if c.Repeat.RawUseDots.State != validation.EvidenceKnown || !c.Repeat.RawUseDots.Value || c.Repeat.UseDots.State != validation.EvidenceAbsent || c.Repeat.UseStems.State != validation.EvidenceKnown || !c.Repeat.UseStems.Value {
+					t.Fatalf("inactive dots %+v", c.Repeat)
+				}
+			}
+			if c.Navigation != nil && c.Navigation.Kind == validation.NavigationBackward {
+				repeat = true
+				if c.Navigation.AttributesActive.State != validation.EvidenceKnown || c.Navigation.AttributesActive.Value || c.Navigation.Times.Value.String() != "2" {
+					t.Fatalf("ending attrs %+v", c.Navigation)
+				}
+			}
+		}
+		if !slash || !repeat {
+			t.Fatalf("slash=%v repeat=%v", slash, repeat)
+		}
+	})
+	repeatAssessBoth(t, `<attributes><measure-style><beat-repeat type="start" slashes="0" use-dots="maybe"/></measure-style></attributes>`, func(t *testing.T, r validation.Report) {
+		found := false
+		for _, c := range r.Context {
+			if c.Repeat == nil {
+				continue
+			}
+			found = true
+			if c.Repeat.Slashes.State != validation.EvidenceInvalid || c.Repeat.Slashes.Cause == nil || c.Repeat.UseDots.State != validation.EvidenceInvalid || c.Repeat.UseDots.Cause == nil {
+				t.Fatalf("invalid default fabricated %+v", c.Repeat)
+			}
+		}
+		if !found {
+			t.Fatal("missing invalid row")
+		}
+	})
+}
+
+func TestRepeatAdaptersLaterAmbiguityPreservesPrefix(t *testing.T) {
+	repeatAssessBoth(t, `<attributes><divisions>1</divisions></attributes><note><rest/><duration>1</duration></note><sound tempo="80"/><sound tempo="90"/>`, func(t *testing.T, r validation.Report) {
+		found := false
+		for _, c := range r.Context {
+			if c.Navigation == nil || c.Navigation.Kind != validation.NavigationTraversal {
+				continue
+			}
+			found = true
+			if c.Navigation.Complete.State != validation.EvidenceUnknown || len(c.Navigation.Traversal) != 1 {
+				t.Fatalf("lost prefix before simultaneous controls %+v", c.Navigation)
+			}
+		}
+		if !found {
+			t.Fatal("missing traversal")
+		}
+	})
+}

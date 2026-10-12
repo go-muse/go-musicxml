@@ -88,28 +88,42 @@ func contextFixtureXML(body string, timewise bool) string {
 }
 
 func TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode(t *testing.T) {
-	for _, value := range []string{"0,1", "1,,2"} {
-		source := contextFixtureXML(`<note time-only="`+value+`"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`, false)
-		r, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
-		if err != nil {
-			t.Fatal(err)
-		}
-		blocked, failed := false, false
-		for _, f := range r.Findings {
-			if strings.HasPrefix(string(f.Rule.ID), "MX40-CONTEXT-time-only-order/") {
-				if f.Outcome != validation.OutcomeBlocked || f.Cause == nil {
-					t.Errorf("%s ordering prerequisite=%+v", value, f)
+	for _, timewise := range []bool{false, true} {
+		for _, value := range []string{"0,1", "1,,2"} {
+			source := contextFixtureXML(`<note time-only="`+value+`"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`, timewise)
+			doc, err := Decode(strings.NewReader(source))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, model := range []bool{false, true} {
+				var r validation.Report
+				if model {
+					r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+				} else {
+					r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
 				}
-				blocked = true
+				if err != nil {
+					t.Fatal(err)
+				}
+				blocked, failed := false, false
+				for _, f := range r.Findings {
+					if strings.HasPrefix(string(f.Rule.ID), "MX40-CONTEXT-time-only-order/") {
+						if f.Outcome != validation.OutcomeBlocked || f.Cause == nil {
+							t.Errorf("%s ordering prerequisite=%+v", value, f)
+						}
+						blocked = true
+					}
+					if strings.HasPrefix(string(f.Rule.ID), "MX40-XSD-") && f.Outcome == validation.OutcomeFail {
+						failed = true
+					}
+				}
+				if !blocked || !failed {
+					t.Errorf("%s model%t/timewise%t missing causal shared-XSD result: %s", value, model, timewise, localFindings(r))
+				}
 			}
-			if strings.HasPrefix(string(f.Rule.ID), "MX40-XSD-") && f.Outcome == validation.OutcomeFail {
-				failed = true
-			}
-		}
-		if !blocked || !failed {
-			t.Errorf("%s missing causal shared-XSD result: %s", value, localFindings(r))
 		}
 	}
+
 	source := contextFixtureXML(`<note time-only="10,2"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`, false)
 	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceContext}})
 	if err == nil || result.Document != nil {

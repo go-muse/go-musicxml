@@ -213,3 +213,54 @@ func TestContextNavigationBackwardReentryStateIsNotInferred(t *testing.T) {
 		t.Fatalf("seen=%d", seen)
 	}
 }
+
+func TestContextNavigationLocalSoundWithoutTimeline(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	s.documentID = "d"
+	typ := ComponentID{Kind: ComponentType, Name: QName{Local: "sound"}}
+	b := &contextBindings{Roles: make(map[contextRole][]SchemaUse), Attributes: make(map[contextRole]map[ComponentID]AttributeSelector)}
+	for _, spec := range append(navigationRawBindings(), navigationGraphicBindings()...) {
+		d := DeclarationID{Occurrence: string(spec.Role)}
+		b.Roles[spec.Role] = []SchemaUse{{Declaration: d, Attribute: spec.Attribute, Name: QName{Local: spec.Name}}}
+		if spec.Attribute {
+			b.Attributes[spec.Role] = map[ComponentID]AttributeSelector{typ: {Declaration: d, Name: QName{Local: spec.Name}}}
+		}
+	}
+	n := &factNode{header: NodeHeader{ID: 1, Declaration: stateKnown(b.Roles[contextNavRawSound][0].Declaration), Type: stateKnown(typ)}, closed: true, end: NodeEnd{AttributesComplete: stateKnown(true), ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+	a := b.Attributes[contextNavRawDaCapo][typ]
+	n.attributes = []AttributeFact{{Owner: 1, Name: a.Name, Declaration: stateKnown(a.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: stateAtomicText("yes")}}}
+	s.nodes = map[NodeID]*factNode{1: n}
+	s.sequence = []NodeID{1}
+	rows, err := navigationReadRows(context.Background(), s, &contextPlan{Bindings: b}, &timelineService{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].value.Kind != NavigationDaCapo || rows[0].value.TimeOnly.State != EvidenceKnown || rows[0].value.TimeOnly.Value != "1" || !rows[0].value.Defaulted || rows[0].position.State == EvidenceKnown {
+		t.Fatalf("local sound lost without timeline %+v", rows)
+	}
+}
+
+func TestContextNavigationSimultaneousListeningNoLastWins(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	updates := []NavigationListeningStatement{
+		{Source: NodeRef{"d", 1}, Kind: NavigationListeningSync, Player: stateAbsent[string](), PlayerTarget: stateAbsent[NodeRef](), Type: stateKnown("none"), TimeOnly: stateAbsent[string](), Latency: stateAbsent[Decimal](), Value: stateAbsent[string]()},
+		{Source: NodeRef{"d", 2}, Kind: NavigationListeningSync, Player: stateAbsent[string](), PlayerTarget: stateAbsent[NodeRef](), Type: stateKnown("bar"), TimeOnly: stateAbsent[string](), Latency: stateAbsent[Decimal](), Value: stateAbsent[string]()},
+	}
+	got, err := navigationApplyListening(context.Background(), s, nil, updates, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Type.State != EvidenceUnknown {
+		t.Fatalf("invented last-wins %+v", got)
+	}
+	updates[0].TimeOnly = stateKnown("2")
+	got, err = navigationApplyListening(context.Background(), s, nil, updates, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].Type.State != EvidenceKnown || got[0].Type.Value != "bar" {
+		t.Fatalf("inactive update contaminated known state %+v", got)
+	}
+}

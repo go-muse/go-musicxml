@@ -62,7 +62,7 @@ func contextRepeatBindingSpecs() []contextBindingSpec {
 		{Role: contextRepeatAfterJump, Owner: "repeat", Name: "after-jump", Type: "yes-no", Attribute: true, Count: 1},
 		{Role: contextEndingType, Owner: "ending", Name: "type", Type: "start-stop-discontinue", Attribute: true, Count: 1},
 		{Role: contextEndingNumber, Owner: "ending", Name: "number", Type: "ending-number", Attribute: true, Count: 1},
-	}, append(contextRepeatContentBindingSpecs(), append(navigationListeningBindingSpecs(), append(navigationNoteListeningBindings(), navigationGraphicBindings()...)...)...)...)
+	}, append(contextRepeatContentBindingSpecs(), append(navigationListeningBindingSpecs(), append(navigationNoteListeningBindings(), append(navigationGraphicBindings(), navigationRawBindings()...)...)...)...)...)
 }
 
 type contextRepeatRecord struct {

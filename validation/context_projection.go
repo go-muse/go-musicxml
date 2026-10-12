@@ -76,9 +76,9 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 	switch in.Property {
 	case ContextPropertySpan, ContextPropertySpanLyricSyllable:
 		expected = "span"
-	case ContextPropertyRepeat, ContextProperty("repeat-style"):
+	case ContextPropertyRepeat:
 		expected = "repeat"
-	case ContextPropertyNavigation, ContextProperty("navigation-traversal"):
+	case ContextPropertyNavigation, ContextPropertyNavigationTraversal:
 		expected = "navigation"
 	case ContextPropertyTiming:
 		expected = "timing"

@@ -119,6 +119,44 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	out.StaffTopDown = Evidence[bool]{State: EvidenceKnown, Value: true}
 	out.TuningBottomUp = Evidence[bool]{State: EvidenceKnown, Value: true}
 	if out.Origin.State != EvidenceKnown {
+		gap := timelineGapAs[ContextPosition, bool](out.Origin, "event-position-unavailable")
+		out.Staves = stateUnavailable[bool, Integer](gap)
+		out.Instruments = out.Staves
+		out.StaffExists = gap
+		out.KeyFifths = out.Staves
+		out.KeyCancel = out.Staves
+		out.KeyMode = stateUnavailable[bool, string](gap)
+		out.CancelLocation = out.KeyMode
+		out.TimeSymbol = out.KeyMode
+		out.TimeSeparator = out.KeyMode
+		out.SenzaMisura = out.KeyMode
+		out.TimePrintObject = gap
+		out.ClefSign = out.KeyMode
+		out.ClefLine = out.Staves
+		out.ClefOctave = out.Staves
+		out.TranspositionChromatic = stateUnavailable[bool, Decimal](gap)
+		out.TranspositionDiatonic = out.Staves
+		out.TranspositionOctave = out.Staves
+		out.ChromaticDisplacement = stateUnavailable[bool, Rational](gap)
+		out.DiatonicDisplacement = out.ChromaticDisplacement
+		out.DoublingAbove = gap
+		out.StaffType = out.KeyMode
+		out.Capo = out.Staves
+		out.EffectiveTempo = out.TranspositionChromatic
+		out.EffectiveDynamics = out.TranspositionChromatic
+		out.EffectivePizzicato = gap
+		out.EffectiveVelocity = out.ChromaticDisplacement
+		if out.Dynamics.State != EvidenceAbsent {
+			out.EffectiveDynamics = out.Dynamics
+			var err error
+			out.EffectiveVelocity, err = performanceVelocity(ctx, s, out.Dynamics)
+			if err != nil {
+				return err
+			}
+		}
+		if out.Pizzicato.State != EvidenceAbsent {
+			out.EffectivePizzicato = out.Pizzicato
+		}
 		return nil
 	}
 	v := out.Origin.Value
@@ -217,7 +255,7 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	if err != nil {
 		return err
 	}
-	if err = performanceStateOrigin(ctx, s, out, "tim", tim); err != nil {
+	if err = performanceStateOrigin(ctx, s, out, "time", tim); err != nil {
 		return err
 	}
 	if tim.Value.State == EvidenceKnown {
@@ -262,7 +300,7 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	if err != nil {
 		return err
 	}
-	if err = performanceStateOrigin(ctx, s, out, "trans", trans); err != nil {
+	if err = performanceStateOrigin(ctx, s, out, "transpose", trans); err != nil {
 		return err
 	}
 	if trans.Value.State == EvidenceKnown {
@@ -290,7 +328,7 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	if err != nil {
 		return err
 	}
-	if err = performanceStateOrigin(ctx, s, out, "details", details); err != nil {
+	if err = performanceStateOrigin(ctx, s, out, "staff-details", details); err != nil {
 		return err
 	}
 	if details.Value.State == EvidenceKnown {

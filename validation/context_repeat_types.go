@@ -17,6 +17,7 @@ const (
 // Start/Stop are established half-open range endpoints; absent Stop may mean
 // continuation to part end only when Complete is known. AllStaves is symbolic.
 type RepeatContextResult struct {
+	RawUseDots, RawUseStems   Evidence[bool]
 	Notes                     []RepeatNoteScope
 	Kind                      RepeatStyleKind
 	Part                      Evidence[NodeRef]
@@ -48,6 +49,7 @@ func cloneRepeatContext(ctx context.Context, s *Session, in *RepeatContextResult
 }
 
 func contextRepeatDefaults(result *RepeatContextResult) {
+	result.RawUseDots, result.RawUseStems = result.UseDots, result.UseStems
 	if result.Kind == RepeatStyleBeat || result.Kind == RepeatStyleMeasure {
 		if result.Slashes.State == EvidenceAbsent {
 			result.Slashes = Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}
