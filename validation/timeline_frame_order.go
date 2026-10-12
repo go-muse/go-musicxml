@@ -7,6 +7,8 @@ import (
 
 // Bounds are observed in-measure current locations, not actual measure spans.
 // They can prove containment and lower bounds on later measure origins only.
+const timelineFrameReserveBytes int64 = 512
+
 type timelineFrame struct {
 	Part, Measure NodeRef
 	Ordinal       uint64
@@ -31,7 +33,7 @@ func (h *timelineState) observeFrameOrigin(ctx context.Context, s *Session, p mu
 			return err
 		}
 	} else if !found {
-		cost, err := rationalSum(BudgetBufferedBytes, 512, int64(len(p.Part.DocumentID)), int64(len(p.Measure.DocumentID)))
+		cost, err := rationalSum(BudgetBufferedBytes, timelineFrameReserveBytes, int64(len(p.Part.DocumentID)), int64(len(p.Measure.DocumentID)))
 		if err != nil {
 			return err
 		}

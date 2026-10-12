@@ -58,11 +58,10 @@ func timelineUnitPlacementGap(r *stateReader, block timelineMeasureBlock, inheri
 					return unavailable(0), nil
 				}
 				region = cursor.Position.Value
-				atOrigin, err := r.s.rationalCmp(r.ctx, region, timelineZero)
-				if err != nil {
-					return timelineUnitGate{}, err
-				}
-				regionChanged = atOrigin != 0
+				// A changed declaration at a new measure's zero still bounds
+				// a new unit region. A negative rewind must not borrow its
+				// departure units across the unresolved preceding boundary.
+				regionChanged = true
 			}
 			current = next
 			continue
@@ -220,7 +219,7 @@ func timelineNeedsUnitPreflight(r *stateReader, block timelineMeasureBlock, inhe
 			if err != nil {
 				return false, err
 			}
-			if moved && !same {
+			if !same && (moved || current.State == EvidenceKnown && next.State == EvidenceKnown) {
 				changed = true
 			}
 			current = next

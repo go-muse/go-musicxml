@@ -69,7 +69,7 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 	if err != nil {
 		return nil, err
 	}
-	cost, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(raw.Publications)), 256)
+	cost, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(raw.Publications)), stateIndexPublicationBytes)
 	if err != nil {
 		return nil, err
 	}

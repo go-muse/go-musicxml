@@ -14,6 +14,11 @@ type stateIndexScope struct {
 	AllStaves bool
 	Staff     string
 }
+
+// Three simultaneous sparse-map entry widths plus ID append backing remain
+// below this host-independent bound on both supported pointer widths.
+const stateIndexPublicationBytes int64 = 320
+
 type stateIndexBucket struct {
 	Publications []int
 	Partial      bool
@@ -49,7 +54,7 @@ func stateIndex[T any](ctx context.Context, s *Session, h *stateHistory[T]) (*st
 	if e := s.step(ctx, int64(len(h.Publications))+1); e != nil {
 		return nil, e
 	}
-	cost, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(h.Publications)), 256)
+	cost, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(h.Publications)), stateIndexPublicationBytes)
 	if e != nil {
 		return nil, e
 	}
