@@ -498,3 +498,53 @@ func TestTimelineNormalizationPreservesStrongestRequiredCause(t *testing.T) {
 		t.Fatalf("irrelevant units=%+v %v", optional, err)
 	}
 }
+
+func independentNestedOriginFixture(t *testing.T) (*Session, *timelineService, *timelineBindings, *factNode, timelineEventFact, *DecisionRef) {
+	t.Helper()
+	s, service, b, fact := independentOriginFixture(t, Budgets{})
+	cause := &DecisionRef{Rule: RuleKey{ID: "nested-upstream", Revision: 1}, Subject: NodeRef{"d", 77}}
+	badDecimal := Evidence[Atomic]{State: EvidenceInvalid, Reason: "bad-number", Cause: cause}
+	bend := stateNode(b, timelineRoleTechnicalBend, 203, stateAbsent[Atomic]())
+	stateAttribute(b, bend, timelineRoleBendBeats, stateAtomicDecimal(t, 4, 1).Value)
+	bend.attributes[len(bend.attributes)-1].Scalar.Value = badDecimal
+	notation := stateNode(b, timelineRoleNoteNotations, 201, stateAbsent[Atomic](), stateNode(b, timelineRoleNotationsTechnical, 202, stateAbsent[Atomic](), bend))
+	grace := stateNode(b, timelineRoleNoteGrace, 204, stateAbsent[Atomic]())
+	stateAttribute(b, grace, timelineRoleGraceStealPrevious, stateAtomicDecimal(t, 10, 1).Value)
+	grace.attributes[0].Scalar.Value = badDecimal
+	note := stateNode(b, timelineRoleNote, 100, stateAbsent[Atomic](), notation, grace)
+	fact.Part = Evidence[NodeRef]{State: EvidenceInvalid, Reason: "bad-part", Cause: cause}
+	return s, service, b, note, fact, cause
+}
+
+func TestIndependentTimelineNestedOriginCancellationAndOwnership(t *testing.T) {
+	probe, service, b, note, fact, cause := independentNestedOriginFixture(t)
+	counter := &rationalCancelContext{Context: context.Background(), at: math.MaxInt}
+	if err := service.readNoteOrigins(counter, probe, b, note, fact, stateKnown(stateDecimal(t, 3, 1))); err != nil {
+		t.Fatal(err)
+	}
+	calls := counter.calls
+	got := service.NoteOrigins[100]
+	if len(got.Bends) != 1 || got.GraceTiming.State != EvidenceKnown {
+		t.Fatal("nested fixture did not exercise full record")
+	}
+	cause.Subject.Node = 999
+	if got.Part.Cause.Subject.Node != 77 || got.Bends[0].RawBeats.Cause.Subject.Node != 77 || got.GraceTiming.Value.StealPrevious.Cause.Subject.Node != 77 {
+		t.Fatal("nested retained evidence borrows mutable cause")
+	}
+	probe.cleanup()
+	for at := 1; at <= calls; at++ {
+		s, service, b, note, fact, cause := independentNestedOriginFixture(t)
+		ctx := &rationalCancelContext{Context: context.Background(), at: at}
+		err := service.readNoteOrigins(ctx, s, b, note, fact, stateKnown(stateDecimal(t, 3, 1)))
+		if !errors.Is(err, context.Canceled) || len(service.NoteOrigins) != 0 || cause.Subject.Node != 77 {
+			t.Fatalf("poll%d published partial origin or changed source: err=%v entries=%d cause=%+v", at, err, len(service.NoteOrigins), cause)
+		}
+		work := rationalUsage(t, s, BudgetRuleSteps)
+		contexts := rationalUsage(t, s, BudgetContextFacts)
+		s.cleanup()
+		if rationalUsage(t, s, BudgetBufferedBytes) != 0 || rationalUsage(t, s, BudgetRuleSteps) != work || rationalUsage(t, s, BudgetContextFacts) != contexts {
+			t.Fatalf("poll%d leaked/refunded resource ownership", at)
+		}
+	}
+	t.Logf("interrupted every one of %d nested note-origin poll boundaries", calls)
+}
