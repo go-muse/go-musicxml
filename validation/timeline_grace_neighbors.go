@@ -17,6 +17,12 @@ type graceNeighborTiming struct {
 	Voice               Evidence[string]
 	Previous, Following graceDonorTiming
 }
+
+const (
+	timelineGraceScratchPerNote  int64 = 4096
+	timelineGraceScratchPerBlock int64 = 2048
+)
+
 type graceStreamKey struct {
 	part   NodeRef
 	voice  string
@@ -179,11 +185,11 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	}
 	// This bound covers live old/new slice backing, scoped gap records, stream
 	// and part maps, and orphan IDs. None is retained with the published facts.
-	scratch, err := rationalCheckedMul(BudgetBufferedBytes, noteCount, 4096)
+	scratch, err := rationalCheckedMul(BudgetBufferedBytes, noteCount, timelineGraceScratchPerNote)
 	if err != nil {
 		return err
 	}
-	blockBytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(blocks)), 2048)
+	blockBytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(blocks)), timelineGraceScratchPerBlock)
 	if err != nil {
 		return err
 	}

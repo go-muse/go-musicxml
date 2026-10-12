@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"unsafe"
 )
 
 func graceNeighborFixture(t *testing.T, order OrderKind, voice Evidence[string]) (*Session, *timelineService, *timelineBindings, []timelineMeasureBlock) {
@@ -317,4 +318,29 @@ func TestGraceNeighborsForeignPositionIsGapNotProviderContract(t *testing.T) {
 	if got := v.GraceNeighbors[20].Previous.Note; got.State != EvidenceUnknown {
 		t.Fatalf("foreign donor: %+v", got)
 	}
+}
+
+// The coefficients include conservative map growth, old+new slice backing,
+// and both a local semantic gap and a mixed-presence gap per admitted note.
+func TestGraceNeighborScratchAdmissionCoversClosedShape(t *testing.T) {
+	note := uintptr(0)
+	note += 4 * unsafe.Sizeof(graceStream{})
+	note += 4 * (unsafe.Sizeof(graceStreamKey{}) + unsafe.Sizeof(int(0)))
+	note += 4 * (unsafe.Sizeof(NodeID(0)) + unsafe.Sizeof(int(0))) // stable tie index
+	note += 4 * unsafe.Sizeof(NodeID(0))                           // each stream's IDs
+	note += 4 * (unsafe.Sizeof(NodeRef{}) + unsafe.Sizeof((*gracePartDomain)(nil)))
+	note += unsafe.Sizeof(gracePartDomain{})
+	note += 4 * unsafe.Sizeof(graceDomainNote{})
+	note += 8 * unsafe.Sizeof(graceScopedGap{}) // two per-note gaps
+	note += 4 * unsafe.Sizeof(NodeID(0))        // orphan IDs
+	note += 4 * (unsafe.Sizeof(NodeID(0)) + unsafe.Sizeof(Evidence[NodeRef]{}))
+	// Structural sequence, coverage and aggregated completeness/declaration
+	// gaps are bounded per block, including parts that contain no exact note.
+	block := 12 * unsafe.Sizeof(graceScopedGap{})
+	block += 4 * (unsafe.Sizeof(NodeRef{}) + unsafe.Sizeof((*gracePartDomain)(nil)))
+	block += unsafe.Sizeof(gracePartDomain{})
+	if uint64(note) > uint64(timelineGraceScratchPerNote) || uint64(block) > uint64(timelineGraceScratchPerBlock) {
+		t.Fatalf("closed scratch shape note=%d/%d block=%d/%d", note, timelineGraceScratchPerNote, block, timelineGraceScratchPerBlock)
+	}
+	t.Logf("closed scratch shape: note=%d block=%d", note, block)
 }
