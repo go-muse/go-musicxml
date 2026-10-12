@@ -715,3 +715,41 @@ func TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits(t 
 		t.Fatalf("cross-boundary rewind chose changed departure units: %+v", got)
 	}
 }
+
+// An unavailable signed displacement supplies no destination interval. It must
+// not inherit the tighter frame scope used for an unknown ordinary cursor.
+func TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	initial := stateNode(b, timelineRoleSound, 30, stateAbsent[Atomic]())
+	stateAttribute(b, initial, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
+	cause := &DecisionRef{Rule: RuleKey{"review-invalid-sound-offset", 1}, Subject: NodeRef{"d", 41}}
+	offset := stateNode(b, timelineRoleSoundOffset, 41, Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-signed-offset", Cause: cause})
+	unplaced := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic](), offset)
+	stateAttribute(b, unplaced, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	repair := stateNode(b, timelineRoleSound, 60, stateAbsent[Atomic]())
+	stateAttribute(b, repair, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 90, 1)})
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, initial, runtimeNote(t, b, 50, 1, false), runtimeNote(t, b, 55, 1, false)), runtimeBlock(b, 1, unplaced), runtimeBlock(b, 2, repair, runtimeNote(t, b, 70, 1, false))}
+	for _, block := range blocks {
+		if err := svc.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	for label, query := range map[string]musicalPosition{"earlier-frame": svc.Facts[55].Position.Value, "later-frame-repair-unproved": svc.Facts[70].Position.Value} {
+		got, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, query)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.Value.State != EvidenceInvalid || got.Value.Cause == nil || *got.Value.Cause != *cause {
+			t.Errorf("%s silently confined an unavailable signed displacement: %+v", label, got)
+		}
+		unrelated, err := svc.Playback.effectiveDynamics(ctx, s, &svc.State, query)
+		if err != nil || unrelated.Value.State != EvidenceKnown || unrelated.Value.Value.String() != "100" {
+			t.Errorf("%s unrelated default dynamics lost: %+v err=%v", label, unrelated, err)
+		}
+	}
+}
