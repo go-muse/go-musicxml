@@ -128,3 +128,36 @@ func TestTimelineRuntimeSamePositionDivisionsConflict(t *testing.T) {
 		t.Fatalf("sameposition conflict advanced=%+v", got)
 	}
 }
+
+func TestTimelineRuntimeUnknownPublisherMasksInheritedState(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	attr := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)), stateNode(b, timelineRoleAttributesKey, 22, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 23, stateAtomicInteger(t, 0))))
+	unknown := stateNode(b, timelineRoleDirection, 30, stateAbsent[Atomic]())
+	unknown.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "publisher-kind-unknown"}
+	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, attr, unknown)); err != nil {
+		t.Fatal(err)
+	}
+	next := runtimeBlock(b, 1, runtimeNote(t, b, 40, 1, false))
+	if err := service.readMeasure(context.Background(), s, b, next); err != nil {
+		t.Fatal(err)
+	}
+	key, err := service.State.effectiveKey(context.Background(), s, statePosition(t, 1, 0, 1), stateKnown(stateInt(t, 1)))
+	if err != nil || key.Value.State != EvidenceUnknown || key.Value.Reason != "publisher-kind-unknown" {
+		t.Fatalf("hidden publisher inherited old key=%+v,%v", key, err)
+	}
+	if got := service.Facts[40].Duration; got.State != EvidenceUnknown {
+		t.Fatalf("hidden publisher inherited old divisions=%+v", got)
+	}
+}
+func TestTimelineRuntimeIncompleteContainerDoesNotInventStateAbsence(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	block := runtimeBlock(b, 0)
+	block.complete = Evidence[bool]{State: EvidenceUnknown, Reason: "events-omitted"}
+	if err := service.readMeasure(context.Background(), s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	key, err := service.State.effectiveKey(context.Background(), s, statePosition(t, 1, 0, 1), stateKnown(stateInt(t, 1)))
+	if err != nil || key.Value.State != EvidenceUnknown || key.Value.Reason != "events-omitted" {
+		t.Fatalf("omitted state became absence=%+v,%v", key, err)
+	}
+}
