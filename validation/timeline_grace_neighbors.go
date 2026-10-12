@@ -117,6 +117,9 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	if err != nil {
 		return err
 	}
+	if _, err := AllocationSize(scratch); err != nil {
+		return err
+	}
 	if err := s.account.Charge(BudgetBufferedBytes, scratch); err != nil {
 		return err
 	}
