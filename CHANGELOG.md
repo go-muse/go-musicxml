@@ -9,6 +9,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add immutable `validation.Rational` with bounded canonical fractions, separate
+  from XSD decimals, and shared-session metered exact arithmetic for musical
+  positions. Arithmetic reserves conservative work and scratch before big-number
+  operations and keeps resource exhaustion distinct from invalidity.
+
 - Add direct `AssessModel` with explicit `ProfileModelXSD` and
   `ProfileModelLocal`, plus `ProfileSourceLocal` for the same bounded local
   clauses on original input. Preserve the existing generated `Assess` type.

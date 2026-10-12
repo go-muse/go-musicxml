@@ -412,7 +412,20 @@ not discard the underlying causes available through `errors.Is`/`errors.As`.
 by child sessions. All limits, charging owners, exact-value constructor caps,
 plan boundaries and remaining obligations are documented in the
 [foundation scope](docs/validation/foundation-scope.md). Numeric constructor
-resource limits are not XSD facets. `DecodeOptions` and generated public field
+resource limits are not XSD facets. `validation.Rational` / `NewRational` add
+an immutable reduced fraction for musical positions, including nonterminating
+values such as `1/3`; they do not widen `Decimal` or XSD `Atomic`. The zero wrapper
+is uninitialized. `Value` returns a copy, `String` returns a canonical fraction
+(or an integer), and `ByteSize` counts significant magnitude plus text. Constructor
+inputs, intermediate magnitude and canonical output are statically bounded by
+`MaxExactValueBytes`; overly large unreduced inputs may be refused even if they
+would cancel. Internal session arithmetic additionally precharges conservative
+quadratic work and live scratch before normalization, cross-products or rendering.
+Its output is retained until `Finish`; resource rejection means incomplete
+assessment, not musical invalidity. Cancellation is checked before and after
+synchronous `math/big` calls, which cannot be preempted in flight.
+
+`DecodeOptions` and generated public field
 representations remain unchanged. The additive model-representation event is
 required only when its corresponding sealed plan is selected; older generic
 fact sessions and the source preview retain their contracts.
