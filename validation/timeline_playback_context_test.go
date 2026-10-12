@@ -336,3 +336,24 @@ func TestPlaybackRawAttributePresenceIsNotSharedXSDDefault(t *testing.T) {
 		})
 	}
 }
+
+func TestPlaybackOrdinaryNoteDefaultBudgetScaling(t *testing.T) {
+	s, p, b, block, fact := playbackFixture(t)
+	for i := 0; i < 1000; i++ {
+		n := runtimeNote(t, b, NodeID(100+i*4), 3, false)
+		if err := p.readNote(context.Background(), s, b, n, block, fact); err != nil {
+			t.Fatalf("ordinary note %d: %v", i, err)
+		}
+	}
+	if len(p.Notes) != 1000 {
+		t.Fatal("missing ordinary note evidence")
+	}
+	t.Logf("1000 note playback contexts: work=%d bytes=%d context=%d", rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes), rationalUsage(t, s, BudgetContextFacts))
+	s.cleanup()
+	if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+		t.Fatal("live bytes not released")
+	}
+	if rationalUsage(t, s, BudgetContextFacts) != 1000 {
+		t.Fatal("cumulative work refunded")
+	}
+}
