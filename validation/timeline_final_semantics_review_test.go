@@ -753,3 +753,51 @@ func TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined(t *testing.
 		}
 	}
 }
+
+func TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof(t *testing.T) {
+	for _, direction := range []string{"forward-into-later-change", "backup-into-prior-change"} {
+		for _, changed := range []bool{false, true} {
+			t.Run(direction+"/"+map[bool]string{false: "uniform-control", true: "different-divisions"}[changed], func(t *testing.T) {
+				ctx := context.Background()
+				s, svc, b := runtimeFixture(t)
+				attrs := func(id NodeID, divisions int64) *factNode {
+					return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, stateAtomicDecimal(t, divisions, 1)))
+				}
+				otherUnits := int64(1)
+				if changed {
+					otherUnits = 2
+				}
+				var blocks []timelineMeasureBlock
+				movementID, noteID := NodeID(50), NodeID(60)
+				wantDuration, wantPosition := "10", "11"
+				if direction == "forward-into-later-change" {
+					forward := stateNode(b, timelineRoleForward, movementID, stateAbsent[Atomic](), stateNode(b, timelineRoleForwardDuration, movementID+1, stateAtomicDecimal(t, 10, 1)))
+					blocks = []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, 1), runtimeNote(t, b, 30, 1, false), forward, runtimeNote(t, b, noteID, 1, false)), runtimeBlock(b, 1, attrs(70, otherUnits), runtimeNote(t, b, 80, 2, false))}
+				} else {
+					backup := stateNode(b, timelineRoleBackup, movementID, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, movementID+1, stateAtomicDecimal(t, 4, 1)))
+					blocks = []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, 1), runtimeNote(t, b, 30, 2, false), attrs(40, otherUnits), runtimeNote(t, b, 45, 2, false), stateNode(b, timelineRoleAttributes, 47, stateAbsent[Atomic]())), runtimeBlock(b, 1, backup, runtimeNote(t, b, noteID, 2, false))}
+					wantDuration, wantPosition = "4", "-4"
+				}
+				for _, block := range blocks {
+					if err := svc.readMeasure(ctx, s, b, block); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+					t.Fatal(err)
+				}
+				if earlier := svc.Facts[30]; earlier.Position.State != EvidenceKnown || earlier.End.State != EvidenceKnown {
+					t.Fatalf("independent complete prefix lost: %+v", earlier)
+				}
+				movement, note := svc.Facts[movementID], svc.Facts[noteID]
+				if changed {
+					if movement.Duration.State == EvidenceKnown || note.Position.State == EvidenceKnown {
+						t.Fatalf("per-measure cache chose units across an unresolved different-unit region: movement=%+v note=%+v", movement, note)
+					}
+				} else if movement.Duration.State != EvidenceKnown || movement.Duration.Value.String() != wantDuration || note.Position.State != EvidenceKnown || note.Position.Value.Offset.String() != wantPosition {
+					t.Fatalf("uniform-unit exact control lost: movement=%+v note=%+v", movement, note)
+				}
+			})
+		}
+	}
+}
