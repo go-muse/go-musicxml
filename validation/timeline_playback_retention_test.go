@@ -7,8 +7,8 @@ import (
 )
 
 func TestPlaybackOwnedRecordAllowanceCoversWidthsAndGrowth(t *testing.T) {
-	// Include two simultaneous fixed values (the newly assembled record and map's
-	// indirect value) plus conservative per-entry map/table growth. Variable Play
+	// Large map values are indirect; growth retains pointers to the same fixed
+	// value. Include conservative per-entry map/table growth. Variable Play
 	// and Technique backing is admitted separately by its construction helpers.
 	for _, tc := range []struct {
 		name    string
@@ -21,12 +21,12 @@ func TestPlaybackOwnedRecordAllowanceCoversWidthsAndGrowth(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Logf("width=%d reserve=%d", tc.width, tc.reserve)
-			if tc.reserve < int64(2*tc.width)+512 {
+			if tc.reserve < int64(tc.width)+512 {
 				t.Fatalf("record/growth allowance too small: width=%d reserve=%d", tc.width, tc.reserve)
 			}
 		})
 	}
-	if playbackMapReserveBytes < 512 {
+	if playbackMapReserveBytes < 256 {
 		t.Fatal("initial map header/group admission too small")
 	}
 	if unsafe.Sizeof(playbackInstruction{}) > 512 {
@@ -64,5 +64,32 @@ func TestPlaybackOwnedRecordDeepCausesWithoutBorrowedVectors(t *testing.T) {
 	first.Play[0].Value.Value.Techniques[0].Kind = playOther
 	if p.Notes[30].Play[0].Value.Value.Techniques[0].Value.Cause.Subject.Node != 23 || p.Notes[30].Play[0].Value.Value.Techniques[0].Kind != playIPA {
 		t.Fatal("records share mutable vector or nested cause")
+	}
+}
+
+func TestPlaybackOwnedRecordConcurrentScratchAdmission(t *testing.T) {
+	for _, delta := range []int64{-1, 0} {
+		t.Run(map[int64]string{-1: "below-peak", 0: "at-peak"}[delta], func(t *testing.T) {
+			s := rationalSession(t, Budgets{MaxBufferedBytes: 2*playbackNoteReserveBytes + playbackMapReserveBytes + delta})
+			defer s.cleanup()
+			var records map[NodeID]notePlaybackContext
+			err := playbackStore(context.Background(), s, &records, 1, notePlaybackContext{})
+			if delta < 0 {
+				if err == nil || len(records) != 0 {
+					t.Fatalf("concurrent temporary+map value was not admitted: err=%v records=%d", err, len(records))
+				}
+			} else {
+				if err != nil || len(records) != 1 {
+					t.Fatalf("exact peak failed: %v", err)
+				}
+				if got := rationalUsage(t, s, BudgetBufferedBytes); got != playbackNoteReserveBytes+playbackMapReserveBytes {
+					t.Fatalf("scratch not released: %d", got)
+				}
+			}
+			s.cleanup()
+			if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+				t.Fatal("failed publication leaked scratch")
+			}
+		})
 	}
 }

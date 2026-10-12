@@ -85,27 +85,68 @@ func playbackOriginAt(s *Session, n *factNode, block timelineMeasureBlock, fact 
 	return playbackOrigin{Source: NodeRef{s.documentID, n.header.ID}, Measure: NodeRef{s.documentID, block.measure.header.ID}, Part: fact.Part, MeasureOrdinal: block.ordinal, Position: fact.Position, Staff: fact.Staff, Voice: fact.Voice, Order: n.end.Order, MeasureComplete: block.complete}
 }
 
-func playbackStore[T any](ctx context.Context, s *Session, records *map[NodeID]T, id NodeID, v T) error {
+// Only these freshly assembled record types may transfer their owned slices to
+// the map. playbackInstructions and stateReader.play admit and allocate new Play
+// and Technique backing on every call. No history/store slice is borrowed here.
+type playbackOwnedRecord interface {
+	notePlaybackContext | soundPlaybackContext | barlinePlaybackContext
+}
+
+// Large Go map values are indirect: growth copies pointers, not these records.
+// Each allowance covers the fixed value plus at least 512 bytes for key/control/
+// pointer tables and concurrent map growth. Initial header/group allocation is
+// separate. Architecture-specific width guards are in the retention tests.
+const (
+	playbackNoteReserveBytes    int64 = 1536
+	playbackSoundReserveBytes   int64 = 2560
+	playbackBarlineReserveBytes int64 = 2048
+	playbackMapReserveBytes     int64 = 256
+)
+
+func playbackStore[T playbackOwnedRecord](ctx context.Context, s *Session, records *map[NodeID]T, id NodeID, v T) error {
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
 	if _, exists := (*records)[id]; exists {
 		return contract("playback context", "duplicate publication")
 	}
-	// Charge the deep owned record and map capacity before either allocation.
-	if _, err := stateReserve(ctx, s, v); err != nil {
+	var bytes int64
+	switch any(v).(type) {
+	case notePlaybackContext:
+		bytes = playbackNoteReserveBytes
+	case soundPlaybackContext:
+		bytes = playbackSoundReserveBytes
+	case barlinePlaybackContext:
+		bytes = playbackBarlineReserveBytes
+	}
+	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
 		return err
 	}
-	if err := s.retain(256); err != nil {
+	// ownOrigin's bounded reflected temporary can coexist with the indirect map
+	// value. Account that logical peak separately and release it on every exit;
+	// this is not a claim about compiler allocation scheduling or process RSS.
+	if err := s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, bytes) }()
+	if err := s.retain(bytes); err != nil {
 		return err
 	}
 	if *records == nil {
-		if err := s.retain(256); err != nil {
+		if err := s.retain(playbackMapReserveBytes); err != nil {
 			return err
 		}
+	}
+	// Immutable numerics/strings and the already-admitted uniquely owned vectors
+	// need no duplicate retention or clone. Copy every mutable cause independently
+	// before publication; cancellation/quota failure never publishes a partial row.
+	if err := ownOrigin(ctx, s, &v); err != nil {
+		return err
+	}
+	if *records == nil {
 		*records = make(map[NodeID]T)
 	}
-	(*records)[id] = stateClone(v)
+	(*records)[id] = v
 	return nil
 }
 
