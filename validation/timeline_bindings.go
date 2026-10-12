@@ -199,6 +199,25 @@ const (
 	timelineRoleKeyPrintObject
 	timelineRoleTimePrintObject
 	timelineRoleClefPrintObject
+	timelineRoleBarline
+	timelineRoleBarlineLocation
+	timelineRoleBarlineSegno
+	timelineRoleBarlineCoda
+	timelineRoleBarlineDivisions
+	timelineRoleBarlineSegnoElement
+	timelineRoleBarlineCodaElement
+	timelineRoleSoundSegno
+	timelineRoleSoundCoda
+	timelineRoleSoundDacapo
+	timelineRoleSoundDalsegno
+	timelineRoleSoundTocoda
+	timelineRoleSoundForwardRepeat
+	timelineRoleSoundFine
+	timelineRoleSoundTimeOnly
+	timelineRoleNotePizzicato
+	timelineRoleNoteDynamics
+	timelineRoleNoteEndDynamics
+	timelineRoleNoteTimeOnly
 	timelineRoleLimit
 )
 
@@ -228,6 +247,24 @@ var timelineRoleShapes = [...]timelineRoleShape{
 	{timelineRoleKeyPrintObject, "key", "print-object", "yes-no", 1, true},
 	{timelineRoleTimePrintObject, "time", "print-object", "yes-no", 1, true},
 	{timelineRoleClefPrintObject, "clef", "print-object", "yes-no", 1, true},
+	{timelineRoleBarlineLocation, "barline", "location", "right-left-middle", 1, true},
+	{timelineRoleBarlineSegno, "barline", "segno", "xs:token", 1, true},
+	{timelineRoleBarlineCoda, "barline", "coda", "xs:token", 1, true},
+	{timelineRoleBarlineDivisions, "barline", "divisions", "divisions", 1, true},
+	{timelineRoleBarlineSegnoElement, "barline", "segno", "segno", 1, false},
+	{timelineRoleBarlineCodaElement, "barline", "coda", "coda", 1, false},
+	{timelineRoleSoundSegno, "sound", "segno", "xs:token", 1, true},
+	{timelineRoleSoundCoda, "sound", "coda", "xs:token", 1, true},
+	{timelineRoleSoundDacapo, "sound", "dacapo", "yes-no", 1, true},
+	{timelineRoleSoundDalsegno, "sound", "dalsegno", "xs:token", 1, true},
+	{timelineRoleSoundTocoda, "sound", "tocoda", "xs:token", 1, true},
+	{timelineRoleSoundForwardRepeat, "sound", "forward-repeat", "yes-no", 1, true},
+	{timelineRoleSoundFine, "sound", "fine", "xs:token", 1, true},
+	{timelineRoleSoundTimeOnly, "sound", "time-only", "time-only", 1, true},
+	{timelineRoleNotePizzicato, "note", "pizzicato", "yes-no", 1, true},
+	{timelineRoleNoteDynamics, "note", "dynamics", "non-negative-decimal", 1, true},
+	{timelineRoleNoteEndDynamics, "note", "end-dynamics", "non-negative-decimal", 1, true},
+	{timelineRoleNoteTimeOnly, "note", "time-only", "time-only", 1, true},
 	{timelineRoleStaffDetailsShowFrets, "staff-details", "show-frets", "show-frets", 1, true},
 	{timelineRoleStaffDetailsPrintObject, "staff-details", "print-object", "yes-no", 1, true},
 	{timelineRoleStaffDetailsPrintSpacing, "staff-details", "print-spacing", "yes-no", 1, true},
@@ -518,7 +555,7 @@ func compileTimelineBindings(schema *CompiledSchema) (*timelineBindings, error) 
 		for _, event := range []struct {
 			role timelineRole
 			name string
-		}{{timelineRoleNote, "note"}, {timelineRoleBackup, "backup"}, {timelineRoleForward, "forward"}, {timelineRoleAttributes, "attributes"}, {timelineRoleHarmony, "harmony"}, {timelineRoleDirection, "direction"}, {timelineRoleSound, "sound"}, {timelineRoleListening, "listening"}, {timelineRoleFiguredBass, "figured-bass"}} {
+		}{{timelineRoleNote, "note"}, {timelineRoleBackup, "backup"}, {timelineRoleForward, "forward"}, {timelineRoleAttributes, "attributes"}, {timelineRoleHarmony, "harmony"}, {timelineRoleDirection, "direction"}, {timelineRoleSound, "sound"}, {timelineRoleListening, "listening"}, {timelineRoleFiguredBass, "figured-bass"}, {timelineRoleBarline, "barline"}} {
 			events, e := find(h.Content, event.name, event.name, 1, false)
 			if e != nil {
 				return nil, e
@@ -618,7 +655,7 @@ func (b *timelineBindings) size() int64 {
 // when its underlying graph has been changed to another value family.
 func timelineExpectedShape(name string) (xsd.TypeContentShape, bool) {
 	switch name {
-	case "", "attributes", "note", "backup", "forward", "direction", "harmony", "clef", "double", "empty", "for-part", "grace", "instrument", "instrument-change", "interchangeable", "key", "line-detail", "listening", "midi-instrument", "numeral", "numeral-key", "part-clef", "part-list", "part-transpose", "play", "score-instrument", "score-part", "sound", "staff-details", "staff-tuning", "swing", "time", "transpose", "virtual-instrument", "bend", "notations", "technical", "release", "figured-bass", "figure":
+	case "", "attributes", "note", "backup", "forward", "direction", "harmony", "clef", "double", "empty", "for-part", "grace", "instrument", "instrument-change", "interchangeable", "key", "line-detail", "listening", "midi-instrument", "numeral", "numeral-key", "part-clef", "part-list", "part-transpose", "play", "score-instrument", "score-part", "sound", "staff-details", "staff-tuning", "swing", "time", "transpose", "virtual-instrument", "bend", "notations", "technical", "release", "figured-bass", "figure", "barline", "segno", "coda":
 		return xsd.ShapeComplex | xsd.ShapeElements, true
 	case "cancel", "key-octave":
 		return xsd.ShapeComplex | xsd.ShapeInteger, true
@@ -634,7 +671,7 @@ func timelineExpectedShape(name string) (xsd.TypeContentShape, bool) {
 		return xsd.ShapeUnion | xsd.ShapeInteger | xsd.ShapeString, true
 	case "yes-no-number":
 		return xsd.ShapeUnion | xsd.ShapeDecimal | xsd.ShapeString, true
-	case "color", "line-type", "show-frets", "cancel-location", "clef-sign", "mode", "mute", "numeral-mode", "semi-pitched", "smufl-accidental-glyph-name", "staff-type", "step", "symbol-size", "time-relation", "time-separator", "time-symbol", "yes-no", "xs:string", "xs:token", "xs:ID", "xs:IDREF":
+	case "right-left-middle", "time-only", "color", "line-type", "show-frets", "cancel-location", "clef-sign", "mode", "mute", "numeral-mode", "semi-pitched", "smufl-accidental-glyph-name", "staff-type", "step", "symbol-size", "time-relation", "time-separator", "time-symbol", "yes-no", "xs:string", "xs:token", "xs:ID", "xs:IDREF":
 		return xsd.ShapeString, true
 	}
 	return 0, false
