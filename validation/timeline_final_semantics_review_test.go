@@ -837,3 +837,42 @@ func TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof(t *testing.T
 		t.Fatalf("restored-prefix statement lost contained carry: %+v err=%v", got, err)
 	}
 }
+
+func TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	initial := stateNode(b, timelineRoleSound, 25, stateAbsent[Atomic]())
+	stateAttribute(b, initial, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
+	changed := stateNode(b, timelineRoleAttributes, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 61, stateAtomicDecimal(t, 2, 1)))
+	backup := stateNode(b, timelineRoleBackup, 70, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 71, stateAtomicDecimal(t, 8, 1)))
+	unplaced := stateNode(b, timelineRoleSound, 80, stateAbsent[Atomic]())
+	stateAttribute(b, unplaced, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	repair := stateNode(b, timelineRoleSound, 90, stateAbsent[Atomic]())
+	stateAttribute(b, repair, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 90, 1)})
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, initial, runtimeNote(t, b, 30, 1, false), runtimeNote(t, b, 40, 1, false)), runtimeBlock(b, 1, runtimeNote(t, b, 50, 2, false), changed, backup, unplaced), runtimeBlock(b, 2, repair, runtimeNote(t, b, 100, 1, false))}
+	for _, block := range blocks {
+		if err := svc.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if got := svc.Facts[80].Position; got.State == EvidenceKnown {
+		t.Fatalf("fixture failed to gate local differing-unit rewind: %+v", got)
+	}
+	earlier, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[40].Position.Value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if earlier.Value.State != EvidenceUnsupported || earlier.Value.Reason != "divisions-rewind-placement-unresolved" {
+		t.Errorf("local unit gate silently confined a potentially earlier displaced publisher: %+v", earlier)
+	}
+	// All admitted duration/unit values are positive. The immediate post-backup
+	// publisher is before the proved departure at m1q2, so m2q0 can supersede it.
+	later, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[100].Position.Value)
+	if err != nil || later.Value.State != EvidenceKnown || later.Value.Value.String() != "90" {
+		t.Errorf("proved backup upper bound failed to preserve later unconditional repair: %+v err=%v", later, err)
+	}
+}
