@@ -25,6 +25,12 @@ func TestTimelineFinalReviewConditionalMIDIDevice(t *testing.T) {
 				t.Fatalf("missing raw record: %+v", svc.State.MIDIDevices)
 			}
 			raw := svc.State.MIDIDevices[0]
+			if conditional && (raw.TimeOnly == nil || raw.TimeOnly.State != EvidenceKnown || raw.TimeOnly.Value != "2") {
+				t.Fatalf("lost raw device repeat condition: %+v", raw.TimeOnly)
+			}
+			if !conditional && raw.TimeOnly != nil {
+				t.Fatalf("invented device repeat condition: %+v", raw.TimeOnly)
+			}
 			if raw.Value.State != EvidenceKnown || raw.Value.Value.Name.Value != "second-pass-device" {
 				t.Fatalf("lost raw value: %+v", raw)
 			}
@@ -148,8 +154,24 @@ func TestTimelineFinalReviewConditionalInstrumentProperties(t *testing.T) {
 				if len(h.MIDI) != 3 || h.MIDI[0].Value.Value.Program.State != EvidenceKnown || h.MIDI[0].Value.Value.Program.Value.String() != "74" {
 					t.Errorf("raw MIDI lost: %+v", h.MIDI)
 				}
-				if len(h.InstrumentChanges) != 1 || h.InstrumentChanges[0].History.Publications[0].Value.Value.Sound.State != EvidenceKnown {
-					t.Log("Raw instrument publication was separated from effective history; verify retained condition and raw properties in its own container")
+				if len(h.InstrumentChanges) != 1 || h.InstrumentChanges[0].History.Publications[0].Value.Value.Sound.State != EvidenceKnown || h.InstrumentChanges[0].History.Publications[0].Value.Value.Sound.Value != "conditional-patch" {
+					t.Fatalf("lost raw instrument sound: %+v", h.InstrumentChanges)
+				}
+				for label, rawCondition := range map[string]*Evidence[string]{"instrument": h.InstrumentChanges[0].History.Publications[0].TimeOnly, "midi": h.MIDI[0].TimeOnly} {
+					switch condition {
+					case "":
+						if rawCondition != nil {
+							t.Errorf("%s invented raw condition: %+v", label, rawCondition)
+						}
+					case "2":
+						if rawCondition == nil || rawCondition.State != EvidenceKnown || rawCondition.Value != "2" {
+							t.Errorf("%s lost raw condition: %+v", label, rawCondition)
+						}
+					default:
+						if rawCondition == nil || rawCondition.State != EvidenceInvalid || rawCondition.Cause == nil || rawCondition.Cause.Rule.ID != "xsd.attributes" {
+							t.Errorf("%s lost raw invalid condition: %+v", label, rawCondition)
+						}
+					}
 				}
 				at.Offset = mustRational(t, 3, 1)
 				instrument, err = h.effectiveInstrumentStatements(ctx, s, at, id)
