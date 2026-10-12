@@ -56,3 +56,29 @@ func TestTimelineExcursionStageFallbackReferenceWork(t *testing.T) {
 		})
 	}
 }
+
+func TestTimelineExcursionIndependentPriorBoundProvesUnitRepair(t *testing.T) {
+	ctx := context.Background()
+	s, v, b := runtimeFixture(t)
+	attrs := func(id NodeID, d int64) *factNode {
+		return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, stateAtomicDecimal(t, d, 1)))
+	}
+	witness := stateNode(b, timelineRoleAttributes, 60, stateAbsent[Atomic]())
+	backup := stateNode(b, timelineRoleBackup, 70, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 71, stateAtomicDecimal(t, 4, 1)))
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, 1), runtimeNote(t, b, 30, 2, false), attrs(40, 2), runtimeNote(t, b, 50, 6, false), witness), runtimeBlock(b, 1, backup, runtimeNote(t, b, 80, 2, false))}
+	for _, block := range blocks {
+		if err := v.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := v.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	movement, note := v.Facts[70], v.Facts[80]
+	if movement.Duration.State != EvidenceKnown || movement.Duration.Value.String() != "2" || note.Position.State != EvidenceKnown || note.Position.Value.Offset.String() != "-2" {
+		t.Fatalf("independent bound5 failed to prove landing after repaired D2 region: movement=%+v note=%+v", movement, note)
+	}
+	if !note.Position.Value.UnprovedFrame {
+		t.Fatal("exact repaired units incorrectly certified new-frame containment")
+	}
+}
