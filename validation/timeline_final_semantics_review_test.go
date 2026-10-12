@@ -297,3 +297,33 @@ func TestTimelineFinalReviewKnownPositionInvalidInstrumentTargetIsLocal(t *testi
 		})
 	}
 }
+
+// A signed position remains an exact measure-relative fact. With no established
+// inter-measure duration, a negative next-measure sound can occur on either side
+// of an earlier measure's q=1 query. Ordinal order alone is not chronological
+// evidence for continuing-state selection across those frames.
+func TestTimelineFinalReviewCrossMeasureOffsetCannotClaimKnownChronology(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	initial := stateNode(b, timelineRoleSound, 30, stateAbsent[Atomic]())
+	stateAttribute(b, initial, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
+	shifted := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundOffset, 41, stateAtomicDecimal(t, -1, 1)))
+	stateAttribute(b, shifted, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	first, second := runtimeBlock(b, 0, attrs, initial, runtimeNote(t, b, 50, 1, false)), runtimeBlock(b, 1, shifted)
+	for _, block := range []timelineMeasureBlock{first, second} {
+		if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := svc.Facts[40].Position; got.State != EvidenceKnown || got.Value.Offset.String() != "-1" || got.Value.MeasureOrdinal != 1 {
+		t.Fatalf("lost exact local coordinate: %+v", got)
+	}
+	query := svc.Facts[50].End.Value
+	got, err := svc.Playback.effectiveTempo(context.Background(), s, &svc.State, query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Value.State == EvidenceKnown {
+		t.Fatalf("ordinal order fabricated cross-frame chronology without measure span: %+v", got)
+	}
+}
