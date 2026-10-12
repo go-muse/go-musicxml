@@ -435,13 +435,13 @@ func (h *timelineState) readAttributes(ctx context.Context, s *Session, b *timel
 // cannot erase divisions, and an unrelated unavailable duration is not itself an
 // attribute publisher. Unknown exact declarations are narrowed by known exact
 // declared type when available; no local-name recovery is used.
-func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timelineBindings, n *factNode, part NodeRef, measureOrdinal uint64, position Evidence[musicalPosition]) error {
+func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timelineBindings, n *factNode, part NodeRef, measureOrdinal uint64, position Evidence[musicalPosition], placement ...stateGapPlacement) error {
 	if position.State == EvidenceKnown || position.State == EvidenceAbsent {
 		return contract("timeline attribute gap", "unavailable position evidence required")
 	}
 	r := &stateReader{ctx: ctx, s: s, b: b}
 	complete := r.enumerated(n)
-	generic := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](position)}
+	generic := stateGap{Placement: timelineGapPlacement(placement), Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](position)}
 	if complete.State != EvidenceKnown {
 		generic.Availability = stateMergeGap(generic.Availability, complete)
 	}
@@ -585,8 +585,8 @@ func (h *timelineState) attributePotentialGap(r *stateReader, n *factNode, p mus
 
 // gapAll is reserved for a genuinely unobserved music-data publisher. Known
 // note duration failure alone does not authorize this broad history gap.
-func (h *timelineState) gapAttributeFamilies(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
-	g := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+func (h *timelineState) gapAttributeFamilies(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition], placement ...stateGapPlacement) error {
+	g := stateGap{Placement: timelineGapPlacement(placement), Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
 	if e := addStateGap(ctx, s, &h.StaffDetails, g); e != nil {
 		return e
 	}
@@ -623,19 +623,28 @@ func (h *timelineState) gapAttributeFamilies(ctx context.Context, s *Session, pa
 	return nil
 }
 
-func (h *timelineState) gapAll(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
-	if err := h.gapAttributeFamilies(ctx, s, part, measureOrdinal, availability); err != nil {
+func (h *timelineState) gapAll(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition], placement ...stateGapPlacement) error {
+	if err := h.gapAttributeFamilies(ctx, s, part, measureOrdinal, availability, placement...); err != nil {
 		return err
 	}
-	return h.gapInstrumentPublisher(ctx, s, part, measureOrdinal, availability)
+	return h.gapInstrumentPublisher(ctx, s, part, measureOrdinal, availability, placement...)
 }
 
-func (h *timelineState) gapInstrumentPublisher(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition]) error {
-	g := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+func (h *timelineState) gapInstrumentPublisher(ctx context.Context, s *Session, part NodeRef, measureOrdinal uint64, availability Evidence[musicalPosition], placement ...stateGapPlacement) error {
+	g := stateGap{Placement: timelineGapPlacement(placement), Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
 
 	if _, e := stateReserve(ctx, s, g); e != nil {
 		return e
 	}
 	h.InstrumentGaps = append(h.InstrumentGaps, stateClone(g))
 	return h.gapMIDIStatements(ctx, s, g)
+}
+
+// Omitted placement retains the established confined-history contract. A caller
+// with a displaced unavailable origin must carry its independent bounds instead.
+func timelineGapPlacement(placement []stateGapPlacement) stateGapPlacement {
+	if len(placement) != 0 {
+		return placement[0]
+	}
+	return stateGapPlacement{}
 }
