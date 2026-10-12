@@ -76,7 +76,11 @@ func TestTimelineRuntimePublishesNoteAndFiguredBassOrigins(t *testing.T) {
 	note := runtimeNote(t, b, 30, 4, false)
 	stateAttribute(b, note, timelineRoleNoteAttack, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, -1, 1)})
 	stateAttribute(b, note, timelineRoleNoteRelease, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 1, 1)})
-	if err := svc.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, attrs, figure, note)); err != nil {
+	block := runtimeBlock(b, 0, attrs, figure, note)
+	if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.finalizeTimingOrigins(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
 		t.Fatal(err)
 	}
 	origin, ok := svc.NoteOrigins[30]
@@ -104,7 +108,11 @@ func TestTimelineRuntimePublishesPlaybackAndFigureUnits(t *testing.T) {
 	figure := stateNode(b, timelineRoleFiguredBass, 25, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassDuration, 26, stateAtomicDecimal(t, 1, 1)))
 	note := runtimeNote(t, b, 30, 4, false)
 	barline := stateNode(b, timelineRoleBarline, 40, stateAbsent[Atomic]())
-	if err := svc.readMeasure(ctx, s, b, runtimeBlock(b, 0, attrs, sound, figure, note, barline)); err != nil {
+	block := runtimeBlock(b, 0, attrs, sound, figure, note, barline)
+	if err := svc.readMeasure(ctx, s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.finalizeTimingOrigins(ctx, s, b, []timelineMeasureBlock{block}); err != nil {
 		t.Fatal(err)
 	}
 	bass := svc.FiguredBassOrigins[25]
