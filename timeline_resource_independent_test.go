@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 	"sync"
 	"testing"
@@ -221,5 +222,22 @@ func TestIndependentTimelineManyAttributesDefaultClassification(t *testing.T) {
 		} else if !r.Satisfied() {
 			t.Fatalf("unexpected verdict: %s", localFindings(r))
 		}
+	}
+}
+
+func TestIndependentTimelineSourceHugeExactStaffIsSparse(t *testing.T) {
+	// Larger than every host integer. Source validation must neither narrow it nor
+	// allocate a staff-count-sized container; explicit exact identity is enough.
+	huge := new(big.Int).Lsh(big.NewInt(1), 8192).String()
+	body := `<attributes><divisions>3</divisions><key number="` + huge + `"><fifths>0</fifths></key><staves>` + huge + `</staves></attributes>` + timelineNumeral("", `<staff>`+huge+`</staff>`)
+	source := (localFixture{body: body}).xml()
+	r, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceTimeline})
+	if err != nil || !r.Satisfied() {
+		t.Fatalf("large exact staff was enumerated/narrowed: %v %s", err, localFindings(r))
+	}
+	body = `<attributes><divisions>3</divisions><key number="` + huge + `"><fifths>0</fifths></key><staves>` + huge + `</staves></attributes>` + timelineNumeral("", "")
+	r, err = InspectXML(context.Background(), strings.NewReader((localFixture{body: body}).xml()), AssessmentOptions{Profile: ProfileSourceTimeline})
+	if err != nil || r.Conformance == validation.ConformanceViolated || r.AssessmentComplete || r.Satisfied() {
+		t.Fatalf("unresolved implicit staff became an invented result: %v %s", err, localFindings(r))
 	}
 }
