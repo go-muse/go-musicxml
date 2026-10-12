@@ -377,3 +377,74 @@ func TestIndependentTimelineRejectsBeforeLargePayloadClone(t *testing.T) {
 		t.Fatal("large input traversal/string-copy work not metered")
 	}
 }
+
+func independentOriginFixture(t *testing.T, budget Budgets) (*Session, *timelineService, *timelineBindings, timelineEventFact) {
+	t.Helper()
+	s := rationalSession(t, budget)
+	s.documentID = "d"
+	t.Cleanup(s.cleanup)
+	b := stateBindings()
+	service := &timelineService{Facts: map[NodeID]timelineEventFact{}}
+	fact := timelineEventFact{Part: stateKnown(NodeRef{"d", 1}), Position: stateKnown(statePosition(t, 0, 0, 1)), End: stateKnown(statePosition(t, 0, 1, 3)), Duration: stateKnown(mustRational(t, 1, 3)), Staff: stateAbsent[Integer](), Voice: stateAbsent[string]()}
+	return s, service, b, fact
+}
+
+func TestIndependentTimelineOriginContextQuota(t *testing.T) {
+	t.Run("note", func(t *testing.T) {
+		s, service, b, fact := independentOriginFixture(t, Budgets{MaxContextFacts: 1})
+		if err := service.readNoteOrigins(context.Background(), s, b, runtimeNote(t, b, 100, 1, false), fact, stateKnown(stateDecimal(t, 3, 1))); err != nil {
+			t.Fatal(err)
+		}
+		err := service.readNoteOrigins(context.Background(), s, b, runtimeNote(t, b, 200, 1, false), fact, stateKnown(stateDecimal(t, 3, 1)))
+		if !errors.Is(err, ErrResourceLimit) || !errors.Is(err, ErrIncompleteAssessment) || len(service.NoteOrigins) != 1 || rationalUsage(t, s, BudgetContextFacts) != 1 {
+			t.Fatalf("note context quota bypass: err=%v entries=%d context=%d", err, len(service.NoteOrigins), rationalUsage(t, s, BudgetContextFacts))
+		}
+	})
+	t.Run("figured-bass", func(t *testing.T) {
+		s, service, b, fact := independentOriginFixture(t, Budgets{MaxContextFacts: 1})
+		first := stateNode(b, timelineRoleFiguredBass, 100, stateAbsent[Atomic]())
+		second := stateNode(b, timelineRoleFiguredBass, 200, stateAbsent[Atomic]())
+		note := runtimeNote(t, b, 300, 1, false)
+		service.Facts[100], service.Facts[200], service.Facts[300] = fact, fact, fact
+		err := service.resolveFiguredBassOrigins(context.Background(), s, b, runtimeBlock(b, 0, first, second, note))
+		if !errors.Is(err, ErrResourceLimit) || !errors.Is(err, ErrIncompleteAssessment) || len(service.FiguredBassOrigins) != 1 || rationalUsage(t, s, BudgetContextFacts) != 1 {
+			t.Fatalf("figured bass quota bypass: err=%v entries=%d context=%d", err, len(service.FiguredBassOrigins), rationalUsage(t, s, BudgetContextFacts))
+		}
+	})
+}
+
+func TestIndependentTimelineOriginCausalOwnership(t *testing.T) {
+	t.Run("note", func(t *testing.T) {
+		s, service, b, fact := independentOriginFixture(t, Budgets{})
+		cause := &DecisionRef{Rule: RuleKey{ID: "fact-input", Revision: 1}, Subject: NodeRef{"d", 77}}
+		unitsCause := &DecisionRef{Rule: RuleKey{ID: "units-input", Revision: 1}, Subject: NodeRef{"d", 78}}
+		fact.Part = Evidence[NodeRef]{State: EvidenceInvalid, Reason: "bad-part", Cause: cause}
+		fact.Position = Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "bad-onset", Cause: cause}
+		if err := service.readNoteOrigins(context.Background(), s, b, runtimeNote(t, b, 100, 1, false), fact, Evidence[Decimal]{State: EvidenceInvalid, Reason: "bad-units", Cause: unitsCause}); err != nil {
+			t.Fatal(err)
+		}
+		cause.Subject.Node = 999
+		unitsCause.Subject.Node = 888
+		got := service.NoteOrigins[100]
+		if got.Part.Cause == nil || got.Part.Cause.Subject.Node != 77 || got.ScoreOnset.Cause == nil || got.ScoreOnset.Cause.Subject.Node != 77 || got.Attack.Units.Cause == nil || got.Attack.Units.Cause.Subject.Node != 78 {
+			t.Fatalf("note retained borrowed cause: part=%+v onset=%+v units=%+v", got.Part.Cause, got.ScoreOnset.Cause, got.Attack.Units.Cause)
+		}
+	})
+	t.Run("figured-bass", func(t *testing.T) {
+		s, service, b, fact := independentOriginFixture(t, Budgets{})
+		cause := &DecisionRef{Rule: RuleKey{ID: "fact-input", Revision: 1}, Subject: NodeRef{"d", 77}}
+		fact.Part = Evidence[NodeRef]{State: EvidenceInvalid, Reason: "bad-part", Cause: cause}
+		figure := stateNode(b, timelineRoleFiguredBass, 100, stateAbsent[Atomic]())
+		service.Facts[100] = fact
+		block := runtimeBlock(b, 0, figure)
+		block.complete = Evidence[bool]{State: EvidenceInvalid, Reason: "bad-measure", Cause: cause}
+		if err := service.resolveFiguredBassOrigins(context.Background(), s, b, block); err != nil {
+			t.Fatal(err)
+		}
+		cause.Subject.Node = 999
+		got := service.FiguredBassOrigins[100]
+		if got.Part.Cause == nil || got.Part.Cause.Subject.Node != 77 || got.Anchor.Cause == nil || got.Anchor.Cause.Subject.Node != 77 || got.Position.Cause == nil || got.Position.Cause.Subject.Node != 77 {
+			t.Fatalf("figured bass retained borrowed cause: part=%+v anchor=%+v position=%+v", got.Part.Cause, got.Anchor.Cause, got.Position.Cause)
+		}
+	})
+}
