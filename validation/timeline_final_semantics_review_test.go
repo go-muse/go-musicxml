@@ -191,3 +191,37 @@ func TestTimelineFinalReviewLaterFigureGapKeepsEarlierChain(t *testing.T) {
 		t.Fatalf("later unrelated anchor gap erased proved prefix chain: %+v", early)
 	}
 }
+
+func TestTimelineFinalReviewLaterVoiceGapKeepsEarlierGraceDonors(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	voiced := func(id NodeID, duration int64) *factNode {
+		n := runtimeNote(t, b, id, duration, false)
+		n.children = append(n.children, stateNode(b, timelineRoleNoteVoice, id+3, stateAtomicText("one")))
+		return n
+	}
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	grace := stateNode(b, timelineRoleNoteGrace, 41, stateAbsent[Atomic]())
+	stateAttribute(b, grace, timelineRoleGraceStealPrevious, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 25, 1)})
+	stateAttribute(b, grace, timelineRoleGraceStealFollowing, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 25, 1)})
+	note := stateNode(b, timelineRoleNote, 40, stateAbsent[Atomic](), grace, stateNode(b, timelineRoleNoteVoice, 43, stateAtomicText("one")))
+	first := runtimeBlock(b, 0, attrs, voiced(30, 1), note, voiced(50, 1))
+	bad := voiced(60, 1)
+	cause := &DecisionRef{Rule: RuleKey{"later-voice-scalar", 1}, Subject: NodeRef{"d", 63}}
+	bad.children[1].end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "later-invalid-voice", Cause: cause}
+	second := runtimeBlock(b, 1, bad)
+	for _, block := range []timelineMeasureBlock{first, second} {
+		if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(context.Background(), s, b, []timelineMeasureBlock{first, second}); err != nil {
+		t.Fatal(err)
+	}
+	got := svc.GraceNeighbors[40]
+	if got.Previous.Note.State != EvidenceKnown || got.Previous.Note.Value.Node != 30 || got.Following.Note.State != EvidenceKnown || got.Following.Note.Value.Node != 50 {
+		t.Fatalf("later-measure voice gap erased earlier closed donors: %+v", got)
+	}
+	if got.Previous.StolenDuration.State != EvidenceKnown || got.Previous.StolenDuration.Value.String() != "1/4" || got.Following.StolenDuration.State != EvidenceKnown || got.Following.StolenDuration.Value.String() != "1/4" {
+		t.Fatalf("earlier exact stolen amounts lost: %+v", got)
+	}
+}
