@@ -44,8 +44,10 @@ The provider therefore retains separately:
    complete canonical part/measure domains. Equal-position competing notes are
    unresolved; lexical order is not a tie-break.
 2. Raw optional duration, finalized cursor and anchor divisions, selected units,
-   normalized duration and independent anchor-relative end. Only known-equal
-   cursor/anchor units normalize. Absent duration does not inherit note duration.
+   normalized duration and independent anchor-relative end. Duration uses the
+   finalized units at the documented anchor position. Cursor units are retained
+   as provenance, not an equality gate. Absent duration does not inherit note
+   duration.
 3. For a proved consecutive shared-anchor group, its group start and cumulative
    exact chain onset/end with the explicit interpretation label
    `consecutive-figured-bass-duration-chain`. These do not replace anchor facts.
@@ -53,9 +55,22 @@ The provider therefore retains separately:
 Musical-order divisions must be finalized before these calculations; an earlier
 lexical register is insufficient when a later serialized attributes record is
 at the same score position. A missing prior duration cannot invent a chain step.
-Different cursor/anchor units and interleaved/nonconsecutive group membership
-remain exact local source-dependent boundaries. End coordinates stay in the
-established anchor measure frame; no guessed measure-length wrapping is added.
+Interleaved/nonconsecutive group membership remains a local reconstruction
+boundary. End coordinates stay in the established anchor measure frame; no
+measure-length wrapping is guessed. Chain positions are derived sums of the
+established anchor-based durations, not a second unit-origin interpretation or
+a fully rendered schedule. A later divisions value at a derived chain position
+does not rewrite the element's documented anchor-based duration.
+
+The duration unit origin follows directly from three published clauses: the
+figure takes its score position from the following regular note; duration is in
+divisions; and [attributes changes apply in score order](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/attributes/).
+Consequently different or missing cursor units do not block a known anchor-unit
+duration. Missing or unavailable anchor units retain their own causal evidence.
+`TestFiguredBassDurationUsesFinalizedAnchorUnits` covers differing known units,
+missing cursor units, invalid anchor units and omitted duration.
+`TestFiguredBassUnavailableAnchorCauseAndRawAbsence` separately checks an
+unavailable anchor identity without inventing duration from raw absence.
 
 ## Clarification evidence and limits
 
