@@ -225,3 +225,53 @@ func TestTimelineFinalReviewLaterVoiceGapKeepsEarlierGraceDonors(t *testing.T) {
 		t.Fatalf("earlier exact stolen amounts lost: %+v", got)
 	}
 }
+
+func TestTimelineFinalReviewKnownPositionInvalidInstrumentTargetIsLocal(t *testing.T) {
+	ctx := context.Background()
+	for _, target := range []Target{TargetSource, TargetModel} {
+		t.Run(string(target), func(t *testing.T) {
+			scalar := func(name, text string) *localTree { return &localTree{name: name, text: text} }
+			first := lt("sound", la("instrument-change", "I1", scalar("instrument-sound", "first")), la("midi-instrument", "I1", scalar("midi-program", "74")))
+			invalid := lt("sound", la("instrument-change", "MISSING", scalar("instrument-sound", "bad-target")), la("midi-instrument", "MISSING", scalar("midi-program", "2")))
+			repair := lt("sound", la("instrument-change", "I1", scalar("instrument-sound", "repaired")), la("midi-instrument", "I1", scalar("midi-program", "41")))
+			s, h, b, sounds, pos, id := finalReviewInstrumentFixture(t, target, first, invalid, repair)
+			for i, n := range sounds {
+				at := pos
+				at.Offset = mustRational(t, int64(i*2), 1)
+				if err := h.readInstrumentChanges(ctx, s, b, n, at); err != nil {
+					t.Fatal(err)
+				}
+			}
+			for _, q := range []int64{1, 3, 5} {
+				at := pos
+				at.Offset = mustRational(t, q, 1)
+				instrument, err := h.effectiveInstrumentStatements(ctx, s, at, id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				midi, err := h.effectiveMIDIStatements(ctx, s, at, id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if q == 3 {
+					for label, v := range map[string]Evidence[bool]{"instrument": stateUnavailable[string, bool](instrument.Sound.Value), "midi": stateUnavailable[Integer, bool](midi.Program.Value)} {
+						if v.State != EvidenceInvalid || v.Cause == nil || v.Cause.Rule.ID != "xsd.identity" {
+							t.Errorf("%s lost unresolved-target cause: %+v", label, v)
+						}
+					}
+				} else {
+					sound, program := "first", "74"
+					if q == 5 {
+						sound, program = "repaired", "41"
+					}
+					if instrument.Sound.Value.State != EvidenceKnown || instrument.Sound.Value.Value != sound || midi.Program.Value.State != EvidenceKnown || midi.Program.Value.Value.String() != program {
+						t.Errorf("q%d known-position bad target erased independent prefix/repair: instrument=%+v midi=%+v", q, instrument.Sound, midi.Program)
+					}
+				}
+				if instrument.Performance.Value.State != EvidenceAbsent || instrument.Virtual.Value.State != EvidenceAbsent || midi.Pan.Value.State != EvidenceAbsent {
+					t.Errorf("q%d unrelated omitted fields poisoned: instrument=%+v midi pan=%+v", q, instrument, midi.Pan)
+				}
+			}
+		})
+	}
+}
