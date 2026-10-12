@@ -83,3 +83,22 @@ func TestTimelineFinalReviewDisplacedKeySchemaControls(t *testing.T) {
 		})
 	}
 }
+
+// An independently valid key update can change which key is effective, but it
+// cannot remove encoded key presence. This projection has a definite baseline;
+// the no-baseline case above must still remain unavailable.
+func TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence(t *testing.T) {
+	for _, form := range []string{"partwise", "timewise"} {
+		t.Run(form, func(t *testing.T) {
+			first := `<attributes><divisions>1</divisions><key><fifths>0</fifths></key></attributes>` + timelineNote("1", "", "")
+			second := timelineNote("2", "", "") + timelineNumeral("", "") + `<attributes><divisions>2</divisions></attributes><backup><duration>8</duration></backup><attributes><key><fifths>3</fifths></key></attributes>`
+			source := semanticQAScore(form, [][2]string{{first, ""}, {second, ""}})
+			assessTimelineBoth(t, source, func(t *testing.T, report validation.Report) {
+				semanticQAExpect(t, report, "MX40-TIMELINE-numeral-requires-key", "", 0)
+				if !report.Satisfied() {
+					t.Fatalf("position-only uncertainty erased invariant valid key presence: %s", localFindings(report))
+				}
+			})
+		})
+	}
+}

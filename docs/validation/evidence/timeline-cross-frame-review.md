@@ -220,6 +220,29 @@ within-frame membership. Only the selected sound displacement matters: an
 ignored visual direction offset (`sound=no` by default), or a parent offset
 replaced by an own sound offset, must not manufacture a displaced sound gap.
 
+## Position uncertainty and invariant presence
+
+The [attributes clause](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/attributes/)
+makes changed attributes effective in score order. The
+[key clause](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/key/)
+defines traditional/nontraditional key signatures and the all-staves default;
+the [numeral clause](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/numeral/)
+requires an encoded key or numeral-key. These clauses support a narrow projection
+proof: a definitely applicable valid key baseline, together with only
+independently valid potentially replacing keys for that scope, establishes
+encoded-key presence regardless of those replacements' unavailable positions.
+Different fifths or a different valid key form can change the effective key
+without removing its encoded presence. This is the same boolean consensus that
+applies when candidate positions are exact but their cross-frame order is not.
+
+This proof does not choose the effective key value or invent unique provenance.
+It requires a definite baseline, complete publisher coverage, and independently
+established key/scope validity. Without a baseline, absence remains possible.
+An invalid, hidden, or unknown-scope possible publisher must retain its own
+causal evidence. The public source/model regression
+`TestTimelineFinalReviewUnplacedValidKeyPreservesEstablishedPresence` distinguishes
+this positive case from the no-baseline unavailable-key regression.
+
 ## Evidence still required for acceptance
 
 The RED test establishes the missing chronology gate. A fix needs explicit
