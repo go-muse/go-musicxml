@@ -497,3 +497,60 @@ func TestTimelineFinalReviewFloatingDeviceIncludesInitialBaseline(t *testing.T) 
 		})
 	}
 }
+
+func TestTimelineFinalReviewConditionalPlaybackCannotRepairPriorGap(t *testing.T) {
+	for _, tc := range []struct {
+		name                     string
+		conditional, priorRepair bool
+	}{
+		{"conditional-retains-causal-gap", true, false},
+		{"unconditional-repairs-gap", false, false},
+		{"prior-unconditional-repair-is-not-resurrected", true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+			events := []*factNode{attrs, runtimeNote(t, b, 30, 3, false)}
+			if tc.priorRepair {
+				repair := stateNode(b, timelineRoleSound, 35, stateAbsent[Atomic]())
+				stateAttribute(b, repair, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 80, 1)})
+				events = append(events, repair)
+			}
+			sound := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic]())
+			stateAttribute(b, sound, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+			if tc.conditional {
+				stateAttribute(b, sound, timelineRoleSoundTimeOnly, Atomic{Kind: AtomicString, Text: "2"})
+			}
+			events = append(events, runtimeNote(t, b, 36, 1, false), sound, runtimeNote(t, b, 50, 1, false), runtimeNote(t, b, 60, 1, false))
+			block := runtimeBlock(b, 0, events...)
+			if err := svc.readMeasure(ctx, s, b, block); err != nil {
+				t.Fatal(err)
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, []timelineMeasureBlock{block}); err != nil {
+				t.Fatal(err)
+			}
+			gapAt := svc.Facts[40].Position.Value
+			gapAt.Offset = mustRational(t, 2, 1)
+			cause := &DecisionRef{Rule: RuleKey{"review-invalid-tempo", 1}, Subject: NodeRef{"d", 90}}
+			if err := addStateGap(ctx, s, &svc.Playback.Tempo, stateGap{Position: &gapAt, Part: gapAt.Part, Scope: stateScope{AllStaves: true}, Availability: Evidence[bool]{State: EvidenceInvalid, Reason: "invalid-tempo-publisher", Cause: cause}}); err != nil {
+				t.Fatal(err)
+			}
+			got, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[60].Position.Value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if tc.conditional && !tc.priorRepair {
+				if got.Value.State != EvidenceInvalid || got.Value.Cause == nil || *got.Value.Cause != *cause {
+					t.Fatalf("conditional playback publication erased unrepaired actual cause: %+v", got)
+				}
+			} else if tc.conditional {
+				if got.Value.State != EvidenceUnknown || got.Value.Cause != nil {
+					t.Fatalf("conditional update resurrected previously repaired invalid gap: %+v", got)
+				}
+			} else if got.Value.State != EvidenceKnown || got.Value.Value.String() != "120" {
+				t.Fatalf("unconditional control failed to repair: %+v", got)
+			}
+		})
+	}
+}
