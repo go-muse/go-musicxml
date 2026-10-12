@@ -140,6 +140,12 @@ func evaluateBendReleaseSign(ctx context.Context, s *Session, n *factNode, p *co
 	if proof.Satisfied.State == EvidenceKnown && proof.Satisfied.Value {
 		return Decision{Outcome: OutcomePass}, false, nil
 	}
+	// A malformed consequent is independently causal even when association is
+	// unavailable, including when both axes are Invalid. Proven exclusion and
+	// sufficient truth still take precedence; otherwise the consequent wins.
+	if proof.Satisfied.State == EvidenceInvalid {
+		return localGap(proof.Satisfied), false, nil
+	}
 	if proof.Applicable.State != EvidenceKnown {
 		return localGap(proof.Applicable), false, nil
 	}

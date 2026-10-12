@@ -123,9 +123,9 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 		if app.State == EvidenceKnown && app.Value {
 			parent := s.nodes[n.header.Parent]
 			var subject *factNode
-			complete := r.complete(parent)
-			if complete.State != EvidenceKnown {
-				app = complete
+			complete := stateUnknown[bool]("harmony-parent-unavailable")
+			if parent != nil {
+				complete = r.complete(parent)
 			}
 			if parent != nil && complete.State == EvidenceKnown {
 				for _, ch := range parent.children {

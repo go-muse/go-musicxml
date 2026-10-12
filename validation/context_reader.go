@@ -69,15 +69,22 @@ func (r *contextReader) roles(n *factNode) []contextRole {
 		if !ready {
 			// Manually assembled private test bindings lack the compiled index.
 			// Keep the compatibility fallback bounded and cached by declaration.
+			var scratch int64
+			defer func() {
+				if scratch != 0 {
+					_ = r.s.account.Release(BudgetBufferedBytes, scratch)
+				}
+			}()
 			if r.b.Elements != nil {
 				for role, declarations := range r.b.Elements {
 					if !r.step(1 + int64(len(role)) + contextDeclarationBytes(d)) {
 						return nil
 					}
 					if _, ok := declarations[d]; ok {
-						if r.err = r.s.retain(64); r.err != nil {
+						if r.err = r.s.account.Charge(BudgetBufferedBytes, 64); r.err != nil {
 							return nil
 						}
+						scratch += 64
 						roles = append(roles, role)
 					}
 				}
@@ -91,9 +98,10 @@ func (r *contextReader) roles(n *factNode) []contextRole {
 							return nil
 						}
 						if !u.Attribute && r.sameDeclaration(d, u.Declaration) {
-							if r.err = r.s.retain(64); r.err != nil {
+							if r.err = r.s.account.Charge(BudgetBufferedBytes, 64); r.err != nil {
 								return nil
 							}
+							scratch += 64
 							roles = append(roles, role)
 							break
 						}
@@ -113,6 +121,10 @@ func (r *contextReader) roles(n *factNode) []contextRole {
 				r.elementCache = make(map[DeclarationID][]contextRole)
 			}
 			r.elementCache[d] = roles
+			// Transfer the already admitted backing storage to the cache without
+			// charging it twice or releasing the borrowed immutable result.
+			r.s.retained += scratch
+			scratch = 0
 		}
 	}
 	for _, role := range roles {
@@ -350,9 +362,15 @@ func (r *contextReader) ownerTable(owner ComponentID) *contextAttributeTable {
 	if !r.step(1) {
 		return nil
 	}
-	if r.err = r.s.retain(512 + int64(count)*256); r.err != nil {
+	scratch := 512 + int64(count)*256
+	if r.err = r.s.account.Charge(BudgetBufferedBytes, scratch); r.err != nil {
 		return nil
 	}
+	defer func() {
+		if scratch != 0 {
+			_ = r.s.account.Release(BudgetBufferedBytes, scratch)
+		}
+	}()
 	table := &contextAttributeTable{selectors: make(map[contextRole]AttributeSelector, count), roles: make([]contextRole, 0, count)}
 	for role, owners := range r.b.Attributes {
 		if !r.step(1 + int64(len(role)) + contextComponentBytes(owner)) {
@@ -373,6 +391,9 @@ func (r *contextReader) ownerTable(owner ComponentID) *contextAttributeTable {
 		r.ownerCache = make(map[ComponentID]*contextAttributeTable)
 	}
 	r.ownerCache[owner] = table
+	// All fallible work is complete; the cache now owns the admitted storage.
+	r.s.retained += scratch
+	scratch = 0
 	return table
 }
 
