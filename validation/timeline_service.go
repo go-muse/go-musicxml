@@ -15,8 +15,9 @@ type timelineService struct {
 	Final              bool
 }
 
-// Fixed record plus conservative indirect-map/growth admission.
-const timelineFactReserveBytes int64 = 2048
+// Indirect fixed record plus at least 512 bytes of map/growth headroom.
+// A matching per-call scratch allowance covers the unpublished temporary.
+const timelineFactReserveBytes int64 = 1536
 
 type timelineEventFact struct {
 	// Origin is the unshifted cursor/onset coordinate. Position may describe
@@ -60,6 +61,10 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
 		return err
 	}
+	if err := s.account.Charge(BudgetBufferedBytes, timelineFactReserveBytes); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, timelineFactReserveBytes) }()
 	if err := s.retain(timelineFactReserveBytes); err != nil {
 		return err
 	}
