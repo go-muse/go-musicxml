@@ -325,3 +325,34 @@ func TestTimelineStateUnplacedSoundWithoutChangesDoesNotMaskVirtualState(t *test
 		t.Fatal("sound without virtual publisher erased instruments")
 	}
 }
+
+func TestTimelineStateInstrumentGapsPreserveStrongestCause(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	s.documentID = "d"
+	defer s.cleanup()
+	b := stateBindings()
+	part := statePosition(t, 0, 0, 1).Part
+	cause := &DecisionRef{Rule: RuleKey{ID: "duration", Revision: 1}, Subject: NodeRef{DocumentID: "d", Node: 4}}
+	position := Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "duration-invalid", Cause: cause}
+	for _, incomplete := range []bool{false, true} {
+		h := &timelineState{}
+		sound := stateNode(b, timelineRoleSound, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundInstrumentChange, 21, stateAbsent[Atomic]()))
+		if incomplete {
+			sound.end.ChildrenComplete = stateUnknown[bool]("children-unavailable")
+		}
+		if e := h.gapInstrumentChanges(context.Background(), s, b, sound, part, 1, position); e != nil {
+			t.Fatal(e)
+		}
+		if len(h.InstrumentGaps) != 1 || h.InstrumentGaps[0].Availability.State != EvidenceInvalid || h.InstrumentGaps[0].Availability.Cause == nil || *h.InstrumentGaps[0].Availability.Cause != *cause {
+			t.Fatalf("stronger position cause hidden %+v", h.InstrumentGaps)
+		}
+	}
+	h := &timelineState{}
+	sound := stateNode(b, timelineRoleSound, 30, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundInstrumentChange, 31, stateAbsent[Atomic]()))
+	if e := h.readInstrumentChanges(context.Background(), s, b, sound, statePosition(t, 0, 0, 1)); e != nil {
+		t.Fatal(e)
+	}
+	if len(h.InstrumentGaps) != 1 || h.InstrumentGaps[0].Availability.State != EvidenceUnknown || h.InstrumentGaps[0].Availability.Reason != "timeline-required-instrument-id-absent" {
+		t.Fatalf("missing required ID became absence %+v", h.InstrumentGaps)
+	}
+}

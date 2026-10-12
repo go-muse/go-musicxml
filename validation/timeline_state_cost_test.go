@@ -85,3 +85,52 @@ func BenchmarkTimelineStateSparseHistory(b *testing.B) {
 		})
 	}
 }
+
+func stateIndexFixture(t *testing.T, budgets Budgets) (*Session, *stateHistory[Integer]) {
+	t.Helper()
+	s := rationalSession(t, budgets)
+	h := &stateHistory[Integer]{}
+	for i := range 8 {
+		statePublish(t, s, h, statePosition(t, 0, int64(8-i), 1), stateScope{AllStaves: true}, stateKnown(stateInt(t, int64(i))), NodeID(i+100))
+	}
+	return s, h
+}
+func TestTimelineStateIndexInterruptionAndInvalidation(t *testing.T) {
+	probe, pubs := stateIndexFixture(t, Budgets{})
+	base := rationalUsage(t, probe, BudgetBufferedBytes)
+	indexBytes := int64(len(pubs.Publications))*256 + 256
+	probe.cleanup()
+	limited, h := stateIndexFixture(t, Budgets{MaxBufferedBytes: base + indexBytes - 1})
+	defer limited.cleanup()
+	if _, e := stateIndex(context.Background(), limited, h); !errors.Is(e, ErrResourceLimit) || h.index != nil || rationalUsage(t, limited, BudgetBufferedBytes) != base {
+		t.Fatalf("partial index published or leaked: %v", e)
+	}
+	for _, at := range []int{1, 4, 12, 30} {
+		s, h := stateIndexFixture(t, Budgets{})
+		ctx := &rationalCancelContext{Context: context.Background(), at: at}
+		before := rationalUsage(t, s, BudgetBufferedBytes)
+		_, e := stateIndex(ctx, s, h)
+		if !errors.Is(e, context.Canceled) || h.index != nil || rationalUsage(t, s, BudgetBufferedBytes) != before {
+			t.Fatalf("cancel at%d published or leaked index: %v", at, e)
+		}
+		s.cleanup()
+	}
+	s, h := stateIndexFixture(t, Budgets{})
+	defer s.cleanup()
+	index, e := stateIndex(context.Background(), s, h)
+	if e != nil {
+		t.Fatal(e)
+	}
+	statePublish(t, s, h, statePosition(t, 0, 9, 1), stateScope{AllStaves: true}, stateKnown(stateInt(t, 99)), 200)
+	if h.index != nil {
+		t.Fatal("publication did not invalidate index")
+	}
+	rebuilt, e := stateIndex(context.Background(), s, h)
+	if e != nil || rebuilt == index || rebuilt.Count != 9 {
+		t.Fatalf("stale index retained %+v,%v", rebuilt, e)
+	}
+	selection, e := selectState(context.Background(), s, h, statePosition(t, 0, 9, 1), stateInt(t, 1), true)
+	if e != nil || selection.Best < 0 || h.Publications[selection.Best].Value.Value.String() != "99" {
+		t.Fatalf("rebuilt selection %+v,%v", selection, e)
+	}
+}
