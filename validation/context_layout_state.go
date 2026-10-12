@@ -15,6 +15,11 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 	}
 	child := func(name string) Evidence[Atomic] { return r.childScalar(n, layoutStateRole(name)) }
 	matches := func(name string) bool { return r.matches(n, layoutStateRole(name)) }
+	if matches("note") {
+		if e := layoutStatePercussionAdvice(ctx, s, key, n, r, p); e != nil {
+			return e
+		}
+	}
 	if matches("clef") {
 		raw := attr("clef", "number")
 		value := raw
@@ -132,7 +137,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		if e := pub("staff-notation-scale", raw, layoutUnknownDefault(raw, "notation-scaling-not-encoded"), active, ContextUnitPercent); e != nil {
 			return e
 		}
-		if e := pub("staff-size-affects-margins", r.scalar(n), known("no"), active, ContextUnitNone); e != nil {
+		if e := pub("staff-size-affects-margins", r.scalar(n), localSemanticLabel(r.scalar(n), "no"), active, ContextUnitNone); e != nil {
 			return e
 		}
 	}
@@ -183,7 +188,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 	}
 	if r.attributeOwner(n, layoutStateRole("accord.@string")) {
 		raw := attr("accord", "string")
-		if e := pub("string-number-basis", raw, known("one-is-highest-pitched-full-length-string"), active, ContextUnitNone); e != nil {
+		if e := pub("string-number-basis", raw, localSemanticLabel(raw, "one-is-highest-pitched-full-length-string"), active, ContextUnitNone); e != nil {
 			return e
 		}
 	}
@@ -209,7 +214,7 @@ func layoutStateNode(ctx context.Context, s *Session, key RuleKey, n *factNode, 
 		}
 	}
 	if matches("string") {
-		if e := pub("string-number-basis", r.scalar(n), known("one-is-highest-pitched-full-length-string"), active, ContextUnitNone); e != nil {
+		if e := pub("string-number-basis", r.scalar(n), localSemanticLabel(r.scalar(n), "one-is-highest-pitched-full-length-string"), active, ContextUnitNone); e != nil {
 			return e
 		}
 	}

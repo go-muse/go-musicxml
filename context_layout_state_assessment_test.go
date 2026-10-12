@@ -160,7 +160,7 @@ func TestLayoutStateOmittedDefaultsAndCategories(t *testing.T) {
 			if !report.Satisfied() {
 				t.Fatal(localFindings(report))
 			}
-			for property, want := range map[string]string{"part-symbol": "brace", "part-symbol-top": "1", "part-symbol-bottom": "2", "part-symbol-barline-scope-change": "no", "created-part-staff-scope": "all-staves-of-created-part", "staff-size-range": "less-than-100-implementation-dependent", "staff-cutaway": "no", "unpitched-default-position": "middle-line-of-staff", "string-number-basis": "one-is-highest-pitched-full-length-string"} {
+			for property, want := range map[string]string{"part-symbol": "brace", "part-symbol-top": "1", "part-symbol-bottom": "2", "part-symbol-barline-scope-change": "no", "created-part-staff-scope": "all-staves-of-created-part", "staff-size-range": "less-than-100-implementation-dependent", "staff-cutaway": "no", "unpitched-default-position": "middle-line-of-staff", "display-staff-position": "0", "string-number-basis": "one-is-highest-pitched-full-length-string"} {
 				layoutStateKnown(t, report, property, want)
 			}
 			rows := layoutStateRows(report, "note-size-category")
@@ -351,5 +351,146 @@ func TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault(t *testing.T)
 				}
 			}
 		}
+	}
+}
+
+func TestLayoutStatePerRecordBoundaryMatrix(t *testing.T) {
+	engine := layoutStateTestEngine(t)
+	yes, no := true, false
+	cases := []struct {
+		name, body, property, value string
+		state                       validation.EvidenceState
+		active                      *bool
+		concert                     bool
+	}{
+		{"ordinary-clef-line", `<attributes><clef size="cue"><sign>G</sign><line>2</line></clef></attributes>`, "clef-line", "2", validation.EvidenceKnown, &yes, false},
+		{"ordinary-clef-size-inactive", `<attributes><clef size="cue"><sign>G</sign><line>2</line></clef></attributes>`, "clef-size", "cue", validation.EvidenceKnown, &no, false},
+		{"key-default-system-print", `<attributes><key><fifths>0</fifths></key></attributes>`, "key-system-print", "yes", validation.EvidenceKnown, nil, false},
+		{"created-staff-two", `<attributes><for-part number="2"><part-transpose><chromatic>2</chromatic></part-transpose></for-part></attributes>`, "created-part-staff-scope", "2", validation.EvidenceKnown, nil, true},
+		{"visible-line-count", `<attributes><staff-details><staff-lines>1</staff-lines><line-detail line="1"/></staff-details></attributes>`, "hidden-line-layout-count", "yes", validation.EvidenceKnown, nil, false},
+		{"visible-line-hidden-rule-inactive", `<attributes><staff-details><staff-lines>1</staff-lines><line-detail line="1"/></staff-details></attributes>`, "hidden-line-coordinate", "included-in-clef-and-display-coordinates", validation.EvidenceKnown, &no, false},
+		{"hidden-staff-no-space", `<attributes><staff-details print-object="no" print-spacing="no"/></attributes>`, "staff-cutaway", "no", validation.EvidenceKnown, nil, false},
+		{"notation-scale-no-numeric-default", `<attributes><staff-details><staff-size>60</staff-size></staff-details></attributes>`, "staff-notation-scale", "", validation.EvidenceUnknown, nil, false},
+		{"alternate-top-has-no-prior", `<attributes><staff-details number="1"><staff-type>alternate</staff-type></staff-details></attributes>`, "alternate-staff-source", "", validation.EvidenceUnknown, nil, false},
+		{"regular-default-playback", `<attributes><staff-details/></attributes>`, "alternate-staff-playback", "yes", validation.EvidenceKnown, nil, false},
+		{"dot-missing-clef", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><dot/></note>`, "dot-placement-active", "", validation.EvidenceUnknown, nil, false},
+		{"not-measure-rest", `<note><rest measure="no"/><duration>1</duration></note>`, "measure-rest", "no", validation.EvidenceKnown, nil, false},
+		{"stem-none-position-inactive", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><stem relative-y="-1">none</stem></note>`, "stem-relative-y", "-1", validation.EvidenceKnown, &no, false},
+		{"stem-zero-offset-active", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><stem relative-y="0">up</stem></note>`, "stem-relative-y", "0", validation.EvidenceKnown, &yes, false},
+		{"pitched-stem-not-stemlet", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><stem>down</stem></note>`, "stemlet", "no", validation.EvidenceKnown, nil, false},
+		{"explicit-unpitched-no-middle-default", `<note><unpitched><display-step>C</display-step><display-octave>4</display-octave></unpitched><duration>1</duration></note>`, "unpitched-default-position", "", validation.EvidenceAbsent, &no, false},
+		{"scordatura-string-reference", `<direction><direction-type><scordatura><accord string="1"><tuning-step>E</tuning-step><tuning-octave>4</tuning-octave></accord></scordatura></direction-type></direction>`, "string-number-basis", "one-is-highest-pitched-full-length-string", validation.EvidenceKnown, nil, false},
+		{"large-note-category", `<note><rest/><duration>1</duration><type size="large">quarter</type></note>`, "note-size-category", "large", validation.EvidenceKnown, nil, false},
+		{"full-grace-not-scaled", `<note><grace/><rest/><type size="full">quarter</type></note>`, "note-size-category", "", validation.EvidenceAbsent, nil, false},
+		{"explicit-cue-overrides-grace-cue", `<note><grace/><cue/><rest/><type size="cue">quarter</type></note>`, "note-size-category", "grace", validation.EvidenceKnown, nil, false},
+		{"numbering-none-disables-range", `<print><measure-numbering multiple-rest-range="yes">none</measure-numbering></print>`, "measure-number-multiple-rest-range", "yes", validation.EvidenceKnown, &no, false},
+		{"numbering-none-disables-always", `<print><measure-numbering multiple-rest-always="yes">none</measure-numbering></print>`, "measure-number-multiple-rest-always", "yes", validation.EvidenceKnown, &no, false},
+		{"numbering-staff-override", `<print><measure-numbering staff="2">measure</measure-numbering></print>`, "measure-number-staff", "2", validation.EvidenceKnown, nil, false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			for _, tw := range []bool{false, true} {
+				for _, model := range []bool{false, true} {
+					source := localContextFixture(c.body, tw)
+					if c.concert {
+						source = strings.Replace(source, `<part-list>`, `<defaults><concert-score/></defaults><part-list>`, 1)
+					}
+					report := localContextAssess(t, engine, source, model)
+					if !report.Satisfied() {
+						t.Fatal(localFindings(report))
+					}
+					rows := layoutStateRows(report, c.property)
+					if len(rows) != 1 {
+						t.Fatalf("%s rows%d", c.property, len(rows))
+					}
+					row := rows[0]
+					if row.Value.State != c.state {
+						t.Fatalf("%s %+v", c.property, row)
+					}
+					if c.state == validation.EvidenceKnown {
+						value := row.Value.Value.Text
+						switch row.Value.Value.Kind {
+						case validation.AtomicInteger:
+							value = row.Value.Value.Integer.String()
+						case validation.AtomicDecimal:
+							value = row.Value.Value.Decimal.String()
+						}
+						if value != c.value {
+							t.Fatalf("%s got%s want%s", c.property, value, c.value)
+						}
+					}
+					if c.active != nil && (row.Layout.Applicability.State != validation.EvidenceKnown || row.Layout.Applicability.Value != *c.active) {
+						t.Fatalf("%s %+v", c.property, row.Layout.Applicability)
+					}
+				}
+			}
+		})
+	}
+}
+func TestLayoutStateUnplacedDivisionsExcursionPreservesGap(t *testing.T) {
+	engine := layoutStateTestEngine(t)
+	first := `<attributes><divisions>1</divisions><staves>2</staves></attributes><note><rest/><duration>1</duration></note>`
+	second := `<note><rest/><duration>2</duration></note><attributes><divisions>2</divisions></attributes><backup><duration>8</duration></backup><attributes><part-symbol>bracket</part-symbol></attributes>`
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			report := localContextAssess(t, engine, layoutStateManyMeasures([]string{first, second}, tw), model)
+			rows := layoutStateRows(report, "part-symbol")
+			if len(rows) != 3 {
+				t.Fatalf("rows%d", len(rows))
+			}
+			if rows[0].Value.State == validation.EvidenceKnown {
+				t.Fatalf("unplaced future publisher lost placement: %+v", rows[0])
+			}
+			if rows[2].Value.State != validation.EvidenceKnown || rows[2].Value.Value.Text != "bracket" {
+				t.Fatalf("explicit raw lost %+v", rows[2])
+			}
+		}
+	}
+}
+
+func TestLayoutStatePercussionRecommendationAxes(t *testing.T) {
+	engine := layoutStateTestEngine(t)
+	for _, c := range []struct {
+		name, sign, note string
+		state            validation.EvidenceState
+		active           bool
+	}{
+		{"pitched-percussion", "percussion", `<pitch><step>C</step><octave>4</octave></pitch>`, validation.EvidenceKnown, true},
+		{"unpitched-percussion", "percussion", `<unpitched/>`, validation.EvidenceKnown, true},
+		{"rest-percussion", "percussion", `<rest/>`, validation.EvidenceKnown, false},
+		{"pitched-G", "G", `<pitch><step>C</step><octave>4</octave></pitch>`, validation.EvidenceKnown, false},
+		{"missing-clef", "", `<unpitched/>`, validation.EvidenceUnknown, false},
+		{"invalid-clef", "bogus", `<unpitched/>`, validation.EvidenceInvalid, false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			for _, tw := range []bool{false, true} {
+				for _, model := range []bool{false, true} {
+					body := ""
+					if c.sign != "" {
+						body = `<attributes><clef><sign>` + c.sign + `</sign></clef></attributes>`
+					}
+					body += `<note>` + c.note + `<duration>1</duration></note>`
+					report := localContextAssess(t, engine, localContextFixture(body, tw), model)
+					rows := layoutStateRows(report, "advisory-percussion-unpitched")
+					if len(rows) != 1 {
+						t.Fatalf("rows%d", len(rows))
+					}
+					row := rows[0]
+					if row.Value.State != validation.EvidenceKnown || row.Value.Value.Text != "use-unpitched-for-notes-in-percussion-clef" {
+						t.Fatalf("guidance %+v", row)
+					}
+					app := row.Layout.Applicability
+					if app.State != c.state || (c.state == validation.EvidenceKnown && app.Value != c.active) {
+						t.Fatalf("app %+v", app)
+					}
+					if c.state == validation.EvidenceInvalid && app.Cause == nil {
+						t.Fatal("missing cause")
+					}
+					if c.state != validation.EvidenceInvalid && !report.Satisfied() {
+						t.Fatal(localFindings(report))
+					}
+				}
+			}
+		})
 	}
 }

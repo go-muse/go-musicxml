@@ -1,11 +1,12 @@
 package validation
 
 type layoutPendingName struct {
+	Part    Evidence[NodeRef]
 	Node    *factNode
 	Certain bool
 }
 
-func (l *layoutScopes) publishName(n *factNode, frame layoutFrame, start Evidence[bool]) error {
+func (l *layoutScopes) publishName(n *factNode, frame layoutFrame, start Evidence[bool], part Evidence[NodeRef]) error {
 	ref := NodeRef{l.r.s.documentID, n.header.ID}
 	onset := frame.system
 	if start.State != EvidenceKnown {
@@ -13,7 +14,7 @@ func (l *layoutScopes) publishName(n *factNode, frame layoutFrame, start Evidenc
 	} else if !start.Value {
 		onset = Evidence[NodeRef]{State: EvidenceAbsent}
 	}
-	return l.r.s.publishContextResult(l.r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: "layout.name-display-onset", Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Scope: ref, Origin: ref, Raw: Evidence[Atomic]{State: EvidenceAbsent}, Applicability: start, System: onset, Page: frame.page, Provenance: ContextExplicit, Basis: "current-or-next-new-system"}})
+	return l.r.s.publishContextResult(l.r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: "layout.name-display-onset", Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: part, Scope: ref, Origin: ref, Raw: Evidence[Atomic]{State: EvidenceAbsent}, Applicability: start, System: onset, Page: frame.page, Provenance: ContextExplicit, Basis: "current-or-next-new-system"}})
 }
 func (l *layoutScopes) nameUpdates(b timelineMeasureBlock, frame layoutFrame, start Evidence[bool]) error {
 	r := l.r
@@ -31,7 +32,7 @@ func (l *layoutScopes) nameUpdates(b timelineMeasureBlock, frame layoutFrame, st
 			if !p.Certain {
 				onset = stateUnknown[bool]("intermediate-system-break-unavailable")
 			}
-			if err := l.publishName(p.Node, frame, onset); err != nil {
+			if err := l.publishName(p.Node, frame, onset, p.Part); err != nil {
 				return err
 			}
 		}
@@ -54,14 +55,14 @@ func (l *layoutScopes) nameUpdates(b timelineMeasureBlock, frame layoutFrame, st
 				continue
 			}
 			if start.State == EvidenceKnown && start.Value {
-				if err := l.publishName(n, frame, start); err != nil {
+				if err := l.publishName(n, frame, start, b.part); err != nil {
 					return err
 				}
 			} else {
 				if err := r.s.retain(512); err != nil {
 					return err
 				}
-				pending = append(pending, layoutPendingName{n, start.State == EvidenceKnown})
+				pending = append(pending, layoutPendingName{Node: n, Certain: start.State == EvidenceKnown, Part: b.part})
 			}
 		}
 	}
@@ -78,7 +79,7 @@ func (l *layoutScopes) closeNames() error {
 			if !p.Certain {
 				active = stateUnknown[bool]("name-display-system-onset-unavailable")
 			}
-			if err := l.publishName(p.Node, layoutFrame{}, active); err != nil {
+			if err := l.publishName(p.Node, layoutFrame{}, active, p.Part); err != nil {
 				return err
 			}
 		}

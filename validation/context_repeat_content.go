@@ -61,7 +61,32 @@ type contextRepeatNote struct {
 	available  Evidence[bool]
 }
 
-func contextRepeatReadNote(r *contextReader, timeline *timelineService, id NodeID) (contextRepeatNote, error) {
+// This invariant presence index is scoped to one content-proof construction.
+// Borrowed part identities retain exact document identity and bounded hash work.
+func contextRepeatTransformParts(ctx context.Context, s *Session, timeline *timelineService) (map[NodeRef]bool, func(), error) {
+	release, err := contextRepeatIndexReserve(ctx, s, len(timeline.State.Transpose.Publications), len(timeline.State.Transpose.Gaps))
+	if err != nil {
+		return nil, nil, err
+	}
+	out := make(map[NodeRef]bool)
+	for _, p := range timeline.State.Transpose.Publications {
+		if err = s.step(ctx, 1+int64(len(p.Position.Part.DocumentID))); err != nil {
+			release()
+			return nil, nil, err
+		}
+		out[p.Position.Part] = true
+	}
+	for _, g := range timeline.State.Transpose.Gaps {
+		if err = s.step(ctx, 1+int64(len(g.Part.DocumentID))); err != nil {
+			release()
+			return nil, nil, err
+		}
+		out[g.Part] = true
+	}
+	return out, release, nil
+}
+
+func contextRepeatReadNote(r *contextReader, timeline *timelineService, transformed map[NodeRef]bool, id NodeID) (contextRepeatNote, error) {
 	note := contextRepeatNote{source: NodeRef{r.s.documentID, id}, available: navigationKnownBool(true)}
 	node := r.s.nodes[id]
 	fact, ok := timeline.Facts[id]
@@ -132,24 +157,10 @@ func contextRepeatReadNote(r *contextReader, timeline *timelineService, id NodeI
 	}
 	// A known absent encoded transformation is independent of a missing staff.
 	// Do not call a staff-specific state selector merely to prove an empty history.
-	hasTransform := false
-	for _, p := range timeline.State.Transpose.Publications {
-		if err := r.s.step(r.ctx, 1); err != nil {
-			return note, err
-		}
-		if p.Position.Part == note.pos.Part {
-			hasTransform = true
-		}
+	if !r.step(1 + int64(len(note.pos.Part.DocumentID))) {
+		return note, r.err
 	}
-	for _, gap := range timeline.State.Transpose.Gaps {
-		if err := r.s.step(r.ctx, 1); err != nil {
-			return note, err
-		}
-		if gap.Part == note.pos.Part {
-			hasTransform = true
-		}
-	}
-	if hasTransform {
+	if transformed[note.pos.Part] {
 		note.available = stateMergeGap(note.available, stateUnknown[bool]("context-repeat-transposed-equivalence-unresolved"))
 	}
 
@@ -193,14 +204,27 @@ func contextRepeatNoteEqual(ctx context.Context, s *Session, a, b contextRepeatN
 			}
 		}
 	}
-	if a.alter.State != b.alter.State {
+	// Pitch omission and an explicit zero denote the same natural pitch.
+	// This comparison does not rewrite either raw evidence field.
+	aa, ba := a.alter, b.alter
+	for _, v := range []Evidence[Decimal]{aa, ba} {
+		if v.State == EvidenceKnown {
+			if err := s.step(ctx, v.Value.ByteSize()); err != nil {
+				return false, err
+			}
+		}
+	}
+	if aa.State == EvidenceAbsent && ba.State == EvidenceKnown && ba.Value.Valid() && ba.Value.value.Sign() == 0 {
+		aa = ba
+	}
+	if ba.State == EvidenceAbsent && aa.State == EvidenceKnown && aa.Value.Valid() && aa.Value.value.Sign() == 0 {
+		ba = aa
+	}
+	if aa.State != ba.State {
 		return false, nil
 	}
-	if a.alter.State == EvidenceKnown {
-		if err := s.step(ctx, a.alter.Value.ByteSize()+b.alter.Value.ByteSize()); err != nil {
-			return false, err
-		}
-		cmp, e := a.alter.Value.Cmp(b.alter.Value)
+	if aa.State == EvidenceKnown {
+		cmp, e := aa.Value.Cmp(ba.Value)
 		if e != nil || cmp != 0 {
 			return false, e
 		}
@@ -216,69 +240,41 @@ func contextRepeatNoteEqual(ctx context.Context, s *Session, a, b contextRepeatN
 // Equality is a sufficient proof on this explicitly bounded event domain.
 // Failure to match is unresolved equivalence, not a necessary-rule violation.
 func contextRepeatMeasureEqual(ctx context.Context, s *Session, notes []contextRepeatNote, part NodeRef, a, b uint64) (Evidence[bool], error) {
-	left, right := 0, 0
+	release, err := contextRepeatIndexReserve(ctx, s, len(notes), len(notes), len(notes), len(notes))
+	if err != nil {
+		return Evidence[bool]{}, err
+	}
+	defer release()
+	var source, target []contextRepeatNote
 	for _, note := range notes {
-		if err := s.step(ctx, 1); err != nil {
+		if err = s.step(ctx, 1); err != nil {
 			return Evidence[bool]{}, err
 		}
 		if note.pos.Part != part {
 			continue
 		}
 		if note.pos.MeasureOrdinal == a {
-			left++
+			source = append(source, note)
 		}
 		if note.pos.MeasureOrdinal == b {
-			right++
+			target = append(target, note)
 		}
 	}
-	if left == 0 || left != right {
-		return stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), nil
-	}
-	bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(notes)), 1)
-	if err != nil {
-		return Evidence[bool]{}, err
-	}
-	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
-		return Evidence[bool]{}, err
-	}
-	defer func() { _ = s.account.Release(BudgetBufferedBytes, bytes) }()
-	used := make([]bool, len(notes))
-	for _, x := range notes {
-		if x.pos.Part != part || x.pos.MeasureOrdinal != a {
-			continue
-		}
-		if x.available.State != EvidenceKnown {
-			return x.available, nil
-		}
-		found := false
-		for j, y := range notes {
-			if err = s.step(ctx, 1); err != nil {
-				return Evidence[bool]{}, err
-			}
-			if used[j] || y.pos.Part != part || y.pos.MeasureOrdinal != b {
-				continue
-			}
-			if y.available.State != EvidenceKnown {
-				return y.available, nil
-			}
-			equal, e := contextRepeatNoteEqual(ctx, s, x, y)
-			if e != nil {
-				return Evidence[bool]{}, e
-			}
-			if equal {
-				used[j] = true
-				found = true
-				break
-			}
-		}
-		if !found {
-			return stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), nil
-		}
-	}
-	return navigationKnownBool(true), nil
+	return contextRepeatSelectedMeasureEqual(ctx, s, source, target)
 }
 
 func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, timeline *timelineService, rows []contextRepeatRecord) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if len(rows) == 0 {
+		return nil
+	}
+	transformed, releaseTransforms, err := contextRepeatTransformParts(ctx, s, timeline)
+	if err != nil {
+		return err
+	}
+	defer releaseTransforms()
 	var notes []contextRepeatNote
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
 	coverage := navigationKnownBool(true)
@@ -296,7 +292,7 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 		if _, ok := timeline.Playback.Notes[id]; !ok {
 			continue
 		}
-		note, err := contextRepeatReadNote(r, timeline, id)
+		note, err := contextRepeatReadNote(r, timeline, transformed, id)
 		if err != nil {
 			return err
 		}
@@ -305,107 +301,257 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 		}
 		notes = append(notes, note)
 	}
+	roster, releaseRoster, err := contextRepeatBuildContentRoster(ctx, s, notes)
+	if err != nil {
+		return err
+	}
+	defer releaseRoster()
 	for i := range rows {
-		row := &rows[i]
-		row.value.NoteScopesComplete = coverage
-		if coverage.State != EvidenceKnown || !coverage.Value {
-			row.value.ContentEquivalent = coverage
-			continue
-		}
-		if err := contextRepeatBeatProof(ctx, s, notes, rows, row); err != nil {
+		if err := contextRepeatProveRosterRow(ctx, s, timeline, roster, rows, &rows[i], coverage); err != nil {
 			return err
-		}
-		if row.value.Kind != RepeatStyleMeasure || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" || row.position.State != EvidenceKnown || row.value.PatternMeasures.State != EvidenceKnown || row.value.Complete.State != EvidenceKnown || !row.value.Complete.Value {
-			continue
-		}
-		// Numbered/excepted staff patterns need the separately reviewed scope filter.
-		if row.value.AllStaves.State != EvidenceKnown || !row.value.AllStaves.Value {
-			continue
-		}
-		placementGap := navigationKnownBool(true)
-		for _, note := range notes {
-			if err := s.step(ctx, 1); err != nil {
-				return err
-			}
-			if note.part.State != EvidenceKnown || note.part.Value == row.value.Part.Value {
-				if !note.pos.Offset.Valid() {
-					placementGap = stateMergeGap(placementGap, note.available)
-				}
-			}
-		}
-		if placementGap.State != EvidenceKnown {
-			row.value.ContentEquivalent = placementGap
-			continue
-		}
-		start := row.position.Value
-		if start.Offset.value.Sign() != 0 {
-			continue
-		}
-		pattern := row.value.PatternMeasures.Value
-		cmp, err := navigationCountCompare(ctx, s, pattern, start.MeasureOrdinal)
-		if err != nil {
-			return err
-		}
-		if cmp > 0 || pattern.value.Sign() <= 0 {
-			continue
-		}
-		count := pattern.value.Uint64()
-		var end uint64
-		endKnown := false
-		if row.value.Stop.State == EvidenceKnown {
-			for _, other := range rows {
-				if err = s.step(ctx, 1); err != nil {
-					return err
-				}
-				if other.source == row.value.Stop.Value && other.position.State == EvidenceKnown && other.position.Value.Offset.value.Sign() == 0 {
-					end = other.position.Value.MeasureOrdinal
-					endKnown = true
-				}
-			}
-		} else if row.value.Stop.State == EvidenceAbsent {
-			for _, closure := range timeline.State.Closures {
-				if err = s.step(ctx, 1); err != nil {
-					return err
-				}
-				if closure.Part == start.Part && closure.Complete.State == EvidenceKnown && closure.Complete.Value {
-					end = closure.Through + 1
-					endKnown = true
-				}
-			}
-		}
-		if !endKnown || end <= start.MeasureOrdinal {
-			continue
-		}
-		row.value.ContentEquivalent = navigationKnownBool(true)
-		for measure := start.MeasureOrdinal; measure < end; measure++ {
-			if err = s.step(ctx, 1); err != nil {
-				return err
-			}
-			source := start.MeasureOrdinal - count + (measure-start.MeasureOrdinal)%count
-			same, e := contextRepeatMeasureEqual(ctx, s, notes, start.Part, source, measure)
-			if e != nil {
-				return e
-			}
-			if same.State != EvidenceKnown {
-				empty, e := contextRepeatEmptyMeasure(ctx, s, timeline, notes, start.Part, source, measure)
-				if e != nil {
-					return e
-				}
-				if empty.State == EvidenceKnown && !empty.Value {
-					same = empty
-				}
-			}
-			if same.State == EvidenceKnown && !same.Value {
-				row.value.ContentEquivalent = same
-				break
-			}
-			row.value.ContentEquivalent = stateMergeGap(row.value.ContentEquivalent, same)
-			if same.State != EvidenceKnown {
-				break
-			}
 		}
 	}
 	return r.err
+}
+
+func contextRepeatProveRosterRow(ctx context.Context, s *Session, timeline *timelineService, roster *contextRepeatContentRoster, rows []contextRepeatRecord, row *contextRepeatRecord, coverage Evidence[bool]) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	row.value.NoteScopesComplete = coverage
+	if coverage.State != EvidenceKnown || !coverage.Value {
+		row.value.ContentEquivalent = coverage
+		return nil
+	}
+	if row.value.Part.State != EvidenceKnown {
+		row.value.ContentEquivalent = stateUnavailable[NodeRef, bool](row.value.Part)
+		if row.value.ContentEquivalent.State == EvidenceAbsent {
+			row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-part-unavailable")
+		}
+		return nil
+	}
+	if (row.value.Kind != RepeatStyleBeat && row.value.Kind != RepeatStyleMeasure) || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" {
+		return nil
+	}
+	notes, release, err := roster.partNotes(ctx, s, row.value.Part.Value)
+	if err != nil {
+		return err
+	}
+	defer release()
+	return contextRepeatProveRow(ctx, s, timeline, notes, rows, row, coverage)
+}
+
+func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineService, notes []contextRepeatNote, rows []contextRepeatRecord, row *contextRepeatRecord, coverage Evidence[bool]) error {
+	row.value.NoteScopesComplete = coverage
+	if coverage.State != EvidenceKnown || !coverage.Value {
+		row.value.ContentEquivalent = coverage
+		return nil
+	}
+	if (row.value.Kind != RepeatStyleBeat && row.value.Kind != RepeatStyleMeasure) || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" {
+		return nil
+	}
+	selected, status, release, err := contextRepeatScopedNotes(ctx, s, notes, row.value)
+	if err != nil {
+		return err
+	}
+	defer release()
+	if status.State != EvidenceKnown || !status.Value {
+		row.value.ContentEquivalent = status
+		return nil
+	}
+	notes = selected
+	if err := contextRepeatBeatProof(ctx, s, notes, rows, row); err != nil {
+		return err
+	}
+	if row.value.Kind != RepeatStyleMeasure || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" || row.position.State != EvidenceKnown || row.value.PatternMeasures.State != EvidenceKnown || row.value.Complete.State != EvidenceKnown || !row.value.Complete.Value {
+		return nil
+	}
+	placementGap := navigationKnownBool(true)
+	for _, note := range notes {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		if note.part.State != EvidenceKnown || note.part.Value == row.value.Part.Value {
+			if !note.pos.Offset.Valid() {
+				placementGap = stateMergeGap(placementGap, note.available)
+			}
+		}
+	}
+	if placementGap.State != EvidenceKnown {
+		row.value.ContentEquivalent = placementGap
+		return nil
+	}
+	start := row.position.Value
+	if start.Offset.value.Sign() != 0 {
+		return nil
+	}
+	pattern := row.value.PatternMeasures.Value
+	cmp, err := navigationCountCompare(ctx, s, pattern, start.MeasureOrdinal)
+	if err != nil {
+		return err
+	}
+	if cmp > 0 || pattern.value.Sign() <= 0 {
+		return nil
+	}
+	count := pattern.value.Uint64()
+	var end uint64
+	endKnown := false
+	if row.value.Stop.State == EvidenceKnown {
+		for _, other := range rows {
+			if err = s.step(ctx, 1); err != nil {
+				return err
+			}
+			if other.source == row.value.Stop.Value && other.position.State == EvidenceKnown && other.position.Value.Offset.value.Sign() == 0 {
+				end = other.position.Value.MeasureOrdinal
+				endKnown = true
+			}
+		}
+	} else if row.value.Stop.State == EvidenceAbsent {
+		for _, closure := range timeline.State.Closures {
+			if err = s.step(ctx, 1); err != nil {
+				return err
+			}
+			if closure.Part == start.Part && closure.Complete.State == EvidenceKnown && closure.Complete.Value {
+				end = closure.Through + 1
+				endKnown = true
+			}
+		}
+	}
+	if !endKnown || end <= start.MeasureOrdinal {
+		return nil
+	}
+	buckets, complete, releaseMeasures, err := contextRepeatBuildMeasureRoster(ctx, s, notes, start.Part)
+	if err != nil {
+		return err
+	}
+	defer releaseMeasures()
+	if complete.State != EvidenceKnown || !complete.Value {
+		row.value.ContentEquivalent = complete
+		return nil
+	}
+	row.value.ContentEquivalent = navigationKnownBool(true)
+	for measure := start.MeasureOrdinal; measure < end; measure++ {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
+		source := start.MeasureOrdinal - count + (measure-start.MeasureOrdinal)%count
+		same, e := contextRepeatSelectedMeasureEqual(ctx, s, buckets[source], buckets[measure])
+		if e != nil {
+			return e
+		}
+		if same.State != EvidenceKnown {
+			empty, e := contextRepeatEmptyMeasure(ctx, s, timeline, notes, start.Part, source, measure)
+			if e != nil {
+				return e
+			}
+			if empty.State == EvidenceKnown && !empty.Value {
+				same = empty
+			}
+		}
+		if same.State == EvidenceKnown && !same.Value {
+			row.value.ContentEquivalent = same
+			break
+		}
+		row.value.ContentEquivalent = stateMergeGap(row.value.ContentEquivalent, same)
+		if same.State != EvidenceKnown {
+			break
+		}
+	}
+	return nil
+}
+
+// Scoped notes are borrowed shallow values, never a second public projection.
+// Exact staff identity can exclude unrelated notes; absent/invalid membership
+// remains unavailable and cannot prove an empty target or content equivalence.
+func contextRepeatScopedNotes(ctx context.Context, s *Session, notes []contextRepeatNote, row RepeatContextResult) ([]contextRepeatNote, Evidence[bool], func(), error) {
+	noop := func() {}
+	if err := s.step(ctx, 1); err != nil {
+		return nil, Evidence[bool]{}, noop, err
+	}
+	all := row.AllStaves.State == EvidenceKnown && row.AllStaves.Value
+	if all && len(row.ExceptVoices) == 0 {
+		return notes, navigationKnownBool(true), noop, nil
+	}
+	if row.AllStaves.State != EvidenceKnown {
+		return nil, row.AllStaves, noop, nil
+	}
+	if !all && row.Staff.State != EvidenceKnown {
+		return nil, stateUnavailable[Integer, bool](row.Staff), noop, nil
+	}
+	if row.Part.State != EvidenceKnown {
+		return nil, stateUnavailable[NodeRef, bool](row.Part), noop, nil
+	}
+	voices, freeVoices, err := contextRepeatBuildVoiceFilter(ctx, s, row.ExceptVoices)
+	if err != nil {
+		return nil, Evidence[bool]{}, noop, err
+	}
+	defer freeVoices()
+	bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(notes)), 2048)
+	if err != nil {
+		return nil, Evidence[bool]{}, noop, err
+	}
+	if _, err = AllocationSize(bytes); err != nil {
+		return nil, Evidence[bool]{}, noop, err
+	}
+	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
+		return nil, Evidence[bool]{}, noop, err
+	}
+	release := func() { _ = s.account.Release(BudgetBufferedBytes, bytes) }
+	out := make([]contextRepeatNote, 0, len(notes))
+	status := navigationKnownBool(true)
+	for _, note := range notes {
+		if err = s.step(ctx, 1+int64(len(note.part.Value.DocumentID)+len(row.Part.Value.DocumentID))); err != nil {
+			release()
+			return nil, Evidence[bool]{}, noop, err
+		}
+		if note.part.State != EvidenceKnown {
+			status = stateMergeGap(status, stateUnavailable[NodeRef, bool](note.part))
+			continue
+		}
+		if note.part.Value != row.Part.Value {
+			continue
+		}
+		member := navigationKnownBool(true)
+		if !all {
+			if note.staff.State != EvidenceKnown {
+				member = stateUnavailable[Integer, bool](note.staff)
+				if member.State == EvidenceAbsent {
+					member = stateUnknown[bool]("context-repeat-note-staff-unavailable")
+				}
+			} else {
+				if err = s.step(ctx, note.staff.Value.ByteSize()+row.Staff.Value.ByteSize()); err != nil {
+					release()
+					return nil, Evidence[bool]{}, noop, err
+				}
+				cmp, e := note.staff.Value.Cmp(row.Staff.Value)
+				if e != nil {
+					release()
+					return nil, Evidence[bool]{}, noop, e
+				}
+				if cmp != 0 {
+					continue
+				}
+			}
+		}
+		if len(row.ExceptVoices) != 0 {
+			applies, e := contextRepeatVoiceApplies(ctx, s, voices, note.voice)
+			if e != nil {
+				release()
+				return nil, Evidence[bool]{}, noop, e
+			}
+			if applies.State == EvidenceKnown && !applies.Value {
+				continue
+			}
+			member = stateMergeGap(member, applies)
+		}
+
+		if member.State != EvidenceKnown || !member.Value {
+			status = stateMergeGap(status, member)
+			continue
+		}
+		out = append(out, note)
+	}
+	return out, status, release, nil
 }
 
 func contextRepeatWindow(ctx context.Context, s *Session, notes []contextRepeatNote, part NodeRef, measure uint64, from, to Rational) ([]contextRepeatNote, Evidence[bool], error) {
@@ -476,7 +622,7 @@ func contextRepeatWindow(ctx context.Context, s *Session, notes []contextRepeatN
 }
 
 func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepeatNote, rows []contextRepeatRecord, row *contextRepeatRecord) error {
-	if row.value.Kind != RepeatStyleBeat || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" || row.position.State != EvidenceKnown || row.value.Beat.State != EvidenceKnown || row.value.Stop.State != EvidenceKnown || row.value.AllStaves.State != EvidenceKnown || !row.value.AllStaves.Value || len(row.value.ExceptVoices) != 0 {
+	if row.value.Kind != RepeatStyleBeat || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" || row.position.State != EvidenceKnown || row.value.Beat.State != EvidenceKnown || row.value.Stop.State != EvidenceKnown {
 		return nil
 	}
 	var stop *contextRepeatRecord
@@ -500,7 +646,12 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 	if sourceStart.value.Sign() < 0 {
 		return nil
 	}
-	source, status, err := contextRepeatWindow(ctx, s, notes, origin.Part, origin.MeasureOrdinal, sourceStart, origin.Offset)
+	windows, releaseWindows, err := contextRepeatBuildWindowIndex(ctx, s, notes, origin.Part, origin.MeasureOrdinal)
+	if err != nil {
+		return err
+	}
+	defer releaseWindows()
+	source, status, err := windows.window(ctx, s, sourceStart, origin.Offset)
 	if err != nil {
 		return err
 	}
@@ -536,7 +687,7 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 			row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-nonintegral-beat-range")
 			return nil
 		}
-		target, status, err := contextRepeatWindow(ctx, s, notes, origin.Part, origin.MeasureOrdinal, from, to)
+		target, status, err := windows.window(ctx, s, from, to)
 		if err != nil {
 			return err
 		}
@@ -547,6 +698,14 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 		if len(source) != len(target) {
 			row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-content-equivalence-unresolved")
 			return nil
+		}
+		ordered, err := contextRepeatOrderedEqual(ctx, s, source, target)
+		if err != nil {
+			return err
+		}
+		if ordered {
+			from = to
+			continue
 		}
 		bytes := int64(len(target))
 		if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {

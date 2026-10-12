@@ -153,7 +153,9 @@ func TestContextNavigationEmptyIndexCanceledBeforeAdmission(t *testing.T) {
 }
 
 func TestContextRepeatNoRowsSkipsIndexAllocation(t *testing.T) {
-	for _, run := range []func(context.Context, *Session, *timelineService, []contextRepeatRecord) error{contextRepeatPairRanges, contextRepeatNoteScopes} {
+	for _, run := range []func(context.Context, *Session, *timelineService, []contextRepeatRecord) error{contextRepeatPairRanges, contextRepeatNoteScopes, func(ctx context.Context, s *Session, timeline *timelineService, rows []contextRepeatRecord) error {
+		return contextRepeatProveContent(ctx, s, &contextPlan{}, timeline, rows)
+	}} {
 		s := rationalSession(t, Budgets{MaxBufferedBytes: 1})
 		s.sequence = make([]NodeID, 1000)
 		if err := run(context.Background(), s, &timelineService{}, nil); err != nil {

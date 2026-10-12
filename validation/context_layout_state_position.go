@@ -86,26 +86,45 @@ func layoutStatePosition(ctx context.Context, s *Session, key RuleKey, n *factNo
 	step := stateText(r.childScalar(subject, layoutStateRole(stepRole)))
 	octave := stateInteger(r.childScalar(subject, layoutStateRole(octaveRole)))
 	fact := layoutStateFact(r, p, n)
-	result := stateUnknown[Integer]("display-effective-clef-unavailable")
+	result := timelineGapAs[musicalPosition, Integer](fact.Position, "display-position-unavailable")
 	service := s.timeline[p.Timeline]
-	if service != nil && fact.Position.State == EvidenceKnown {
+	defaultUnpitched := step.State == EvidenceAbsent && octave.State == EvidenceAbsent && r.matches(subject, layoutStateRole("unpitched"))
+	if step.State != EvidenceKnown && step.State != EvidenceAbsent {
+		result = stateUnavailable[string, Integer](step)
+	} else if octave.State != EvidenceKnown && octave.State != EvidenceAbsent {
+		result = octave
+	} else if step.State == EvidenceAbsent && !defaultUnpitched {
+		result = stateUnknown[Integer]("application-rest-or-missing-written-position")
+	} else if service != nil && fact.Position.State == EvidenceKnown {
 		staff, e := service.State.resolveStaff(ctx, s, fact.Position.Value, fact.Staff)
 		if e != nil {
 			return e
 		}
-		clef, e := queryState(ctx, s, &service.State, &service.State.Clefs, fact.Position.Value, staff, stateWhole[clefState])
-		if e != nil {
-			return e
-		}
-		if clef.Value.State == EvidenceKnown {
-			result, e = layoutStateStaffStep(ctx, s, step, octave, clef.Value.Value)
+		if defaultUnpitched {
+			details, e := service.State.effectiveStaffDetails(ctx, s, fact.Position.Value, staff)
+			if e != nil {
+				return e
+			}
+			result, e = layoutStateMiddleLine(ctx, s, details.Value)
 			if e != nil {
 				return e
 			}
 		} else {
-			result = stateUnavailable[clefState, Integer](clef.Value)
+			clef, e := queryState(ctx, s, &service.State, &service.State.Clefs, fact.Position.Value, staff, stateWhole[clefState])
+			if e != nil {
+				return e
+			}
+			if clef.Value.State == EvidenceKnown {
+				result, e = layoutStateStaffStep(ctx, s, step, octave, clef.Value.Value)
+				if e != nil {
+					return e
+				}
+			} else {
+				result = timelineGapAs[clefState, Integer](clef.Value, "display-effective-clef-not-encoded")
+			}
 		}
 	}
+
 	raw := r.childScalar(subject, layoutStateRole(stepRole))
 	active := Evidence[bool]{State: EvidenceKnown, Value: true}
 	property := ContextProperty("layout.display-staff-position")
@@ -123,14 +142,14 @@ func layoutStatePosition(ctx context.Context, s *Session, key RuleKey, n *factNo
 		value = localBoolAtomic(applicable)
 	}
 	ref := NodeRef{s.documentID, n.header.ID}
-	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Scope: layoutStateScope(s, n, fact), Origin: ref, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: ContextExplicit, Staff: fact.Staff, Basis: "diatonic-half-space-offset-from-bottom-staff-line; hidden-lines-included; no-sounding-pitch"}})
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Part: fact.Part, Scope: layoutStateScope(s, n, fact), Origin: ref, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: ContextExplicit, Staff: fact.Staff, Basis: "diatonic-half-space-offset-from-bottom-staff-line; hidden-lines-included; no-sounding-pitch"}})
 }
 func layoutStateStaffStep(ctx context.Context, s *Session, step Evidence[string], octave Evidence[Integer], clef clefState) (Evidence[Integer], error) {
 	if step.State != EvidenceKnown {
-		return stateUnavailable[string, Integer](step), nil
+		return timelineGapAs[string, Integer](step, "display-step-not-encoded"), nil
 	}
 	if octave.State != EvidenceKnown {
-		return octave, nil
+		return timelineGapAs[Integer, Integer](octave, "display-octave-not-encoded"), nil
 	}
 	if clef.Sign.State != EvidenceKnown {
 		return stateUnavailable[string, Integer](clef.Sign), nil
@@ -179,4 +198,25 @@ func layoutStateStaffStep(ctx context.Context, s *Session, step Evidence[string]
 		return Evidence[Integer]{}, e
 	}
 	return Evidence[Integer]{State: EvidenceKnown, Value: v}, nil
+}
+
+func layoutStateMiddleLine(ctx context.Context, s *Session, details Evidence[staffDetailsState]) (Evidence[Integer], error) {
+	if details.State != EvidenceKnown {
+		return timelineGapAs[staffDetailsState, Integer](details, "staff-line-count-not-encoded"), nil
+	}
+	lines := details.Value.Lines
+	if lines.State != EvidenceKnown {
+		return timelineGapAs[Integer, Integer](lines, "staff-line-count-not-encoded"), nil
+	}
+	if !lines.Value.Valid() || lines.Value.value.Sign() <= 0 {
+		return stateUnknown[Integer]("staff-has-no-unique-middle-line"), nil
+	}
+	if lines.Value.value.Bit(0) == 0 {
+		return stateUnknown[Integer]("even-staff-has-no-unique-middle-line"), nil
+	}
+	value, e := layoutStateInteger(ctx, s, []Integer{lines.Value}, func() *big.Int { return new(big.Int).Sub(lines.Value.value, localOne.value) })
+	if e != nil {
+		return Evidence[Integer]{}, e
+	}
+	return Evidence[Integer]{State: EvidenceKnown, Value: value}, nil
 }

@@ -72,14 +72,14 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 			origin = pageDefaults
 		}
 		value = layoutUnknownDefault(value, "application-page-margin")
-		if err := l.publish(b.measure, "page-"+name, raw, value, yes, ref, frame, origin); err != nil {
+		if err := l.publish(b.measure, "page-"+name, raw, value, yes, ref, frame, origin, b.part); err != nil {
 			return err
 		}
 		if name != "left-margin" && name != "right-margin" {
 			continue
 		}
 		sysRaw, sysValue, origin := l.effective(sysOverride, sysDefaults, name, frame.systemCertain)
-		if err := l.publish(b.measure, "system-"+name, sysRaw, sysValue, yes, ref, frame, origin); err != nil {
+		if err := l.publish(b.measure, "system-"+name, sysRaw, sysValue, yes, ref, frame, origin, b.part); err != nil {
 			return err
 		}
 		page, err := l.rational(value)
@@ -100,7 +100,7 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 		} else if system.State != EvidenceKnown {
 			sum = system
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout.effective-" + name), Value: layoutRationalScalar(sum), Layout: &LayoutContextResult{Scope: ref, Origin: ref, Raw: sysRaw, Applicability: yes, Page: frame.page, System: frame.system, Conversion: sum, Unit: ContextUnitTenths, Basis: "page-margin-plus-signed-system-inset"}}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout.effective-" + name), Value: layoutRationalScalar(sum), Layout: &LayoutContextResult{Part: b.part, Scope: ref, Origin: ref, Raw: sysRaw, Applicability: yes, Page: frame.page, System: frame.system, Conversion: sum, Unit: ContextUnitTenths, Basis: "page-margin-plus-signed-system-inset"}}); err != nil {
 			return err
 		}
 	}

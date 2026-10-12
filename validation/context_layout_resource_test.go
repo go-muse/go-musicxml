@@ -110,3 +110,34 @@ func TestLayoutZeroStaffHasNoImplicitCandidate(t *testing.T) {
 		t.Fatal("lost ordinary staff one")
 	}
 }
+
+func TestLayoutPartPayloadOwnershipAndQuota(t *testing.T) {
+	cause := &DecisionRef{Rule: RuleKey{"part-cause", 1}, Subject: NodeRef{"score", 4}}
+	part := Evidence[NodeRef]{State: EvidenceUnknown, Reason: "part-unavailable", Cause: cause}
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	s.documentID = "score"
+	l := &layoutScopes{r: &contextReader{ctx: context.Background(), s: s}, key: RuleKey{"layout", 1}}
+	n := localNode(1, 0, "measure")
+	if err := l.publish(n, "page-height", Evidence[Atomic]{State: EvidenceAbsent}, stateUnknown[Atomic]("application-choice"), Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{"score", 1}, layoutFrame{}, nil, part); err != nil {
+		t.Fatal(err)
+	}
+	cause.Rule.ID = "mutated"
+	got := s.contextResults[0].Layout.Part
+	if got.State != EvidenceUnknown || got.Reason != "part-unavailable" || got.Cause == nil || got.Cause.Rule.ID != "part-cause" {
+		t.Fatalf("part evidence lost or borrowed: %+v", got)
+	}
+	absent, err := cloneLayoutContext(context.Background(), s, &LayoutContextResult{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if absent.Part.State != EvidenceAbsent {
+		t.Fatal("unrelated payload fabricated part")
+	}
+	limited := rationalSession(t, Budgets{MaxBufferedBytes: 1})
+	defer limited.cleanup()
+	out, err := cloneLayoutContext(context.Background(), limited, &LayoutContextResult{Part: part})
+	if !errors.Is(err, ErrResourceLimit) || out != nil || limited.retained != 0 {
+		t.Fatalf("part clone allocated before quota: out=%+v err=%v retained=%d", out, err, limited.retained)
+	}
+}

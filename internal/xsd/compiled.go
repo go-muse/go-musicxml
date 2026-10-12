@@ -81,6 +81,12 @@ func (u Use) TypeName() QName {
 // IsAttribute reports whether the handle identifies an attribute use.
 func (u Use) IsAttribute() bool { return u.attribute != nil }
 
+// IsRequiredAttribute reports whether this exact attribute use is required.
+// It does not resolve inherited or actual-type applicability.
+func (u Use) IsRequiredAttribute() bool {
+	return u.attribute != nil && u.attribute.Use == AttributeRequired
+}
+
 // OwnerType returns the exact declaring complex type. Global declarations have
 // no owning type; inherited uses retain their original declaration owner.
 func (u Use) OwnerType() (TypeID, bool) {

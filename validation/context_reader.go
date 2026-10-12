@@ -96,7 +96,54 @@ func (r *contextReader) attribute(n *factNode, role contextRole) Evidence[Atomic
 	}
 	v, e := r.s.localScalar(r.ctx, n, &a)
 	r.err = e
+	if e == nil && v.State == EvidenceUnsupported && v.Reason == "exact-attribute-use-unavailable" {
+		if invalid, ok := r.missingRequiredAttribute(n, a); ok {
+			return invalid
+		}
+	}
 	return v
+}
+
+// missingRequiredAttribute bridges the deliberate absence of a kernel
+// AttributeResult for an omitted required slot. It proves only a selected use
+// directly declared by the authoritative actual type, in the same assembly and
+// schema graph. Equivalent compiled copies remain portable through catalog
+// interning. Inherited omissions remain conservative rather than guessing
+// whether a derived type retains or replaces its base attribute requirement.
+func (r *contextReader) missingRequiredAttribute(n *factNode, a AttributeSelector) (Evidence[Atomic], bool) {
+	if !r.step(contextDeclarationBytes(a.Declaration) + int64(len(a.Name.Space)+len(a.Name.Local)+len(r.b.requiredSchemaDigest))) {
+		return Evidence[Atomic]{}, false
+	}
+	owner, required := r.b.RequiredAttributes[a]
+	if !required || !n.closed || n.end.AttributesComplete.State != EvidenceKnown || !n.end.AttributesComplete.Value || r.s.schema == nil || r.s.schema.run == nil || r.s.schema.active == nil || r.s.schema.active.assembly != a.Declaration.Assembly || r.b.requiredSchemaDigest == "" || r.s.schema.active.Digest() != r.b.requiredSchemaDigest {
+		return Evidence[Atomic]{}, false
+	}
+	bound, ok := r.s.schema.nodes[n.header.ID]
+	if !ok || !bound.available {
+		return Evidence[Atomic]{}, false
+	}
+	actual, known := r.s.schema.run.ActualType(bound.binding)
+	if !known {
+		return Evidence[Atomic]{}, false
+	}
+	actualOwner := r.s.schema.active.component(actual)
+	if !r.step(contextComponentBytes(actualOwner)+contextComponentBytes(owner)) || actualOwner != owner {
+		return Evidence[Atomic]{}, false
+	}
+	// Exact expanded-name absence is independent of declaration matching. A
+	// present or uncertain same-named fact with the wrong selector cannot be
+	// turned into a missing required attribute by attributeEvidence's fallback.
+	for _, input := range n.attributes {
+		if !r.step(1 + int64(len(input.Name.Space)+len(input.Name.Local))) {
+			return Evidence[Atomic]{}, false
+		}
+		if input.Name == a.Name && input.Presence.State != EvidenceAbsent && (input.Presence.State != EvidenceKnown || input.Presence.Value) {
+			return Evidence[Atomic]{}, false
+		}
+	}
+	invalid, err := r.s.schemaInvalidValue(r.ctx, n, XSDCheckAttributes)
+	r.err = err
+	return invalid, err == nil && invalid.State == EvidenceInvalid && invalid.Cause != nil
 }
 
 // attributeSelector uses compiled owner/type lookup on the common path. The

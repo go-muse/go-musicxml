@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"math/big"
+	"sort"
 )
 
 const (
@@ -294,7 +295,7 @@ func contextRepeatPairRanges(ctx context.Context, s *Session, timeline *timeline
 
 var contextRepeatBeatValues = map[string]int64{"maxima": 32, "long": 16, "breve": 8, "whole": 4, "half": 2, "quarter": 1, "eighth": -2, "16th": -4, "32nd": -8, "64th": -16, "128th": -32, "256th": -64, "512th": -128, "1024th": -256}
 
-func contextRepeatBeat(r *contextReader, timeline *timelineService, n *factNode, value RepeatContextResult, pos Evidence[musicalPosition], typeRole, dotRole contextRole) Evidence[Rational] {
+func contextRepeatBeat(r *contextReader, timeline *timelineService, n *factNode, value RepeatContextResult, pos Evidence[musicalPosition], typeRole, dotRole contextRole, roster *contextRepeatMeterRoster) Evidence[Rational] {
 	child, available := r.child(n, typeRole)
 	if available.State != EvidenceKnown && available.State != EvidenceAbsent {
 		return stateUnavailable[bool, Rational](available)
@@ -305,98 +306,18 @@ func contextRepeatBeat(r *contextReader, timeline *timelineService, n *factNode,
 		if pos.State != EvidenceKnown {
 			return stateUnavailable[musicalPosition, Rational](pos)
 		}
-		staff := value.Staff
 		if value.AllStaves.State == EvidenceKnown && value.AllStaves.Value {
-			// A common beat for an all-staff style needs a uniform meter. Query
-			// one symbolic staff only after ruling out possible numbered overrides.
-			for _, publication := range timeline.State.Times.Publications {
-				if !r.step(1) {
-					return stateUnknown[Rational]("context-interrupted")
-				}
-				if publication.Scope.AllStaves || publication.Position.Part != pos.Value.Part {
-					continue
-				}
-				order, err := timeline.State.positionOrder(r.ctx, r.s, publication.Position, pos.Value)
-				if err != nil {
-					r.err = err
-					return stateUnknown[Rational]("context-interrupted")
-				}
-				if order != stateAfter {
-					return stateUnknown[Rational]("context-repeat-all-staff-meter-uniformity-unresolved")
-				}
-			}
-			for _, gap := range timeline.State.Times.Gaps {
-				if !r.step(1) {
-					return stateUnknown[Rational]("context-interrupted")
-				}
-				if gap.Scope.AllStaves || gap.Part != pos.Value.Part {
-					continue
-				}
-				if gap.Position != nil {
-					order, err := timeline.State.positionOrder(r.ctx, r.s, *gap.Position, pos.Value)
-					if err != nil {
-						r.err = err
-						return stateUnknown[Rational]("context-interrupted")
-					}
-					if order == stateAfter {
-						continue
-					}
-				} else if !gap.Placement.Displaced && gap.FirstMeasure > pos.Value.MeasureOrdinal {
-					continue
-				}
-				if gap.Availability.State == EvidenceKnown || gap.Availability.State == EvidenceAbsent {
-					return stateUnknown[Rational]("context-repeat-all-staff-meter-uniformity-unresolved")
-				}
-				return stateUnavailable[bool, Rational](gap.Availability)
-			}
-			staff = Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}
+			return contextRepeatUniformBeat(r, timeline, pos.Value, roster)
 		}
-		meter, err := queryState(r.ctx, r.s, &timeline.State, &timeline.State.Times, pos.Value, staff, func(v timeState) Evidence[timeState] { return Evidence[timeState]{State: EvidenceKnown, Value: v} })
+		meter, err := queryState(r.ctx, r.s, &timeline.State, &timeline.State.Times, pos.Value, value.Staff, func(v timeState) Evidence[Rational] { return contextRepeatSimpleMeterBeat(r, v) })
 		if err != nil {
 			r.err = err
 			return stateUnknown[Rational]("context-interrupted")
 		}
-		if meter.Value.State != EvidenceKnown {
-			return stateUnavailable[timeState, Rational](meter.Value)
-		}
-		v := meter.Value.Value
-		if v.SenzaMisura.State != EvidenceAbsent || len(v.Pairs) != 1 || v.Pairs[0].Beats.State != EvidenceKnown || v.Pairs[0].BeatType.State != EvidenceKnown {
-			return stateUnknown[Rational]("context-repeat-meter-beat-derivation-unresolved")
-		}
-		beats, denominator := v.Pairs[0].Beats.Value, v.Pairs[0].BeatType.Value
-		if beats != "1" && beats != "2" && beats != "3" && beats != "4" {
-			return stateUnknown[Rational]("context-repeat-meter-beat-derivation-unresolved")
-		}
-		denom := int64(0)
-		switch denominator {
-		case "1":
-			denom = 1
-		case "2":
-			denom = 2
-		case "4":
-			denom = 4
-		case "8":
-			denom = 8
-		case "16":
-			denom = 16
-		case "32":
-			denom = 32
-		case "64":
-			denom = 64
-		}
-		if denom == 0 {
-			return stateUnknown[Rational]("context-repeat-meter-beat-derivation-unresolved")
-		}
-		if err := r.s.retain(256); err != nil {
-			r.err = err
+		if r.err != nil {
 			return stateUnknown[Rational]("context-interrupted")
 		}
-		beat, err := NewRational(big.NewRat(4, denom))
-		if err != nil {
-			r.err = err
-			return stateUnknown[Rational]("context-interrupted")
-		}
-		return Evidence[Rational]{State: EvidenceKnown, Value: beat}
+		return meter.Value
 	}
 	if kind.State != EvidenceKnown {
 		return stateUnavailable[string, Rational](kind)
@@ -461,6 +382,8 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 	}
 	result := &contextRepeatService{ByNode: make(map[NodeID]int)}
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	meterRoster := &contextRepeatMeterRoster{}
+	defer meterRoster.close()
 	for _, id := range s.sequence {
 		node := s.nodes[id]
 		kind := RepeatStyleKind("")
@@ -518,7 +441,7 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 		}
 		contextRepeatDefaults(&value)
 		if displayRole != "" {
-			value.Beat = contextRepeatBeat(r, timeline, node, value, fact.Position, displayRole, dotRole)
+			value.Beat = contextRepeatBeat(r, timeline, node, value, fact.Position, displayRole, dotRole, meterRoster)
 		}
 		for _, ch := range node.children {
 			if exceptRole != "" && r.matches(ch, exceptRole) {
@@ -555,4 +478,341 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 	result.Final = true
 	service.Repeats = result
 	return Decision{Outcome: OutcomePass}, false, nil
+}
+
+// Project only the beat-bearing fields. Display/print metadata is independent.
+func contextRepeatSimpleMeterBeat(r *contextReader, v timeState) Evidence[Rational] {
+	if !r.step(1) {
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	if v.SenzaMisura.State != EvidenceAbsent {
+		if v.SenzaMisura.State != EvidenceKnown {
+			return stateUnavailable[string, Rational](v.SenzaMisura)
+		}
+		return stateUnknown[Rational]("context-repeat-meter-beat-derivation-unresolved")
+	}
+	if len(v.Pairs) != 1 {
+		return stateUnknown[Rational]("context-repeat-meter-beat-derivation-unresolved")
+	}
+	pair := v.Pairs[0]
+	if pair.Beats.State != EvidenceKnown {
+		return stateUnavailable[string, Rational](pair.Beats)
+	}
+	if pair.BeatType.State != EvidenceKnown {
+		return stateUnavailable[string, Rational](pair.BeatType)
+	}
+	if !r.step(int64(len(pair.Beats.Value) + len(pair.BeatType.Value))) {
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	beats, denominator := pair.Beats.Value, pair.BeatType.Value
+	if beats != "1" && beats != "2" && beats != "3" && beats != "4" {
+		return stateUnknown[Rational]("context-repeat-meter-beat-derivation-unresolved")
+	}
+	denom := int64(0)
+	switch denominator {
+	case "1":
+		denom = 1
+	case "2":
+		denom = 2
+	case "4":
+		denom = 4
+	case "8":
+		denom = 8
+	case "16":
+		denom = 16
+	case "32":
+		denom = 32
+	case "64":
+		denom = 64
+	}
+	if denom == 0 {
+		return stateUnknown[Rational]("context-repeat-meter-beat-derivation-unresolved")
+	}
+	if err := r.s.retain(256); err != nil {
+		r.err = err
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	beat, err := NewRational(big.NewRat(4, denom))
+	if err != nil {
+		r.err = err
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	return Evidence[Rational]{State: EvidenceKnown, Value: beat}
+}
+
+// A finite set of explicit selectors partitions the effective staff domain.
+// Query those selectors and, when needed, one representative of their complement.
+// Staff count and selector values remain arbitrary-width; neither is expanded.
+func contextRepeatUniformBeat(r *contextReader, timeline *timelineService, pos musicalPosition, rosters ...*contextRepeatMeterRoster) Evidence[Rational] {
+	count, err := timeline.State.effectiveStaves(r.ctx, r.s, pos)
+	if err != nil {
+		r.err = err
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	if count.Value.State != EvidenceKnown {
+		return stateUnavailable[Integer, Rational](count.Value)
+	}
+	if !count.Value.Value.Valid() || count.Value.Value.value.Sign() <= 0 {
+		return stateUnknown[Rational]("context-repeat-staff-domain-unavailable")
+	}
+	roster := (*contextRepeatMeterRoster)(nil)
+	if len(rosters) > 0 {
+		roster = rosters[0]
+	}
+	if roster == nil {
+		roster = &contextRepeatMeterRoster{}
+		defer roster.close()
+	}
+	if err := roster.prepare(r.ctx, r.s, timeline); err != nil {
+		r.err = err
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	if !r.step(1 + int64(len(pos.Part.DocumentID))) {
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	publications, gaps := roster.publications[pos.Part], roster.gaps[pos.Part]
+	release, err := contextRepeatIndexReserve(r.ctx, r.s, len(publications), len(gaps))
+	if err != nil {
+		r.err = err
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	defer release()
+	var selectors []Integer
+	collect := func(part NodeRef, scope stateScope) Evidence[bool] {
+		if !r.step(1 + int64(len(part.DocumentID)+len(pos.Part.DocumentID))) {
+			return stateUnknown[bool]("context-interrupted")
+		}
+		if part != pos.Part || scope.AllStaves {
+			return navigationKnownBool(true)
+		}
+		if !scope.Staff.Valid() || scope.Staff.value.Sign() <= 0 {
+			return stateUnknown[bool]("context-repeat-meter-staff-scope-unavailable")
+		}
+		if !r.step(scope.Staff.ByteSize() + count.Value.Value.ByteSize()) {
+			return stateUnknown[bool]("context-interrupted")
+		}
+		cmp, e := scope.Staff.Cmp(count.Value.Value)
+		if e != nil {
+			r.err = e
+			return stateUnknown[bool]("context-interrupted")
+		}
+		if cmp <= 0 {
+			selectors = append(selectors, scope.Staff)
+		}
+		return navigationKnownBool(true)
+	}
+	var possibleScopeGaps []stateGap
+	for _, i := range publications {
+		publication := &timeline.State.Times.Publications[i]
+		v := collect(publication.Position.Part, publication.Scope)
+		if r.err != nil {
+			return stateUnknown[Rational]("context-interrupted")
+		}
+		if v.State != EvidenceKnown {
+			if publication.Value.State != EvidenceKnown && publication.Value.State != EvidenceAbsent {
+				v = stateMergeGap(v, stateUnavailable[timeState, bool](publication.Value))
+			}
+			possibleScopeGaps = append(possibleScopeGaps, stateGap{Part: publication.Position.Part, Position: &publication.Position, Scope: stateScope{AllStaves: true}, Availability: v})
+		}
+	}
+	for _, i := range gaps {
+		gap := timeline.State.Times.Gaps[i]
+		if !r.step(1 + int64(len(gap.Part.DocumentID)+len(pos.Part.DocumentID))) {
+			return stateUnknown[Rational]("context-interrupted")
+		}
+		if gap.Part == pos.Part {
+			bound := gap.Position
+			if bound == nil {
+				bound = gap.Placement.Lower
+			}
+			if bound != nil {
+				order, e := timeline.State.positionOrder(r.ctx, r.s, *bound, pos)
+				if e != nil {
+					r.err = e
+					return stateUnknown[Rational]("context-interrupted")
+				}
+				if order == stateAfter {
+					continue
+				}
+			} else if !gap.Placement.Displaced && gap.FirstMeasure > pos.MeasureOrdinal {
+				continue
+			}
+		}
+		v := collect(gap.Part, gap.Scope)
+		if r.err != nil {
+			return stateUnknown[Rational]("context-interrupted")
+		}
+		if v.State != EvidenceKnown {
+			if gap.Availability.State != EvidenceKnown && gap.Availability.State != EvidenceAbsent {
+				v = stateMergeGap(v, gap.Availability)
+			}
+			possible := gap
+			possible.Scope = stateScope{AllStaves: true}
+			possible.Availability = v
+			possibleScopeGaps = append(possibleScopeGaps, possible)
+		}
+	}
+	sort.Slice(selectors, func(i, j int) bool {
+		if !r.step(selectors[i].ByteSize() + selectors[j].ByteSize()) {
+			return false
+		}
+		cmp, e := selectors[i].Cmp(selectors[j])
+		if e != nil {
+			r.err = e
+			return false
+		}
+		return cmp < 0
+	})
+	if r.err != nil {
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	result := Evidence[Rational]{State: EvidenceAbsent}
+	availability := navigationKnownBool(true)
+	query := func(staff Integer) bool {
+		beat, e := queryStateAtFull(r.ctx, r.s, &timeline.State, &timeline.State.Times, pos, Evidence[Integer]{State: EvidenceKnown, Value: staff}, func(v timeState) Evidence[Rational] { return contextRepeatSimpleMeterBeat(r, v) }, true, true, nil, possibleScopeGaps)
+		if e != nil {
+			r.err = e
+			return false
+		}
+		if r.err != nil {
+			return false
+		}
+		if beat.Value.State != EvidenceKnown {
+			gap := stateUnavailable[Rational, bool](beat.Value)
+			if gap.State == EvidenceAbsent {
+				gap = stateUnknown[bool]("context-repeat-meter-unavailable")
+			}
+			availability = stateMergeGap(availability, gap)
+			return true
+		}
+		if result.State == EvidenceAbsent {
+			result = beat.Value
+			return true
+		}
+		cmp, e := r.s.rationalCmp(r.ctx, result.Value, beat.Value.Value)
+		if e != nil {
+			r.err = e
+			return false
+		}
+		if cmp != 0 {
+			availability = stateMergeGap(availability, stateUnknown[bool]("context-repeat-all-staff-meter-uniformity-unresolved"))
+			return true
+		}
+		return true
+	}
+	missing := uint64(1)
+	var previous Integer
+	for _, staff := range selectors {
+		if !r.step(1) {
+			return stateUnknown[Rational]("context-interrupted")
+		}
+		if previous.Valid() {
+			if !r.step(previous.ByteSize() + staff.ByteSize()) {
+				return stateUnknown[Rational]("context-interrupted")
+			}
+			cmp, e := previous.Cmp(staff)
+			if e != nil {
+				r.err = e
+				return stateUnknown[Rational]("context-interrupted")
+			}
+			if cmp == 0 {
+				continue
+			}
+		}
+		previous = staff
+		cmp, e := navigationCountCompare(r.ctx, r.s, staff, missing)
+		if e != nil {
+			r.err = e
+			return stateUnknown[Rational]("context-interrupted")
+		}
+		if cmp == 0 {
+			missing++
+		}
+		if !query(staff) {
+			return result
+		}
+	}
+	cmp, err := navigationCountCompare(r.ctx, r.s, count.Value.Value, missing)
+	if err != nil {
+		r.err = err
+		return stateUnknown[Rational]("context-interrupted")
+	}
+	if cmp >= 0 {
+		representative, e := navigationInteger(r.ctx, r.s, missing)
+		if e != nil {
+			r.err = e
+			return stateUnknown[Rational]("context-interrupted")
+		}
+		if !query(representative) {
+			return result
+		}
+	}
+	if availability.State != EvidenceKnown {
+		return stateUnavailable[bool, Rational](availability)
+	}
+	return result
+}
+
+// A roster borrows immutable timeline entries for one completed provider
+// evaluation. It is prepared lazily once, prepaid before allocating any map or
+// slice backing, and released even when a later query is interrupted.
+type contextRepeatMeterRoster struct {
+	timeline                   *timelineService
+	publications               map[NodeRef][]int
+	gaps                       map[NodeRef][]int
+	publicationCount, gapCount int
+	release                    func()
+}
+
+func (index *contextRepeatMeterRoster) close() {
+	if index.release != nil {
+		index.release()
+		index.release = nil
+	}
+	index.timeline = nil
+	index.publications = nil
+	index.gaps = nil
+}
+func (index *contextRepeatMeterRoster) prepare(ctx context.Context, s *Session, timeline *timelineService) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if index.release != nil {
+		if index.timeline != timeline || index.publicationCount != len(timeline.State.Times.Publications) || index.gapCount != len(timeline.State.Times.Gaps) {
+			return contract("repeat meter roster", "immutable provider timeline required")
+		}
+		return nil
+	}
+	release, err := contextRepeatIndexReserve(ctx, s, len(timeline.State.Times.Publications), len(timeline.State.Times.Gaps))
+	if err != nil {
+		return err
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			release()
+		}
+	}()
+	publications := make(map[NodeRef][]int)
+	gaps := make(map[NodeRef][]int)
+	for i, p := range timeline.State.Times.Publications {
+		if err = s.step(ctx, 1+int64(len(p.Position.Part.DocumentID))); err != nil {
+			return err
+		}
+		publications[p.Position.Part] = append(publications[p.Position.Part], i)
+	}
+	for i, g := range timeline.State.Times.Gaps {
+		if err = s.step(ctx, 1+int64(len(g.Part.DocumentID))); err != nil {
+			return err
+		}
+		gaps[g.Part] = append(gaps[g.Part], i)
+	}
+	index.timeline = timeline
+	index.publications = publications
+	index.gaps = gaps
+	index.publicationCount = len(timeline.State.Times.Publications)
+	index.gapCount = len(timeline.State.Times.Gaps)
+	index.release = release
+	committed = true
+	return nil
 }

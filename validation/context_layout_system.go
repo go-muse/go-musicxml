@@ -53,7 +53,7 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 		if de.State != EvidenceKnown && de.State != EvidenceAbsent {
 			value = stateUnavailable[bool, Rational](de)
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-y"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "midway-between-current-and-previous-system-above-current-top"}}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-y"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "midway-between-current-and-previous-system-above-current-top"}}); err != nil {
 			return err
 		}
 		raw = layoutAttribute(r, divider, "default-x")
@@ -70,7 +70,7 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 				return err
 			}
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-x"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "corresponding-system-margin"}}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-x"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "corresponding-system-margin"}}); err != nil {
 			return err
 		}
 	}
@@ -78,6 +78,7 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 }
 
 type layoutSystemWidth struct {
+	Part       Evidence[NodeRef]
 	Node       *factNode
 	Frame      layoutFrame
 	Width, Sum Evidence[Rational]
@@ -133,7 +134,7 @@ func (l *layoutScopes) addWidth(b timelineMeasureBlock, frame layoutFrame, first
 		if err != nil {
 			return err
 		}
-		v = layoutSystemWidth{Node: b.measure, Frame: frame, Width: width, Sum: Evidence[Rational]{State: EvidenceKnown, Value: timelineZero}, Complete: l.systemComplete.State == EvidenceKnown && l.systemComplete.Value}
+		v = layoutSystemWidth{Part: b.part, Node: b.measure, Frame: frame, Width: width, Sum: Evidence[Rational]{State: EvidenceKnown, Value: timelineZero}, Complete: l.systemComplete.State == EvidenceKnown && l.systemComplete.Value}
 	}
 	raw := layoutAttribute(r, b.measure, "width")
 	width, err := l.rational(raw)
@@ -174,7 +175,7 @@ func (l *layoutScopes) publishWidths() error {
 				value = stateUnknown[Atomic]("system-width-disagreement-rendering-unspecified")
 			}
 		}
-		if err := l.publish(v.Node, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{r.s.documentID, v.Node.header.ID}, v.Frame, nil); err != nil {
+		if err := l.publish(v.Node, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, value, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{r.s.documentID, v.Node.header.ID}, v.Frame, nil, v.Part); err != nil {
 			return err
 		}
 	}

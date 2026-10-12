@@ -22,6 +22,7 @@ func layoutStateBindingSpecs() []contextBindingSpec {
 }
 
 var layoutStateProperties = []ContextProperty{
+	"layout.advisory-percussion-unpitched",
 	"layout.measure-number-staff", "layout.measure-number-multiple-rest-always", "layout.measure-number-multiple-rest-range", "layout.clef-staff", "layout.clef-line", "layout.clef-size", "layout.clef-after-barline", "layout.clef-system-print", "layout.key-system-print", "layout.created-part-staff-scope", "layout.hidden-line-coordinate", "layout.hidden-line-layout-count", "layout.staff-cutaway", "layout.staff-space-scale", "layout.staff-notation-scale", "layout.staff-size-affects-margins", "layout.staff-size-range", "layout.alternate-staff-playback", "layout.alternate-staff-source", "layout.part-symbol", "layout.part-symbol-top", "layout.part-symbol-bottom", "layout.part-symbol-barline-scope-change", "layout.dot-placement-active", "layout.measure-rest", "layout.stemlet", "layout.stem-relative-y", "layout.unpitched-default-position", "layout.display-staff-position", "layout.string-number-basis", "layout.note-size-category", "layout.measure-number-text", "layout.measure-number-display",
 }
 

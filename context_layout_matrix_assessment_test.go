@@ -811,3 +811,241 @@ func TestLayoutMatrixDividers(t *testing.T) {
 		})
 	}
 }
+
+func TestLayoutMatrixArrowheadAndAbsentOwners(t *testing.T) {
+	for _, tc := range []struct {
+		axis, content string
+		count         int
+	}{
+		{"positive", `<arrow-direction>up</arrow-direction><arrowhead/>`, 1},
+		{"negative", `<arrow-direction>up</arrow-direction>`, 0},
+		{"boundary", `<arrow-direction>left</arrow-direction><arrow-style>filled</arrow-style><arrowhead/>`, 1},
+		{"interaction", `<arrow-direction>down</arrow-direction><arrowhead/>`, 1},
+	} {
+		t.Run(tc.axis, func(t *testing.T) {
+			layoutReports(t, layoutMatrixNote(`<notations><technical><arrow>`+tc.content+`</arrow></technical></notations>`), "", func(t *testing.T, r validation.Report) {
+				rows := layoutFacts(r, "geometry")
+				if len(rows) != tc.count {
+					t.Fatalf("head-only rows %d want %d", len(rows), tc.count)
+				}
+				for _, v := range rows {
+					if v.Value.State != validation.EvidenceKnown || v.Value.Value.Text != "head-only" {
+						t.Errorf("geometry %+v", v.Value)
+					}
+				}
+				layoutMatrixNoDefect(t, r)
+			})
+		})
+	}
+	t.Run("missing_fact", func(t *testing.T) {
+		layoutReports(t, layoutMatrixNote(""), "", func(t *testing.T, r validation.Report) {
+			if len(layoutFacts(r, "geometry")) != 0 {
+				t.Fatal("invented arrow from absent notation")
+			}
+		})
+	})
+	for _, property := range []string{"unplayed-string", "numeral-root-text"} {
+		t.Run(property+"/negative", func(t *testing.T) {
+			layoutReports(t, layoutMatrixNote(""), "", func(t *testing.T, r validation.Report) {
+				if len(layoutFacts(r, property)) != 0 {
+					t.Fatal("default applied outside its owner")
+				}
+			})
+		})
+	}
+}
+
+func TestLayoutMatrixPageMarginSelection(t *testing.T) {
+	for _, tc := range []struct {
+		axis, typ string
+		print     bool
+		want      layoutMatrixValue
+	}{
+		{"positive", "", false, lmk("11")}, {"negative", `type="even"`, false, lmu()},
+		{"boundary", `type="odd"`, false, lmk("11")}, {"missing_fact", `type="invalid"`, false, lmi()},
+		{"interaction", `type="even"`, true, lmk("11")},
+	} {
+		t.Run(tc.axis, func(t *testing.T) {
+			layout := `<page-layout><page-margins ` + tc.typ + `><left-margin>11</left-margin><right-margin>12</right-margin><top-margin>13</top-margin><bottom-margin>14</bottom-margin></page-margins></page-layout>`
+			header := `<defaults>` + layout + `</defaults>`
+			body := `<print/>`
+			if tc.print {
+				header = ""
+				body = `<print>` + layout + `</print>`
+			}
+			layoutReports(t, body, header, func(t *testing.T, r validation.Report) { layoutMatrixValues(t, r, "page-left-margin", tc.want) })
+		})
+	}
+}
+
+func TestLayoutMatrixLyricAlignmentDefaults(t *testing.T) {
+	for _, tc := range []struct {
+		axis, attrs       string
+		placement, halign layoutMatrixValue
+	}{
+		{"positive", "", lmk("below"), lmk("center")},
+		{"negative", `placement="above" justify="left"`, lmk("above"), lmk("left")},
+		{"boundary", `justify="right"`, lmk("below"), lmk("right")},
+		{"missing_fact", `justify="invalid"`, lmk("below"), lmi()},
+		{"interaction", `placement="invalid" justify="left"`, lmi(), lmk("left")},
+	} {
+		t.Run(tc.axis, func(t *testing.T) {
+			layoutReports(t, layoutMatrixNote(`<lyric `+tc.attrs+`><text>x</text></lyric>`), "", func(t *testing.T, r validation.Report) {
+				layoutMatrixValues(t, r, "lyric-placement", tc.placement)
+				rows := layoutMatrixRows(r, "halign")
+				if len(rows) < 1 {
+					t.Fatal("missing lyric alignment")
+				}
+				got := rows[0].Value
+				if got.State != tc.halign.state || (got.State == validation.EvidenceKnown && got.Value.Text != tc.halign.text) {
+					t.Errorf("lyric halign %+v", got)
+				}
+				vals := layoutMatrixRows(r, "valign")
+				if len(vals) < 1 || vals[0].Value.Value.Text != "baseline" {
+					t.Error("lyric baseline lost")
+				}
+			})
+		})
+	}
+}
+
+func TestLayoutMatrixStaffOverrideLifetime(t *testing.T) {
+	header := `<identification><encoding><supports element="print" attribute="new-page" value="yes" type="yes"/><supports element="print" attribute="new-system" value="yes" type="yes"/></encoding></identification><defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`
+	for _, tc := range []struct {
+		axis, second string
+		want         layoutMatrixValue
+	}{
+		{"positive", `<print new-system="yes"/>`, lmk("12")},
+		{"negative", `<print new-system="no"/>`, lmk("22")},
+		{"boundary", `<print new-page="yes"/>`, lmk("12")},
+		{"missing_fact", `<print new-system="invalid"/>`, lmu()},
+		{"interaction", `<print new-system="yes"><staff-layout><staff-distance>32</staff-distance></staff-layout></print>`, lmk("32")},
+	} {
+		t.Run(tc.axis, func(t *testing.T) {
+			layoutMatrixMeasures(t, header, []string{`<print><staff-layout><staff-distance>22</staff-distance></staff-layout></print>`, tc.second}, func(t *testing.T, r validation.Report) {
+				layoutMatrixValues(t, r, "staff-distance", lmk("22"), tc.want)
+			})
+		})
+	}
+}
+
+func TestLayoutMatrixDefaultsStayComponentLocal(t *testing.T) {
+	for _, tc := range []struct {
+		axis, defaults, attrs string
+		want                  layoutMatrixValue
+	}{
+		{"positive", `<word-font font-family="Default"/>`, "", lmk("Default")},
+		{"negative", `<music-font font-family="Music"/>`, "", lmu()},
+		{"boundary", `<word-font font-style="italic"/>`, "", lmu()},
+		{"missing_fact", "", "", lmu()},
+		{"interaction", `<word-font font-family="Default"/>`, `font-family="Local"`, lmk("Local")},
+	} {
+		t.Run(tc.axis, func(t *testing.T) {
+			layoutReports(t, layoutMatrixWords(tc.attrs), `<defaults>`+tc.defaults+`</defaults>`, func(t *testing.T, r validation.Report) {
+				rows := layoutMatrixRows(r, "font-family")
+				if len(rows) == 0 {
+					t.Fatal("missing word font")
+				}
+				got := rows[len(rows)-1].Value
+				if got.State != tc.want.state || (got.State == validation.EvidenceKnown && got.Value.Text != tc.want.text) {
+					t.Errorf("font %+v want %+v", got, tc.want)
+				}
+			})
+		})
+	}
+}
+
+func TestLayoutMatrixEmptyLanguageClears(t *testing.T) {
+	for _, tc := range []struct {
+		axis, first, second string
+		want                layoutMatrixValue
+	}{
+		{"positive", `xml:lang="fr"`, `xml:lang=""`, lmk("")},
+		{"negative", `xml:lang="fr"`, "", lmk("fr")},
+		{"boundary", `xml:lang=""`, "", lmk("")},
+		{"missing_fact", `xml:lang="*"`, "", lmi()},
+		{"interaction", `xml:lang="*"`, `xml:lang=""`, lmk("")},
+	} {
+		t.Run(tc.axis, func(t *testing.T) {
+			body := `<direction><direction-type><words ` + tc.first + `>a</words><words ` + tc.second + `>b</words></direction-type></direction>`
+			layoutReports(t, body, "", func(t *testing.T, r validation.Report) {
+				rows := layoutMatrixRows(r, "language")
+				if len(rows) < 2 {
+					t.Fatal("missing word language")
+				}
+				got := rows[len(rows)-1].Value
+				if got.State != tc.want.state || (got.State == validation.EvidenceKnown && got.Value.Text != tc.want.text) {
+					t.Errorf("language %+v want %+v", got, tc.want)
+				}
+			})
+		})
+	}
+}
+
+func TestLayoutMatrixInheritedTextDefaults(t *testing.T) {
+	for _, tc := range []struct {
+		axis, first, second string
+		cross               bool
+		dir, spacing        layoutMatrixValue
+	}{
+		{"positive", "", "", false, lmk("ltr"), lmk("normal")},
+		{"negative", `dir="invalid" letter-spacing="bad"`, "", false, lmi(), lmi()},
+		{"boundary", `dir="rtl" letter-spacing="0"`, "", false, lmk("rtl"), lmk("0")},
+		{"missing_fact", `dir="rtl" letter-spacing="2"`, "", true, lmu(), lmu()},
+		{"interaction", `dir="invalid" letter-spacing="bad"`, `dir="ltr" letter-spacing="normal"`, false, lmk("ltr"), lmk("normal")},
+	} {
+		t.Run(tc.axis, func(t *testing.T) {
+			separator := ""
+			if tc.cross {
+				separator = `</direction-type><direction-type>`
+			}
+			body := `<direction><direction-type><words ` + tc.first + `>a</words>` + separator + `<words ` + tc.second + `>b</words></direction-type></direction>`
+			layoutReports(t, body, "", func(t *testing.T, r validation.Report) {
+				for _, pair := range []struct {
+					property string
+					want     layoutMatrixValue
+				}{{"dir", tc.dir}, {"letter-spacing", tc.spacing}} {
+					rows := layoutMatrixRows(r, pair.property)
+					if len(rows) != 2 {
+						t.Fatalf("%s rows %d", pair.property, len(rows))
+					}
+					got := rows[1].Value
+					value := got.Value.Text
+					if got.Value.Kind == validation.AtomicDecimal {
+						value = got.Value.Decimal.String()
+					}
+					if got.State != pair.want.state || (got.State == validation.EvidenceKnown && value != pair.want.text) {
+						t.Errorf("%s %+v want %+v", pair.property, got, pair.want)
+					}
+				}
+			})
+		})
+	}
+}
+
+func TestLayoutMatrixNameTextDefaults(t *testing.T) {
+	for _, element := range []string{"display-text", "accidental-text"} {
+		for _, tc := range []struct {
+			axis, attrs         string
+			language, enclosure layoutMatrixValue
+		}{
+			{"positive", "", lmk("it"), lmk("none")},
+			{"negative", `xml:lang="fr" enclosure="circle"`, lmk("fr"), lmk("circle")},
+			{"boundary", `xml:lang="" enclosure="none"`, lmk(""), lmk("none")},
+			{"missing_fact", `xml:lang="*" enclosure="invalid"`, lmi(), lmi()},
+			{"interaction", `xml:lang="de" enclosure="square" font-family="Explicit"`, lmk("de"), lmk("square")},
+		} {
+			t.Run(element+"/"+tc.axis, func(t *testing.T) {
+				value := "Name"
+				if element == "accidental-text" {
+					value = "sharp"
+				}
+				body := `<print><part-name-display><` + element + ` ` + tc.attrs + `>` + value + `</` + element + `></part-name-display></print>`
+				layoutReports(t, body, "", func(t *testing.T, r validation.Report) {
+					layoutMatrixValues(t, r, "language", tc.language)
+					layoutMatrixValues(t, r, "enclosure", tc.enclosure)
+				})
+			})
+		}
+	}
+}

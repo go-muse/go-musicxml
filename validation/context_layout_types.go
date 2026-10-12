@@ -32,6 +32,8 @@ const (
 // that MusicXML specifies an engraver's complete physical geometry.
 type LayoutContextResult struct {
 	Scope, Origin NodeRef
+	// Part identifies the accepted score part for per-part rows, including timewise measures.
+	Part Evidence[NodeRef]
 	// Page and System identify established encoded layout occurrences.
 	Page, System Evidence[NodeRef]
 	// Staff is a sparse within-part selector, never an expanded staff array.
@@ -50,10 +52,14 @@ func cloneLayoutContext(ctx context.Context, s *Session, p *LayoutContextResult)
 	if p == nil {
 		return nil, nil
 	}
-	if err := contextRetainProjection(ctx, s, *p); err != nil {
+	value := *p
+	if value.Part.State == "" {
+		value.Part.State = EvidenceAbsent
+	}
+	if err := contextRetainProjection(ctx, s, value); err != nil {
 		return nil, err
 	}
-	q := stateClone(*p)
+	q := stateClone(value)
 	return &q, nil
 }
 

@@ -209,6 +209,14 @@ func TestLayoutStaffDefaultsApplyAcrossParts(t *testing.T) {
 			if len(values) != 2 {
 				t.Fatalf("got %d staff scopes", len(values))
 			}
+			parts := map[validation.NodeRef]bool{}
+			for _, v := range values {
+				part := v.Layout.Part
+				if part.State != validation.EvidenceKnown || part.Value.Node == 0 || parts[part.Value] {
+					t.Fatalf("ambiguous part identity %+v", part)
+				}
+				parts[part.Value] = true
+			}
 			for i, v := range values {
 				if v.Value.Value.Decimal.String() != "12" || v.Layout.Staff.Value.String() != "1" || v.Layout.Applicability.State != validation.EvidenceKnown || v.Layout.Applicability.Value != (i == 1) {
 					t.Errorf("tw%v model%v staff%d=%+v payload%+v", tw, model, i, v, v.Layout)
@@ -342,11 +350,12 @@ func TestLayoutFormattingAndGeometryAgainstPinnedSchema(t *testing.T) {
 	}
 }
 func TestLayoutHiddenSpaceAndVisiblePublisherAreSeparate(t *testing.T) {
-	for _, spacing := range []string{"yes", "no"} {
+	for _, cfg := range []struct{ object, spacing string }{{"no", "yes"}, {"no", "no"}, {"no", "invalid"}, {"yes", "yes"}, {"invalid", "yes"}} {
+		spacing, object := cfg.spacing, cfg.object
 		for _, tw := range []bool{false, true} {
 			for _, model := range []bool{false, true} {
 				header := `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults><part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>`
-				a := `<attributes><staff-details print-object="no" print-spacing="` + spacing + `"/></attributes>`
+				a := `<attributes><staff-details print-object="` + object + `" print-spacing="` + spacing + `"/></attributes>`
 				b := `<print><system-layout><system-distance>73</system-distance></system-layout></print>`
 				source := `<score-partwise>` + header + `<part id="P1"><measure number="1">` + a + `</measure></part><part id="P2"><measure number="1">` + b + `</measure></part></score-partwise>`
 				if tw {
@@ -370,11 +379,11 @@ func TestLayoutHiddenSpaceAndVisiblePublisherAreSeparate(t *testing.T) {
 				if len(staff) != 2 {
 					t.Fatal("missing staff scopes")
 				}
-				if staff[1].Layout.Applicability.State != validation.EvidenceKnown || staff[1].Layout.Applicability.Value != (spacing == "yes") {
+				if ((spacing == "invalid" || object == "invalid") && staff[1].Layout.Applicability.State == validation.EvidenceKnown) || (spacing != "invalid" && object != "invalid" && (staff[1].Layout.Applicability.State != validation.EvidenceKnown || staff[1].Layout.Applicability.Value != (object == "yes" || spacing == "yes"))) {
 					t.Errorf("spacing=%s tw=%v model=%v P2=%+v", spacing, tw, model, staff[1].Layout)
 				}
 				system := layoutFacts(r, "system-distance")
-				if len(system) != 2 || system[0].Value.Value.Decimal.String() != "73" || system[1].Value.Value.Decimal.String() != "73" {
+				if len(system) != 2 || (object == "no" && (system[0].Value.Value.Decimal.String() != "73" || system[1].Value.Value.Decimal.String() != "73")) || (object != "no" && (system[0].Value.State == validation.EvidenceKnown || system[1].Value.State == validation.EvidenceKnown)) {
 					t.Errorf("wrong first visible publisher %+v", system)
 				}
 			}
@@ -515,12 +524,26 @@ func TestLayoutGroupDisplayPriorityAndExplicitOverride(t *testing.T) {
 		if abbrev {
 			name, display = "group-abbreviation", "group-abbreviation-display"
 		}
-		for _, present := range []bool{false, true} {
+		for _, mode := range []string{"absent", "present", "empty", "other"} {
+			present := mode == "present" || mode == "empty"
 			for _, tw := range []bool{false, true} {
 				for _, model := range []bool{false, true} {
 					body := `<part-group type="start" number="1"><` + name + ` font-family="Deprecated">Group</` + name + `>`
-					if present {
+					if mode == "present" {
 						body += `<` + display + `><display-text font-family="Preferred">Shown</display-text></` + display + `>`
+					} else if mode == "empty" {
+						body += `<` + display + `/>`
+					} else if mode == "other" {
+						other := "group-abbreviation-display"
+						if abbrev {
+							other = "group-name-display"
+						}
+						otherXML := `<` + other + `><display-text>Other</display-text></` + other + `>`
+						if abbrev {
+							body = strings.Replace(body, `<group-abbreviation`, otherXML+`<group-abbreviation`, 1)
+						} else {
+							body += otherXML
+						}
 					}
 					body += `</part-group>`
 					source := contextFixtureXML(`<print/>`, tw)
@@ -575,14 +598,22 @@ func TestLayoutWordFontDoesNotCrossNotationDomains(t *testing.T) {
 func TestLayoutParallelPrintPositionsUseMusicalOffsets(t *testing.T) {
 	for _, tw := range []bool{false, true} {
 		for _, model := range []bool{false, true} {
-			for _, different := range []bool{false, true} {
+			for _, mode := range []string{"equal", "different", "rewound", "unavailable", "one-publisher"} {
+				different := mode == "different" || mode == "unavailable"
 				header := `<defaults><page-layout><page-height>100</page-height><page-width>80</page-width></page-layout></defaults><part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>`
 				prefix := `<attributes><divisions>1</divisions></attributes>`
 				note := `<note><rest/><duration>1</duration></note>`
 				a := prefix + `<print new-page="yes"/>` + note
 				b := a
-				if different {
+				switch mode {
+				case "different":
 					b = prefix + note + `<print new-page="yes"/>`
+				case "rewound":
+					b = prefix + note + `<backup><duration>1</duration></backup><print new-page="yes"/>`
+				case "unavailable":
+					b = prefix + `<backup><duration>1</duration></backup><print new-page="yes"/>`
+				case "one-publisher":
+					b = prefix + note
 				}
 				source := `<score-partwise>` + header + `<part id="P1"><measure number="1">` + a + `</measure></part><part id="P2"><measure number="1">` + b + `</measure></part></score-partwise>`
 				if tw {

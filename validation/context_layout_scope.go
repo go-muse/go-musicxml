@@ -73,7 +73,7 @@ func (l *layoutScopes) supports(attribute string) Evidence[bool] {
 	}
 	return result
 }
-func (l *layoutScopes) publish(n *factNode, property string, raw, value Evidence[Atomic], active Evidence[bool], scope NodeRef, frame layoutFrame, origin *factNode) error {
+func (l *layoutScopes) publish(n *factNode, property string, raw, value Evidence[Atomic], active Evidence[bool], scope NodeRef, frame layoutFrame, origin *factNode, part Evidence[NodeRef]) error {
 	ref := NodeRef{l.r.s.documentID, n.header.ID}
 	from := ref
 	if origin != nil {
@@ -86,7 +86,7 @@ func (l *layoutScopes) publish(n *factNode, property string, raw, value Evidence
 			provenance = ContextApplicationChoice
 		}
 	}
-	return l.r.s.publishContextResult(l.r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Layout: &LayoutContextResult{Scope: scope, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitTenths, Page: frame.page, System: frame.system, Provenance: provenance}})
+	return l.r.s.publishContextResult(l.r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Layout: &LayoutContextResult{Part: part, Scope: scope, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitTenths, Page: frame.page, System: frame.system, Provenance: provenance}})
 }
 func (l *layoutScopes) child(n *factNode, name string) (*factNode, Evidence[bool]) {
 	if n == nil {
@@ -344,7 +344,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			active := Evidence[bool]{State: EvidenceKnown, Value: true}
 			for _, name := range []string{"page-height", "page-width"} {
 				raw, value, origin := l.effectivePage(frame, pageDefaults, name)
-				if err = l.publish(b.measure, name, raw, value, active, ref, frame, origin); err != nil {
+				if err = l.publish(b.measure, name, raw, value, active, ref, frame, origin, b.part); err != nil {
 					return err
 				}
 			}
@@ -354,19 +354,19 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				if name == "system-distance" && app.State == EvidenceKnown {
 					app.Value = !app.Value
 				}
-				if err = l.publish(b.measure, name, raw, value, app, ref, frame, origin); err != nil {
+				if err = l.publish(b.measure, name, raw, value, app, ref, frame, origin, b.part); err != nil {
 					return err
 				}
 			}
 			print, _ := l.child(b.content, "print")
 			measureLayout, _ := l.child(print, "measure-layout")
 			raw := l.scalar(measureLayout, "measure-distance")
-			if err = l.publish(b.measure, "measure-distance", raw, raw, stateUnknown[bool]("internal-system-whitespace-unavailable"), ref, frame, measureLayout); err != nil {
+			if err = l.publish(b.measure, "measure-distance", raw, raw, stateUnknown[bool]("internal-system-whitespace-unavailable"), ref, frame, measureLayout, b.part); err != nil {
 				return err
 			}
 
 			if conflict {
-				if err = l.publish(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, stateUnknown[Atomic]("parallel-print-rendering-unspecified"), active, ref, frame, nil); err != nil {
+				if err = l.publish(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, stateUnknown[Atomic]("parallel-print-rendering-unspecified"), active, ref, frame, nil, b.part); err != nil {
 					return err
 				}
 			}

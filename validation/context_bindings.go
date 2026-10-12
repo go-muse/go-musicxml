@@ -33,7 +33,10 @@ type contextBindings struct {
 	Roles          map[contextRole][]SchemaUse
 	Attributes     map[contextRole]map[ComponentID]AttributeSelector
 	AttributeUses  map[contextRole]map[DeclarationID]AttributeSelector
-	bytes          int64
+	// Exact owner identities remain portable across equal-schema interning.
+	RequiredAttributes   map[AttributeSelector]ComponentID
+	requiredSchemaDigest string
+	bytes                int64
 }
 type contextBindingsCache struct {
 	once     sync.Once
@@ -93,13 +96,19 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 	}
 	index := make(map[useKey][]SchemaUse)
 	uses := schema.Uses()
+	required := make(map[DeclarationID]ComponentID)
+	for _, u := range schema.kernel.Uses() {
+		if owner, ok := u.OwnerType(); ok && u.IsRequiredAttribute() {
+			required[schema.declaration(u)] = schema.component(owner)
+		}
+	}
 	for _, u := range uses {
 		if u.OwnerTypeKnown {
 			k := useKey{u.OwnerType, u.Name, u.Attribute}
 			index[k] = append(index[k], u)
 		}
 	}
-	b := &contextBindings{Elements: make(map[contextRole]map[DeclarationID]struct{}), AttributeRoles: make(map[DeclarationID][]contextAttributeRole), Roles: make(map[contextRole][]SchemaUse), Attributes: make(map[contextRole]map[ComponentID]AttributeSelector), AttributeUses: make(map[contextRole]map[DeclarationID]AttributeSelector), bytes: 512}
+	b := &contextBindings{Elements: make(map[contextRole]map[DeclarationID]struct{}), AttributeRoles: make(map[DeclarationID][]contextAttributeRole), Roles: make(map[contextRole][]SchemaUse), Attributes: make(map[contextRole]map[ComponentID]AttributeSelector), AttributeUses: make(map[contextRole]map[DeclarationID]AttributeSelector), RequiredAttributes: make(map[AttributeSelector]ComponentID), requiredSchemaDigest: schema.Digest(), bytes: 640 + int64(len(schema.Digest()))}
 	for _, spec := range specs {
 		if spec.Role == "" || spec.Name == "" || spec.Type == "" || (spec.Count < 1 && spec.Count != -1) || (spec.Count == -1 && spec.Owner != "") {
 			return nil, contract("context binding spec", "exact fixed role or declared-type family required")
@@ -138,6 +147,12 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 			declarations := make(map[DeclarationID]AttributeSelector)
 			for _, u := range bound {
 				a := AttributeSelector{Name: u.Name, Declaration: u.Declaration}
+				if owner, ok := required[u.Declaration]; ok {
+					if _, exists := b.RequiredAttributes[a]; !exists {
+						b.RequiredAttributes[a] = owner
+						b.bytes += 256 + contextDeclarationBytes(a.Declaration) + contextComponentBytes(owner) + int64(len(a.Name.Space)+len(a.Name.Local))
+					}
+				}
 				if old, ok := owners[u.OwnerType]; ok && old != a {
 					return nil, contract("context attribute role", "ambiguous exact owner slot")
 				}

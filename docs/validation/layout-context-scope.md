@@ -13,7 +13,10 @@ statuses are unchanged.
 encoded/default/inherited evidence. These metadata also describe local scalar
 projections; their use is not restricted to geometric fields. Derived exact
 ratios use `Layout.Conversion`. Page/system references identify structural
-occurrences, never printed labels. `Basis` records the documented coordinate
+occurrences, never printed labels. `Layout.Part` preserves the accepted canonical
+part identity for per-part rows, including timewise rows sharing an outer measure
+and staff number. Unavailable part evidence retains its cause; unrelated rows
+carry explicit absence. `Basis` records the documented coordinate
 relation, not a computed unencoded position.
 
 Formatting is component-local. Explicit child attributes win. Consecutive

@@ -52,6 +52,27 @@ func contextRepeatNoteScopes(ctx context.Context, s *Session, timeline *timeline
 		notes[note.Origin.Part.Value] = append(notes[note.Origin.Part.Value], index)
 	}
 
+	voiceFilters := make([]*contextRepeatVoiceFilter, len(rows))
+	var voiceReleases []func()
+	defer func() {
+		for _, free := range voiceReleases {
+			free()
+		}
+	}()
+	for i := range rows {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		if len(rows[i].value.ExceptVoices) == 0 {
+			continue
+		}
+		filter, free, e := contextRepeatBuildVoiceFilter(ctx, s, rows[i].value.ExceptVoices)
+		if e != nil {
+			return e
+		}
+		voiceFilters[i] = filter
+		voiceReleases = append(voiceReleases, free)
+	}
 	for i := range rows {
 		if err = s.step(ctx, 1); err != nil {
 			return err
@@ -162,25 +183,15 @@ func contextRepeatNoteScopes(ctx context.Context, s *Session, timeline *timeline
 				} else {
 					v.Applies = stateMergeGap(v.Applies, scope)
 				}
-				for _, except := range row.value.ExceptVoices {
-					if err := s.step(ctx, 1+int64(len(except.Value)+len(fact.Voice.Value))); err != nil {
-						return err
+				if voiceFilters[i] != nil && !(v.Applies.State == EvidenceKnown && !v.Applies.Value) {
+					applies, e := contextRepeatVoiceApplies(ctx, s, voiceFilters[i], fact.Voice)
+					if e != nil {
+						return e
 					}
-					if except.State == EvidenceKnown && fact.Voice.State == EvidenceKnown && except.Value == fact.Voice.Value {
-						v.Applies = navigationKnownBool(false)
-						break
-					}
-					if v.Applies.State == EvidenceKnown && !v.Applies.Value {
-						continue
-					}
-					if except.State != EvidenceKnown {
-						v.Applies = stateMergeGap(v.Applies, stateUnavailable[string, bool](except))
-					} else if fact.Voice.State != EvidenceKnown {
-						gap := stateUnavailable[string, bool](fact.Voice)
-						if gap.State == EvidenceAbsent {
-							gap = stateUnknown[bool]("context-repeat-note-voice-unavailable")
-						}
-						v.Applies = stateMergeGap(v.Applies, gap)
+					if applies.State == EvidenceKnown && !applies.Value {
+						v.Applies = applies
+					} else {
+						v.Applies = stateMergeGap(v.Applies, applies)
 					}
 				}
 			}

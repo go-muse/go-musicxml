@@ -139,7 +139,7 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		if origin != nil {
 			from.Node = origin.header.ID
 		}
-		payload := &LayoutContextResult{Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitTenths, Page: frame.page, System: frame.system, Staff: stateInteger(number), Provenance: ContextInherited, Basis: "previous-system-staff-bottom-to-current-staff-top"}
+		payload := &LayoutContextResult{Part: b.part, Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitTenths, Page: frame.page, System: frame.system, Staff: stateInteger(number), Provenance: ContextInherited, Basis: "previous-system-staff-bottom-to-current-staff-top"}
 		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: "layout.staff-distance", Value: value, Layout: payload}); err != nil {
 			return err
 		}
@@ -204,7 +204,7 @@ func (l *layoutScopes) firstSystemStaff(blocks []timelineMeasureBlock, slots boo
 			if visible.Value {
 				return result, nil
 			}
-			if spacing.State != EvidenceKnown {
+			if slots && spacing.State != EvidenceKnown {
 				return stateUnavailable[bool, layoutStaffRef](spacing), nil
 			}
 			if slots && spacing.Value {
