@@ -1,0 +1,72 @@
+package validation
+
+import (
+	"context"
+	"testing"
+)
+
+func runtimeFixture(t *testing.T) (*Session, *timelineService, *timelineBindings) {
+	t.Helper()
+	s := rationalSession(t, Budgets{})
+	s.documentID = "d"
+	t.Cleanup(s.cleanup)
+	service := &timelineService{Facts: map[NodeID]timelineEventFact{}}
+	stateClose(t, s, &service.State, 5)
+	return s, service, stateBindings()
+}
+func runtimeBlock(b *timelineBindings, ordinal uint64, children ...*factNode) timelineMeasureBlock {
+	n := stateNode(b, timelineRoleMeasure, NodeID(500+ordinal), stateAbsent[Atomic](), children...)
+	return timelineMeasureBlock{content: n, measure: n, part: stateKnown(NodeRef{"d", 1}), ordinal: ordinal, complete: stateKnown(true)}
+}
+func runtimeNote(t *testing.T, b *timelineBindings, id NodeID, duration int64, chord bool) *factNode {
+	children := []*factNode{stateNode(b, timelineRoleNoteDuration, id+1, stateAtomicDecimal(t, duration, 1))}
+	if chord {
+		children = append(children, stateNode(b, timelineRoleNoteChord, id+2, stateAbsent[Atomic]()))
+	}
+	return stateNode(b, timelineRoleNote, id, stateAbsent[Atomic](), children...)
+}
+func TestTimelineRuntimeExactMeasureAndInheritance(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	attr := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 3, 1)))
+	backup := stateNode(b, timelineRoleBackup, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 61, stateAtomicDecimal(t, 2, 1)))
+	key := stateNode(b, timelineRoleAttributes, 70, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesKey, 71, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 72, stateAtomicInteger(t, 2))))
+	block := runtimeBlock(b, 0, attr, runtimeNote(t, b, 30, 1, false), runtimeNote(t, b, 40, 1, true), runtimeNote(t, b, 50, 1, false), backup, key, runtimeNote(t, b, 80, 1, false))
+	if err := service.readMeasure(context.Background(), s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	for id, want := range map[NodeID]string{20: "0", 30: "0", 40: "0", 50: "1/3", 60: "2/3", 70: "0", 80: "0"} {
+		fact := service.Facts[id]
+		if fact.Position.State != EvidenceKnown || fact.Position.Value.Offset.String() != want {
+			t.Errorf("node%d=%+v want%s", id, fact.Position, want)
+		}
+	}
+	next := runtimeBlock(b, 1, runtimeNote(t, b, 90, 2, false), runtimeNote(t, b, 100, 1, false))
+	if err := service.readMeasure(context.Background(), s, b, next); err != nil {
+		t.Fatal(err)
+	}
+	if got := service.Facts[100].Position.Value.Offset.String(); got != "2/3" {
+		t.Fatalf("inherited exactunits=%s", got)
+	}
+	keyResult, err := service.State.effectiveKey(context.Background(), s, service.Facts[50].Position.Value, stateKnown(stateInt(t, 1)))
+	if err != nil || keyResult.Value.State != EvidenceKnown || keyResult.Value.Value.Fifths.Value.String() != "2" {
+		t.Fatalf("score-order key=%+v,%v", keyResult, err)
+	}
+}
+func TestTimelineRuntimeUnknownPositionOnlyGapsPublishedFamily(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	attr := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesKey, 21, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 22, stateAtomicInteger(t, 0))))
+	later := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesClef, 41, stateAbsent[Atomic](), stateNode(b, timelineRoleClefSign, 42, stateAtomicText("G"))))
+	block := runtimeBlock(b, 0, attr, runtimeNote(t, b, 30, 1, false), later)
+	if err := service.readMeasure(context.Background(), s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	at := statePosition(t, 1, 0, 1)
+	key, err := service.State.effectiveKey(context.Background(), s, at, stateKnown(stateInt(t, 1)))
+	if err != nil || key.Value.State != EvidenceKnown {
+		t.Fatalf("unrelated key lost=%+v,%v", key, err)
+	}
+	clef := stateQuery(t, s, &service.State, &service.State.Clefs, at, stateKnown(stateInt(t, 1)))
+	if clef.Value.State != EvidenceUnknown || clef.Value.Reason != "initial-divisions-unavailable" {
+		t.Fatalf("unknown placed clef fabricated absence=%+v", clef)
+	}
+}
