@@ -153,3 +153,58 @@ func TestFiguredBassOriginBudgetFailureCannotPublish(t *testing.T) {
 		t.Fatalf("interrupted anchor publication: %v", err)
 	}
 }
+
+func TestFiguredBassDurationUsesOnlyEqualReviewedUnits(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		for _, mode := range []string{"equal", "different", "missing-cursor", "invalid-anchor", "absent-duration"} {
+			t.Run(string(order)+"/"+mode, func(t *testing.T) {
+				s, service, b, block := figuredOriginFixture(t, order)
+				figure := block.content.children[0]
+				if mode != "absent-duration" {
+					figure.children = append(figure.children, stateNode(b, timelineRoleFiguredBassDuration, 12, stateAtomicDecimal(t, 1, 1)))
+				}
+				f := service.Facts[10]
+				f.Units = stateKnown(stateDecimal(t, 3, 1))
+				service.Facts[10] = f
+				f = service.Facts[40]
+				f.Units = stateKnown(stateDecimal(t, 3, 1))
+				cause := &DecisionRef{Rule: RuleKey{"units", 1}, Subject: NodeRef{"d", 40}}
+				if mode == "different" {
+					f.Units = stateKnown(stateDecimal(t, 4, 1))
+				}
+				if mode == "invalid-anchor" {
+					f.Units = Evidence[Decimal]{State: EvidenceInvalid, Reason: "bad-units", Cause: cause}
+				}
+				service.Facts[40] = f
+				if mode == "missing-cursor" {
+					f = service.Facts[10]
+					f.Units = stateAbsent[Decimal]()
+					service.Facts[10] = f
+				}
+				if err := service.resolveFiguredBassOrigins(context.Background(), s, b, block); err != nil {
+					t.Fatal(err)
+				}
+				got := service.FiguredBassOrigins[10]
+				switch mode {
+				case "equal":
+					if got.DurationUnits.State != EvidenceKnown || got.Duration.Value.String() != "1/3" {
+						t.Fatalf("duration = %+v", got)
+					}
+					noteOriginCheckPosition(t, got.End, "7/3")
+				case "absent-duration":
+					if got.Duration.State != EvidenceAbsent || got.End.State != EvidenceAbsent {
+						t.Fatalf("invented omitted duration: %+v", got)
+					}
+				case "invalid-anchor":
+					if got.Duration.State != EvidenceInvalid || got.Duration.Cause == nil || *got.Duration.Cause != *cause || got.Duration.Cause == cause {
+						t.Fatalf("cause ownership: %+v", got)
+					}
+				default:
+					if got.Duration.State != EvidenceUnknown || got.End.State != EvidenceUnknown {
+						t.Fatalf("selected disputed units: %+v", got)
+					}
+				}
+			})
+		}
+	}
+}
