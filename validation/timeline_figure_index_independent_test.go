@@ -7,10 +7,23 @@ import (
 )
 
 func TestIndependentTimelineFigureIndexMatchesCausalScan(t *testing.T) {
-	for _, mode := range []string{"known", "unknown-position", "unknown-kind", "unknown-owner", "duplicate-domain"} {
+	for _, mode := range []string{"known", "floating-negative", "floating-positive", "floating-unknown-voice", "floating-query", "unknown-position", "unknown-kind", "unknown-owner", "duplicate-domain"} {
 		t.Run(mode, func(t *testing.T) {
 			s, v, b, blocks := independentDirectionIndexFixture(t)
 			switch mode {
+			case "floating-negative", "floating-positive", "floating-unknown-voice":
+				f := v.Facts[104]
+				f.Position.Value.UnprovedFrame = true
+				if mode == "floating-negative" {
+					f.Position.Value.Offset = mustRational(t, -1, 3)
+				}
+				if mode == "floating-positive" {
+					f.Position.Value.Offset = mustRational(t, 100, 1)
+				}
+				if mode == "floating-unknown-voice" {
+					f.Voice = stateUnknown[string]("unvoiced-floating-note")
+				}
+				v.Facts[104] = f
 			case "unknown-position":
 				f := v.Facts[104]
 				f.Position = stateUnknown[musicalPosition]("unplaced")
@@ -36,11 +49,14 @@ func TestIndependentTimelineFigureIndexMatchesCausalScan(t *testing.T) {
 				origin := v.Facts[10]
 				origin.Position = origin.Origin
 				origin.Position.Value.Offset = mustRational(t, numerator, 3)
+				if mode == "floating-query" {
+					origin.Position.Value.UnprovedFrame = true
+				}
 				got, fact, handled, err := index.anchor(context.Background(), s, v, origin)
 				if err != nil {
 					t.Fatal(err)
 				}
-				if mode == "known" && !handled {
+				if (mode == "known" || mode == "floating-negative") && !handled {
 					t.Fatal("complete known figure domain bypassed index")
 				}
 				if !handled {
