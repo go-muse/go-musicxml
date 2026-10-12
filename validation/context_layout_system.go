@@ -85,7 +85,7 @@ type layoutSystemWidth struct {
 }
 
 func (l *layoutScopes) systemWidth(frame layoutFrame, pageDefaults, systemDefaults *factNode) (Evidence[Rational], error) {
-	_, width, _ := l.effective(frame.pageLayout, pageDefaults, "page-width", frame.pageCertain)
+	_, width, _ := l.effectivePage(frame, pageDefaults, "page-width")
 	out, err := l.rational(width)
 	if err != nil {
 		return out, err
@@ -93,7 +93,7 @@ func (l *layoutScopes) systemWidth(frame layoutFrame, pageDefaults, systemDefaul
 	sys, _ := l.child(frame.systemLayout, "system-margins")
 	def, _ := l.child(systemDefaults, "system-margins")
 	for _, side := range []string{"left-margin", "right-margin"} {
-		page := l.pageMargin(frame.pageLayout, side, frame.parity, true)
+		page := l.frameMargin(frame, side)
 		if page.State == EvidenceAbsent {
 			page = l.pageMargin(pageDefaults, side, frame.parity, false)
 		}

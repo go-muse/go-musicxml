@@ -1,5 +1,10 @@
 package validation
 
+import (
+	"math/big"
+	"sort"
+)
+
 // Sparse observed staff selectors. The encoded staff count is never expanded.
 type layoutStaffBucket struct {
 	Number  Evidence[Atomic]
@@ -59,7 +64,7 @@ func (l *layoutScopes) staffConsensus(bucket layoutStaffBucket) Evidence[Atomic]
 	}
 	return result
 }
-func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidence[NodeRef], frame layoutFrame) error {
+func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidence[layoutStaffRef], frame layoutFrame) error {
 	r := l.r
 	print, _ := l.child(b.content, "print")
 	if b.part.State != EvidenceKnown {
@@ -127,7 +132,7 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		}
 		active := stateUnknown[bool]("first-visible-staff-unavailable")
 		if first.State == EvidenceKnown && number.State == EvidenceKnown && frame.system.State == EvidenceKnown {
-			active = Evidence[bool]{State: EvidenceKnown, Value: !(first.Value == b.part.Value && k == "1")}
+			active = Evidence[bool]{State: EvidenceKnown, Value: !(first.Value.Part == b.part.Value && k == first.Value.Staff.String())}
 		}
 		ref := NodeRef{r.s.documentID, b.measure.header.ID}
 		from := ref
@@ -141,3 +146,163 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 	}
 	return r.err
 }
+
+// The first visible publisher and the first occupied layout slot are different
+// facts: an invisible staff can retain space without supplying system-layout.
+type layoutStaffRef struct {
+	Part  NodeRef
+	Staff Integer
+}
+
+func layoutStaffPart(v Evidence[layoutStaffRef]) Evidence[NodeRef] {
+	if v.State != EvidenceKnown {
+		return stateUnavailable[layoutStaffRef, NodeRef](v)
+	}
+	return Evidence[NodeRef]{State: EvidenceKnown, Value: v.Value.Part}
+}
+func (l *layoutScopes) firstSystemStaff(blocks []timelineMeasureBlock, slots bool) (Evidence[layoutStaffRef], error) {
+	r := l.r
+	if l.timeline == nil || !l.timeline.Final {
+		return stateUnknown[layoutStaffRef]("staff-visibility-state-unavailable"), nil
+	}
+	for _, b := range blocks {
+		if !r.step(1) {
+			return Evidence[layoutStaffRef]{}, r.err
+		}
+		if b.part.State != EvidenceKnown {
+			return stateUnavailable[NodeRef, layoutStaffRef](b.part), nil
+		}
+		pos := musicalPosition{Part: b.part.Value, Measure: NodeRef{r.s.documentID, b.measure.header.ID}, MeasureOrdinal: b.ordinal, Offset: timelineZero}
+		count, err := l.timeline.State.effectiveStaves(r.ctx, r.s, pos)
+		if err != nil {
+			return Evidence[layoutStaffRef]{}, err
+		}
+		if count.Value.State != EvidenceKnown {
+			return stateUnavailable[Integer, layoutStaffRef](count.Value), nil
+		}
+		candidates, err := l.staffCandidates(b.part.Value, count.Value.Value)
+		if err != nil {
+			return Evidence[layoutStaffRef]{}, err
+		}
+		for _, staff := range candidates {
+			details, err := l.timeline.State.effectiveStaffDetails(r.ctx, r.s, pos, Evidence[Integer]{State: EvidenceKnown, Value: staff})
+			if err != nil {
+				return Evidence[layoutStaffRef]{}, err
+			}
+			result := Evidence[layoutStaffRef]{State: EvidenceKnown, Value: layoutStaffRef{b.part.Value, staff}}
+			if details.Value.State == EvidenceAbsent {
+				return result, nil
+			}
+			if details.Value.State != EvidenceKnown {
+				return stateUnavailable[staffDetailsState, layoutStaffRef](details.Value), nil
+			}
+			visible := details.Value.Value.effectivePrintObject().Effective
+			spacing := details.Value.Value.effectivePrintSpacing().Effective
+			if visible.State != EvidenceKnown {
+				return stateUnavailable[bool, layoutStaffRef](visible), nil
+			}
+			if visible.Value {
+				return result, nil
+			}
+			if spacing.State != EvidenceKnown {
+				return stateUnavailable[bool, layoutStaffRef](spacing), nil
+			}
+			if slots && spacing.Value {
+				return result, nil
+			}
+		}
+	}
+	return Evidence[layoutStaffRef]{State: EvidenceAbsent}, nil
+}
+func (l *layoutScopes) staffCandidates(part NodeRef, count Integer) ([]Integer, error) {
+	r := l.r
+	if l.candidateCache == nil {
+		if err := r.s.retain(1024); err != nil {
+			return nil, err
+		}
+		l.candidateCache = make(map[NodeID][]Integer)
+		buckets := make(map[NodeID]map[string]Integer)
+		for _, p := range l.timeline.State.StaffDetails.Publications {
+			if !r.step(1 + p.Scope.Staff.ByteSize()) {
+				return nil, r.err
+			}
+			if p.Scope.AllStaves || !p.Scope.Staff.Valid() {
+				continue
+			}
+			part := p.Position.Part.Node
+			bucket := buckets[part]
+			if bucket == nil {
+				if err := r.s.retain(512); err != nil {
+					return nil, err
+				}
+				bucket = map[string]Integer{"1": localOne}
+				buckets[part] = bucket
+			}
+			if err := r.s.retain(768 + p.Scope.Staff.ByteSize()*3); err != nil {
+				return nil, err
+			}
+			bucket[p.Scope.Staff.String()] = p.Scope.Staff
+			next := new(big.Int).Add(p.Scope.Staff.value, big.NewInt(1))
+			n, err := NewInteger(next)
+			if err != nil {
+				return nil, err
+			}
+			bucket[n.String()] = n
+		}
+		for part, bucket := range buckets {
+			if !r.step(1) {
+				return nil, r.err
+			}
+			if err := r.s.retain(256 + int64(len(bucket))*64); err != nil {
+				return nil, err
+			}
+			values := make([]Integer, 0, len(bucket))
+			for _, v := range bucket {
+				if !r.step(1) {
+					return nil, r.err
+				}
+				values = append(values, v)
+			}
+			var err error
+			sort.Slice(values, func(i, j int) bool {
+				if err != nil {
+					return false
+				}
+				err = r.s.step(r.ctx, 1+values[i].ByteSize()+values[j].ByteSize())
+				if err != nil {
+					return false
+				}
+				cmp, e := values[i].Cmp(values[j])
+				err = e
+				return cmp < 0
+			})
+			if err != nil {
+				return nil, err
+			}
+			l.candidateCache[part] = values
+		}
+	}
+	values := l.candidateCache[part.Node]
+	if len(values) == 0 {
+		return layoutStaffOneCandidates, nil
+	}
+	// Sorted sparse identities are sliced at the current count; a later encoded
+	// staff increase reuses the same index without pre-expanding that count.
+	end := 0
+	for end < len(values) {
+		if !r.step(1 + values[end].ByteSize() + count.ByteSize()) {
+			return nil, r.err
+		}
+		cmp, err := values[end].Cmp(count)
+		if err != nil {
+			return nil, err
+		}
+		if cmp > 0 {
+			break
+		}
+		end++
+	}
+	return values[:end], nil
+}
+
+var layoutStaffOneCandidates = []Integer{localOne}

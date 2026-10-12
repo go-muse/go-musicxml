@@ -61,7 +61,7 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 	sysOverride, _ := l.child(frame.systemLayout, "system-margins")
 	sysDefaults, _ := l.child(systemDefaults, "system-margins")
 	for _, name := range []string{"left-margin", "right-margin", "top-margin", "bottom-margin"} {
-		raw := l.pageMargin(frame.pageLayout, name, frame.parity, true)
+		raw := l.frameMargin(frame, name)
 		value := raw
 		origin := frame.pageLayout
 		if !frame.pageCertain && raw.State != EvidenceAbsent {
@@ -105,4 +105,36 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 		}
 	}
 	return r.err
+}
+
+func (l *layoutScopes) effectivePage(frame layoutFrame, defaults *factNode, name string) (Evidence[Atomic], Evidence[Atomic], *factNode) {
+	raw := Evidence[Atomic]{State: EvidenceAbsent}
+	origin := frame.pageLayout
+	for _, page := range frame.pagePeers {
+		v := l.scalar(page, name)
+		if !l.r.step(1 + atomicLogicalBytes(raw.Value) + atomicLogicalBytes(v.Value)) {
+			return raw, stateUnknown[Atomic]("context-interrupted"), origin
+		}
+		raw = layoutConsensusPair(raw, v)
+	}
+	value := raw
+	if !frame.pageCertain && raw.State != EvidenceAbsent {
+		value = stateUnknown[Atomic]("page-override-lifetime-unavailable")
+	}
+	if value.State == EvidenceAbsent {
+		value = l.scalar(defaults, name)
+		origin = defaults
+	}
+	return raw, layoutUnknownDefault(value, "application-page-layout"), origin
+}
+func (l *layoutScopes) frameMargin(frame layoutFrame, name string) Evidence[Atomic] {
+	raw := Evidence[Atomic]{State: EvidenceAbsent}
+	for _, page := range frame.pagePeers {
+		value := l.pageMargin(page, name, frame.parity, true)
+		if !l.r.step(1 + atomicLogicalBytes(raw.Value) + atomicLogicalBytes(value.Value)) {
+			return stateUnknown[Atomic]("context-interrupted")
+		}
+		raw = layoutConsensusPair(raw, value)
+	}
+	return raw
 }

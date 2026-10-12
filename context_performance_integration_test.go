@@ -681,3 +681,14 @@ func TestPerformanceConditionalFrettedRolesAndTrillCount(t *testing.T) {
 		}
 	})
 }
+func TestPerformanceZeroStaffCountProvesNoStaff(t *testing.T) {
+	performanceReports(t, `<attributes><divisions>1</divisions><staves>0</staves></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><staff>1</staff></note>`, func(t *testing.T, r validation.Report) {
+		n := performanceTiming(r, "note")
+		if len(n) != 1 {
+			t.Fatal("note missing")
+		}
+		if n[0].Staves.State != validation.EvidenceKnown || n[0].Staves.Value.String() != "0" || n[0].StaffExists.State != validation.EvidenceKnown || n[0].StaffExists.Value {
+			t.Error("explicit zero staves must not become default one")
+		}
+	})
+}

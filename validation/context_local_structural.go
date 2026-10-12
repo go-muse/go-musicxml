@@ -97,7 +97,7 @@ const (
 
 func localStructuralPropertyValid(p ContextProperty) bool {
 	switch p {
-	case ContextMinorMode, ContextHarmonyActive, ContextHarmonyDescription, ContextDegreeReference, ContextDegreeTextComposition, ContextDashLength, ContextSpaceLength, ContextColorAlpha, ContextColorRGB, ContextFontFamilyOrder, ContextSupportsElement, ContextSupportsAttribute, ContextSupportsValue, ContextSupportsType, ContextMetadataRole, ContextDistanceType, ContextLineWidthType, ContextEnsembleSize, ContextLyricLiteralText, ContextPartNameDisplay, ContextPartAbbreviationDisplay, ContextOpenString, ContextStaffLineBasis, ContextOctaveBasis, ContextAlterSemitones, ContextFrameString, ContextFrameMissingString, ContextSupportUnreported, ContextFigureNumber, ContextMinorRaisedSixth, ContextMinorRaisedSeventh, ContextDeprecatedNotation:
+	case ContextFontFamilyCategories, ContextMinorMode, ContextHarmonyActive, ContextHarmonyDescription, ContextDegreeReference, ContextDegreeTextComposition, ContextDashLength, ContextSpaceLength, ContextColorAlpha, ContextColorRGB, ContextFontFamilyOrder, ContextSupportsElement, ContextSupportsAttribute, ContextSupportsValue, ContextSupportsType, ContextMetadataRole, ContextDistanceType, ContextLineWidthType, ContextEnsembleSize, ContextLyricLiteralText, ContextPartNameDisplay, ContextPartAbbreviationDisplay, ContextOpenString, ContextStaffLineBasis, ContextOctaveBasis, ContextAlterSemitones, ContextFrameString, ContextFrameMissingString, ContextSupportUnreported, ContextFigureNumber, ContextMinorRaisedSixth, ContextMinorRaisedSeventh, ContextDeprecatedNotation:
 		return true
 	}
 	return false
@@ -274,6 +274,13 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 			if err := publish(ContextFontFamilyOrder, raw, value, active); err != nil {
 				return err
 			}
+			categories, err := localFontCategories(ctx, s, raw)
+			if err != nil {
+				return err
+			}
+			if err = publish(ContextFontFamilyCategories, raw, categories, active); err != nil {
+				return err
+			}
 		}
 	}
 	if r.matches(n, localSupports) {
@@ -336,7 +343,14 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 		}{{localPartNameDisplay, ContextPartNameDisplay}, {localPartAbbreviationDisplay, ContextPartAbbreviationDisplay}} {
 			presence := localPresence(r, n, q.role)
 			value := localBoolAtomic(presence)
-			if err := publish(q.property, Evidence[Atomic]{State: EvidenceAbsent}, value, active); err != nil {
+			origin, exists := r.child(n, q.role)
+			var err error
+			if exists.State == EvidenceKnown {
+				err = localPublishAtOrigin(ctx, s, key, n, origin, q.property, Evidence[Atomic]{State: EvidenceAbsent}, value, active, ContextExplicit)
+			} else {
+				err = publish(q.property, Evidence[Atomic]{State: EvidenceAbsent}, value, active)
+			}
+			if err != nil {
 				return err
 			}
 		}
@@ -361,13 +375,13 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 		if r.attributeOwner(n, localLineNumber) {
 			raw = localRawAttribute(r, n, localLineNumber)
 		}
-		if err := publish(ContextStaffLineBasis, raw, localKnownText("one-is-bottom-line-unbounded-by-line-count"), active); err != nil {
+		if err := publish(ContextStaffLineBasis, raw, localSemanticLabel(raw, "one-is-bottom-line-unbounded-by-line-count"), active); err != nil {
 			return err
 		}
 	}
 	if r.matches(n, localPitchOctave) {
 		raw := r.scalar(n)
-		if err := publish(ContextOctaveBasis, raw, localKnownText("octave-four-begins-at-middle-c"), active); err != nil {
+		if err := publish(ContextOctaveBasis, raw, localSemanticLabel(raw, "octave-four-begins-at-middle-c"), active); err != nil {
 			return err
 		}
 	}
@@ -385,8 +399,8 @@ func localStructuralNode(ctx context.Context, s *Session, key RuleKey, n *factNo
 	if r.matches(n, localFrame) {
 		raw := r.childScalar(n, localFrameStrings)
 		complete := r.complete(n)
-		value := localKnownText("unlisted-strings-muted")
-		if complete.State != EvidenceKnown {
+		value := localSemanticLabel(raw, "unlisted-strings-muted")
+		if complete.State != EvidenceKnown && value.State == EvidenceKnown {
 			value = stateUnavailable[bool, Atomic](complete)
 		}
 		if err := publish(ContextFrameMissingString, raw, value, complete); err != nil {
@@ -469,3 +483,10 @@ const (
 
 // ContextDeprecatedNotation reports a permitted deprecated notation without rejecting it.
 const ContextDeprecatedNotation ContextProperty = "local.deprecated-notation"
+
+func localSemanticLabel(raw Evidence[Atomic], label string) Evidence[Atomic] {
+	if raw.State != EvidenceKnown {
+		return raw
+	}
+	return localKnownText(label)
+}

@@ -6,6 +6,10 @@ var layoutConstantRules = []localConstantRule{
 	{Element: "level", Type: "level", Attribute: "parentheses", AttributeType: "yes-no", Property: "editorial-parentheses", Unknown: "application-editorial-parentheses"},
 	{Element: "level", Type: "level", Attribute: "bracket", AttributeType: "yes-no", Property: "editorial-bracket", Unknown: "application-editorial-bracket"},
 	{Element: "level", Type: "level", Attribute: "size", AttributeType: "symbol-size", Property: "editorial-size", Unknown: "application-editorial-size"},
+	{Element: "accidental", Type: "accidental", Attribute: "parentheses", AttributeType: "yes-no", Property: "editorial-parentheses", Unknown: "application-editorial-parentheses"},
+	{Element: "accidental", Type: "accidental", Attribute: "bracket", AttributeType: "yes-no", Property: "editorial-bracket", Unknown: "application-editorial-bracket"},
+	{Element: "accidental", Type: "accidental", Attribute: "size", AttributeType: "symbol-size", Property: "editorial-size", Unknown: "application-editorial-size"},
+
 	{Element: "frame", Type: "frame", Attribute: "unplayed", AttributeType: "xs:token", Property: "unplayed-string", Unknown: "application-unplayed-string"},
 	{Element: "kind", Type: "kind", Attribute: "stack-degrees", AttributeType: "yes-no", Property: "kind-stack-degrees", Unknown: "application-kind-degrees"},
 	{Element: "kind", Type: "kind", Attribute: "parentheses-degrees", AttributeType: "yes-no", Property: "kind-parentheses-degrees", Unknown: "application-kind-degrees"},

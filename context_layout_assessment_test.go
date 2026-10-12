@@ -3,6 +3,9 @@ package musicxml
 import (
 	"context"
 	"github.com/go-muse/go-musicxml/validation"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -292,6 +295,110 @@ func TestLayoutHarmonyAndMetronomeComponentInheritance(t *testing.T) {
 			}
 			if !found {
 				t.Fatal("explicit child missing")
+			}
+		})
+	}
+}
+func TestLayoutFormattingAndGeometryAgainstPinnedSchema(t *testing.T) {
+	xmllint, err := exec.LookPath("xmllint")
+	if err != nil {
+		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {
+			t.Fatal(err)
+		}
+		t.Skip("xmllint unavailable")
+	}
+	for _, tw := range []bool{false, true} {
+		for _, tc := range []struct {
+			body  string
+			valid bool
+		}{
+			{`<direction><direction-type><words font-family="A" font-size="12.5" xml:lang="">x</words><words justify="right">y</words></direction-type></direction>`, true},
+			{`<direction><direction-type><words justify="bad">x</words></direction-type></direction>`, false},
+			{`<print new-page="no" page-number="arbitrary"><page-layout><page-height>-100.5</page-height><page-width>0</page-width></page-layout></print>`, true},
+			{`<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><notations><slur type="start" bezier-x="0" bezier-offset="-2"/></notations></note>`, true},
+			{`<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><lyric number="01"><text>la</text><elision smufl="lyricsElisionNarrow"/><text>la</text></lyric></note>`, true},
+		} {
+			source := contextFixtureXML(tc.body, tw)
+			report, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+			if err != nil {
+				t.Fatal(err)
+			}
+			invalid := false
+			for _, f := range report.Findings {
+				if strings.HasPrefix(string(f.Rule.ID), "MX40-XSD-") && f.Outcome == validation.OutcomeFail {
+					invalid = true
+				}
+			}
+			if invalid == tc.valid {
+				t.Fatalf("unexpected XSD result: %s", localFindings(report))
+			}
+			assertXMLLintOutcome(t, xmllint, filepath.Join("schema", "musicxml-4.0", "musicxml.xsd"), filepath.Join("schema", "musicxml-4.0", "catalog.xml"), source, tc.valid)
+		}
+	}
+}
+func TestLayoutHiddenSpaceAndVisiblePublisherAreSeparate(t *testing.T) {
+	for _, spacing := range []string{"yes", "no"} {
+		for _, tw := range []bool{false, true} {
+			for _, model := range []bool{false, true} {
+				header := `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults><part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>`
+				a := `<attributes><staff-details print-object="no" print-spacing="` + spacing + `"/></attributes>`
+				b := `<print><system-layout><system-distance>73</system-distance></system-layout></print>`
+				source := `<score-partwise>` + header + `<part id="P1"><measure number="1">` + a + `</measure></part><part id="P2"><measure number="1">` + b + `</measure></part></score-partwise>`
+				if tw {
+					source = `<score-timewise>` + header + `<measure number="1"><part id="P1">` + a + `</part><part id="P2">` + b + `</part></measure></score-timewise>`
+				}
+				var r validation.Report
+				var err error
+				if model {
+					doc, e := Decode(strings.NewReader(source))
+					if e != nil {
+						t.Fatal(e)
+					}
+					r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
+				} else {
+					r, err = InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceContext})
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
+				staff := layoutFacts(r, "staff-distance")
+				if len(staff) != 2 {
+					t.Fatal("missing staff scopes")
+				}
+				if staff[1].Layout.Applicability.State != validation.EvidenceKnown || staff[1].Layout.Applicability.Value != (spacing == "yes") {
+					t.Errorf("spacing=%s tw=%v model=%v P2=%+v", spacing, tw, model, staff[1].Layout)
+				}
+				system := layoutFacts(r, "system-distance")
+				if len(system) != 2 || system[0].Value.Value.Decimal.String() != "73" || system[1].Value.Value.Decimal.String() != "73" {
+					t.Errorf("wrong first visible publisher %+v", system)
+				}
+			}
+		}
+	}
+}
+func TestLayoutSystemSelectorsAndAdvisoriesRemainContext(t *testing.T) {
+	for _, tc := range []struct{ body, property, want string }{
+		{`<direction system="none"><direction-type><words>text</words></direction-type></direction>`, "system", "none"},
+		{`<direction system="also-top"><direction-type><words>text</words></direction-type></direction>`, "system", "also-top"},
+		{`<print><measure-numbering system="also-bottom">system</measure-numbering></print>`, "system", "also-bottom"},
+		{`<direction><direction-type><words font-size="small">text</words></direction-type></direction>`, "font-size", "small"},
+		{`<harmony><root><root-step>C</root-step></root><kind use-symbols="yes" text="maj">major</kind></harmony>`, "kind-text-placement", "after-symbol"},
+	} {
+		layoutReports(t, tc.body, "", func(t *testing.T, r validation.Report) {
+			values := layoutFacts(r, tc.property)
+			found := false
+			for _, v := range values {
+				if v.Value.State == validation.EvidenceKnown && v.Value.Value.Text == tc.want {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("missing %s=%s", tc.property, tc.want)
+			}
+			for _, f := range r.Findings {
+				if strings.HasPrefix(string(f.Rule.ID), "MX40-CONTEXT-layout") && f.Outcome == validation.OutcomeFail {
+					t.Fatalf("advisory strengthened %+v", f)
+				}
 			}
 		})
 	}

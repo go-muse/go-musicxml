@@ -196,3 +196,24 @@ func TestPerformanceTimelineProjectionEvidenceAxes(t *testing.T) {
 		s.cleanup()
 	}
 }
+func TestPerformanceUnavailableStaffCountRemainsCausal(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	s.documentID = "d"
+	service := &timelineService{}
+	stateClose(t, s, &service.State, 1)
+	pos := statePosition(t, 0, 0, 1)
+	cause := &DecisionRef{Rule: RuleKey{"invalid-count", 1}, Subject: NodeRef{"d", 1}}
+	if err := publishState(context.Background(), s, &service.State.Staves, statePublication[Integer]{Position: pos, Scope: stateScope{AllStaves: true}, Value: Evidence[Integer]{State: EvidenceInvalid, Cause: cause}}); err != nil {
+		t.Fatal(err)
+	}
+	out := newTimingContext("note")
+	out.Origin = performancePosition(stateKnown(pos))
+	out.Staff = stateKnown(stateOne())
+	if err := performanceEffectiveState(context.Background(), s, service, &out); err != nil {
+		t.Fatal(err)
+	}
+	if out.Staves.State != EvidenceInvalid || out.StaffExists.State != EvidenceInvalid || out.StaffExists.Cause == nil {
+		t.Errorf("invalid count became known staff nonexistence: %+v", out.StaffExists)
+	}
+}

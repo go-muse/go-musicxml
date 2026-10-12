@@ -217,6 +217,9 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 		return err
 	}
 	out.StaffExists = stateUnavailable[Integer, bool](staff)
+	if staff.State == EvidenceKnown && out.Staves.State != EvidenceKnown {
+		out.StaffExists = stateUnavailable[Integer, bool](out.Staves)
+	}
 	if staff.State == EvidenceKnown && out.Staves.State == EvidenceKnown {
 		a, err := s.stateRationalInteger(ctx, staff.Value)
 		if err != nil {

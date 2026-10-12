@@ -415,3 +415,158 @@ func TestLocalTechnicalSMuFLInvalidDoesNotDefault(t *testing.T) {
 		}
 	}
 }
+
+func TestLocalContextRecordSpecificStructuralMatrix(t *testing.T) {
+	engine := localContextTestEngine(t)
+	type assertion struct {
+		property validation.ContextProperty
+		value    string
+		state    validation.EvidenceState
+		active   *bool
+	}
+	yes, no := true, false
+	cases := []struct {
+		name, body, header, part string
+		want                     []assertion
+	}{
+		{name: "octave-four-and-quarter-tone", body: `<note><pitch><step>C</step><alter>-0.5</alter><octave>4</octave></pitch><duration>1</duration></note>`, want: []assertion{{validation.ContextOctaveBasis, "octave-four-begins-at-middle-c", validation.EvidenceKnown, nil}, {validation.ContextAlterSemitones, "-0.5", validation.EvidenceKnown, nil}}},
+		{name: "other-kind-and-add-reference", body: `<harmony><root><root-step>C</root-step></root><kind>other</kind><degree><degree-value>7</degree-value><degree-alter>-1</degree-alter><degree-type>add</degree-type></degree></harmony>`, want: []assertion{{validation.ContextHarmonyDescription, "added-degrees", validation.EvidenceKnown, nil}, {validation.ContextHarmonyActive, "yes", validation.EvidenceKnown, nil}, {validation.ContextDegreeReference, "dominant-with-minor-seventh", validation.EvidenceKnown, nil}, {validation.ContextDegreeTextComposition, "", validation.EvidenceAbsent, &no}}},
+		{name: "alter-reference", body: `<harmony><root><root-step>D</root-step></root><kind>major</kind><degree><degree-value text="degree">3</degree-value><degree-alter>1</degree-alter><degree-type>alter</degree-type></degree></harmony>`, want: []assertion{{validation.ContextDegreeReference, "harmony-kind-degree", validation.EvidenceKnown, nil}, {validation.ContextDegreeTextComposition, "degree", validation.EvidenceKnown, &no}}},
+		{name: "generic-font-families", body: `<direction><direction-type><words font-family="music, engraved, handwritten, text, serif, custom">word</words></direction-type></direction>`, want: []assertion{{validation.ContextFontFamilyCategories, "music,music,music,text,text,specific", validation.EvidenceKnown, nil}}},
+		{name: "opaque-srgb", body: `<direction><direction-type><words color="#12ABCD" font-family="First, Second">text</words></direction-type></direction>`, want: []assertion{{validation.ContextColorRGB, "#12ABCD", validation.EvidenceKnown, nil}, {validation.ContextColorAlpha, "255", validation.EvidenceKnown, nil}, {validation.ContextFontFamilyOrder, "comma-separated-preference-order", validation.EvidenceKnown, nil}, {validation.ContextFontFamilyCategories, "specific,specific", validation.EvidenceKnown, nil}}},
+		{name: "custom-open-domains", header: `<identification><creator type="custom creator">A</creator><encoding><encoder type="custom encoder">B</encoder></encoding></identification><defaults><appearance><line-width type="new-width">0</line-width><distance type="new-distance">-1</distance></appearance></defaults>`, want: []assertion{{validation.ContextMetadataRole, "custom creator|custom encoder", validation.EvidenceKnown, nil}, {validation.ContextLineWidthType, "new-width", validation.EvidenceKnown, nil}, {validation.ContextDistanceType, "new-distance", validation.EvidenceKnown, nil}}},
+		{name: "empty-name-overrides", part: `<part-name-display/><part-abbreviation>Ordinary</part-abbreviation><part-abbreviation-display/>`, want: []assertion{{validation.ContextPartNameDisplay, "yes", validation.EvidenceKnown, nil}, {validation.ContextPartAbbreviationDisplay, "yes", validation.EvidenceKnown, nil}}},
+		{name: "absent-name-overrides", want: []assertion{{validation.ContextPartNameDisplay, "no", validation.EvidenceKnown, nil}, {validation.ContextPartAbbreviationDisplay, "no", validation.EvidenceKnown, nil}}},
+		{name: "supports-qualified-claim", header: `<identification><encoding><supports type="yes" element="print" attribute="new-system" value="yes"/></encoding></identification>`, want: []assertion{{validation.ContextSupportsElement, "print", validation.EvidenceKnown, nil}, {validation.ContextSupportsAttribute, "new-system", validation.EvidenceKnown, nil}, {validation.ContextSupportsType, "yes", validation.EvidenceKnown, nil}, {validation.ContextSupportsValue, "yes", validation.EvidenceKnown, &yes}, {validation.ContextSupportUnreported, "", validation.EvidenceUnknown, nil}}},
+		{name: "supports-omission-unspecified", want: []assertion{{validation.ContextSupportUnreported, "", validation.EvidenceUnknown, nil}}},
+		{name: "ensemble-one", part: `<score-instrument id="I1"><instrument-name>Voice</instrument-name><ensemble>1</ensemble></score-instrument>`, want: []assertion{{validation.ContextEnsembleSize, "1", validation.EvidenceKnown, nil}}},
+		{name: "dashed-active", body: `<note><rest/><duration>1</duration><notations><slur type="start" line-type="dashed" dash-length="0" space-length="2"/></notations></note>`, want: []assertion{{validation.ContextDashLength, "0", validation.EvidenceKnown, &yes}, {validation.ContextSpaceLength, "2", validation.EvidenceKnown, &yes}}},
+		{name: "slur-omitted-line-type-unavailable", body: `<note><rest/><duration>1</duration><notations><slur type="start" dash-length="3"/></notations></note>`, want: []assertion{{validation.ContextDashLength, "3", validation.EvidenceKnown, nil}}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			for _, tw := range []bool{false, true} {
+				for _, model := range []bool{false, true} {
+					source := localContextFixture(c.body, tw)
+					if c.header != "" {
+						source = strings.Replace(source, `<part-list>`, c.header+`<part-list>`, 1)
+					}
+					if c.part != "" {
+						source = strings.Replace(source, `</part-name>`, `</part-name>`+c.part, 1)
+					}
+					report := localContextAssess(t, engine, source, model)
+					if !report.Satisfied() {
+						t.Fatalf("%s", localFindings(report))
+					}
+					for _, want := range c.want {
+						var rows []validation.ContextResult
+						for _, row := range report.Context {
+							if row.Property == want.property {
+								rows = append(rows, row)
+							}
+						}
+						values := strings.Split(want.value, "|")
+						if len(rows) != len(values) {
+							t.Fatalf("%s rows=%d want%d", want.property, len(rows), len(values))
+						}
+						for i, row := range rows {
+							if row.Value.State != want.state {
+								t.Fatalf("%s %+v", want.property, row)
+							}
+							if want.state == validation.EvidenceKnown {
+								got := row.Value.Value.Text
+								switch row.Value.Value.Kind {
+								case validation.AtomicInteger:
+									got = row.Value.Value.Integer.String()
+								case validation.AtomicDecimal:
+									got = row.Value.Value.Decimal.String()
+								}
+								if got != values[i] {
+									t.Fatalf("%s got%s want%s", want.property, got, values[i])
+								}
+							}
+							if want.active != nil && (row.Layout.Applicability.State != validation.EvidenceKnown || row.Layout.Applicability.Value != *want.active) {
+								t.Fatalf("%s applicability %+v", want.property, row.Layout.Applicability)
+							}
+							if c.name == "slur-omitted-line-type-unavailable" && row.Layout.Applicability.State != validation.EvidenceUnknown {
+								t.Fatalf("omitted slur style guessed: %+v", row)
+							}
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestLocalInheritedLyricAndExplicitNameOrigins(t *testing.T) {
+	engine := localContextTestEngine(t)
+	body := `<note print-lyric="no"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><lyric><text>word</text></lyric></note>`
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			source := strings.Replace(localContextFixture(body, tw), `</part-name>`, `</part-name><part-name-display/>`, 1)
+			report := localContextAssess(t, engine, source, model)
+			seen := false
+			for _, row := range report.Context {
+				if row.Property == validation.ContextPrintObject && row.Value.State == validation.EvidenceKnown && row.Value.Value.Text == "no" {
+					seen = true
+					if row.Layout.Provenance != validation.ContextInherited || row.Layout.Origin == row.Subject || row.Value.Value.Text != "no" {
+						t.Fatalf("lyric inherited origin %+v", row)
+					}
+				}
+				if row.Property == validation.ContextPartNameDisplay {
+					if row.Layout.Provenance != validation.ContextExplicit || row.Layout.Origin == row.Subject {
+						t.Fatalf("explicit child origin %+v", row)
+					}
+				}
+			}
+			if !seen {
+				t.Fatal("lyric output missing")
+			}
+		}
+	}
+}
+
+func TestLocalStructuralInvalidPrerequisitesRemainCausal(t *testing.T) {
+	engine := localContextTestEngine(t)
+	cases := []struct {
+		body       string
+		properties []validation.ContextProperty
+	}{
+		{`<note><pitch><step>C</step><alter>oops</alter><octave>12</octave></pitch><duration>1</duration></note>`, []validation.ContextProperty{validation.ContextAlterSemitones, validation.ContextOctaveBasis}},
+		{`<attributes><clef><sign>G</sign><line>oops</line></clef></attributes>`, []validation.ContextProperty{validation.ContextStaffLineBasis}},
+		{`<direction><direction-type><words color="#GG0000">text</words></direction-type></direction>`, []validation.ContextProperty{validation.ContextColorRGB, validation.ContextColorAlpha}},
+		{`<harmony><root><root-step>C</root-step></root><kind>major</kind><degree><degree-value>7</degree-value><degree-alter>0</degree-alter><degree-type>wrong</degree-type></degree></harmony>`, []validation.ContextProperty{validation.ContextDegreeReference}},
+	}
+	for _, c := range cases {
+		for _, tw := range []bool{false, true} {
+			for _, model := range []bool{false, true} {
+				source := localContextFixture(c.body, tw)
+				if model && strings.Contains(source, "<line>oops</line>") {
+					continue
+				}
+				if model && strings.Contains(source, "oops") {
+					source = strings.Replace(source, "<alter>oops</alter>", "", 1)
+				}
+				report := localContextAssess(t, engine, source, model)
+				for _, property := range c.properties {
+					if model && property == validation.ContextAlterSemitones {
+						continue
+					}
+					count := 0
+					for _, row := range report.Context {
+						if row.Property == property {
+							count++
+							if row.Value.State != validation.EvidenceInvalid || row.Value.Cause == nil {
+								t.Fatalf("%s %+v", property, row)
+							}
+						}
+					}
+					if count != 1 {
+						t.Fatalf("%s rows%d", property, count)
+					}
+				}
+			}
+		}
+	}
+}

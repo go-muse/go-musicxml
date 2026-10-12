@@ -53,3 +53,57 @@ func TestLayoutComponentConsensusFiveAxes(t *testing.T) {
 		})
 	}
 }
+
+// Every static layout rule is exercised independently. These tests concern
+// already assessed evidence; adapter fixtures separately prove exact use sites.
+func TestLayoutEveryConstantFiveAxes(t *testing.T) {
+	for _, rule := range layoutConstantRules {
+		t.Run(rule.Property, func(t *testing.T) {
+			explicit := Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "explicit"}}
+			for _, target := range []Target{TargetSource, TargetModel} {
+				for _, hierarchy := range []string{"partwise", "timewise"} {
+					t.Run(string(target)+"-"+hierarchy, func(t *testing.T) {
+						t.Run("positive", func(t *testing.T) {
+							v := localConstantEffective(rule, explicit)
+							if v.State != EvidenceKnown || v.Value.Text != "explicit" {
+								t.Fatalf("explicit %+v", v)
+							}
+						})
+						t.Run("negative", func(t *testing.T) {
+							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceAbsent})
+							if rule.Unknown != "" {
+								if v.State != EvidenceUnknown {
+									t.Fatalf("invented application default %+v", v)
+								}
+							} else if v.State != EvidenceKnown {
+								t.Fatalf("lost known default %+v", v)
+							}
+						})
+						t.Run("boundary", func(t *testing.T) {
+							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: ""}})
+							if !rule.Empty && v.State != EvidenceKnown {
+								t.Fatalf("empty explicit %+v", v)
+							}
+							if rule.Empty && rule.Unknown != "" && v.State != EvidenceUnknown {
+								t.Fatalf("empty symbol %+v", v)
+							}
+						})
+						t.Run("missing_fact", func(t *testing.T) {
+							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceUnknown, Reason: "adapter-field-unavailable"})
+							if v.State != EvidenceUnknown || v.Reason != "adapter-field-unavailable" {
+								t.Fatalf("unknown became default %+v", v)
+							}
+						})
+						t.Run("interaction", func(t *testing.T) {
+							cause := &DecisionRef{Rule: RuleKey{"xsd-field", 1}, Subject: NodeRef{"score", 1}}
+							v := localConstantEffective(rule, Evidence[Atomic]{State: EvidenceInvalid, Reason: "xsd", Cause: cause})
+							if v.State != EvidenceInvalid || v.Cause != cause {
+								t.Fatalf("invalid became default %+v", v)
+							}
+						})
+					})
+				}
+			}
+		})
+	}
+}

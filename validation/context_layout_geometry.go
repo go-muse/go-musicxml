@@ -1,5 +1,7 @@
 package validation
 
+import "strconv"
+
 func layoutKnownText(text string) Evidence[Atomic] {
 	return Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: text}}
 }
@@ -16,12 +18,66 @@ func layoutAncestor(r *contextReader, n *factNode, roles ...string) *factNode {
 	}
 	return nil
 }
-func layoutStatic(r *contextReader, key RuleKey, n *factNode) error {
+func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) error {
 	s := r.s
 	ref := NodeRef{s.documentID, n.header.ID}
 	yes := Evidence[bool]{State: EvidenceKnown, Value: true}
 	publish := func(property string, raw, value Evidence[Atomic], active Evidence[bool], unit ContextUnit, basis string) error {
-		return s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Scope: ref, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: ContextExplicit, Basis: basis}})
+		scope := ref
+		if property == "system" && value.State == EvidenceKnown && value.Value.Text == "none" {
+			if timeline := s.timeline[p.Timeline]; timeline != nil {
+				for a := n; a != nil; a = s.nodes[a.header.Parent] {
+					if !r.step(1) {
+						return r.err
+					}
+					if fact, ok := timeline.Facts[a.header.ID]; ok && fact.Part.State == EvidenceKnown {
+						scope = fact.Part.Value
+						break
+					}
+				}
+			}
+		}
+		return s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Origins: []Location{n.header.Location}, Layout: &LayoutContextResult{Scope: scope, Origin: ref, Raw: raw, Applicability: active, Unit: unit, Provenance: ContextExplicit, Basis: basis}})
+	}
+	if r.matches(n, layoutRole("staff-layout")) {
+		raw := localRawAttribute(r, n, layoutRole("staff-layout.@number"))
+		value := raw
+		if raw.State == EvidenceAbsent {
+			value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: localOne}}
+		}
+		if err := publish("staff-number", raw, value, yes, ContextUnitNone, "within-part-top-to-bottom-default-one"); err != nil {
+			return err
+		}
+	}
+	for _, name := range []string{"page-layout", "system-layout", "staff-layout", "measure-layout"} {
+		if !r.matches(n, layoutRole(name)) {
+			continue
+		}
+		scope := "current-system"
+		if name == "page-layout" {
+			scope = "current-page"
+		}
+		if name == "measure-layout" {
+			scope = "current-measure"
+		}
+		if layoutAncestor(r, n, "defaults") != nil {
+			scope = "all-systems-all-parts"
+			if name == "page-layout" {
+				scope = "all-pages"
+			}
+		}
+		if err := publish("scope", Evidence[Atomic]{State: EvidenceAbsent}, layoutKnownText(scope), yes, ContextUnitNone, "print-overrides-expire-at-declared-scope"); err != nil {
+			return err
+		}
+	}
+	for _, e := range layoutElements {
+		if e.typ != "tenths" || !r.matches(n, layoutRole(e.name)) {
+			continue
+		}
+		raw := r.scalar(n)
+		if err := publish("declared-"+e.name, raw, raw, yes, ContextUnitTenths, "encoded-global-tenths"); err != nil {
+			return err
+		}
 	}
 	for _, name := range []string{"default-x", "default-y", "relative-x", "relative-y", "bezier-x", "bezier-y", "bezier-x2", "bezier-y2", "bezier-offset", "bezier-offset2"} {
 		if !r.attributeOwner(n, layoutRole("@"+name)) {
@@ -170,13 +226,53 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode) error {
 			return err
 		}
 	}
+	if r.matches(n, layoutRole("harmony")) {
+		raw := layoutAttribute(r, n, "arrangement")
+		value := layoutUnknownDefault(raw, "application-harmony-arrangement")
+		basis := "stacked-harmony-arrangement"
+		if value.State == EvidenceKnown {
+			switch value.Value.Text {
+			case "vertical":
+				basis = "second-below-first-horizontal-separator"
+			case "horizontal":
+				basis = "second-right-of-first-slash-separator"
+			case "diagonal":
+				basis = "second-below-and-right-slash-separator"
+			}
+		}
+		if err := publish("arrangement", raw, value, yes, ContextUnitNone, basis); err != nil {
+			return err
+		}
+	}
+	if r.matches(n, layoutRole("kind")) {
+		role := contextRole("")
+		for i, spec := range layoutConstantRules {
+			if spec.Property == "kind-use-symbols" {
+				role = layoutRole("constant." + strconv.Itoa(i) + ".attribute")
+				break
+			}
+		}
+		raw := localRawAttribute(r, n, role)
+		value := Evidence[Atomic]{State: EvidenceAbsent}
+		if raw.State == EvidenceKnown && raw.Value.Text == "yes" {
+			value = layoutKnownText("after-symbol")
+		} else if raw.State != EvidenceKnown {
+			value = layoutUnknownDefault(raw, "application-kind-symbol-choice")
+		}
+		if err := publish("kind-text-placement", raw, value, yes, ContextUnitNone, "explicit-text-follows-enabled-kind-symbol"); err != nil {
+			return err
+		}
+	}
 	if r.matches(n, layoutRole("arrowhead")) {
 		if err := publish("geometry", Evidence[Atomic]{State: EvidenceAbsent}, layoutKnownText("head-only"), yes, ContextUnitNone, "no-shaft-implied"); err != nil {
 			return err
 		}
 	}
-	for _, spec := range []struct{ owner, property string }{{"direction", "system"}, {"measure-numbering", "system"}} {
+	for _, spec := range []struct{ owner, property string }{{"", "system-mark"}, {"measure-numbering", "system"}} {
 		role := layoutRole(spec.owner + ".@system")
+		if spec.owner == "" {
+			role = layoutRole("@system-mark")
+		}
 		if !r.attributeOwner(n, role) {
 			continue
 		}

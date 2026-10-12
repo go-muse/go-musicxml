@@ -8,9 +8,9 @@ import (
 type layoutFrame struct {
 	page, system               Evidence[NodeRef]
 	first                      Evidence[bool]
-	pageNumber                 uint64
 	parity                     Evidence[bool]
 	pageLayout, systemLayout   *factNode
+	pagePeers                  []*factNode
 	pageCertain, systemCertain bool
 }
 type layoutScopes struct {
@@ -23,11 +23,14 @@ type layoutScopes struct {
 	staffOverrides               map[NodeID]map[string]layoutStaffBucket
 	staffUnknown                 bool
 	widths                       map[NodeID]layoutSystemWidth
+	names                        map[NodeID][]layoutPendingName
+	candidateCache               map[NodeID][]Integer
 }
 
 func (l *layoutScopes) supports(attribute string) Evidence[bool] {
 	r := l.r
 	result := Evidence[bool]{State: EvidenceAbsent}
+	uncertain := Evidence[bool]{State: EvidenceAbsent}
 	for _, id := range r.s.sequence {
 		if !r.step(1) {
 			return stateUnknown[bool]("context-interrupted")
@@ -38,7 +41,11 @@ func (l *layoutScopes) supports(attribute string) Evidence[bool] {
 		}
 		element := stateText(r.attribute(n, layoutRole("supports.@element")))
 		attr := stateText(r.attribute(n, layoutRole("supports.@attribute")))
+		if element.State == EvidenceKnown && element.Value != "print" || attr.State == EvidenceKnown && attr.Value != attribute {
+			continue
+		}
 		if element.State != EvidenceKnown || attr.State != EvidenceKnown {
+			uncertain = stateUnknown[bool]("potential-break-support-unavailable")
 			continue
 		}
 		if element.Value != "print" || attr.Value != attribute {
@@ -57,6 +64,9 @@ func (l *layoutScopes) supports(attribute string) Evidence[bool] {
 			}
 			result = Evidence[bool]{State: EvidenceKnown, Value: false}
 		}
+	}
+	if uncertain.State != EvidenceAbsent {
+		return uncertain
 	}
 	if result.State == EvidenceAbsent {
 		return stateUnknown[bool]("encoded-break-completeness-unavailable")
@@ -103,50 +113,6 @@ func (l *layoutScopes) effective(override, defaults *factNode, name string, cert
 	}
 	return raw, layoutUnknownDefault(value, "application-layout-choice"), origin
 }
-func (l *layoutScopes) firstVisible(blocks []timelineMeasureBlock) (Evidence[NodeRef], error) {
-	r := l.r
-	for _, b := range blocks {
-		if !r.step(1) {
-			return Evidence[NodeRef]{}, r.err
-		}
-		if b.part.State != EvidenceKnown {
-			return b.part, nil
-		}
-		if l.timeline == nil || !l.timeline.Final {
-			return stateUnknown[NodeRef]("staff-visibility-state-unavailable"), nil
-		}
-		pos := musicalPosition{Part: b.part.Value, Measure: NodeRef{r.s.documentID, b.measure.header.ID}, MeasureOrdinal: b.ordinal, Offset: timelineZero}
-		details, err := l.timeline.State.effectiveStaffDetails(r.ctx, r.s, pos, Evidence[Integer]{State: EvidenceKnown, Value: localOne})
-		if err != nil {
-			return Evidence[NodeRef]{}, err
-		}
-		if details.Value.State == EvidenceAbsent {
-			return b.part, nil
-		}
-		if details.Value.State != EvidenceKnown {
-			return stateUnavailable[staffDetailsState, NodeRef](details.Value), nil
-		}
-		visible := details.Value.Value.effectivePrintObject().Effective
-		spacing := details.Value.Value.effectivePrintSpacing().Effective
-		// Visibility selects the first visible system staff; spacing remains an
-		// independent prerequisite for proving hidden-staff exclusion.
-		if visible.State == EvidenceKnown && visible.Value {
-			return b.part, nil
-		}
-
-		if visible.State != EvidenceKnown || spacing.State != EvidenceKnown {
-			return stateUnknown[NodeRef]("first-visible-staff-unavailable"), nil
-		}
-		count, err := l.timeline.State.effectiveStaves(r.ctx, r.s, pos)
-		if err != nil {
-			return Evidence[NodeRef]{}, err
-		}
-		if count.Value.State != EvidenceKnown || count.Value.Value.String() != "1" {
-			return stateUnknown[NodeRef]("first-visible-multistaff-unavailable"), nil
-		}
-	}
-	return Evidence[NodeRef]{State: EvidenceAbsent}, nil
-}
 func layoutBreak(r *contextReader, print *factNode, name string, complete Evidence[bool]) Evidence[bool] {
 	raw := layoutAttribute(r, print, name)
 	if raw.State == EvidenceAbsent {
@@ -159,6 +125,9 @@ func layoutBreak(r *contextReader, print *factNode, name string, complete Eviden
 }
 func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *contextPlan, defaults *factNode) error {
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	if p.Timeline == (RuleKey{}) || s.catalog == nil {
+		return nil
+	}
 	rule, ok := s.catalog.rules[p.Timeline]
 	if !ok {
 		return nil
@@ -189,7 +158,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 	if sortError != nil {
 		return sortError
 	}
-	l := layoutScopes{r: r, key: key, timeline: s.timeline[p.Timeline], defaults: defaults, staffDefaults: make(map[string]layoutStaffBucket), staffOverrides: make(map[NodeID]map[string]layoutStaffBucket), widths: make(map[NodeID]layoutSystemWidth)}
+	l := layoutScopes{r: r, key: key, timeline: s.timeline[p.Timeline], defaults: defaults, staffDefaults: make(map[string]layoutStaffBucket), staffOverrides: make(map[NodeID]map[string]layoutStaffBucket), widths: make(map[NodeID]layoutSystemWidth), names: make(map[NodeID][]layoutPendingName)}
 	if err = l.readStaffLayouts(defaults, l.staffDefaults); err != nil {
 		return err
 	}
@@ -197,7 +166,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 	l.systemComplete = l.supports("new-system")
 	pageDefaults, _ := l.child(defaults, "page-layout")
 	systemDefaults, _ := l.child(defaults, "system-layout")
-	frame := layoutFrame{pageCertain: true, systemCertain: true, first: Evidence[bool]{State: EvidenceKnown, Value: true}, pageNumber: 1, parity: Evidence[bool]{State: EvidenceKnown, Value: true}}
+	frame := layoutFrame{pageCertain: true, systemCertain: true, first: Evidence[bool]{State: EvidenceKnown, Value: true}, parity: Evidence[bool]{State: EvidenceKnown, Value: true}}
 	for start := 0; start < len(ordered); {
 		end := start + 1
 		for end < len(ordered) && ordered[end].ordinal == ordered[start].ordinal {
@@ -207,12 +176,19 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			end++
 		}
 		group := ordered[start:end]
-		first, err := l.firstVisible(group)
+		visible, err := l.firstSystemStaff(group, false)
+		first := layoutStaffPart(visible)
+		if err != nil {
+			return err
+		}
+		firstSlot, err := l.firstSystemStaff(group, true)
 		if err != nil {
 			return err
 		}
 		var pageBreak, systemBreak Evidence[bool]
+		blanks := Evidence[Atomic]{State: EvidenceAbsent}
 		var pagePublisher, systemPublisher *factNode
+		var pagePeers []*factNode
 		conflict := false
 		for _, b := range group {
 			if !r.step(1) {
@@ -226,6 +202,11 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			}
 			pb, sb := layoutBreak(r, print, "new-page", l.pageComplete), layoutBreak(r, print, "new-system", l.systemComplete)
 			if pb.State == EvidenceKnown && pb.Value {
+				bv := layoutAttribute(r, print, "blank-page")
+				if !r.step(1 + atomicLogicalBytes(bv.Value) + atomicLogicalBytes(blanks.Value)) {
+					return r.err
+				}
+				blanks = layoutConsensusPair(blanks, bv)
 				sb = pb
 			}
 			for _, pair := range [][2]Evidence[bool]{{pageBreak, pb}, {systemBreak, sb}} {
@@ -244,9 +225,11 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				if pg != nil {
 					if pagePublisher == nil {
 						pagePublisher = pg
-					} else {
-						conflict = true
 					}
+					if err = s.retain(32); err != nil {
+						return err
+					}
+					pagePeers = append(pagePeers, pg)
 				}
 				if first.State == EvidenceKnown && b.part.State == EvidenceKnown && first.Value == b.part.Value {
 					systemPublisher, _ = l.child(print, "system-layout")
@@ -267,12 +250,12 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		if !initial {
 			if pageBreak.State == EvidenceKnown && pageBreak.Value {
 				frame.pageLayout = nil
+				frame.pagePeers = nil
 				frame.systemLayout = nil
 				frame.pageCertain = true
 				frame.systemCertain = true
 				frame.page = Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{s.documentID, group[0].measure.header.ID}}
 				frame.system = frame.page
-				frame.pageNumber++
 				if frame.parity.State == EvidenceKnown {
 					frame.parity.Value = !frame.parity.Value
 				}
@@ -298,6 +281,15 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				}
 			}
 		}
+
+		if blanks.State == EvidenceKnown && frame.parity.State == EvidenceKnown {
+			text := blanks.Value.Integer.String()
+			if len(text) > 0 && (text[len(text)-1]-'0')%2 == 1 {
+				frame.parity.Value = !frame.parity.Value
+			}
+		} else if blanks.State != EvidenceAbsent && blanks.State != EvidenceKnown {
+			frame.parity = stateUnavailable[Atomic, bool](blanks)
+		}
 		if conflict {
 			frame.pageCertain = false
 			frame.systemCertain = false
@@ -307,17 +299,28 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		}
 		if pagePublisher != nil {
 			frame.pageLayout = pagePublisher
+			frame.pagePeers = pagePeers
 			frame.pageCertain = true
 		}
 		if systemPublisher != nil {
 			frame.systemLayout = systemPublisher
 			frame.systemCertain = true
 		}
+		systemStart := systemBreak
+		if initial {
+			systemStart = Evidence[bool]{State: EvidenceKnown, Value: true}
+		}
+		if conflict {
+			systemStart = stateUnknown[bool]("parallel-print-break-disagreement")
+		}
 		for _, b := range group {
+			if err = l.nameUpdates(b, frame, systemStart); err != nil {
+				return err
+			}
 			ref := NodeRef{s.documentID, b.measure.header.ID}
 			active := Evidence[bool]{State: EvidenceKnown, Value: true}
 			for _, name := range []string{"page-height", "page-width"} {
-				raw, value, origin := l.effective(frame.pageLayout, pageDefaults, name, frame.pageCertain)
+				raw, value, origin := l.effectivePage(frame, pageDefaults, name)
 				if err = l.publish(b.measure, name, raw, value, active, ref, frame, origin); err != nil {
 					return err
 				}
@@ -338,6 +341,15 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			if err = l.publish(b.measure, "measure-distance", raw, raw, stateUnknown[bool]("internal-system-whitespace-unavailable"), ref, frame, measureLayout); err != nil {
 				return err
 			}
+
+			if blanks.State == EvidenceKnown && frame.parity.State == EvidenceKnown {
+				text := blanks.Value.Integer.String()
+				if len(text) > 0 && (text[len(text)-1]-'0')%2 == 1 {
+					frame.parity.Value = !frame.parity.Value
+				}
+			} else if blanks.State != EvidenceAbsent && blanks.State != EvidenceKnown {
+				frame.parity = stateUnavailable[Atomic, bool](blanks)
+			}
 			if conflict {
 				if err = l.publish(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, stateUnknown[Atomic]("parallel-print-rendering-unspecified"), active, ref, frame, nil); err != nil {
 					return err
@@ -352,7 +364,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			if err = l.publishMargins(b, frame, pageDefaults, systemDefaults); err != nil {
 				return err
 			}
-			if err = l.publishStaffLayouts(b, first, frame); err != nil {
+			if err = l.publishStaffLayouts(b, firstSlot, frame); err != nil {
 				return err
 			}
 		}
@@ -360,6 +372,9 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 	}
 	if r.err != nil {
 		return r.err
+	}
+	if err = l.closeNames(); err != nil {
+		return err
 	}
 	return l.publishWidths()
 }

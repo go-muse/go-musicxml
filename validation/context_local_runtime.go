@@ -114,7 +114,14 @@ func localPrintNode(ctx context.Context, s *Session, key RuleKey, n *factNode, r
 				value = localInheritedBool(stateYesNo(localRawAttribute(r, parent, localPrintLyric)), localDefault(stateYesNo(localRawAttribute(r, parent, localPrintObject)), true))
 			}
 		}
-		if err := localPublish(ctx, s, key, n, ContextPrintObject, raw, localBoolAtomic(value), active, NodeRef{}, ContextUnitNone); err != nil {
+		var err error
+		parent := s.nodes[n.header.Parent]
+		if r.matches(n, localLyric) && raw.State == EvidenceAbsent && parent != nil && r.matches(parent, localNote) {
+			err = localPublishAtOrigin(ctx, s, key, n, parent, ContextPrintObject, raw, localBoolAtomic(value), active, ContextInherited)
+		} else {
+			err = localPublish(ctx, s, key, n, ContextPrintObject, raw, localBoolAtomic(value), active, NodeRef{}, ContextUnitNone)
+		}
+		if err != nil {
 			return err
 		}
 	}

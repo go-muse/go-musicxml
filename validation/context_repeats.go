@@ -249,7 +249,49 @@ func contextRepeatBeat(r *contextReader, timeline *timelineService, n *factNode,
 		}
 		staff := value.Staff
 		if value.AllStaves.State == EvidenceKnown && value.AllStaves.Value {
-			staff = Evidence[Integer]{State: EvidenceAbsent}
+			// A common beat for an all-staff style needs a uniform meter. Query
+			// one symbolic staff only after ruling out possible numbered overrides.
+			for _, publication := range timeline.State.Times.Publications {
+				if !r.step(1) {
+					return stateUnknown[Rational]("context-interrupted")
+				}
+				if publication.Scope.AllStaves || publication.Position.Part != pos.Value.Part {
+					continue
+				}
+				order, err := timeline.State.positionOrder(r.ctx, r.s, publication.Position, pos.Value)
+				if err != nil {
+					r.err = err
+					return stateUnknown[Rational]("context-interrupted")
+				}
+				if order != stateAfter {
+					return stateUnknown[Rational]("context-repeat-all-staff-meter-uniformity-unresolved")
+				}
+			}
+			for _, gap := range timeline.State.Times.Gaps {
+				if !r.step(1) {
+					return stateUnknown[Rational]("context-interrupted")
+				}
+				if gap.Scope.AllStaves || gap.Part != pos.Value.Part {
+					continue
+				}
+				if gap.Position != nil {
+					order, err := timeline.State.positionOrder(r.ctx, r.s, *gap.Position, pos.Value)
+					if err != nil {
+						r.err = err
+						return stateUnknown[Rational]("context-interrupted")
+					}
+					if order == stateAfter {
+						continue
+					}
+				} else if !gap.Placement.Displaced && gap.FirstMeasure > pos.Value.MeasureOrdinal {
+					continue
+				}
+				if gap.Availability.State == EvidenceKnown || gap.Availability.State == EvidenceAbsent {
+					return stateUnknown[Rational]("context-repeat-all-staff-meter-uniformity-unresolved")
+				}
+				return stateUnavailable[bool, Rational](gap.Availability)
+			}
+			staff = Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}
 		}
 		meter, err := queryState(r.ctx, r.s, &timeline.State, &timeline.State.Times, pos.Value, staff, func(v timeState) Evidence[timeState] { return Evidence[timeState]{State: EvidenceKnown, Value: v} })
 		if err != nil {

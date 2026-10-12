@@ -609,3 +609,118 @@ func TestRepeatAdaptersLaterAmbiguityPreservesPrefix(t *testing.T) {
 		}
 	})
 }
+
+func TestRepeatAdaptersSlashBeatDefaultAndMissingMeter(t *testing.T) {
+	for _, meter := range []string{"4", "6", ""} {
+		time := ""
+		if meter != "" {
+			time = `<time><beats>` + meter + `</beats><beat-type>4</beat-type></time>`
+		}
+		repeatAssessBoth(t, `<attributes><divisions>1</divisions>`+time+`<measure-style><slash type="start"/></measure-style></attributes><note><rest/><duration>1</duration></note>`, func(t *testing.T, r validation.Report) {
+			found := false
+			for _, c := range r.Context {
+				if c.Repeat == nil || c.Repeat.Kind != validation.RepeatStyleSlash {
+					continue
+				}
+				found = true
+				v := c.Repeat.Beat
+				if meter == "4" && (v.State != validation.EvidenceKnown || v.Value.String() != "1") {
+					t.Fatalf("simple meter beat %+v", v)
+				}
+				if meter != "4" && v.State == validation.EvidenceKnown {
+					t.Fatalf("ambiguous/missing meter fabricated %+v", v)
+				}
+			}
+			if !found {
+				t.Fatal("missing slash")
+			}
+		})
+	}
+}
+
+func TestRepeatAdaptersNumberedStaffScopeAndMissingStaff(t *testing.T) {
+	repeatAssessBoth(t, `<attributes><divisions>1</divisions><staves>2</staves><measure-style number="2"><slash type="start"><slash-type>quarter</slash-type></slash></measure-style></attributes><note><rest/><duration>1</duration><staff>1</staff></note><note><rest/><duration>1</duration><staff>2</staff></note><note><rest/><duration>1</duration></note>`, func(t *testing.T, r validation.Report) {
+		found := false
+		for _, c := range r.Context {
+			if c.Repeat == nil || c.Repeat.Kind != validation.RepeatStyleSlash {
+				continue
+			}
+			found = true
+			v := c.Repeat
+			if v.AllStaves.State != validation.EvidenceKnown || v.AllStaves.Value || len(v.Notes) != 3 {
+				t.Fatalf("staff scope %+v", v)
+			}
+			if v.Notes[0].Applies.State != validation.EvidenceKnown || v.Notes[0].Applies.Value || v.Notes[1].Applies.State != validation.EvidenceKnown || !v.Notes[1].Applies.Value || v.Notes[2].Applies.State != validation.EvidenceUnknown {
+				t.Fatalf("scope/missing staff %+v", v.Notes)
+			}
+		}
+		if !found {
+			t.Fatal("missing numbered scope")
+		}
+	})
+}
+
+func TestRepeatAdaptersPartIsolation(t *testing.T) {
+	header := `<part-list><score-part id="P1"><part-name>One</part-name></score-part><score-part id="P2"><part-name>Two</part-name></score-part></part-list>`
+	body := `<sound segno="S"/><note><rest/><duration>1</duration></note><sound dalsegno="S"/>`
+	one := `<attributes><divisions>1</divisions><measure-style><slash type="start"><slash-type>quarter</slash-type></slash></measure-style></attributes>` + body
+	two := `<attributes><divisions>1</divisions></attributes>` + body
+	for _, timewise := range []bool{false, true} {
+		source := `<score-partwise version="4.0">` + header + `<part id="P1"><measure number="same">` + one + `</measure></part><part id="P2"><measure number="same">` + two + `</measure></part></score-partwise>`
+		if timewise {
+			source = `<score-timewise version="4.0">` + header + `<measure number="same"><part id="P1">` + one + `</part><part id="P2">` + two + `</part></measure></score-timewise>`
+		}
+		for _, model := range []bool{false, true} {
+			var r validation.Report
+			var err error
+			if model {
+				doc, e := musicxml.Decode(strings.NewReader(source))
+				if e != nil {
+					t.Fatal(e)
+				}
+				r, err = musicxml.AssessModel(context.Background(), doc, musicxml.AssessmentOptions{Profile: musicxml.ProfileModelContext})
+			} else {
+				r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceContext})
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			targets := map[validation.NodeRef]validation.NodeRef{}
+			notes := map[validation.NodeRef]validation.NodeRef{}
+			var styles []*validation.RepeatContextResult
+			for _, c := range r.Context {
+				if c.Repeat != nil {
+					styles = append(styles, c.Repeat)
+				}
+				if c.Navigation == nil {
+					continue
+				}
+				v := c.Navigation
+				if v.Kind == validation.NavigationDalSegno {
+					if v.Target.State != validation.EvidenceKnown {
+						t.Fatalf("same label in distinct part rejected %+v", v)
+					}
+					targets[v.Part.Value] = v.Target.Value
+				}
+				if v.Kind == validation.NavigationNote {
+					notes[c.Subject] = v.Part.Value
+				}
+			}
+			if len(targets) != 2 || len(styles) != 1 || len(styles[0].Notes) != 1 {
+				t.Fatalf("part projection targets=%+v styles=%+v", targets, styles)
+			}
+			for _, scope := range styles[0].Notes {
+				if notes[scope.Source] != styles[0].Part.Value {
+					t.Fatalf("style leaked across parts %+v", scope)
+				}
+			}
+			seen := map[validation.NodeRef]bool{}
+			for _, target := range targets {
+				if seen[target] {
+					t.Fatal("target crossed part boundary")
+				}
+				seen[target] = true
+			}
+		}
+	}
+}

@@ -104,3 +104,12 @@ func localRawAttribute(r *contextReader, n *factNode, role contextRole) Evidence
 	}
 	return value
 }
+
+// localPublishAtOrigin records a genuinely inherited or child-selected fact.
+// Raw absence remains visible; it does not mislabel an encoded override as a
+// documented default merely because the subject has no scalar of its own.
+func localPublishAtOrigin(ctx context.Context, s *Session, key RuleKey, n, origin *factNode, property ContextProperty, raw, value Evidence[Atomic], active Evidence[bool], provenance ContextProvenance) error {
+	ref := NodeRef{s.documentID, n.header.ID}
+	from := NodeRef{s.documentID, origin.header.ID}
+	return s.publishContextResult(ctx, ContextResult{Provider: key, Subject: ref, Property: property, Value: value, Origins: []Location{n.header.Location, origin.header.Location}, Layout: &LayoutContextResult{Scope: ref, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitNone, Provenance: provenance}})
+}

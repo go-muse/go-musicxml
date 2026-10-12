@@ -1,8 +1,9 @@
 package validation
 
 type layoutFormatField struct {
-	Value  Evidence[Atomic]
-	Origin NodeRef
+	Value   Evidence[Atomic]
+	Origin  NodeRef
+	Origins []Location
 }
 
 var layoutFormatNames = [17]string{"font-family", "font-style", "font-weight", "font-size", "justify", "halign", "valign", "enclosure", "language", "line-height", "letter-spacing", "dir", "color", "rotation", "underline", "overline", "line-through"}
@@ -141,6 +142,11 @@ func (f *layoutFormatting) lyricValue(lyric *factNode, component int) layoutForm
 		if !r.step(1 + atomicLogicalBytes(result.Value.Value) + atomicLogicalBytes(value.Value)) {
 			return
 		}
+		if err := r.s.retain(768 + locationLogicalBytes(p.Node.header.Location)); err != nil {
+			r.err = err
+			return
+		}
+		result.Origins = append(result.Origins, p.Node.header.Location)
 		result.Value = layoutConsensusPair(result.Value, value)
 		if result.Origin.Node == 0 {
 			result.Origin = NodeRef{r.s.documentID, p.Node.header.ID}
@@ -235,6 +241,10 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 			raw = layoutLanguage(r, n)
 		}
 		value := layoutFormatField{Value: raw, Origin: ref}
+		if raw.State != EvidenceAbsent {
+			value.Origins = []Location{n.header.Location}
+		}
+		inheritedXMLLanguage := false
 		if raw.State == EvidenceAbsent && previous != nil {
 			if prior := f.formats[previous.header.ID]; prior != nil {
 				inherited := (*prior)[i]
@@ -274,8 +284,21 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 				}
 				lang := layoutLanguage(r, a)
 				if lang.State != EvidenceAbsent {
-					value = layoutFormatField{Value: lang, Origin: NodeRef{r.s.documentID, a.header.ID}}
+					value = layoutFormatField{Value: lang, Origin: NodeRef{r.s.documentID, a.header.ID}, Origins: []Location{a.header.Location}}
+					inheritedXMLLanguage = true
 					break
+				}
+			}
+		}
+		if inheritedXMLLanguage && lyric != nil && value.Value.State == EvidenceKnown && value.Value.Value.Text != "" {
+			candidate := f.lyricValue(lyric, 4)
+			if candidate.Value.State != EvidenceAbsent {
+				if !r.step(1 + atomicLogicalBytes(candidate.Value.Value) + atomicLogicalBytes(value.Value.Value)) {
+					return r.err
+				}
+				merged := layoutConsensusPair(value.Value, candidate.Value)
+				if merged.State != EvidenceKnown {
+					value.Value = stateUnknown[Atomic]("lyric-language-xml-precedence-unresolved")
 				}
 			}
 		}
@@ -359,7 +382,7 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 		if name == "line-height" && value.Value.State == EvidenceKnown && value.Value.Value.Kind == AtomicDecimal {
 			payload.Unit = ContextUnitPercent
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: f.key, Subject: ref, Property: ContextProperty("layout." + name), Value: value.Value, Layout: payload}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: f.key, Subject: ref, Property: ContextProperty("layout." + name), Value: value.Value, Origins: value.Origins, Layout: payload}); err != nil {
 			return err
 		}
 	}
