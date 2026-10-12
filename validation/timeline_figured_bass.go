@@ -31,10 +31,10 @@ type figuredBassAnchorKey struct {
 	ordinal       uint64
 	offset        string
 }
-type figuredBassAnchorFact struct {
-	anchor Evidence[NodeRef]
-	fact   timelineEventFact
-}
+
+// Indirect retained record plus at least 512 bytes of map growth headroom.
+// The finalizer's separately admitted fixed scratch covers temporary records.
+const timelineFigureReserveBytes int64 = 2560
 
 type figuredBassDomain struct {
 	block    timelineMeasureBlock
@@ -249,7 +249,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	}
 	defer func() { _ = s.account.Release(BudgetBufferedBytes, scratch) }()
 	pending := make(map[NodeID]figuredBassTimingOrigin)
-	anchorCache := make(map[figuredBassAnchorKey]figuredBassAnchorFact)
+	anchorCache := make(map[figuredBassAnchorKey]Evidence[NodeRef])
 	unitCache := make(map[figuredBassAnchorKey]Evidence[Decimal])
 	durationCache := make(map[figuredBassDurationKey]Evidence[Rational])
 	ids := make([]NodeID, 0, int(figureCount))
@@ -305,7 +305,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
 				return err
 			}
-			if err := s.retain(4096); err != nil {
+			if err := s.retain(timelineFigureReserveBytes); err != nil {
 				return err
 			}
 			fact, found := service.Facts[event.header.ID]
@@ -343,19 +343,22 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 				cached, found := anchorCache[key]
 				if !found {
 					var used bool
-					cached.anchor, cached.fact, used, err = noteIndex.anchor(ctx, s, service, fact)
+					cached, _, used, err = noteIndex.anchor(ctx, s, service, fact)
 					if err != nil {
 						return err
 					}
 					if !used {
-						cached.anchor, cached.fact = service.figuredBassAnchor(r, domains, fact, complete)
+						cached, _ = service.figuredBassAnchor(r, domains, fact, complete)
 					}
 					if r.err != nil {
 						return r.err
 					}
 					anchorCache[key] = cached
 				}
-				anchor, anchorFact = cached.anchor, cached.fact
+				anchor = cached
+				if anchor.State == EvidenceKnown {
+					anchorFact = service.Facts[anchor.Value.Node]
+				}
 			} else {
 				anchor, anchorFact = service.figuredBassAnchor(r, domains, fact, complete)
 			}
