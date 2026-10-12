@@ -83,7 +83,7 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 	if err = s.retain(cost); err != nil {
 		return nil, err
 	}
-	candidate := &stateHistoryIndex{Scopes: make(map[stateIndexScope][]int), Count: len(raw.Publications), bytes: cost}
+	candidate := &stateHistoryIndex{Scopes: make(map[stateIndexScope]stateIndexBucket), Count: len(raw.Publications), bytes: cost}
 	ok := false
 	defer func() {
 		if !ok {
@@ -94,7 +94,7 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 		if err = s.step(ctx, int64(len(key.Part.DocumentID))+int64(len(key.Staff))+1); err != nil {
 			return nil, err
 		}
-		for _, i := range bucket {
+		for _, i := range bucket.Publications {
 			p := raw.Publications[i]
 			// The closed projectors inspect presence only; immutable payload magnitudes
 			// and strings are not traversed until query comparison/copy.
@@ -104,7 +104,10 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 			if p.Value.State == EvidenceKnown && statementEvidence(project(p.Value.Value)).State == EvidenceAbsent {
 				continue
 			}
-			candidate.Scopes[key] = append(candidate.Scopes[key], i)
+			scope := candidate.Scopes[key]
+			scope.Publications = append(scope.Publications, i)
+			scope.Partial = scope.Partial || p.Position.UnprovedFrame
+			candidate.Scopes[key] = scope
 		}
 	}
 	if err = s.step(ctx, 1); err != nil {
@@ -119,67 +122,9 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 // Extra gaps are checked against the selected property's publication rather
 // than the latest unrelated whole-record publication.
 func queryStatementView[T, V any](ctx context.Context, s *Session, h *timelineState, view *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], extra ...[]stateGap) (stateResult[V], error) {
-	if !stateValidPosition(pos) {
-		return stateResult[V]{}, contract("statement query", "known musical position required")
-	}
-	closure, err := h.closure(ctx, s, pos)
-	if err != nil {
-		return stateResult[V]{}, err
-	}
-	if closure.State != EvidenceKnown || !closure.Value {
-		return stateUnavailableResult[bool, V](ctx, s, closure)
-	}
-	if staff.State != EvidenceKnown {
-		return queryState(ctx, s, h, view, pos, staff, project)
-	}
-	selection, err := selectState(ctx, s, view, pos, staff.Value, true)
-	if err != nil {
-		return stateResult[V]{}, err
-	}
-	gap := Evidence[bool]{State: EvidenceKnown, Value: true}
-	var repairPosition *musicalPosition
-	for _, gaps := range extra {
-		if len(gaps) != 0 {
-			repairPosition, err = stateRepairPosition(ctx, s, view, staff.Value, selection)
-			if err != nil {
-				return stateResult[V]{}, err
-			}
-			break
-		}
-	}
-	for _, gaps := range extra {
-		for _, g := range gaps {
-			if err = s.step(ctx, 1); err != nil {
-				return stateResult[V]{}, err
-			}
-			if g.Part != pos.Part || g.FirstMeasure > pos.MeasureOrdinal {
-				continue
-			}
-			applies, err := stateApplies(ctx, s, g.Scope, staff)
-			if err != nil {
-				return stateResult[V]{}, err
-			}
-			if !applies {
-				continue
-			}
-			unrepaired, err := stateGapUnrepaired(ctx, s, g, pos, repairPosition, true)
-			if err != nil {
-				return stateResult[V]{}, err
-			}
-			if unrepaired {
-				gap = stateMergeGap(gap, g.Availability)
-			}
-		}
-	}
-	out, err := queryState(ctx, s, h, view, pos, staff, project)
-	if err != nil {
-		return out, err
-	}
-	if stateAvailabilityRank(gap.State) > stateAvailabilityRank(out.Value.State) {
-		return stateUnavailableResult[bool, V](ctx, s, gap)
-	}
-	return out, nil
+	return queryStateAtFull(ctx, s, h, view, pos, staff, project, true, true, nil, extra...)
 }
+
 func instrumentStatement[T any](ctx context.Context, s *Session, h *timelineState, pos musicalPosition, id NodeRef, field int, project func(instrumentState) Evidence[T]) (stateResult[T], error) {
 	if id.Node == 0 || id.DocumentID != pos.Part.DocumentID {
 		return stateResult[T]{}, contract("instrument statement", "canonical matching instrument required")
@@ -209,33 +154,34 @@ func instrumentStatement[T any](ctx context.Context, s *Session, h *timelineStat
 	if selected == nil {
 		defer func() { stateDiscardIndex(s, view.index) }()
 	}
-	out, err := queryStatementView(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, project, h.InstrumentGaps, h.InstrumentPropertyGaps[field], local)
-	if err != nil || out.Value.State != EvidenceAbsent {
-		return out, err
-	}
-	found := false
-	for _, d := range h.Definitions {
-		if err = s.step(ctx, 1); err != nil {
+	initial := func() (stateResult[T], error) {
+		out := stateResult[T]{Value: Evidence[T]{State: EvidenceAbsent}}
+		found := false
+		for _, d := range h.Definitions {
+			if err := s.step(ctx, 1); err != nil {
+				return stateResult[T]{}, err
+			}
+			if d.Part != pos.Part || d.Instrument != id {
+				continue
+			}
+			value := stateUnavailable[instrumentState, T](d.Value)
+			if d.Value.State == EvidenceKnown {
+				value = statementEvidence(project(d.Value.Value))
+			}
+			if found {
+				return stateResult[T]{Value: stateUnknown[T]("timeline-instrument-definition-conflict")}, nil
+			}
+			found = true
+			out = stateResult[T]{Value: value, Provenance: d.Provenance, Inherited: true}
+		}
+		if err := stateRetainCopy(ctx, s, out); err != nil {
 			return stateResult[T]{}, err
 		}
-		if d.Part != pos.Part || d.Instrument != id {
-			continue
-		}
-		value := stateUnavailable[instrumentState, T](d.Value)
-		if d.Value.State == EvidenceKnown {
-			value = statementEvidence(project(d.Value.Value))
-		}
-		if found {
-			return stateResult[T]{Value: stateUnknown[T]("timeline-instrument-definition-conflict")}, nil
-		}
-		found = true
-		out = stateResult[T]{Value: value, Provenance: d.Provenance, Inherited: true}
+		return stateClone(out), nil
 	}
-	if err = stateRetainCopy(ctx, s, out); err != nil {
-		return stateResult[T]{}, err
-	}
-	return stateClone(out), nil
+	return queryStateAtFull(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, project, true, true, initial, h.InstrumentGaps, h.InstrumentPropertyGaps[field], local)
 }
+
 func (h *timelineState) effectiveInstrumentStatements(ctx context.Context, s *Session, pos musicalPosition, id NodeRef) (instrumentStatements, error) {
 	out := instrumentStatements{}
 	var err error
@@ -288,7 +234,7 @@ func (h *timelineState) effectiveInstrument(ctx context.Context, s *Session, pos
 	if allUnavailable {
 		return stateUnavailableResult[bool, instrumentState](ctx, s, strongest)
 	}
-	out := stateResult[instrumentState]{Value: Evidence[instrumentState]{State: EvidenceKnown, Value: v}, Inherited: fields.Sound.Inherited || fields.Performance.Inherited || fields.Virtual.Inherited}
+	out := stateResult[instrumentState]{Value: Evidence[instrumentState]{State: EvidenceKnown, Value: v}, Inherited: fields.Sound.Inherited || fields.Performance.Inherited || fields.Virtual.Inherited, InheritanceUnproved: fields.Sound.InheritanceUnproved || fields.Performance.InheritanceUnproved || fields.Virtual.InheritanceUnproved}
 	for _, provenance := range [3][]stateProvenance{fields.Sound.Provenance, fields.Performance.Provenance, fields.Virtual.Provenance} {
 		for _, p := range provenance {
 			duplicate := false

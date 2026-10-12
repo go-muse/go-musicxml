@@ -27,6 +27,7 @@ type figuredBassTimingOrigin struct {
 type figuredBassDurationKey struct{ raw, units string }
 
 type figuredBassAnchorKey struct {
+	unprovedFrame bool
 	part, measure NodeRef
 	ordinal       uint64
 	offset        string
@@ -358,7 +359,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			var anchorFact timelineEventFact
 			if fact.Position.State == EvidenceKnown {
 				at := fact.Position.Value
-				key := figuredBassAnchorKey{part: at.Part, measure: at.Measure, ordinal: at.MeasureOrdinal, offset: at.Offset.text}
+				key := figuredBassAnchorKey{part: at.Part, measure: at.Measure, ordinal: at.MeasureOrdinal, offset: at.Offset.text, unprovedFrame: at.UnprovedFrame}
 				if !r.step(1 + int64(len(key.offset)) + int64(len(key.part.DocumentID)) + int64(len(key.measure.DocumentID))) {
 					return r.err
 				}
@@ -453,7 +454,7 @@ func (service *timelineService) figuredBassUnits(ctx context.Context, s *Session
 		return timelineGapAs[musicalPosition, Decimal](at, "figured-bass-unit-position-unavailable"), nil
 	}
 	value := at.Value
-	key := figuredBassAnchorKey{part: value.Part, measure: value.Measure, ordinal: value.MeasureOrdinal, offset: value.Offset.text}
+	key := figuredBassAnchorKey{part: value.Part, measure: value.Measure, ordinal: value.MeasureOrdinal, offset: value.Offset.text, unprovedFrame: value.UnprovedFrame}
 	if err := s.step(ctx, 1+int64(len(key.offset))+int64(len(key.part.DocumentID))+int64(len(key.measure.DocumentID))); err != nil {
 		return Evidence[Decimal]{}, err
 	}

@@ -47,6 +47,12 @@ func (s *Session) offsetPosition(ctx context.Context, base Evidence[musicalPosit
 		return Evidence[musicalPosition]{}, err
 	}
 	position.Value.Offset = sum
+	if delta.Value.value.Sign() != 0 {
+		position.Value.UnprovedFrame = true
+		if !base.Value.UnprovedFrame && sum.value.Sign() >= 0 && delta.Value.value.Sign() < 0 {
+			position.Value.UnprovedFrame = false
+		}
+	}
 	return position, nil
 }
 
@@ -76,6 +82,9 @@ func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *
 	}
 	position, err := s.playbackOffsetPosition(ctx, base, own, units, directionOffset, directionSound)
 	if err != nil {
+		return err
+	}
+	if err = service.State.proveFramePosition(ctx, s, &position); err != nil {
 		return err
 	}
 	if block.part.State == EvidenceKnown {
@@ -151,6 +160,9 @@ func (service *timelineService) readListeningAt(ctx context.Context, s *Session,
 	}
 	position, err := s.playbackOffsetPosition(ctx, base, own, units, directionOffset, directionSound)
 	if err != nil {
+		return err
+	}
+	if err = service.State.proveFramePosition(ctx, s, &position); err != nil {
 		return err
 	}
 	return service.storeFact(ctx, s, listening.header.ID, timelineEventFact{

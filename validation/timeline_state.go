@@ -15,6 +15,9 @@ type musicalPosition struct {
 	Part, Measure  NodeRef
 	MeasureOrdinal uint64
 	Offset         Rational
+	// UnprovedFrame preserves an exact local coordinate without asserting that
+	// its displaced/cursor position belongs to its canonical measure.
+	UnprovedFrame bool
 }
 
 type stateScope struct {
@@ -60,6 +63,9 @@ type stateResult[T any] struct {
 	Value      Evidence[T]
 	Provenance []stateProvenance
 	Inherited  bool
+	// When true, consensus established the value but not whether every possible
+	// latest publication is strictly before the query. Inherited is then unset.
+	InheritanceUnproved bool
 }
 type stateClosure struct {
 	Part     NodeRef
@@ -144,6 +150,7 @@ type instrumentChanges struct {
 }
 
 type timelineState struct {
+	frameBounds                              map[timelineFrame]Rational
 	StaffDetails                             stateHistory[staffDetailsState]
 	Divisions                                stateHistory[Decimal]
 	Keys                                     stateHistory[keyState]
@@ -472,6 +479,9 @@ func queryStateAt[T, V any](ctx context.Context, s *Session, h *timelineState, h
 // causal pointers. Full compound/provenance queries keep their original copying
 // contract. This is not a borrowed compound-state escape hatch.
 func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive, ownedResult bool) (stateResult[V], error) {
+	return queryStateAtFull(ctx, s, h, history, pos, staff, project, inclusive, ownedResult, nil)
+}
+func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive, ownedResult bool, initial func() (stateResult[V], error), extra ...[]stateGap) (stateResult[V], error) {
 	if !ownedResult && reflect.TypeFor[V]() != reflect.TypeFor[Decimal]() {
 		return stateResult[V]{}, contract("timeline query", "evidence-only mode requires immutable Decimal")
 	}
@@ -493,6 +503,35 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 		}
 		return out, nil
 	}
+	partial, e := statePartialQuery(ctx, s, h, history, pos, staff.Value)
+	if e != nil {
+		return out, e
+	}
+	if !partial {
+		for _, g := range history.Gaps {
+			if e = s.step(ctx, 1); e != nil {
+				return out, e
+			}
+			if g.Position != nil && g.Position.UnprovedFrame {
+				partial = true
+				break
+			}
+		}
+		for _, gaps := range extra {
+			for _, g := range gaps {
+				if e = s.step(ctx, 1); e != nil {
+					return out, e
+				}
+				if g.Position != nil && g.Position.UnprovedFrame {
+					partial = true
+					break
+				}
+			}
+		}
+	}
+	if partial {
+		return queryPartialState(ctx, s, h, history, pos, staff, project, inclusive, ownedResult, initial, extra...)
+	}
 	selection, e := selectState(ctx, s, history, pos, staff.Value, inclusive)
 	if e != nil {
 		return out, e
@@ -500,37 +539,56 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 	best := selection.Best
 	gapAvailability := Evidence[bool]{State: EvidenceKnown, Value: true}
 	var repairPosition *musicalPosition
-	if len(history.Gaps) != 0 {
+	hasGaps := len(history.Gaps) != 0
+	for _, gaps := range extra {
+		hasGaps = hasGaps || len(gaps) != 0
+	}
+	if hasGaps {
 		repairPosition, e = stateRepairPosition(ctx, s, history, staff.Value, selection)
 		if e != nil {
 			return out, e
 		}
 	}
-	for _, g := range history.Gaps {
-		if e = s.step(ctx, 1); e != nil {
+	visitGaps := func(gaps []stateGap) error {
+		for _, g := range gaps {
+			if e = s.step(ctx, 1); e != nil {
+				return e
+			}
+			if g.Part != pos.Part || g.FirstMeasure > pos.MeasureOrdinal {
+				continue
+			}
+			applies, x := stateApplies(ctx, s, g.Scope, staff)
+			if x != nil {
+				return x
+			}
+			if !applies {
+				continue
+			}
+			unrepaired, err := h.stateGapUnrepaired(ctx, s, g, pos, repairPosition, inclusive)
+			if err != nil {
+				return err
+			}
+			if unrepaired {
+				gapAvailability = stateMergeGap(gapAvailability, g.Availability)
+			}
+		}
+		return nil
+	}
+	if e = visitGaps(history.Gaps); e != nil {
+		return out, e
+	}
+	for _, gaps := range extra {
+		if e = visitGaps(gaps); e != nil {
 			return out, e
 		}
-		if g.Part != pos.Part || g.FirstMeasure > pos.MeasureOrdinal {
-			continue
-		}
-		applies, x := stateApplies(ctx, s, g.Scope, staff)
-		if x != nil {
-			return out, x
-		}
-		if !applies {
-			continue
-		}
-		unrepaired, err := stateGapUnrepaired(ctx, s, g, pos, repairPosition, inclusive)
-		if err != nil {
-			return out, err
-		}
-		if unrepaired {
-			gapAvailability = stateMergeGap(gapAvailability, g.Availability)
-		}
 	}
+
 	if best < 0 {
 		if gapAvailability.State != EvidenceKnown {
 			return stateUnavailableResult[bool, V](ctx, s, gapAvailability)
+		}
+		if initial != nil {
+			return initial()
 		}
 		out.Value = Evidence[V]{State: EvidenceAbsent}
 		return out, nil
@@ -557,7 +615,7 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 	if e = s.step(ctx, 1); e != nil {
 		return stateResult[V]{}, e
 	}
-	initial := out.Value
+	initialValue := out.Value
 	conflict := false
 	for _, group := range selection.Groups {
 		for _, publicationIndex := range group {
@@ -600,7 +658,7 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 			if e = s.step(ctx, 1); e != nil {
 				return stateResult[V]{}, e
 			}
-			if !reflect.DeepEqual(initial, candidate) {
+			if !reflect.DeepEqual(initialValue, candidate) {
 				conflict = true
 			}
 			// Preserve an actual invalid/unsupported publication's causal evidence rather
@@ -661,19 +719,15 @@ var timelineOne = Integer{value: big.NewInt(1), text: "1", bytes: 2}
 
 func stateOne() Integer { return timelineOne }
 func (h *timelineState) effectiveCount(ctx context.Context, s *Session, hist *stateHistory[Integer], pos musicalPosition) (stateResult[Integer], error) {
-	r, e := queryState(ctx, s, h, hist, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Integer])
-	if e != nil {
-		return r, e
-	}
-	if r.Value.State == EvidenceAbsent {
-		if e = s.retain(256); e != nil {
-			return stateResult[Integer]{}, e
+	initial := func() (stateResult[Integer], error) {
+		if err := s.retain(256); err != nil {
+			return stateResult[Integer]{}, err
 		}
-		r.Value = Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}
-		r.Provenance = []stateProvenance{{Node: pos.Part, Kind: stateInitialDefault}}
+		return stateResult[Integer]{Value: Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, Provenance: []stateProvenance{{Node: pos.Part, Kind: stateInitialDefault}}, Inherited: true}, nil
 	}
-	return r, nil
+	return queryStateAtFull(ctx, s, h, hist, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Integer], true, true, initial)
 }
+
 func (h *timelineState) effectiveStaves(ctx context.Context, s *Session, pos musicalPosition) (stateResult[Integer], error) {
 	return h.effectiveCount(ctx, s, &h.Staves, pos)
 }

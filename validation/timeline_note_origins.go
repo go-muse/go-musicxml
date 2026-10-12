@@ -105,6 +105,12 @@ func (s *Session) noteTimingShift(ctx context.Context, origin Evidence[musicalPo
 	}
 	out := origin
 	out.Value.Offset = sum
+	if delta.Value.value.Sign() != 0 {
+		out.Value.UnprovedFrame = true
+		if !origin.Value.UnprovedFrame && sum.value.Sign() >= 0 && delta.Value.value.Sign() < 0 {
+			out.Value.UnprovedFrame = false
+		}
+	}
 	return out, nil
 }
 func (s *Session) noteTimingAdjustment(ctx context.Context, origin Evidence[musicalPosition], raw, units Evidence[Decimal], omissionUnchanged bool) (noteTimingAdjustment, error) {

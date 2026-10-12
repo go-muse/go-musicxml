@@ -325,24 +325,21 @@ func (p *timelinePlaybackContext) effectiveTempo(ctx context.Context, s *Session
 	return queryState(ctx, s, h, &p.Tempo, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal])
 }
 func (p *timelinePlaybackContext) effectiveDynamics(ctx context.Context, s *Session, h *timelineState, pos musicalPosition) (stateResult[Decimal], error) {
-	out, err := queryState(ctx, s, h, &p.Dynamics, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal])
-	if err != nil {
-		return out, err
-	}
-	// The official tutorial specifies MIDI velocity 90 (forte); sound dynamics
-	// are percentages of that value, hence 100 percent on established absence.
-	if out.Value.State == EvidenceAbsent {
+	// The official tutorial's velocity90 corresponds to dynamics100 percent.
+	// It is a definite initial baseline, including when a floating statement
+	// may or may not yet have applied and agrees with that documented value.
+	initial := func() (stateResult[Decimal], error) {
 		if err := s.step(ctx, 1); err != nil {
 			return stateResult[Decimal]{}, err
 		}
 		if err := s.retain(256); err != nil {
 			return stateResult[Decimal]{}, err
 		}
-		out.Value = Evidence[Decimal]{State: EvidenceKnown, Value: noteTimingHundred}
-		out.Provenance = []stateProvenance{{Node: pos.Part, Kind: stateInitialDefault}}
+		return stateResult[Decimal]{Value: Evidence[Decimal]{State: EvidenceKnown, Value: noteTimingHundred}, Provenance: []stateProvenance{{Node: pos.Part, Kind: stateInitialDefault}}, Inherited: true}, nil
 	}
-	return out, nil
+	return queryStateAtFull(ctx, s, h, &p.Dynamics, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal], true, true, initial)
 }
+
 func (p *timelinePlaybackContext) effectivePizzicato(ctx context.Context, s *Session, h *timelineState, pos musicalPosition) (stateResult[bool], error) {
 	return queryState(ctx, s, h, &p.Pizzicato, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[bool])
 }

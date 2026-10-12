@@ -209,65 +209,65 @@ func recordStatement[T, V any](ctx context.Context, s *Session, h *timelineState
 	} else {
 		defer func() { stateDiscardIndex(s, view.index) }()
 	}
-	out, err := queryStatementView(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: key}, project, h.MIDIUnknownGaps, gaps)
-	if err != nil || out.Value.State != EvidenceAbsent {
-		return out, err
-	}
-	found, conflict := false, false
-	var initial Evidence[V]
-	for _, record := range records {
-		if err = s.step(ctx, 1); err != nil {
-			return stateResult[V]{}, err
-		}
-		if record.Part != pos.Part || record.Position.State != EvidenceAbsent || record.Note.Node != 0 {
-			continue
-		}
-		value := stateUnavailable[T, V](record.Value)
-		if record.Value.State == EvidenceKnown {
-			value = statementEvidence(project(record.Value.Value))
-		}
-		if value.State == EvidenceAbsent {
-			continue
-		}
-		value = stateConditionalValue(value, record.TimeOnly)
-		target := recordTargetScope(record, omittedAll)
-		if target.State == EvidenceKnown {
-			if !target.Value.AllInstruments && target.Value.Instrument != id {
+	initialValue := func() (stateResult[V], error) {
+		out := stateResult[V]{Value: Evidence[V]{State: EvidenceAbsent}}
+		found, conflict := false, false
+		var initial Evidence[V]
+		for _, record := range records {
+			if err = s.step(ctx, 1); err != nil {
+				return stateResult[V]{}, err
+			}
+			if record.Part != pos.Part || record.Position.State != EvidenceAbsent || record.Note.Node != 0 {
 				continue
 			}
-		} else if stateAvailabilityRank(target.State) > stateAvailabilityRank(value.State) {
-			value = stateUnavailable[instrumentTargetScope, V](target)
-		}
-		if err = stateRetainCopy(ctx, s, value); err != nil {
-			return stateResult[V]{}, err
-		}
-		if !found {
-			out.Value = value
-			initial = value
-			found = true
-		} else {
-			if !reflect.DeepEqual(initial, value) {
-				conflict = true
+			value := stateUnavailable[T, V](record.Value)
+			if record.Value.State == EvidenceKnown {
+				value = statementEvidence(project(record.Value.Value))
 			}
-			if stateAvailabilityRank(value.State) > stateAvailabilityRank(out.Value.State) {
+			if value.State == EvidenceAbsent {
+				continue
+			}
+			value = stateConditionalValue(value, record.TimeOnly)
+			target := recordTargetScope(record, omittedAll)
+			if target.State == EvidenceKnown {
+				if !target.Value.AllInstruments && target.Value.Instrument != id {
+					continue
+				}
+			} else if stateAvailabilityRank(target.State) > stateAvailabilityRank(value.State) {
+				value = stateUnavailable[instrumentTargetScope, V](target)
+			}
+			if err = stateRetainCopy(ctx, s, value); err != nil {
+				return stateResult[V]{}, err
+			}
+			if !found {
 				out.Value = value
+				initial = value
+				found = true
+			} else {
+				if !reflect.DeepEqual(initial, value) {
+					conflict = true
+				}
+				if stateAvailabilityRank(value.State) > stateAvailabilityRank(out.Value.State) {
+					out.Value = value
+				}
 			}
+			pr := stateProvenance{Node: record.Source, Kind: stateExplicit}
+			if err = stateRetainCopy(ctx, s, pr); err != nil {
+				return stateResult[V]{}, err
+			}
+			out.Provenance = append(out.Provenance, stateClone(pr))
 		}
-		pr := stateProvenance{Node: record.Source, Kind: stateExplicit}
-		if err = stateRetainCopy(ctx, s, pr); err != nil {
+		if conflict && (out.Value.State == EvidenceKnown || out.Value.State == EvidenceAbsent) {
+			out.Value = stateUnknown[V]("timeline-state-conflict")
+		}
+		out.Inherited = found
+		if err = stateRetainCopy(ctx, s, out.Value); err != nil {
 			return stateResult[V]{}, err
 		}
-		out.Provenance = append(out.Provenance, stateClone(pr))
+		out.Value = stateClone(out.Value)
+		return out, nil
 	}
-	if conflict && (out.Value.State == EvidenceKnown || out.Value.State == EvidenceAbsent) {
-		out.Value = stateUnknown[V]("timeline-state-conflict")
-	}
-	out.Inherited = found
-	if err = stateRetainCopy(ctx, s, out.Value); err != nil {
-		return stateResult[V]{}, err
-	}
-	out.Value = stateClone(out.Value)
-	return out, nil
+	return queryStateAtFull(ctx, s, h, &view, pos, Evidence[Integer]{State: EvidenceKnown, Value: key}, project, true, true, initialValue, h.MIDIUnknownGaps, gaps)
 }
 
 type midiStatements struct {

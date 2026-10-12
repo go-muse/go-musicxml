@@ -14,8 +14,12 @@ type stateIndexScope struct {
 	AllStaves bool
 	Staff     string
 }
+type stateIndexBucket struct {
+	Publications []int
+	Partial      bool
+}
 type stateHistoryIndex struct {
-	Scopes map[stateIndexScope][]int
+	Scopes map[stateIndexScope]stateIndexBucket
 	Count  int
 	bytes  int64
 }
@@ -59,7 +63,7 @@ func stateIndex[T any](ctx context.Context, s *Session, h *stateHistory[T]) (*st
 	if e = s.retain(cost); e != nil {
 		return nil, e
 	}
-	index := &stateHistoryIndex{Scopes: make(map[stateIndexScope][]int), Count: len(h.Publications), bytes: cost}
+	index := &stateHistoryIndex{Scopes: make(map[stateIndexScope]stateIndexBucket), Count: len(h.Publications), bytes: cost}
 	success := false
 	defer func() {
 		if !success {
@@ -71,12 +75,16 @@ func stateIndex[T any](ctx context.Context, s *Session, h *stateHistory[T]) (*st
 			return nil, e
 		}
 		key := stateScopeKey(p.Position.Part, p.Scope)
-		index.Scopes[key] = append(index.Scopes[key], i)
+		bucket := index.Scopes[key]
+		bucket.Publications = append(bucket.Publications, i)
+		bucket.Partial = bucket.Partial || p.Position.UnprovedFrame
+		index.Scopes[key] = bucket
 	}
 	// Sorting does not publish the candidate. Once a comparison is interrupted,
 	// further comparator calls are constant no-ops and the partial sort is discarded.
 	var compareError error
-	for _, bucket := range index.Scopes {
+	for _, scope := range index.Scopes {
+		bucket := scope.Publications
 		if e = s.step(ctx, 1); e != nil {
 			return nil, e
 		}
@@ -118,7 +126,7 @@ func selectState[T any](ctx context.Context, s *Session, h *stateHistory[T], pos
 	keys := [2]stateIndexScope{{Part: pos.Part, AllStaves: true}, {Part: pos.Part, Staff: staff.String()}}
 	ends := [2]int{}
 	for k, key := range keys {
-		bucket := index.Scopes[key]
+		bucket := index.Scopes[key].Publications
 		lo, hi := 0, len(bucket)
 		for lo < hi {
 			mid := lo + (hi-lo)/2

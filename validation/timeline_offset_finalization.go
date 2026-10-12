@@ -57,6 +57,9 @@ func newTimelinePendingOffsets(r *stateReader, block timelineMeasureBlock) ([]ti
 // divisions at that same score coordinate must not leave a stale lexical unit.
 func (service *timelineService) finalizeOffsetEvent(ctx context.Context, s *Session, b *timelineBindings, block timelineMeasureBlock, event *factNode, fact timelineEventFact) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
+	if err := service.State.proveFramePosition(ctx, s, &fact.Origin); err != nil {
+		return err
+	}
 	units := fact.Units
 	if fact.Origin.State == EvidenceKnown {
 		selected, err := service.State.effectiveDivisionsEvidence(ctx, s, fact.Origin.Value)
@@ -99,6 +102,9 @@ func (service *timelineService) finalizeOffsetEvent(ctx context.Context, s *Sess
 		}
 		fact.Position, err = s.offsetPosition(ctx, base, offset, units)
 		if err != nil {
+			return err
+		}
+		if err = service.State.proveFramePosition(ctx, s, &fact.Position); err != nil {
 			return err
 		}
 		if r.matches(event, timelineRoleDirection) {

@@ -78,6 +78,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 	}
 	defer releasePending()
 	cursor := newTimelineCursor()
+	// An exact ordinary note prefix proves observed current locations, not its
+	// unobserved terminal End. Cursor excursions cannot create new witnesses.
+	prefix, principalPrefix, monotone := true, false, true
 	units := Evidence[Decimal]{State: EvidenceAbsent}
 	origin := timelineAt(block, cursor.Position)
 	if origin.State == EvidenceKnown {
@@ -112,12 +115,14 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		}
 		if block.complete.State != EvidenceKnown || !block.complete.Value {
 			cursor.interrupt(block.complete)
+			prefix = false
 		}
 		if unitGate.From == event.header.ID && unitGate.Gap.State != "" {
 			unitGap = unitGate.Gap
 		}
 		fact := timelineEventFact{Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: stateUnknown[NodeRef]("timeline-principal-unavailable"), PrincipalDuration: stateUnknown[Rational]("timeline-principal-unavailable")}
 		if event.header.Declaration.State != EvidenceKnown {
+			prefix = false
 			gap := stateUnavailable[DeclarationID, bool](event.header.Declaration)
 			if _, err := cursor.advance(ctx, s, timelineMovement{Kind: timelineMovementGap, Unavailability: gap}); err != nil {
 				return err
@@ -223,6 +228,45 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			return err
 		}
 		fact.Position = timelineAt(block, cursorFact.Position)
+		factPrefix := prefix
+		if movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && movement.Chord.Value {
+			factPrefix = principalPrefix
+		}
+		if fact.Position.State == EvidenceKnown {
+			fact.Position.Value.UnprovedFrame = !factPrefix || fact.Position.Value.Offset.value.Sign() < 0
+			// A chord reuses its already observed principal onset; it is not
+			// a new current-cursor witness and may precede the current maximum.
+			if !(movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && movement.Chord.Value) {
+				if err := service.State.observeFrameOrigin(ctx, s, fact.Position.Value, monotone); err != nil {
+					return err
+				}
+			}
+		}
+		if movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && !movement.Chord.Value {
+			principalPrefix = factPrefix
+		}
+		if movement.Kind == timelineMovementBackup || movement.Kind == timelineMovementForward {
+			principalPrefix = false
+			destination := timelineAt(block, cursor.Position)
+			if destination.State == EvidenceKnown {
+				destination.Value.UnprovedFrame = true
+				member, e := service.State.frameMember(ctx, s, destination.Value)
+				if e != nil {
+					return e
+				}
+				prefix = prefix && member
+			} else {
+				prefix = false
+			}
+		}
+		if movement.Kind == timelineMovementBackup || movement.Duration.State == EvidenceKnown && movement.Duration.Value.value.Sign() < 0 {
+			monotone = false
+		}
+		if cursor.Position.State != EvidenceKnown {
+			prefix = false
+		} else if cursor.Position.Value.value.Sign() == 0 {
+			prefix = true
+		}
 		fact.Origin = fact.Position
 		fact.Units = selectedUnits
 		fact.Duration = cursorFact.Duration
@@ -234,6 +278,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				fact.End = Evidence[musicalPosition]{State: EvidenceAbsent}
 			case movement.Chord.State == EvidenceKnown && !movement.Chord.Value:
 				fact.End = timelineAt(block, cursor.Position)
+				if fact.End.State == EvidenceKnown {
+					fact.End.Value.UnprovedFrame = true
+				}
 			}
 			if err := service.Playback.readNote(ctx, s, b, event, block, fact); err != nil {
 				return err

@@ -6,22 +6,35 @@ import "context"
 // strictly later selected statement repairs its property; an equal-position
 // statement cannot silently outrank the unavailable publisher. Genuinely
 // unplaced publishers retain the existing conservative interval behavior.
-func stateGapUnrepaired(ctx context.Context, s *Session, gap stateGap, query musicalPosition, selected *musicalPosition, inclusive bool) (bool, error) {
+func (h *timelineState) gapCouldApply(ctx context.Context, s *Session, gap stateGap, query musicalPosition, inclusive bool) (bool, error) {
 	if gap.Position == nil {
-		return selected == nil || selected.MeasureOrdinal <= gap.LastMeasure, nil
+		member, err := h.frameMember(ctx, s, query)
+		return !member || gap.FirstMeasure <= query.MeasureOrdinal, err
 	}
 	if !stateValidPosition(*gap.Position) || gap.Position.Part != gap.Part || gap.FirstMeasure != gap.Position.MeasureOrdinal || gap.LastMeasure != gap.Position.MeasureOrdinal {
 		return false, contract("timeline gap", "exact point must match its part and interval")
 	}
-	cmp, err := stateComparePosition(ctx, s, *gap.Position, query)
-	if err != nil || cmp > 0 || (cmp == 0 && !inclusive) {
-		return false, err
+	order, err := h.positionOrder(ctx, s, *gap.Position, query)
+	return order.possiblyApplies(inclusive), err
+}
+func (h *timelineState) gapStrictlyBefore(ctx context.Context, s *Session, gap stateGap, selected musicalPosition) (bool, error) {
+	if gap.Position == nil {
+		member, err := h.frameMember(ctx, s, selected)
+		return member && selected.MeasureOrdinal > gap.LastMeasure, err
+	}
+	order, err := h.positionOrder(ctx, s, *gap.Position, selected)
+	return order == stateBefore, err
+}
+func (h *timelineState) stateGapUnrepaired(ctx context.Context, s *Session, gap stateGap, query musicalPosition, selected *musicalPosition, inclusive bool) (bool, error) {
+	relevant, err := h.gapCouldApply(ctx, s, gap, query, inclusive)
+	if err != nil || !relevant {
+		return relevant, err
 	}
 	if selected == nil {
 		return true, nil
 	}
-	cmp, err = stateComparePosition(ctx, s, *selected, *gap.Position)
-	return cmp <= 0, err
+	repaired, err := h.gapStrictlyBefore(ctx, s, gap, *selected)
+	return !repaired, err
 }
 
 func (h *timelineState) addUnresolvedInstrumentChange(ctx context.Context, s *Session, record instrumentRecord[instrumentState], ordinal uint64) error {
