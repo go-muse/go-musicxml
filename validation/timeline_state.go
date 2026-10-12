@@ -116,9 +116,10 @@ type instrumentState struct {
 	Virtual  Evidence[virtualInstrumentState]
 }
 type instrumentDefinition struct {
-	Part, Instrument NodeRef
-	Value            Evidence[instrumentState]
-	Provenance       []stateProvenance
+	Name, Abbreviation Evidence[string]
+	Part, Instrument   NodeRef
+	Value              Evidence[instrumentState]
+	Provenance         []stateProvenance
 }
 type noteInstrumentSet struct {
 	Note, Part NodeRef
@@ -741,47 +742,45 @@ func stateEncodingComponent[T any](v Evidence[T], required bool) Evidence[bool] 
 
 // encodingEvidence is a projection over already budgeted state. queryState
 // charges the entire typed payload before invoking it and polls again afterward.
+func stateAvailabilityRank(state EvidenceState) int {
+	switch state {
+	case EvidenceInvalid:
+		return 4
+	case EvidenceUnsupported:
+		return 3
+	case EvidenceUnknown:
+		return 2
+	case EvidenceAbsent:
+		return 1
+	case EvidenceKnown:
+		return 0
+	default:
+		return 2
+	}
+}
 func (v keyState) encodingEvidence() Evidence[bool] {
-	check := func(e Evidence[bool]) bool { return e.State == EvidenceKnown && e.Value }
-	required := stateEncodingComponent(v.Fifths, v.Traditional)
-	if !check(required) {
-		return required
+	result := Evidence[bool]{State: EvidenceKnown, Value: true}
+	merge := func(e Evidence[bool]) {
+		if stateAvailabilityRank(e.State) > stateAvailabilityRank(result.State) {
+			result = e
+		}
 	}
-	if e := stateEncodingComponent(v.Mode, false); !check(e) {
-		return e
-	}
-	if e := stateEncodingComponent(v.Cancel, false); !check(e) {
-		return e
-	}
-	if e := stateEncodingComponent(v.CancelLocation, false); !check(e) {
-		return e
-	}
+	merge(stateEncodingComponent(v.Fifths, v.Traditional))
+	merge(stateEncodingComponent(v.Mode, false))
+	merge(stateEncodingComponent(v.Cancel, false))
+	merge(stateEncodingComponent(v.CancelLocation, false))
 	for _, a := range v.Alterations {
-		if e := stateEncodingComponent(a.Step, true); !check(e) {
-			return e
-		}
-		if e := stateEncodingComponent(a.Alter, true); !check(e) {
-			return e
-		}
-		if e := stateEncodingComponent(a.Accidental, false); !check(e) {
-			return e
-		}
-		if e := stateEncodingComponent(a.SMuFL, false); !check(e) {
-			return e
-		}
+		merge(stateEncodingComponent(a.Step, true))
+		merge(stateEncodingComponent(a.Alter, true))
+		merge(stateEncodingComponent(a.Accidental, false))
+		merge(stateEncodingComponent(a.SMuFL, false))
 	}
 	for _, o := range v.Octaves {
-		if e := stateEncodingComponent(o.Number, true); !check(e) {
-			return e
-		}
-		if e := stateEncodingComponent(o.Octave, true); !check(e) {
-			return e
-		}
-		if e := stateEncodingComponent(o.Cancel, false); !check(e) {
-			return e
-		}
+		merge(stateEncodingComponent(o.Number, true))
+		merge(stateEncodingComponent(o.Octave, true))
+		merge(stateEncodingComponent(o.Cancel, false))
 	}
-	return Evidence[bool]{State: EvidenceKnown, Value: true}
+	return result
 }
 func (h *timelineState) effectiveKeyPresence(ctx context.Context, s *Session, pos musicalPosition, staff Evidence[Integer]) (stateResult[bool], error) {
 	staff, e := h.resolveStaff(ctx, s, pos, staff)

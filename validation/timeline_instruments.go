@@ -289,7 +289,11 @@ func (r *stateReader) play(n *factNode) Evidence[playState] {
 			}
 			continue
 		}
-		v.Techniques = append(v.Techniques, playTechnique{Kind: kind, Value: stateText(r.scalar(ch)), Type: Evidence[string]{State: EvidenceAbsent}})
+		technique := playTechnique{Kind: kind, Value: stateText(r.scalar(ch)), Type: Evidence[string]{State: EvidenceAbsent}}
+		if kind == playOther {
+			technique.Type = stateText(r.attribute(ch, timelineRoleOtherPlayType))
+		}
+		v.Techniques = append(v.Techniques, technique)
 	}
 	return Evidence[playState]{State: EvidenceKnown, Value: v}
 }
@@ -342,7 +346,7 @@ func (h *timelineState) readInstrumentDefinitions(ctx context.Context, s *Sessio
 		return r.err
 	}
 	for _, ch := range children {
-		d := instrumentDefinition{Part: part, Instrument: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Value: r.instrument(ch, false), Provenance: []stateProvenance{{Node: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Kind: stateExplicit}}}
+		d := instrumentDefinition{Name: stateText(r.childScalar(ch, timelineRoleScoreInstrumentInstrumentName)), Abbreviation: stateText(r.childScalar(ch, timelineRoleScoreInstrumentInstrumentAbbreviation)), Part: part, Instrument: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Value: r.instrument(ch, false), Provenance: []stateProvenance{{Node: NodeRef{DocumentID: s.documentID, Node: ch.header.ID}, Kind: stateExplicit}}}
 		if r.err != nil {
 			return r.err
 		}
@@ -412,5 +416,70 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 		}
 	}
 	h.rawInstrumentRecords(r, n, pos.Part, NodeRef{}, Evidence[musicalPosition]{State: EvidenceKnown, Value: pos}, timelineRoleSoundMidiInstrument, timelineRoleSoundMidiDevice, timelineRoleSoundPlay)
+	return r.err
+}
+
+func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b *timelineBindings, n *factNode, part NodeRef, ordinal uint64, availability Evidence[musicalPosition]) error {
+	if availability.State == EvidenceKnown || availability.State == EvidenceAbsent {
+		return contract("instrument gap", "unavailable position required")
+	}
+	r := &stateReader{ctx: ctx, s: s, b: b}
+	if !r.matches(n, timelineRoleSound) && !r.matches(n, timelineRoleDirectionSound) {
+		return contract("instrument gap", "exact sound declaration required")
+	}
+	g := stateGap{Part: part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+	global := func(g stateGap) error {
+		if _, e := stateReserve(ctx, s, g); e != nil {
+			return e
+		}
+		h.InstrumentGaps = append(h.InstrumentGaps, stateClone(g))
+		return nil
+	}
+	children, complete := r.children(n, timelineRoleSoundInstrumentChange)
+	if r.err != nil {
+		return r.err
+	}
+	if complete.State != EvidenceKnown {
+		g.Availability = complete
+		return global(g)
+	}
+	for _, ch := range children {
+		id := r.reference(ch, timelineRoleInstrumentChangeID, part)
+		if r.err != nil {
+			return r.err
+		}
+		if id.State != EvidenceKnown {
+			g.Availability = stateUnavailable[NodeRef, bool](id)
+			if e := global(g); e != nil {
+				return e
+			}
+			continue
+		}
+		at := -1
+		for i := range h.InstrumentChanges {
+			if e := s.step(ctx, 1); e != nil {
+				return e
+			}
+			if h.InstrumentChanges[i].Instrument == id.Value {
+				at = i
+				break
+			}
+		}
+		if at < 0 {
+			if e := s.retain(256); e != nil {
+				return e
+			}
+			item := instrumentChanges{Instrument: id.Value}
+			if e := addStateGap(ctx, s, &item.History, g); e != nil {
+				return e
+			}
+			h.InstrumentChanges = append(h.InstrumentChanges, item)
+		} else {
+			if e := addStateGap(ctx, s, &h.InstrumentChanges[at].History, g); e != nil {
+				return e
+			}
+		}
+	}
+	h.rawInstrumentRecords(r, n, part, NodeRef{}, availability, timelineRoleSoundMidiInstrument, timelineRoleSoundMidiDevice, timelineRoleSoundPlay)
 	return r.err
 }
