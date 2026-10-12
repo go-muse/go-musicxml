@@ -65,3 +65,47 @@ associations for newly marked cursor excursions, or causal unplaced signed-offse
 publisher gaps whose destination has no established confinement. Independent
 resource/cancellation tests and final integration checks remain pending. The
 existing B5-PERF-01 kernel/session obligation remains open.
+
+## Well-founded cursor-unit checkpoint
+
+Independent REDs `ba52bd6`, `b614c1a`, `5aced4b`, and `8c6d53e` require
+cross-frame unit evidence, directional unavailable-position bounds, rejection of
+self-supported recovered-prefix bounds, and preserved opposite-side controls.
+Their focused groups are GREEN with the least-proof reconstruction below.
+
+- Record a potential excursion at its observed departure, before descendants
+  can extend the frame bound. Complete assessed positive-unit consensus permits
+  the ordinary exact result without a rebuild. No-excursion histories do not
+  allocate a unit inventory or repeat duration arithmetic.
+- For mixed/unknown units, stop every unresolved excursion in a fresh service.
+  Inventory raw divisions publishers independently of staged coordinates; lost
+  positions never erase publishers. Only the safe service's positions and
+  bounds can exclude a potentially crossed region. A movement also requires a
+  known safe departure and matching effective departure units.
+- Forward travel excludes independently proved earlier or unreachable later
+  changes. Backup travel excludes a differing earlier region only when an
+  independently placed same-unit repair is strictly after that region and no
+  later than the tentative destination. Every other potentially intervening
+  publisher remains relevant. Opposite-direction contained changes are local.
+- Remove a gate only after this independent certificate; rebuild and repeat.
+  Each progressing pass removes at least one member of the finite admitted gate
+  map. A dependent return and bound cannot certify their ancestor excursion.
+  Existing local causal gates remain unavailable. Actual relevant invalid or
+  unavailable unit causes are carried into durations and descendant positions.
+- Displacement scope survives loss of exact coordinates in event/note/playback
+  facts and state-family gaps. An assessed nonnegative movement and a complete
+  positive-unit-domain proof retain its independently known departure as an
+  upper (backup) or lower (forward) bound. Subsequent movement weakens endpoints
+  as necessary. A contained return can restore ordinary prefix membership.
+- Raw publisher scratch is pre-counted, host-checked and admitted before
+  allocation, with an idempotent release. Named fixed allowances cover excursion
+  append peaks, maps, and staged service objects. All scans, candidate pairs,
+  arithmetic and rebuilds share the existing limits and cancellation polling.
+  The original service is replaced only after successful completion. Old and
+  staged retained allocations remain charged until session cleanup, a deliberate
+  conservative exceptional-case cost; no production budget is raised.
+
+At this checkpoint, `go test ./validation -count=1 -skip
+'TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote'`
+is GREEN. The one skipped association group belongs to the parallel association
+implementation and is not claimed fixed by this state/runtime checkpoint.

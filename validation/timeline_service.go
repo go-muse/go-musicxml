@@ -5,6 +5,10 @@ import "context"
 // The service is private, session-owned evidence, never a second identity index.
 // Final denotes completed publication, not universal availability of each fact.
 type timelineService struct {
+	unitExcursions     []timelineUnitExcursion
+	unitGates          map[NodeID]timelineExcursionGate
+	unitPositive       map[NodeRef]bool
+	unitProofFinal     bool
 	State              timelineState
 	Playback           timelinePlaybackContext
 	NoteOrigins        map[NodeID]noteTimingOrigin

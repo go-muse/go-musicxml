@@ -77,13 +77,13 @@ func (service *timelineService) finalizeOffsetEvent(ctx context.Context, s *Sess
 	var err error
 	base := fact.Origin
 	if r.matches(event, timelineRoleSound) {
-		if err := service.readSoundAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
+		if err := service.readSoundAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}, fact.Placement); err != nil {
 			return err
 		}
 		return nil // readSoundAt retains the independently addressable fact.
 	}
 	if r.matches(event, timelineRoleListening) {
-		if err := service.readListeningAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}); err != nil {
+		if err := service.readListeningAt(ctx, s, b, event, block, base, units, Evidence[Decimal]{State: EvidenceAbsent}, Evidence[bool]{State: EvidenceAbsent}, fact.Placement); err != nil {
 			return err
 		}
 		return nil
@@ -126,9 +126,9 @@ func (service *timelineService) finalizeOffsetEvent(ctx context.Context, s *Sess
 				}
 				switch {
 				case r.matches(child, timelineRoleDirectionSound):
-					err = service.readSoundAt(ctx, s, b, child, block, base, units, offset, sound)
+					err = service.readSoundAt(ctx, s, b, child, block, base, units, offset, sound, fact.Placement)
 				case r.matches(child, timelineRoleDirectionListening):
-					err = service.readListeningAt(ctx, s, b, child, block, base, units, offset, sound)
+					err = service.readListeningAt(ctx, s, b, child, block, base, units, offset, sound, fact.Placement)
 				}
 				if err != nil {
 					return err

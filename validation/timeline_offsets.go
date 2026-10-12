@@ -66,7 +66,7 @@ func (s *Session) offsetPosition(ctx context.Context, base Evidence[musicalPosit
 // known yes applies the parent direction displacement to playback. Defaults are
 // used only for proven absence, never unknown or invalid evidence. See pinned
 // musicxml.xsd complex types offset (line 3937) and sound (line 4123).
-func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *timelineBindings, sound *factNode, block timelineMeasureBlock, base Evidence[musicalPosition], units Evidence[Decimal], directionOffset Evidence[Decimal], directionSound Evidence[bool]) error {
+func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *timelineBindings, sound *factNode, block timelineMeasureBlock, base Evidence[musicalPosition], units Evidence[Decimal], directionOffset Evidence[Decimal], directionSound Evidence[bool], originPlacement ...stateGapPlacement) error {
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
@@ -92,8 +92,15 @@ func (service *timelineService) readSoundAt(ctx context.Context, s *Session, b *
 		return err
 	}
 	var placement stateGapPlacement
+	if len(originPlacement) != 0 {
+		placement = originPlacement[0]
+	}
 	if position.State != EvidenceKnown {
-		placement, err = s.playbackGapPlacement(ctx, base, own, units, directionOffset, directionSound)
+		derived, e := s.playbackGapPlacement(ctx, base, own, units, directionOffset, directionSound)
+		if derived.Displaced {
+			placement = derived
+		}
+		err = e
 		if err != nil {
 			return err
 		}
@@ -194,7 +201,7 @@ func (s *Session) playbackGapPlacement(ctx context.Context, base Evidence[musica
 // running a machine-listening engine or interpreting player/repeat selectors.
 // The override rule is explicit in musicxml.xsd listening (line 3739); the parent
 // direction's sound=no default applies to listening as well (offset, line 3937).
-func (service *timelineService) readListeningAt(ctx context.Context, s *Session, b *timelineBindings, listening *factNode, block timelineMeasureBlock, base Evidence[musicalPosition], units Evidence[Decimal], directionOffset Evidence[Decimal], directionSound Evidence[bool]) error {
+func (service *timelineService) readListeningAt(ctx context.Context, s *Session, b *timelineBindings, listening *factNode, block timelineMeasureBlock, base Evidence[musicalPosition], units Evidence[Decimal], directionOffset Evidence[Decimal], directionSound Evidence[bool], originPlacement ...stateGapPlacement) error {
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
@@ -220,8 +227,15 @@ func (service *timelineService) readListeningAt(ctx context.Context, s *Session,
 		return err
 	}
 	var placement stateGapPlacement
+	if len(originPlacement) != 0 {
+		placement = originPlacement[0]
+	}
 	if position.State != EvidenceKnown {
-		placement, err = s.playbackGapPlacement(ctx, base, own, units, directionOffset, directionSound)
+		derived, e := s.playbackGapPlacement(ctx, base, own, units, directionOffset, directionSound)
+		if derived.Displaced {
+			placement = derived
+		}
+		err = e
 		if err != nil {
 			return err
 		}

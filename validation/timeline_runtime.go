@@ -81,6 +81,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 	// An exact ordinary note prefix proves observed current locations, not its
 	// unobserved terminal End. Cursor excursions cannot create new witnesses.
 	prefix, principalPrefix, monotone := true, false, true
+	cursorPlacement := stateGapPlacement{}
 	units := Evidence[Decimal]{State: EvidenceAbsent}
 	origin := timelineAt(block, cursor.Position)
 	if origin.State == EvidenceKnown {
@@ -120,7 +121,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		if unitGate.From == event.header.ID && unitGate.Gap.State != "" {
 			unitGap = unitGate.Gap
 		}
-		fact := timelineEventFact{Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: stateUnknown[NodeRef]("timeline-principal-unavailable"), PrincipalDuration: stateUnknown[Rational]("timeline-principal-unavailable")}
+		fact := timelineEventFact{Placement: cursorPlacement, Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: stateUnknown[NodeRef]("timeline-principal-unavailable"), PrincipalDuration: stateUnknown[Rational]("timeline-principal-unavailable")}
 		if event.header.Declaration.State != EvidenceKnown {
 			prefix = false
 			gap := stateUnavailable[DeclarationID, bool](event.header.Declaration)
@@ -130,13 +131,13 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			fact.Position = stateUnavailable[DeclarationID, musicalPosition](event.header.Declaration)
 			fact.Origin = fact.Position
 			if block.part.State == EvidenceKnown && r.potential(event, timelineRoleAttributes) {
-				if err := service.State.gapAttributeFamilies(ctx, s, block.part.Value, block.ordinal, fact.Position); err != nil {
+				if err := service.State.gapAttributeFamilies(ctx, s, block.part.Value, block.ordinal, fact.Position, fact.Placement); err != nil {
 					return err
 				}
 				units = stateUnavailable[musicalPosition, Decimal](fact.Position)
 			}
 			if block.part.State == EvidenceKnown && (r.potential(event, timelineRoleSound) || r.potential(event, timelineRoleDirection)) {
-				if err := service.gapSoundPublishers(ctx, s, block.part.Value, block.ordinal, fact.Position); err != nil {
+				if err := service.gapSoundPublishers(ctx, s, block.part.Value, block.ordinal, fact.Position, fact.Placement); err != nil {
 					return err
 				}
 			}
@@ -146,6 +147,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			continue
 		}
 		movement := timelineMovement{Subject: NodeRef{s.documentID, event.header.ID}, Kind: timelineMovementOther, Chord: Evidence[bool]{State: EvidenceKnown, Value: false}, Grace: Evidence[bool]{State: EvidenceKnown, Value: false}, Duration: Evidence[Rational]{State: EvidenceAbsent}}
+		rawMovement := Evidence[Decimal]{State: EvidenceAbsent}
 		selectedUnits := units
 		if unitGap.State != EvidenceAbsent {
 			selectedUnits = unitGap
@@ -193,10 +195,15 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			}
 			movement.Kind = timelineMovementBackup
 			raw := stateDecimalValue(r.childScalar(event, timelineRoleBackupDuration))
-			var err error
-			movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, units)
-			if err != nil {
-				return err
+			rawMovement = raw
+			if gate, found := service.unitGates[event.header.ID]; found {
+				movement.Duration = stateUnavailable[Decimal, Rational](gate.Availability)
+			} else {
+				var err error
+				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, units)
+				if err != nil {
+					return err
+				}
 			}
 		case r.matches(event, timelineRoleForward):
 			if unitGap.State != EvidenceAbsent {
@@ -204,10 +211,15 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			}
 			movement.Kind = timelineMovementForward
 			raw := stateDecimalValue(r.childScalar(event, timelineRoleForwardDuration))
-			var err error
-			movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, units)
-			if err != nil {
-				return err
+			rawMovement = raw
+			if gate, found := service.unitGates[event.header.ID]; found {
+				movement.Duration = stateUnavailable[Decimal, Rational](gate.Availability)
+			} else {
+				var err error
+				movement.Duration, err = s.normalizeTimelineDuration(ctx, raw, units)
+				if err != nil {
+					return err
+				}
 			}
 			fact.Staff = stateInteger(r.childScalar(event, timelineRoleForwardStaff))
 			fact.Voice = stateText(r.childScalar(event, timelineRoleForwardVoice))
@@ -247,6 +259,14 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		}
 		if movement.Kind == timelineMovementBackup || movement.Kind == timelineMovementForward {
 			principalPrefix = false
+			departureMember := false
+			if fact.Position.State == EvidenceKnown {
+				var e error
+				departureMember, e = service.State.frameMember(ctx, s, fact.Position.Value)
+				if e != nil {
+					return e
+				}
+			}
 			destination := timelineAt(block, cursor.Position)
 			if destination.State == EvidenceKnown {
 				destination.Value.UnprovedFrame = true
@@ -255,9 +275,25 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 					return e
 				}
 				prefix = member
+				if !member || !departureMember {
+					if err := service.recordUnitExcursion(ctx, s, event.header.ID, block, rawMovement, movement.Kind == timelineMovementBackup, movement.Duration); err != nil {
+						return err
+					}
+				}
 			} else {
 				prefix = false
+				if err := service.recordUnitExcursion(ctx, s, event.header.ID, block, rawMovement, movement.Kind == timelineMovementBackup, movement.Duration); err != nil {
+					return err
+				}
 			}
+			if cursor.Position.State != EvidenceKnown {
+				cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, block.part, rawMovement, movement.Kind == timelineMovementBackup)
+			}
+		} else if movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && !movement.Chord.Value && movement.Grace.State == EvidenceKnown && !movement.Grace.Value && cursor.Position.State != EvidenceKnown && cursorPlacement.Displaced {
+			// An ordinary note advances the unknown cursor. A prior upper
+			// bound does not bound its new end; an established lower survives
+			// only an assessed positive duration and positive unit-domain proof.
+			cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, block.part, stateDecimalValue(r.childScalar(event, timelineRoleNoteDuration)), false)
 		}
 		if movement.Kind == timelineMovementBackup || movement.Duration.State == EvidenceKnown && movement.Duration.Value.value.Sign() < 0 {
 			monotone = false
@@ -266,6 +302,11 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			prefix = false
 		} else if cursor.Position.Value.value.Sign() == 0 {
 			prefix = true
+		}
+		if cursor.Position.State == EvidenceKnown {
+			// Keep displacement scope independently of the exact coordinate, so
+			// a later unavailable movement cannot silently regain confinement.
+			cursorPlacement = stateGapPlacement{Displaced: !prefix}
 		}
 		fact.Origin = fact.Position
 		fact.Units = selectedUnits
@@ -302,7 +343,7 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 					return err
 				}
 			} else if block.part.State == EvidenceKnown {
-				if err := service.State.gapAttributes(ctx, s, b, event, block.part.Value, block.ordinal, fact.Position); err != nil {
+				if err := service.State.gapAttributes(ctx, s, b, event, block.part.Value, block.ordinal, fact.Position, fact.Placement); err != nil {
 					return err
 				}
 			}
@@ -362,6 +403,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 // Position-dependent associations run after every canonical measure has
 // published its facts and effective-state history, including later voices.
 func (service *timelineService) finalizeTimingOrigins(ctx context.Context, s *Session, b *timelineBindings, blocks []timelineMeasureBlock) error {
+	if err := service.finalizeExcursionUnits(ctx, s, b, blocks); err != nil {
+		return err
+	}
 	if err := service.resolveFiguredBassOriginsAll(ctx, s, b, blocks); err != nil {
 		return err
 	}
