@@ -231,8 +231,8 @@ func TestTimelineStateClefAndCreatedPartSeparation(t *testing.T) {
 	at := statePosition(t, 0, 0, 1)
 	staff := stateKnown(stateInt(t, 1))
 	scope := stateScope{Staff: staff.Value}
-	normal := clefState{Sign: stateKnown("G"), Line: stateKnown(stateDecimal(t, 2, 1))}
-	added := clefState{Sign: stateKnown("F"), Line: stateKnown(stateDecimal(t, 4, 1)), Additional: stateKnown(true)}
+	normal := clefState{Sign: stateKnown("G"), Line: stateKnown(stateInt(t, 2))}
+	added := clefState{Sign: stateKnown("F"), Line: stateKnown(stateInt(t, 4)), Additional: stateKnown(true)}
 	statePublish(t, s, &h.Clefs, at, scope, stateKnown(normal), 1)
 	statePublish(t, s, &h.AdditionalClefs, at, scope, stateKnown(added), 2)
 	statePublish(t, s, &h.CreatedPartClefs, at, stateScope{AllStaves: true}, stateKnown(clefState{Sign: stateKnown("C")}), 3)

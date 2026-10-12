@@ -92,7 +92,7 @@ type timeState struct {
 }
 type clefState struct {
 	Sign         Evidence[string]
-	Line         Evidence[Decimal]
+	Line         Evidence[Integer]
 	OctaveChange Evidence[Integer]
 	Additional   Evidence[bool]
 	Size         Evidence[string]
@@ -140,6 +140,10 @@ type timelineState struct {
 	Definitions                              []instrumentDefinition
 	NoteInstruments                          []noteInstrumentSet
 	InstrumentChanges                        []instrumentChanges
+	InstrumentGaps                           []stateGap
+	MIDI                                     []instrumentRecord[midiState]
+	MIDIDevices                              []instrumentRecord[midiDeviceState]
+	Play                                     []instrumentRecord[playState]
 	Closures                                 []stateClosure
 }
 
@@ -595,12 +599,12 @@ func (h *timelineState) effectiveKey(ctx context.Context, s *Session, pos musica
 func (h *timelineState) effectiveDivisions(ctx context.Context, s *Session, pos musicalPosition) (stateResult[Decimal], error) {
 	return queryState(ctx, s, h, &h.Divisions, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Decimal])
 }
-func (v clefState) activeLine() Evidence[Decimal] {
+func (v clefState) activeLine() Evidence[Integer] {
 	if v.Additional.State == EvidenceKnown && v.Additional.Value {
-		return Evidence[Decimal]{State: EvidenceAbsent}
+		return Evidence[Integer]{State: EvidenceAbsent}
 	}
 	if v.Additional.State != EvidenceKnown && v.Additional.State != EvidenceAbsent {
-		return stateUnavailable[bool, Decimal](v.Additional)
+		return stateUnavailable[bool, Integer](v.Additional)
 	}
 	return v.Line
 }
