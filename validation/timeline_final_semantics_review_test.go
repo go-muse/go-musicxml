@@ -554,3 +554,77 @@ func TestTimelineFinalReviewConditionalPlaybackCannotRepairPriorGap(t *testing.T
 		})
 	}
 }
+
+func TestTimelineFinalReviewFloatingDynamicsIncludesDocumentedDefault(t *testing.T) {
+	for _, value := range []int64{100, 50} {
+		t.Run(map[int64]string{100: "same-default", 50: "different-value"}[value], func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+			sound := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundOffset, 41, stateAtomicDecimal(t, 10, 1)))
+			stateAttribute(b, sound, timelineRoleSoundDynamics, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, value, 1)})
+			blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, sound, runtimeNote(t, b, 50, 1, false)), runtimeBlock(b, 1, runtimeNote(t, b, 60, 1, false), runtimeNote(t, b, 70, 1, false))}
+			for _, block := range blocks {
+				if err := svc.readMeasure(ctx, s, b, block); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+				t.Fatal(err)
+			}
+			got, err := svc.Playback.effectiveDynamics(ctx, s, &svc.State, svc.Facts[70].Position.Value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if value != 100 {
+				if got.Value.State == EvidenceKnown {
+					t.Fatalf("floating dynamics fabricated definite replacement of default: %+v", got)
+				}
+				return
+			}
+			if got.Value.State != EvidenceKnown || got.Value.Value.String() != "100" {
+				t.Fatalf("same-value documented-default consensus lost: %+v", got)
+			}
+			defaultSource := false
+			for _, source := range got.Provenance {
+				defaultSource = defaultSource || source.Kind == stateInitialDefault && source.Node == (NodeRef{"d", 1})
+			}
+			if !defaultSource {
+				t.Fatalf("consensus hid necessary documented-default proof: %+v", got)
+			}
+		})
+	}
+}
+
+func TestTimelineFinalReviewFloatingInvalidPublicationPreservesActualCause(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	initial := stateNode(b, timelineRoleSound, 30, stateAbsent[Atomic]())
+	stateAttribute(b, initial, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 60, 1)})
+	floating := stateNode(b, timelineRoleSound, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundOffset, 41, stateAtomicDecimal(t, -1, 1)))
+	stateAttribute(b, floating, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	cause := &DecisionRef{Rule: RuleKey{"review-invalid-tempo-scalar", 1}, Subject: NodeRef{"d", 40}}
+	floating.attributes[0].Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-tempo-scalar", Cause: cause}
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs, initial, runtimeNote(t, b, 50, 1, false)), runtimeBlock(b, 1, floating)}
+	for _, block := range blocks {
+		if err := svc.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	got, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[50].End.Value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Value.State != EvidenceInvalid || got.Value.Cause == nil || *got.Value.Cause != *cause {
+		t.Fatalf("floating actual invalid evidence was ignored or replaced by synthetic order uncertainty: %+v", got)
+	}
+	got.Value.Cause.Subject.Node = 999
+	again, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, svc.Facts[50].End.Value)
+	if err != nil || again.Value.Cause == nil || again.Value.Cause.Subject.Node != 40 {
+		t.Fatalf("floating result aliased causal ownership: %+v err=%v", again, err)
+	}
+}
