@@ -41,7 +41,9 @@ adopted.
 5. Normalize one signed non-cursor scalar with divisions established at its
    origin after relevant musical-order publications are complete. Do not use a
    stale lexical register merely because the event was encountered first.
-   Offset conversion never advances the serialization cursor.
+   Offset conversion never advances the serialization cursor. An explicitly known
+   zero offset keeps an independently established origin without requiring a
+   divisions conversion; this does not make an unavailable origin known.
 
 Neither missing nor malformed display conversion destroys independently known
 analysis-key origin evidence. Invalid source data may still have an independent
@@ -66,6 +68,22 @@ end alone cannot. Backup/forward outside an already proved interval suspends
 that prefix proof. No nominal-meter, maximum-note-end, final-cursor, graphical
 barline or shifted-position rule invents a measure length or certifies its own
 containment.
+
+An unavailable destination retains a separate placement envelope. Independently
+proved lower/upper endpoints can exclude an irrelevant candidate or establish a
+strictly later repair. When no such bound is proved, an unknown signed offset can
+reach outside its serialized measure; the canonical measure label alone cannot
+confine it. Invalid offset/condition evidence keeps its original cause. The
+selected offset still follows the own-sound/listening override and parent
+sound-flag rules above, so an ignored parent displacement cannot contaminate an
+independent channel.
+
+The same placement evidence must reach attribute, instrument and playback gap
+publications and the direction/figure/grace association consumers. It is copied
+between independently owned records rather than silently dropped by a service
+adapter. These statements specify the provider contract; exact accepted tests,
+remaining cursor reconstruction and consumer-projection obligations are pinned
+in the [acceptance checkpoint](evidence/timeline-acceptance-checkpoint.md).
 
 Effective continuing-state queries must consider whether a displaced candidate
 can apply and whether it can supersede an established statement. Proven later

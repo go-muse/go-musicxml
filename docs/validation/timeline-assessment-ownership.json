@@ -1108,7 +1108,7 @@
   },
   "execution_evidence": {
     "status": "reconciled-contributions-acceptance-open",
-    "implementation_commit": "b6623ae53da1caea80887aaa6993643ab9533fe3",
+    "implementation_commit": "d381b50402b1a26a44f042288d21a3f2c8f0d0de",
     "timeline_semantic_revision": 2,
     "whole_batch_closed": false,
     "runtime_bindings": [
@@ -1702,6 +1702,36 @@
         "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
       },
       {
+        "file": "validation/timeline_association_resource_independent_test.go",
+        "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+        "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+      },
+      {
+        "file": "validation/timeline_placement_ownership_independent_test.go",
+        "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+        "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+      },
+      {
+        "file": "validation/timeline_placement_ownership_independent_test.go",
+        "name": "TestIndependentTimelineFactPlacementFixedPeak",
+        "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+      },
+      {
+        "file": "validation/timeline_placement_ownership_independent_test.go",
+        "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+        "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+      },
+      {
+        "file": "validation/timeline_gap_placement_resource_independent_test.go",
+        "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+        "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+      },
+      {
+        "file": "validation/timeline_gap_placement_resource_independent_test.go",
+        "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+        "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+      },
+      {
         "file": "validation/timeline_display_state_test.go",
         "name": "TestTimelineDisplayStateDocumentedDefaultsAndMidmeasureApplicability",
         "scope": "Shared state: absent cancel location left, before-barline start versus middle, absent cancel, unavailable position, inactive midmeasure clef and retained invalid cause. This is a projection, never an added mandatory recommendation violation."
@@ -2085,6 +2115,81 @@
         "file": "validation/timeline_origin_locality_test.go",
         "name": "TestGraceDuplicateCanonicalMeasureDomainIsCausalNotContract",
         "scope": "Duplicate canonical measure domains retain causal unavailable evidence rather than a terminal provider contract error."
+      },
+      {
+        "file": "validation/timeline_origin_locality_test.go",
+        "name": "TestGracePotentialDeclarationGapsAggregateWithinCanonicalBlock",
+        "scope": "Potential declaration gaps aggregate within their known canonical block instead of expanding documentwide scratch or poisoning unrelated blocks."
+      },
+      {
+        "file": "validation/timeline_association_frame_test.go",
+        "name": "TestTimelineAssociationFrameCandidatesAndFastPath",
+        "scope": "Later-negative and earlier-positive floating note candidates compete; contained and definitely excluded controls keep indexed lookup; exact same-frame fallback remains available."
+      },
+      {
+        "file": "validation/timeline_association_frame_test.go",
+        "name": "TestTimelineGraceFrameCompetitorAndSideLocality",
+        "scope": "Possible floating donor competitors affect only the relevant previous/following interval."
+      },
+      {
+        "file": "validation/timeline_association_frame_test.go",
+        "name": "TestTimelineFigureChainDisplacedGapKeepsActualCause",
+        "scope": "Displaced figure-chain uncertainty keeps its actual cause rather than a generic order gap."
+      },
+      {
+        "file": "validation/timeline_association_frame_test.go",
+        "name": "TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier",
+        "scope": "Floating fallback cannot skip a nearer chord donor barrier to invent an ordinary donor."
+      },
+      {
+        "file": "validation/timeline_association_frame_test.go",
+        "name": "TestTimelineUnavailableDisplacedAssociationKeepsPlacement",
+        "scope": "Unavailable displaced note/figure/grace positions retain unconfined reach or proved bounds; local exclusions and confined controls remain available."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote",
+        "scope": "Independent direction, figure and grace negative-cursor regressions with contained cross-measure positive controls."
+      },
+      {
+        "file": "validation/timeline_displaced_gap_test.go",
+        "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+        "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+      },
+      {
+        "file": "validation/timeline_displaced_gap_test.go",
+        "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+        "scope": "Known zero offset preserves an established origin without a divisions conversion."
+      },
+      {
+        "file": "validation/timeline_displaced_gap_test.go",
+        "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+        "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+      },
+      {
+        "file": "validation/timeline_displaced_gap_test.go",
+        "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+        "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+      },
+      {
+        "file": "validation/timeline_final_semantics_review_test.go",
+        "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+        "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+      },
+      {
+        "file": "validation/timeline_attribute_placement_test.go",
+        "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+        "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+      },
+      {
+        "file": "validation/timeline_attribute_placement_test.go",
+        "name": "TestTimelineBroadGapPlacementPropagation",
+        "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+      },
+      {
+        "file": "validation/timeline_attribute_placement_test.go",
+        "name": "TestTimelinePublisherServiceGapPlacement",
+        "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
       }
     ],
     "evidence_groups": [
@@ -2883,6 +2988,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
@@ -3372,6 +3507,107 @@
             "file": "validation/timeline_origin_locality_test.go",
             "name": "TestGraceDuplicateCanonicalMeasureDomainIsCausalNotContract",
             "scope": "Duplicate canonical measure domains retain causal unavailable evidence rather than a terminal provider contract error."
+          },
+          {
+            "file": "validation/timeline_origin_locality_test.go",
+            "name": "TestGracePotentialDeclarationGapsAggregateWithinCanonicalBlock",
+            "scope": "Potential declaration gaps aggregate within their known canonical block instead of expanding documentwide scratch or poisoning unrelated blocks."
+          }
+        ],
+        "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
+      },
+      {
+        "id": "crossframe-associations",
+        "scope": "Direction/figure/grace consumers use proved partial relations rather than serialized measure ordinals; exact floating competitors and unavailable bounded/unconfined placements preserve causes, local exclusions and ordinary fast paths.",
+        "runtime_bindings": [
+          {
+            "id": "MX40-TIMELINE-effective-state",
+            "revision": 1
+          }
+        ],
+        "executable_tests": [
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineAssociationFrameCandidatesAndFastPath",
+            "scope": "Later-negative and earlier-positive floating note candidates compete; contained and definitely excluded controls keep indexed lookup; exact same-frame fallback remains available."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFrameCompetitorAndSideLocality",
+            "scope": "Possible floating donor competitors affect only the relevant previous/following interval."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineFigureChainDisplacedGapKeepsActualCause",
+            "scope": "Displaced figure-chain uncertainty keeps its actual cause rather than a generic order gap."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier",
+            "scope": "Floating fallback cannot skip a nearer chord donor barrier to invent an ordinary donor."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineUnavailableDisplacedAssociationKeepsPlacement",
+            "scope": "Unavailable displaced note/figure/grace positions retain unconfined reach or proved bounds; local exclusions and confined controls remain available."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote",
+            "scope": "Independent direction, figure and grace negative-cursor regressions with contained cross-measure positive controls."
+          }
+        ],
+        "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
+      },
+      {
+        "id": "unavailable-placement",
+        "scope": "Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
+        "runtime_bindings": [
+          {
+            "id": "MX40-TIMELINE-effective-state",
+            "revision": 1
+          }
+        ],
+        "executable_tests": [
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
@@ -3420,6 +3656,22 @@
         "result": "all four rejected for intended reasons",
         "artifact": "reconcile-ownership-mutation.log",
         "scope": "Removing a retained later owner, forging a test function, forging a binding revision and broadening a profile closure are rejected. Documentation integrity only."
+      },
+      {
+        "command": "MUSICXML_REQUIRE_XMLLINT=1 go test -count=1 ./... -run \"$DISPLACEMENT_TEST_REGEX\"",
+        "selection": "Exact anchored union of 21 association, Placement, ownership/admission/cancellation and block-local grace tests plus TestTimelineFinalReviewDisplacedKeySchemaControls.",
+        "result": "passed",
+        "implementation_commit": "d381b50402b1a26a44f042288d21a3f2c8f0d0de",
+        "artifact": "reconcile-displacement-d381b50.log",
+        "scope": "Selected component tests with real xmllint source-fixture controls; excludes pending public key-presence and unit-region reconstruction groups. XSD controls are not musical-conformance evidence."
+      },
+      {
+        "command": "go test -count=1 ./... -run \"$DECLARED_TEST_REGEX|^TestTimelineOwnership\"",
+        "selection": "Exact anchored union of all 206 distinct functions declared at this checkpoint, plus TestTimelineOwnership integrity tests.",
+        "result": "passed",
+        "implementation_commit": "d381b50402b1a26a44f042288d21a3f2c8f0d0de",
+        "artifact": "reconcile-declared-d381b50.log",
+        "scope": "Selected checkpoint suite only. Pending unit reconstruction, public numeral-key projection, all-stage repository and exact-head CI acceptance remain separate."
       }
     ],
     "remaining_acceptance": [
@@ -3439,53 +3691,68 @@
       "scope": "All root TestIndependentTimeline cases and focused independent validation/rational checks. All eight direction and all eight figured-bass public variants pass, including default 64 MiB source/current-model timeline cases with 1000 notes and 1000 candidate events. Ordinary 100/1000 exact trajectories, repeated divisions, sparse exact staff, parallel profiles/report ownership and failure-preserving diagnostic quotas remain covered.",
       "final_head_refresh_required": true,
       "actual_386_execution_claimed": false,
-      "b5_perf_01_closed": false
+      "b5_perf_01_closed": false,
+      "later_scoped_refreshes": [
+        {
+          "implementation_commit": "904c7cf",
+          "result": "passed",
+          "scope": "All root TestIndependentTimeline cases, including 32 public direction/figure/grace default/diagnostic variants; selected private resource/grace/point-gap/cross-frame tests.",
+          "artifacts": [
+            "resource-independent-904c7cf-public.log",
+            "resource-independent-904c7cf-private.log"
+          ]
+        },
+        {
+          "implementation_commit": "1f7797bb3f4e5070c769ff16eef66756f46675d0",
+          "independent_test_commit": "e7cf607",
+          "result": "passed",
+          "scope": "Sixteen publisher families retain separately owned Placement endpoints/causes; 880 cancellation polls and literal admission; selected private suite and race, validation/internal-xsd vet, validation-package 386 compilation. Compilation is not execution; final unit reconstruction and matched-cost refresh remain open.",
+          "artifacts": [
+            "resource-independent-1f7797b-placement.log",
+            "resource-independent-1f7797b-private.log",
+            "resource-independent-1f7797b-race-vet-386.log"
+          ]
+        }
+      ]
     },
     "independent_semantic_review": {
-      "status": "checkpoint-green-final-crossframe-integration-open",
+      "status": "independent-association-checkpoint-green-final-unit-and-key-integration-open",
       "accepted_component_commit": "b6623ae53da1caea80887aaa6993643ab9533fe3",
-      "accepted_component_scope": "Previously accepted instrument/MIDI, figure-prefix, grace-locality and conditional-cause cases plus major continuing-state cross-frame/containment/initial-default-consensus regressions are green at this checkpoint. This is not final semantic acceptance.",
+      "accepted_component_scope": "Previously accepted instrument/MIDI, figure-prefix, grace-locality and conditional-cause cases plus continuing-state cross-frame/containment/initial-default-consensus controls. Separate association review below extends this scope; neither is final semantic acceptance.",
       "pending_cases": [
-        "Direction/figured-bass/grace cross-frame associations after an unproved negative cursor excursion",
-        "Changed-divisions reconstruction for structural-start, inherited/later-frame and differing-unit boundary excursions must not invent departure units",
-        "Unavailable signed-offset publishers require unconstrained, property-local uncertainty instead of an invented frame bound"
+        "Acyclic least-proof unit-region reconstruction for structural-start, inherited/later-frame and differing-unit excursions; circular ancestor/bound self-certification must be rejected, independent prefixes and directional bounds preserved.",
+        "Public source/current-model numeral-key consumers must retain displaced publisher uncertainty without false failure, while invariant valid-key presence and valid own local numeral keys stay independently sufficient.",
+        "Final integrated semantic/resource review and exact-head repository/CI acceptance remain open."
       ],
       "earlier_report_is_final_evidence": false,
       "whole_repository_pass_claimed": false,
       "pending_clause_work": [
         {
           "clause_ids": [
-            "direction-note-association",
-            "figured-bass-anchor",
-            "grace-time-semantics"
-          ],
-          "case": "B6-CROSSFRAME-ASSOCIATION: reject unsupported known following-note identity after a negative cursor excursion while preserving exact uniform-unit local coordinates and contained cross-measure positive controls.",
-          "owner": "Batch 6 timeline/origin provider integration.",
-          "test": "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote"
-        },
-        {
-          "clause_ids": [
             "duration-cursor",
             "divisions-tuplet-units",
             "backup-no-boundary-cross"
           ],
-          "case": "B6-CROSSFRAME-CURSOR-UNITS: structural-start, inherited/later-frame and differing-unit boundary excursions cannot choose departure units without evidence; preserve independently established prefixes. This is unavailable coordinate evidence, not a must-reject boundary-crossing rule.",
-          "owner": "Batch 6 cursor/effective-divisions provider.",
-          "test": "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits"
+          "case": "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule.",
+          "owner": "Batch 6 cursor/effective-divisions provider and staged runtime integration.",
+          "test": "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof"
         },
         {
           "clause_ids": [
-            "offset-scope-precedence",
-            "sound-offset-precedence",
-            "listening-offset",
-            "sound-instrument-grouping",
-            "sound-tempo-dynamics",
-            "sound-pizzicato-scope"
+            "numeral-requires-key"
           ],
-          "case": "B6-UNCONFINED-OFFSET-GAP: an unavailable signed destination cannot be bounded to its serialized measure; uncertainty must remain scoped to the actually affected properties and canonical part.",
-          "owner": "Batch 6 displaced-state and publisher-gap provider integration."
+          "case": "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient.",
+          "owner": "Batch 6 key-state projection and mandatory numeral consumer.",
+          "test": "TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters"
         }
-      ]
+      ],
+      "association_review": {
+        "worker_commit": "44ffd16",
+        "independent_review_commit": "1b13767",
+        "artifact": "final-semantic-associations-44ffd16-green.log",
+        "result": "passed",
+        "scope": "All unavailable-position displacement/bounds controls, original direction/figure/grace cross-frame regressions and unavailable sound-offset actual-cause control. This is selected component acceptance, not whole-repository acceptance."
+      }
     },
     "non_cursor_interpretation": {
       "status": "reviewed-clause-derived-profile-interpretation",
@@ -19913,6 +20180,36 @@
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
           },
           {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
             "file": "timeline_assessment_test.go",
             "name": "TestTimelineMandatoryMilestonesBothTargets",
             "scope": "Production source/model principal 4, tone 1 then 3 passes; tone exceeding principal fails; cross-staff and fractional controls."
@@ -20290,6 +20587,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -20954,6 +21281,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -21377,6 +21734,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           },
           {
             "file": "validation/rational_test.go",
@@ -21927,6 +22314,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           },
           {
             "file": "validation/rational_test.go",
@@ -22661,6 +23078,36 @@
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
           },
           {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
             "file": "validation/rational_test.go",
             "name": "TestRationalSessionExactOperations",
             "scope": "Hand-computed exact arithmetic; shared session unit tests, including nonterminating rational results."
@@ -23033,6 +23480,36 @@
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
           },
           {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
+          },
+          {
             "file": "validation/rational_test.go",
             "name": "TestRationalSessionExactOperations",
             "scope": "Hand-computed exact arithmetic; shared session unit tests, including nonterminating rational results."
@@ -23393,6 +23870,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           },
           {
             "file": "validation/rational_test.go",
@@ -24039,6 +24546,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -24524,6 +25061,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -24867,6 +25434,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -25218,6 +25815,36 @@
             "file": "validation/timeline_frame_resource_independent_test.go",
             "name": "TestIndependentTimelineFrameWitnessSurvivesChordOnset",
             "scope": "Reused earlier chord onset cannot decrease an already established frame containment bound."
+          },
+          {
+            "file": "validation/timeline_association_resource_independent_test.go",
+            "name": "TestIndependentTimelineFloatingAssociationEveryCancellationBoundary",
+            "scope": "Each observed floating direction/figure two-pass association poll cancels without retained scratch or mutation of raw records."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactOwnsPlacementEndpoints",
+            "scope": "Event facts own copied displacement endpoint records and causes without borrowed mutable pointers."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementFixedPeak",
+            "scope": "Closed endpoint copying peak is admitted before allocation and cleaned up on failure."
+          },
+          {
+            "file": "validation/timeline_placement_ownership_independent_test.go",
+            "name": "TestIndependentTimelineFactPlacementEveryCancellationBoundary",
+            "scope": "Each event-fact endpoint copy cancellation poll retains inputs and releases admitted scratch."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementAdmissionAndOwnership",
+            "scope": "Sixteen publisher families own independent endpoints/causes; context quotas and literal 3262-byte first-gap admission reject before unadmitted publication."
+          },
+          {
+            "file": "validation/timeline_gap_placement_resource_independent_test.go",
+            "name": "TestIndependentTimelinePublisherPlacementEveryCancellationBoundary",
+            "scope": "All 880 observed publisher-Placement polls cancel with borrowed inputs unchanged, no retained scratch and zero live bytes after cleanup; already admitted publications may persist until cleanup."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -32268,7 +32895,7 @@
       },
       "batch6_ownership": {
         "status": "evidenced-contribution-open-requirement",
-        "scope": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.",
+        "scope": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "remaining_batches": [
           6
         ],
@@ -32339,12 +32966,54 @@
             "file": "timeline_semantic_qa_test.go",
             "name": "TestTimelineAnalysisKeyStaysAtUnshiftedHarmonyOrigin",
             "scope": "Production source/current-model, partwise/timewise: forward visual offset cannot borrow future key, backward visual offset does not erase present key, sound flag does not move analysis and local key remains independent."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
-        "completed_contribution": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.",
-        "exact_remaining": [],
+        "completed_contribution": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
+        "exact_remaining": [
+          "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient. Owner: Batch 6 key-state projection and mandatory numeral consumer. Outstanding regression: TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters."
+        ],
         "evidence_scope": "Contribution only; original requirement acceptance, hard_error_basis and five-axis recipes are unchanged. All original named remaining owners are retained.",
-        "remaining_scope": "Exact original remaining scope and named owners are preserved in previous_ownership; no new broader closure claim."
+        "remaining_scope": "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient. Owner: Batch 6 key-state projection and mandatory numeral consumer. Outstanding regression: TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters."
       }
     },
     {
@@ -41835,7 +42504,7 @@
         "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
         "batch6_remaining": [
-          "B6-CROSSFRAME-CURSOR-UNITS: structural-start, inherited/later-frame and differing-unit boundary excursions cannot choose departure units without evidence; preserve independently established prefixes. This is unavailable coordinate evidence, not a must-reject boundary-crossing rule. Owner: Batch 6 cursor/effective-divisions provider. Outstanding regression: TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits."
+          "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule. Owner: Batch 6 cursor/effective-divisions provider and staged runtime integration. Outstanding regression: TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof."
         ],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
@@ -46584,7 +47253,7 @@
       },
       "original_source_reference": "MX40-PROSE-direction-note-association",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -46664,17 +47333,46 @@
             "file": "timeline_semantic_qa_test.go",
             "name": "TestTimelineAnalysisKeyStaysAtUnshiftedHarmonyOrigin",
             "scope": "Production source/current-model, partwise/timewise: forward visual offset cannot borrow future key, backward visual offset does not erase present key, sound flag does not move analysis and local key remains independent."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineAssociationFrameCandidatesAndFastPath",
+            "scope": "Later-negative and earlier-positive floating note candidates compete; contained and definitely excluded controls keep indexed lookup; exact same-frame fallback remains available."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFrameCompetitorAndSideLocality",
+            "scope": "Possible floating donor competitors affect only the relevant previous/following interval."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineFigureChainDisplacedGapKeepsActualCause",
+            "scope": "Displaced figure-chain uncertainty keeps its actual cause rather than a generic order gap."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier",
+            "scope": "Floating fallback cannot skip a nearer chord donor barrier to invent an ordinary donor."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineUnavailableDisplacedAssociationKeepsPlacement",
+            "scope": "Unavailable displaced note/figure/grace positions retain unconfined reach or proved bounds; local exclusions and confined controls remain available."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote",
+            "scope": "Independent direction, figure and grace negative-cursor regressions with contained cross-measure positive controls."
           }
         ],
         "evidence_groups": [
           "direction-association",
-          "finalized-offset-origin"
+          "finalized-offset-origin",
+          "crossframe-associations"
         ],
-        "implemented_contribution": "Optional first following same-part compatible-voice note association from unshifted origin, exact musical order and cross-measure identity; equal-time ties remain explicit.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.",
+        "implemented_contribution": "Optional first following same-part compatible-voice note association from unshifted origin, exact musical order and cross-measure identity; equal-time ties remain explicit.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Direction/figure/grace consumers use proved partial relations rather than serialized measure ordinals; exact floating competitors and unavailable bounded/unconfined placements preserve causes, local exclusions and ordinary fast paths.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-CROSSFRAME-ASSOCIATION: reject unsupported known following-note identity after a negative cursor excursion while preserving exact uniform-unit local coordinates and contained cross-measure positive controls. Owner: Batch 6 timeline/origin provider integration. Outstanding regression: TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote."
-        ],
+        "batch6_remaining": [],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
     },
@@ -47371,7 +48069,7 @@
         "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
         "batch6_remaining": [
-          "B6-CROSSFRAME-CURSOR-UNITS: structural-start, inherited/later-frame and differing-unit boundary excursions cannot choose departure units without evidence; preserve independently established prefixes. This is unavailable coordinate evidence, not a must-reject boundary-crossing rule. Owner: Batch 6 cursor/effective-divisions provider. Outstanding regression: TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits."
+          "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule. Owner: Batch 6 cursor/effective-divisions provider and staged runtime integration. Outstanding regression: TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof."
         ],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
@@ -48199,7 +48897,7 @@
         "implemented_contribution": "Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.; Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
         "batch6_remaining": [
-          "B6-CROSSFRAME-CURSOR-UNITS: structural-start, inherited/later-frame and differing-unit boundary excursions cannot choose departure units without evidence; preserve independently established prefixes. This is unavailable coordinate evidence, not a must-reject boundary-crossing rule. Owner: Batch 6 cursor/effective-divisions provider. Outstanding regression: TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits."
+          "B6-CROSSFRAME-CURSOR-UNITS: implement independently justified acyclic unit-region evidence for boundary excursions without selecting departure units or allowing derived positions/bounds to certify their own ancestors; preserve already established prefixes and valid directional placement bounds. Unavailable reconstruction is not a must-reject boundary rule. Owner: Batch 6 cursor/effective-divisions provider and staged runtime integration. Outstanding regression: TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof."
         ],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
@@ -48861,16 +49559,46 @@
             "file": "validation/timeline_origin_locality_test.go",
             "name": "TestFiguredBassChainGapUsesExactScoreLowerBound",
             "scope": "Known cursor lower bounds exclude irrelevant figure-gap candidates without guessed measure duration."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineAssociationFrameCandidatesAndFastPath",
+            "scope": "Later-negative and earlier-positive floating note candidates compete; contained and definitely excluded controls keep indexed lookup; exact same-frame fallback remains available."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFrameCompetitorAndSideLocality",
+            "scope": "Possible floating donor competitors affect only the relevant previous/following interval."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineFigureChainDisplacedGapKeepsActualCause",
+            "scope": "Displaced figure-chain uncertainty keeps its actual cause rather than a generic order gap."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier",
+            "scope": "Floating fallback cannot skip a nearer chord donor barrier to invent an ordinary donor."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineUnavailableDisplacedAssociationKeepsPlacement",
+            "scope": "Unavailable displaced note/figure/grace positions retain unconfined reach or proved bounds; local exclusions and confined controls remain available."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote",
+            "scope": "Independent direction, figure and grace negative-cursor regressions with contained cross-measure positive controls."
           }
         ],
         "evidence_groups": [
-          "figured-bass"
+          "figured-bass",
+          "crossframe-associations"
         ],
-        "implemented_contribution": "Unique nearest ordinary note across complete established same-part measure domains, raw top-to-bottom figures, final anchor units, separate anchor and proven consecutive cumulative chain onsets.",
+        "implemented_contribution": "Unique nearest ordinary note across complete established same-part measure domains, raw top-to-bottom figures, final anchor units, separate anchor and proven consecutive cumulative chain onsets.; Direction/figure/grace consumers use proved partial relations rather than serialized measure ordinals; exact floating competitors and unavailable bounded/unconfined placements preserve causes, local exclusions and ordinary fast paths.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
         "batch6_remaining": [
-          "B6-FIGURE-BOUNDARIES: ordinary cross-measure anchors, finalized following-note units and proven consecutive cumulative chains are supported. Nonconsecutive/interleaved same-anchor group membership remains an exact source-dependent case; absent preceding duration cannot fabricate a chain step. Derived chain positions do not create an alternative duration-unit origin. No sum-of-figures <= note-duration or same-measure restriction is introduced.",
-          "B6-CROSSFRAME-ASSOCIATION: reject unsupported known following-note identity after a negative cursor excursion while preserving exact uniform-unit local coordinates and contained cross-measure positive controls. Owner: Batch 6 timeline/origin provider integration. Outstanding regression: TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote."
+          "B6-FIGURE-BOUNDARIES: ordinary cross-measure anchors, finalized following-note units and proven consecutive cumulative chains are supported. Nonconsecutive/interleaved same-anchor group membership remains an exact source-dependent case; absent preceding duration cannot fabricate a chain step. Derived chain positions do not create an alternative duration-unit origin. No sum-of-figures <= note-duration or same-measure restriction is introduced."
         ],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
@@ -50698,17 +51426,52 @@
             "file": "validation/timeline_origin_locality_test.go",
             "name": "TestGraceDuplicateCanonicalMeasureDomainIsCausalNotContract",
             "scope": "Duplicate canonical measure domains retain causal unavailable evidence rather than a terminal provider contract error."
+          },
+          {
+            "file": "validation/timeline_origin_locality_test.go",
+            "name": "TestGracePotentialDeclarationGapsAggregateWithinCanonicalBlock",
+            "scope": "Potential declaration gaps aggregate within their known canonical block instead of expanding documentwide scratch or poisoning unrelated blocks."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineAssociationFrameCandidatesAndFastPath",
+            "scope": "Later-negative and earlier-positive floating note candidates compete; contained and definitely excluded controls keep indexed lookup; exact same-frame fallback remains available."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFrameCompetitorAndSideLocality",
+            "scope": "Possible floating donor competitors affect only the relevant previous/following interval."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineFigureChainDisplacedGapKeepsActualCause",
+            "scope": "Displaced figure-chain uncertainty keeps its actual cause rather than a generic order gap."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier",
+            "scope": "Floating fallback cannot skip a nearer chord donor barrier to invent an ordinary donor."
+          },
+          {
+            "file": "validation/timeline_association_frame_test.go",
+            "name": "TestTimelineUnavailableDisplacedAssociationKeepsPlacement",
+            "scope": "Unavailable displaced note/figure/grace positions retain unconfined reach or proved bounds; local exclusions and confined controls remain available."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote",
+            "scope": "Independent direction, figure and grace negative-cursor regressions with contained cross-measure positive controls."
           }
         ],
         "evidence_groups": [
           "note-origins",
-          "grace-neighbors"
+          "grace-neighbors",
+          "crossframe-associations"
         ],
-        "implemented_contribution": "Raw note attack/release, independent original onset/end and signed positions; bend release/percent origins; grace raw timing.; Finalized neighbor map with independently proved donor-specific inclusive score intervals in explicit-voice or proved unvoiced sequences; exact donor duration/fraction/stolen amount, no staff filter, fabricated grace duration or continuous playback claim.",
+        "implemented_contribution": "Raw note attack/release, independent original onset/end and signed positions; bend release/percent origins; grace raw timing.; Finalized neighbor map with independently proved donor-specific inclusive score intervals in explicit-voice or proved unvoiced sequences; exact donor duration/fraction/stolen amount, no staff filter, fabricated grace duration or continuous playback claim.; Direction/figure/grace consumers use proved partial relations rather than serialized measure ordinals; exact floating competitors and unavailable bounded/unconfined placements preserve causes, local exclusions and ordinary fast paths.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
         "batch6_remaining": [
-          "B6-GRACE-BOUNDARIES: each proved donor interval is independently resolved. Ambiguous chord identity, overlaps, mixed missing/explicit voice and unavailable kinds/positions block only intervals they could enter; genuinely unknown ownership/domain coverage remains conservative. Donor identity does not claim continuous time or playback redistribution.",
-          "B6-CROSSFRAME-ASSOCIATION: reject unsupported known following-note identity after a negative cursor excursion while preserving exact uniform-unit local coordinates and contained cross-measure positive controls. Owner: Batch 6 timeline/origin provider integration. Outstanding regression: TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote."
+          "B6-GRACE-BOUNDARIES: each proved donor interval is independently resolved. Ambiguous chord identity, overlaps, mixed missing/explicit voice and unavailable kinds/positions block only intervals they could enter; genuinely unknown ownership/domain coverage remains conservative. Donor identity does not claim continuous time or playback redistribution."
         ],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
@@ -52967,7 +53730,7 @@
       },
       "original_source_reference": "MX40-PROSE-listening-offset",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -53082,18 +53845,57 @@
             "file": "validation/timeline_cross_frame_test.go",
             "name": "TestTimelineCrossFrameInstrumentInitialConsensus",
             "scope": "Initial instrument definitions remain part of same-value cross-frame consensus."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "evidence_groups": [
           "offsets",
           "finalized-offset-origin",
-          "crossframe-state"
+          "crossframe-state",
+          "unavailable-placement"
         ],
-        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.",
+        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-UNCONFINED-OFFSET-GAP: an unavailable signed destination cannot be bounded to its serialized measure; uncertainty must remain scoped to the actually affected properties and canonical part. Owner: Batch 6 displaced-state and publisher-gap provider integration."
-        ],
+        "batch6_remaining": [],
         "availability_boundaries": [
           "An exact signed local coordinate alone does not establish displaced-state applicability or supersession across measure frames. Queries retain local unavailability where no independent containment or sufficient order bound exists; no meter, terminal-note endpoint or measure label supplies an invented elapsed span."
         ],
@@ -57304,7 +58106,7 @@
       },
       "original_source_reference": "MX40-PROSE-numeral-requires-key",
       "ownership": {
-        "status": "evidenced-contribution-acceptance-pending",
+        "status": "partial-contribution-open-subclauses",
         "targets": [
           "source",
           "model"
@@ -57388,16 +58190,59 @@
             "file": "timeline_semantic_qa_test.go",
             "name": "TestTimelineAnalysisKeyStaysAtUnshiftedHarmonyOrigin",
             "scope": "Production source/current-model, partwise/timewise: forward visual offset cannot borrow future key, backward visual offset does not erase present key, sound flag does not move analysis and local key remains independent."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "evidence_groups": [
           "key",
           "numeral",
-          "finalized-offset-origin"
+          "finalized-offset-origin",
+          "unavailable-placement"
         ],
-        "implemented_contribution": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.",
+        "implemented_contribution": "Traditional/nontraditional raw key state, exact staff scope, encoded presence and strictly prior key/cancel provenance.; Selected normative own numeral-key alternative or applicable explicitly encoded effective key at actual harmony position.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [],
+        "batch6_remaining": [
+          "B6-KEY-PRESENCE-PROJECTION: public source/current-model consumers must preserve unresolved cross-frame key applicability without a false mandatory failure, and may prove encoded-key presence independently of an unavailable exact coordinate when that presence is invariant. Own valid numeral-key remains sufficient. Owner: Batch 6 key-state projection and mandatory numeral consumer. Outstanding regression: TestTimelineFinalReviewDisplacedKeyMandatoryConsumerBothAdapters."
+        ],
         "acceptance_remaining": "Final exact-head source/current-model case review and aggregate verification remain open. No original planning status or full five-axis recipe is promoted by these references."
       }
     },
@@ -57920,7 +58765,7 @@
       },
       "original_source_reference": "MX40-PROSE-offset-scope-precedence",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -58036,18 +58881,57 @@
             "file": "validation/timeline_cross_frame_test.go",
             "name": "TestTimelineCrossFrameInstrumentInitialConsensus",
             "scope": "Initial instrument definitions remain part of same-value cross-frame consensus."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "evidence_groups": [
           "offsets",
           "finalized-offset-origin",
-          "crossframe-state"
+          "crossframe-state",
+          "unavailable-placement"
         ],
-        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.",
+        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-UNCONFINED-OFFSET-GAP: an unavailable signed destination cannot be bounded to its serialized measure; uncertainty must remain scoped to the actually affected properties and canonical part. Owner: Batch 6 displaced-state and publisher-gap provider integration."
-        ],
+        "batch6_remaining": [],
         "availability_boundaries": [
           "An exact signed local coordinate alone does not establish displaced-state applicability or supersession across measure frames. Queries retain local unavailability where no independent containment or sufficient order bound exists; no meter, terminal-note endpoint or measure label supplies an invented elapsed span."
         ],
@@ -61989,7 +62873,7 @@
       },
       "original_source_reference": "MX40-PROSE-sound-instrument-grouping",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -62297,6 +63181,46 @@
             "file": "validation/timeline_cross_frame_test.go",
             "name": "TestTimelineCrossFrameInstrumentInitialConsensus",
             "scope": "Initial instrument definitions remain part of same-value cross-frame consensus."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "evidence_groups": [
@@ -62304,13 +63228,12 @@
           "instrument-statements",
           "offsets",
           "playback-context",
-          "crossframe-state"
+          "crossframe-state",
+          "unavailable-placement"
         ],
-        "implemented_contribution": "Part-wide count, canonical definitions, plural note-local selections, raw MIDI/device/play and positioned virtual changes.; Positioned encoded property histories: sparse sound updates, exclusive solo/ensemble, atomic virtual descriptor, eight independent MIDI fields and symbolic part-wide device scope, with per-field provenance and local gaps; no hardware or playback-state claim.; Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Exact barline location and navigation markers, positioned sound tempo/dynamics/pizzicato, separate note-local versus following-note play scope; no repeat execution.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.",
+        "implemented_contribution": "Part-wide count, canonical definitions, plural note-local selections, raw MIDI/device/play and positioned virtual changes.; Positioned encoded property histories: sparse sound updates, exclusive solo/ensemble, atomic virtual descriptor, eight independent MIDI fields and symbolic part-wide device scope, with per-field provenance and local gaps; no hardware or playback-state claim.; Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Exact barline location and navigation markers, positioned sound tempo/dynamics/pizzicato, separate note-local versus following-note play scope; no repeat execution.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-UNCONFINED-OFFSET-GAP: an unavailable signed destination cannot be bounded to its serialized measure; uncertainty must remain scoped to the actually affected properties and canonical part. Owner: Batch 6 displaced-state and publisher-gap provider integration."
-        ],
+        "batch6_remaining": [],
         "availability_boundaries": [
           "An exact signed local coordinate alone does not establish displaced-state applicability or supersession across measure frames. Queries retain local unavailability where no independent containment or sufficient order bound exists; no meter, terminal-note endpoint or measure label supplies an invented elapsed span."
         ],
@@ -62460,7 +63383,7 @@
       },
       "original_source_reference": "MX40-PROSE-sound-offset-precedence",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -62596,19 +63519,58 @@
             "file": "validation/timeline_cross_frame_test.go",
             "name": "TestTimelineCrossFrameInstrumentInitialConsensus",
             "scope": "Initial instrument definitions remain part of same-value cross-frame consensus."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "evidence_groups": [
           "offsets",
           "finalized-offset-origin",
           "sound-spatial",
-          "crossframe-state"
+          "crossframe-state",
+          "unavailable-placement"
         ],
-        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Raw legacy sound pan/elevation and separately identity-qualified same-sound MIDI per-field precedence; no guessed instrument selection.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.",
+        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Reviewed clause-derived non-cursor contract: unshifted analysis origin, finalized score-effective origin divisions and independent display/playback coordinates.; Raw legacy sound pan/elevation and separately identity-qualified same-sound MIDI per-field precedence; no guessed instrument selection.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-UNCONFINED-OFFSET-GAP: an unavailable signed destination cannot be bounded to its serialized measure; uncertainty must remain scoped to the actually affected properties and canonical part. Owner: Batch 6 displaced-state and publisher-gap provider integration."
-        ],
+        "batch6_remaining": [],
         "availability_boundaries": [
           "An exact signed local coordinate alone does not establish displaced-state applicability or supersession across measure frames. Queries retain local unavailability where no independent containment or sufficient order bound exists; no meter, terminal-note endpoint or measure label supplies an invented elapsed span."
         ],
@@ -62758,7 +63720,7 @@
       },
       "original_source_reference": "MX40-PROSE-sound-pizzicato-scope",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -62910,18 +63872,57 @@
             "file": "validation/timeline_cross_frame_test.go",
             "name": "TestTimelineCrossFrameInstrumentInitialConsensus",
             "scope": "Initial instrument definitions remain part of same-value cross-frame consensus."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "evidence_groups": [
           "offsets",
           "playback-context",
-          "crossframe-state"
+          "crossframe-state",
+          "unavailable-placement"
         ],
-        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Exact barline location and navigation markers, positioned sound tempo/dynamics/pizzicato, separate note-local versus following-note play scope; no repeat execution.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.",
+        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Exact barline location and navigation markers, positioned sound tempo/dynamics/pizzicato, separate note-local versus following-note play scope; no repeat execution.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-UNCONFINED-OFFSET-GAP: an unavailable signed destination cannot be bounded to its serialized measure; uncertainty must remain scoped to the actually affected properties and canonical part. Owner: Batch 6 displaced-state and publisher-gap provider integration."
-        ],
+        "batch6_remaining": [],
         "availability_boundaries": [
           "An exact signed local coordinate alone does not establish displaced-state applicability or supersession across measure frames. Queries retain local unavailability where no independent containment or sufficient order bound exists; no meter, terminal-note endpoint or measure label supplies an invented elapsed span."
         ],
@@ -63066,7 +64067,7 @@
       },
       "original_source_reference": "MX40-PROSE-sound-tempo-dynamics",
       "ownership": {
-        "status": "partial-contribution-open-subclauses",
+        "status": "evidenced-contribution-acceptance-pending",
         "targets": [
           "source",
           "model"
@@ -63218,18 +64219,57 @@
             "file": "validation/timeline_cross_frame_test.go",
             "name": "TestTimelineCrossFrameInstrumentInitialConsensus",
             "scope": "Initial instrument definitions remain part of same-value cross-frame consensus."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapCanAffectEarlierFrame",
+            "scope": "An invalid signed sound offset in a later serialized frame can affect an earlier-frame tempo query and retains its actual cause."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineZeroOffsetDoesNotNeedUnits",
+            "scope": "Known zero offset preserves an established origin without a divisions conversion."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapSelectedOffsetPrecedence",
+            "scope": "Ignored parent sound=no displacement and overriding own zero offset cannot taint sound state."
+          },
+          {
+            "file": "validation/timeline_displaced_gap_test.go",
+            "name": "TestTimelineDisplacedGapRetainsKnownFlagAlternatives",
+            "scope": "Unknown sound flag retains independently owned origin/displaced endpoints; proved earlier exclusion and later unconditional repair remain known."
+          },
+          {
+            "file": "validation/timeline_final_semantics_review_test.go",
+            "name": "TestTimelineFinalReviewUnavailableSoundOffsetIsNotFrameConfined",
+            "scope": "Independent unavailable signed sound-offset cause survives cross-frame state applicability."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineAttributeGapPlacementScopeAndRepair",
+            "scope": "Attribute key gap keeps exact staff/property scope, bounded exclusion, strict repair and independently owned endpoints/causes."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelineBroadGapPlacementPropagation",
+            "scope": "Broad hidden-publisher paths carry Placement through state and playback families instead of silently restoring frame confinement."
+          },
+          {
+            "file": "validation/timeline_attribute_placement_test.go",
+            "name": "TestTimelinePublisherServiceGapPlacement",
+            "scope": "Shared publisher adapter forwards Placement through both all-family and sound-family paths."
           }
         ],
         "evidence_groups": [
           "offsets",
           "playback-context",
-          "crossframe-state"
+          "crossframe-state",
+          "unavailable-placement"
         ],
-        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Exact barline location and navigation markers, positioned sound tempo/dynamics/pizzicato, separate note-local versus following-note play scope; no repeat execution.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.",
+        "implemented_contribution": "Signed offset arithmetic over established units and independent sound/listening versus direction origins.; Exact barline location and navigation markers, positioned sound tempo/dynamics/pizzicato, separate note-local versus following-note play scope; no repeat execution.; Exact signed measure-local coordinates remain distinct from continuing-state applicability across frames; independently contained score order, bounded origin witnesses and property-local uncertainty preserve only established conclusions.; Unavailable signed displacement carries separately owned causal Placement bounds through event facts and affected property publishers; structural measure identity alone does not confine its reach.",
         "evidence_scope": "Only the provider/consumer subcases listed in executable_tests are evidenced. The exact original clause remains separately below; common chronology/state prerequisites do not claim its downstream rendering, repeat, playback, intent or dictionary consumer.",
-        "batch6_remaining": [
-          "B6-UNCONFINED-OFFSET-GAP: an unavailable signed destination cannot be bounded to its serialized measure; uncertainty must remain scoped to the actually affected properties and canonical part. Owner: Batch 6 displaced-state and publisher-gap provider integration."
-        ],
+        "batch6_remaining": [],
         "availability_boundaries": [
           "An exact signed local coordinate alone does not establish displaced-state applicability or supersession across measure frames. Queries retain local unavailability where no independent containment or sufficient order bound exists; no meter, terminal-note endpoint or measure label supplies an invented elapsed span."
         ],
