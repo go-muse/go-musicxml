@@ -421,7 +421,10 @@ inputs, intermediate magnitude and canonical output are statically bounded by
 `MaxExactValueBytes`; overly large unreduced inputs may be refused even if they
 would cancel. Internal session arithmetic additionally precharges conservative
 quadratic work and live scratch before normalization, cross-products or rendering.
-Its output is retained until `Finish`; resource rejection means incomplete
+Work counts architecture-independent logical bulk units (32-bit limbs and
+four-byte text chunks), not individual bits or literal machine instructions;
+large operands retain quadratic costs. Its output is retained until `Finish`;
+resource rejection means incomplete
 assessment, not musical invalidity. Cancellation is checked before and after
 synchronous `math/big` calls, which cannot be preempted in flight.
 

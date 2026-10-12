@@ -176,6 +176,17 @@ func rationalMagnitude(bits int64) int64 {
 	}
 	return n
 }
+
+// rationalUnits rounds a nonnegative amount to a fixed logical bulk unit.
+// Division before rounding avoids an overflowing amount + width - 1.
+func rationalUnits(amount, width int64) int64 {
+	units := amount / width
+	if amount%width != 0 {
+		units++
+	}
+	return units
+}
+
 func rationalUpperDigits(bits int64) (int64, error) {
 	if bits == 0 {
 		return 1, nil
@@ -276,14 +287,21 @@ func rationalPlan(op rationalOperation, a, b rationalWidths) (rationalCost, erro
 	if err != nil {
 		return rationalCost{}, err
 	}
-	totalBits, err := rationalSum(BudgetRuleSteps, a.num, a.den, b.num, b.den, n, d, text, 1)
+	// Logical work uses fixed 32-bit limbs and four-byte text chunks on every
+	// host, not individual bits or a literal count of machine instructions.
+	// The conservative quadratic model covers operand arithmetic, Rat's GCD/
+	// normalization, copying and rendering, including every unreduced width.
+	// Charge before all big-number work, including comparison and conversion.
+	// This keeps ordinary exact float64 model values practical while retaining
+	// quadratic growth and finite rejection of adversarial large fractions.
+	totalUnits, err := rationalSum(BudgetRuleSteps,
+		rationalUnits(a.num, 32), rationalUnits(a.den, 32),
+		rationalUnits(b.num, 32), rationalUnits(b.den, 32),
+		rationalUnits(n, 32), rationalUnits(d, 32), rationalUnits(text, 4), 1)
 	if err != nil {
 		return rationalCost{}, err
 	}
-	// A conservative quadratic charge covers the operand arithmetic, Rat's
-	// internal GCD/normalization, copying and decimal integer rendering. Charge
-	// it before any big-number operation, including comparison and conversion.
-	work, err := rationalCheckedMul(BudgetRuleSteps, totalBits, totalBits)
+	work, err := rationalCheckedMul(BudgetRuleSteps, totalUnits, totalUnits)
 	if err != nil {
 		return rationalCost{}, err
 	}
