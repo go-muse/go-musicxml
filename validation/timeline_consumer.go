@@ -121,6 +121,7 @@ func (s *Session) localNumeralKeyProof(ctx context.Context, n *factNode, p *time
 	if err != nil || d.Outcome != OutcomePass {
 		return d, true, err
 	}
+	unresolved := Decision{Outcome: OutcomePass}
 	for _, field := range [...]struct {
 		role timelineRole
 		kind AtomicKind
@@ -129,28 +130,27 @@ func (s *Session) localNumeralKeyProof(ctx context.Context, n *factNode, p *time
 		if err != nil {
 			return Decision{}, false, err
 		}
-		if gap.Outcome != OutcomePass {
-			return gap, true, nil
-		}
+		unresolved = localWorst(unresolved, gap)
 		if child == nil {
-			return Decision{Outcome: OutcomeUnknown, Reason: "numeral-key-field-unavailable"}, true, nil
+			unresolved = localWorst(unresolved, Decision{Outcome: OutcomeUnknown, Reason: "numeral-key-field-unavailable"})
+			continue
 		}
 		shape, err := s.timelineConsumerStructure(ctx, child)
-		if err != nil || shape.Outcome != OutcomePass {
-			return shape, true, err
+		if err != nil {
+			return Decision{}, false, err
 		}
+		unresolved = localWorst(unresolved, shape)
 		value, err := s.localScalar(ctx, child, nil)
 		if err != nil {
 			return Decision{}, false, err
 		}
 		if value.State != EvidenceKnown {
-			return localGap(value), true, nil
-		}
-		if value.Value.Kind != field.kind {
-			return Decision{Outcome: OutcomeUnsupported, Reason: "numeral-key-field-domain-unavailable"}, true, nil
+			unresolved = localWorst(unresolved, localGap(value))
+		} else if value.Value.Kind != field.kind {
+			unresolved = localWorst(unresolved, Decision{Outcome: OutcomeUnsupported, Reason: "numeral-key-field-domain-unavailable"})
 		}
 	}
-	return Decision{Outcome: OutcomePass}, true, nil
+	return unresolved, true, nil
 }
 
 func (s *Session) evaluateTimelineConsumer(ctx context.Context, n *factNode, p *timelineConsumerPlan, kind planKind, final bool) (Decision, bool, error) {
