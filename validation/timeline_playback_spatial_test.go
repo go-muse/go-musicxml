@@ -100,7 +100,7 @@ func TestPlaybackSpatialCancellationAndRetentionAdmission(t *testing.T) {
 			// Directly acquired test bytes are released outside Session cleanup.
 			if kind == "retention" {
 				used := rationalUsage(t, s, BudgetBufferedBytes)
-				if err := s.account.Release(BudgetBufferedBytes, used-s.buffered); err != nil {
+				if err := s.account.Release(BudgetBufferedBytes, used-s.retained); err != nil {
 					t.Fatal(err)
 				}
 			}

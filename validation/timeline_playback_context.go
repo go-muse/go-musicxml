@@ -54,6 +54,7 @@ type barlinePlaybackContext struct {
 type soundPlaybackContext struct {
 	Origin          playbackOrigin
 	Tempo, Dynamics Evidence[Decimal]
+	Pan, Elevation  Evidence[Decimal]
 	Pizzicato       Evidence[bool]
 	TimeOnly        Evidence[string]
 	Navigation      navigationContext
@@ -262,7 +263,7 @@ func (p *timelinePlaybackContext) readSound(ctx context.Context, s *Session, b *
 		}
 		return contract("sound playback", "exact sound declaration required")
 	}
-	out := soundPlaybackContext{Origin: playbackOriginAt(s, n, block, fact), Tempo: stateDecimalValue(r.attribute(n, timelineRoleSoundTempo)), Dynamics: stateDecimalValue(r.attribute(n, timelineRoleSoundDynamics)), Pizzicato: stateYesNo(r.attribute(n, timelineRoleSoundPizzicato)), TimeOnly: stateText(r.attribute(n, timelineRoleSoundTimeOnly)), Navigation: r.navigation(n, false)}
+	out := soundPlaybackContext{Pan: stateDecimalValue(r.attribute(n, timelineRoleSoundPan)), Elevation: stateDecimalValue(r.attribute(n, timelineRoleSoundElevation)), Origin: playbackOriginAt(s, n, block, fact), Tempo: stateDecimalValue(r.attribute(n, timelineRoleSoundTempo)), Dynamics: stateDecimalValue(r.attribute(n, timelineRoleSoundDynamics)), Pizzicato: stateYesNo(r.attribute(n, timelineRoleSoundPizzicato)), TimeOnly: stateText(r.attribute(n, timelineRoleSoundTimeOnly)), Navigation: r.navigation(n, false)}
 	out.Play, out.PlayComplete = r.playbackInstructions(n, fact.Part, timelineRoleSoundPlay, playbackFollowingNotes)
 	if r.err != nil {
 		return r.err
