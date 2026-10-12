@@ -7,7 +7,7 @@ import (
 
 func spanTestEndpoint(t *testing.T, id NodeID, family SpanFamily, role string, number int64) *spanEndpoint {
 	t.Helper()
-	return &spanEndpoint{ref: NodeRef{"d", id}, complete: Evidence[bool]{State: EvidenceKnown, Value: true}, payload: SpanContextResult{Family: family, Role: Evidence[string]{State: EvidenceKnown, Value: role}, Domain: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", 100}}, Anchor: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", id + 1000}}, Number: Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, number)}, Identity: SpanIdentityNumber, Voice: Evidence[string]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Association: stateUnknown[bool]("span-not-associated")}}
+	return &spanEndpoint{ref: NodeRef{"d", id}, categoryKnown: true, complete: Evidence[bool]{State: EvidenceKnown, Value: true}, payload: SpanContextResult{Family: family, Role: Evidence[string]{State: EvidenceKnown, Value: role}, Domain: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", 100}}, Anchor: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"d", id + 1000}}, Number: Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, number)}, Identity: SpanIdentityNumber, Voice: Evidence[string]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Association: stateUnknown[bool]("span-not-associated")}}
 }
 func TestContextSpanDocumentOrderAssociation(t *testing.T) {
 	s := rationalSession(t, Budgets{})

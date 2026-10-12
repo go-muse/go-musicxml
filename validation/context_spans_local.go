@@ -31,15 +31,6 @@ func spanDefault(v, d Evidence[Atomic]) Evidence[Atomic] {
 	}
 	return v
 }
-func spanText(v Evidence[Atomic]) Evidence[string] {
-	if v.State != EvidenceKnown {
-		return stateUnavailable[Atomic, string](v)
-	}
-	if v.Value.Kind != AtomicString {
-		return Evidence[string]{State: EvidenceUnsupported, Reason: "span-string-domain"}
-	}
-	return Evidence[string]{State: EvidenceKnown, Value: v.Value.Text}
-}
 func spanIs(v Evidence[Atomic], text string) bool {
 	return v.State == EvidenceKnown && v.Value.Kind == AtomicString && v.Value.Text == text
 }

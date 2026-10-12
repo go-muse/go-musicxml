@@ -7,6 +7,8 @@ type spanVerticalKey struct {
 	ordinal        uint64
 	family         SpanFamily
 	number, offset string
+	grace, cue     bool
+	categoryKnown  bool
 }
 type spanVerticalRun struct {
 	endpoints []*spanEndpoint
@@ -29,11 +31,29 @@ func spanVerticalMembership(ctx context.Context, s *Session, es []*spanEndpoint)
 			gaps[k] = timelineMergeAvailability(old, v)
 			return nil
 		}
-		if err := s.retain(512 + int64(len(k.offset))); err != nil {
+		if err := s.retain(512 + int64(len(k.offset)+len(k.number))); err != nil {
 			return err
 		}
 		gaps[k] = v
 		return nil
+	}
+	// Missing position broadens only the location axis. For a category gap,
+	// keep an established number even when no exact cursor can be used.
+	categoryGap := func(e *spanEndpoint, k spanVerticalKey, v Evidence[bool]) (spanVerticalKey, Evidence[bool], error) {
+		if e.categoryKnown {
+			return k, v, nil
+		}
+		v = timelineMergeAvailability(spanCategoryAvailability(e), v)
+		number, ok, err := spanAtomicKey(ctx, s, e.payload.Number)
+		if err != nil {
+			return k, v, err
+		}
+		if ok {
+			k.number = number
+		} else if e.payload.Number.State != EvidenceKnown && e.payload.Number.State != EvidenceAbsent {
+			v = timelineMergeAvailability(v, stateUnavailable[Atomic, bool](e.payload.Number))
+		}
+		return k, v, nil
 	}
 	for _, e := range es {
 		if err := s.step(ctx, 1); err != nil {
@@ -49,14 +69,24 @@ func spanVerticalMembership(ctx context.Context, s *Session, es []*spanEndpoint)
 			if p.Domain.State == EvidenceKnown {
 				g.part = p.Domain.Value
 			}
-			if err := setGap(g, p.Association); err != nil {
+			g, v, err := categoryGap(e, g, p.Association)
+			if err != nil {
+				return err
+			}
+			p.Association = v
+			if err := setGap(g, v); err != nil {
 				return err
 			}
 			continue
 		}
 		if p.Position.Value.UnprovedFrame {
 			p.Association = stateUnknown[bool]("span-vertical-frame-unproved")
-			if err := setGap(spanVerticalKey{part: p.Position.Value.Part, family: p.Family}, p.Association); err != nil {
+			g, v, err := categoryGap(e, spanVerticalKey{part: p.Position.Value.Part, family: p.Family}, p.Association)
+			if err != nil {
+				return err
+			}
+			p.Association = v
+			if err := setGap(g, v); err != nil {
 				return err
 			}
 			continue
@@ -66,15 +96,34 @@ func spanVerticalMembership(ctx context.Context, s *Session, es []*spanEndpoint)
 			return err
 		}
 		if !ok {
+			v := stateUnknown[bool]("span-competing-identity-unproved")
+			if p.Number.State != EvidenceKnown {
+				v = stateUnavailable[Atomic, bool](p.Number)
+			}
+			if !e.categoryKnown {
+				v = timelineMergeAvailability(spanCategoryAvailability(e), v)
+			}
+			p.Association = v
 			pos := p.Position.Value
-			g := spanVerticalKey{part: pos.Part, measure: pos.Measure, ordinal: pos.MeasureOrdinal, family: p.Family, offset: pos.Offset.String()}
-			if err := setGap(g, stateUnavailable[Atomic, bool](p.Number)); err != nil {
+			g := spanVerticalKey{part: pos.Part, measure: pos.Measure, ordinal: pos.MeasureOrdinal, family: p.Family, offset: pos.Offset.String(), grace: e.grace, cue: e.cue, categoryKnown: e.categoryKnown}
+			if !e.categoryKnown {
+				g.grace, g.cue = false, false
+			}
+			if err := setGap(g, v); err != nil {
 				return err
 			}
 			continue
 		}
 		pos := p.Position.Value
-		k := spanVerticalKey{pos.Part, pos.Measure, pos.MeasureOrdinal, p.Family, number, pos.Offset.String()}
+		k := spanVerticalKey{part: pos.Part, measure: pos.Measure, ordinal: pos.MeasureOrdinal, family: p.Family, number: number, offset: pos.Offset.String(), grace: e.grace, cue: e.cue, categoryKnown: e.categoryKnown}
+		if !e.categoryKnown {
+			k.grace, k.cue = false, false
+			p.Association = timelineMergeAvailability(spanCategoryAvailability(e), e.complete)
+			if err := setGap(k, p.Association); err != nil {
+				return err
+			}
+			continue
+		}
 		run := runs[k]
 		if run == nil {
 			if err := s.retain(512 + int64(len(number)+len(k.offset))); err != nil {
@@ -93,13 +142,16 @@ func spanVerticalMembership(ctx context.Context, s *Session, es []*spanEndpoint)
 		if err := s.step(ctx, 1); err != nil {
 			return err
 		}
-		for _, g := range []spanVerticalKey{{family: k.family}, {part: k.part, family: k.family}, {part: k.part, measure: k.measure, ordinal: k.ordinal, family: k.family, offset: k.offset}} {
+		for _, g := range []spanVerticalKey{{family: k.family}, {family: k.family, number: k.number}, {part: k.part, family: k.family}, {part: k.part, family: k.family, number: k.number}, {part: k.part, measure: k.measure, ordinal: k.ordinal, family: k.family, offset: k.offset, grace: k.grace, cue: k.cue, categoryKnown: true}, {part: k.part, measure: k.measure, ordinal: k.ordinal, family: k.family, number: k.number, offset: k.offset}, {part: k.part, measure: k.measure, ordinal: k.ordinal, family: k.family, offset: k.offset}} {
 			if v, ok := gaps[g]; ok {
 				run.complete = timelineMergeAvailability(run.complete, v)
 			}
 		}
 		if run.complete.State != EvidenceKnown || !run.complete.Value {
 			for _, e := range run.endpoints {
+				if err := s.step(ctx, 1); err != nil {
+					return err
+				}
 				e.payload.Association = stateUnavailable[bool, bool](run.complete)
 			}
 			continue

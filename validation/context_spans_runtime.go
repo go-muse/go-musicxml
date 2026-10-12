@@ -3,7 +3,6 @@ package validation
 import (
 	"context"
 	"math/big"
-	"strconv"
 	"strings"
 )
 
@@ -42,6 +41,16 @@ var spanFamilies = []spanFamilyBinding{
 	{SpanMetronomeTied, spanRole_metronomeTied, spanRole_metronome_tied_type, "", SpanIdentityUnnumbered},
 	{SpanTremolo, spanRole_tremolo, spanRole_tremolo_type, "", SpanIdentityUnnumbered},
 }
+
+// The family table is static; exact declarations and their role sets are owned
+// by the shared compiled bindings rather than reindexed by each provider run.
+var spanFamilyByRole = func() map[contextRole]spanFamilyBinding {
+	out := make(map[contextRole]spanFamilyBinding, len(spanFamilies))
+	for _, binding := range spanFamilies {
+		out[binding.node] = binding
+	}
+	return out
+}()
 
 func spanAncestor(r *contextReader, n *factNode, roles ...contextRole) *factNode {
 	for n != nil {
@@ -191,7 +200,7 @@ func spanPitch(r *contextReader, note *factNode) (string, Evidence[bool]) {
 	}
 	return q.String(), Evidence[bool]{State: EvidenceKnown, Value: true}
 }
-func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding, t *timelineService, domains map[NodeID]Evidence[NodeRef], order uint64) *spanEndpoint {
+func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding, t *timelineService, domains map[NodeID]Evidence[NodeRef], order uint64, lyrics *spanLyricIndex) *spanEndpoint {
 	if err := r.s.retain(3072); err != nil {
 		r.err = err
 		return nil
@@ -208,9 +217,9 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 	p.Position = stateUnknown[SpanPosition]("span-timeline-position-unavailable")
 	p.Association = stateUnknown[bool]("span-correspondence-unresolved")
 	if b.role != "" {
-		p.Role = spanText(r.attribute(n, b.role))
+		p.Role = stateText(r.attribute(n, b.role))
 	} else if b.family == SpanBeam {
-		p.Role = spanText(r.scalar(n))
+		p.Role = stateText(r.scalar(n))
 	}
 	if b.family == SpanTremolo && p.Role.State == EvidenceAbsent {
 		p.Role = Evidence[string]{State: EvidenceKnown, Value: "single"}
@@ -241,13 +250,19 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 	}
 	note := spanAncestor(r, n, spanRole_note)
 	if note != nil {
-		p.Voice = spanText(r.childScalar(note, spanRole_noteVoice))
+		p.Voice = stateText(r.childScalar(note, spanRole_noteVoice))
 		p.Staff = stateInteger(r.childScalar(note, spanRole_noteStaff))
 		_, g := r.child(note, spanRole_noteGrace)
 		_, c := r.child(note, spanRole_noteCue)
 		e.grace = g.State == EvidenceKnown
 		e.cue = c.State == EvidenceKnown
 		e.categoryKnown = (g.State == EvidenceKnown || g.State == EvidenceAbsent) && (c.State == EvidenceKnown || c.State == EvidenceAbsent)
+		e.categoryAvailable = Evidence[bool]{State: EvidenceKnown, Value: true}
+		for _, category := range []Evidence[bool]{g, c} {
+			if category.State != EvidenceKnown && category.State != EvidenceAbsent {
+				e.categoryAvailable = timelineMergeAvailability(e.categoryAvailable, category)
+			}
+		}
 		e.complete = timelineMergeAvailability(e.complete, r.enumerated(note))
 		if b.family == SpanTied || b.family == SpanTie {
 			e.pitch, e.pitchAvailable = spanPitch(r, note)
@@ -281,6 +296,7 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 	if b.family == SpanPartGroup {
 		p.Domain = spanRef(r.s, spanAncestor(r, n, spanRole_partList))
 		p.Anchor = p.Domain
+		p.Position = Evidence[SpanPosition]{State: EvidenceAbsent}
 	}
 	if b.family == SpanMetronomeTied {
 		p.Domain = spanRef(r.s, spanAncestor(r, n, spanRole_metronome))
@@ -288,9 +304,9 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 	}
 	if b.family == SpanBarre {
 		p.Domain = spanRef(r.s, spanAncestor(r, n, spanRole_frame))
-		p.Anchor = spanRef(r.s, spanAncestor(r, n, spanRole_frameNote))
-		p.Position = Evidence[SpanPosition]{State: EvidenceAbsent}
 		frameNote := spanAncestor(r, n, spanRole_frameNote)
+		p.Anchor = spanRef(r.s, frameNote)
+		p.Position = Evidence[SpanPosition]{State: EvidenceAbsent}
 		f := r.childScalar(frameNote, spanRole_frameFret)
 		if f.State == EvidenceKnown {
 			if k, ok, err := spanAtomicKey(r.ctx, r.s, f); err != nil {
@@ -311,18 +327,9 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 	}
 	if b.family == SpanLyricExtend {
 		lyric := spanAncestor(r, n, spanRole_noteLyric)
-		number, name := r.attribute(lyric, spanRole_lyric_number), r.attribute(lyric, spanRole_lyric_name)
-		if number.State == EvidenceKnown || name.State == EvidenceKnown {
-			if (number.State == EvidenceKnown || number.State == EvidenceAbsent) && (name.State == EvidenceKnown || name.State == EvidenceAbsent) {
-				if r.step(int64(len(number.Value.Text)+len(name.Value.Text)) + 32) {
-					if err := r.s.retain(int64(len(number.Value.Text)+len(name.Value.Text)) + 128); err != nil {
-						r.err = err
-					} else {
-						e.lyric = strconv.Itoa(len(number.Value.Text)) + ":" + number.Value.Text + ":" + name.Value.Text
-					}
-				}
-			}
-		}
+		var available Evidence[bool]
+		e.lyric, available = lyrics.endpoint(r, lyric)
+		e.complete = timelineMergeAvailability(e.complete, available)
 	}
 	if (b.family == SpanLyricExtend || b.family == SpanFigureExtend) && p.Role.State == EvidenceAbsent {
 		version := spanDefault(r.attribute(r.s.root, spanRole_version), spanString("1.0"))
@@ -338,14 +345,14 @@ func spanExtract(r *contextReader, key RuleKey, n *factNode, b spanFamilyBinding
 		p.Association = stateUnavailable[string, bool](p.Role)
 		e.complete = timelineMergeAvailability(e.complete, stateUnavailable[string, bool](p.Role))
 	}
-	if b.number != "" && p.Number.State != EvidenceKnown && p.Number.State != EvidenceAbsent {
+	if !spanSelfContained(e) && b.number != "" && p.Number.State != EvidenceKnown && p.Number.State != EvidenceAbsent {
 		p.Association = stateUnavailable[Atomic, bool](p.Number)
 	}
-	if p.Domain.State == EvidenceInvalid || p.Domain.State == EvidenceUnsupported {
+	if !spanSelfContained(e) && (p.Domain.State == EvidenceInvalid || p.Domain.State == EvidenceUnsupported) {
 		p.Association = stateUnavailable[NodeRef, bool](p.Domain)
 	}
-	if b.family == SpanBeam && !e.categoryKnown {
-		e.complete = timelineMergeAvailability(e.complete, stateUnknown[bool]("span-beam-note-category-unavailable"))
+	if (b.family == SpanBeam || b.family == SpanArpeggiate || b.family == SpanNonArpeggiate) && !e.categoryKnown {
+		e.complete = timelineMergeAvailability(e.complete, spanCategoryAvailability(e))
 	}
 
 	spanLocalFacts(r, key, n, note, e)
@@ -392,19 +399,23 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 	}
 	gaps := make(map[NodeRef]Evidence[bool])
 	localGaps := make(map[NodeRef]Evidence[bool])
+	scratch := spanScratch{s: s}
+	defer scratch.release()
+	lyrics := &spanLyricIndex{scratch: &scratch}
 	var metronomeSide NodeID
 	for order, id := range s.sequence {
 		node := s.nodes[id]
 		if !r.step(1) {
 			break
 		}
-		if r.matches(node, spanRole_metronome) {
-			metronomeSide = node.header.ID
-		}
-		if r.matches(node, spanRole_metronomeRelation) {
-			metronomeSide = node.header.ID
+		roles := r.roles(node)
+		if r.err != nil {
+			break
 		}
 		complete := r.enumerated(node)
+		if r.err != nil {
+			break
+		}
 		if complete.State != EvidenceKnown || !complete.Value || node.header.Declaration.State != EvidenceKnown {
 			d := spanInheritedDomain(r, node, domains)
 			if d.State != EvidenceKnown {
@@ -413,24 +424,33 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 					d = spanRef(s, owner)
 				}
 			}
+			if r.err != nil {
+				break
+			}
+			var domain NodeRef
 			if d.State == EvidenceKnown {
-				if complete.State == EvidenceKnown {
-					complete = stateUnavailable[DeclarationID, bool](node.header.Declaration)
+				domain = d.Value
+			}
+			if complete.State == EvidenceKnown {
+				complete = stateUnavailable[DeclarationID, bool](node.header.Declaration)
+			}
+			if old, ok := gaps[domain]; ok {
+				gaps[domain] = timelineMergeAvailability(old, complete)
+			} else {
+				if !r.step(1) {
+					break
 				}
-				if _, ok := gaps[d.Value]; !ok {
-					if r.err = s.retain(256); r.err != nil {
-						break
-					}
+				if r.err = s.retain(256); r.err != nil {
+					break
 				}
-				if old, ok := gaps[d.Value]; ok {
-					gaps[d.Value] = timelineMergeAvailability(old, complete)
-				} else {
-					gaps[d.Value] = complete
-				}
+				gaps[domain] = complete
 			}
 		}
 		if complete.State != EvidenceKnown || !complete.Value || node.header.Declaration.State != EvidenceKnown {
 			anchor := spanAncestor(r, node, spanRole_note, spanRole_frame, spanRole_metronome, spanRole_partList)
+			if r.err != nil {
+				break
+			}
 			if anchor != nil {
 				a := NodeRef{s.documentID, anchor.header.ID}
 				g := complete
@@ -448,25 +468,36 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 			}
 		}
 
-		if r.matches(node, spanRole_noteModification) {
-			spanModificationFacts(r, key, node)
-		}
-		if r.matches(node, spanRole_noteLyric) {
-			spanLyricFacts(r, key, node)
-		}
-		for _, binding := range spanFamilies {
-			if !r.matches(node, binding.node) {
+		// roles has charged the complete returned traversal. Propagate an
+		// interrupted handler before another branch can overwrite its error.
+		for _, role := range roles {
+			switch role {
+			case spanRole_metronome, spanRole_metronomeRelation:
+				metronomeSide = node.header.ID
+			case spanRole_noteModification:
+				spanModificationFacts(r, key, node)
+			case spanRole_noteLyric:
+				lyrics.record(r, node)
+				spanLyricFacts(r, key, node)
+			}
+			if r.err != nil {
+				break
+			}
+			binding, ok := spanFamilyByRole[role]
+			if !ok {
 				continue
 			}
-			e := spanExtract(r, key, node, binding, timeline, domains, uint64(order))
-			if e == nil {
+			e := spanExtract(r, key, node, binding, timeline, domains, uint64(order), lyrics)
+			if e == nil || r.err != nil {
 				break
 			}
 			if binding.family == SpanMetronomeTied {
 				e.relationSide = metronomeSide
 			}
 			if timeline == nil && service.Timeline.State != "" && service.Timeline.State != EvidenceAbsent && service.Timeline.State != EvidenceKnown {
-				e.payload.Position = stateUnavailable[bool, SpanPosition](service.Timeline)
+				if e.payload.Position.State != EvidenceAbsent {
+					e.payload.Position = stateUnavailable[bool, SpanPosition](service.Timeline)
+				}
 				if e.payload.Domain.State != EvidenceKnown {
 					e.payload.Domain = stateUnavailable[bool, NodeRef](service.Timeline)
 				}
@@ -483,6 +514,9 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 		return Decision{}, false, r.err
 	}
 	for _, e := range out.endpoints {
+		if !r.step(1) {
+			return Decision{}, false, r.err
+		}
 		if e.payload.Domain.State == EvidenceKnown {
 			if gap, ok := localGaps[e.payload.Domain.Value]; ok {
 				e.complete = timelineMergeAvailability(e.complete, gap)
@@ -492,6 +526,13 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 			if gap, ok := localGaps[e.payload.Anchor.Value]; ok {
 				e.complete = timelineMergeAvailability(e.complete, gap)
 			}
+			if e.payload.Family == SpanLyricExtend {
+				for _, identity := range []string{e.lyric, ""} {
+					if gap, ok := lyrics.scopes[spanLyricScopeKey{note: e.payload.Anchor.Value, identity: identity}]; ok {
+						e.complete = timelineMergeAvailability(e.complete, gap)
+					}
+				}
+			}
 		}
 	}
 	if err = spanLocalTiePairs(ctx, s, out.endpoints); err != nil {
@@ -499,8 +540,18 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 	}
 
 	for _, e := range out.endpoints {
+		if !r.step(1) {
+			return Decision{}, false, r.err
+		}
 		if e.payload.Domain.State == EvidenceKnown {
 			if gap, ok := gaps[e.payload.Domain.Value]; ok {
+				e.complete = timelineMergeAvailability(e.complete, gap)
+			}
+		}
+		// An unknown musical-part domain may cover every part, but cannot
+		// make an independently enumerated part-list, frame or metronome incomplete.
+		if e.payload.Family != SpanPartGroup && e.payload.Family != SpanBarre && e.payload.Family != SpanMetronomeTied {
+			if gap, ok := gaps[NodeRef{}]; ok {
 				e.complete = timelineMergeAvailability(e.complete, gap)
 			}
 		}

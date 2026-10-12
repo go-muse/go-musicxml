@@ -5,54 +5,175 @@ import (
 	"math/big"
 )
 
-// A local visual stub is independent of score timing and remote enumeration.
+type spanNoteIdentityKey struct {
+	note     NodeRef
+	identity spanAssociationKey
+}
+
+// Same-note comparison uses the note itself as the scope, so absent remote
+// timeline identity cannot erase an independently established local order.
+func spanNoteKey(ctx context.Context, s *Session, e *spanEndpoint) (spanNoteIdentityKey, bool, error) {
+	k := spanNoteIdentityKey{note: e.payload.Anchor.Value, identity: spanAssociationKey{family: e.payload.Family, identity: e.payload.Identity}}
+	if err := s.step(ctx, 1+int64(len(k.note.DocumentID)+len(e.guard)+len(e.lyric))); err != nil {
+		return k, false, err
+	}
+	switch e.payload.Identity {
+	case SpanIdentityNumber, SpanIdentityBeamLevel, SpanIdentityPartGroup, SpanIdentityGrouping:
+		var ok bool
+		var err error
+		k.identity.number, ok, err = spanAtomicKey(ctx, s, e.payload.Number)
+		return k, ok, err
+	case SpanIdentityImpliedTie:
+		return k, true, nil
+	case SpanIdentityUnnumbered:
+		k.identity.guard = e.guard
+		return k, true, nil
+	case SpanIdentityLyric:
+		k.identity.lyric = e.lyric
+		return k, e.lyric != "", nil
+	}
+	return k, false, nil
+}
+
+// spanTieAnchors records whether all competing boundaries belong to one note.
+// It allows a local visual stub without requiring a pitch or a timeline, but
+// never removes that stub from a run with a potentially competing remote tie.
+type spanTieAnchors struct {
+	anchor   NodeRef
+	multiple bool
+	count    int
+}
+
+func (a spanTieAnchors) add(ref NodeRef) spanTieAnchors {
+	a.count++
+	if a.anchor == (NodeRef{}) {
+		a.anchor = ref
+	} else if a.anchor != ref {
+		a.multiple = true
+	}
+	return a
+}
+func (a spanTieAnchors) local(ref NodeRef) bool {
+	return !a.multiple && (a.anchor == (NodeRef{}) || a.anchor == ref)
+}
+
+// The pinned tied documentation explicitly defines start/stop on one note.
+// In a mixed run that spelling can also be a chain in nonrecommended order;
+// without additional sound evidence neither interpretation is established.
 func spanLocalTiePairs(ctx context.Context, s *Session, es []*spanEndpoint) error {
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
-	if err := s.retain(512); err != nil {
+	scratch := spanScratch{s: s}
+	defer scratch.release()
+	if err := scratch.reserve(2048); err != nil {
 		return err
 	}
-	last := make(map[NodeRef]*spanEndpoint)
+	exact := make(map[spanAssociationKey]spanTieAnchors)
+	unknownIdentity := make(map[NodeRef]spanTieAnchors)
+	domains := make(map[NodeRef]spanTieAnchors)
+	var all, unknownDomain spanTieAnchors
 	for _, e := range es {
-		if err := s.step(ctx, 1); err != nil {
+		if err := s.step(ctx, 1+int64(len(e.payload.Anchor.Value.DocumentID)+len(e.payload.Domain.Value.DocumentID))); err != nil {
 			return err
 		}
-		if e.payload.Family != SpanTied || e.payload.Anchor.State != EvidenceKnown {
+		if e.payload.Family != SpanTied || spanSelfContained(e) {
 			continue
 		}
-		a := e.payload.Anchor.Value
-		prev := last[a]
-		if prev != nil && prev.payload.Role.State == EvidenceKnown && prev.payload.Role.Value == "start" && e.payload.Role.State == EvidenceKnown && e.payload.Role.Value == "stop" && prev.payload.Identity == e.payload.Identity {
-			same := e.payload.Identity == SpanIdentityImpliedTie
-			if !same {
-				x, xok, err := spanAtomicKey(ctx, s, prev.payload.Number)
-				if err != nil {
-					return err
-				}
-				y, yok, err := spanAtomicKey(ctx, s, e.payload.Number)
-				if err != nil {
-					return err
-				}
-				same = xok && yok && x == y
-			}
-			if same && prev.complete.State == EvidenceKnown && prev.complete.Value && e.complete.State == EvidenceKnown && e.complete.Value {
-				if err := spanSetAssociation(ctx, s, prev, []NodeRef{prev.ref, e.ref}); err != nil {
-					return err
-				}
-				if err := spanSetAssociation(ctx, s, e, []NodeRef{prev.ref, e.ref}); err != nil {
-					return err
-				}
-				delete(last, a)
-				continue
-			}
+		anchor := e.payload.Anchor.Value
+		if e.payload.Anchor.State != EvidenceKnown {
+			anchor = e.ref
 		}
-		if _, ok := last[a]; !ok {
-			if err := s.retain(256 + int64(len(a.DocumentID))); err != nil {
+		all = all.add(anchor)
+		if e.payload.Domain.State != EvidenceKnown {
+			unknownDomain = unknownDomain.add(anchor)
+			continue
+		}
+		domain := e.payload.Domain.Value
+		if _, exists := domains[domain]; !exists {
+			if err := scratch.reserve(256); err != nil {
 				return err
 			}
 		}
-		last[a] = e
+		domains[domain] = domains[domain].add(anchor)
+		k, ok, err := spanKey(ctx, s, e)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			if _, exists := unknownIdentity[domain]; !exists {
+				if err := scratch.reserve(256); err != nil {
+					return err
+				}
+			}
+			unknownIdentity[domain] = unknownIdentity[domain].add(anchor)
+		} else {
+			if _, exists := exact[k]; !exists {
+				if err := scratch.reserve(512 + int64(len(k.number)+len(k.pitch))); err != nil {
+					return err
+				}
+			}
+			exact[k] = exact[k].add(anchor)
+		}
+	}
+	last := make(map[spanNoteIdentityKey]*spanEndpoint)
+	for _, e := range es {
+		if err := s.step(ctx, 1+int64(len(e.payload.Anchor.Value.DocumentID)+len(e.payload.Domain.Value.DocumentID))); err != nil {
+			return err
+		}
+		if e.payload.Family != SpanTied || spanSelfContained(e) || e.payload.Anchor.State != EvidenceKnown {
+			continue
+		}
+		a := e.payload.Anchor.Value
+		if e.payload.Domain.State != EvidenceKnown {
+			if !all.local(a) || all.count != 2 {
+				continue
+			}
+		} else {
+			k, ok, err := spanKey(ctx, s, e)
+			if err != nil {
+				return err
+			}
+			if unknownDomain.count != 0 {
+				continue
+			}
+			if ok {
+				if !exact[k].local(a) || exact[k].count != 2 || unknownIdentity[e.payload.Domain.Value].count != 0 {
+					continue
+				}
+			} else if !domains[e.payload.Domain.Value].local(a) || domains[e.payload.Domain.Value].count != 2 {
+				continue
+			}
+		}
+		identity := spanAssociationKey{family: SpanTied, identity: e.payload.Identity}
+		if e.payload.Identity != SpanIdentityImpliedTie {
+			number, ok, err := spanAtomicKey(ctx, s, e.payload.Number)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				continue
+			}
+			identity.number = number
+		}
+		k := spanNoteIdentityKey{note: a, identity: identity}
+		prev := last[k]
+		if prev != nil && prev.payload.Role.State == EvidenceKnown && prev.payload.Role.Value == "start" && e.payload.Role.State == EvidenceKnown && e.payload.Role.Value == "stop" && prev.complete.State == EvidenceKnown && prev.complete.Value && e.complete.State == EvidenceKnown && e.complete.Value {
+			if err := spanSetAssociation(ctx, s, prev, []NodeRef{prev.ref, e.ref}); err != nil {
+				return err
+			}
+			if err := spanSetAssociation(ctx, s, e, []NodeRef{prev.ref, e.ref}); err != nil {
+				return err
+			}
+			delete(last, k)
+			continue
+		}
+		if _, ok := last[k]; !ok {
+			if err := scratch.reserve(512 + int64(len(a.DocumentID)+len(identity.number))); err != nil {
+				return err
+			}
+		}
+		last[k] = e
 	}
 	return nil
 }
@@ -83,6 +204,9 @@ func spanPartGroupMembers(r *contextReader, es []*spanEndpoint) error {
 		}
 	}
 	for order, id := range r.s.sequence {
+		if !r.step(1) {
+			return r.err
+		}
 		n := r.s.nodes[id]
 		if !r.matches(n, spanRole_scorePart) {
 			continue
@@ -146,15 +270,22 @@ func spanModificationFacts(r *contextReader, key RuleKey, n *factNode) {
 	spanPublish(r, key, n, ContextPropertySpanTimeModificationNormal, r.childScalar(n, spanRole_normalNotes))
 	typ := r.childScalar(note, spanRole_noteType)
 	spanPublish(r, key, n, ContextPropertySpanCurrentType, typ)
-	spanPublish(r, key, n, ContextPropertySpanCurrentDots, spanCountChildren(r, note, spanRole_noteDot))
+	dots := spanCountChildren(r, note, spanRole_noteDot)
+	spanPublish(r, key, n, ContextPropertySpanCurrentDots, dots)
 	spanPublish(r, key, n, ContextPropertySpanNormalType, spanDefault(r.childScalar(n, spanRole_normalType), typ))
-	spanPublish(r, key, n, ContextPropertySpanNormalDots, spanEffectiveNormalDots(r, n, spanCountChildren(r, note, spanRole_noteDot)))
+	spanPublish(r, key, n, ContextPropertySpanNormalDots, spanEffectiveNormalDots(r, n, dots))
 }
 func spanLyricUnavailable(r *contextReader, key RuleKey, n *factNode, v Evidence[bool]) {
+	if r.err != nil {
+		return
+	}
 	if v.State == EvidenceKnown {
 		v = stateUnknown[bool]("span-lyric-enumeration-incomplete")
 	}
 	p := SpanContextResult{Family: SpanLyricSyllable, Role: stateUnavailable[bool, string](v), Domain: spanRef(r.s, n), Anchor: spanRef(r.s, spanAncestor(r, n, spanRole_note)), Number: Evidence[Atomic]{State: EvidenceAbsent}, NumberExplicit: Evidence[bool]{State: EvidenceAbsent}, Identity: SpanIdentityLyric, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Position: Evidence[SpanPosition]{State: EvidenceAbsent}, Association: v}
+	if r.err != nil {
+		return
+	}
 	r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: ContextPropertySpanLyricSyllable, Span: &p, Origins: []Location{n.header.Location}})
 }
 
@@ -170,6 +301,9 @@ func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
 			return
 		}
 		p := SpanContextResult{Family: SpanLyricSyllable, Role: Evidence[string]{State: EvidenceKnown, Value: "syllable"}, Domain: spanRef(r.s, n), Anchor: spanRef(r.s, spanAncestor(r, n, spanRole_note)), Number: Evidence[Atomic]{State: EvidenceAbsent}, NumberExplicit: Evidence[bool]{State: EvidenceAbsent}, Identity: SpanIdentityLyric, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Position: Evidence[SpanPosition]{State: EvidenceAbsent}, Association: Evidence[bool]{State: EvidenceKnown, Value: true}, Members: members}
+		if r.err != nil {
+			return
+		}
 		r.err = r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: members[0], Property: ContextPropertySpanLyricSyllable, Span: &p, Origins: []Location{n.header.Location}})
 		members = nil
 	}
@@ -205,10 +339,7 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 	}
 	byRef := make(map[NodeRef]*spanEndpoint)
 	lastFan := make(map[NodeRef]Evidence[Atomic])
-	lastNote := make(map[struct {
-		note   NodeRef
-		family SpanFamily
-	}]*spanEndpoint)
+	lastNote := make(map[spanNoteIdentityKey]*spanEndpoint)
 	for _, e := range es {
 		if !r.step(1) {
 			return
@@ -313,33 +444,36 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 			}
 			spanPublish(r, key, n, property, value)
 		}
-		if e.payload.Anchor.State == EvidenceKnown && role.State == EvidenceKnown {
-			k := struct {
-				note   NodeRef
-				family SpanFamily
-			}{e.payload.Anchor.Value, e.payload.Family}
-			prev := lastNote[k]
-			if prev != nil && prev.payload.Role.State == EvidenceKnown {
-				value := stateUnknown[Atomic]("span-same-note-musical-order-unestablished")
-				if e.payload.Family == SpanTie && prev.payload.Role.Value != role.Value {
-					value = spanBool(prev.payload.Role.Value == "stop" && role.Value == "start")
+		if e.payload.Anchor.State == EvidenceKnown && role.State == EvidenceKnown && (role.Value == "start" || role.Value == "stop") {
+			k, ok, err := spanNoteKey(r.ctx, r.s, e)
+			if err != nil {
+				r.err = err
+				return
+			}
+			if ok {
+				prev := lastNote[k]
+				if prev != nil && prev.payload.Role.State == EvidenceKnown {
+					value := stateUnknown[Atomic]("span-same-note-musical-order-unestablished")
+					if e.payload.Family == SpanTie && prev.payload.Role.Value != role.Value {
+						value = spanBool(prev.payload.Role.Value == "stop" && role.Value == "start")
+					}
+					if e.payload.Family == SpanTied && prev.payload.Role.Value == "start" && role.Value == "stop" && prev.payload.Association.State == EvidenceKnown && len(prev.payload.Members) == 2 && prev.payload.Members[1] == e.ref {
+						value = spanBool(true)
+					}
+					if e.payload.Family != SpanTie && prev.payload.Association.State == EvidenceKnown && e.payload.Association.State == EvidenceKnown && len(prev.payload.Members) == 2 && len(e.payload.Members) == 2 && prev.payload.Members[0] != e.payload.Members[0] {
+						if (prev.payload.Role.Value == "start" && role.Value == "stop") || (prev.payload.Role.Value == "stop" && role.Value == "start") {
+							value = spanBool(prev.payload.Role.Value == "stop")
+						}
+					}
+					spanPublish(r, key, n, ContextPropertySpanSameNoteOrderRecommended, value)
 				}
-				if e.payload.Family == SpanTied && prev.payload.Role.Value == "start" && role.Value == "stop" && prev.payload.Association.State == EvidenceKnown && len(prev.payload.Members) == 2 && prev.payload.Members[1] == e.ref {
-					value = spanBool(true)
-				}
-				if e.payload.Family != SpanTie && prev.payload.Association.State == EvidenceKnown && e.payload.Association.State == EvidenceKnown && len(prev.payload.Members) == 2 && len(e.payload.Members) == 2 && prev.payload.Members[0] != e.payload.Members[0] {
-					if (prev.payload.Role.Value == "start" && role.Value == "stop") || (prev.payload.Role.Value == "stop" && role.Value == "start") {
-						value = spanBool(prev.payload.Role.Value == "stop")
+				if _, ok := lastNote[k]; !ok {
+					if r.err = r.s.retain(256); r.err != nil {
+						return
 					}
 				}
-				spanPublish(r, key, n, ContextPropertySpanSameNoteOrderRecommended, value)
+				lastNote[k] = e
 			}
-			if _, ok := lastNote[k]; !ok {
-				if r.err = r.s.retain(256); r.err != nil {
-					return
-				}
-			}
-			lastNote[k] = e
 		}
 		if e.payload.Family == SpanTremolo && role.State == EvidenceKnown && (role.Value == "start" || role.Value == "stop") {
 			spanTremoloFacts(r, key, n, e, timeline)
@@ -373,7 +507,7 @@ func spanTremoloFacts(r *contextReader, key RuleKey, n *factNode, e *spanEndpoin
 	}
 	if timeline != nil && note != nil && (ordinary || me.State == EvidenceAbsent) {
 		fact, ok := timeline.Facts[note.header.ID]
-		typ := spanText(r.childScalar(note, spanRole_noteType))
+		typ := stateText(r.childScalar(note, spanRole_noteType))
 		dots := spanCountChildren(r, note, spanRole_noteDot)
 		if ok && fact.Duration.State == EvidenceKnown && typ.State == EvidenceKnown && dots.State == EvidenceKnown && dots.Value.Integer.value.IsUint64() {
 			denom := int64(0)

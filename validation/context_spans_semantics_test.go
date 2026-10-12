@@ -287,7 +287,7 @@ func TestContextSpanEndpointAvailabilityByFamily(t *testing.T) {
 						spanUnitAttribute(r, n, binding.number, v)
 					}
 					domains := map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: NodeRef{r.s.documentID, 100}}}
-					e := spanExtract(r, RuleKey{"spans", 1}, n, binding, nil, domains, 1)
+					e := spanExtract(r, RuleKey{"spans", 1}, n, binding, nil, domains, 1, nil)
 					if r.err != nil {
 						t.Fatal(r.err)
 					}
@@ -721,7 +721,7 @@ func TestContextSpanHistoricalVersionCause(t *testing.T) {
 					break
 				}
 			}
-			e := spanExtract(r, RuleKey{"spans", 1}, n, b, nil, nil, 1)
+			e := spanExtract(r, RuleKey{"spans", 1}, n, b, nil, nil, 1, nil)
 			if r.err != nil {
 				t.Fatal(r.err)
 			}

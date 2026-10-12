@@ -97,6 +97,7 @@ type spanEndpoint struct {
 	pitch, guard, lyric string
 	grace, cue          bool
 	categoryKnown       bool
+	categoryAvailable   Evidence[bool]
 	order               uint64
 	scoreParts          []NodeRef
 }

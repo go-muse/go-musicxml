@@ -147,6 +147,9 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 	}
 	runs := make(map[spanAssociationKey]*spanAssociationRun)
 	gaps := make(map[spanAssociationGapKey]Evidence[bool])
+	var categoryGaps map[spanBeamCategoryGapKey]Evidence[bool]
+	scratch := spanScratch{s: s}
+	defer scratch.release()
 	for i, e := range es {
 		if err := s.step(ctx, 1); err != nil {
 			return err
@@ -154,6 +157,8 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 		if e.payload.Association.State == EvidenceKnown && e.payload.Association.Value {
 			continue
 		}
+		// A self-contained role proves membership without using Number or Domain.
+		// Their original causal evidence remains available in those fields.
 		if spanSelfContained(e) {
 			if err := spanSetAssociation(ctx, s, e, []NodeRef{e.ref}); err != nil {
 				return err
@@ -161,6 +166,28 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 			continue
 		}
 		if !spanPairable(e.payload.Family) {
+			continue
+		}
+		if e.payload.Family == SpanBeam && !e.categoryKnown {
+			k, v, err := spanBeamCategoryGap(ctx, s, e)
+			if err != nil {
+				return err
+			}
+			if old, ok := categoryGaps[k]; ok {
+				categoryGaps[k] = timelineMergeAvailability(old, v)
+			} else {
+				if err := scratch.reserve(512 + int64(len(k.identity.number)+len(k.identity.voice)+len(k.identity.domain.DocumentID))); err != nil {
+					return err
+				}
+				if categoryGaps == nil {
+					if err := scratch.reserve(2048); err != nil {
+						return err
+					}
+					categoryGaps = make(map[spanBeamCategoryGapKey]Evidence[bool])
+				}
+				categoryGaps[k] = v
+			}
+			e.payload.Association = v
 			continue
 		}
 		k, ok, err := spanKey(ctx, s, e)
@@ -220,8 +247,16 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 				run.complete = timelineMergeAvailability(run.complete, v)
 			}
 		}
+		categoryGap, err := spanBeamCategoryRunGap(ctx, s, key, categoryGaps)
+		if err != nil {
+			return err
+		}
+		run.complete = timelineMergeAvailability(run.complete, categoryGap)
 		if run.complete.State != EvidenceKnown || !run.complete.Value {
 			for _, i := range run.indices {
+				if err := s.step(ctx, 1); err != nil {
+					return err
+				}
 				es[i].payload.Association = stateUnavailable[bool, bool](run.complete)
 			}
 			continue
@@ -261,6 +296,13 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 			a, b := prev, e
 			if role == 1 {
 				a, b = e, prev
+			}
+			// Local one-note ties were established before this run. If one was
+			// excluded by competing boundaries, ordinary pairing must not silently
+			// reintroduce the same unproved interpretation.
+			if a.payload.Family == SpanTied && a.payload.Anchor.State == EvidenceKnown && b.payload.Anchor.State == EvidenceKnown && a.payload.Anchor.Value == b.payload.Anchor.Value {
+				ambiguous = true
+				continue
 			}
 			// If both positions prove reversed chronology, do not invent a musical
 			// relation. Equal and unknown chronology do not erase document identity.
