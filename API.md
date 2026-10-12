@@ -387,8 +387,10 @@ provider's typed-state responsibilities. Final acceptance evidence is tracked
 in the [full ownership ledger](docs/validation/timeline-assessment-ownership.json).
 
 Timeline arithmetic, indexes and retained context share the session's finite
-budgets; a small input can still exceed work or memory limits. Earlier XSD/local
-cost measurements above are not timeline capacity promises. B5-PERF-01 remains
+budgets; a small input can still exceed work or memory limits.
+Contained state histories use indexed lookup; exceptional ambiguous cross-frame
+candidate comparisons can be quadratic under those same limits.
+Earlier XSD/local cost measurements above are not timeline capacity promises. B5-PERF-01 remains
 outstanding with the shared validation kernel/session workstream and final
 batch-9 reconciliation. Timeline-specific improvements do not close that older
 matched-performance obligation.

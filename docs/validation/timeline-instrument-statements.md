@@ -95,12 +95,27 @@ an equal-position statement is not silently treated as later. The unresolved
 record retains its original target cause, raw fields, repeat condition and
 position. Only a genuinely unplaced publisher needs bounded measure-interval
 uncertainty. This is the provider's score-order evidence boundary, not an excuse
-to discard the original XSD identity failure or manufacture a target identity.
+to discard the original identity/reference failure or manufacture a target identity.
+A conditional later statement cannot repair the target gap without pass evidence,
+and cannot resurrect a gap already repaired by an unconditional statement.
+Hidden child enumeration at a known position is broad over possible properties,
+but still begins at that position rather than invalidating an earlier prefix.
 
 A property query names its actual selected source and inherited state. A
 compound convenience projection may aggregate sources, but may not label every
 field as if it were published by the latest unrelated change. Copies, indexes,
 provenance and exact comparisons remain session-accounted and cancellable.
+
+For displaced statements with only partial cross-frame order, a known value can
+also follow from agreement among every remaining possible statement and a
+definite initial or positioned baseline. Such a result retains the actual source
+consensus; it does not invent a unique latest source. `InheritanceUnproved`
+records when the latest-source/query relation is not established. Initial
+instrument/MIDI/device statements participate in this proof and cannot disappear
+merely because a later serialized displaced candidate exists. The
+[cross-frame implementation checkpoint](evidence/timeline-cross-frame-implementation.md)
+states the indexed ordinary path, bounded exceptional comparisons and exact
+remaining integration cases.
 
 ## Required distinguishing cases and later owners
 
