@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+
+	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
 // timelineRole names a fixed MusicXML role, never a runtime string-key fact.
@@ -162,6 +164,11 @@ const (
 	timelineRoleSoundDamperPedal
 	timelineRoleSoundSoftPedal
 	timelineRoleSoundSostenutoPedal
+	timelineRoleOtherPlayType
+	timelineRoleScoreInstrumentInstrumentName
+	timelineRoleScoreInstrumentInstrumentAbbreviation
+	timelineRoleLineDetailLine
+	timelineRoleStaffSizeScaling
 	timelineRoleLimit
 )
 
@@ -188,6 +195,11 @@ type timelineRoleShape struct {
 // This finite table is a configuration-time binding contract against MusicXML
 // 4.0 metadata. Runtime readers use only the copied exact descriptors.
 var timelineRoleShapes = [...]timelineRoleShape{
+	{timelineRoleLineDetailLine, "line-detail", "line", "staff-line", 1, true},
+	{timelineRoleStaffSizeScaling, "staff-size", "scaling", "non-negative-decimal", 1, true},
+	{timelineRoleOtherPlayType, "other-play", "type", "xs:token", 1, true},
+	{timelineRoleScoreInstrumentInstrumentName, "score-instrument", "instrument-name", "xs:string", 1, false},
+	{timelineRoleScoreInstrumentInstrumentAbbreviation, "score-instrument", "instrument-abbreviation", "xs:string", 1, false},
 	{timelineRoleNoteChord, "note", "chord", "empty", 4, false},
 	{timelineRoleNoteDuration, "note", "duration", "positive-divisions", 2, false},
 	{timelineRoleNoteGrace, "note", "grace", "grace", 1, false},
@@ -346,6 +358,24 @@ func compileTimelineBindings(schema *CompiledSchema) (*timelineBindings, error) 
 	// Uses is already bounded by schema compilation. Build one configuration-time
 	// index, then bind the finite role table without repeated whole-schema scans.
 	uses := schema.Uses()
+	types := make(map[ComponentID]xsd.TypeID)
+	for _, typ := range schema.kernel.Components() {
+		types[schema.component(typ)] = typ
+	}
+	type inspectedShape struct {
+		shape xsd.TypeContentShape
+		known bool
+	}
+	shapeCache := make(map[ComponentID]inspectedShape)
+	shapeMatches := func(typ ComponentID, name string) bool {
+		expected, known := timelineExpectedShape(name)
+		inspected, found := shapeCache[typ]
+		if !found {
+			inspected.shape, inspected.known = types[typ].ContentShape()
+			shapeCache[typ] = inspected
+		}
+		return known && inspected.known && inspected.shape == expected
+	}
 	type useKey struct {
 		owner     ComponentID
 		name      QName
@@ -371,6 +401,9 @@ func compileTimelineBindings(schema *CompiledSchema) (*timelineBindings, error) 
 			if !validDeclaration(u.Declaration) || u.Declaration.Assembly != AssemblyMusicXML || !u.DeclaredTypeKnown || !validComponent(u.DeclaredType) || u.DeclaredType.Assembly != AssemblyMusicXML {
 				return nil, timelineShapeError(owner.Name.Local, name)
 			}
+			if !shapeMatches(u.DeclaredType, typ) {
+				return nil, timelineShapeError(owner.Name.Local, name)
+			}
 			if typ == "" {
 				if u.DeclaredType.Name != (QName{}) || u.DeclaredType.Occurrence == "" {
 					return nil, timelineShapeError(owner.Name.Local, name)
@@ -385,6 +418,9 @@ func compileTimelineBindings(schema *CompiledSchema) (*timelineBindings, error) 
 		d, ok := schema.Root(QName{Local: name})
 		u, exists := roots[d]
 		if !ok || !exists || u.Name != (QName{Local: name}) || !u.DeclaredTypeKnown || u.DeclaredType.Name != (QName{}) || u.DeclaredType.Occurrence == "" {
+			return nil, timelineShapeError("root", name)
+		}
+		if !shapeMatches(u.DeclaredType, "") {
 			return nil, timelineShapeError("root", name)
 		}
 		h := timelineHierarchy{Root: u}
@@ -517,4 +553,30 @@ func (b *timelineBindings) size() int64 {
 		n += timelineUseSize(h.Root) + timelineUseSize(h.Part) + timelineUseSize(h.Measure) + localAttributeSize(h.PartID) + int64(128+len(h.Content.Occurrence))
 	}
 	return n
+}
+
+// Expected scalar families are explicit; a familiar named type is insufficient
+// when its underlying graph has been changed to another value family.
+func timelineExpectedShape(name string) (xsd.TypeContentShape, bool) {
+	switch name {
+	case "", "attributes", "note", "backup", "forward", "direction", "harmony", "clef", "double", "empty", "for-part", "grace", "instrument", "instrument-change", "interchangeable", "key", "line-detail", "midi-instrument", "numeral", "numeral-key", "part-clef", "part-list", "part-transpose", "play", "score-instrument", "score-part", "sound", "staff-details", "staff-tuning", "swing", "time", "transpose", "virtual-instrument":
+		return xsd.ShapeComplex | xsd.ShapeElements, true
+	case "cancel", "key-octave":
+		return xsd.ShapeComplex | xsd.ShapeInteger, true
+	case "offset", "staff-size":
+		return xsd.ShapeComplex | xsd.ShapeDecimal, true
+	case "key-accidental", "midi-device", "other-play":
+		return xsd.ShapeComplex | xsd.ShapeString, true
+	case "fifths", "midi-128", "midi-16", "midi-16384", "octave", "staff-line", "staff-line-position", "staff-number", "xs:integer", "xs:positiveInteger", "xs:nonNegativeInteger":
+		return xsd.ShapeInteger, true
+	case "divisions", "non-negative-decimal", "percent", "positive-divisions", "rotation-degrees", "semitones", "xs:decimal":
+		return xsd.ShapeDecimal, true
+	case "positive-integer-or-empty":
+		return xsd.ShapeUnion | xsd.ShapeInteger | xsd.ShapeString, true
+	case "yes-no-number":
+		return xsd.ShapeUnion | xsd.ShapeDecimal | xsd.ShapeString, true
+	case "cancel-location", "clef-sign", "mode", "mute", "numeral-mode", "semi-pitched", "smufl-accidental-glyph-name", "staff-type", "step", "symbol-size", "time-relation", "time-separator", "time-symbol", "yes-no", "xs:string", "xs:token", "xs:ID", "xs:IDREF":
+		return xsd.ShapeString, true
+	}
+	return 0, false
 }
