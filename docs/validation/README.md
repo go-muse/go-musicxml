@@ -16,6 +16,11 @@ reconciles the bounded implementation repairs following PR 30, their reusable
 evidence and explicit remaining obligations. It does not mark the planned stages
 or a new validation profile complete.
 
+The [timeline/effective-state scope and ownership ledger](TIMELINE_ASSESSMENT_SCOPE.md)
+retains the complete batch-6 target, source translations, open interpretation
+gates and future owners. It is planned scope/provenance evidence; implementation
+and exact-head acceptance evidence remain separately pending.
+
 ## Reading order
 
 Start with the [direct-model/local scope and ownership evidence](model-assessment-scope.md)
