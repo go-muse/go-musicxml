@@ -78,6 +78,26 @@ func TestLayoutRound3ConflictingAdmittedBreaksEveryOrder(t *testing.T) {
 					if err := evaluateLayoutScopes(r.ctx, r.s, key, p, nil); err != nil {
 						t.Fatal(err)
 					}
+					widths := 0
+					for _, row := range r.s.contextResults {
+						if row.Property != "layout.width-outcome" || row.Layout.System.State == EvidenceKnown {
+							continue
+						}
+						widths++
+						if row.Layout.Provenance != ContextExplicit || row.Layout.Raw.State != EvidenceAbsent {
+							t.Errorf("conflict provenance/raw: %+v", row.Layout)
+						}
+						wantReason := Code("admitted-break-unavailable")
+						if state == EvidenceUnknown {
+							wantReason = "parallel-print-rendering-unspecified"
+						}
+						if row.Value.State != state || row.Value.Cause == nil || row.Value.Cause.Rule.ID != "fixture" || row.Value.Reason != wantReason {
+							t.Errorf("conflict outcome lost cause: %+v", row.Value)
+						}
+					}
+					if widths != 3 {
+						t.Errorf("conflict width rows=%d", widths)
+					}
 					count := 0
 					for _, row := range r.s.contextResults {
 						if row.Property != "layout.page-height" {

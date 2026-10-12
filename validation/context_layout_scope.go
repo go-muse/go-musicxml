@@ -81,17 +81,26 @@ func (l *layoutScopes) publish(n *factNode, property string, raw, value Evidence
 	if l.r.err != nil {
 		return l.r.err
 	}
-	ref := NodeRef{l.r.s.documentID, n.header.ID}
-	from := ref
-	if origin != nil {
-		from.Node = origin.header.ID
-	}
 	provenance := ContextExplicit
 	if raw.State == EvidenceAbsent {
 		provenance = ContextInherited
 		if value.State == EvidenceUnknown {
 			provenance = ContextApplicationChoice
 		}
+	}
+	return l.publishWithProvenance(n, property, raw, value, active, scope, frame, origin, part, provenance)
+}
+
+// Boundary conflicts are direct encoded observations, even though no width
+// scalar is present. Keep their provenance distinct from inherited geometry.
+func (l *layoutScopes) publishWithProvenance(n *factNode, property string, raw, value Evidence[Atomic], active Evidence[bool], scope NodeRef, frame layoutFrame, origin *factNode, part Evidence[NodeRef], provenance ContextProvenance) error {
+	if l.r.err != nil {
+		return l.r.err
+	}
+	ref := NodeRef{l.r.s.documentID, n.header.ID}
+	from := ref
+	if origin != nil {
+		from.Node = origin.header.ID
 	}
 	return l.r.s.publishContextResult(l.r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + property), Value: value, Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Conversion: Evidence[Rational]{State: EvidenceAbsent}, Part: part, Scope: scope, Origin: from, Raw: raw, Applicability: active, Unit: ContextUnitTenths, Page: frame.page, System: frame.system, Provenance: provenance}})
 }
@@ -481,7 +490,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			}
 
 			if conflict {
-				if err = l.publish(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, layoutBoundaryGap[Atomic](systemBreak, "parallel-print-rendering-unspecified"), active, ref, frame, nil, b.part); err != nil {
+				if err = l.publishWithProvenance(b.measure, "width-outcome", Evidence[Atomic]{State: EvidenceAbsent}, layoutBoundaryGap[Atomic](systemBreak, "parallel-print-rendering-unspecified"), active, ref, frame, nil, b.part, ContextExplicit); err != nil {
 					return err
 				}
 			}
