@@ -127,7 +127,7 @@ func TestTimelineRuntimeUnknownPublisherGapsOnlyPotentialFamilies(t *testing.T) 
 		t.Run(string(rune(role)), func(t *testing.T) {
 			s, svc, b := runtimeFixture(t)
 			ctx := context.Background()
-			typ := ComponentID{Kind: ComponentComplexType, Name: QName{Local: "test-publisher"}}
+			typ := ComponentID{Kind: ComponentType, Name: QName{Local: "test-publisher"}}
 			b.Roles[role][0].DeclaredTypeKnown = true
 			b.Roles[role][0].DeclaredType = typ
 			unknown := stateNode(b, role, 50, stateAbsent[Atomic]())
