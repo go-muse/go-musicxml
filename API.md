@@ -358,6 +358,13 @@ unshifted score origin and staff. Display offsets cannot borrow a future key.
 No initial C major, meter, clef, tempo or divisions value is invented. An own
 valid numeral-key remains an independent alternative when fallback timeline
 evidence is unavailable.
+A projection may prove encoded-key presence, or an unchanged divisions value,
+without identifying a unique latest publisher. This requires an independently
+established baseline and independently valid same-result alternatives; missing,
+invalid or hidden candidates remain causal. Actual source witnesses survive,
+and uncertain inheritance is retained rather than replaced by fabricated
+provenance.
+
 
 Exact established regions remain usable when another region is incomplete.
 Unknown same-time conflicts, missing staff/voice/anchor evidence, and unsettled
@@ -366,6 +373,11 @@ they are not silently defaulted or turned into new musical violations.
 Signed offsets remain exact local coordinates; continuing-state selection across
 measure frames also needs established containment/order evidence. No measure
 length is invented from meter or a terminal note endpoint.
+Cursor normalization is checked against complete unit history. Staged proofs use
+only independently established prior-stage origins/units; derived descendants
+cannot certify an unresolved ancestor or its frame bound. Final facts are
+replaced only after successful closure.
+
 Grace donor identity does not establish continuous playback time. Figured-bass
 consecutive-chain positions are explicitly derived context, not a sum-duration
 restriction. Instrument state means latest applicable encoded statements, with
@@ -389,7 +401,9 @@ in the [full ownership ledger](docs/validation/timeline-assessment-ownership.jso
 Timeline arithmetic, indexes and retained context share the session's finite
 budgets; a small input can still exceed work or memory limits.
 Contained state histories use indexed lookup; exceptional ambiguous cross-frame
-candidate comparisons can be quadratic under those same limits.
+candidate comparisons can be quadratic under those same limits. Exceptional
+reconstruction can retain both old and staged services until session cleanup;
+that conservative cost remains charged, with no automatic budget increase.
 Earlier XSD/local cost measurements above are not timeline capacity promises. B5-PERF-01 remains
 outstanding with the shared validation kernel/session workstream and final
 batch-9 reconciliation. Timeline-specific improvements do not close that older

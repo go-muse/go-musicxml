@@ -1,8 +1,9 @@
 # Batch 6 acceptance checkpoint (not final)
 
-Reconciliation snapshot: `8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a`.
-Individual accepted runs are pinned below; independent review of the latest
-complete-history and equal-value certificate integration remains pending.
+Frozen production code: `22ae68a731ddc26e15f988fb59232e2dd9d572e6`, tree
+`440f9d3cabffd535efb127bbbaeecb22e3185a27`. Independent semantic acceptance is
+complete for this code checkpoint. Final resource review and aggregate/CI gates
+are separately recorded below; individual historical runs retain their pins.
 This report does not claim final batch acceptance, completion of all repository
 stages, or any exact-head CI result. The public profiles remain bounded and opt-in.
 
@@ -30,6 +31,19 @@ stages, or any exact-head CI result. The public profiles remain bounded and opt-
   across `./...` using an exact anchored union. Evidence:
   `reconcile-declared-8237597.log`. The open long-identity work-meter regression
   is not included in this pass.
+- At frozen production `22ae68a` plus independent test commit `38b77a3`, all
+  243 declared functions plus ownership checks pass across `./...` with an exact
+  anchored union and `MUSICXML_REQUIRE_XMLLINT=1`. Evidence:
+  `reconcile-declared-22ae68a.log`. The additional eight functions independently
+  test divisions-certificate and normalization gate/closure/restoration lifecycle,
+  admission, causal ownership, primitive/full parity and cancellation.
+- At production `22ae68a`, the lead's initial seven-stage run passed module tidy,
+  reproducible generation, formatting, full tests, vet, full race and all seven
+  counted fuzz targets. Evidence: `production-22ae68a-all7.log`. The sourced
+  environment exports `MUSICXML_REQUIRE_XMLLINT=1`; the separately supplied
+  `REQUIRE_XMLLINT=1` variable is unused. This earlier code checkpoint predates
+  final independent tests and documentation, so the exact final head must rerun
+  all seven stages. Actual 386 execution still belongs to CI.
 - Runtime profile metadata and actual binding revisions match the compiled engine.
   All original source, translation, selection and later-owner integrity checks pass.
 - The 121 selected clauses, 20 split/shared contracts, 135 original source records,
@@ -67,6 +81,7 @@ are separate from the worker implementation history.
 | Well-founded unit reconstruction, causes and directional bounds | `22a6c77`/`5f52cb0`/`87196b2` → `23bd0a0`; `d381975`/`b029b8c`/`8e9ccef` → `c52c9ce`; `9227daf` → `3124dcc` |
 | Complete-history normalization and equal-value restoration | `743e74c` → `6c633a0`; `13ce21c`/`12a9fe1` → `8237597` (latest local regression pass; independent refresh pending) |
 | Invariant key-presence projection | `f34dc1e` → `121cbcf`, independently accepted at `d4071ae` |
+| Canonical-identity work before comparison | `56a3b8d` → `94a56df`; `2224b66` → `4a3fe68`; `2921866` → `4543c44`; `65ecf3f`/`1d21eb8` → `22ae68a` |
 | Full ownership and acceptance reconciliation | `5ba0bd1` → `f1958a9`; final semantic/resource acceptance remains pending |
 
 
@@ -79,6 +94,15 @@ bounded exceptional-query cost. A RED commit is not promoted to a pass merely
 because a later unrelated test command completed.
 
 ## Independent review snapshots
+
+- Final independent semantic code acceptance is pinned to `22ae68a` and its tree
+  above. A fresh preserved checkout passed full `go test ./... -count=1`, focused
+  all-package race and `go vet ./...`, with required real xmllint 2.9.14. All 30
+  final-review families pass without exclusions; that family count is not a
+  coverage denominator. The [final semantic report](timeline-final-semantic-review.md)
+  records the exact commands, logs and reviewed proof matrix. Subsequent code
+  changes require a refresh. This semantic acceptance does not substitute for
+  final resource review or exact-final-head aggregate/CI verification.
 
 - Resource checkpoint `ab8da72c1c538946945d4c06cb8139360714b1e7` accepted all eight
   public direction and all eight public figured-bass variants, including default
@@ -112,27 +136,26 @@ because a later unrelated test command completed.
   matched benchmark remains at `ab8da72`.
 
 Older semantic/resource reports retain their earlier-head scope and are not
-final acceptance evidence. The parent whole-repository run at `1f7797b` still
+final acceptance evidence. The historical parent whole-repository run at `1f7797b`
 failed the public displaced-key consumer, cross-frame unit-proof and local-unit
 placement-bound groups (`pre-unit-certificate-whole-repository.log`). A later
 unrelated pass cannot erase those recorded failures.
 
-## Remaining implementation and acceptance work
+## Remaining acceptance work and precise boundaries
 
-The concrete semantic regression groups above pass locally at `8237597`,
-including complete-history invalidation and independent safe restoration. That
-execution does not replace independent review of the new certificate and closure.
+No unresolved semantic counterexample remains in the independently reviewed
+bounded matrix at `22ae68a`. The earlier complete-history, safe restoration,
+projection and canonical-identity regressions have actual implementation and
+executed evidence above. No earlier RED is retroactively relabeled as a pass.
 
-- The canonical document-identity work-meter regression `1b03ac8`
-  (`TestIndependentTimelinePositionIdentityWorkBeforeComparison`) remains open:
-  long identity bytes must be charged before ordering/comparison. Owner: batch-6
-  timeline resource-accounting integration. This is distinct from B5-PERF-01.
-- Independent semantic/resource review of the complete-history closure and new
-  divisions certificates, including transactional staged-service failure,
-  admission/cancellation and final practical profile costs, remains pending.
-- The original source-dependent donor/group ambiguities remain exact evidence
-  boundaries; full five-axis clause acceptance is not inferred from a named
-  regression or from returning Unsupported.
+- Final independent resource/certificate lifecycle review and matched practical
+  profile costs remain pending at this frozen code checkpoint.
+- The exact final documentation/test integration requires all seven local
+  repository stages, followed by all nine exact-head CI jobs when publication
+  is authorized. The final head does not exist until that integration completes.
+- Original source-dependent donor/group ambiguities remain precise evidence
+  boundaries. A named test or a truthful Unsupported result does not execute a
+  full five-axis clause recipe or independently close a mandatory clause.
 
 The ledger maps implemented contributions and precise remaining source-dependent
 cases to the original clause IDs. Unsupported never closes a mandatory clause
@@ -142,11 +165,11 @@ and final-reconciliation ownership.
 
 ## Acceptance still required
 
-After the remaining corrections and independent reviews, refresh the actual
-profile snapshot and complete named-test binding, rerun selected and whole-repository tests, and obtain refreshed
-independent semantic/resource reviews at that exact implementation. All seven
-repository-local stages and all nine exact-head CI jobs remain pending until
-explicit results are supplied. Cross-compilation is not actual 386 execution;
+After the remaining independent review and test/document integration, refresh the actual
+profile snapshot and complete named-test binding. Independent semantic acceptance
+and the initial seven-stage run above remain pinned to their tested code. All
+seven repository-local stages on the final documentation/test integration and
+all nine exact-head CI jobs remain pending until explicit results are supplied. Cross-compilation is not actual 386 execution;
 the latter remains a CI requirement. Real xmllint evidence concerns XSD controls,
 not musical semantics.
 

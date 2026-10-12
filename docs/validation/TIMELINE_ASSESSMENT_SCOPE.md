@@ -237,7 +237,7 @@ invented for them.
 
 ## Reconciled execution snapshot
 
-Implementation snapshot: `8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a`. Sealed timeline semantic revision: `2`. The snapshot is local; no remote publication or exact-head CI success is implied.
+Implementation snapshot: `22ae68a731ddc26e15f988fb59232e2dd9d572e6`. Sealed timeline semantic revision: `2`. The snapshot is local; no remote publication or exact-head CI success is implied.
 
 Verification entries pin completed commands to their exact implementation
 snapshots; a named test reference is not itself an execution pass. The ledger distinguishes direct
@@ -257,9 +257,8 @@ marked executed merely because a related provider test passes.
 
 Independent semantic review is still open for these concrete cases; earlier-head reports do not discharge them:
 
-- Independent semantic review of complete-history closure and independently equal raw-divisions certificates at 8237597 remains pending despite all named final-review regressions passing locally.
-- Canonical DocumentID comparison metering regression 1b03ac8 remains open; final staged-rebuild/certificate resource refresh is also pending.
-- All seven repository-local stages and nine exact-head CI jobs require separately supplied results.
+- Final independent resource/certificate lifecycle review and matched costs remain pending at the frozen production checkpoint.
+- All seven local stages after final documentation/tests and all nine exact-head CI jobs still require separately supplied evidence.
 
 - `exact-arithmetic`: Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.
 - `chronology`: Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.

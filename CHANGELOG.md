@@ -42,9 +42,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   local instrument-link split; date and MIDI existence share existing
   consequences. These counts are not conformance coverage.
 - Publish the bounded model/local scope and executable-evidence ledger with
-  unchanged planning contracts and remaining batches 6–9. Final combined review,
-  aggregate checks and exact-head CI evidence remain pending; this entry does
-  not claim production readiness or actual 386 execution on the local host.
+  unchanged planning contracts and remaining batches 6–9. Batch-5 combined
+  review and aggregate checks passed; [PR #34](https://github.com/go-muse/go-musicxml/pull/34)
+  merged as `146400c`, with all nine [postmerge CI jobs](https://github.com/go-muse/go-musicxml/actions/runs/38202157871)
+  passing on that exact main commit. This historical checkpoint does not close
+  batch-6 acceptance or B5-PERF-01, or claim complete MusicXML conformance.
 
 - Add opt-in single-pass `InspectXML` and `DecodeAssessed` with explicit
   `ProfileSourceXSDPreview`, original-byte locations, bounded retained facts and

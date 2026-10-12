@@ -1108,7 +1108,7 @@
   },
   "execution_evidence": {
     "status": "reconciled-contributions-acceptance-open",
-    "implementation_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
+    "implementation_commit": "22ae68a731ddc26e15f988fb59232e2dd9d572e6",
     "timeline_semantic_revision": 2,
     "whole_batch_closed": false,
     "runtime_bindings": [
@@ -1787,6 +1787,71 @@
         "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
       },
       {
+        "file": "validation/timeline_position_work_independent_test.go",
+        "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+        "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+      },
+      {
+        "file": "validation/timeline_position_work_independent_test.go",
+        "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+        "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+      },
+      {
+        "file": "validation/timeline_position_work_independent_test.go",
+        "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+        "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+      },
+      {
+        "file": "validation/timeline_excursion_units_test.go",
+        "name": "TestTimelineExcursionStageFallbackReferenceWork",
+        "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+      },
+      {
+        "file": "validation/timeline_provider_reference_work_independent_test.go",
+        "name": "TestIndependentTimelineProviderReferenceGuardWork",
+        "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+      },
+      {
+        "file": "validation/timeline_divisions_value_resource_independent_test.go",
+        "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+        "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+      },
+      {
+        "file": "validation/timeline_divisions_value_resource_independent_test.go",
+        "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+        "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+      },
+      {
+        "file": "validation/timeline_divisions_value_resource_independent_test.go",
+        "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+        "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+      },
+      {
+        "file": "validation/timeline_divisions_value_resource_independent_test.go",
+        "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+        "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+      },
+      {
+        "file": "validation/timeline_normalization_resource_independent_test.go",
+        "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+        "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+      },
+      {
+        "file": "validation/timeline_normalization_resource_independent_test.go",
+        "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+        "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+      },
+      {
+        "file": "validation/timeline_normalization_resource_independent_test.go",
+        "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+        "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+      },
+      {
+        "file": "validation/timeline_normalization_resource_independent_test.go",
+        "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+        "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
+      },
+      {
         "file": "validation/timeline_display_state_test.go",
         "name": "TestTimelineDisplayStateDocumentedDefaultsAndMidmeasureApplicability",
         "scope": "Shared state: absent cancel location left, before-barline start versus middle, absent cancel, unavailable position, inactive midmeasure clef and retained invalid cause. This is a projection, never an added mandatory recommendation violation."
@@ -2305,6 +2370,11 @@
         "file": "validation/timeline_divisions_consensus_test.go",
         "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
         "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
+      },
+      {
+        "file": "validation/timeline_excursion_units_test.go",
+        "name": "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair",
+        "scope": "Independently bounded prior displaced units can be strictly repaired without losing supported exact excursion normalization."
       }
     ],
     "evidence_groups": [
@@ -3188,6 +3258,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
@@ -3851,6 +3986,11 @@
             "file": "validation/timeline_divisions_consensus_test.go",
             "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
             "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair",
+            "scope": "Independently bounded prior displaced units can be strictly repaired without losing supported exact excursion normalization."
           }
         ],
         "qualification": "The exact asserted cases below define executable coverage; passing execution is pinned separately by snapshot and command. Shared-fact unit fixtures are distinguished from production source/current-model entry points; this is not full five-axis closure of every linked research record."
@@ -3938,6 +4078,37 @@
         "implementation_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
         "artifact": "reconcile-declared-8237597.log",
         "scope": "Selected checkpoint suite; excludes the open long-identity work-meter regression. Independent final semantic/resource review and seven/nine acceptance gates remain separate."
+      },
+      {
+        "command": "source /workspace/shared/tools/go-musicxml-env.sh && go test ./... -count=1",
+        "result": "passed",
+        "implementation_commit": "9e99c0421d13113c5a864ecc1c431b4008a1f83d",
+        "artifact": "pre-final-resource-whole-suite.log",
+        "scope": "Lead-executed full repository test suite; sourced environment exports MUSICXML_REQUIRE_XMLLINT=1 (verified independently). Later resource-head and full seven-stage acceptance remain separate."
+      },
+      {
+        "command": "go test ./... -run 'TestTimelineFinalReview|TestTimelineUnplacedDivisions' -count=1",
+        "result": "passed",
+        "implementation_commit": "9e99c0421d13113c5a864ecc1c431b4008a1f83d",
+        "artifact": "final-reconstruction-integrated-green.log",
+        "scope": "Lead-executed selected integrated reconstruction and certificate tests; not the aggregate repository stages."
+      },
+      {
+        "command": "source /workspace/shared/tools/go-musicxml-env.sh && MUSICXML_REQUIRE_XMLLINT=1 go test -count=1 ./... -run \"$DECLARED_TEST_REGEX|^TestTimelineOwnership\"",
+        "selection": "Exact anchored union of all 243 distinct declared executable functions plus ownership integrity tests.",
+        "result": "passed",
+        "implementation_commit": "22ae68a731ddc26e15f988fb59232e2dd9d572e6",
+        "additional_test_commit": "38b77a3",
+        "artifact": "reconcile-declared-22ae68a.log",
+        "scope": "Frozen production code plus independent certificate/normalization lifecycle tests. Selected function pass with required oracle environment; final integrated seven-stage/nine-CI acceptance and final resource report remain separate."
+      },
+      {
+        "command": "source /workspace/shared/tools/go-musicxml-env.sh && REQUIRE_XMLLINT=1 bash scripts/check-all.sh mod generate format test vet race fuzz > /workspace/shared/batch6-timeline-evidence/production-22ae68a-all7.log 2>&1; code=$?; tail -50 /workspace/shared/batch6-timeline-evidence/production-22ae68a-all7.log; exit $code",
+        "result": "passed",
+        "implementation_commit": "22ae68a731ddc26e15f988fb59232e2dd9d572e6",
+        "artifact": "production-22ae68a-all7.log",
+        "environment": "Sourced environment exports MUSICXML_REQUIRE_XMLLINT=1; separately supplied REQUIRE_XMLLINT is unused. Go1.27.2, libxml2/xmllint2.9.14.",
+        "scope": "Initial seven-stage frozen-code checkpoint: mod, generate, format, test, vet, race, fuzz. Seven counted fuzz targets completed 50000/10000/50000/10023/10000/10000/10000. Final documentation/test integrated head must rerun seven stages; nine exact-head CI jobs and actual386 execution remain pending."
       }
     ],
     "remaining_acceptance": [
@@ -3982,13 +4153,12 @@
       ]
     },
     "independent_semantic_review": {
-      "status": "latest-local-regressions-green-independent-review-and-resource-meter-open",
+      "status": "final-code-semantic-checkpoint-accepted-resource-refresh-and-aggregate-gates-open",
       "accepted_component_commit": "b6623ae53da1caea80887aaa6993643ab9533fe3",
       "accepted_component_scope": "Previously accepted instrument/MIDI, figure-prefix, grace-locality and conditional-cause cases plus continuing-state cross-frame/containment/initial-default-consensus controls. Separate association review below extends this scope; neither is final semantic acceptance.",
       "pending_cases": [
-        "Independent semantic review of complete-history closure and independently equal raw-divisions certificates at 8237597 remains pending despite all named final-review regressions passing locally.",
-        "Canonical DocumentID comparison metering regression 1b03ac8 remains open; final staged-rebuild/certificate resource refresh is also pending.",
-        "All seven repository-local stages and nine exact-head CI jobs require separately supplied results."
+        "Final independent resource/certificate lifecycle review and matched costs remain pending at the frozen production checkpoint.",
+        "All seven local stages after final documentation/tests and all nine exact-head CI jobs still require separately supplied evidence."
       ],
       "earlier_report_is_final_evidence": false,
       "whole_repository_pass_claimed": false,
@@ -4016,18 +4186,37 @@
         "result": "passed",
         "scope": "Locked prior invalid unit cause, actual new-frame effective repair, excluded future invalid-unit positivity and local backward upper-bound repair. Complete-history invalidation/restoration remains separate."
       },
-      "pending_resource_cases": [
-        {
-          "test": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
-          "regression_commit": "1b03ac8",
-          "scope": "Canonical position comparisons must charge long document-identity bytes before comparison; this is a current timeline work-meter defect distinct from the retained B5-PERF-01 obligation."
-        }
-      ],
+      "pending_resource_cases": [],
       "latest_local_checkpoint": {
         "implementation_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
         "artifact": "reconcile-final-review-8237597.log",
         "result": "passed",
         "scope": "All TestTimelineFinalReview functions plus TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue across ./... with required real xmllint fixture controls. Independent latest-head semantic acceptance and complete resource verification remain pending."
+      },
+      "complete_history_review": {
+        "production_commit": "8237597b73deeadfcbc99a2b2ae8fe525a1f4e2a",
+        "independent_review_commit": "c12c6c0",
+        "artifact": "final-semantic-divisions-8237597.log",
+        "result": "passed",
+        "scope": "Every TestTimelineFinalReview across ./... without exclusions, complete-history invalidation/safe restoration and full baseline/candidate/provenance certificate matrix. Later resource changes and final-head verification remain separate."
+      },
+      "final_code_checkpoint": {
+        "production_commit": "22ae68a731ddc26e15f988fb59232e2dd9d572e6",
+        "production_tree": "440f9d3cabffd535efb127bbbaeecb22e3185a27",
+        "review_commit": "bfb4b6a3cbe7eec9facdd5d4c576d3390d1eb819",
+        "document": "evidence/timeline-final-semantic-review.md",
+        "result": "accepted-bounded-code-checkpoint",
+        "commands": [
+          "go test ./... -count=1",
+          "go test -race ./... -run 'Timeline|Grace|FiguredBass|Direction' -count=1",
+          "go vet ./..."
+        ],
+        "environment": "Go 1.27.2 linux/amd64, MUSICXML_REQUIRE_XMLLINT=1, real libxml2/xmllint 2.9.14",
+        "artifacts": [
+          "final-semantic-acceptance-22ae68a-full.log",
+          "final-semantic-acceptance-22ae68a-race-vet.log"
+        ],
+        "scope": "Full repository tests, focused all-package race and all-package vet; all 30 FinalReview families pass without exclusions. No unresolved semantic counterexample from the reviewed bounded matrix; subsequent production-code changes require refresh. This does not claim full MusicXML conformance or completed exact-head CI."
       }
     },
     "non_cursor_interpretation": {
@@ -20556,6 +20745,71 @@
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           },
           {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
+          },
+          {
             "file": "timeline_assessment_test.go",
             "name": "TestTimelineMandatoryMilestonesBothTargets",
             "scope": "Production source/model principal 4, tone 1 then 3 passes; tone exceeding principal fails; cross-staff and fractional controls."
@@ -21013,6 +21267,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -21747,6 +22066,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -22240,6 +22624,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           },
           {
             "file": "validation/rational_test.go",
@@ -22860,6 +23309,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           },
           {
             "file": "validation/rational_test.go",
@@ -23664,6 +24178,71 @@
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           },
           {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
+          },
+          {
             "file": "validation/rational_test.go",
             "name": "TestRationalSessionExactOperations",
             "scope": "Hand-computed exact arithmetic; shared session unit tests, including nonterminating rational results."
@@ -24106,6 +24685,71 @@
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
           },
           {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
+          },
+          {
             "file": "validation/rational_test.go",
             "name": "TestRationalSessionExactOperations",
             "scope": "Hand-computed exact arithmetic; shared session unit tests, including nonterminating rational results."
@@ -24536,6 +25180,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           },
           {
             "file": "validation/rational_test.go",
@@ -25252,6 +25961,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -25807,6 +26581,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           }
         ],
         "completed_contribution": "Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -26220,6 +27059,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -26641,6 +27545,71 @@
             "file": "timeline_excursion_scale_independent_test.go",
             "name": "TestIndependentTimelineUniformExcursionPracticalDefaults",
             "scope": "All 16 public source/model local/timeline default/diagnostic variants for 100/1000 uniform-forward cursor excursions complete without raised production limits."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelinePositionIdentityWorkBeforeComparison",
+            "scope": "Long canonical document-identity byte work is charged before exact position ordering or early mismatch returns."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestTimelineStateIdentityAdmissionWorkBeforeEarlyMismatch",
+            "scope": "Closure/publication/gap/query/unresolved-instrument identity admission is charged before early-return comparisons."
+          },
+          {
+            "file": "validation/timeline_position_work_independent_test.go",
+            "name": "TestIndependentTimelineClosureAndGraceIdentityWork",
+            "scope": "Closure and grace reference comparisons charge the full variable document identity before traversal."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionStageFallbackReferenceWork",
+            "scope": "Raw declaration fallback comparisons admit variable document-reference work before equality checks."
+          },
+          {
+            "file": "validation/timeline_provider_reference_work_independent_test.go",
+            "name": "TestIndependentTimelineProviderReferenceGuardWork",
+            "scope": "Direction/figure/grace/instrument/MIDI/spatial provider guards admit long canonical reference work before mismatching comparisons or early exits."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueShapeAndCertificateAdmission",
+            "scope": "Equal-value divisions certificates obey independently measured closed-shape, context/byte admission and every insertion cancellation poll."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueQueryOwnershipAndCancellation",
+            "scope": "Full divisions consensus queries retain separately owned witnesses and cancel at each observed poll without scratch leakage."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValueFilteredScratchBeforeAllocation",
+            "scope": "Filtered unit-gap query scratch is admitted before allocation; rejection preserves its original service."
+          },
+          {
+            "file": "validation/timeline_divisions_value_resource_independent_test.go",
+            "name": "TestIndependentTimelineDivisionsValuePrimitiveParityAndCancellation",
+            "scope": "Primitive and owned unit queries agree on equal/different candidates and causal availability; primitive mode does not retain unused provenance and every poll cancels cleanly."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationGateAdmissionAndOwnership",
+            "scope": "Normalization gates use a checked closed allowance, independently owned causes and pre-publication byte admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationClosureEveryCancellationBoundary",
+            "scope": "Each complete-history closure/rebuild poll can cancel while the original service remains unchanged and staged/live accounting is cleaned up."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRebuildContextQuota",
+            "scope": "Rebuilt stage publications consume the shared context quota rather than resetting admission."
+          },
+          {
+            "file": "validation/timeline_normalization_resource_independent_test.go",
+            "name": "TestIndependentTimelineNormalizationRestorationEveryCancellationBoundary",
+            "scope": "Independent normalization restoration cancels at each observed poll without borrowing causes or bypassing existing accounting."
           }
         ],
         "completed_contribution": "Exact sealed configuration, role families, provider revisions and opt-in profiles preserve frozen catalogs.; Single shared account, bounded copy/index/arithmetic, context quotas, ownership, cancellation and independent failure preservation.",
@@ -43374,6 +44343,11 @@
             "file": "validation/timeline_divisions_consensus_test.go",
             "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
             "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair",
+            "scope": "Independently bounded prior displaced units can be strictly repaired without losing supported exact excursion normalization."
           }
         ],
         "evidence_groups": [
@@ -49008,6 +49982,11 @@
             "file": "validation/timeline_divisions_consensus_test.go",
             "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
             "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair",
+            "scope": "Independently bounded prior displaced units can be strictly repaired without losing supported exact excursion normalization."
           }
         ],
         "evidence_groups": [
@@ -49895,6 +50874,11 @@
             "file": "validation/timeline_divisions_consensus_test.go",
             "name": "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue",
             "scope": "Valid same-valued unplaced divisions preserve an independent baseline with owned witnesses; differing/invalid/hidden values and missing baseline remain unavailable unless independently excluded or repaired."
+          },
+          {
+            "file": "validation/timeline_excursion_units_test.go",
+            "name": "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair",
+            "scope": "Independently bounded prior displaced units can be strictly repaired without losing supported exact excursion normalization."
           }
         ],
         "evidence_groups": [
