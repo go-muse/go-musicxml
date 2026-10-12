@@ -100,7 +100,44 @@ Only origins with established membership can be these witnesses: a displaced
 sound position cannot certify its own containment, and an unsupported cursor
 boundary crossing must not be used as an in-measure witness.
 
+A narrow ordinary-prefix derivation can supply such an origin without assuming
+a measure length. Begin at the structural start. The pinned duration annotation
+(lines 6472–6474) defines ordinary non-chord cursor movement; the chord annotation
+(line 6499) describes that movement as the musical position within a measure;
+the offset annotation (line 3939) explicitly retains the current location in the
+current measure, including its end. Along a complete ordinary-note prefix with
+known exact duration units, an **observed subsequent unshifted current-location
+origin** may therefore establish a membership bound. This is a derived provider
+proof, not an added mandatory clause or a theorem equating duration with meter.
+An origin at a backup/forward departure may be observed before processing that
+movement, provided the incoming prefix is still proved. A terminal note end
+alone is not an observed subsequent origin.
+
+Backup/forward movement must not extend this bound from its destination merely
+because it is serialized inside the measure. The source only recommends avoiding
+boundary crossing. A movement with both endpoints inside an already proved
+interval preserves membership; a destination outside that interval suspends
+this prefix proof. Exact recovery at structural zero can resume it. An origin
+reached through unknown units, invalid duration, or an unproved movement cannot
+bootstrap a new bound. Neither chord/grace endpoints, attack/release endpoints,
+figured-bass chain sums, shifted coordinates, nor unassessed right-barline
+locations are independent cursor membership witnesses.
+
 ### B. Bounded cross-frame order
+
+Two independently proved-contained positions retain the existing canonical
+**score-order** precedence of their respective measures. This represents
+structural before/after-barline scope; it is not a claim that their absolute
+elapsed times are strictly separated. The adopted
+[MusicXML 4.0 issue 28](https://github.com/w3c-cg/musicxml/issues/28) clarification
+specifically retains an end-of-measure current location in the old measure.
+There is no primary-source evidence here requiring ordinary old-measure-end and
+next-measure-start state statements to become ambiguous. An unrelated floating
+publication must not remove this independently established score-order result.
+
+The stricter elapsed-time proof below applies when one or both positions lack
+that containment proof. In particular an unproved displaced candidate cannot
+claim structural precedence merely from its original measure label.
 
 Conceptually retain unknown measure-origin times `T_m`. A local position is
 `T_m + x`, not the tuple's lexicographic rank. Same-part structural measure
@@ -135,8 +172,10 @@ Otherwise preserve local ambiguity and its exact source/cause.
 
 Do not mark every same-frame query known automatically: another frame's displaced
 publisher can still compete. Conversely do not discard a same-frame result
-merely because some unrelated cross-frame offset exists. Boundary equality and
-same-position conflict require the existing no-invented-winner discipline.
+merely because some unrelated cross-frame offset exists. For unproved displaced candidates, a non-strict elapsed bound cannot supply a
+strict supersession proof. This caution does not reopen the established
+canonical precedence of two independently contained positions. Same-frame
+same-position conflicts still require the existing no-invented-winner discipline.
 
 ## Evidence still required for acceptance
 
