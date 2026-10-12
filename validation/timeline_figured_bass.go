@@ -85,138 +85,89 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, domains []figu
 	if origin.Position.State != EvidenceKnown {
 		return timelineGapAs[musicalPosition, NodeRef](origin.Position, "figured-bass-position-unavailable"), empty
 	}
-	var best *factNode
-	bestFact := empty
-	gap := Evidence[NodeRef]{State: EvidenceAbsent}
-	gapPosition := Evidence[musicalPosition]{State: EvidenceAbsent}
-	addGap := func(value Evidence[NodeRef], position Evidence[musicalPosition]) {
-		if gap.State != EvidenceAbsent {
-			if gapPosition.State != EvidenceKnown {
-				return
-			}
-			if position.State == EvidenceKnown {
-				cmp, err := figuredBassScoreCompare(r.ctx, r.s, position.Value, gapPosition.Value)
-				if err != nil {
-					r.err = err
-					return
-				}
-				if cmp >= 0 {
-					return
-				}
-			}
-		}
-		gap, gapPosition = value, position
-	}
-	tied := false
-	for _, domain := range domains {
-		if !r.step(1) {
-			return stateUnknown[NodeRef]("timeline-interrupted"), empty
-		}
-		block := domain.block
-		if block.part.State != EvidenceKnown {
-			addGap(timelineGapAs[NodeRef, NodeRef](block.part, "figured-bass-part-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown})
-			continue
-		}
-		if block.part.Value != origin.Position.Value.Part || block.ordinal < origin.Position.Value.MeasureOrdinal {
-			continue
-		}
-		lower := timelineAt(block, Evidence[Rational]{State: EvidenceKnown, Value: timelineZero})
-		if block.ordinal == origin.Position.Value.MeasureOrdinal {
-			lower = origin.Position
-			if block.measure.header.ID != origin.Position.Value.Measure.Node {
-				addGap(stateUnknown[NodeRef]("figured-bass-measure-identity-unresolved"), lower)
-				continue
-			}
-		}
-		if domain.complete.State != EvidenceKnown || !domain.complete.Value {
-			addGap(timelineGapAs[bool, NodeRef](domain.complete, "figured-bass-domain-incomplete"), lower)
-		}
-		for _, candidate := range block.content.children {
+	q := timelineFollowingSearch{state: &service.State, want: origin.Position.Value, best: Evidence[NodeRef]{State: EvidenceAbsent}, gap: Evidence[NodeRef]{State: EvidenceKnown}, chronology: "figured-bass-cross-frame-chronology-unresolved", tied: "figured-bass-simultaneous-notes-unresolved"}
+	for q.pass = 0; q.pass < 2; q.pass++ {
+		for _, domain := range domains {
 			if !r.step(1) {
 				return stateUnknown[NodeRef]("timeline-interrupted"), empty
 			}
-			if !r.matches(candidate, timelineRoleNote) {
-				if candidate.header.Declaration.State != EvidenceKnown && r.potential(candidate, timelineRoleNote) {
-					addGap(stateUnavailable[DeclarationID, NodeRef](candidate.header.Declaration), lower)
-				}
+			block := domain.block
+			addGap := func(value Evidence[NodeRef], position Evidence[musicalPosition]) {
+				q.add(r, value, position, block.ordinal)
+			}
+			if block.part.State != EvidenceKnown {
+				addGap(timelineGapAs[NodeRef, NodeRef](block.part, "figured-bass-part-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown})
 				continue
 			}
-			fact, found := service.Facts[candidate.header.ID]
-			_, grace := r.child(candidate, timelineRoleNoteGrace)
-			_, chord := r.child(candidate, timelineRoleNoteChord)
-			if (grace.State == EvidenceKnown && grace.Value) || (chord.State == EvidenceKnown && chord.Value) {
+			if block.part.Value != origin.Position.Value.Part {
 				continue
 			}
-			if !found {
-				addGap(stateUnknown[NodeRef]("figured-bass-note-fact-unavailable"), lower)
-				continue
-			}
-			if fact.Position.State != EvidenceKnown {
-				if fact.Part.State == EvidenceKnown && fact.Part.Value != origin.Position.Value.Part {
+			lower := timelineAt(block, Evidence[Rational]{State: EvidenceKnown, Value: timelineZero})
+			if block.ordinal == origin.Position.Value.MeasureOrdinal {
+				lower = origin.Position
+				if block.measure.header.ID != origin.Position.Value.Measure.Node {
+					addGap(stateUnknown[NodeRef]("figured-bass-measure-identity-unresolved"), lower)
 					continue
 				}
-				addGap(timelineGapAs[musicalPosition, NodeRef](fact.Position, "figured-bass-note-position-unavailable"), lower)
-				continue
 			}
-			at, want := fact.Position.Value, origin.Position.Value
-			if at.Part != want.Part {
-				continue
+			if domain.complete.State != EvidenceKnown || !domain.complete.Value {
+				addGap(timelineGapAs[bool, NodeRef](domain.complete, "figured-bass-domain-incomplete"), lower)
 			}
-			if at.Measure.Node != block.measure.header.ID || at.MeasureOrdinal != block.ordinal {
-				continue
-			}
-			cmp, err := figuredBassScoreCompare(r.ctx, r.s, at, want)
-			if err != nil {
-				r.err = err
-				return stateUnknown[NodeRef]("timeline-interrupted"), empty
-			}
-			if cmp < 0 {
-				continue
-			}
-			if grace.State != EvidenceAbsent {
-				addGap(stateUnavailable[bool, NodeRef](grace), fact.Position)
-				continue
-			}
-			if chord.State != EvidenceAbsent {
-				addGap(stateUnavailable[bool, NodeRef](chord), fact.Position)
-				continue
-			}
-			if best == nil {
-				best, bestFact, tied = candidate, fact, false
-				continue
-			}
-			cmp, err = figuredBassScoreCompare(r.ctx, r.s, at, bestFact.Position.Value)
-			if err != nil {
-				r.err = err
-				return stateUnknown[NodeRef]("timeline-interrupted"), empty
-			}
-			if cmp < 0 {
-				best, bestFact, tied = candidate, fact, false
-			} else if cmp == 0 {
-				tied = true
+			for _, candidate := range block.content.children {
+				if !r.step(1) {
+					return stateUnknown[NodeRef]("timeline-interrupted"), empty
+				}
+				if !r.matches(candidate, timelineRoleNote) {
+					if candidate.header.Declaration.State != EvidenceKnown && r.potential(candidate, timelineRoleNote) {
+						addGap(stateUnavailable[DeclarationID, NodeRef](candidate.header.Declaration), lower)
+					}
+					continue
+				}
+				fact, found := service.Facts[candidate.header.ID]
+				_, grace := r.child(candidate, timelineRoleNoteGrace)
+				_, chord := r.child(candidate, timelineRoleNoteChord)
+				if (grace.State == EvidenceKnown && grace.Value) || (chord.State == EvidenceKnown && chord.Value) {
+					continue
+				}
+				if !found {
+					addGap(stateUnknown[NodeRef]("figured-bass-note-fact-unavailable"), lower)
+					continue
+				}
+				if fact.Position.State != EvidenceKnown {
+					if fact.Part.State == EvidenceKnown && fact.Part.Value != origin.Position.Value.Part {
+						continue
+					}
+					addGap(timelineGapAs[musicalPosition, NodeRef](fact.Position, "figured-bass-note-position-unavailable"), lower)
+					continue
+				}
+				at, want := fact.Position.Value, origin.Position.Value
+				if at.Part != want.Part {
+					continue
+				}
+				if at.Measure.Node != block.measure.header.ID || at.MeasureOrdinal != block.ordinal {
+					continue
+				}
+
+				if grace.State != EvidenceAbsent {
+					addGap(stateUnavailable[bool, NodeRef](grace), fact.Position)
+					continue
+				}
+				if chord.State != EvidenceAbsent {
+					addGap(stateUnavailable[bool, NodeRef](chord), fact.Position)
+					continue
+				}
+				q.candidate(r, Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, candidate.header.ID}}, fact)
 			}
 		}
 	}
-	if gap.State != EvidenceAbsent {
-		if best == nil || gapPosition.State != EvidenceKnown {
-			return gap, empty
-		}
-		cmp, err := figuredBassScoreCompare(r.ctx, r.s, gapPosition.Value, bestFact.Position.Value)
-		if err != nil {
-			r.err = err
-			return stateUnknown[NodeRef]("timeline-interrupted"), empty
-		}
-		if cmp <= 0 {
-			return gap, empty
-		}
+	if q.gap.State != EvidenceKnown {
+		return q.gap, empty
 	}
-	if best == nil {
+	if q.best.State != EvidenceKnown {
 		return stateUnknown[NodeRef]("figured-bass-following-note-unresolved"), empty
 	}
-	if tied {
-		return stateUnknown[NodeRef]("figured-bass-simultaneous-notes-unresolved"), empty
-	}
-	return Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, best.header.ID}}, bestFact
+	return q.best, q.fact
+
 }
 
 // The block wrapper is retained for isolated provider fixtures. Production calls
@@ -425,7 +376,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	if r.err != nil {
 		return r.err
 	}
-	if err := resolveFiguredBassChains(r, domains, pending, ids); err != nil {
+	if err := service.State.resolveFiguredBassChains(r, domains, pending, ids); err != nil {
 		return err
 	}
 	for _, id := range ids {
@@ -513,6 +464,9 @@ func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimin
 // a complete consecutive run with one unique anchor is established here. The
 // anchor and independent duration survive when chain membership is unproved.
 func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pending map[NodeID]figuredBassTimingOrigin, ids []NodeID) error {
+	return (&timelineState{}).resolveFiguredBassChains(r, domains, pending, ids)
+}
+func (state *timelineState) resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pending map[NodeID]figuredBassTimingOrigin, ids []NodeID) error {
 	counts := map[NodeID]int{}
 	// Unknown anchors retain IDs only: on 64-bit hosts each map entry is
 	// NodeRef24 + slice24, conservatively 4*48 bytes, plus 32 bytes per ID
@@ -581,7 +535,7 @@ func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pendi
 						return r.err
 					}
 					other := pending[id]
-					relevant, err := figuredBassChainGapRelevant(r, other, first.AnchorPosition)
+					relevant, err := state.figuredBassChainGapRelevant(r, other, first.AnchorPosition)
 					if err != nil {
 						return err
 					}
@@ -630,7 +584,7 @@ func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pendi
 // position. Thus a strictly later gap cannot share an earlier known anchor,
 // regardless of XML serialization order. An unplaced or incoherently owned gap
 // still may be relevant and is never discarded by a lexical guess.
-func figuredBassChainGapRelevant(r *stateReader, gap figuredBassTimingOrigin, anchor Evidence[musicalPosition]) (bool, error) {
+func (state *timelineState) figuredBassChainGapRelevant(r *stateReader, gap figuredBassTimingOrigin, anchor Evidence[musicalPosition]) (bool, error) {
 	if !r.step(1) {
 		return false, r.err
 	}
@@ -647,6 +601,6 @@ func figuredBassChainGapRelevant(r *stateReader, gap figuredBassTimingOrigin, an
 	if at.MeasureOrdinal == target.MeasureOrdinal && at.Measure != target.Measure {
 		return true, nil
 	}
-	cmp, err := figuredBassScoreCompare(r.ctx, r.s, at, target)
-	return cmp <= 0, err
+	order, err := state.positionOrder(r.ctx, r.s, at, target)
+	return order != stateAfter, err
 }

@@ -21,35 +21,117 @@ type directionTimingOrigin struct {
 	AnchorVoice                   Evidence[string]
 }
 
-type directionCandidateGap struct {
-	Value    Evidence[NodeRef]
-	Position Evidence[musicalPosition]
-	Ordinal  uint64
+// A nominal ordering is sufficient for indexing, but never certifies a
+// displaced candidate's chronology. Two passes keep constant scratch: select a
+// definitely eligible minimum, then check every possible competitor against it.
+// The second pass also preserves the strongest actual unavailable cause.
+type timelineFollowingSearch struct {
+	state            *timelineState
+	want             musicalPosition
+	best             Evidence[NodeRef]
+	fact             timelineEventFact
+	gap              Evidence[NodeRef]
+	pass             int
+	chronology, tied Code
 }
 
-// An unavailable position can affect its own measure, not arbitrarily earlier
-// measures. Keep the earliest potentially relevant gap; a later bad selector
-// cannot displace an earlier proved candidate.
-func (g *directionCandidateGap) add(r *stateReader, value Evidence[NodeRef], position Evidence[musicalPosition], ordinal uint64) {
-	if !r.step(1) {
+func (q *timelineFollowingSearch) add(r *stateReader, value Evidence[NodeRef], position Evidence[musicalPosition], ordinal uint64) {
+	if q.pass == 0 || !r.step(1) {
 		return
 	}
-	if g.Value.State != "" {
-		if ordinal > g.Ordinal || ordinal == g.Ordinal && g.Position.State != EvidenceKnown {
+	if position.State == EvidenceKnown {
+		at := position.Value
+		order, err := q.state.positionOrder(r.ctx, r.s, at, q.want)
+		if err != nil {
+			r.err = err
 			return
 		}
-		if ordinal == g.Ordinal && position.State == EvidenceKnown {
-			cmp, err := r.s.rationalCmp(r.ctx, position.Value.Offset, g.Position.Value.Offset)
+		if order == stateBefore {
+			return
+		}
+		if q.best.State == EvidenceKnown {
+			if at.MeasureOrdinal == q.fact.Position.Value.MeasureOrdinal && at.Measure != q.fact.Position.Value.Measure {
+				q.gap = graceStronger(q.gap, value)
+				return
+			}
+			order, err = q.state.positionOrder(r.ctx, r.s, at, q.fact.Position.Value)
 			if err != nil {
 				r.err = err
 				return
 			}
-			if cmp >= 0 {
+			if order == stateAfter {
+				return
+			}
+		}
+	} else {
+		// Unplaced evidence retains its canonical measure scope; a known displaced
+		// position above must instead pass the partial-chronology test.
+		member, err := q.state.frameMember(r.ctx, r.s, q.want)
+		if err != nil {
+			r.err = err
+			return
+		}
+		if member && ordinal < q.want.MeasureOrdinal {
+			return
+		}
+		if q.best.State == EvidenceKnown && ordinal > q.fact.Position.Value.MeasureOrdinal {
+			member, err = q.state.frameMember(r.ctx, r.s, q.fact.Position.Value)
+			if err != nil {
+				r.err = err
+				return
+			}
+			if member {
 				return
 			}
 		}
 	}
-	g.Value, g.Position, g.Ordinal = value, position, ordinal
+	q.gap = graceStronger(q.gap, value)
+}
+func (q *timelineFollowingSearch) candidate(r *stateReader, value Evidence[NodeRef], fact timelineEventFact) {
+	if !r.step(1) {
+		return
+	}
+	at := fact.Position.Value
+	order, err := q.state.positionOrder(r.ctx, r.s, at, q.want)
+	if err != nil {
+		r.err = err
+		return
+	}
+	if order == stateBefore {
+		return
+	}
+	if q.pass == 1 {
+		if q.best.State == EvidenceKnown && value.Value == q.best.Value {
+			return
+		}
+		reason := q.chronology
+		if q.best.State == EvidenceKnown {
+			relation, err := q.state.positionOrder(r.ctx, r.s, at, q.fact.Position.Value)
+			if err != nil {
+				r.err = err
+				return
+			}
+			if relation == stateEqual {
+				reason = q.tied
+			}
+		}
+		q.add(r, stateUnknown[NodeRef](reason), fact.Position, at.MeasureOrdinal)
+		return
+	}
+	if order&stateBefore != 0 {
+		return
+	}
+	if q.best.State == EvidenceKnown {
+		relation, err := q.state.positionOrder(r.ctx, r.s, at, q.fact.Position.Value)
+		if err != nil {
+			r.err = err
+			return
+		}
+		if relation != stateBefore {
+			return
+		}
+	}
+	q.best, q.fact = value, fact
 }
 
 func (service *timelineService) directionAnchor(r *stateReader, origin timelineEventFact, blocks []timelineMeasureBlock) (Evidence[NodeRef], timelineEventFact) {
@@ -75,118 +157,74 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 	if complete.State != EvidenceKnown || !complete.Value {
 		return timelineGapAs[bool, NodeRef](complete, "direction-part-incomplete"), empty
 	}
-	best := Evidence[NodeRef]{State: EvidenceAbsent}
-	bestFact := empty
-	gap := directionCandidateGap{}
-	tied := false
-	for _, block := range blocks {
-		if !r.step(1) {
-			return stateUnknown[NodeRef]("timeline-interrupted"), empty
-		}
-		if block.ordinal < want.MeasureOrdinal || block.part.State == EvidenceKnown && block.part.Value != want.Part {
-			continue
-		}
-		if best.State == EvidenceKnown && block.ordinal > bestFact.Position.Value.MeasureOrdinal {
-			continue
-		}
-		if block.part.State != EvidenceKnown {
-			gap.add(r, timelineGapAs[NodeRef, NodeRef](block.part, "direction-candidate-part-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
-			continue
-		}
-		if block.ordinal == want.MeasureOrdinal && (NodeRef{r.s.documentID, block.measure.header.ID}) != want.Measure {
-			gap.add(r, stateUnknown[NodeRef]("direction-measure-domain-conflict"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
-			continue
-		}
-		if block.complete.State != EvidenceKnown || !block.complete.Value {
-			gap.add(r, timelineGapAs[bool, NodeRef](block.complete, "direction-candidate-domain-incomplete"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
-		}
-		for _, candidate := range block.content.children {
+	q := timelineFollowingSearch{state: &service.State, want: want, best: Evidence[NodeRef]{State: EvidenceAbsent}, gap: Evidence[NodeRef]{State: EvidenceKnown}, chronology: "direction-cross-frame-chronology-unresolved", tied: "direction-simultaneous-notes-unresolved"}
+	for q.pass = 0; q.pass < 2; q.pass++ {
+		for _, block := range blocks {
 			if !r.step(1) {
 				return stateUnknown[NodeRef]("timeline-interrupted"), empty
 			}
-			if !r.matches(candidate, timelineRoleNote) {
-				if candidate.header.Declaration.State != EvidenceKnown && r.potential(candidate, timelineRoleNote) {
-					gap.add(r, timelineGapAs[DeclarationID, NodeRef](candidate.header.Declaration, "direction-candidate-binding-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
-				}
+			if block.part.State == EvidenceKnown && block.part.Value != want.Part {
 				continue
 			}
-			fact, found := service.Facts[candidate.header.ID]
-			if !found {
-				gap.add(r, stateUnknown[NodeRef]("direction-note-fact-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
+			if block.part.State != EvidenceKnown {
+				q.add(r, timelineGapAs[NodeRef, NodeRef](block.part, "direction-candidate-part-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 				continue
 			}
-			if fact.Part.State == EvidenceKnown && fact.Part.Value != want.Part {
+			if block.ordinal == want.MeasureOrdinal && (NodeRef{r.s.documentID, block.measure.header.ID}) != want.Measure {
+				q.add(r, stateUnknown[NodeRef]("direction-measure-domain-conflict"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 				continue
 			}
-			if origin.Voice.State == EvidenceKnown && fact.Voice.State == EvidenceKnown {
-				if !r.step(int64(len(origin.Voice.Value)) + int64(len(fact.Voice.Value))) {
+			if block.complete.State != EvidenceKnown || !block.complete.Value {
+				q.add(r, timelineGapAs[bool, NodeRef](block.complete, "direction-candidate-domain-incomplete"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
+			}
+			for _, candidate := range block.content.children {
+				if !r.step(1) {
 					return stateUnknown[NodeRef]("timeline-interrupted"), empty
 				}
-				if origin.Voice.Value != fact.Voice.Value {
+				if !r.matches(candidate, timelineRoleNote) {
+					if candidate.header.Declaration.State != EvidenceKnown && r.potential(candidate, timelineRoleNote) {
+						q.add(r, timelineGapAs[DeclarationID, NodeRef](candidate.header.Declaration, "direction-candidate-binding-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
+					}
 					continue
 				}
-			}
-			if fact.Position.State != EvidenceKnown {
-				gap.add(r, timelineGapAs[musicalPosition, NodeRef](fact.Position, "direction-note-position-unavailable"), fact.Position, block.ordinal)
-				continue
-			}
-			at := fact.Position.Value
-			if at.Part != want.Part || at.MeasureOrdinal != block.ordinal || at.Measure != (NodeRef{r.s.documentID, block.measure.header.ID}) {
-				continue
-			}
-			cmp, err := stateComparePosition(r.ctx, r.s, at, want)
-			if err != nil {
-				r.err = err
-				return stateUnknown[NodeRef]("timeline-interrupted"), empty
-			}
-			if cmp < 0 {
-				continue
-			}
-			if origin.Voice.State == EvidenceKnown && fact.Voice.State != EvidenceKnown {
-				gap.add(r, timelineGapAs[string, NodeRef](fact.Voice, "direction-note-voice-unavailable"), fact.Position, block.ordinal)
-				continue
-			}
-			if best.State == EvidenceKnown {
-				if at.MeasureOrdinal == bestFact.Position.Value.MeasureOrdinal && at.Measure != bestFact.Position.Value.Measure {
-					gap.add(r, stateUnknown[NodeRef]("direction-measure-domain-conflict"), fact.Position, block.ordinal)
+				fact, found := service.Facts[candidate.header.ID]
+				if !found {
+					q.add(r, stateUnknown[NodeRef]("direction-note-fact-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 					continue
 				}
-				cmp, err = stateComparePosition(r.ctx, r.s, at, bestFact.Position.Value)
-				if err != nil {
-					r.err = err
-					return stateUnknown[NodeRef]("timeline-interrupted"), empty
-				}
-				if cmp > 0 {
+				if fact.Part.State == EvidenceKnown && fact.Part.Value != want.Part {
 					continue
 				}
-				if cmp == 0 {
-					tied = true
+				if origin.Voice.State == EvidenceKnown && fact.Voice.State == EvidenceKnown {
+					if !r.step(int64(len(origin.Voice.Value)) + int64(len(fact.Voice.Value))) {
+						return stateUnknown[NodeRef]("timeline-interrupted"), empty
+					}
+					if origin.Voice.Value != fact.Voice.Value {
+						continue
+					}
+				}
+				if fact.Position.State != EvidenceKnown {
+					q.add(r, timelineGapAs[musicalPosition, NodeRef](fact.Position, "direction-note-position-unavailable"), fact.Position, block.ordinal)
 					continue
 				}
-			}
-			best = Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, candidate.header.ID}}
-			bestFact, tied = fact, false
-		}
-	}
-	if gap.Value.State != "" {
-		if best.State != EvidenceKnown || gap.Ordinal < bestFact.Position.Value.MeasureOrdinal || gap.Ordinal == bestFact.Position.Value.MeasureOrdinal && gap.Position.State != EvidenceKnown {
-			return gap.Value, empty
-		}
-		if gap.Ordinal == bestFact.Position.Value.MeasureOrdinal {
-			cmp, err := r.s.rationalCmp(r.ctx, gap.Position.Value.Offset, bestFact.Position.Value.Offset)
-			if err != nil {
-				r.err = err
-				return stateUnknown[NodeRef]("timeline-interrupted"), empty
-			}
-			if cmp <= 0 {
-				return gap.Value, empty
+				at := fact.Position.Value
+				if at.Part != want.Part || at.MeasureOrdinal != block.ordinal || at.Measure != (NodeRef{r.s.documentID, block.measure.header.ID}) {
+					continue
+				}
+
+				if origin.Voice.State == EvidenceKnown && fact.Voice.State != EvidenceKnown {
+					q.add(r, timelineGapAs[string, NodeRef](fact.Voice, "direction-note-voice-unavailable"), fact.Position, block.ordinal)
+					continue
+				}
+				q.candidate(r, Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, candidate.header.ID}}, fact)
 			}
 		}
 	}
-	if tied {
-		return stateUnknown[NodeRef]("direction-simultaneous-notes-unresolved"), empty
+	if q.gap.State != EvidenceKnown {
+		return q.gap, empty
 	}
-	return best, bestFact
+	return q.best, q.fact
+
 }
 
 // Run once after every measure has published its exact positions. This enables

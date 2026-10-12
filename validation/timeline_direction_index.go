@@ -10,6 +10,7 @@ import (
 type directionNotePart struct {
 	Safe, UnknownVoice bool
 	Notes              []NodeID
+	Floating           []NodeID
 	Voices             map[string][]NodeID
 	Measures           map[uint64]NodeRef
 }
@@ -105,6 +106,14 @@ func (service *timelineService) buildDirectionNoteIndex(r *stateReader, blocks [
 			if err := charge(32); err != nil {
 				return fail(err)
 			}
+			member, err := service.State.frameMember(r.ctx, r.s, at)
+			if err != nil {
+				return fail(err)
+			}
+			if !member {
+				item.Floating = append(item.Floating, candidate.header.ID)
+				continue
+			}
 			item.Notes = append(item.Notes, candidate.header.ID)
 			if fact.Voice.State != EvidenceKnown {
 				item.UnknownVoice = true
@@ -195,6 +204,13 @@ func (index directionNoteIndex) anchor(ctx context.Context, s *Session, service 
 	if complete.State != EvidenceKnown || !complete.Value {
 		return Evidence[NodeRef]{}, empty, false, nil
 	}
+	member, err := service.State.frameMember(ctx, s, at)
+	if err != nil {
+		return Evidence[NodeRef]{}, empty, false, err
+	}
+	if !member {
+		return Evidence[NodeRef]{}, empty, false, nil
+	}
 	ids := item.Notes
 	if origin.Voice.State == EvidenceKnown {
 		if item.UnknownVoice {
@@ -219,6 +235,40 @@ func (index directionNoteIndex) anchor(ctx context.Context, s *Session, service 
 		} else {
 			hi = mid
 		}
+	}
+	// The sorted contained prefix is still useful in a part with floating
+	// candidates. Only a possibly competing displaced note requires the causal
+	// fallback; distant and independently excluded exceptions preserve this path.
+	for _, id := range item.Floating {
+		if err := s.step(ctx, 1); err != nil {
+			return Evidence[NodeRef]{}, empty, false, err
+		}
+		fact := service.Facts[id]
+		if origin.Voice.State == EvidenceKnown && fact.Voice.State == EvidenceKnown {
+			if err := s.step(ctx, int64(len(origin.Voice.Value))+int64(len(fact.Voice.Value))); err != nil {
+				return Evidence[NodeRef]{}, empty, false, err
+			}
+			if origin.Voice.Value != fact.Voice.Value {
+				continue
+			}
+		}
+		order, err := service.State.positionOrder(ctx, s, fact.Position.Value, at)
+		if err != nil {
+			return Evidence[NodeRef]{}, empty, false, err
+		}
+		if order == stateBefore {
+			continue
+		}
+		if lo < len(ids) {
+			order, err = service.State.positionOrder(ctx, s, fact.Position.Value, service.Facts[ids[lo]].Position.Value)
+			if err != nil {
+				return Evidence[NodeRef]{}, empty, false, err
+			}
+			if order == stateAfter {
+				continue
+			}
+		}
+		return Evidence[NodeRef]{}, empty, false, nil
 	}
 	if lo == len(ids) {
 		return Evidence[NodeRef]{State: EvidenceAbsent}, empty, true, nil

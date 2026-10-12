@@ -34,8 +34,9 @@ type graceStreamKey struct {
 	absent bool
 }
 type graceStream struct {
-	key   graceStreamKey
-	notes []NodeID
+	key      graceStreamKey
+	notes    []NodeID
+	floating bool
 }
 type graceScopedGap struct {
 	Value             Evidence[NodeRef]
@@ -88,7 +89,7 @@ func (s *Session) gracePositionOrder(ctx context.Context, a, b musicalPosition) 
 // A scoped gap can affect a donor only if it can fall in that donor-to-grace
 // score interval. Complete hierarchy identity bounds even an unplaced note to
 // its measure. Unknown ownership/coverage remains conservatively part-wide.
-func graceGapRelevant(r *stateReader, gap graceScopedGap, key graceStreamKey, lo, hi Evidence[musicalPosition]) (bool, error) {
+func graceGapRelevant(r *stateReader, state *timelineState, gap graceScopedGap, key graceStreamKey, lo, hi Evidence[musicalPosition]) (bool, error) {
 	if !r.step(1) {
 		return false, r.err
 	}
@@ -124,28 +125,40 @@ func graceGapRelevant(r *stateReader, gap graceScopedGap, key graceStreamKey, lo
 			if at.MeasureOrdinal == edge.MeasureOrdinal && at.Measure != edge.Measure {
 				return true, nil
 			}
-			cmp, err := r.s.gracePositionOrder(r.ctx, at, edge)
+			order, err := state.positionOrder(r.ctx, r.s, at, edge)
 			if err != nil {
 				return false, err
 			}
-			if (bound.lower && cmp < 0) || (!bound.lower && cmp > 0) {
+			if (bound.lower && order == stateBefore) || (!bound.lower && order == stateAfter) {
 				return false, nil
 			}
 		}
 		return true, nil
 	}
 	if lo.State == EvidenceKnown && gap.Through < lo.Value.MeasureOrdinal {
-		return false, nil
+		member, err := state.frameMember(r.ctx, r.s, lo.Value)
+		if err != nil {
+			return false, err
+		}
+		if member {
+			return false, nil
+		}
 	}
 	if hi.State == EvidenceKnown && gap.From > hi.Value.MeasureOrdinal {
-		return false, nil
+		member, err := state.frameMember(r.ctx, r.s, hi.Value)
+		if err != nil {
+			return false, err
+		}
+		if member {
+			return false, nil
+		}
 	}
 	return true, nil
 }
-func graceRelationGap(r *stateReader, part *gracePartDomain, key graceStreamKey, global Evidence[NodeRef], lo, hi Evidence[musicalPosition]) (Evidence[NodeRef], error) {
+func graceRelationGap(r *stateReader, state *timelineState, part *gracePartDomain, key graceStreamKey, global Evidence[NodeRef], lo, hi Evidence[musicalPosition]) (Evidence[NodeRef], error) {
 	out := global
 	for _, gap := range part.gaps {
-		relevant, err := graceGapRelevant(r, gap, key, lo, hi)
+		relevant, err := graceGapRelevant(r, state, gap, key, lo, hi)
 		if err != nil {
 			return out, err
 		}
@@ -330,6 +343,13 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				indices[key] = i
 				streams = append(streams, graceStream{key: key})
 			}
+			member, err := service.State.frameMember(ctx, s, at.Value)
+			if err != nil {
+				return err
+			}
+			if !member {
+				streams[i].floating = true
+			}
 			sequence[id] = len(sequence)
 			streams[i].notes = append(streams[i].notes, id)
 		}
@@ -497,6 +517,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			cached := false
 			var cachedAt musicalPosition
 			var previousGap, followingGap Evidence[NodeRef]
+			chosenPrevious, chosenFollowing := previous, following
 			for ; at < end; at++ {
 				if !r.step(1) {
 					return r.err
@@ -506,26 +527,40 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				if !r.step(int64(len(position.Offset.text))) {
 					return r.err
 				}
-				same := cached && graceSameMeasure(position, cachedAt) && position.Offset.text == cachedAt.Offset.text
+				same := cached && graceSameMeasure(position, cachedAt) && position.Offset.text == cachedAt.Offset.text && position.UnprovedFrame == cachedAt.UnprovedFrame
 				if !same {
+					chosenPrevious, chosenFollowing = previous, following
+					previousProof, followingProof := stateKnown(NodeRef{}), stateKnown(NodeRef{})
+					if stream.floating {
+						chosenPrevious, previousProof, err = service.graceChronologicalDonor(r, stream, at, true)
+						if err != nil {
+							return err
+						}
+						chosenFollowing, followingProof, err = service.graceChronologicalDonor(r, stream, at, false)
+						if err != nil {
+							return err
+						}
+					}
 					lo, hi := Evidence[musicalPosition]{State: EvidenceAbsent}, Evidence[musicalPosition]{State: EvidenceAbsent}
-					if previous >= 0 {
-						lo = service.NoteOrigins[stream.notes[previous]].ScoreOnset
+					if chosenPrevious >= 0 {
+						lo = service.NoteOrigins[stream.notes[chosenPrevious]].ScoreOnset
 					}
-					if following >= 0 {
-						hi = service.NoteOrigins[stream.notes[following]].ScoreOnset
+					if chosenFollowing >= 0 {
+						hi = service.NoteOrigins[stream.notes[chosenFollowing]].ScoreOnset
 					}
-					previousGap, err = graceRelationGap(r, part, stream.key, global, lo, n.ScoreOnset)
+					previousGap, err = graceRelationGap(r, &service.State, part, stream.key, global, lo, n.ScoreOnset)
 					if err != nil {
 						return err
 					}
-					followingGap, err = graceRelationGap(r, part, stream.key, global, n.ScoreOnset, hi)
+					followingGap, err = graceRelationGap(r, &service.State, part, stream.key, global, n.ScoreOnset, hi)
 					if err != nil {
 						return err
 					}
+					previousGap = graceStronger(previousGap, previousProof)
+					followingGap = graceStronger(followingGap, followingProof)
 					cached, cachedAt = true, position
 				}
-				if err := publish(n, stream, previous, following, previousGap, followingGap); err != nil {
+				if err := publish(n, stream, chosenPrevious, chosenFollowing, previousGap, followingGap); err != nil {
 					return err
 				}
 			}
@@ -549,6 +584,77 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	service.GraceNeighbors = pending
 	return nil
 }
+
+// The nominal stream remains a bounded index. A displaced member switches
+// only that stream's donor proof to exact partial chronology. Candidate and
+// competitor passes allocate no per-query scratch and retain separate sides.
+func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *graceStream, target int, previous bool) (int, Evidence[NodeRef], error) {
+	n := service.NoteOrigins[stream.notes[target]]
+	best := -1
+	gap := stateKnown(NodeRef{})
+	for pass := 0; pass < 2; pass++ {
+		for i, id := range stream.notes {
+			if !r.step(1) {
+				return -1, gap, r.err
+			}
+			candidate := service.NoteOrigins[id]
+			if candidate.Grace.State != EvidenceKnown || candidate.Grace.Value || candidate.Chord.State != EvidenceKnown || candidate.Chord.Value {
+				continue
+			}
+			order, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, n.ScoreOnset.Value)
+			if err != nil {
+				return -1, gap, err
+			}
+			// Same-frame equality retains the encoded ordering of grace runs. No
+			// such source-order tie break is permitted for different measure frames.
+			if order == stateEqual && graceSameMeasure(candidate.ScoreOnset.Value, n.ScoreOnset.Value) {
+				if i < target {
+					order = stateBefore
+				} else {
+					order = stateAfter
+				}
+			}
+			eligible, impossible := stateAfter, stateBefore
+			if previous {
+				eligible, impossible = stateBefore, stateAfter
+			}
+			if order == impossible {
+				continue
+			}
+			if pass == 0 {
+				if order != eligible {
+					continue
+				}
+				if best >= 0 {
+					relation, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, service.NoteOrigins[stream.notes[best]].ScoreOnset.Value)
+					if err != nil {
+						return -1, gap, err
+					}
+					if relation != impossible {
+						continue
+					}
+				}
+				best = i
+				continue
+			}
+			if i == best {
+				continue
+			}
+			if best >= 0 {
+				relation, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, service.NoteOrigins[stream.notes[best]].ScoreOnset.Value)
+				if err != nil {
+					return -1, gap, err
+				}
+				if relation == eligible {
+					continue
+				}
+			}
+			gap = stateUnknown[NodeRef]("grace-cross-frame-chronology-unresolved")
+		}
+	}
+	return best, gap, nil
+}
+
 func (service *timelineService) graceDonor(ctx context.Context, s *Session, stream *graceStream, n noteTimingOrigin, index int, previous bool, raw Evidence[Decimal], gap Evidence[NodeRef]) (graceDonorTiming, error) {
 	out := graceDonorTiming{Note: gap, Raw: raw, DonorDuration: stateUnknown[Rational]("grace-donor-duration-unavailable"), Fraction: Evidence[Rational]{State: EvidenceAbsent}, StolenDuration: Evidence[Rational]{State: EvidenceAbsent}}
 	if err := s.step(ctx, 1); err != nil {

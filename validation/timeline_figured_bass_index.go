@@ -10,6 +10,7 @@ import (
 type figuredBassNotePart struct {
 	Safe     bool
 	Notes    []NodeID
+	Floating []NodeID
 	Measures map[uint64]NodeRef
 }
 type figuredBassNoteIndex map[NodeRef]*figuredBassNotePart
@@ -102,6 +103,14 @@ func (service *timelineService) buildFiguredBassNoteIndex(r *stateReader, domain
 			if err := charge(32); err != nil {
 				return fail(err)
 			}
+			member, err := service.State.frameMember(r.ctx, r.s, at)
+			if err != nil {
+				return fail(err)
+			}
+			if !member {
+				item.Floating = append(item.Floating, candidate.header.ID)
+				continue
+			}
 			item.Notes = append(item.Notes, candidate.header.ID)
 		}
 	}
@@ -164,6 +173,13 @@ func (index figuredBassNoteIndex) anchor(ctx context.Context, s *Session, servic
 	if item == nil || !item.Safe || item.Measures[at.MeasureOrdinal] != at.Measure {
 		return Evidence[NodeRef]{}, empty, false, nil
 	}
+	member, err := service.State.frameMember(ctx, s, at)
+	if err != nil {
+		return Evidence[NodeRef]{}, empty, false, err
+	}
+	if !member {
+		return Evidence[NodeRef]{}, empty, false, nil
+	}
 	ids := item.Notes
 	lo, hi := 0, len(ids)
 	for lo < hi {
@@ -177,6 +193,32 @@ func (index figuredBassNoteIndex) anchor(ctx context.Context, s *Session, servic
 		} else {
 			hi = mid
 		}
+	}
+	// The sorted contained prefix is still useful in a part with floating
+	// candidates. Only a possibly competing displaced note requires the causal
+	// fallback; distant and independently excluded exceptions preserve this path.
+	for _, id := range item.Floating {
+		if err := s.step(ctx, 1); err != nil {
+			return Evidence[NodeRef]{}, empty, false, err
+		}
+		fact := service.Facts[id]
+		order, err := service.State.positionOrder(ctx, s, fact.Position.Value, at)
+		if err != nil {
+			return Evidence[NodeRef]{}, empty, false, err
+		}
+		if order == stateBefore {
+			continue
+		}
+		if lo < len(ids) {
+			order, err = service.State.positionOrder(ctx, s, fact.Position.Value, service.Facts[ids[lo]].Position.Value)
+			if err != nil {
+				return Evidence[NodeRef]{}, empty, false, err
+			}
+			if order == stateAfter {
+				continue
+			}
+		}
+		return Evidence[NodeRef]{}, empty, false, nil
 	}
 	if lo == len(ids) {
 		return stateUnknown[NodeRef]("figured-bass-following-note-unresolved"), empty, true, nil
