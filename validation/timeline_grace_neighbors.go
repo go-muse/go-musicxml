@@ -39,6 +39,7 @@ type graceStream struct {
 	floating bool
 }
 type graceScopedGap struct {
+	Note              NodeID
 	Value             Evidence[NodeRef]
 	Position          Evidence[musicalPosition]
 	Voice             Evidence[string]
@@ -89,7 +90,7 @@ func (s *Session) gracePositionOrder(ctx context.Context, a, b musicalPosition) 
 // A scoped gap can affect a donor only if it can fall in that donor-to-grace
 // score interval. Complete hierarchy identity bounds even an unplaced note to
 // its measure. Unknown ownership/coverage remains conservatively part-wide.
-func graceGapRelevant(r *stateReader, state *timelineState, gap graceScopedGap, key graceStreamKey, lo, hi Evidence[musicalPosition]) (bool, error) {
+func graceGapRelevant(r *stateReader, service *timelineService, gap graceScopedGap, key graceStreamKey, lo, hi Evidence[musicalPosition]) (bool, error) {
 	if !r.step(1) {
 		return false, r.err
 	}
@@ -125,7 +126,7 @@ func graceGapRelevant(r *stateReader, state *timelineState, gap graceScopedGap, 
 			if at.MeasureOrdinal == edge.MeasureOrdinal && at.Measure != edge.Measure {
 				return true, nil
 			}
-			order, err := state.positionOrder(r.ctx, r.s, at, edge)
+			order, err := service.State.positionOrder(r.ctx, r.s, at, edge)
 			if err != nil {
 				return false, err
 			}
@@ -135,8 +136,21 @@ func graceGapRelevant(r *stateReader, state *timelineState, gap graceScopedGap, 
 		}
 		return true, nil
 	}
+	if gap.Note != 0 {
+		if !r.step(1) {
+			return false, r.err
+		}
+		n, found := service.NoteOrigins[gap.Note]
+		placement := n.Placement
+		if !found {
+			placement = service.Facts[gap.Note].Placement
+		}
+		if placement.Displaced {
+			return service.State.associationPlacementRelevant(r, placement, lo, hi)
+		}
+	}
 	if lo.State == EvidenceKnown && gap.Through < lo.Value.MeasureOrdinal {
-		member, err := state.frameMember(r.ctx, r.s, lo.Value)
+		member, err := service.State.frameMember(r.ctx, r.s, lo.Value)
 		if err != nil {
 			return false, err
 		}
@@ -145,7 +159,7 @@ func graceGapRelevant(r *stateReader, state *timelineState, gap graceScopedGap, 
 		}
 	}
 	if hi.State == EvidenceKnown && gap.From > hi.Value.MeasureOrdinal {
-		member, err := state.frameMember(r.ctx, r.s, hi.Value)
+		member, err := service.State.frameMember(r.ctx, r.s, hi.Value)
 		if err != nil {
 			return false, err
 		}
@@ -155,10 +169,10 @@ func graceGapRelevant(r *stateReader, state *timelineState, gap graceScopedGap, 
 	}
 	return true, nil
 }
-func graceRelationGap(r *stateReader, state *timelineState, part *gracePartDomain, key graceStreamKey, global Evidence[NodeRef], lo, hi Evidence[musicalPosition]) (Evidence[NodeRef], error) {
+func graceRelationGap(r *stateReader, service *timelineService, part *gracePartDomain, key graceStreamKey, global Evidence[NodeRef], lo, hi Evidence[musicalPosition]) (Evidence[NodeRef], error) {
 	out := global
 	for _, gap := range part.gaps {
-		relevant, err := graceGapRelevant(r, state, gap, key, lo, hi)
+		relevant, err := graceGapRelevant(r, service, gap, key, lo, hi)
 		if err != nil {
 			return out, err
 		}
@@ -282,7 +296,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			id := event.header.ID
 			n, found := service.NoteOrigins[id]
 			if !found {
-				gap := graceScopedGap{Value: stateUnknown[NodeRef]("grace-note-origin-unavailable"), From: block.ordinal, Through: block.ordinal}
+				gap := graceScopedGap{Note: id, Value: stateUnknown[NodeRef]("grace-note-origin-unavailable"), From: block.ordinal, Through: block.ordinal}
 				if fact, ok := service.Facts[id]; ok {
 					gap.Position, gap.Voice = fact.Position, fact.Voice
 				}
@@ -324,7 +338,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				cause = graceStronger(cause, timelineGapAs[bool, NodeRef](n.Chord, "grace-note-kind-unavailable"))
 			}
 			if cause.State != EvidenceKnown {
-				part.gaps = append(part.gaps, graceScopedGap{Value: cause, Position: at, Voice: n.Voice, From: block.ordinal, Through: block.ordinal})
+				part.gaps = append(part.gaps, graceScopedGap{Note: id, Value: cause, Position: at, Voice: n.Voice, From: block.ordinal, Through: block.ordinal})
 			}
 			if !positioned || !voiceKnown || n.Grace.State != EvidenceKnown {
 				if isGrace {
@@ -375,7 +389,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			}
 			n := service.NoteOrigins[member.id]
 			if (n.Voice.State == EvidenceAbsent && part.voicedGrace) || (n.Voice.State == EvidenceKnown && part.unvoicedGrace) {
-				gap := graceScopedGap{Value: stateUnknown[NodeRef]("grace-mixed-voice-identity-unresolved"), Position: member.position, Voice: n.Voice, Mixing: true, From: member.ordinal, Through: member.ordinal}
+				gap := graceScopedGap{Note: member.id, Value: stateUnknown[NodeRef]("grace-mixed-voice-identity-unresolved"), Position: member.position, Voice: n.Voice, Mixing: true, From: member.ordinal, Through: member.ordinal}
 				part.gaps = append(part.gaps, gap)
 			}
 		}
@@ -548,11 +562,11 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 					if chosenFollowing >= 0 {
 						hi = service.NoteOrigins[stream.notes[chosenFollowing]].ScoreOnset
 					}
-					previousGap, err = graceRelationGap(r, &service.State, part, stream.key, global, lo, n.ScoreOnset)
+					previousGap, err = graceRelationGap(r, service, part, stream.key, global, lo, n.ScoreOnset)
 					if err != nil {
 						return err
 					}
-					followingGap, err = graceRelationGap(r, &service.State, part, stream.key, global, n.ScoreOnset, hi)
+					followingGap, err = graceRelationGap(r, service, part, stream.key, global, n.ScoreOnset, hi)
 					if err != nil {
 						return err
 					}

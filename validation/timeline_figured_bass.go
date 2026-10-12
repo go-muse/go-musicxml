@@ -137,7 +137,7 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, domains []figu
 					if fact.Part.State == EvidenceKnown && fact.Part.Value != origin.Position.Value.Part {
 						continue
 					}
-					addGap(timelineGapAs[musicalPosition, NodeRef](fact.Position, "figured-bass-note-position-unavailable"), lower)
+					q.addPlaced(r, timelineGapAs[musicalPosition, NodeRef](fact.Position, "figured-bass-note-position-unavailable"), fact.Position, block.ordinal, fact.Placement)
 					continue
 				}
 				at, want := fact.Position.Value, origin.Position.Value

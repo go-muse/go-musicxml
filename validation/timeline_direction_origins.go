@@ -36,6 +36,9 @@ type timelineFollowingSearch struct {
 }
 
 func (q *timelineFollowingSearch) add(r *stateReader, value Evidence[NodeRef], position Evidence[musicalPosition], ordinal uint64) {
+	q.addPlaced(r, value, position, ordinal, stateGapPlacement{})
+}
+func (q *timelineFollowingSearch) addPlaced(r *stateReader, value Evidence[NodeRef], position Evidence[musicalPosition], ordinal uint64, placement stateGapPlacement) {
 	if q.pass == 0 || !r.step(1) {
 		return
 	}
@@ -63,6 +66,19 @@ func (q *timelineFollowingSearch) add(r *stateReader, value Evidence[NodeRef], p
 				return
 			}
 		}
+	} else if placement.Displaced {
+		best := Evidence[musicalPosition]{State: EvidenceAbsent}
+		if q.best.State == EvidenceKnown {
+			best = q.fact.Position
+		}
+		relevant, err := q.state.associationPlacementRelevant(r, placement, Evidence[musicalPosition]{State: EvidenceKnown, Value: q.want}, best)
+		if err != nil {
+			r.err = err
+			return
+		}
+		if !relevant {
+			return
+		}
 	} else {
 		// Unplaced evidence retains its canonical measure scope; a known displaced
 		// position above must instead pass the partial-chronology test.
@@ -87,6 +103,35 @@ func (q *timelineFollowingSearch) add(r *stateReader, value Evidence[NodeRef], p
 	}
 	q.gap = graceStronger(q.gap, value)
 }
+
+// Unavailable coordinates reached through an unproved displacement are not
+// confined by their source measure. Independent endpoint bounds can still
+// exclude them from this one closed candidate interval.
+func (state *timelineState) associationPlacementRelevant(r *stateReader, placement stateGapPlacement, lo, hi Evidence[musicalPosition]) (bool, error) {
+	for _, bound := range [2]struct {
+		endpoint *musicalPosition
+		edge     Evidence[musicalPosition]
+		excluded statePositionOrder
+	}{
+		{placement.Upper, lo, stateBefore}, {placement.Lower, hi, stateAfter},
+	} {
+		if !r.step(1) {
+			return false, r.err
+		}
+		if bound.endpoint == nil || bound.edge.State != EvidenceKnown {
+			continue
+		}
+		order, err := state.positionOrder(r.ctx, r.s, *bound.endpoint, bound.edge.Value)
+		if err != nil {
+			return false, err
+		}
+		if order == bound.excluded {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 func (q *timelineFollowingSearch) candidate(r *stateReader, value Evidence[NodeRef], fact timelineEventFact) {
 	if !r.step(1) {
 		return
@@ -204,7 +249,7 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 					}
 				}
 				if fact.Position.State != EvidenceKnown {
-					q.add(r, timelineGapAs[musicalPosition, NodeRef](fact.Position, "direction-note-position-unavailable"), fact.Position, block.ordinal)
+					q.addPlaced(r, timelineGapAs[musicalPosition, NodeRef](fact.Position, "direction-note-position-unavailable"), fact.Position, block.ordinal, fact.Placement)
 					continue
 				}
 				at := fact.Position.Value
