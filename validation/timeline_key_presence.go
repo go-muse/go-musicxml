@@ -40,9 +40,19 @@ func (h *timelineState) certifyKeyPresenceGap(ctx context.Context, s *Session, i
 }
 
 func (h *timelineState) queryKeyPresence(ctx context.Context, s *Session, pos musicalPosition, staff Evidence[Integer]) (stateResult[bool], error) {
+	if staff.State == EvidenceAbsent || staff.State == EvidenceUnknown && staff.Reason == "timeline-staff-unresolved" && staff.Cause == nil {
+		return h.queryStafflessKeyPresence(ctx, s, pos)
+	}
+	return h.queryKeyPresenceScope(ctx, s, pos, staff, false)
+}
+
+func (h *timelineState) queryKeyPresenceScope(ctx context.Context, s *Session, pos musicalPosition, staff Evidence[Integer], allStavesOnly bool) (stateResult[bool], error) {
 	project := func(v keyState) Evidence[bool] { return v.encodingEvidence() }
-	original, err := queryState(ctx, s, h, &h.Keys, pos, staff, project)
-	if err != nil || len(h.keyPresenceGaps) == 0 || staff.State != EvidenceKnown || original.Value.State == EvidenceKnown && original.Value.Value {
+	query := func(history *stateHistory[keyState]) (stateResult[bool], error) {
+		return queryStateAtScope(ctx, s, h, history, pos, staff, project, true, true, allStavesOnly, nil)
+	}
+	original, err := query(&h.Keys)
+	if err != nil || len(h.keyPresenceGaps) == 0 || !allStavesOnly && staff.State != EvidenceKnown || original.Value.State == EvidenceKnown && original.Value.Value {
 		return original, err
 	}
 	// Remove only certified value-preserving gaps for an independent baseline
@@ -78,7 +88,7 @@ func (h *timelineState) queryKeyPresence(ctx context.Context, s *Session, pos mu
 			view.Gaps = append(view.Gaps, gap)
 		}
 	}
-	out, err := queryState(ctx, s, h, &view, pos, staff, project)
+	out, err := query(&view)
 	if err != nil {
 		return stateResult[bool]{}, err
 	}
@@ -185,4 +195,115 @@ func (h *timelineState) keyPresenceGapRelevant(ctx context.Context, s *Session, 
 		}
 	}
 	return true, nil
+}
+
+// The unnamed partition sees AllStaves statements only. Each observed staff
+// partition adds its own statements and gaps. Keeping the unnamed partition
+// avoids assuming that observed numbers exhaust the possible staff identities,
+// even when a finite staves count is encoded. Work is bounded by actual records,
+// never by that count. Each partition keeps the ordinary chronology and repair
+// semantics, including certified valid keys whose placement remains unknown.
+const timelineKeyPresenceScopeScratchBytes int64 = 512
+
+func (h *timelineState) queryStafflessKeyPresence(ctx context.Context, s *Session, pos musicalPosition) (stateResult[bool], error) {
+	count, err := rationalCheckedAdd(BudgetBufferedBytes, int64(len(h.Keys.Publications)), int64(len(h.Keys.Gaps)))
+	if err != nil {
+		return stateResult[bool]{}, err
+	}
+	bytes, err := rationalCheckedMul(BudgetBufferedBytes, count, timelineKeyPresenceScopeScratchBytes)
+	if err != nil {
+		return stateResult[bool]{}, err
+	}
+	bytes, err = rationalCheckedAdd(BudgetBufferedBytes, bytes, timelineKeyPresenceScratchFixedBytes)
+	if err != nil {
+		return stateResult[bool]{}, err
+	}
+	if _, err = AllocationSize(bytes); err != nil {
+		return stateResult[bool]{}, err
+	}
+	capacity, err := AllocationSize(count)
+	if err != nil {
+		return stateResult[bool]{}, err
+	}
+	if err = s.step(ctx, count+1); err != nil {
+		return stateResult[bool]{}, err
+	}
+	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
+		return stateResult[bool]{}, err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, bytes) }()
+	seen := make(map[string]struct{})
+	staves := make([]Integer, 0, capacity)
+	addScope := func(part NodeRef, scope stateScope) error {
+		same, err := stateSameRef(ctx, s, part, pos.Part)
+		if err != nil || !same || scope.AllStaves {
+			return err
+		}
+		if err = s.step(ctx, scope.Staff.ByteSize()+1); err != nil {
+			return err
+		}
+		key := scope.Staff.String()
+		if _, exists := seen[key]; !exists {
+			seen[key] = struct{}{}
+			staves = append(staves, scope.Staff)
+		}
+		return nil
+	}
+	for _, publication := range h.Keys.Publications {
+		if err = addScope(publication.Position.Part, publication.Scope); err != nil {
+			return stateResult[bool]{}, err
+		}
+	}
+	for _, gap := range h.Keys.Gaps {
+		if err = addScope(gap.Part, gap.Scope); err != nil {
+			return stateResult[bool]{}, err
+		}
+	}
+	out, err := h.queryKeyPresenceScope(ctx, s, pos, Evidence[Integer]{State: EvidenceAbsent}, true)
+	if err != nil {
+		return stateResult[bool]{}, err
+	}
+	first := out.Value
+	conflict := false
+	allBefore := out.Inherited && !out.InheritanceUnproved
+	allEqual := !out.Inherited && !out.InheritanceUnproved
+	for _, staff := range staves {
+		candidate, err := h.queryKeyPresenceScope(ctx, s, pos, Evidence[Integer]{State: EvidenceKnown, Value: staff}, false)
+		if err != nil {
+			return stateResult[bool]{}, err
+		}
+		if err = s.step(ctx, 1); err != nil {
+			return stateResult[bool]{}, err
+		}
+		conflict = conflict || first.State != candidate.Value.State || first.Value != candidate.Value.Value
+		if stateAvailabilityRank(candidate.Value.State) > stateAvailabilityRank(out.Value.State) {
+			out.Value = candidate.Value
+		}
+		allBefore = allBefore && candidate.Inherited && !candidate.InheritanceUnproved
+		allEqual = allEqual && !candidate.Inherited && !candidate.InheritanceUnproved
+		for _, witness := range candidate.Provenance {
+			duplicate := false
+			for _, old := range out.Provenance {
+				if err = s.step(ctx, 1+int64(len(old.Node.DocumentID))+int64(len(witness.Node.DocumentID))); err != nil {
+					return stateResult[bool]{}, err
+				}
+				if old == witness {
+					duplicate = true
+					break
+				}
+			}
+			if !duplicate {
+				if err = stateRetainCopy(ctx, s, witness); err != nil {
+					return stateResult[bool]{}, err
+				}
+				out.Provenance = append(out.Provenance, stateClone(witness))
+			}
+		}
+	}
+	if conflict && (out.Value.State == EvidenceKnown || out.Value.State == EvidenceAbsent) {
+		out.Value = stateUnknown[bool]("timeline-staff-unresolved")
+	}
+	out.Inherited = allBefore
+	out.InheritanceUnproved = !allBefore && !allEqual
+	return out, nil
 }

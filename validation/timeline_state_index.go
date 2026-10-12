@@ -125,10 +125,10 @@ func selectState[T any](ctx context.Context, s *Session, h *stateHistory[T], pos
 	if e != nil {
 		return out, e
 	}
-	if e = s.step(ctx, 2*int64(len(pos.Part.DocumentID))+staff.ByteSize()+1); e != nil {
+	keys, e := stateQueryScopes(ctx, s, pos, staff)
+	if e != nil {
 		return out, e
 	}
-	keys := [2]stateIndexScope{{Part: pos.Part, AllStaves: true}, {Part: pos.Part, Staff: staff.String()}}
 	ends := [2]int{}
 	for k, key := range keys {
 		bucket := index.Scopes[key].Publications

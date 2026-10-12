@@ -17,7 +17,13 @@ func stateQueryScopes(ctx context.Context, s *Session, pos musicalPosition, staf
 	if err := s.step(ctx, 2*int64(len(pos.Part.DocumentID))+staff.ByteSize()+1); err != nil {
 		return [2]stateIndexScope{}, err
 	}
-	return [2]stateIndexScope{{Part: pos.Part, AllStaves: true}, {Part: pos.Part, Staff: staff.String()}}, nil
+	keys := [2]stateIndexScope{{Part: pos.Part, AllStaves: true}}
+	// An uninitialized staff is the explicit all-staves-only partition, not an
+	// invented numbered staff. No publication can have the empty second key.
+	if staff.Valid() {
+		keys[1] = stateIndexScope{Part: pos.Part, Staff: staff.String()}
+	}
+	return keys, nil
 }
 func statePartialQuery[T any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Integer) (bool, error) {
 	member, err := h.frameMember(ctx, s, pos)

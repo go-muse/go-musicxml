@@ -557,6 +557,16 @@ func queryStateAtMode[T, V any](ctx context.Context, s *Session, h *timelineStat
 	return queryStateAtFull(ctx, s, h, history, pos, staff, project, inclusive, ownedResult, nil)
 }
 func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive, ownedResult bool, initial func() (stateResult[V], error), extra ...[]stateGap) (stateResult[V], error) {
+	return queryStateAtScope(ctx, s, h, history, pos, staff, project, inclusive, ownedResult, false, initial, extra...)
+}
+
+// allStavesOnly is an explicit baseline partition for the key-presence
+// consensus, never a resolved staff identity. Ordinary state queries retain the
+// unresolved-staff guard, including queries for a concrete key value.
+func queryStateAtScope[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive, ownedResult, allStavesOnly bool, initial func() (stateResult[V], error), extra ...[]stateGap) (stateResult[V], error) {
+	if allStavesOnly && (staff.State != EvidenceAbsent || staff.Value.Valid()) {
+		return stateResult[V]{}, contract("timeline query", "all-staves baseline must not name a staff")
+	}
 	if !ownedResult && reflect.TypeFor[V]() != reflect.TypeFor[Decimal]() {
 		return stateResult[V]{}, contract("timeline query", "evidence-only mode requires immutable Decimal")
 	}
@@ -575,7 +585,7 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 	if closure.State != EvidenceKnown || !closure.Value {
 		return stateUnavailableResult[bool, V](ctx, s, closure)
 	}
-	if staff.State != EvidenceKnown || !staff.Value.Valid() {
+	if !allStavesOnly && (staff.State != EvidenceKnown || !staff.Value.Valid()) {
 		out.Value = stateUnknown[V]("timeline-staff-unresolved")
 		if staff.State != EvidenceAbsent && staff.State != EvidenceKnown {
 			return stateUnavailableResult[Integer, V](ctx, s, staff)
