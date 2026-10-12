@@ -202,3 +202,54 @@ func TestIndependentTimelinePartialIndexAndFrameMapShapes(t *testing.T) {
 	}
 	t.Logf("index minimum%d allowance%d; frame minimum%d allowance%d", indexMinimum, stateIndexPublicationBytes, frameMinimum, timelineFrameReserveBytes)
 }
+
+func TestIndependentTimelineUnrelatedFloatingGapKeepsIndexedPath(t *testing.T) {
+	for _, otherPart := range []bool{false, true} {
+		for _, extraGap := range []bool{false, true} {
+			s := rationalSession(t, Budgets{})
+			h := &timelineState{}
+			stateClose(t, s, h, 0)
+			for i := int64(0); i < 128; i++ {
+				if err := publishState(context.Background(), s, &h.Divisions, statePublication[Decimal]{Position: statePosition(t, 0, i, 1), Scope: stateScope{AllStaves: true}, Value: stateKnown(stateDecimal(t, 3, 1))}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			at := statePosition(t, 0, 128, 1)
+			if _, err := stateIndex(context.Background(), s, &h.Divisions); err != nil {
+				t.Fatal(err)
+			}
+			query := func(extra ...[]stateGap) (stateResult[Decimal], error) {
+				return queryStateAtFull(context.Background(), s, h, &h.Divisions, at, stateKnown(stateOne()), stateWhole[Decimal], true, false, nil, extra...)
+			}
+			work := rationalUsage(t, s, BudgetRuleSteps)
+			if _, err := query(); err != nil {
+				t.Fatal(err)
+			}
+			baseline := rationalUsage(t, s, BudgetRuleSteps) - work
+			point := statePosition(t, 0, -1, 1)
+			point.UnprovedFrame = true
+			gap := stateGap{Position: &point, Part: point.Part, FirstMeasure: 0, LastMeasure: 0, Scope: stateScope{Staff: stateInt(t, 2)}, Availability: stateUnknown[bool]("unrelated-floating-gap")}
+			if otherPart {
+				point.Part = NodeRef{"d", 2}
+				gap.Part = point.Part
+				gap.Scope = stateScope{AllStaves: true}
+			}
+			extras := [][]stateGap{}
+			if extraGap {
+				extras = append(extras, []stateGap{gap})
+			} else if err := addStateGap(context.Background(), s, &h.Divisions, gap); err != nil {
+				t.Fatal(err)
+			}
+			work = rationalUsage(t, s, BudgetRuleSteps)
+			got, err := query(extras...)
+			used := rationalUsage(t, s, BudgetRuleSteps) - work
+			if err != nil || got.Value.State != EvidenceKnown || got.Value.Value.String() != "3" {
+				t.Fatalf("unrelated part%t extra%t changed query: %+v %v", otherPart, extraGap, got, err)
+			}
+			if used > 3*baseline+4096 {
+				t.Errorf("unrelated part%t extra%t triggered exceptional scan: baseline%d new%d", otherPart, extraGap, baseline, used)
+			}
+			s.cleanup()
+		}
+	}
+}
