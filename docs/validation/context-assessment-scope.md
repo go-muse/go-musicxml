@@ -80,10 +80,29 @@ coverage denominator.
 
 ## Practical default limits
 
+The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
+and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
+profile under the default budgets. Both stop at the 20,000,000-step limit;
+raising work alone still reaches the default 64 MiB buffered-byte limit.
+Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
+complete the measured source/current-model cases. Source measurements remove
+only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
+are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
+source assessment contract.
+
+The corrected Mozart model run requires 40,509,894 steps and a measured
+90,509,904-byte buffer minimum; MozaChlo requires 46,226,065 steps and
+97,906,233 bytes. [Matched Round 1 resource acceptance](evidence/context-round1-resource-acceptance.md)
+records baseline/final results, exact finite configuration, source treatment,
+public outcomes, one-under controls and post-Finish cleanup. These two official
+files and synthetic fixtures do not establish replicated-score or universal
+throughput guarantees.
+
 A clean 100-note fixture completes under unchanged default budgets after the
-context indexing corrections. A 1000-note fixture still exceeds default work
-limits; raising work alone can then reach the 64 MiB retention limit. Explicit
+context indexing corrections. The measured 1000-note fixture now stops at the default 64 MiB buffered-byte
+limit before exhausting default work (source: 12,994,218 steps; model:
+13,699,811 steps). Raising work alone does not remove that retention limit. Explicit
 finite limits of `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20` allow
 that measured fixture to finish. This is bounded-profile evidence, not an
-unrestricted score-size guarantee. See [resource acceptance evidence](evidence/context-resource-acceptance.md)
+unrestricted score-size guarantee. See [current resource acceptance evidence](evidence/context-round1-resource-acceptance.md)
 for exact counts, budget outcomes and remaining output-size costs.

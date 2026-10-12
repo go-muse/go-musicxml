@@ -1,5 +1,10 @@
 # Context resource acceptance and practical limits
 
+**Historical pre-Round-1 evidence.** The current correction measurements and
+default-budget outcomes are in [Round 1 resource acceptance](context-round1-resource-acceptance.md).
+In particular, the corrected 1000-note fixture stops on buffered bytes under
+defaults; the earlier work-limit outcome and counts below remain historical.
+
 The contextual profiles use the existing finite shared budgets. They do not
 promise that arbitrary-size scores finish under the defaults. Resource exhaustion
 is incomplete assessment, not a MusicXML violation. B5-PERF-01 remains assigned to

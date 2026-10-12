@@ -102,9 +102,10 @@
       "tests": [
         "TestContextFigureNumberRetainsUnreviewedGrammarGate",
         "TestContextFigureNumberAbsentDoesNotCreateGrammarObligation",
-        "TestContextFigureNumberRequiresExactDeclaration"
+        "TestContextFigureNumberRequiresExactDeclaration",
+        "TestLocalRound1FigureNumberSufficientNumericSubset"
       ],
-      "implemented_subclauses": "Exact figure-number occurrence remains Unsupported after XSD scalar prerequisites; absent optional node creates no obligation.",
+      "implemented_subclauses": "After exact-declaration XSD prerequisites, nonempty ASCII digits satisfy a sufficient numeric subset under the mandatory rule. Other valid style-text remains Unsupported pending a reviewed general grammar; an absent optional node creates no obligation.",
       "remaining_boundaries": [
         "No reviewed general numeric grammar; no guessed decimal/Roman/fraction syntax."
       ],

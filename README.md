@@ -159,6 +159,19 @@ completed provider does not mean every optional fact is known. Selected
 contextual predicates retain unresolved numeric, repeat-content and gesture
 requirements explicitly. See the [context scope](docs/validation/context-assessment-scope.md).
 
+The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
+and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
+profile under the default budgets. Both stop at the 20,000,000-step limit;
+raising work alone still reaches the default 64 MiB buffered-byte limit.
+Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
+complete the measured source/current-model cases. Source measurements remove
+only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
+are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
+source assessment contract.
+See [matched resource evidence](docs/validation/evidence/context-round1-resource-acceptance.md)
+for exact minima and outcomes. Exhaustion is incomplete assessment, not a
+MusicXML violation or a readiness success.
+
 Always inspect `Report.Satisfied()`: a nil error alone is not acceptance.
 Ordinary violations live in the report; cancellation/resource interruptions
 return their cause and a partial report. Model locations are field/index paths

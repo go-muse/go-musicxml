@@ -532,6 +532,23 @@ finite budgets. The matched `BenchmarkContextProfiles` compares warmed timeline
 and context profiles with documented larger finite budgets; it does not close
 `B5-PERF-01` or promise default-budget throughput.
 
+The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
+and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
+profile under the default budgets. Both stop at the 20,000,000-step limit;
+raising work alone still reaches the default 64 MiB buffered-byte limit.
+Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
+complete the measured source/current-model cases. Source measurements remove
+only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
+are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
+source assessment contract.
+
+The corrected Mozart model run uses 40,509,894 shared steps, 12,874 facts and
+11,105 records; its measured minimum buffered limit is 90,509,904 bytes.
+The MozaChlo model run uses 46,226,065 steps, 14,161 facts and 12,337 records,
+with a 97,906,233-byte minimum. These are fixture-specific results, not a
+score-size guarantee. See [matched resource evidence](docs/validation/evidence/context-round1-resource-acceptance.md)
+for source minima, exact/one-under controls and cleanup.
+
 See [scope and limits](docs/validation/context-assessment-scope.md) for the
 source/model contract and deliberately retained normative boundaries.
 

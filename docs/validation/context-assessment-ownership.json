@@ -1,7 +1,7 @@
 {
   "format": "musicxml-context-ownership-v1",
   "baseline": "d605a63fe5785292af354b93928e56c1e01bc77f",
-  "status": "complete provenance reconciliation with record-specific bounded implementation evidence; independent final exact-head acceptance pending",
+  "status": "Bounded batch7 contributions and original inventories retained. Round1 production candidate independently accepted; exact final packaged-tree stages and remote-head CI remain separate publication gates.",
   "source_hashes": {
     "docs/validation/plan/context-dispositions.json": "f5402c473dad21fd747013d60d746e1fad7e6ad323959cd9a1773071cf151272",
     "docs/validation/plan/prose-contracts.json": "f623fa5c731876b28e4fdcc99d0750e665e071bc5721848fa2739dfbe5d91b2c",
@@ -20282,39 +20282,62 @@
   "implementation_artifacts": [
     {
       "artifact": "docs/validation/evidence/local-layout-implementation-map.json",
-      "source_sha256": "c62309f80d262a1521b68ee80eac165c1812597f866c93c988c459727b6e8ca2",
-      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted."
+      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
+      "historical_source_sha256": "c62309f80d262a1521b68ee80eac165c1812597f866c93c988c459727b6e8ca2",
+      "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
+      "current_artifact_sha256": "d403a4a04e7cc5ea729bb2376e50e86f3fe5986ad2b36393f1646079ce04c9a4"
     },
     {
       "artifact": "docs/validation/evidence/span-implementation-map.json",
-      "source_sha256": "e9a90a656d9c94362f7773e23e9546e6d181be12ff8aac7943545ceae43cb6cc",
-      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted."
+      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
+      "historical_source_sha256": "e9a90a656d9c94362f7773e23e9546e6d181be12ff8aac7943545ceae43cb6cc",
+      "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
+      "current_artifact_sha256": "e9a90a656d9c94362f7773e23e9546e6d181be12ff8aac7943545ceae43cb6cc"
     },
     {
       "artifact": "docs/validation/evidence/repeat-implementation-map.json",
-      "source_sha256": "5d86cd891355952f406547519ffe1da5e2f13ae65de4b2d6ab6557e7a0e3fa1a",
-      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted."
+      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
+      "historical_source_sha256": "5d86cd891355952f406547519ffe1da5e2f13ae65de4b2d6ab6557e7a0e3fa1a",
+      "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
+      "current_artifact_sha256": "7245dbe0f82c987521773273f3c9187c58ce7a14beac5f7136db67abd6a3f8f1"
     },
     {
       "artifact": "docs/validation/evidence/performance-implementation-map.json",
-      "source_sha256": "040ffaf64f35410db1ab365c544444729c6ac268db86f92ee2f610da489a1e63",
-      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted."
+      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
+      "historical_source_sha256": "040ffaf64f35410db1ab365c544444729c6ac268db86f92ee2f610da489a1e63",
+      "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
+      "current_artifact_sha256": "38d5f9cc7fe71e418b2ea091d94e1d86519ba674adf186b12f1d476a221027c6"
     },
     {
       "artifact": "docs/validation/evidence/lead-implementation-map.json",
-      "source_sha256": "b288a520370fe7ad40321540adf0551c6546a1bdde2992a946e98d24a6efd72a",
-      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted."
+      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
+      "historical_source_sha256": "b288a520370fe7ad40321540adf0551c6546a1bdde2992a946e98d24a6efd72a",
+      "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
+      "current_artifact_sha256": "c7fff25af05657748dd782dafecd80af9fc2eb0c4811340e15326e2721b8f196"
     },
     {
       "artifact": "docs/validation/evidence/layout-state17-implementation-map.json",
-      "source_sha256": "671893cfc83e24896f2c0574e8c96da12bd23d7844b4ea81a98e0609717bd6e8",
-      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted."
+      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
+      "historical_source_sha256": "671893cfc83e24896f2c0574e8c96da12bd23d7844b4ea81a98e0609717bd6e8",
+      "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
+      "current_artifact_sha256": "51c3643d66d7d0ca68b7ba910edf0aac4471bf5cf8a0f460430a33865b0c9167"
     },
     {
       "artifact": "docs/validation/evidence/layout-implementation-map.json",
-      "source_sha256": "454affab335b0da9a58e74ca15124c7412324300ea9cfba40e17cb08a6aee3f8",
-      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted."
+      "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
+      "historical_source_sha256": "454affab335b0da9a58e74ca15124c7412324300ea9cfba40e17cb08a6aee3f8",
+      "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
+      "current_artifact_sha256": "454affab335b0da9a58e74ca15124c7412324300ea9cfba40e17cb08a6aee3f8"
     }
   ],
-  "resource_acceptance": "docs/validation/evidence/context-resource-acceptance.md"
+  "resource_acceptance": "docs/validation/evidence/context-round1-resource-acceptance.md",
+  "historical_resource_acceptance": "docs/validation/evidence/context-resource-acceptance.md",
+  "round1_correction_summary": "docs/validation/evidence/context-round1-review-summary.md",
+  "semantic_acceptance": "docs/validation/evidence/context-round1-semantic-review.md",
+  "historical_acceptance": [
+    "docs/validation/evidence/context-resource-acceptance.md",
+    "docs/validation/evidence/context-independent-resource-acceptance.json",
+    "docs/validation/evidence/context-independent-semantic-acceptance.json"
+  ],
+  "historical_acceptance_scope": "Preserved earlier 59dcdff/pre-Round1 measurements and findings; current production acceptance uses the Round1 reports."
 }
