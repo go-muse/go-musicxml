@@ -225,6 +225,17 @@ func stateValidScope(v stateScope) bool {
 	return (v.AllStaves && !v.Staff.Valid()) || (!v.AllStaves && v.Staff.Valid() && v.Staff.value.Sign() > 0)
 }
 
+// State-record reflection is restricted to a closed private value graph. The
+// only admitted non-nil pointers are *DecisionRef (an owned causal witness),
+// *Evidence[string] (an optional sound time-only condition), and
+// *musicalPosition (an optional exact gap/placement witness). stateMeasure
+// checks that allow-list before any stateCopy/stateClone retention path; copies
+// recursively own those records and their strings/slices. Nil pointers retain
+// no payload. Integer, Decimal and Rational are terminal immutable wrappers:
+// their private numeric storage is shared safely and measured directly, never
+// traversed as arbitrary mutable pointers. New pointer-bearing record types
+// require an explicit accounting and ownership review here.
+//
 // stateMeasure walks only the closed, shallow set of private typed state records.
 // Numeric wrappers stop recursion: their immutable magnitude/text is accounted
 // directly. This is neither a scalar parser nor a composite serialization path.

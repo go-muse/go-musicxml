@@ -24,7 +24,6 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   and final batch-9 reconciliation. New timeline resource improvements do not
   discharge the earlier matched-performance obligation. Final integrated
   acceptance and actual 386 execution remain separately evidenced gates.
-
 - Add immutable `validation.Rational` with bounded canonical fractions, separate
   from XSD decimals, and shared-session metered exact arithmetic for musical
   positions. Arithmetic reserves conservative work and scratch before big-number

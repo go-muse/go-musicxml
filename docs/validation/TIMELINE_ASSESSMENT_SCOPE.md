@@ -137,12 +137,30 @@ The selected profiles explicitly adopt the [clause-derived offset contract](time
 Chord duration is compared with the established principal in common exact units:
 principal 4, tones 1 then 3 passes; tone 5 fails. Later tone 3 is not bounded by
 tone 1. Grace branches and interrupted anchors retain their actual evidence.
+For this duration-only clause, principal means the established preceding
+non-chord `<note>` element, including a duration-bearing rest. The
+[MusicXML chord reference](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/chord/)
+selects that note-element relation, while the
+[note grammar](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/note/)
+includes pitch, unpitched and rest alternatives. No pitch-based applicability
+exception is inferred. A rest principal therefore participates in the same exact
+bound; passing it does not certify the group's broader musical or rendering
+interpretation. No new malformed-rest-chord rejection or older-pitched-anchor
+search is introduced.
 
 Numeral requires either a valid own numeral-key or an applicable explicitly
 encoded effective key. Known complete absence can fail. Missing timing, scope,
 unclosed history or invalid prerequisite retains incomplete/causal evidence.
 Fifths 0 and nontraditional keys are not silently replaced with C major or
 excluded merely because a richer pitch derivation is unavailable.
+An omitted harmony staff in a multi-staff part does not by itself prevent the
+encoded-key-presence projection: agreement between the AllStaves-only baseline
+and every observed staff-scoped publication/gap partition proves a staff-independent
+result. This does not choose a concrete staff/key or enumerate the staff count.
+The baseline is retained even when numbered publications appear to cover every
+staff. Staff-dependent disagreement retains `timeline-staff-unresolved`; other
+unavailable or invalid prerequisites keep their actual causal evidence. The
+concrete effective-key query still requires resolved staff evidence.
 
 Barline-location, beat-repeat-content, measure-repeat-content and
 written-transposition remain joint batch-6/batch-7 candidates. Batch 6 supplies

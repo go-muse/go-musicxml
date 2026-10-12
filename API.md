@@ -358,6 +358,19 @@ unshifted score origin and staff. Display offsets cannot borrow a future key.
 No initial C major, meter, clef, tempo or divisions value is invented. An own
 valid numeral-key remains an independent alternative when fallback timeline
 evidence is unavailable.
+For the duration-only chord bound, the principal is the established preceding
+non-chord `<note>` element, including a duration-bearing rest. The bound does
+not decide pitch-based chord eligibility or musical/rendering intent; a rest
+principal uses the same shorter/equal/longer duration comparison.
+
+When harmony staff is omitted in a multi-staff part, encoded-key presence can
+still be proved if the AllStaves-only baseline and every observed staff-scoped
+publication/gap partition agree. This does not select a staff or a concrete key,
+and it never enumerates the encoded staff count. The baseline is retained even
+when numbered publications appear to cover all staves. If the projection can
+vary with staff, it remains Unknown with `timeline-staff-unresolved`; malformed
+or unavailable prerequisite evidence retains its actual causal reason. General
+concrete-key queries still require resolved staff evidence.
 A projection may prove encoded-key presence, or an unchanged divisions value,
 without identifying a unique latest publisher. This requires an independently
 established baseline and independently valid same-result alternatives; missing,
