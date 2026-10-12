@@ -181,6 +181,11 @@ func TestFiguredBassDurationUsesOnlyEqualReviewedUnits(t *testing.T) {
 					f.Units = stateAbsent[Decimal]()
 					service.Facts[10] = f
 				}
+				stateClose(t, s, &service.State, 0)
+				if mode != "missing-cursor" {
+					statePublish(t, s, &service.State.Divisions, service.Facts[10].Position.Value, stateScope{AllStaves: true}, service.Facts[10].Units, 100)
+				}
+				statePublish(t, s, &service.State.Divisions, service.Facts[40].Position.Value, stateScope{AllStaves: true}, service.Facts[40].Units, 101)
 				if err := service.resolveFiguredBassOrigins(context.Background(), s, b, block); err != nil {
 					t.Fatal(err)
 				}
