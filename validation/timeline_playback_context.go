@@ -278,7 +278,6 @@ func playbackPublish[T any](ctx context.Context, s *Session, h *stateHistory[T],
 	if value.State == EvidenceAbsent {
 		return s.step(ctx, 1)
 	}
-	value = stateConditionalValue(value, &condition)
 	if origin.Part.State != EvidenceKnown {
 		return s.step(ctx, 1)
 	}
@@ -287,10 +286,16 @@ func playbackPublish[T any](ctx context.Context, s *Session, h *stateHistory[T],
 		if gap.State == EvidenceAbsent || gap.State == "" {
 			gap = stateUnknown[bool]("playback-position-unavailable")
 		}
-		gap = stateMergeGap(gap, stateUnavailable[T, bool](value))
+		gap = stateMergeGap(gap, stateUnavailable[T, bool](stateConditionalValue(value, &condition)))
 		return addStateGap(ctx, s, h, stateGap{Part: origin.Part.Value, FirstMeasure: origin.MeasureOrdinal, LastMeasure: origin.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: gap})
 	}
-	return publishState(ctx, s, h, statePublication[T]{Position: origin.Position.Value, Scope: stateScope{AllStaves: true}, Value: value, Provenance: []stateProvenance{{Node: origin.Source, Kind: stateExplicit}}})
+	// Keep the guard on the publication so conditional changes cannot repair
+	// prior unavailable state. Projection belongs to the property query.
+	var guard *Evidence[string]
+	if !stateUnconditional(&condition) {
+		guard = &condition
+	}
+	return publishState(ctx, s, h, statePublication[T]{TimeOnly: guard, Position: origin.Position.Value, Scope: stateScope{AllStaves: true}, Value: value, Provenance: []stateProvenance{{Node: origin.Source, Kind: stateExplicit}}})
 }
 func (p *timelinePlaybackContext) readSound(ctx context.Context, s *Session, b *timelineBindings, n *factNode, block timelineMeasureBlock, fact timelineEventFact) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
