@@ -6,13 +6,15 @@ import "errors"
 // timeline operator has established its own false consequence. It does not infer
 // proof from an arbitrary nonzero Decision returned alongside an error.
 type provedPlanInterruption struct {
-	node      NodeID
-	local     *localPlan
-	reference *referencePlan
-	timeline  *timelineConsumerPlan
-	kind      planKind
-	decision  Decision
-	cause     error
+	node            NodeID
+	local           *localPlan
+	reference       *referencePlan
+	timeline        *timelineConsumerPlan
+	context         *contextPlan
+	contextBindings *contextBindings
+	kind            planKind
+	decision        Decision
+	cause           error
 }
 
 func (e *provedPlanInterruption) Error() string { return e.cause.Error() }
@@ -35,12 +37,14 @@ func (s *Session) recordProvedPlanInterruption(r RuleDefinition, n *factNode, p 
 	}
 	matched := false
 	switch p.kind {
+	case planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+		matched = proof.kind == p.kind && proof.local == nil && proof.reference == nil && proof.timeline == nil && ((proof.context != nil && proof.context == p.context) || (proof.context == nil && proof.contextBindings != nil && p.context != nil && proof.contextBindings == p.context.Bindings))
 	case planLocal:
-		matched = proof.local == p.local && proof.reference == nil && proof.timeline == nil && proof.kind == ""
+		matched = proof.local == p.local && proof.reference == nil && proof.timeline == nil && proof.kind == "" && proof.context == nil && proof.contextBindings == nil
 	case planTypedReference:
-		matched = proof.reference == p.reference && proof.local == nil && proof.timeline == nil && proof.kind == ""
+		matched = proof.reference == p.reference && proof.local == nil && proof.timeline == nil && proof.kind == "" && proof.context == nil && proof.contextBindings == nil
 	case planChordDuration, planNumeralKey:
-		matched = proof.timeline != nil && proof.timeline == p.timelineConsumer && proof.kind == p.kind && proof.local == nil && proof.reference == nil
+		matched = proof.timeline != nil && proof.timeline == p.timelineConsumer && proof.kind == p.kind && proof.local == nil && proof.reference == nil && proof.context == nil && proof.contextBindings == nil
 	}
 	if !matched {
 		return err
@@ -57,4 +61,17 @@ func (s *Session) withProvedPlanRelated(n *factNode, local *localPlan, reference
 	d.Related = make([]Location, len(locations))
 	copy(d.Related, locations)
 	return d, nil
+}
+
+func contextProofStop(n *factNode, p *contextPlan, kind planKind, d Decision, cause error) error {
+	if cause == nil || d.Outcome != OutcomeFail {
+		return cause
+	}
+	return &provedPlanInterruption{node: n.header.ID, context: p, kind: kind, decision: d, cause: cause}
+}
+func contextBindingProofStop(n *factNode, b *contextBindings, kind planKind, d Decision, cause error) error {
+	if cause == nil || d.Outcome != OutcomeFail {
+		return cause
+	}
+	return &provedPlanInterruption{node: n.header.ID, contextBindings: b, kind: kind, decision: d, cause: cause}
 }

@@ -1,0 +1,281 @@
+{
+  "format": "pr36-round3-independent-semantic-acceptance-v1",
+  "status": "accepted bounded local semantic implementation at exact production fingerprint; release and external interpretation acceptance gates remain separate",
+  "recorded_at_utc": "2026-10-12T18:33:39.730103+00:00",
+  "identity": {
+    "baseline": {
+      "head": "0821afd31cc0c783db53b351096ea9e76bd060dc",
+      "git_tree": "25df53a98ccfe7d804466987895fd8fd427d4256",
+      "production_manifest_sha256": "818be3c075f68b96629d163b9ec010b3d1d708df8c3124daf148fc1e911251bb",
+      "production_manifest_entries": 247
+    },
+    "final": {
+      "head": "64285b299d567df56534813dcd06fad10bd5cf70",
+      "git_tree": "7c44d9c60cdc4c7f35a6841983cc8ced35dfaaa3",
+      "production_manifest_sha256": "b11b9a7c933a611f58bed23120306c0598567498532223f8cd1634c7a7d070d7",
+      "production_manifest_entries": 247
+    },
+    "workspace_production_files_match_commit": true
+  },
+  "packaged_commit": "115b030ff450d067e51a5ee1ee985afb27967704",
+  "packaged_whole_tree_identical": true,
+  "production_edits_by_auditor": false,
+  "github_writes_by_auditor": false,
+  "review_inputs": [
+    "CONTRIBUTING.md",
+    "round3-threads.json (all 13 full review bodies)",
+    "docs/validation/plan/implementation-plan.json",
+    "docs/validation/plan/context-dispositions.json",
+    "docs/validation/context-assessment-scope.md",
+    "docs/validation/layout-context-scope.md",
+    "docs/validation/evidence/span-round3-scope.md",
+    "docs/validation/evidence/context-round3-repeat-review.md",
+    "prior Round 1 semantic acceptance and closure readback"
+  ],
+  "reviewed_delta": {
+    "baseline": "0821afd31cc0c783db53b351096ea9e76bd060dc",
+    "production_files_changed": [
+      "validation/context_layout_geometry.go",
+      "validation/context_layout_margins.go",
+      "validation/context_layout_scope.go",
+      "validation/context_layout_staff.go",
+      "validation/context_layout_system.go",
+      "validation/context_local_advisory.go",
+      "validation/context_navigation.go",
+      "validation/context_navigation_machine.go",
+      "validation/context_navigation_prefix.go",
+      "validation/context_performance_bend.go",
+      "validation/context_reader.go",
+      "validation/context_repeat_content.go",
+      "validation/context_repeat_proof_index.go",
+      "validation/context_spans_association.go",
+      "validation/context_spans_lyric.go",
+      "validation/context_spans_runtime.go"
+    ],
+    "whole_delta_reviewed": true
+  },
+  "original_review_findings": [
+    {
+      "discussion_id": 4250901447,
+      "subject": "Known system width ownership",
+      "acceptance": "Proved breaks create/select the new accumulator before an unavailable visible publisher is marked incomplete. Previous complete systems remain independent."
+    },
+    {
+      "discussion_id": 4250901458,
+      "subject": "Initial parity and blank consensus",
+      "acceptance": "Presence-aware blank consensus preserves all-Absent, distinguishes Known/Absent disagreement, and propagates unavailable initial boundaries. Independent three-part yes/no/Invalid probes exposed order-dependent cause loss; the correction tracks observed booleans independently and retains stronger boundary evidence in every permutation."
+    },
+    {
+      "discussion_id": 4250901464,
+      "subject": "Staff applicability causes",
+      "acceptance": "First-slot, staff selector, system and part prerequisites merge their actual Unknown/Unsupported/Invalid evidence. Proven absence becomes a bounded unknown applicability, not an invented cause."
+    },
+    {
+      "discussion_id": 4250901472,
+      "subject": "Staff temporary ownership",
+      "acceptance": "Call-local keys/order and unknown-part bucket storage remain charged through owned publication and release on all exits; known-part state stays retained. Resource review additionally exposed cancellation masking; immediate sticky-error guards and all-poll/tight-cap tests now retain the first interruption."
+    },
+    {
+      "discussion_id": 4250901484,
+      "subject": "Derived provenance and all-cutaway publisher",
+      "acceptance": "Divider Raw/Conversion preserve unavailable selection, so no fabricated absent/default coordinate escapes. Genuine absent coordinates retain documented-default relations; derived scaling/margins are explicit. An observed all-cutaway override has unresolved publisher selection, while absent overrides retain defaults."
+    },
+    {
+      "discussion_id": 4250901490,
+      "subject": "Tied stubs and hierarchy gaps",
+      "acceptance": "Part and zero-domain musical hierarchy gaps are merged before the local tied-stub prepass. Self-contained singleton behavior and separately enumerated non-temporal families remain bounded independently."
+    },
+    {
+      "discussion_id": 4250901493,
+      "subject": "Exact tied-run ambiguity",
+      "acceptance": "A preflight withholds a refused same-note start/stop interpretation throughout its exact identity run, before any candidate pairs publish. Number, part and proved implied-pitch identities stay distinct; ordinary stop/start chains remain supported."
+    },
+    {
+      "discussion_id": 4250901497,
+      "subject": "Wholly unnamed lyric domain",
+      "acceptance": "Duplicate wholly unnamed lyrics anywhere in the musical part withhold only that unnamed identity; there is no verse-1 or reset default. Independent malformed-number/known-name probes exposed loss of a proved exclusion; known string presence now preserves that exclusion, including empty name. The subsequent sibling fix prevents an excluded wildcard sibling from supplying the candidate cause."
+    },
+    {
+      "discussion_id": 4250901502,
+      "subject": "Passive navigation and jump causes",
+      "acceptance": "Ordinary sound/listening rows and demoted inactive markers preserve stable source order and do not create control-order ambiguity; interleaved passive rows cannot hide two genuine controls. Ordinary absent-selector sound Guard is Known true. Unresolved jump targets retain their cause without fabricating movement-pass evidence; a proved false guard still excludes the edge."
+    },
+    {
+      "discussion_id": 4250901507,
+      "subject": "Eventless repeat enumeration",
+      "acceptance": "Exact semantic root/part/measure containers join the indexed enumeration proof. A dropped malformed model choice retains model-choice-cardinality in NoteScopesComplete and ContentEquivalent. Unknown-part rosters use the source-ordered cached all-parts aggregate. Declaration owner/assembly and structural parent identity remain exact."
+    },
+    {
+      "discussion_id": 4250901511,
+      "subject": "Terminal encoded extent and dead origins",
+      "acceptance": "Unused origins state is removed. Positive note and forward endpoint synthesis marks UnprovedFrame=true symmetrically. Private partEnd is used only for same-final-measure encoded-content comparison; it does not observe frame bounds or assert capacity. Cross-measure, incomplete and nonintegral cases retain unavailable evidence. External ReviewerAccepted for this source argument is not supplied by this audit."
+    },
+    {
+      "discussion_id": 4250901518,
+      "subject": "Bend implication precedence",
+      "acceptance": "Proved exclusion and sufficient truth keep precedence; otherwise an independently Invalid consequent blocks with its exact cause before an unavailable antecedent. Merely unavailable consequents do not force that override."
+    },
+    {
+      "discussion_id": 4250901526,
+      "subject": "Reader cache commit ownership and local cause",
+      "acceptance": "Compatibility tables/lists hold construction scratch until all fallible work finishes, then transfer ownership once. Rejected pre-commit paths release storage, and committed cache lifetime is preserved. A missing harmony parent has its own local reason. Exact selected-use identity and inherited-owner restrictions remain intact."
+    }
+  ],
+  "independent_followthrough": [
+    {
+      "finding": "Part-wide unnamed lyric gap discarded independent known name presence",
+      "red_head": "a7ba9b7",
+      "correction": "d26f662",
+      "final": "PASS on all four full public adapters"
+    },
+    {
+      "finding": "Three-part page-break disagreement erased Invalid cause depending on part order",
+      "red_head": "a7ba9b7",
+      "correction": "64285b2",
+      "final": "PASS on all four full public adapters; author six-permutation initial/later matrix also executed"
+    },
+    {
+      "finding": "Excluded lyric sibling supplied an unrelated cause via shared unavailable-identity bucket",
+      "found_by": "span author during follow-through",
+      "correction": "b152397",
+      "final": "private evidence-state and authentic source/model cause-owner tests executed and passed"
+    },
+    {
+      "finding": "Sticky reader cancellation could be replaced by later staff-retention refusal",
+      "found_by": "independent resource reviewer",
+      "correction": "64285b2",
+      "final": "code paths independently reviewed; all-poll and tight-budget committed tests executed and passed"
+    },
+    {
+      "finding": "Draft API wording incorrectly generalized Known-true sound Guard to listening rows",
+      "correction": "parent draft API narrowed to ordinary sound; listening activation remains separate",
+      "final": "wording readback verified"
+    }
+  ],
+  "semantic_boundaries": [
+    "Availability rank is merged among actual prerequisites, not across unrelated axes. With unknown initial print selection, an explicit margin may not depend on parity: Unknown selection remains appropriate. Proved default-margin parity dependencies retain Invalid boundary causes. Later memberships carry their own lifetime evidence.",
+    "The sealed timeline constructor fixes hierarchy slot 0 to partwise and slot 1 to timewise. The repeat index borrows that invariant; arbitrary reordered hand-built private bindings are not claimed supported.",
+    "The exact malformed Note+Forward content-choice regression is model-only; no source serialization/reparse is claimed to preserve it. Authentic source controls and all four ordinary adapters are tested separately.",
+    "Synthesized same-measure endpoints remain UnprovedFrame, and independent origin witnesses can establish containment only through the unchanged timeline service.",
+    "Exact owner/declaration, schema assembly/digest, selected-use evidence, causal DecisionRefs and caller-owned snapshots remain preserved; no raw-name or actual-type-only identity substitution was introduced.",
+    "No universal tie balance, default lyric verse, playback pass policy, physical rendering, measure capacity, or author padding intent is asserted."
+  ],
+  "source_argument_gate": {
+    "prior_accepted_clarification": [
+      4250280968,
+      4250385633
+    ],
+    "current_thread": 4250901511,
+    "current_argument_reported_by_parent": 4251043369,
+    "scope": "Retains and states the existing same-final-measure encoded-cursor extent interpretation; it is not a new universal meaning of forwards or padding.",
+    "reviewer_acceptance": "This independent audit does not grant or certify the external ReviewerAccepted state. Parent must verify that state in the original thread before resolving its source-interpretation gate."
+  },
+  "toolchain": {
+    "go": "go1.27.2",
+    "goos": "linux",
+    "goarch": "amd64",
+    "GOMAXPROCS": 4,
+    "setup": "source /workspace/shared/tools/go-musicxml-env.sh"
+  },
+  "actual_final_commands": [
+    {
+      "command": "go test -count=1 -p 1 -v ./validation -run 'Round3|ContextRequiredAttribute|ContextReaderExactOwner|TimelineCrossFrame|TimelineDisplaced|Round1RepeatClosure|Round1RepeatProof|IndependentEmptyOnset'",
+      "result": "PASS",
+      "package_seconds": 1.744,
+      "log": "round3-independent-semantic-final-validation.log"
+    },
+    {
+      "command": "go test -count=1 -p 1 -v . -run 'Round3|IndependentR3|ContextRequiredAttribute|ContextRequiredEnding|ContextOwnership|IndependentContextFrozenProfileDigests|IndependentContextAssessRequired|TimelineFinalReview'",
+      "result": "PASS",
+      "package_seconds": 3.266,
+      "log": "round3-independent-semantic-final-root.log"
+    },
+    {
+      "command": "go test -race -count=1 -p 1 -timeout 5m -v . -run '^TestIndependentR3|^TestSpanRound3(ExcludedSibling|Partial)'",
+      "result": "PASS",
+      "package_seconds": 4.594,
+      "log": "round3-independent-semantic-final-race.log"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS",
+      "log": "round3-independent-semantic-diff-check.log"
+    }
+  ],
+  "compatibility": {
+    "six_frozen_profiles": "PASS",
+    "original_planning_files": "unchanged from 0821afd",
+    "timeline_production_and_catalog": "unchanged from 0821afd",
+    "production_budget_defaults": "unchanged from 0821afd"
+  },
+  "separate_gates": [
+    "Parent full seven-stage suite",
+    "Independent matched resource matrix",
+    "Exact published-head CI",
+    "Supported-host actual 386 execution",
+    "Required real-xmllint execution",
+    "ReviewerAccepted source argument in thread4250901511"
+  ],
+  "not_claimed": [
+    "full seven-stage rerun by this auditor",
+    "remote CI success",
+    "386 execution or compilation by this auditor",
+    "resource or unrestricted throughput acceptance",
+    "B5-PERF-01 closure",
+    "batch-8/9 or external-resource closure"
+  ],
+  "evidence": {
+    "round3-independent-semantic-final-race.log": {
+      "sha256": "5e6d0cc909ed8aaa5c014729da0fb66e8cd222cdd2dbfecb475aaff17852db4d",
+      "bytes": 16802
+    },
+    "round3-independent-semantic-run.sh": {
+      "sha256": "cf7e0fbd24a50159c8433d16d2addff818ee9047a898124ba3c3ae6084166a47",
+      "bytes": 1679
+    },
+    "round3-independent-semantic-code-identity.json": {
+      "sha256": "690864a7cce49a6da0ba237009db85623abe1d9df32cf9803244b322288e42d4",
+      "bytes": 607
+    },
+    "round3-independent-semantic-final-root.log": {
+      "sha256": "79ed4416d04994a35e0a318ba46529b3e2e8f2a5288fee7321a864f984cac414",
+      "bytes": 160039
+    },
+    "round3-independent-semantic-families-interim.log": {
+      "sha256": "6237c79780856c1e3a125f75d66d93faafc292abf83233309b711c642bfbce33",
+      "bytes": 54
+    },
+    "round3-independent-semantic-production-manifest.txt": {
+      "sha256": "b11b9a7c933a611f58bed23120306c0598567498532223f8cd1634c7a7d070d7",
+      "bytes": 20732
+    },
+    "round3-independent-semantic-harness_test.go.txt": {
+      "sha256": "224f506cac18f94c61e5e501e8fe19249eca211dad230ae8bc264ac35632212a",
+      "bytes": 4282
+    },
+    "round3-independent-semantic-diff-check.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "round3-independent-semantic-environment.log": {
+      "sha256": "d5bd41a88bd236651055eaf9e663a691227298b8d93a5c7127825bd0c528a84f",
+      "bytes": 262
+    },
+    "round3-independent-semantic-extra-candidate-green.log": {
+      "sha256": "2e208197b8b91633506c4ab4ba9d4b07d5525720ab8f2aec69af4cbf8f816416",
+      "bytes": 5390
+    },
+    "round3-independent-semantic-final-validation.log": {
+      "sha256": "05a309095f48961e9c47f9a516df727bce8b91602e18fd27c3408d4990e4d173",
+      "bytes": 138554
+    },
+    "round3-independent-semantic-extra-red.log": {
+      "sha256": "babe8a9ea7c0741fc8dc0e56651d0e45c85adfdeec12830e8f0c4d3b630085c7",
+      "bytes": 11195
+    },
+    "round3-independent-semantic-lyric-green.log": {
+      "sha256": "bf7c1d2ba9b8b69de352f11581ac4599b6f528f8e51ad69fa591a2e333d45a2d",
+      "bytes": 3838
+    }
+  }
+}

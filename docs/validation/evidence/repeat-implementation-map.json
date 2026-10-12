@@ -1,0 +1,3692 @@
+{
+  "format": "batch7-repeat-implementation-map-v1",
+  "checkpoint": "Integrated content/selection correction 0de79a1; semantic meter correction f865107 and provider-local meter roster 59dcdff included. Final whole-tree acceptance remains separate.",
+  "status": "All 23 original check IDs and partial/local implementation statuses preserved; bounded semantic and resource follow-ups recorded without universal normative closure.",
+  "verification": {
+    "own": "Initial family-only tagged-scaffold evidence is preserved under historical_verification. Later owned ordered helpers/adapters ran against the actual checkout without a scaffold; SEM10 owner-specific setup remains explicitly distinguished from final independent integrated verification.",
+    "real_integrated": "Independent combined root/validation regression suite passes production 59dcdff9dde34cb25e1ee20730b8e3a77f207fb4 plus test-only 0044570 (QA commit dfb445b): root 27.474s, validation 2.142s. All authentic repeat growth guards and named repeat controls pass; independent-resource-59dcdff-regressions.log. This is a selected combined regression suite, not an all-stage or universal normative claim.",
+    "cancellation": "Named final fixtures interrupt every observed poll: ordered 31, selected ordered 32, multiset fallback 70, measure roster 4, beat-window index 125, meter-roster build 8 and cached meter query 106. Exact/one-under admission and zero retained scratch are fixture-scoped; original navigation and projection coverage also remains recorded.",
+    "386": "Cross-compilation succeeds in recorded owned and integrated checkpoints; local execution returns exec format error. Actual 386 runtime remains an unpassed CI gate.",
+    "race": "PASS for the independently selected combined root/validation suite at production 59dcdff: root 198.163s, validation 18.813s; independent-resource-59dcdff-race.log.",
+    "owned_followups": "Ordered helper and 32 public adapter controls pass ordinary/race/vet on owned ebdb67f/091d436. SEM10 roster owned 03cf59b regular/race tests and 386 compilation pass; owner used its tagged fixture setup, so this is distinct from immutable integrated acceptance.",
+    "scope": "Named fixtures establish bounded supported behavior, not complete renderer/playback behavior, global linearity, or B5-PERF-01 closure.",
+    "final_checkpoint_race_benchmark_386": "Independent final summary confirms selected regressions/race PASS, five-sample benchmarks complete, and both root/validation 386 packages cross-compiled. Actual 386 execution remains blocked; final whole-repository/CI gates and B5-PERF-01 are not claimed.",
+    "independent_final_summary": "independent-resource-final-summary.json",
+    "ordinary_open_resource_findings": "None in the independent final summary for this tested production checkpoint; retained source, baseline-query and output-size limits remain explicit."
+  },
+  "checks": [
+    {
+      "id": "CHECK-context-unknown-ending-number",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/23",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationReadRows"
+      ],
+      "implemented_subclauses": "Raw ending number and type retain exact known empty versus absent/invalid causes. Empty ending number is not inferred from text. Empty ending number remains known empty while its selection guard is explicitly Unknown; no inference from printed text.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersEmptyEndingAndFine",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Ending range guard binding and executable selection remain unresolved; no maximum ending number infers total repeat count.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ending number=\"\" versus \"1\" with a stop boundary",
+          "required_assertion": "Raw ending number and type retain exact known empty versus absent/invalid causes. Empty ending number is not inferred from text.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyEndingAndFine"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ending number=\"\" versus \"1\" with a stop boundary",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Ending range guard binding and executable selection remain unresolved; no maximum ending number infers total repeat count.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ending number=\"\" versus \"1\" with a stop boundary",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyEndingAndFine"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ending number=\"\" versus \"1\" with a stop boundary",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyEndingAndFine"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ending number=\"\" versus \"1\" with a stop boundary",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-coda-sound",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/65",
+      "status": "implemented_advice_with_explicit_local_association",
+      "code_symbols": [
+        "navigationBuildEdges",
+        "navigationPublishGraphics"
+      ],
+      "implemented_subclauses": "Named sound coda labels and to-coda targets are part-scoped and direction-constrained. Graphic advice PlaybackSoundNeeded is known true; exact same-direction labelled sound is associated when present; missing local sound is absent. Graphics never enter traversal.",
+      "actual_tests": [
+        {
+          "function": "TestContextNavigationNamedTargetAndSectionDomain",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersGraphicPlaybackAdvice",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "No pinned rule chooses a distant sound by proximity; same-direction explicit association is supported. Cross-direction association remains unresolved, not a missing local implementation.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "graphical coda alone versus sound coda=\"A\" and tocoda=\"A\"",
+          "required_assertion": "Named sound coda labels and to-coda targets are part-scoped and direction-constrained.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "graphical coda alone versus sound coda=\"A\" and tocoda=\"A\"",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Graphical coda advisory association is not yet projected; graphic alone must never create playback jump.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "graphical coda alone versus sound coda=\"A\" and tocoda=\"A\"",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "graphical coda alone versus sound coda=\"A\" and tocoda=\"A\"",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "graphical coda alone versus sound coda=\"A\" and tocoda=\"A\"",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-segno-sound",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/75",
+      "status": "implemented_advice_with_explicit_local_association",
+      "code_symbols": [
+        "navigationBuildEdges",
+        "navigationPublishGraphics"
+      ],
+      "implemented_subclauses": "Named sound segno labels and dal-segno targets are part-scoped and direction-constrained. Graphic advice PlaybackSoundNeeded is known true; exact same-direction labelled sound is associated when present; missing local sound is absent. Graphics never enter traversal.",
+      "actual_tests": [
+        {
+          "function": "TestContextNavigationNamedTargetAndSectionDomain",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersGraphicPlaybackAdvice",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "No pinned rule chooses a distant sound by proximity; same-direction explicit association is supported. Cross-direction association remains unresolved, not a missing local implementation.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two segno labels A in separate parts versus duplicate A within one part",
+          "required_assertion": "Named sound segno labels and dal-segno targets are part-scoped and direction-constrained.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two segno labels A in separate parts versus duplicate A within one part",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Graphical segno advisory association is not yet projected; graphic alone must never create playback jump.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two segno labels A in separate parts versus duplicate A within one part",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two segno labels A in separate parts versus duplicate A within one part",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersGraphicPlaybackAdvice"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two segno labels A in separate parts versus duplicate A within one part",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-beat-repeat-stop",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/82",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "contextRepeatPairRanges"
+      ],
+      "implemented_subclauses": "Half-open style region and stop boundary; complete part end can terminate an open style.",
+      "actual_tests": [
+        {
+          "function": "TestContextRepeatHalfOpenRanges",
+          "file": "validation/context_repeat_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersBeatContentExactAndMismatch",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Scoped overlapping all-staff and numbered styles retain ambiguity; no invented endpoint on incomplete closure.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "beat-repeat stop exactly at following note onset",
+          "required_assertion": "Half-open style region and stop boundary; complete part end can terminate an open style.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersBeatContentExactAndMismatch"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "beat-repeat stop exactly at following note onset",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Scoped overlapping all-staff and numbered styles retain ambiguity; no invented endpoint on incomplete closure.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersBeatContentExactAndMismatch"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "beat-repeat stop exactly at following note onset",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersBeatContentExactAndMismatch"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "beat-repeat stop exactly at following note onset",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "beat-repeat stop exactly at following note onset",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-measure-repeat-stop",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/89",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "contextRepeatPairRanges"
+      ],
+      "implemented_subclauses": "Half-open measure-repeat region with stop first inactive; no synthetic repeated notes.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersMeasureContentAndStopBoundary",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Incomplete region closure or ambiguous style scope remains unknown.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-repeat stop at measure origin versus nonzero offset",
+          "required_assertion": "Half-open measure-repeat region with stop first inactive; no synthetic repeated notes.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersMeasureContentAndStopBoundary"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-repeat stop at measure origin versus nonzero offset",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Incomplete region closure or ambiguous style scope remains unknown.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-repeat stop at measure origin versus nonzero offset",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersMeasureContentAndStopBoundary"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-repeat stop at measure origin versus nonzero offset",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-repeat stop at measure origin versus nonzero offset",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-slash-use-dots",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/92",
+      "status": "implemented_local_fact",
+      "code_symbols": [
+        "evaluateContextRepeats",
+        "contextRepeatDefaults"
+      ],
+      "implemented_subclauses": "Default dots no and stems no; known stems yes makes effective dots inactive. RawUseDots and RawUseStems preserved independently of effective inactive dots; invalid explicit attributes retain causal XSD evidence.",
+      "actual_tests": [
+        {
+          "function": "TestContextRepeatDefaultsAndInactiveDots",
+          "file": "validation/context_repeat_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersDefaultsWithoutNavigation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "No unresolved semantic subclause identified in local raw/default/inactive-dot projection. Full independent cross-family acceptance is pending.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash use-stems=yes and use-dots=yes versus omitted attributes",
+          "required_assertion": "Default dots no and stems no; known stems yes makes effective dots inactive.",
+          "actual_test_functions": [
+            "TestContextRepeatDefaultsAndInactiveDots"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash use-stems=yes and use-dots=yes versus omitted attributes",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Raw versus effective dots provenance needs dedicated public projection review.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash use-stems=yes and use-dots=yes versus omitted attributes",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash use-stems=yes and use-dots=yes versus omitted attributes",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersDefaultsWithoutNavigation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash use-stems=yes and use-dots=yes versus omitted attributes",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-repeat-backward-attributes",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/99",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationBuildEdges",
+        "navigationReadRows"
+      ],
+      "implemented_subclauses": "Forward proves times/after-jump inactive independently; backward applicability requires outside-ending membership. Explicit positive times drives bounded ordinary repeat traversal. Same-barline closing ending independently proves backward attributes inactive even when traversal order is unavailable; raw times/after-jump retained.",
+      "actual_tests": [
+        {
+          "function": "TestContextNavigationBackwardApplicabilityIndependent",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersUnknownCountAndForwardApplicability",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersExplicitTraversal",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextNavigationExplicitRepeatAndNestedFrames",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        }
+      ],
+      "residual": {
+        "dependency": "Absent times and absent after-jump have no fabricated defaults; zero times execution unresolved; ending-associated repeat control unresolved.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "forward times=3 after-jump=yes; backward absent, zero, or positive times",
+          "required_assertion": "Forward proves times/after-jump inactive independently; backward applicability requires outside-ending membership. Explicit positive times drives bounded ordinary repeat traversal.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersExplicitTraversal"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "forward times=3 after-jump=yes; backward absent, zero, or positive times",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Absent times and absent after-jump have no fabricated defaults; zero times execution unresolved; ending-associated repeat control unresolved.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "forward times=3 after-jump=yes; backward absent, zero, or positive times",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersUnknownCountAndForwardApplicability"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "forward times=3 after-jump=yes; backward absent, zero, or positive times",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersUnknownCountAndForwardApplicability"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "forward times=3 after-jump=yes; backward absent, zero, or positive times",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestContextNavigationExplicitRepeatAndNestedFrames"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-listening-distinct-targets",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/117",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationReadListening",
+        "navigationListeningDistinct"
+      ],
+      "implemented_subclauses": "Typed sync and other-listening raw player/time-only scopes and exact player references retained. Same-type child player/time-only attribute distinctness advice is computed after content completeness; duplicate selectors false; distinct selectors true; invalid facts preserve causes. Simultaneous overlapping continuing-listening candidates now explicitly retain unresolved precedence; known-false guards exclude candidates before conflict handling.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersListeningOffsetAndPassState",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersListeningDistinctAndAssessment",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextNavigationSimultaneousListeningNoLastWins",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersPlayerReferenceScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Application behavior and simultaneous conflicting state precedence are not prescribed. Semantic overlap of nonidentical selector sets does not authorize a conformance failure. Additional invalid/unknown field fixtures remain acceptance work.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two sync instructions with same player/time-only versus distinct players",
+          "required_assertion": "Typed sync and other-listening raw player/time-only scopes and exact player references retained.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two sync instructions with same player/time-only versus distinct players",
+          "required_assertion": "Exact duplicate same-kind child target/time-only attributes yield distinct-target advice false; different exact selectors yield advice true. Simultaneous overlapping continuing-state precedence remains unresolved, and nonidentical selector-set overlap is not a conformance failure.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment",
+            "TestContextNavigationSimultaneousListeningNoLastWins"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two sync instructions with same player/time-only versus distinct players",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestContextNavigationSimultaneousListeningNoLastWins"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two sync instructions with same player/time-only versus distinct players",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two sync instructions with same player/time-only versus distinct players",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningOffsetAndPassState"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-sound-jump-passes",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/132",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationDefaultGuard",
+        "navigationBuildEdges",
+        "runNavigation",
+        "navigationRawSound",
+        "navigationRawDirectives",
+        "navigationLinearPrefix"
+      ],
+      "implemented_subclauses": "DC/DS default first and to-coda second guards; explicit time-only overrides; exact unique part-local markers; simple established section-pass execution; bounded explicit nested ordinary repeats. Unique/missing/duplicate targets tested on both adapters/score layouts; local jump defaults survive unavailable timeline; multiple raw directives retained; later ambiguous controls preserve known linear prefix; reentry changed fields remain unknown until restated.",
+      "actual_tests": [
+        {
+          "function": "TestContextNavigationJumpPassDefaults",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestContextNavigationNamedTargetAndSectionDomain",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestContextNavigationExplicitRepeatAndNestedFrames",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestContextNavigationUnknownCountKeepsPrefix",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestContextNavigationHugeRepeatBudgetAndCancellation",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersNamedJumpTargetsAndDefaults",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersMultipleSoundDirectivesRetainRaw",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextNavigationLocalSoundWithoutTimeline",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersLaterAmbiguityPreservesPrefix",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextNavigationBackwardReentryStateIsNotInferred",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Nested/jump selector-domain ambiguity, endings, unresolved targets/counts and later edges retain prefix. No directive encounter counter substituted for section pass.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "DC with guard1 versus explicit2; to-coda first encounter after reentry in section pass2",
+          "required_assertion": "DC/DS default first and to-coda second guards; explicit time-only overrides; exact unique part-local markers; simple established section-pass execution; bounded explicit nested ordinary repeats.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNamedJumpTargetsAndDefaults"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "DC with guard1 versus explicit2; to-coda first encounter after reentry in section pass2",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Nested/jump selector-domain ambiguity, endings, unresolved targets/counts and later edges retain prefix. No directive encounter counter substituted for section pass.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNamedJumpTargetsAndDefaults"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "DC with guard1 versus explicit2; to-coda first encounter after reentry in section pass2",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersMultipleSoundDirectivesRetainRaw",
+            "TestContextNavigationBackwardReentryStateIsNotInferred"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "DC with guard1 versus explicit2; to-coda first encounter after reentry in section pass2",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestContextNavigationLocalSoundWithoutTimeline",
+            "TestRepeatAdaptersLaterAmbiguityPreservesPrefix"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "DC with guard1 versus explicit2; to-coda first encounter after reentry in section pass2",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation",
+            "TestContextNavigationExplicitRepeatAndNestedFrames"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-sound-fine-duration",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/133",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationReadRows",
+        "runNavigation"
+      ],
+      "implemented_subclauses": "Fine=yes preserves local note/rest duration evidence; numeric value remains raw without guessing units. Fine=yes preserves duration; other values retain unresolved numeric units instead of a fabricated false duration fact.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersEmptyEndingAndFine",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Termination activation and numeric endpoint semantics unresolved; control edge remains unknown rather than universal after-jump-only termination.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_subclauses_tested",
+          "concrete_subject": "fine=yes versus fine numeric and explicit time-only",
+          "required_assertion": "Fine=yes preserves local note/rest duration evidence; numeric value remains raw without guessing units.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyEndingAndFine"
+          ],
+          "acceptance_claim": false
+        },
+        "negative": {
+          "status": "fixture_pending",
+          "concrete_subject": "fine=yes versus fine numeric and explicit time-only",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Termination activation and numeric endpoint semantics unresolved; control edge remains unknown rather than universal after-jump-only termination.",
+          "actual_test_functions": [],
+          "acceptance_claim": false
+        },
+        "boundary": {
+          "status": "fixture_pending",
+          "concrete_subject": "fine=yes versus fine numeric and explicit time-only",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [],
+          "acceptance_claim": false
+        },
+        "missing_fact": {
+          "status": "fixture_pending",
+          "concrete_subject": "fine=yes versus fine numeric and explicit time-only",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [],
+          "acceptance_claim": false
+        },
+        "interaction": {
+          "status": "adapter_layout_parity_tested; dedicated cross-part cases pending",
+          "concrete_subject": "fine=yes versus fine numeric and explicit time-only",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyEndingAndFine"
+          ],
+          "acceptance_claim": false
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-sync-default",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/140",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationReadListening",
+        "navigationApplyListening"
+      ],
+      "implemented_subclauses": "Initial application-defined sync remains unknown; explicit pass-qualified sync continuing state is sparse and player-scoped. Simultaneous overlapping continuing-listening candidates now explicitly retain unresolved precedence; known-false guards exclude candidates before conflict handling.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersListeningOffsetAndPassState",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextNavigationSimultaneousListeningNoLastWins",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestContextNavigationFalseGuardDoesNotApplyInvalidUpdate",
+          "file": "validation/context_navigation_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersPlayerReferenceScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "No fabricated initial synchronization mode; conflicting simultaneous scopes and unknown jump transfer remain unavailable.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "no sync, explicit sync type=none time-only=2, invalid inactive payload",
+          "required_assertion": "Initial application-defined sync remains unknown; explicit pass-qualified sync continuing state is sparse and player-scoped.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningOffsetAndPassState"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "no sync, explicit sync type=none time-only=2, invalid inactive payload",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. No fabricated initial synchronization mode; conflicting simultaneous scopes and unknown jump transfer remain unavailable.",
+          "actual_test_functions": [
+            "TestContextNavigationSimultaneousListeningNoLastWins"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "no sync, explicit sync type=none time-only=2, invalid inactive payload",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestContextNavigationFalseGuardDoesNotApplyInvalidUpdate"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "no sync, explicit sync type=none time-only=2, invalid inactive payload",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "no sync, explicit sync type=none time-only=2, invalid inactive payload",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningOffsetAndPassState"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-assess-default",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/162",
+      "status": "implemented_local_fact",
+      "code_symbols": [
+        "navigationReadNoteListening"
+      ],
+      "implemented_subclauses": "Ordinary-note recommendation true and cue-note recommendation false are advice, with explicit assess override kept separately. Ordinary note and cue advice tested independently of explicit assess override; no application-default conformance rule invented.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersListeningDistinctAndAssessment",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPlayerReferenceScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Recommendation and explicit override are projected separately. Actual score-following application policy is intentionally not chosen.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ordinary note versus cue note versus assess type=no",
+          "required_assertion": "Ordinary-note recommendation true and cue-note recommendation false are advice, with explicit assess override kept separately.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ordinary note versus cue note versus assess type=no",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Application assessment behavior is not a conformance failure; dedicated adapter fixtures still pending.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ordinary note versus cue note versus assess type=no",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ordinary note versus cue note versus assess type=no",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "ordinary note versus cue note versus assess type=no",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-listen-distinct-targets",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/179",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationReadNoteListening"
+      ],
+      "implemented_subclauses": "Same-kind exact target/time-only duplicate advisory is separate from validation. Same-type note-listen child attribute distinctness advice is separate from conformance and application precedence.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersListeningDistinctAndAssessment",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPlayerReferenceScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Application behavior and simultaneous conflicting state precedence are not prescribed. Semantic overlap of nonidentical selector sets does not authorize a conformance failure. Additional invalid/unknown field fixtures remain acceptance work.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two assess with identical player/pass selectors versus disjoint selectors",
+          "required_assertion": "Same-kind exact target/time-only duplicate advisory is separate from validation.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two assess with identical player/pass selectors versus disjoint selectors",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Semantic overlap of nonidentical pass sets and extension target semantics unresolved; dedicated adapter fixtures pending.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two assess with identical player/pass selectors versus disjoint selectors",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two assess with identical player/pass selectors versus disjoint selectors",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "two assess with identical player/pass selectors versus disjoint selectors",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersListeningDistinctAndAssessment"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-slash-beat-default",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/222",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "contextRepeatBeat",
+        "contextRepeatUniformBeat",
+        "contextRepeatSimpleMeterBeat",
+        "contextRepeatMeterRoster.prepare",
+        "contextRepeatMeterRoster.close"
+      ],
+      "implemented_subclauses": "Explicit slash-type and dots yield exact rational beats. Omitted type can derive the same simple beat from effective global meters, exhaustive numbered-staff meters, or matching global/numbered mixtures. A sparse arbitrary-width staff partition queries each observed selector and at most one complement representative; it never expands staff-count magnitude. Chronological repairs, future-gap exclusion and field-local causes are preserved. The production provider shares a lazy per-part publication/gap roster across default-beat queries.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersDefaultsWithoutNavigation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersSlashBeatDefaultAndMissingMeter",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatUniformNumberedMeter",
+          "file": "context_independent_repeat_meter_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersMeterLateInvalidSelector",
+          "file": "validation/context_repeat_meter_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextRepeatUniformMeterSparseHugeDomain",
+          "file": "validation/context_repeat_meter_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatUniformMeterChronologyAndMissingClass",
+          "file": "validation/context_repeat_meter_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatUniformMeterFieldLocalCauses",
+          "file": "validation/context_repeat_meter_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatUniformMeterUnknownSelectorRepair",
+          "file": "validation/context_repeat_meter_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatUniformMeterCollectsLaterCausalGap",
+          "file": "validation/context_repeat_meter_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatUniformMeterZeroStaffDomain",
+          "file": "validation/context_repeat_meter_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Additive, compound and alternating grouping without a prescribed simple beat remains unavailable. Different effective staff beats, unresolved membership or an unrepaired applicable meter/count gap remain unavailable; no arbitrary common grouping is inferred.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash-type quarter dotted versus omitted type in simple4/4 and compound6/8",
+          "required_assertion": "Uniform simple numbered/global staff-meter classes prove one exact beat in both adapters and hierarchies; mixed simple beats remain unavailable.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashBeatDefaultAndMissingMeter",
+            "TestIndependentContextRepeatUniformNumberedMeter"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Uniform simple numbered/global staff-meter classes prove one exact beat in both adapters and hierarchies; mixed simple beats remain unavailable."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash-type quarter dotted versus omitted type in simple4/4 and compound6/8",
+          "required_assertion": "Mixed effective beats do not prove a common beat; invalid beat/count evidence retains its cause without contamination from irrelevant display fields.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashBeatDefaultAndMissingMeter",
+            "TestIndependentContextRepeatUniformNumberedMeter",
+            "TestContextRepeatUniformMeterFieldLocalCauses"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Mixed effective beats do not prove a common beat; invalid beat/count evidence retains its cause without contamination from irrelevant display fields."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash-type quarter dotted versus omitted type in simple4/4 and compound6/8",
+          "required_assertion": "A 2^256 domain and selector remain finite-input-sized; an empty or unavailable staff domain does not fabricate a common beat.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersDefaultsWithoutNavigation",
+            "TestContextRepeatUniformMeterSparseHugeDomain",
+            "TestContextRepeatUniformMeterZeroStaffDomain"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "A 2^256 domain and selector remain finite-input-sized; an empty or unavailable staff domain does not fabricate a common beat."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash-type quarter dotted versus omitted type in simple4/4 and compound6/8",
+          "required_assertion": "Missing complement classes and unrepaired possible-scope gaps remain unavailable; only authoritative chronological repairs can restore the affected classes.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashBeatDefaultAndMissingMeter",
+            "TestContextRepeatUniformMeterChronologyAndMissingClass",
+            "TestContextRepeatUniformMeterUnknownSelectorRepair"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Missing complement classes and unrepaired possible-scope gaps remain unavailable; only authoritative chronological repairs can restore the affected classes."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash-type quarter dotted versus omitted type in simple4/4 and compound6/8",
+          "required_assertion": "A future invalid selector does not contaminate an earlier style; separate canonical documents/parts keep publication and gap order, and provider reuse does not change the beat proof.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+            "TestRepeatAdaptersMeterLateInvalidSelector",
+            "TestContextRepeatMeterRosterOrderIdentityAndReuse"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "A future invalid selector does not contaminate an earlier style; separate canonical documents/parts keep publication and gap order, and provider reuse does not change the beat proof."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-except-voice",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/223",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "evaluateContextRepeats",
+        "contextRepeatNoteScopes",
+        "contextRepeatScopedNotes",
+        "contextRepeatVoiceExclusions",
+        "contextRepeatBuildVoiceFilter"
+      ],
+      "implemented_subclauses": "Explicit except-voice values remain style overlays separate from base staff scope. Exact named known voices are excluded from note applicability and supported beat-repeat content proof; differing material in an excluded voice does not hide equality of remaining known voices. Missing voice identity is not silently excluded. One prepaid exact string set replaces per-note exception-list scans while preserving the original loop evidence and equally ranked cause order.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersSlashVoiceAndStopScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatExceptVoiceContent",
+          "file": "context_independent_repeat_voice_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextVoiceFilterPreservesLoopEvidence",
+          "file": "validation/context_repeat_voice_filter_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestIndependentContextVoiceFilterAdmission",
+          "file": "validation/context_repeat_voice_admission_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatVoiceExclusionLinearWork",
+          "file": "validation/context_repeat_voice_scale_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Ambiguous overlapping all-staff/numbered style transitions and general complex musical equivalence remain unresolved. Ordinary exact voice exclusions and simple beat-repeat content with an explicit exclusion are implemented; no precedence or voice-identity default is invented.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "all-staff slash except voice1 with simultaneous voice2",
+          "required_assertion": "Known excluded-voice differences leave supported nonexcluded beat-repeat content equivalent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope",
+            "TestIndependentContextRepeatExceptVoiceContent"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Known excluded-voice differences leave supported nonexcluded beat-repeat content equivalent."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "all-staff slash except voice1 with simultaneous voice2",
+          "required_assertion": "An unknown voice identity cannot be treated as excluded; indexed membership reproduces the original conservative evidence instead of declaring a mismatch invalid.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope",
+            "TestIndependentContextRepeatExceptVoiceContent",
+            "TestIndependentContextVoiceFilterPreservesLoopEvidence"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "An unknown voice identity cannot be treated as excluded; indexed membership reproduces the original conservative evidence instead of declaring a mismatch invalid."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "all-staff slash except voice1 with simultaneous voice2",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "all-staff slash except voice1 with simultaneous voice2",
+          "required_assertion": "Unavailable voices and unknown/invalid exclusions keep causal evidence and the original equally ranked cause order; a known matching exclusion retains its existing dominance.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+            "TestIndependentContextRepeatExceptVoiceContent",
+            "TestIndependentContextVoiceFilterPreservesLoopEvidence"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Unavailable voices and unknown/invalid exclusions keep causal evidence and the original equally ranked cause order; a known matching exclusion retains its existing dominance."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "all-staff slash except voice1 with simultaneous voice2",
+          "required_assertion": "Both source/model and partwise/timewise voice-exception fixtures pass; 2,800 internal original-loop differential cases cover evidence-order combinations, not arbitrary musical overlays.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation",
+            "TestIndependentContextRepeatExceptVoiceContent",
+            "TestIndependentContextVoiceFilterPreservesLoopEvidence"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Both source/model and partwise/timewise voice-exception fixtures pass; 2,800 internal original-loop differential cases cover evidence-order combinations, not arbitrary musical overlays."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-measure-style-all-staves",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/265",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "evaluateContextRepeats",
+        "contextRepeatPairRanges",
+        "contextRepeatNoteScopes",
+        "contextRepeatScopedNotes",
+        "contextRepeatBuildContentRoster"
+      ],
+      "implemented_subclauses": "Absent measure-style number is symbolic all staves; explicit number preserves staff scope. Absent measure-style number is symbolic all staves and actual note applicability is filtered within canonical part. Simple content comparison now also selects exact known numbered-staff notes; known other-staff content is excluded, while absent/invalid staff membership prevents an unsupported equality proof. Per-part rosters retain unknown-part candidates in original source order.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersDefaultsWithoutNavigation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersSlashVoiceAndStopScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatNumberedStaffContent",
+          "file": "context_independent_repeat_content_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatContentScopeCauseOrder",
+          "file": "validation/context_repeat_content_order_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatRosterPreservesCoverageCause",
+          "file": "validation/context_repeat_roster_coverage_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Symbolic all-staff and explicit numbered scope are supported. Ambiguous overlapping style transitions retain source-scoped unknown rather than invented precedence.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-style without number versus number=2 across part boundary",
+          "required_assertion": "A numbered measure-repeat proves equal selected-staff material despite differing known other-staff notes.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersDefaultsWithoutNavigation",
+            "TestIndependentContextRepeatNumberedStaffContent"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "A numbered measure-repeat proves equal selected-staff material despite differing known other-staff notes."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-style without number versus number=2 across part boundary",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Mixed overlapping numbered/all-staff region resolution and score-instrument scope require retained evidence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-style without number versus number=2 across part boundary",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-style without number versus number=2 across part boundary",
+          "required_assertion": "A note with unavailable staff identity is not dropped; unknown-part versus selected-part causal order is preserved.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+            "TestIndependentContextRepeatNumberedStaffContent",
+            "TestIndependentContextRepeatContentScopeCauseOrder"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "A note with unavailable staff identity is not dropped; unknown-part versus selected-part causal order is preserved."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "measure-style without number versus number=2 across part boundary",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-slash-start-stop",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/268",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "contextRepeatPairRanges",
+        "contextRepeatNoteScopes"
+      ],
+      "implemented_subclauses": "Start/stop half-open region; part-end continuation only with complete closure; no fake required closing error. Exact start/stop pairing and per-note half-open applicability.",
+      "actual_tests": [
+        {
+          "function": "TestContextRepeatHalfOpenRanges",
+          "file": "validation/context_repeat_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersSlashVoiceAndStopScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Ambiguous overlapping scopes and incomplete endpoint remain unknown.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash start, stop at same onset, and unclosed style at complete part end",
+          "required_assertion": "Start/stop half-open region; part-end continuation only with complete closure; no fake required closing error.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash start, stop at same onset, and unclosed style at complete part end",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Ambiguous overlapping scopes and incomplete endpoint remain unknown.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash start, stop at same onset, and unclosed style at complete part end",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash start, stop at same onset, and unclosed style at complete part end",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash start, stop at same onset, and unclosed style at complete part end",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-beat-repeat-state",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/288",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "contextRepeatPairRanges",
+        "contextRepeatProveContent",
+        "contextRepeatScopedNotes",
+        "contextRepeatOrderedEqual"
+      ],
+      "implemented_subclauses": "Active graphical range separate from performed control; conservative exact event equality supports content proof. Ordered exact note pairs provide a sufficient fast equality proof; reordered supported content retains conservative multiset comparison, and a mismatch remains unresolved rather than a necessary-rule failure.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersBeatContentExactAndMismatch",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatOrderedAdaptersPreserveFallback",
+          "file": "validation/context_repeat_ordered_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatNaturalAlterEquivalence",
+          "file": "context_independent_repeat_content_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatExceptVoiceContent",
+          "file": "context_independent_repeat_voice_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls",
+          "file": "validation/context_repeat_window_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Cross-measure/tied/grace/carry/instrument/transposition equivalence unresolved; no mismatch is automatic failure.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "one beat exact repeated pitched event versus pitch mismatch and boundary-crossing note",
+          "required_assertion": "Identically ordered and reordered supported notes retain equality on source/model and partwise/timewise paths.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersBeatContentExactAndMismatch",
+            "TestRepeatOrderedAdaptersPreserveFallback"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Identically ordered and reordered supported notes retain equality on source/model and partwise/timewise paths."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "one beat exact repeated pitched event versus pitch mismatch and boundary-crossing note",
+          "required_assertion": "Different notes and unsupported notations remain unavailable; an ordered mismatch never becomes an automatic invalid result.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersBeatContentExactAndMismatch",
+            "TestRepeatOrderedAdaptersPreserveFallback"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Different notes and unsupported notations remain unavailable; an ordered mismatch never becomes an automatic invalid result."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "one beat exact repeated pitched event versus pitch mismatch and boundary-crossing note",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersBeatContentExactAndMismatch"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "one beat exact repeated pitched event versus pitch mismatch and boundary-crossing note",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "one beat exact repeated pitched event versus pitch mismatch and boundary-crossing note",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-measure-repeat-state",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/289",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "contextRepeatPairRanges",
+        "contextRepeatProveContent",
+        "contextRepeatScopedNotes",
+        "contextRepeatOrderedEqual"
+      ],
+      "implemented_subclauses": "Active graphical region and explicit pattern count retained; exact simple normalized measure equality supports proof. Ordered exact note pairs provide a sufficient fast equality proof; reordered supported content retains conservative multiset comparison, and a mismatch remains unresolved rather than a necessary-rule failure.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersMeasureContentAndStopBoundary",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatOrderedAdaptersPreserveFallback",
+          "file": "validation/context_repeat_ordered_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatNumberedStaffContent",
+          "file": "context_independent_repeat_content_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "General tied/grace, cross-boundary sounding carry, midmeasure patterns, transposed and other unsupported event equivalence remains unavailable. Exact known numbered-staff selection is implemented; no repeat notes are synthesized.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "previous one-measure pattern, equal target, stop measure first inactive",
+          "required_assertion": "Identically ordered and reordered supported notes retain equality on source/model and partwise/timewise paths.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersMeasureContentAndStopBoundary",
+            "TestRepeatOrderedAdaptersPreserveFallback"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Identically ordered and reordered supported notes retain equality on source/model and partwise/timewise paths."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "previous one-measure pattern, equal target, stop measure first inactive",
+          "required_assertion": "Different notes and unsupported notations remain unavailable; an ordered mismatch never becomes an automatic invalid result.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
+            "TestRepeatOrderedAdaptersPreserveFallback"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance.",
+          "reviewed_assertion": "Different notes and unsupported notations remain unavailable; an ordered mismatch never becomes an automatic invalid result."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "previous one-measure pattern, equal target, stop measure first inactive",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersMeasureContentAndStopBoundary"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "previous one-measure pattern, equal target, stop measure first inactive",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "previous one-measure pattern, equal target, stop measure first inactive",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-assess-target-scope",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/291",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "navigationReadNoteListening",
+        "navigationResolvePlayer"
+      ],
+      "implemented_subclauses": "Absent player/pass is symbolic all; explicit player resolves exact declaration in same score-part; explicit pass matches established domain only. Exact player declaration is resolved within canonical part; absent pass symbolic all passes; missing player target remains unknown, never all-player.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersPlayerReferenceScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Application behavior and simultaneous conflicting state precedence are not prescribed. Semantic overlap of nonidentical selector sets does not authorize a conformance failure. Additional invalid/unknown field fixtures remain acceptance work.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "assess player=R time-only=2 versus missing player declaration and absent selectors",
+          "required_assertion": "Absent player/pass is symbolic all; explicit player resolves exact declaration in same score-part; explicit pass matches established domain only.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "assess player=R time-only=2 versus missing player declaration and absent selectors",
+          "required_assertion": "Unknown player/pass does not expand to all; the unknown section-selector domain remains unavailable. TestRepeatAdaptersPlayerReferenceScope covers present/missing exact player declarations through source/model and both hierarchies without choosing application precedence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "assess player=R time-only=2 versus missing player declaration and absent selectors",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "assess player=R time-only=2 versus missing player declaration and absent selectors",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "assess player=R time-only=2 versus missing player declaration and absent selectors",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPlayerReferenceScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-context-slash-stop-boundary",
+      "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/292",
+      "status": "implemented_partial",
+      "code_symbols": [
+        "contextRepeatPairRanges",
+        "contextRepeatNoteScopes"
+      ],
+      "implemented_subclauses": "Half-open slash stop excludes boundary and following events. Half-open range scope excludes the note at the stop position.",
+      "actual_tests": [
+        {
+          "function": "TestContextRepeatHalfOpenRanges",
+          "file": "validation/context_repeat_test.go",
+          "targets": [
+            "typed internal facts"
+          ],
+          "layouts": []
+        },
+        {
+          "function": "TestRepeatAdaptersSlashVoiceAndStopScope",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatAdaptersPartIsolation",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "Exact unambiguous per-note staff/voice scope and half-open stop boundary have dedicated fixtures. Ambiguous overlapping all-staff/numbered transitions retain unresolved precedence; no general overlay policy is inferred.",
+        "owner": "batch7 repeat/navigation family; source ambiguity requires normative review, not importer policy",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash stop at note onset excludes that note",
+          "required_assertion": "Half-open slash stop excludes boundary and following events.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "negative": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash stop at note onset excludes that note",
+          "required_assertion": "Contradictory/invalid input retains causal evidence and never fabricates the claimed known fact. Exact staff/voice overlay interactions need dedicated fixtures.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "boundary": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash stop at note onset excludes that note",
+          "required_assertion": "Exercise absent/empty/zero and exact start/stop or pass boundary in this fixture; no inferred default outside its antecedent.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersSlashVoiceAndStopScope"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "missing_fact": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash stop at note onset excludes that note",
+          "required_assertion": "Remove exact schema scalar or timeline position/target/scope independently; preserve unavailable cause, do not infer absence.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        },
+        "interaction": {
+          "status": "supported_case_exercised; not universal closure",
+          "concrete_subject": "slash stop at note onset excludes that note",
+          "required_assertion": "Run source and direct model in partwise/timewise documents; introduce second part and ensure no target/state/style leakage.",
+          "actual_test_functions": [
+            "TestRepeatAdaptersPartIsolation"
+          ],
+          "acceptance_claim": false,
+          "scope_note": "These named tests provide concrete evidence for the described supported clause. They do not discharge every arbitrary malformed/missing combination or unresolved policy."
+        }
+      }
+    },
+    {
+      "id": "CHECK-beat-repeat-content",
+      "status": "implemented_sufficient_proof_partial",
+      "code_symbols": [
+        "evaluateGraphicalRepeatContent",
+        "contextRepeatProveContent",
+        "contextRepeatReadNote",
+        "contextRepeatNoteEqual",
+        "contextRepeatScopedNotes",
+        "contextRepeatOrderedEqual",
+        "contextRepeatBuildWindowIndex",
+        "contextRepeatWindowIndex.window"
+      ],
+      "implemented_subclauses": "The separate sealed predicate proves equality only over the complete supported scoped note domain; stop rows are not applicable. Natural pitch with omitted alter equals explicit zero without rewriting raw evidence. Explicit known voice exclusions are applied before comparison, while unavailable membership is retained. Ordered exact pairs prove equality in one pass; a failed ordered proof uses the existing conservative multiset semantics. Ordered positive-duration nonoverlapping beat windows use a prepaid endpoint index, monotone cursor and bounded search; unplaced, uncertain, overlapping or unordered inputs retain conservative window behavior. Mismatch and cross-boundary events remain Unknown, not a conformance failure.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersBeatContentExactAndMismatch",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "file": "validation/context_repeat_adapters_test.go"
+        },
+        {
+          "function": "TestIndependentContextRepeatNaturalAlterEquivalence",
+          "file": "context_independent_repeat_content_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatExceptVoiceContent",
+          "file": "context_independent_repeat_voice_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatOrderedAdaptersPreserveFallback",
+          "file": "validation/context_repeat_ordered_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls",
+          "file": "validation/context_repeat_window_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextRepeatOrderedProofBoundary",
+          "file": "validation/context_repeat_ordered_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatOrderedProofFallback",
+          "file": "validation/context_repeat_ordered_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatWindowIndexMatchesConservativeWindows",
+          "file": "validation/context_repeat_window_index_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatWindowIndexFallbackPreservesEvidence",
+          "file": "validation/context_repeat_window_index_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatRosterPreservesCoverageCause",
+          "file": "validation/context_repeat_roster_coverage_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "General tied/grace, enharmonic, transformed/transposed or unsupported notation/instrument semantics, sounding carry across windows and unspecified musical equivalence remain unavailable. Complete declaration/content coverage is still required. No generic beat-repeat negative theorem is claimed.",
+        "owner": "batch7 repeat/navigation",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestIndependentContextRepeatNaturalAlterEquivalence",
+            "TestIndependentContextRepeatExceptVoiceContent",
+            "TestRepeatOrderedAdaptersPreserveFallback",
+            "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls"
+          ],
+          "reviewed_assertion": "Named fixtures prove natural-pitch equivalence, simple nonexcluded voice equality, same/reordered supported pairs and sequential indexed beats.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "negative": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestRepeatOrderedAdaptersPreserveFallback",
+            "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls"
+          ],
+          "reviewed_assertion": "Different pitches or unsupported notations remain Unknown; crossing events retain their specific unavailable reason. These are conservative controls, not necessary-rule negative proofs.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "boundary": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestContextRepeatOrderedProofBoundary",
+            "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls"
+          ],
+          "reviewed_assertion": "Empty or unequal note counts cannot prove equality; exact durations/relative offsets are checked, and crossing-window events do not disappear.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "missing_fact": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestIndependentContextRepeatExceptVoiceContent",
+            "TestContextRepeatWindowIndexFallbackPreservesEvidence",
+            "TestIndependentContextRepeatRosterPreservesCoverageCause"
+          ],
+          "reviewed_assertion": "Unavailable voice/placement/content evidence and preexisting invalid coverage keep their original causal semantics rather than being silently dropped or downgraded.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "interaction": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestRepeatOrderedAdaptersPreserveFallback",
+            "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls",
+            "TestIndependentContextRepeatExceptVoiceContent"
+          ],
+          "reviewed_assertion": "The named beat cases run through source/model and partwise/timewise adapters, including reordered voices and overlapping chord fallback. This does not cover all complex musical equivalence.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        }
+      }
+    },
+    {
+      "id": "CHECK-measure-repeat-content",
+      "status": "implemented_sufficient_proof_partial",
+      "code_symbols": [
+        "evaluateGraphicalRepeatContent",
+        "contextRepeatProveContent",
+        "contextRepeatScopedNotes",
+        "contextRepeatBuildMeasureRoster",
+        "contextRepeatSelectedMeasureEqual",
+        "contextRepeatOrderedEqual",
+        "contextRepeatEmptyMeasure",
+        "contextRepeatBuildOnsetProof"
+      ],
+      "implemented_subclauses": "The separate sealed predicate proves supported complete note equality and treats stop rows as not applicable. Exact known numbered-staff selection excludes known other-staff differences but retains unavailable membership. One sparse selected-scope measure partition feeds a true-only ordered note comparison; reordered content keeps the original multiset/evidence semantics. A distinct empty-target counterexample requires complete scoped note enumeration, zero selected target note records, available independently contained scored onsets for every selected note, and a positive-duration ordinary non-rest source onset. It does not require a terminal endpoint witness or claim acoustic silence. Unknown placement and shared coverage causes are preserved before grouping/comparison.",
+      "actual_tests": [
+        {
+          "function": "TestRepeatAdaptersMeasureContentAndStopBoundary",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "file": "validation/context_repeat_adapters_test.go"
+        },
+        {
+          "function": "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
+          "file": "validation/context_repeat_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatNumberedStaffContent",
+          "file": "context_independent_repeat_content_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestRepeatOrderedAdaptersPreserveFallback",
+          "file": "validation/context_repeat_ordered_adapters_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextRepeatOrderedProofBoundary",
+          "file": "validation/context_repeat_ordered_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatOrderedProofFallback",
+          "file": "validation/context_repeat_ordered_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatContentScopeCauseOrder",
+          "file": "validation/context_repeat_content_order_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestIndependentContextRepeatRosterPreservesCoverageCause",
+          "file": "validation/context_repeat_roster_coverage_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        {
+          "function": "TestContextRepeatEmptyTargetOnsetProof",
+          "file": "context_repeat_empty_onset_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextRepeatEmptyTargetOnsetProofBoundaries",
+          "file": "context_repeat_empty_onset_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextRepeatEmptyTargetOnsetProofPatternAndStop",
+          "file": "context_repeat_empty_onset_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        }
+      ],
+      "residual": {
+        "dependency": "General tied/grace, enharmonic, transposed or otherwise unsupported event equivalence, cross-boundary sounding carry and midmeasure pattern interpretation remain unavailable. Ordered mismatch is not a necessary-rule violation. The empty-target onset theorem proves missing encoded score content only; it does not establish terminal-end containment, acoustic silence or measure capacity.",
+        "owner": "batch7 repeat/navigation",
+        "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
+      },
+      "five_axes": {
+        "positive": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestIndependentContextRepeatNumberedStaffContent",
+            "TestRepeatOrderedAdaptersPreserveFallback"
+          ],
+          "reviewed_assertion": "Known selected-staff material and same/reordered supported note pairs prove equality on source/model and both hierarchies.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "negative": {
+          "status": "supported_theorem_tested",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
+            "TestRepeatOrderedAdaptersPreserveFallback",
+            "TestContextRepeatEmptyTargetOnsetProof"
+          ],
+          "assertion": "Known false for a complete empty selected target and a positive ordinary source onset when every selected onset is available and independently contained.",
+          "acceptance_claim": true,
+          "reviewed_assertion": "The narrow missing-scored-onset counterexample can decide the ordinary unwitnessed-end fixture; ordinary content mismatch and unsupported notation remain Unknown.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "boundary": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestContextRepeatOrderedProofBoundary",
+            "TestRepeatAdaptersMeasureContentAndStopBoundary"
+          ],
+          "reviewed_assertion": "Count/offset/duration boundaries and the half-open stop are preserved; no inferred equality from empty ordered slices.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "missing_fact": {
+          "status": "coverage_witness_tested",
+          "actual_test_functions": [
+            "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
+            "TestIndependentContextRepeatNumberedStaffContent",
+            "TestIndependentContextRepeatRosterPreservesCoverageCause",
+            "TestContextRepeatEmptyTargetOnsetProofBoundaries"
+          ],
+          "assertion": "Unavailable onset, content or selected membership prevents the counterexample; a missing terminal endpoint witness alone does not.",
+          "acceptance_claim": true,
+          "reviewed_assertion": "Removing onset containment, availability or staff identity prevents a proof; wrapper selection cannot replace a preexisting invalid coverage cause with an unrelated unknown part.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        },
+        "interaction": {
+          "status": "pending_full_acceptance",
+          "acceptance_claim": false,
+          "actual_test_functions": [
+            "TestIndependentContextRepeatNumberedStaffContent",
+            "TestRepeatOrderedAdaptersPreserveFallback"
+          ],
+          "reviewed_assertion": "Independent numbered-staff and reordered voice fixtures run in source/model and both hierarchies; content ordering optimizations do not broaden the event domain.",
+          "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
+        }
+      }
+    }
+  ],
+  "resource_tests": [
+    {
+      "function": "TestContextNavigationEveryCancellationBoundary",
+      "file": "validation/context_navigation_resources_test.go"
+    },
+    {
+      "function": "TestContextNavigationSharedRetentionAndFactLimits",
+      "file": "validation/context_navigation_resources_test.go"
+    },
+    {
+      "function": "TestContextRepeatOwnedScopeProjection",
+      "file": "validation/context_navigation_resources_test.go"
+    },
+    {
+      "function": "TestContextNavigationHugeRepeatBudgetAndCancellation",
+      "file": "validation/context_navigation_test.go"
+    },
+    {
+      "function": "TestContextNavigationOwnedProjection",
+      "file": "validation/context_navigation_test.go"
+    },
+    {
+      "function": "TestIndependentContextNavigationEdgesLinearWork",
+      "file": "validation/context_repeat_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatSparseRangesLinearWork",
+      "file": "validation/context_repeat_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatSparseNoteScopesLinearWork",
+      "file": "validation/context_repeat_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatIndexCancellationAndQuota",
+      "file": "validation/context_repeat_index_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatNoRowsSkipsIndexAllocation",
+      "file": "validation/context_repeat_index_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatTransposePresenceLinearWork",
+      "file": "validation/context_repeat_transpose_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatTransformIndexAdmission",
+      "file": "validation/context_repeat_transform_index_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatContentScopeLinearWork",
+      "file": "validation/context_repeat_content_scope_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatContentScopeCauseOrder",
+      "file": "validation/context_repeat_content_order_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatContentRosterAdmission",
+      "file": "validation/context_repeat_roster_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatRosterPreservesCoverageCause",
+      "file": "validation/context_repeat_roster_coverage_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatVoiceExclusionLinearWork",
+      "file": "validation/context_repeat_voice_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextVoiceFilterAdmission",
+      "file": "validation/context_repeat_voice_admission_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextVoiceFilterPreservesLoopEvidence",
+      "file": "validation/context_repeat_voice_filter_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatOrderedProofBoundary",
+      "file": "validation/context_repeat_ordered_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatOrderedProofFallback",
+      "file": "validation/context_repeat_ordered_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatOrderedProofFallbackResources",
+      "file": "validation/context_repeat_ordered_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatOrderedProofResourceBoundaries",
+      "file": "validation/context_repeat_ordered_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatOrderedProofLinearWork",
+      "file": "validation/context_repeat_ordered_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatOrderedMeasureLinearWork",
+      "file": "validation/context_repeat_measure_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatSequentialMeasureRangeLinearWork",
+      "file": "validation/context_repeat_measure_roster_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextRepeatSequentialBeatWindowsLinearWork",
+      "file": "validation/context_repeat_beat_window_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatWindowIndexMatchesConservativeWindows",
+      "file": "validation/context_repeat_window_index_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatWindowIndexFallbackPreservesEvidence",
+      "file": "validation/context_repeat_window_index_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatWindowIndexAdmission",
+      "file": "validation/context_repeat_window_index_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatWindowIndexCancellationAndWorkBoundary",
+      "file": "validation/context_repeat_window_index_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatWindowIndexSequentialWindowGrowth",
+      "file": "validation/context_repeat_window_index_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatUniformMeterSparseHugeDomain",
+      "file": "validation/context_repeat_meter_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatUniformMeterCancellationAndQuota",
+      "file": "validation/context_repeat_meter_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatUniformMeterSharedQuota",
+      "file": "validation/context_repeat_meter_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextUniformMeterUnrelatedPartsLinearWork",
+      "file": "validation/context_repeat_meter_scale_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatMeterRosterOrderIdentityAndReuse",
+      "file": "validation/context_repeat_meter_roster_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatMeterRosterEveryCancellationAndAdmission",
+      "file": "validation/context_repeat_meter_roster_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatMeterRosterRejectsChangedTimeline",
+      "file": "validation/context_repeat_meter_roster_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatMeterRosterOneUnderAdmission",
+      "file": "validation/context_repeat_meter_roster_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestContextRepeatMeterCachedQueryCancellation",
+      "file": "validation/context_repeat_meter_roster_test.go",
+      "targets": [
+        "typed internal facts"
+      ]
+    },
+    {
+      "function": "TestIndependentContextMeasureRosterAdmissionAndCauseOrder",
+      "file": "validation/context_repeat_measure_roster_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ],
+      "test_commit": "0044570",
+      "verified_at": "production 59dcdff plus test-only 0044570 as QA commit dfb445b",
+      "log": "independent-resource-59dcdff-regressions.log"
+    },
+    {
+      "function": "TestIndependentContextMeasureRosterCancellation",
+      "file": "validation/context_repeat_measure_roster_independent_test.go",
+      "targets": [
+        "typed internal facts"
+      ],
+      "test_commit": "0044570",
+      "verified_at": "production 59dcdff plus test-only 0044570 as QA commit dfb445b",
+      "log": "independent-resource-59dcdff-regressions.log"
+    }
+  ],
+  "semantic_gates": [
+    {
+      "gate": "ending control realization",
+      "reason": "Ending-associated repeat times/after-jump are inactive. Empty number is explicitly unknown. No absent count or maximum-number inference. No primary proof establishes general nested/jump selector-domain binding.",
+      "owner": "repeat/navigation normative review",
+      "implemented": "raw endpoints/numbers, empty-number evidence, backward attribute applicability, prefix retention"
+    },
+    {
+      "gate": "Fine control and numeric units",
+      "reason": "Pinned prose preserves duration for fine=yes but does not establish universal post-jump activation or numeric unit/endpoint interpretation.",
+      "owner": "repeat/navigation normative review",
+      "implemented": "raw value and yes-duration fact; unresolved control edge"
+    },
+    {
+      "gate": "reentry effective state",
+      "reason": "Pinned sound/listening/instrument text does not choose carry versus source-position reset across repeat/jump reentry.",
+      "owner": "repeat/navigation normative review",
+      "implemented": "known previous prefix; affected executed fields Unknown at reentry; unchanged initial declarations survive; later executed statements reestablish only their fields"
+    },
+    {
+      "gate": "complex graphical equality",
+      "reason": "No canonical necessary equivalence policy for ties/grace/enharmonic/instrument/transposition/voice overlays.",
+      "owner": "graphical repeat semantic review",
+      "implemented": "Complete simple equality with exact known staff/voice filtering, natural-zero normalization, ordered true-only proof plus reordered fallback, and witnessed empty-target negative. These bounded facts do not define general enharmonic/tie/grace/transform equivalence or ambiguous overlay precedence."
+    },
+    {
+      "gate": "compound meter beat grouping",
+      "reason": "Time-signature beat grouping is not uniquely determined for all additive/compound/alternating encodings.",
+      "owner": "meter-derived context semantic review",
+      "implemented": "Explicit slash-type/dots and common simple effective beats across sparse global/numbered staff classes; missing or differing classes retain unavailable evidence. No unsupported additive/compound/alternating grouping is inferred."
+    }
+  ],
+  "projection_completeness": "RepeatContextResult.NoteScopesComplete is separate from range Complete. Shared declaration/content coverage is checked before part selection; invalid coverage keeps its exact cause. Part indexes retain unknown-part candidates in original sequence, while missing staff/voice/placement membership cannot silently disappear. Conservative document-wide structural gaps may still reduce precision; no partial roster is presented as exhaustive.",
+  "commits": [
+    "5e11e04",
+    "8e10aa9",
+    "360ab71",
+    "04e7ecf",
+    "994745e",
+    "9f65430",
+    "82713fe",
+    "015023b",
+    "2029047",
+    "77c1dbb",
+    "bac0df8",
+    "a7263d6",
+    "a3f8d0f",
+    "f865107",
+    "a024f90",
+    "2d57eba",
+    "4c01801",
+    "0de79a1",
+    "59dcdff"
+  ],
+  "resource_index_followup": {
+    "commit": "b87dd67",
+    "independent_red_tests_unchanged": [
+      "TestIndependentContextNavigationEdgesLinearWork",
+      "TestIndependentContextRepeatSparseRangesLinearWork",
+      "TestIndependentContextRepeatSparseNoteScopesLinearWork"
+    ],
+    "before_steps_100_1000": {
+      "navigation": [
+        31200,
+        3012000
+      ],
+      "ranges": [
+        100100,
+        8201000
+      ],
+      "note_scopes": [
+        33000,
+        1230000
+      ]
+    },
+    "after_steps_100_1000": {
+      "navigation": [
+        1501,
+        15001
+      ],
+      "ranges": [
+        87302,
+        873002
+      ],
+      "note_scopes": [
+        23902,
+        239002
+      ]
+    },
+    "indexes": [
+      "Canonical part/style grouping with unknown-part candidates retained",
+      "Same-barline ending and named-marker indexes with duplicate and unknown marker conservatism",
+      "Exact contained single-scope sorted transition successors with independently checked adjacency",
+      "Canonical part note rosters merged with unknown-part candidates in original sequence; direct stop lookup",
+      "Last closure index preserving previous last-match semantics"
+    ],
+    "resource_ownership": "Scratch map/slice backing prepaid before allocation (1024 bytes per upper-bound input entry plus fixed512); borrowed admitted strings/references are not copied; proportional hash/comparison work metered; defer release on all paths; no finite budget increase. Empty graphical row domains do not allocate unused indexes.",
+    "cancellation_polls": {
+      "range": 156,
+      "navigation": 14,
+      "note_scopes": 203
+    },
+    "residual_complexity": "Overlapping/unknown or unproved positional/scope groups retain a bounded conservative within-part fallback. Emitting a membership for each of R ranges and N notes in the same part requires Theta(R*N) output and is not claimed globallylinear. Exact ordinary single-scope samepart successors are O(NlogN), verified100-to1000 steps252066-to3023762.",
+    "review": "audit_context_resource_safety found no remaining semantic/accounting blocker after first poll, explicit adjacency verification and zero-row early exits.",
+    "logs": [
+      "repeats-scale-independent-red-own.log",
+      "repeats-index-final-green.log",
+      "repeats-index-final-race.log",
+      "repeats-index-final-386.log"
+    ],
+    "final_integrated_recheck": {
+      "production_commit": "59dcdff",
+      "log": "independent-resource-59dcdff-regressions.log",
+      "after_steps_100_1000": {
+        "navigation": [
+          1501,
+          15001
+        ],
+        "ranges": [
+          87302,
+          873002
+        ],
+        "note_scopes": [
+          24002,
+          240002
+        ]
+      },
+      "cancellation_polls": {
+        "range": 156,
+        "navigation": 14,
+        "note_scopes": 209
+      },
+      "difference_from_original_green": "Later charged voice membership/admission adds bounded work; original GREEN measurements remain historical evidence."
+    }
+  },
+  "uniform_numbered_meter_followup": {
+    "commit": "916021d",
+    "independent_red": "c2107e4/TestIndependentContextRepeatUniformNumberedMeter unchanged; RED->GREEN for source/model and partwise/timewise slash/beat-repeat, exhaustive numbered and global-base cases; mixed beats remain unavailable",
+    "implementation": [
+      "Query effective arbitrary-width staff count",
+      "Collect/sort/deduplicate finite explicit numbered meter/gap selectors within the effective domain",
+      "Query projected beat through existing chronological service for each explicit selector and one complement representative when needed",
+      "Preserve field-local beat/count causes while ignoring unrelated display metadata",
+      "Treat unresolved numbered selectors as prepaid possible-all-staff query gaps, preserving position/envelope/cause and public histories; accepted chronological repairs can repair every possible class"
+    ],
+    "tests": [
+      "TestContextRepeatUniformMeterSparseHugeDomain",
+      "TestContextRepeatUniformMeterChronologyAndMissingClass",
+      "TestContextRepeatUniformMeterFieldLocalCauses",
+      "TestContextRepeatUniformMeterCancellationAndQuota",
+      "TestContextRepeatUniformMeterUnknownSelectorChronology",
+      "TestContextRepeatUniformMeterSharedQuota",
+      "TestContextRepeatUniformMeterCollectsLaterCausalGap",
+      "TestContextRepeatUniformMeterZeroStaffDomain",
+      "TestContextRepeatUniformMeterUnknownSelectorRepair",
+      "TestRepeatAdaptersMeterLateInvalidSelector"
+    ],
+    "resource": "2^256 staff count and selector produce known quarter with finite input-sized work; no count expansion.250 cancellation polls, shared quota/cleanup tests. Scratch prepaid from finite publication/gap counts; selectors borrowed immutable Integer values.",
+    "remaining_source_gate": "No arbitrary additive/compound/alternating beat grouping is inferred; this closes uniform simple numbered-staff meters, not undefined grouping policies.",
+    "reviewer": "audit_context_semantic_scope reviewed sparse partition, future-gap exclusion, causal aggregation and possible-scope repair approach; integrated exact-head regression remains parent-owned.",
+    "logs": [
+      "repeats-sem10-red.log",
+      "repeats-sem10-final-green.log",
+      "repeats-sem10-final-race.log",
+      "repeats-sem10-final-386.log"
+    ],
+    "integrated_commit": "f865107",
+    "independent_integrated_verification": "PASS at production 59dcdff; semantic and resource fixtures are present in independent-resource-59dcdff-regressions.log and selected race log. Full normative closure is not asserted."
+  },
+  "uniform_meter_roster_followup": {
+    "commit": "03cf59b",
+    "independent_test": "db19d39/TestIndependentContextUniformMeterUnrelatedPartsLinearWork",
+    "regression_adaptation": "Only uniform branch prepares and passes one provider roster before its query loop; unchanged timeline-query baseline and15x added-work guard.",
+    "before_independent_added_work_100_1000": [
+      30400,
+      3004000
+    ],
+    "after_added_work_100_1000": [
+      1202,
+      12002
+    ],
+    "ratio": 9.99,
+    "production": "evaluateContextRepeats owns one lazy precharged contextRepeatMeterRoster, passes it explicitly to every default-beat query, and closes it on every provider return. No repeated standalone fallback on the production consumer path.",
+    "ownership": "Canonical full NodeRef map keys borrow immutable admitted references; separate publication and gap index vectors retain source order. Failed build is transactional. Cached prepare polls cancellation and guards timeline identity/counts.",
+    "resource_tests": {
+      "construction_polls": 8,
+      "cached_query_polls": 106,
+      "admission": "one byte, exact one-under, exact-fit",
+      "lifecycle": "reuse without new allocation; close, double-close and reprepare; failed build no publication; changed timeline rejected"
+    },
+    "preserved_semantics": "SEM10 sparse2^256 domain, all numbered/global uniform fixtures, mixed/missing/stale/future/causal gap and possible-scope repair cases remain passing. Accepted timeline state query and accounting are unchanged.",
+    "scope_of_claim": "Added roster/collector work is linear for unrelated parts after one build; accepted authoritative state-query baseline remains separately measured, not claimed globallylinear.",
+    "review": "audit_context_resource_safety reviewed roster and exact adapted guard and found no blocker.",
+    "logs": [
+      "repeats-sem10-roster-authentic-red.log",
+      "repeats-sem10-roster-authentic-green.log",
+      "repeats-sem10-roster-admission-green.log",
+      "repeats-sem10-roster-final-green.log",
+      "repeats-sem10-roster-final-race.log",
+      "repeats-sem10-roster-final-386.log",
+      "independent-resource-59dcdff-regressions.log",
+      "independent-resource-59dcdff-race.log"
+    ],
+    "integrated_commit": "59dcdff",
+    "baseline_steps_100_1000": [
+      178504,
+      4485004
+    ],
+    "after_full_steps_100_1000": [
+      179706,
+      4497006
+    ],
+    "original_independent_red_log": "independent-resource-repeat-meter-unrelated-red.log",
+    "owned_race": "PASS: root 2.247s, validation 6.222s; owned tagged-fixture scope, not immutable integrated acceptance",
+    "owned_386": "compile_exit=0; no 386 execution claim",
+    "integrated_verification": "PASS at production 59dcdff plus test-only 0044570; independent-resource-59dcdff-regressions.log; full/base/added counts match owned correction.",
+    "intermediate_owned_red_added_work_100_1000": [
+      21100,
+      2011000
+    ],
+    "intermediate_red_scope": "The owned intermediate RED replay is distinct from the original independent f865107 RED; retain its separate original log instead of conflating counts.",
+    "independent_final_summary": "independent-resource-final-summary.json"
+  },
+  "historical_verification": {
+    "own": "Tagged unrelated-family scaffold only; family tests green. This is not full production acceptance.",
+    "real_integrated": "No-scaffold regular and race selected-family tests PASS in active lead tree observed c465a7469b38d4da73534f25a47f440ef5316a5f before final015023b field-only follow-up; exact immutable/all7 claim not made. repeats-real-integrated-final.log",
+    "cancellation": "106 navigation polls, work/fact/retention quota tests and owned nested snapshots.",
+    "386": "GOARCH=386 compile-only PASS; host execution unsupported (exec format error). repeats-386-compile.log",
+    "race": "Own tagged family PASS and real untagged integrated family PASS."
+  },
+  "semantic_content_followup": {
+    "integrated_commits": [
+      "bac0df8",
+      "a7263d6",
+      "a3f8d0f",
+      "f865107",
+      "a024f90",
+      "2d57eba",
+      "4c01801",
+      "0de79a1",
+      "59dcdff"
+    ],
+    "authentic_red_tests": [
+      "b0b7907/TestIndependentContextRepeatNaturalAlterEquivalence",
+      "b0b7907/TestIndependentContextRepeatNumberedStaffContent",
+      "06b5705/TestIndependentContextRepeatExceptVoiceContent",
+      "6742082/TestIndependentContextRepeatRosterPreservesCoverageCause",
+      "8ef4aaf/TestIndependentContextRepeatUniformNumberedMeter"
+    ],
+    "supported_changes": [
+      "Omitted natural alteration and explicit exact zero are equivalent without changing raw evidence.",
+      "Exact known staff/voice selection excludes only proven nonmembers; missing identity remains unavailable.",
+      "Canonical part rosters retain unknown-part candidates in original source order and preserve coverage before later selectors.",
+      "Uniform simple effective numbered-staff meter classes derive a common beat sparsely; no numeric staff-domain expansion.",
+      "Ordered comparison is a sufficient true-only path; reordered content retains conservative multiset and first unavailable-cause behavior.",
+      "Measure buckets and ordered beat-window indexes remove repeated selection scans without broadening the supported event universe."
+    ],
+    "logs": [
+      "independent-semantic-repeat-content-red.log",
+      "repeat-scoped-natural-green.log",
+      "independent-semantic-repeat-voice-red.log",
+      "repeat-voice-filter-green.log",
+      "independent-resource-repeat-roster-coverage-red.log",
+      "repeat-roster-coverage-green.log",
+      "independent-semantic-repeat-meter-red.log",
+      "repeats-sem10-final-green.log",
+      "independent-resource-measure-window-integration-green.log"
+    ],
+    "limits": "Complete supported event coverage remains mandatory. General musical equivalence, transposed content, grace/tie/carry handling, ambiguous overlays, unspecified beat grouping, ending/jump binding and reentry policy are not closed by these changes."
+  },
+  "late_resource_followup": {
+    "scope": "These are avoidable batch-7 common-path scans, not source-policy boundaries. Counts include applicable new index construction. Exceptional/output-sized work remains bounded by unchanged shared quotas.",
+    "growth": [
+      {
+        "name": "part-wide transpose presence",
+        "test": {
+          "function": "TestIndependentContextRepeatTransposePresenceLinearWork",
+          "file": "validation/context_repeat_transpose_scale_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        "input_sizes": [
+          100,
+          1000
+        ],
+        "before_steps": [
+          46800,
+          2268000
+        ],
+        "after_steps": [
+          27401,
+          274001
+        ],
+        "before_ratio": 48.46,
+        "after_ratio": 10.0,
+        "red_test_commit": "7e8553b",
+        "integrated_fix_commit": "bac0df8",
+        "red_log": "independent-resource-transpose-red.log",
+        "green_log": "independent-resource-59dcdff-regressions.log",
+        "scope": "Affected and unrelated parts stay distinct; one exact-part presence index.",
+        "unchanged_growth_guard": 15,
+        "previous_green_log": "repeat-roster-resource-green.log",
+        "green_production_commit": "59dcdff"
+      },
+      {
+        "name": "content selection across unrelated parts",
+        "test": {
+          "function": "TestIndependentContextRepeatContentScopeLinearWork",
+          "file": "validation/context_repeat_content_scope_scale_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        "input_sizes": [
+          100,
+          1000
+        ],
+        "before_steps": [
+          30500,
+          3005000
+        ],
+        "after_steps": [
+          1401,
+          14001
+        ],
+        "before_ratio": 98.52,
+        "after_ratio": 9.99,
+        "red_test_commit": "b958aa2",
+        "integrated_fix_commit": "a7263d6",
+        "red_log": "independent-resource-repeat-content-scope-red.log",
+        "green_log": "independent-resource-59dcdff-regressions.log",
+        "scope": "One selected note per exact part/row; unknown candidates and causal order retained. Final counts include the newly charged voice-pass loop; the earlier 1301/13001 result is retained separately.",
+        "unchanged_growth_guard": 15,
+        "previous_green_log": "repeat-roster-resource-green.log",
+        "green_production_commit": "59dcdff",
+        "previous_after_steps": [
+          1301,
+          13001
+        ]
+      },
+      {
+        "name": "voice-exclusion membership",
+        "test": {
+          "function": "TestIndependentContextRepeatVoiceExclusionLinearWork",
+          "file": "validation/context_repeat_voice_scale_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        "input_sizes": [
+          100,
+          1000
+        ],
+        "before_steps": [
+          153407,
+          13234007
+        ],
+        "after_steps": [
+          24810,
+          248010
+        ],
+        "before_ratio": 86.27,
+        "after_ratio": 10.0,
+        "red_test_commit": "8a426e5",
+        "integrated_fix_commit": "a3f8d0f",
+        "red_log": "independent-resource-repeat-voice-red.log",
+        "green_log": "independent-resource-59dcdff-regressions.log",
+        "scope": "One set build, exact named known exclusions and original loop evidence. Earlier independent a3f8d0f count was 24809/248009; current integrated count includes an added cancellation/step admission poll.",
+        "unchanged_growth_guard": 15,
+        "previous_green_log": "repeat-integrated-growth-green.log",
+        "green_production_commit": "59dcdff"
+      },
+      {
+        "name": "same-order two-measure content",
+        "test": {
+          "function": "TestIndependentContextRepeatOrderedMeasureLinearWork",
+          "file": "validation/context_repeat_measure_scale_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        "input_sizes": [
+          100,
+          1000
+        ],
+        "before_steps": [
+          72966,
+          2139660
+        ],
+        "after_steps": [
+          57919,
+          639163
+        ],
+        "before_ratio": 29.32,
+        "after_ratio": 11.04,
+        "red_test_commit": "f2aa58f",
+        "integrated_fix_commit": "0de79a1",
+        "red_log": "independent-resource-repeat-ordered-measure-red.log",
+        "green_log": "independent-resource-59dcdff-regressions.log",
+        "scope": "Exact source/target selection and ordered sufficient proof; reordered fallback remains bounded.",
+        "unchanged_growth_guard": 15,
+        "previous_green_log": "independent-resource-measure-window-integration-green.log",
+        "green_production_commit": "59dcdff"
+      },
+      {
+        "name": "one-note sequential measure range",
+        "test": {
+          "function": "TestIndependentContextRepeatSequentialMeasureRangeLinearWork",
+          "file": "validation/context_repeat_measure_roster_scale_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        "input_sizes": [
+          100,
+          1000
+        ],
+        "before_steps": [
+          55155,
+          1905105
+        ],
+        "after_steps": [
+          40705,
+          410605
+        ],
+        "before_ratio": 34.54,
+        "after_ratio": 10.09,
+        "red_test_commit": "6f3f3e0",
+        "integrated_fix_commit": "0de79a1",
+        "red_log": "independent-resource-repeat-sequential-measures-red.log",
+        "green_log": "independent-resource-59dcdff-regressions.log",
+        "scope": "One sparse measure partition per row; comparison uses preselected slices.",
+        "unchanged_growth_guard": 15,
+        "previous_green_log": "independent-resource-measure-window-integration-green.log",
+        "green_production_commit": "59dcdff"
+      },
+      {
+        "name": "one-note sequential beat windows",
+        "test": {
+          "function": "TestIndependentContextRepeatSequentialBeatWindowsLinearWork",
+          "file": "validation/context_repeat_beat_window_scale_independent_test.go",
+          "targets": [
+            "typed internal facts"
+          ]
+        },
+        "input_sizes": [
+          100,
+          1000
+        ],
+        "before_steps": [
+          9920777,
+          1152727921
+        ],
+        "after_steps": [
+          556813,
+          6308341
+        ],
+        "before_ratio": 116.19,
+        "after_ratio": 11.33,
+        "red_test_commit": "a3684e3",
+        "integrated_fix_commit": "0de79a1",
+        "red_log": "independent-resource-repeat-sequential-beats-red.log",
+        "green_log": "independent-resource-59dcdff-regressions.log",
+        "scope": "Includes endpoint index construction; unsupported/overlapping/uncertain windows retain conservative fallback.",
+        "unchanged_growth_guard": 15,
+        "previous_green_log": "independent-resource-measure-window-integration-green.log",
+        "green_production_commit": "59dcdff"
+      }
+    ],
+    "ordered_resource_boundaries": {
+      "ordered_polls": 31,
+      "selected_ordered_polls": 32,
+      "fallback_polls": 70,
+      "fallback_mask_exact_one_under_bytes": [
+        3,
+        2
+      ],
+      "claim": "All observed owned-helper cancellation boundaries and exact/one-under work/mask limits retain no scratch; these are bounded fixture counts, not all-program cancellation proof."
+    },
+    "retained_limits": [
+      "Reordered or otherwise unproved content may use a quadratic bounded multiset fallback.",
+      "Full note membership output can require Theta(ranges times notes).",
+      "Authoritative timeline-state query baseline retains its own separately measured costs.",
+      "Unknown placement/structural coverage can conservatively make a whole content proof unavailable.",
+      "Shared budget defaults are unchanged; no globally linear assessment or exact heap-accounting claim."
+    ],
+    "measure_roster_ownership": {
+      "test_commit": "0044570",
+      "production_commit": "59dcdff",
+      "test_only_qa_commit": "dfb445b",
+      "log": "independent-resource-59dcdff-regressions.log",
+      "observed_note_value_bytes": 664,
+      "conservative_reserve_per_input_bytes": 4096,
+      "cancellation_polls": 4,
+      "scope": "Exact/one-under scratch, no partial publication, cause/order preservation and cleanup; this is conservative admission rather than exact heap accounting."
+    },
+    "window_resource_boundaries": {
+      "cancellation_polls": 125,
+      "exact_work_boundary": 10074,
+      "log": "independent-resource-59dcdff-regressions.log",
+      "scope": "Observed finite fixture polls; endpoint index and fallback preserve resource/causal contracts."
+    },
+    "final_acceptance": {
+      "summary": "independent-resource-final-summary.json",
+      "production_commit": "59dcdff9dde34cb25e1ee20730b8e3a77f207fb4",
+      "selected_regressions": "pass",
+      "selected_race": "pass",
+      "386_compile": "pass",
+      "386_execution": "blocked exec format error",
+      "benchmarks": "five samples each completed; shared-host measurements do not support isolated throughput claims",
+      "ordinary_open_resource_findings": [],
+      "final_whole_repository_and_ci_gates": "not independently passed by this resource audit"
+    }
+  },
+  "evidence_preservation": {
+    "original_check_count": 23,
+    "ids_unchanged": true,
+    "check_statuses_unchanged": true,
+    "original_contract_pointers_unchanged": true,
+    "normative_scope": "Existing source/status scope is preserved. Added fixture evidence does not promote whole-check conformance or unresolved policy closure.",
+    "source_map": "docs/validation/evidence/repeat-implementation-map.json",
+    "resource_trace": "repeat-final-resource-trace.md"
+  }
+}

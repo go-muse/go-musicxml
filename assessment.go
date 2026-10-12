@@ -220,7 +220,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	}
 	run := &sourceAssessmentRun{ctx: ctx}
 	if assessment != nil {
-		if assessment.Profile != ProfileSourceXSDPreview && assessment.Profile != ProfileSourceLocal && assessment.Profile != ProfileSourceTimeline {
+		if assessment.Profile != ProfileSourceXSDPreview && assessment.Profile != ProfileSourceLocal && assessment.Profile != ProfileSourceTimeline && assessment.Profile != ProfileSourceContext {
 			return nil, &validation.ConfigurationError{Field: "profile", Reason: "unknown or empty explicit source profile"}
 		}
 		run.account, err = validation.NewBudgetAccount(assessment.Budgets)
@@ -234,7 +234,9 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 		}
 		var engine *validation.Engine
 		var engineErr error
-		if assessment.Profile == ProfileSourceTimeline {
+		if assessment.Profile == ProfileSourceContext {
+			engine, engineErr = newContextAssessmentEngine()
+		} else if assessment.Profile == ProfileSourceTimeline {
 			engine, engineErr = newTimelineAssessmentEngine()
 		} else if assessment.Profile == ProfileSourceLocal {
 			engine, engineErr = newModelAssessmentEngine()

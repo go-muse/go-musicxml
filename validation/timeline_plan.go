@@ -302,12 +302,21 @@ func (p Plan) timelineConsumerSchema() *CompiledSchema {
 // that are not selected by a profile. Immutable timeline bindings are shared,
 // but remain conservatively accounted for by every plan that retains them.
 func (p Plan) boundSchema() *CompiledSchema {
+	if p.isContext() && p.context != nil {
+		return p.context.Schema
+	}
 	if p.kind == planXSD {
 		return p.schema
 	}
 	return p.timelineConsumerSchema()
 }
 func (p Plan) withBoundSchema(schema *CompiledSchema) Plan {
+	if p.isContext() && p.context != nil {
+		copy := *p.context
+		copy.Schema = schema
+		p.context = &copy
+		return p
+	}
 	switch p.kind {
 	case planXSD:
 		p.schema = schema

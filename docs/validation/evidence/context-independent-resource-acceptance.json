@@ -1,0 +1,184 @@
+{
+  "status": "independent_resource_acceptance_pass_with_explicit_limits",
+  "tested_production_head": "59dcdff9dde34cb25e1ee20730b8e3a77f207fb4",
+  "qa_head": "dfb445b",
+  "qa_overlay": "test-only 0044570, no production difference",
+  "toolchain": {
+    "go": "go1.27.2",
+    "goos": "linux",
+    "goarch": "amd64",
+    "gomaxprocs": 4,
+    "xmllint": "real libxml2 2.9.14"
+  },
+  "defaults_unchanged": true,
+  "default_limits": {
+    "max_rule_steps": 20000000,
+    "max_buffered_bytes": 67108864
+  },
+  "default_matrix": {
+    "notes100": {
+      "source": "complete_conformant",
+      "model": "complete_conformant",
+      "projected_records_each": 2174
+    },
+    "notes1000": {
+      "source": "incomplete_rule_steps_limit",
+      "source_records": 354,
+      "source_used_steps": 19999965,
+      "model": "incomplete_rule_steps_limit",
+      "model_records": 358,
+      "model_used_steps": 19999996
+    },
+    "corpus": {
+      "fixtures": [
+        "23a-Tuplets",
+        "33c-Spanners-Slurs",
+        "45a-SimpleRepeat",
+        "45d-Repeats-Nested-Alternatives",
+        "52a-PageLayout"
+      ],
+      "model": "all_complete_conformant",
+      "exact_source": "all_incomplete_unread_external_DTD_boundary_1000_diagnostics"
+    }
+  },
+  "shared_model_account": {
+    "max_rule_steps": 17179869184,
+    "notes100": {
+      "max_buffered_bytes": [
+        67108864,
+        536870912
+      ],
+      "complete": true,
+      "rule_steps": 14944682,
+      "context_facts": 3284,
+      "projected_records": 2174
+    },
+    "notes1000_expanded": {
+      "max_buffered_bytes": 536870912,
+      "complete": true,
+      "rule_steps": 145289971,
+      "context_facts": 32084,
+      "projected_records": 21074
+    },
+    "notes1000_retention_limited": {
+      "max_buffered_bytes": 67108864,
+      "complete": false,
+      "error": "buffered-bytes limit",
+      "rule_steps": 23011478,
+      "context_facts": 4449,
+      "projected_records": 442,
+      "buffered_used_at_refusal": 67106090,
+      "requested_bytes": 4672
+    },
+    "post_finish_gauges": {
+      "buffered_bytes": 0,
+      "depth": 0,
+      "scope": "four shared-account cases above"
+    }
+  },
+  "growth_100_to_1000": {
+    "performance_advice": {
+      "small_steps": 501,
+      "large_steps": 5001,
+      "ratio": 9.982,
+      "guard_max_ratio": 15
+    },
+    "navigation_edges": {
+      "small_steps": 1501,
+      "large_steps": 15001,
+      "ratio": 9.994,
+      "guard_max_ratio": 15
+    },
+    "independent_part_ranges": {
+      "small_steps": 87302,
+      "large_steps": 873002,
+      "ratio": 10.0,
+      "guard_max_ratio": 15
+    },
+    "independent_part_note_membership": {
+      "small_steps": 24002,
+      "large_steps": 240002,
+      "ratio": 9.999,
+      "guard_max_ratio": 15
+    },
+    "transpose_presence": {
+      "small_steps": 27401,
+      "large_steps": 274001,
+      "ratio": 10.0,
+      "guard_max_ratio": 15
+    },
+    "content_part_scope": {
+      "small_steps": 1401,
+      "large_steps": 14001,
+      "ratio": 9.994,
+      "guard_max_ratio": 15
+    },
+    "voice_exclusion": {
+      "small_steps": 24810,
+      "large_steps": 248010,
+      "ratio": 9.996,
+      "guard_max_ratio": 15
+    },
+    "ordered_measure_match": {
+      "small_steps": 57919,
+      "large_steps": 639163,
+      "ratio": 11.035,
+      "guard_max_ratio": 15
+    },
+    "sequential_measure_range": {
+      "small_steps": 40705,
+      "large_steps": 410605,
+      "ratio": 10.087,
+      "guard_max_ratio": 15
+    },
+    "sequential_beat_windows": {
+      "small_steps": 556813,
+      "large_steps": 6308341,
+      "ratio": 11.329,
+      "guard_max_ratio": 15
+    },
+    "uniform_meter_added_collection": {
+      "small_steps": 1202,
+      "large_steps": 12002,
+      "ratio": 9.985,
+      "guard_max_ratio": 15
+    }
+  },
+  "uniform_meter_baseline": {
+    "steps100": 178504,
+    "steps1000": 4485004,
+    "interpretation": "accepted state-query costs subtracted; only added collector work asserted linear"
+  },
+  "checks": {
+    "selected_root_and_validation_regressions": "pass",
+    "targeted_race": "pass",
+    "386_cross_compile_root_and_validation": "pass",
+    "actual_386_execution": "blocked_exec_format_error_exit126",
+    "benchmark": "five_samples_each_completed",
+    "frozen_six_old_profiles": "unchanged",
+    "typed_payload_and_ingress_ownership": "pass",
+    "opus_no_fetch_and_scope": "pass",
+    "required_attribute_equal_schema_interning": "pass",
+    "both_live_gauges_after_finish": "pass"
+  },
+  "ordinary_unfinished_resource_defects": [],
+  "limitations": [
+    "B5-PERF-01 remains open for batch9; defaults do not complete 1000-note context fixture",
+    "Some accepted timeline multi-part query costs remain superlinear",
+    "Overlapping or unknown scopes/windows and reordered multiset matching retain finite-budget conservative fallback; globally linear performance is not claimed",
+    "Per-range note memberships and simultaneous span outputs may themselves be quadratic in total output size",
+    "Retained external DTD, linked resources/packages, intended pitch, physical performance/engraving and figure-number source boundaries remain explicit",
+    "Actual 386 execution and final whole-repository/CI gates are not independently passed here"
+  ],
+  "evidence": {
+    "regressions": "independent-resource-59dcdff-regressions.log",
+    "race": "independent-resource-59dcdff-race.log",
+    "bench": "independent-resource-59dcdff-bench.log",
+    "live_gauges": "independent-resource-59dcdff-live-gauges.log",
+    "full_audit": "independent-resource-qa.md"
+  },
+  "test_only_commits": [
+    "004457021cba110805f0293b71e8c8dad4b995dd",
+    "6e2dc8a0caf540ded4527a4b21577d72c5cd004d"
+  ]
+}

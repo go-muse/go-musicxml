@@ -1,0 +1,203 @@
+package validation
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"testing"
+)
+
+func TestIndependentRound3TiedScratchAllInterruptionsAndRetries(t *testing.T) {
+	for _, count := range []int{100, 1000} {
+		es := make([]*spanEndpoint, count+1)
+		indices := make([]int, len(es))
+		for i := range count {
+			es[i] = spanTestEndpoint(t, NodeID(i+1), SpanTied, "start", 1)
+			indices[i] = i
+		}
+		es[count] = spanTestEndpoint(t, NodeID(count+1), SpanTied, "stop", 1)
+		es[count].payload.Anchor = es[count-1].payload.Anchor
+		indices[count] = count
+		exactBytes := int64(512 + 257*count)
+		s := rationalSession(t, Budgets{MaxBufferedBytes: exactBytes})
+		if err := s.account.Charge(BudgetBufferedBytes, 1); err != nil {
+			t.Fatal(err)
+		}
+		for attempt := 0; attempt < 3; attempt++ {
+			if _, err := spanTiedRunAmbiguous(context.Background(), s, es, indices); !errors.Is(err, ErrResourceLimit) {
+				t.Fatalf("same-account refusal: %v", err)
+			}
+			if s.retained != 0 || rationalUsage(t, s, BudgetBufferedBytes) != 1 {
+				t.Fatal("same-account refusal leaked scratch")
+			}
+		}
+		if err := s.account.Release(BudgetBufferedBytes, 1); err != nil {
+			t.Fatal(err)
+		}
+		probe := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
+		before := rationalUsage(t, s, BudgetRuleSteps)
+		yes, err := spanTiedRunAmbiguous(probe, s, es, indices)
+		steps := rationalUsage(t, s, BudgetRuleSteps) - before
+		if err != nil || !yes {
+			t.Fatalf("recovered exact admission: %v", err)
+		}
+		if steps != int64(2*len(es)+1) {
+			t.Fatalf("unexpected scan work %d", steps)
+		}
+		if s.retained != 0 || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+			t.Fatal("success leaked scratch")
+		}
+		for at := 1; at <= probe.calls; at++ {
+			// Exhaust every stop in the 100-entry control, and representative first,
+			// middle, last stops in the larger control, on the very same account.
+			if count == 1000 && at != 1 && at != probe.calls/2 && at != probe.calls {
+				continue
+			}
+			interrupted := &rationalCancelContext{Context: context.Background(), at: at}
+			if _, err := spanTiedRunAmbiguous(interrupted, s, es, indices); !errors.Is(err, context.Canceled) {
+				t.Fatalf("stop %d: %v", at, err)
+			}
+			if s.retained != 0 || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+				t.Fatalf("canceled scratch survived stop %d", at)
+			}
+			if yes, err := spanTiedRunAmbiguous(context.Background(), s, es, indices); err != nil || !yes {
+				t.Fatalf("retry stop %d: %v", at, err)
+			}
+		}
+		s.cleanup()
+		t.Logf("count=%d exact_buffer=%d exact_steps=%d cancellation_polls=%d same_account_refusals=3", count, exactBytes, steps, probe.calls)
+	}
+}
+
+func TestIndependentRound3LayoutScratchRepeatedBudgetAndCancellation(t *testing.T) {
+	for _, unknown := range []bool{false, true} {
+		t.Run(fmt.Sprint(unknown), func(t *testing.T) {
+			measure := localNode(1, 0, "measure")
+			r := layoutRound1Reader(t, measure)
+			exactBytes := int64(512)
+			part := Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"score", 2}}
+			if unknown {
+				exactBytes = 1024
+				part = Evidence[NodeRef]{State: EvidenceAbsent}
+			}
+			account, err := NewBudgetAccount(Budgets{MaxBufferedBytes: exactBytes, MaxRuleSteps: 1 << 30})
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.s.account = account
+			l := layoutScopes{r: r, key: RuleKey{"layout", 1}, staffOverrides: map[NodeID]map[string]layoutStaffBucket{2: {}}, staffGaps: map[NodeID]Evidence[bool]{}}
+			b := timelineMeasureBlock{measure: measure, content: measure, part: part}
+			run := func(ctx context.Context) error {
+				l = layoutScopes{r: &contextReader{ctx: ctx, s: r.s, b: r.b}, key: RuleKey{"layout", 1}, staffOverrides: map[NodeID]map[string]layoutStaffBucket{2: {}}, staffGaps: map[NodeID]Evidence[bool]{}}
+				return l.publishStaffLayouts(b, Evidence[layoutStaffRef]{State: EvidenceAbsent}, layoutFrame{})
+			}
+			if err := account.Charge(BudgetBufferedBytes, 1); err != nil {
+				t.Fatal(err)
+			}
+			for attempt := 0; attempt < 3; attempt++ {
+				if err := run(context.Background()); !errors.Is(err, ErrResourceLimit) {
+					t.Fatalf("one-under attempt %d: %v", attempt, err)
+				}
+				if r.s.retained != 0 || rationalUsage(t, r.s, BudgetBufferedBytes) != 1 {
+					t.Fatal("one-under scratch survived")
+				}
+			}
+			if err := account.Release(BudgetBufferedBytes, 1); err != nil {
+				t.Fatal(err)
+			}
+			probe := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
+			if err := run(probe); err != nil {
+				t.Fatal("exact", err)
+			}
+			for at := 1; at <= probe.calls; at++ {
+				if err := run(&rationalCancelContext{Context: context.Background(), at: at}); !errors.Is(err, context.Canceled) {
+					t.Fatalf("cancel at %d: %v", at, err)
+				}
+				if r.s.retained != 0 || rationalUsage(t, r.s, BudgetBufferedBytes) != 0 {
+					t.Fatalf("canceled scratch survived %d", at)
+				}
+				if err := run(context.Background()); err != nil {
+					t.Fatal("recovery", err)
+				}
+			}
+			var small int64
+			for _, count := range []int{100, 1000} {
+				before := rationalUsage(t, r.s, BudgetRuleSteps)
+				for i := 0; i < count; i++ {
+					if err := run(context.Background()); err != nil {
+						t.Fatal(err)
+					}
+				}
+				work := rationalUsage(t, r.s, BudgetRuleSteps) - before
+				if count == 100 {
+					small = work
+				} else if work != small*10 {
+					t.Fatalf("nonlinear repeated scan: %d -> %d", small, work)
+				}
+				if r.s.retained != 0 || rationalUsage(t, r.s, BudgetBufferedBytes) != 0 {
+					t.Fatal("repeated scratch survived")
+				}
+				t.Logf("absent_part=%t calls=%d exact_buffer=%d total_steps=%d cancellation_polls_per_call=%d retained=0", unknown, count, exactBytes, work, probe.calls)
+			}
+		})
+	}
+}
+
+func TestIndependentRound3RepeatIndexSharedAccountRecovery(t *testing.T) {
+	for _, timewise := range []bool{false, true} {
+		t.Run(fmt.Sprint(timewise), func(t *testing.T) {
+			const exactBytes int64 = 7 * 640
+			s, r, timeline, p, cause := repeatR3ContainerFixture(t, 3, timewise, Budgets{MaxBufferedBytes: exactBytes})
+			defer s.cleanup()
+			call := func(ctx context.Context) (*contextRepeatProofIndex, func(), error) {
+				fresh := &contextReader{ctx: ctx, s: s, b: r.b}
+				return contextRepeatBuildProofIndex(fresh, timeline, nil, p)
+			}
+			if err := s.account.Charge(BudgetBufferedBytes, 1); err != nil {
+				t.Fatal(err)
+			}
+			for attempt := 0; attempt < 3; attempt++ {
+				x, free, err := call(context.Background())
+				if !errors.Is(err, ErrResourceLimit) || x != nil || free != nil {
+					t.Fatalf("refusal %d exposed partial index: %v", attempt, err)
+				}
+				if s.retained != 0 || rationalUsage(t, s, BudgetBufferedBytes) != 1 {
+					t.Fatal("refusal retained scratch")
+				}
+			}
+			if err := s.account.Release(BudgetBufferedBytes, 1); err != nil {
+				t.Fatal(err)
+			}
+			probe := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
+			x, free, err := call(probe)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if x.partCoverage(stateUnknown[NodeRef]("all")).Cause != cause {
+				t.Fatal("coverage cause lost")
+			}
+			if rationalUsage(t, s, BudgetBufferedBytes) != exactBytes || s.retained != 0 {
+				t.Fatal("index lost live scratch ownership")
+			}
+			free()
+			for at := 1; at <= probe.calls; at++ {
+				x, free, err := call(&rationalCancelContext{Context: context.Background(), at: at})
+				if !errors.Is(err, context.Canceled) || x != nil || free != nil {
+					t.Fatalf("cancel %d exposed partial index: %v", at, err)
+				}
+				if rationalUsage(t, s, BudgetBufferedBytes) != 0 || s.retained != 0 {
+					t.Fatalf("cancel %d leaked scratch", at)
+				}
+				x, free, err = call(context.Background())
+				if err != nil || x == nil || free == nil {
+					t.Fatalf("recover %d: %v", at, err)
+				}
+				free()
+			}
+			if rationalUsage(t, s, BudgetBufferedBytes) != 0 || s.retained != 0 {
+				t.Fatal("recovery leaked scratch")
+			}
+			t.Logf("timewise=%t exact_buffer=%d all_cancellation_polls=%d repeated_same_account_refusals=3", timewise, exactBytes, probe.calls)
+		})
+	}
+}

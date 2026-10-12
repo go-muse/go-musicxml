@@ -1,0 +1,451 @@
+{
+  "format": "musicxml-context-logical-packaging-v1",
+  "baseline": "d605a63fe5785292af354b93928e56c1e01bc77f",
+  "meaning": "Original unpublished test-first and integration commits are retained locally, grouped into buildable logical publication milestones. Their original hashes identify provenance; canonical published commits use exactly these trees and ordered canonical parents but may have different server metadata. The final documentation/acceptance commit follows these milestones; exact remote mapping belongs to publication verification. No accepted remote history is rewritten.",
+  "milestones": [
+    {
+      "task": "Typed contextual providers, profile composition and narrow consumers",
+      "source_checkpoint": "a4a0b94a20fa77627b57b45ba8bedbd6208b1de4",
+      "tree": "87637adba0df0d8903039fe76c24cc080cada830",
+      "preserved_development_commits": [
+        {
+          "commit": "86bd7aea3479668f8efa12706db2360c117babd3",
+          "subject": "feat(validation): add typed bounded span association core"
+        },
+        {
+          "commit": "3ac70afb643f3bdb3ae52804e4b26e29a9d53375",
+          "subject": "feat(validation): bind typed contextual services and owned result projection"
+        },
+        {
+          "commit": "937cd543bf71347261db4bfe5db52cfc31b49bc4",
+          "subject": "test(validation): guard contextual lifecycle dependencies and bounded projection work"
+        },
+        {
+          "commit": "2eb2b5f3a9de957c16fa7f561eac355438847ace",
+          "subject": "feat(validation): extract typed span context and family-specific correspondence"
+        },
+        {
+          "commit": "436cefc06e6220d1389de23f89253a5a34bfc058",
+          "subject": "feat(validation): project exact performance and accepted timing context"
+        },
+        {
+          "commit": "2704bc5a711cce1b31912fc6ad0e822c8fef7f22",
+          "subject": "Add causal local printing and note-size projections with focused tests"
+        },
+        {
+          "commit": "1b2483157713756d0f242e3d612fc4cde2f26101",
+          "subject": "Project exact local defaults printing and semantic context with source-model fixtures"
+        },
+        {
+          "commit": "a5a34404b0d770f5cc1a54ac3144b6344def9fca",
+          "subject": "feat(validation): add bounded repeat navigation and pass-qualified context"
+        },
+        {
+          "commit": "29e194175cd3864b5a1cc579071acb9920d20794",
+          "subject": "feat(validation): project scoped layout and inherited formatting context"
+        },
+        {
+          "commit": "6b0ceb6f7dfcac8e79333c64f5d14217274ee60e",
+          "subject": "Restrict horizontal-turn defaults to exact owners and extend local boundary fixtures"
+        },
+        {
+          "commit": "a4a0b94a20fa77627b57b45ba8bedbd6208b1de4",
+          "subject": "feat(assessment): expose bounded context profiles and exact contextual predicates"
+        }
+      ]
+    },
+    {
+      "task": "Source-supported conformance and assembly-specific local Opus context",
+      "source_checkpoint": "50ccf3b1991c159dc008c8800f26f5a8ab2c740d",
+      "tree": "f88f320e1717c7dcfeb5f6d467ae24e3af5e2f54",
+      "preserved_development_commits": [
+        {
+          "commit": "7650ae0cdb4868e8341f525dcbda59cb80154062",
+          "subject": "fix(validation): preserve unresolved normal dots and expand span evidence"
+        },
+        {
+          "commit": "daa5d0ad087f43fb8a6c99f777025eeb6fec690e",
+          "subject": "feat(validation): retain graphic advice and exact listening target scopes"
+        },
+        {
+          "commit": "802cf04d24a8c2dd19682fa713011c591a259d07",
+          "subject": "feat(validation): preserve local state defaults and scoped performance guidance"
+        },
+        {
+          "commit": "5e5e80d34fee56a52a4d78d2ab9f9f1c78f7c9d6",
+          "subject": "feat(validation): resolve sparse staff layouts margins and system geometry"
+        },
+        {
+          "commit": "b5dced44a8e1d0abad70cb8c713b0091bc23b388",
+          "subject": "feat(validation): prove graphical note scopes and guard reentry state"
+        },
+        {
+          "commit": "226b756cc315c6028a4cf20c5aa083e336e4a32f",
+          "subject": "feat(validation): establish vertical span membership and precise evidence gaps"
+        },
+        {
+          "commit": "0ad054660812c00ffacb6910d461d4a24f140cc0",
+          "subject": "Project local stopped open and half-muted SMuFL glyph defaults"
+        },
+        {
+          "commit": "50ccf3b1991c159dc008c8800f26f5a8ab2c740d",
+          "subject": "feat(validation): bind local Opus pagination to its exact assembly"
+        }
+      ]
+    },
+    {
+      "task": "Local glyph applicability and cross-target causal boundaries",
+      "source_checkpoint": "37420a4c6dedef7dc85622a5a57fcbe5389bf0cc",
+      "tree": "19899a63abc72af14691d8d3f0e91d6c08729b32",
+      "preserved_development_commits": [
+        {
+          "commit": "4d42630961f1063a2fc8674b9650532fc9a53b20",
+          "subject": "feat(validation): project local glyph semantics without inventing dictionary rules"
+        },
+        {
+          "commit": "55834cd4164598b506f8283dfa374bed7649204e",
+          "subject": "fix(validation): preserve unavailable performance state and test mixed clauses"
+        },
+        {
+          "commit": "54ae8f138aae18b14a19114320108b36f48eb572",
+          "subject": "fix(validation): preserve local navigation facts and known prefixes"
+        },
+        {
+          "commit": "434e7a99e95ada186ec3e0b688050fa0590409d6",
+          "subject": "fix(validation): retain ambiguous simultaneous listening updates"
+        },
+        {
+          "commit": "37420a4c6dedef7dc85622a5a57fcbe5389bf0cc",
+          "subject": "test(assessment): cover exact local context boundaries across both targets"
+        }
+      ]
+    },
+    {
+      "task": "Stateful layout, span and encoded-performance refinements",
+      "source_checkpoint": "6c38f3f983da3e058178b9647e00a17aae8c50aa",
+      "tree": "523bf3cc60324a0af97224d06117f1bbd3076a04",
+      "preserved_development_commits": [
+        {
+          "commit": "21db60b5f07a28e534f38d2f7f4749005d8bd9eb",
+          "subject": "fix(validation): preserve independent layout scopes and rendering evidence"
+        },
+        {
+          "commit": "21149cbf4503869f01aab82ee5e872b07a2e1c65",
+          "subject": "fix(validation): retain unavailable staff-count evidence in existence projection"
+        },
+        {
+          "commit": "20cecdfff4d13458c60eec5adb09d8d563dadbb0",
+          "subject": "fix(validation): derive uniform all-staff repeat beats"
+        },
+        {
+          "commit": "c465a7469b38d4da73534f25a47f440ef5316a5f",
+          "subject": "test(validation): verify repeat and navigation part isolation"
+        },
+        {
+          "commit": "6c38f3f983da3e058178b9647e00a17aae8c50aa",
+          "subject": "Preserve local causal origins and classify ordered font families"
+        }
+      ]
+    },
+    {
+      "task": "Independent semantic/resource regressions and common-path corrections",
+      "source_checkpoint": "adcffc007cbe98fa1f0fdbfae2db9677b3eefb3e",
+      "tree": "40e77dd85ba0af9cda856df6658a7deec7c8da7e",
+      "preserved_development_commits": [
+        {
+          "commit": "7ce8f262f67037cc125af5327bc542b42dc5460c",
+          "subject": "Project conditional staff and measure layout state with exact coordinate evidence"
+        },
+        {
+          "commit": "7b350f64dffc480ecfca1d83d6e3b643085873c3",
+          "subject": "test(validation): independently audit context ownership and expose advisory scan growth"
+        },
+        {
+          "commit": "d36f88427c840ca8e5ab1c6f6df158246cbb3e0c",
+          "subject": "test(validation): expose quadratic ordinary repeat and navigation scans"
+        },
+        {
+          "commit": "985bde8dbc9195c540f001f90b9b1a717d6eed53",
+          "subject": "fix(validation): expose graphical note-scope enumeration evidence"
+        },
+        {
+          "commit": "67ac1d83c8d9f4f9f2ca348c79ac8b99f997040c",
+          "subject": "test(validation): close span clause axes and retain prerequisite causes"
+        },
+        {
+          "commit": "1a05d145385dde5baa830be10a5e997ae28368da",
+          "subject": "fix(validation): publish unavailable lyric groups as typed span evidence"
+        },
+        {
+          "commit": "cd72ef1c0d38e20c0a262610c793c9b71d7eedba",
+          "subject": "test(validation): integrate layout state and map all layout context obligations"
+        },
+        {
+          "commit": "177f9e7e8436f14582af86ff8a957557069a3d88",
+          "subject": "test(validation): expose repeated blank-page parity updates"
+        },
+        {
+          "commit": "54adecce4ed40d3e48f3515af4e02049a0e3dc85",
+          "subject": "test(musicxml): audit public context cost ownership isolation and frozen profiles"
+        },
+        {
+          "commit": "9e8a786fe26bd871d66a6f8cc2ad316ccf390289",
+          "subject": "test(validation): expose canceled empty span scratch admission and measure full context cost"
+        },
+        {
+          "commit": "c911acde6011160fea565cb4ef4d45db5e18961a",
+          "subject": "fix(validation): bound invariant performance advice and cancel span admission"
+        },
+        {
+          "commit": "3cb845a19531c0bb41be43c25f4367d92e49c96f",
+          "subject": "perf(validation): index exact contextual roles and admitted attribute witnesses"
+        },
+        {
+          "commit": "8baddd4baf6414e8ab8e26da26f9f26b4926c723",
+          "subject": "Index sparse layout publishers once and isolate future timing gaps"
+        },
+        {
+          "commit": "18082d1c6c4c7d99125f3bafb141a5a57dc1f402",
+          "subject": "Keep placement and font fallback within exact layout domains"
+        },
+        {
+          "commit": "c85e08df81d92945d0001d9ede1e2bba2a994b72",
+          "subject": "test(validation): expose ignored dynamics placement fallback"
+        },
+        {
+          "commit": "dd708d386727b059ab7d32c85a4013d86e1884ab",
+          "subject": "test(validation): keep music and word font defaults independent"
+        },
+        {
+          "commit": "86cbb0154b3f8da3a7ba8748eb0e452ffeacc137",
+          "subject": "test(validation): expose cross-part graphical scope scanning"
+        },
+        {
+          "commit": "2f531c3b5b06b95460c05ce042705b2a0c5bf8d5",
+          "subject": "test(validation): isolate authoritative context attribute fallback bindings"
+        },
+        {
+          "commit": "6ed12e371023e74d0e6efe27ae5faeb685411013",
+          "subject": "Compare parallel print breaks at exact musical positions"
+        },
+        {
+          "commit": "14cf4987c91a6b7d183b788221bc928c06fabfd6",
+          "subject": "feat(validation): retain local Opus version defaults and guard advice admission"
+        },
+        {
+          "commit": "6847cbe1a58cc30be51da40dc20267078707456e",
+          "subject": "test(validation): preserve cross-frame part-symbol uncertainty"
+        },
+        {
+          "commit": "7cfce864d33fdf344dbcb2b3b3214f765146e6ca",
+          "subject": "test(validation): extend binding cache cancellation and empty advice regression"
+        },
+        {
+          "commit": "29fb9fe8a554ccbaa13d8a74fd67754ec2ca5bc0",
+          "subject": "Expose bounded advisory recommendations with separate applicability evidence"
+        },
+        {
+          "commit": "71d13442b4a18da01b8218cf7732be23a11e353e",
+          "subject": "Preserve layout gap causality and clarify partial barline scope semantics"
+        },
+        {
+          "commit": "3a927695e16e007ea3fc2ec06de0820c8ff746f9",
+          "subject": "test(validation): preserve unconfined part-symbol placement gaps"
+        },
+        {
+          "commit": "2dadfcdacbbb909bce574c97b892d625cf2e6ca0",
+          "subject": "test(musicxml): scope no-fetch probe to local Opus pagination records"
+        },
+        {
+          "commit": "53fdb630b3815897b3944f2a701b80da87e2c5a3",
+          "subject": "test(validation): exclude zero-staff system publishers"
+        },
+        {
+          "commit": "bb8d04973b2ca354d8f297ab33da95d6a070e1fd",
+          "subject": "test(validation): characterize timing projection retention allowances"
+        },
+        {
+          "commit": "5dc1d6d4cf624bad0ae2c237ba0e81368078914d",
+          "subject": "Exercise concrete layout matrices and scope parallel-position uncertainty"
+        },
+        {
+          "commit": "96a402e1bc6d85d8e2cad966d1878a32e2af8193",
+          "subject": "Build protocol-only layout enumeration fixture independently of schema subset"
+        },
+        {
+          "commit": "0e9018e7147b2d81752996548d7efed0960fe2a7",
+          "subject": "perf(validation): reserve standalone projection graphs without history growth"
+        },
+        {
+          "commit": "e1dab14097a06e3702bbe20a6a3196679599c19c",
+          "subject": "Exclude zero-staff parts before sparse layout candidate selection"
+        },
+        {
+          "commit": "20290472958cf2db56f36d6241690ea22095cd02",
+          "subject": "perf(validation): index repeat regions markers and note scopes"
+        },
+        {
+          "commit": "adcffc007cbe98fa1f0fdbfae2db9677b3eefb3e",
+          "subject": "test(musicxml): fuzz bounded context profiles on source and current models"
+        }
+      ]
+    },
+    {
+      "task": "Exact required-attribute causes, scoped repeat proofs and bounded content indexes",
+      "source_checkpoint": "22dd6443c1290915ba76c4a716a30afadaab2eae",
+      "tree": "62af9381ff6802a0a05b6a237b468ce459681d46",
+      "preserved_development_commits": [
+        {
+          "commit": "5bf11bee3a2d127e3d2d502a3c9d06228cf454ab",
+          "subject": "Separate visibility from spacing evidence and complete layout adapter matrices"
+        },
+        {
+          "commit": "6b81f3c3e57ab7a3eff5204523251319affbdc02",
+          "subject": "test(validation): audit large standalone projection exact admission"
+        },
+        {
+          "commit": "77c1dbb756886095e08e52ec9e022f023e228f48",
+          "subject": "perf(validation): skip unused graphical content proof scratch"
+        },
+        {
+          "commit": "6081886ceafdf7089480bccb3bb292e13b5f0f3f",
+          "subject": "Verify transferred text defaults and empty-language inheritance matrices"
+        },
+        {
+          "commit": "fa45db38d824f7d267fddd732506c22b4763d4c6",
+          "subject": "Complete state layout boundaries and percussion guidance"
+        },
+        {
+          "commit": "b0b790728f030dadaabe2f6f2c16396d454879c6",
+          "subject": "test(validation): expose normalized and staff-scoped repeat content gaps"
+        },
+        {
+          "commit": "0cef7f88c46d3e5509de46b75410c70420e2b668",
+          "subject": "test(validation): expose repeated part transpose presence scans"
+        },
+        {
+          "commit": "db90c50a23d121c08f26f3ab283a689a64b0f88c",
+          "subject": "test(validation): distinguish required assessment type from optional scopes"
+        },
+        {
+          "commit": "dbf75d86c1afe10fc11860d489d73acd508683ab",
+          "subject": "fix(validation): retain causal evidence for missing context attributes"
+        },
+        {
+          "commit": "bac0df8063e39458163466948148a9694fa30747",
+          "subject": "fix(validation): prove natural pitch and exact staff repeat content"
+        },
+        {
+          "commit": "8ef4aafe13274e9c25b626cec24687cd0bde3ab6",
+          "subject": "test(validation): require uniform numbered-staff repeat beat proof"
+        },
+        {
+          "commit": "fb04141070ac2806f3037b70f35d259e36f1a5ed",
+          "subject": "test(validation): expose unrelated part content scope scans"
+        },
+        {
+          "commit": "1984d49f3d978cd1b5673efd7a67eea3cf62b11d",
+          "subject": "Retain canonical part identity in scoped layout projections"
+        },
+        {
+          "commit": "5aa08bd5d4412ba48112c850816291586b2fbfb5",
+          "subject": "Retain canonical part on direct layout state projections"
+        },
+        {
+          "commit": "79280c9a5d24b450226a25a81d72bafba3318799",
+          "subject": "test(validation): verify transpose index admission and cancellation"
+        },
+        {
+          "commit": "829c4a88bc67b9a13528c70dbbc90b30c0e1d75c",
+          "subject": "test(validation): preserve content scope causal source order"
+        },
+        {
+          "commit": "a7263d684d1267f0faeae5830aee978db05102a5",
+          "subject": "perf(validation): partition graphical content proofs by exact part"
+        },
+        {
+          "commit": "6742082833245e6e8c7ac02da5e99e2d281c003b",
+          "subject": "test(validation): expose roster coverage cause downgrade"
+        },
+        {
+          "commit": "de672d348b710c0c550677b4a49fcb02abea36a8",
+          "subject": "test(validation): audit content roster scratch boundaries"
+        },
+        {
+          "commit": "a5a5169948500518741e51ae15c0bfceea790b54",
+          "subject": "Record complete per-check layout implementation and verification evidence"
+        },
+        {
+          "commit": "06b57053814528fa57448cb722977beea36abdac",
+          "subject": "test(validation): expose exact voice-exception repeat content gap"
+        },
+        {
+          "commit": "6fb98cca68950504fa83a04f706a88e2411af1c2",
+          "subject": "test(validation): expose repeated voice exclusion list scans"
+        },
+        {
+          "commit": "a3f8d0f7d4822cff266579ebcb5f5614a6228219",
+          "subject": "fix(validation): preserve graphical coverage and index voice exclusions"
+        },
+        {
+          "commit": "f86510710b2ba6785dc15f293cfa54da49b1d5f0",
+          "subject": "fix(validation): prove uniform numbered staff repeat beats"
+        },
+        {
+          "commit": "56a09e84746025b2dbb037ba875516261e734226",
+          "subject": "test(validation): verify voice index bounds and causal equivalence"
+        },
+        {
+          "commit": "a024f9035f167fd6513ae1dc0fee46b005588919",
+          "subject": "fix(validation): prove ordered repeat content before bounded fallback"
+        },
+        {
+          "commit": "2d57eba0ef836f28d2a0e3444e60b9605ae4552c",
+          "subject": "test(validation): preserve repeat order fallback across public adapters"
+        },
+        {
+          "commit": "4c01801e8c4b9293f18ccdff62ab7a54dd370652",
+          "subject": "perf(validation): index ordered beat content windows"
+        },
+        {
+          "commit": "8029e90e8f3a51a6ceb0a140794b679359f4cd17",
+          "subject": "test(validation): expose quadratic ordered repeat content matching"
+        },
+        {
+          "commit": "823f2328013f26eab9e2f7aa1d2885d95c4fadcc",
+          "subject": "test(validation): expose repeated whole-part measure selection"
+        },
+        {
+          "commit": "61124c299a01024c062bf9849879c0ed69765323",
+          "subject": "test(validation): expose quadratic sequential beat window selection"
+        },
+        {
+          "commit": "0de79a11f205e550f9d091e1b88a633410ebf636",
+          "subject": "fix(validation): bound repeated content selection and ordered proof"
+        },
+        {
+          "commit": "54e43ab84bf18a900dd11be538c3f0064619efca",
+          "subject": "test(validation): isolate uniform meter unrelated-part rescan cost"
+        },
+        {
+          "commit": "59dcdff9dde34cb25e1ee20730b8e3a77f207fb4",
+          "subject": "perf(validation): share sparse meter rosters across repeat styles"
+        },
+        {
+          "commit": "d7c7c5729d0acf718c79fcb775941ec2290db702",
+          "subject": "test(validation): audit sparse measure roster ownership and bounds"
+        },
+        {
+          "commit": "22dd6443c1290915ba76c4a716a30afadaab2eae",
+          "subject": "test(validation): verify both live gauges after context finish"
+        }
+      ]
+    }
+  ],
+  "historical_worktrees": {
+    "count": 71,
+    "dirty_probe_worktrees": 18,
+    "head_and_status_differences_after_batch": 0,
+    "treatment": "Preserved in place; inspect accepted provenance instead of replaying already merged probes."
+  }
+}

@@ -99,3 +99,39 @@ func TestFoundationFuzzTargetsAreExecutedByCheckAll(t *testing.T) {
 		t.Fatalf("foundation fuzz targets=%d, want at least 2", count)
 	}
 }
+
+func TestRaceStageRetainsFullCoverageWithFiniteHeadroom(t *testing.T) {
+	data, err := os.ReadFile("../scripts/check-all.sh")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, stage, ok := strings.Cut(string(data), "stage_race() {")
+	if !ok {
+		t.Fatal("missing shared race stage")
+	}
+	stage, _, ok = strings.Cut(stage, "\n}")
+	if !ok {
+		t.Fatal("unterminated shared race stage")
+	}
+	// The full bounded suite approaches Go's implicit ten-minute package limit.
+	// Retain all race checks and one uncached execution, with an explicit finite
+	// deadline below the unchanged twenty-minute CI job cap.
+	if !strings.Contains(stage, `"$check_go" test -race -count=1 -timeout=15m ./...`) {
+		t.Fatal("race stage must retain full coverage and a finite fifteen-minute package deadline")
+	}
+	workflow, err := os.ReadFile("../.github/workflows/ci.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	lf := strings.ReplaceAll(string(workflow), "\r\n", "\n")
+	for _, checkout := range []string{lf, strings.ReplaceAll(lf, "\n", "\r\n")} {
+		_, job, ok := strings.Cut(strings.ReplaceAll(checkout, "\r\n", "\n"), "\n  race:\n")
+		if !ok {
+			t.Fatal("missing CI race job")
+		}
+		job, _, ok = strings.Cut(job, "\n  xsd-conformance:")
+		if !ok || !strings.Contains(job, "timeout-minutes: 20") {
+			t.Fatal("race CI job must retain its finite twenty-minute cap")
+		}
+	}
+}

@@ -1,0 +1,1269 @@
+{
+  "format": "batch7-layout-state17-map-1",
+  "commit": "d2cb348",
+  "status": "final owned state17 plus one shared advisory; all focused state tests green; parent integrated earlier checkpoints with whole repository green before final d2cb348",
+  "checks": [
+    {
+      "check_id": "CHECK-context-clef-conditions",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2932"
+      ],
+      "symbols": [
+        "layoutStateNode",
+        "layoutStateFact",
+        "atMeasureStart"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "number default1; additional disables line and enables size; after-barline applicability uses exact measure offset; system eligibility combines print-object and additional"
+      ],
+      "residuals": [],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "ordinary-clef-line; ordinary-clef-size-inactive; midmeasure clef after-barline inactive; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "ordinary-clef-line; ordinary-clef-size-inactive; midmeasure clef after-barline inactive"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateInvalidComponentsStayCausal"
+          ],
+          "note": "invalid additional causal; additional absent uses no"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-for-part-staff-scope",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2959"
+      ],
+      "symbols": [
+        "layoutStateNode"
+      ],
+      "source_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "absent number is symbolic all-staves-of-created-part; explicit number remains exact"
+      ],
+      "residuals": [],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "created-staff-two versus omitted number symbolic all-staves; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "created-staff-two versus omitted number symbolic all-staves"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories"
+          ],
+          "note": "absent number remains symbolic all-staves; no fabricated concrete staff"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-key-system-print",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2993"
+      ],
+      "symbols": [
+        "layoutStateNode"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "print-object defaultyes; explicit no suppresses system-print eligibility"
+      ],
+      "residuals": [
+        {
+          "dependency": "Actual system placement is the shared layout scope service; eligibility does not assert an engraving occurred.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "key-default-system-print versus explicit print-object=no; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "key-default-system-print versus explicit print-object=no"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "known absence print-object yields yes; actual system membership handled by layout scope map"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-hidden-staff-lines",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3037"
+      ],
+      "symbols": [
+        "layoutStateNode",
+        "layoutStateStaffStep"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "hidden lines retain coordinate membership; line layout-count eligibility excludes print-object=no"
+      ],
+      "residuals": [],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "visible-line-count; visible-line-hidden-rule-inactive versus hidden coordinate inclusion; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "visible-line-count; visible-line-hidden-rule-inactive versus hidden coordinate inclusion"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "known absence print-object yields visible; numeric staff inventory is not asserted by this eligibility fact"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-part-symbol-default",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3100"
+      ],
+      "symbols": [
+        "layoutStatePartSymbol",
+        "layoutStatePriorSymbol",
+        "layoutGetStateIndex",
+        "stateHistory",
+        "queryState",
+        "publishState",
+        "layoutGetStateIndex",
+        "stateHistory",
+        "queryState",
+        "publishState"
+      ],
+      "source_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault",
+        "TestLayoutStateUnplacedDivisionsExcursionPreservesGap"
+      ],
+      "model_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault",
+        "TestLayoutStateUnplacedDivisionsExcursionPreservesGap"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "brace default for omitted multi-staff symbol; part-wide inherited explicit symbol; exact top/bottom defaults and partial common-barline scope",
+        "Once-built sparse typed musical-state index; retained Placement and exact Position gaps; boolean layout.part-symbol-barline-scope-change means only partial-span automatic barline scope change, not absence of common barlines.",
+        "Once-built sparse typed musical-state index; retained Placement and exact Position gaps; boolean layout.part-symbol-barline-scope-change means only partial-span automatic barline scope change, not absence of common barlines."
+      ],
+      "residuals": [
+        {
+          "dependency": "Unknown effective staff count retains unknown bottom extent and multi-staff applicability.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault",
+            "TestLayoutStateUnplacedDivisionsExcursionPreservesGap"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault",
+            "TestLayoutStateUnplacedDivisionsExcursionPreservesGap"
+          ],
+          "note": "initial multistaff brace; explicit bracket inherited; partial top/bottom; displaced future publisher; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault",
+            "TestLayoutStateUnplacedDivisionsExcursionPreservesGap"
+          ],
+          "note": "initial multistaff brace; explicit bracket inherited; partial top/bottom; displaced future publisher"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateUnplacedDivisionsExcursionPreservesGap"
+          ],
+          "note": "unplaced/unconfined future publisher blocks initial default; exact raw bracket survives"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault",
+            "TestLayoutStateUnplacedDivisionsExcursionPreservesGap"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-staff-cutaway",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3131"
+      ],
+      "symbols": [
+        "layoutStateNode",
+        "layoutStateCutaway"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStateInvalidComponentsStayCausal",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStateInvalidComponentsStayCausal",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "known object=no and spacing=yes gives cutaway; documented print defaults; decisive false antecedents remain field-local"
+      ],
+      "residuals": [],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStateInvalidComponentsStayCausal",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "hidden-staff-no-space versus object=no spacing=yes; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "hidden-staff-no-space versus object=no spacing=yes"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateMissingAndBlockedComponents"
+          ],
+          "note": "Unknown/Unsupported/Invalid object or spacing preserves causal field-local uncertainty; decisive false dominates irrelevant uncertainty"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStateInvalidComponentsStayCausal",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-staff-size-scaling",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3159"
+      ],
+      "symbols": [
+        "layoutStateNode"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "separate staff-space and notation percentages; margin non-effect; cue/ossia/editorial reduction constraint"
+      ],
+      "residuals": [
+        {
+          "dependency": "Omitted exact reduction amount and omitted notation-scaling amount are implementation-dependent; no invented numeric percentage.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "notation-scale-no-numeric-default; staff-size60 independently scaling80; cue reduction constraint; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "notation-scale-no-numeric-default; staff-size60 independently scaling80; cue reduction constraint"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "absent notation scaling Unknown; cue reduction exact percentage unknown"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-alternate-staff-playback",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L789"
+      ],
+      "symbols": [
+        "layoutStateNode",
+        "layoutStatePrecedingStaff"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateInvalidComponentsStayCausal",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStateInvalidComponentsStayCausal",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "alternate contributes no extra playback stream; explicit staff n>1 maps exactly to n-1"
+      ],
+      "residuals": [
+        {
+          "dependency": "Unknown/all-staff selector or staff1 cannot prove one concrete preceding staff; source role fact remains known independently.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateInvalidComponentsStayCausal",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "alternate-top-has-no-prior; regular-default-playback versus alternate staff2 source1; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "alternate-top-has-no-prior; regular-default-playback versus alternate staff2 source1"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "staff1 cannot yield preceding staff; selector unavailable never converted to one"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStateInvalidComponentsStayCausal",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-dot-placement-condition",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5209"
+      ],
+      "symbols": [
+        "layoutStatePosition",
+        "layoutStateStaffStep"
+      ],
+      "source_tests": [
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "dot placement active on line, inactive on space from exact effective clef and written diatonic coordinates"
+      ],
+      "residuals": [
+        {
+          "dependency": "Renderer-dependent/default rest positions without encoded display-step/octave remain unavailable; no dot-duration inference.",
+          "owner": "application geometry/intent",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "G4 line versus A4 space; dot-missing-clef; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "G4 line versus A4 space; dot-missing-clef"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "missing clef gives Unknown, never guessed conventional clef"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-measure-rest",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5438"
+      ],
+      "symbols": [
+        "layoutStateNode"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "encoded rest measure=yes retained with actual structural measure scope"
+      ],
+      "residuals": [
+        {
+          "dependency": "The declaration means a full-measure rest. It does not invent its duration or impose equality with nominal meter; exact duration remains timeline-owned.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "not-measure-rest versus explicit yes scoped to its measure; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "not-measure-rest versus explicit yes scoped to its measure"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts"
+          ],
+          "note": "measure=yes factual meaning preserved without invented meter or expected duration; duration comparison belongs timeline"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-stem-negative-relative",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5481"
+      ],
+      "symbols": [
+        "layoutStateNode",
+        "layoutStateStemApplicability"
+      ],
+      "source_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateSourceModelConditionalFacts",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "rest-associated stem identifies stemlet; y positioning applies only up/down; raw negative relative-y retained with unavailable flip test"
+      ],
+      "residuals": [
+        {
+          "dependency": "Whether negative offset flips a stem needs the application default endpoint/stem length; missing geometry is a field-local Unknown.",
+          "owner": "application geometry/intent",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "stem-none-position-inactive; stem-zero-offset-active; pitched-stem-not-stemlet versus rest stemlet and negative offset; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "stem-none-position-inactive; stem-zero-offset-active; pitched-stem-not-stemlet versus rest stemlet and negative offset"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts"
+          ],
+          "note": "negative offset flip applicability Unknown without application default stem length"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateSourceModelConditionalFacts",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-unpitched-default-position",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L5809"
+      ],
+      "symbols": [
+        "layoutStateNode",
+        "layoutStatePosition",
+        "layoutStateMiddleLine",
+        "layoutStateMiddleLine"
+      ],
+      "source_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "absent display children imply symbolic middle staff line; explicit display children disable default; no sounding pitch invented",
+        "Exact numeric middle line = positive odd effective staff-lines minus1 half spaces; missing/even/zero count does not fabricate a unique middle line.",
+        "Exact numeric middle line = positive odd effective staff-lines minus1 half spaces; missing/even/zero count does not fabricate a unique middle line."
+      ],
+      "residuals": [
+        {
+          "dependency": "Actual numeric middle-line coordinate depends on applicable line geometry; symbolic documented default remains known. Percussion recommendation to use unpitched is not a new pitch prohibition.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "explicit-unpitched-no-middle-default versus absent display on explicit one-line staff; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "explicit-unpitched-no-middle-default versus absent display on explicit one-line staff"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "explicit display disables middle-line default; numeric coordinate Unknown without effective clef; absent display symbolic default remains independent"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-display-percussion-clef",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L6482"
+      ],
+      "symbols": [
+        "layoutStatePosition",
+        "layoutStateStaffStep"
+      ],
+      "source_tests": [
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef"
+      ],
+      "model_tests": [
+        "TestLayoutStatePercussionAndDots",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef"
+      ],
+      "unit_tests": [
+        "TestLayoutStateExactCoordinateAndResources",
+        "TestLayoutStateCoordinateMissingClefLineNotStandardGuess"
+      ],
+      "implemented_subclauses": [
+        "effective clef selected by musical position; percussion uses G4 line2; exact unbounded integer half-space offsets include hidden lines"
+      ],
+      "residuals": [
+        {
+          "dependency": "G/F/C missing line does not silently take a conventional standard line; custom/nonpitched clef reference stays unavailable.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef"
+          ],
+          "note": "percussion G4 line2/A4 space; F3 line4; exact negative and arbitrarily large coordinate; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef"
+          ],
+          "note": "percussion G4 line2/A4 space; F3 line4; exact negative and arbitrarily large coordinate"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateCoordinateMissingClefLineNotStandardGuess"
+          ],
+          "note": "absent G/F/C clef line Unknown; percussion reference known independently"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePercussionAndDots",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-string-numbering",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L527"
+      ],
+      "symbols": [
+        "layoutStateNode"
+      ],
+      "source_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "string1 basis is highest-pitched full-length string, distinct from staff-line bottom-up numbering; both string elements and accord@string bound"
+      ],
+      "residuals": [
+        {
+          "dependency": "Actual instrument string inventory/tuning identity is not fabricated from the numbering convention.",
+          "owner": "application geometry/intent",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "scordatura-string-reference and technical string1; highest full-length basis independent staff bottom-up convention; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "scordatura-string-reference and technical string1; highest full-length basis independent staff bottom-up convention"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories"
+          ],
+          "note": "actual instrument inventory not required for numbering convention; absent optional string has no node invocation"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-note-size-category",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1508"
+      ],
+      "symbols": [
+        "layoutStateNoteCategory",
+        "layoutStateNode"
+      ],
+      "source_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStateInvalidComponentsStayCausal",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "model_tests": [
+        "TestLayoutStateOmittedDefaultsAndCategories",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStateInvalidComponentsStayCausal",
+        "TestLayoutStatePerRecordBoundaryMatrix"
+      ],
+      "unit_tests": [
+        "TestLayoutStateConditionalSemantics"
+      ],
+      "implemented_subclauses": [
+        "full has no scaled appearance category; cue with grace maps grace; cue without grace maps cue; grace-cue and large retain identity; typeless cue branch covered"
+      ],
+      "residuals": [],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStateInvalidComponentsStayCausal",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "large-note-category; full-grace-not-scaled; explicit-cue-overrides-grace-cue; typeless cue; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "large-note-category; full-grace-not-scaled; explicit-cue-overrides-grace-cue; typeless cue"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateMissingAndBlockedComponents"
+          ],
+          "note": "Unknown/Unsupported/Invalid type size retains cause; explicit large does not depend on unknown grace"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateOmittedDefaultsAndCategories",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStateInvalidComponentsStayCausal",
+            "TestLayoutStatePerRecordBoundaryMatrix"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-implicit-measure-number",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L2385"
+      ],
+      "symbols": [
+        "layoutStateNode",
+        "layoutStateMeasure"
+      ],
+      "source_tests": [
+        "TestLayoutStateImplicitAndNumberingPolicy"
+      ],
+      "model_tests": [
+        "TestLayoutStateImplicitAndNumberingPolicy"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "text overrides number; implicit=yes suppresses both display text and frequency result; raw/default implicit scalar owned by sibling layout"
+      ],
+      "residuals": [],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateImplicitAndNumberingPolicy"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateImplicitAndNumberingPolicy"
+          ],
+          "note": "implicit yes/no crossed with none/measure/system and text override; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateImplicitAndNumberingPolicy"
+          ],
+          "note": "implicit yes/no crossed with none/measure/system and text override"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateImplicitAndNumberingPolicy"
+          ],
+          "note": "omitted implicit=no, encoded text overrides number; shared scope uncertainty cannot defeat explicit implicit=yes suppression"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateImplicitAndNumberingPolicy"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    },
+    {
+      "check_id": "CHECK-context-measure-numbering-implicit",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3756"
+      ],
+      "symbols": [
+        "layoutStateMeasure",
+        "layoutStateNumberingPolicy",
+        "layoutStateNode",
+        "layoutGetStateIndex",
+        "layoutGetStateIndex"
+      ],
+      "source_tests": [
+        "TestLayoutStateImplicitAndNumberingPolicy",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStatePerRecordBoundaryMatrix",
+        "TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering"
+      ],
+      "model_tests": [
+        "TestLayoutStateImplicitAndNumberingPolicy",
+        "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+        "TestLayoutStatePerRecordBoundaryMatrix",
+        "TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering"
+      ],
+      "unit_tests": [],
+      "implemented_subclauses": [
+        "part-local inherited none/measure/system policy; implicit suppression dominates; staff default1; multiple-rest flags retain explicit values and none applicability",
+        "Once-built sparse per-part visual numbering policy index, not per-consumer document scans.",
+        "Once-built sparse per-part visual numbering policy index, not per-consumer document scans."
+      ],
+      "residuals": [
+        {
+          "dependency": "System-start certainty supplied by shared scope service. Unknown policy/break evidence remains field-local.",
+          "owner": "shared state/scope evidence",
+          "closure": "Supply the stated evidence; do not convert its absence into a normative failure."
+        }
+      ],
+      "status": "implemented_source_model_verified",
+      "axes": {
+        "positive": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateImplicitAndNumberingPolicy",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStatePerRecordBoundaryMatrix",
+            "TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering"
+          ]
+        },
+        "negative": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix",
+            "TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering"
+          ],
+          "note": "numbering-none-disables-range/always; numbering-staff-override; inherited policy; these are contrary antecedents, not new conformance failures"
+        },
+        "boundary": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStatePerRecordBoundaryMatrix",
+            "TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering"
+          ],
+          "note": "numbering-none-disables-range/always; numbering-staff-override; inherited policy"
+        },
+        "missing_fact": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering"
+          ],
+          "note": "future invalid timing does not contaminate prior visual policy; later none remains effective by visual measure ordinal"
+        },
+        "interaction": {
+          "status": "executed",
+          "fixtures": [
+            "TestLayoutStateImplicitAndNumberingPolicy",
+            "TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef",
+            "TestLayoutStatePerRecordBoundaryMatrix",
+            "TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering"
+          ],
+          "note": "Independent source/model input paths crossed with score-partwise/score-timewise; unit-only helpers listed separately."
+        }
+      }
+    }
+  ],
+  "commits": [
+    "4d7a907",
+    "d7ba9a0",
+    "930069f",
+    "d2cb348"
+  ],
+  "evidence_log": "layout-state-final-green.log",
+  "shared_advisory": {
+    "check_id": "CHECK-context-percussion-clef-unpitched",
+    "status": "implemented_source_model_verified",
+    "symbols": [
+      "layoutStatePercussionAdvice"
+    ],
+    "property": "layout.advisory-percussion-unpitched",
+    "source_tests": [
+      "TestLayoutStatePercussionRecommendationAxes"
+    ],
+    "model_tests": [
+      "TestLayoutStatePercussionRecommendationAxes"
+    ],
+    "implemented_subclauses": [
+      "Observable recommendation use-unpitched-for-notes-in-percussion-clef; applicability from accepted effective clef and note/rest identity; never an invented pitch prohibition."
+    ],
+    "axes": {
+      "positive": {
+        "status": "executed",
+        "fixtures": [
+          "TestLayoutStatePercussionRecommendationAxes/unpitched-percussion"
+        ]
+      },
+      "negative": {
+        "status": "executed",
+        "fixtures": [
+          "TestLayoutStatePercussionRecommendationAxes/pitched-percussion"
+        ],
+        "note": "Recommendation remains active but contrary encoding is conforming."
+      },
+      "boundary": {
+        "status": "executed",
+        "fixtures": [
+          "TestLayoutStatePercussionRecommendationAxes/rest-percussion",
+          "TestLayoutStatePercussionRecommendationAxes/pitched-G"
+        ]
+      },
+      "missing_fact": {
+        "status": "executed",
+        "fixtures": [
+          "TestLayoutStatePercussionRecommendationAxes/missing-clef",
+          "TestLayoutStatePercussionRecommendationAxes/invalid-clef"
+        ],
+        "note": "Unknown and causal Invalid remain distinct."
+      },
+      "interaction": {
+        "status": "executed",
+        "fixtures": [
+          "TestLayoutStatePercussionRecommendationAxes"
+        ],
+        "note": "All six cases separately run source/model × both hierarchies."
+      }
+    },
+    "residuals": []
+  },
+  "final_part_projection_commit": "ccc1749",
+  "latest_focused_log": "local-state-final-green.log"
+}

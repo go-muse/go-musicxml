@@ -215,6 +215,8 @@ and already-canceled contexts fail before model traversal.
 | `ProfileSourceLocal` | `musicxml-4.0/source-local` | Original single-pass source XSD plus those same local clauses; used with `InspectXML` or strict `DecodeAssessed` |
 | `ProfileModelTimeline` | `musicxml-4.0/model-timeline` | Model-local scope plus the bounded exact timeline/effective-state provider and selected chord/numeral consumers |
 | `ProfileSourceTimeline` | `musicxml-4.0/source-timeline` | Source-local scope plus the same timeline provider and consumers on original input |
+| `ProfileModelContext` | `musicxml-4.0/model-context` | Frozen model-timeline scope plus bounded typed context projections and selected contextual predicates |
+| `ProfileSourceContext` | `musicxml-4.0/source-context` | The corresponding context extension on original input |
 
 These are bounded implementations under final verification, not a claim of
 whole-MusicXML conformance or completed batch acceptance. The complete selected
@@ -484,6 +486,90 @@ in the [PR 35 budget evidence](docs/validation/evidence/pr35-timeline-budget-cos
 workstream and final batch-9 reconciliation. Incremental timeline measurements
 and initialization improvements do not close the older matched-performance
 obligation.
+
+### Bounded context profiles
+
+`ProfileModelContext` (`musicxml-4.0/model-context`) and `ProfileSourceContext`
+(`musicxml-4.0/source-context`) compose the frozen timeline profiles with six
+sealed families: local defaults/applicability, type-specific spans, graphical
+repeats, bounded navigation, layout and encoded performance/timing. Earlier
+profile IDs, selected rules, digests and ordinary validation remain unchanged.
+
+`validation.Report.Context` exposes independently owned `ContextResult` values.
+A closed `ContextProperty` identifies a scalar evidence value or a typed
+`SpanContextResult`, `RepeatContextResult`, `NavigationContextResult`,
+`LayoutContextResult` or `TimingContextResult`. Local scalar defaults also use
+layout-shaped scope/applicability metadata. A provider's completion does not
+claim that each optional field is known. Mandatory consumers separately assess
+exact `time-only` ordering, supported bend-release signs and proved graphical
+repeat content. Nonempty ASCII-digit figure-number content satisfies a sufficient
+numeric subset; other spellings retain an unsupported unreviewed grammar gate.
+This does not define or reject the remaining numeric lexical domain.
+
+`NavigationContextResult.MarkerActive` records activation of an encoded barline
+marker; `Guard` records pass-selection evidence. Neither field is a realized
+playback count. Traversal extent remains separately described by `Complete`;
+ambiguous mixed jump/repeat control preserves an unavailable bounded prefix.
+Ordinary sound/listening updates retain stable encoded order at a shared
+position; they do not create a competing navigation-control boundary. For an
+ordinary sound update, an absent pass selector has a Known true `Guard`,
+independently of traversal completeness. Listening statements retain their own
+activation evidence; jump-specific selector defaults remain separate.
+
+Span correspondence preserves exact part and identity boundaries. Refused
+same-note tied interpretations withhold their exact identity run in every
+document order. Duplicate wholly unnamed lyric lines withhold that unnamed
+identity within the part; no default verse or reset boundary is inferred.
+Graphical beat-repeat comparison without an explicit stop uses the documented
+same-final-measure encoded cursor extent. A trailing forward contributes to that
+extent just like other positive non-backup advancement; this comparison does
+not establish measure capacity or endpoint containment. See the
+[bounded terminal-range contract](docs/validation/context-assessment-scope.md#graphical-beat-repeat-terminal-extent).
+
+Catalog users can bind the same sealed contracts with `NewLocalContextPlan`,
+`NewSpanContextPlan`, `NewRepeatContextPlan`, `NewNavigationContextPlan`,
+`NewLayoutContextPlan`, `NewPerformanceContextPlan`, `NewTimeOnlyOrderPlan`,
+`NewBendReleaseSignPlan`, `NewGraphicalRepeatContentPlan` and
+`NewFigureNumberNumericPlan`. `NewOpusLayoutContextPlan` is separately
+bound to the Opus assembly and projects only local score pagination hints;
+missing new-page remains application-dependent and no linked score is opened. `ContextPlanSpec` binds the exact selected timeline
+provider where needed; `ContextConsumerSpec` binds an exact type-specific
+provider. There are no caller expressions, evaluator callbacks or unmetered
+post-Finish queries. Configuration is schema-bound and revisioned separately
+from the accepted timeline contract.
+
+Projection is admitted under the same context-fact, work and buffered-byte
+budgets before cleanup. Reports are editable caller snapshots, not immutable
+certificates. Unavailable optional geometry, author intent and physical playback
+realization remain per-field evidence or explicit exclusions; they are not new
+conformance failures. Repeated/ambiguous ranges remain bounded by the selected
+finite budgets. The matched `BenchmarkContextProfiles` compares warmed timeline
+and context profiles with documented larger finite budgets; it does not close
+`B5-PERF-01` or promise default-budget throughput.
+
+The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
+and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
+profile under the default budgets. Both stop at the 20,000,000-step limit;
+raising work alone still reaches the default 64 MiB buffered-byte limit.
+Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
+complete the measured source/current-model cases. Source measurements remove
+only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
+are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
+source assessment contract.
+
+The corrected Mozart model run uses 40,569,928 shared steps, 13,808 facts and
+11,105 records; its measured minimum buffered limit is 94,263,641 bytes.
+The MozaChlo model run uses 46,302,398 steps, 15,488 facts and 12,337 records,
+with a 103,134,552-byte minimum. These are fixture-specific results, not a
+score-size guarantee. Correcting false passive-control ambiguity reaches more
+encoded navigation occurrences and retains their owned state snapshots; the
+higher official-sample cost is included in these measurements.
+See [matched resource evidence](docs/validation/evidence/context-round3-resource-acceptance.md)
+for source minima, exact/one-under controls and cleanup.
+
+See [scope and limits](docs/validation/context-assessment-scope.md) for the
+source/model contract and deliberately retained normative boundaries.
+
 
 ## Fact-stream validation foundation
 

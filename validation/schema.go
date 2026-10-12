@@ -93,6 +93,7 @@ type CompiledSchema struct {
 	// Construction-only memoization is shared by value-copied caller handles,
 	// but detached from immutable plan/catalog snapshots by snapshot.
 	timeline *timelineBindingsCache
+	context  *contextBindingsCache
 }
 
 // CompileSchema copies bounded schema metadata into an immutable handle. It
@@ -106,7 +107,7 @@ func CompileSchema(assembly Assembly, data SchemaData) (*CompiledSchema, error) 
 	if err != nil {
 		return nil, &ConfigurationError{Field: "schema", Reason: err.Error()}
 	}
-	return &CompiledSchema{assembly: assembly, kernel: kernel, timeline: &timelineBindingsCache{}}, nil
+	return &CompiledSchema{assembly: assembly, kernel: kernel, timeline: &timelineBindingsCache{}, context: &contextBindingsCache{}}, nil
 }
 
 // snapshot retains only the immutable schema graph. A later constructor on the

@@ -93,8 +93,8 @@ construction and compressed `.mxl` round trips in
 | Read or write compressed MusicXML | `DecodeMXL`, typed `DecodeMXL...` helpers, `As...` accessors, and `EncodeMXL` |
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
-| Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline` |
-| Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline` |
+| Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
+| Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Construct scores and opus documents | `NewScorePartwise`, `NewScoreTimewise`, `NewOpusDocument` |
 | Construct common notes | `NewPitchedNote`, `NewRestNote` |
 | Resolve linked opus documents | `MXLPackage.ResolveOpus` |
@@ -152,6 +152,26 @@ ambiguous fact is known. The separate timeline engine leaves the existing
 XSD/local profiles and legacy `Validate` unchanged. See the
 [timeline scope and evidence](docs/validation/TIMELINE_ASSESSMENT_SCOPE.md).
 
+Select `ProfileModelContext` or `ProfileSourceContext` for the bounded
+repeat/span, local-default, layout and encoded-performance extension. Owned
+`Report.Context` snapshots retain per-field availability and provenance; a
+completed provider does not mean every optional fact is known. Selected
+contextual predicates retain unresolved numeric, repeat-content and gesture
+requirements explicitly. See the [context scope](docs/validation/context-assessment-scope.md).
+
+The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
+and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
+profile under the default budgets. Both stop at the 20,000,000-step limit;
+raising work alone still reaches the default 64 MiB buffered-byte limit.
+Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
+complete the measured source/current-model cases. Source measurements remove
+only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
+are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
+source assessment contract.
+See [matched resource evidence](docs/validation/evidence/context-round3-resource-acceptance.md)
+for exact minima and outcomes. Exhaustion is incomplete assessment, not a
+MusicXML violation or a readiness success.
+
 Always inspect `Report.Satisfied()`: a nil error alone is not acceptance.
 Ordinary violations live in the report; cancellation/resource interruptions
 return their cause and a partial report. Model locations are field/index paths
@@ -161,7 +181,7 @@ Optional nil and present-zero fields remain distinct; `XMLName` is ignored
 transport metadata.
 
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
-`ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged
+`ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged
 `ProfileSourceXSDPreview` (XSD only). Unread external DOCTYPE subsets still make
 all source profiles incomplete, including `Chant.musicxml`, `MozartTrio.musicxml`
 and `MozaChloSample.musicxml`. Strict assessed decoding returns no document for

@@ -1,0 +1,405 @@
+package validation
+
+import "context"
+
+type spanAssociationKey struct {
+	voiceSpecified                     bool
+	relationSide                       NodeID
+	domain                             NodeRef
+	family                             SpanFamily
+	identity                           SpanIdentityKind
+	number, pitch, guard, voice, lyric string
+	grace, cue                         bool
+}
+type spanAssociationGapKey struct {
+	domain NodeRef
+	family SpanFamily
+	side   NodeID
+}
+
+type spanAssociationRun struct {
+	indices  []int
+	complete Evidence[bool]
+}
+
+func spanBoundaryRole(e *spanEndpoint) int {
+	if e.payload.Role.State != EvidenceKnown {
+		return 0
+	}
+	if e.payload.Family == SpanPedal {
+		switch e.payload.Role.Value {
+		case "start", "sostenuto", "resume":
+			return 1
+		case "stop", "discontinue":
+			return -1
+		case "change", "continue":
+			return 2
+		}
+	}
+	switch e.payload.Role.Value {
+	case "start", "begin", "up", "down", "crescendo", "diminuendo":
+		return 1
+	case "stop", "end":
+		return -1
+	case "continue":
+		return 2
+	}
+	return 0
+}
+func spanSelfContained(e *spanEndpoint) bool {
+	if e.payload.Role.State != EvidenceKnown {
+		return false
+	}
+	r := e.payload.Role.Value
+	return (e.payload.Family == SpanTied && r == "let-ring") || r == "single" || (e.payload.Family == SpanTremolo && r == "unmeasured") || (e.payload.Family == SpanBeam && (r == "forward hook" || r == "backward hook"))
+}
+func spanPairable(f SpanFamily) bool {
+	switch f {
+	case SpanSlur, SpanTied, SpanTie, SpanBeam, SpanTuplet, SpanGlissando, SpanSlide, SpanOctaveShift, SpanBracket, SpanDashes, SpanWavyLine, SpanHammerOn, SpanPullOff, SpanPartGroup, SpanWedge, SpanLyricExtend, SpanGrouping, SpanOtherNotation, SpanMetronomeTied, SpanTremolo, SpanPedal, SpanPrincipalVoice, SpanBarre:
+		return true
+	}
+	return false
+}
+func spanAtomicKey(ctx context.Context, s *Session, v Evidence[Atomic]) (string, bool, error) {
+	if v.State != EvidenceKnown {
+		return "", false, nil
+	}
+	n := int64(len(v.Value.Text)) + v.Value.Integer.ByteSize() + v.Value.Decimal.ByteSize() + 128
+	if err := s.step(ctx, n); err != nil {
+		return "", false, err
+	}
+	switch v.Value.Kind {
+	case AtomicString:
+		return v.Value.Text, true, nil
+	case AtomicInteger:
+		if v.Value.Integer.Valid() {
+			return v.Value.Integer.String(), true, nil
+		}
+	}
+	return "", false, nil
+}
+func spanKey(ctx context.Context, s *Session, e *spanEndpoint) (spanAssociationKey, bool, error) {
+	p := e.payload
+	k := spanAssociationKey{family: p.Family, identity: p.Identity, relationSide: e.relationSide}
+	if p.Domain.State != EvidenceKnown {
+		return k, false, nil
+	}
+	k.domain = p.Domain.Value
+	if err := s.step(ctx, 1+int64(len(k.domain.DocumentID)+len(e.pitch)+len(e.guard)+len(e.lyric)+len(p.Voice.Value))); err != nil {
+		return k, false, err
+	}
+	var ok bool
+	var err error
+	switch p.Identity {
+	case SpanIdentityNumber, SpanIdentityPartGroup, SpanIdentityBeamLevel, SpanIdentityGrouping:
+		k.number, ok, err = spanAtomicKey(ctx, s, p.Number)
+		if !ok || err != nil {
+			return k, false, err
+		}
+	case SpanIdentityImpliedTie:
+		if e.pitch == "" {
+			return k, false, nil
+		}
+		k.pitch = e.pitch
+	case SpanIdentityLyric:
+		if e.lyric == "" {
+			return k, false, nil
+		}
+		k.lyric = e.lyric
+	case SpanIdentityUnnumbered:
+		if p.Family == SpanTie || p.Family == SpanBarre {
+			if e.pitch == "" {
+				return k, false, nil
+			}
+			k.pitch = e.pitch
+			k.guard = e.guard
+		}
+	default:
+		return k, false, nil
+	}
+	if p.Family == SpanGrouping {
+		k.lyric = e.lyric
+	}
+	if p.Family == SpanBeam {
+		if p.Voice.State == EvidenceKnown {
+			k.voice = p.Voice.Value
+			k.voiceSpecified = true
+		} else if p.Voice.State == EvidenceAbsent {
+			k.voice = ""
+		} else {
+			return k, false, nil
+		}
+		k.grace = e.grace
+		k.cue = e.cue
+	}
+	return k, true, nil
+}
+
+// associateSpanEndpoints consumes document-order records. Its ordinary numbered
+// association is an explicitly bounded interpretation, never a balance predicate.
+// No score-order sort or LIFO stack is used; a stop may be the first boundary.
+func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint, timeline *timelineService) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if err := s.retain(512); err != nil {
+		return err
+	}
+	runs := make(map[spanAssociationKey]*spanAssociationRun)
+	gaps := make(map[spanAssociationGapKey]Evidence[bool])
+	var categoryGaps map[spanBeamCategoryGapKey]Evidence[bool]
+	scratch := spanScratch{s: s}
+	defer scratch.release()
+	for i, e := range es {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		if e.payload.Association.State == EvidenceKnown && e.payload.Association.Value {
+			continue
+		}
+		// A self-contained role proves membership without using Number or Domain.
+		// Their original causal evidence remains available in those fields.
+		if spanSelfContained(e) {
+			if err := spanSetAssociation(ctx, s, e, []NodeRef{e.ref}); err != nil {
+				return err
+			}
+			continue
+		}
+		if !spanPairable(e.payload.Family) {
+			continue
+		}
+		if e.payload.Family == SpanBeam && !e.categoryKnown {
+			k, v, err := spanBeamCategoryGap(ctx, s, e)
+			if err != nil {
+				return err
+			}
+			if old, ok := categoryGaps[k]; ok {
+				categoryGaps[k] = timelineMergeAvailability(old, v)
+			} else {
+				if err := scratch.reserve(512 + int64(len(k.identity.number)+len(k.identity.voice)+len(k.identity.domain.DocumentID))); err != nil {
+					return err
+				}
+				if categoryGaps == nil {
+					if err := scratch.reserve(2048); err != nil {
+						return err
+					}
+					categoryGaps = make(map[spanBeamCategoryGapKey]Evidence[bool])
+				}
+				categoryGaps[k] = v
+			}
+			e.payload.Association = v
+			continue
+		}
+		k, ok, err := spanKey(ctx, s, e)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			g := spanAssociationGapKey{family: e.payload.Family, side: e.relationSide}
+			if e.payload.Domain.State == EvidenceKnown {
+				g.domain = e.payload.Domain.Value
+			}
+			v := stateUnknown[bool]("span-competing-identity-unproved")
+			if e.payload.Domain.State != EvidenceKnown {
+				v = stateUnavailable[NodeRef, bool](e.payload.Domain)
+			} else if e.payload.Number.State != EvidenceKnown && e.payload.Number.State != EvidenceAbsent {
+				v = stateUnavailable[Atomic, bool](e.payload.Number)
+			} else if e.payload.Voice.State != EvidenceKnown && e.payload.Voice.State != EvidenceAbsent && e.payload.Family == SpanBeam {
+				v = stateUnavailable[string, bool](e.payload.Voice)
+			}
+			if e.pitch == "" && e.pitchAvailable.State != "" && (e.payload.Family == SpanTie || e.payload.Identity == SpanIdentityImpliedTie) {
+				v = timelineMergeAvailability(v, e.pitchAvailable)
+			}
+			v = timelineMergeAvailability(v, e.complete)
+			if old, found := gaps[g]; found {
+				gaps[g] = timelineMergeAvailability(old, v)
+			} else {
+				if err := s.retain(512); err != nil {
+					return err
+				}
+				gaps[g] = v
+			}
+			e.payload.Association = v
+			continue
+		}
+		run := runs[k]
+		if run == nil {
+			if err := s.retain(512 + int64(len(k.number)+len(k.pitch)+len(k.guard)+len(k.voice)+len(k.lyric)+len(k.domain.DocumentID))); err != nil {
+				return err
+			}
+			run = &spanAssociationRun{complete: Evidence[bool]{State: EvidenceKnown, Value: true}}
+			runs[k] = run
+		}
+		if err := s.retain(32); err != nil {
+			return err
+		}
+		run.indices = append(run.indices, i)
+		if e.complete.State != EvidenceKnown || !e.complete.Value {
+			run.complete = timelineMergeAvailability(run.complete, e.complete)
+		}
+	}
+	for key, run := range runs {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		for _, g := range []spanAssociationGapKey{{domain: key.domain, family: key.family, side: key.relationSide}, {family: key.family, side: key.relationSide}} {
+			if v, ok := gaps[g]; ok {
+				run.complete = timelineMergeAvailability(run.complete, v)
+			}
+		}
+		categoryGap, err := spanBeamCategoryRunGap(ctx, s, key, categoryGaps)
+		if err != nil {
+			return err
+		}
+		run.complete = timelineMergeAvailability(run.complete, categoryGap)
+		if run.complete.State != EvidenceKnown || !run.complete.Value {
+			for _, i := range run.indices {
+				if err := s.step(ctx, 1); err != nil {
+					return err
+				}
+				es[i].payload.Association = stateUnavailable[bool, bool](run.complete)
+			}
+			continue
+		}
+		// A refused one-note interpretation cannot be discarded as if it were
+		// proved isolated. Check the entire exact tied identity before publishing
+		// any pairs, so placing that ambiguity before or after another candidate
+		// has the same result. Other identities/domains remain independent.
+		ambiguousTied, err := spanTiedRunAmbiguous(ctx, s, es, run.indices)
+		if err != nil {
+			return err
+		}
+		if ambiguousTied {
+			for _, i := range run.indices {
+				if err := s.step(ctx, 1); err != nil {
+					return err
+				}
+				es[i].payload.Association = stateUnknown[bool]("span-tied-local-interpretation-ambiguous")
+			}
+			continue
+		}
+		pending := -1
+		from := 0
+		ambiguous := false
+		for j, i := range run.indices {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			e := es[i]
+			role := spanBoundaryRole(e)
+			if ambiguous {
+				continue
+			}
+			if role == 0 {
+				ambiguous = true
+				continue
+			}
+			if role == 2 {
+				if pending < 0 {
+					ambiguous = true
+				}
+				continue
+			}
+			if pending < 0 {
+				pending = i
+				from = j
+				continue
+			}
+			prev := es[pending]
+			if spanBoundaryRole(prev) == role {
+				ambiguous = true
+				continue
+			}
+			a, b := prev, e
+			if role == 1 {
+				a, b = e, prev
+			}
+			// Local one-note ties were established before this run. If one was
+			// excluded by competing boundaries, ordinary pairing must not silently
+			// reintroduce the same unproved interpretation.
+			if a.payload.Family == SpanTied && a.payload.Anchor.State == EvidenceKnown && b.payload.Anchor.State == EvidenceKnown && a.payload.Anchor.Value == b.payload.Anchor.Value {
+				ambiguous = true
+				continue
+			}
+			// If both positions prove reversed chronology, do not invent a musical
+			// relation. Equal and unknown chronology do not erase document identity.
+			if timeline != nil && a.payload.Position.State == EvidenceKnown && b.payload.Position.State == EvidenceKnown {
+				ap, bp := a.payload.Position.Value, b.payload.Position.Value
+				ord, err := timeline.State.positionOrder(ctx, s, musicalPosition{Part: ap.Part, Measure: ap.Measure, MeasureOrdinal: ap.MeasureOrdinal, Offset: ap.Offset, UnprovedFrame: ap.UnprovedFrame}, musicalPosition{Part: bp.Part, Measure: bp.Measure, MeasureOrdinal: bp.MeasureOrdinal, Offset: bp.Offset, UnprovedFrame: bp.UnprovedFrame})
+				if err != nil {
+					return err
+				}
+				if ord == stateAfter {
+					pending = -1
+					continue
+				}
+			}
+			for _, member := range run.indices[from : j+1] {
+				if err := spanSetAssociation(ctx, s, es[member], []NodeRef{a.ref, b.ref}); err != nil {
+					return err
+				}
+			}
+			pending = -1
+		}
+	}
+	return nil
+}
+
+// spanTiedRunAmbiguous does not infer a visual stub or recover musical chains.
+// It only detects an unresolved same-note start/stop spelling anywhere in this
+// already-keyed run. Known positions alone do not prove a different visual
+// interpretation, and no missing boundaries or sound evidence are synthesized.
+func spanTiedRunAmbiguous(ctx context.Context, s *Session, es []*spanEndpoint, indices []int) (bool, error) {
+	if err := s.step(ctx, 1); err != nil {
+		return false, err
+	}
+	if len(indices) == 0 || es[indices[0]].payload.Family != SpanTied {
+		return false, nil
+	}
+	scratch := spanScratch{s: s}
+	defer scratch.release()
+	var started map[NodeRef]bool
+	for _, i := range indices {
+		e := es[i]
+		if err := s.step(ctx, 1+int64(len(e.payload.Anchor.Value.DocumentID))); err != nil {
+			return false, err
+		}
+		if e.payload.Anchor.State != EvidenceKnown || e.payload.Role.State != EvidenceKnown {
+			continue
+		}
+		anchor := e.payload.Anchor.Value
+		switch e.payload.Role.Value {
+		case "start":
+			if started[anchor] {
+				continue
+			}
+			if err := scratch.reserve(256 + int64(len(anchor.DocumentID))); err != nil {
+				return false, err
+			}
+			if started == nil {
+				if err := scratch.reserve(512); err != nil {
+					return false, err
+				}
+				started = make(map[NodeRef]bool)
+			}
+			started[anchor] = true
+		case "stop":
+			if started[anchor] {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+func spanSetAssociation(ctx context.Context, s *Session, e *spanEndpoint, members []NodeRef) error {
+	if err := s.step(ctx, int64(len(members))+1); err != nil {
+		return err
+	}
+	if err := stateRetainCount(s, len(members), 64); err != nil {
+		return err
+	}
+	e.payload.Members = append([]NodeRef(nil), members...)
+	e.payload.Association = Evidence[bool]{State: EvidenceKnown, Value: true}
+	return nil
+}

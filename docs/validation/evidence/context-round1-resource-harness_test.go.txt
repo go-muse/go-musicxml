@@ -1,0 +1,285 @@
+package musicxml
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"reflect"
+	"runtime"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/go-muse/go-musicxml/validation"
+)
+
+type r1ResourceFixture struct {
+	name, original, source string
+	doc                    Document
+}
+type r1ResourceObservation struct {
+	Case                 string                          `json:"case"`
+	Path                 string                          `json:"path"`
+	Profile              string                          `json:"profile"`
+	Config               string                          `json:"config"`
+	Budgets              validation.Budgets              `json:"budgets"`
+	OriginalBytes        int                             `json:"original_bytes"`
+	SourceBytes          int                             `json:"source_bytes"`
+	SourceSHA256         string                          `json:"source_sha256"`
+	Notes                int                             `json:"notes"`
+	AssessmentComplete   bool                            `json:"assessment_complete"`
+	InputComplete        bool                            `json:"input_complete"`
+	Satisfied            bool                            `json:"satisfied"`
+	Conformance          string                          `json:"conformance"`
+	Syntax               string                          `json:"syntax"`
+	Records              int                             `json:"records"`
+	Findings             int                             `json:"findings"`
+	BlockingProblems     uint64                          `json:"blocking_problems"`
+	DiagnosticsTruncated bool                            `json:"diagnostics_truncated"`
+	Error                string                          `json:"error"`
+	ResourceError        *validation.ResourceError       `json:"resource_error,omitempty"`
+	Usage                map[validation.BudgetKind]int64 `json:"usage"`
+	AllocatedBytes       uint64                          `json:"allocated_bytes"`
+	Allocations          uint64                          `json:"allocations"`
+	ElapsedNS            int64                           `json:"elapsed_ns"`
+	PublicReportMatched  bool                            `json:"public_report_matched"`
+	MinimumBufferedBytes int64                           `json:"minimum_buffered_bytes,omitempty"`
+}
+
+func r1ResourceEmit(t *testing.T, v any) {
+	t.Helper()
+	b, e := json.Marshal(v)
+	if e != nil {
+		t.Fatal(e)
+	}
+	fmt.Printf("RESOURCE_JSON %s\n", b)
+}
+func r1ResourceError(e error) string {
+	if e == nil {
+		return ""
+	}
+	return e.Error()
+}
+
+// Encode ASCII match markers in the fixture's original byte encoding. The
+// UTF-16 official sample keeps its BOM, declaration, and all other source bytes.
+func r1ResourceASCII(source, text string) string {
+	if len(source) < 2 || !((source[0] == 0xfe && source[1] == 0xff) || (source[0] == 0xff && source[1] == 0xfe)) {
+		return text
+	}
+	b := make([]byte, 0, len(text)*2)
+	for i := 0; i < len(text); i++ {
+		if source[0] == 0xfe {
+			b = append(b, 0, text[i])
+		} else {
+			b = append(b, text[i], 0)
+		}
+	}
+	return string(b)
+}
+func r1ResourceFixtures(t *testing.T) []r1ResourceFixture {
+	t.Helper()
+	var out []r1ResourceFixture
+	for _, n := range []string{"MozartTrio.musicxml", "MozaChloSample.musicxml", "notes100", "notes1000"} {
+		if filter := os.Getenv("RESOURCE_CASES"); filter != "" && !strings.Contains(","+filter+",", ","+n+",") {
+			continue
+		}
+		var original string
+		if strings.HasPrefix(n, "notes") {
+			count := 100
+			if n == "notes1000" {
+				count = 1000
+			}
+			original = independentTimelineScore(count, false, "1")
+		} else {
+			b, e := os.ReadFile("testdata/official/" + n)
+			if e != nil {
+				t.Fatal(e)
+			}
+			original = string(b)
+		}
+		source := original
+		// These official fixtures use one external declaration without an internal
+		// subset. Remove exactly that declaration for the explicitly bounded source
+		// path. Decode the original bytes for the current-model path.
+		openMarker, closeMarker, subsetMarker := r1ResourceASCII(source, "<!DOCTYPE"), r1ResourceASCII(source, ">"), r1ResourceASCII(source, "[")
+		if p := strings.Index(source, openMarker); p >= 0 {
+			q := strings.Index(source[p:], closeMarker)
+			if q < 0 || strings.Contains(source[p:p+q], subsetMarker) {
+				t.Fatal("unsupported fixture DOCTYPE")
+			}
+			source = source[:p] + source[p+q+len(closeMarker):]
+		}
+		d, e := Decode(strings.NewReader(original))
+		if e != nil {
+			t.Fatal(e)
+		}
+		out = append(out, r1ResourceFixture{n, original, source, d})
+	}
+	return out
+}
+func r1ResourceRun(t *testing.T, f r1ResourceFixture, path string, timeline bool, limits validation.Budgets, config string, public bool) (r1ResourceObservation, validation.Report) {
+	t.Helper()
+	ctx := context.Background()
+	p := ProfileSourceContext
+	if path == "model" {
+		p = ProfileModelContext
+	}
+	if timeline {
+		p = ProfileSourceTimeline
+		if path == "model" {
+			p = ProfileModelTimeline
+		}
+	}
+	options := AssessmentOptions{Profile: p, Budgets: limits}
+	// Initialize catalogs outside allocation measurement, as in warmed benchmarks.
+	var engine *validation.Engine
+	var e error
+	if timeline {
+		engine, e = newTimelineAssessmentEngine()
+	} else {
+		engine, e = newContextAssessmentEngine()
+	}
+	if e != nil {
+		t.Fatal(e)
+	}
+	runtime.GC()
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	start := time.Now()
+	var report validation.Report
+	var account *validation.Account
+	if path == "source" {
+		run, err := newSourceAssessmentRun(ctx, strings.NewReader(f.source), DecodeOptions{}, &options, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		account = run.account
+		drainErr := run.drain()
+		var finishErr error
+		report, finishErr = run.finish(drainErr)
+		e = errors.Join(drainErr, finishErr)
+	} else {
+		account, e = validation.NewBudgetAccount(limits)
+		if e != nil {
+			t.Fatal(e)
+		}
+		session, err := engine.Begin(ctx, validation.RunOptions{Profile: p, DocumentID: modelDocumentID, Account: account})
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, walkErr := walkModel(ctx, f.doc, session, account, modelDocumentID, modelWalkOptions{})
+		var finishErr error
+		report, finishErr = session.Finish(ctx, validation.Completion{InputComplete: walkErr == nil, Syntax: validation.SyntaxNotAssessed, Cause: walkErr})
+		e = errors.Join(walkErr, finishErr)
+	}
+	elapsed := time.Since(start)
+	runtime.ReadMemStats(&after)
+	obs := r1ResourceObservation{Case: f.name, Path: path, Profile: string(p), Config: config, Budgets: account.Limits(), OriginalBytes: len(f.original), SourceBytes: len(f.source), SourceSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(f.source))), Notes: strings.Count(f.original, r1ResourceASCII(f.original, "<note")), AssessmentComplete: report.AssessmentComplete, InputComplete: report.InputComplete, Satisfied: report.Satisfied(), Conformance: string(report.Conformance), Syntax: string(report.Syntax), Records: len(report.Context), Findings: len(report.Findings), BlockingProblems: uint64(report.BlockingProblems), DiagnosticsTruncated: report.DiagnosticsTruncated, Error: r1ResourceError(e), Usage: map[validation.BudgetKind]int64{}, AllocatedBytes: after.TotalAlloc - before.TotalAlloc, Allocations: after.Mallocs - before.Mallocs, ElapsedNS: elapsed.Nanoseconds()}
+	var re *validation.ResourceError
+	if errors.As(e, &re) {
+		obs.ResourceError = re
+	}
+	for _, kind := range []validation.BudgetKind{validation.BudgetInputBytes, validation.BudgetExternalBytes, validation.BudgetBufferedBytes, validation.BudgetDepth, validation.BudgetNodes, validation.BudgetAttributes, validation.BudgetEvents, validation.BudgetScalarBytes, validation.BudgetIDs, validation.BudgetRuleSteps, validation.BudgetContextFacts, validation.BudgetLinkedDocuments, validation.BudgetDiagnostics, validation.BudgetDiagnosticBytes} {
+		u, err := account.Usage(kind)
+		if err != nil {
+			t.Fatal(err)
+		}
+		obs.Usage[kind] = u
+	}
+	if obs.Usage[validation.BudgetBufferedBytes] != 0 || obs.Usage[validation.BudgetDepth] != 0 {
+		t.Errorf("%s/%s/%s leaked live gauges: %v", f.name, path, config, obs.Usage)
+	}
+	if e != nil && !errors.Is(e, validation.ErrResourceLimit) {
+		t.Fatalf("unexpected error %s/%s: %v", f.name, path, e)
+	}
+	if e != nil && (report.AssessmentComplete || report.Satisfied()) {
+		t.Errorf("resource refusal claimed complete/satisfied")
+	}
+	if public {
+		var pr validation.Report
+		var pe error
+		if path == "source" {
+			pr, pe = InspectXML(ctx, strings.NewReader(f.source), options)
+		} else {
+			pr, pe = AssessModel(ctx, f.doc, options)
+		}
+		obs.PublicReportMatched = reflect.DeepEqual(pr, report) && r1ResourceError(pe) == r1ResourceError(e)
+		if !obs.PublicReportMatched {
+			t.Errorf("account path differs from public %s/%s/%s", f.name, path, config)
+		}
+	}
+	return obs, report
+}
+func TestRound1IndependentResourceMatrix(t *testing.T) {
+	expanded := validation.Budgets{MaxRuleSteps: 1 << 34, MaxBufferedBytes: 512 << 20}
+	for _, f := range r1ResourceFixtures(t) {
+		for _, path := range []string{"source", "model"} {
+			if filter := os.Getenv("RESOURCE_PATHS"); filter != "" && !strings.Contains(","+filter+",", ","+path+",") {
+				continue
+			}
+			t.Run(f.name+"/"+path, func(t *testing.T) {
+				if os.Getenv("RESOURCE_MINIMUMS") != "only" {
+					for _, c := range []struct {
+						name     string
+						limits   validation.Budgets
+						timeline bool
+					}{{"defaults", validation.Budgets{}, false}, {"expanded", expanded, false}, {"work-expanded-only", validation.Budgets{MaxRuleSteps: 1 << 34}, false}, {"timeline-expanded", expanded, true}} {
+						o, _ := r1ResourceRun(t, f, path, c.timeline, c.limits, c.name, true)
+						r1ResourceEmit(t, o)
+					}
+				}
+				if os.Getenv("RESOURCE_MINIMUMS") == "" {
+					return
+				}
+				complete, _ := r1ResourceRun(t, f, path, false, expanded, "expanded-minimum-control", false)
+				if complete.Error != "" || !complete.AssessmentComplete {
+					t.Fatalf("expanded run cannot establish minima: %+v", complete)
+				}
+				low, high := int64(1), int64(512<<20)
+				for low < high {
+					mid := low + (high-low)/2
+					limits := expanded
+					limits.MaxBufferedBytes = mid
+					o, _ := r1ResourceRun(t, f, path, false, limits, "search-buffered", false)
+					if o.Error == "" && o.AssessmentComplete {
+						high = mid
+					} else if o.ResourceError != nil && o.ResourceError.Kind == validation.BudgetBufferedBytes {
+						low = mid + 1
+					} else {
+						t.Fatalf("unexpected binary search result: %+v", o)
+					}
+				}
+				for _, kind := range []string{"buffered", "steps", "facts"} {
+					for _, delta := range []int64{0, -1} {
+						limits := expanded
+						switch kind {
+						case "buffered":
+							limits.MaxBufferedBytes = low + delta
+						case "steps":
+							limits.MaxRuleSteps = complete.Usage[validation.BudgetRuleSteps] + delta
+						case "facts":
+							limits.MaxContextFacts = complete.Usage[validation.BudgetContextFacts] + delta
+						}
+						config := kind + "-exact"
+						if delta < 0 {
+							config = kind + "-one-under"
+						}
+						o, _ := r1ResourceRun(t, f, path, false, limits, config, false)
+						o.MinimumBufferedBytes = low
+						r1ResourceEmit(t, o)
+						if delta == 0 && (o.Error != "" || !o.AssessmentComplete || o.Records != complete.Records) {
+							t.Errorf("exact admission failed: %+v", o)
+						}
+						if delta < 0 && (o.ResourceError == nil || o.AssessmentComplete || o.Satisfied) {
+							t.Errorf("one-under admission failed to refuse: %+v", o)
+						}
+					}
+				}
+			})
+		}
+	}
+}

@@ -9,6 +9,18 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add explicit `ProfileModelContext` and `ProfileSourceContext`, preserving all
+  frozen XSD/local/timeline profiles and XSD-only `Validate`. The new bounded
+  providers expose owned repeat/navigation, type-specific span, local default,
+  layout and performance context, with exact prerequisite causes and separate
+  optional unknowns. Mandatory consumers cover numeric time-only ordering and
+  narrowly established bend/repeat content antecedents.
+- Add the sealed context plan constructors and `Report.Context` projections,
+  including assembly-specific local Opus version and pagination facts without
+  following links. External packages/resolvers, dictionaries, disputed normative
+  policies and B5-PERF-01 retain their later owners; no universal rendering,
+  playback or MusicXML conformance claim is introduced.
+
 - Add explicit `ProfileModelTimeline` and `ProfileSourceTimeline` through a
   separate engine, preserving frozen XSD/local profiles and legacy XSD-only
   `Validate`. The bounded provider retains exact musical chronology and typed

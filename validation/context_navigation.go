@@ -1,0 +1,645 @@
+package validation
+
+import (
+	"context"
+	"sort"
+	"unsafe"
+)
+
+type contextNavigationService struct{ Final bool }
+type contextNavigationNode struct {
+	event    navigationEvent
+	position Evidence[musicalPosition]
+	part     Evidence[NodeRef]
+	value    NavigationContextResult
+}
+
+func navigationKnownBool(v bool) Evidence[bool] {
+	return Evidence[bool]{State: EvidenceKnown, Value: v}
+}
+
+func navigationBackwardApplicability(direction Evidence[string], ending Evidence[bool]) Evidence[bool] {
+	if direction.State != EvidenceKnown {
+		return stateUnavailable[string, bool](direction)
+	}
+	if direction.Value != "backward" {
+		return navigationKnownBool(false)
+	}
+	if ending.State != EvidenceKnown {
+		return ending
+	}
+	return navigationKnownBool(!ending.Value)
+}
+
+func navigationDefaultGuard(kind NavigationKind, raw Evidence[string]) (Evidence[string], bool) {
+	if raw.State != EvidenceAbsent && raw.State != "" {
+		return raw, false
+	}
+	switch kind {
+	case NavigationDaCapo, NavigationDalSegno:
+		return Evidence[string]{State: EvidenceKnown, Value: "1"}, true
+	case NavigationToCoda:
+		return Evidence[string]{State: EvidenceKnown, Value: "2"}, true
+	}
+	return Evidence[string]{State: EvidenceAbsent}, false
+}
+
+func navigationSoundKind(raw navigationContext) (NavigationKind, Evidence[string], Evidence[bool]) {
+	kind, label, count := NavigationSound, Evidence[string]{State: EvidenceAbsent}, 0
+	status := navigationKnownBool(true)
+	for _, v := range []struct {
+		kind NavigationKind
+		raw  Evidence[string]
+	}{{NavigationSegno, raw.Segno}, {NavigationCoda, raw.Coda}, {NavigationDalSegno, raw.Dalsegno}, {NavigationToCoda, raw.Tocoda}, {NavigationFine, raw.Fine}} {
+		if v.raw.State == EvidenceKnown {
+			kind, label = v.kind, v.raw
+			count++
+		} else if v.raw.State != EvidenceAbsent && v.raw.State != "" {
+			status = stateMergeGap(status, stateUnavailable[string, bool](v.raw))
+		}
+	}
+	for _, v := range []struct {
+		kind NavigationKind
+		raw  Evidence[bool]
+	}{{NavigationDaCapo, raw.Dacapo}, {NavigationForward, raw.ForwardRepeat}} {
+		if v.raw.State == EvidenceKnown && v.raw.Value {
+			kind = v.kind
+			count++
+		} else if v.raw.State != EvidenceAbsent && v.raw.State != "" && v.raw.State != EvidenceKnown {
+			status = stateMergeGap(status, v.raw)
+		}
+	}
+	if count > 1 {
+		status = stateMergeGap(status, stateUnknown[bool]("navigation-multiple-directives-unresolved"))
+	}
+	return kind, label, status
+}
+
+const navigationRowBytes = int64(unsafe.Sizeof(contextNavigationNode{}))*2 + 128
+
+func navigationAppend(ctx context.Context, s *Session, rows *[]contextNavigationNode, retained *int64, row contextNavigationNode) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	bytes, err := rationalCheckedAdd(BudgetBufferedBytes, *retained, navigationRowBytes)
+	if err != nil {
+		return err
+	}
+	if err := s.account.Charge(BudgetBufferedBytes, navigationRowBytes); err != nil {
+		return err
+	}
+	*retained = bytes
+	if row.value.Guard.State == "" && row.event.Guard.State != "" {
+		guard, err := navigationPassApplies(ctx, s, row.event.Guard, 0)
+		if err != nil {
+			return err
+		}
+		row.value.Guard = guard
+	}
+	row.value.Position = contextPositionEvidence(row.position)
+	*rows = append(*rows, row)
+	return nil
+}
+
+func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timeline *timelineService) (rows []contextNavigationNode, release func(), err error) {
+	var retained int64
+	release = func() { _ = s.account.Release(BudgetBufferedBytes, retained) }
+	defer func() {
+		if err != nil {
+			release()
+			release = func() {}
+		}
+	}()
+	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	for _, id := range s.sequence {
+		if err := s.step(ctx, 1); err != nil {
+			return nil, release, err
+		}
+		node := s.nodes[id]
+		if r.matches(node, contextNavListening) {
+			fact, e := contextRepeatOrigin(ctx, s, timeline, node)
+			if e != nil {
+				return nil, release, e
+			}
+			updates, e := navigationReadListening(r, node, fact.Part)
+			if e != nil {
+				return nil, release, e
+			}
+			row := contextNavigationNode{event: navigationEvent{Source: NodeRef{s.documentID, id}, Kind: NavigationListening, Listening: updates}, part: fact.Part, position: fact.Position, value: NavigationContextResult{Kind: NavigationListening, Part: fact.Part, Listening: updates, TargetsDistinct: navigationListeningDistinct(r, node, updates)}}
+			if e = navigationAppend(ctx, s, &rows, &retained, row); e != nil {
+				return nil, release, e
+			}
+		}
+		if note, ok := timeline.Playback.Notes[id]; ok {
+			noteListening, recommended, distinct, e := navigationReadNoteListening(r, node, note.Origin.Part)
+			if e != nil {
+				return nil, release, e
+			}
+			play, e := performancePlayInstructions(ctx, s, note.Play)
+			if e != nil {
+				return nil, release, e
+			}
+			row := contextNavigationNode{event: navigationEvent{Source: note.Origin.Source, Kind: NavigationNote, NoteListening: noteListening, Play: play, Guard: note.TimeOnly, NoteDynamics: note.Dynamics, EndDynamics: note.EndDynamics, NotePizzicato: note.Pizzicato}, part: note.Origin.Part, position: note.Origin.Position, value: NavigationContextResult{Kind: NavigationNote, NoteListening: noteListening, RecommendedAssess: recommended, TargetsDistinct: distinct, Play: play, Part: note.Origin.Part, TimeOnly: note.TimeOnly}}
+			if err := navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+				return nil, release, err
+			}
+		}
+		sound, soundKnown := timeline.Playback.Sounds[id]
+		if !soundKnown && r.matches(node, contextNavRawSound) {
+			var e error
+			sound, e = navigationRawSound(r, node, timeline)
+			if e != nil {
+				return nil, release, e
+			}
+			soundKnown = true
+		}
+		if soundKnown {
+			directives, e := navigationRawDirectives(r, sound.Navigation)
+			if e != nil {
+				return nil, release, e
+			}
+			play, e := performancePlayInstructions(ctx, s, sound.Play)
+			if e != nil {
+				return nil, release, e
+			}
+			kind, label, available := navigationSoundKind(sound.Navigation)
+			guard, defaulted := navigationDefaultGuard(kind, sound.TimeOnly)
+			row := contextNavigationNode{event: navigationEvent{Source: sound.Origin.Source, Kind: kind, Play: play, Guard: guard, Tempo: sound.Tempo, Dynamics: sound.Dynamics, Pizzicato: sound.Pizzicato, Control: available}, part: sound.Origin.Part, position: sound.Origin.Position, value: NavigationContextResult{Kind: kind, Directives: directives, Play: play, Part: sound.Origin.Part, Label: label, TimeOnly: guard, Defaulted: defaulted}}
+			if kind == NavigationFine {
+				if label.State == EvidenceKnown && label.Value == "yes" {
+					row.value.DurationUnchanged = navigationKnownBool(true)
+				} else if label.State == EvidenceKnown {
+					row.value.DurationUnchanged = stateUnknown[bool]("navigation-fine-duration-units-unresolved")
+					row.value.FineDuration = stateUnknown[Decimal]("navigation-fine-duration-units-unresolved")
+				} else {
+					row.value.DurationUnchanged = stateUnavailable[string, bool](label)
+					row.value.FineDuration = stateUnavailable[string, Decimal](label)
+				}
+			}
+			if err := navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+				return nil, release, err
+			}
+		}
+		if barline, ok := timeline.Playback.Barlines[id]; ok {
+			for _, marker := range []struct {
+				kind    NavigationKind
+				label   Evidence[string]
+				present Evidence[bool]
+			}{{NavigationSegno, barline.Navigation.Segno, barline.Navigation.SegnoElement}, {NavigationCoda, barline.Navigation.Coda, barline.Navigation.CodaElement}} {
+				if marker.label.State == EvidenceAbsent {
+					continue
+				}
+				active := playbackMarker(marker.label, marker.present, true)
+				row := contextNavigationNode{event: navigationEvent{Source: barline.Origin.Source, Kind: marker.kind, Control: active}, part: barline.Origin.Part, position: barline.Origin.Position, value: NavigationContextResult{Kind: marker.kind, Part: barline.Origin.Part, Label: marker.label, MarkerActive: active}}
+				// Raw inactive marker facts are retained, but do not become target nodes.
+				if active.State == EvidenceKnown && !active.Value {
+					row.event.Kind = NavigationSound
+				}
+				if err := navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+					return nil, release, err
+				}
+			}
+		}
+		if r.matches(node, contextBarlineRepeat) || r.matches(node, contextBarlineEnding) {
+			fact, err := contextRepeatOrigin(ctx, s, timeline, node)
+			if err != nil {
+				return nil, release, err
+			}
+			row := contextNavigationNode{part: fact.Part, position: fact.Position, event: navigationEvent{Source: NodeRef{s.documentID, id}}, value: NavigationContextResult{Part: fact.Part}}
+			if r.matches(node, contextBarlineRepeat) {
+				direction := stateText(r.attribute(node, contextRepeatDirection))
+				row.value.Direction = direction
+				row.value.Times = stateInteger(r.attribute(node, contextRepeatTimes))
+				row.value.AfterJump = stateYesNo(r.attribute(node, contextRepeatAfterJump))
+				row.event.Kind = NavigationBackward
+				if direction.State == EvidenceKnown && direction.Value == "forward" {
+					row.event.Kind = NavigationForward
+				}
+				row.value.Kind = row.event.Kind
+				row.event.Times = row.value.Times
+				row.event.AfterJump = row.value.AfterJump
+				row.value.AttributesActive = navigationBackwardApplicability(direction, stateUnknown[bool]("navigation-ending-membership-unavailable"))
+				if direction.State == EvidenceKnown && direction.Value == "backward" {
+					ending, present := r.child(s.nodes[node.header.Parent], contextBarlineEnding)
+					if present.State == EvidenceKnown {
+						typ := stateText(r.attribute(ending, contextEndingType))
+						if typ.State == EvidenceKnown && (typ.Value == "stop" || typ.Value == "discontinue") {
+							row.value.AttributesActive = navigationKnownBool(false)
+						}
+					}
+				}
+				if direction.State != EvidenceKnown {
+					row.event.Control = stateUnavailable[string, bool](direction)
+				}
+			} else {
+				row.event.Kind = NavigationEnding
+				row.value.Kind = NavigationEnding
+				row.value.Direction = stateText(r.attribute(node, contextEndingType))
+				row.value.EndingNumber = stateText(r.attribute(node, contextEndingNumber))
+				row.value.Guard = stateUnknown[bool]("navigation-ending-pass-domain-unavailable")
+				if row.value.EndingNumber.State == EvidenceKnown && row.value.EndingNumber.Value == "" {
+					row.value.Guard = stateUnknown[bool]("navigation-ending-number-unknown")
+				}
+			}
+			if err = navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+				return nil, release, err
+			}
+		}
+	}
+	return rows, release, r.err
+}
+
+// A closing ending precedes its backward repeat at the same barline;
+// an opening ending follows its forward repeat. This orders encoded controls,
+// without choosing a playback pass for the ending.
+func navigationRowPriority(row contextNavigationNode) int {
+	if row.event.Kind == NavigationEnding && row.value.Direction.State == EvidenceKnown {
+		switch row.value.Direction.Value {
+		case "stop", "discontinue":
+			return -4
+		case "start":
+			return -1
+		}
+	}
+	if row.event.Kind == NavigationSegno || row.event.Kind == NavigationCoda {
+		return -3
+	}
+	return navigationPriority(row.event.Kind)
+}
+
+func navigationPriority(kind NavigationKind) int {
+	if kind == NavigationForward {
+		return -2
+	}
+	if kind == NavigationSegno || kind == NavigationCoda {
+		return -1
+	}
+	if kind == NavigationNote {
+		return 1
+	}
+	return 0
+}
+
+// Only encoded navigation boundaries and transfers compete for control order.
+// Ordinary playback/listening updates and inactive barline markers (demoted to
+// NavigationSound) retain their stable source order at the same position.
+func navigationControlKind(kind NavigationKind) bool {
+	switch kind {
+	case NavigationForward, NavigationBackward, NavigationEnding,
+		NavigationSegno, NavigationCoda, NavigationDaCapo, NavigationDalSegno,
+		NavigationToCoda, NavigationFine:
+		return true
+	}
+	return false
+}
+
+// Sorting is a candidate arrangement only. Every adjacent relation is checked
+// afterward using the exact partial-order service; an unresolved relation never
+// becomes a deterministic playback order from the sorting fallback.
+func navigationOrder(ctx context.Context, s *Session, timeline *timelineService, rows []contextNavigationNode) (Evidence[bool], error) {
+	available := navigationKnownBool(true)
+	for _, row := range rows {
+		if err := s.step(ctx, 1); err != nil {
+			return Evidence[bool]{}, err
+		}
+		if row.position.State != EvidenceKnown {
+			available = stateMergeGap(available, stateUnavailable[musicalPosition, bool](row.position))
+		}
+	}
+	if available.State != EvidenceKnown {
+		return available, nil
+	}
+	var compareErr error
+	sort.SliceStable(rows, func(i, j int) bool {
+		if compareErr != nil {
+			return false
+		}
+		a, b := rows[i], rows[j]
+		order, err := timeline.State.positionOrder(ctx, s, a.position.Value, b.position.Value)
+		if err != nil {
+			compareErr = err
+			return false
+		}
+		if order == stateBefore {
+			return true
+		}
+		if order == stateAfter {
+			return false
+		}
+		if order == stateEqual {
+			return navigationRowPriority(a) < navigationRowPriority(b)
+		}
+		available = stateMergeGap(available, stateUnknown[bool]("navigation-position-order-unresolved"))
+		return false
+	})
+	if compareErr != nil {
+		return Evidence[bool]{}, compareErr
+	}
+	controlSeen := len(rows) > 0 && navigationControlKind(rows[0].event.Kind)
+	for i := 1; i < len(rows); i++ {
+		order, err := timeline.State.positionOrder(ctx, s, rows[i-1].position.Value, rows[i].position.Value)
+		if err != nil {
+			return Evidence[bool]{}, err
+		}
+		if order != stateBefore && order != stateEqual {
+			available = stateMergeGap(available, stateUnknown[bool]("navigation-position-order-unresolved"))
+		}
+		if order != stateEqual || navigationRowPriority(rows[i-1]) != navigationRowPriority(rows[i]) {
+			controlSeen = false
+		}
+		if navigationControlKind(rows[i].event.Kind) {
+			// Passive rows must not hide two competing controls in the same run.
+			if controlSeen {
+				available = stateMergeGap(available, stateUnknown[bool]("navigation-simultaneous-control-unresolved"))
+			}
+			controlSeen = true
+		}
+	}
+	return available, nil
+}
+
+func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigationNode) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(rows)), 512)
+	if err != nil {
+		return err
+	}
+	bytes, err = rationalSum(BudgetBufferedBytes, bytes, 512)
+	if err != nil {
+		return err
+	}
+	if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, bytes) }()
+	stack := make([]int, 0, len(rows))
+	type markerKey struct {
+		kind  NavigationKind
+		label string
+	}
+	type markerValue struct{ index, count int }
+	markers := make(map[markerKey]markerValue)
+	unknownMarkers := make(map[NavigationKind]bool)
+	endingBarlines := make(map[NodeID]bool)
+	for i, row := range rows {
+		if err = s.step(ctx, 1+int64(len(row.value.Label.Value))); err != nil {
+			return err
+		}
+		if row.event.Kind == NavigationEnding {
+			if node := s.nodes[row.event.Source.Node]; node != nil {
+				endingBarlines[node.header.Parent] = true
+			}
+		}
+		if row.event.Kind == NavigationSegno || row.event.Kind == NavigationCoda {
+			if row.value.Label.State != EvidenceKnown {
+				unknownMarkers[row.event.Kind] = true
+				continue
+			}
+			key := markerKey{row.event.Kind, row.value.Label.Value}
+			value := markers[key]
+			value.index = i
+			value.count++
+			markers[key] = value
+		}
+	}
+	hasRepeat, hasEnding, hasDS, hasJump := false, false, false, false
+	for _, row := range rows {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
+		hasRepeat = hasRepeat || row.event.Kind == NavigationForward || row.event.Kind == NavigationBackward
+		hasEnding = hasEnding || row.event.Kind == NavigationEnding
+		hasDS = hasDS || row.event.Kind == NavigationDalSegno
+		hasJump = hasJump || row.event.Kind == NavigationDaCapo || row.event.Kind == NavigationDalSegno || row.event.Kind == NavigationToCoda
+	}
+	endingDepth := 0
+	endingAvailable := navigationKnownBool(true)
+	for i := range rows {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
+		row := &rows[i]
+		// Movement pass is proved for the simple D.C. movement with no local
+		// repeat/ending or D.S. submovement. More complex bindings stay unavailable.
+		if !hasRepeat && !hasEnding && !hasDS {
+			row.event.PassDomain = navigationMovementPass
+		}
+		switch row.event.Kind {
+		case NavigationForward:
+			stack = append(stack, i)
+		case NavigationEnding:
+			if row.value.Direction.State != EvidenceKnown {
+				endingAvailable = stateUnavailable[string, bool](row.value.Direction)
+			} else if row.value.Direction.Value == "start" {
+				endingDepth++
+			} else if endingDepth > 0 {
+				endingDepth--
+			} else {
+				endingAvailable = stateUnknown[bool]("navigation-ending-boundary-unresolved")
+			}
+		case NavigationBackward:
+			ending := endingAvailable
+			if ending.State == EvidenceKnown {
+				ending.Value = endingDepth > 0
+				// A stop/discontinue on this same barline owns its trailing repeat even
+				// though its ending interval is otherwise half-open.
+				if node := s.nodes[row.event.Source.Node]; node != nil && endingBarlines[node.header.Parent] {
+					ending.Value = true
+				}
+			}
+			row.value.AttributesActive = navigationBackwardApplicability(row.value.Direction, ending)
+			if row.value.AttributesActive.State != EvidenceKnown || !row.value.AttributesActive.Value {
+				row.event.Control = stateUnknown[bool]("navigation-ending-repeat-realization-unresolved")
+			}
+			if len(stack) == 0 {
+				row.event.Target = stateUnknown[int]("navigation-repeat-start-unavailable")
+			} else {
+				row.event.Target = Evidence[int]{State: EvidenceKnown, Value: stack[len(stack)-1]}
+				row.value.Target = Evidence[NodeRef]{State: EvidenceKnown, Value: rows[stack[len(stack)-1]].event.Source}
+				stack = stack[:len(stack)-1]
+			}
+		case NavigationDaCapo:
+			if len(rows) > 0 {
+				row.event.Target = Evidence[int]{State: EvidenceKnown, Value: 0}
+				row.value.Target = Evidence[NodeRef]{State: EvidenceKnown, Value: rows[0].event.Source}
+			}
+		case NavigationDalSegno, NavigationToCoda:
+			kind := NavigationSegno
+			if row.event.Kind == NavigationToCoda {
+				kind = NavigationCoda
+			}
+			found := -1
+			ambiguous := false
+			if row.value.Label.State != EvidenceKnown {
+				row.event.Target = stateUnavailable[string, int](row.value.Label)
+				row.value.Target = stateUnavailable[string, NodeRef](row.value.Label)
+				break
+			}
+			if err = s.step(ctx, 1+int64(len(row.value.Label.Value))); err != nil {
+				return err
+			}
+			candidate := markers[markerKey{kind, row.value.Label.Value}]
+			if candidate.count > 0 {
+				found = candidate.index
+			}
+			ambiguous = unknownMarkers[kind] || candidate.count > 1
+			if ambiguous || found < 0 || row.event.Kind == NavigationDalSegno && found >= i || row.event.Kind == NavigationToCoda && found <= i {
+				row.event.Target = stateUnknown[int]("navigation-target-unresolved")
+				row.value.Target = stateUnknown[NodeRef]("navigation-target-unresolved")
+			} else {
+				row.event.Target = Evidence[int]{State: EvidenceKnown, Value: found}
+				row.value.Target = Evidence[NodeRef]{State: EvidenceKnown, Value: rows[found].event.Source}
+			}
+		}
+	}
+	// Establish the domain of a single D.C. movement or single D.S. section.
+	// Events beyond its departure (including a coda reached only on re-entry)
+	// do not inherit the movement epoch as their own section pass.
+	jumpIndex, jumpCount := -1, 0
+	for i := range rows {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
+		if rows[i].event.Kind == NavigationDaCapo || rows[i].event.Kind == NavigationDalSegno {
+			jumpIndex = i
+			jumpCount++
+		}
+	}
+	if !hasRepeat && !hasEnding && jumpCount == 1 && rows[jumpIndex].event.Target.State == EvidenceKnown {
+		start := rows[jumpIndex].event.Target.Value
+		for i := range rows {
+			if err = s.step(ctx, 1); err != nil {
+				return err
+			}
+			rows[i].event.PassDomain = navigationUnknownPass
+			if i >= start && i <= jumpIndex {
+				rows[i].event.PassDomain = navigationMovementPass
+			}
+		}
+	} else if jumpCount > 1 {
+		for i := range rows {
+			if err = s.step(ctx, 1); err != nil {
+				return err
+			}
+			rows[i].event.PassDomain = navigationUnknownPass
+		}
+	}
+	// A single ordinary region supplies a section pass; nested selector domains
+	// remain distinct and therefore unknown unless the selector is unrestricted.
+	for i := range rows {
+		if err = s.step(ctx, 1); err != nil {
+			return err
+		}
+		if hasRepeat && !hasEnding && !hasJump && rows[i].event.PassDomain == navigationUnknownPass {
+			rows[i].event.PassDomain = navigationSingleRepeatPass
+		}
+	}
+	return nil
+}
+
+func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key RuleKey, p *contextPlan, final bool) (Decision, bool, error) {
+	if !final {
+		return Decision{}, true, nil
+	}
+	service, err := s.newContextService(ctx, key)
+	if err != nil {
+		return Decision{}, false, err
+	}
+	if service.Navigation != nil && service.Navigation.Final {
+		return Decision{Outcome: OutcomePass}, false, nil
+	}
+	timeline := s.timeline[p.Timeline]
+	if timeline == nil {
+		timeline = &timelineService{}
+	}
+	if err = navigationPublishGraphics(ctx, s, p, key, timeline); err != nil {
+		return Decision{}, false, err
+	}
+	rows, freeRows, err := navigationReadRows(ctx, s, p, timeline)
+	if err != nil {
+		return Decision{}, false, err
+	}
+	defer freeRows()
+	instrumentIndex, err := navigationBuildInstrumentIndex(ctx, s, timeline)
+	if err != nil {
+		return Decision{}, false, err
+	}
+	defer instrumentIndex.release()
+	freeParts, err := contextRepeatScratch(ctx, s, len(rows), navigationRowBytes)
+	if err != nil {
+		return Decision{}, false, err
+	}
+	defer freeParts()
+	// Part grouping remains symbolic and sparse; printed measure labels never
+	// participate in identity. Source-qualified NodeRef keys prevent aliasing.
+	parts := make(map[NodeRef][]contextNavigationNode)
+	for _, row := range rows {
+		if err = s.step(ctx, 1); err != nil {
+			return Decision{}, false, err
+		}
+		if row.part.State != EvidenceKnown {
+			row.value.Complete = stateUnavailable[NodeRef, bool](row.part)
+			if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.event.Source, Property: ContextPropertyNavigation, Navigation: &row.value}); err != nil {
+				return Decision{}, false, err
+			}
+			continue
+		}
+		parts[row.part.Value] = append(parts[row.part.Value], row)
+	}
+	// Iterate first-encounter order rather than Go map order for deterministic
+	// bounded output and cancellation boundaries.
+	for _, row := range rows {
+		if row.part.State != EvidenceKnown {
+			continue
+		}
+		partRows, ok := parts[row.part.Value]
+		if !ok {
+			continue
+		}
+		delete(parts, row.part.Value)
+		available, e := navigationOrder(ctx, s, timeline, partRows)
+		if e != nil {
+			return Decision{}, false, e
+		}
+		traversal := NavigationContextResult{Kind: NavigationTraversal, Part: row.part, Complete: available, InitialSyncMode: stateUnknown[string]("navigation-sync-application-default")}
+		if available.State == EvidenceKnown {
+			if e = navigationBuildEdges(ctx, s, partRows); e != nil {
+				return Decision{}, false, e
+			}
+			traversal, e = navigationRunRows(ctx, s, timeline, partRows, instrumentIndex)
+			if e != nil {
+				return Decision{}, false, e
+			}
+			traversal.Part = row.part
+		} else {
+			count, e := navigationLinearPrefix(ctx, s, timeline, partRows)
+			if e != nil {
+				return Decision{}, false, e
+			}
+			if count > 0 {
+				traversal, e = navigationRunRows(ctx, s, timeline, partRows[:count], instrumentIndex)
+				if e != nil {
+					return Decision{}, false, e
+				}
+				traversal.Part = row.part
+				traversal.Complete = available
+			}
+		}
+		for i := range partRows {
+			v := &partRows[i]
+			if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: v.event.Source, Property: ContextPropertyNavigation, Navigation: &v.value}); err != nil {
+				return Decision{}, false, err
+			}
+		}
+		if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.part.Value, Property: ContextPropertyNavigationTraversal, Navigation: &traversal}); err != nil {
+			return Decision{}, false, err
+		}
+	}
+	if err = s.retain(128); err != nil {
+		return Decision{}, false, err
+	}
+	service.Navigation = &contextNavigationService{Final: true}
+	return Decision{Outcome: OutcomePass}, false, nil
+}

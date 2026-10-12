@@ -94,7 +94,7 @@ stage_vet() {
 
 stage_race() {
     stage "go test -race"
-    "$check_go" test -race -count=1 ./...
+    "$check_go" test -race -count=1 -timeout=15m ./...
 }
 
 stage_fuzz() {
@@ -108,6 +108,8 @@ stage_fuzz() {
     "$check_go" test -run='^$' -fuzz='^FuzzSourceXMLReader$' \
         -fuzztime="$check_validation_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzAssessCurrentModel$' \
+        -fuzztime="$check_validation_fuzz_time" .
+    "$check_go" test -run='^$' -fuzz='^FuzzContextAssessment$' \
         -fuzztime="$check_validation_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzReportFieldIsBoundedEscapedUTF8$' \
           -fuzztime="$check_validation_fuzz_time" ./validation

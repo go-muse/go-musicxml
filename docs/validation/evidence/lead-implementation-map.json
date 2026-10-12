@@ -1,0 +1,181 @@
+{
+  "format": "batch7-lead-implementation-map-v1",
+  "status": "actual bounded contributions; final independent QA pending",
+  "checks": [
+    {
+      "check_id": "CHECK-context-extensible-glyph-type",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "glyphSemanticTarget",
+        "localGlyphFacts"
+      ],
+      "tests": [
+        "TestContextLocalGlyphSemanticsAcrossTargets"
+      ],
+      "implemented_subclauses": "Open type strings are retained; source-defined semantic selectors are recognized without rejecting application-specific strings.",
+      "remaining_boundaries": [],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-named-notehead-text",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "localGlyphFacts"
+      ],
+      "tests": [
+        "TestContextLocalGlyphSemanticsAcrossTargets"
+      ],
+      "implemented_subclauses": "Preserve the note-name-range recommendation and its local applicability; no broad ban on other+smufl.",
+      "remaining_boundaries": [
+        "External SMuFL range membership remains batch9; a name prefix is not substituted for codepoint membership."
+      ],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-symbol-semantic-markup",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "localGlyphFacts"
+      ],
+      "tests": [
+        "TestContextLocalGlyphSemanticsAcrossTargets"
+      ],
+      "implemented_subclauses": "Retain raw canonical-name subject and unavailable specialized-markup advice; choosing generic symbol does not become invalid.",
+      "remaining_boundaries": [
+        "Canonical naming and specialized-symbol lookup require shared external dictionary in9."
+      ],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-glyph-match-type",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "glyphTypeMatch"
+      ],
+      "tests": [
+        "TestContextLocalGlyphSemanticsAcrossTargets"
+      ],
+      "implemented_subclauses": "Source-listed sufficient compatible examples yield known advisory agreement; unmatched pairs remain unresolved, never invented closed-dictionary rejection.",
+      "remaining_boundaries": [
+        "General semantic matching remains dictionary-dependent batch9."
+      ],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-arrow-glyph-consistency",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "localGlyphFacts"
+      ],
+      "tests": [
+        "TestContextLocalGlyphSemanticsAcrossTargets"
+      ],
+      "implemented_subclauses": "Expose exact linear/circular direction, style and arrowhead-only evidence; preserve unavailable glyph-description matching.",
+      "remaining_boundaries": [
+        "General SMuFL appearance/structural compatibility remains batch9."
+      ],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-symbol-defaults-and-name",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "localGlyphFacts",
+        "layoutFormatting"
+      ],
+      "tests": [
+        "TestContextLocalGlyphSemanticsAcrossTargets"
+      ],
+      "implemented_subclauses": "Lead retains glyph name/markup subject. Layout worker separately provides justify/enclosure defaults and exact raw/effective provenance.",
+      "remaining_boundaries": [
+        "Canonical glyph-name validation belongs to shared dictionary9."
+      ],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-figure-number-numeric",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "NewFigureNumberNumericPlan",
+        "evaluateFigureNumberNumeric"
+      ],
+      "tests": [
+        "TestContextFigureNumberRetainsUnreviewedGrammarGate",
+        "TestContextFigureNumberAbsentDoesNotCreateGrammarObligation",
+        "TestContextFigureNumberRequiresExactDeclaration",
+        "TestLocalRound1FigureNumberSufficientNumericSubset"
+      ],
+      "implemented_subclauses": "After exact-declaration XSD prerequisites, nonempty ASCII digits satisfy a sufficient numeric subset under the mandatory rule. Other valid style-text remains Unsupported pending a reviewed general grammar; an absent optional node creates no obligation.",
+      "remaining_boundaries": [
+        "No reviewed general numeric grammar; no guessed decimal/Roman/fraction syntax."
+      ],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-time-only-ascending",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "contextTimeOnlyOrder",
+        "NewTimeOnlyOrderPlan"
+      ],
+      "tests": [
+        "TestContextProfilesTimeOnlyAcrossTargetsAndHierarchies",
+        "TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode"
+      ],
+      "implemented_subclauses": "Exact arbitrary-width ascending comparison on all exact carriers, independent of timeline/repeat reachability; descending fails and scalar invalidity blocks.",
+      "remaining_boundaries": [
+        "Equal adjacent pass values retain unresolved duplicate policy."
+      ],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-binding-workarounds-not-rules",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "buildContextAssessmentEngine"
+      ],
+      "tests": [
+        "TestContextProfilesKeepApplicationChoicesExcluded"
+      ],
+      "implemented_subclauses": "Retained excluded application/implementation choice. No new document predicate or format violation is installed.",
+      "remaining_boundaries": [],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-sounds-application-mapping",
+      "owner": "batch7 lead",
+      "implementation_symbols": [
+        "buildContextAssessmentEngine"
+      ],
+      "tests": [
+        "TestContextProfilesKeepApplicationChoicesExcluded"
+      ],
+      "implemented_subclauses": "Retained excluded application/implementation choice. No new document predicate or format violation is installed.",
+      "remaining_boundaries": [],
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+    },
+    {
+      "check_id": "CHECK-context-opus-version-default",
+      "owner": "batch7 lead, bounded Opus-local assembly",
+      "implementation_symbols": [
+        "evaluateContextOpusLayout",
+        "contextOpusLayoutBindingSpecs"
+      ],
+      "tests": [
+        "TestContextOpusVersionDefaultIsLocal",
+        "TestContextOpusAssemblyContract",
+        "TestContextOpusProjectionOwnershipAndLimits"
+      ],
+      "implemented_subclauses": "Each Opus root/nested occurrence retains explicit version token including empty, collapses xs:token whitespace, or uses documented omission default1.0. No version compatibility policy and no linked content read.",
+      "remaining_boundaries": [],
+      "axes": {
+        "positive": "explicit4.0 and nested2.0",
+        "negative": "explicit application token is preserved, not rejected as a fabricated closed version enumeration",
+        "boundary": "known absent1.0 distinct from explicit empty token; whitespace normalized by XSD",
+        "missing_fact": "zero/missing assembly and wrong assembly rejected by sealed plan/selector contract; optional version omission is valid default",
+        "interaction": "source/current-model nested identities; reportownership/quota/cancel and empty Opus no fabricated pagination"
+      },
+      "acceptance": "Source-supported local addition; independent exact-head acceptance pending, no original statuses promoted."
+    }
+  ]
+}

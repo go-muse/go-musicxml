@@ -1,0 +1,2842 @@
+{
+  "format": "batch7-reviewed-translation-triplets-v1",
+  "baseline": "d605a63fe5785292af354b93928e56c1e01bc77f",
+  "registry_commit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+  "proposal_sha256": "43e7212b0a8505de711384e02590a0a0f9d3d9136cf07a13f0b5ba14cc7286d4",
+  "reviewer": "batch7 lead, independent of translator",
+  "review_scope": "All 177 original Russian description, short explanation and conditions fields compared individually to English; source IDs, force, defaults, exceptions and gates preserved. Original planning status untouched. Normative truth is separately researched. One readability correction to extend historical-start description.",
+  "records": [
+    {
+      "research_id": "MX40-PROSE-number-level-overlap",
+      "registry_pointer": "/records/2220/record",
+      "source_triplet_ru": {
+        "description_ru": "number различает одновременно перекрывающиеся объекты одного типа внутри партии по порядку XML.",
+        "short_explanation_ru": "number различает одновременно перекрывающиеся объекты одного типа внутри партии по порядку XML.",
+        "conditions_ru": "Нельзя считать перекрытие исключительно по музыкальному времени; значение 1 подразумевается, кроме специально оговорённых элементов."
+      },
+      "source_triplet_sha256": "2c0c431d4d08ae318fbfced73e17718b8585199c4b6650cd9dac7908940a5ad3",
+      "reviewed_translation_en": {
+        "description_en": "number distinguishes simultaneously overlapping objects of the same type within a part in XML order.",
+        "short_explanation_en": "number distinguishes simultaneously overlapping objects of the same type within a part in XML order.",
+        "conditions_en": "Overlap must not be determined solely by musical time; a value of 1 is implied except for elements with expressly stated exceptions."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-same-note-span-order",
+      "registry_pointer": "/records/2230/record",
+      "source_triplet_ru": {
+        "description_ru": "Одноимённые span-элементы одной ноты рекомендуется располагать в музыкальном порядке.",
+        "short_explanation_ru": "Одноимённые span-элементы одной ноты рекомендуется располагать в музыкальном порядке.",
+        "conditions_ru": "Это should, не универсальная обязательная сортировка XML."
+      },
+      "source_triplet_sha256": "16254eff2b6ef3235bcac7b710750687a36608c55d7f949cf2849003bcb7c3e0",
+      "reviewed_translation_en": {
+        "description_en": "Span elements of the same name on one note are recommended to appear in musical order.",
+        "short_explanation_en": "Span elements of the same name on one note are recommended to appear in musical order.",
+        "conditions_en": "This is a should, not a universal mandatory sorting of XML."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-global-tenths",
+      "registry_pointer": "/records/2234/record",
+      "source_triplet_ru": {
+        "description_ru": "Все tenths относятся к глобальному scaling и равны десятым долям межлинейного интервала.",
+        "short_explanation_ru": "Все tenths относятся к глобальному scaling и равны десятым долям межлинейного интервала.",
+        "conditions_ru": "staff-size не переопределяет единицу tenths; допускаются дробные и отрицательные значения."
+      },
+      "source_triplet_sha256": "50e370b4eadfd53c9df89ae8b9ce79f092f703ce0deda5534a15d561d1611d27",
+      "reviewed_translation_en": {
+        "description_en": "All tenths refer to global scaling and equal tenths of the distance between staff lines.",
+        "short_explanation_en": "All tenths refer to global scaling and equal tenths of the distance between staff lines.",
+        "conditions_en": "staff-size does not redefine the tenths unit; fractional and negative values are allowed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-text-direction-default",
+      "registry_pointer": "/records/2235/record",
+      "source_triplet_ru": {
+        "description_ru": "Если направление текста не задано, используется ltr.",
+        "short_explanation_ru": "Если направление текста не задано, используется ltr.",
+        "conditions_ru": "Значения lro/rlo переопределяют алгоритм bidi."
+      },
+      "source_triplet_sha256": "590ae51e8d5808fb8db8c28d78ee63a0828982c1fb92d5ea5d86fd3324c4aa70",
+      "reviewed_translation_en": {
+        "description_en": "If text direction is unspecified, ltr is used.",
+        "short_explanation_en": "If text direction is unspecified, ltr is used.",
+        "conditions_en": "The lro/rlo values override the bidi algorithm."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-let-ring-single-tie",
+      "registry_pointer": "/records/2236/record",
+      "source_triplet_ru": {
+        "description_ru": "Не заглушаемый звук обозначается одиночным tied с типом let-ring.",
+        "short_explanation_ru": "Не заглушаемый звук обозначается одиночным tied с типом let-ring.",
+        "conditions_ru": "Обычная пара start/stop для let-ring не требуется."
+      },
+      "source_triplet_sha256": "42b17f2ebf3e74d78e96c7fd6249759f7018e77a7e7bb4471579e29637fa79de",
+      "reviewed_translation_en": {
+        "description_en": "An undamped sound is indicated by a single tied element with type let-ring.",
+        "short_explanation_en": "An undamped sound is indicated by a single tied element with type let-ring.",
+        "conditions_en": "The usual start/stop pair is not required for let-ring."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-one-note-visual-tie",
+      "registry_pointer": "/records/2237/record",
+      "source_triplet_ru": {
+        "description_ru": "Визуальную лигу, прикреплённую только к одной ноте, рекомендуется кодировать start затем stop на этой ноте.",
+        "short_explanation_ru": "Визуальную лигу, прикреплённую только к одной ноте, рекомендуется кодировать start затем stop на этой ноте.",
+        "conditions_ru": "Исключение: let-ring; допустимы связи с повтором или кодой."
+      },
+      "source_triplet_sha256": "8cb355f89d274c192217f6e5ee651e92c39542c84acda80c758a8c2894b0260c",
+      "reviewed_translation_en": {
+        "description_en": "A visual tie attached to only one note is recommended to be encoded as start followed by stop on that note.",
+        "short_explanation_en": "A visual tie attached to only one note is recommended to be encoded as start followed by stop on that note.",
+        "conditions_en": "Exception: let-ring; connections involving a repeat or coda are allowed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-valign-app-default",
+      "registry_pointer": "/records/2240/record",
+      "source_triplet_ru": {
+        "description_ru": "Вертикальное выравнивание без явного значения выбирает приложение.",
+        "short_explanation_ru": "Вертикальное выравнивание без явного значения выбирает приложение.",
+        "conditions_ru": "Нельзя объявлять отсутствие valign ошибкой."
+      },
+      "source_triplet_sha256": "987e25e4ac80648cee08552623540436709b68578880e2e110f6e06d4047120e",
+      "reviewed_translation_en": {
+        "description_en": "The application chooses vertical alignment when no explicit value is given.",
+        "short_explanation_en": "The application chooses vertical alignment when no explicit value is given.",
+        "conditions_en": "Absence of valign must not be declared an error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-image-valign-app-default",
+      "registry_pointer": "/records/2241/record",
+      "source_triplet_ru": {
+        "description_ru": "Для изображения выравнивание по умолчанию определяется приложением.",
+        "short_explanation_ru": "Для изображения выравнивание по умолчанию определяется приложением.",
+        "conditions_ru": "baseline отсутствует в типе для изображений."
+      },
+      "source_triplet_sha256": "313ae054fe7f2454b47881f8ada4b584327b91d5dda3e757edf91c1521a2780d",
+      "reviewed_translation_en": {
+        "description_en": "Default image alignment is determined by the application.",
+        "short_explanation_en": "Default image alignment is determined by the application.",
+        "conditions_en": "baseline is absent from the image alignment type."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-unknown-ending-number",
+      "registry_pointer": "/records/2252/record",
+      "source_triplet_ru": {
+        "description_ru": "Пустая строка или пробелы в ending number означают известное наличие вольты с неустановленным номером.",
+        "short_explanation_ru": "Пустая строка или пробелы в ending number означают известное наличие вольты с неустановленным номером.",
+        "conditions_ru": "Не требовать непустой цифровой список при такой записи."
+      },
+      "source_triplet_sha256": "cf38f561b811d7f0c1c687cc63e49b397e0e4b3068b9b87bc78559dd079affe4",
+      "reviewed_translation_en": {
+        "description_en": "An empty string or spaces in ending number indicate that an ending is known to exist but its number is undetermined.",
+        "short_explanation_en": "An empty string or spaces in ending number indicate that an ending is known to exist but its number is undetermined.",
+        "conditions_en": "Do not require a nonempty numeric list for this representation."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-winged-default",
+      "registry_pointer": "/records/2253/record",
+      "source_triplet_ru": {
+        "description_ru": "Отсутствующий winged означает none.",
+        "short_explanation_ru": "Отсутствующий winged означает none.",
+        "conditions_ru": "Другие значения описывают только графические крылья репризы."
+      },
+      "source_triplet_sha256": "429ac45c446b89ab41afcc78cb2dc1b042a852eb4f8404826aa6b72e8eb3d5f7",
+      "reviewed_translation_en": {
+        "description_en": "An absent winged means none.",
+        "short_explanation_en": "An absent winged means none.",
+        "conditions_en": "Other values describe only graphical repeat wings."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-harmony-none-hide-root",
+      "registry_pointer": "/records/2255/record",
+      "source_triplet_ru": {
+        "description_ru": "Для kind=none рекомендуется пустой text у root-step или numeral-root, чтобы не печатать корень.",
+        "short_explanation_ru": "Для kind=none рекомендуется пустой text у root-step или numeral-root, чтобы не печатать корень.",
+        "conditions_ru": "Источник говорит numeral-step, которого нет в схеме; уточнение отмечено как неоднозначность."
+      },
+      "source_triplet_sha256": "853cc21c3c32494dde5f1d8c804b1ceaf05a73cec46d1df5139bc29bf813cd65",
+      "reviewed_translation_en": {
+        "description_en": "For kind=none, an empty text on root-step or numeral-root is recommended to avoid printing the root.",
+        "short_explanation_en": "For kind=none, an empty text on root-step or numeral-root is recommended to avoid printing the root.",
+        "conditions_en": "The source says numeral-step, which does not exist in the schema; this clarification is recorded as an ambiguity."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-pedal-line-types",
+      "registry_pointer": "/records/2257/record",
+      "source_triplet_ru": {
+        "description_ru": "change, continue, discontinue и resume предназначены для pedal с line=yes.",
+        "short_explanation_ru": "change, continue, discontinue и resume предназначены для pedal с line=yes.",
+        "conditions_ru": "Не принимать отсутствие графической линии за доказанный дефект звука."
+      },
+      "source_triplet_sha256": "391b79a55cabd13d47e8b0b2ea3ab6ae8f2805840cdc2f9591324338355af1ed",
+      "reviewed_translation_en": {
+        "description_en": "change, continue, discontinue, and resume are intended for pedal with line=yes.",
+        "short_explanation_en": "change, continue, discontinue, and resume are intended for pedal with line=yes.",
+        "conditions_en": "Do not take the absence of a graphical line as a proven sound defect."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-octave-shift-direction",
+      "registry_pointer": "/records/2260/record",
+      "source_triplet_ru": {
+        "description_ru": "up/down в octave-shift описывает сдвиг изображения относительно истинной высоты note pitch.",
+        "short_explanation_ru": "up/down в octave-shift описывает сдвиг изображения относительно истинной высоты note pitch.",
+        "conditions_ru": "8va над скрипичной строкой соответствует down; нельзя повторно транспонировать звуковую высоту."
+      },
+      "source_triplet_sha256": "15a6b40c25b877060a15ca7d805fcb4a3fbb77674e1d46977451dbccd30ad949",
+      "reviewed_translation_en": {
+        "description_en": "up/down in octave-shift describes the shift of the displayed notation relative to the actual note pitch.",
+        "short_explanation_en": "up/down in octave-shift describes the shift of the displayed notation relative to the actual note pitch.",
+        "conditions_en": "8va above a treble staff corresponds to down; the sounding pitch must not be transposed again."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-extensible-distance-type",
+      "registry_pointer": "/records/2261/record",
+      "source_triplet_ru": {
+        "description_ru": "distance type допускает расширения приложений помимо известных значений.",
+        "short_explanation_ru": "distance type допускает расширения приложений помимо известных значений.",
+        "conditions_ru": "Список примеров не является закрытым enum."
+      },
+      "source_triplet_sha256": "ffed62ce409fcba474b16b5ed7bd0cdce5323f749f9ff373d72f77e871e0fdad",
+      "reviewed_translation_en": {
+        "description_en": "distance type permits application extensions beyond the known values.",
+        "short_explanation_en": "distance type permits application extensions beyond the known values.",
+        "conditions_en": "The list of examples is not a closed enum."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-extensible-glyph-type",
+      "registry_pointer": "/records/2262/record",
+      "source_triplet_ru": {
+        "description_ru": "glyph type допускает прикладные расширения; известные типы привязаны к конкретным символам.",
+        "short_explanation_ru": "glyph type допускает прикладные расширения; известные типы привязаны к конкретным символам.",
+        "conditions_ru": "Не ограничивать string списком примеров."
+      },
+      "source_triplet_sha256": "f3205aef51ebb301f337e58352f65fe8cf624401b4b260f2e3755c86bf51cd2a",
+      "reviewed_translation_en": {
+        "description_en": "glyph type permits application extensions; known types are associated with specific symbols.",
+        "short_explanation_en": "glyph type permits application extensions; known types are associated with specific symbols.",
+        "conditions_en": "Do not restrict string to the list of examples."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-extensible-line-width-type",
+      "registry_pointer": "/records/2263/record",
+      "source_triplet_ru": {
+        "description_ru": "line-width type допускает значения приложений вне приведённых примеров.",
+        "short_explanation_ru": "line-width type допускает значения приложений вне приведённых примеров.",
+        "conditions_ru": "Не добавлять закрытый enum поверх XSD string."
+      },
+      "source_triplet_sha256": "49eefa675158e71534812581fa8a20cceaea3bea6b74c94c957b6150650b03bf",
+      "reviewed_translation_en": {
+        "description_en": "line-width type permits application values beyond the listed examples.",
+        "short_explanation_en": "line-width type permits application values beyond the listed examples.",
+        "conditions_en": "Do not add a closed enum on top of XSD string."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-note-size-category",
+      "registry_pointer": "/records/2264/record",
+      "source_triplet_ru": {
+        "description_ru": "Категория grace-cue используется при совместных grace и cue; grace относится к grace cue-size, cue — к остальным cue-size.",
+        "short_explanation_ru": "Категория grace-cue используется при совместных grace и cue; grace относится к grace cue-size, cue — к остальным cue-size.",
+        "conditions_ru": "Размер и звучание являются отдельными свойствами."
+      },
+      "source_triplet_sha256": "932f8f27a1e766add934bd6ddf95c5794f8467262d877659ccb851127b8eb12e",
+      "reviewed_translation_en": {
+        "description_en": "The grace-cue category is used when grace and cue occur together; grace refers to grace cue-size, and cue to other cue-size cases.",
+        "short_explanation_en": "The grace-cue category is used when grace and cue occur together; grace refers to grace cue-size, and cue to other cue-size cases.",
+        "conditions_en": "Size and sound are separate properties."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-named-notehead-text",
+      "registry_pointer": "/records/2265/record",
+      "source_triplet_ru": {
+        "description_ru": "Для SMuFL Note name noteheads рекомендуется notehead-text вместо smufl/other.",
+        "short_explanation_ru": "Для SMuFL Note name noteheads рекомендуется notehead-text вместо smufl/other.",
+        "conditions_ru": "Применимо к U+E150–U+E1AF и U+EEE0–U+EEFF."
+      },
+      "source_triplet_sha256": "25bb61c472e43b46426cd876b851f65a296cd339d246dcf34b326417bb9ac375",
+      "reviewed_translation_en": {
+        "description_en": "For SMuFL Note name noteheads, notehead-text is recommended instead of smufl/other.",
+        "short_explanation_en": "For SMuFL Note name noteheads, notehead-text is recommended instead of smufl/other.",
+        "conditions_en": "Applies to U+E150–U+E1AF and U+EEE0–U+EEFF."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-measure-text-hide",
+      "registry_pointer": "/records/2268/record",
+      "source_triplet_ru": {
+        "description_ru": "Для скрытия номера рекомендуется implicit=yes вместо пустого text.",
+        "short_explanation_ru": "Для скрытия номера рекомендуется implicit=yes вместо пустого text.",
+        "conditions_ru": "Пустой text отдельно запрещён lexical типом measure-text."
+      },
+      "source_triplet_sha256": "27214edabba788e0b2e14f2055b08edae68d5d233b97c80bbdb162705d8ba74f",
+      "reviewed_translation_en": {
+        "description_en": "To hide the measure number, implicit=yes is recommended instead of empty text.",
+        "short_explanation_en": "To hide the measure number, implicit=yes is recommended instead of empty text.",
+        "conditions_en": "Empty text is separately prohibited by the lexical measure-text type."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-bend-sound-defaults",
+      "registry_pointer": "/records/2269/record",
+      "source_triplet_ru": {
+        "description_ru": "bend-sound: accelerate=no, beats=4, first-beat=25, last-beat=75 по умолчанию.",
+        "short_explanation_ru": "bend-sound: accelerate=no, beats=4, first-beat=25, last-beat=75 по умолчанию.",
+        "conditions_ru": "Проценты относятся к длительности; это интерпретация отсутствия атрибутов."
+      },
+      "source_triplet_sha256": "cbfaed909037883c0b8cb814cb390719b457dc470d0120930be29c848e673c78",
+      "reviewed_translation_en": {
+        "description_en": "bend-sound defaults are accelerate=no, beats=4, first-beat=25, and last-beat=75.",
+        "short_explanation_en": "bend-sound defaults are accelerate=no, beats=4, first-beat=25, and last-beat=75.",
+        "conditions_en": "Percentages refer to duration; this interprets the absence of attributes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-dash-format-active",
+      "registry_pointer": "/records/2272/record",
+      "source_triplet_ru": {
+        "description_ru": "dash-length и space-length игнорируются, если line-type не dashed.",
+        "short_explanation_ru": "dash-length и space-length игнорируются, если line-type не dashed.",
+        "conditions_ru": "Их наличие при другом типе линии не является обязательной ошибкой."
+      },
+      "source_triplet_sha256": "2529fc0d7b7345ca1c8ee186bea83af499fc936c2962a331f37b153d3475223d",
+      "reviewed_translation_en": {
+        "description_en": "dash-length and space-length are ignored unless line-type is dashed.",
+        "short_explanation_en": "dash-length and space-length are ignored unless line-type is dashed.",
+        "conditions_en": "Their presence with another line type is not necessarily an error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-score-version-default",
+      "registry_pointer": "/records/2274/record",
+      "source_triplet_ru": {
+        "description_ru": "Отсутствующий version интерпретируется как 1.0.",
+        "short_explanation_ru": "Отсутствующий version интерпретируется как 1.0.",
+        "conditions_ru": "Для экспорта 1.1 и новее указание версии рекомендуется, но схема не фиксирует 4.0."
+      },
+      "source_triplet_sha256": "9ac7143390330ee07259a7308c0b50711c10e2722961d6b098702899268c0006",
+      "reviewed_translation_en": {
+        "description_en": "An absent version is interpreted as 1.0.",
+        "short_explanation_en": "An absent version is interpreted as 1.0.",
+        "conditions_en": "Specifying the version is recommended for exports of 1.1 and later, but the schema does not fix it to 4.0."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-font-app-default",
+      "registry_pointer": "/records/2275/record",
+      "source_triplet_ru": {
+        "description_ru": "Шрифт по умолчанию выбирается приложением как текстовый, а не нотный.",
+        "short_explanation_ru": "Шрифт по умолчанию выбирается приложением как текстовый, а не нотный.",
+        "conditions_ru": "Нет основания требовать конкретный шрифт."
+      },
+      "source_triplet_sha256": "9887575e8444ba36e8aad5fdbad87dedf74040be326242f2c7ddd0e09a62ec29",
+      "reviewed_translation_en": {
+        "description_en": "The application chooses a default text font rather than a music font.",
+        "short_explanation_en": "The application chooses a default text font rather than a music font.",
+        "conditions_en": "There is no basis for requiring a specific font."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-halign-fallback",
+      "registry_pointer": "/records/2276/record",
+      "source_triplet_ru": {
+        "description_ru": "Если halign отсутствует, используется justify; если justify недопустим, выбор зависит от приложения.",
+        "short_explanation_ru": "Если halign отсутствует, используется justify; если justify недопустим, выбор зависит от приложения.",
+        "conditions_ru": "Выравнивание блока и выравнивание строк могут различаться."
+      },
+      "source_triplet_sha256": "79aafd3cf62fdf3d58af5d9af25633ec4d8152262ab1d4f94d76ae5ccc4c68d0",
+      "reviewed_translation_en": {
+        "description_en": "If halign is absent, justify is used; if justify is not allowed, the choice depends on the application.",
+        "short_explanation_en": "If halign is absent, justify is used; if justify is not allowed, the choice depends on the application.",
+        "conditions_en": "Block alignment and line alignment may differ."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-justify-alignment",
+      "registry_pointer": "/records/2277/record",
+      "source_triplet_ru": {
+        "description_ru": "При наличии justify и отсутствии halign значение justify задаёт оба вида горизонтального выравнивания.",
+        "short_explanation_ru": "При наличии justify и отсутствии halign значение justify задаёт оба вида горизонтального выравнивания.",
+        "conditions_ru": "Общий default justify не установлен для всех элементов."
+      },
+      "source_triplet_sha256": "7908fffecb44a24f7bafc408f62e68cc8d4d7ea81c2e24c95563eb8336566f8d",
+      "reviewed_translation_en": {
+        "description_en": "When justify is present and halign is absent, justify supplies both kinds of horizontal alignment.",
+        "short_explanation_en": "When justify is present and halign is absent, justify supplies both kinds of horizontal alignment.",
+        "conditions_en": "No general justify default is established for all elements."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-letter-spacing-default",
+      "registry_pointer": "/records/2278/record",
+      "source_triplet_ru": {
+        "description_ru": "letter-spacing по умолчанию normal; числа измеряются в em и могут быть отрицательными.",
+        "short_explanation_ru": "letter-spacing по умолчанию normal; числа измеряются в em и могут быть отрицательными.",
+        "conditions_ru": "Не запрещать отрицательный tracking."
+      },
+      "source_triplet_sha256": "f4686092c9c0c392060cd6940daa4f9ad0c1646622268af257c0346d1df7c51a",
+      "reviewed_translation_en": {
+        "description_en": "letter-spacing defaults to normal; numbers are measured in em and may be negative.",
+        "short_explanation_en": "letter-spacing defaults to normal; numbers are measured in em and may be negative.",
+        "conditions_en": "Do not prohibit negative tracking."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-editorial-display-default",
+      "registry_pointer": "/records/2279/record",
+      "source_triplet_ru": {
+        "description_ru": "Неуказанные parentheses, bracket и size для editorial display определяются приложением.",
+        "short_explanation_ru": "Неуказанные parentheses, bracket и size для editorial display определяются приложением.",
+        "conditions_ru": "Не требовать явных атрибутов."
+      },
+      "source_triplet_sha256": "62e1c8e54fdae8b64714a375c6528f05085e5cab1740ed706b76a0e77fcf6565",
+      "reviewed_translation_en": {
+        "description_en": "Unspecified parentheses, bracket, and size for editorial display are determined by the application.",
+        "short_explanation_en": "Unspecified parentheses, bracket, and size for editorial display are determined by the application.",
+        "conditions_en": "Do not require explicit attributes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-line-height-default",
+      "registry_pointer": "/records/2280/record",
+      "source_triplet_ru": {
+        "description_ru": "line-height по умолчанию normal; конкретное значение зависит от приложения.",
+        "short_explanation_ru": "line-height по умолчанию normal; конкретное значение зависит от приложения.",
+        "conditions_ru": "Диапазон 100…120 рекомендован, а не обязателен."
+      },
+      "source_triplet_sha256": "e09ae69f26bde3496dfa8ff8fcf24e3e58d11db890d8f3cb438b187c9197e2e9",
+      "reviewed_translation_en": {
+        "description_en": "line-height defaults to normal; its concrete value depends on the application.",
+        "short_explanation_en": "line-height defaults to normal; its concrete value depends on the application.",
+        "conditions_en": "The range 100…120 is recommended, not mandatory."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-position-origins",
+      "registry_pointer": "/records/2282/record",
+      "source_triplet_ru": {
+        "description_ru": "default-x/y изменяют начало координат; relative-x/y являются смещением от результата по умолчанию.",
+        "short_explanation_ru": "default-x/y изменяют начало координат; relative-x/y являются смещением от результата по умолчанию.",
+        "conditions_ru": "Кредиты отсчитываются от нижнего левого угла страницы; исключения для measure/part-name отмечены в исходном разделе."
+      },
+      "source_triplet_sha256": "7985a998796904d8a1c8bbc3c61db8ff2e0c1eb506d47902b72d08237089a2f3",
+      "reviewed_translation_en": {
+        "description_en": "default-x/y change the coordinate origin; relative-x/y are offsets from the default result.",
+        "short_explanation_en": "default-x/y change the coordinate origin; relative-x/y are offsets from the default result.",
+        "conditions_en": "Credits are measured from the lower-left corner of the page; exceptions for measure/part-name are noted in the original section."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-print-object-default",
+      "registry_pointer": "/records/2284/record",
+      "source_triplet_ru": {
+        "description_ru": "Отсутствующий print-object означает yes.",
+        "short_explanation_ru": "Отсутствующий print-object означает yes.",
+        "conditions_ru": "Условные зависимые атрибуты рассматриваются отдельно."
+      },
+      "source_triplet_sha256": "323ab53dad8e1daacadaa747b45abbf1e249243fe79bf0bf67a3c2250b5b8144",
+      "reviewed_translation_en": {
+        "description_en": "An absent print-object means yes.",
+        "short_explanation_en": "An absent print-object means yes.",
+        "conditions_en": "Conditionally dependent attributes are considered separately."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-print-spacing-invisible",
+      "registry_pointer": "/records/2285/record",
+      "source_triplet_ru": {
+        "description_ru": "print-spacing применяется только если не печатаются нота, точка и лирика; default yes.",
+        "short_explanation_ru": "print-spacing применяется только если не печатаются нота, точка и лирика; default yes.",
+        "conditions_ru": "Не считать неактивный print-spacing ошибкой."
+      },
+      "source_triplet_sha256": "41f0c594922eb787fee3c6ade57804b577239883645550a1139012fabc483ab2",
+      "reviewed_translation_en": {
+        "description_en": "print-spacing applies only if the note, dot, and lyrics are not printed; its default is yes.",
+        "short_explanation_en": "print-spacing applies only if the note, dot, and lyrics are not printed; its default is yes.",
+        "conditions_en": "Do not treat an inactive print-spacing as an error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-printout-conditional-default",
+      "registry_pointer": "/records/2286/record",
+      "source_triplet_ru": {
+        "description_ru": "print-dot и print-lyric по умолчанию yes, но при print-object=no их отсутствие означает no.",
+        "short_explanation_ru": "print-dot и print-lyric по умолчанию yes, но при print-object=no их отсутствие означает no.",
+        "conditions_ru": "Явные значения сохраняют отдельный смысл."
+      },
+      "source_triplet_sha256": "63e02dc4815bd0b3f065e0547cacca3c2293b8eba043ab040074f57fd35ed128",
+      "reviewed_translation_en": {
+        "description_en": "print-dot and print-lyric default to yes, but their absence means no when print-object=no.",
+        "short_explanation_en": "print-dot and print-lyric default to yes, but their absence means no when print-object=no.",
+        "conditions_en": "Explicit values retain a separate meaning."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-text-rotation-sign",
+      "registry_pointer": "/records/2287/record",
+      "source_triplet_ru": {
+        "description_ru": "Положительный rotation поворачивает текст по часовой стрелке вокруг точки выравнивания.",
+        "short_explanation_ru": "Положительный rotation поворачивает текст по часовой стрелке вокруг точки выравнивания.",
+        "conditions_ru": "Отрицательный поворот идёт против часовой стрелки."
+      },
+      "source_triplet_sha256": "df474ebbf01393df62d29f7e4351e9fb6275877204d34693b6a7dfb7c4075f43",
+      "reviewed_translation_en": {
+        "description_en": "A positive rotation rotates text clockwise around its alignment point.",
+        "short_explanation_en": "A positive rotation rotates text clockwise around its alignment point.",
+        "conditions_en": "A negative rotation is counterclockwise."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-trill-defaults",
+      "registry_pointer": "/records/2288/record",
+      "source_triplet_ru": {
+        "description_ru": "trill-sound defaults: upper, whole, none, no, beats=4, second-beat=25, last-beat=75.",
+        "short_explanation_ru": "trill-sound defaults: upper, whole, none, no, beats=4, second-beat=25, last-beat=75.",
+        "conditions_ru": "У mordent/inverted-mordent: main, beats=3, second-beat=12, last-beat=24."
+      },
+      "source_triplet_sha256": "cff8dc870057f1759123a2d5ff2e44072665b40a1b41121b20f96015c1652852",
+      "reviewed_translation_en": {
+        "description_en": "trill-sound defaults are upper, whole, none, no, beats=4, second-beat=25, and last-beat=75.",
+        "short_explanation_en": "trill-sound defaults are upper, whole, none, no, beats=4, second-beat=25, and last-beat=75.",
+        "conditions_en": "For mordent/inverted-mordent: main, beats=3, second-beat=12, and last-beat=24."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-print-page-conditions",
+      "registry_pointer": "/records/2291/record",
+      "source_triplet_ru": {
+        "description_ru": "page-number и blank-page игнорируются, если new-page не yes.",
+        "short_explanation_ru": "page-number и blank-page игнорируются, если new-page не yes.",
+        "conditions_ru": "staff-layout имеет приоритет над устаревшим staff-spacing."
+      },
+      "source_triplet_sha256": "2393fc5cf569d478563259b578f512d702fe108d9b71d763e6099f8f6c4cf437",
+      "reviewed_translation_en": {
+        "description_en": "page-number and blank-page are ignored unless new-page is yes.",
+        "short_explanation_en": "page-number and blank-page are ignored unless new-page is yes.",
+        "conditions_en": "staff-layout takes precedence over the deprecated staff-spacing."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-link-element-position",
+      "registry_pointer": "/records/2292/record",
+      "source_triplet_ru": {
+        "description_ru": "Без element/position ссылка относится к следующему sibling; element задаёт потомка следующего элемента, не являющегося link/bookmark.",
+        "short_explanation_ru": "Без element/position ссылка относится к следующему sibling; element задаёт потомка следующего элемента, не являющегося link/bookmark.",
+        "conditions_ru": "position — 1-based; без element он игнорируется."
+      },
+      "source_triplet_sha256": "15cd3f4501b1062bbe9a58aa275ad5592609d9e2f357f474528eb252706fb7bc",
+      "reviewed_translation_en": {
+        "description_en": "Without element/position, a link refers to the next sibling; element specifies a descendant of the next element that is not a link/bookmark.",
+        "short_explanation_en": "Without element/position, a link refers to the next sibling; element specifies a descendant of the next element that is not a link/bookmark.",
+        "conditions_en": "position is 1-based; it is ignored without element."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-implicit-measure-number",
+      "registry_pointer": "/records/2294/record",
+      "source_triplet_ru": {
+        "description_ru": "implicit=yes запрещает показ номера такта, включая text; default implicit=no.",
+        "short_explanation_ru": "implicit=yes запрещает показ номера такта, включая text; default implicit=no.",
+        "conditions_ru": "Pickup обычно number=0 и implicit=yes, но это не обязательная универсальная форма."
+      },
+      "source_triplet_sha256": "66d2aa6f61460e85b189c2fda9cc177c9feca0f9ae78213f5365b892af31d414",
+      "reviewed_translation_en": {
+        "description_en": "implicit=yes suppresses display of the measure number, including text; implicit defaults to no.",
+        "short_explanation_en": "implicit=yes suppresses display of the measure number, including text; implicit defaults to no.",
+        "conditions_en": "A pickup usually has number=0 and implicit=yes, but this is not a universally mandatory representation."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-coda-sound",
+      "registry_pointer": "/records/2297/record",
+      "source_triplet_ru": {
+        "description_ru": "Для надёжного воспроизведения вместе с визуальной coda нужна соответствующая sound-информация.",
+        "short_explanation_ru": "Для надёжного воспроизведения вместе с визуальной coda нужна соответствующая sound-информация.",
+        "conditions_ru": "Отсутствие sound не делает чисто нотный документ недействительным."
+      },
+      "source_triplet_sha256": "7bfdc1b4a515fb5e9757d3b0b059c9c666413f9c66eaceff5dd4f898d053557c",
+      "reviewed_translation_en": {
+        "description_en": "Reliable playback requires corresponding sound information alongside a visual coda.",
+        "short_explanation_en": "Reliable playback requires corresponding sound information alongside a visual coda.",
+        "conditions_en": "Absence of sound does not invalidate a notation-only document."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-dynamics-direction-placement",
+      "registry_pointer": "/records/2298/record",
+      "source_triplet_ru": {
+        "description_ru": "Внутри direction собственный placement dynamics игнорируется в пользу placement направления.",
+        "short_explanation_ru": "Внутри direction собственный placement dynamics игнорируется в пользу placement направления.",
+        "conditions_ru": "При привязке dynamics к note собственный placement используется."
+      },
+      "source_triplet_sha256": "460f0ae22e4aceb426054f579f49ee4c0166ae6b0b2df060875f47dfa244a7b0",
+      "reviewed_translation_en": {
+        "description_en": "Within direction, dynamics' own placement is ignored in favor of the direction's placement.",
+        "short_explanation_en": "Within direction, dynamics' own placement is ignored in favor of the direction's placement.",
+        "conditions_en": "When dynamics is attached to a note, its own placement is used."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-horizontal-turn-slash",
+      "registry_pointer": "/records/2299/record",
+      "source_triplet_ru": {
+        "description_ru": "slash у горизонтального turn по умолчанию no.",
+        "short_explanation_ru": "slash у горизонтального turn по умолчанию no.",
+        "conditions_ru": "yes добавляет вертикальную черту."
+      },
+      "source_triplet_sha256": "14bf8f71cceb9d58c12fc4271e0095a571f7d0adcb673730fce7c1833194639f",
+      "reviewed_translation_en": {
+        "description_en": "slash on a horizontal turn defaults to no.",
+        "short_explanation_en": "slash on a horizontal turn defaults to no.",
+        "conditions_en": "yes adds a vertical stroke."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-fingering-defaults",
+      "registry_pointer": "/records/2301/record",
+      "source_triplet_ru": {
+        "description_ru": "substitution и alternate по умолчанию no.",
+        "short_explanation_ru": "substitution и alternate по умолчанию no.",
+        "conditions_ru": "У щипковых инструментов fingering относится к прижимающему пальцу, pluck — к щиплющему."
+      },
+      "source_triplet_sha256": "0139bb057bee2812a77fd524129d356efd29d3c4a4d2a1e998fa07adf98d40b9",
+      "reviewed_translation_en": {
+        "description_en": "substitution and alternate default to no.",
+        "short_explanation_en": "substitution and alternate default to no.",
+        "conditions_en": "For plucked instruments, fingering refers to the fretting finger and pluck to the plucking finger."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-editorial-reference",
+      "registry_pointer": "/records/2303/record",
+      "source_triplet_ru": {
+        "description_ru": "level reference=yes обозначает только изображаемую редакционную информацию без влияния на воспроизведение.",
+        "short_explanation_ru": "level reference=yes обозначает только изображаемую редакционную информацию без влияния на воспроизведение.",
+        "conditions_ru": "Default reference=no, type=single."
+      },
+      "source_triplet_sha256": "20eb7e837ff0957e0c9e4b4900c411bd28e2c8d5c2d46ad2c2a04b703015c05e",
+      "reviewed_translation_en": {
+        "description_en": "level reference=yes denotes editorial information that is only displayed and does not affect playback.",
+        "short_explanation_en": "level reference=yes denotes editorial information that is only displayed and does not affect playback.",
+        "conditions_en": "Defaults are reference=no and type=single."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-midi-unpitched-one-based",
+      "registry_pointer": "/records/2306/record",
+      "source_triplet_ru": {
+        "description_ru": "midi-unpitched использует 1…128, тогда как MIDI note number обычно 0…127.",
+        "short_explanation_ru": "midi-unpitched использует 1…128, тогда как MIDI note number обычно 0…127.",
+        "conditions_ru": "При преобразовании требуется сдвиг; валидатор XML не должен требовать MIDI zero-based диапазон."
+      },
+      "source_triplet_sha256": "1773b59950d4de6a722e5b7eed7723bfd1f2e756c6466de9aadffb90c4e2f66b",
+      "reviewed_translation_en": {
+        "description_en": "midi-unpitched uses 1…128, whereas MIDI note numbers usually use 0…127.",
+        "short_explanation_en": "midi-unpitched uses 1…128, whereas MIDI note numbers usually use 0…127.",
+        "conditions_en": "Conversion requires an offset; an XML validator must not require the MIDI zero-based range."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-pan-angles",
+      "registry_pointer": "/records/2307/record",
+      "source_triplet_ru": {
+        "description_ru": "pan: 0 впереди, -90 слева, +90 справа, ±180 сзади.",
+        "short_explanation_ru": "pan: 0 впереди, -90 слева, +90 справа, ±180 сзади.",
+        "conditions_ru": "elevation: 0 на уровне слушателя, +90 над ним, -90 под ним."
+      },
+      "source_triplet_sha256": "5cdc5f31632d70d8fdcf5b9bc84c2ac2c33e4c5014999ab17d9fa944402a80d2",
+      "reviewed_translation_en": {
+        "description_en": "pan: 0 is in front, -90 is to the left, +90 is to the right, and ±180 is behind.",
+        "short_explanation_en": "pan: 0 is in front, -90 is to the left, +90 is to the right, and ±180 is behind.",
+        "conditions_en": "elevation: 0 is at listener level, +90 is above the listener, and -90 is below."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-name-display-defaults",
+      "registry_pointer": "/records/2308/record",
+      "source_triplet_ru": {
+        "description_ru": "display-text в name-display имеет enclosure=none и язык it по умолчанию.",
+        "short_explanation_ru": "display-text в name-display имеет enclosure=none и язык it по умолчанию.",
+        "conditions_ru": "Язык по умолчанию не требует изменения записанного текста."
+      },
+      "source_triplet_sha256": "eb97b1b4fd7ebbe9e3e8776cdb290e91d5711365d7919fd95726b43d8dcb47fe",
+      "reviewed_translation_en": {
+        "description_en": "display-text within name-display defaults to enclosure=none and language it.",
+        "short_explanation_en": "display-text within name-display defaults to enclosure=none and language it.",
+        "conditions_en": "The default language does not require changing the encoded text."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-segno-sound",
+      "registry_pointer": "/records/2311/record",
+      "source_triplet_ru": {
+        "description_ru": "Для надёжного воспроизведения вместе с визуальной segno нужна sound-информация.",
+        "short_explanation_ru": "Для надёжного воспроизведения вместе с визуальной segno нужна sound-информация.",
+        "conditions_ru": "Не требовать её в профиле только нотной записи."
+      },
+      "source_triplet_sha256": "c361078ccb9529038ddb97ca5f1e8cd187cf867e5a0313b3528cc6719e9f5373",
+      "reviewed_translation_en": {
+        "description_en": "Reliable playback requires sound information alongside a visual segno.",
+        "short_explanation_en": "Reliable playback requires sound information alongside a visual segno.",
+        "conditions_en": "Do not require it in a notation-only profile."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-barline-wavy-continue",
+      "registry_pointer": "/records/2312/record",
+      "source_triplet_ru": {
+        "description_ru": "wavy-line внутри barline рекомендуется всегда кодировать с type=continue.",
+        "short_explanation_ru": "wavy-line внутри barline рекомендуется всегда кодировать с type=continue.",
+        "conditions_ru": "Формулировка should не превращается автоматически в обязательную ошибку."
+      },
+      "source_triplet_sha256": "c687abca598f771ca52aad98a374de2cb4adc28a1aca941b160be0e92277022f",
+      "reviewed_translation_en": {
+        "description_en": "wavy-line within barline is recommended always to be encoded with type=continue.",
+        "short_explanation_en": "wavy-line within barline is recommended always to be encoded with type=continue.",
+        "conditions_en": "The wording should does not automatically become a mandatory error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-multiple-rest-symbol-default",
+      "registry_pointer": "/records/2331/record",
+      "source_triplet_ru": {
+        "description_ru": "use-symbols у multiple-rest по умолчанию no; содержимое задаёт число тактов.",
+        "short_explanation_ru": "use-symbols у multiple-rest по умолчанию no; содержимое задаёт число тактов.",
+        "conditions_ru": "Запись не является основанием требовать один пустой XML-такт вместо всех тактов."
+      },
+      "source_triplet_sha256": "f286423601a5314d42082bb0c85a001d51db90789587bcbffb22c14478ae8155",
+      "reviewed_translation_en": {
+        "description_en": "use-symbols on multiple-rest defaults to no; the content gives the number of measures.",
+        "short_explanation_en": "use-symbols on multiple-rest defaults to no; the content gives the number of measures.",
+        "conditions_en": "This notation is not grounds for requiring a single empty XML measure in place of all the measures."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-slash-use-dots",
+      "registry_pointer": "/records/2333/record",
+      "source_triplet_ru": {
+        "description_ru": "use-dots действует только при use-stems=no; default use-stems=no.",
+        "short_explanation_ru": "use-dots действует только при use-stems=no; default use-stems=no.",
+        "conditions_ru": "При use-stems=yes показывается ритм без высот."
+      },
+      "source_triplet_sha256": "0aecd602f558249a3d42bbeddc0fe6cde054c3724edd7c25218ac92ca499245b",
+      "reviewed_translation_en": {
+        "description_en": "use-dots applies only when use-stems=no; use-stems defaults to no.",
+        "short_explanation_en": "use-dots applies only when use-stems=no; use-stems defaults to no.",
+        "conditions_en": "With use-stems=yes, rhythm is shown without pitches."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-repeat-backward-attributes",
+      "registry_pointer": "/records/2342/record",
+      "source_triplet_ru": {
+        "description_ru": "times и after-jump используются для backward repeat вне ending.",
+        "short_explanation_ru": "times и after-jump используются для backward repeat вне ending.",
+        "conditions_ru": "Наличие в другом контексте требует политики ignored/warning, а не выдуманного XSD запрета."
+      },
+      "source_triplet_sha256": "5520b6e1f09c540e688828d58c1c70d81b11905cd15e9e0aea6bcee35e6af650",
+      "reviewed_translation_en": {
+        "description_en": "times and after-jump are used for a backward repeat outside an ending.",
+        "short_explanation_en": "times and after-jump are used for a backward repeat outside an ending.",
+        "conditions_en": "Their presence in another context requires an ignored/warning policy, not an invented XSD prohibition."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-barre-endpoint-order",
+      "registry_pointer": "/records/2344/record",
+      "source_triplet_ru": {
+        "description_ru": "barre start относится к низкой по высоте струне с большим номером, stop — к высокой.",
+        "short_explanation_ru": "barre start относится к низкой по высоте струне с большим номером, stop — к высокой.",
+        "conditions_ru": "Это музыкальная семантика концов, а не обязательный порядок XML frame-note."
+      },
+      "source_triplet_sha256": "da43b5b9764eae347fb4751169e5f9e731a6a0bad8c4e0bb8801547dd9692b09",
+      "reviewed_translation_en": {
+        "description_en": "barre start refers to the lower-pitched string with the larger number, and stop to the higher-pitched string.",
+        "short_explanation_en": "barre start refers to the lower-pitched string with the larger number, and stop to the higher-pitched string.",
+        "conditions_en": "This is the musical meaning of the endpoints, not a mandatory XML frame-note order."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-bass-alter-location",
+      "registry_pointer": "/records/2345/record",
+      "source_triplet_ru": {
+        "description_ru": "bass-alter располагается справа по умолчанию.",
+        "short_explanation_ru": "bass-alter располагается справа по умолчанию.",
+        "conditions_ru": "print-object=no допускает включение обозначения альтерации в bass-step text."
+      },
+      "source_triplet_sha256": "328d6947f4917fe9279e7bf7792d99b800d40c4609222d3a875d94ffc46001fc",
+      "reviewed_translation_en": {
+        "description_en": "bass-alter is positioned on the right by default.",
+        "short_explanation_en": "bass-alter is positioned on the right by default.",
+        "conditions_en": "print-object=no allows the accidental indication to be included in bass-step text."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-bracket-line-default",
+      "registry_pointer": "/records/2346/record",
+      "source_triplet_ru": {
+        "description_ru": "bracket line-type по умолчанию solid.",
+        "short_explanation_ru": "bracket line-type по умолчанию solid.",
+        "conditions_ru": "end-length задаёт длину jog при line-end up/down."
+      },
+      "source_triplet_sha256": "17919be064fbbdf407908683769dfe796ad440e390012c7df4773b983a0f728a",
+      "reviewed_translation_en": {
+        "description_en": "bracket line-type defaults to solid.",
+        "short_explanation_en": "bracket line-type defaults to solid.",
+        "conditions_en": "end-length gives the jog length when line-end is up/down."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-degree-alter-reference",
+      "registry_pointer": "/records/2347/record",
+      "source_triplet_ru": {
+        "description_ru": "При alter/subtract degree-alter отсчитывается от степени данного kind; при add — от dominant с минорной VII.",
+        "short_explanation_ru": "При alter/subtract degree-alter отсчитывается от степени данного kind; при add — от dominant с минорной VII.",
+        "conditions_ru": "Default plus-minus=no."
+      },
+      "source_triplet_sha256": "eb9554b2ae31500e78fd76ff70b2be09f0af17d6fb0d2d2579f382cc9a3644fe",
+      "reviewed_translation_en": {
+        "description_en": "For alter/subtract, degree-alter is measured from the degree of the given kind; for add, it is measured from dominant with a minor seventh.",
+        "short_explanation_en": "For alter/subtract, degree-alter is measured from the degree of the given kind; for add, it is measured from dominant with a minor seventh.",
+        "conditions_en": "plus-minus defaults to no."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-degree-symbol-text",
+      "registry_pointer": "/records/2348/record",
+      "source_triplet_ru": {
+        "description_ru": "Если degree-value symbol задан, text следует после символа.",
+        "short_explanation_ru": "Если degree-value symbol задан, text следует после символа.",
+        "conditions_ru": "Содержимое degree-value остаётся номером ступени."
+      },
+      "source_triplet_sha256": "b9c833374ffb537652545530924b89676a9b0d95d93dc2e7586679a5da043df9",
+      "reviewed_translation_en": {
+        "description_en": "If degree-value symbol is specified, text follows the symbol.",
+        "short_explanation_en": "If degree-value symbol is specified, text follows the symbol.",
+        "conditions_en": "The content of degree-value remains the degree number."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-direction-format-inheritance",
+      "registry_pointer": "/records/2350/record",
+      "source_triplet_ru": {
+        "description_ru": "direction-type и их дочерние элементы визуально следуют друг за другом; непозиционные параметры наследуются от предыдущего элемента.",
+        "short_explanation_ru": "direction-type и их дочерние элементы визуально следуют друг за другом; непозиционные параметры наследуются от предыдущего элемента.",
+        "conditions_ru": "Не переносить координаты как непозиционные параметры."
+      },
+      "source_triplet_sha256": "dd4d51f14b9670d9a21a1c5df68661e21f2b17d0b5292604e7e1389b960b5857",
+      "reviewed_translation_en": {
+        "description_en": "direction-type elements and their children follow one another visually; non-positional parameters are inherited from the preceding element.",
+        "short_explanation_en": "direction-type elements and their children follow one another visually; non-positional parameters are inherited from the preceding element.",
+        "conditions_en": "Do not carry coordinates over as non-positional parameters."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-rehearsal-defaults",
+      "registry_pointer": "/records/2351/record",
+      "source_triplet_ru": {
+        "description_ru": "rehearsal: enclosure=square, язык it, justify=left по умолчанию.",
+        "short_explanation_ru": "rehearsal: enclosure=square, язык it, justify=left по умолчанию.",
+        "conditions_ru": "Текст может быть названием раздела, не только буквой или номером."
+      },
+      "source_triplet_sha256": "35aeedf8ee52a8d4714542ae823d05ffaf80c6e1bfb4481122bd0ae920e7a60e",
+      "reviewed_translation_en": {
+        "description_en": "rehearsal defaults are enclosure=square, language it, and justify=left.",
+        "short_explanation_en": "rehearsal defaults are enclosure=square, language it, and justify=left.",
+        "conditions_en": "The text may be a section name, not just a letter or number."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-words-defaults",
+      "registry_pointer": "/records/2352/record",
+      "source_triplet_ru": {
+        "description_ru": "words: enclosure=none, язык it, justify=left по умолчанию.",
+        "short_explanation_ru": "words: enclosure=none, язык it, justify=left по умолчанию.",
+        "conditions_ru": "Отсутствие явных полей допустимо."
+      },
+      "source_triplet_sha256": "71685eb1b56af3922bc8115a6d8d7782f2e88a8be2a9f5c1f561b09f28e9dc8d",
+      "reviewed_translation_en": {
+        "description_en": "words defaults are enclosure=none, language it, and justify=left.",
+        "short_explanation_en": "words defaults are enclosure=none, language it, and justify=left.",
+        "conditions_en": "Absence of explicit fields is allowed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-first-fret-default",
+      "registry_pointer": "/records/2354/record",
+      "source_triplet_ru": {
+        "description_ru": "При отсутствии first-fret верхняя ячейка соответствует ладу 1.",
+        "short_explanation_ru": "При отсутствии first-fret верхняя ячейка соответствует ладу 1.",
+        "conditions_ru": "text и location меняют подпись, не фактический номер лада."
+      },
+      "source_triplet_sha256": "652cf389b55accb50a2396ccdacc12bf0235bfafae656108a13a4e549bb5fd76",
+      "reviewed_translation_en": {
+        "description_en": "If first-fret is absent, the top cell corresponds to fret 1.",
+        "short_explanation_en": "If first-fret is absent, the top cell corresponds to fret 1.",
+        "conditions_en": "text and location change the label, not the actual fret number."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-unplayed-string-default",
+      "registry_pointer": "/records/2355/record",
+      "source_triplet_ru": {
+        "description_ru": "Для струны без frame-note отсутствующий unplayed оставляет вид символа приложению.",
+        "short_explanation_ru": "Для струны без frame-note отсутствующий unplayed оставляет вид символа приложению.",
+        "conditions_ru": "x и пустая строка — примеры, не закрытый набор."
+      },
+      "source_triplet_sha256": "f4c099ad39221f022556268dbbbcba76730124f3d947d7a3accdfa868945ba98",
+      "reviewed_translation_en": {
+        "description_en": "For a string without frame-note, an absent unplayed leaves the symbol's appearance to the application.",
+        "short_explanation_en": "For a string without frame-note, an absent unplayed leaves the symbol's appearance to the application.",
+        "conditions_en": "x and the empty string are examples, not a closed set."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-frame-note-muted",
+      "registry_pointer": "/records/2356/record",
+      "source_triplet_ru": {
+        "description_ru": "Открытая струна имеет fret=0, заглушённая не имеет frame-note.",
+        "short_explanation_ru": "Открытая струна имеет fret=0, заглушённая не имеет frame-note.",
+        "conditions_ru": "Не требовать frame-note на каждой струне."
+      },
+      "source_triplet_sha256": "4ef7eb03afb0d633ec9d13bc40d1896aebfc709e06927faf1c74eaf79e4a0818",
+      "reviewed_translation_en": {
+        "description_en": "An open string has fret=0; a muted string has no frame-note.",
+        "short_explanation_en": "An open string has fret=0; a muted string has no frame-note.",
+        "conditions_en": "Do not require frame-note for every string."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-grouping-stop-content",
+      "registry_pointer": "/records/2357/record",
+      "source_triplet_ru": {
+        "description_ru": "feature внутри grouping type=stop может игнорироваться.",
+        "short_explanation_ru": "feature внутри grouping type=stop может игнорироваться.",
+        "conditions_ru": "number различает перекрывающиеся/иерархические группы; member-of различает иерархии."
+      },
+      "source_triplet_sha256": "15c0639a60ace7a5a565b8617c67a521a9841e5025d2b5b7dac7dae25faa2cb1",
+      "reviewed_translation_en": {
+        "description_en": "feature within grouping type=stop may be ignored.",
+        "short_explanation_en": "feature within grouping type=stop may be ignored.",
+        "conditions_en": "number distinguishes overlapping/hierarchical groups; member-of distinguishes hierarchies."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-harmony-format-precedence",
+      "registry_pointer": "/records/2358/record",
+      "source_triplet_ru": {
+        "description_ru": "Формат отдельных элементов harmony переопределяет общий print-style; arrangement задаёт взаимное расположение stacked chords.",
+        "short_explanation_ru": "Формат отдельных элементов harmony переопределяет общий print-style; arrangement задаёт взаимное расположение stacked chords.",
+        "conditions_ru": "Проверка гармонического анализа по звучащим нотам не следует из этой нормы."
+      },
+      "source_triplet_sha256": "7d7f8f1fa849a547640591ebd83a3e9ded10fc5d860dfe0c98d05f48af51b0de",
+      "reviewed_translation_en": {
+        "description_en": "Formatting of individual harmony elements overrides the general print-style; arrangement specifies the relative placement of stacked chords.",
+        "short_explanation_en": "Formatting of individual harmony elements overrides the general print-style; arrangement specifies the relative placement of stacked chords.",
+        "conditions_en": "This rule does not entail checking the harmonic analysis against sounding notes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-harp-pedal-order",
+      "registry_pointer": "/records/2359/record",
+      "source_triplet_ru": {
+        "description_ru": "Для читаемости рекомендуется порядок pedal-step D,C,B,E,F,G,A.",
+        "short_explanation_ru": "Для читаемости рекомендуется порядок pedal-step D,C,B,E,F,G,A.",
+        "conditions_ru": "Не считать любой другой порядок недействительным."
+      },
+      "source_triplet_sha256": "bb4e92604abb00e313d98443621a4f393970ad22aa2f0f5c81a02964c0f8751d",
+      "reviewed_translation_en": {
+        "description_en": "For readability, the pedal-step order D,C,B,E,F,G,A is recommended.",
+        "short_explanation_en": "For readability, the pedal-step order D,C,B,E,F,G,A is recommended.",
+        "conditions_en": "Do not treat every other order as invalid."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-kind-format-defaults",
+      "registry_pointer": "/records/2361/record",
+      "source_triplet_ru": {
+        "description_ru": "Неуказанные stack-degrees, parentheses-degrees, bracket-degrees определяются приложением.",
+        "short_explanation_ru": "Неуказанные stack-degrees, parentheses-degrees, bracket-degrees определяются приложением.",
+        "conditions_ru": "Если kind text уже содержит степень, для её degree рекомендуется print-object=no во избежание дублирования."
+      },
+      "source_triplet_sha256": "f35ed33d7ff2c6f33da7da6cac019ed8605c904ff02591b75e6a717ab3f9ebc1",
+      "reviewed_translation_en": {
+        "description_en": "Unspecified stack-degrees, parentheses-degrees, and bracket-degrees are determined by the application.",
+        "short_explanation_en": "Unspecified stack-degrees, parentheses-degrees, and bracket-degrees are determined by the application.",
+        "conditions_en": "If kind text already contains a degree, print-object=no is recommended for that degree to avoid duplication."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-listening-distinct-targets",
+      "registry_pointer": "/records/2362/record",
+      "source_triplet_ru": {
+        "description_ru": "Однотипным детям listening рекомендуется задавать различающиеся player и/или time-only.",
+        "short_explanation_ru": "Однотипным детям listening рекомендуется задавать различающиеся player и/или time-only.",
+        "conditions_ru": "Нужен учёт области проходов, а не только числа XML children."
+      },
+      "source_triplet_sha256": "3f56756211de2c9e45da32a4888e0a7b0d353159da8b43b7d806500e7c9b8358",
+      "reviewed_translation_en": {
+        "description_en": "Children of listening with the same type are recommended to have different player and/or time-only values.",
+        "short_explanation_en": "Children of listening with the same type are recommended to have different player and/or time-only values.",
+        "conditions_en": "Pass scope must be taken into account, not just the number of XML children."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-metronome-parentheses-default",
+      "registry_pointer": "/records/2365/record",
+      "source_triplet_ru": {
+        "description_ru": "metronome parentheses по умолчанию no.",
+        "short_explanation_ru": "metronome parentheses по умолчанию no.",
+        "conditions_ru": "print-object=no скрывает закодированное метрическое отношение."
+      },
+      "source_triplet_sha256": "709550653bf724bb6f24c055a710c344e5a08d662abed834254c4bbed2c9440a",
+      "reviewed_translation_en": {
+        "description_en": "metronome parentheses defaults to no.",
+        "short_explanation_en": "metronome parentheses defaults to no.",
+        "conditions_en": "print-object=no hides the encoded metric relationship."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-metronome-tie-pair",
+      "registry_pointer": "/records/2367/record",
+      "source_triplet_ru": {
+        "description_ru": "Для метронoмной лиги рекомендуется start и stop на отдельных metronome-note.",
+        "short_explanation_ru": "Для метронoмной лиги рекомендуется start и stop на отдельных metronome-note.",
+        "conditions_ru": "Не переносить автоматически все правила звучащего note/tie на этот renderer-контекст."
+      },
+      "source_triplet_sha256": "67014f4c19a76d14e31d7950d1098c440edffc7b596649460b5f9abea578294b",
+      "reviewed_translation_en": {
+        "description_en": "For a metronome tie, start and stop on separate metronome-note elements are recommended.",
+        "short_explanation_en": "For a metronome tie, start and stop on separate metronome-note elements are recommended.",
+        "conditions_en": "Do not automatically transfer every sounding note/tie rule to this rendering context."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-numeral-alter-location",
+      "registry_pointer": "/records/2369/record",
+      "source_triplet_ru": {
+        "description_ru": "numeral-alter по умолчанию находится слева.",
+        "short_explanation_ru": "numeral-alter по умолчанию находится слева.",
+        "conditions_ru": "print-object может скрывать семантически нужную, но не печатаемую альтерацию."
+      },
+      "source_triplet_sha256": "6a4f65418adb33b6878a58e1f7000dfa7eb54d5b09524225e618112aedaf8b60",
+      "reviewed_translation_en": {
+        "description_en": "numeral-alter is positioned on the left by default.",
+        "short_explanation_en": "numeral-alter is positioned on the left by default.",
+        "conditions_en": "print-object may hide an accidental that is semantically needed but not printed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-numeral-root-display",
+      "registry_pointer": "/records/2370/record",
+      "source_triplet_ru": {
+        "description_ru": "Если numeral-root text отсутствует, отображение выбирает приложение.",
+        "short_explanation_ru": "Если numeral-root text отсутствует, отображение выбирает приложение.",
+        "conditions_ru": "Число 1…7 ограничено XSD; нельзя требовать римскую или Nashville запись по умолчанию."
+      },
+      "source_triplet_sha256": "6f52e54d116003e9a31543b6080868c7eb05dbf01823e03642f00cd6d690bb30",
+      "reviewed_translation_en": {
+        "description_en": "If numeral-root text is absent, the application chooses the display.",
+        "short_explanation_en": "If numeral-root text is absent, the application chooses the display.",
+        "conditions_en": "The number is restricted to 1…7 by XSD; do not require Roman or Nashville notation by default."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-octave-shift-size",
+      "registry_pointer": "/records/2371/record",
+      "source_triplet_ru": {
+        "description_ru": "octave-shift size=8 означает одну октаву, 15 — две.",
+        "short_explanation_ru": "octave-shift size=8 означает одну октаву, 15 — две.",
+        "conditions_ru": "Направление относится к печатной высоте относительно note pitch."
+      },
+      "source_triplet_sha256": "a7ed7a9931eb329596e7da27c26aed7a4c48624cab577547f4d6ec2f3d3adb6e",
+      "reviewed_translation_en": {
+        "description_en": "octave-shift size=8 means one octave, and 15 means two.",
+        "short_explanation_en": "octave-shift size=8 means one octave, and 15 means two.",
+        "conditions_en": "Direction refers to the printed pitch relative to note pitch."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-pedal-conditional-default",
+      "registry_pointer": "/records/2373/record",
+      "source_triplet_ru": {
+        "description_ru": "По умолчанию sign=yes при line=no, sign=no при line=yes.",
+        "short_explanation_ru": "По умолчанию sign=yes при line=no, sign=no при line=yes.",
+        "conditions_ru": "abbreviated действует только для sign=yes и start/sostenuto; иначе игнорируется. Alignment игнорируется при sign=no."
+      },
+      "source_triplet_sha256": "16fd9e0e77dafc2e8e1f92ff97def867bf30c8035fe1a2532f9e40c417a3201c",
+      "reviewed_translation_en": {
+        "description_en": "By default, sign=yes when line=no, and sign=no when line=yes.",
+        "short_explanation_en": "By default, sign=yes when line=no, and sign=no when line=yes.",
+        "conditions_en": "abbreviated applies only to sign=yes and start/sostenuto; otherwise it is ignored. Alignment is ignored when sign=no."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-per-minute-font",
+      "registry_pointer": "/records/2374/record",
+      "source_triplet_ru": {
+        "description_ru": "Шрифт per-minute переопределяет общий font metronome.",
+        "short_explanation_ru": "Шрифт per-minute переопределяет общий font metronome.",
+        "conditions_ru": "Содержимое может быть текстом с числами, не обязательно чистым numeric BPM."
+      },
+      "source_triplet_sha256": "99aca7e338b248b4ee193ddca0126e78376045148e4aa85e3868f4d3a085765d",
+      "reviewed_translation_en": {
+        "description_en": "The per-minute font overrides the general metronome font.",
+        "short_explanation_en": "The per-minute font overrides the general metronome font.",
+        "conditions_en": "The content may be text containing numbers, not necessarily a purely numeric BPM value."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-principal-voice-symbol",
+      "registry_pointer": "/records/2375/record",
+      "source_triplet_ru": {
+        "description_ru": "Для чистого анализа рекомендуется symbol=none; при визуальном stop — plain.",
+        "short_explanation_ru": "Для чистого анализа рекомендуется symbol=none; при визуальном stop — plain.",
+        "conditions_ru": "Не трактовать произвольный analysis text как ошибку."
+      },
+      "source_triplet_sha256": "09389939518057cfe7a626ef306100de3188112c595ee5809509a4411b864b63",
+      "reviewed_translation_en": {
+        "description_en": "For analysis alone, symbol=none is recommended; for a visual stop, plain is recommended.",
+        "short_explanation_en": "For analysis alone, symbol=none is recommended; for a visual stop, plain is recommended.",
+        "conditions_en": "Do not interpret arbitrary analysis text as an error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-print-layout-locality",
+      "registry_pointer": "/records/2376/record",
+      "source_triplet_ru": {
+        "description_ru": "Layout в print действует только на текущие страницу/систему/стан; дальнейший layout снова берётся из defaults.",
+        "short_explanation_ru": "Layout в print действует только на текущие страницу/систему/стан; дальнейший layout снова берётся из defaults.",
+        "conditions_ru": "part-name-display меняет имя с текущей или следующей новой системы."
+      },
+      "source_triplet_sha256": "5905eb4d0e27667b6bb7e88b24e18baeac051089df1c093d0d41cc25b2e82a0e",
+      "reviewed_translation_en": {
+        "description_en": "Layout in print applies only to the current page/system/staff; subsequent layout again comes from defaults.",
+        "short_explanation_en": "Layout in print applies only to the current page/system/staff; subsequent layout again comes from defaults.",
+        "conditions_en": "part-name-display changes the name from the current or next new system."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-root-alter-location",
+      "registry_pointer": "/records/2377/record",
+      "source_triplet_ru": {
+        "description_ru": "root-alter располагается справа по умолчанию.",
+        "short_explanation_ru": "root-alter располагается справа по умолчанию.",
+        "conditions_ru": "print-object=no допускается при альтерации в root-step text."
+      },
+      "source_triplet_sha256": "6e4ea234241f3874e7cc4fd37433d7c8cc1e0b2dfe151987e404d8ac37c40127",
+      "reviewed_translation_en": {
+        "description_en": "root-alter is positioned on the right by default.",
+        "short_explanation_en": "root-alter is positioned on the right by default.",
+        "conditions_en": "print-object=no is allowed when the accidental is in root-step text."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sound-jump-passes",
+      "registry_pointer": "/records/2382/record",
+      "source_triplet_ru": {
+        "description_ru": "По умолчанию dacapo/dalsegno выполняется на первом проходе, tocoda — на втором.",
+        "short_explanation_ru": "По умолчанию dacapo/dalsegno выполняется на первом проходе, tocoda — на втором.",
+        "conditions_ru": "time-only переопределяет проходы; имена segno/coda различают цели."
+      },
+      "source_triplet_sha256": "b85c1eb6ba6656133e3b6fd6ea91dc77c6307946f40662eced23a11f2a594d77",
+      "reviewed_translation_en": {
+        "description_en": "By default, dacapo/dalsegno executes on the first pass, and tocoda on the second.",
+        "short_explanation_en": "By default, dacapo/dalsegno executes on the first pass, and tocoda on the second.",
+        "conditions_en": "time-only overrides the passes; segno/coda names distinguish targets."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-stick-defaults",
+      "registry_pointer": "/records/2387/record",
+      "source_triplet_ru": {
+        "description_ru": "stick parentheses и dashed-circle по умолчанию no.",
+        "short_explanation_ru": "stick parentheses и dashed-circle по умолчанию no.",
+        "conditions_ru": "Относятся к графике головки колотушки."
+      },
+      "source_triplet_sha256": "697255c08232323a3a1d572fe6247103d1cc427eceb070cc449416f7eaf49447",
+      "reviewed_translation_en": {
+        "description_en": "stick parentheses and dashed-circle default to no.",
+        "short_explanation_en": "stick parentheses and dashed-circle default to no.",
+        "conditions_en": "They concern the graphic appearance of the beater head."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-swing-ratio-reduced",
+      "registry_pointer": "/records/2388/record",
+      "source_triplet_ru": {
+        "description_ru": "Отношение swing рекомендуется записывать минимальными целыми, например 3:2 вместо 6:4.",
+        "short_explanation_ru": "Отношение swing рекомендуется записывать минимальными целыми, например 3:2 вместо 6:4.",
+        "conditions_ru": "XSD и спецификация не запрещают эквивалентную несокращённую пару."
+      },
+      "source_triplet_sha256": "a77efb08b0ac6dad2bec0749277415d7256ed1721162c9778a9133c964395ab7",
+      "reviewed_translation_en": {
+        "description_en": "The swing ratio is recommended to be written using the smallest integers, for example 3:2 instead of 6:4.",
+        "short_explanation_en": "The swing ratio is recommended to be written using the smallest integers, for example 3:2 instead of 6:4.",
+        "conditions_en": "XSD and the specification do not prohibit an equivalent unreduced pair."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sync-default",
+      "registry_pointer": "/records/2390/record",
+      "source_triplet_ru": {
+        "description_ru": "Без sync режим синхронизации зависит от приложения.",
+        "short_explanation_ru": "Без sync режим синхронизации зависит от приложения.",
+        "conditions_ru": "latency измеряется в миллисекундах; player/time-only сужают область."
+      },
+      "source_triplet_sha256": "356b9d97bf4c4df39f43dbf2e05b06592108df26896eed78aa6faa57f8aa94c5",
+      "reviewed_translation_en": {
+        "description_en": "Without sync, the synchronization mode depends on the application.",
+        "short_explanation_en": "Without sync, the synchronization mode depends on the application.",
+        "conditions_en": "latency is measured in milliseconds; player/time-only narrow the scope."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-wedge-conditional-fields",
+      "registry_pointer": "/records/2391/record",
+      "source_triplet_ru": {
+        "description_ru": "Spread игнорируется в начале crescendo и конце diminuendo; niente используется только на закрытом конце.",
+        "short_explanation_ru": "Spread игнорируется в начале crescendo и конце diminuendo; niente используется только на закрытом конце.",
+        "conditions_ru": "Default niente=no/line-type=solid; необходимо знать начало wedge для stop."
+      },
+      "source_triplet_sha256": "717bbdc0f4cd8fb1406d2c8a51b0b89a93fa5f8f554550ff959d1ceb847345dc",
+      "reviewed_translation_en": {
+        "description_en": "Spread is ignored at the start of a crescendo and the end of a diminuendo; niente is used only at the closed end.",
+        "short_explanation_en": "Spread is ignored at the start of a crescendo and the end of a diminuendo; niente is used only at the closed end.",
+        "conditions_en": "Defaults are niente=no and line-type=solid; the wedge start must be known for stop."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-supports-reporting",
+      "registry_pointer": "/records/2394/record",
+      "source_triplet_ru": {
+        "description_ru": "Для неоднозначно отсутствующих beam/stem/accidental рекомендуется указывать supports.",
+        "short_explanation_ru": "Для неоднозначно отсутствующих beam/stem/accidental рекомендуется указывать supports.",
+        "conditions_ru": "Нельзя считать отсутствующий знак ошибкой без знания capabilities кодировщика."
+      },
+      "source_triplet_sha256": "929affd3bf2ec41448ae72457f9d8a42869a08f9d9e37ba3ceaf45483aa64cde",
+      "reviewed_translation_en": {
+        "description_en": "For ambiguously absent beam/stem/accidental elements, specifying supports is recommended.",
+        "short_explanation_en": "For ambiguously absent beam/stem/accidental elements, specifying supports is recommended.",
+        "conditions_en": "An absent sign must not be treated as an error without knowing the encoder's capabilities."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-glyph-match-type",
+      "registry_pointer": "/records/2395/record",
+      "source_triplet_ru": {
+        "description_ru": "glyph value рекомендуется согласовывать с glyph type и его нотационным смыслом.",
+        "short_explanation_ru": "glyph value рекомендуется согласовывать с glyph type и его нотационным смыслом.",
+        "conditions_ru": "Существование глифа и семантическое соответствие требуют SMuFL-контекста."
+      },
+      "source_triplet_sha256": "c2e295431f6efe9e0629e81380d10c578b41dfe6ad5c682365c5610d3b959814",
+      "reviewed_translation_en": {
+        "description_en": "glyph value is recommended to agree with glyph type and its notational meaning.",
+        "short_explanation_en": "glyph value is recommended to agree with glyph type and its notational meaning.",
+        "conditions_en": "Glyph existence and semantic correspondence require SMuFL context."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-measure-layout-local",
+      "registry_pointer": "/records/2396/record",
+      "source_triplet_ru": {
+        "description_ru": "measure-layout действует только на текущий такт.",
+        "short_explanation_ru": "measure-layout действует только на текущий такт.",
+        "conditions_ru": "Не распространяется на последующие такты как унаследованный attributes-state."
+      },
+      "source_triplet_sha256": "d7ed2170bcf378e8ca1f1ada5e01ef6105d72277df3e41e51e3eb2b6049c452e",
+      "reviewed_translation_en": {
+        "description_en": "measure-layout applies only to the current measure.",
+        "short_explanation_en": "measure-layout applies only to the current measure.",
+        "conditions_en": "It does not extend to subsequent measures as inherited attributes-state."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-measure-distance-use",
+      "registry_pointer": "/records/2397/record",
+      "source_triplet_ru": {
+        "description_ru": "measure-distance используется для внутреннего пробела системы, например перед кодой.",
+        "short_explanation_ru": "measure-distance используется для внутреннего пробела системы, например перед кодой.",
+        "conditions_ru": "Ширина обычного такта задаётся measure width, не этим полем."
+      },
+      "source_triplet_sha256": "bdbee0852ebb8df874a199da02b34f377d395191207cbc7d8500f5ff79ef681c",
+      "reviewed_translation_en": {
+        "description_en": "measure-distance is used for space within a system, for example before a coda.",
+        "short_explanation_en": "measure-distance is used for space within a system, for example before a coda.",
+        "conditions_en": "The width of an ordinary measure is specified by measure width, not this field."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-page-layout-fallback",
+      "registry_pointer": "/records/2398/record",
+      "source_triplet_ru": {
+        "description_ru": "print/page-layout действует только на текущую страницу; пропущенные поля берутся из defaults.",
+        "short_explanation_ru": "print/page-layout действует только на текущую страницу; пропущенные поля берутся из defaults.",
+        "conditions_ru": "Без defaults/page-layout конкретные значения выбирает приложение."
+      },
+      "source_triplet_sha256": "f6824ea7679fe3c3905c7b2ad646aa8dc1ded3facf206fd957524a9ced11764c",
+      "reviewed_translation_en": {
+        "description_en": "print/page-layout applies only to the current page; omitted fields come from defaults.",
+        "short_explanation_en": "print/page-layout applies only to the current page; omitted fields come from defaults.",
+        "conditions_en": "Without defaults/page-layout, the application chooses concrete values."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-page-margins-default",
+      "registry_pointer": "/records/2399/record",
+      "source_triplet_ru": {
+        "description_ru": "Для defaults/page-margins отсутствующий type означает both.",
+        "short_explanation_ru": "Для defaults/page-margins отсутствующий type означает both.",
+        "conditions_ru": "При print type не требуется."
+      },
+      "source_triplet_sha256": "b26a58ba05814298925ccb7b87af80180d922e99ddf3d6667be952fd860cc401",
+      "reviewed_translation_en": {
+        "description_en": "For defaults/page-margins, an absent type means both.",
+        "short_explanation_en": "For defaults/page-margins, an absent type means both.",
+        "conditions_en": "Within print, type is not required."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-scaling-physical-units",
+      "registry_pointer": "/records/2400/record",
+      "source_triplet_ru": {
+        "description_ru": "scaling задаёт соответствие millimeters и tenths, а не независимые размеры.",
+        "short_explanation_ru": "scaling задаёт соответствие millimeters и tenths, а не независимые размеры.",
+        "conditions_ru": "Не вводить запрет нулевого denominator без отдельной нормативной/арифметической политики: XSD tenths допускает его."
+      },
+      "source_triplet_sha256": "22cba83f1320ecdce2d97fc625c5cedb5a4bcb3d795e03723bc200c0462956f7",
+      "reviewed_translation_en": {
+        "description_en": "scaling establishes the correspondence between millimeters and tenths, rather than independent dimensions.",
+        "short_explanation_en": "scaling establishes the correspondence between millimeters and tenths, rather than independent dimensions.",
+        "conditions_en": "Do not prohibit a zero denominator without a separate normative/arithmetic policy: XSD tenths allows it."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-system-dividers-position",
+      "registry_pointer": "/records/2402/record",
+      "source_triplet_ru": {
+        "description_ru": "Divider по умолчанию находится посередине system-distance от верха нижней системы и на соответствующем system margin.",
+        "short_explanation_ru": "Divider по умолчанию находится посередине system-distance от верха нижней системы и на соответствующем system margin.",
+        "conditions_ru": "В print он относится к границе текущей и предыдущей систем."
+      },
+      "source_triplet_sha256": "7d806c2128bc8dc2bc10458bce83d86aaf9ca40135ef2a65d67dffd0b27e088b",
+      "reviewed_translation_en": {
+        "description_en": "By default, a divider is positioned halfway through system-distance from the top of the lower system, at the corresponding system margin.",
+        "short_explanation_en": "By default, a divider is positioned halfway through system-distance from the top of the lower system, at the corresponding system margin.",
+        "conditions_en": "Within print, it applies to the boundary between the current and previous systems."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-system-layout-scope",
+      "registry_pointer": "/records/2403/record",
+      "source_triplet_ru": {
+        "description_ru": "system-distance игнорируется для первой системы страницы, top-system-distance — для остальных.",
+        "short_explanation_ru": "system-distance игнорируется для первой системы страницы, top-system-distance — для остальных.",
+        "conditions_ru": "print/system-layout относится к текущей системе; недостающие значения берутся из defaults."
+      },
+      "source_triplet_sha256": "de075bf2fbbdf87dfa599024e083c26db4ba2c02bb514ef830ddb8f19675e5a0",
+      "reviewed_translation_en": {
+        "description_en": "system-distance is ignored for the first system on a page, and top-system-distance for the others.",
+        "short_explanation_en": "system-distance is ignored for the first system on a page, and top-system-distance for the others.",
+        "conditions_en": "print/system-layout applies to the current system; missing values come from defaults."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-system-width-mismatch",
+      "registry_pointer": "/records/2404/record",
+      "source_triplet_ru": {
+        "description_ru": "Результат несоответствия суммы measure width и system width выбирает приложение.",
+        "short_explanation_ru": "Результат несоответствия суммы measure width и system width выбирает приложение.",
+        "conditions_ru": "Не объявлять это безусловной ошибкой валидации."
+      },
+      "source_triplet_sha256": "e8c712135b2c65d3256eee841f477d8bedcbffc3430df7d4616314e69fa7194d",
+      "reviewed_translation_en": {
+        "description_en": "The application chooses the outcome when the sum of measure widths does not match the system width.",
+        "short_explanation_en": "The application chooses the outcome when the sum of measure widths does not match the system width.",
+        "conditions_en": "Do not declare this an unconditional validation error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-system-layout-first-part",
+      "registry_pointer": "/records/2405/record",
+      "source_triplet_ru": {
+        "description_ru": "print/system-layout достаточно читать/записывать в первой видимой партии.",
+        "short_explanation_ru": "print/system-layout достаточно читать/записывать в первой видимой партии.",
+        "conditions_ru": "Не требовать повторения во всех партиях."
+      },
+      "source_triplet_sha256": "91006587ac9cc746112b76ccc8142239412ac290927c544dca81539be482d56f",
+      "reviewed_translation_en": {
+        "description_en": "It is sufficient to read/write print/system-layout in the first visible part.",
+        "short_explanation_en": "It is sufficient to read/write print/system-layout in the first visible part.",
+        "conditions_en": "Do not require it to be repeated in all parts."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-negative-system-margins",
+      "registry_pointer": "/records/2406/record",
+      "source_triplet_ru": {
+        "description_ru": "Отрицательные system margins уменьшают page margin, положительные увеличивают отступ.",
+        "short_explanation_ru": "Отрицательные system margins уменьшают page margin, положительные увеличивают отступ.",
+        "conditions_ru": "Не запрещать отрицательные значения как универсально недействительные."
+      },
+      "source_triplet_sha256": "d5f324c11e7c57b43671815f2818c06af06dd192899e4277118588aaff7db648",
+      "reviewed_translation_en": {
+        "description_en": "Negative system margins reduce the page margin; positive ones increase the indentation.",
+        "short_explanation_en": "Negative system margins reduce the page margin; positive ones increase the indentation.",
+        "conditions_en": "Do not prohibit negative values as universally invalid."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-compressed-relative-links",
+      "registry_pointer": "/records/2407/record",
+      "source_triplet_ru": {
+        "description_ru": "Относительная link внутри сжатого MusicXML разрешается от корня ZIP.",
+        "short_explanation_ru": "Относительная link внутри сжатого MusicXML разрешается от корня ZIP.",
+        "conditions_ru": "Это не директория XML-entry; безопасная обработка traversal — отдельная защитная политика."
+      },
+      "source_triplet_sha256": "fd49d678efd2e69f5f580e074120d263837cad9d36bcc3f1821f6cd10a957b80",
+      "reviewed_translation_en": {
+        "description_en": "A relative link within compressed MusicXML is resolved from the ZIP root.",
+        "short_explanation_en": "A relative link within compressed MusicXML is resolved from the ZIP root.",
+        "conditions_en": "This is not the directory of the XML entry; safe handling of traversal is a separate security policy."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-ornament-accidental-position",
+      "registry_pointer": "/records/2409/record",
+      "source_triplet_ru": {
+        "description_ru": "accidental-mark внутри ornament позиционируется относительно орнамента, а не ноты.",
+        "short_explanation_ru": "accidental-mark внутри ornament позиционируется относительно орнамента, а не ноты.",
+        "conditions_ru": "Тот же элемент вне ornament имеет иной контекст."
+      },
+      "source_triplet_sha256": "28602a19384e330a70cd61ce0d8197a95c4fe9ce99b9acb93290b933c35c07ab",
+      "reviewed_translation_en": {
+        "description_en": "accidental-mark within an ornament is positioned relative to the ornament, not the note.",
+        "short_explanation_en": "accidental-mark within an ornament is positioned relative to the ornament, not the note.",
+        "conditions_en": "The same element outside an ornament has a different context."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-beam-fan-conditions",
+      "registry_pointer": "/records/2417/record",
+      "source_triplet_ru": {
+        "description_ru": "fan применяется к begin и может к continue при изменении направления; default none.",
+        "short_explanation_ru": "fan применяется к begin и может к continue при изменении направления; default none.",
+        "conditions_ru": "Устаревший repeater для каждого использующего его beam задаётся yes."
+      },
+      "source_triplet_sha256": "62bd0ce453a336b813eae3287ac2bebfc6f22fd8158df1969f8a854e3f6fe1eb",
+      "reviewed_translation_en": {
+        "description_en": "fan applies to begin and may apply to continue when direction changes; its default is none.",
+        "short_explanation_en": "fan applies to begin and may apply to continue when direction changes; its default is none.",
+        "conditions_en": "The deprecated repeater is set to yes for each beam that uses it."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-bend-release-pair",
+      "registry_pointer": "/records/2418/record",
+      "source_triplet_ru": {
+        "description_ru": "Нота с bend и release содержит два bend: сначала изгиб, затем возврат.",
+        "short_explanation_ru": "Нота с bend и release содержит два bend: сначала изгиб, затем возврат.",
+        "conditions_ru": "Не путать с pre-bend и отдельной семантикой отрицательной ступени."
+      },
+      "source_triplet_sha256": "c52af2bb1a1ca91f3a80af05d7b908af6f93065c3335526496394f4bcecc575b",
+      "reviewed_translation_en": {
+        "description_en": "A note with a bend and release contains two bend elements: first the bend, then the return.",
+        "short_explanation_en": "A note with a bend and release contains two bend elements: first the bend, then the return.",
+        "conditions_en": "Do not confuse this with pre-bend or the separate semantics of a negative step."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-elision-precedence",
+      "registry_pointer": "/records/2420/record",
+      "source_triplet_ru": {
+        "description_ru": "Непустой elision text имеет приоритет над smufl; без обоих глиф выбирает приложение.",
+        "short_explanation_ru": "Непустой elision text имеет приоритет над smufl; без обоих глиф выбирает приложение.",
+        "conditions_ru": "Не требовать smufl, если текст задан."
+      },
+      "source_triplet_sha256": "443fbcac00a9392daba647283bc5908c883664fbdfac212b536baa20a3dce05e",
+      "reviewed_translation_en": {
+        "description_en": "Nonempty elision text takes precedence over smufl; with neither, the application chooses the glyph.",
+        "short_explanation_en": "Nonempty elision text takes precedence over smufl; with neither, the application chooses the glyph.",
+        "conditions_en": "Do not require smufl if text is provided."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-figured-bass-prefix-open",
+      "registry_pointer": "/records/2421/record",
+      "source_triplet_ru": {
+        "description_ru": "prefix допускает дополнительные символы для разных стилей figured bass.",
+        "short_explanation_ru": "prefix допускает дополнительные символы для разных стилей figured bass.",
+        "conditions_ru": "Список plus/accidentals является примером, не enum."
+      },
+      "source_triplet_sha256": "b1b5aebca40b35374593d50ffb0696c4403852e10b78b32dd3fb59ec8efd6569",
+      "reviewed_translation_en": {
+        "description_en": "prefix permits additional symbols for different figured-bass styles.",
+        "short_explanation_en": "prefix permits additional symbols for different figured-bass styles.",
+        "conditions_en": "The list of plus/accidentals is illustrative, not an enum."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-figure-number-numeric",
+      "registry_pointer": "/records/2422/record",
+      "source_triplet_ru": {
+        "description_ru": "figure-number обозначает число; перечёркивание представляется через suffix.",
+        "short_explanation_ru": "figure-number обозначает число; перечёркивание представляется через suffix.",
+        "conditions_ru": "Источник не задаёт точную lexical grammar числа, поэтому обязательный regex требует решения."
+      },
+      "source_triplet_sha256": "4e701b4de972f78dd5c11d0a26d4c57cc9e4d759e9f8202b3d582e6b1e2e7f79",
+      "reviewed_translation_en": {
+        "description_en": "figure-number denotes a number; a strike-through is represented through suffix.",
+        "short_explanation_en": "figure-number denotes a number; a strike-through is represented through suffix.",
+        "conditions_en": "The source does not specify the exact lexical grammar of a number, so a mandatory regex requires a decision."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-figured-bass-suffix-open",
+      "registry_pointer": "/records/2423/record",
+      "source_triplet_ru": {
+        "description_ru": "suffix допускает стилевые расширения; slash/back-slash/vertical могут перечёркивать число.",
+        "short_explanation_ru": "suffix допускает стилевые расширения; slash/back-slash/vertical могут перечёркивать число.",
+        "conditions_ru": "Не закрывать XSD string перечислением примеров."
+      },
+      "source_triplet_sha256": "59f3e78ecde6e89e380c75b87057dfb456775db0c9978343ee755bcd43326d75",
+      "reviewed_translation_en": {
+        "description_en": "suffix permits stylistic extensions; slash/back-slash/vertical may strike through the number.",
+        "short_explanation_en": "suffix permits stylistic extensions; slash/back-slash/vertical may strike through the number.",
+        "conditions_en": "Do not close the XSD string domain with an enumeration of examples."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-glissando-line-default",
+      "registry_pointer": "/records/2427/record",
+      "source_triplet_ru": {
+        "description_ru": "glissando по умолчанию использует wavy line и обозначает различимые промежуточные звуки.",
+        "short_explanation_ru": "glissando по умолчанию использует wavy line и обозначает различимые промежуточные звуки.",
+        "conditions_ru": "slide по умолчанию solid и непрерывен по высоте."
+      },
+      "source_triplet_sha256": "c7da87542d1e11ea5ed31182496bf6b789c7c0043015573ad9256d976dab77e7",
+      "reviewed_translation_en": {
+        "description_en": "glissando uses a wavy line by default and denotes distinguishable intermediate sounds.",
+        "short_explanation_en": "glissando uses a wavy line by default and denotes distinguishable intermediate sounds.",
+        "conditions_en": "slide defaults to solid and is continuous in pitch."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-hammer-empty-default",
+      "registry_pointer": "/records/2429/record",
+      "source_triplet_ru": {
+        "description_ru": "Пустой hammer-on/pull-off оставляет обозначение приложению.",
+        "short_explanation_ru": "Пустой hammer-on/pull-off оставляет обозначение приложению.",
+        "conditions_ru": "Парность относится к конкретным двум нотам, независимо от более длинной slur."
+      },
+      "source_triplet_sha256": "60a5d2e7eb15be9599205b35b4c49eb97fc3a33a4359c8a23bbe4c31c940bb06",
+      "reviewed_translation_en": {
+        "description_en": "An empty hammer-on/pull-off leaves the indication to the application.",
+        "short_explanation_en": "An empty hammer-on/pull-off leaves the indication to the application.",
+        "conditions_en": "Pairing applies to the two specific notes, independently of a longer slur."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-heel-toe-default",
+      "registry_pointer": "/records/2430/record",
+      "source_triplet_ru": {
+        "description_ru": "heel/toe substitution по умолчанию no.",
+        "short_explanation_ru": "heel/toe substitution по умолчанию no.",
+        "conditions_ru": "Никакое конкретное число пальца не требуется."
+      },
+      "source_triplet_sha256": "351676c6097692cc4c4d1eabd347973ea61eb6ae5ea706487960edbd3e32e80b",
+      "reviewed_translation_en": {
+        "description_en": "heel/toe substitution defaults to no.",
+        "short_explanation_en": "heel/toe substitution defaults to no.",
+        "conditions_en": "No specific finger number is required."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-hole-shape-default",
+      "registry_pointer": "/records/2431/record",
+      "source_triplet_ru": {
+        "description_ru": "Без hole-shape отверстие изображается кругом.",
+        "short_explanation_ru": "Без hole-shape отверстие изображается кругом.",
+        "conditions_ru": "location имеет смысл для half-closed."
+      },
+      "source_triplet_sha256": "ffe3448ca1801d86e86924e4baef44a6fc8aa0191269a57ed570ad16be6ac79c",
+      "reviewed_translation_en": {
+        "description_en": "Without hole-shape, the hole is displayed as a circle.",
+        "short_explanation_en": "Without hole-shape, the hole is displayed as a circle.",
+        "conditions_en": "location is meaningful for half-closed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-listen-distinct-targets",
+      "registry_pointer": "/records/2434/record",
+      "source_triplet_ru": {
+        "description_ru": "Однотипным детям listen рекомендуется задавать различающиеся player и/или time-only.",
+        "short_explanation_ru": "Однотипным детям listen рекомендуется задавать различающиеся player и/или time-only.",
+        "conditions_ru": "Контекст ограничен отдельной нотой."
+      },
+      "source_triplet_sha256": "dfa51d78af1843a83b8c8132d4aa16a5d3bbc74828e49fb5b144e6d0e519e1c6",
+      "reviewed_translation_en": {
+        "description_en": "Children of listen with the same type are recommended to have different player and/or time-only values.",
+        "short_explanation_en": "Children of listen with the same type are recommended to have different player and/or time-only values.",
+        "conditions_en": "The context is limited to an individual note."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-lyric-syllable-structure",
+      "registry_pointer": "/records/2435/record",
+      "source_triplet_ru": {
+        "description_ru": "Два text без elision принадлежат одной syllable; новый syllabic требует предварительного elision.",
+        "short_explanation_ru": "Два text без elision принадлежат одной syllable; новый syllabic требует предварительного elision.",
+        "conditions_ru": "Порядок и cardinality уже частично выражены XSD."
+      },
+      "source_triplet_sha256": "75cc133ed64bb002cc47d7f2e5da44cf02025d16dd4d4b6980b280a3ef7b9a94",
+      "reviewed_translation_en": {
+        "description_en": "Two text elements without elision belong to one syllable; a new syllabic requires a preceding elision.",
+        "short_explanation_en": "Two text elements without elision belong to one syllable; a new syllabic requires a preceding elision.",
+        "conditions_en": "Order and cardinality are already partly expressed by XSD."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-lyric-defaults",
+      "registry_pointer": "/records/2436/record",
+      "source_triplet_ru": {
+        "description_ru": "Лирика по умолчанию center/below, вертикально по baseline; halign соответствует justify.",
+        "short_explanation_ru": "Лирика по умолчанию center/below, вертикально по baseline; halign соответствует justify.",
+        "conditions_ru": "Собственный print-object lyric переопределяет note print-lyric."
+      },
+      "source_triplet_sha256": "96eb130d22b7788bf83ca646b9b0543829ff161c50c5190e9acd2d7d0baa4741",
+      "reviewed_translation_en": {
+        "description_en": "Lyrics default to center/below, vertically aligned to the baseline; halign corresponds to justify.",
+        "short_explanation_en": "Lyrics default to center/below, vertically aligned to the baseline; halign corresponds to justify.",
+        "conditions_en": "A lyric's own print-object overrides note print-lyric."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-mordent-long-default",
+      "registry_pointer": "/records/2437/record",
+      "source_triplet_ru": {
+        "description_ru": "mordent и inverted-mordent имеют long=no по умолчанию.",
+        "short_explanation_ru": "mordent и inverted-mordent имеют long=no по умолчанию.",
+        "conditions_ru": "Названия инверсии в MusicXML и SMuFL отличаются."
+      },
+      "source_triplet_sha256": "e752ad7eb52d2836d85bf09e32a4733d7055591cce769b06c9322b7cd3da59b6",
+      "reviewed_translation_en": {
+        "description_en": "mordent and inverted-mordent default to long=no.",
+        "short_explanation_en": "mordent and inverted-mordent default to long=no.",
+        "conditions_en": "The names for inversion differ between MusicXML and SMuFL."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-note-print-leger-default",
+      "registry_pointer": "/records/2440/record",
+      "source_triplet_ru": {
+        "description_ru": "print-leger по умолчанию yes, но при print-object=no отсутствие означает no; для rest игнорируется.",
+        "short_explanation_ru": "print-leger по умолчанию yes, но при print-object=no отсутствие означает no; для rest игнорируется.",
+        "conditions_ru": "Не запрещать явное значение при rest, оно неактивно."
+      },
+      "source_triplet_sha256": "f9a158a5ccafb9da8fcc52228e5663e4a644f9c5b361b2afba8dfb80a5719b47",
+      "reviewed_translation_en": {
+        "description_en": "print-leger defaults to yes, but its absence means no when print-object=no; it is ignored for rest.",
+        "short_explanation_en": "print-leger defaults to yes, but its absence means no when print-object=no; it is ignored for rest.",
+        "conditions_en": "Do not prohibit an explicit value on rest; it is inactive."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-notehead-fill-default",
+      "registry_pointer": "/records/2445/record",
+      "source_triplet_ru": {
+        "description_ru": "Замкнутые noteheads по умолчанию полые для половинных и длиннее, заполненные для более коротких.",
+        "short_explanation_ru": "Замкнутые noteheads по умолчанию полые для половинных и длиннее, заполненные для более коротких.",
+        "conditions_ru": "filled переопределяет это; parentheses=no по умолчанию."
+      },
+      "source_triplet_sha256": "eb0f1541be4945ec6b2b08cf3593a2259e1d6637b8067f78a32e564c4bfc102b",
+      "reviewed_translation_en": {
+        "description_en": "Closed noteheads are hollow by default for half notes and longer, and filled for shorter notes.",
+        "short_explanation_en": "Closed noteheads are hollow by default for half notes and longer, and filled for shorter notes.",
+        "conditions_en": "filled overrides this; parentheses defaults to no."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-slur-pair-usual",
+      "registry_pointer": "/records/2448/record",
+      "source_triplet_ru": {
+        "description_ru": "Обычно slur состоит из start/stop и может содержать continue.",
+        "short_explanation_ru": "Обычно slur состоит из start/stop и может содержать continue.",
+        "conditions_ru": "Слово most не устанавливает универсальный запрет незамкнутой визуальной slur."
+      },
+      "source_triplet_sha256": "23aa6dd6adb96011d102ded646f3b081dcdede29a3031e92d73cafa29773c717",
+      "reviewed_translation_en": {
+        "description_en": "A slur usually consists of start/stop and may contain continue.",
+        "short_explanation_en": "A slur usually consists of start/stop and may contain continue.",
+        "conditions_en": "The word most does not establish a universal prohibition on an unclosed visual slur."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-stem-negative-relative",
+      "registry_pointer": "/records/2449/record",
+      "source_triplet_ru": {
+        "description_ru": "relative-y, который перевернул бы stem вместо укорочения, игнорируется.",
+        "short_explanation_ru": "relative-y, который перевернул бы stem вместо укорочения, игнорируется.",
+        "conditions_ru": "Stem на rest означает stemlet; absolute default-y и relative-y имеют разные основы."
+      },
+      "source_triplet_sha256": "a30b22ea2b544cab2760894256b0eb9b16ede4bbf66bd3618d92363676be3139",
+      "reviewed_translation_en": {
+        "description_en": "A relative-y that would reverse the stem rather than shorten it is ignored.",
+        "short_explanation_en": "A relative-y that would reverse the stem rather than shorten it is ignored.",
+        "conditions_en": "A stem on a rest means a stemlet; absolute default-y and relative-y have different reference bases."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-tap-precedence",
+      "registry_pointer": "/records/2450/record",
+      "source_triplet_ru": {
+        "description_ru": "Непустой tap text переопределяет hand; без обоих изображение выбирает приложение.",
+        "short_explanation_ru": "Непустой tap text переопределяет hand; без обоих изображение выбирает приложение.",
+        "conditions_ru": "Пустой tap сам по себе допустим."
+      },
+      "source_triplet_sha256": "ec16935cd5149907af1ff1446ea150dc75fc34995365d4164e52da5d5d7373b8",
+      "reviewed_translation_en": {
+        "description_en": "Nonempty tap text overrides hand; with neither, the application chooses the depiction.",
+        "short_explanation_en": "Nonempty tap text overrides hand; with neither, the application chooses the depiction.",
+        "conditions_en": "An empty tap is allowed in itself."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-stopped-smufl-default",
+      "registry_pointer": "/records/2451/record",
+      "source_triplet_ru": {
+        "description_ru": "Без smufl stopped использует brassMuteClosed.",
+        "short_explanation_ru": "Без smufl stopped использует brassMuteClosed.",
+        "conditions_ru": "Не заменять другими похожими glyph по форме."
+      },
+      "source_triplet_sha256": "08797a13fa74b36daa277e72d380a153bbc68b0729bd1c8ad39c9345f355c24f",
+      "reviewed_translation_en": {
+        "description_en": "Without smufl, stopped uses brassMuteClosed.",
+        "short_explanation_en": "Without smufl, stopped uses brassMuteClosed.",
+        "conditions_en": "Do not substitute other glyphs with similar shapes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-open-smufl-default",
+      "registry_pointer": "/records/2452/record",
+      "source_triplet_ru": {
+        "description_ru": "Без smufl open использует brassMuteOpen.",
+        "short_explanation_ru": "Без smufl open использует brassMuteOpen.",
+        "conditions_ru": "Явный smufl уточняет схожий символ."
+      },
+      "source_triplet_sha256": "379c3f94ba821d94f231ef9d84256a36d05ac78cb0c75d2ac7ca816c3892b544",
+      "reviewed_translation_en": {
+        "description_en": "Without smufl, open uses brassMuteOpen.",
+        "short_explanation_en": "Without smufl, open uses brassMuteOpen.",
+        "conditions_en": "An explicit smufl specifies a similar symbol more precisely."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-half-muted-smufl-default",
+      "registry_pointer": "/records/2453/record",
+      "source_triplet_ru": {
+        "description_ru": "Без smufl half-muted использует brassMuteHalfClosed.",
+        "short_explanation_ru": "Без smufl half-muted использует brassMuteHalfClosed.",
+        "conditions_ru": "Явный smufl может обозначать подобный графический знак."
+      },
+      "source_triplet_sha256": "0a8914521527e0a494620be5324146b551c1d136cd5e0c8ec1c08d89ccd35f48",
+      "reviewed_translation_en": {
+        "description_en": "Without smufl, half-muted uses brassMuteHalfClosed.",
+        "short_explanation_en": "Without smufl, half-muted uses brassMuteHalfClosed.",
+        "conditions_en": "An explicit smufl may denote a similar graphic sign."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-tie-sound-vs-tied",
+      "registry_pointer": "/records/2455/record",
+      "source_triplet_ru": {
+        "description_ru": "tie задаёт звучание, tied — графическую лигу; их нельзя механически отождествлять.",
+        "short_explanation_ru": "tie задаёт звучание, tied — графическую лигу; их нельзя механически отождествлять.",
+        "conditions_ru": "time-only ограничивает конкретные проходы для звуковой лиги."
+      },
+      "source_triplet_sha256": "203c09104fa3e24edf7d6d6f4b30a43266e5a34bda7c6a0757d84c6c54dc2c75",
+      "reviewed_translation_en": {
+        "description_en": "tie specifies sound, while tied specifies a graphical tie; they must not be mechanically equated.",
+        "short_explanation_en": "tie specifies sound, while tied specifies a graphical tie; they must not be mechanically equated.",
+        "conditions_en": "time-only restricts the sounding tie to specific passes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-tie-pitch-equivalence",
+      "registry_pointer": "/records/2456/record",
+      "source_triplet_ru": {
+        "description_ru": "Обычные tied соединяют одинаковые либо энгармонически эквивалентные высоты; неэквивалентные не рекомендуются.",
+        "short_explanation_ru": "Обычные tied соединяют одинаковые либо энгармонически эквивалентные высоты; неэквивалентные не рекомендуются.",
+        "conditions_ru": "Не превращать этот совет в запрет всех visual ties к повтору/коде или let-ring."
+      },
+      "source_triplet_sha256": "5531ebfa8042b8ae867c388b436ae5601c56df5ae33ee7fc71d4644e9ec7ea1f",
+      "reviewed_translation_en": {
+        "description_en": "Ordinary tied elements connect identical or enharmonically equivalent pitches; nonequivalent pitches are not recommended.",
+        "short_explanation_en": "Ordinary tied elements connect identical or enharmonically equivalent pitches; nonequivalent pitches are not recommended.",
+        "conditions_en": "Do not turn this advice into a prohibition on all visual ties involving a repeat/coda or let-ring."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-tied-number-implied",
+      "registry_pointer": "/records/2457/record",
+      "source_triplet_ru": {
+        "description_ru": "У tied number подразумевается без общего default=1, в отличие от большинства number-level usages.",
+        "short_explanation_ru": "У tied number подразумевается без общего default=1, в отличие от большинства number-level usages.",
+        "conditions_ru": "Не навязывать 1, если это теряет различие explicit/implicit."
+      },
+      "source_triplet_sha256": "8528eac0e1beb4d3121dbaaee540e7885236faba89d355f6bbed9c5a09c665f6",
+      "reviewed_translation_en": {
+        "description_en": "For tied, number is implied without a general default=1, unlike most number-level usages.",
+        "short_explanation_en": "For tied, number is implied without a general default=1, unlike most number-level usages.",
+        "conditions_en": "Do not impose 1 if this loses the explicit/implicit distinction."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-unmeasured-tremolo-zero",
+      "registry_pointer": "/records/2460/record",
+      "source_triplet_ru": {
+        "description_ru": "Для unmeasured tremolo рекомендуется число штрихов 0.",
+        "short_explanation_ru": "Для unmeasured tremolo рекомендуется число штрихов 0.",
+        "conditions_ru": "Это should; XSD допускает 0…8 для всех типов."
+      },
+      "source_triplet_sha256": "3b7510b6008940c7cb86f29c5a1f9dfea94a6a802c940fd103ecf0c629b75e81",
+      "reviewed_translation_en": {
+        "description_en": "For unmeasured tremolo, a stroke count of 0 is recommended.",
+        "short_explanation_en": "For unmeasured tremolo, a stroke count of 0 is recommended.",
+        "conditions_en": "This is a should; XSD allows 0…8 for all types."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-tremolo-smufl-condition",
+      "registry_pointer": "/records/2462/record",
+      "source_triplet_ru": {
+        "description_ru": "smufl tremolo действует только для unmeasured; default buzzRoll; у других типов игнорируется.",
+        "short_explanation_ru": "smufl tremolo действует только для unmeasured; default buzzRoll; у других типов игнорируется.",
+        "conditions_ru": "Default type=single; beam-число не включается в количество штрихов."
+      },
+      "source_triplet_sha256": "cf59d6e883c7c2c15f4a47e7f776b987937770c502fbb19a65914734e4871714",
+      "reviewed_translation_en": {
+        "description_en": "tremolo smufl applies only to unmeasured, defaults to buzzRoll, and is ignored for other types.",
+        "short_explanation_en": "tremolo smufl applies only to unmeasured, defaults to buzzRoll, and is ignored for other types.",
+        "conditions_en": "type defaults to single; the beam count is not included in the number of strokes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-tuplet-display-defaults",
+      "registry_pointer": "/records/2463/record",
+      "source_triplet_ru": {
+        "description_ru": "Default tuplet line-shape=straight, show-number=actual, show-type=none; bracket зависит от приложения.",
+        "short_explanation_ru": "Default tuplet line-shape=straight, show-number=actual, show-type=none; bracket зависит от приложения.",
+        "conditions_ru": "number различает вложенные tuplets, не ритмический numerator."
+      },
+      "source_triplet_sha256": "7cf9a05b9dd4a11fe71be405f74241ca510e59424dd527aa27529983135149db",
+      "reviewed_translation_en": {
+        "description_en": "Tuplet defaults are line-shape=straight, show-number=actual, and show-type=none; bracket depends on the application.",
+        "short_explanation_en": "Tuplet defaults are line-shape=straight, show-number=actual, and show-type=none; bracket depends on the application.",
+        "conditions_en": "number distinguishes nested tuplets, not the rhythmic numerator."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-credit-page-and-inheritance",
+      "registry_pointer": "/records/2468/record",
+      "source_triplet_ru": {
+        "description_ru": "credit page по умолчанию 1; отсчёт физических страниц начинается с 1 независимо от print page-number.",
+        "short_explanation_ru": "credit page по умолчанию 1; отсчёт физических страниц начинается с 1 независимо от print page-number.",
+        "conditions_ru": "credit-words/symbol следуют визуально подряд и наследуют непозиционное форматирование; enclosure=none."
+      },
+      "source_triplet_sha256": "6522c4720db19e9bab0706f5958ac08780867ebf673dad39a9c286aed32faeff",
+      "reviewed_translation_en": {
+        "description_en": "credit page defaults to 1; physical pages are counted from 1 independently of print page-number.",
+        "short_explanation_en": "credit page defaults to 1; physical pages are counted from 1 independently of print page-number.",
+        "conditions_en": "credit-words/symbol follow one another visually and inherit non-positional formatting; enclosure=none."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-defaults-app-choice",
+      "registry_pointer": "/records/2469/record",
+      "source_triplet_ru": {
+        "description_ru": "Если defaults не заданы, их выбирает приложение, кроме особой семантики concert-score.",
+        "short_explanation_ru": "Если defaults не заданы, их выбирает приложение, кроме особой семантики concert-score.",
+        "conditions_ru": "Не превращать отсутствие font/scaling/layout в ошибку."
+      },
+      "source_triplet_sha256": "7f89c52d6c8966d3d50d231d11b66b97f4348bec4d03867473f6439974ff5871",
+      "reviewed_translation_en": {
+        "description_en": "If defaults are unspecified, the application chooses them, except for the special semantics of concert-score.",
+        "short_explanation_en": "If defaults are unspecified, the application chooses them, except for the special semantics of concert-score.",
+        "conditions_en": "Do not turn absence of font/scaling/layout into an error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-group-symbol-default",
+      "registry_pointer": "/records/2471/record",
+      "source_triplet_ru": {
+        "description_ru": "При отсутствии group-symbol подразумевается none.",
+        "short_explanation_ru": "При отсутствии group-symbol подразумевается none.",
+        "conditions_ru": "Не путать с brace по умолчанию для многосоставной отдельной партии."
+      },
+      "source_triplet_sha256": "d04f958a7d3efb36d71568d3f29febb61ddc8a5bc66df5c5ecdc93934447b6c5",
+      "reviewed_translation_en": {
+        "description_en": "When group-symbol is absent, none is implied.",
+        "short_explanation_en": "When group-symbol is absent, none is implied.",
+        "conditions_en": "Do not confuse this with the default brace for a single multi-staff part."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-part-group-boundaries",
+      "registry_pointer": "/records/2473/record",
+      "source_triplet_ru": {
+        "description_ru": "part-group start стоит перед первой score-part группы, stop после последней; number различает перекрытие и вложенность.",
+        "short_explanation_ru": "part-group start стоит перед первой score-part группы, stop после последней; number различает перекрытие и вложенность.",
+        "conditions_ru": "Дети stop игнорируются; одну многосоставную партию не требуется оформлять как part-group."
+      },
+      "source_triplet_sha256": "6fd5edaf7c6c4489b79f87014b702f8c386a7b7b8c736ed8aa6b6ea09db4057f",
+      "reviewed_translation_en": {
+        "description_en": "part-group start occurs before the group's first score-part, and stop after its last; number distinguishes overlap and nesting.",
+        "short_explanation_en": "part-group start occurs before the group's first score-part, and stop after its last; number distinguishes overlap and nesting.",
+        "conditions_en": "Children of stop are ignored; a single multi-staff part need not be represented as a part-group."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-group-name-display-priority",
+      "registry_pointer": "/records/2474/record",
+      "source_triplet_ru": {
+        "description_ru": "group-name-display переопределяет formatting group-name.",
+        "short_explanation_ru": "group-name-display переопределяет formatting group-name.",
+        "conditions_ru": "Отсутствие нового display не делает старую запись недопустимой."
+      },
+      "source_triplet_sha256": "e8aac292f616a92ada19c56d2d3228ee2c09a41fac5cb3eac27eeae1f6552fc2",
+      "reviewed_translation_en": {
+        "description_en": "group-name-display overrides group-name formatting.",
+        "short_explanation_en": "group-name-display overrides group-name formatting.",
+        "conditions_en": "Absence of the newer display does not make the older representation invalid."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-group-abbreviation-display-priority",
+      "registry_pointer": "/records/2475/record",
+      "source_triplet_ru": {
+        "description_ru": "group-abbreviation-display переопределяет formatting group-abbreviation.",
+        "short_explanation_ru": "group-abbreviation-display переопределяет formatting group-abbreviation.",
+        "conditions_ru": "Устаревшая форма остаётся разрешённой."
+      },
+      "source_triplet_sha256": "97b5d253bc56172a33d20638dec2e0e665ee07f07869bb65b1a1b347b6360902",
+      "reviewed_translation_en": {
+        "description_en": "group-abbreviation-display overrides group-abbreviation formatting.",
+        "short_explanation_en": "group-abbreviation-display overrides group-abbreviation formatting.",
+        "conditions_en": "The deprecated form remains allowed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-part-link-archive-root",
+      "registry_pointer": "/records/2476/record",
+      "source_triplet_ru": {
+        "description_ru": "part-link href внутри общего MXL разрешается от корня ZIP и указывает на документ партии.",
+        "short_explanation_ru": "part-link href внутри общего MXL разрешается от корня ZIP и указывает на документ партии.",
+        "conditions_ru": "Не разрешать URI от директории содержащего score XML."
+      },
+      "source_triplet_sha256": "f10f60ef907daaf61afe5db1606db3406e6ccedc33b46166d75e48a1c6cf6601",
+      "reviewed_translation_en": {
+        "description_en": "part-link href within a shared MXL is resolved from the ZIP root and points to the part document.",
+        "short_explanation_en": "part-link href within a shared MXL is resolved from the ZIP root and points to the part document.",
+        "conditions_en": "Do not resolve the URI from the directory containing the score XML."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-group-link-match",
+      "registry_pointer": "/records/2477/record",
+      "source_triplet_ru": {
+        "description_ru": "group-link рекомендуется согласовывать с содержимым group в целевом документе.",
+        "short_explanation_ru": "group-link рекомендуется согласовывать с содержимым group в целевом документе.",
+        "conditions_ru": "Без чтения целевого документа проверка должна быть unknown, а не pass/fail."
+      },
+      "source_triplet_sha256": "4ae4e206ba0b1047eb82ede6dfa4eb73cb8a18a16b5e82543a9b6c37a6133ada",
+      "reviewed_translation_en": {
+        "description_en": "group-link is recommended to match the content of group in the target document.",
+        "short_explanation_en": "group-link is recommended to match the content of group in the target document.",
+        "conditions_en": "Without reading the target document, the check must be unknown rather than pass/fail."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-ensemble-empty-size",
+      "registry_pointer": "/records/2481/record",
+      "source_triplet_ru": {
+        "description_ru": "Пустой ensemble означает неизвестный размер ансамбля.",
+        "short_explanation_ru": "Пустой ensemble означает неизвестный размер ансамбля.",
+        "conditions_ru": "Не трактовать пустое содержимое как zero или ошибку."
+      },
+      "source_triplet_sha256": "f57f61f8760f30dbcab810825c110803ce5f93ed3464b9d23d2bc7f1d8019807",
+      "reviewed_translation_en": {
+        "description_en": "An empty ensemble means an unknown ensemble size.",
+        "short_explanation_en": "An empty ensemble means an unknown ensemble size.",
+        "conditions_en": "Do not interpret empty content as zero or an error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-color-srgb-alpha",
+      "registry_pointer": "/records/2494/record",
+      "source_triplet_ru": {
+        "description_ru": "RGB/ARGB задают цвет в sRGB; у RGB альфа подразумевается FF, 00 прозрачно и FF непрозрачно.",
+        "short_explanation_ru": "RGB/ARGB задают цвет в sRGB; у RGB альфа подразумевается FF, 00 прозрачно и FF непрозрачно.",
+        "conditions_ru": "Lexical длина/hex проверяется XSD; значения каналов не меняют namespace/структуру."
+      },
+      "source_triplet_sha256": "e8e501c19115348aaf2839a9f94da0cd289041d0386b96e23710b2d567521330",
+      "reviewed_translation_en": {
+        "description_en": "RGB/ARGB specify color in sRGB; RGB implies alpha FF, with 00 transparent and FF opaque.",
+        "short_explanation_en": "RGB/ARGB specify color in sRGB; RGB implies alpha FF, with 00 transparent and FF opaque.",
+        "conditions_en": "Lexical length/hex is checked by XSD; channel values do not change namespace/structure."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-font-family-order",
+      "registry_pointer": "/records/2495/record",
+      "source_triplet_ru": {
+        "description_ru": "font-family содержит разделённый запятыми список имён; music/engraved/handwritten относятся к нотным шрифтам.",
+        "short_explanation_ru": "font-family содержит разделённый запятыми список имён; music/engraved/handwritten относятся к нотным шрифтам.",
+        "conditions_ru": "Список рекомендуемых общих семейств не является ограничивающим enum."
+      },
+      "source_triplet_sha256": "8c86bbf04b5cbb57d55fd40ebbab7eed5bab273030cbf6d51b79d7f183c8dce6",
+      "reviewed_translation_en": {
+        "description_en": "font-family contains a comma-separated list of names; music/engraved/handwritten refer to music fonts.",
+        "short_explanation_en": "font-family contains a comma-separated list of names; music/engraved/handwritten refer to music fonts.",
+        "conditions_en": "The list of recommended generic families is not a restrictive enum."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-kind-other-add-degrees",
+      "registry_pointer": "/records/2496/record",
+      "source_triplet_ru": {
+        "description_ru": "kind=other используется для гармонии, полностью описанной добавленными degree.",
+        "short_explanation_ru": "kind=other используется для гармонии, полностью описанной добавленными degree.",
+        "conditions_ru": "Источник не даёт универсального hard запрета alternate analysis или обязательного вывода по звучащим нотам."
+      },
+      "source_triplet_sha256": "cd93bcf3e1ea263865f0edd818da9319a1170eb62594933d24f66177f9b9f328",
+      "reviewed_translation_en": {
+        "description_en": "kind=other is used for harmony described entirely by added degree elements.",
+        "short_explanation_en": "kind=other is used for harmony described entirely by added degree elements.",
+        "conditions_en": "The source does not provide a universal hard prohibition on alternate analysis or require inference from sounding notes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-entry-name-utf8",
+      "registry_pointer": "/records/2499/record",
+      "source_triplet_ru": {
+        "description_ru": "Имена файлов в ZIP рекомендуется кодировать UTF-8.",
+        "short_explanation_ru": "Имена файлов в ZIP рекомендуется кодировать UTF-8.",
+        "conditions_ru": "should не становится безусловным hard error для старых архивов."
+      },
+      "source_triplet_sha256": "46c858c5aa57517e78b932d676c34128ef2f4f6a10ab9826883a42cd1b3e1155",
+      "reviewed_translation_en": {
+        "description_en": "File names in ZIP are recommended to be encoded in UTF-8.",
+        "short_explanation_en": "File names in ZIP are recommended to be encoded in UTF-8.",
+        "conditions_en": "should does not become an unconditional hard error for older archives."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-deflate",
+      "registry_pointer": "/records/2500/record",
+      "source_triplet_ru": {
+        "description_ru": "Обычные файлы контейнера описаны как сжатые DEFLATE.",
+        "short_explanation_ru": "Обычные файлы контейнера описаны как сжатые DEFLATE.",
+        "conditions_ru": "mimetype имеет явное исключение; запрет всех иных методов требует отдельного решения по совместимому ZIP."
+      },
+      "source_triplet_sha256": "40b545e493edcd693eae3e3c7fe6c05535d170671786fd1de16660e65f637b5a",
+      "reviewed_translation_en": {
+        "description_en": "Ordinary container files are described as compressed with DEFLATE.",
+        "short_explanation_en": "Ordinary container files are described as compressed with DEFLATE.",
+        "conditions_en": "mimetype has an explicit exception; prohibiting every other method requires a separate decision about compatible ZIP."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-mimetype-first",
+      "registry_pointer": "/records/2502/record",
+      "source_triplet_ru": {
+        "description_ru": "Первым entry рекомендуется mimetype с ASCII-строкой application/vnd.recordare.musicxml.",
+        "short_explanation_ru": "Первым entry рекомендуется mimetype с ASCII-строкой application/vnd.recordare.musicxml.",
+        "conditions_ru": "Отсутствие mimetype возможно в старых версиях; наличие в 4.0 дано как should."
+      },
+      "source_triplet_sha256": "783d2a96ad28a8497946425703485eaa7a19322a10c8bd5ce17c47b1d7bb8ea9",
+      "reviewed_translation_en": {
+        "description_en": "mimetype is recommended as the first entry, containing the ASCII string application/vnd.recordare.musicxml.",
+        "short_explanation_en": "mimetype is recommended as the first entry, containing the ASCII string application/vnd.recordare.musicxml.",
+        "conditions_en": "mimetype may be absent in older versions; its presence in 4.0 is specified as a should."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-musicxml-file-types",
+      "registry_pointer": "/records/2506/record",
+      "source_triplet_ru": {
+        "description_ru": "Рекомендуются .mxl и media type application/vnd.recordare.musicxml для архива; .musicxml и application/vnd.recordare.musicxml+xml для XML.",
+        "short_explanation_ru": "Рекомендуются .mxl и media type application/vnd.recordare.musicxml для архива; .musicxml и application/vnd.recordare.musicxml+xml для XML.",
+        "conditions_ru": "Для чтения также рекомендовано поддерживать старое расширение .xml; расширение не делает XML валидным."
+      },
+      "source_triplet_sha256": "1199a269f7a1dff5c6d57061669c66d9a392f9764c7000c6fd62e82101d6187c",
+      "reviewed_translation_en": {
+        "description_en": ".mxl and media type application/vnd.recordare.musicxml are recommended for archives; .musicxml and application/vnd.recordare.musicxml+xml for XML.",
+        "short_explanation_en": ".mxl and media type application/vnd.recordare.musicxml are recommended for archives; .musicxml and application/vnd.recordare.musicxml+xml for XML.",
+        "conditions_en": "Support for the older .xml extension is also recommended when reading; the extension does not make XML valid."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-rootfile-relative-path",
+      "registry_pointer": "/records/2510/record",
+      "source_triplet_ru": {
+        "description_ru": "rootfile full-path отсчитывается от корневой директории ZIP.",
+        "short_explanation_ru": "rootfile full-path отсчитывается от корневой директории ZIP.",
+        "conditions_ru": "Обязательность full-path покрыта XSD; существование entry требует архива."
+      },
+      "source_triplet_sha256": "c1589377ce56207c2d46777287941ca056971ca8045b25055ee1448bf029bddf",
+      "reviewed_translation_en": {
+        "description_en": "rootfile full-path is measured from the ZIP root directory.",
+        "short_explanation_en": "rootfile full-path is measured from the ZIP root directory.",
+        "conditions_en": "The requirement for full-path is covered by XSD; checking entry existence requires the archive."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-media-type-default",
+      "registry_pointer": "/records/2512/record",
+      "source_triplet_ru": {
+        "description_ru": "При отсутствии media-type rootfile считается MusicXML.",
+        "short_explanation_ru": "При отсутствии media-type rootfile считается MusicXML.",
+        "conditions_ru": "Дополнительные rootfile имеют произвольные альтернативные представления."
+      },
+      "source_triplet_sha256": "58b8a8efec81eafad403122548ed76a6dd9eb3bc0e780bf9fdaafc8ee7a2fa5d",
+      "reviewed_translation_en": {
+        "description_en": "When media-type is absent, rootfile is considered MusicXML.",
+        "short_explanation_en": "When media-type is absent, rootfile is considered MusicXML.",
+        "conditions_en": "Additional rootfile entries may have arbitrary alternative representations."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-opus-nesting-linking",
+      "registry_pointer": "/records/2513/record",
+      "source_triplet_ru": {
+        "description_ru": "Opus допускает произвольную глубину вложенных opus и ссылок opus-link.",
+        "short_explanation_ru": "Opus допускает произвольную глубину вложенных opus и ссылок opus-link.",
+        "conditions_ru": "Не изобретать нормативный предел глубины или запрет циклов; защитные лимиты отдельны."
+      },
+      "source_triplet_sha256": "1ddbf72960e7f229fa7d15bbabe2aa017c175cfdd45c42cb7a8536f7307b33d5",
+      "reviewed_translation_en": {
+        "description_en": "Opus permits arbitrary nesting depth of opus elements and opus-link references.",
+        "short_explanation_en": "Opus permits arbitrary nesting depth of opus elements and opus-link references.",
+        "conditions_en": "Do not invent a normative depth limit or prohibition on cycles; security limits are separate."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-opus-version-default",
+      "registry_pointer": "/records/2514/record",
+      "source_triplet_ru": {
+        "description_ru": "Для opus отсутствующая version означает 1.0; при экспорте 2.0+ её рекомендуется указывать.",
+        "short_explanation_ru": "Для opus отсутствующая version означает 1.0; при экспорте 2.0+ её рекомендуется указывать.",
+        "conditions_ru": "Обязательного значения 4.0 схема не задаёт."
+      },
+      "source_triplet_sha256": "8cbc988248699314b59b0c30fb83cb93fa27711d734fb3138a384cd3915d776e",
+      "reviewed_translation_en": {
+        "description_en": "For opus, an absent version means 1.0; specifying it is recommended for exports of 2.0 and later.",
+        "short_explanation_en": "For opus, an absent version means 1.0; specifying it is recommended for exports of 2.0 and later.",
+        "conditions_en": "The schema does not prescribe a mandatory value of 4.0."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-opus-link-target",
+      "registry_pointer": "/records/2515/record",
+      "source_triplet_ru": {
+        "description_ru": "opus-link указывает на другой opus-документ.",
+        "short_explanation_ru": "opus-link указывает на другой opus-документ.",
+        "conditions_ru": "Без resolver тип внешнего целевого документа неизвестен."
+      },
+      "source_triplet_sha256": "0a73ec8b82094d4f262bdf7f785b205a8c7aa01ae43df8a859a862c296fe9477",
+      "reviewed_translation_en": {
+        "description_en": "opus-link points to another opus document.",
+        "short_explanation_en": "opus-link points to another opus document.",
+        "conditions_en": "Without a resolver, the type of the external target document is unknown."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-opus-score-target",
+      "registry_pointer": "/records/2516/record",
+      "source_triplet_ru": {
+        "description_ru": "score в opus ссылается на отдельный музыкальный score.",
+        "short_explanation_ru": "score в opus ссылается на отдельный музыкальный score.",
+        "conditions_ru": "Тип целевого файла не выражен одним anyURI."
+      },
+      "source_triplet_sha256": "a6d1788aaef88b4e249c26ab8134a1ea1804f1f9f929b2bf3315e6a909a5ac70",
+      "reviewed_translation_en": {
+        "description_en": "score in opus refers to a separate musical score.",
+        "short_explanation_en": "score in opus refers to a separate musical score.",
+        "conditions_en": "The target file type is not expressed by anyURI alone."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-opus-new-page-default",
+      "registry_pointer": "/records/2517/record",
+      "source_triplet_ru": {
+        "description_ru": "Отсутствующий score new-page выбирает приложение; yes означает новую страницу, no продолжение предыдущей.",
+        "short_explanation_ru": "Отсутствующий score new-page выбирает приложение; yes означает новую страницу, no продолжение предыдущей.",
+        "conditions_ru": "Не требовать одинаковой пагинации у разных приложений."
+      },
+      "source_triplet_sha256": "bc38543b6c2c51b2750864125243bb43178dce63e0e7b4659e5a378ceba0680b",
+      "reviewed_translation_en": {
+        "description_en": "The application chooses the behavior of an absent score new-page; yes means a new page, and no continues the previous one.",
+        "short_explanation_en": "The application chooses the behavior of an absent score new-page; yes means a new page, and no continues the previous one.",
+        "conditions_en": "Do not require identical pagination across applications."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-standard-identifiers",
+      "registry_pointer": "/records/2518/record",
+      "source_triplet_ru": {
+        "description_ru": "sounds.xml перечисляет стандартные sound identifiers MusicXML 4.0 для instrument-sound.",
+        "short_explanation_ru": "sounds.xml перечисляет стандартные sound identifiers MusicXML 4.0 для instrument-sound.",
+        "conditions_ru": "Сам xs:string не создаёт закрытого enum; запрет прикладных расширений из этой фразы не доказан."
+      },
+      "source_triplet_sha256": "683541f21ba56bf27323f122e00ea286a1e8dd2ed8d9209563bffab352d12b82",
+      "reviewed_translation_en": {
+        "description_en": "sounds.xml lists the standard MusicXML 4.0 sound identifiers for instrument-sound.",
+        "short_explanation_en": "sounds.xml lists the standard MusicXML 4.0 sound identifiers for instrument-sound.",
+        "conditions_en": "xs:string itself does not create a closed enum; this statement does not establish a prohibition on application extensions."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-primary-direction",
+      "registry_pointer": "/records/2519/record",
+      "source_triplet_ru": {
+        "description_ru": "primary у sound выбирает MusicXML ID при обратном отображении нескольких MusicXML IDs на один library ID.",
+        "short_explanation_ru": "primary у sound выбирает MusicXML ID при обратном отображении нескольких MusicXML IDs на один library ID.",
+        "conditions_ru": "Не путать направление с primary дочерних any/solo/ensemble."
+      },
+      "source_triplet_sha256": "9acaac7f970acee37508930bdae47dd0ffc99d57763d91239b2d3554ec542aff",
+      "reviewed_translation_en": {
+        "description_en": "primary on sound selects the MusicXML ID in the reverse mapping when several MusicXML IDs map to one library ID.",
+        "short_explanation_en": "primary on sound selects the MusicXML ID in the reverse mapping when several MusicXML IDs map to one library ID.",
+        "conditions_en": "Do not confuse this direction with primary on child any/solo/ensemble elements."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-any-primary",
+      "registry_pointer": "/records/2520/record",
+      "source_triplet_ru": {
+        "description_ru": "any относится к одному library ID без различения solo/ensemble; primary выбирает целевой library ID для MusicXML ID.",
+        "short_explanation_ru": "any относится к одному library ID без различения solo/ensemble; primary выбирает целевой library ID для MusicXML ID.",
+        "conditions_ru": "Несколько отображений допустимы."
+      },
+      "source_triplet_sha256": "b9a6b4f72358a4b055b5559fe35d4fd5487f9e10011901ae38b8b45f89f51e0f",
+      "reviewed_translation_en": {
+        "description_en": "any refers to one library ID without distinguishing solo/ensemble; primary selects the target library ID for a MusicXML ID.",
+        "short_explanation_en": "any refers to one library ID without distinguishing solo/ensemble; primary selects the target library ID for a MusicXML ID.",
+        "conditions_en": "Multiple mappings are allowed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-ensemble-primary",
+      "registry_pointer": "/records/2521/record",
+      "source_triplet_ru": {
+        "description_ru": "ensemble number описывает размер ансамбля; primary выбирает отображение из MusicXML ID.",
+        "short_explanation_ru": "ensemble number описывает размер ансамбля; primary выбирает отображение из MusicXML ID.",
+        "conditions_ru": "Источник не устанавливает universal cardinality ровно один primary=yes."
+      },
+      "source_triplet_sha256": "e59dad609150c944a7bac6316db39f6c223bfda433793c8ddb20badd2cf89fee",
+      "reviewed_translation_en": {
+        "description_en": "ensemble number describes the ensemble size; primary selects the mapping from a MusicXML ID.",
+        "short_explanation_en": "ensemble number describes the ensemble size; primary selects the mapping from a MusicXML ID.",
+        "conditions_en": "The source does not establish a universal cardinality of exactly one primary=yes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-solo-primary",
+      "registry_pointer": "/records/2522/record",
+      "source_triplet_ru": {
+        "description_ru": "solo содержит прикладной library ID; primary выбирает отображение из MusicXML ID.",
+        "short_explanation_ru": "solo содержит прикладной library ID; primary выбирает отображение из MusicXML ID.",
+        "conditions_ru": "Множественные варианты допустимы."
+      },
+      "source_triplet_sha256": "1fd9063ec927c00c030deb4e26b1ef11d67f8e12cc54c528fb13bafd2af95cd8",
+      "reviewed_translation_en": {
+        "description_en": "solo contains an application-specific library ID; primary selects the mapping from a MusicXML ID.",
+        "short_explanation_en": "solo contains an application-specific library ID; primary selects the mapping from a MusicXML ID.",
+        "conditions_en": "Multiple alternatives are allowed."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-xml-reserved-semantics",
+      "registry_pointer": "/records/2523/record",
+      "source_triplet_ru": {
+        "description_ru": "xml:base, xml:id, xml:lang и xml:space сохраняют семантику XML namespace, в том числе наследование base/lang/space.",
+        "short_explanation_ru": "xml:base, xml:id, xml:lang и xml:space сохраняют семантику XML namespace, в том числе наследование base/lang/space.",
+        "conditions_ru": "Импорт xml.xsd сам не разрешает произвольный атрибут на любом MusicXML-элементе."
+      },
+      "source_triplet_sha256": "65d9908a30afd604971f4fd0a5b1d3fce786553e960a62c5626dc5411317e128",
+      "reviewed_translation_en": {
+        "description_en": "xml:base, xml:id, xml:lang, and xml:space retain XML namespace semantics, including inheritance of base/lang/space.",
+        "short_explanation_en": "xml:base, xml:id, xml:lang, and xml:space retain XML namespace semantics, including inheritance of base/lang/space.",
+        "conditions_en": "Importing xml.xsd does not itself permit arbitrary attributes on any MusicXML element."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-xml-lang-empty",
+      "registry_pointer": "/records/2524/record",
+      "source_triplet_ru": {
+        "description_ru": "Пустой xml:lang снимает унаследованное указание языка.",
+        "short_explanation_ru": "Пустой xml:lang снимает унаследованное указание языка.",
+        "conditions_ru": "Не запрещать пустую строку вопреки union типа."
+      },
+      "source_triplet_sha256": "36b4fbcf8a979c4bdec435286019ea45f1744d4a040ff5d35e1c3bcf8c047031",
+      "reviewed_translation_en": {
+        "description_en": "An empty xml:lang clears the inherited language indication.",
+        "short_explanation_en": "An empty xml:lang clears the inherited language indication.",
+        "conditions_en": "Do not prohibit an empty string contrary to the union type."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-tie-stop-start-same-note",
+      "registry_pointer": "/records/2527/record",
+      "source_triplet_ru": {
+        "description_ru": "На ноте, одновременно завершающей и начинающей звуковую лигу, рекомендуется stop перед start.",
+        "short_explanation_ru": "На ноте, одновременно завершающей и начинающей звуковую лигу, рекомендуется stop перед start.",
+        "conditions_ru": "Не запрещать stop раньше start на разных XML нотах."
+      },
+      "source_triplet_sha256": "0b438df34d57e6f7db5ed38235291202ace208ca54a9caffeaac8befbeb56f1b",
+      "reviewed_translation_en": {
+        "description_en": "On a note that both ends and starts a sounding tie, stop before start is recommended.",
+        "short_explanation_en": "On a note that both ends and starts a sounding tie, stop before start is recommended.",
+        "conditions_en": "Do not prohibit stop appearing before start on different XML notes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-mxl-media-location-open",
+      "registry_pointer": "/records/2531/record",
+      "source_triplet_ru": {
+        "description_ru": "Версия 4.0 не предписывает директории для изображений, партий и прочих связанных ресурсов внутри ZIP.",
+        "short_explanation_ru": "Версия 4.0 не предписывает директории для изображений, партий и прочих связанных ресурсов внутри ZIP.",
+        "conditions_ru": "Поддиректории по типу media — рекомендация удобства, не constraint."
+      },
+      "source_triplet_sha256": "7a0eb300c5dbc6ea2ced7f456371a2884181e52d4534232978a24240c374fccb",
+      "reviewed_translation_en": {
+        "description_en": "Version 4.0 does not prescribe directories for images, parts, and other linked resources within ZIP.",
+        "short_explanation_en": "Version 4.0 does not prescribe directories for images, parts, and other linked resources within ZIP.",
+        "conditions_en": "Subdirectories by media type are a convenience recommendation, not a constraint."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-binding-workarounds-not-rules",
+      "registry_pointer": "/records/2532/record",
+      "source_triplet_ru": {
+        "description_ru": "Примеры JAXB/code-generation обходят конфликты generated names и XML catalog поддержки.",
+        "short_explanation_ru": "Примеры JAXB/code-generation обходят конфликты generated names и XML catalog поддержки.",
+        "conditions_ru": "Они не разрешают менять стандартный instance-контракт MusicXML или переименовывать XML-элементы."
+      },
+      "source_triplet_sha256": "a7bf080fc45dcb7b2b6bc731c6f07d8df3d18a9fdcfde2a158877fac496ac1b0",
+      "reviewed_translation_en": {
+        "description_en": "The JAXB/code-generation examples work around generated-name conflicts and XML catalog support.",
+        "short_explanation_en": "The JAXB/code-generation examples work around generated-name conflicts and XML catalog support.",
+        "conditions_en": "They do not authorize changing the standard MusicXML instance contract or renaming XML elements."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-musicxml40-deprecations",
+      "registry_pointer": "/records/2533/record",
+      "source_triplet_ru": {
+        "description_ru": "В 4.0 устарели DTD, function и clef sign=none; пустой multiple-rest больше не допускается.",
+        "short_explanation_ru": "В 4.0 устарели DTD, function и clef sign=none; пустой multiple-rest больше не допускается.",
+        "conditions_ru": "Deprecation не равен запрету, кроме явно удалённой формы multiple-rest, уже охваченной XSD."
+      },
+      "source_triplet_sha256": "5ff38f71c5b377c7e76541a48aebf924717812172ce5aed370b3629a85eaf17c",
+      "reviewed_translation_en": {
+        "description_en": "In 4.0, DTD, function, and clef sign=none are deprecated; an empty multiple-rest is no longer allowed.",
+        "short_explanation_en": "In 4.0, DTD, function, and clef sign=none are deprecated; an empty multiple-rest is no longer allowed.",
+        "conditions_en": "Deprecation is not prohibition, except for the expressly removed multiple-rest form, which is already covered by XSD."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-xlink-actuate-behavior",
+      "registry_pointer": "/records/2534/record",
+      "source_triplet_ru": {
+        "description_ru": "onRequest ожидает действие пользователя, onLoad предполагает переход при загрузке; other/none оставляют поведение приложению.",
+        "short_explanation_ru": "onRequest ожидает действие пользователя, onLoad предполагает переход при загрузке; other/none оставляют поведение приложению.",
+        "conditions_ru": "Описание формата не даёт разрешения автоматически читать внешнюю сеть; политика безопасности отдельна."
+      },
+      "source_triplet_sha256": "c66e6cfdf6cce4ad82a31ad7bd3921b69fc2b6d0219df14e9a197a52e034df1f",
+      "reviewed_translation_en": {
+        "description_en": "onRequest waits for user action; onLoad implies navigation on loading; other/none leave behavior to the application.",
+        "short_explanation_en": "onRequest waits for user action; onLoad implies navigation on loading; other/none leave behavior to the application.",
+        "conditions_en": "The format description does not authorize automatically reading the external network; security policy is separate."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-accidental-text-lang-default",
+      "registry_pointer": "/records/2536/record",
+      "source_triplet_ru": {
+        "description_ru": "На accidental-text отсутствующий xml:lang интерпретируется как it.",
+        "short_explanation_ru": "На accidental-text отсутствующий xml:lang интерпретируется как it.",
+        "conditions_ru": "Это локальный default описания элемента, не глобальная замена любого отсутствующего xml:lang."
+      },
+      "source_triplet_sha256": "cab8ce08acd057f0773db3071d32b7cbd090f54ee2e911d7f795485f6d07bcc8",
+      "reviewed_translation_en": {
+        "description_en": "On accidental-text, an absent xml:lang is interpreted as it.",
+        "short_explanation_en": "On accidental-text, an absent xml:lang is interpreted as it.",
+        "conditions_en": "This is a local default in the element description, not a global replacement for every absent xml:lang."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-empty-breath-mark",
+      "registry_pointer": "/records/2537/record",
+      "source_triplet_ru": {
+        "description_ru": "Пустой breath-mark оставляет конкретный символ приложению.",
+        "short_explanation_ru": "Пустой breath-mark оставляет конкретный символ приложению.",
+        "conditions_ru": "Пустая строка входит в XSD enum."
+      },
+      "source_triplet_sha256": "e78832bd68cc3232398209d2c4099f4c1c87bbd5a5b25acbb015db67c10e3fab",
+      "reviewed_translation_en": {
+        "description_en": "An empty breath-mark leaves the specific symbol to the application.",
+        "short_explanation_en": "An empty breath-mark leaves the specific symbol to the application.",
+        "conditions_en": "The empty string is included in the XSD enum."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-empty-caesura-normal",
+      "registry_pointer": "/records/2538/record",
+      "source_triplet_ru": {
+        "description_ru": "Пустая caesura эквивалентна normal.",
+        "short_explanation_ru": "Пустая caesura эквивалентна normal.",
+        "conditions_ru": "Не путать с application-dependent пустым breath-mark."
+      },
+      "source_triplet_sha256": "cc6039a00e69f296fc1268bdc9989b22323d49d0a263e939c8db845f32b3c4d4",
+      "reviewed_translation_en": {
+        "description_en": "An empty caesura is equivalent to normal.",
+        "short_explanation_en": "An empty caesura is equivalent to normal.",
+        "conditions_en": "Do not confuse it with the application-dependent empty breath-mark."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-css-size-guidelines",
+      "registry_pointer": "/records/2539/record",
+      "source_triplet_ru": {
+        "description_ru": "Коэффициенты относительно medium для CSS-размеров служат ориентиром масштабирования.",
+        "short_explanation_ru": "Коэффициенты относительно medium для CSS-размеров служат ориентиром масштабирования.",
+        "conditions_ru": "Не делать из этих guideline точные обязательные размеры каждого renderer."
+      },
+      "source_triplet_sha256": "168c714d3274471e6e3570101cd441584f056acfd73353747a415a83f0fc3366",
+      "reviewed_translation_en": {
+        "description_en": "Factors relative to medium for CSS sizes serve as scaling guidelines.",
+        "short_explanation_en": "Factors relative to medium for CSS sizes serve as scaling guidelines.",
+        "conditions_en": "Do not make these guidelines exact mandatory sizes for every renderer."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-supports-value-needs-attribute",
+      "registry_pointer": "/records/2541/record",
+      "source_triplet_ru": {
+        "description_ru": "supports value используется только совместно с attribute.",
+        "short_explanation_ru": "supports value используется только совместно с attribute.",
+        "conditions_ru": "Условие активности/назначения поля; источник не называет неактивное value безусловной ошибкой."
+      },
+      "source_triplet_sha256": "21d7a50cf85ef6bea7dff84f4bf877edee51290e5048f0b6552985d647e960e0",
+      "reviewed_translation_en": {
+        "description_en": "supports value is used only together with attribute.",
+        "short_explanation_en": "supports value is used only together with attribute.",
+        "conditions_en": "This is a condition on the field's applicability/purpose; the source does not call an inactive value an unconditional error."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-supports-absence-meaning",
+      "registry_pointer": "/records/2542/record",
+      "source_triplet_ru": {
+        "description_ru": "supports type=yes делает отсутствие указанного элемента/атрибута/значения содержательно значимым; no означает отсутствие поддержки кодировщиком.",
+        "short_explanation_ru": "supports type=yes делает отсутствие указанного элемента/атрибута/значения содержательно значимым; no означает отсутствие поддержки кодировщиком.",
+        "conditions_ru": "Нельзя по отсутствию неподдерживаемых данных заключать, что объект музыкально отсутствует."
+      },
+      "source_triplet_sha256": "0b2fe66047dd2c471a2916869fd0bc2d254c1de8e5fbae9167f98fbcd9fe5ff5",
+      "reviewed_translation_en": {
+        "description_en": "supports type=yes makes absence of the specified element/attribute/value meaningful; no means lack of encoder support.",
+        "short_explanation_en": "supports type=yes makes absence of the specified element/attribute/value meaningful; no means lack of encoder support.",
+        "conditions_en": "Absence of unsupported data must not be taken to mean that the object is musically absent."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-strong-accent-default",
+      "registry_pointer": "/records/2543/record",
+      "source_triplet_ru": {
+        "description_ru": "strong-accent type по умолчанию up.",
+        "short_explanation_ru": "strong-accent type по умолчанию up.",
+        "conditions_ru": "down меняет направление вершины знака."
+      },
+      "source_triplet_sha256": "a5fa84738f976aaaab2acce518c917d344e8ed7115a21446dd46aa9d9ab5d019",
+      "reviewed_translation_en": {
+        "description_en": "strong-accent type defaults to up.",
+        "short_explanation_en": "strong-accent type defaults to up.",
+        "conditions_en": "down changes the direction of the sign's apex."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-octave-shift-size-default",
+      "registry_pointer": "/records/2544/record",
+      "source_triplet_ru": {
+        "description_ru": "octave-shift size по умолчанию 8; 15 обозначает две октавы, 22 — три.",
+        "short_explanation_ru": "octave-shift size по умолчанию 8; 15 обозначает две октавы, 22 — три.",
+        "conditions_ru": "XSD positiveInteger сам не ограничивает size только тремя приведёнными примерами."
+      },
+      "source_triplet_sha256": "029305ad2d750043dfc22ef3cc68e4f0e19f44d1bda3bd674f8a3dc9559346fc",
+      "reviewed_translation_en": {
+        "description_en": "octave-shift size defaults to 8; 15 denotes two octaves, and 22 three.",
+        "short_explanation_en": "octave-shift size defaults to 8; 15 denotes two octaves, and 22 three.",
+        "conditions_en": "XSD positiveInteger does not itself restrict size to the three listed examples."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-part-name-display-priority",
+      "registry_pointer": "/records/2546/record",
+      "source_triplet_ru": {
+        "description_ru": "Формат part-name-display переопределяет формат part-name.",
+        "short_explanation_ru": "Формат part-name-display переопределяет формат part-name.",
+        "conditions_ru": "Устаревшие атрибуты part-name при этом не становятся schema-invalid."
+      },
+      "source_triplet_sha256": "082e4e3a041db9a08b8984448368ffdc38fe68a8f9c5d40a05627b20d23ca006",
+      "reviewed_translation_en": {
+        "description_en": "part-name-display formatting overrides part-name formatting.",
+        "short_explanation_en": "part-name-display formatting overrides part-name formatting.",
+        "conditions_en": "The deprecated part-name attributes do not thereby become schema-invalid."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-part-abbreviation-display-priority",
+      "registry_pointer": "/records/2547/record",
+      "source_triplet_ru": {
+        "description_ru": "Формат part-abbreviation-display переопределяет формат part-abbreviation.",
+        "short_explanation_ru": "Формат part-abbreviation-display переопределяет формат part-abbreviation.",
+        "conditions_ru": "Если новый display отсутствует, старая разрешённая форма сохраняет смысл."
+      },
+      "source_triplet_sha256": "b8f2d1b90f7a97f0e87a3baa5790e27851df564f2fda7bb235af94bebda349c1",
+      "reviewed_translation_en": {
+        "description_en": "part-abbreviation-display formatting overrides part-abbreviation formatting.",
+        "short_explanation_en": "part-abbreviation-display formatting overrides part-abbreviation formatting.",
+        "conditions_en": "If the newer display is absent, the older allowed form retains its meaning."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-extend-historical-start",
+      "registry_pointer": "/records/2549/record",
+      "source_triplet_ru": {
+        "description_ru": "До версии 3.0 extend без доступного тогда type всегда означал начало продления.",
+        "short_explanation_ru": "До версии 3.0 extend без доступного тогда type всегда означал начало продления.",
+        "conditions_ru": "Не выводить из исторической фразы универсальный hard default для всех спорных modern-span случаев."
+      },
+      "source_triplet_sha256": "80e63da24b14f7034d2fa860f438cd9ee4bd31c25b228a986b752a7480aabede",
+      "reviewed_translation_en": {
+        "description_en": "Before version 3.0, when the type attribute was not yet available, extend always meant the start of an extension.",
+        "short_explanation_en": "Before version 3.0, when the type attribute was not yet available, extend always meant the start of an extension.",
+        "conditions_en": "Do not infer a universal hard default for every disputed modern-span case from this historical statement."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-kind-text-symbol-default",
+      "registry_pointer": "/records/2550/record",
+      "source_triplet_ru": {
+        "description_ru": "Отсутствующие kind text и use-symbols определяются приложением.",
+        "short_explanation_ru": "Отсутствующие kind text и use-symbols определяются приложением.",
+        "conditions_ru": "При use-symbols=yes text следует за символом."
+      },
+      "source_triplet_sha256": "b9abd5f93249ac0f2613d8a6a21c3e478fe2644efdba8b59edd71d3af91a3692",
+      "reviewed_translation_en": {
+        "description_en": "Absent kind text and use-symbols are determined by the application.",
+        "short_explanation_en": "Absent kind text and use-symbols are determined by the application.",
+        "conditions_en": "When use-symbols=yes, text follows the symbol."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-accidental-text-enclosure",
+      "registry_pointer": "/records/2551/record",
+      "source_triplet_ru": {
+        "description_ru": "У accidental-text enclosure по умолчанию none.",
+        "short_explanation_ru": "У accidental-text enclosure по умолчанию none.",
+        "conditions_ru": "Применимо в display-контекстах, в том числе notehead-text."
+      },
+      "source_triplet_sha256": "aea040c7c2e775b832d8f688a75fecd681b754b789ed9f273d6c94f6811fe6ae",
+      "reviewed_translation_en": {
+        "description_en": "accidental-text enclosure defaults to none.",
+        "short_explanation_en": "accidental-text enclosure defaults to none.",
+        "conditions_en": "Applies in display contexts, including notehead-text."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-display-text-enclosure",
+      "registry_pointer": "/records/2552/record",
+      "source_triplet_ru": {
+        "description_ru": "У display-text enclosure по умолчанию none.",
+        "short_explanation_ru": "У display-text enclosure по умолчанию none.",
+        "conditions_ru": "Используется для многошрифтового оформления имён и других display-элементов."
+      },
+      "source_triplet_sha256": "d0ba1603d66e32107a544d3659c2720eee15bce25d4ef43745d1d1717a18b601",
+      "reviewed_translation_en": {
+        "description_en": "display-text enclosure defaults to none.",
+        "short_explanation_en": "display-text enclosure defaults to none.",
+        "conditions_en": "Used for multi-font formatting of names and other display elements."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-lyric-font-target",
+      "registry_pointer": "/records/2553/record",
+      "source_triplet_ru": {
+        "description_ru": "lyric-font выбирает default шрифт для lyric с соответствующими name и number.",
+        "short_explanation_ru": "lyric-font выбирает default шрифт для lyric с соответствующими name и number.",
+        "conditions_ru": "Алгоритм конфликтов нескольких defaults с неполными selectors явно не определён; не выдумывать приоритет."
+      },
+      "source_triplet_sha256": "1f35c488b0caaa3b5eb7d5c7811127a2f33cbbfa612e344f365ad8a12fad6828",
+      "reviewed_translation_en": {
+        "description_en": "lyric-font selects the default font for lyrics with matching name and number.",
+        "short_explanation_en": "lyric-font selects the default font for lyrics with matching name and number.",
+        "conditions_en": "Conflict resolution among multiple defaults with incomplete selectors is not explicitly defined; do not invent precedence."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-lyric-language-target",
+      "registry_pointer": "/records/2554/record",
+      "source_triplet_ru": {
+        "description_ru": "lyric-language задаёт default языка для соответствующих lyric name и number.",
+        "short_explanation_ru": "lyric-language задаёт default языка для соответствующих lyric name и number.",
+        "conditions_ru": "Не путать имя типа lyric с текстовым содержимым стиха."
+      },
+      "source_triplet_sha256": "eadb78d4fdcfaaee5b715a25b0525b2a19c37164c10d3fe90d36bcee5224baed",
+      "reviewed_translation_en": {
+        "description_en": "lyric-language sets the default language for matching lyric name and number.",
+        "short_explanation_en": "lyric-language sets the default language for matching lyric name and number.",
+        "conditions_en": "Do not confuse the lyric type name with the text content of a verse."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-direction-type-format-scope",
+      "registry_pointer": "/records/2557/record",
+      "source_triplet_ru": {
+        "description_ru": "Print-suggestion параметры ребёнка direction-type относятся к отдельному direction-type, не ко всему direction.",
+        "short_explanation_ru": "Print-suggestion параметры ребёнка direction-type относятся к отдельному direction-type, не ко всему direction.",
+        "conditions_ru": "Нельзя распространять частный override на соседние независимые направления."
+      },
+      "source_triplet_sha256": "4439347dde6bf231178a76ad6273fd427db5d02dc46670b3a0e73c3a191563b2",
+      "reviewed_translation_en": {
+        "description_en": "Print-suggestion parameters of a direction-type child apply to the individual direction-type, not the entire direction.",
+        "short_explanation_en": "Print-suggestion parameters of a direction-type child apply to the individual direction-type, not the entire direction.",
+        "conditions_en": "A local override must not be extended to neighboring independent directions."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-trill-playback-beat-count",
+      "registry_pointer": "/records/2558/record",
+      "source_triplet_ru": {
+        "description_ru": "trill beats считает отдельные звуки, включая первый, но исключая завершающий two-note-turn.",
+        "short_explanation_ru": "trill beats считает отдельные звуки, включая первый, но исключая завершающий two-note-turn.",
+        "conditions_ru": "Параметры звучания не задают число визуальных штрихов."
+      },
+      "source_triplet_sha256": "1540af3badbad2f5d7e2852c03c9760c5223f16df6626c0ffaa0dd7e77dea59d",
+      "reviewed_translation_en": {
+        "description_en": "trill beats counts individual sounds, including the first but excluding the concluding two-note-turn.",
+        "short_explanation_en": "trill beats counts individual sounds, including the first but excluding the concluding two-note-turn.",
+        "conditions_en": "Playback parameters do not specify the number of visual strokes."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-application-mapping",
+      "registry_pointer": "/records/2559/record",
+      "source_triplet_ru": {
+        "description_ru": "Приложение может поставлять изменённый sounds.xml с собственными идентификаторами библиотеки.",
+        "short_explanation_ru": "Приложение может поставлять изменённый sounds.xml с собственными идентификаторами библиотеки.",
+        "conditions_ru": "Файл отображений отдельно от валидности score; не требовать единственного универсального virtual library."
+      },
+      "source_triplet_sha256": "50066c40f6f66bd52dac1d4d3935935bed368302232d3c8c5b8a8763f9413c56",
+      "reviewed_translation_en": {
+        "description_en": "An application may supply a modified sounds.xml with its own library identifiers.",
+        "short_explanation_en": "An application may supply a modified sounds.xml with its own library identifiers.",
+        "conditions_en": "The mapping file is separate from score validity; do not require a single universal virtual library."
+      },
+      "review_status": "field-for-field linguistic fidelity reviewed; no normative, implementation or closure status promotion"
+    }
+  ]
+}
