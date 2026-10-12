@@ -164,3 +164,78 @@ func TestGraceNeighborsOmissionAndBudgetCancellation(t *testing.T) {
 		}
 	}
 }
+
+func TestGraceNeighborsSeparateExplicitVoicesAndCrossMeasureFollowing(t *testing.T) {
+	s, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	other := runtimeNote(t, b, 50, 6, false)
+	blocks[0].content.children = append(blocks[0].content.children, other)
+	n := v.NoteOrigins[40]
+	n.Note.Node = 50
+	n.Voice = stateKnown("b")
+	v.NoteOrigins[50] = n
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if got := v.GraceNeighbors[20].Following.Note; got.State != EvidenceKnown || got.Value.Node != 40 {
+		t.Fatalf("another voice interfered: %+v", got)
+	}
+	s, v, b, blocks = graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	second := runtimeBlock(b, 1, blocks[0].content.children[3])
+	blocks[0].content.children = blocks[0].content.children[:3]
+	n = v.NoteOrigins[40]
+	n.ScoreOnset = timelineAt(second, stateKnown(timelineZero))
+	n.ScoreEnd = timelineAt(second, stateKnown(mustRational(t, 2, 1)))
+	v.NoteOrigins[40] = n
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, append(blocks, second)); err != nil {
+		t.Fatal(err)
+	}
+	if got := v.GraceNeighbors[20].Following.Note; got.State != EvidenceKnown || got.Value.Node != 40 {
+		t.Fatalf("following barline donor: %+v", got)
+	}
+}
+
+func TestGraceNeighborsLongGroupDefaultBudgetsAndAtomicFailure(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		s, v, b, blocks := graceNeighborFixture(t, order, stateKnown("a"))
+		prototype := v.NoteOrigins[20]
+		nodes := []*factNode{blocks[0].content.children[0]}
+		delete(v.NoteOrigins, 20)
+		delete(v.NoteOrigins, 30)
+		for i := 0; i < 1000; i++ {
+			id := NodeID(1000 + i*10)
+			n := prototype
+			n.Note.Node = id
+			n.GraceTiming.Value.Grace.Node = id + 1
+			v.NoteOrigins[id] = n
+			nodes = append(nodes, stateNode(b, timelineRoleNote, id, stateAbsent[Atomic]()))
+		}
+		nodes = append(nodes, blocks[0].content.children[3])
+		blocks[0].content.children = nodes
+		if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+			t.Fatal(err)
+		}
+		if len(v.GraceNeighbors) != 1000 {
+			t.Fatalf("records: %d", len(v.GraceNeighbors))
+		}
+		t.Logf("%s steps=%d bytes=%d", order, rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes))
+		s.cleanup()
+		if got := rationalUsage(t, s, BudgetBufferedBytes); got != 0 {
+			t.Fatalf("retained after cleanup: %d", got)
+		}
+	}
+	for _, at := range []int{10, 50, 100, 250} {
+		_, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+		s := rationalSession(t, Budgets{})
+		defer s.cleanup()
+		ctx := &rationalCancelContext{Context: context.Background(), at: at}
+		if err := v.resolveGraceNeighbors(ctx, s, b, blocks); !errors.Is(err, context.Canceled) || len(v.GraceNeighbors) != 0 {
+			t.Fatalf("partial publication at %d: %v", at, err)
+		}
+	}
+	_, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	s := rationalSession(t, Budgets{MaxContextFacts: 1})
+	defer s.cleanup()
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); !errors.Is(err, ErrResourceLimit) || len(v.GraceNeighbors) != 0 {
+		t.Fatalf("context quota published subset: %v", err)
+	}
+}

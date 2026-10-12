@@ -8,6 +8,7 @@ type timelineService struct {
 	State              timelineState
 	Playback           timelinePlaybackContext
 	NoteOrigins        map[NodeID]noteTimingOrigin
+	GraceNeighbors     map[NodeID]graceNeighborTiming
 	FiguredBassOrigins map[NodeID]figuredBassTimingOrigin
 	DirectionOrigins   map[NodeID]directionTimingOrigin
 	Facts              map[NodeID]timelineEventFact
