@@ -260,7 +260,110 @@ func TestDirectionOriginsBudgetsCancellationAndDuplicatePublication(t *testing.T
 	if err := service.resolveDirectionOrigins(context.Background(), s, b, blocks); !errors.Is(err, ErrResourceLimit) || len(service.DirectionOrigins) != 1 || rationalUsage(t, s, BudgetContextFacts) != 1 {
 		t.Fatalf("per-record context quota: err=%v records=%d", err, len(service.DirectionOrigins))
 	}
-	if err := service.resolveDirectionOrigins(context.Background(), s, b, blocks); !errors.Is(err, ErrContract) {
+	if err := service.resolveDirectionOrigins(context.Background(), s, b, blocks); !errors.Is(err, ErrInvalidConfiguration) {
 		t.Fatalf("duplicate accepted: %v", err)
+	}
+}
+
+func TestDirectionOriginsScopeAndIndependentUnavailableNotes(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		for _, tc := range []struct {
+			name   string
+			change func(*testing.T, *timelineService, *timelineBindings, []timelineMeasureBlock)
+		}{
+			{"earlier-bad-voice", func(_ *testing.T, v *timelineService, _ *timelineBindings, _ []timelineMeasureBlock) {
+				f := v.Facts[20]
+				f.Voice = stateUnknown[string]("earlier-voice")
+				v.Facts[20] = f
+			}},
+			{"other-voice-unplaced", func(_ *testing.T, v *timelineService, _ *timelineBindings, _ []timelineMeasureBlock) {
+				f := v.Facts[30]
+				f.Voice = stateKnown("lower")
+				f.Position = stateUnknown[musicalPosition]("other-voice-unplaced")
+				v.Facts[30] = f
+			}},
+			{"other-document", func(_ *testing.T, v *timelineService, _ *timelineBindings, _ []timelineMeasureBlock) {
+				f := v.Facts[30]
+				f.Position.Value.Part.DocumentID = "other"
+				f.Part.Value.DocumentID = "other"
+				v.Facts[30] = f
+			}},
+			{"foreign-known-declaration", func(_ *testing.T, v *timelineService, b *timelineBindings, blocks []timelineMeasureBlock) {
+				foreign := stateNode(b, timelineRoleHarmony, 99, stateAbsent[Atomic]())
+				blocks[0].content.children = append(blocks[0].content.children, foreign)
+				v.Facts[99] = v.Facts[40]
+			}},
+		} {
+			t.Run(string(order)+"/"+tc.name, func(t *testing.T) {
+				s, service, b, blocks := directionOriginFixture(t, order, Budgets{})
+				for _, id := range []NodeID{10, 20, 30, 40} {
+					f := service.Facts[id]
+					f.Voice = stateKnown("upper")
+					service.Facts[id] = f
+				}
+				tc.change(t, service, b, blocks)
+				if err := service.resolveDirectionOrigins(context.Background(), s, b, blocks); err != nil {
+					t.Fatal(err)
+				}
+				if got := service.DirectionOrigins[10].Anchor; got.State != EvidenceKnown || got.Value.Node != 40 {
+					t.Fatalf("irrelevant gap masked association: %+v", got)
+				}
+			})
+		}
+	}
+}
+
+func TestDirectionOriginsUnknownCandidateVoiceAndExactEmptyVoice(t *testing.T) {
+	for _, candidateVoice := range []Evidence[string]{stateAbsent[string](), stateUnknown[string]("voice-unavailable"), stateKnown("")} {
+		s, service, b, blocks := directionOriginFixture(t, OrderSource, Budgets{})
+		f := service.Facts[10]
+		f.Voice = stateKnown("")
+		service.Facts[10] = f
+		f = service.Facts[40]
+		f.Voice = candidateVoice
+		service.Facts[40] = f
+		f = service.Facts[30]
+		f.Voice = stateKnown("upper")
+		service.Facts[30] = f
+		if err := service.resolveDirectionOrigins(context.Background(), s, b, blocks); err != nil {
+			t.Fatal(err)
+		}
+		got := service.DirectionOrigins[10].Anchor
+		if candidateVoice.State == EvidenceKnown {
+			if got.State != EvidenceKnown || got.Value.Node != 40 {
+				t.Fatalf("empty xs:string voice lost: %+v", got)
+			}
+		} else if got.State != EvidenceUnknown {
+			t.Fatalf("missing candidate voice invented: %+v", got)
+		}
+	}
+}
+
+func TestDirectionOriginsLaterMeasureGapDoesNotMaskEarlierCandidate(t *testing.T) {
+	s, service, b, blocks := directionOriginFixture(t, OrderSource, Budgets{})
+	late := runtimeBlock(b, 1, runtimeNote(t, b, 90, 1, false))
+	late.complete = stateUnknown[bool]("later-measure-incomplete")
+	blocks = append(blocks, late)
+	stateClose(t, s, &service.State, 1)
+	if err := service.resolveDirectionOrigins(context.Background(), s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if got := service.DirectionOrigins[10].Anchor; got.State != EvidenceKnown || got.Value.Node != 40 {
+		t.Fatalf("later domain gap leaked: %+v", got)
+	}
+}
+
+func TestDirectionOriginsStoredCursorCauseOwned(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	service := &timelineService{Facts: map[NodeID]timelineEventFact{}}
+	cause := &DecisionRef{Rule: RuleKey{"cursor", 1}, Subject: NodeRef{"d", 77}}
+	fact := timelineEventFact{Origin: Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "cursor-unavailable", Cause: cause}}
+	if err := service.storeFact(context.Background(), s, 10, fact); err != nil {
+		t.Fatal(err)
+	}
+	cause.Subject.Node = 999
+	if got := service.Facts[10].Origin.Cause; got == nil || got.Subject.Node != 77 {
+		t.Fatalf("origin cause borrowed: %+v", got)
 	}
 }

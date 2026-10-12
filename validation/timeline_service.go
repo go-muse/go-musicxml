@@ -9,10 +9,14 @@ type timelineService struct {
 	Playback           timelinePlaybackContext
 	NoteOrigins        map[NodeID]noteTimingOrigin
 	FiguredBassOrigins map[NodeID]figuredBassTimingOrigin
+	DirectionOrigins   map[NodeID]directionTimingOrigin
 	Facts              map[NodeID]timelineEventFact
 	Final              bool
 }
 type timelineEventFact struct {
+	// Origin is the unshifted cursor/onset coordinate. Position may describe
+	// a direction/harmony display displacement or a sound/listening effect.
+	Origin                      Evidence[musicalPosition]
 	Position, End               Evidence[musicalPosition]
 	Duration, PrincipalDuration Evidence[Rational]
 	Principal                   Evidence[NodeRef]
@@ -55,6 +59,9 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 		return err
 	}
 	var err error
+	if fact.Origin, err = stateOwnEvidence(ctx, s, fact.Origin); err != nil {
+		return err
+	}
 	if fact.Position, err = stateOwnEvidence(ctx, s, fact.Position); err != nil {
 		return err
 	}
