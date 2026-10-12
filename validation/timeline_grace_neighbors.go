@@ -598,7 +598,7 @@ func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *
 				return -1, gap, r.err
 			}
 			candidate := service.NoteOrigins[id]
-			if candidate.Grace.State != EvidenceKnown || candidate.Grace.Value || candidate.Chord.State != EvidenceKnown || candidate.Chord.Value {
+			if candidate.Grace.State != EvidenceKnown || candidate.Grace.Value || candidate.Chord.State != EvidenceKnown {
 				continue
 			}
 			order, err := service.State.positionOrder(r.ctx, r.s, candidate.ScoreOnset.Value, n.ScoreOnset.Value)
