@@ -9,6 +9,22 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add explicit `ProfileModelTimeline` and `ProfileSourceTimeline` through a
+  separate engine, preserving frozen XSD/local profiles and legacy XSD-only
+  `Validate`. The bounded provider retains exact musical chronology and typed
+  effective state; selected consumers check principal-note chord duration bounds
+  and explicit numeral-key or encoded key at the unshifted harmony score origin.
+- Add sealed `NewTimelinePlan`, `NewChordDurationPlan` and `NewNumeralKeyPlan`,
+  finalized note/offset/grace/figured-bass/direction context and sparse encoded
+  instrument/MIDI statements. Unknown dependencies retain local causal evidence;
+  provider completion is not a claim that every fact is known. Publish the full
+  clause/requirement ownership ledger without promoting frozen source statuses
+  or claiming complete repeat, layout, playback or MusicXML conformance.
+- Keep B5-PERF-01 outstanding under shared validation kernel/session ownership
+  and final batch-9 reconciliation. New timeline resource improvements do not
+  discharge the earlier matched-performance obligation. Final integrated
+  acceptance and actual 386 execution remain separately evidenced gates.
+
 - Add immutable `validation.Rational` with bounded canonical fractions, separate
   from XSD decimals, and shared-session metered exact arithmetic for musical
   positions. Arithmetic reserves conservative work and scratch before big-number

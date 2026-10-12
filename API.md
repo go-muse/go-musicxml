@@ -213,11 +213,14 @@ and already-canceled contexts fail before model traversal.
 | `ProfileModelXSD` | `musicxml-4.0/model-xsd` | Current generated structure/value XSD plus required model representation checks |
 | `ProfileModelLocal` | `musicxml-4.0/model-local` | The same model checks plus the explicitly selected local musical and typed-reference clauses |
 | `ProfileSourceLocal` | `musicxml-4.0/source-local` | Original single-pass source XSD plus those same local clauses; used with `InspectXML` or strict `DecodeAssessed` |
+| `ProfileModelTimeline` | `musicxml-4.0/model-timeline` | Model-local scope plus the bounded exact timeline/effective-state provider and selected chord/numeral consumers |
+| `ProfileSourceTimeline` | `musicxml-4.0/source-timeline` | Source-local scope plus the same timeline provider and consumers on original input |
 
 These are bounded implementations under final verification, not a claim of
 whole-MusicXML conformance or completed batch acceptance. The complete selected
 clause list, exclusions, test evidence and remaining owners are in the
-[model assessment scope](docs/validation/model-assessment-scope.md). Each profile
+[model assessment scope](docs/validation/model-assessment-scope.md) and
+[timeline scope](docs/validation/TIMELINE_ASSESSMENT_SCOPE.md). Each profile
 supports the three roots above; score-only local predicates are inapplicable to
 opus and never assess linked opus/score content. Version selection is the pinned
 MusicXML 4.0 schema, not an invented requirement that the `version` attribute
@@ -326,11 +329,71 @@ path retains schema/session facts and exact current-value/report semantics;
 these measurements disclose the remaining cost rather than promising a
 throughput or memory improvement. Cold initialization adds further cost.
 
+### Exact timeline and effective-state profiles
+
+Select `ProfileModelTimeline` with `AssessModel`, or `ProfileSourceTimeline`
+with `InspectXML` / the explicit assessment in strict `DecodeAssessed`.
+These profiles use a separately compiled engine and add exactly three required
+bindings to their corresponding local profile: `MX40-TIMELINE-effective-state@1`,
+`MX40-TIMELINE-chord-duration-bound@1`, and
+`MX40-TIMELINE-numeral-requires-key@1`. Model/source have 39/37 required keys,
+respectively, with no additional transitive-only keys. The existing XSD/local
+catalogs and their digests remain frozen. Legacy `Validate` remains XSD-only;
+ordinary `Decode` and `Encode` do not select a timeline profile.
+
+The session-owned provider retains exact rational musical positions and typed
+divisions, key, time, clef, staff, transpose and instrument histories. It includes
+independent display/sound/listening offsets, note attack/release/bend origins,
+proved grace donors, figured-bass anchors and anchor-based durations, direction
+association, barline/navigation statements, and sparse sound/instrument/MIDI
+statements. These are bounded context facts, not additional rejection rules.
+A provider pass means indexing and finalization completed; it does not assert
+that every optional or ambiguous fact is known. This release does not expose a
+general public timeline-query or playback API.
+
+The selected consumers check each duration-bearing chord tone against its
+established principal note, not the preceding chord tone, and require a valid
+local numeral-key or an applicable explicitly encoded key at the harmony's
+unshifted score origin and staff. Display offsets cannot borrow a future key.
+No initial C major, meter, clef, tempo or divisions value is invented. An own
+valid numeral-key remains an independent alternative when fallback timeline
+evidence is unavailable.
+
+Exact established regions remain usable when another region is incomplete.
+Unknown same-time conflicts, missing staff/voice/anchor evidence, and unsettled
+cursor movement across divisions boundaries retain their specific causes;
+they are not silently defaulted or turned into new musical violations.
+Grace donor identity does not establish continuous playback time. Figured-bass
+consecutive-chain positions are explicitly derived context, not a sum-duration
+restriction. Instrument state means latest applicable encoded statements, with
+exclusive solo/ensemble and atomic virtual descriptors, not a reconstructed
+synthesizer configuration. The reviewed
+[offset](docs/validation/timeline-offset-interpretation.md),
+[note-origin](docs/validation/timeline-note-origin-interpretation.md), and
+[instrument](docs/validation/timeline-instrument-statements.md) contracts state
+the exact source interpretations and remaining boundaries.
+
+The profiles retain all target-specific XSD, representation and unread-DTD
+limits. Full repeat/span, layout, performance realization, author intent,
+packages, linked content and external dictionaries are outside their closure.
+Opus selection assesses that document only. Predicate counts and the two
+consumer milestones are not complete MusicXML coverage or a ceiling on the
+provider's typed-state responsibilities. Final acceptance evidence is tracked
+in the [full ownership ledger](docs/validation/timeline-assessment-ownership.json).
+
+Timeline arithmetic, indexes and retained context share the session's finite
+budgets; a small input can still exceed work or memory limits. Earlier XSD/local
+cost measurements above are not timeline capacity promises. B5-PERF-01 remains
+outstanding with the shared validation kernel/session workstream and final
+batch-9 reconciliation. Timeline-specific improvements do not close that older
+matched-performance obligation.
+
 ## Fact-stream validation foundation
 
 The `validation` subpackage exports `NewCatalog`, eight generic sealed typed-plan
 constructors, the sealed shared-schema `NewXSDPlan`, bounded local relation and
-typed-reference constructors, `NewModelRepresentationPlan`, `NewEngine`, and
+typed-reference constructors, `NewModelRepresentationPlan`, `NewTimelinePlan`,
+`NewChordDurationPlan`, `NewNumeralKeyPlan`, `NewEngine`, and
 explicit-profile fact sessions using `Open`, `Attribute`, optional
 `CompleteAttributes`/`ModelRepresentation`, `Close` and `Finish`. The optional
 attribute-closure event seals explicit start-tag enumeration before children;
@@ -355,6 +418,14 @@ The additive local constructors are `NewDistinctChildAttributePlan`,
 `ReferenceOwner` binds the exact provider rule/revision defining matching scope.
 These sealed constructors require bounded exact selectors/parameters and copy
 retained inputs. They are not a callback ABI or a linked-resource resolver.
+
+`NewTimelinePlan(TimelinePlanSpec)` requires the exact compiled MusicXML schema
+and both part-reference owners. `NewChordDurationPlan(TimelineConsumerSpec)` and
+`NewNumeralKeyPlan(TimelineConsumerSpec)` require the matching schema and exact
+provider rule/revision; their rule definitions must also declare that document
+dependency. Sealed role/type validation rejects similarly named but incompatible
+schema declarations. These plans do not add generic interpretation to unrelated
+context keys or expose mutable session state.
 
 `Session.ModelRepresentation` accepts one bounded `ModelRepresentationFact` for
 the currently open model occurrence before `Close`. `ModelProblem` identifies a
@@ -450,7 +521,8 @@ assessment of the original file. DTD closure remains later work.
 
 `InspectXML(ctx, reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})`
 assesses original XML without creating a Go document. Use `ProfileSourceLocal`
-instead to add the frozen local clauses. An empty/unknown profile,
+to add the frozen local clauses, or `ProfileSourceTimeline` to add the bounded
+timeline provider and consumers described above. An empty/unknown profile,
 invalid budgets, or an already canceled context fail before the first input read.
 A nil operation error does not imply acceptance: inspect `Report.Satisfied()`.
 Ordinary normative failures return a report with no operational error. Syntax,
