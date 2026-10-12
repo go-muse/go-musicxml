@@ -160,3 +160,36 @@ func TestTimelineGraceFrameCompetitorAndSideLocality(t *testing.T) {
 		})
 	}
 }
+
+func TestTimelineFigureChainDisplacedGapKeepsActualCause(t *testing.T) {
+	for _, offset := range []int64{-2, 2} {
+		s := rationalSession(t, Budgets{})
+		defer s.cleanup()
+		s.documentID = "d"
+		b := noteOriginBindings()
+		first := stateNode(b, timelineRoleFiguredBass, 10, stateAbsent[Atomic]())
+		bad := stateNode(b, timelineRoleFiguredBass, 20, stateAbsent[Atomic]())
+		block := runtimeBlock(b, 0, first)
+		later := runtimeBlock(b, 1, bad)
+		at := timelineAt(block, stateKnown(mustRational(t, 1, 1)))
+		gapAt := timelineAt(later, stateKnown(mustRational(t, offset, 1)))
+		gapAt.Value.UnprovedFrame = true
+		cause := &DecisionRef{Rule: RuleKey{"floating-figure", 1}, Subject: NodeRef{"d", 20}}
+		pending := map[NodeID]figuredBassTimingOrigin{
+			10: {FiguredBass: NodeRef{"d", 10}, Part: block.part, Anchor: stateKnown(NodeRef{"d", 30}), AnchorPosition: at, Position: at, DurationRaw: stateAbsent[Decimal](), Duration: stateAbsent[Rational]()},
+			20: {FiguredBass: NodeRef{"d", 20}, Part: block.part, Anchor: Evidence[NodeRef]{State: EvidenceInvalid, Reason: "invalid-floating-figure", Cause: cause}, CursorOrigin: gapAt},
+		}
+		r := &stateReader{ctx: context.Background(), s: s, b: b}
+		if err := resolveFiguredBassChains(r, []figuredBassDomain{{block: block, complete: stateKnown(true)}, {block: later, complete: stateKnown(true)}}, pending, []NodeID{10, 20}); err != nil {
+			t.Fatal(err)
+		}
+		got := pending[10].GroupStart
+		if offset < 0 {
+			if got.State != EvidenceInvalid || got.Cause != cause {
+				t.Fatalf("possible displaced chain member lost cause: %+v", got)
+			}
+		} else if got.State != EvidenceKnown {
+			t.Fatalf("definitely later displaced chain gap erased known group: %+v", got)
+		}
+	}
+}
