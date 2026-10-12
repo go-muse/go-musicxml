@@ -235,9 +235,6 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			case movement.Chord.State == EvidenceKnown && !movement.Chord.Value:
 				fact.End = timelineAt(block, cursor.Position)
 			}
-			if err := service.readNoteOrigins(ctx, s, b, event, fact, selectedUnits); err != nil {
-				return err
-			}
 			if err := service.Playback.readNote(ctx, s, b, event, block, fact); err != nil {
 				return err
 			}
@@ -304,6 +301,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		if err := service.finalizeOffsetEvent(ctx, s, b, block, item.Event, item.Fact); err != nil {
 			return err
 		}
+	}
+	if err := service.finalizeNoteOrigins(ctx, s, b, block); err != nil {
+		return err
 	}
 	return service.resolveFiguredBassOrigins(ctx, s, b, block)
 }

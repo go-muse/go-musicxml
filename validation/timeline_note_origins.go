@@ -275,3 +275,34 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 	service.NoteOrigins[note.header.ID] = out
 	return nil
 }
+
+// Musical note duration/end facts remain unchanged. Independent performance
+// adjustments (notably grace make-time) use finalized onset-effective units,
+// including a later serialized declaration at the same musical position.
+func (service *timelineService) finalizeNoteOrigins(ctx context.Context, s *Session, b *timelineBindings, block timelineMeasureBlock) error {
+	r := &stateReader{ctx: ctx, s: s, b: b}
+	for _, note := range block.content.children {
+		if !r.matches(note, timelineRoleNote) {
+			if r.err != nil {
+				return r.err
+			}
+			continue
+		}
+		fact, found := service.Facts[note.header.ID]
+		if !found {
+			return contract("note origin finalization", "stored note fact required")
+		}
+		units := fact.Units
+		if fact.Origin.State == EvidenceKnown {
+			selected, err := service.State.effectiveDivisions(ctx, s, fact.Origin.Value)
+			if err != nil {
+				return err
+			}
+			units = selected.Value
+		}
+		if err := service.readNoteOrigins(ctx, s, b, note, fact, units); err != nil {
+			return err
+		}
+	}
+	return r.err
+}
