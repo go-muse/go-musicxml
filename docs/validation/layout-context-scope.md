@@ -81,3 +81,39 @@ retain independent application choices when their applicable font is not proved.
 A dynamics child's placement is ignored inside direction even when the
 direction placement is omitted; that omission leaves the effective placement
 application-dependent while preserving the child's encoded raw value.
+
+## Parallel blank pages and unavailable layout publishers
+
+The MusicXML 4.0 [print attributes](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/print/)
+require parallel break positions to agree, and apply `blank-page` only to an
+encoded `new-page="yes"`. The attribute has no schema or documented numeric
+default. Blank-page consensus therefore distinguishes its initial accumulator
+from an observed omission: an explicit count and an omitted parallel count
+produce Unknown, never a synthesized zero or an XSD defect. All-omitted counts
+remain Absent and leave the bounded parity projection unchanged. An unavailable
+encoded page break also keeps initial-page parity unavailable, preserving its
+cause; ordinary missing break-support metadata alone does not discard the initial
+structural page when there is no blank-page adjustment.
+
+The [system-layout publisher rule](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/system-layout/)
+selects the first visible part. If all staves are proven cutaways, an observed
+print system-layout does not establish that publisher. Its selection stays
+Unknown, without choosing a hidden part or silently substituting defaults.
+Defaults remain available when there is no observed override. Width completeness
+belongs to the proven current system even if its visible publisher is unavailable;
+a gap after a proven break cannot invalidate the preceding complete system or
+certify the new system from only its later measures.
+
+[Staff-layout applicability](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/staff-layout/)
+retains unavailable selector, part, first-slot and system prerequisites, including
+Invalid or Unsupported causes. Temporary staff-selection maps and unknown-part
+buckets are charged through owned publication and released on success, refusal,
+or cancellation; known-part overrides are not released as call-local scratch.
+
+[Divider coordinate defaults](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/system-dividers/)
+carry documented-default provenance only when their coordinate is proven absent;
+the raw coordinate remains Absent. Unavailable divider selection keeps Raw and
+Conversion unavailable with their cause and cannot claim default provenance. Explicit divider coordinates, encoded scaling
+ratios and effective signed-margin sums carry explicit provenance. No change
+adds defaults to the source or current model, selects rendering policy, or
+changes the earlier timeline and frozen-profile contracts.

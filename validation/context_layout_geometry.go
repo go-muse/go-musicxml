@@ -332,7 +332,7 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode, p *contextPlan) er
 		} else {
 			conversion = stateUnavailable[Atomic, Rational](tenths)
 		}
-		if err := s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: "layout.millimeters-per-tenth", Value: stateUnknown[Atomic]("exact-rational-in-layout-conversion"), Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Scope: ref, Origin: ref, Raw: tenths, Applicability: yes, Conversion: conversion, Unit: ContextUnitMillimeters, Basis: "millimeters-per-global-tenth"}}); err != nil {
+		if err := s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: ref, Property: "layout.millimeters-per-tenth", Value: stateUnknown[Atomic]("exact-rational-in-layout-conversion"), Layout: &LayoutContextResult{Part: Evidence[NodeRef]{State: EvidenceAbsent}, Page: Evidence[NodeRef]{State: EvidenceAbsent}, System: Evidence[NodeRef]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Scope: ref, Origin: ref, Raw: tenths, Applicability: yes, Conversion: conversion, Unit: ContextUnitMillimeters, Provenance: ContextExplicit, Basis: "millimeters-per-global-tenth"}}); err != nil {
 			return err
 		}
 	}

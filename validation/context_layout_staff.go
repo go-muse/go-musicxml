@@ -12,7 +12,7 @@ type layoutStaffBucket struct {
 	Epoch  uint64
 }
 
-func (l *layoutScopes) readStaffLayouts(owner *factNode, buckets map[string]layoutStaffBucket) (Evidence[bool], error) {
+func (l *layoutScopes) readStaffLayouts(owner *factNode, buckets map[string]layoutStaffBucket, scratch *int64) (Evidence[bool], error) {
 	gap := Evidence[bool]{State: EvidenceAbsent}
 	if owner == nil {
 		return gap, nil
@@ -44,11 +44,21 @@ func (l *layoutScopes) readStaffLayouts(owner *factNode, buckets map[string]layo
 		if !r.step(1 + number.Value.Integer.ByteSize()) {
 			return gap, r.err
 		}
-		k := number.Value.Integer.String()
-		bucket := buckets[k]
-		if err := r.s.retain(768 + int64(len(k))); err != nil {
+		// Reserve the selector's decimal string before materializing it. Three
+		// bytes per integer byte conservatively cover base-10 digits.
+		bytes, err := rationalCheckedMul(BudgetBufferedBytes, number.Value.Integer.ByteSize(), 3)
+		if err != nil {
 			return gap, err
 		}
+		bytes, err = rationalCheckedAdd(BudgetBufferedBytes, 768, bytes)
+		if err != nil {
+			return gap, err
+		}
+		if err := layoutStaffReserve(r.s, scratch, bytes); err != nil {
+			return gap, err
+		}
+		k := number.Value.Integer.String()
+		bucket := buckets[k]
 		bucket.Number = number
 		// Fresh explicit publishers establish current-system applicability, but do
 		// not resolve competing statements retained for that same observed selector.
@@ -78,6 +88,15 @@ func (l *layoutScopes) staffConsensus(bucket layoutStaffBucket) Evidence[Atomic]
 }
 func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidence[layoutStaffRef], frame layoutFrame) error {
 	r := l.r
+	if !r.step(1) {
+		return r.err
+	}
+	var scratch int64
+	defer func() { _ = r.s.account.Release(BudgetBufferedBytes, scratch) }()
+	var localScratch *int64
+	if b.part.State != EvidenceKnown {
+		localScratch = &scratch
+	}
 	print, selected := l.child(b.content, "print")
 	part := b.part.Value.Node
 	local, ok := l.staffOverrides[part]
@@ -85,7 +104,7 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		local, ok = nil, false
 	}
 	if !ok {
-		if err := r.s.retain(512); err != nil {
+		if err := layoutStaffReserve(r.s, localScratch, 512); err != nil {
 			return err
 		}
 		local = make(map[string]layoutStaffBucket)
@@ -93,7 +112,7 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 			l.staffOverrides[part] = local
 		}
 	}
-	gap, err := l.readStaffLayouts(print, local)
+	gap, err := l.readStaffLayouts(print, local, localScratch)
 	if err != nil {
 		return err
 	}
@@ -106,7 +125,7 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 				return r.err
 			}
 			if r.matches(candidate, layoutRole("print")) {
-				more, err := l.readStaffLayouts(candidate, local)
+				more, err := l.readStaffLayouts(candidate, local, localScratch)
 				if err != nil {
 					return err
 				}
@@ -138,7 +157,19 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 	} else {
 		partGap = layoutMergeSelection(partGap, stateUnavailable[NodeRef, bool](b.part))
 	}
-	if err := r.s.retain(512 + int64(len(l.staffDefaults)+len(local))*128); err != nil {
+	keyCount, err := rationalCheckedAdd(BudgetBufferedBytes, int64(len(l.staffDefaults)), int64(len(local)))
+	if err != nil {
+		return err
+	}
+	keyBytes, err := rationalCheckedMul(BudgetBufferedBytes, keyCount, 128)
+	if err != nil {
+		return err
+	}
+	keyBytes, err = rationalCheckedAdd(BudgetBufferedBytes, 512, keyBytes)
+	if err != nil {
+		return err
+	}
+	if err := layoutStaffReserve(r.s, &scratch, keyBytes); err != nil {
 		return err
 	}
 	keys := make(map[string]bool)
@@ -212,9 +243,18 @@ func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidenc
 		if number.State == "" {
 			number = Evidence[Atomic]{State: EvidenceAbsent}
 		}
-		active := stateUnknown[bool]("first-visible-staff-unavailable")
-		if first.State == EvidenceKnown && number.State == EvidenceKnown && frame.system.State == EvidenceKnown {
-			active = Evidence[bool]{State: EvidenceKnown, Value: !(first.Value.Part == b.part.Value && k == first.Value.Staff.String())}
+		active := Evidence[bool]{State: EvidenceKnown, Value: true}
+		for _, prerequisite := range []Evidence[bool]{stateUnavailable[layoutStaffRef, bool](first), stateUnavailable[Atomic, bool](number), stateUnavailable[NodeRef, bool](frame.system), stateUnavailable[NodeRef, bool](b.part)} {
+			if prerequisite.State == EvidenceKnown {
+				continue
+			}
+			if prerequisite.State == EvidenceAbsent {
+				prerequisite = stateUnknown[bool]("first-visible-staff-unavailable")
+			}
+			active = timelineMergeAvailability(active, prerequisite)
+		}
+		if active.State == EvidenceKnown {
+			active.Value = !(first.Value.Part == b.part.Value && k == first.Value.Staff.String())
 		}
 		ref := NodeRef{r.s.documentID, b.measure.header.ID}
 		from := ref
@@ -401,3 +441,16 @@ func (l *layoutScopes) staffCandidates(part NodeRef, count Integer) ([]Integer, 
 }
 
 var layoutStaffOneCandidates = []Integer{localOne}
+
+// Known-part buckets survive this call. Unknown-part buckets and the selection
+// maps are scratch, held until all publications have copied their payloads.
+func layoutStaffReserve(s *Session, scratch *int64, bytes int64) error {
+	if scratch == nil {
+		return s.retain(bytes)
+	}
+	if err := s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
+		return err
+	}
+	*scratch += bytes
+	return nil
+}

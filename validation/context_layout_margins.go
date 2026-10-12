@@ -98,7 +98,7 @@ func (l *layoutScopes) publishMargins(b timelineMeasureBlock, frame layoutFrame,
 		} else if system.State != EvidenceKnown {
 			sum = system
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout.effective-" + name), Value: layoutRationalScalar(sum), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: ref, Raw: sysRaw, Applicability: yes, Page: frame.page, System: frame.system, Conversion: sum, Unit: ContextUnitTenths, Basis: "page-margin-plus-signed-system-inset"}}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout.effective-" + name), Value: layoutRationalScalar(sum), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: ref, Raw: sysRaw, Applicability: yes, Page: frame.page, System: frame.system, Conversion: sum, Unit: ContextUnitTenths, Provenance: ContextExplicit, Basis: "page-margin-plus-signed-system-inset"}}); err != nil {
 			return err
 		}
 	}

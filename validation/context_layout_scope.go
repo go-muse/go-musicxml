@@ -208,7 +208,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		return sortError
 	}
 	l := layoutScopes{r: r, key: key, timeline: s.timeline[p.Timeline], defaults: defaults, staffDefaults: make(map[string]layoutStaffBucket), staffOverrides: make(map[NodeID]map[string]layoutStaffBucket), widths: make(map[NodeID]layoutSystemWidth), names: make(map[NodeID][]layoutPendingName), staffGaps: make(map[NodeID]Evidence[bool])}
-	if l.staffDefaultGap, err = l.readStaffLayouts(defaults, l.staffDefaults); err != nil {
+	if l.staffDefaultGap, err = l.readStaffLayouts(defaults, l.staffDefaults, nil); err != nil {
 		return err
 	}
 	l.pageComplete = l.supports("new-page")
@@ -236,6 +236,7 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 		}
 		var pageBreak, systemBreak Evidence[bool]
 		blanks := Evidence[Atomic]{State: EvidenceAbsent}
+		blanksSeen := false
 		breakPosition := Evidence[Rational]{State: EvidenceAbsent}
 		breakPositionUnknown := false
 		breakDeclarations := 0
@@ -266,7 +267,11 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				if !r.step(1 + atomicLogicalBytes(bv.Value) + atomicLogicalBytes(blanks.Value)) {
 					return r.err
 				}
-				blanks = layoutConsensusPair(blanks, bv)
+				if !blanksSeen {
+					blanks, blanksSeen = bv, true
+				} else {
+					blanks = layoutBlankPageConsensus(blanks, bv)
+				}
 				sb = pb
 			} else if pb.State != EvidenceKnown && !(sb.State == EvidenceKnown && sb.Value) {
 				// Every page boundary starts a system; an unavailable page
@@ -317,8 +322,11 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				if first.State == EvidenceKnown && b.part.State == EvidenceKnown && first.Value == b.part.Value {
 					systemPublisher = system
 					systemSelection = layoutMergeSelection(systemSelection, se)
-				} else if (first.State != EvidenceKnown && first.State != EvidenceAbsent || b.part.State != EvidenceKnown) && se.State != EvidenceAbsent {
+				} else if (first.State != EvidenceKnown || b.part.State != EvidenceKnown) && se.State != EvidenceAbsent {
 					gap := stateUnavailable[NodeRef, bool](first)
+					if first.State == EvidenceAbsent {
+						gap = stateUnknown[bool]("system-layout-publisher-unavailable")
+					}
 					if b.part.State != EvidenceKnown {
 						gap = stateUnavailable[NodeRef, bool](b.part)
 					}
@@ -390,6 +398,12 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			}
 		}
 
+		// The initial structural page does not license an encoded, unavailable
+		// boundary to choose physical parity. Ordinary missing supports alone
+		// still leaves the initial page intact when no blank adjustment is present.
+		if initial && pageBreak.State != EvidenceKnown && (pageBreak.Reason != "encoded-break-completeness-unavailable" || blanks.State != EvidenceAbsent) {
+			blanks = layoutBlankPageConsensus(blanks, layoutBoundaryGap[Atomic](pageBreak, "physical-page-parity-unavailable"))
+		}
 		frame.parity = layoutBlankPageParity(frame.parity, blanks)
 		if conflict {
 			frame.pageCertain = false
@@ -502,7 +516,11 @@ func layoutBlankPageParity(parity Evidence[bool], blanks Evidence[Atomic]) Evide
 		return parity
 	}
 	if blanks.State != EvidenceKnown {
-		return stateUnavailable[Atomic, bool](blanks)
+		gap := stateUnavailable[Atomic, bool](blanks)
+		if parity.State != EvidenceKnown {
+			gap = timelineMergeAvailability(gap, parity)
+		}
+		return gap
 	}
 	if blanks.Value.Kind != AtomicInteger || !blanks.Value.Integer.Valid() || blanks.Value.Integer.value.Sign() < 0 {
 		return stateUnknown[bool]("blank-page-integer-unavailable")
@@ -561,4 +579,23 @@ func layoutLifetimeValue[T any](scope Evidence[NodeRef], reason Code) Evidence[T
 		return stateUnavailable[NodeRef, T](scope)
 	}
 	return Evidence[T]{State: EvidenceUnknown, Reason: reason, Cause: scope.Cause}
+}
+
+// Blank-page has no schema or prose default. Unlike component inheritance,
+// an omitted parallel count cannot agree with an explicit count. The caller
+// separately tracks the first participant so all-Absent remains absent.
+func layoutBlankPageConsensus(a, b Evidence[Atomic]) Evidence[Atomic] {
+	if a.State != EvidenceKnown && a.State != EvidenceAbsent || b.State != EvidenceKnown && b.State != EvidenceAbsent {
+		gap := Evidence[bool]{State: EvidenceAbsent}
+		for _, v := range []Evidence[Atomic]{a, b} {
+			if v.State != EvidenceKnown && v.State != EvidenceAbsent {
+				gap = layoutMergeSelection(gap, stateUnavailable[Atomic, bool](v))
+			}
+		}
+		return stateUnavailable[bool, Atomic](gap)
+	}
+	if (a.State == EvidenceAbsent) != (b.State == EvidenceAbsent) {
+		return stateUnknown[Atomic]("parallel-blank-page-disagreement")
+	}
+	return layoutConsensusPair(a, b)
 }

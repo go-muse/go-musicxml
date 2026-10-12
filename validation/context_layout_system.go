@@ -42,7 +42,7 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 		if active.State == EvidenceKnown {
 			active.Value = !active.Value
 		}
-		raw := layoutAttribute(r, divider, "default-y")
+		raw := layoutSelectionValue(layoutAttribute(r, divider, "default-y"), de)
 		value := half
 		if raw.State != EvidenceAbsent {
 			value, err = l.rational(raw)
@@ -56,10 +56,10 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 		if r.err != nil {
 			return r.err
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-y"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "midway-between-current-and-previous-system-above-current-top"}}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-y"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Provenance: localAbsentProvenance(raw, ContextDocumentedDefault), Basis: "midway-between-current-and-previous-system-above-current-top"}}); err != nil {
 			return err
 		}
-		raw = layoutAttribute(r, divider, "default-x")
+		raw = layoutSelectionValue(layoutAttribute(r, divider, "default-x"), de)
 		value, err = l.rational(raw)
 		if err != nil {
 			return err
@@ -77,7 +77,7 @@ func (l *layoutScopes) publishDividers(b timelineMeasureBlock, frame layoutFrame
 		if r.err != nil {
 			return r.err
 		}
-		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-x"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Basis: "corresponding-system-margin"}}); err != nil {
+		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: l.key, Subject: ref, Property: ContextProperty("layout." + side + "-divider-x"), Value: layoutRationalScalar(value), Layout: &LayoutContextResult{Staff: Evidence[Integer]{State: EvidenceAbsent}, Part: b.part, Scope: ref, Origin: from, Page: frame.page, System: frame.system, Raw: raw, Applicability: active, Conversion: value, Unit: ContextUnitTenths, Provenance: localAbsentProvenance(raw, ContextDocumentedDefault), Basis: "corresponding-system-margin"}}); err != nil {
 			return err
 		}
 	}
@@ -128,14 +128,14 @@ func (l *layoutScopes) addWidth(b timelineMeasureBlock, frame layoutFrame, first
 	if !l.r.step(1) {
 		return l.r.err
 	}
-	if first.State != EvidenceKnown || b.part.State != EvidenceKnown || frame.system.State != EvidenceKnown {
+	if frame.system.State != EvidenceKnown {
 		if v, ok := l.widths[l.openWidth]; ok {
 			v.Complete = false
 			l.widths[l.openWidth] = v
 		}
 		return l.r.err
 	}
-	if first.Value != b.part.Value {
+	if first.State == EvidenceKnown && b.part.State == EvidenceKnown && first.Value != b.part.Value {
 		return nil
 	}
 	r := l.r
@@ -150,7 +150,14 @@ func (l *layoutScopes) addWidth(b timelineMeasureBlock, frame layoutFrame, first
 		if err != nil {
 			return err
 		}
-		v = layoutSystemWidth{Part: b.part, Node: b.measure, Frame: frame, Width: width, Sum: Evidence[Rational]{State: EvidenceKnown, Value: timelineZero}, Complete: l.systemComplete.State == EvidenceKnown && l.systemComplete.Value}
+		v = layoutSystemWidth{Part: first, Node: b.measure, Frame: frame, Width: width, Sum: Evidence[Rational]{State: EvidenceKnown, Value: timelineZero}, Complete: l.systemComplete.State == EvidenceKnown && l.systemComplete.Value}
+	}
+	// A proved break selects the new accumulator even when its first visible
+	// publisher cannot be selected. Never debit that gap to the previous system.
+	if first.State != EvidenceKnown || b.part.State != EvidenceKnown {
+		v.Complete = false
+		l.widths[k] = v
+		return r.err
 	}
 	raw := layoutAttribute(r, b.measure, "width")
 	width, err := l.rational(raw)
