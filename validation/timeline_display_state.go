@@ -68,3 +68,15 @@ func (v clefState) afterBarlineAt(ctx context.Context, s *Session, position Evid
 	}
 	return stateOwnEvidence(ctx, s, v.AfterBarline)
 }
+
+// The print-object attribute group explicitly defaults to yes. Keep raw absence
+// in the typed record and apply this projection only when printing is queried.
+func printObjectDefault(ctx context.Context, s *Session, raw Evidence[bool]) (Evidence[bool], error) {
+	if err := s.step(ctx, 1); err != nil {
+		return Evidence[bool]{}, err
+	}
+	if raw.State == EvidenceAbsent {
+		return Evidence[bool]{State: EvidenceKnown, Value: true}, nil
+	}
+	return stateOwnEvidence(ctx, s, raw)
+}

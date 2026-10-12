@@ -226,7 +226,7 @@ func (r *stateReader) key(n *factNode) Evidence[keyState] {
 		return stateUnavailable[bool, keyState](complete)
 	}
 	fifths := stateInteger(r.childScalar(n, timelineRoleKeyFifths))
-	value := keyState{Traditional: fifths.State != EvidenceAbsent, Fifths: fifths, Mode: stateText(r.childScalar(n, timelineRoleKeyMode)), Cancel: stateInteger(r.childScalar(n, timelineRoleKeyCancel)), CancelLocation: Evidence[string]{State: EvidenceAbsent}}
+	value := keyState{PrintObject: stateYesNo(r.attribute(n, timelineRoleKeyPrintObject)), Traditional: fifths.State != EvidenceAbsent, Fifths: fifths, Mode: stateText(r.childScalar(n, timelineRoleKeyMode)), Cancel: stateInteger(r.childScalar(n, timelineRoleKeyCancel)), CancelLocation: Evidence[string]{State: EvidenceAbsent}}
 	if cancel, e := r.child(n, timelineRoleKeyCancel); e.State == EvidenceKnown {
 		value.CancelLocation = stateText(r.attribute(cancel, timelineRoleCancelLocation))
 	}
@@ -293,7 +293,7 @@ func (r *stateReader) time(n *factNode) Evidence[timeState] {
 	if complete.State != EvidenceKnown {
 		return stateUnavailable[bool, timeState](complete)
 	}
-	v := timeState{SenzaMisura: stateText(r.childScalar(n, timelineRoleTimeSenzaMisura)), Symbol: stateText(r.attribute(n, timelineRoleTimeSymbol)), Separator: stateText(r.attribute(n, timelineRoleTimeSeparator)), Interchangeable: Evidence[interchangeableState]{State: EvidenceAbsent}}
+	v := timeState{PrintObject: stateYesNo(r.attribute(n, timelineRoleTimePrintObject)), SenzaMisura: stateText(r.childScalar(n, timelineRoleTimeSenzaMisura)), Symbol: stateText(r.attribute(n, timelineRoleTimeSymbol)), Separator: stateText(r.attribute(n, timelineRoleTimeSeparator)), Interchangeable: Evidence[interchangeableState]{State: EvidenceAbsent}}
 	v.Pairs = r.timePairs(n, timelineRoleTimeBeats, timelineRoleTimeBeatType)
 	ch, e := r.child(n, timelineRoleTimeInterchangeable)
 	if e.State == EvidenceKnown {
@@ -314,13 +314,14 @@ func (r *stateReader) clef(n *factNode, created bool) Evidence[clefState] {
 		return stateUnavailable[bool, clefState](complete)
 	}
 	sign, line, oct := timelineRoleClefSign, timelineRoleClefLine, timelineRoleClefClefOctaveChange
-	v := clefState{Additional: Evidence[bool]{State: EvidenceAbsent}, Size: Evidence[string]{State: EvidenceAbsent}, AfterBarline: Evidence[bool]{State: EvidenceAbsent}}
+	v := clefState{PrintObject: Evidence[bool]{State: EvidenceAbsent}, Additional: Evidence[bool]{State: EvidenceAbsent}, Size: Evidence[string]{State: EvidenceAbsent}, AfterBarline: Evidence[bool]{State: EvidenceAbsent}}
 	if created {
 		sign, line, oct = timelineRolePartClefSign, timelineRolePartClefLine, timelineRolePartClefClefOctaveChange
 	} else {
 		v.Additional = stateYesNo(r.attribute(n, timelineRoleClefAdditional))
 		v.Size = stateText(r.attribute(n, timelineRoleClefSize))
 		v.AfterBarline = stateYesNo(r.attribute(n, timelineRoleClefAfterBarline))
+		v.PrintObject = stateYesNo(r.attribute(n, timelineRoleClefPrintObject))
 	}
 	v.Sign = stateText(r.childScalar(n, sign))
 	v.Line = stateInteger(r.childScalar(n, line))

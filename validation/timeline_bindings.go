@@ -196,6 +196,9 @@ const (
 	timelineRoleFiguredBass
 	timelineRoleFiguredBassFigure
 	timelineRoleFiguredBassDuration
+	timelineRoleKeyPrintObject
+	timelineRoleTimePrintObject
+	timelineRoleClefPrintObject
 	timelineRoleLimit
 )
 
@@ -222,6 +225,9 @@ type timelineRoleShape struct {
 // This finite table is a configuration-time binding contract against MusicXML
 // 4.0 metadata. Runtime readers use only the copied exact descriptors.
 var timelineRoleShapes = [...]timelineRoleShape{
+	{timelineRoleKeyPrintObject, "key", "print-object", "yes-no", 1, true},
+	{timelineRoleTimePrintObject, "time", "print-object", "yes-no", 1, true},
+	{timelineRoleClefPrintObject, "clef", "print-object", "yes-no", 1, true},
 	{timelineRoleStaffDetailsShowFrets, "staff-details", "show-frets", "show-frets", 1, true},
 	{timelineRoleStaffDetailsPrintObject, "staff-details", "print-object", "yes-no", 1, true},
 	{timelineRoleStaffDetailsPrintSpacing, "staff-details", "print-spacing", "yes-no", 1, true},

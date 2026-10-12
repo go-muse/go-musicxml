@@ -65,6 +65,7 @@ type stateClosure struct {
 // Compound encodings remain typed. Individual component availability is retained
 // even when another component is missing, malformed, or unavailable.
 type keyState struct {
+	PrintObject    Evidence[bool]
 	Traditional    bool
 	Fifths         Evidence[Integer]
 	Mode           Evidence[string]
@@ -88,11 +89,13 @@ type interchangeableState struct {
 	Relation, Symbol, Separator Evidence[string]
 }
 type timeState struct {
+	PrintObject                    Evidence[bool]
 	Pairs                          []timePair
 	Interchangeable                Evidence[interchangeableState]
 	SenzaMisura, Symbol, Separator Evidence[string]
 }
 type clefState struct {
+	PrintObject  Evidence[bool]
 	Sign         Evidence[string]
 	Line         Evidence[Integer]
 	OctaveChange Evidence[Integer]
