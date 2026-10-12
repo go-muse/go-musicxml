@@ -348,3 +348,83 @@ func TestRationalConcurrentImmutableReads(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestRationalOutputRetentionPeakAndFinishCleanup(t *testing.T) {
+	a, b := mustRational(t, 1, 3), mustRational(t, 1, 6)
+	cost, err := rationalPlan(rationalAddOp, rationalWidthsOf(a.value), rationalWidthsOf(b.value))
+	if err != nil {
+		t.Fatal(err)
+	}
+	probe := rationalSession(t, Budgets{})
+	if _, err := probe.rationalAdd(context.Background(), a, b); err != nil {
+		t.Fatal(err)
+	}
+	peak := cost.scratch + probe.retained
+	probe.cleanup()
+	for _, delta := range []int64{-1, 0, 1} {
+		s := rationalSession(t, Budgets{MaxBufferedBytes: peak + delta})
+		v, err := s.rationalAdd(context.Background(), a, b)
+		if delta < 0 {
+			if !errors.Is(err, ErrResourceLimit) || v.Valid() || s.retained != 0 {
+				t.Fatalf("output reservation failure=%v,%v retained=%d", v, err, s.retained)
+			}
+		} else if err != nil || v.String() != "1/2" {
+			t.Fatalf("output peak %+d=%v,%v", delta, v, err)
+		}
+		if rationalUsage(t, s, BudgetRuleSteps) != cost.work {
+			t.Fatal("work was refunded or not precharged")
+		}
+		if rationalUsage(t, s, BudgetBufferedBytes) != s.retained {
+			t.Fatal("scratch survived output reservation")
+		}
+		s.cleanup()
+	}
+	_, s := sessionFixture(t, Budgets{})
+	if _, err := s.rationalAdd(context.Background(), a, b); err != nil {
+		t.Fatal(err)
+	}
+	_, _ = s.Finish(context.Background(), Completion{Syntax: SyntaxIncomplete})
+	if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+		t.Fatal("Finish did not release rational outputs")
+	}
+}
+
+func TestRationalComparisonAndConversionMetering(t *testing.T) {
+	a, b := mustRational(t, 1, 3), mustRational(t, 1, 6)
+	cost, err := rationalPlan(rationalCmpOp, rationalWidthsOf(a.value), rationalWidthsOf(b.value))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, delta := range []int64{-1, 0, 1} {
+		s := rationalSession(t, Budgets{MaxRuleSteps: cost.work + delta})
+		got, err := s.rationalCmp(context.Background(), a, b)
+		if delta < 0 {
+			if !errors.Is(err, ErrResourceLimit) {
+				t.Fatalf("comparison work cap=%v", err)
+			}
+		} else if err != nil || got != 1 {
+			t.Fatalf("comparison boundary=%d,%v", got, err)
+		}
+		if rationalUsage(t, s, BudgetBufferedBytes) != 0 || s.retained != 0 {
+			t.Fatal("comparison retained memory")
+		}
+	}
+	decimal, _ := NewDecimal(big.NewRat(7, 20))
+	cost, err = rationalPlan(rationalCopyOp, rationalWidthsOf(decimal.value), rationalWidths{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := rationalSession(t, Budgets{MaxRuleSteps: cost.work - 1})
+	if _, err := s.rationalFromDecimal(context.Background(), decimal); !errors.Is(err, ErrResourceLimit) {
+		t.Fatalf("conversion skipped work cap=%v", err)
+	}
+	if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+		t.Fatal("failed conversion retained memory")
+	}
+	s = rationalSession(t, Budgets{MaxRuleSteps: cost.work})
+	v, err := s.rationalFromDecimal(context.Background(), decimal)
+	if err != nil || v.String() != "7/20" {
+		t.Fatalf("conversion exact work=%v,%v", v, err)
+	}
+	s.cleanup()
+}
