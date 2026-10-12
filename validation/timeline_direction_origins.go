@@ -194,6 +194,11 @@ func (service *timelineService) resolveDirectionOrigins(ctx context.Context, s *
 	if !r.step(1) {
 		return r.err
 	}
+	index, release, err := service.buildDirectionNoteIndex(r, blocks)
+	if err != nil {
+		return err
+	}
+	defer release()
 	for _, block := range blocks {
 		if !r.step(1) {
 			return r.err
@@ -219,7 +224,13 @@ func (service *timelineService) resolveDirectionOrigins(ctx context.Context, s *
 				fact = timelineEventFact{Part: block.part, Origin: stateUnknown[musicalPosition]("direction-origin-unavailable"), Position: stateUnknown[musicalPosition]("direction-display-position-unavailable"), Staff: stateUnknown[Integer]("direction-staff-unavailable"), Voice: stateUnknown[string]("direction-voice-unavailable")}
 			}
 			out := directionTimingOrigin{Direction: NodeRef{s.documentID, event.header.ID}, Part: fact.Part, Staff: fact.Staff, Voice: fact.Voice, CursorOrigin: fact.Origin, DisplayPosition: fact.Position}
-			anchor, anchorFact := service.directionAnchor(r, fact, blocks)
+			anchor, anchorFact, proved, err := index.anchor(ctx, s, service, fact)
+			if err != nil {
+				return err
+			}
+			if !proved {
+				anchor, anchorFact = service.directionAnchor(r, fact, blocks)
+			}
 			out.Anchor = anchor
 			if anchor.State == EvidenceKnown {
 				out.AnchorPosition, out.AnchorStaff, out.AnchorVoice = anchorFact.Position, anchorFact.Staff, anchorFact.Voice
