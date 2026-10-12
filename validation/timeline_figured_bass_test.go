@@ -390,3 +390,17 @@ func TestFiguredBassThousandDistinctOriginsDefaultBudget(t *testing.T) {
 		t.Logf("%s steps=%d bytes=%d", order, rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes))
 	}
 }
+
+func TestFiguredBassCacheCannotAliasForeignDocumentCoordinates(t *testing.T) {
+	s, v, b, block := figuredChainFixture(t, OrderSource)
+	f := v.Facts[60]
+	f.Position.Value.Part.DocumentID = "foreign"
+	f.Position.Value.Measure.DocumentID = "foreign"
+	v.Facts[60] = f
+	if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+		t.Fatal(err)
+	}
+	if got := v.FiguredBassOrigins[60]; got.Anchor.State == EvidenceKnown || got.DurationUnits.State == EvidenceKnown {
+		t.Fatalf("cross-document cache alias: %+v", got)
+	}
+}
