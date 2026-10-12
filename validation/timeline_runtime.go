@@ -264,11 +264,20 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 	}
 	principalUnits := Evidence[Decimal]{State: EvidenceAbsent}
 	if block.complete.State != EvidenceKnown || !block.complete.Value {
-		cursor.Position = stateUnavailable[bool, Rational](block.complete)
+		cursor.interrupt(block.complete)
+		units = stateUnavailable[bool, Decimal](block.complete)
+		if block.part.State == EvidenceKnown {
+			if err := service.State.gapAll(ctx, s, block.part.Value, block.ordinal, stateUnavailable[bool, musicalPosition](block.complete)); err != nil {
+				return err
+			}
+		}
 	}
 	for _, event := range block.content.children {
 		if !r.step(1) {
 			return r.err
+		}
+		if block.complete.State != EvidenceKnown || !block.complete.Value {
+			cursor.interrupt(block.complete)
 		}
 		fact := timelineEventFact{Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: stateUnknown[NodeRef]("timeline-principal-unavailable"), PrincipalDuration: stateUnknown[Rational]("timeline-principal-unavailable")}
 		if event.header.Declaration.State != EvidenceKnown {
@@ -277,6 +286,12 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				return err
 			}
 			fact.Position = stateUnavailable[DeclarationID, musicalPosition](event.header.Declaration)
+			if block.part.State == EvidenceKnown && r.potential(event, timelineRoleAttributes) {
+				if err := service.State.gapAll(ctx, s, block.part.Value, block.ordinal, fact.Position); err != nil {
+					return err
+				}
+				units = stateUnavailable[musicalPosition, Decimal](fact.Position)
+			}
 			if err := service.storeFact(ctx, s, event.header.ID, fact); err != nil {
 				return err
 			}
