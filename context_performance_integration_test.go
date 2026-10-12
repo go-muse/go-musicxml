@@ -126,7 +126,7 @@ func TestPerformanceCapoTuningEvidence(t *testing.T) {
 func TestPerformanceAllStaticFamiliesAndOrigins(t *testing.T) {
 	body := `<attributes><divisions>1</divisions></attributes><direction><direction-type><percussion><stick><stick-type>snare</stick-type><stick-material>wood</stick-material></stick></percussion></direction-type></direction><harmony><root><root-step>C</root-step><root-alter print-object="no">1</root-alter></root><kind>major</kind></harmony><figured-bass><figure><prefix>custom-prefix</prefix><figure-number>6</figure-number><suffix>custom-suffix</suffix></figure></figured-bass><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><level reference="yes">original</level><notations><slide type="start"/><ornaments><trill-mark beats="3.5"/><accidental-mark>sharp</accidental-mark><turn/><shake/><wavy-line type="start"/><inverted-mordent/></ornaments><technical><fret>0</fret><fingering alternate="yes">2</fingering></technical></notations></note>`
 	performanceReports(t, body, func(t *testing.T, r validation.Report) {
-		expected := map[validation.ContextProperty]string{"perf-slide-beats": "4", "perf-empty-trill-sound-beats": "3.5", "perf-horizontal-turn-start-note": "upper", "perf-wavy-line-last-beat": "75", "perf-mordent-start-note": "main", "perf-level-reference": "yes", "perf-level-type": "single", "perf-stick-parentheses": "no", "perf-stick-dashed-circle": "no", "perf-root-alter-location": "right", "performance-figure-prefix": "custom-prefix", "performance-figure-suffix": "custom-suffix"}
+		expected := map[validation.ContextProperty]string{"perf-slide-beats": "4", "perf-empty-trill-sound-beats": "3.5", "perf-horizontal-turn-start-note": "upper", "perf-wavy-line-last-beat": "75", "perf-mordent-start-note": "main", "perf-level-reference": "yes", "perf-level-type": "single", "perf-stick-parentheses": "no", "perf-stick-dashed-circle": "no", "local.root-alter-location": "right", "performance-figure-prefix": "custom-prefix", "performance-figure-suffix": "custom-suffix"}
 		for _, c := range r.Context {
 			want, ok := expected[c.Property]
 			if !ok {
@@ -599,7 +599,7 @@ func TestPerformanceDefaultInvalidFieldMatrix(t *testing.T) {
 		{"perf-mordent-start-note", note(`<ornaments><mordent start-note="invalid"/></ornaments>`)},
 		{"perf-level-reference", `<attributes><level reference="invalid">editorial</level><divisions>1</divisions></attributes>`},
 		{"perf-stick-parentheses", `<direction><direction-type><percussion><stick parentheses="invalid"><stick-type>snare</stick-type><stick-material>wood</stick-material></stick></percussion></direction-type></direction>`},
-		{"perf-root-alter-location", `<harmony><root><root-step>C</root-step><root-alter location="invalid">1</root-alter></root><kind>major</kind></harmony>`},
+		{"local.root-alter-location", `<harmony><root><root-step>C</root-step><root-alter location="invalid">1</root-alter></root><kind>major</kind></harmony>`},
 	}
 	for _, tc := range cases {
 		t.Run(string(tc.property), func(t *testing.T) {

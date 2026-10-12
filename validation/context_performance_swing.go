@@ -54,13 +54,17 @@ func performanceBuildSwing(r *contextReader, service *timelineService) (performa
 			if gap.State == EvidenceAbsent || gap.State == EvidenceKnown {
 				gap = stateUnknown[bool]("swing-origin-unavailable")
 			}
-			if err := addStateGap(r.ctx, r.s, &out.history, stateGap{Placement: origin.Origin.Placement, Part: origin.Origin.Part.Value, FirstMeasure: origin.Origin.MeasureOrdinal, LastMeasure: ^uint64(0), Scope: stateScope{AllStaves: true}, Availability: gap}); err != nil {
+			if err := addStateGap(r.ctx, r.s, &out.history, stateGap{Placement: origin.Origin.Placement, Part: origin.Origin.Part.Value, FirstMeasure: origin.Origin.MeasureOrdinal, LastMeasure: origin.Origin.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: gap}); err != nil {
 				return out, err
 			}
 			continue
 		}
 		condition := origin.TimeOnly
-		p := statePublication[performanceSwing]{Position: origin.Origin.Position.Value, Scope: stateScope{AllStaves: true}, Value: v, Provenance: []stateProvenance{{Node: NodeRef{r.s.documentID, id}, Kind: stateExplicit}}, TimeOnly: &condition}
+		var guard *Evidence[string]
+		if !stateUnconditional(&condition) {
+			guard = &condition
+		}
+		p := statePublication[performanceSwing]{Position: origin.Origin.Position.Value, Scope: stateScope{AllStaves: true}, Value: v, Provenance: []stateProvenance{{Node: NodeRef{r.s.documentID, id}, Kind: stateExplicit}}, TimeOnly: guard}
 		if err := publishState(r.ctx, r.s, &out.history, p); err != nil {
 			return out, err
 		}
@@ -68,6 +72,9 @@ func performanceBuildSwing(r *contextReader, service *timelineService) (performa
 	return out, r.err
 }
 func performanceNoteSwing(r *contextReader, service *timelineService, h *performanceSwingHistory, n *factNode, out *TimingContextResult) {
+	if r.err != nil {
+		return
+	}
 	typ := stateText(r.childScalar(n, "perf-type"))
 	out.SwingRealized = stateUnknown[bool]("swing-pair-pass-unavailable")
 	// Known false nominal or grace/type antecedents need no active chronology.
@@ -91,7 +98,7 @@ func performanceNoteSwing(r *contextReader, service *timelineService, h *perform
 		return
 	}
 	p := out.Origin.Value
-	pos := musicalPosition{Part: p.Part, Measure: p.Measure, MeasureOrdinal: p.MeasureOrdinal, Offset: p.Offset, UnprovedFrame: p.UnprovedFrame}
+	pos := contextMusicalPosition(p)
 	active, err := queryStateAtScope(r.ctx, r.s, &service.State, &h.history, pos, Evidence[Integer]{State: EvidenceAbsent}, stateWhole[performanceSwing], true, true, true, nil)
 	if err != nil {
 		r.err = err

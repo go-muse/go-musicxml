@@ -102,6 +102,19 @@ func navigationApplyInstruments(ctx context.Context, s *Session, current []Navig
 		}
 		if !found {
 			value := NavigationInstrumentState{Instrument: u.Instrument}
+			navigationAbsentIfUnset(&value.Sound.Value)
+			navigationAbsentIfUnset(&value.Performance.Value)
+			navigationAbsentIfUnset(&value.Virtual.Value)
+			navigationAbsentIfUnset(&value.Channel.Value)
+			navigationAbsentIfUnset(&value.Bank.Value)
+			navigationAbsentIfUnset(&value.Program.Value)
+			navigationAbsentIfUnset(&value.Unpitched.Value)
+			navigationAbsentIfUnset(&value.Name.Value)
+			navigationAbsentIfUnset(&value.DeviceName.Value)
+			navigationAbsentIfUnset(&value.DevicePort.Value)
+			navigationAbsentIfUnset(&value.Volume.Value)
+			navigationAbsentIfUnset(&value.Pan.Value)
+			navigationAbsentIfUnset(&value.Elevation.Value)
 			navigationApplyInstrumentFields(&value, u, guard)
 			if _, err := stateReserve(ctx, s, value); err != nil {
 				return nil, err
@@ -150,39 +163,66 @@ func navigationSoundOwner(ctx context.Context, s *Session, timeline *timelineSer
 	return 0, nil
 }
 
-func navigationAttachInstrumentUpdates(ctx context.Context, s *Session, timeline *timelineService, rows []contextNavigationNode) ([]navigationInstrumentUpdate, error) {
-	var initial []navigationInstrumentUpdate
-	if err := s.retain(256); err != nil {
-		return nil, err
+type navigationInstrumentIndex struct {
+	initial map[NodeRef][]navigationInstrumentUpdate
+	sounds  map[NodeID][]navigationInstrumentUpdate
+	release func()
+}
+
+func navigationBuildInstrumentIndex(ctx context.Context, s *Session, timeline *timelineService) (*navigationInstrumentIndex, error) {
+	count := int64(0)
+	for _, n := range []int{len(timeline.State.Definitions), len(timeline.State.UnresolvedInstrumentChanges), len(timeline.State.MIDI), len(timeline.State.MIDIDevices)} {
+		var err error
+		count, err = rationalCheckedAdd(BudgetBufferedBytes, count, int64(n))
+		if err != nil {
+			return nil, err
+		}
 	}
-	index := make(map[NodeID]int)
-	for i, row := range rows {
+	for _, changes := range timeline.State.InstrumentChanges {
 		if err := s.step(ctx, 1); err != nil {
 			return nil, err
 		}
-		if _, ok := timeline.Playback.Sounds[row.event.Source.Node]; ok {
-			if err := s.retain(128); err != nil {
-				return nil, err
-			}
-			index[row.event.Source.Node] = i
+		var err error
+		count, err = rationalCheckedAdd(BudgetBufferedBytes, count, int64(len(changes.History.Publications)))
+		if err != nil {
+			return nil, err
 		}
 	}
-	add := func(u navigationInstrumentUpdate, initialPart NodeRef) error {
-		if _, err := stateReserve(ctx, s, u); err != nil {
+	n, err := AllocationSize(count)
+	if err != nil {
+		return nil, err
+	}
+	free, err := contextRepeatScratch(ctx, s, n, 4096)
+	if err != nil {
+		return nil, err
+	}
+	if err = s.account.Charge(BudgetBufferedBytes, 512); err != nil {
+		free()
+		return nil, err
+	}
+	freeRecords := free
+	free = func() { freeRecords(); _ = s.account.Release(BudgetBufferedBytes, 512) }
+	complete := false
+	defer func() {
+		if !complete {
+			free()
+		}
+	}()
+	out := &navigationInstrumentIndex{initial: make(map[NodeRef][]navigationInstrumentUpdate), sounds: make(map[NodeID][]navigationInstrumentUpdate), release: free}
+	add := func(u navigationInstrumentUpdate, part NodeRef) error {
+		if err := s.step(ctx, 1+int64(len(part.DocumentID)+len(u.Source.DocumentID))); err != nil {
 			return err
 		}
-		if initialPart.Node != 0 {
-			if len(rows) > 0 && rows[0].part.State == EvidenceKnown && rows[0].part.Value == initialPart {
-				initial = append(initial, stateClone(u))
-			}
+		if part.Node != 0 {
+			out.initial[part] = append(out.initial[part], u)
 			return nil
 		}
 		owner, err := navigationSoundOwner(ctx, s, timeline, u.Source.Node)
 		if err != nil {
 			return err
 		}
-		if i, ok := index[owner]; ok {
-			rows[i].event.Instruments = append(rows[i].event.Instruments, stateClone(u))
+		if owner != 0 {
+			out.sounds[owner] = append(out.sounds[owner], u)
 		}
 		return nil
 	}
@@ -248,6 +288,26 @@ func navigationAttachInstrumentUpdates(ctx context.Context, s *Session, timeline
 		if err := add(u, part); err != nil {
 			return nil, err
 		}
+	}
+	complete = true
+	return out, nil
+}
+
+// The caller owns index through traversal; returned updates are borrowed views.
+func navigationAttachInstrumentUpdates(ctx context.Context, s *Session, timeline *timelineService, rows []contextNavigationNode, index *navigationInstrumentIndex) ([]navigationInstrumentUpdate, error) {
+	var initial []navigationInstrumentUpdate
+	if len(rows) > 0 && rows[0].part.State == EvidenceKnown {
+		part := rows[0].part.Value
+		if err := s.step(ctx, 1+int64(len(part.DocumentID))); err != nil {
+			return nil, err
+		}
+		initial = index.initial[part]
+	}
+	for i := range rows {
+		if err := s.step(ctx, 1); err != nil {
+			return nil, err
+		}
+		rows[i].event.Instruments = index.sounds[rows[i].event.Source.Node]
 	}
 	return initial, nil
 }

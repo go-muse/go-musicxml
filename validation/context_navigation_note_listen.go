@@ -119,28 +119,24 @@ func navigationReadNoteListening(r *contextReader, n *factNode, part Evidence[No
 			v.OtherType = stateText(r.attribute(ch, contextNavOtherListenType))
 			v.Value = stateText(r.scalar(ch))
 		}
-		for _, old := range out {
-			if old.Kind != kind {
-				continue
-			}
-			same, err := navigationSameTarget(r.ctx, r.s, old.Player, old.TimeOnly, v.Player, v.TimeOnly)
-			if err != nil {
-				return nil, recommended, distinct, err
-			}
-			if same.State == EvidenceKnown && same.Value {
-				distinct = navigationKnownBool(false)
-			} else if same.State != EvidenceKnown && distinct.Value {
-				distinct = stateMergeGap(distinct, same)
-			}
-		}
 		if _, err := stateReserve(r.ctx, r.s, v); err != nil {
 			return nil, recommended, distinct, err
 		}
 		out = append(out, stateClone(v))
 	}
-	return out, recommended, distinct, r.err
+	if r.err != nil {
+		return nil, recommended, distinct, r.err
+	}
+	distinct, err := navigationDistinctTargets(r.ctx, r.s, len(out), distinct, func(i int) (string, Evidence[string], Evidence[string]) {
+		v := out[i]
+		return string(v.Kind), v.Player, v.TimeOnly
+	})
+	return out, recommended, distinct, err
 }
 func navigationSameTarget(ctx context.Context, s *Session, ap, at, bp, bt Evidence[string]) (Evidence[bool], error) {
+	if err := s.step(ctx, 1); err != nil {
+		return Evidence[bool]{}, err
+	}
 	result := navigationKnownBool(true)
 	for _, pair := range [][2]Evidence[string]{{ap, bp}, {at, bt}} {
 		for _, v := range pair {

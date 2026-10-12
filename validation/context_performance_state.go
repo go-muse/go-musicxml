@@ -60,18 +60,15 @@ func performanceStateOrigin[T any](ctx context.Context, s *Session, out *TimingC
 	out.StateOrigins = append(out.StateOrigins, TimingStateOrigin{Property: property, Sources: sources, Inherited: v.Inherited, InheritanceUnproved: v.InheritanceUnproved})
 	return nil
 }
-func performanceSoundSpatial(ctx context.Context, s *Session, service *timelineService, n *factNode, out *TimingContextResult) error {
+func performanceSoundSpatial(ctx context.Context, s *Session, service *timelineService, index *performanceAdviceIndex, n *factNode, out *TimingContextResult) error {
 	sound, ok := service.Playback.Sounds[n.header.ID]
 	if !ok {
 		return nil
 	}
-	for _, m := range service.State.MIDI {
+	for _, id := range index.midiByParent[n.header.ID] {
+		m := service.State.MIDI[id]
 		if err := s.step(ctx, 1); err != nil {
 			return err
-		}
-		node := s.nodes[m.Source.Node]
-		if node == nil || node.header.Parent != n.header.ID {
-			continue
 		}
 		result, err := sound.spatial(ctx, s, m.Instrument, Evidence[instrumentRecord[midiState]]{State: EvidenceKnown, Value: m})
 		if err != nil {

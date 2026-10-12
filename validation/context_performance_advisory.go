@@ -34,6 +34,12 @@ func performanceSwingRatio(ctx context.Context, s *Session, first, second Eviden
 	if second.State != EvidenceKnown {
 		return stateUnavailable[Integer, Rational](second), stateUnavailable[Integer, bool](second), nil
 	}
+	if err := s.step(ctx, first.Value.ByteSize()+second.Value.ByteSize()+1); err != nil {
+		return Evidence[Rational]{}, Evidence[bool]{}, err
+	}
+	if first.Value.value != nil && second.Value.value != nil && (first.Value.value.Sign() <= 0 || second.Value.value.Sign() <= 0) {
+		return stateUnknown[Rational]("swing-ratio-nonpositive"), stateUnknown[bool]("swing-ratio-nonpositive"), nil
+	}
 	a, err := s.stateRationalInteger(ctx, first.Value)
 	if err != nil {
 		return Evidence[Rational]{}, Evidence[bool]{}, err
@@ -52,7 +58,10 @@ func performanceSwingRatio(ctx context.Context, s *Session, first, second Eviden
 	reduced := q.value.Num().Cmp(first.Value.value) == 0 && q.value.Denom().Cmp(second.Value.value) == 0
 	return Evidence[Rational]{State: EvidenceKnown, Value: q}, Evidence[bool]{State: EvidenceKnown, Value: reduced}, nil
 }
-func performanceMovement(r *contextReader, service *timelineService, n *factNode, out *TimingContextResult) bool {
+func performanceMovement(r *contextReader, service *timelineService, index *performanceAdviceIndex, n *factNode, out *TimingContextResult) bool {
+	if r.err != nil {
+		return false
+	}
 	backup, forward := r.matches(n, "perf-backup"), r.matches(n, "perf-forward")
 	if !backup && !forward {
 		return false
@@ -70,7 +79,7 @@ func performanceMovement(r *contextReader, service *timelineService, n *factNode
 	}
 	if out.Origin.State == EvidenceKnown && out.Duration.State == EvidenceKnown && service != nil {
 		from := out.Origin.Value
-		p := musicalPosition{Part: from.Part, Measure: from.Measure, MeasureOrdinal: from.MeasureOrdinal, Offset: from.Offset, UnprovedFrame: from.UnprovedFrame}
+		p := contextMusicalPosition(from)
 		delta := out.Duration.Value
 		if backup {
 			var e error
@@ -110,17 +119,13 @@ func performanceMovement(r *contextReader, service *timelineService, n *factNode
 				if backup {
 					lo, hi = hi, lo
 				}
-				for _, v := range service.State.Divisions.Publications {
+				if !r.step(1 + int64(len(p.Part.DocumentID))) {
+					return true
+				}
+				for _, id := range index.movementDivisions[performanceMeasure{p.Part, p.MeasureOrdinal}] {
+					v := service.State.Divisions.Publications[id]
 					if !r.step(1) {
 						return true
-					}
-					same, e := stateSameRef(r.ctx, r.s, v.Position.Part, p.Part)
-					if e != nil {
-						r.err = e
-						return true
-					}
-					if !same || v.Position.MeasureOrdinal != p.MeasureOrdinal {
-						continue
 					}
 					a, e := r.s.rationalCmp(r.ctx, v.Position.Offset, lo)
 					if e != nil {
@@ -152,18 +157,11 @@ func performanceMovement(r *contextReader, service *timelineService, n *factNode
 						}
 					}
 				}
-				for _, g := range service.State.Divisions.Gaps {
-					if !r.step(1) {
-						return true
-					}
-					same, e := stateSameRef(r.ctx, r.s, g.Part, p.Part)
-					if e != nil {
-						r.err = e
-						return true
-					}
-					if same && p.MeasureOrdinal >= g.FirstMeasure && p.MeasureOrdinal <= g.LastMeasure && !(boundary.State == EvidenceKnown && !boundary.Value) {
-						boundary = g.Availability
-					}
+				if !r.step(1 + int64(len(p.Part.DocumentID))) {
+					return true
+				}
+				if gap, ok := index.movementGaps[performanceMeasure{p.Part, p.MeasureOrdinal}]; ok && !(boundary.State == EvidenceKnown && !boundary.Value) {
+					boundary = gap
 				}
 			}
 		}
@@ -182,8 +180,12 @@ type performanceDivisionAdvice struct {
 	complete Evidence[bool]
 }
 type performanceAdviceIndex struct {
-	divisions   map[NodeRef]performanceDivisionAdvice
-	instruments map[NodeID]Evidence[bool]
+	bytes             int64
+	movementDivisions map[performanceMeasure][]int
+	movementGaps      map[performanceMeasure]Evidence[bool]
+	midiByParent      map[NodeID][]int
+	divisions         map[NodeRef]performanceDivisionAdvice
+	instruments       map[NodeID]Evidence[bool]
 }
 
 // Build invariant part and note advice once. Entries borrow immutable timeline
@@ -192,27 +194,34 @@ func buildPerformanceAdviceIndex(ctx context.Context, s *Session, service *timel
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
-	if err := s.retain(256); err != nil {
+	reserved, err := performanceIndexReservation(s, service)
+	if err != nil {
 		return nil, err
 	}
-	x := &performanceAdviceIndex{divisions: make(map[NodeRef]performanceDivisionAdvice), instruments: make(map[NodeID]Evidence[bool])}
+	x := &performanceAdviceIndex{bytes: reserved, divisions: make(map[NodeRef]performanceDivisionAdvice), instruments: make(map[NodeID]Evidence[bool]), movementDivisions: make(map[performanceMeasure][]int), movementGaps: make(map[performanceMeasure]Evidence[bool]), midiByParent: make(map[NodeID][]int)}
+	success := false
+	defer func() {
+		if !success {
+			x.release(s)
+		}
+	}()
 	if service == nil {
+		success = true
 		return x, nil
 	}
 	charge := func(p NodeRef) error {
 		if err := s.step(ctx, 1+int64(len(p.DocumentID))); err != nil {
 			return err
 		}
-		if _, ok := x.divisions[p]; !ok {
-			return s.retain(512 + int64(len(p.DocumentID)))
-		}
 		return nil
 	}
-	for _, v := range service.State.Divisions.Publications {
+	for i, v := range service.State.Divisions.Publications {
 		p := v.Position.Part
 		if err := charge(p); err != nil {
 			return nil, err
 		}
+		key := performanceMeasure{p, v.Position.MeasureOrdinal}
+		x.movementDivisions[key] = append(x.movementDivisions[key], i)
 		d, ok := x.divisions[p]
 		if !ok {
 			d.complete = Evidence[bool]{State: EvidenceKnown}
@@ -239,9 +248,6 @@ func buildPerformanceAdviceIndex(ctx context.Context, s *Session, service *timel
 		if _, ok := x.instruments[set.Note.Node]; ok {
 			continue
 		}
-		if err := s.retain(512); err != nil {
-			return nil, err
-		}
 		identified := set.Complete
 		if identified.State == EvidenceKnown {
 			identified.Value = len(set.References) > 0
@@ -257,6 +263,19 @@ func buildPerformanceAdviceIndex(ctx context.Context, s *Session, service *timel
 		}
 		x.instruments[set.Note.Node] = identified
 	}
+	for i, m := range service.State.MIDI {
+		if err := s.step(ctx, 1); err != nil {
+			return nil, err
+		}
+		n := s.nodes[m.Source.Node]
+		if n != nil {
+			x.midiByParent[n.header.Parent] = append(x.midiByParent[n.header.Parent], i)
+		}
+	}
+	if err := performanceIndexGaps(ctx, s, service, x); err != nil {
+		return nil, err
+	}
+	success = true
 	return x, nil
 }
 

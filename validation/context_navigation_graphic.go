@@ -13,8 +13,8 @@ const (
 
 func navigationGraphicBindings() []contextBindingSpec {
 	return []contextBindingSpec{
-		{Role: contextNavGraphicSegno, Name: "segno", Type: "segno", Count: -1},
-		{Role: contextNavGraphicCoda, Name: "coda", Type: "coda", Count: -1},
+		{Role: contextNavGraphicSegno, Owner: "direction-type", Name: "segno", Type: "segno", Count: 1},
+		{Role: contextNavGraphicCoda, Owner: "direction-type", Name: "coda", Type: "coda", Count: 1},
 		{Role: contextNavGraphicDirection, Name: "direction", Type: "direction", Count: -1},
 		{Role: contextNavGraphicSound, Owner: "direction", Name: "sound", Type: "sound", Count: 1},
 		{Role: contextNavGraphicSoundSegno, Owner: "sound", Name: "segno", Type: "xs:token", Attribute: true, Count: 1},

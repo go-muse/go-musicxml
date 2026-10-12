@@ -19,6 +19,7 @@ func TestIndependentContextPerformanceAdvisoryLinearWork(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		defer index.release(s)
 		for i := 0; i < count; i++ {
 			out := newTimingContext("event")
 			out.Part = stateKnown(NodeRef{"d", 1})

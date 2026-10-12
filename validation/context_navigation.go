@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"sort"
+	"unsafe"
 )
 
 type contextNavigationService struct{ Final bool }
@@ -74,57 +75,73 @@ func navigationSoundKind(raw navigationContext) (NavigationKind, Evidence[string
 	return kind, label, status
 }
 
-func navigationAppend(ctx context.Context, s *Session, rows *[]contextNavigationNode, row contextNavigationNode) error {
+const navigationRowBytes = int64(unsafe.Sizeof(contextNavigationNode{}))*2 + 128
+
+func navigationAppend(ctx context.Context, s *Session, rows *[]contextNavigationNode, retained *int64, row contextNavigationNode) error {
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
-	if err := s.retain(6144); err != nil {
+	bytes, err := rationalCheckedAdd(BudgetBufferedBytes, *retained, navigationRowBytes)
+	if err != nil {
 		return err
 	}
+	if err := s.account.Charge(BudgetBufferedBytes, navigationRowBytes); err != nil {
+		return err
+	}
+	*retained = bytes
+	if row.value.Guard.State == "" && row.event.Guard.State != "" {
+		guard, err := navigationPassApplies(ctx, s, row.event.Guard, 0)
+		if err != nil {
+			return err
+		}
+		row.value.Guard = guard
+	}
+	row.value.Position = contextPositionEvidence(row.position)
 	*rows = append(*rows, row)
 	return nil
 }
 
-func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timeline *timelineService) ([]contextNavigationNode, error) {
+func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timeline *timelineService) (rows []contextNavigationNode, release func(), err error) {
+	var retained int64
+	release = func() { _ = s.account.Release(BudgetBufferedBytes, retained) }
+	defer func() {
+		if err != nil {
+			release()
+			release = func() {}
+		}
+	}()
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
-	var rows []contextNavigationNode
 	for _, id := range s.sequence {
 		if err := s.step(ctx, 1); err != nil {
-			return nil, err
+			return nil, release, err
 		}
 		node := s.nodes[id]
 		if r.matches(node, contextNavListening) {
 			fact, e := contextRepeatOrigin(ctx, s, timeline, node)
 			if e != nil {
-				return nil, e
+				return nil, release, e
 			}
 			updates, e := navigationReadListening(r, node, fact.Part)
 			if e != nil {
-				return nil, e
+				return nil, release, e
 			}
 			row := contextNavigationNode{event: navigationEvent{Source: NodeRef{s.documentID, id}, Kind: NavigationListening, Listening: updates}, part: fact.Part, position: fact.Position, value: NavigationContextResult{Kind: NavigationListening, Part: fact.Part, Listening: updates, TargetsDistinct: navigationListeningDistinct(r, node, updates)}}
-			if fact.Position.State == EvidenceKnown {
-				v := fact.Position.Value
-				row.value.Position = Evidence[ContextPosition]{State: EvidenceKnown, Value: ContextPosition{Part: v.Part, Measure: v.Measure, MeasureOrdinal: v.MeasureOrdinal, Offset: v.Offset, UnprovedFrame: v.UnprovedFrame}}
-			} else {
-				row.value.Position = stateUnavailable[musicalPosition, ContextPosition](fact.Position)
-			}
-			if e = navigationAppend(ctx, s, &rows, row); e != nil {
-				return nil, e
+			if e = navigationAppend(ctx, s, &rows, &retained, row); e != nil {
+				return nil, release, e
 			}
 		}
 		if note, ok := timeline.Playback.Notes[id]; ok {
 			noteListening, recommended, distinct, e := navigationReadNoteListening(r, node, note.Origin.Part)
 			if e != nil {
-				return nil, e
+				return nil, release, e
 			}
 			play, e := performancePlayInstructions(ctx, s, note.Play)
 			if e != nil {
-				return nil, e
+				return nil, release, e
 			}
 			row := contextNavigationNode{event: navigationEvent{Source: note.Origin.Source, Kind: NavigationNote, NoteListening: noteListening, Play: play, Guard: note.TimeOnly, NoteDynamics: note.Dynamics, EndDynamics: note.EndDynamics, NotePizzicato: note.Pizzicato}, part: note.Origin.Part, position: note.Origin.Position, value: NavigationContextResult{Kind: NavigationNote, NoteListening: noteListening, RecommendedAssess: recommended, TargetsDistinct: distinct, Play: play, Part: note.Origin.Part, TimeOnly: note.TimeOnly}}
-			if err := navigationAppend(ctx, s, &rows, row); err != nil {
-				return nil, err
+			if err := navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+				return nil, release, err
 			}
 		}
 		sound, soundKnown := timeline.Playback.Sounds[id]
@@ -132,18 +149,18 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 			var e error
 			sound, e = navigationRawSound(r, node, timeline)
 			if e != nil {
-				return nil, e
+				return nil, release, e
 			}
 			soundKnown = true
 		}
 		if soundKnown {
 			directives, e := navigationRawDirectives(r, sound.Navigation)
 			if e != nil {
-				return nil, e
+				return nil, release, e
 			}
 			play, e := performancePlayInstructions(ctx, s, sound.Play)
 			if e != nil {
-				return nil, e
+				return nil, release, e
 			}
 			kind, label, available := navigationSoundKind(sound.Navigation)
 			guard, defaulted := navigationDefaultGuard(kind, sound.TimeOnly)
@@ -159,8 +176,8 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 					row.value.FineDuration = stateUnavailable[string, Decimal](label)
 				}
 			}
-			if err := navigationAppend(ctx, s, &rows, row); err != nil {
-				return nil, err
+			if err := navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+				return nil, release, err
 			}
 		}
 		if barline, ok := timeline.Playback.Barlines[id]; ok {
@@ -173,20 +190,20 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 					continue
 				}
 				active := playbackMarker(marker.label, marker.present, true)
-				row := contextNavigationNode{event: navigationEvent{Source: barline.Origin.Source, Kind: marker.kind, Control: active}, part: barline.Origin.Part, position: barline.Origin.Position, value: NavigationContextResult{Kind: marker.kind, Part: barline.Origin.Part, Label: marker.label, Guard: active}}
+				row := contextNavigationNode{event: navigationEvent{Source: barline.Origin.Source, Kind: marker.kind, Control: active}, part: barline.Origin.Part, position: barline.Origin.Position, value: NavigationContextResult{Kind: marker.kind, Part: barline.Origin.Part, Label: marker.label, MarkerActive: active}}
 				// Raw inactive marker facts are retained, but do not become target nodes.
 				if active.State == EvidenceKnown && !active.Value {
 					row.event.Kind = NavigationSound
 				}
-				if err := navigationAppend(ctx, s, &rows, row); err != nil {
-					return nil, err
+				if err := navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+					return nil, release, err
 				}
 			}
 		}
 		if r.matches(node, contextBarlineRepeat) || r.matches(node, contextBarlineEnding) {
 			fact, err := contextRepeatOrigin(ctx, s, timeline, node)
 			if err != nil {
-				return nil, err
+				return nil, release, err
 			}
 			row := contextNavigationNode{part: fact.Part, position: fact.Position, event: navigationEvent{Source: NodeRef{s.documentID, id}}, value: NavigationContextResult{Part: fact.Part}}
 			if r.matches(node, contextBarlineRepeat) {
@@ -219,16 +236,35 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 				row.value.Kind = NavigationEnding
 				row.value.Direction = stateText(r.attribute(node, contextEndingType))
 				row.value.EndingNumber = stateText(r.attribute(node, contextEndingNumber))
+				row.value.Guard = stateUnknown[bool]("navigation-ending-pass-domain-unavailable")
 				if row.value.EndingNumber.State == EvidenceKnown && row.value.EndingNumber.Value == "" {
 					row.value.Guard = stateUnknown[bool]("navigation-ending-number-unknown")
 				}
 			}
-			if err = navigationAppend(ctx, s, &rows, row); err != nil {
-				return nil, err
+			if err = navigationAppend(ctx, s, &rows, &retained, row); err != nil {
+				return nil, release, err
 			}
 		}
 	}
-	return rows, r.err
+	return rows, release, r.err
+}
+
+// A closing ending precedes its backward repeat at the same barline;
+// an opening ending follows its forward repeat. This orders encoded controls,
+// without choosing a playback pass for the ending.
+func navigationRowPriority(row contextNavigationNode) int {
+	if row.event.Kind == NavigationEnding && row.value.Direction.State == EvidenceKnown {
+		switch row.value.Direction.Value {
+		case "stop", "discontinue":
+			return -4
+		case "start":
+			return -1
+		}
+	}
+	if row.event.Kind == NavigationSegno || row.event.Kind == NavigationCoda {
+		return -3
+	}
+	return navigationPriority(row.event.Kind)
 }
 
 func navigationPriority(kind NavigationKind) int {
@@ -278,7 +314,7 @@ func navigationOrder(ctx context.Context, s *Session, timeline *timelineService,
 			return false
 		}
 		if order == stateEqual {
-			return navigationPriority(a.event.Kind) < navigationPriority(b.event.Kind)
+			return navigationRowPriority(a) < navigationRowPriority(b)
 		}
 		available = stateMergeGap(available, stateUnknown[bool]("navigation-position-order-unresolved"))
 		return false
@@ -294,7 +330,7 @@ func navigationOrder(ctx context.Context, s *Session, timeline *timelineService,
 		if order != stateBefore && order != stateEqual {
 			available = stateMergeGap(available, stateUnknown[bool]("navigation-position-order-unresolved"))
 		}
-		if order == stateEqual && navigationPriority(rows[i-1].event.Kind) == navigationPriority(rows[i].event.Kind) && rows[i].event.Kind != NavigationNote {
+		if order == stateEqual && navigationRowPriority(rows[i-1]) == navigationRowPriority(rows[i]) && rows[i].event.Kind != NavigationNote {
 			available = stateMergeGap(available, stateUnknown[bool]("navigation-simultaneous-control-unresolved"))
 		}
 	}
@@ -347,7 +383,7 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 			markers[key] = value
 		}
 	}
-	hasRepeat, hasEnding, hasDS := false, false, false
+	hasRepeat, hasEnding, hasDS, hasJump := false, false, false, false
 	for _, row := range rows {
 		if err = s.step(ctx, 1); err != nil {
 			return err
@@ -355,6 +391,7 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 		hasRepeat = hasRepeat || row.event.Kind == NavigationForward || row.event.Kind == NavigationBackward
 		hasEnding = hasEnding || row.event.Kind == NavigationEnding
 		hasDS = hasDS || row.event.Kind == NavigationDalSegno
+		hasJump = hasJump || row.event.Kind == NavigationDaCapo || row.event.Kind == NavigationDalSegno || row.event.Kind == NavigationToCoda
 	}
 	endingDepth := 0
 	endingAvailable := navigationKnownBool(true)
@@ -473,7 +510,7 @@ func navigationBuildEdges(ctx context.Context, s *Session, rows []contextNavigat
 		if err = s.step(ctx, 1); err != nil {
 			return err
 		}
-		if hasRepeat && !hasEnding && !hasDS && rows[i].event.PassDomain == navigationUnknownPass {
+		if hasRepeat && !hasEnding && !hasJump && rows[i].event.PassDomain == navigationUnknownPass {
 			rows[i].event.PassDomain = navigationSingleRepeatPass
 		}
 	}
@@ -498,15 +535,23 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 	if err = navigationPublishGraphics(ctx, s, p, key, timeline); err != nil {
 		return Decision{}, false, err
 	}
-	rows, err := navigationReadRows(ctx, s, p, timeline)
+	rows, freeRows, err := navigationReadRows(ctx, s, p, timeline)
 	if err != nil {
 		return Decision{}, false, err
 	}
-	// Part grouping remains symbolic and sparse; printed measure labels never
-	// participate in identity. Source-qualified NodeRef keys prevent aliasing.
-	if err = s.retain(256); err != nil {
+	defer freeRows()
+	instrumentIndex, err := navigationBuildInstrumentIndex(ctx, s, timeline)
+	if err != nil {
 		return Decision{}, false, err
 	}
+	defer instrumentIndex.release()
+	freeParts, err := contextRepeatScratch(ctx, s, len(rows), navigationRowBytes)
+	if err != nil {
+		return Decision{}, false, err
+	}
+	defer freeParts()
+	// Part grouping remains symbolic and sparse; printed measure labels never
+	// participate in identity. Source-qualified NodeRef keys prevent aliasing.
 	parts := make(map[NodeRef][]contextNavigationNode)
 	for _, row := range rows {
 		if err = s.step(ctx, 1); err != nil {
@@ -518,9 +563,6 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 				return Decision{}, false, err
 			}
 			continue
-		}
-		if err = s.retain(8192); err != nil {
-			return Decision{}, false, err
 		}
 		parts[row.part.Value] = append(parts[row.part.Value], row)
 	}
@@ -539,12 +581,12 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 		if e != nil {
 			return Decision{}, false, e
 		}
-		traversal := NavigationContextResult{Kind: NavigationTraversal, Part: row.part, Complete: available}
+		traversal := NavigationContextResult{Kind: NavigationTraversal, Part: row.part, Complete: available, InitialSyncMode: stateUnknown[string]("navigation-sync-application-default")}
 		if available.State == EvidenceKnown {
 			if e = navigationBuildEdges(ctx, s, partRows); e != nil {
 				return Decision{}, false, e
 			}
-			traversal, e = navigationRunRows(ctx, s, timeline, partRows)
+			traversal, e = navigationRunRows(ctx, s, timeline, partRows, instrumentIndex)
 			if e != nil {
 				return Decision{}, false, e
 			}
@@ -555,7 +597,7 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 				return Decision{}, false, e
 			}
 			if count > 0 {
-				traversal, e = navigationRunRows(ctx, s, timeline, partRows[:count])
+				traversal, e = navigationRunRows(ctx, s, timeline, partRows[:count], instrumentIndex)
 				if e != nil {
 					return Decision{}, false, e
 				}

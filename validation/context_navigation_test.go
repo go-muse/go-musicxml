@@ -232,7 +232,8 @@ func TestContextNavigationLocalSoundWithoutTimeline(t *testing.T) {
 	n.attributes = []AttributeFact{{Owner: 1, Name: a.Name, Declaration: stateKnown(a.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: stateAtomicText("yes")}}}
 	s.nodes = map[NodeID]*factNode{1: n}
 	s.sequence = []NodeID{1}
-	rows, err := navigationReadRows(context.Background(), s, &contextPlan{Bindings: b}, &timelineService{})
+	rows, release, err := navigationReadRows(context.Background(), s, &contextPlan{Bindings: b}, &timelineService{})
+	defer release()
 	if err != nil {
 		t.Fatal(err)
 	}

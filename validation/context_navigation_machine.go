@@ -75,14 +75,15 @@ type NavigationContextResult struct {
 	Label                              Evidence[string]
 	Target                             Evidence[NodeRef]
 	TimeOnly                           Evidence[string]
-	Passes                             []Integer
-	Guard                              Evidence[bool]
-	Defaulted                          bool
-	EndingNumber                       Evidence[string]
-	DurationUnchanged                  Evidence[bool]
-	FineDuration                       Evidence[Decimal]
-	Traversal                          []NavigationOccurrence
-	Complete                           Evidence[bool]
+	// MarkerActive reports barline marker activation; Guard is pass selection.
+	MarkerActive      Evidence[bool]
+	Guard             Evidence[bool]
+	Defaulted         bool
+	EndingNumber      Evidence[string]
+	DurationUnchanged Evidence[bool]
+	FineDuration      Evidence[Decimal]
+	Traversal         []NavigationOccurrence
+	Complete          Evidence[bool]
 }
 
 type navigationPassDomain uint8
@@ -132,48 +133,20 @@ func navigationPassApplies(ctx context.Context, s *Session, set Evidence[string]
 	if pass == 0 {
 		return stateUnknown[bool]("navigation-pass-unavailable"), nil
 	}
-	text := set.Value
-	if err := s.step(ctx, int64(len(text))); err != nil {
-		return Evidence[bool]{}, err
-	}
 	if err := s.account.Charge(BudgetBufferedBytes, 64); err != nil {
 		return Evidence[bool]{}, err
 	}
 	defer func() { _ = s.account.Release(BudgetBufferedBytes, 64) }()
 	target := strconv.FormatUint(pass, 10)
 	matched := false
-	for start := 0; start < len(text); {
-		if err := s.step(ctx, 1); err != nil {
-			return Evidence[bool]{}, err
-		}
-		end := start
-		if text[start] < '1' || text[start] > '9' {
-			return stateUnknown[bool]("navigation-pass-set-unavailable"), nil
-		}
-		for end < len(text) && text[end] >= '0' && text[end] <= '9' {
-			if end%1024 == 0 {
-				if err := s.step(ctx, 0); err != nil {
-					return Evidence[bool]{}, err
-				}
-			}
-			end++
-		}
-		matched = matched || text[start:end] == target
-		if end == len(text) {
-			return Evidence[bool]{State: EvidenceKnown, Value: matched}, nil
-		}
-		if text[end] != ',' {
-			return stateUnknown[bool]("navigation-pass-set-unavailable"), nil
-		}
-		start = end + 1
-		if start < len(text) && text[start] == ' ' {
-			start++
-		}
-		if start == len(text) {
-			return stateUnknown[bool]("navigation-pass-set-unavailable"), nil
-		}
+	valid, err := contextScanPassSet(ctx, s, set.Value, func(item string) error { matched = matched || item == target; return nil })
+	if err != nil {
+		return Evidence[bool]{}, err
 	}
-	return stateUnknown[bool]("navigation-pass-set-unavailable"), nil
+	if !valid {
+		return stateUnknown[bool]("navigation-pass-set-unavailable"), nil
+	}
+	return navigationKnownBool(matched), nil
 }
 
 func navigationConditionalValue[T any](v Evidence[T], guard Evidence[bool]) Evidence[T] {
@@ -321,7 +294,7 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 		if e = s.account.Charge(BudgetContextFacts, 1); e != nil {
 			return out, e
 		}
-		occurrence := NavigationOccurrence{Source: event.Source, Epoch: epoch, Played: guard, Pass: stateUnknown[Integer]("navigation-pass-domain-unavailable"), Frames: make([]NavigationPassFrame, len(frames))}
+		occurrence := NavigationOccurrence{EndDynamics: Evidence[Decimal]{State: EvidenceAbsent}, Source: event.Source, Epoch: epoch, Played: guard, Pass: stateUnknown[Integer]("navigation-pass-domain-unavailable"), Frames: make([]NavigationPassFrame, len(frames))}
 		if pass != 0 {
 			v, e := navigationInteger(ctx, s, pass)
 			if e != nil {
@@ -486,12 +459,43 @@ func cloneNavigationContext(ctx context.Context, s *Session, in *NavigationConte
 	if in == nil {
 		return nil, nil
 	}
-	if _, err := stateReserve(ctx, s, *in); err != nil {
+	value := *in
+	navigationNormalizeEvidence(&value)
+	if _, err := stateReserve(ctx, s, value); err != nil {
 		return nil, err
 	}
-	out := stateClone(*in)
+	out := stateClone(value)
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
 	return &out, nil
+}
+
+// Irrelevant public fields are explicitly absent, never zero-state evidence.
+func navigationAbsentIfUnset[T any](v *Evidence[T]) {
+	if v.State == "" {
+		*v = Evidence[T]{State: EvidenceAbsent}
+	}
+}
+func navigationNormalizeEvidence(v *NavigationContextResult) {
+	navigationAbsentIfUnset(&v.PlaybackSoundNeeded)
+	navigationAbsentIfUnset(&v.LocalPlaybackSound)
+	navigationAbsentIfUnset(&v.RecommendedAssess)
+	navigationAbsentIfUnset(&v.TargetsDistinct)
+	navigationAbsentIfUnset(&v.InitialSyncMode)
+	navigationAbsentIfUnset(&v.Position)
+	navigationAbsentIfUnset(&v.Part)
+	navigationAbsentIfUnset(&v.Direction)
+	navigationAbsentIfUnset(&v.Times)
+	navigationAbsentIfUnset(&v.AfterJump)
+	navigationAbsentIfUnset(&v.AttributesActive)
+	navigationAbsentIfUnset(&v.Label)
+	navigationAbsentIfUnset(&v.Target)
+	navigationAbsentIfUnset(&v.TimeOnly)
+	navigationAbsentIfUnset(&v.Guard)
+	navigationAbsentIfUnset(&v.MarkerActive)
+	navigationAbsentIfUnset(&v.EndingNumber)
+	navigationAbsentIfUnset(&v.DurationUnchanged)
+	navigationAbsentIfUnset(&v.FineDuration)
+	navigationAbsentIfUnset(&v.Complete)
 }

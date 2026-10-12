@@ -178,7 +178,7 @@ func TestPerformanceTimelineProjectionEvidenceAxes(t *testing.T) {
 		voice := Evidence[string]{State: st, Cause: c, Value: "V"}
 		service := &timelineService{Facts: map[NodeID]timelineEventFact{1: {Origin: pos, Position: pos, End: pos, Duration: rational, PrincipalDuration: rational, Principal: ref, Units: decimal, Staff: integer, Voice: voice, Part: ref}}}
 		n := &factNode{header: NodeHeader{ID: 1}}
-		out, ok, err := performanceTimelineFact(context.Background(), s, service, n)
+		out, ok, err := performanceTimelineFact(context.Background(), s, service, &performanceAdviceIndex{}, n)
 		if err != nil || !ok {
 			t.Fatal(ok, err)
 		}

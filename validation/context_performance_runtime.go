@@ -18,6 +18,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 	if err != nil {
 		return Decision{}, false, err
 	}
+	defer adviceIndex.release(s)
 	swingHistory, err := performanceBuildSwing(r, service)
 	if err != nil {
 		return Decision{}, false, err
@@ -27,15 +28,41 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			break
 		}
 		n := s.nodes[id]
-		performanceStatic(r, key, n)
+		elements, attributes := r.roles(n), r.attributeRoles(n)
 		if r.err != nil {
 			break
 		}
-		out := newTimingContext("performance")
+		roles := performanceRoles(elements, attributes)
+		// Anonymous measure declarations come from the already compiled timeline
+		// hierarchy, not a name or guessed declared-type binding.
+		if sr.matches(n, timelineRoleMeasure) {
+			roles |= performanceStateRole
+		}
+		if sr.err != nil {
+			r.err = sr.err
+			break
+		}
+		performanceStaticRoles(r, key, n, attributes)
+		if r.err != nil {
+			break
+		}
+		hasFact := false
+		if service != nil && service.Final {
+			_, hasFact = service.Facts[id]
+		}
+		if !hasFact && !roles.timing() {
+			// Scalar-only roles never dereference the timing payload.
+			performanceLocalRoles(r, key, n, nil, roles)
+			if r.err != nil {
+				break
+			}
+			continue
+		}
+		var out TimingContextResult
 		publish := false
 		if service != nil && service.Final {
 			var err error
-			out, publish, err = performanceTimelineFact(ctx, s, service, n)
+			out, publish, err = performanceTimelineFact(ctx, s, service, adviceIndex, n)
 			if err != nil {
 				return Decision{}, false, err
 			}
@@ -45,7 +72,10 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 				}
 			}
 		}
-		if r.matches(n, "perf-note") {
+		if !publish && roles.timing() {
+			out = newTimingContext("performance")
+		}
+		if roles.has(performanceNote) {
 			if !publish {
 				performanceUnavailableEvent(s, key, &out)
 			}
@@ -58,7 +88,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			performanceWrittenPitch(r, n, &out)
 			performanceNoteSwing(r, service, &swingHistory, n, &out)
 		}
-		if r.matches(n, "perf-sound") {
+		if roles.has(performanceSound) {
 			if !publish {
 				out.PlayComplete = Evidence[bool]{State: EvidenceUnsupported, Reason: "timeline-service-unavailable"}
 			}
@@ -70,7 +100,7 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 				out.ReferenceVelocity, r.err = performanceVelocity(ctx, s, out.Dynamics)
 			}
 		}
-		if r.matches(n, "perf-midi-unpitched") {
+		if roles.has(performanceMIDIUnpitched) {
 			publish = true
 			out.Kind = "midi-unpitched"
 			out.MIDIUnpitched = stateInteger(r.scalar(n))
@@ -83,26 +113,23 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 				}
 			}
 		}
-		if r.matches(n, "perf-pan") {
+		if roles.has(performancePan) {
 			publish = true
 			out.Kind = "pan"
 			out.Pan = stateDecimalValue(r.scalar(n))
 		}
-		if r.matches(n, "perf-elevation") {
+		if roles.has(performanceElevation) {
 			publish = true
 			out.Kind = "elevation"
 			out.Elevation = stateDecimalValue(r.scalar(n))
 		}
-		if r.matches(n, "perf-swing") {
+		if roles.has(performanceSwingRole) {
 			publish = true
 			out.Kind = "swing"
-			straight, c := r.child(n, "perf-straight")
-			out.Straight = performancePresence(straight, c)
-			out.SwingType = stateWithDefault(stateText(r.childScalar(n, "perf-swing-type")), "eighth", "swing-type-eighth").Effective
-			out.SwingFirst = stateInteger(r.childScalar(n, "perf-swing-first"))
-			out.SwingSecond = stateInteger(r.childScalar(n, "perf-swing-second"))
+			v := performanceReadSwing(r, n)
+			out.Straight, out.SwingType, out.SwingFirst, out.SwingSecond = v.Straight, v.Type, v.First, v.Second
 		}
-		if r.matches(n, "perf-bend") {
+		if roles.has(performanceBend) {
 			publish = true
 			out.Kind = "bend"
 			out.BendAlter = stateDecimalValue(r.childScalar(n, "perf-bend-alter"))
@@ -110,18 +137,18 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			out.PreBend = performancePresence(pre, c)
 			rel, c := r.child(n, "perf-release")
 			out.BendRelease = performancePresence(rel, c)
-			proof := performanceBendRelation(r, n)
+			proof := performanceBendRelation(r, n, out.BendRelease, out.BendAlter)
 			out.BendNegativeApplicable = proof.Applicable
 			out.BendNegativeSatisfied = proof.Satisfied
 			storePerformanceBend(r, key, n, proof)
 		}
-		if performanceLocalState(r, sr, n, &out, &partOrder) {
+		if roles.has(performanceStateRole) && performanceLocalState(r, sr, n, &out, &partOrder) {
 			publish = true
 		}
-		if performanceLocal(r, key, n, &out) {
+		if performanceLocalRoles(r, key, n, &out, roles) {
 			publish = true
 		}
-		if performanceMovement(r, service, n, &out) {
+		if roles.has(performanceMovementRole) && performanceMovement(r, service, adviceIndex, n, &out) {
 			publish = true
 		}
 		if out.Kind == "swing" && r.err == nil {
@@ -166,6 +193,9 @@ func performancePresence(n *factNode, e Evidence[bool]) Evidence[bool] {
 
 func performanceUnavailableEvent(s *Session, key RuleKey, out *TimingContextResult) {
 	gap := Evidence[bool]{State: EvidenceUnsupported, Reason: "timeline-service-unavailable"}
+	if service := s.contextServices[key]; service != nil && service.Timeline.State == EvidenceKnown {
+		gap = stateUnknown[bool]("event-position-unavailable")
+	}
 	if service := s.contextServices[key]; service != nil && service.Timeline.State != EvidenceKnown && service.Timeline.State != EvidenceAbsent {
 		gap = service.Timeline
 	}

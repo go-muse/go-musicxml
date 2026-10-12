@@ -55,7 +55,6 @@ var performanceDefaults = []performanceDefault{
 	{"perf-level-type", "level", "type", "start-stop-single", Atomic{Kind: AtomicString, Text: "single"}},
 	{"perf-stick-parentheses", "stick", "parentheses", "yes-no", Atomic{Kind: AtomicString, Text: "no"}},
 	{"perf-stick-dashed-circle", "stick", "dashed-circle", "yes-no", Atomic{Kind: AtomicString, Text: "no"}},
-	{"perf-root-alter-location", "root-alter", "location", "left-right", Atomic{Kind: AtomicString, Text: "right"}},
 	{"perf-cancel-location", "cancel", "location", "cancel-location", Atomic{Kind: AtomicString, Text: "left"}},
 	{"perf-double-above", "double", "above", "yes-no", Atomic{Kind: AtomicString, Text: "no"}},
 	{"perf-figured-bass-parentheses", "figured-bass", "parentheses", "yes-no", Atomic{Kind: AtomicString, Text: "no"}},
@@ -75,6 +74,10 @@ func contextPerformanceBindingSpecs() []contextBindingSpec {
 }
 
 var performanceElements = []contextBindingSpec{
+	{Role: "perf-score-part", Name: "score-part", Type: "score-part", Count: -1},
+	{Role: "perf-key", Owner: "attributes", Name: "key", Type: "key", Count: 1},
+	{Role: "perf-time", Owner: "attributes", Name: "time", Type: "time", Count: 1},
+	{Role: "perf-transpose", Owner: "attributes", Name: "transpose", Type: "transpose", Count: 1},
 	{Role: "perf-pluck", Owner: "technical", Name: "pluck", Type: "placement-text", Count: 1},
 	{Role: "perf-measure-label", Name: "number", Type: "xs:token", Attribute: true, Count: -1},
 	{Role: "perf-backup", Name: "backup", Type: "backup", Count: -1},
@@ -118,12 +121,8 @@ func contextPerformancePropertyValid(p ContextProperty) bool {
 	if p == "performance-fretted-instrument-role" || p == "performance-figure-prefix" || p == "performance-figure-suffix" {
 		return true
 	}
-	for _, d := range performanceDefaults {
-		if p == ContextProperty(d.role) {
-			return true
-		}
-	}
-	return false
+	_, ok := performanceDefaultsByRole[contextRole(p)]
+	return ok
 }
 func publishPerformanceScalar(r *contextReader, key RuleKey, n *factNode, property ContextProperty, v Evidence[Atomic]) {
 	if r.err == nil {
@@ -134,17 +133,30 @@ func performanceDefaultOwner(owner, name string) string {
 	if owner == "mordent" && name == "long" {
 		return "mordent"
 	}
-	if owner == "root-alter" {
-		return "harmony-alter"
-	}
 	if owner == "mordent" {
 		return "empty-trill-sound"
 	}
 	return owner
 }
-func performanceStatic(r *contextReader, key RuleKey, n *factNode) {
+
+var performanceDefaultsByRole = func() map[contextRole]performanceDefault {
+	out := make(map[contextRole]performanceDefault, len(performanceDefaults))
 	for _, d := range performanceDefaults {
-		if d.owner == "root-alter" && !r.matches(n, "perf-root-alter") {
+		out[d.role] = d
+	}
+	return out
+}()
+
+func performanceStatic(r *contextReader, key RuleKey, n *factNode) {
+	performanceStaticRoles(r, key, n, r.attributeRoles(n))
+}
+func performanceStaticRoles(r *contextReader, key RuleKey, n *factNode, roles []contextRole) {
+	if r.err != nil {
+		return
+	}
+	for _, role := range roles {
+		d, ok := performanceDefaultsByRole[role]
+		if !ok {
 			continue
 		}
 		if d.owner == "mordent" && (n.header.Type.State != EvidenceKnown || n.header.Type.Value != contextNamedType("mordent")) {
@@ -155,9 +167,6 @@ func performanceStatic(r *contextReader, key RuleKey, n *factNode) {
 		}
 		if !r.step(1) {
 			return
-		}
-		if !r.attributeOwner(n, d.role) {
-			continue
 		}
 		v := r.attribute(n, d.role)
 		if v.State == EvidenceAbsent {

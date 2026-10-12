@@ -2,15 +2,17 @@ package validation
 
 import "context"
 
-func performanceTimelineFact(ctx context.Context, s *Session, service *timelineService, n *factNode) (TimingContextResult, bool, error) {
-	out := newTimingContext("event")
+func performanceTimelineFact(ctx context.Context, s *Session, service *timelineService, index *performanceAdviceIndex, n *factNode) (TimingContextResult, bool, error) {
 	f, ok := service.Facts[n.header.ID]
 	if !ok {
-		return out, false, nil
+		return TimingContextResult{}, false, nil
 	}
+	out := newTimingContext("event")
 	out.Origin = performancePosition(f.Origin)
 	out.Position = performancePosition(f.Position)
-	out.End = performancePosition(f.End)
+	if f.End.State != "" {
+		out.End = performancePosition(f.End)
+	}
 	out.Duration = f.Duration
 	out.PrincipalDuration = f.PrincipalDuration
 	out.Principal = f.Principal
@@ -20,6 +22,12 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 	out.Part = f.Part
 	if v, ok := service.NoteOrigins[n.header.ID]; ok {
 		out.Kind = "note"
+		if f.End.State == "" {
+			out.End = stateUnknown[ContextPosition]("timeline-note-end-unestablished")
+			if v.Chord.State != EvidenceKnown && v.Chord.State != EvidenceAbsent {
+				out.End = stateUnavailable[bool, ContextPosition](v.Chord)
+			}
+		}
 		out.ScoreOnset = performancePosition(v.ScoreOnset)
 		out.ScoreEnd = performancePosition(v.ScoreEnd)
 		out.Chord = v.Chord
@@ -44,7 +52,15 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 			out.GraceNode = Evidence[NodeRef]{State: EvidenceKnown, Value: g.Grace}
 			out.StealPrevious = g.StealPrevious
 			out.StealFollowing = g.StealFollowing
-			out.MakeTime = TimingAdjustment{Raw: g.MakeTime.Raw, Units: g.MakeTime.Units, Delta: g.MakeTime.Delta}
+			out.MakeTime.Raw, out.MakeTime.Units, out.MakeTime.Delta = g.MakeTime.Raw, g.MakeTime.Units, g.MakeTime.Delta
+			if g.MakeTime.Raw.State != EvidenceAbsent {
+				out.MakeTime.Origin = stateUnknown[ContextPosition]("grace-make-time-position-not-realized")
+				out.MakeTime.Position = out.MakeTime.Origin
+				if g.MakeTime.Raw.State != EvidenceKnown {
+					out.MakeTime.Origin = stateUnavailable[Decimal, ContextPosition](g.MakeTime.Raw)
+					out.MakeTime.Position = out.MakeTime.Origin
+				}
+			}
 		}
 		if g, ok := service.GraceNeighbors[n.header.ID]; ok {
 			out.Previous = performanceDonor(g.Previous)
@@ -108,7 +124,7 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 	}
 	out.EndReferenceVelocity, err = performanceVelocity(ctx, s, out.EndDynamics)
 	if err == nil {
-		err = performanceSoundSpatial(ctx, s, service, n, &out)
+		err = performanceSoundSpatial(ctx, s, service, index, n, &out)
 	}
 	return out, true, err
 }
@@ -160,7 +176,7 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 		return nil
 	}
 	v := out.Origin.Value
-	pos := musicalPosition{Part: v.Part, Measure: v.Measure, MeasureOrdinal: v.MeasureOrdinal, Offset: v.Offset, UnprovedFrame: v.UnprovedFrame}
+	pos := contextMusicalPosition(v)
 	h := &service.State
 	tempo, err := service.Playback.effectiveTempo(ctx, s, h, pos)
 	if err != nil {
@@ -242,17 +258,8 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	if err = performanceStateOrigin(ctx, s, out, "key", key); err != nil {
 		return err
 	}
-	if key.Value.State == EvidenceKnown {
-		k := key.Value.Value
-		out.KeyFifths = k.Fifths
-		out.KeyMode = k.Mode
-		out.KeyCancel = k.Cancel
-		out.CancelLocation = performanceCancelLocation(k)
-	} else {
-		out.KeyFifths = stateUnavailable[keyState, Integer](key.Value)
-		out.KeyMode = stateUnavailable[keyState, string](key.Value)
-		out.KeyCancel = stateUnavailable[keyState, Integer](key.Value)
-		out.CancelLocation = stateUnavailable[keyState, string](key.Value)
+	if err = performanceProjectKey(ctx, s, out, key.Value); err != nil {
+		return err
 	}
 	tim, err := queryState(ctx, s, h, &h.Times, pos, staff, stateWhole[timeState])
 	if err != nil {
@@ -261,27 +268,8 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	if err = performanceStateOrigin(ctx, s, out, "time", tim); err != nil {
 		return err
 	}
-	if tim.Value.State == EvidenceKnown {
-		t := tim.Value.Value
-		if err := stateRetainCount(s, len(t.Pairs), 512); err != nil {
-			return err
-		}
-		out.Meter = make([]TimingMeterPair, len(t.Pairs))
-		for i, p := range t.Pairs {
-			if err := s.step(ctx, 1); err != nil {
-				return err
-			}
-			out.Meter[i] = TimingMeterPair{Beats: p.Beats, BeatType: p.BeatType}
-		}
-		out.TimeSymbol = t.displaySymbol().Effective
-		out.TimeSeparator = t.displaySeparator().Effective
-		out.SenzaMisura = t.SenzaMisura
-		out.TimePrintObject = stateWithDefault(t.PrintObject, true, "print-object-yes").Effective
-	} else {
-		out.TimeSymbol = stateUnavailable[timeState, string](tim.Value)
-		out.TimeSeparator = stateUnavailable[timeState, string](tim.Value)
-		out.SenzaMisura = stateUnavailable[timeState, string](tim.Value)
-		out.TimePrintObject = stateUnavailable[timeState, bool](tim.Value)
+	if err = performanceProjectTime(ctx, s, out, tim.Value); err != nil {
+		return err
 	}
 	clef, err := queryState(ctx, s, h, &h.Clefs, pos, staff, stateWhole[clefState])
 	if err != nil {
@@ -306,26 +294,8 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	if err = performanceStateOrigin(ctx, s, out, "transpose", trans); err != nil {
 		return err
 	}
-	if trans.Value.State == EvidenceKnown {
-		t := trans.Value.Value
-		out.TranspositionChromatic = t.Chromatic
-		out.TranspositionDiatonic = t.Diatonic
-		out.TranspositionOctave = t.OctaveChange
-		out.ChromaticDisplacement, out.DiatonicDisplacement, err = t.contributions(ctx, s)
-		if err != nil {
-			return err
-		}
-		out.DoublingAbove = stateUnavailable[doublingState, bool](t.Double)
-		if t.Double.State == EvidenceKnown {
-			out.DoublingAbove = t.Double.Value.effectiveAbove().Effective
-		}
-	} else {
-		out.TranspositionChromatic = stateUnavailable[transposeState, Decimal](trans.Value)
-		out.TranspositionDiatonic = stateUnavailable[transposeState, Integer](trans.Value)
-		out.TranspositionOctave = stateUnavailable[transposeState, Integer](trans.Value)
-		out.ChromaticDisplacement = stateUnavailable[transposeState, Rational](trans.Value)
-		out.DiatonicDisplacement = stateUnavailable[transposeState, Rational](trans.Value)
-		out.DoublingAbove = stateUnavailable[transposeState, bool](trans.Value)
+	if err = performanceProjectTranspose(ctx, s, out, trans.Value); err != nil {
+		return err
 	}
 	details, err := h.effectiveStaffDetails(ctx, s, pos, out.Staff)
 	if err != nil {
@@ -334,26 +304,8 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 	if err = performanceStateOrigin(ctx, s, out, "staff-details", details); err != nil {
 		return err
 	}
-	if details.Value.State == EvidenceKnown {
-		d := details.Value.Value
-		out.StaffType = d.effectiveType().Effective
-		out.Capo = d.Capo
-		if err := stateRetainCount(s, len(d.Tunings), 2048); err != nil {
-			return err
-		}
-		out.Tunings = make([]TimingTuning, len(d.Tunings))
-		for i, t := range d.Tunings {
-			if err := s.step(ctx, 1); err != nil {
-				return err
-			}
-			out.Tunings[i], err = performanceTuning(ctx, s, t, d.Capo)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		out.StaffType = stateUnavailable[staffDetailsState, string](details.Value)
-		out.Capo = stateUnavailable[staffDetailsState, Integer](details.Value)
+	if err = performanceProjectStaffDetails(ctx, s, out, details.Value); err != nil {
+		return err
 	}
 	return nil
 }

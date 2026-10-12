@@ -7,99 +7,96 @@ import "context"
 // XSD prerequisite, and equal passes retain the separately reviewed policy gate.
 // Canonical positive decimal digit strings compare exactly by length then digits;
 // this has no machine-integer bound and allocates no pass vector or big integers.
-func contextTimeOnlyOrder(ctx context.Context, s *Session, text string) (Decision, error) {
+// contextScanPassSet validates the full normalized positive-decimal list.
+// Work is prepaid and every scan/comparison polls at the same 256-byte cadence.
+// Callers may collect a result, but must not publish it until valid is true.
+func contextScanPassSet(ctx context.Context, s *Session, text string, visit func(string) error) (bool, error) {
 	work, err := rationalCheckedMul(BudgetRuleSteps, int64(len(text)), 3)
 	if err != nil {
-		return Decision{}, err
+		return false, err
 	}
 	if err = s.step(ctx, work); err != nil {
-		return Decision{}, err
+		return false, err
 	}
-	unsupported := Decision{Outcome: OutcomeUnsupported, Reason: "time-only-normalized-domain-unavailable"}
 	if len(text) == 0 {
-		return unsupported, nil
+		return false, nil
 	}
-	// Defensively verify the full admitted domain before retaining any order proof.
-	// In normal assessment malformed values are blocked by the authoritative XSD
-	// result, not by this guard and never by a duplicate lexical failure here.
-	for i := 0; i < len(text); {
-		if text[i] < '1' || text[i] > '9' {
-			return unsupported, nil
+	for start := 0; start < len(text); {
+		if err = s.step(ctx, 0); err != nil {
+			return false, err
 		}
-		for i < len(text) && text[i] >= '0' && text[i] <= '9' {
-			if i&255 == 0 {
-				if err := ctx.Err(); err != nil {
-					return Decision{}, err
+		if text[start] < '1' || text[start] > '9' {
+			return false, nil
+		}
+		end := start
+		for end < len(text) && text[end] >= '0' && text[end] <= '9' {
+			if end&255 == 0 {
+				if err = s.step(ctx, 0); err != nil {
+					return false, err
 				}
 			}
-			i++
+			end++
 		}
-		if i == len(text) {
-			break
+		if err = visit(text[start:end]); err != nil {
+			return false, err
 		}
-		if text[i] != ',' {
-			return unsupported, nil
+		if end == len(text) {
+			return true, nil
 		}
-		i++
-		if i < len(text) && text[i] == ' ' {
-			i++
+		if text[end] != ',' {
+			return false, nil
 		}
-		if i == len(text) {
-			return unsupported, nil
+		start = end + 1
+		if start < len(text) && text[start] == ' ' {
+			start++
+		}
+		if start == len(text) {
+			return false, nil
 		}
 	}
-	previousStart, previousEnd := -1, -1
-	equal := false
-	for i := 0; i < len(text); {
-		if err := ctx.Err(); err != nil {
-			return Decision{}, err
-		}
-		start := i
-		for i < len(text) && text[i] >= '0' && text[i] <= '9' {
-			if i&255 == 0 {
-				if err := ctx.Err(); err != nil {
-					return Decision{}, err
-				}
-			}
-			i++
-		}
-		if previousStart >= 0 {
-			previousLength, currentLength := previousEnd-previousStart, i-start
+	return false, nil
+}
+func contextTimeOnlyOrder(ctx context.Context, s *Session, text string) (Decision, error) {
+	previous := ""
+	equal, descending := false, false
+	valid, err := contextScanPassSet(ctx, s, text, func(item string) error {
+		if previous != "" {
 			comparison := 0
-			if previousLength > currentLength {
+			if len(previous) > len(item) {
 				comparison = 1
-			} else if previousLength < currentLength {
+			} else if len(previous) < len(item) {
 				comparison = -1
 			} else {
-				for j := 0; j < currentLength; j++ {
+				for j := 0; j < len(item); j++ {
 					if j&255 == 0 {
-						if err := ctx.Err(); err != nil {
-							return Decision{}, err
+						if err := s.step(ctx, 0); err != nil {
+							return err
 						}
 					}
-					a, b := text[previousStart+j], text[start+j]
-					if a > b {
+					if previous[j] > item[j] {
 						comparison = 1
 						break
 					}
-					if a < b {
+					if previous[j] < item[j] {
 						comparison = -1
 						break
 					}
 				}
 			}
-			if comparison > 0 {
-				return Decision{Outcome: OutcomeFail, Reason: "time-only-descending-passes", Expected: "Numerically ascending pass numbers", Actual: "A pass number exceeds the following pass number"}, nil
-			}
+			descending = descending || comparison > 0
 			equal = equal || comparison == 0
 		}
-		previousStart, previousEnd = start, i
-		if i < len(text) {
-			i++
-			if i < len(text) && text[i] == ' ' {
-				i++
-			}
-		}
+		previous = item
+		return nil
+	})
+	if err != nil {
+		return Decision{}, err
+	}
+	if !valid {
+		return Decision{Outcome: OutcomeUnsupported, Reason: "time-only-normalized-domain-unavailable"}, nil
+	}
+	if descending {
+		return Decision{Outcome: OutcomeFail, Reason: "time-only-descending-passes", Expected: "Numerically ascending pass numbers", Actual: "A pass number exceeds the following pass number"}, nil
 	}
 	if equal {
 		return Decision{Outcome: OutcomeUnknown, Reason: "time-only-duplicate-policy-unresolved"}, nil

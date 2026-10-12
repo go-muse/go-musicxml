@@ -144,42 +144,44 @@ type TimingContextResult struct {
 	SwingFirst                  Evidence[Integer]
 	SwingSecond                 Evidence[Integer]
 	Straight                    Evidence[bool]
-	SwingEligible               Evidence[bool]
-	SwingRealized               Evidence[bool]
-	SwungOnset                  Evidence[ContextPosition]
-	SwungEnd                    Evidence[ContextPosition]
-	BendAlter                   Evidence[Decimal]
-	PreBend                     Evidence[bool]
-	BendRelease                 Evidence[bool]
-	BendNegativeApplicable      Evidence[bool]
-	BendNegativeSatisfied       Evidence[bool]
-	Staves                      Evidence[Integer]
-	Instruments                 Evidence[Integer]
-	StaffExists                 Evidence[bool]
-	TranspositionChromatic      Evidence[Decimal]
-	TranspositionDiatonic       Evidence[Integer]
-	TranspositionOctave         Evidence[Integer]
-	ChromaticDisplacement       Evidence[Rational]
-	DiatonicDisplacement        Evidence[Rational]
-	DoublingAbove               Evidence[bool]
-	WrittenStep                 Evidence[string]
-	WrittenAlter                Evidence[Decimal]
-	WrittenOctave               Evidence[Integer]
-	WrittenPitch                Evidence[Rational]
-	SoundingPitch               Evidence[Rational]
-	StaffType                   Evidence[string]
-	Capo                        Evidence[Integer]
-	KeyFifths                   Evidence[Integer]
-	KeyMode                     Evidence[string]
-	KeyCancel                   Evidence[Integer]
-	CancelLocation              Evidence[string]
-	TimeSymbol                  Evidence[string]
-	TimeSeparator               Evidence[string]
-	SenzaMisura                 Evidence[string]
-	TimePrintObject             Evidence[bool]
-	ClefSign                    Evidence[string]
-	ClefLine                    Evidence[Integer]
-	ClefOctave                  Evidence[Integer]
+	// SwingEligible is bounded to an encoded note type. Known absence of type
+	// excludes this projection, even if duration could describe a swingable note.
+	SwingEligible          Evidence[bool]
+	SwingRealized          Evidence[bool]
+	SwungOnset             Evidence[ContextPosition]
+	SwungEnd               Evidence[ContextPosition]
+	BendAlter              Evidence[Decimal]
+	PreBend                Evidence[bool]
+	BendRelease            Evidence[bool]
+	BendNegativeApplicable Evidence[bool]
+	BendNegativeSatisfied  Evidence[bool]
+	Staves                 Evidence[Integer]
+	Instruments            Evidence[Integer]
+	StaffExists            Evidence[bool]
+	TranspositionChromatic Evidence[Decimal]
+	TranspositionDiatonic  Evidence[Integer]
+	TranspositionOctave    Evidence[Integer]
+	ChromaticDisplacement  Evidence[Rational]
+	DiatonicDisplacement   Evidence[Rational]
+	DoublingAbove          Evidence[bool]
+	WrittenStep            Evidence[string]
+	WrittenAlter           Evidence[Decimal]
+	WrittenOctave          Evidence[Integer]
+	WrittenPitch           Evidence[Rational]
+	SoundingPitch          Evidence[Rational]
+	StaffType              Evidence[string]
+	Capo                   Evidence[Integer]
+	KeyFifths              Evidence[Integer]
+	KeyMode                Evidence[string]
+	KeyCancel              Evidence[Integer]
+	CancelLocation         Evidence[string]
+	TimeSymbol             Evidence[string]
+	TimeSeparator          Evidence[string]
+	SenzaMisura            Evidence[string]
+	TimePrintObject        Evidence[bool]
+	ClefSign               Evidence[string]
+	ClefLine               Evidence[Integer]
+	ClefOctave             Evidence[Integer]
 }
 
 func cloneTimingAdjustment(p TimingAdjustment) TimingAdjustment {
@@ -371,6 +373,14 @@ func cloneTimingContext(ctx context.Context, s *Session, p *TimingContextResult)
 	return &q, nil
 }
 func performancePosition(v Evidence[musicalPosition]) Evidence[ContextPosition] {
+	return contextPositionEvidence(v)
+}
+
+func contextMusicalPosition(p ContextPosition) musicalPosition {
+	return musicalPosition{Part: p.Part, Measure: p.Measure, MeasureOrdinal: p.MeasureOrdinal, Offset: p.Offset, UnprovedFrame: p.UnprovedFrame}
+}
+
+func contextPositionEvidence(v Evidence[musicalPosition]) Evidence[ContextPosition] {
 	o := stateUnavailable[musicalPosition, ContextPosition](v)
 	if v.State == EvidenceKnown {
 		p := v.Value

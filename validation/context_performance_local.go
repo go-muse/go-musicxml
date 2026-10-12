@@ -1,15 +1,18 @@
 package validation
 
-func performanceLocal(r *contextReader, key RuleKey, n *factNode, out *TimingContextResult) bool {
+func performanceLocalRoles(r *contextReader, key RuleKey, n *factNode, out *TimingContextResult, roles performanceNodeRoles) bool {
+	if r.err != nil {
+		return false
+	}
 	publish := false
 	// This conditional role does not assert that the current instrument is fretted.
-	if r.attributeOwner(n, "perf-fingering-substitution") {
+	if roles.has(performanceFingering) {
 		publishPerformanceScalar(r, key, n, "performance-fretted-instrument-role", Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "stopping-finger"}})
 	}
-	if r.matches(n, "perf-pluck") {
+	if roles.has(performancePluck) {
 		publishPerformanceScalar(r, key, n, "performance-fretted-instrument-role", Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "plucking-finger"}})
 	}
-	if r.matches(n, "perf-fret") {
+	if roles.has(performanceFret) {
 		publish = true
 		out.Kind = "fret"
 		out.FretNumber = stateInteger(r.scalar(n))
@@ -21,32 +24,29 @@ func performanceLocal(r *contextReader, key RuleKey, n *factNode, out *TimingCon
 			out.FretOpenString = Evidence[bool]{State: EvidenceKnown, Value: out.FretNumber.Value.value.Sign() == 0}
 		}
 	}
-	if r.matches(n, "perf-level") {
+	if roles.has(performanceLevel) {
 		publish = true
 		out.Kind = "editorial-level"
 		out.EditorialPlaybackSuppressed = stateWithDefault(stateYesNo(r.attribute(n, "perf-level-reference")), false, "editorial-reference-no").Effective
 	}
-	if r.matches(n, "perf-root-alter") {
+	if roles.has(performanceRootAlter) {
 		publish = true
 		out.Kind = "root-alter"
 		out.RootAlterPrintObject = stateWithDefault(stateYesNo(r.attribute(n, "perf-root-print")), true, "print-object-yes").Effective
 	}
-	for _, role := range []contextRole{"perf-empty-trill-sound-beats", "perf-horizontal-turn-beats", "perf-wavy-line-beats"} {
-		if r.attributeOwner(n, role) {
-			publish = true
-			out.Kind = "trill"
-			out.TrillIncludesInitialSound = Evidence[bool]{State: EvidenceKnown, Value: true}
-			out.TrillExcludesClosingTurn = Evidence[bool]{State: EvidenceKnown, Value: true}
-			break
-		}
+	if roles.has(performanceTrill) {
+		publish = true
+		out.Kind = "trill"
+		out.TrillIncludesInitialSound = Evidence[bool]{State: EvidenceKnown, Value: true}
+		out.TrillExcludesClosingTurn = Evidence[bool]{State: EvidenceKnown, Value: true}
 	}
-	if r.matches(n, "perf-prefix") {
+	if roles.has(performancePrefix) {
 		publishPerformanceScalar(r, key, n, "performance-figure-prefix", r.scalar(n))
 	}
-	if r.matches(n, "perf-suffix") {
+	if roles.has(performanceSuffix) {
 		publishPerformanceScalar(r, key, n, "performance-figure-suffix", r.scalar(n))
 	}
-	if r.matches(n, "perf-accidental-mark") {
+	if roles.has(performanceAccidental) {
 		parent := r.s.nodes[n.header.Parent]
 		if r.matches(parent, "perf-ornaments") {
 			publish = true

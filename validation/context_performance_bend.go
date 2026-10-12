@@ -10,13 +10,19 @@ type contextPerformanceService struct {
 	Bends map[NodeID]performanceBendProof
 }
 
-func performanceBendRelation(r *contextReader, n *factNode) performanceBendProof {
+func performanceBendRelation(r *contextReader, n *factNode, present Evidence[bool], value Evidence[Decimal]) performanceBendProof {
 	out := performanceBendProof{Applicable: stateUnknown[bool]("bend-gesture-unestablished"), Satisfied: stateUnknown[bool]("bend-gesture-unestablished"), Prior: stateUnknown[NodeRef]("bend-gesture-unestablished")}
-	release, c := r.child(n, "perf-release")
-	present := performancePresence(release, c)
+	// The consequent is independent of gesture association: a proved negative
+	// displacement satisfies the implication even when its antecedent is unknown.
+	out.Satisfied = stateUnavailable[Decimal, bool](value)
+	if value.State == EvidenceKnown {
+		if !r.step(value.Value.ByteSize()) {
+			return out
+		}
+		out.Satisfied = Evidence[bool]{State: EvidenceKnown, Value: value.Value.value.Sign() < 0}
+	}
 	if present.State != EvidenceKnown {
 		out.Applicable = present
-		out.Satisfied = present
 		return out
 	}
 	if !present.Value {
@@ -66,19 +72,16 @@ func performanceBendRelation(r *contextReader, n *factNode) performanceBendProof
 		out.Applicable = stateUnavailable[Decimal, bool](alter)
 		return out
 	}
+	if !r.step(alter.Value.ByteSize()) {
+		return out
+	}
 	if alter.Value.value.Sign() <= 0 {
+		out.Applicable = Evidence[bool]{State: EvidenceKnown, Value: false}
 		return out
 	}
 	out.Applicable = Evidence[bool]{State: EvidenceKnown, Value: true}
 	out.Prior = Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, first.header.ID}}
-	value := stateDecimalValue(r.childScalar(n, "perf-bend-alter"))
-	out.Satisfied = stateUnavailable[Decimal, bool](value)
-	if value.State == EvidenceKnown {
-		if !r.step(value.Value.ByteSize()) {
-			return out
-		}
-		out.Satisfied = Evidence[bool]{State: EvidenceKnown, Value: value.Value.value.Sign() < 0}
-	}
+
 	return out
 }
 func storePerformanceBend(r *contextReader, key RuleKey, n *factNode, p performanceBendProof) {
@@ -118,24 +121,30 @@ func evaluateBendReleaseSign(ctx context.Context, s *Session, n *factNode, p *co
 		}
 		return Decision{Outcome: OutcomeUnsupported, Reason: "performance-service-unavailable"}, false, nil
 	}
+	if n.header.Declaration.State == EvidenceAbsent {
+		return Decision{Outcome: OutcomeUnknown, Reason: "bend-declaration-unavailable"}, false, nil
+	}
+	if n.header.Declaration.State != EvidenceKnown {
+		return localGap(stateUnavailable[DeclarationID, bool](n.header.Declaration)), false, nil
+	}
 	if service.Performance == nil {
 		return Decision{Outcome: OutcomeUnknown, Reason: "bend-gesture-unestablished"}, false, nil
 	}
 	proof, ok := service.Performance.Bends[n.header.ID]
 	if !ok {
-		return Decision{Outcome: OutcomeNotApplicable, Reason: "bend-role-mismatch"}, false, nil
+		return Decision{Outcome: OutcomeUnknown, Reason: "bend-gesture-unestablished"}, false, nil
+	}
+	if proof.Applicable.State == EvidenceKnown && !proof.Applicable.Value {
+		return Decision{Outcome: OutcomeNotApplicable, Reason: "bend-release-condition-false"}, false, nil
+	}
+	if proof.Satisfied.State == EvidenceKnown && proof.Satisfied.Value {
+		return Decision{Outcome: OutcomePass}, false, nil
 	}
 	if proof.Applicable.State != EvidenceKnown {
 		return localGap(proof.Applicable), false, nil
 	}
-	if !proof.Applicable.Value {
-		return Decision{Outcome: OutcomeNotApplicable, Reason: "bend-release-condition-false"}, false, nil
-	}
 	if proof.Satisfied.State != EvidenceKnown {
 		return localGap(proof.Satisfied), false, nil
-	}
-	if proof.Satisfied.Value {
-		return Decision{Outcome: OutcomePass}, false, nil
 	}
 	return Decision{Outcome: OutcomeFail, Reason: "bend-release-must-be-negative", Expected: "negative semitone displacement for an established release after a bend", Actual: "nonnegative bend-alter"}, false, nil
 }
