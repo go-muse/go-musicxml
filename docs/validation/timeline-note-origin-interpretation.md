@@ -9,9 +9,14 @@ percentage default. The [voice reference](https://www.w3.org/2021/06/musicxml40/
 describes a linear musical sequence within a part. Together these support the
 provider's explicitly derived sufficient proof:
 
-- Complete explicit voice streams are independent of staff. A wholly unvoiced
-  complete part is usable only when its musical sequence is proved linear;
-  no voice 1 is invented.
+- Established explicit voice sequences are ordered by exact score position,
+  independently of staff and backup/forward serialization. A wholly unvoiced
+  complete linear part is another sufficient case; no voice 1 is invented.
+- Each donor has its own proof interval. The previous side covers the selected
+  ordinary donor's onset through the grace onset, inclusively. The following
+  side covers the grace onset through its selected ordinary donor's onset.
+  Both intervals must exclude any possible competing event; the two sides can
+  have different availability.
 - A grace run skips its grace peers and refers to proven ordinary neighbors.
   Each grace retains its own percentage, exact fraction, donor duration and
   stolen-duration amount. No aggregate allocation or redistribution is implied.
@@ -24,8 +29,13 @@ records contain the supported donor association and calculation. An unresolved
 neighbor slot in the raw record is not the final association answer.
 
 Chord donors with competing identities/durations, overlapping same-voice events,
-mixed explicit/absent voice, missing kinds/positions and unclosed domains retain
-precise local unavailable evidence. These are batch-6 provider evidence
+mixed explicit/absent voice and missing kinds/positions retain precise local
+unavailable evidence only where they could enter the donor's proof interval.
+An unavailable position can still be bounded by its established canonical
+measure; a later-measure invalid voice cannot erase an earlier closed donor
+interval. Unknown ownership or domain coverage remains conservative. A gap
+between the previous donor and grace can block that side while leaving a proved
+following donor available. These are batch-6 provider evidence
 boundaries, not an excuse to defer every ordinary grace association to playback.
 Batch 7 retains realized performance redistribution and engraving decisions.
 
@@ -56,7 +66,9 @@ Musical-order divisions must be finalized before these calculations; an earlier
 lexical register is insufficient when a later serialized attributes record is
 at the same score position. A missing prior duration cannot invent a chain step.
 Interleaved/nonconsecutive group membership remains a local reconstruction
-boundary. End coordinates stay in the established anchor measure frame; no
+boundary. A later figure whose known cursor is beyond an earlier group's anchor
+cannot erase that already proved chain merely because it lacks a following
+anchor. End coordinates stay in the established anchor measure frame; no
 measure-length wrapping is guessed. Chain positions are derived sums of the
 established anchor-based durations, not a second unit-origin interpretation or
 a fully rendered schedule. A later divisions value at a derived chain position
