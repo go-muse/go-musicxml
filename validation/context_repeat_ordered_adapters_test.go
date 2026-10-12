@@ -28,7 +28,7 @@ func TestRepeatOrderedAdaptersPreserveFallback(t *testing.T) {
 			case "different":
 				target = note("F", "2", "") + backup + note("C", "1", "")
 			case "unavailable":
-				target = note("C", "1", `<notations/>`) + backup + note("E", "2", "")
+				target = note("C", "1", `<notations><ornaments><trill-mark/></ornaments></notations>`) + backup + note("E", "2", "")
 			}
 			measures := []string{
 				`<attributes><divisions>1</divisions></attributes>` + pattern,

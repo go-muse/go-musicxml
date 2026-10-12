@@ -88,9 +88,9 @@ func contextRepeatBuildWindowIndex(ctx context.Context, s *Session, notes []cont
 	return out, release, nil
 }
 
-func (index *contextRepeatWindowIndex) window(ctx context.Context, s *Session, from, to Rational) ([]contextRepeatNote, Evidence[bool], error) {
+func (index *contextRepeatWindowIndex) window(ctx context.Context, s *Session, from, to Rational) ([]contextRepeatNote, Evidence[bool], func(), error) {
 	if err := s.step(ctx, 1); err != nil {
-		return nil, Evidence[bool]{}, err
+		return nil, Evidence[bool]{}, func() {}, err
 	}
 	notes := index.notes
 	nextFirst := index.first
@@ -99,7 +99,7 @@ func (index *contextRepeatWindowIndex) window(ctx context.Context, s *Session, f
 		// starts. Keep boundary-crossing candidates for Window to diagnose.
 		first, last, err := index.bounds(ctx, s, from, to)
 		if err != nil {
-			return nil, Evidence[bool]{}, err
+			return nil, Evidence[bool]{}, func() {}, err
 		}
 		nextFirst = first
 		if first == last {
@@ -110,11 +110,11 @@ func (index *contextRepeatWindowIndex) window(ctx context.Context, s *Session, f
 			notes = notes[index.entries[first].note : index.entries[last-1].note+1]
 		}
 	}
-	out, status, err := contextRepeatWindow(ctx, s, notes, index.part, index.measure, from, to)
+	out, status, release, err := contextRepeatWindow(ctx, s, notes, index.part, index.measure, from, to)
 	if err == nil && index.ordered {
 		index.first, index.previousFrom = nextFirst, from
 	}
-	return out, status, err
+	return out, status, release, err
 }
 
 // Nondecreasing window starts advance a borrowed cursor in linear total work

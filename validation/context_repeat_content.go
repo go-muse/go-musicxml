@@ -3,27 +3,51 @@ package validation
 import "context"
 
 const (
-	contextRepeatAnyNote         contextRole = "repeat-any-note"
-	contextRepeatNotePitch       contextRole = "repeat-note-pitch"
-	contextRepeatNoteRest        contextRole = "repeat-note-rest"
-	contextRepeatNoteUnpitched   contextRole = "repeat-note-unpitched"
-	contextRepeatNoteDuration    contextRole = "repeat-note-duration"
-	contextRepeatNoteChord       contextRole = "repeat-note-chord"
-	contextRepeatNoteVoice       contextRole = "repeat-note-voice"
-	contextRepeatNoteStaff       contextRole = "repeat-note-staff"
-	contextRepeatNoteType        contextRole = "repeat-note-type"
-	contextRepeatNoteStem        contextRole = "repeat-note-stem"
-	contextRepeatNoteInstrument  contextRole = "repeat-note-instrument"
-	contextRepeatInstrumentID    contextRole = "repeat-instrument-id"
-	contextRepeatPitchStep       contextRole = "repeat-pitch-step"
-	contextRepeatPitchAlter      contextRole = "repeat-pitch-alter"
-	contextRepeatPitchOctave     contextRole = "repeat-pitch-octave"
-	contextRepeatUnpitchedStep   contextRole = "repeat-unpitched-step"
-	contextRepeatUnpitchedOctave contextRole = "repeat-unpitched-octave"
+	contextRepeatNoteDot              contextRole = "repeat-note-dot"
+	contextRepeatNoteAccidental       contextRole = "repeat-note-accidental"
+	contextRepeatNoteBeam             contextRole = "repeat-note-beam"
+	contextRepeatNoteLyric            contextRole = "repeat-note-lyric"
+	contextRepeatNoteNotehead         contextRole = "repeat-note-notehead"
+	contextRepeatNoteTimeModification contextRole = "repeat-note-time-modification"
+	contextRepeatNoteNotations        contextRole = "repeat-note-notations"
+	contextRepeatNoteTie              contextRole = "repeat-note-tie"
+	contextRepeatNoteGrace            contextRole = "repeat-note-grace"
+	contextRepeatNotationSlur         contextRole = "repeat-notation-slur"
+	contextRepeatNotationTied         contextRole = "repeat-notation-tied"
+	contextRepeatCursorBackup         contextRole = "repeat-cursor-backup"
+	contextRepeatAnyNote              contextRole = "repeat-any-note"
+	contextRepeatNotePitch            contextRole = "repeat-note-pitch"
+	contextRepeatNoteRest             contextRole = "repeat-note-rest"
+	contextRepeatNoteUnpitched        contextRole = "repeat-note-unpitched"
+	contextRepeatNoteDuration         contextRole = "repeat-note-duration"
+	contextRepeatNoteChord            contextRole = "repeat-note-chord"
+	contextRepeatNoteVoice            contextRole = "repeat-note-voice"
+	contextRepeatNoteStaff            contextRole = "repeat-note-staff"
+	contextRepeatNoteType             contextRole = "repeat-note-type"
+	contextRepeatNoteStem             contextRole = "repeat-note-stem"
+	contextRepeatNoteInstrument       contextRole = "repeat-note-instrument"
+	contextRepeatInstrumentID         contextRole = "repeat-instrument-id"
+	contextRepeatPitchStep            contextRole = "repeat-pitch-step"
+	contextRepeatPitchAlter           contextRole = "repeat-pitch-alter"
+	contextRepeatPitchOctave          contextRole = "repeat-pitch-octave"
+	contextRepeatUnpitchedStep        contextRole = "repeat-unpitched-step"
+	contextRepeatUnpitchedOctave      contextRole = "repeat-unpitched-octave"
 )
 
 func contextRepeatContentBindingSpecs() []contextBindingSpec {
 	return []contextBindingSpec{
+		{Role: contextRepeatCursorBackup, Name: "backup", Type: "backup", Count: -1},
+		{Role: contextRepeatNoteDot, Owner: "note", Name: "dot", Type: "empty-placement", Count: 1},
+		{Role: contextRepeatNoteAccidental, Owner: "note", Name: "accidental", Type: "accidental", Count: 1},
+		{Role: contextRepeatNoteBeam, Owner: "note", Name: "beam", Type: "beam", Count: 1},
+		{Role: contextRepeatNoteLyric, Owner: "note", Name: "lyric", Type: "lyric", Count: 1},
+		{Role: contextRepeatNoteNotehead, Owner: "note", Name: "notehead", Type: "notehead", Count: 1},
+		{Role: contextRepeatNoteTimeModification, Owner: "note", Name: "time-modification", Type: "time-modification", Count: 1},
+		{Role: contextRepeatNoteNotations, Owner: "note", Name: "notations", Type: "notations", Count: 1},
+		{Role: contextRepeatNoteTie, Owner: "note", Name: "tie", Type: "tie", Count: 2},
+		{Role: contextRepeatNoteGrace, Owner: "note", Name: "grace", Type: "grace", Count: 1},
+		{Role: contextRepeatNotationSlur, Owner: "notations", Name: "slur", Type: "slur", Count: 1},
+		{Role: contextRepeatNotationTied, Owner: "notations", Name: "tied", Type: "tied", Count: 1},
 		{Role: contextRepeatAnyNote, Name: "note", Type: "note", Count: -1},
 		{Role: contextRepeatNotePitch, Owner: "note", Name: "pitch", Type: "pitch", Count: 4},
 		{Role: contextRepeatNoteRest, Owner: "note", Name: "rest", Type: "rest", Count: 4},
@@ -95,6 +119,10 @@ func contextRepeatReadNote(r *contextReader, timeline *timelineService, transfor
 		return note, nil
 	}
 	note.part = fact.Part
+	if _, present := r.child(node, contextRepeatNoteGrace); present.State == EvidenceKnown {
+		note.available = stateUnknown[bool]("context-repeat-grace-content-unresolved")
+		return note, r.err
+	}
 	for _, v := range []Evidence[bool]{stateUnavailable[musicalPosition, bool](fact.Position), stateUnavailable[Rational, bool](fact.Duration)} {
 		if v.State != EvidenceKnown {
 			note.available = stateMergeGap(note.available, v)
@@ -115,13 +143,30 @@ func contextRepeatReadNote(r *contextReader, timeline *timelineService, transfor
 	if playback.TimeOnly.State != EvidenceAbsent {
 		note.available = stateMergeGap(note.available, stateUnknown[bool]("context-repeat-pass-content-unresolved"))
 	}
+	// Intended duration is authoritative for dots and time-modification;
+	// engraving does not alter the pitch/rhythm comparison. Sound ties and
+	// performance-bearing notation are a separate unresolved musical domain.
 	for _, ch := range node.children {
 		allowed := false
-		for _, role := range []contextRole{contextRepeatNotePitch, contextRepeatNoteRest, contextRepeatNoteUnpitched, contextRepeatNoteDuration, contextRepeatNoteChord, contextRepeatNoteVoice, contextRepeatNoteStaff, contextRepeatNoteType, contextRepeatNoteStem, contextRepeatNoteInstrument} {
+		for _, role := range []contextRole{contextRepeatNotePitch, contextRepeatNoteRest, contextRepeatNoteUnpitched, contextRepeatNoteDuration, contextRepeatNoteChord, contextRepeatNoteVoice, contextRepeatNoteStaff, contextRepeatNoteType, contextRepeatNoteStem, contextRepeatNoteInstrument, contextRepeatNoteDot, contextRepeatNoteAccidental, contextRepeatNoteBeam, contextRepeatNoteLyric, contextRepeatNoteNotehead, contextRepeatNoteTimeModification, contextRepeatNoteNotations} {
 			if r.matches(ch, role) {
 				allowed = true
 				break
 			}
+		}
+		if r.matches(ch, contextRepeatNoteTie) {
+			note.available = stateMergeGap(note.available, stateUnknown[bool]("context-repeat-playback-tie-unresolved"))
+			allowed = true
+		}
+		if r.matches(ch, contextRepeatNoteNotations) {
+			for _, mark := range ch.children {
+				if !r.matches(mark, contextRepeatNotationSlur) && !r.matches(mark, contextRepeatNotationTied) {
+					note.available = stateMergeGap(note.available, stateUnknown[bool]("context-repeat-performance-notation-unresolved"))
+				}
+			}
+		}
+		if r.err != nil {
+			return note, r.err
 		}
 		if !allowed {
 			note.available = stateMergeGap(note.available, stateUnknown[bool]("context-repeat-note-equivalence-domain-unresolved"))
@@ -237,32 +282,6 @@ func contextRepeatNoteEqual(ctx context.Context, s *Session, a, b contextRepeatN
 	return cmp == 0, err
 }
 
-// Equality is a sufficient proof on this explicitly bounded event domain.
-// Failure to match is unresolved equivalence, not a necessary-rule violation.
-func contextRepeatMeasureEqual(ctx context.Context, s *Session, notes []contextRepeatNote, part NodeRef, a, b uint64) (Evidence[bool], error) {
-	release, err := contextRepeatIndexReserve(ctx, s, len(notes), len(notes), len(notes), len(notes))
-	if err != nil {
-		return Evidence[bool]{}, err
-	}
-	defer release()
-	var source, target []contextRepeatNote
-	for _, note := range notes {
-		if err = s.step(ctx, 1); err != nil {
-			return Evidence[bool]{}, err
-		}
-		if note.pos.Part != part {
-			continue
-		}
-		if note.pos.MeasureOrdinal == a {
-			source = append(source, note)
-		}
-		if note.pos.MeasureOrdinal == b {
-			target = append(target, note)
-		}
-	}
-	return contextRepeatSelectedMeasureEqual(ctx, s, source, target)
-}
-
 func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, timeline *timelineService, rows []contextRepeatRecord) error {
 	if err := s.step(ctx, 1); err != nil {
 		return err
@@ -275,28 +294,27 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 		return err
 	}
 	defer releaseTransforms()
-	var notes []contextRepeatNote
+	freeNotes, err := contextRepeatScratch(ctx, s, len(timeline.Playback.Notes), 2048)
+	if err != nil {
+		return err
+	}
+	defer freeNotes()
+	notes := make([]contextRepeatNote, 0, len(timeline.Playback.Notes))
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
-	coverage := navigationKnownBool(true)
+	index, freeIndex, err := contextRepeatBuildProofIndex(r, timeline, rows)
+	if err != nil {
+		return err
+	}
+	defer freeIndex()
 	for _, id := range s.sequence {
-		node := s.nodes[id]
-		coverage = stateMergeGap(coverage, r.complete(node))
-		if node.header.Declaration.State != EvidenceKnown {
-			coverage = stateMergeGap(coverage, stateUnavailable[DeclarationID, bool](node.header.Declaration))
-		}
-		if r.matches(node, contextRepeatAnyNote) {
-			if _, ok := timeline.Playback.Notes[id]; !ok {
-				coverage = stateMergeGap(coverage, stateUnknown[bool]("context-repeat-note-universe-incomplete"))
-			}
+		if !r.step(1) {
+			return r.err
 		}
 		if _, ok := timeline.Playback.Notes[id]; !ok {
 			continue
 		}
 		note, err := contextRepeatReadNote(r, timeline, transformed, id)
 		if err != nil {
-			return err
-		}
-		if err = s.retain(2048); err != nil {
 			return err
 		}
 		notes = append(notes, note)
@@ -307,18 +325,24 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 	}
 	defer releaseRoster()
 	for i := range rows {
-		if err := contextRepeatProveRosterRow(ctx, s, timeline, roster, rows, &rows[i], coverage); err != nil {
+		if err := s.step(ctx, 1+int64(len(rows[i].value.Part.Value.DocumentID))); err != nil {
+			return err
+		}
+		if err := contextRepeatProveRosterRow(ctx, s, timeline, roster, rows, &rows[i], index.partCoverage(rows[i].value.Part), index); err != nil {
 			return err
 		}
 	}
 	return r.err
 }
 
-func contextRepeatProveRosterRow(ctx context.Context, s *Session, timeline *timelineService, roster *contextRepeatContentRoster, rows []contextRepeatRecord, row *contextRepeatRecord, coverage Evidence[bool]) error {
+func contextRepeatProveRosterRow(ctx context.Context, s *Session, timeline *timelineService, roster *contextRepeatContentRoster, rows []contextRepeatRecord, row *contextRepeatRecord, coverage Evidence[bool], indexes ...*contextRepeatProofIndex) error {
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
 	row.value.NoteScopesComplete = coverage
+	if (row.value.Kind != RepeatStyleBeat && row.value.Kind != RepeatStyleMeasure) || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" {
+		return nil
+	}
 	if coverage.State != EvidenceKnown || !coverage.Value {
 		row.value.ContentEquivalent = coverage
 		return nil
@@ -330,55 +354,53 @@ func contextRepeatProveRosterRow(ctx context.Context, s *Session, timeline *time
 		}
 		return nil
 	}
-	if (row.value.Kind != RepeatStyleBeat && row.value.Kind != RepeatStyleMeasure) || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" {
-		return nil
+	var notes []contextRepeatNote
+	var release func()
+	var err error
+	if len(indexes) != 0 {
+		notes, release, err = indexes[0].cachedPart(ctx, s, roster, row.value.Part.Value)
+	} else {
+		notes, release, err = roster.partNotes(ctx, s, row.value.Part.Value)
 	}
-	notes, release, err := roster.partNotes(ctx, s, row.value.Part.Value)
 	if err != nil {
 		return err
 	}
 	defer release()
-	return contextRepeatProveRow(ctx, s, timeline, notes, rows, row, coverage)
+	return contextRepeatProveRow(ctx, s, timeline, notes, rows, row, coverage, indexes...)
 }
 
-func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineService, notes []contextRepeatNote, rows []contextRepeatRecord, row *contextRepeatRecord, coverage Evidence[bool]) error {
+func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineService, notes []contextRepeatNote, rows []contextRepeatRecord, row *contextRepeatRecord, coverage Evidence[bool], indexes ...*contextRepeatProofIndex) error {
 	row.value.NoteScopesComplete = coverage
+	if (row.value.Kind != RepeatStyleBeat && row.value.Kind != RepeatStyleMeasure) || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" {
+		return nil
+	}
 	if coverage.State != EvidenceKnown || !coverage.Value {
 		row.value.ContentEquivalent = coverage
 		return nil
 	}
-	if (row.value.Kind != RepeatStyleBeat && row.value.Kind != RepeatStyleMeasure) || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" {
-		return nil
+	var scope *contextRepeatProofScope
+	var release func()
+	var err error
+	if len(indexes) != 0 {
+		scope, release, err = indexes[0].scope(ctx, s, notes, row.value)
+	} else {
+		selected, status, free, e := contextRepeatScopedNotes(ctx, s, notes, row.value)
+		scope = &contextRepeatProofScope{notes: selected, complete: status}
+		release, err = free, e
 	}
-	selected, status, release, err := contextRepeatScopedNotes(ctx, s, notes, row.value)
 	if err != nil {
 		return err
 	}
 	defer release()
-	if status.State != EvidenceKnown || !status.Value {
-		row.value.ContentEquivalent = status
+	if scope.complete.State != EvidenceKnown || !scope.complete.Value {
+		row.value.ContentEquivalent = scope.complete
 		return nil
 	}
-	notes = selected
-	if err := contextRepeatBeatProof(ctx, s, notes, rows, row); err != nil {
+	notes = scope.notes
+	if err := contextRepeatBeatProof(ctx, s, notes, rows, row, indexes...); err != nil {
 		return err
 	}
-	if row.value.Kind != RepeatStyleMeasure || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" || row.position.State != EvidenceKnown || row.value.PatternMeasures.State != EvidenceKnown || row.value.Complete.State != EvidenceKnown || !row.value.Complete.Value {
-		return nil
-	}
-	placementGap := navigationKnownBool(true)
-	for _, note := range notes {
-		if err := s.step(ctx, 1); err != nil {
-			return err
-		}
-		if note.part.State != EvidenceKnown || note.part.Value == row.value.Part.Value {
-			if !note.pos.Offset.Valid() {
-				placementGap = stateMergeGap(placementGap, note.available)
-			}
-		}
-	}
-	if placementGap.State != EvidenceKnown {
-		row.value.ContentEquivalent = placementGap
+	if row.value.Kind != RepeatStyleMeasure || row.position.State != EvidenceKnown || row.value.PatternMeasures.State != EvidenceKnown || row.value.Complete.State != EvidenceKnown || !row.value.Complete.Value {
 		return nil
 	}
 	start := row.position.Value
@@ -397,7 +419,14 @@ func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineSe
 	var end uint64
 	endKnown := false
 	if row.value.Stop.State == EvidenceKnown {
-		for _, other := range rows {
+		candidates := rows
+		if len(indexes) != 0 {
+			if err := s.step(ctx, 1+int64(len(row.value.Stop.Value.DocumentID))); err != nil {
+				return err
+			}
+			candidates = indexes[0].stopRows(rows, row.value.Stop.Value)
+		}
+		for _, other := range candidates {
 			if err = s.step(ctx, 1); err != nil {
 				return err
 			}
@@ -407,11 +436,22 @@ func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineSe
 			}
 		}
 	} else if row.value.Stop.State == EvidenceAbsent {
-		for _, closure := range timeline.State.Closures {
+		closures := timeline.State.Closures
+		if len(indexes) != 0 {
+			if c, ok := indexes[0].closures[start.Part]; ok {
+				closures = []stateClosure{c}
+			} else {
+				closures = nil
+			}
+		}
+		for _, closure := range closures {
 			if err = s.step(ctx, 1); err != nil {
 				return err
 			}
 			if closure.Part == start.Part && closure.Complete.State == EvidenceKnown && closure.Complete.Value {
+				if closure.Through == ^uint64(0) {
+					return nil
+				}
 				end = closure.Through + 1
 				endKnown = true
 			}
@@ -420,11 +460,15 @@ func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineSe
 	if !endKnown || end <= start.MeasureOrdinal {
 		return nil
 	}
-	buckets, complete, releaseMeasures, err := contextRepeatBuildMeasureRoster(ctx, s, notes, start.Part)
-	if err != nil {
-		return err
+	buckets, complete := scope.buckets, scope.complete
+	if buckets == nil {
+		var free func()
+		buckets, complete, free, err = contextRepeatBuildMeasureRoster(ctx, s, notes, start.Part)
+		if err != nil {
+			return err
+		}
+		defer free()
 	}
-	defer releaseMeasures()
 	if complete.State != EvidenceKnown || !complete.Value {
 		row.value.ContentEquivalent = complete
 		return nil
@@ -440,7 +484,7 @@ func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineSe
 			return e
 		}
 		if same.State != EvidenceKnown {
-			empty, e := contextRepeatEmptyMeasure(ctx, s, timeline, notes, start.Part, source, measure)
+			empty, e := contextRepeatEmptyMeasure(ctx, s, timeline, notes, start.Part, source, measure, indexes...)
 			if e != nil {
 				return e
 			}
@@ -554,12 +598,21 @@ func contextRepeatScopedNotes(ctx context.Context, s *Session, notes []contextRe
 	return out, status, release, nil
 }
 
-func contextRepeatWindow(ctx context.Context, s *Session, notes []contextRepeatNote, part NodeRef, measure uint64, from, to Rational) ([]contextRepeatNote, Evidence[bool], error) {
-	var out []contextRepeatNote
-	status := navigationKnownBool(true)
+func contextRepeatWindow(ctx context.Context, s *Session, notes []contextRepeatNote, part NodeRef, measure uint64, from, to Rational) (out []contextRepeatNote, status Evidence[bool], release func(), err error) {
+	release, err = contextRepeatScratch(ctx, s, len(notes), 2048)
+	if err != nil {
+		return nil, Evidence[bool]{}, func() {}, err
+	}
+	defer func() {
+		if err != nil {
+			release()
+			release = func() {}
+		}
+	}()
+	status = navigationKnownBool(true)
 	for _, note := range notes {
 		if err := s.step(ctx, 1); err != nil {
-			return nil, Evidence[bool]{}, err
+			return nil, Evidence[bool]{}, release, err
 		}
 		if note.part.State != EvidenceKnown {
 			status = stateMergeGap(status, note.available)
@@ -577,29 +630,29 @@ func contextRepeatWindow(ctx context.Context, s *Session, notes []contextRepeatN
 		}
 		before, e := s.rationalCmp(ctx, note.pos.Offset, from)
 		if e != nil {
-			return nil, Evidence[bool]{}, e
+			return nil, Evidence[bool]{}, release, e
 		}
 		after, e := s.rationalCmp(ctx, note.pos.Offset, to)
 		if e != nil {
-			return nil, Evidence[bool]{}, e
+			return nil, Evidence[bool]{}, release, e
 		}
 		if after >= 0 {
 			continue
 		}
 		end, e := s.rationalAdd(ctx, note.pos.Offset, note.duration)
 		if e != nil {
-			return nil, Evidence[bool]{}, e
+			return nil, Evidence[bool]{}, release, e
 		}
 		endBefore, e := s.rationalCmp(ctx, end, from)
 		if e != nil {
-			return nil, Evidence[bool]{}, e
+			return nil, Evidence[bool]{}, release, e
 		}
 		if endBefore <= 0 {
 			continue
 		}
 		endAfter, e := s.rationalCmp(ctx, end, to)
 		if e != nil {
-			return nil, Evidence[bool]{}, e
+			return nil, Evidence[bool]{}, release, e
 		}
 		if before < 0 || endAfter > 0 {
 			status = stateMergeGap(status, stateUnknown[bool]("context-repeat-cross-boundary-event-unresolved"))
@@ -611,30 +664,46 @@ func contextRepeatWindow(ctx context.Context, s *Session, notes []contextRepeatN
 		}
 		note.pos.Offset, e = s.rationalSub(ctx, note.pos.Offset, from)
 		if e != nil {
-			return nil, Evidence[bool]{}, e
-		}
-		if e = s.retain(2048); e != nil {
-			return nil, Evidence[bool]{}, e
+			return nil, Evidence[bool]{}, release, e
 		}
 		out = append(out, note)
 	}
-	return out, status, nil
+	return out, status, release, nil
 }
 
-func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepeatNote, rows []contextRepeatRecord, row *contextRepeatRecord) error {
-	if row.value.Kind != RepeatStyleBeat || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" || row.position.State != EvidenceKnown || row.value.Beat.State != EvidenceKnown || row.value.Stop.State != EvidenceKnown {
+func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepeatNote, rows []contextRepeatRecord, row *contextRepeatRecord, indexes ...*contextRepeatProofIndex) error {
+	if row.value.Kind != RepeatStyleBeat || row.value.Type.State != EvidenceKnown || row.value.Type.Value != "start" || row.position.State != EvidenceKnown || row.value.Beat.State != EvidenceKnown {
 		return nil
 	}
-	var stop *contextRepeatRecord
-	for i := range rows {
-		if err := s.step(ctx, 1); err != nil {
-			return err
+	var end Evidence[musicalPosition]
+	if row.value.Stop.State == EvidenceKnown {
+		candidates := rows
+		if len(indexes) != 0 {
+			if err := s.step(ctx, 1+int64(len(row.value.Stop.Value.DocumentID))); err != nil {
+				return err
+			}
+			candidates = indexes[0].stopRows(rows, row.value.Stop.Value)
 		}
-		if rows[i].source == row.value.Stop.Value {
-			stop = &rows[i]
+		for i := range candidates {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			if candidates[i].source == row.value.Stop.Value {
+				end = candidates[i].position
+			}
 		}
+	} else if row.value.Stop.State == EvidenceAbsent && len(indexes) != 0 && row.value.Complete.State == EvidenceKnown && row.value.Complete.Value {
+		end = indexes[0].partEnd(row.position.Value)
 	}
-	if stop == nil || stop.position.State != EvidenceKnown || stop.position.Value.Measure != row.position.Value.Measure {
+	if end.State != EvidenceKnown {
+		row.value.ContentEquivalent = stateUnavailable[musicalPosition, bool](end)
+		if end.State == "" || end.State == EvidenceAbsent {
+			row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-beat-measure-local-boundary-unresolved")
+		}
+		return nil
+	}
+	if end.Value.Measure != row.position.Value.Measure {
+		row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-beat-measure-local-boundary-unresolved")
 		return nil
 	}
 	origin := row.position.Value
@@ -644,17 +713,25 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 		return err
 	}
 	if sourceStart.value.Sign() < 0 {
+		row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-beat-measure-local-source-unresolved")
 		return nil
 	}
-	windows, releaseWindows, err := contextRepeatBuildWindowIndex(ctx, s, notes, origin.Part, origin.MeasureOrdinal)
+	var windows *contextRepeatWindowIndex
+	var releaseWindows func()
+	if len(indexes) != 0 {
+		windows, releaseWindows, err = indexes[0].windowIndex(ctx, s, notes, row.value, origin)
+	} else {
+		windows, releaseWindows, err = contextRepeatBuildWindowIndex(ctx, s, notes, origin.Part, origin.MeasureOrdinal)
+	}
 	if err != nil {
 		return err
 	}
 	defer releaseWindows()
-	source, status, err := windows.window(ctx, s, sourceStart, origin.Offset)
+	source, status, freeSource, err := windows.window(ctx, s, sourceStart, origin.Offset)
 	if err != nil {
 		return err
 	}
+	defer freeSource()
 	if status.State != EvidenceKnown {
 		row.value.ContentEquivalent = status
 		return nil
@@ -664,7 +741,7 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 	}
 	row.value.ContentEquivalent = navigationKnownBool(true)
 	for from := origin.Offset; ; {
-		cmp, err := s.rationalCmp(ctx, from, stop.position.Value.Offset)
+		cmp, err := s.rationalCmp(ctx, from, end.Value.Offset)
 		if err != nil {
 			return err
 		}
@@ -679,7 +756,7 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 		if err != nil {
 			return err
 		}
-		cmp, err = s.rationalCmp(ctx, to, stop.position.Value.Offset)
+		cmp, err = s.rationalCmp(ctx, to, end.Value.Offset)
 		if err != nil {
 			return err
 		}
@@ -687,71 +764,56 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 			row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-nonintegral-beat-range")
 			return nil
 		}
-		target, status, err := windows.window(ctx, s, from, to)
+		target, status, freeTarget, err := windows.window(ctx, s, from, to)
 		if err != nil {
 			return err
 		}
-		if status.State != EvidenceKnown {
-			row.value.ContentEquivalent = status
-			return nil
-		}
-		if len(source) != len(target) {
-			row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-content-equivalence-unresolved")
-			return nil
-		}
-		ordered, err := contextRepeatOrderedEqual(ctx, s, source, target)
-		if err != nil {
-			return err
-		}
-		if ordered {
-			from = to
-			continue
-		}
-		bytes := int64(len(target))
-		if err = s.account.Charge(BudgetBufferedBytes, bytes); err != nil {
-			return err
-		}
-		used := make([]bool, len(target))
-		equal := true
-		for _, a := range source {
-			found := false
-			for j, b := range target {
-				if used[j] {
-					continue
-				}
-				same, e := contextRepeatNoteEqual(ctx, s, a, b)
-				if e != nil {
-					_ = s.account.Release(BudgetBufferedBytes, bytes)
-					return e
-				}
-				if same {
-					used[j] = true
-					found = true
-					break
+		same, compareErr := func() (Evidence[bool], error) {
+			defer freeTarget()
+			if status.State != EvidenceKnown {
+				return status, nil
+			}
+			if len(target) == 0 {
+				for _, note := range source {
+					if err := s.step(ctx, 1); err != nil {
+						return Evidence[bool]{}, err
+					}
+					if !note.rest {
+						return navigationKnownBool(false), nil
+					}
 				}
 			}
-			if !found {
-				equal = false
-				break
-			}
+			return contextRepeatSelectedMeasureEqual(ctx, s, source, target)
+		}()
+		if compareErr != nil {
+			return compareErr
 		}
-		_ = s.account.Release(BudgetBufferedBytes, bytes)
-		if !equal {
-			row.value.ContentEquivalent = stateUnknown[bool]("context-repeat-content-equivalence-unresolved")
+		if same.State != EvidenceKnown || !same.Value {
+			row.value.ContentEquivalent = same
 			return nil
 		}
 		from = to
 	}
+
 }
 
 // An empty measure is a counterexample only when all earlier sounding note
 // endpoints are independently proved before its origin. A terminal note end,
 // nominal meter, printed barline or missing note count alone is insufficient.
-func contextRepeatEmptyMeasure(ctx context.Context, s *Session, timeline *timelineService, notes []contextRepeatNote, part NodeRef, source, target uint64) (Evidence[bool], error) {
+func contextRepeatEmptyMeasure(ctx context.Context, s *Session, timeline *timelineService, notes []contextRepeatNote, part NodeRef, source, target uint64, indexes ...*contextRepeatProofIndex) (Evidence[bool], error) {
 	sourceSound := false
 	var origin musicalPosition
 	originKnown := false
-	for _, id := range s.sequence {
+	if len(indexes) != 0 {
+		if p, ok := indexes[0].origins[contextRepeatMeasureKey{part, target}]; ok {
+			origin, originKnown = p, true
+		}
+	}
+	sequence := s.sequence
+	if len(indexes) != 0 {
+		sequence = nil
+	}
+	for _, id := range sequence {
 		fact := timeline.Facts[id]
 		if err := s.step(ctx, 1); err != nil {
 			return Evidence[bool]{}, err
@@ -778,6 +840,15 @@ func contextRepeatEmptyMeasure(ctx context.Context, s *Session, timeline *timeli
 		if note.available.State != EvidenceKnown || !note.pos.Offset.Valid() {
 			return note.available, nil
 		}
+		if note.pos.UnprovedFrame {
+			member, e := timeline.State.frameMember(ctx, s, note.pos)
+			if e != nil {
+				return Evidence[bool]{}, e
+			}
+			if !member {
+				return stateUnknown[bool]("context-repeat-empty-coverage-unresolved"), nil
+			}
+		}
 		if note.pos.MeasureOrdinal == target {
 			return stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), nil
 		}
@@ -795,7 +866,7 @@ func contextRepeatEmptyMeasure(ctx context.Context, s *Session, timeline *timeli
 		if err != nil {
 			return Evidence[bool]{}, err
 		}
-		if order != stateBefore && order != stateEqual {
+		if order&stateAfter != 0 {
 			return stateUnknown[bool]("context-repeat-empty-coverage-unresolved"), nil
 		}
 	}

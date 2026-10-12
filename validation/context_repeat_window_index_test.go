@@ -49,8 +49,10 @@ func TestContextRepeatWindowIndexMatchesConservativeWindows(t *testing.T) {
 		}
 		for _, query := range queries {
 			from, to := mustRational(t, query[0], query[1]), mustRational(t, query[2], query[3])
-			got, status, e := index.window(context.Background(), s, from, to)
-			want, wantStatus, wantErr := contextRepeatWindow(context.Background(), s, notes, part, 0, from, to)
+			got, status, freeGot, e := index.window(context.Background(), s, from, to)
+			want, wantStatus, freeWant, wantErr := contextRepeatWindow(context.Background(), s, notes, part, 0, from, to)
+			freeGot()
+			freeWant()
 			if e != nil || wantErr != nil || !reflect.DeepEqual(got, want) || !reflect.DeepEqual(status, wantStatus) {
 				t.Fatalf("interleave=%t query=%v: got %+v,%+v,%v want %+v,%+v,%v", interleave, query, got, status, e, want, wantStatus, wantErr)
 			}
@@ -109,8 +111,10 @@ func TestContextRepeatWindowIndexFallbackPreservesEvidence(t *testing.T) {
 			}
 			defer release()
 			from, to := mustRational(t, 0, 1), mustRational(t, 2, 3)
-			got, status, err := index.window(context.Background(), s, from, to)
-			want, wantStatus, wantErr := contextRepeatWindow(context.Background(), s, notes, NodeRef{"d", 1}, 0, from, to)
+			got, status, freeGot, err := index.window(context.Background(), s, from, to)
+			want, wantStatus, freeWant, wantErr := contextRepeatWindow(context.Background(), s, notes, NodeRef{"d", 1}, 0, from, to)
+			freeGot()
+			freeWant()
 			if err != nil || wantErr != nil || !reflect.DeepEqual(got, want) || !reflect.DeepEqual(status, wantStatus) {
 				t.Fatalf("fallback changed evidence: got %+v,%+v,%v want %+v,%+v,%v", got, status, err, want, wantStatus, wantErr)
 			}
@@ -154,11 +158,13 @@ func TestContextRepeatWindowIndexCancellationAndWorkBoundary(t *testing.T) {
 			return err
 		}
 		defer release()
-		_, _, err = index.window(ctx, s, from, to)
+		_, _, freeWindow, err := index.window(ctx, s, from, to)
+		freeWindow()
 		if err != nil {
 			return err
 		}
-		_, _, err = index.window(ctx, s, to, mustRational(t, 4, 3))
+		_, _, freeWindow, err = index.window(ctx, s, to, mustRational(t, 4, 3))
+		freeWindow()
 		return err
 	}
 	probe := rationalSession(t, Budgets{})
@@ -215,7 +221,8 @@ func TestContextRepeatWindowIndexSequentialWindowGrowth(t *testing.T) {
 		}
 		defer release()
 		for i := 0; i < count; i++ {
-			got, status, err := index.window(context.Background(), s, mustRational(t, int64(i), 3), mustRational(t, int64(i+1), 3))
+			got, status, freeGot, err := index.window(context.Background(), s, mustRational(t, int64(i), 3), mustRational(t, int64(i+1), 3))
+			freeGot()
 			if err != nil || status.State != EvidenceKnown || !status.Value || len(got) != 1 || got[0].source != notes[i].source || got[0].pos.Offset.String() != "0" {
 				t.Fatalf("window %d: %v %+v %+v", i, err, status, got)
 			}

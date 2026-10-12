@@ -20,7 +20,12 @@ func TestIndependentContextRepeatOrderedMeasureLinearWork(t *testing.T) {
 				notes = append(notes, contextRepeatNote{part: stateKnown(part), pos: pos, duration: statePosition(t, 0, 1, 1).Offset, rest: true, available: stateKnown(true), staff: stateAbsent[Integer](), voice: stateAbsent[string](), step: stateAbsent[string](), alter: stateAbsent[Decimal](), octave: stateAbsent[Integer](), instrument: stateAbsent[string]()})
 			}
 		}
-		same, err := contextRepeatMeasureEqual(context.Background(), s, notes, part, 0, 1)
+		buckets, complete, release, err := contextRepeatBuildMeasureRoster(context.Background(), s, notes, part)
+		if err != nil || complete.State != EvidenceKnown {
+			t.Fatalf("roster: %+v %v", complete, err)
+		}
+		defer release()
+		same, err := contextRepeatSelectedMeasureEqual(context.Background(), s, buckets[0], buckets[1])
 		if err != nil || same.State != EvidenceKnown || !same.Value {
 			t.Fatalf("ordered exact equivalence lost: %+v %v", same, err)
 		}

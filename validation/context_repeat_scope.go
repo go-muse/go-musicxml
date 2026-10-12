@@ -118,9 +118,6 @@ func contextRepeatNoteScopes(ctx context.Context, s *Session, timeline *timeline
 			if !ok {
 				continue
 			}
-			if row.value.Part.State == EvidenceKnown && note.Origin.Part.State == EvidenceKnown && row.value.Part.Value != note.Origin.Part.Value {
-				continue
-			}
 			fact := timeline.Facts[id]
 			v := RepeatNoteScope{Source: note.Origin.Source, InRange: stateUnknown[bool]("context-repeat-range-membership-unavailable")}
 			if row.value.Part.State != EvidenceKnown {

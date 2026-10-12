@@ -342,10 +342,7 @@ func contextRepeatBeat(r *contextReader, timeline *timelineService, n *factNode,
 		return stateUnknown[Rational]("context-interrupted")
 	}
 	part := beat
-	complete := r.complete(n)
-	if complete.State != EvidenceKnown {
-		return stateUnavailable[bool, Rational](complete)
-	}
+	// child already established the parent enumeration above.
 	two, _ := NewRational(big.NewRat(2, 1))
 	for _, ch := range n.children {
 		if r.matches(ch, dotRole) {
@@ -409,6 +406,9 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 			dotRole = contextSlashDisplayDot
 			exceptRole = contextSlashExcept
 		}
+		if r.err != nil {
+			return Decision{}, false, r.err
+		}
 		if kind == "" {
 			continue
 		}
@@ -416,7 +416,7 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 		if e != nil {
 			return Decision{}, false, e
 		}
-		value := RepeatContextResult{Kind: kind, Part: fact.Part, Type: stateText(r.attribute(node, typeRole)), Staff: stateInteger(r.attribute(s.nodes[node.header.Parent], contextRepeatStaff)), Slashes: Evidence[Integer]{State: EvidenceAbsent}, UseDots: Evidence[bool]{State: EvidenceAbsent}, UseStems: Evidence[bool]{State: EvidenceAbsent}, Start: Evidence[NodeRef]{State: EvidenceAbsent}, Stop: Evidence[NodeRef]{State: EvidenceAbsent}, ContentEquivalent: stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), Complete: r.complete(node)}
+		value := RepeatContextResult{Beat: Evidence[Rational]{State: EvidenceAbsent}, PatternMeasures: Evidence[Integer]{State: EvidenceAbsent}, Kind: kind, Part: fact.Part, Type: stateText(r.attribute(node, typeRole)), Staff: stateInteger(r.attribute(s.nodes[node.header.Parent], contextRepeatStaff)), Slashes: Evidence[Integer]{State: EvidenceAbsent}, UseDots: Evidence[bool]{State: EvidenceAbsent}, UseStems: Evidence[bool]{State: EvidenceAbsent}, Start: Evidence[NodeRef]{State: EvidenceAbsent}, Stop: Evidence[NodeRef]{State: EvidenceAbsent}, ContentEquivalent: stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), Complete: r.complete(node)}
 		if slashRole != "" {
 			value.Slashes = stateInteger(r.attribute(node, slashRole))
 		}
@@ -439,11 +439,17 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 				}
 			}
 		}
+		if value.Type.State == EvidenceKnown && value.Type.Value == "stop" {
+			value.ContentEquivalent = Evidence[bool]{State: EvidenceAbsent}
+		}
 		contextRepeatDefaults(&value)
 		if displayRole != "" {
 			value.Beat = contextRepeatBeat(r, timeline, node, value, fact.Position, displayRole, dotRole, meterRoster)
 		}
 		for _, ch := range node.children {
+			if !r.step(1) {
+				return Decision{}, false, r.err
+			}
 			if exceptRole != "" && r.matches(ch, exceptRole) {
 				if err = s.retain(256); err != nil {
 					return Decision{}, false, err
@@ -484,6 +490,12 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 func contextRepeatSimpleMeterBeat(r *contextReader, v timeState) Evidence[Rational] {
 	if !r.step(1) {
 		return stateUnknown[Rational]("context-interrupted")
+	}
+	if v.Interchangeable.State != EvidenceAbsent && v.Interchangeable.State != "" {
+		if v.Interchangeable.State != EvidenceKnown {
+			return stateUnavailable[interchangeableState, Rational](v.Interchangeable)
+		}
+		return stateUnknown[Rational]("context-repeat-interchangeable-meter-unresolved")
 	}
 	if v.SenzaMisura.State != EvidenceAbsent {
 		if v.SenzaMisura.State != EvidenceKnown {
