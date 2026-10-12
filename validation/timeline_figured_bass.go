@@ -35,6 +35,28 @@ type figuredBassAnchorKey struct {
 // Indirect retained record plus at least 512 bytes of map growth headroom.
 // The finalizer's separately admitted fixed scratch covers temporary records.
 const timelineFigureReserveBytes int64 = 2560
+const timelineFigureCacheEntries = 64
+const timelineFigureCacheReserveBytes int64 = 131072
+const timelineFigureVariableScratchBytes int64 = 384
+
+// Cache storage is bounded independently of document size. Clear reuses the
+// admitted map tables, and its traversal and cancellation are still metered.
+func timelineFigureCachePut[K comparable, V any](ctx context.Context, s *Session, cache map[K]V, key K, value V) error {
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if _, present := cache[key]; !present && len(cache) >= timelineFigureCacheEntries {
+		if err := s.step(ctx, int64(len(cache))); err != nil {
+			return err
+		}
+		clear(cache)
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+	}
+	cache[key] = value
+	return nil
+}
 
 type figuredBassDomain struct {
 	block    timelineMeasureBlock
@@ -229,7 +251,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	if err != nil {
 		return err
 	}
-	itemBytes, err := rationalCheckedMul(BudgetBufferedBytes, figureCount, 2048)
+	itemBytes, err := rationalCheckedMul(BudgetBufferedBytes, figureCount, timelineFigureVariableScratchBytes)
 	if err != nil {
 		return err
 	}
@@ -237,7 +259,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 	if err != nil {
 		return err
 	}
-	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, 8192)
+	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, 8192+timelineFigureCacheReserveBytes)
 	if err != nil {
 		return err
 	}
@@ -353,7 +375,9 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 					if r.err != nil {
 						return r.err
 					}
-					anchorCache[key] = cached
+					if err := timelineFigureCachePut(ctx, s, anchorCache, key, cached); err != nil {
+						return err
+					}
 				}
 				anchor = cached
 				if anchor.State == EvidenceKnown {
@@ -440,7 +464,9 @@ func (service *timelineService) figuredBassUnits(ctx context.Context, s *Session
 	if err != nil {
 		return Evidence[Decimal]{}, err
 	}
-	cache[key] = result
+	if err := timelineFigureCachePut(ctx, s, cache, key, result); err != nil {
+		return Evidence[Decimal]{}, err
+	}
 	return result, nil
 }
 
@@ -467,7 +493,9 @@ func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimin
 			if err != nil {
 				return err
 			}
-			cache[key] = out.Duration
+			if err := timelineFigureCachePut(ctx, s, cache, key, out.Duration); err != nil {
+				return err
+			}
 		}
 	} else {
 		out.Duration, err = s.normalizeTimelineDuration(ctx, out.DurationRaw, out.DurationUnits)
