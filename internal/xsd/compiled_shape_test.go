@@ -95,3 +95,21 @@ func TestCompiledContentShapeBoundsAndCycles(t *testing.T) {
 		t.Fatal("cyclic scalar metadata gained a shape")
 	}
 }
+
+func TestCompiledContentShapeComplexExtensionBoundsAndCycles(t *testing.T) {
+	for _, count := range []int{128, 129} {
+		base := &ComplexSchema{Form: ComplexDirect}
+		for range count {
+			base = &ComplexSchema{Form: ComplexComplexContentExtension, Base: &TypeRef{InlineComplex: base}}
+		}
+		_, known := shapeType(t, TypeRef{InlineComplex: base}).ContentShape()
+		if known != (count == 128) {
+			t.Fatalf("extension depth %d known=%v", count, known)
+		}
+	}
+	loop := &ComplexSchema{Form: ComplexComplexContentExtension}
+	loop.Base = &TypeRef{InlineComplex: loop}
+	if _, known := shapeType(t, TypeRef{InlineComplex: loop}).ContentShape(); known {
+		t.Fatal("cyclic element extension gained a shape")
+	}
+}

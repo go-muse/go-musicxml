@@ -144,3 +144,12 @@ func TestFiguredBassOriginLaterUnknownMarkersDoNotMaskEarlierAnchor(t *testing.T
 		})
 	}
 }
+
+func TestFiguredBassOriginBudgetFailureCannotPublish(t *testing.T) {
+	_, service, b, block := figuredOriginFixture(t, OrderSource)
+	s := rationalSession(t, Budgets{MaxRuleSteps: 5})
+	defer s.cleanup()
+	if err := service.resolveFiguredBassOrigins(context.Background(), s, b, block); !errors.Is(err, ErrResourceLimit) || len(service.FiguredBassOrigins) != 0 {
+		t.Fatalf("interrupted anchor publication: %v", err)
+	}
+}

@@ -223,3 +223,39 @@ func TestNoteOriginsMidReadCancellationAndSignedOffset(t *testing.T) {
 	}
 	noteOriginCheckPosition(t, service.NoteOrigins[20].Attack.Position, "-1/3")
 }
+
+func TestNoteOriginsThousandOrdinaryNotesFitDefaultBudgets(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		t.Run(string(order), func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			s.documentID = "d"
+			service := &timelineService{}
+			b := noteOriginBindings()
+			for i := 0; i < 1000; i++ {
+				id := NodeID(20 + i*10)
+				n := runtimeNote(t, b, id, 1, false)
+				n.end.Order = stateKnown(order)
+				fact := noteOriginFact(t)
+				fact.Position.Value.Offset = mustRational(t, int64(i), 30)
+				fact.End = stateKnown(fact.Position.Value)
+				fact.End.Value.Offset = mustRational(t, int64(i+1), 30)
+				fact.Duration = stateKnown(mustRational(t, 1, 30))
+				if err := service.readNoteOrigins(context.Background(), s, b, n, fact, stateKnown(stateDecimal(t, 3, 1))); err != nil {
+					t.Fatalf("note %d: %v", i, err)
+				}
+				got := service.NoteOrigins[id]
+				if got.ScoreEnd.Value.Offset.value != fact.End.Value.Offset.value {
+					t.Fatalf("note %d duplicated rational arithmetic", i)
+				}
+			}
+			if len(service.NoteOrigins) != 1000 {
+				t.Fatalf("stored %d notes", len(service.NoteOrigins))
+			}
+			t.Logf("provider work steps=%d retained bytes=%d", rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes))
+			s.cleanup()
+			if got := rationalUsage(t, s, BudgetBufferedBytes); got != 0 {
+				t.Fatalf("retained after cleanup: %d", got)
+			}
+		})
+	}
+}
