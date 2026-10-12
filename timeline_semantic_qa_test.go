@@ -506,3 +506,30 @@ func TestTimelineSemanticQAFixtureSchemaControls(t *testing.T) {
 		})
 	}
 }
+
+func TestTimelineAnalysisKeyStaysAtUnshiftedHarmonyOrigin(t *testing.T) {
+	key := `<attributes><key><fifths>0</fifths></key></attributes>`
+	for _, tc := range []struct {
+		name, body string
+		want       validation.Outcome
+		count      int
+	}{
+		{"visual-forward-cannot-borrow-future-key", semanticQADivisions + timelineNote("1", "", "") + timelineNumeral("", `<offset>2</offset>`) + timelineNote("1", "", "") + key, validation.OutcomeFail, 1},
+		{"visual-backward-does-not-erase-present-key", semanticQADivisions + timelineNote("2", "", "") + key + timelineNote("1", "", "") + timelineNumeral("", `<offset>-2</offset>`), "", 0},
+		{"sound-flag-does-not-move-analysis-key", semanticQADivisions + timelineNote("1", "", "") + timelineNumeral("", `<offset sound="yes">2</offset>`) + timelineNote("1", "", "") + key, validation.OutcomeFail, 1},
+		{"local-analysis-key-independent", semanticQADivisions + timelineNote("1", "", "") + timelineNumeral(semanticQALocalKey, `<offset>2</offset>`) + timelineNote("1", "", "") + key, "", 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, form := range []string{"partwise", "timewise"} {
+				t.Run(form, func(t *testing.T) {
+					assessTimelineBoth(t, semanticQAScore(form, [][2]string{{tc.body, ""}}), func(t *testing.T, r validation.Report) {
+						semanticQAExpect(t, r, "MX40-TIMELINE-numeral-requires-key", tc.want, tc.count)
+						if !r.AssessmentComplete {
+							t.Fatalf("unexpected incomplete %s", localFindings(r))
+						}
+					})
+				})
+			}
+		})
+	}
+}
