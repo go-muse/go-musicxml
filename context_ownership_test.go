@@ -1,8 +1,6 @@
 package musicxml
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"os"
 	"reflect"
 	"strconv"
@@ -56,7 +54,7 @@ func TestContextOwnershipPreservesOriginalScope(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if got := fmt.Sprintf("%x", sha256.Sum256(data)); got != want {
+		if got := contextEvidenceTextSHA256(data); got != want {
 			t.Errorf("source %s changed: %s", path, got)
 		}
 	}
@@ -70,7 +68,7 @@ func TestContextTranslationsPreserveFidelityBoundary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if fmt.Sprintf("%x", sha256.Sum256(data)) != meta["artifact_sha256"] {
+	if contextEvidenceTextSHA256(data) != meta["artifact_sha256"] {
 		t.Fatal("reviewed translation artifact drift")
 	}
 	translations := timelineOwnershipJSON(t, path)
