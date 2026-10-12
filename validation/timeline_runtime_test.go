@@ -70,3 +70,27 @@ func TestTimelineRuntimeUnknownPositionOnlyGapsPublishedFamily(t *testing.T) {
 		t.Fatalf("unknown placed clef fabricated absence=%+v", clef)
 	}
 }
+
+func TestTimelineRuntimeDoesNotChooseDisputedUnits(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	d1 := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	d2 := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 41, stateAtomicDecimal(t, 2, 1)))
+	backup := stateNode(b, timelineRoleBackup, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 51, stateAtomicDecimal(t, 2, 1)))
+	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, d1, runtimeNote(t, b, 30, 1, false), d2, backup, runtimeNote(t, b, 60, 2, false))); err != nil {
+		t.Fatal(err)
+	}
+	if got := service.Facts[60].Position; got.State == EvidenceKnown {
+		t.Fatalf("unapproved lexical/onset/departure convention chose %s", got.Value.Offset)
+	}
+}
+func TestTimelineRuntimeChordDoesNotBorrowLaterDivisions(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	d1 := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	d2 := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 41, stateAtomicDecimal(t, 2, 1)))
+	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, d1, runtimeNote(t, b, 30, 1, false), d2, runtimeNote(t, b, 50, 2, true))); err != nil {
+		t.Fatal(err)
+	}
+	if got := service.Facts[50].Duration; got.State == EvidenceKnown {
+		t.Fatalf("chord chose unapproved normalization %s", got.Value)
+	}
+}
