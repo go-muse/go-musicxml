@@ -91,15 +91,7 @@ func (s *Session) normalizeTimelineDuration(ctx context.Context, raw, units Evid
 	if units.Value.value.Sign() == 0 {
 		return Evidence[Rational]{State: EvidenceUnsupported, Reason: "zero-division-units"}, nil
 	}
-	numerator, err := s.rationalFromDecimal(ctx, raw.Value)
-	if err != nil {
-		return Evidence[Rational]{}, err
-	}
-	denominator, err := s.rationalFromDecimal(ctx, units.Value)
-	if err != nil {
-		return Evidence[Rational]{}, err
-	}
-	value, err := s.rationalQuo(ctx, numerator, denominator)
+	value, err := s.rationalQuoDecimals(ctx, raw.Value, units.Value)
 	if err != nil {
 		return Evidence[Rational]{}, err
 	}

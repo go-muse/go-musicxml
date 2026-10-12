@@ -431,6 +431,19 @@ func (s *Session) rationalFromDecimal(ctx context.Context, value Decimal) (Ratio
 	defer release()
 	return s.rationalResult(ctx, new(big.Rat).Set(value.value))
 }
+
+// rationalQuoDecimals reads already-owned immutable decimal operands and owns
+// only the escaping fraction. The same exact quotient width/work/scratch plan
+// applies; unused converted copies must not become session-lifetime outputs.
+func (s *Session) rationalQuoDecimals(ctx context.Context, a, b Decimal) (Rational, error) {
+	release, err := s.rationalReserve(ctx, rationalQuoOp, a.value, b.value, a.ByteSize(), b.ByteSize())
+	if err != nil {
+		return Rational{}, err
+	}
+	defer release()
+	return s.rationalResult(ctx, new(big.Rat).Quo(a.value, b.value))
+}
+
 func (s *Session) rationalArithmetic(ctx context.Context, op rationalOperation, a, b Rational) (Rational, error) {
 	release, err := s.rationalReserve(ctx, op, a.value, b.value, a.ByteSize(), b.ByteSize())
 	if err != nil {
