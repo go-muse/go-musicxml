@@ -188,7 +188,7 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 	positive := make(map[NodeRef]bool, len(v.unitExcursions))
 	gates := make(map[NodeID]timelineExcursionGate, len(v.unitExcursions))
 	for _, exc := range v.unitExcursions {
-		if err = s.step(ctx, 1); err != nil {
+		if err = s.step(ctx, 1+int64(len(exc.Part.DocumentID))); err != nil {
 			return err
 		}
 		units := v.Facts[exc.Node].Units
@@ -353,7 +353,7 @@ func (v *timelineService) proveExcursion(ctx context.Context, s *Session, exc ti
 			// A differing old region is harmless only with an independently
 			// located same-unit repair after it and at/before the landing.
 			for _, repair := range publishers {
-				if err = s.step(ctx, 1); err != nil {
+				if err = s.step(ctx, 1+int64(len(exc.Part.DocumentID))+int64(len(repair.Part.Value.DocumentID))); err != nil {
 					return false, cause, err
 				}
 				if repair.Part.State != EvidenceKnown || repair.Part.Value != exc.Part {
