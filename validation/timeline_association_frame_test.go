@@ -193,3 +193,36 @@ func TestTimelineFigureChainDisplacedGapKeepsActualCause(t *testing.T) {
 		}
 	}
 }
+
+func TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier(t *testing.T) {
+	s, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	chord := v.NoteOrigins[40]
+	chord.Chord = stateKnown(true)
+	v.NoteOrigins[40] = chord
+	farther := chord
+	farther.Note.Node = 70
+	farther.Chord = stateKnown(false)
+	farther.ScoreOnset = timelineAt(blocks[0], stateKnown(mustRational(t, 4, 1)))
+	farther.ScoreEnd = farther.ScoreOnset
+	v.NoteOrigins[70] = farther
+	blocks[0].content.children = append(blocks[0].content.children, runtimeNote(t, b, 70, 1, false))
+	extra := runtimeNote(t, b, 80, 1, false)
+	later := runtimeBlock(b, 1, extra)
+	floating := farther
+	floating.Note.Node = 80
+	floating.ScoreOnset = timelineAt(later, stateKnown(mustRational(t, 10, 1)))
+	floating.ScoreOnset.Value.UnprovedFrame = true
+	floating.ScoreEnd = floating.ScoreOnset
+	v.NoteOrigins[80] = floating
+	blocks = append(blocks, later)
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	got := v.GraceNeighbors[20]
+	if got.Previous.Note.State != EvidenceKnown || got.Previous.Note.Value.Node != 10 {
+		t.Fatalf("unrelated floating candidate lost previous donor: %+v", got)
+	}
+	if got.Following.Note.State == EvidenceKnown {
+		t.Fatalf("floating fallback skipped nearer chord ambiguity: %+v", got)
+	}
+}
