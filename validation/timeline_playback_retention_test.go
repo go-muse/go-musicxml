@@ -32,8 +32,8 @@ func TestPlaybackOwnedRecordAllowanceCoversWidthsAndGrowth(t *testing.T) {
 	if unsafe.Sizeof(playbackInstruction{}) > 512 {
 		t.Fatal("playback instruction exceeds separately admitted slot")
 	}
-	if unsafe.Sizeof(playTechnique{}) > 512 {
-		t.Fatal("play technique exceeds separately admitted slot")
+	if 2*unsafe.Sizeof(playTechnique{})+64 > 512 {
+		t.Fatal("play technique and overlapping append growth exceed admitted slot")
 	}
 	if unsafe.Sizeof(DecisionRef{}) > 128 {
 		t.Fatal("causal record exceeds ownOrigin admission")
