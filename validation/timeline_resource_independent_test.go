@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"math/big"
 	"testing"
@@ -155,5 +156,118 @@ func TestIndependentTimelineCheckedCountOverflow(t *testing.T) {
 	}
 	if _, err := AllocationSize(math.MaxInt64); uint64(^uint(0)>>1) < math.MaxInt64 && !errors.Is(err, ErrResourceLimit) {
 		t.Fatalf("host int truncation err=%v", err)
+	}
+}
+
+func TestIndependentTimelineEveryIndexCancellationBoundary(t *testing.T) {
+	probe, h := stateIndexFixture(t, Budgets{})
+	counter := &rationalCancelContext{Context: context.Background(), at: math.MaxInt}
+	if _, err := stateIndex(counter, probe, h); err != nil {
+		t.Fatal(err)
+	}
+	calls := counter.calls
+	probe.cleanup()
+	if calls < 30 {
+		t.Fatalf("too few observed index poll boundaries: %d", calls)
+	}
+	for at := 1; at <= calls; at++ {
+		s, h := stateIndexFixture(t, Budgets{})
+		before := rationalUsage(t, s, BudgetBufferedBytes)
+		workBefore := rationalUsage(t, s, BudgetRuleSteps)
+		ctx := &rationalCancelContext{Context: context.Background(), at: at}
+		index, err := stateIndex(ctx, s, h)
+		if !errors.Is(err, context.Canceled) || index != nil || h.index != nil || rationalUsage(t, s, BudgetBufferedBytes) != before || rationalUsage(t, s, BudgetRuleSteps) < workBefore {
+			t.Fatalf("poll %d leaked/published/reset state: index=%p err=%v bytes=%d want=%d", at, index, err, rationalUsage(t, s, BudgetBufferedBytes), before)
+		}
+		for i, p := range h.Publications {
+			if p.Value.Value.String() != fmt.Sprint(i) || p.Position.Offset.String() != fmt.Sprint(8-i) {
+				t.Fatalf("poll%d changed publication order/value", at)
+			}
+		}
+		rebuilt, err := stateIndex(context.Background(), s, h)
+		if err != nil || rebuilt.Count != 8 {
+			t.Fatalf("retry poll%d: %v", at, err)
+		}
+		s.cleanup()
+		if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+			t.Fatalf("poll%d leaked final gauge", at)
+		}
+	}
+	t.Logf("canceled and retried every one of %d index polling boundaries", calls)
+}
+
+func TestIndependentTimelineStateValueOutputIsolation(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 0)
+	cause := &DecisionRef{Rule: RuleKey{ID: "input", Revision: 1}, Subject: NodeRef{"d", 70}}
+	value := timeState{Pairs: []timePair{{Beats: stateKnown("3+2"), BeatType: stateKnown("8")}}, Interchangeable: stateKnown(interchangeableState{Pairs: []timePair{{Beats: Evidence[string]{State: EvidenceInvalid, Cause: cause}, BeatType: stateKnown("4")}}})}
+	statePublish(t, s, &h.Times, statePosition(t, 0, 1, 3), stateScope{AllStaves: true}, stateKnown(value), 99)
+	cause.Subject.Node = 999
+	value.Pairs[0].Beats.Value = "99"
+	got := stateQuery(t, s, h, &h.Times, statePosition(t, 0, 2, 3), stateKnown(stateInt(t, 1)))
+	if got.Value.Value.Pairs[0].Beats.Value != "3+2" || got.Value.Value.Interchangeable.Value.Pairs[0].Beats.Cause.Subject.Node != 70 {
+		t.Fatal("publication retained mutable input")
+	}
+	got.Value.Value.Pairs[0].Beats.Value = "999"
+	got.Value.Value.Interchangeable.Value.Pairs[0].Beats.Cause.Subject.Node = 999
+	got.Provenance[0].Node.Node = 999
+	again := stateQuery(t, s, h, &h.Times, statePosition(t, 0, 2, 3), stateKnown(stateInt(t, 1)))
+	if again.Value.Value.Pairs[0].Beats.Value != "3+2" || again.Value.Value.Interchangeable.Value.Pairs[0].Beats.Cause.Subject.Node != 70 || again.Provenance[0].Node.Node != 99 {
+		t.Fatal("query retained mutable output")
+	}
+}
+
+func TestIndependentTimelineIntegerEmbeddingScalarBoundary(t *testing.T) {
+	v, err := NewInteger(new(big.Int).Lsh(big.NewInt(1), 8192))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, limit := range []int64{v.ByteSize() - 1, v.ByteSize(), v.ByteSize() + 1} {
+		s := rationalSession(t, Budgets{MaxScalarBytes: limit})
+		got, err := s.stateRationalInteger(context.Background(), v)
+		if limit < v.ByteSize() {
+			if !errors.Is(err, ErrResourceLimit) || got.Valid() || rationalUsage(t, s, BudgetBufferedBytes) != 0 || rationalUsage(t, s, BudgetRuleSteps) != 0 {
+				t.Fatalf("scalar precheck: limit=%d err=%v", limit, err)
+			}
+		} else if err != nil && !errors.Is(err, ErrResourceLimit) {
+			t.Fatalf("wrong enlarged rational bound error: %v", err)
+		}
+		// The rational planner may conservatively need a larger scalar envelope than
+		// the integer's input payload; it must never fabricate a musical failure.
+		s.cleanup()
+		if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+			t.Fatal("integer embedding leaked scratch")
+		}
+	}
+}
+
+func TestIndependentTimelineSharedAccountCleanupIsolation(t *testing.T) {
+	account, err := NewBudgetAccount(Budgets{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, b := &Session{account: account}, &Session{account: account}
+	for i, s := range []*Session{a, b} {
+		service, err := s.newTimelineService(context.Background(), RuleKey{ID: "shared-immutable-plan", Revision: 1})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for j := 0; j <= i; j++ {
+			if err := service.storeFact(context.Background(), s, NodeID(j+1), timelineEventFact{}); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	retainedB := b.retained
+	a.cleanup()
+	if a.timeline != nil || b.timeline == nil || rationalUsage(t, b, BudgetBufferedBytes) != retainedB {
+		t.Fatal("cleanup reset another session's gauge/state")
+	}
+	a.cleanup()
+	b.cleanup()
+	if b.timeline != nil || rationalUsage(t, b, BudgetBufferedBytes) != 0 {
+		t.Fatal("cleanup left timeline gauge")
 	}
 }
