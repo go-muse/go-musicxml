@@ -241,3 +241,39 @@ func TestTimelineStateModelFieldsAreStructuralNotChronology(t *testing.T) {
 		t.Fatalf("singleton field scans retained %d bytes", after-before)
 	}
 }
+
+func TestTimelineStateUnknownPublisherGapsAllButKnownTypeNarrows(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	s.documentID = "d"
+	defer s.cleanup()
+	h := &timelineState{}
+	stateClose(t, s, h, 2)
+	b := stateBindings()
+	part := statePosition(t, 0, 0, 1).Part
+	availability := stateUnknown[musicalPosition]("unobserved-event")
+	if e := h.gapAll(context.Background(), s, part, 1, availability); e != nil {
+		t.Fatal(e)
+	}
+	if len(h.Keys.Gaps) != 1 || len(h.Divisions.Gaps) != 1 || len(h.InstrumentGaps) != 1 {
+		t.Fatal("unknown event omitted possible state families")
+	}
+	isolated := &timelineState{}
+	stateClose(t, s, isolated, 2)
+	keyType := ComponentID{Kind: ComponentType, Name: QName{Local: "exact-key-type"}}
+	b.Roles[timelineRoleAttributesKey][0].DeclaredTypeKnown = true
+	b.Roles[timelineRoleAttributesKey][0].DeclaredType = keyType
+	for _, role := range []timelineRole{timelineRoleAttributesDivisions, timelineRoleAttributesTime, timelineRoleAttributesStaves, timelineRoleAttributesInstruments, timelineRoleAttributesClef, timelineRoleAttributesTranspose, timelineRoleAttributesForPart} {
+		b.Roles[role][0].DeclaredTypeKnown = true
+		b.Roles[role][0].DeclaredType = ComponentID{Kind: ComponentType, Name: QName{Local: "other-type"}}
+	}
+	child := stateNode(b, timelineRoleAttributesKey, 31, stateAbsent[Atomic]())
+	child.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "unbound-key-use"}
+	child.header.Type = stateKnown(keyType)
+	attrs := stateNode(b, timelineRoleAttributes, 30, stateAbsent[Atomic](), child)
+	if e := isolated.readAttributes(context.Background(), s, b, attrs, statePosition(t, 0, 0, 1)); e != nil {
+		t.Fatal(e)
+	}
+	if len(isolated.Keys.Publications) != 1 || len(isolated.Divisions.Publications) != 0 || len(isolated.Times.Publications) != 0 {
+		t.Fatal("known exact key type poisoned other families")
+	}
+}
