@@ -87,6 +87,16 @@ property after its relevant gap interval. Different properties at the same
 position can both be known, while incompatible statements for the same property
 remain ambiguous.
 
+An unresolved instrument target with an established musical position introduces
+point-local uncertainty for its stated properties in the canonical part. It
+cannot invalidate a proved earlier prefix or properties omitted by that record.
+A strictly later known statement for the same property may repair the result;
+an equal-position statement is not silently treated as later. The unresolved
+record retains its original target cause, raw fields, repeat condition and
+position. Only a genuinely unplaced publisher needs bounded measure-interval
+uncertainty. This is the provider's score-order evidence boundary, not an excuse
+to discard the original XSD identity failure or manufacture a target identity.
+
 A property query names its actual selected source and inherited state. A
 compound convenience projection may aggregate sources, but may not label every
 field as if it were published by the latest unrelated change. Copies, indexes,
@@ -105,6 +115,9 @@ provenance and exact comparisons remain session-accounted and cancellable.
   omitted channel preserves its independent earlier statement
 - Guarded invalid value: preserve its actual cause; a later unconditional update
   repairs only the same property
+- Known-position invalid target: preserve earlier property state, retain the
+  exact identity cause from that position, and permit strictly later same-field
+  repair without poisoning omitted fields
 
 Exact executable cases and the inspected implementation snapshot are recorded in
 [timeline-assessment-ownership.json](timeline-assessment-ownership.json).
