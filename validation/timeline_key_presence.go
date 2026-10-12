@@ -2,6 +2,12 @@ package validation
 
 import "context"
 
+const (
+	timelineKeyPresenceCertificateBytes  int64 = 512
+	timelineKeyPresenceGapScratchBytes   int64 = 512
+	timelineKeyPresenceScratchFixedBytes int64 = 256
+)
+
 // A certificate describes valid key encoding only. It does not position an
 // update, choose a concrete key, or repair an invalid/hidden publisher. The map
 // is sparse in actual unplaced keys and indexed by their immutable gap row.
@@ -20,7 +26,7 @@ func (h *timelineState) certifyKeyPresenceGap(ctx context.Context, s *Session, i
 		return err
 	}
 	// Map header and old/new bucket coexistence, separately from the owned source.
-	if err := s.retain(512); err != nil {
+	if err := s.retain(timelineKeyPresenceCertificateBytes); err != nil {
 		return err
 	}
 	if err := stateRetainCopy(ctx, s, provenance); err != nil {
@@ -42,11 +48,11 @@ func (h *timelineState) queryKeyPresence(ctx context.Context, s *Session, pos mu
 	// Remove only certified value-preserving gaps for an independent baseline
 	// proof. Missing baseline and every other causal gap remain in the query.
 	count := int64(len(h.Keys.Gaps))
-	bytes, err := rationalCheckedMul(BudgetBufferedBytes, count, 512)
+	bytes, err := rationalCheckedMul(BudgetBufferedBytes, count, timelineKeyPresenceGapScratchBytes)
 	if err != nil {
 		return stateResult[bool]{}, err
 	}
-	bytes, err = rationalCheckedAdd(BudgetBufferedBytes, bytes, 256)
+	bytes, err = rationalCheckedAdd(BudgetBufferedBytes, bytes, timelineKeyPresenceScratchFixedBytes)
 	if err != nil {
 		return stateResult[bool]{}, err
 	}
