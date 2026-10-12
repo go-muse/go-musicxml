@@ -439,3 +439,49 @@ func TestTimelinePlansSnapshotSchemaHandlesAndProviderRevision(t *testing.T) {
 		t.Fatal("plan retained caller schema handle")
 	}
 }
+
+func TestTimelinePlanRejectsWrongNamedScalarFamilies(t *testing.T) {
+	for _, tc := range []struct {
+		name, typ string
+		change    func(*validation.SchemaType)
+	}{
+		{"duration alias becomes string", "positive-divisions", func(t *validation.SchemaType) {
+			s := *t.Simple
+			s.Base = &validation.SchemaSimpleMember{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+			t.Simple = &s
+		}},
+		{"integer key becomes decimal", "fifths", func(t *validation.SchemaType) {
+			s := *t.Simple
+			s.Base = &validation.SchemaSimpleMember{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "decimal"}}
+			t.Simple = &s
+		}},
+		{"arbitrary precision staff becomes string", "staff-number", func(t *validation.SchemaType) {
+			s := *t.Simple
+			s.Base = &validation.SchemaSimpleMember{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+			t.Simple = &s
+		}},
+		{"pedal union loses numeric branch", "yes-no-number", func(t *validation.SchemaType) {
+			s := *t.Simple
+			s.Members = []*validation.SchemaSimpleMember{{Name: validation.SchemaName{Local: "yes-no"}}}
+			t.Simple = &s
+		}},
+		{"complex scalar octave becomes string", "key-octave", func(t *validation.SchemaType) {
+			c := *t.Complex
+			c.Base = &validation.SchemaTypeRef{Name: validation.SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "string"}}
+			t.Complex = &c
+		}},
+		{"structured key becomes mixed", "key", func(t *validation.SchemaType) { c := *t.Complex; c.Mixed = true; t.Complex = &c }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			schema := timelineContractVariantSchema(t, func(d *validation.SchemaData) {
+				key := validation.SchemaName{Local: tc.typ}
+				typ := *d.Types[key]
+				tc.change(&typ)
+				d.Types[key] = &typ
+			})
+			if _, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: timelineContractOwners(t, schema)}); !errors.Is(err, validation.ErrInvalidConfiguration) {
+				t.Fatalf("accepted wrong underlying scalar/complex family: %v", err)
+			}
+		})
+	}
+}
