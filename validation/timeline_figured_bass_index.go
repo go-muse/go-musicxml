@@ -91,12 +91,12 @@ func (service *timelineService) buildFiguredBassNoteIndex(r *stateReader, domain
 				continue
 			}
 			fact, found := service.Facts[candidate.header.ID]
-			if !found || fact.Part.State != EvidenceKnown || fact.Part.Value != part || fact.Position.State != EvidenceKnown {
+			if !found || fact.Part.State != EvidenceKnown || !r.sameRef(fact.Part.Value, part) || fact.Position.State != EvidenceKnown {
 				item.Safe = false
 				continue
 			}
 			at := fact.Position.Value
-			if at.Part != part || at.Measure != measure || at.MeasureOrdinal != block.ordinal {
+			if !r.sameRef(at.Part, part) || !r.sameRef(at.Measure, measure) || at.MeasureOrdinal != block.ordinal {
 				item.Safe = false
 				continue
 			}
@@ -159,19 +159,20 @@ func (service *timelineService) buildFiguredBassNoteIndex(r *stateReader, domain
 
 func (index figuredBassNoteIndex) anchor(ctx context.Context, s *Session, service *timelineService, origin timelineEventFact) (Evidence[NodeRef], timelineEventFact, bool, error) {
 	empty := timelineEventFact{}
+	r := &stateReader{ctx: ctx, s: s}
 	if origin.Part.State != EvidenceKnown || origin.Position.State != EvidenceKnown {
 		return Evidence[NodeRef]{}, empty, false, nil
 	}
 	at := origin.Position.Value
-	if at.Part != origin.Part.Value {
-		return Evidence[NodeRef]{}, empty, false, nil
+	if !r.sameRef(at.Part, origin.Part.Value) {
+		return Evidence[NodeRef]{}, empty, false, r.err
 	}
 	if err := s.step(ctx, 1+int64(len(at.Part.DocumentID))); err != nil {
 		return Evidence[NodeRef]{}, empty, false, err
 	}
 	item := index[at.Part]
-	if item == nil || !item.Safe || item.Measures[at.MeasureOrdinal] != at.Measure {
-		return Evidence[NodeRef]{}, empty, false, nil
+	if item == nil || !item.Safe || !r.sameRef(item.Measures[at.MeasureOrdinal], at.Measure) {
+		return Evidence[NodeRef]{}, empty, false, r.err
 	}
 	member, err := service.State.frameMember(ctx, s, at)
 	if err != nil {

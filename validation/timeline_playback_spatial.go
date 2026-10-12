@@ -49,7 +49,11 @@ func (sound soundPlaybackContext) spatial(ctx context.Context, s *Session, instr
 			if gap.State != EvidenceKnown {
 				unavailable(gap)
 			} else {
-				if record.Instrument.Value != instrument.Value || record.Part != sound.Origin.Part.Value || record.Source.DocumentID != sound.Origin.Source.DocumentID || record.Source.DocumentID != s.documentID || record.Source.Node == 0 || instrument.Value.Node == 0 {
+				r := &stateReader{ctx: ctx, s: s}
+				if !r.sameRef(record.Instrument.Value, instrument.Value) || !r.sameRef(record.Part, sound.Origin.Part.Value) || !r.sameRef(NodeRef{DocumentID: record.Source.DocumentID}, NodeRef{DocumentID: sound.Origin.Source.DocumentID}) || !r.sameRef(NodeRef{DocumentID: record.Source.DocumentID}, NodeRef{DocumentID: s.documentID}) || record.Source.Node == 0 || instrument.Value.Node == 0 {
+					if r.err != nil {
+						return playbackSpatialState{}, r.err
+					}
 					return playbackSpatialState{}, contract("sound spatial precedence", "matching canonical part and instrument required")
 				}
 				node := s.nodes[record.Source.Node]

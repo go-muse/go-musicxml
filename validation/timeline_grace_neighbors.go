@@ -65,26 +65,8 @@ func graceStronger(a, b Evidence[NodeRef]) Evidence[NodeRef] {
 	}
 	return a
 }
-func graceSameMeasure(a, b musicalPosition) bool {
-	return a.Part == b.Part && a.Measure == b.Measure && a.MeasureOrdinal == b.MeasureOrdinal
-}
 func (s *Session) gracePositionOrder(ctx context.Context, a, b musicalPosition) (int, error) {
-	if a.Part != b.Part {
-		return 0, contract("grace neighbor", "different part positions")
-	}
-	if err := s.step(ctx, 1); err != nil {
-		return 0, err
-	}
-	if a.MeasureOrdinal < b.MeasureOrdinal {
-		return -1, nil
-	}
-	if a.MeasureOrdinal > b.MeasureOrdinal {
-		return 1, nil
-	}
-	if a.Measure != b.Measure {
-		return 0, contract("grace neighbor", "different measures share ordinal")
-	}
-	return s.rationalCmp(ctx, a.Offset, b.Offset)
+	return stateComparePosition(ctx, s, a, b)
 }
 
 // A scoped gap can affect a donor only if it can fall in that donor-to-grace
@@ -113,7 +95,7 @@ func graceGapRelevant(r *stateReader, service *timelineService, gap graceScopedG
 	if gap.WholePart {
 		return true, nil
 	}
-	if gap.Position.State == EvidenceKnown && stateValidPosition(gap.Position.Value) && gap.Position.Value.Part == key.part {
+	if gap.Position.State == EvidenceKnown && r.validPosition(gap.Position.Value) && r.sameRef(gap.Position.Value.Part, key.part) {
 		at := gap.Position.Value
 		for _, bound := range []struct {
 			position Evidence[musicalPosition]
@@ -123,8 +105,8 @@ func graceGapRelevant(r *stateReader, service *timelineService, gap graceScopedG
 				continue
 			}
 			edge := bound.position.Value
-			if at.MeasureOrdinal == edge.MeasureOrdinal && at.Measure != edge.Measure {
-				return true, nil
+			if at.MeasureOrdinal == edge.MeasureOrdinal && !r.sameRef(at.Measure, edge.Measure) {
+				return true, r.err
 			}
 			order, err := service.State.positionOrder(r.ctx, r.s, at, edge)
 			if err != nil {
@@ -135,6 +117,9 @@ func graceGapRelevant(r *stateReader, service *timelineService, gap graceScopedG
 			}
 		}
 		return true, nil
+	}
+	if r.err != nil {
+		return false, r.err
 	}
 	if gap.Note != 0 {
 		if !r.step(1) {
@@ -317,7 +302,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				}
 			}
 			cause := Evidence[NodeRef]{State: EvidenceKnown}
-			positioned := n.ScoreOnset.State == EvidenceKnown && stateValidPosition(n.ScoreOnset.Value) && n.ScoreOnset.Value.Part == owner && n.ScoreOnset.Value.Measure == (NodeRef{s.documentID, block.measure.header.ID}) && n.ScoreOnset.Value.MeasureOrdinal == block.ordinal
+			positioned := n.ScoreOnset.State == EvidenceKnown && r.validPosition(n.ScoreOnset.Value) && r.sameRef(n.ScoreOnset.Value.Part, owner) && r.sameRef(n.ScoreOnset.Value.Measure, NodeRef{s.documentID, block.measure.header.ID}) && n.ScoreOnset.Value.MeasureOrdinal == block.ordinal
 			at := n.ScoreOnset
 			if !positioned {
 				cause = timelineGapAs[musicalPosition, NodeRef](n.ScoreOnset, "grace-note-position-unavailable")
@@ -423,7 +408,14 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			// Duplicate canonical ordinals already have a scoped gap. Give those
 			// unavailable domains a deterministic internal order without treating
 			// their different measure identities as chronological evidence.
-			if a.MeasureOrdinal == z.MeasureOrdinal && a.Measure != z.Measure {
+			sameMeasure := true
+			if a.MeasureOrdinal == z.MeasureOrdinal {
+				sameMeasure, interrupted = stateSameRef(ctx, s, a.Measure, z.Measure)
+				if interrupted != nil {
+					return false
+				}
+			}
+			if a.MeasureOrdinal == z.MeasureOrdinal && !sameMeasure {
 				interrupted = s.step(ctx, 1)
 				return interrupted == nil && a.Measure.Node < z.Measure.Node
 			}
@@ -451,15 +443,22 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			}
 			if lastOrdinary != 0 {
 				prior := service.NoteOrigins[lastOrdinary]
-				if prior.ScoreEnd.State == EvidenceKnown && graceSameMeasure(prior.ScoreEnd.Value, n.ScoreOnset.Value) {
+				if prior.ScoreEnd.State == EvidenceKnown && r.sameMeasure(prior.ScoreEnd.Value, n.ScoreOnset.Value) {
 					cmp, err := s.rationalCmp(ctx, prior.ScoreEnd.Value.Offset, n.ScoreOnset.Value.Offset)
 					if err != nil {
 						return err
 					}
 					if cmp > 0 {
-						parts[stream.key.part].gaps = append(parts[stream.key.part].gaps, graceScopedGap{Value: stateUnknown[NodeRef]("grace-overlapping-voice-events"), Position: n.ScoreOnset, Voice: n.Voice, From: n.ScoreOnset.Value.MeasureOrdinal, Through: n.ScoreOnset.Value.MeasureOrdinal})
+						if !r.step(1 + int64(len(stream.key.part.DocumentID))) {
+							return r.err
+						}
+						part := parts[stream.key.part]
+						part.gaps = append(part.gaps, graceScopedGap{Value: stateUnknown[NodeRef]("grace-overlapping-voice-events"), Position: n.ScoreOnset, Voice: n.Voice, From: n.ScoreOnset.Value.MeasureOrdinal, Through: n.ScoreOnset.Value.MeasureOrdinal})
 					}
 				}
+			}
+			if r.err != nil {
+				return r.err
 			}
 			lastOrdinary = id
 		}
@@ -502,6 +501,9 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 	}
 	for i := range streams {
 		stream := &streams[i]
+		if !r.step(1 + int64(len(stream.key.part.DocumentID))) {
+			return r.err
+		}
 		part := parts[stream.key.part]
 		previous := -1
 		for at := 0; at < len(stream.notes); {
@@ -541,7 +543,10 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				if !r.step(int64(len(position.Offset.text))) {
 					return r.err
 				}
-				same := cached && graceSameMeasure(position, cachedAt) && position.Offset.text == cachedAt.Offset.text && position.UnprovedFrame == cachedAt.UnprovedFrame
+				same := cached && r.sameMeasure(position, cachedAt) && position.Offset.text == cachedAt.Offset.text && position.UnprovedFrame == cachedAt.UnprovedFrame
+				if r.err != nil {
+					return r.err
+				}
 				if !same {
 					chosenPrevious, chosenFollowing = previous, following
 					previousProof, followingProof := Evidence[NodeRef]{State: EvidenceKnown}, Evidence[NodeRef]{State: EvidenceKnown}
@@ -621,12 +626,15 @@ func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *
 			}
 			// Same-frame equality retains the encoded ordering of grace runs. No
 			// such source-order tie break is permitted for different measure frames.
-			if order == stateEqual && graceSameMeasure(candidate.ScoreOnset.Value, n.ScoreOnset.Value) {
+			if order == stateEqual && r.sameMeasure(candidate.ScoreOnset.Value, n.ScoreOnset.Value) {
 				if i < target {
 					order = stateBefore
 				} else {
 					order = stateAfter
 				}
+			}
+			if r.err != nil {
+				return -1, gap, r.err
 			}
 			eligible, impossible := stateAfter, stateBefore
 			if previous {

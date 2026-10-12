@@ -53,7 +53,7 @@ func (q *timelineFollowingSearch) addPlaced(r *stateReader, value Evidence[NodeR
 			return
 		}
 		if q.best.State == EvidenceKnown {
-			if at.MeasureOrdinal == q.fact.Position.Value.MeasureOrdinal && at.Measure != q.fact.Position.Value.Measure {
+			if at.MeasureOrdinal == q.fact.Position.Value.MeasureOrdinal && !r.sameRef(at.Measure, q.fact.Position.Value.Measure) {
 				q.gap = graceStronger(q.gap, value)
 				return
 			}
@@ -146,7 +146,7 @@ func (q *timelineFollowingSearch) candidate(r *stateReader, value Evidence[NodeR
 		return
 	}
 	if q.pass == 1 {
-		if q.best.State == EvidenceKnown && value.Value == q.best.Value {
+		if q.best.State == EvidenceKnown && r.sameRef(value.Value, q.best.Value) {
 			return
 		}
 		reason := q.chronology
@@ -191,7 +191,7 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 		return timelineGapAs[string, NodeRef](origin.Voice, "direction-voice-unavailable"), empty
 	}
 	want := origin.Origin.Value
-	if want.Part != origin.Part.Value {
+	if !r.sameRef(want.Part, origin.Part.Value) {
 		return stateUnknown[NodeRef]("direction-part-position-conflict"), empty
 	}
 	complete, err := service.State.closure(r.ctx, r.s, want)
@@ -208,14 +208,14 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 			if !r.step(1) {
 				return stateUnknown[NodeRef]("timeline-interrupted"), empty
 			}
-			if block.part.State == EvidenceKnown && block.part.Value != want.Part {
+			if block.part.State == EvidenceKnown && !r.sameRef(block.part.Value, want.Part) {
 				continue
 			}
 			if block.part.State != EvidenceKnown {
 				q.add(r, timelineGapAs[NodeRef, NodeRef](block.part, "direction-candidate-part-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 				continue
 			}
-			if block.ordinal == want.MeasureOrdinal && (NodeRef{r.s.documentID, block.measure.header.ID}) != want.Measure {
+			if block.ordinal == want.MeasureOrdinal && !r.sameRef(NodeRef{r.s.documentID, block.measure.header.ID}, want.Measure) {
 				q.add(r, stateUnknown[NodeRef]("direction-measure-domain-conflict"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 				continue
 			}
@@ -237,7 +237,7 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 					q.add(r, stateUnknown[NodeRef]("direction-note-fact-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 					continue
 				}
-				if fact.Part.State == EvidenceKnown && fact.Part.Value != want.Part {
+				if fact.Part.State == EvidenceKnown && !r.sameRef(fact.Part.Value, want.Part) {
 					continue
 				}
 				if origin.Voice.State == EvidenceKnown && fact.Voice.State == EvidenceKnown {
@@ -253,7 +253,7 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 					continue
 				}
 				at := fact.Position.Value
-				if at.Part != want.Part || at.MeasureOrdinal != block.ordinal || at.Measure != (NodeRef{r.s.documentID, block.measure.header.ID}) {
+				if !r.sameRef(at.Part, want.Part) || at.MeasureOrdinal != block.ordinal || !r.sameRef(at.Measure, NodeRef{r.s.documentID, block.measure.header.ID}) {
 					continue
 				}
 

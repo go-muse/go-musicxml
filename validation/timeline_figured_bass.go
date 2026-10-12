@@ -99,7 +99,7 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, domains []figu
 				addGap(timelineGapAs[NodeRef, NodeRef](block.part, "figured-bass-part-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown})
 				continue
 			}
-			if block.part.Value != origin.Position.Value.Part {
+			if !r.sameRef(block.part.Value, origin.Position.Value.Part) {
 				continue
 			}
 			lower := timelineAt(block, Evidence[Rational]{State: EvidenceKnown, Value: timelineZero})
@@ -134,14 +134,14 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, domains []figu
 					continue
 				}
 				if fact.Position.State != EvidenceKnown {
-					if fact.Part.State == EvidenceKnown && fact.Part.Value != origin.Position.Value.Part {
+					if fact.Part.State == EvidenceKnown && !r.sameRef(fact.Part.Value, origin.Position.Value.Part) {
 						continue
 					}
 					q.addPlaced(r, timelineGapAs[musicalPosition, NodeRef](fact.Position, "figured-bass-note-position-unavailable"), fact.Position, block.ordinal, fact.Placement)
 					continue
 				}
 				at, want := fact.Position.Value, origin.Position.Value
-				if at.Part != want.Part {
+				if !r.sameRef(at.Part, want.Part) {
 					continue
 				}
 				if at.Measure.Node != block.measure.header.ID || at.MeasureOrdinal != block.ordinal {
@@ -589,17 +589,17 @@ func (state *timelineState) figuredBassChainGapRelevant(r *stateReader, gap figu
 		return false, r.err
 	}
 	if gap.Part.State != EvidenceKnown || gap.CursorOrigin.State != EvidenceKnown || anchor.State != EvidenceKnown {
-		return true, nil
+		return true, r.err
 	}
 	at, target := gap.CursorOrigin.Value, anchor.Value
-	if !stateValidPosition(at) || !stateValidPosition(target) || at.Part != gap.Part.Value {
-		return true, nil
+	if !r.validPosition(at) || !r.validPosition(target) || !r.sameRef(at.Part, gap.Part.Value) {
+		return true, r.err
 	}
-	if at.Part != target.Part {
-		return false, nil
+	if !r.sameRef(at.Part, target.Part) {
+		return false, r.err
 	}
-	if at.MeasureOrdinal == target.MeasureOrdinal && at.Measure != target.Measure {
-		return true, nil
+	if at.MeasureOrdinal == target.MeasureOrdinal && !r.sameRef(at.Measure, target.Measure) {
+		return true, r.err
 	}
 	order, err := state.positionOrder(r.ctx, r.s, at, target)
 	return order != stateAfter, err

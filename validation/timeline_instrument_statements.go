@@ -104,6 +104,9 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 			if p.Value.State == EvidenceKnown && statementEvidence(project(p.Value.Value)).State == EvidenceAbsent {
 				continue
 			}
+			if err = s.step(ctx, 1+int64(len(key.Part.DocumentID))+int64(len(key.Staff))); err != nil {
+				return nil, err
+			}
 			scope := candidate.Scopes[key]
 			scope.Publications = append(scope.Publications, i)
 			scope.Partial = scope.Partial || p.Position.UnprovedFrame
@@ -126,7 +129,11 @@ func queryStatementView[T, V any](ctx context.Context, s *Session, h *timelineSt
 }
 
 func instrumentStatement[T any](ctx context.Context, s *Session, h *timelineState, pos musicalPosition, id NodeRef, field int, project func(instrumentState) Evidence[T]) (stateResult[T], error) {
-	if id.Node == 0 || id.DocumentID != pos.Part.DocumentID {
+	r := &stateReader{ctx: ctx, s: s}
+	if id.Node == 0 || !r.sameRef(NodeRef{DocumentID: id.DocumentID}, NodeRef{DocumentID: pos.Part.DocumentID}) {
+		if r.err != nil {
+			return stateResult[T]{}, r.err
+		}
 		return stateResult[T]{}, contract("instrument statement", "canonical matching instrument required")
 	}
 	var selected *instrumentChanges
@@ -134,10 +141,16 @@ func instrumentStatement[T any](ctx context.Context, s *Session, h *timelineStat
 		if err := s.step(ctx, 1); err != nil {
 			return stateResult[T]{}, err
 		}
-		if h.InstrumentChanges[i].Instrument == id {
+		if r.sameRef(h.InstrumentChanges[i].Instrument, id) {
 			selected = &h.InstrumentChanges[i]
 			break
 		}
+		if r.err != nil {
+			return stateResult[T]{}, r.err
+		}
+	}
+	if r.err != nil {
+		return stateResult[T]{}, r.err
 	}
 	var view stateHistory[instrumentState]
 	var local []stateGap
@@ -161,7 +174,10 @@ func instrumentStatement[T any](ctx context.Context, s *Session, h *timelineStat
 			if err := s.step(ctx, 1); err != nil {
 				return stateResult[T]{}, err
 			}
-			if d.Part != pos.Part || d.Instrument != id {
+			if !r.sameRef(d.Part, pos.Part) || !r.sameRef(d.Instrument, id) {
+				if r.err != nil {
+					return stateResult[T]{}, r.err
+				}
 				continue
 			}
 			value := stateUnavailable[instrumentState, T](d.Value)

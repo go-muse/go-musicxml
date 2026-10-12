@@ -13,24 +13,35 @@ type instrumentTargetScope struct {
 	AllInstruments   bool
 }
 
-func recordTargetScope[T any](record instrumentRecord[T], omittedAll bool) Evidence[instrumentTargetScope] {
+func recordTargetScope[T any](ctx context.Context, s *Session, record instrumentRecord[T], omittedAll bool) (Evidence[instrumentTargetScope], error) {
 	if record.Instrument.State == EvidenceAbsent && omittedAll {
-		return Evidence[instrumentTargetScope]{State: EvidenceKnown, Value: instrumentTargetScope{Part: record.Part, AllInstruments: true}}
+		return Evidence[instrumentTargetScope]{State: EvidenceKnown, Value: instrumentTargetScope{Part: record.Part, AllInstruments: true}}, nil
 	}
 	if record.Instrument.State != EvidenceKnown {
 		if record.Instrument.State == EvidenceAbsent || record.Instrument.State == "" {
-			return stateUnknown[instrumentTargetScope]("timeline-required-instrument-id-absent")
+			return stateUnknown[instrumentTargetScope]("timeline-required-instrument-id-absent"), nil
 		}
-		return stateUnavailable[NodeRef, instrumentTargetScope](record.Instrument)
+		return stateUnavailable[NodeRef, instrumentTargetScope](record.Instrument), nil
 	}
 	id := record.Instrument.Value
-	if id.Node == 0 || id.DocumentID != record.Part.DocumentID {
-		return stateUnknown[instrumentTargetScope]("timeline-instrument-owner-unavailable")
+	if id.Node == 0 {
+		return stateUnknown[instrumentTargetScope]("timeline-instrument-owner-unavailable"), nil
 	}
-	return Evidence[instrumentTargetScope]{State: EvidenceKnown, Value: instrumentTargetScope{Part: record.Part, Instrument: id}}
+	same, err := stateSameRef(ctx, s, NodeRef{DocumentID: id.DocumentID}, NodeRef{DocumentID: record.Part.DocumentID})
+	if err != nil {
+		return Evidence[instrumentTargetScope]{}, err
+	}
+	if !same {
+		return stateUnknown[instrumentTargetScope]("timeline-instrument-owner-unavailable"), nil
+	}
+	return Evidence[instrumentTargetScope]{State: EvidenceKnown, Value: instrumentTargetScope{Part: record.Part, Instrument: id}}, nil
 }
 func midiDeviceScope(ctx context.Context, s *Session, record instrumentRecord[midiDeviceState]) (Evidence[instrumentTargetScope], error) {
-	return stateOwnEvidence(ctx, s, recordTargetScope(record, true))
+	scope, err := recordTargetScope(ctx, s, record, true)
+	if err != nil {
+		return Evidence[instrumentTargetScope]{}, err
+	}
+	return stateOwnEvidence(ctx, s, scope)
 }
 
 // The shared timeline index calls its identity discriminator Staff. Here its
@@ -95,23 +106,26 @@ func retainRecordStatement[T any](ctx context.Context, s *Session, store *record
 	if record.Position.State == EvidenceAbsent {
 		return nil
 	} // initial statement is retained in its raw record
-	target := recordTargetScope(record, omittedAll)
+	target, err := recordTargetScope(ctx, s, record, omittedAll)
+	if err != nil {
+		return err
+	}
+	r := &stateReader{ctx: ctx, s: s}
 	scope := stateScope{AllStaves: true}
-	var err error
 	if target.State == EvidenceKnown {
 		scope, err = targetStateScope(ctx, s, target.Value)
 		if err != nil {
 			return err
 		}
 	}
-	if record.Position.State == EvidenceKnown && record.Position.Value.Part != record.Part {
+	if record.Position.State == EvidenceKnown && !r.sameRef(record.Position.Value.Part, record.Part) {
+		if r.err != nil {
+			return r.err
+		}
 		return contract("instrument record", "matching positioned part required")
 	}
 	if record.Position.State == EvidenceKnown && target.State == EvidenceKnown {
 		p := statePublication[T]{Position: record.Position.Value, TimeOnly: record.TimeOnly, Scope: scope, Value: record.Value, Provenance: []stateProvenance{{Node: record.Source, Kind: stateExplicit}}}
-		if record.Position.Value.Part != record.Part {
-			return contract("instrument record", "matching positioned part required")
-		}
 		if err = publishState(ctx, s, &store.History, p); err != nil {
 			return err
 		}
@@ -189,7 +203,11 @@ func (h *timelineState) addMIDIDeviceRecord(ctx context.Context, s *Session, rec
 }
 
 func recordStatement[T, V any](ctx context.Context, s *Session, h *timelineState, pos musicalPosition, id NodeRef, store *recordStatementStore[T], records []instrumentRecord[T], field int, omittedAll bool, project func(T) Evidence[V]) (stateResult[V], error) {
-	if id.DocumentID != pos.Part.DocumentID {
+	r := &stateReader{ctx: ctx, s: s}
+	if !r.sameRef(NodeRef{DocumentID: id.DocumentID}, NodeRef{DocumentID: pos.Part.DocumentID}) {
+		if r.err != nil {
+			return stateResult[V]{}, r.err
+		}
 		return stateResult[V]{}, contract("instrument statement", "canonical matching instrument required")
 	}
 	key, err := instrumentIdentityKey(ctx, s, id)
@@ -217,7 +235,10 @@ func recordStatement[T, V any](ctx context.Context, s *Session, h *timelineState
 			if err = s.step(ctx, 1); err != nil {
 				return stateResult[V]{}, err
 			}
-			if record.Part != pos.Part || record.Position.State != EvidenceAbsent || record.Note.Node != 0 {
+			if !r.sameRef(record.Part, pos.Part) || record.Position.State != EvidenceAbsent || record.Note.Node != 0 {
+				if r.err != nil {
+					return stateResult[V]{}, r.err
+				}
 				continue
 			}
 			value := stateUnavailable[T, V](record.Value)
@@ -228,9 +249,15 @@ func recordStatement[T, V any](ctx context.Context, s *Session, h *timelineState
 				continue
 			}
 			value = stateConditionalValue(value, record.TimeOnly)
-			target := recordTargetScope(record, omittedAll)
+			target, err := recordTargetScope(ctx, s, record, omittedAll)
+			if err != nil {
+				return stateResult[V]{}, err
+			}
 			if target.State == EvidenceKnown {
-				if !target.Value.AllInstruments && target.Value.Instrument != id {
+				if !target.Value.AllInstruments && !r.sameRef(target.Value.Instrument, id) {
+					if r.err != nil {
+						return stateResult[V]{}, r.err
+					}
 					continue
 				}
 			} else if stateAvailabilityRank(target.State) > stateAvailabilityRank(value.State) {
