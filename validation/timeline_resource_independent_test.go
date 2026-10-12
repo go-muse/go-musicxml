@@ -548,3 +548,24 @@ func TestIndependentTimelineNestedOriginCancellationAndOwnership(t *testing.T) {
 	}
 	t.Logf("interrupted every one of %d nested note-origin poll boundaries", calls)
 }
+
+func TestIndependentTimelineOffsetUsesLateSameOriginUnits(t *testing.T) {
+	s, service, b := runtimeFixture(t)
+	d2 := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)))
+	note := runtimeNote(t, b, 30, 2, false)
+	harmony := stateNode(b, timelineRoleHarmony, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleHarmonyOffset, 41, stateAtomicDecimal(t, 2, 1)))
+	d4 := stateNode(b, timelineRoleAttributes, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 51, stateAtomicDecimal(t, 4, 1)))
+	block := runtimeBlock(b, 0, d2, note, harmony, d4)
+	if err := service.readMeasure(context.Background(), s, b, block); err != nil {
+		t.Fatal(err)
+	}
+	origin := timelineAt(block, stateKnown(mustRational(t, 1, 1)))
+	effective, err := service.State.effectiveDivisions(context.Background(), s, origin.Value)
+	if err != nil || effective.Value.State != EvidenceKnown || effective.Value.Value.String() != "4" {
+		t.Fatalf("late exact unit publication not in score-order state: %+v %v", effective, err)
+	}
+	got := service.Facts[40].Position
+	if got.State != EvidenceKnown || got.Value.Offset.String() != "3/2" {
+		t.Fatalf("origin q1 has divisions4; offset2 must yield q3/2 under adopted origin-units rule, got %+v", got)
+	}
+}
