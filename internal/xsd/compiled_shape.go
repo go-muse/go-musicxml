@@ -106,6 +106,15 @@ func (t TypeID) ContentShape() (TypeContentShape, bool) {
 					return 0, false
 				}
 				return finish(ShapeComplex|ShapeElements, true)
+			case ComplexComplexContentExtension:
+				if c.SimpleContent != nil {
+					return 0, false
+				}
+				shape, ok := base(c.Base)
+				if !ok || shape != ShapeComplex|ShapeElements {
+					return 0, false
+				}
+				return finish(shape, true)
 			case ComplexSimpleContentExtension:
 				if c.SimpleContent != nil || c.Particle != nil {
 					return 0, false
