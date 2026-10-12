@@ -617,7 +617,7 @@
       ],
       "implementation_symbols": [
         "performanceStatic",
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceSourceModelDefaultsTiming",
@@ -692,7 +692,7 @@
       ],
       "implementation_symbols": [
         "performanceStatic",
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceSourceModelDefaultsTiming",
@@ -767,7 +767,7 @@
         "FretOpenString"
       ],
       "implementation_symbols": [
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceAllStaticFamiliesAndOrigins",
@@ -892,7 +892,7 @@
       ],
       "implementation_symbols": [
         "performanceStatic",
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceAllStaticFamiliesAndOrigins"
@@ -3109,15 +3109,17 @@
         "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L4095"
       ],
       "projected_fields": [
-        "perf-root-alter-location",
+        "local.root-alter-location",
         "RootAlterPrintObject"
       ],
       "implementation_symbols": [
-        "performanceStatic",
-        "performanceLocal"
+        "localConstantRules",
+        "localPublishConstant",
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
-        "TestPerformanceAllStaticFamiliesAndOrigins"
+        "TestPerformanceAllStaticFamiliesAndOrigins",
+        "TestLocalRound1RootAlterAndFiguredBassAllAdapters"
       ],
       "five_axes": {
         "positive": {
@@ -3164,10 +3166,13 @@
         "TestPerformanceEveryDefaultEvidenceAxes",
         "TestPerformanceTimelineProjectionEvidenceAxes"
       ],
-      "remaining_boundaries": [],
+      "remaining_boundaries": [
+        "Location is a local source-defined default; it does not require timeline or performance state. The historical inventory route is retained unchanged."
+      ],
       "acceptance": "Implemented bounded projection/advisory; independent exact-head review remains required. Original planning statuses are not rewritten.",
       "accepted_batch6_provider_tests": [],
-      "accepted_batch6_evidence_scope": "Exact names/scopes preserved from accepted ownership ledger; these prove only the provider contribution, not new consumer behavior or every five-axis combination."
+      "accepted_batch6_evidence_scope": "Exact names/scopes preserved from accepted ownership ledger; these prove only the provider contribution, not new consumer behavior or every five-axis combination.",
+      "current_route": "batch7-local-context location default; batch7-performance-context print-object"
     },
     {
       "check_id": "CHECK-context-sound-tempo-dynamics",
@@ -4564,7 +4569,7 @@
         "LayoutOrigin"
       ],
       "implementation_symbols": [
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceAllStaticFamiliesAndOrigins"
@@ -4967,7 +4972,7 @@
         "performance-figure-suffix"
       ],
       "implementation_symbols": [
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceAllStaticFamiliesAndOrigins"
@@ -5035,7 +5040,7 @@
         "performance-figure-suffix"
       ],
       "implementation_symbols": [
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceAllStaticFamiliesAndOrigins"
@@ -7636,7 +7641,7 @@
       ],
       "implementation_symbols": [
         "performanceStatic",
-        "performanceLocal"
+        "performanceLocalRoles"
       ],
       "source_model_tests": [
         "TestPerformanceSourceModelDefaultsTiming",

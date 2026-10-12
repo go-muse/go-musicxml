@@ -5684,7 +5684,7 @@
       "research_ids": [
         "MX40-PROSE-root-alter-location"
       ],
-      "workstream": "batch7-performance-context",
+      "workstream": "batch7-local-context and batch7-performance-context",
       "retained_owner_batches": [
         7
       ],
@@ -5694,7 +5694,7 @@
           "artifact": "docs/validation/evidence/performance-implementation-map.json",
           "pointer": "#/checks/25",
           "declared_status": "Implemented bounded projection/advisory; independent exact-head review remains required. Original planning statuses are not rewritten.",
-          "contribution": "See exact artifact record."
+          "contribution": "Local exact-owner root-alter location/default via localConstantRules/localPublishConstant; performance RootAlterPrintObject via performanceLocalRoles. Original inventory route and source statuses remain unchanged."
         }
       ]
     },
@@ -11979,7 +11979,7 @@
           "artifact": "docs/validation/evidence/lead-implementation-map.json",
           "pointer": "#/checks/6",
           "declared_status": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved.",
-          "contribution": "Exact figure-number occurrence remains Unsupported after XSD scalar prerequisites; absent optional node creates no obligation."
+          "contribution": "Exact figure-number occurrence passes for the sufficient nonempty ASCII-digit subset after XSD scalar prerequisites; other spellings remain Unsupported, and absent optional node creates no obligation."
         }
       ]
     },

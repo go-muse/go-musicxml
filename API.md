@@ -502,8 +502,14 @@ A closed `ContextProperty` identifies a scalar evidence value or a typed
 layout-shaped scope/applicability metadata. A provider's completion does not
 claim that each optional field is known. Mandatory consumers separately assess
 exact `time-only` ordering, supported bend-release signs and proved graphical
-repeat content. Present figure-number numeric content retains an unsupported
-unreviewed grammar gate rather than an invented lexical definition.
+repeat content. Nonempty ASCII-digit figure-number content satisfies a sufficient
+numeric subset; other spellings retain an unsupported unreviewed grammar gate.
+This does not define or reject the remaining numeric lexical domain.
+
+`NavigationContextResult.MarkerActive` records activation of an encoded barline
+marker; `Guard` records pass-selection evidence. Neither field is a realized
+playback count. Traversal extent remains separately described by `Complete`;
+ambiguous mixed jump/repeat control preserves an unavailable bounded prefix.
 
 Catalog users can bind the same sealed contracts with `NewLocalContextPlan`,
 `NewSpanContextPlan`, `NewRepeatContextPlan`, `NewNavigationContextPlan`,

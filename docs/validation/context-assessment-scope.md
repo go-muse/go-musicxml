@@ -43,9 +43,10 @@ The context profiles select additional narrow predicates:
 - Graphical beat and measure repeats consume only proved musical-content
   correspondence. They do not synthesize missing notes. Unresolved equivalence
   is incomplete rather than a guessed failure or success.
-- Present `figure-number` content retains an explicit unsupported numeric-grammar
-  gate. XSD `style-text` validity is not proof of the prose's numeric requirement;
-  this profile invents no lexical grammar.
+- Nonempty ASCII-digit `figure-number` content passes a sufficient numeric subset,
+  supported by the source requirement and official example. Other spellings retain
+  an explicit unsupported grammar gate; no full lexical domain or rejection rule
+  is invented. XSD `style-text` validity alone is not numeric proof.
 
 A missing optional node does not instantiate its node-local predicate.
 Resource exhaustion is incomplete assessment, never a MusicXML defect.
