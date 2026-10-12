@@ -111,6 +111,13 @@ func spanBothWithFailures(t *testing.T, source string, withTimeline, allowFailur
 func spanBothWithGap(t *testing.T, source string, withTimeline, allowFailures bool, gapName string, check func(*testing.T, validation.Report)) {
 	t.Helper()
 	engine, profiles := spanTestEngine(t, withTimeline)
+	spanBothWithEngine(t, engine, profiles, source, allowFailures, gapName, check)
+}
+
+// Only immutable compiled catalog/engine setup is shared. Every leaf creates
+// its own account, session, sink, input reader/model, completion and report.
+func spanBothWithEngine(t *testing.T, engine *validation.Engine, profiles []validation.Profile, source string, allowFailures bool, gapName string, check func(*testing.T, validation.Report)) {
+	t.Helper()
 	for _, profile := range profiles {
 		t.Run(string(profile.Target), func(t *testing.T) {
 			ctx := context.Background()
@@ -637,6 +644,7 @@ func TestContextSpanLyricGrammarOwnerAndMissingFacts(t *testing.T) {
 }
 
 func TestContextSpanLocalDefaultAxesBothAdapters(t *testing.T) {
+	engine, profiles := spanTestEngine(t, false)
 	for _, c := range []struct {
 		name, element, attribute, def, explicit string
 		property                                validation.ContextProperty
@@ -702,7 +710,7 @@ func TestContextSpanLocalDefaultAxesBothAdapters(t *testing.T) {
 					if axis == "missing-fact" {
 						gap = "@" + c.element
 					}
-					spanBothWithGap(t, (localFixture{body: body}).xml(), false, axis == "negative", gap, func(t *testing.T, r validation.Report) {
+					spanBothWithEngine(t, engine, profiles, (localFixture{body: body}).xml(), axis == "negative", gap, func(t *testing.T, r validation.Report) {
 						vs := spanProperty(r, c.property)
 						if len(vs) == 0 {
 							t.Fatal("missing property")

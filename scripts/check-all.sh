@@ -94,7 +94,7 @@ stage_vet() {
 
 stage_race() {
     stage "go test -race"
-    "$check_go" test -race -count=1 ./...
+    "$check_go" test -race -count=1 -timeout=15m ./...
 }
 
 stage_fuzz() {

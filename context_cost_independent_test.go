@@ -143,10 +143,14 @@ func TestIndependentContextFullSharedAccountCost(t *testing.T) {
 			r, finishErr := session.Finish(context.Background(), validation.Completion{InputComplete: true, Syntax: validation.SyntaxNotAssessed})
 			steps, _ := account.Usage(validation.BudgetRuleSteps)
 			facts, _ := account.Usage(validation.BudgetContextFacts)
-			remaining, _ := account.Usage(validation.BudgetBufferedBytes)
-			t.Logf("notes=%d retention_limit=%d complete=%t steps=%d facts=%d records=%d post_finish_retention=%d err=%v", count, retention, r.AssessmentComplete, steps, facts, len(r.Context), remaining, finishErr)
-			if remaining != 0 {
-				t.Fatal("cleanup leaked retained account")
+			// This same matrix proves cleanup after both completed assessment and
+			// retention refusal. Reuse each assessment for both live gauges;
+			// replaying the identical four cases adds no lifecycle coverage.
+			remaining, bufferErr := account.Usage(validation.BudgetBufferedBytes)
+			depth, depthErr := account.Usage(validation.BudgetDepth)
+			t.Logf("notes=%d retention_limit=%d complete=%t steps=%d facts=%d records=%d post_finish_retention=%d post_finish_depth=%d err=%v", count, retention, r.AssessmentComplete, steps, facts, len(r.Context), remaining, depth, finishErr)
+			if bufferErr != nil || depthErr != nil || remaining != 0 || depth != 0 {
+				t.Fatalf("cleanup gauges: buffered=%d depth=%d errors=%v/%v", remaining, depth, bufferErr, depthErr)
 			}
 			if retention == 512<<20 && (finishErr != nil || !r.Satisfied()) {
 				t.Fatalf("raised-limit reference did not complete: %v", finishErr)

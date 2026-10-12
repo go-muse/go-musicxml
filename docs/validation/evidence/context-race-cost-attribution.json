@@ -1,0 +1,215 @@
+{
+  "tested_head": "d9e5fa1b6fef198a4e6042e5bbc6204dae1d99b9",
+  "snapshot": "/workspace/shared/go-musicxml-batch7-ci-resource-qa",
+  "toolchain": {
+    "go": "go1.27.2",
+    "os_arch": "linux/amd64",
+    "GOMAXPROCS": 4
+  },
+  "measurements": [
+    {
+      "label": "context",
+      "jsonl": "pr36-race-context-d9e5fa1.jsonl",
+      "package_elapsed_s": 124.31,
+      "top_level_count": 78,
+      "top_level_inclusive_sum_s": 123.24,
+      "failures": []
+    },
+    {
+      "label": "complement",
+      "jsonl": "pr36-race-context-complement-d9e5fa1.jsonl",
+      "package_elapsed_s": 77.654,
+      "top_level_count": 86,
+      "top_level_inclusive_sum_s": 76.57,
+      "failures": []
+    }
+  ],
+  "scope_note": "Separate uncached processes; sums describe selected context coverage, not one complete root-package race run. Parent-provided complete-root measurements are listed separately.",
+  "parent_provided_full_root_race_s": {
+    "CI_d9e5fa1": 592.369,
+    "local": 510.972
+  },
+  "prior_audit": {
+    "head": "59dcdff",
+    "selected_root_race_package_s": 198.163,
+    "different_selection_and_host_load": true
+  },
+  "largest_top_level_tests": [
+    {
+      "test": "TestIndependentContextFullSharedAccountCost",
+      "file": "context_cost_independent_test.go",
+      "elapsed_s": 18.69,
+      "prior_59dcdff_s": 25.77
+    },
+    {
+      "test": "TestIndependentContextFinishReleasesBothLiveGauges",
+      "file": "context_live_gauges_independent_test.go",
+      "elapsed_s": 18.02,
+      "prior_59dcdff_s": null
+    },
+    {
+      "test": "TestContextSpanLocalDefaultAxesBothAdapters",
+      "file": "context_spans_integration_test.go",
+      "elapsed_s": 15.92,
+      "prior_59dcdff_s": 18.65
+    },
+    {
+      "test": "TestIndependentContextDefaultResourceMatrix",
+      "file": "context_resource_independent_test.go",
+      "elapsed_s": 13.23,
+      "prior_59dcdff_s": 14.81
+    },
+    {
+      "test": "TestLayoutMatrixFormattingFields",
+      "file": "context_layout_matrix_assessment_test.go",
+      "elapsed_s": 5.95,
+      "prior_59dcdff_s": 7.87
+    },
+    {
+      "test": "TestIndependentContextFamilyCostAttribution",
+      "file": "context_cost_independent_test.go",
+      "elapsed_s": 5.39,
+      "prior_59dcdff_s": 6.75
+    },
+    {
+      "test": "TestLayoutMatrixApplicationChoices",
+      "file": "context_layout_matrix_assessment_test.go",
+      "elapsed_s": 5.39,
+      "prior_59dcdff_s": 6.28
+    },
+    {
+      "test": "TestContextSpanFamiliesExecuteCorrespondence",
+      "file": "context_spans_integration_test.go",
+      "elapsed_s": 5.09,
+      "prior_59dcdff_s": 5.74
+    },
+    {
+      "test": "TestLayoutScalarDefaultsUseSpecificFields",
+      "file": "context_layout_assessment_test.go",
+      "elapsed_s": 3.56,
+      "prior_59dcdff_s": 4.03
+    },
+    {
+      "test": "TestLayoutMatrixCoordinatesAndRelations",
+      "file": "context_layout_matrix_assessment_test.go",
+      "elapsed_s": 3.09,
+      "prior_59dcdff_s": 3.91
+    },
+    {
+      "test": "TestLayoutMatrixUseSiteDefaults",
+      "file": "context_layout_matrix_assessment_test.go",
+      "elapsed_s": 3,
+      "prior_59dcdff_s": 3.53
+    },
+    {
+      "test": "TestContextProfilesTimeOnlyAcrossTargetsAndHierarchies",
+      "file": "context_assessment_test.go",
+      "elapsed_s": 2.86,
+      "prior_59dcdff_s": 3.17
+    },
+    {
+      "test": "TestContextSpanTiesPitchPassAndLocalOrder",
+      "file": "context_spans_integration_test.go",
+      "elapsed_s": 2.83,
+      "prior_59dcdff_s": 3.17
+    },
+    {
+      "test": "TestContextLocalGlyphSemanticsAcrossTargets",
+      "file": "context_glyph_test.go",
+      "elapsed_s": 2.49,
+      "prior_59dcdff_s": 3.03
+    },
+    {
+      "test": "TestLayoutFormattingFiveAxes",
+      "file": "context_layout_assessment_test.go",
+      "elapsed_s": 2.49,
+      "prior_59dcdff_s": 0.92
+    }
+  ],
+  "context_test_file_totals_s": {
+    "context_layout_matrix_assessment_test.go": 41.01,
+    "context_spans_integration_test.go": 39.52,
+    "context_cost_independent_test.go": 26.47,
+    "context_live_gauges_independent_test.go": 18.02,
+    "context_layout_assessment_test.go": 16.64,
+    "context_resource_independent_test.go": 14.44,
+    "context_performance_integration_test.go": 9.81,
+    "context_layout_state_assessment_test.go": 7.08,
+    "context_local_assessment_test.go": 6.78,
+    "context_assessment_test.go": 4.51,
+    "context_glyph_test.go": 2.49,
+    "context_required_attribute_test.go": 2.23,
+    "context_independent_repeat_meter_test.go": 2.07,
+    "context_independent_repeat_content_test.go": 1.65,
+    "context_ownership_test.go": 1.45,
+    "context_independent_semantic_test.go": 1.29,
+    "context_profile_frozen_independent_test.go": 1.09,
+    "context_independent_repeat_voice_test.go": 0.78,
+    "context_independent_assess_gate_test.go": 0.6,
+    "context_evidence_line_endings_test.go": 0.43,
+    "context_independent_state_test.go": 0.43,
+    "context_assessment_fuzz_test.go": 0.28,
+    "context_independent_unplaced_symbol_test.go": 0.27,
+    "context_opus_test.go": 0.24,
+    "context_independent_zero_staff_test.go": 0.23,
+    "external_validation_helpers_test.go": 0.0
+  },
+  "safe_consolidation": {
+    "existing_matrix": "TestIndependentContextFullSharedAccountCost",
+    "existing_s": 18.69,
+    "duplicate": "TestIndependentContextFinishReleasesBothLiveGauges",
+    "duplicate_s": 18.02,
+    "preserved_cases": [
+      "100 notes,64MiB",
+      "100 notes,512MiB",
+      "1000 notes,64MiB",
+      "1000 notes,512MiB"
+    ],
+    "preserved_steps_limit": 17179869184,
+    "assertions_moved": [
+      "BudgetDepth==0",
+      "BudgetBufferedBytes==0",
+      "both Usage errors nil"
+    ],
+    "independent_diff_review": "pass"
+  },
+  "span_test_scoped_setup": {
+    "test": "TestContextSpanLocalDefaultAxesBothAdapters",
+    "identical_engine_builds_before": 50,
+    "builds_after": 1,
+    "before_s": 15.92,
+    "before_100_leaf_sum_s": 1.38,
+    "after_s": 1.91,
+    "leaf_name_count_before": 100,
+    "leaf_name_count_after": 100,
+    "leaf_name_sets_exactly_equal": true,
+    "global_memoization": false,
+    "fresh_session_account_sink_input_and_report_each_leaf": true,
+    "independent_diff_review": "pass",
+    "after_log": "span-shared-engine-race-after.jsonl"
+  },
+  "recommendation": {
+    "remove_duplicate_work": true,
+    "keep_all_semantic_adapter_hierarchy_causal_and_concurrent_cases": true,
+    "race_package_timeout": "15m finite",
+    "existing_ci_job_timeout": "20m finite",
+    "preserve_command": "go test -race -count=1 -timeout=15m ./...",
+    "rationale": "Observed592.369s CI leaves7.631s at600s; legitimate broad coverage and host variation remain after measured duplicate removal. Finite15m retains a failing deadline rather than disabling it."
+  },
+  "new_guard_review": {
+    "CRLF_workflow_delimiter_issue": "corrected and independently verified: normalization precedes job parsing; checked-in guard exercises LF and simulated CRLF",
+    "focused_guard_run": {
+      "command": "go test -count=1 ./validation -run '^TestRaceStageRetainsFullCoverageWithFiniteHeadroom$'",
+      "result": "PASS",
+      "package_seconds": 0.005,
+      "snapshot": "d9e5fa1 plus reviewed uncommitted test/CI-only correction"
+    }
+  },
+  "no_production_or_test_edits_by_auditor": true,
+  "evidence": [
+    "pr36-race-context-d9e5fa1.jsonl",
+    "pr36-race-context-complement-d9e5fa1.jsonl",
+    "pr36-race-context-complement-d9e5fa1-selection.txt",
+    "independent-resource-59dcdff-race.log"
+  ]
+}
