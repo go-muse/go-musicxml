@@ -628,3 +628,90 @@ func TestTimelineFinalReviewFloatingInvalidPublicationPreservesActualCause(t *te
 		t.Fatalf("floating result aliased causal ownership: %+v err=%v", again, err)
 	}
 }
+
+// Structural measure order is sufficient for contained note candidates. A
+// later-labeled note reached by an unproved negative cursor excursion cannot
+// borrow that proof for direction/figure/grace following-note association.
+func TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote(t *testing.T) {
+	for _, family := range []string{"direction", "figure", "grace"} {
+		for _, excursion := range []bool{false, true} {
+			t.Run(family+"/"+map[bool]string{false: "contained-control", true: "negative-cursor"}[excursion], func(t *testing.T) {
+				ctx := context.Background()
+				s, svc, b := runtimeFixture(t)
+				attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+				var origin *factNode
+				switch family {
+				case "direction":
+					origin = stateNode(b, timelineRoleDirection, 40, stateAbsent[Atomic]())
+				case "figure":
+					origin = stateNode(b, timelineRoleFiguredBass, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, 41, stateAbsent[Atomic]()), stateNode(b, timelineRoleFiguredBassDuration, 42, stateAtomicDecimal(t, 1, 1)))
+				case "grace":
+					grace := stateNode(b, timelineRoleNoteGrace, 41, stateAbsent[Atomic]())
+					stateAttribute(b, grace, timelineRoleGraceStealFollowing, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 25, 1)})
+					origin = stateNode(b, timelineRoleNote, 40, stateAbsent[Atomic](), grace)
+				}
+				first := runtimeBlock(b, 0, attrs, runtimeNote(t, b, 30, 1, false), origin)
+				var secondEvents []*factNode
+				if excursion {
+					secondEvents = append(secondEvents, stateNode(b, timelineRoleBackup, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 61, stateAtomicDecimal(t, 2, 1))))
+				}
+				secondEvents = append(secondEvents, runtimeNote(t, b, 70, 1, false))
+				blocks := []timelineMeasureBlock{first, runtimeBlock(b, 1, secondEvents...)}
+				for _, block := range blocks {
+					if err := svc.readMeasure(ctx, s, b, block); err != nil {
+						t.Fatal(err)
+					}
+				}
+				if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+					t.Fatal(err)
+				}
+				wantCoordinate := "0"
+				if excursion {
+					wantCoordinate = "-2"
+				}
+				if pos := svc.Facts[70].Position; pos.State != EvidenceKnown || pos.Value.Offset.String() != wantCoordinate {
+					t.Fatalf("uniform-unit local coordinate lost: %+v", pos)
+				}
+				var got Evidence[NodeRef]
+				switch family {
+				case "direction":
+					got = svc.DirectionOrigins[40].Anchor
+				case "figure":
+					got = svc.FiguredBassOrigins[40].Anchor
+				case "grace":
+					got = svc.GraceNeighbors[40].Following.Note
+				}
+				if excursion {
+					if got.State == EvidenceKnown {
+						t.Fatalf("measure label certified an unproved cross-frame candidate: %+v", got)
+					}
+				} else if got.State != EvidenceKnown || got.Value.Node != 70 {
+					t.Fatalf("contained structural-order control lost: %+v", got)
+				}
+			})
+		}
+	}
+}
+
+func TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	firstUnits := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
+	nextUnits := stateNode(b, timelineRoleAttributes, 40, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 41, stateAtomicDecimal(t, 2, 1)))
+	backup := stateNode(b, timelineRoleBackup, 50, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 51, stateAtomicDecimal(t, 2, 1)))
+	blocks := []timelineMeasureBlock{runtimeBlock(b, 0, firstUnits, runtimeNote(t, b, 30, 1, false)), runtimeBlock(b, 1, nextUnits, backup, runtimeNote(t, b, 60, 1, false))}
+	for _, block := range blocks {
+		if err := svc.readMeasure(ctx, s, b, block); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if earlier := svc.Facts[30]; earlier.Position.State != EvidenceKnown || earlier.End.State != EvidenceKnown || earlier.End.Value.Offset.String() != "1" {
+		t.Fatalf("independent earlier prefix lost: %+v", earlier)
+	}
+	if origin := svc.Facts[40].Position; origin.State != EvidenceKnown || origin.Value.Offset.String() != "0" {
+		t.Fatalf("new frame origin lost: %+v", origin)
+	}
+	if got := svc.Facts[60].Position; got.State == EvidenceKnown {
+		t.Fatalf("cross-boundary rewind chose changed departure units: %+v", got)
+	}
+}
