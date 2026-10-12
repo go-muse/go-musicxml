@@ -1131,3 +1131,47 @@ func TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits(t *
 		t.Fatalf("excluded future invalid units erased independently proved backwards upper-bound repair: %+v err=%v", later, err)
 	}
 }
+
+func TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes(t *testing.T) {
+	for _, descendantPublisher := range []bool{false, true} {
+		t.Run(map[bool]string{false: "independent-prefix-control", true: "later-gap-can-reach-prefix"}[descendantPublisher], func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			attrs := func(id NodeID, units int64) *factNode {
+				return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, stateAtomicDecimal(t, units, 1)))
+			}
+			backup := stateNode(b, timelineRoleBackup, 60, stateAbsent[Atomic](), stateNode(b, timelineRoleBackupDuration, 61, stateAtomicDecimal(t, 6, 1)))
+			later := []*factNode{attrs(50, 3), backup}
+			if descendantPublisher {
+				later = append(later, attrs(70, 2))
+			}
+			blocks := []timelineMeasureBlock{runtimeBlock(b, 0, attrs(20, 1), runtimeNote(t, b, 30, 1, false), runtimeNote(t, b, 40, 1, false)), runtimeBlock(b, 1, later...)}
+			for _, block := range blocks {
+				if err := svc.readMeasure(ctx, s, b, block); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+				t.Fatal(err)
+			}
+			first, next := svc.Facts[30], svc.Facts[40]
+			if first.Position.State != EvidenceKnown || first.Position.Value.Offset.String() != "0" {
+				t.Fatalf("independent structural origin lost: %+v", first)
+			}
+			effective, err := svc.State.effectiveDivisions(ctx, s, first.Position.Value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if descendantPublisher {
+				if effective.Value.State == EvidenceKnown {
+					t.Fatalf("fixture failed to expose later displaced divisions reach: %+v", effective)
+				}
+				if first.Duration.State == EvidenceKnown || next.Position.State == EvidenceKnown {
+					t.Fatalf("sequential rebuild retained normalization before seeing relevant future divisions gap: effective=%+v first=%+v next=%+v", effective, first, next)
+				}
+			} else if first.Duration.State != EvidenceKnown || first.Duration.Value.String() != "1" || next.Position.State != EvidenceKnown || next.Position.Value.Offset.String() != "1" {
+				t.Fatalf("independently unaffected prefix lost: first=%+v next=%+v", first, next)
+			}
+		})
+	}
+}
