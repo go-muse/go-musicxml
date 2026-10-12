@@ -530,7 +530,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 				same := cached && graceSameMeasure(position, cachedAt) && position.Offset.text == cachedAt.Offset.text && position.UnprovedFrame == cachedAt.UnprovedFrame
 				if !same {
 					chosenPrevious, chosenFollowing = previous, following
-					previousProof, followingProof := stateKnown(NodeRef{}), stateKnown(NodeRef{})
+					previousProof, followingProof := Evidence[NodeRef]{State: EvidenceKnown}, Evidence[NodeRef]{State: EvidenceKnown}
 					if stream.floating {
 						chosenPrevious, previousProof, err = service.graceChronologicalDonor(r, stream, at, true)
 						if err != nil {
@@ -591,7 +591,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 func (service *timelineService) graceChronologicalDonor(r *stateReader, stream *graceStream, target int, previous bool) (int, Evidence[NodeRef], error) {
 	n := service.NoteOrigins[stream.notes[target]]
 	best := -1
-	gap := stateKnown(NodeRef{})
+	gap := Evidence[NodeRef]{State: EvidenceKnown}
 	for pass := 0; pass < 2; pass++ {
 		for i, id := range stream.notes {
 			if !r.step(1) {
