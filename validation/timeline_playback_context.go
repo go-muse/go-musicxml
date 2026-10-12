@@ -303,3 +303,20 @@ func (p *timelinePlaybackContext) effectiveDynamics(ctx context.Context, s *Sess
 func (p *timelinePlaybackContext) effectivePizzicato(ctx context.Context, s *Session, h *timelineState, pos musicalPosition) (stateResult[bool], error) {
 	return queryState(ctx, s, h, &p.Pizzicato, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[bool])
 }
+
+// gapAll is used only when hierarchy/enumeration loss can hide a sound publisher.
+// A single unplaced known sound instead gaps its actually encoded families in
+// playbackPublish. Earlier established measures retain their independent facts.
+func (p *timelinePlaybackContext) gapAll(ctx context.Context, s *Session, part NodeRef, ordinal uint64, availability Evidence[musicalPosition]) error {
+	if availability.State == EvidenceKnown || availability.State == EvidenceAbsent || availability.State == "" {
+		return contract("playback gap", "causal unavailable evidence required")
+	}
+	gap := stateGap{Part: part, FirstMeasure: ordinal, LastMeasure: ordinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](availability)}
+	if err := addStateGap(ctx, s, &p.Tempo, gap); err != nil {
+		return err
+	}
+	if err := addStateGap(ctx, s, &p.Dynamics, gap); err != nil {
+		return err
+	}
+	return addStateGap(ctx, s, &p.Pizzicato, gap)
+}
