@@ -154,7 +154,7 @@ func TestFiguredBassOriginBudgetFailureCannotPublish(t *testing.T) {
 	}
 }
 
-func TestFiguredBassDurationUsesOnlyEqualReviewedUnits(t *testing.T) {
+func TestFiguredBassDurationUsesFinalizedAnchorUnits(t *testing.T) {
 	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
 		for _, mode := range []string{"equal", "different", "missing-cursor", "invalid-anchor", "absent-duration"} {
 			t.Run(string(order)+"/"+mode, func(t *testing.T) {
@@ -196,6 +196,15 @@ func TestFiguredBassDurationUsesOnlyEqualReviewedUnits(t *testing.T) {
 						t.Fatalf("duration = %+v", got)
 					}
 					noteOriginCheckPosition(t, got.End, "7/3")
+				case "different":
+					if got.CursorUnits.Value.String() != "3" || got.AnchorUnits.Value.String() != "4" || got.DurationUnits.Value.String() != "4" || got.Duration.Value.String() != "1/4" {
+						t.Fatalf("duration did not use actual anchor position: %+v", got)
+					}
+					noteOriginCheckPosition(t, got.End, "9/4")
+				case "missing-cursor":
+					if got.CursorUnits.State != EvidenceAbsent || got.DurationUnits.State != EvidenceKnown || got.Duration.Value.String() != "1/3" {
+						t.Fatalf("missing lexical cursor units blocked known anchor: %+v", got)
+					}
 				case "absent-duration":
 					if got.Duration.State != EvidenceAbsent || got.End.State != EvidenceAbsent {
 						t.Fatalf("invented omitted duration: %+v", got)
@@ -403,4 +412,23 @@ func TestFiguredBassCacheCannotAliasForeignDocumentCoordinates(t *testing.T) {
 	if got := v.FiguredBassOrigins[60]; got.Anchor.State == EvidenceKnown || got.DurationUnits.State == EvidenceKnown {
 		t.Fatalf("cross-document cache alias: %+v", got)
 	}
+}
+
+func TestFiguredBassChainKeepsAnchorBasedDurationsAcrossLaterDivisions(t *testing.T) {
+	s, v, b, block := figuredChainFixture(t, OrderSource)
+	// First figure starts at 2 and lasts 2/3. A divisions change at its end does
+	// not rewrite the common anchor-based duration of the second figure.
+	at := timelineAt(block, stateKnown(mustRational(t, 8, 3))).Value
+	statePublish(t, s, &v.State.Divisions, at, stateScope{AllStaves: true}, stateKnown(stateDecimal(t, 4, 1)), 110)
+	if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+		t.Fatal(err)
+	}
+	got := v.FiguredBassOrigins[60]
+	if got.AnchorUnits.Value.String() != "3" || got.Duration.Value.String() != "1/3" || got.ChainEnd.State != EvidenceKnown {
+		t.Fatalf("chain rewrote anchored duration units: %+v", got)
+	}
+	noteOriginCheckPosition(t, got.ChainPosition, "8/3")
+	noteOriginCheckPosition(t, got.End, "7/3")
+	noteOriginCheckPosition(t, got.ChainEnd, "3")
+	noteOriginCheckPosition(t, v.FiguredBassOrigins[70].ChainPosition, "3")
 }
