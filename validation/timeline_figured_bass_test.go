@@ -311,3 +311,52 @@ func TestFiguredBassChainAmbiguityAndAbsentDurationAreIndependent(t *testing.T) 
 		}
 	}
 }
+
+func TestFiguredBassAllTransactionalScratchAndLongChain(t *testing.T) {
+	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
+		s, v, b, block := figuredChainFixture(t, order)
+		base := block.content.children[0]
+		nodes := make([]*factNode, 0, 1001)
+		for i := 0; i < 1000; i++ {
+			id := NodeID(1000 + i*10)
+			n := stateNode(b, timelineRoleFiguredBass, id, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, id+1, stateAbsent[Atomic]()), stateNode(b, timelineRoleFiguredBassDuration, id+2, stateAtomicDecimal(t, 1, 1)))
+			nodes = append(nodes, n)
+			v.Facts[id] = v.Facts[base.header.ID]
+		}
+		nodes = append(nodes, block.content.children[len(block.content.children)-1])
+		block.content.children = nodes
+		if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+			t.Fatal(err)
+		}
+		if len(v.FiguredBassOrigins) != 1000 {
+			t.Fatal(len(v.FiguredBassOrigins))
+		}
+		noteOriginCheckPosition(t, v.FiguredBassOrigins[10990].ChainEnd, "1006/3")
+		t.Logf("%s steps=%d bytes=%d", order, rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes))
+		s.cleanup()
+		if got := rationalUsage(t, s, BudgetBufferedBytes); got != 0 {
+			t.Fatalf("cleanup retained %d", got)
+		}
+	}
+	for _, at := range []int{10, 100, 250, 500} {
+		_, v, b, block := figuredChainFixture(t, OrderSource)
+		s := rationalSession(t, Budgets{})
+		defer s.cleanup()
+		ctx := &rationalCancelContext{Context: context.Background(), at: at}
+		if err := v.resolveFiguredBassOriginsAll(ctx, s, b, []timelineMeasureBlock{block}); !errors.Is(err, context.Canceled) || len(v.FiguredBassOrigins) != 0 {
+			t.Fatalf("partial finalization at %d: %v", at, err)
+		}
+	}
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	b := noteOriginBindings()
+	v := &timelineService{}
+	block := runtimeBlock(b, 0, runtimeNote(t, b, 10, 1, false))
+	before := rationalUsage(t, s, BudgetBufferedBytes)
+	if err := v.resolveFiguredBassOriginsAll(context.Background(), s, b, []timelineMeasureBlock{block}); err != nil {
+		t.Fatal(err)
+	}
+	if got := rationalUsage(t, s, BudgetBufferedBytes); got != before {
+		t.Fatalf("ordinary score allocated %d", got-before)
+	}
+}

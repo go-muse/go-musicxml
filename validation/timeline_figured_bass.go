@@ -17,8 +17,21 @@ type figuredBassTimingOrigin struct {
 	CursorUnits, AnchorUnits, DurationUnits Evidence[Decimal]
 	Duration                                Evidence[Rational]
 	End                                     Evidence[musicalPosition]
+	AnchorPosition, ChainPosition, ChainEnd Evidence[musicalPosition]
+	GroupStart                              Evidence[NodeRef]
+	ChainInterpretation                     Code
 	Figures                                 []NodeRef
 	FiguresComplete                         Evidence[bool]
+}
+
+type figuredBassAnchorKey struct {
+	part, measure NodeID
+	ordinal       uint64
+	offset        string
+}
+type figuredBassAnchorFact struct {
+	anchor Evidence[NodeRef]
+	fact   timelineEventFact
 }
 
 type figuredBassDomain struct {
@@ -189,21 +202,67 @@ func (service *timelineService) resolveFiguredBassOrigins(ctx context.Context, s
 
 func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context, s *Session, b *timelineBindings, blocks []timelineMeasureBlock) error {
 	r := &stateReader{ctx: ctx, s: s, b: b}
+	var figureCount int64
+	for _, block := range blocks {
+		if !r.step(1) {
+			return r.err
+		}
+		for _, event := range block.content.children {
+			if r.matches(event, timelineRoleFiguredBass) {
+				var err error
+				figureCount, err = rationalCheckedAdd(BudgetBufferedBytes, figureCount, 1)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if r.err != nil {
+		return r.err
+	}
+	if figureCount == 0 {
+		return s.step(ctx, 1)
+	}
+	scratch, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(blocks)), 2048)
+	if err != nil {
+		return err
+	}
+	itemBytes, err := rationalCheckedMul(BudgetBufferedBytes, figureCount, 2048)
+	if err != nil {
+		return err
+	}
+	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, itemBytes)
+	if err != nil {
+		return err
+	}
+	scratch, err = rationalCheckedAdd(BudgetBufferedBytes, scratch, 8192)
+	if err != nil {
+		return err
+	}
+	if _, err := AllocationSize(scratch); err != nil {
+		return err
+	}
+	if err := s.account.Charge(BudgetBufferedBytes, scratch); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, scratch) }()
+	pending := make(map[NodeID]figuredBassTimingOrigin)
+	anchorCache := make(map[figuredBassAnchorKey]figuredBassAnchorFact)
+	ids := make([]NodeID, 0, int(figureCount))
 	domains := make([]figuredBassDomain, 0)
 	counts := make(map[timelineDomain]int)
 	for _, block := range blocks {
 		if !r.step(1) {
 			return r.err
 		}
-		if err := s.retain(640); err != nil {
-			return err
-		}
 		complete := block.complete
 		if complete.State == EvidenceKnown && complete.Value {
 			complete = r.complete(block.content)
 		}
 		if block.coverage.State != "" && (block.coverage.State != EvidenceKnown || !block.coverage.Value) {
-			complete = block.coverage
+			if stateAvailabilityRank(block.coverage.State) > stateAvailabilityRank(complete.State) {
+				complete = block.coverage
+			}
 		}
 		domains = append(domains, figuredBassDomain{block: block, complete: complete})
 		if block.part.State == EvidenceKnown {
@@ -237,7 +296,7 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
 				return err
 			}
-			if err := s.retain(2048); err != nil {
+			if err := s.retain(4096); err != nil {
 				return err
 			}
 			fact, found := service.Facts[event.header.ID]
@@ -261,7 +320,26 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 				}
 				out.Figures[i] = NodeRef{s.documentID, figure.header.ID}
 			}
-			anchor, anchorFact := service.figuredBassAnchor(r, domains, fact, complete)
+			var anchor Evidence[NodeRef]
+			var anchorFact timelineEventFact
+			if fact.Position.State == EvidenceKnown {
+				at := fact.Position.Value
+				key := figuredBassAnchorKey{part: at.Part.Node, measure: at.Measure.Node, ordinal: at.MeasureOrdinal, offset: at.Offset.text}
+				if !r.step(1 + int64(len(key.offset))) {
+					return r.err
+				}
+				cached, found := anchorCache[key]
+				if !found {
+					cached.anchor, cached.fact = service.figuredBassAnchor(r, domains, fact, complete)
+					if r.err != nil {
+						return r.err
+					}
+					anchorCache[key] = cached
+				}
+				anchor, anchorFact = cached.anchor, cached.fact
+			} else {
+				anchor, anchorFact = service.figuredBassAnchor(r, domains, fact, complete)
+			}
 			out.Anchor = anchor
 			if anchor.State == EvidenceKnown {
 				out.Position = anchorFact.Position
@@ -289,15 +367,38 @@ func (service *timelineService) resolveFiguredBassOriginsAll(ctx context.Context
 			if err = s.step(ctx, 1); err != nil {
 				return err
 			}
-			if err := ownOrigin(ctx, s, &out); err != nil {
-				return err
+			out.AnchorPosition = out.Position
+			if _, exists := pending[event.header.ID]; exists {
+				return contract("figured bass origins", "duplicate staged publication")
 			}
-			if service.FiguredBassOrigins == nil {
-				service.FiguredBassOrigins = make(map[NodeID]figuredBassTimingOrigin)
-			}
-			service.FiguredBassOrigins[event.header.ID] = out
+			pending[event.header.ID] = out
+			ids = append(ids, event.header.ID)
 		}
 	}
+	if r.err != nil {
+		return r.err
+	}
+	if err := resolveFiguredBassChains(r, domains, pending, ids); err != nil {
+		return err
+	}
+	for _, id := range ids {
+		if !r.step(1) {
+			return r.err
+		}
+		out := pending[id]
+		if err := ownOrigin(ctx, s, &out); err != nil {
+			return err
+		}
+		pending[id] = out
+	}
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	if len(service.FiguredBassOrigins) != 0 {
+		return contract("figured bass origins", "duplicate finalization")
+	}
+	service.FiguredBassOrigins = pending
+
 	return r.err
 }
 
@@ -345,4 +446,98 @@ func (s *Session) figuredBassDuration(ctx context.Context, out *figuredBassTimin
 	}
 	out.End, err = s.noteTimingShift(ctx, out.Position, out.Duration)
 	return err
+}
+
+// This explicit derived interpretation is supported by the duration clause and
+// the maintainers' clarification in MusicXML issue 645. Only the common case of
+// a complete consecutive run with one unique anchor is established here. The
+// anchor and independent duration survive when chain membership is unproved.
+func resolveFiguredBassChains(r *stateReader, domains []figuredBassDomain, pending map[NodeID]figuredBassTimingOrigin, ids []NodeID) error {
+	counts := map[NodeID]int{}
+	partGaps := map[NodeID]Evidence[NodeRef]{}
+	globalGap := Evidence[NodeRef]{State: EvidenceKnown}
+	for _, id := range ids {
+		if !r.step(1) {
+			return r.err
+		}
+		out := pending[id]
+		if out.Anchor.State == EvidenceKnown {
+			counts[out.Anchor.Value.Node]++
+		} else if out.Part.State == EvidenceKnown {
+			gap := partGaps[out.Part.Value.Node]
+			if gap.State == "" {
+				gap.State = EvidenceKnown
+			}
+			partGaps[out.Part.Value.Node] = graceStronger(gap, timelineGapAs[NodeRef, NodeRef](out.Anchor, "figured-bass-chain-anchor-unavailable"))
+		} else {
+			globalGap = graceStronger(globalGap, timelineGapAs[NodeRef, NodeRef](out.Part, "figured-bass-chain-part-unavailable"))
+		}
+	}
+	for _, domain := range domains {
+		events := domain.block.content.children
+		for at := 0; at < len(events); {
+			if !r.step(1) {
+				return r.err
+			}
+			first, found := pending[events[at].header.ID]
+			if !found {
+				at++
+				continue
+			}
+			end := at + 1
+			if first.Anchor.State == EvidenceKnown {
+				for end < len(events) {
+					if !r.step(1) {
+						return r.err
+					}
+					next, found := pending[events[end].header.ID]
+					if !found || next.Anchor.State != EvidenceKnown || next.Anchor.Value != first.Anchor.Value {
+						break
+					}
+					end++
+				}
+			}
+			group := Evidence[NodeRef]{State: EvidenceKnown, Value: first.FiguredBass}
+			if first.Anchor.State != EvidenceKnown {
+				group = timelineGapAs[NodeRef, NodeRef](first.Anchor, "figured-bass-chain-anchor-unavailable")
+			} else if counts[first.Anchor.Value.Node] != end-at {
+				group = stateUnknown[NodeRef]("figured-bass-chain-membership-unresolved")
+			}
+			group = graceStronger(group, globalGap)
+			if first.Part.State == EvidenceKnown {
+				if gap, ok := partGaps[first.Part.Value.Node]; ok {
+					group = graceStronger(group, gap)
+				}
+			}
+			position := first.AnchorPosition
+			if group.State != EvidenceKnown {
+				position = timelineGapAs[NodeRef, musicalPosition](group, "figured-bass-chain-unavailable")
+			}
+			for ; at < end; at++ {
+				if !r.step(1) {
+					return r.err
+				}
+				out := pending[events[at].header.ID]
+				out.GroupStart = group
+				out.ChainPosition = position
+				if group.State == EvidenceKnown {
+					out.ChainInterpretation = "consecutive-figured-bass-duration-chain"
+				}
+				out.ChainEnd = Evidence[musicalPosition]{State: EvidenceAbsent}
+				if out.DurationRaw.State != EvidenceAbsent {
+					var err error
+					out.ChainEnd, err = r.s.noteTimingShift(r.ctx, out.ChainPosition, out.Duration)
+					if err != nil {
+						return err
+					}
+				}
+				pending[out.FiguredBass.Node] = out
+				position = out.ChainEnd
+				if position.State == EvidenceAbsent {
+					position = stateUnknown[musicalPosition]("figured-bass-chain-duration-unavailable")
+				}
+			}
+		}
+	}
+	return r.err
 }
