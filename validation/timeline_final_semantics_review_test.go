@@ -41,3 +41,129 @@ func TestTimelineFinalReviewConditionalMIDIDevice(t *testing.T) {
 		})
 	}
 }
+
+// This small schema supplies real shared ID/IDREF resolution and assessed scalar
+// causes. It is an extraction/query fixture, not an original-source adapter or
+// a substitute MusicXML schema conformance oracle.
+func finalReviewInstrumentFixture(t *testing.T, target Target, sounds ...*localTree) (*Session, *timelineState, *timelineBindings, []*factNode, musicalPosition, NodeRef) {
+	t.Helper()
+	types := map[SchemaName]*SchemaType{}
+	add := func(name string, c *SchemaComplex) { types[SchemaName{Local: name}] = &SchemaType{Complex: c} }
+	for _, name := range []string{"string", "integer", "decimal"} {
+		types[SchemaName{Local: name}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin(name).Name}}}
+	}
+	types[SchemaName{Local: "condition"}] = &SchemaType{Simple: &SchemaSimple{Form: SchemaSimpleRestriction, Base: &SchemaSimpleMember{Name: localBuiltin("string").Name}, Enumerations: []string{"2"}}}
+	id := func(typ string) SchemaAttribute {
+		return SchemaAttribute{Name: SchemaName{Local: "id"}, Type: localBuiltin(typ), Use: SchemaAttributeRequired}
+	}
+	add("empty", &SchemaComplex{Form: SchemaComplexDirect})
+	add("score-instrument", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("ID")}})
+	add("score-part", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("ID")}, Particle: localChoice(localElement("score-instrument", "score-instrument"))})
+	add("instrument-change", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("IDREF")}, Particle: localChoice(localElement("instrument-sound", "string"), localElement("solo", "empty"))})
+	add("midi-instrument", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{id("IDREF")}, Particle: localChoice(localElement("midi-program", "integer"), localElement("pan", "decimal"))})
+	add("sound", &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{{Name: SchemaName{Local: "time-only"}, Type: localType("condition")}}, Particle: localChoice(localElement("instrument-change", "instrument-change"), localElement("midi-instrument", "midi-instrument"))})
+	add("root", &SchemaComplex{Form: SchemaComplexDirect, Particle: localChoice(localElement("score-part", "score-part"), localElement("sound", "sound"))})
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Types: types, Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType("root")}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	root := lt("root", la("score-part", "P1", la("score-instrument", "I1")))
+	root.children = append(root.children, sounds...)
+	s := localAdmit(t, localEngine(t, schema, target), target, root, nil)
+	t.Cleanup(s.cleanup)
+	if err = s.bindSourceSchema(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	s.inputComplete = true
+	if err = s.finalizeSourceSchema(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	b := stateBindings()
+	for role, slot := range map[timelineRole][2]string{
+		timelineRoleScoreInstrument: {"score-part", "score-instrument"}, timelineRoleSound: {"root", "sound"}, timelineRoleSoundInstrumentChange: {"sound", "instrument-change"}, timelineRoleSoundMidiInstrument: {"sound", "midi-instrument"}, timelineRoleInstrumentChangeInstrumentSound: {"instrument-change", "instrument-sound"}, timelineRoleInstrumentChangeSolo: {"instrument-change", "solo"}, timelineRoleMidiInstrumentMidiProgram: {"midi-instrument", "midi-program"}, timelineRoleMidiInstrumentPan: {"midi-instrument", "pan"},
+	} {
+		b.Roles[role] = []SchemaUse{localUse(t, schema, slot[0], slot[1], false)}
+	}
+	for role, slot := range map[timelineRole][2]string{timelineRoleInstrumentChangeID: {"instrument-change", "id"}, timelineRoleMidiInstrumentID: {"midi-instrument", "id"}, timelineRoleSoundTimeOnly: {"sound", "time-only"}} {
+		b.Roles[role] = []SchemaUse{localUse(t, schema, slot[0], slot[1], true)}
+	}
+	part := NodeRef{"doc", 2}
+	instrument := NodeRef{"doc", 3}
+	pos := musicalPosition{Part: part, Measure: NodeRef{"doc", 1}, Offset: mustRational(t, 0, 1)}
+	h := &timelineState{}
+	if err = h.closePart(context.Background(), s, part, 0, stateKnown(true)); err != nil {
+		t.Fatal(err)
+	}
+	return s, h, b, s.root.children[1:], pos, instrument
+}
+
+func TestTimelineFinalReviewConditionalInstrumentProperties(t *testing.T) {
+	ctx := context.Background()
+	for _, target := range []Target{TargetSource, TargetModel} {
+		for _, condition := range []string{"", "2", "invalid"} {
+			t.Run(string(target)+"/"+condition, func(t *testing.T) {
+				scalar := func(name, text string) *localTree { return &localTree{name: name, text: text} }
+				changed := lt("sound", la("instrument-change", "I1", scalar("instrument-sound", "conditional-patch")), la("midi-instrument", "I1", scalar("midi-program", "74")))
+				if condition != "" {
+					changed.attrs = map[string]string{"time-only": condition}
+				}
+				other := lt("sound", la("instrument-change", "I1", lt("solo")), la("midi-instrument", "I1", scalar("pan", "20")))
+				repair := lt("sound", la("instrument-change", "I1", scalar("instrument-sound", "unconditional-patch")), la("midi-instrument", "I1", scalar("midi-program", "41")))
+				s, h, b, sounds, pos, id := finalReviewInstrumentFixture(t, target, changed, other, repair)
+				for i, n := range sounds {
+					at := pos
+					at.Offset = mustRational(t, int64(i), 1)
+					if err := h.readInstrumentChanges(ctx, s, b, n, at); err != nil {
+						t.Fatal(err)
+					}
+				}
+				at := pos
+				at.Offset = mustRational(t, 1, 1)
+				instrument, err := h.effectiveInstrumentStatements(ctx, s, at, id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				midi, err := h.effectiveMIDIStatements(ctx, s, at, id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if condition == "" {
+					if instrument.Sound.Value.State != EvidenceKnown || instrument.Sound.Value.Value != "conditional-patch" || midi.Program.Value.State != EvidenceKnown || midi.Program.Value.Value.String() != "74" {
+						t.Fatalf("unconditional control: instrument=%+v midi=%+v", instrument, midi)
+					}
+				} else if condition == "2" {
+					if instrument.Sound.Value.State == EvidenceKnown || midi.Program.Value.State == EvidenceKnown {
+						t.Errorf("repeat-dependent statements became unconditional: instrument=%+v midi=%+v", instrument.Sound, midi.Program)
+					}
+				} else {
+					for label, v := range map[string]Evidence[bool]{"instrument": stateUnavailable[string, bool](instrument.Sound.Value), "midi": stateUnavailable[Integer, bool](midi.Program.Value)} {
+						if v.State != EvidenceInvalid || v.Cause == nil || v.Cause.Rule.ID != "xsd.attributes" || v.Cause.Subject.Node != sounds[0].header.ID {
+							t.Errorf("%s lost condition cause: %+v", label, v)
+						}
+					}
+				}
+				if instrument.Performance.Value.State != EvidenceKnown || !instrument.Performance.Value.Value.Solo || midi.Pan.Value.State != EvidenceKnown || midi.Pan.Value.Value.String() != "20" {
+					t.Errorf("unrelated unconditional fields lost: %+v %+v", instrument, midi)
+				}
+				if len(h.MIDI) != 3 || h.MIDI[0].Value.Value.Program.State != EvidenceKnown || h.MIDI[0].Value.Value.Program.Value.String() != "74" {
+					t.Errorf("raw MIDI lost: %+v", h.MIDI)
+				}
+				if len(h.InstrumentChanges) != 1 || h.InstrumentChanges[0].History.Publications[0].Value.Value.Sound.State != EvidenceKnown {
+					t.Log("Raw instrument publication was separated from effective history; verify retained condition and raw properties in its own container")
+				}
+				at.Offset = mustRational(t, 3, 1)
+				instrument, err = h.effectiveInstrumentStatements(ctx, s, at, id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				midi, err = h.effectiveMIDIStatements(ctx, s, at, id)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if instrument.Sound.Value.State != EvidenceKnown || instrument.Sound.Value.Value != "unconditional-patch" || midi.Program.Value.State != EvidenceKnown || midi.Program.Value.Value.String() != "41" {
+					t.Errorf("later unconditional same-field repair failed: instrument=%+v midi=%+v", instrument.Sound, midi.Program)
+				}
+			})
+		}
+	}
+}
