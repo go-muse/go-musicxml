@@ -219,7 +219,9 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 			}
 			n := service.NoteOrigins[id]
 			if n.ScoreOnset.State == EvidenceKnown && last != nil && last.ScoreOnset.State == EvidenceKnown {
-				if n.ScoreOnset.Value.MeasureOrdinal == last.ScoreOnset.Value.MeasureOrdinal && n.ScoreOnset.Value.Measure != last.ScoreOnset.Value.Measure {
+				if n.ScoreOnset.Value.Part != last.ScoreOnset.Value.Part {
+					gap = graceStronger(gap, stateUnknown[NodeRef]("grace-note-domain-unresolved"))
+				} else if n.ScoreOnset.Value.MeasureOrdinal == last.ScoreOnset.Value.MeasureOrdinal && n.ScoreOnset.Value.Measure != last.ScoreOnset.Value.Measure {
 					gap = graceStronger(gap, stateUnknown[NodeRef]("grace-measure-identity-unresolved"))
 				} else {
 					cmp, err := s.gracePositionOrder(ctx, last.ScoreOnset.Value, n.ScoreOnset.Value)
