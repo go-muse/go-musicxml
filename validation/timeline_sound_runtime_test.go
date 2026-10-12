@@ -94,3 +94,28 @@ func TestTimelineRuntimePublishesNoteAndFiguredBassOrigins(t *testing.T) {
 		t.Fatalf("figured bass=%+v exists=%v", bass, ok)
 	}
 }
+
+func TestTimelineRuntimePublishesPlaybackAndFigureUnits(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	ctx := context.Background()
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)))
+	sound := stateNode(b, timelineRoleSound, 23, stateAbsent[Atomic]())
+	stateAttribute(b, sound, timelineRoleSoundTempo, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 120, 1)})
+	figure := stateNode(b, timelineRoleFiguredBass, 25, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassDuration, 26, stateAtomicDecimal(t, 1, 1)))
+	note := runtimeNote(t, b, 30, 4, false)
+	barline := stateNode(b, timelineRoleBarline, 40, stateAbsent[Atomic]())
+	if err := svc.readMeasure(ctx, s, b, runtimeBlock(b, 0, attrs, sound, figure, note, barline)); err != nil {
+		t.Fatal(err)
+	}
+	bass := svc.FiguredBassOrigins[25]
+	if bass.Duration.State != EvidenceKnown || bass.Duration.Value.String() != "1/2" {
+		t.Fatalf("figure=%+v", bass)
+	}
+	if len(svc.Playback.Notes) != 1 || len(svc.Playback.Sounds) != 1 || len(svc.Playback.Barlines) != 1 {
+		t.Fatalf("missing playback maps notes=%d sounds=%d bars=%d", len(svc.Playback.Notes), len(svc.Playback.Sounds), len(svc.Playback.Barlines))
+	}
+	tempo, err := svc.Playback.effectiveTempo(ctx, s, &svc.State, statePosition(t, 0, 1, 1))
+	if err != nil || tempo.Value.State != EvidenceKnown || tempo.Value.Value.String() != "120" {
+		t.Fatalf("tempo=%+v %v", tempo, err)
+	}
+}
