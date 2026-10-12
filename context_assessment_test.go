@@ -180,3 +180,22 @@ func TestContextFigureNumberAbsentDoesNotCreateGrammarObligation(t *testing.T) {
 		}
 	}
 }
+
+func TestContextProfilesKeepApplicationChoicesExcluded(t *testing.T) {
+	engine, err := newContextAssessmentEngine()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []validation.ProfileID{ProfileSourceContext, ProfileModelContext} {
+		profile := catalogProfile(t, engine, id)
+		for _, key := range profile.Required {
+			text := string(key.ID)
+			if strings.Contains(text, "binding-workaround") || strings.Contains(text, "sounds-application-mapping") {
+				t.Errorf("application implementation advice promoted to document rule: %s", text)
+			}
+		}
+		if !strings.Contains(profile.NormativeClosure, "external dictionaries") || !strings.Contains(profile.NormativeClosure, "physical") && !strings.Contains(profile.NormativeClosure, "playback realization") {
+			t.Error("external/application scope boundary disappeared")
+		}
+	}
+}

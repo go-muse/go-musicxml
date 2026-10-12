@@ -67,6 +67,9 @@ func TestContextLocalGlyphSemanticsAcrossTargets(t *testing.T) {
 							}
 						}
 					}
+					if (tc.name == "open-type" || tc.name == "symbol-advice" || tc.name == "unresolved-match") && !r.Satisfied() {
+						t.Errorf("open-domain/advisory evidence became a hard obligation: %s", localFindings(r))
+					}
 					if !found {
 						t.Errorf("model%t missing %s", model, tc.property)
 					}

@@ -23,7 +23,12 @@ presence. Model assessment does not serialize and reparse the model.
 Defaults apply only to known absence. Invalid prerequisites retain a causal
 `DecisionRef`; unavailable or unsupported prerequisites do not become absence.
 The selected timeline dependency schedules the exact accepted provider, but an
-unavailable timeline field does not suppress independent local facts.
+unavailable timeline field does not suppress independent local facts. A missing
+required attribute can retain its containing XSD decision only when the compiled
+use is proved against the exact declaration owner, assembly and schema digest.
+Inherited required uses without that exact ownership proof remain unsupported;
+this bounded causal repair does not reinterpret model zero values as source
+absence.
 
 ## Mandatory consumers
 
@@ -61,7 +66,9 @@ Absent optional authoritative intent is preserved as a bounded exclusion.
 
 MXL/package processing, linked resources, sound containers, dictionaries and
 transitive external normative closure remain outside these profiles. Opus
-assessment does not fetch linked scores. The accepted timeline's narrow research
+assessment projects each local Opus version (omission defaults to 1.0) and score
+pagination hints, including nested identities; omitted new-page is application-dependent, and no
+linked score is fetched. The accepted timeline's narrow research
 boundaries remain intact. `B5-PERF-01` remains assigned to the final kernel/session
 reconciliation; this batch does not close it.
 
@@ -69,3 +76,13 @@ Historical planning records retain their original statuses. New executable
 contracts, source interpretation evidence and actual tests must be reconciled
 separately. Counts of rules, projected facts or fixtures are not a MusicXML
 coverage denominator.
+
+## Practical default limits
+
+A clean 100-note fixture completes under unchanged default budgets after the
+context indexing corrections. A 1000-note fixture still exceeds default work
+limits; raising work alone can then reach the 64 MiB retention limit. Explicit
+finite limits of `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20` allow
+that measured fixture to finish. This is bounded-profile evidence, not an
+unrestricted score-size guarantee. See [resource acceptance evidence](evidence/context-resource-acceptance.md)
+for exact counts, budget outcomes and remaining output-size costs.

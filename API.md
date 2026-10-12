@@ -215,6 +215,8 @@ and already-canceled contexts fail before model traversal.
 | `ProfileSourceLocal` | `musicxml-4.0/source-local` | Original single-pass source XSD plus those same local clauses; used with `InspectXML` or strict `DecodeAssessed` |
 | `ProfileModelTimeline` | `musicxml-4.0/model-timeline` | Model-local scope plus the bounded exact timeline/effective-state provider and selected chord/numeral consumers |
 | `ProfileSourceTimeline` | `musicxml-4.0/source-timeline` | Source-local scope plus the same timeline provider and consumers on original input |
+| `ProfileModelContext` | `musicxml-4.0/model-context` | Frozen model-timeline scope plus bounded typed context projections and selected contextual predicates |
+| `ProfileSourceContext` | `musicxml-4.0/source-context` | The corresponding context extension on original input |
 
 These are bounded implementations under final verification, not a claim of
 whole-MusicXML conformance or completed batch acceptance. The complete selected
@@ -484,6 +486,49 @@ in the [PR 35 budget evidence](docs/validation/evidence/pr35-timeline-budget-cos
 workstream and final batch-9 reconciliation. Incremental timeline measurements
 and initialization improvements do not close the older matched-performance
 obligation.
+
+### Bounded context profiles
+
+`ProfileModelContext` (`musicxml-4.0/model-context`) and `ProfileSourceContext`
+(`musicxml-4.0/source-context`) compose the frozen timeline profiles with six
+sealed families: local defaults/applicability, type-specific spans, graphical
+repeats, bounded navigation, layout and encoded performance/timing. Earlier
+profile IDs, selected rules, digests and ordinary validation remain unchanged.
+
+`validation.Report.Context` exposes independently owned `ContextResult` values.
+A closed `ContextProperty` identifies a scalar evidence value or a typed
+`SpanContextResult`, `RepeatContextResult`, `NavigationContextResult`,
+`LayoutContextResult` or `TimingContextResult`. Local scalar defaults also use
+layout-shaped scope/applicability metadata. A provider's completion does not
+claim that each optional field is known. Mandatory consumers separately assess
+exact `time-only` ordering, supported bend-release signs and proved graphical
+repeat content. Present figure-number numeric content retains an unsupported
+unreviewed grammar gate rather than an invented lexical definition.
+
+Catalog users can bind the same sealed contracts with `NewLocalContextPlan`,
+`NewSpanContextPlan`, `NewRepeatContextPlan`, `NewNavigationContextPlan`,
+`NewLayoutContextPlan`, `NewPerformanceContextPlan`, `NewTimeOnlyOrderPlan`,
+`NewBendReleaseSignPlan`, `NewGraphicalRepeatContentPlan` and
+`NewFigureNumberNumericPlan`. `NewOpusLayoutContextPlan` is separately
+bound to the Opus assembly and projects only local score pagination hints;
+missing new-page remains application-dependent and no linked score is opened. `ContextPlanSpec` binds the exact selected timeline
+provider where needed; `ContextConsumerSpec` binds an exact type-specific
+provider. There are no caller expressions, evaluator callbacks or unmetered
+post-Finish queries. Configuration is schema-bound and revisioned separately
+from the accepted timeline contract.
+
+Projection is admitted under the same context-fact, work and buffered-byte
+budgets before cleanup. Reports are editable caller snapshots, not immutable
+certificates. Unavailable optional geometry, author intent and physical playback
+realization remain per-field evidence or explicit exclusions; they are not new
+conformance failures. Repeated/ambiguous ranges remain bounded by the selected
+finite budgets. The matched `BenchmarkContextProfiles` compares warmed timeline
+and context profiles with documented larger finite budgets; it does not close
+`B5-PERF-01` or promise default-budget throughput.
+
+See [scope and limits](docs/validation/context-assessment-scope.md) for the
+source/model contract and deliberately retained normative boundaries.
+
 
 ## Fact-stream validation foundation
 
