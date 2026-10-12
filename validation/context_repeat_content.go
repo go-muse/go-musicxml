@@ -386,7 +386,7 @@ func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineSe
 	} else {
 		selected, status, free, e := contextRepeatScopedNotes(ctx, s, notes, row.value)
 		scope = &contextRepeatProofScope{notes: selected, complete: status}
-		release, err = free, e
+		release, err = func() { scope.closeOnsets(); free() }, e
 	}
 	if err != nil {
 		return err
@@ -468,6 +468,7 @@ func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineSe
 			return err
 		}
 		defer free()
+		scope.buckets = buckets
 	}
 	if complete.State != EvidenceKnown || !complete.Value {
 		row.value.ContentEquivalent = complete
@@ -484,7 +485,7 @@ func contextRepeatProveRow(ctx context.Context, s *Session, timeline *timelineSe
 			return e
 		}
 		if same.State != EvidenceKnown {
-			empty, e := contextRepeatEmptyMeasure(ctx, s, timeline, notes, start.Part, source, measure, indexes...)
+			empty, e := contextRepeatEmptyMeasure(ctx, s, timeline, scope, start.Part, source, measure)
 			if e != nil {
 				return e
 			}
@@ -797,80 +798,36 @@ func contextRepeatBeatProof(ctx context.Context, s *Session, notes []contextRepe
 
 }
 
-// An empty measure is a counterexample only when all earlier sounding note
-// endpoints are independently proved before its origin. A terminal note end,
-// nominal meter, printed barline or missing note count alone is insufficient.
-func contextRepeatEmptyMeasure(ctx context.Context, s *Session, timeline *timelineService, notes []contextRepeatNote, part NodeRef, source, target uint64, indexes ...*contextRepeatProofIndex) (Evidence[bool], error) {
-	sourceSound := false
-	var origin musicalPosition
-	originKnown := false
-	if len(indexes) != 0 {
-		if p, ok := indexes[0].origins[contextRepeatMeasureKey{part, target}]; ok {
-			origin, originKnown = p, true
-		}
+// A missing encoded scored onset is an independent counterexample to the
+// repeated intended pitch/rhythm pattern. It does not assert acoustic silence:
+// an earlier note's uncontained terminal End cannot supply a newly encoded
+// onset in this measure. The caller has proved the repeat range and complete
+// selected note universe; every selected onset, including later notes, must
+// independently belong to its recorded measure before ordinal exclusion.
+func contextRepeatEmptyMeasure(ctx context.Context, s *Session, timeline *timelineService, scope *contextRepeatProofScope, part NodeRef, source, target uint64) (Evidence[bool], error) {
+	if err := s.step(ctx, 1); err != nil {
+		return Evidence[bool]{}, err
 	}
-	sequence := s.sequence
-	if len(indexes) != 0 {
-		sequence = nil
+	if len(scope.buckets[target]) != 0 {
+		return stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), nil
 	}
-	for _, id := range sequence {
-		fact := timeline.Facts[id]
-		if err := s.step(ctx, 1); err != nil {
-			return Evidence[bool]{}, err
-		}
-		if fact.Origin.State == EvidenceKnown && fact.Origin.Value.Part == part && fact.Origin.Value.MeasureOrdinal == target && fact.Origin.Value.Offset.value.Sign() == 0 {
-			origin = fact.Origin.Value
-			originKnown = true
-			break
-		}
+	if scope.complete.State != EvidenceKnown {
+		return scope.complete, nil
 	}
-	if !originKnown {
+	if !scope.complete.Value {
 		return stateUnknown[bool]("context-repeat-empty-coverage-unresolved"), nil
 	}
-	for _, note := range notes {
-		if err := s.step(ctx, 1); err != nil {
-			return Evidence[bool]{}, err
-		}
-		if note.part.State != EvidenceKnown {
-			return stateUnknown[bool]("context-repeat-empty-coverage-unresolved"), nil
-		}
-		if note.part.Value != part {
-			continue
-		}
-		if note.available.State != EvidenceKnown || !note.pos.Offset.Valid() {
-			return note.available, nil
-		}
-		if note.pos.UnprovedFrame {
-			member, e := timeline.State.frameMember(ctx, s, note.pos)
-			if e != nil {
-				return Evidence[bool]{}, e
-			}
-			if !member {
-				return stateUnknown[bool]("context-repeat-empty-coverage-unresolved"), nil
-			}
-		}
-		if note.pos.MeasureOrdinal == target {
-			return stateUnknown[bool]("context-repeat-content-equivalence-unresolved"), nil
-		}
-		if note.pos.MeasureOrdinal == source && !note.rest {
-			sourceSound = true
-		}
-		if note.rest || note.pos.MeasureOrdinal > target {
-			continue
-		}
-		fact := timeline.Facts[note.source.Node]
-		if fact.End.State != EvidenceKnown {
-			return stateUnavailable[musicalPosition, bool](fact.End), nil
-		}
-		order, err := timeline.State.positionOrder(ctx, s, fact.End.Value, origin)
+	if scope.onsetComplete.State == "" {
+		witnesses, complete, release, err := contextRepeatBuildOnsetProof(ctx, s, timeline, scope.notes, part)
 		if err != nil {
 			return Evidence[bool]{}, err
 		}
-		if order&stateAfter != 0 {
-			return stateUnknown[bool]("context-repeat-empty-coverage-unresolved"), nil
-		}
+		scope.sourceOnsets, scope.onsetComplete, scope.releaseOnsets = witnesses, complete, release
 	}
-	if !sourceSound {
+	if scope.onsetComplete.State != EvidenceKnown || !scope.onsetComplete.Value {
+		return scope.onsetComplete, nil
+	}
+	if !scope.sourceOnsets[source] {
 		return stateUnknown[bool]("context-repeat-source-content-unavailable"), nil
 	}
 	return navigationKnownBool(false), nil

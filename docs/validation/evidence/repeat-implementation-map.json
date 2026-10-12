@@ -2693,9 +2693,10 @@
         "contextRepeatBuildMeasureRoster",
         "contextRepeatSelectedMeasureEqual",
         "contextRepeatOrderedEqual",
-        "contextRepeatEmptyMeasure"
+        "contextRepeatEmptyMeasure",
+        "contextRepeatBuildOnsetProof"
       ],
-      "implemented_subclauses": "The separate sealed predicate proves supported complete note equality and treats stop rows as not applicable. Exact known numbered-staff selection excludes known other-staff differences but retains unavailable membership. One sparse per-row measure partition feeds a true-only ordered note comparison; reordered content keeps the original multiset/evidence semantics. Empty-target known-false remains a distinct narrow theorem requiring complete semantic coverage and an independent sounding-note endpoint witness; removing that witness yields Unknown. Unknown placement and shared coverage causes are preserved before grouping/comparison.",
+      "implemented_subclauses": "The separate sealed predicate proves supported complete note equality and treats stop rows as not applicable. Exact known numbered-staff selection excludes known other-staff differences but retains unavailable membership. One sparse selected-scope measure partition feeds a true-only ordered note comparison; reordered content keeps the original multiset/evidence semantics. A distinct empty-target counterexample requires complete scoped note enumeration, zero selected target note records, available independently contained scored onsets for every selected note, and a positive-duration ordinary non-rest source onset. It does not require a terminal endpoint witness or claim acoustic silence. Unknown placement and shared coverage causes are preserved before grouping/comparison.",
       "actual_tests": [
         {
           "function": "TestRepeatAdaptersMeasureContentAndStopBoundary",
@@ -2768,10 +2769,46 @@
           "targets": [
             "typed internal facts"
           ]
+        },
+        {
+          "function": "TestContextRepeatEmptyTargetOnsetProof",
+          "file": "context_repeat_empty_onset_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextRepeatEmptyTargetOnsetProofBoundaries",
+          "file": "context_repeat_empty_onset_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
+        },
+        {
+          "function": "TestContextRepeatEmptyTargetOnsetProofPatternAndStop",
+          "file": "context_repeat_empty_onset_test.go",
+          "targets": [
+            "source",
+            "model"
+          ],
+          "layouts": [
+            "partwise",
+            "timewise"
+          ]
         }
       ],
       "residual": {
-        "dependency": "General tied/grace, enharmonic, transposed or otherwise unsupported event equivalence, cross-boundary sounding carry and midmeasure pattern interpretation remain unavailable. Ordered mismatch is not a necessary-rule violation. The empty-target theorem is bounded to its independently witnessed coverage preconditions.",
+        "dependency": "General tied/grace, enharmonic, transposed or otherwise unsupported event equivalence, cross-boundary sounding carry and midmeasure pattern interpretation remain unavailable. Ordered mismatch is not a necessary-rule violation. The empty-target onset theorem proves missing encoded score content only; it does not establish terminal-end containment, acoustic silence or measure capacity.",
         "owner": "batch7 repeat/navigation",
         "closure": "Review the exact named fixtures and source-policy limits. No status is a universal conformance/renderer/playback claim; only the implemented clauses are executable."
       },
@@ -2790,11 +2827,12 @@
           "status": "supported_theorem_tested",
           "actual_test_functions": [
             "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
-            "TestRepeatOrderedAdaptersPreserveFallback"
+            "TestRepeatOrderedAdaptersPreserveFallback",
+            "TestContextRepeatEmptyTargetOnsetProof"
           ],
-          "assertion": "known false only with independent endpoint coverage witness; otherwise Unknown",
+          "assertion": "Known false for a complete empty selected target and a positive ordinary source onset when every selected onset is available and independently contained.",
           "acceptance_claim": true,
-          "reviewed_assertion": "Only the independently witnessed empty-target theorem proves known false; ordinary content mismatch and unsupported notation remain Unknown.",
+          "reviewed_assertion": "The narrow missing-scored-onset counterexample can decide the ordinary unwitnessed-end fixture; ordinary content mismatch and unsupported notation remain Unknown.",
           "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
         },
         "boundary": {
@@ -2812,11 +2850,12 @@
           "actual_test_functions": [
             "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage",
             "TestIndependentContextRepeatNumberedStaffContent",
-            "TestIndependentContextRepeatRosterPreservesCoverageCause"
+            "TestIndependentContextRepeatRosterPreservesCoverageCause",
+            "TestContextRepeatEmptyTargetOnsetProofBoundaries"
           ],
-          "assertion": "remove endpoint witness, retain unknown rather than negative conclusion",
+          "assertion": "Unavailable onset, content or selected membership prevents the counterexample; a missing terminal endpoint witness alone does not.",
           "acceptance_claim": true,
-          "reviewed_assertion": "Removing endpoint coverage or staff identity prevents a proof; wrapper selection cannot replace a preexisting invalid coverage cause with an unrelated unknown part.",
+          "reviewed_assertion": "Removing onset containment, availability or staff identity prevents a proof; wrapper selection cannot replace a preexisting invalid coverage cause with an unrelated unknown part.",
           "scope_note": "Evidence covers the named supported fixtures only; this is not full normative closure or all-input acceptance."
         },
         "interaction": {

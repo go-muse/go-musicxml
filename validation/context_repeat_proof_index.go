@@ -257,10 +257,13 @@ type contextRepeatProofScopeKey struct {
 	staff string
 }
 type contextRepeatProofScope struct {
-	notes    []contextRepeatNote
-	buckets  map[uint64][]contextRepeatNote
-	complete Evidence[bool]
-	windows  map[uint64]*contextRepeatWindowIndex
+	onsetComplete Evidence[bool]
+	sourceOnsets  map[uint64]bool
+	releaseOnsets func()
+	notes         []contextRepeatNote
+	buckets       map[uint64][]contextRepeatNote
+	complete      Evidence[bool]
+	windows       map[uint64]*contextRepeatWindowIndex
 }
 
 func (x *contextRepeatProofIndex) cachedPart(ctx context.Context, s *Session, roster *contextRepeatContentRoster, part NodeRef) ([]contextRepeatNote, func(), error) {
@@ -305,7 +308,7 @@ func (x *contextRepeatProofIndex) scope(ctx context.Context, s *Session, notes [
 			return nil, nil, err
 		}
 	}
-	free := func() { freeBuckets(); freeSelected() }
+	free := func() { scope.closeOnsets(); freeBuckets(); freeSelected() }
 	if cache {
 		x.scopes[key] = scope
 		x.releases = append(x.releases, free)

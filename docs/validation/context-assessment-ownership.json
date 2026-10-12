@@ -19942,7 +19942,7 @@
           "artifact": "docs/validation/evidence/repeat-implementation-map.json",
           "pointer": "#/checks/22",
           "declared_status": "implemented_sufficient_proof_partial",
-          "contribution": "Separate sealed predicate: stop is not applicable; complete simple equal normalized events prove Pass; mismatch remains Unknown. Measure empty-target negative is a narrow semantic coverage theorem, pending dedicated adapter fixture. Dedicated negative fixture now proves empty target only with independent source endpoint witness; removing witness yields Unknown. Full semantic declaration/content enumeration is required before either equality or this negative theorem."
+          "contribution": "Separate sealed predicate: stop is not applicable; complete simple equal normalized events prove Pass; ordinary mismatch remains Unknown. A complete empty selected target cannot reproduce a positive-duration ordinary non-rest source onset when all selected scored onsets are available and independently contained. This sufficient negative theorem needs no terminal endpoint witness and does not infer acoustic silence or measure capacity. Full semantic declaration/content enumeration is required before either equality or this counterexample."
         }
       ]
     },
@@ -20299,7 +20299,7 @@
       "scope": "Record-level implementation/test evidence; original source planning statuses are not promoted.",
       "historical_source_sha256": "5d86cd891355952f406547519ffe1da5e2f13ae65de4b2d6ab6557e7a0e3fa1a",
       "historical_source_scope": "Original imported implementation artifact, retained as provenance rather than a current-content pin.",
-      "current_artifact_sha256": "7245dbe0f82c987521773273f3c9187c58ce7a14beac5f7136db67abd6a3f8f1"
+      "current_artifact_sha256": "fbaccfd74316da6ecd91e5d8bf4016254a9d2cf68cc71f5e6f97fd6dc1b93e67"
     },
     {
       "artifact": "docs/validation/evidence/performance-implementation-map.json",

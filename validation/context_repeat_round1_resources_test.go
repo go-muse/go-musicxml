@@ -218,20 +218,33 @@ func TestRound1RepeatHugeClosureIsNotWrapped(t *testing.T) {
 }
 
 func TestRound1RepeatEmptyCoverageKeepsFutureDisplacement(t *testing.T) {
-	s := rationalSession(t, Budgets{})
-	defer s.cleanup()
 	part := NodeRef{"d", 1}
-	origin := statePosition(t, 1, 0, 1)
 	source := statePosition(t, 0, 0, 1)
-	end := statePosition(t, 0, 1, 1)
 	future := statePosition(t, 2, -1, 1)
 	future.UnprovedFrame = true
-	timeline := &timelineService{Facts: map[NodeID]timelineEventFact{10: {End: stateKnown(end)}}}
-	notes := []contextRepeatNote{{source: NodeRef{"d", 10}, part: stateKnown(part), pos: source, available: stateKnown(true)}, {source: NodeRef{"d", 11}, part: stateKnown(part), pos: future, available: stateKnown(true)}}
-	index := &contextRepeatProofIndex{origins: map[contextRepeatMeasureKey]musicalPosition{{part, 1}: origin}}
-	got, err := contextRepeatEmptyMeasure(context.Background(), s, timeline, notes, part, 0, 1, index)
-	if err != nil || got.State != EvidenceUnknown {
-		t.Fatalf("unconfined future note excluded by ordinal: %+v %v", got, err)
+	principal := contextRepeatNote{source: NodeRef{"d", 10}, part: stateKnown(part), pos: source, duration: mustRational(t, 1, 1), available: stateKnown(true)}
+	displaced := contextRepeatNote{source: NodeRef{"d", 11}, part: stateKnown(part), pos: future, duration: mustRational(t, 1, 1), available: stateKnown(true)}
+	contained := displaced
+	contained.pos = statePosition(t, 2, 0, 1)
+	for _, tc := range []struct {
+		name  string
+		notes []contextRepeatNote
+		want  EvidenceState
+	}{
+		{"unconfined-future", []contextRepeatNote{principal, displaced}, EvidenceUnknown},
+		{"future-omitted", []contextRepeatNote{principal}, EvidenceKnown},
+		{"future-contained", []contextRepeatNote{principal, contained}, EvidenceKnown},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			scope := &contextRepeatProofScope{notes: tc.notes, complete: stateKnown(true), buckets: map[uint64][]contextRepeatNote{}}
+			defer scope.closeOnsets()
+			got, err := contextRepeatEmptyMeasure(context.Background(), s, &timelineService{}, scope, part, 0, 1)
+			if err != nil || got.State != tc.want || got.State == EvidenceKnown && got.Value {
+				t.Fatalf("future onset confinement: %+v %v, want %s(false)", got, err, tc.want)
+			}
+		})
 	}
 }
 

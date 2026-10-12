@@ -149,7 +149,8 @@ func TestRound1RepeatInterchangeableBeat(t *testing.T) {
 	})
 }
 func TestRound1RepeatUnwitnessedEndAndPlaybackBoundaries(t *testing.T) {
-	repeatRound1Score(t, []string{`<attributes><divisions>1</divisions></attributes>` + repeatR1Note, repeatR1Start, repeatR1Stop}, nil, func(t *testing.T, r validation.Report) { repeatR1Content(t, r, validation.EvidenceUnknown, false) })
+	// Missing encoded scored onsets need no terminal-End containment proof.
+	repeatRound1Score(t, []string{`<attributes><divisions>1</divisions></attributes>` + repeatR1Note, repeatR1Start, repeatR1Stop}, nil, func(t *testing.T, r validation.Report) { repeatR1Content(t, r, validation.EvidenceKnown, false) })
 	for _, extra := range []string{`<tie type="start"/>`, `<notations><ornaments><trill-mark/></ornaments></notations>`} {
 		note := strings.Replace(repeatR1Note, `<duration>1</duration>`, `<duration>1</duration>`+extra, 1)
 		repeatRound1Score(t, []string{`<attributes><divisions>1</divisions></attributes>` + note, repeatR1Start + note, repeatR1Stop}, nil, func(t *testing.T, r validation.Report) { repeatR1Content(t, r, validation.EvidenceUnknown, false) })

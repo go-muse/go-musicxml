@@ -405,6 +405,8 @@ func TestRepeatAdaptersPlayerReferenceScope(t *testing.T) {
 	}
 }
 
+// Complete onset coverage proves the missing encoded note with or without an
+// endpoint direction. Neither branch certifies the terminal End frame.
 func TestRepeatAdaptersEmptyTargetRequiresSoundCoverage(t *testing.T) {
 	for _, proved := range []bool{false, true} {
 		boundary := ""
@@ -451,11 +453,8 @@ func TestRepeatAdaptersEmptyTargetRequiresSoundCoverage(t *testing.T) {
 					}
 					found = true
 					v := c.Repeat.ContentEquivalent
-					if proved && (v.State != validation.EvidenceKnown || v.Value) {
+					if v.State != validation.EvidenceKnown || v.Value {
 						t.Fatalf("proved=%v timewise=%v model=%v: %+v", proved, timewise, model, v)
-					}
-					if !proved && v.State == validation.EvidenceKnown {
-						t.Fatalf("terminal end alone proved empty content: %+v", v)
 					}
 				}
 				if !found {

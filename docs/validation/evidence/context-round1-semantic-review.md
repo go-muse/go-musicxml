@@ -118,7 +118,7 @@ Nonempty ASCII digits are a sufficient numeric subset. Other strings remain Unsu
 
 ## 8 · PRRT_kwDOT4c3vs6rgi32
 
-Public empty repeat consumer failures are tested with independently witnessed cursor coverage. Unwitnessed terminal End remains Unknown. Measure witness test already passed baseline and is added coverage, not a newly fixed impossible result.
+At this Round 1 snapshot, public empty repeat consumer failures were tested with independently witnessed cursor coverage. Unwitnessed terminal End remained Unknown. The measure witness test already passed baseline and was added coverage, not a newly fixed impossible result. The subsequent [empty-measure onset follow-up](context-empty-measure-onset-review.md) supersedes this measure-specific limitation with a separate scored-onset counterexample; terminal End ordering itself remains unchanged.
 
 ## 9 · PRRT_kwDOT4c3vs6rgi38
 
