@@ -47,16 +47,60 @@ func (h *timelineState) addInstrumentDefinition(ctx context.Context, s *Session,
 	h.Definitions = append(h.Definitions, stateClone(d))
 	return nil
 }
+
+// Fixed append storage covers concurrent old/new backing arrays. References are
+// copied at exact length; immutable identity strings may be shared, while every
+// mutable causal pointer is independently owned. The temporary fixed record is
+// admitted separately and released on every exit.
+const timelineNoteInstrumentReserveBytes int64 = 512
+
 func (h *timelineState) addNoteInstruments(ctx context.Context, s *Session, n noteInstrumentSet) error {
 	if n.Note.Node == 0 || n.Part.Node == 0 || n.Note.DocumentID != n.Part.DocumentID {
 		return contract("note instruments", "exact note and canonical part required")
 	}
-	if _, e := stateReserve(ctx, s, n); e != nil {
-		return e
+	if err := s.step(ctx, 1); err != nil {
+		return err
 	}
-	h.NoteInstruments = append(h.NoteInstruments, stateClone(n))
+	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
+		return err
+	}
+	if err := s.account.Charge(BudgetBufferedBytes, timelineNoteInstrumentReserveBytes); err != nil {
+		return err
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, timelineNoteInstrumentReserveBytes) }()
+	if err := s.retain(timelineNoteInstrumentReserveBytes); err != nil {
+		return err
+	}
+	var err error
+	if n.Complete, err = stateOwnEvidence(ctx, s, n.Complete); err != nil {
+		return err
+	}
+	if err := stateRetainCount(s, len(n.References), 128); err != nil {
+		return err
+	}
+	if _, err := AllocationSize(int64(len(n.References))); err != nil {
+		return err
+	}
+	var refs []Evidence[NodeRef]
+	if n.References != nil {
+		refs = make([]Evidence[NodeRef], len(n.References))
+	}
+	for i, ref := range n.References {
+		if err := s.step(ctx, 1); err != nil {
+			return err
+		}
+		if refs[i], err = stateOwnEvidence(ctx, s, ref); err != nil {
+			return err
+		}
+	}
+	n.References = refs
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	h.NoteInstruments = append(h.NoteInstruments, n)
 	return nil
 }
+
 func (h *timelineState) addInstrumentChange(ctx context.Context, s *Session, id NodeRef, p statePublication[instrumentState]) error {
 	if id.Node == 0 || id.DocumentID != p.Position.Part.DocumentID {
 		return contract("instrument change", "canonical instrument required")
