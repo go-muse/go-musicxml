@@ -452,7 +452,27 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 		case timelineRoleAttributesDivisions:
 			r.err = addStateGap(ctx, s, &h.Divisions, g)
 		case timelineRoleAttributesKey:
+			preserves := false
+			if ch != nil && r.matches(ch, timelineRoleAttributesKey) {
+				key := r.key(ch)
+				encoding := stateUnavailable[keyState, bool](key)
+				if key.State == EvidenceKnown && r.step(1+int64(len(key.Value.Alterations))+int64(len(key.Value.Octaves))) {
+					encoding = key.Value.encodingEvidence()
+				}
+				if encoding.State != EvidenceKnown || !encoding.Value {
+					g.Availability = stateMergeGap(g.Availability, encoding)
+				} else {
+					scope := r.scope(ch, timelineRoleKeyNumber, false)
+					preserves = scope.State == EvidenceKnown
+				}
+			}
+			if r.err != nil {
+				return
+			}
 			r.err = addStateGap(ctx, s, &h.Keys, g)
+			if r.err == nil && preserves {
+				r.err = h.certifyKeyPresenceGap(ctx, s, len(h.Keys.Gaps)-1, NodeRef{s.documentID, ch.header.ID})
+			}
 		case timelineRoleAttributesTime:
 			r.err = addStateGap(ctx, s, &h.Times, g)
 		case timelineRoleAttributesStaves:

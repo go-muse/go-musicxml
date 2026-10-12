@@ -159,6 +159,7 @@ type instrumentChanges struct {
 
 type timelineState struct {
 	frameBounds                              map[timelineFrame]Rational
+	keyPresenceGaps                          map[int]stateProvenance
 	StaffDetails                             stateHistory[staffDetailsState]
 	Divisions                                stateHistory[Decimal]
 	Keys                                     stateHistory[keyState]
@@ -943,7 +944,7 @@ func (h *timelineState) effectiveKeyPresence(ctx context.Context, s *Session, po
 	if e != nil {
 		return stateResult[bool]{}, e
 	}
-	return queryState(ctx, s, h, &h.Keys, pos, staff, func(v keyState) Evidence[bool] { return v.encodingEvidence() })
+	return h.queryKeyPresence(ctx, s, pos, staff)
 }
 
 func stateMergeGap(a, b Evidence[bool]) Evidence[bool] {
