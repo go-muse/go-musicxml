@@ -226,3 +226,70 @@ func TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier(t *testing.T) {
 		t.Fatalf("floating fallback skipped nearer chord ambiguity: %+v", got)
 	}
 }
+
+func TestTimelineUnavailableDisplacedAssociationKeepsPlacement(t *testing.T) {
+	for _, family := range []string{"direction", "figure", "grace"} {
+		for _, mode := range []string{"unconfined", "confined-control", "proved-before", "proved-after"} {
+			t.Run(family+"/"+mode, func(t *testing.T) {
+				ctx := context.Background()
+				s, v, b, blocks := directionOriginFixture(t, OrderSource, Budgets{})
+				if family == "grace" {
+					s, v, b, blocks = graceNeighborFixture(t, OrderSource, stateKnown("a"))
+				}
+				node := runtimeNote(t, b, 70, 1, false)
+				later := runtimeBlock(b, 1, node)
+				blocks = append(blocks, later)
+				cause := &DecisionRef{Rule: RuleKey{"unavailable-displaced-note", 1}, Subject: NodeRef{"d", 70}}
+				position := Evidence[musicalPosition]{State: EvidenceInvalid, Reason: "unavailable-displaced-note", Cause: cause}
+				placement := stateGapPlacement{Displaced: mode != "confined-control"}
+				if mode == "proved-before" {
+					bound := timelineAt(blocks[0], stateKnown(mustRational(t, -1, 1))).Value
+					placement.Upper = &bound
+				}
+				if mode == "proved-after" {
+					bound := timelineAt(blocks[0], stateKnown(mustRational(t, 4, 1))).Value
+					placement.Lower = &bound
+				}
+				fact := v.Facts[40]
+				fact.Position = position
+				fact.Placement = placement
+				v.Facts[70] = fact
+				r := &stateReader{ctx: ctx, s: s, b: b}
+				var values []Evidence[NodeRef]
+				switch family {
+				case "direction":
+					stateClose(t, s, &v.State, 1)
+					got, _ := v.directionAnchor(r, v.Facts[10], blocks)
+					values = []Evidence[NodeRef]{got}
+				case "figure":
+					domains := []figuredBassDomain{{block: blocks[0], complete: stateKnown(true)}, {block: later, complete: stateKnown(true)}}
+					got, _ := v.figuredBassAnchor(r, domains, v.Facts[10], stateKnown(true))
+					values = []Evidence[NodeRef]{got}
+				case "grace":
+					n := v.NoteOrigins[40]
+					n.Note.Node = 70
+					n.ScoreOnset = position
+					n.Placement = placement
+					v.NoteOrigins[70] = n
+					if err := v.resolveGraceNeighbors(ctx, s, b, blocks); err != nil {
+						t.Fatal(err)
+					}
+					got := v.GraceNeighbors[20]
+					values = []Evidence[NodeRef]{got.Previous.Note, got.Following.Note}
+				}
+				if r.err != nil {
+					t.Fatal(r.err)
+				}
+				for _, got := range values {
+					if mode == "unconfined" {
+						if got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != *cause {
+							t.Fatalf("lost unavailable displacement or actual cause: %+v", got)
+						}
+					} else if got.State != EvidenceKnown {
+						t.Fatalf("independently excluded placement lost local association: %+v", got)
+					}
+				}
+			})
+		}
+	}
+}
