@@ -13,6 +13,10 @@ type timelineService struct {
 	Facts              map[NodeID]timelineEventFact
 	Final              bool
 }
+
+// Fixed record plus conservative indirect-map/growth admission.
+const timelineFactReserveBytes int64 = 2048
+
 type timelineEventFact struct {
 	// Origin is the unshifted cursor/onset coordinate. Position may describe
 	// a direction/harmony display displacement or a sound/listening effect.
@@ -55,7 +59,7 @@ func (service *timelineService) storeFact(ctx context.Context, s *Session, id No
 	if err := s.account.Charge(BudgetContextFacts, 1); err != nil {
 		return err
 	}
-	if err := s.retain(1024); err != nil {
+	if err := s.retain(timelineFactReserveBytes); err != nil {
 		return err
 	}
 	var err error
