@@ -177,6 +177,46 @@ strict supersession proof. This caution does not reopen the established
 canonical precedence of two independently contained positions. Same-frame
 same-position conflicts still require the existing no-invented-winner discipline.
 
+## Dependent proof boundaries
+
+A known local coordinate presupposes a uniquely established duration-unit
+conversion. Marking an already-computed destination as outside the proved frame
+does not repair an earlier unsupported unit choice. The existing cursor-unit
+interpretation remains in force: no departure-only or piecewise convention is
+invented for a movement that may cross differing divisions. This differs from
+the separately documented origin-unit interpretation for a non-cursor offset.
+
+The independent excursion regressions cover a backup after a changed division
+value at the new measure start; a backup with unchanged current-start units that
+may reach a prior mid-measure differently valued region; and a forward outside
+the proved prefix that may reach a later-frame changed region. Uniform-value
+controls retain exact arithmetic. Existing earlier complete prefixes remain
+independent. A per-measure detector alone cannot establish that no remote region
+can intervene. Nor is checking only differently valued publisher points inside
+a tentative interval sufficient: in reverse travel the crossed boundary may
+publish the departure value, while the earlier differently valued region began
+before the tentative landing point. A conservative proof must cover applicable
+regions, unavailable publications and the independent placement of its bounds.
+The backup/forward recommendations remain advice, not a newly enforced error.
+
+Direction/figured-bass first-following-note associations and grace donor queries
+also depend on cross-frame order. An unproved cursor candidate cannot borrow
+canonical order from its containing measure label. Exact same-frame comparisons
+and two proved-contained frame positions retain their existing proofs. Both
+candidate indexes and fallback scans must consider potentially competing
+unproved candidates, including earlier-frame positive excursions and later-frame
+negative excursions; a nominal ordinal prefilter is not enough.
+
+Finally, an unavailable signed sound displacement has no established destination
+interval merely because its unshifted source was in a known measure. Its
+property-specific gap must retain that missing confinement and the actual
+scalar/units cause. A contained earlier query cannot ignore it by ordinal, and
+a nominally later publication cannot repair it without an independent
+supersession relation. This differs from an unknown ordinary cursor with proved
+within-frame membership. Only the selected sound displacement matters: an
+ignored visual direction offset (`sound=no` by default), or a parent offset
+replaced by an own sound offset, must not manufacture a displaced sound gap.
+
 ## Evidence still required for acceptance
 
 The RED test establishes the missing chronology gate. A fix needs explicit
