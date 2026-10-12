@@ -15,7 +15,11 @@ and no planning JSON status is changed by the tests cited below.
 
 The later [source assessment scope](source-assessment-scope.md) adds the root
 source adapter, sealed XSD plans and shared kernel. Its ownership ledger
-supersedes the batch-4 future-owner statements retained below.
+supersedes the batch-4 future-owner statements retained below. The later
+[bounded model/local scope](model-assessment-scope.md) adds the root direct-model
+adapter, model representation and sealed local/typed-reference plans. Its exact
+scope and pending verification supersede batch-5 future-owner statements here;
+this foundation-only ledger does not claim whole-program closure.
 
 ## Compiled execution and inspection are separate
 
@@ -304,8 +308,10 @@ its original issues. Its error text intentionally migrates from
 `validation: incomplete assessment: incomplete XSD assessment: …`.
 Callers should use `errors.Is`/`errors.As` instead of matching string prefixes;
 recognition is supported through the public sentinel and typed carrier.
-Existing XSD-only `Validate` still encodes and reparses the
-model. It is not redirected to this engine and does not become prose validation.
+At the original foundation boundary, XSD-only `Validate` still encoded and
+reparsed the model. The later [direct-model migration](model-assessment-scope.md)
+replaces that route while preserving XSD-only scope; see the [current API](../../API.md#validation)
+for finite budgets, exact-current-value behavior and legacy error recognition.
 Existing root signatures, `DecodeOptions` fields, permissive decoding, generated
 models and transport behavior are unchanged.
 
@@ -369,8 +375,10 @@ The [28 issue dispositions](open-questions.md) and [deferred inventory](deferred
 remain gates, not hard-error predicates. No guessed initial context, musical
 position, universal span balance or broad `ProductionMusicXML` profile is added.
 `InspectXML` and `DecodeAssessed` now expose an explicit developmental source
-preview. Direct `Assess` and package-assessment entry points remain absent until
-their adapters satisfy their contracts.
+preview. The later explicit `AssessModel` and source-local profiles are recorded
+in the bounded model/local scope; the name `Assess` remains the generated type.
+Package-assessment entry points remain absent until their adapters satisfy their
+contracts.
 
 Required verification remains `make check-all`, the existing required Linux
 external-XSD roots and planning/generation reproducibility. The Linux CI test job

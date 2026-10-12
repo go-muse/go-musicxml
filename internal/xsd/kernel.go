@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	"unsafe"
 )
 
 const (
@@ -200,24 +201,27 @@ type Node struct {
 // attribute in a namespace whose literal URI is "xmlns" has the same expanded
 // xml.Name as a namespace declaration.
 type Attribute struct {
+	Current CurrentScalar
 	Attr
 	NamespaceDeclaration bool
 	ValueKnown           bool
 }
 
 type Context struct {
-	identitySource     identityOrigin
-	identityDiagnostic identityDiagnostic
-	run                *Run
-	local              *boundState
-	AssessmentErr      error
-	AssessmentVersion  uint64
-	TypeMetadata       map[TypeIdentity]uint8
-	Derivations        map[DerivationKey]bool
-	Schema             *SchemaData
-	Issues             []Issue
-	Effective          map[*ComplexSchema]*EffectiveComplex
-	ParticleNullable   map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
+	currentTrials           int
+	currentFixedUnavailable bool
+	identitySource          identityOrigin
+	identityDiagnostic      identityDiagnostic
+	run                     *Run
+	local                   *boundState
+	AssessmentErr           error
+	AssessmentVersion       uint64
+	TypeMetadata            map[TypeIdentity]uint8
+	Derivations             map[DerivationKey]bool
+	Schema                  *SchemaData
+	Issues                  []Issue
+	Effective               map[*ComplexSchema]*EffectiveComplex
+	ParticleNullable        map[*ParticleSchema]bool // prepared immutable metadata, scoped to this validation
 	// These per-context, schema-keyed caches are lazy: simpleSemantics is
 	// needed only when a simple schema is reached; enumerationValues only
 	// when enumeration literals need immutable lexical and value views.
@@ -238,6 +242,8 @@ type IdentityReference struct {
 }
 
 type EffectiveComplex struct {
+	// Run-local immutable absence records, indexed by the effective schema.
+	absent       absentAttributeCache
 	Particle     *ParticleSchema
 	Attributes   []AttributeSchema
 	AnyAttribute *AnyAttributeSchema
@@ -326,6 +332,9 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	if c.local != nil {
 		c.local.actual = actualType
 		c.local.declared = &schema.Type
+		if c.currentModel() && !c.local.subject.Current.Known && !c.local.subject.Current.Absent && (c.currentIdentityCapable(&schema.Type) || c.currentIdentityCapable(actualType)) {
+			c.IdentityIncomplete = true
+		}
 	}
 
 	// This is an element constraint, not a scalar constraint: validateType is
@@ -362,7 +371,11 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 			declarationValid = false
 			c.AddIssue(path, "fixed", "nil element must not have a fixed value constraint")
 		}
-		if len(node.Children) != 0 || node.Text.Len() != 0 {
+		characters := node.Text.Len() != 0
+		if c.currentModel() {
+			characters, _ = c.currentCharacters()
+		}
+		if len(node.Children) != 0 || characters {
 			c.SkipIdentityChildren(node)
 			declarationValid = false
 			c.AddIssue(path, "nillable", "nil element must not contain character data or child elements")
@@ -375,18 +388,26 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	// Use a validation-only view: the source text and model stay unchanged.
 	defaulted := false
 	constraintBlocked := false
+	if c.currentModel() && !nilled && (schema.Default != nil || schema.Fixed != nil) {
+		characters, _ := c.currentCharacters()
+		if !characters && len(node.Children) == 0 {
+			constraintBlocked = true
+			c.capability("declaration", "model-element-value-constraint-unavailable")
+			c.capability("scalar", "model-element-value-constraint-unavailable")
+		}
+	}
 	if c.local != nil && !c.local.subject.ChildrenComplete {
 		if nilled || schema.Fixed != nil {
 			c.capability("declaration", "element-child-absence-unavailable")
 		}
-		if !nilled && len(node.Children) == 0 && node.Text.Len() == 0 && (schema.Default != nil || schema.Fixed != nil) {
+		if !c.currentModel() && !nilled && len(node.Children) == 0 && node.Text.Len() == 0 && (schema.Default != nil || schema.Fixed != nil) {
 			constraintBlocked = true
 			c.capability("declaration", "element-value-constraint-emptiness-unavailable")
 			c.capability("scalar", "element-value-constraint-emptiness-unavailable")
 			c.IdentityIncomplete = true
 		}
 	}
-	if !nilled && !constraintBlocked && (c.local == nil || c.local.subject.TextKnown) && len(node.Children) == 0 && node.Text.Len() == 0 {
+	if !c.currentModel() && !nilled && !constraintBlocked && (c.local == nil || c.local.subject.TextKnown) && len(node.Children) == 0 && node.Text.Len() == 0 {
 		value := schema.Default
 		if schema.Fixed != nil {
 			value = schema.Fixed
@@ -421,7 +442,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		}
 	}
 
-	if !nilled && !defaulted && !constraintBlocked && schema.Fixed != nil && (c.local == nil || c.local.subject.TextKnown) {
+	if !nilled && !defaulted && !constraintBlocked && schema.Fixed != nil && c.scalarAvailable() {
 		beforeFixed := c.AssessmentVersion
 		// XSD 1.0 cvc-elt 5.2.2.1 forbids element children independently
 		// of fixed-value equality, including for mixed content. Report the
@@ -429,8 +450,11 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 		if len(node.Children) != 0 {
 			declarationValid = false
 			c.AddIssue(path, "fixed", "element with a fixed value must not contain child elements")
-		} else if !c.ElementConstraintEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed) {
+		} else if equal := c.elementFixedEqual(actualType, &schema.Type, node.Text.String(), *schema.Fixed); !equal && (!c.currentModel() || (c.AssessmentVersion == beforeFixed && !c.currentFixedUnavailable)) {
 			declarationValid = false
+			if c.currentModel() {
+				c.local.result().Valid = false
+			}
 			c.AddIssue(
 				path,
 				"fixed",
@@ -441,13 +465,16 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 				),
 			)
 		}
-		declarationValid = declarationValid && c.AssessmentVersion == beforeFixed
+		declarationValid = declarationValid && c.AssessmentVersion == beforeFixed && (!c.currentModel() || !c.currentFixedUnavailable)
 	}
 
 	// An unavailable/invalid default blocks dependent scalar/content checks,
 	// while actual-type attribute checks remain independent.
 	if c.local != nil {
 		c.local.effectiveText = node.Text.String()
+		if c.currentModel() && c.local.subject.Current.Known && c.local.subject.Current.Value.Domain == StringDomain {
+			c.local.effectiveText = c.local.subject.Current.Value.Text
+		}
 	}
 	c.setFamily("scalar")
 	typeValid := c.ValidateType(node, actualType, path, nilled || constraintBlocked, original) && typeAttributesValid
@@ -455,7 +482,7 @@ func (c *Context) ValidateElementOwned(node *Node, schema *ElementSchema, path s
 	if c.local != nil {
 		c.local.typeValid = typeValid
 		c.local.declarationValid = declarationValid
-		c.local.identityAllowed = !nilled && !constraintBlocked && c.local.subject.TextKnown
+		c.local.identityAllowed = !nilled && !constraintBlocked && c.scalarAvailable()
 		// Capability is a permanent local fact available immediately at Bind;
 		// postorder completion only gates registration, never discovers it late.
 		if typeValid && c.local.identityAllowed {
@@ -526,10 +553,16 @@ func (c *Context) ValidateType(
 			)
 			return false
 		}
-		if c.local != nil && !c.local.subject.TextKnown {
+		if !c.scalarAvailable() {
 			return false
 		}
-		assessment, failure := c.AssessSimpleValue(simple, node.Text.String(), node.Text.String())
+		var assessment SimpleAssessment
+		var failure *SimpleFailure
+		if c.currentModel() {
+			assessment, failure = c.assessCurrentType(reference, c.local.subject.Current)
+		} else {
+			assessment, failure = c.AssessSimpleValue(simple, node.Text.String(), node.Text.String())
+		}
 		c.observeScalar(assessment, failure == nil)
 		if failure != nil {
 			c.AddIssue(path, failure.Constraint, failure.Message)
@@ -557,10 +590,16 @@ func (c *Context) ValidateType(
 			)
 			return false
 		}
-		if c.local != nil && !c.local.subject.TextKnown {
+		if !c.scalarAvailable() {
 			return false
 		}
-		assessment, failure := c.AssessBuiltinValue(builtin, node.Text.String(), node.Text.String())
+		var assessment SimpleAssessment
+		var failure *SimpleFailure
+		if c.currentModel() {
+			assessment, failure = c.assessCurrentType(reference, c.local.subject.Current)
+		} else {
+			assessment, failure = c.AssessBuiltinValue(builtin, node.Text.String(), node.Text.String())
+		}
 		c.observeScalar(assessment, failure == nil)
 		if failure != nil {
 			c.AddIssue(path, failure.Constraint, failure.Message)
@@ -602,7 +641,8 @@ func (c *Context) ResolveType(
 	c.bytes(len(reference.Name.Space))
 	c.bytes(len(reference.Name.Local))
 	if reference.Name.Space == XSDNamespace {
-		return nil, nil, reference.Name.Local, BuiltinSemantics(reference.Name.Local) != nil
+		_, found := builtinSemanticsValue(reference.Name.Local)
+		return nil, nil, reference.Name.Local, found
 	}
 
 	resolved, found := c.Schema.Types[reference.Name]
@@ -669,8 +709,14 @@ func (c *Context) ValidateComplex(
 	// effective particle identifies the empty types represented here, not
 	// nullable particles or the generator's unnormalized empty groups.
 	// Keep the legacy diagnostic and leave the source text unchanged.
-	if (c.local == nil || c.local.subject.TextKnown) && !effective.Mixed && node.Text.Len() != 0 &&
-		(effective.Particle == nil || trimXMLWhitespace(node.Text.String(), c) != "") {
+	characterViolation := false
+	if c.currentModel() {
+		characters, nonWhitespace := c.currentCharacters()
+		characterViolation = c.scalarAvailable() && !effective.Mixed && characters && (effective.Particle == nil || nonWhitespace)
+	} else {
+		characterViolation = (c.local == nil || c.local.subject.TextKnown) && !effective.Mixed && node.Text.Len() != 0 && (effective.Particle == nil || trimXMLWhitespace(node.Text.String(), c) != "")
+	}
+	if characterViolation {
 		c.AddIssue(
 			path,
 			"element-only",
@@ -694,6 +740,11 @@ func (c *Context) ValidateComplex(
 		return attributesValid && contentValid && len(node.Children) == 0
 	}
 
+	if c.currentModel() && !c.local.subject.ChildrenOrderKnown {
+		c.capability("content", "model-child-order-unavailable")
+		c.IdentityIncomplete = true
+		return false
+	}
 	result, failure, matched := c.MatchParticle(
 		effective.Particle,
 		node.Children,
@@ -758,7 +809,9 @@ func (c *Context) EffectiveComplex(
 		return cached, cached != nil
 	}
 
-	c.reserve(160)
+	// Preserve the established effective-record/map allowance and separately
+	// admit the host-sized fields added for the run-local absence cache.
+	c.reserve(160 + int64(unsafe.Sizeof(absentAttributeCache{})))
 	c.reserve(c.size(int64(len(schema.Attributes)), 192))
 	c.step(int64(len(schema.Attributes)))
 	result = &EffectiveComplex{
@@ -1013,6 +1066,13 @@ func (c *Context) ValidateAttributes(
 			c.local.attribute = attribute.Name
 			c.local.attributeEpoch = c.AssessmentVersion
 			c.local.attributeKnown = attribute.ValueKnown
+			c.local.attributeLimited = false
+			c.local.attributeInvalid = false
+			c.local.currentAttributeSet = c.currentModel()
+			if c.currentModel() {
+				c.local.currentAttribute = c.checkCurrent(attribute.Current)
+				c.local.attributeKnown = attribute.Current.Known && !attribute.Current.Absent
+			}
 			c.local.scalarAssessed = false
 		}
 		name := Name(attribute.Name)
@@ -1044,24 +1104,33 @@ func (c *Context) ValidateAttributes(
 			continue
 		}
 
-		if c.local != nil && !attribute.ValueKnown {
+		if c.local != nil && !c.local.attributeKnown {
 			c.local.limit("attributes", "attribute-value-unavailable", nil)
-			c.IdentityIncomplete = true
+			if !c.currentModel() || c.currentIdentityCapable(&schema.Type) {
+				c.IdentityIncomplete = true
+			}
 			c.attributeResult(schema, attribute.Value, true, false, false)
 			valid = false
 			continue
 		}
 		attributeValid := true
+		if c.currentModel() {
+			c.currentFixedUnavailable = false
+		}
 		beforeFixed := c.AssessmentVersion
 		if schema.Constraint != nil &&
 			schema.Constraint.Kind == "fixed" &&
-			!c.SimpleValuesEqual(
+			!c.attributeFixedEqual(
 				&schema.Type,
 				attribute.Value,
 				schema.Constraint.Value,
-			) && c.AssessmentVersion == beforeFixed {
+			) && c.AssessmentVersion == beforeFixed && (!c.currentModel() || !c.currentFixedUnavailable) {
 			attributeValid = false
 			valid = false
+			if c.currentModel() {
+				c.local.result().Valid = false
+				c.local.attributeInvalid = true
+			}
 			c.AddIssue(
 				attributePath(path, attribute.Name, c),
 				"fixed",
@@ -1073,7 +1142,7 @@ func (c *Context) ValidateAttributes(
 			)
 		}
 
-		if c.AssessmentVersion != beforeFixed {
+		if c.AssessmentVersion != beforeFixed || (c.currentModel() && c.currentFixedUnavailable) {
 			attributeValid = false
 			valid = false
 		}
@@ -1090,15 +1159,16 @@ func (c *Context) ValidateAttributes(
 		} else {
 			attributePath := attributePath(path, attribute.Name, c)
 			if attributeValid {
-				c.RecordIdentity(&schema.Type, attribute.Value, attributePath)
+				c.RecordIdentity(&schema.Type, c.attributeIdentityText(attribute.Value), attributePath)
 			}
-			c.RecordIdentityBinding(&schema.Type, attribute.Value, attributePath, node)
+			c.RecordIdentityBinding(&schema.Type, c.attributeIdentityText(attribute.Value), attributePath, node)
 		}
 		c.attributeResult(schema, attribute.Value, true, c.local == nil || c.local.scalarAssessed, attributeValid && (c.local == nil || c.local.scalarAssessed))
 	}
 
 	if c.local != nil {
 		c.local.attribute = QName{}
+		c.local.currentAttributeSet = false
 	}
 	for _, schema := range schemas {
 		c.step(1)
@@ -1129,6 +1199,11 @@ func (c *Context) ValidateSimpleType(
 	value string,
 ) *SimpleFailure {
 	c.step(1)
+	if current, ok := c.inputCurrent(); ok {
+		assessment, failure := c.assessCurrentType(reference, current)
+		c.observeScalar(assessment, failure == nil)
+		return failure
+	}
 
 	simple, complex, builtin, found := c.ResolveType(reference)
 	if !found || complex != nil {
@@ -2129,6 +2204,9 @@ func (c *Context) AddIssue(
 ) {
 	c.step(1)
 
+	if constraint == "model-capability" {
+		return
+	}
 	if constraint == "schema" || constraint == "assessment" {
 		if constraint == "schema" || c.AssessmentErr == nil {
 			c.reserve(c.sum(int64(len(path)), 2, int64(len(message))))

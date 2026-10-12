@@ -119,7 +119,22 @@ func cloneProfile(v Profile) Profile {
 	return v
 }
 func cloneEvidence[T any](v Evidence[T]) Evidence[T] {
-	v.State = EvidenceState(strings.Clone(string(v.State)))
+	// Use the closed vocabulary's owned constants. This detaches even enum
+	// substrings from caller backing storage without allocating for every fact.
+	switch v.State {
+	case EvidenceKnown:
+		v.State = EvidenceKnown
+	case EvidenceAbsent:
+		v.State = EvidenceAbsent
+	case EvidenceUnknown:
+		v.State = EvidenceUnknown
+	case EvidenceUnsupported:
+		v.State = EvidenceUnsupported
+	case EvidenceInvalid:
+		v.State = EvidenceInvalid
+	default:
+		v.State = EvidenceState(strings.Clone(string(v.State)))
+	}
 	if v.Cause != nil {
 		c := *v.Cause
 		c.Rule = cloneKey(c.Rule)

@@ -1,5 +1,10 @@
 package xsd
 
+import (
+	"context"
+	"errors"
+)
+
 // XSD 1.0 sic-id has two independent predicates: declaration-valid eligible
 // items seed entry strings; successful actual ID types bind containing elements.
 // This bounded 1.0 interpretation does not register selected list/union trials
@@ -33,6 +38,7 @@ type IdentityEntry struct {
 
 type IdentityBindings struct {
 	firstOrigin, secondOrigin identityOrigin
+	firstOwner, secondOwner   SubjectID
 	Owners                    map[*Node]struct{}
 	FirstPath, SecondPath     string
 }
@@ -138,17 +144,24 @@ func (c *Context) RecordIdentityBinding(reference *TypeRef, value, path string, 
 		}
 	}
 	c.identity(1)
+	var origin identityOrigin
+	if bindings == nil || len(bindings.Owners) == 1 {
+		origin = c.origin()
+	}
+	// Admit the actual owner entry before publishing bounded owner evidence.
+	// A resource stop must not expose an owner that was never registered.
+	c.reserve(32)
 	if bindings == nil {
-		c.reserve(c.sum(256, int64(len(path))))
-		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path, firstOrigin: c.origin()}
+		c.reserve(c.sum(272, int64(len(path))))
+		bindings = &IdentityBindings{Owners: make(map[*Node]struct{}), FirstPath: path, firstOrigin: origin, firstOwner: owner.ID}
 		c.IdentityBindings[value] = bindings
 	}
 	if len(bindings.Owners) == 1 {
 		c.reserve(int64(len(path)))
 		bindings.SecondPath = path
-		bindings.secondOrigin = c.origin()
+		bindings.secondOrigin = origin
+		bindings.secondOwner = owner.ID
 	}
-	c.reserve(32)
 	bindings.Owners[owner] = struct{}{}
 }
 
@@ -202,4 +215,88 @@ func (c *Context) ValidateIdentityReferences() {
 		c.proveIdentityFailure()
 		c.AddIssue(reference.Path, "IDREF", format(c, "IDREF %q does not identify an element in the document", reference.Value))
 	}
+}
+
+// IdentityResolutionStatus describes one already validated reference value's
+// binding, independently of failures for other IDs or references.
+type IdentityResolutionStatus string
+
+const (
+	// IdentityMissing proves that a closed scope has no actual-ID owner.
+	IdentityMissing IdentityResolutionStatus = "missing"
+	// IdentityUnique proves that a closed scope has exactly one actual-ID owner.
+	IdentityUnique IdentityResolutionStatus = "unique"
+	// IdentityAmbiguous proves two distinct owners, even in an incomplete scope.
+	IdentityAmbiguous IdentityResolutionStatus = "ambiguous"
+	// IdentityIncomplete cannot establish absence or uniqueness in an open scope.
+	IdentityIncomplete IdentityResolutionStatus = "incomplete"
+)
+
+// IdentityResolution is a bounded snapshot of actual-ID owner bindings. Owner
+// is the unique owner, or the sole known candidate when Status is incomplete.
+// FirstOwner and SecondOwner retain registration order without exposing nodes
+// or an unbounded owner collection. ScopeComplete is independent of ambiguity.
+type IdentityResolution struct {
+	Status                         IdentityResolutionStatus
+	Owner, FirstOwner, SecondOwner SubjectID
+	ScopeComplete                  bool
+	Reason                         string
+}
+
+// ResolveIdentity reads one already domain-validated, normalized reference
+// value. It does not perform lexical assessment, build a second ID index, or
+// require unrelated identity predicates to pass. Call Identity with complete
+// input after node completions to establish closure. Reads remain valid after
+// Finalize, until Close; they consume bounded work but retain no storage.
+func (r *Run) ResolveIdentity(ctx context.Context, value string) (IdentityResolution, error) {
+	if r == nil || r.closed {
+		return IdentityResolution{}, errors.New("xsd: run is closed or nil")
+	}
+	if ctx == nil {
+		return IdentityResolution{}, errors.New("xsd: nil context")
+	}
+	if err := ctx.Err(); err != nil {
+		return IdentityResolution{}, err
+	}
+	if err := r.meter.Step(ctx, 1); err != nil {
+		return IdentityResolution{}, err
+	}
+	// Admit hashing of the lookup key before the uninterruptible map access.
+	for remaining := len(value); remaining > 0; {
+		chunk := min(remaining, 256)
+		if err := ctx.Err(); err != nil {
+			return IdentityResolution{}, err
+		}
+		if err := r.meter.Step(ctx, int64(chunk)); err != nil {
+			return IdentityResolution{}, err
+		}
+		remaining -= chunk
+	}
+	if err := ctx.Err(); err != nil {
+		return IdentityResolution{}, err
+	}
+	out := IdentityResolution{Status: IdentityIncomplete,
+		ScopeComplete: r.identityInputComplete && !r.context.IdentityIncomplete && r.context.AssessmentErr == nil}
+	if !out.ScopeComplete {
+		out.Reason = "identity-scope-incomplete"
+	}
+	bindings := r.context.IdentityBindings[value]
+	if bindings != nil {
+		out.FirstOwner, out.SecondOwner = bindings.firstOwner, bindings.secondOwner
+		if len(bindings.Owners) > 1 {
+			out.Status = IdentityAmbiguous
+			return out, nil
+		}
+		if len(bindings.Owners) == 1 {
+			out.Owner = bindings.firstOwner
+			if out.ScopeComplete {
+				out.Status = IdentityUnique
+			}
+			return out, nil
+		}
+	}
+	if out.ScopeComplete {
+		out.Status = IdentityMissing
+	}
+	return out, nil
 }

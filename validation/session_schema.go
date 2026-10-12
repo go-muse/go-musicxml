@@ -54,11 +54,22 @@ func (m schemaMeter) Scalar(n int64) error                    { return m.session
 func (m schemaMeter) Identity(n int64) error                  { return m.session.account.Charge(BudgetIDs, n) }
 
 func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, error) {
-	bytes := int64(256) + int64(len(n.header.Bindings))*64 + int64(len(n.attributes))*96 + int64(len(n.children))*64
+	bytes := int64(256) + int64(len(n.header.Bindings))*64 + int64(len(n.attributes))*256 + int64(len(n.children))*64
 	if err := s.retain(bytes); err != nil {
 		return xsd.Subject{}, err
 	}
 	out := xsd.Subject{ID: xsd.SubjectID(n.header.ID), Parent: xsd.SubjectID(n.header.Parent), Name: xsd.QName{Space: n.header.Name.Space, Local: n.header.Name.Local}, Path: n.header.Location.Path, Text: n.end.Scalar.Lexeme.Value, TextKnown: n.closed && n.end.Scalar.Lexeme.State == EvidenceKnown, AttributesComplete: n.closed && n.end.AttributesComplete.State == EvidenceKnown && n.end.AttributesComplete.Value, ChildrenComplete: n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value && n.end.Order.State == EvidenceKnown && n.end.Order.Value == OrderSource}
+	if s.profile.Target == TargetModel {
+		out.CurrentModel = true
+		out.ChildrenOrderKnown = n.closed && n.end.Order.State == EvidenceKnown && (n.end.Order.Value == OrderModelFields || n.end.Order.Value == OrderModelContent)
+		out.ChildrenComplete = n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value && out.ChildrenOrderKnown
+		out.Text, out.TextKnown = "", false
+		var err error
+		out.Current, err = s.schemaCurrent(ctx, n.end.Scalar.Value)
+		if err != nil {
+			return out, err
+		}
+	}
 	if !n.closed && n.attributeSeal != nil {
 		out.AttributesComplete = n.attributeSeal.State == EvidenceKnown && n.attributeSeal.Value
 	}
@@ -83,7 +94,16 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 				continue
 			}
 		}
-		out.Attributes = append(out.Attributes, xsd.Attribute{Attr: xsd.Attr{Name: xsd.QName{Space: a.Name.Space, Local: a.Name.Local}, Value: a.Scalar.Lexeme.Value}, ValueKnown: a.Presence.State == EvidenceKnown && a.Presence.Value && a.Scalar.Lexeme.State == EvidenceKnown, NamespaceDeclaration: a.Name.Space == "http://www.w3.org/2000/xmlns/"})
+		attribute := xsd.Attribute{Attr: xsd.Attr{Name: xsd.QName{Space: a.Name.Space, Local: a.Name.Local}, Value: a.Scalar.Lexeme.Value}, ValueKnown: a.Presence.State == EvidenceKnown && a.Presence.Value && a.Scalar.Lexeme.State == EvidenceKnown, NamespaceDeclaration: a.Name.Space == "http://www.w3.org/2000/xmlns/"}
+		if out.CurrentModel {
+			attribute.Value, attribute.ValueKnown = "", false
+			var err error
+			attribute.Current, err = s.schemaCurrent(ctx, a.Scalar.Value)
+			if err != nil {
+				return out, err
+			}
+		}
+		out.Attributes = append(out.Attributes, attribute)
 	}
 	out.Children = make([]xsd.Child, len(n.children))
 	for i, ch := range n.children {
@@ -107,7 +127,7 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		return err
 	}
 	state.nodes = make(map[NodeID]schemaNode, len(s.nodes))
-	if s.root.header.Declaration.State == EvidenceUnsupported || s.root.header.Type.State == EvidenceUnsupported {
+	if s.profile.Target == TargetSource && (s.root.header.Declaration.State == EvidenceUnsupported || s.root.header.Type.State == EvidenceUnsupported) {
 		reason := s.root.header.Declaration.Reason
 		if reason == "" {
 			reason = s.root.header.Type.Reason
@@ -217,6 +237,10 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 					item.reason = "wildcard-skip"
 					break
 				}
+				if ancestor.end.Order.State == EvidenceInvalid && ancestor.end.Order.Cause != nil {
+					item.cause = ancestor.end.Order.Cause
+					break
+				}
 				if bound.cause != nil {
 					item.cause = bound.cause
 					break
@@ -269,11 +293,13 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 	} else {
 		n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "actual-type-unavailable"}
 	}
-	scalar, err := s.schemaAtomic(ctx, state.run.Scalar(binding))
-	if err != nil {
-		return err
+	if s.profile.Target != TargetModel {
+		scalar, err := s.schemaAtomic(ctx, state.run.Scalar(binding))
+		if err != nil {
+			return err
+		}
+		n.end.Scalar.Value = scalar
 	}
-	n.end.Scalar.Value = scalar
 	if err := s.retain(int64(len(n.attributes)) * 96); err != nil {
 		return err
 	}
@@ -283,7 +309,9 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 			continue
 		}
 		n.attributes[i].Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "attribute-use-unavailable"}
-		n.attributes[i].Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "typed-scalar-unavailable"}
+		if s.profile.Target != TargetModel {
+			n.attributes[i].Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "typed-scalar-unavailable"}
+		}
 	}
 	for i, a := range n.attributes {
 		if err := s.step(ctx, 1); err != nil {
@@ -291,12 +319,12 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 		}
 		attributes[a.Name] = i
 	}
-	for _, result := range state.run.Attributes(binding) {
-		if !result.Present {
-			continue
-		}
+	for result := range state.run.Attributes(binding) {
 		if err := s.step(ctx, 1); err != nil {
 			return err
+		}
+		if !result.Present {
+			continue
 		}
 		index, exists := attributes[QName{Space: result.Name.Space, Local: result.Name.Local}]
 		if !exists {
@@ -309,11 +337,13 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 		} else {
 			a.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "attribute-use-unavailable"}
 		}
-		value, err := s.schemaAtomic(ctx, result.Scalar)
-		if err != nil {
-			return err
+		if s.profile.Target != TargetModel {
+			value, err := s.schemaAtomic(ctx, result.Scalar)
+			if err != nil {
+				return err
+			}
+			a.Scalar.Value = value
 		}
-		a.Scalar.Value = value
 	}
 
 	return nil
@@ -421,7 +451,7 @@ func (s *Session) schemaResult(n *factNode, check XSDCheck) xsd.Result {
 	case XSDCheckScalar:
 		return results.Scalar
 	case XSDCheckContent:
-		if n.closed && (n.end.Order.State != EvidenceKnown || n.end.Order.Value != OrderSource) {
+		if s.profile.Target == TargetSource && n.closed && (n.end.Order.State != EvidenceKnown || n.end.Order.Value != OrderSource) {
 			results.Content.Complete = false
 			results.Content.Limitations = append(results.Content.Limitations, xsd.Limitation{Reason: "original-order-unavailable"})
 		}
@@ -484,9 +514,13 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 		if len(result.Limitations) > 0 {
 			d.Reason = Code(result.Limitations[0].Reason)
 		}
-		if bound := s.schema.nodes[n.header.ID]; bound.cause != nil {
+		cause, err := s.schemaResultCause(ctx, n, s.catalog.plans[r.Predicate].xsdCheck)
+		if err != nil {
+			return err
+		}
+		if cause != nil {
 			d.Outcome = OutcomeBlocked
-			d.Cause = bound.cause
+			d.Cause = cause
 		}
 	}
 	if done {
@@ -657,4 +691,195 @@ func (s *Session) finalizeSourceSchema(ctx context.Context) error {
 		return errors.Join(err, proofErr)
 	}
 	return err
+}
+
+// schemaCurrent borrows immutable canonical number components as values. It
+// never creates an XML lexeme or feeds canonical digits to lexical facets.
+func (s *Session) schemaCurrent(ctx context.Context, evidence Evidence[Atomic]) (xsd.CurrentScalar, error) {
+	if err := s.step(ctx, 1); err != nil {
+		return xsd.CurrentScalar{}, err
+	}
+	if evidence.State == EvidenceAbsent {
+		return xsd.CurrentScalar{Absent: true}, nil
+	}
+	if evidence.State != EvidenceKnown {
+		return xsd.CurrentScalar{}, nil
+	}
+	value := evidence.Value
+	out := xsd.CurrentScalar{Known: true}
+	switch value.Kind {
+	case AtomicString:
+		out.Value = xsd.SimpleValue{Domain: xsd.StringDomain, Text: value.Text}
+	case AtomicBoolean:
+		out.Value = xsd.SimpleValue{Domain: xsd.BooleanDomain, Boolean: value.Text == "true"}
+	case AtomicInteger, AtomicDecimal:
+		text := value.Integer.String()
+		if value.Kind == AtomicDecimal {
+			text = value.Decimal.String()
+		}
+		if err := s.account.Check(BudgetScalarBytes, int64(len(text))); err != nil {
+			return xsd.CurrentScalar{}, err
+		}
+		if err := s.step(ctx, 1+int64(len(text))*2); err != nil {
+			return xsd.CurrentScalar{}, err
+		}
+		number := xsd.Decimal{}
+		if len(text) > 0 && text[0] == '-' {
+			number.Negative = true
+			text = text[1:]
+		}
+		number.Whole = text
+		if index := strings.IndexByte(text, '.'); index >= 0 {
+			number.Whole, number.Fraction = text[:index], text[index+1:]
+		}
+		number.Whole = strings.TrimLeft(number.Whole, "0")
+		number.Fraction = strings.TrimRight(number.Fraction, "0")
+		number.Negative = number.Negative && (number.Whole != "" || number.Fraction != "")
+		out.Value = xsd.SimpleValue{Domain: xsd.NumberDomain, Number: number}
+	default:
+		return xsd.CurrentScalar{}, nil
+	}
+	return out, nil
+}
+
+func (s *Session) schemaResultCause(ctx context.Context, n *factNode, check XSDCheck) (*DecisionRef, error) {
+	if err := s.step(ctx, 1); err != nil {
+		return nil, err
+	}
+	if bound := s.schema.nodes[n.header.ID]; bound.cause != nil {
+		return bound.cause, nil
+	}
+	if s.profile.Target != TargetModel {
+		return nil, nil
+	}
+	switch check {
+	case XSDCheckScalar, XSDCheckDeclaration:
+		if n.end.Scalar.Value.State == EvidenceInvalid {
+			return n.end.Scalar.Value.Cause, nil
+		}
+	case XSDCheckContent:
+		if n.end.Order.State == EvidenceInvalid {
+			return n.end.Order.Cause, nil
+		}
+		if n.end.ChildrenComplete.State == EvidenceInvalid {
+			return n.end.ChildrenComplete.Cause, nil
+		}
+		if n.end.Scalar.Value.State == EvidenceInvalid {
+			return n.end.Scalar.Value.Cause, nil
+		}
+	case XSDCheckAttributes:
+		for _, attribute := range n.attributes {
+			if err := s.step(ctx, 1); err != nil {
+				return nil, err
+			}
+			if attribute.Scalar.Value.State == EvidenceInvalid {
+				return attribute.Scalar.Value.Cause, nil
+			}
+		}
+	}
+	return nil, nil
+}
+
+// schemaEffectiveScalar exposes only the shared kernel's validated effective
+// value. Current input remains separately available in the original fact slot.
+func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attribute QName) (Evidence[Atomic], error) {
+	unknown := Evidence[Atomic]{State: EvidenceUnsupported, Reason: "schema-effective-value-unavailable"}
+	if err := s.step(ctx, 1); err != nil {
+		return unknown, err
+	}
+	if s.schema == nil || s.schema.run == nil {
+		return unknown, nil
+	}
+	n := s.nodes[node]
+	if n == nil {
+		return unknown, nil
+	}
+	bound, ok := s.schema.nodes[node]
+	if !ok || !bound.available {
+		if bound.cause != nil {
+			unknown.State = EvidenceInvalid
+			unknown.Cause = bound.cause
+		}
+		return unknown, nil
+	}
+	if attribute == (QName{}) {
+		if n.end.Scalar.Value.State == EvidenceInvalid {
+			return n.end.Scalar.Value, nil
+		}
+		result := s.schema.run.Results(bound.binding)
+		if !result.Scalar.Valid {
+			return s.schemaInvalidValue(ctx, n, XSDCheckScalar)
+		}
+		if !result.Declaration.Valid {
+			return s.schemaInvalidValue(ctx, n, XSDCheckDeclaration)
+		}
+		return s.schemaAtomic(ctx, s.schema.run.Scalar(bound.binding))
+	}
+	for _, input := range n.attributes {
+		if err := s.step(ctx, 1); err != nil {
+			return unknown, err
+		}
+		if input.Name == attribute && input.Scalar.Value.State == EvidenceInvalid {
+			return input.Scalar.Value, nil
+		}
+	}
+	for result := range s.schema.run.Attributes(bound.binding) {
+		if err := s.step(ctx, 1); err != nil {
+			return unknown, err
+		}
+		if result.Name != (xsd.QName{Space: attribute.Space, Local: attribute.Local}) {
+			continue
+		}
+		if result.Violation {
+			return s.schemaInvalidValue(ctx, n, XSDCheckAttributes)
+		}
+		if !result.Present && !result.Scalar.Defaulted && result.Complete {
+			return Evidence[Atomic]{State: EvidenceAbsent}, nil
+		}
+		if !result.TypeValid || !result.DeclarationValid {
+			if result.Complete {
+				return s.schemaInvalidValue(ctx, n, XSDCheckAttributes)
+			}
+			return unknown, nil
+		}
+		return s.schemaAtomic(ctx, result.Scalar)
+	}
+	return unknown, nil
+}
+func (s *Session) schemaInvalidValue(ctx context.Context, n *factNode, check XSDCheck) (Evidence[Atomic], error) {
+	out := Evidence[Atomic]{State: EvidenceUnsupported, Reason: "schema-value-invalid"}
+	for _, key := range s.schema.proofRules[s.schema.active.assembly][check] {
+		if err := s.step(ctx, 1); err != nil {
+			return out, err
+		}
+		if decision, ok := s.lookupDecision(decisionID{key, n.header.ID}); ok && decision.Outcome == OutcomeFail {
+			if err := s.retain(64); err != nil {
+				return out, err
+			}
+			out.State = EvidenceInvalid
+			out.Cause = &DecisionRef{Rule: key, Subject: NodeRef{s.documentID, n.header.ID}}
+			break
+		}
+	}
+	return out, nil
+}
+func (s *Session) schemaResolveIdentity(ctx context.Context, node NodeID, attribute QName) (xsd.IdentityResolution, *DecisionRef, error) {
+	value, err := s.schemaEffectiveScalar(ctx, node, attribute)
+	if err != nil {
+		return xsd.IdentityResolution{Status: xsd.IdentityIncomplete, Reason: "schema-reference-value-unavailable"}, nil, err
+	}
+	if value.State != EvidenceKnown || value.Value.Kind != AtomicString {
+		return xsd.IdentityResolution{Status: xsd.IdentityIncomplete, Reason: "schema-reference-value-unavailable"}, value.Cause, nil
+	}
+	result, err := s.schema.run.ResolveIdentity(ctx, value.Value.Text)
+	if err != nil {
+		return result, nil, err
+	}
+	if result.Status != xsd.IdentityMissing && result.Status != xsd.IdentityAmbiguous {
+		return result, nil, nil
+	}
+	// Only a proved failure for this key uses the document identity decision as
+	// its cause. An unrelated ID/IDREF failure cannot suppress a unique target.
+	invalid, err := s.schemaInvalidValue(ctx, s.root, XSDCheckIdentity)
+	return result, invalid.Cause, err
 }

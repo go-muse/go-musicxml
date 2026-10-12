@@ -22,6 +22,8 @@ type DocumentGenerationOptions struct {
 	GoName        string
 	TypeNames     []TypeNameOverride
 	ExternalTypes []QName
+	// ModelMetadata emits the closed private current-model representation map.
+	ModelMetadata bool
 }
 
 // GenerateDocument generates one root element together with the named simple
@@ -241,6 +243,12 @@ func GenerateDocument(
 
 	if _, err := renderer.renderNumericXML(&body); err != nil {
 		return nil, err
+	}
+
+	if options.ModelMetadata {
+		if err := renderer.renderModelMetadata(&body); err != nil {
+			return nil, err
+		}
 	}
 
 	var source bytes.Buffer

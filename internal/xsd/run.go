@@ -3,16 +3,20 @@ package xsd
 import (
 	"context"
 	"errors"
+	"iter"
 	"math"
 	"unsafe"
 )
 
-// SubjectID identifies a source occurrence; zero denotes no containing owner.
+// SubjectID identifies an input occurrence; zero denotes no containing owner.
 type SubjectID uint64
 
 // Subject contains XML-neutral borrowed facts. The caller keeps their storage
 // unchanged until Close. Incomplete axes never imply an empty value or absence.
 type Subject struct {
+	CurrentModel                         bool
+	Current                              CurrentScalar
+	ChildrenOrderKnown                   bool
 	ID, Parent                           SubjectID
 	Name                                 QName
 	Path                                 string
@@ -55,7 +59,9 @@ type AttributeResult struct {
 	Name                                           QName
 	Use                                            Use
 	Present, TypeValid, DeclarationValid, Complete bool
-	Scalar                                         ScalarResult
+	// Violation records a proved slot-local failure independently of completeness.
+	Violation bool
+	Scalar    ScalarResult
 }
 type WitnessMode string
 
@@ -101,8 +107,12 @@ type Meter interface {
 }
 
 type boundState struct {
+	currentAttribute                             CurrentScalar
+	currentAttributeSet                          bool
 	attributeEpoch                               uint64
 	attributeKnown                               bool
+	attributeLimited                             bool
+	attributeInvalid                             bool
 	defaulted                                    bool
 	run                                          *Run
 	subject                                      Subject
@@ -111,7 +121,7 @@ type boundState struct {
 	actual, declared                             *TypeRef
 	results                                      NodeResults
 	scalar                                       ScalarResult
-	attributes                                   []AttributeResult
+	attributes                                   []*AttributeResult
 	matches                                      []ElementMatch
 	witnesses                                    []Witness
 	typeValid, declarationValid, identityAllowed bool
@@ -127,20 +137,21 @@ type boundState struct {
 
 // Run contains only run-local state. Compiled schema handles remain immutable.
 type Run struct {
-	schema            *Compiled
-	meter             Meter
-	context           Context
-	nodes             map[SubjectID]*Node
-	states            map[SubjectID]*boundState
-	retained          int64
-	scratchRetained   int64
-	closed, finalized bool
-	current           context.Context
-	identityResults   map[SubjectID]Result
-	identityIssues    []Detail
-	identitySeen      map[identityDiagnostic]bool
-	identityValid     bool
-	identityOutput    *IdentityResults
+	schema                *Compiled
+	meter                 Meter
+	context               Context
+	nodes                 map[SubjectID]*Node
+	states                map[SubjectID]*boundState
+	retained              int64
+	scratchRetained       int64
+	closed, finalized     bool
+	identityInputComplete bool
+	current               context.Context
+	identityResults       map[SubjectID]Result
+	identityIssues        []Detail
+	identitySeen          map[identityDiagnostic]bool
+	identityValid         bool
+	identityOutput        *IdentityResults
 }
 
 func NewRun(schema *Compiled, meter Meter) (out *Run, err error) {
@@ -241,6 +252,9 @@ func (s *boundState) limit(family, reason string, cause error) {
 func (s *boundState) detail(path, constraint, message string) {
 	v := s.result()
 	v.Valid = false
+	if s.attribute != (QName{}) {
+		s.attributeInvalid = true
+	}
 	s.run.reserve(int64(len(path)))
 	s.run.reserve(int64(len(message)))
 	d := Detail{Issue: Issue{Path: path, Constraint: constraint, Message: message}, Subject: s.subject.ID, Attribute: s.attribute}
@@ -284,6 +298,10 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 	defer recoverRun(&err)
 	defer r.releaseScratch()
 	r.step(1)
+	r.identityInputComplete = false
+	if subject.CurrentModel {
+		subject.Current = r.context.checkCurrent(subject.Current)
+	}
 	r.scalar(int64(len(subject.Text)))
 	r.reserve(int64(unsafe.Sizeof(boundState{})) + int64(unsafe.Sizeof(Node{})) + 192)
 	r.reserve(r.context.builderAllowance(int64(len(subject.Text))))
@@ -332,11 +350,13 @@ func (r *Run) Bind(ctx context.Context, use Use, subject Subject) (bound Binding
 		s.limit("content", "child-enumeration-incomplete", nil)
 		r.context.IdentityIncomplete = true
 	}
-	if !subject.TextKnown {
+	if (!subject.CurrentModel && !subject.TextKnown) || (subject.CurrentModel && !subject.Current.Known && !subject.Current.Absent) {
 		s.limit("scalar", "scalar-lexeme-unavailable", nil)
 		s.limit("declaration", "scalar-lexeme-unavailable", nil)
 		s.limit("content", "scalar-lexeme-unavailable", nil)
-		r.context.IdentityIncomplete = true
+		if !subject.CurrentModel {
+			r.context.IdentityIncomplete = true
+		}
 	}
 	if !subject.AttributesComplete {
 		// An omitted xsi:type or xsi:nil can change all dependent local
@@ -370,25 +390,8 @@ func (r *Run) ActualType(b Binding) (TypeID, bool) {
 	}
 	return r.typeID(b.state.actual)
 }
-func (r *Run) typeID(ref *TypeRef) (TypeID, bool) {
-	if ref == nil {
-		return TypeID{}, false
-	}
-	if ref.InlineSimple != nil {
-		v, ok := r.schema.simpleTypes[ref.InlineSimple]
-		return v, ok
-	}
-	if ref.InlineComplex != nil {
-		v, ok := r.schema.complexTypes[ref.InlineComplex]
-		return v, ok
-	}
-	if ref.Name.Space == XSDNamespace {
-		v, ok := r.schema.builtinTypes[ref.Name.Local]
-		return v, ok
-	}
-	v, ok := r.schema.namedTypes[ref.Name]
-	return v, ok
-}
+func (r *Run) typeID(ref *TypeRef) (TypeID, bool) { return r.schema.typeID(ref) }
+
 func (r *Run) owns(b Binding) bool {
 	return r != nil && b.run == r && b.state != nil && r.states[b.state.subject.ID] == b.state
 }
@@ -410,11 +413,22 @@ func (r *Run) Scalar(b Binding) ScalarResult {
 	}
 	return b.state.scalar
 }
-func (r *Run) Attributes(b Binding) []AttributeResult {
-	if !r.owns(b) {
-		return nil
+
+// Attributes yields assessed attribute facts in input order, then schema order
+// for known absences. Each result is a read-only value copy. The iterator does
+// not allocate a snapshot; consumers must charge/check each visited result in
+// their operation's meter, just as for the other borrowed result views.
+func (r *Run) Attributes(b Binding) iter.Seq[AttributeResult] {
+	return func(yield func(AttributeResult) bool) {
+		if !r.owns(b) {
+			return
+		}
+		for _, attribute := range b.state.attributes {
+			if !r.owns(b) || !yield(*attribute) {
+				return
+			}
+		}
 	}
-	return b.state.attributes
 }
 func (r *Run) buildWitnesses(s *boundState) {
 	owner, _ := r.typeID(s.actual)
@@ -531,6 +545,7 @@ func (r *Run) Identity(ctx context.Context, inputComplete bool) (out IdentityRes
 		r.identityResults = make(map[SubjectID]Result)
 		r.identitySeen = make(map[identityDiagnostic]bool)
 	}
+	r.identityInputComplete = inputComplete
 	out = IdentityResults{BySubject: r.identityResults, Issues: r.identityIssues, Valid: r.identityValid, Complete: inputComplete && !r.context.IdentityIncomplete && r.context.AssessmentErr == nil}
 	r.identityOutput = &out
 	defer func() { r.identityOutput = nil }()
@@ -591,6 +606,9 @@ func (c *Context) observeScalar(assessment SimpleAssessment, valid bool) {
 	s.scalarAssessed = valid
 	if s.attribute == (QName{}) {
 		s.scalar = ScalarResult{Known: valid, Complete: s.results.Scalar.Complete, Defaulted: s.defaulted, Lexeme: s.subject.Text, EffectiveLexeme: assessment.Lexical, Builtin: assessment.Builtin, Value: assessment.Value}
+		if s.subject.CurrentModel {
+			s.scalar.Lexeme = ""
+		}
 	}
 }
 func (c *Context) identityDetail(path, constraint, message string) {
@@ -630,8 +648,13 @@ func (c *Context) attributeResult(schema AttributeSchema, value string, present,
 	}
 	s := c.local
 	use := s.run.attributeUse(s.actual, schema.Name)
-	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
-	s.attributes = appendRetained(c, s.attributes, AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Scalar: scalar})
+	scalar := ScalarResult{Known: typeValid, Complete: s.attributeKnown && !s.attributeLimited && c.AssessmentVersion == s.attributeEpoch, Lexeme: value, EffectiveLexeme: s.scalarAssessment.Lexical, Builtin: s.scalarAssessment.Builtin, Value: s.scalarAssessment.Value}
+	if s.subject.CurrentModel {
+		scalar.Lexeme = ""
+	}
+	c.reserve(int64(unsafe.Sizeof(AttributeResult{})))
+	result := &AttributeResult{Name: schema.Name, Use: use, Present: present, TypeValid: typeValid, DeclarationValid: declarationValid, Complete: scalar.Complete, Violation: s.attributeInvalid, Scalar: scalar}
+	s.attributes = appendRetained(c, s.attributes, result)
 }
 
 // size validates arithmetic and host allocation width before any allocation.

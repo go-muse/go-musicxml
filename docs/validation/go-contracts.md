@@ -15,6 +15,14 @@ The follow-on [catalog and test-coverage plan](catalog-and-test-plan.md) binds
 research records and deferred implementation work to explicit check/test contracts,
 without implementing or freezing these proposed interfaces.
 
+Current implementation: this page preserves its original proposal/status and
+illustrative contracts. The [bounded model/local scope](model-assessment-scope.md)
+and [public API](../../API.md#direct-current-model-assessment) describe the later
+`AssessModel` implementation and direct XSD-only `Validate` migration, under final
+verification. The proposed name `Assess` was not used because the generated model
+already exports that type. Broader timeline, package/link and external contracts
+below remain future work; the original planning statuses are unchanged.
+
 ## 1. Boundaries and dependency direction
 
 Proposed package placement is deliberately small:

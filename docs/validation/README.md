@@ -1,6 +1,7 @@
 # Validation design and requirements
 
-Status: **PROPOSED broader architecture with an implemented foundation and explicit source XSD preview**.
+Status: **PROPOSED broader architecture; implemented foundation/source preview;
+bounded direct-model/local implementation under final verification**.
 Research snapshot: 8 October 2026.
 
 This directory contains the proposed validation architecture and package-facing
@@ -17,11 +18,13 @@ or a new validation profile complete.
 
 ## Reading order
 
-Start with the [source assessment scope and complete ownership ledger](source-assessment-scope.md)
-for the current opt-in source preview, then the [foundation scope](foundation-scope.md)
-for generic fact/catalog/report contracts. The proposal pages below describe
-wider future contracts; direct model/package adapters and a production profile
-remain unimplemented.
+Start with the [direct-model/local scope and ownership evidence](model-assessment-scope.md)
+for `AssessModel`, the direct XSD-only `Validate` migration and explicit local
+profiles. Then read the [source assessment scope and ownership ledger](source-assessment-scope.md)
+for the unchanged developmental source preview, and the [foundation scope](foundation-scope.md)
+for generic fact/catalog/report contracts. Final verification of the bounded
+model/local implementation is pending. The proposal pages below describe wider
+future contracts; package/link/timeline and full normative closure remain unimplemented.
 
 1. [Architecture proposal](architecture.md): one XML parse, optional strict source
    validation, direct model validation, shared rules, and self-contained diagnostics.
@@ -42,8 +45,10 @@ remain unimplemented.
 The catalog contains 2,218 XSD contracts and 342 prose records. These 2,560
 records are not 2,560 independent mandatory executable rules. Source inventory
 and review cover the scoped 974-page publication and 642 schema annotations;
-external normative closure, executable predicates, model mapping, and rule-level
-implementation tests remain future work.
+external normative closure and the wider executable catalog remain future work.
+Implemented rule bindings and inspected tests are recorded separately in the
+[target-specific ownership ledger](model-assessment-ownership.json), without
+promoting original planned test IDs to executed coverage.
 
 The repository-facing narrative is in English, matching the main README. The
 research data retains its original bilingual fields and stable identifiers so

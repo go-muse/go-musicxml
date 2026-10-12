@@ -52,6 +52,7 @@ type Use struct {
 	schema                *Compiled
 	original, declaration *ElementSchema
 	attribute             *AttributeSchema
+	owner                 TypeID
 	ownerPath, path       string
 }
 
@@ -75,6 +76,27 @@ func (u Use) TypeName() QName {
 		return u.declaration.Type.Name
 	}
 	return QName{}
+}
+
+// IsAttribute reports whether the handle identifies an attribute use.
+func (u Use) IsAttribute() bool { return u.attribute != nil }
+
+// OwnerType returns the exact declaring complex type. Global declarations have
+// no owning type; inherited uses retain their original declaration owner.
+func (u Use) OwnerType() (TypeID, bool) {
+	return u.owner, u.schema != nil && u.owner.schema == u.schema
+}
+
+// DeclaredType returns the resolved declaration's immutable type identity.
+// Anonymous type occurrences are preserved; unresolved references return false.
+func (u Use) DeclaredType() (TypeID, bool) {
+	if u.attribute != nil {
+		return u.schema.typeID(&u.attribute.Type)
+	}
+	if u.declaration != nil {
+		return u.schema.typeID(&u.declaration.Type)
+	}
+	return TypeID{}, false
 }
 
 // OwnerOccurrence returns the exact assembly-neutral owning component path.
@@ -562,7 +584,7 @@ func (c *Compiled) addType(b *compileBudget, id TypeID) error {
 	return nil
 }
 func (c *Compiled) addUse(b *compileBudget, use Use) error {
-	if err := b.add(192+int64(len(use.path))+int64(len(use.ownerPath)), 1, 1); err != nil {
+	if err := b.add(288+int64(len(use.path))+int64(len(use.ownerPath)), 1, 1); err != nil {
 		return err
 	}
 	c.uses = append(c.uses, use)
@@ -692,7 +714,7 @@ func (c *Compiled) index(b *compileBudget) error {
 }
 func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 	for i := range owner.complex.Attributes {
-		use := Use{schema: c, attribute: &owner.complex.Attributes[i], ownerPath: owner.path, path: owner.path + "/attributes/" + strconv.Itoa(i)}
+		use := Use{schema: c, attribute: &owner.complex.Attributes[i], owner: owner, ownerPath: owner.path, path: owner.path + "/attributes/" + strconv.Itoa(i)}
 		if err := c.addUse(b, use); err != nil {
 			return err
 		}
@@ -716,6 +738,7 @@ func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 		}
 		if p.Element != nil {
 			use := c.elementUse(p.Element, owner.path, current.path+"/element")
+			use.owner = owner
 			if err := c.addUse(b, use); err != nil {
 				return err
 			}
@@ -751,7 +774,7 @@ func (c *Compiled) indexInheritedParticleUse(b *compileBudget, particle *Particl
 	}
 	// Admit the map header and conservative per-entry storage before growth.
 	// The Use's strings and declarations are borrowed from the existing index.
-	bytes := int64(192)
+	bytes := int64(288)
 	if c.inheritedParticleUses == nil {
 		bytes += 64
 	}
@@ -763,4 +786,25 @@ func (c *Compiled) indexInheritedParticleUse(b *compileBudget, particle *Particl
 	}
 	c.inheritedParticleUses[particle] = use
 	return nil
+}
+
+// typeID resolves only immutable compiled metadata, without a validation run.
+func (c *Compiled) typeID(ref *TypeRef) (TypeID, bool) {
+	if c == nil || ref == nil {
+		return TypeID{}, false
+	}
+	if ref.InlineSimple != nil {
+		v, ok := c.simpleTypes[ref.InlineSimple]
+		return v, ok
+	}
+	if ref.InlineComplex != nil {
+		v, ok := c.complexTypes[ref.InlineComplex]
+		return v, ok
+	}
+	if ref.Name.Space == XSDNamespace {
+		v, ok := c.builtinTypes[ref.Name.Local]
+		return v, ok
+	}
+	v, ok := c.namedTypes[ref.Name]
+	return v, ok
 }

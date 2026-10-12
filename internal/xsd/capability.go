@@ -2,12 +2,15 @@ package xsd
 
 import "unsafe"
 
-// Source assessment exposes the prerequisite kernel's documented capability
+// Controlled assessment exposes the prerequisite kernel's documented capability
 // boundaries. Compatibility Context calls leave these guards inactive.
 func (c *Context) capability(family, reason string) {
 	c.step(1)
 	if c.local == nil {
 		return
+	}
+	if c.currentModel() && family == "attributes" && c.local.attribute != (QName{}) {
+		c.local.attributeLimited = true
 	}
 	old := c.local.family
 	c.local.family = family
@@ -180,7 +183,10 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		return
 	}
 	s := c.local
-	for _, schema := range schemas {
+	actual, _ := s.run.typeID(s.actual)
+	effective := c.Effective[actual.complex]
+	for i := range schemas {
+		schema := &schemas[i]
 		c.step(1)
 		c.bytes(len(schema.Name.Space))
 		c.bytes(len(schema.Name.Local))
@@ -190,10 +196,12 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		s.attribute = schema.Name
 		s.attributeEpoch = c.AssessmentVersion
 		s.attributeKnown = true
+		s.attributeLimited = false
+		s.attributeInvalid = false
 		s.scalarAssessed = false
 		s.scalarAssessment = SimpleAssessment{}
 		if schema.Constraint == nil {
-			c.attributeResult(schema, "", false, false, true)
+			c.absentAttributeResult(effective, actual.path, schemas, i)
 			continue
 		}
 		value := schema.Constraint.Value
@@ -206,8 +214,8 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		if identityFact {
 			c.identity(1)
 		}
-		c.attributeResult(schema, value, false, failure == nil, failure == nil)
-		last := &s.attributes[len(s.attributes)-1]
+		c.attributeResult(*schema, value, false, failure == nil, failure == nil)
+		last := s.attributes[len(s.attributes)-1]
 		last.Scalar.Defaulted = true
 		last.Scalar.Lexeme = ""
 		if identityFact {
@@ -216,6 +224,40 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		}
 	}
 	s.attribute = QName{}
+}
+
+type absentAttributeCache struct {
+	records []*AttributeResult
+	owner   string
+}
+
+// Unconstrained absence has no subject-specific scalar data. The effective
+// schema cache is run-local and keyed by the exact resolved complex type. Keep
+// one immutable record per effective declaration and only its pointer in each
+// node's ordered fact sequence. Defaults and fixed values never take this path.
+func (c *Context) absentAttributeResult(effective *EffectiveComplex, owner string, schemas []AttributeSchema, index int) {
+	s := c.local
+	schema := &schemas[index]
+	if effective == nil || owner == "" || len(effective.Attributes) != len(schemas) || &effective.Attributes[index] != schema || (effective.absent.records != nil && compareText(effective.absent.owner, owner, c) != 0) {
+		// An independent slice or aliased metadata with another exact type
+		// occurrence cannot borrow this cache owner's declaration evidence.
+		c.attributeResult(*schema, "", false, false, true)
+		return
+	}
+	if effective.absent.records == nil {
+		c.step(int64(len(schemas)))
+		c.reserve(c.size(int64(len(schemas)), int64(unsafe.Sizeof((*AttributeResult)(nil)))))
+		effective.absent.records = make([]*AttributeResult, len(schemas))
+		effective.absent.owner = owner
+	}
+	result := effective.absent.records[index]
+	if result == nil {
+		use := s.run.attributeUse(s.actual, schema.Name)
+		c.reserve(int64(unsafe.Sizeof(AttributeResult{})))
+		result = &AttributeResult{Name: schema.Name, Use: use, DeclarationValid: true, Complete: true, Scalar: ScalarResult{Complete: true}}
+		effective.absent.records[index] = result
+	}
+	s.attributes = appendRetained(c, s.attributes, result)
 }
 
 // A full match of an incomplete enumeration supplies safe prefix witnesses only

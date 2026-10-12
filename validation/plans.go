@@ -30,20 +30,24 @@ type AttributeSelector struct {
 type planKind string
 
 const (
-	planXSD               planKind = "xsd-composite"
-	planChildren          planKind = "child-count"
-	planAttribute         planKind = "attribute-presence"
-	planAtomic            planKind = "atomic-comparison"
-	planContextValue      planKind = "context-value"
-	planContextDefault    planKind = "context-default"
-	planContextCompare    planKind = "context-comparison"
-	planIdentityDeclare   planKind = "identity-declaration"
-	planIdentityReference planKind = "identity-reference"
+	planXSD                 planKind = "xsd-composite"
+	planModelRepresentation planKind = "model-representation"
+	planChildren            planKind = "child-count"
+	planAttribute           planKind = "attribute-presence"
+	planAtomic              planKind = "atomic-comparison"
+	planContextValue        planKind = "context-value"
+	planContextDefault      planKind = "context-default"
+	planContextCompare      planKind = "context-comparison"
+	planIdentityDeclare     planKind = "identity-declaration"
+	planIdentityReference   planKind = "identity-reference"
 )
 
 // Plan is an immutable sealed typed program. Its zero value is invalid; use a
 // constructor. Plans contain no callback, XML parser, runtime expression or DSL.
 type Plan struct {
+	modelAssembly    Assembly
+	local            *localPlan
+	reference        *referencePlan
 	schema           *CompiledSchema
 	xsdCheck         XSDCheck
 	kind             planKind
@@ -125,6 +129,12 @@ func validAttributeSelector(a AttributeSelector) bool {
 	return validQName(a.Name) && validDeclaration(a.Declaration)
 }
 func (p Plan) valid() error {
+	if p.kind == planLocal && !p.local.bounded() {
+		return contract("local plan", "parameters exceed finite collection bounds")
+	}
+	if p.kind == planTypedReference && !p.reference.bounded() {
+		return contract("typed reference", "parameters exceed finite collection bounds")
+	}
 	if len(p.children) > 4096 {
 		return contract("plan", "too many child declarations")
 	}
@@ -132,6 +142,14 @@ func (p Plan) valid() error {
 		return contract("plan", "parameters exceed the finite configuration bound")
 	}
 	switch p.kind {
+	case planModelRepresentation:
+		if !validAssembly(p.modelAssembly) {
+			return contract("model representation plan", "valid assembly required")
+		}
+	case planLocal:
+		return p.local.valid()
+	case planTypedReference:
+		return p.reference.valid()
 	case planXSD:
 		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) {
 			return contract("XSD plan", "compiled schema and supported operation required")
@@ -194,6 +212,8 @@ func validateComparison(c Comparison, a Atomic) error {
 	return nil
 }
 func (p Plan) clone() Plan {
+	p.local = p.local.clone()
+	p.reference = p.reference.clone()
 	if p.schema != nil {
 		schema := *p.schema
 		p.schema = &schema
@@ -212,6 +232,7 @@ func (p Plan) clone() Plan {
 		return cmp.Compare(a.Occurrence, b.Occurrence)
 	})
 	p.kind = planKind(strings.Clone(string(p.kind)))
+	p.modelAssembly = Assembly(strings.Clone(string(p.modelAssembly)))
 	p.comparison = Comparison(strings.Clone(string(p.comparison)))
 	p.relation = RelationKind(strings.Clone(string(p.relation)))
 	p.key = strings.Clone(p.key)
@@ -221,20 +242,39 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
+	if (p.kind == planLocal || p.kind == planTypedReference) && (r.Scope != ScopeNode || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate) {
+		return contract("local plan", "required normative node predicate required")
+	}
+	if p.kind == planLocal || p.kind == planTypedReference {
+		for _, target := range r.Targets {
+			if target != TargetSource && target != TargetModel {
+				return contract("local plan", "source or model target required")
+			}
+		}
+	}
 	if p.kind == planXSD {
 		if r.Selector.Assembly == nil || p.schema == nil || *r.Selector.Assembly != p.schema.assembly || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate {
 			return contract("XSD plan", "matching assembly selector and required normative predicate role required")
 		}
 		for _, target := range r.Targets {
-			if target != TargetSource {
-				return contract("XSD plan", "only source evidence is implemented")
+			if target != TargetSource && target != TargetModel {
+				return contract("XSD plan", "only source or current-model evidence is implemented")
 			}
 		}
 		if (p.xsdCheck == XSDCheckIdentity) != (r.Scope == ScopeDocument) {
 			return contract("XSD plan", "identity requires document scope; other operations require node scope")
 		}
+	} else if p.kind == planModelRepresentation {
+		if r.Selector.Assembly == nil || *r.Selector.Assembly != p.modelAssembly || r.Category != CategoryModel || r.Class != ClassMandatory || r.Role != RolePredicate || r.Scope != ScopeNode || len(r.Requires) != 0 {
+			return contract("model representation plan", "matching assembly and mandatory model node predicate without prerequisites required")
+		}
+		for _, target := range r.Targets {
+			if target != TargetModel {
+				return contract("model representation plan", "only model targets are implemented")
+			}
+		}
 	} else if r.Selector.Assembly != nil {
-		return contract("plan selector", "assembly selection is reserved for XSD plans")
+		return contract("plan selector", "assembly selection is reserved for sealed assembly plans")
 	}
 	if err := p.valid(); err != nil {
 		return err
@@ -258,6 +298,18 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	return nil
 }
 func (p Plan) digestValue() any {
+	if p.kind == planModelRepresentation {
+		return struct {
+			Kind     planKind
+			Assembly Assembly
+		}{p.kind, p.modelAssembly}
+	}
+	if p.kind == planTypedReference {
+		return p.reference.digest()
+	}
+	if p.kind == planLocal {
+		return p.local.digest()
+	}
 	if p.kind == planXSD {
 		return struct {
 			Kind           planKind
@@ -291,7 +343,7 @@ func (p Plan) digestValue() any {
 	}{p.kind, p.children, p.minimum, p.maximum, p.attribute, p.required, p.comparison, a, p.key, p.relation}
 }
 func (p Plan) configSize() int64 {
-	n := int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
+	n := p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
 	for _, d := range p.children {
 		n += int64(64 + len(d.OwnerOccurrence) + len(d.Occurrence))
 	}

@@ -79,11 +79,12 @@ type DeclarationID struct {
 }
 
 // Selector has exactly one branch. Exact type-component and element-declaration
-// selection are supported; sealed XSD plans use the exclusive Assembly branch.
+// selection are supported; sealed XSD and model-representation plans use the
+// exclusive Assembly branch.
 // Other component kinds are unavailable.
 type Selector struct {
 	// Assembly selects the active compiled schema, including unbound nodes.
-	// It is an exclusive branch reserved for sealed XSD plans.
+	// It is an exclusive branch reserved for sealed assembly-selected plans.
 	Assembly    *Assembly
 	Component   *ComponentID
 	Declaration *DeclarationID

@@ -66,6 +66,8 @@ func GenerateComplexTypes(
 // into one field per element would lose order or values.
 type ComplexGenerationOptions struct {
 	OrderedContentTypes []QName
+	// ModelMetadata emits the closed private current-model representation map.
+	ModelMetadata bool
 }
 
 // GenerateComplexTypesWithOptions generates named XSD complex types using
@@ -151,6 +153,12 @@ func GenerateComplexTypesWithOptions(
 	hasNumericXML, err := renderer.renderNumericXML(&body)
 	if err != nil {
 		return nil, err
+	}
+
+	if options.ModelMetadata {
+		if err := renderer.renderModelMetadata(&body); err != nil {
+			return nil, err
+		}
 	}
 
 	var source bytes.Buffer

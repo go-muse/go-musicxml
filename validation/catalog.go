@@ -23,13 +23,14 @@ type PlanBinding struct {
 // A catalog makes only its profiles' explicit claims; no MusicXML profile is
 // implicitly supplied by this package.
 type CompiledCatalog struct {
-	schemas  map[ProfileID]map[Assembly]*CompiledSchema
-	rules    map[RuleKey]RuleDefinition
-	profiles map[ProfileID]Profile
-	plans    map[string]Plan
-	orders   map[ProfileID][]RuleKey
-	phases   map[ProfileID][]catalogPhase
-	supports map[ProfileID]map[RuleKey]RuleSupport
+	schemas     map[ProfileID]map[Assembly]*CompiledSchema
+	rules       map[RuleKey]RuleDefinition
+	profiles    map[ProfileID]Profile
+	plans       map[string]Plan
+	orders      map[ProfileID][]RuleKey
+	modelOrders map[ProfileID][]RuleKey
+	phases      map[ProfileID][]catalogPhase
+	supports    map[ProfileID]map[RuleKey]RuleSupport
 }
 
 // A declaration's registration phase collects every eligible subject before
@@ -83,13 +84,14 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 		return nil, err
 	}
 	c := &CompiledCatalog{
-		schemas:  make(map[ProfileID]map[Assembly]*CompiledSchema, len(profiles)),
-		rules:    make(map[RuleKey]RuleDefinition, len(rules)),
-		profiles: make(map[ProfileID]Profile, len(profiles)),
-		plans:    make(map[string]Plan, len(plans)),
-		orders:   make(map[ProfileID][]RuleKey, len(profiles)),
-		phases:   make(map[ProfileID][]catalogPhase, len(profiles)),
-		supports: make(map[ProfileID]map[RuleKey]RuleSupport, len(profiles)),
+		schemas:     make(map[ProfileID]map[Assembly]*CompiledSchema, len(profiles)),
+		rules:       make(map[RuleKey]RuleDefinition, len(rules)),
+		profiles:    make(map[ProfileID]Profile, len(profiles)),
+		plans:       make(map[string]Plan, len(plans)),
+		orders:      make(map[ProfileID][]RuleKey, len(profiles)),
+		modelOrders: make(map[ProfileID][]RuleKey, len(profiles)),
+		phases:      make(map[ProfileID][]catalogPhase, len(profiles)),
+		supports:    make(map[ProfileID]map[RuleKey]RuleSupport, len(profiles)),
 	}
 	internedSchemas := make(map[string]*CompiledSchema)
 	for _, binding := range plans {
@@ -172,6 +174,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 				if rule.Selector.Component != nil && rule.Selector.Component.Kind != ComponentType {
 					return nil, contract("rule selector", "only exact type components or declarations are executable")
 				}
+				if err := plan.validateReferenceRules(c, closure); err != nil {
+					return nil, err
+				}
 				if err := plan.validateFor(rule); err != nil {
 					return nil, fmt.Errorf("catalog rule %q revision %d: %w", key.ID, key.Revision, err)
 				}
@@ -187,8 +192,8 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			if err := plan.validateFor(rule); err != nil {
 				return nil, err
 			}
-			if profile.Target != TargetSource {
-				return nil, contract("schema profile", "only source target is implemented")
+			if profile.Target != TargetSource && profile.Target != TargetModel {
+				return nil, contract("schema profile", "only source or model targets are implemented")
 			}
 			if previous := schemas[plan.schema.assembly]; previous != nil && previous.Digest() != plan.schema.Digest() {
 				return nil, contract("schema profile", "conflicting schemas in one assembly")
@@ -218,6 +223,25 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			if !phase.registration {
 				keys = append(keys, phase.rule)
 			}
+		}
+		// Cache only the ordered preparation subset. Its exact capacity is
+		// bounded by this profile's already checked support inventory, and
+		// keys borrow immutable strings from the compiled rules. Source
+		// profiles have no model-representation preparation work.
+		modelCount := 0
+		for _, key := range keys {
+			if c.plans[c.rules[key].Predicate].kind == planModelRepresentation {
+				modelCount++
+			}
+		}
+		if modelCount != 0 {
+			modelKeys := make([]RuleKey, 0, modelCount)
+			for _, key := range keys {
+				if c.plans[c.rules[key].Predicate].kind == planModelRepresentation {
+					modelKeys = append(modelKeys, key)
+				}
+			}
+			c.modelOrders[owned.ID] = modelKeys
 		}
 		c.profiles[owned.ID] = owned
 		c.orders[owned.ID] = keys

@@ -92,7 +92,9 @@ construction and compressed `.mxl` round trips in
 | Write XML | `Encode` |
 | Read or write compressed MusicXML | `DecodeMXL`, typed `DecodeMXL...` helpers, `As...` accessors, and `EncodeMXL` |
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
-| Validate against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
+| Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
+| Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal` |
+| Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal` |
 | Construct scores and opus documents | `NewScorePartwise`, `NewScoreTimewise`, `NewOpusDocument` |
 | Construct common notes | `NewPitchedNote`, `NewRestNote` |
 | Resolve linked opus documents | `MXLPackage.ResolveOpus` |
@@ -105,7 +107,9 @@ See [`API.md`](API.md) for invariants and compatibility rules.
 
 `Decode` and `Encode` are transport operations. They do not validate
 automatically, so callers can inspect, repair, and re-encode incomplete
-documents. Call `Validate` explicitly when XSD conformance is required.
+documents. Call `Validate` explicitly for bounded XSD-only assessment of the
+current model. It now walks Go fields directly without encoding or parsing XML;
+its successful result makes no claim about the original input.
 Encoding rejects invalid UTF-8 and XML 1.0 characters before writing, so text
 is never silently replaced with U+FFFD.
 
@@ -127,6 +131,40 @@ Ordered `Content` fields use generated slice types that discard unknown child
 elements before appending them. This keeps the same invariant for both the
 package decoders and direct `encoding/xml` use: every retained entry represents
 exactly one recognized child.
+
+### Explicit assessment profiles
+
+`AssessModel(ctx, document, AssessmentOptions{Profile: ProfileModelLocal})`
+checks the current model's XSD/representation contract and a bounded selection of
+local musical clauses, including accordion register presence, beam-number
+uniqueness and typed same-part references. Select `ProfileModelXSD` for the
+XSD/representation scope without those local clauses. All three document roots
+are supported; score-only clauses are inapplicable to opus. Linked content is
+not assessed.
+
+Always inspect `Report.Satisfied()`: a nil error alone is not acceptance.
+Ordinary violations live in the report; cancellation/resource interruptions
+return their cause and a partial report. Model locations are field/index paths
+without invented XML positions. Finite decimal fields are assessed as their
+exact current binary rational value, so `float64(0.1)` is not decimal `1/10`.
+Optional nil and present-zero fields remain distinct; `XMLName` is ignored
+transport metadata.
+
+For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
+`ProfileSourceLocal` (XSD plus the same local clauses) or the unchanged
+`ProfileSourceXSDPreview` (XSD only). Unread external DOCTYPE subsets still make
+both source profiles incomplete, including `Chant.musicxml`, `MozartTrio.musicxml`
+and `MozaChloSample.musicxml`. Strict assessed decoding returns no document for
+those original files. There is no new DTD trust, stripping, fetching or ignore
+policy. The two DOCTYPE-free official opus examples are a separate assessable
+source case.
+
+These bounded implementations are under final verification. They do not establish
+complete MusicXML conformance, timeline/repeat semantics, author intent, package
+or linked-resource validity. See the [scope and evidence](docs/validation/model-assessment-scope.md)
+and [API contract](API.md#direct-current-model-assessment); no profile is selected
+implicitly. A runnable [direct-model example](model_assessment_example_test.go)
+shows explicit profile selection and the model report axes.
 
 ## Compressed MXL and opus
 
@@ -159,7 +197,7 @@ type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
   document with `xmllint` against the bundled MusicXML 4.0 XSD without network
   access.
 - CI runs tests, module and generation reproducibility checks, and formatting
-  checks on Linux, macOS, and Windows, plus the race detector and three fuzz
+  checks on Linux, macOS, and Windows, plus the race detector and seven fuzz
   targets.
 
 ## Limitations
@@ -173,8 +211,9 @@ type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
   linked-resource resolution.
 - XML extensions not represented by the MusicXML 4.0 model are ignored during
   decoding and are not preserved when re-encoded.
-- Encoding and validation reject cyclic opus models and models deeper than
-  4096 nested elements.
+- Encoding and legacy `Validate` reject cyclic opus models and models deeper
+  than 4096 nested elements. `AssessModel` reports model/resource outcomes with
+  configurable finite budgets and a default depth of 1024.
 - Encoding normalizes lexical details such as whitespace, attribute order,
   character encoding, and ZIP metadata; the first output need not match the
   original bytes.
@@ -186,8 +225,9 @@ See [`docs/validation`](docs/validation/README.md) for the proposed validation
 architecture, MusicXML 4.0 requirements catalog, source coverage, and open
 questions. The research data lives separately in the
 [pinned registry snapshot](https://github.com/go-muse/go-musicxml-registry/tree/3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c).
-These documents describe future work; they do not change the current API or
-claim that the proposal is implemented.
+The broader proposals remain future work. The foundation, source preview and
+bounded direct-model/local implementation have separate scope/evidence ledgers;
+research counts and planned test contracts are not executed coverage.
 
 ## Development
 

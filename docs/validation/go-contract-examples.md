@@ -13,6 +13,18 @@ MusicXML profile may additionally find other problems and must not inherit a
 “pass” from this narrow example. Unless noted, input reaches EOF, budgets suffice,
 and all unrelated selected mandatory obligations pass.
 
+Current implementation: this page preserves its original proposal/status and
+illustrative contracts. The [bounded model/local scope](model-assessment-scope.md)
+and [public API](../../API.md#direct-current-model-assessment) describe the later
+`AssessModel` implementation and direct XSD-only `Validate` migration, under final
+verification. The proposed name `Assess` was not used because the generated model
+already exports that type. Broader timeline, package/link and external contracts
+below remain future work; the original planning statuses are unchanged.
+In particular, trace 4 illustrates a future profile selecting linked-file
+association; the current local profiles select only its local IDREF subclause
+and make no linked-content claim. Trace 5's statement about “current main”
+describes the original proposal baseline, not the present implementation.
+
 ## 1. A local prose rule with source and model facts
 
 Input inside a direction-type:

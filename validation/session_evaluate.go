@@ -20,8 +20,11 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 	if err := s.step(ctx, 1); err != nil {
 		return err
 	}
+	p, hasPlan := s.catalog.plans[r.Predicate]
 	selected := selectorDecision(r.Selector, n.header)
-	if r.Selector.Assembly != nil {
+	if r.Selector.Assembly != nil && p.kind == planModelRepresentation {
+		selected = s.modelAssemblyDecision(*r.Selector.Assembly)
+	} else if r.Selector.Assembly != nil {
 		selected = Decision{Outcome: OutcomeUnsupported, Reason: "schema-binding-unavailable"}
 		if s.schema != nil && s.schema.active != nil {
 			selected = Decision{Outcome: OutcomeNotApplicable, Reason: "schema-assembly-mismatch"}
@@ -33,7 +36,6 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 
 	selected.Rule = key
 	selected.Subject = NodeRef{DocumentID: s.documentID, Node: n.header.ID}
-	p, hasPlan := s.catalog.plans[r.Predicate]
 	if selected.Outcome != OutcomePass {
 		if hasPlan && p.kind == planIdentityDeclare && selected.Outcome != OutcomeNotApplicable {
 			s.markIdentityIncomplete(p.key)
@@ -88,12 +90,15 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 		}
 		return s.record(r, n, dependency)
 	}
+	if p.kind == planModelRepresentation {
+		return s.evaluateModelRepresentation(ctx, n, r)
+	}
 	if p.kind == planXSD {
 		return s.evaluateXSD(ctx, n, r, p, final)
 	}
 	decision, pending, err := s.evaluatePlan(ctx, n, r, p, final)
 	if err != nil {
-		return err
+		return s.recordProvedPlanInterruption(r, n, p, err)
 	}
 	if pending {
 		return nil
@@ -399,6 +404,10 @@ func (s *Session) scanPrerequisite(ctx context.Context, dependency Dependency, c
 func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinition, p Plan, final bool) (Decision, bool, error) {
 	d := Decision{Rule: r.Key, Subject: NodeRef{s.documentID, n.header.ID}, Outcome: OutcomePass}
 	switch p.kind {
+	case planLocal:
+		return s.evaluateLocalPlan(ctx, n, p.local, final)
+	case planTypedReference:
+		return s.evaluateReferencePlan(ctx, n, p.reference, final)
 	case planChildren:
 		count := int64(0)
 		var uncertain *Decision

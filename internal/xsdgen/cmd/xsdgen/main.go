@@ -49,6 +49,7 @@ func run(arguments []string, stderr io.Writer) error {
 		"simple",
 		"generated declaration kind: simple, complex, element, document, or validation",
 	)
+	modelMetadata := flags.Bool("model-metadata", false, "emit the private current-model representation map")
 	validationName := flags.String(
 		"validation-name",
 		"",
@@ -146,6 +147,7 @@ func run(arguments []string, stderr io.Writer) error {
 			*packageName,
 			xsdgen.ComplexGenerationOptions{
 				OrderedContentTypes: ordered,
+				ModelMetadata:       *modelMetadata,
 			},
 		)
 		if err != nil {
@@ -164,7 +166,11 @@ func run(arguments []string, stderr io.Writer) error {
 			}
 		}
 
-		source, err = xsdgen.GenerateElements(
+		generateElements := xsdgen.GenerateElements
+		if *modelMetadata {
+			generateElements = xsdgen.GenerateElementsWithModelMetadata
+		}
+		source, err = generateElements(
 			index,
 			*packageName,
 			elements...,
@@ -221,6 +227,7 @@ func run(arguments []string, stderr io.Writer) error {
 				GoName:        *elementGoName,
 				TypeNames:     overrides,
 				ExternalTypes: external,
+				ModelMetadata: *modelMetadata,
 			},
 		)
 		if err != nil {
