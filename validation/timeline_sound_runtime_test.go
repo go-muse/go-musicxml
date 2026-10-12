@@ -68,3 +68,29 @@ func TestTimelineRuntimeDirectionOffsetsKeepIndependentOrigins(t *testing.T) {
 		}
 	}
 }
+
+func TestTimelineRuntimePublishesNoteAndFiguredBassOrigins(t *testing.T) {
+	s, svc, b := runtimeFixture(t)
+	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)))
+	figure := stateNode(b, timelineRoleFiguredBass, 25, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, 26, stateAbsent[Atomic]()))
+	note := runtimeNote(t, b, 30, 4, false)
+	stateAttribute(b, note, timelineRoleNoteAttack, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, -1, 1)})
+	stateAttribute(b, note, timelineRoleNoteRelease, Atomic{Kind: AtomicDecimal, Decimal: stateDecimal(t, 1, 1)})
+	if err := svc.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, attrs, figure, note)); err != nil {
+		t.Fatal(err)
+	}
+	origin, ok := svc.NoteOrigins[30]
+	if !ok {
+		t.Fatal("missing note timing origins")
+	}
+	for label, p := range map[string]Evidence[musicalPosition]{"onset": origin.ScoreOnset, "end": origin.ScoreEnd, "attack": origin.Attack.Position, "release": origin.Release.Position} {
+		want := map[string]string{"onset": "0", "end": "2", "attack": "-1/2", "release": "5/2"}[label]
+		if p.State != EvidenceKnown || p.Value.Offset.String() != want {
+			t.Fatalf("%s=%+v want%s", label, p, want)
+		}
+	}
+	bass, ok := svc.FiguredBassOrigins[25]
+	if !ok || bass.Anchor.State != EvidenceKnown || bass.Anchor.Value.Node != 30 {
+		t.Fatalf("figured bass=%+v exists=%v", bass, ok)
+	}
+}
