@@ -110,6 +110,8 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	contextServices         map[RuleKey]*contextService
+	contextResults          []ContextResult
 	timeline                map[RuleKey]*timelineService
 	localDocuments          map[*localPlan]localDocumentResult
 	schema                  *schemaSession
@@ -563,6 +565,7 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 		s.accumulator.terminal(s.terminalCause, category, reason)
 	}
 	report := s.accumulator.finish(s.inputComplete, end.Syntax)
+	report.Context = s.contextResults
 	if s.terminalCause != nil {
 		return report, &IncompleteError{Reason: "session-terminated", Cause: s.terminalCause}
 	}
@@ -621,6 +624,8 @@ func (s *Session) cleanup() {
 	s.schema = nil
 	s.localDocuments = nil
 	s.timeline = nil
+	s.contextServices = nil
+	s.contextResults = nil
 	if s.depth > 0 {
 		_ = s.account.Release(BudgetDepth, s.depth)
 		s.depth = 0

@@ -45,6 +45,7 @@ const (
 // Plan is an immutable sealed typed program. Its zero value is invalid; use a
 // constructor. Plans contain no callback, XML parser, runtime expression or DSL.
 type Plan struct {
+	context          *contextPlan
 	timeline         *timelinePlan
 	timelineConsumer *timelineConsumerPlan
 	modelAssembly    Assembly
@@ -144,6 +145,8 @@ func (p Plan) valid() error {
 		return contract("plan", "parameters exceed the finite configuration bound")
 	}
 	switch p.kind {
+	case planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+		return p.context.valid()
 	case planTimeline:
 		return p.timeline.valid()
 	case planChordDuration, planNumeralKey:
@@ -218,6 +221,7 @@ func validateComparison(c Comparison, a Atomic) error {
 	return nil
 }
 func (p Plan) clone() Plan {
+	p.context = p.context.clone()
 	p.timeline = p.timeline.clone()
 	p.timelineConsumer = p.timelineConsumer.clone()
 	p.local = p.local.clone()
@@ -247,6 +251,9 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
+	if p.isContext() {
+		return p.validateContextFor(r)
+	}
 	if p.isTimeline() {
 		return p.validateTimelineFor(r)
 	}
@@ -306,6 +313,9 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	return nil
 }
 func (p Plan) digestValue() any {
+	if p.isContext() {
+		return p.context.digest(p.kind)
+	}
 	if p.kind == planTimeline {
 		return p.timeline.digest()
 	}
@@ -357,7 +367,7 @@ func (p Plan) digestValue() any {
 	}{p.kind, p.children, p.minimum, p.maximum, p.attribute, p.required, p.comparison, a, p.key, p.relation}
 }
 func (p Plan) configSize() int64 {
-	n := p.timeline.size() + p.timelineConsumer.size() + p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
+	n := p.context.size() + p.timeline.size() + p.timelineConsumer.size() + p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
 	for _, d := range p.children {
 		n += int64(64 + len(d.OwnerOccurrence) + len(d.Occurrence))
 	}

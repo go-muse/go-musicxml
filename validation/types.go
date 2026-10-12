@@ -413,6 +413,9 @@ type TerminalSummary struct {
 // contribute to eligible Counts without consuming diagnostic quotas or setting
 // DiagnosticsTruncated. Reports do not provide an all-decisions execution trace.
 type Report struct {
+	// Context contains bounded independently owned facts from selected context
+	// providers. Optional fact availability is independent of conformance.
+	Context              []ContextResult
 	Requested            bool
 	Profile              Profile
 	Target               Target

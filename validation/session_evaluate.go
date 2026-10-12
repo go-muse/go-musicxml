@@ -81,7 +81,14 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 			return s.record(r, n, d)
 		}
 	}
-	dependency, pending, err := s.dependencies(ctx, n, r, final)
+	var dependency Decision
+	var pending bool
+	var err error
+	if p.isContext() && p.kind != planTimeOnlyOrder && p.kind != planFigureNumberNumeric && p.kind != planBendReleaseSign && p.kind != planGraphicalRepeatContent {
+		dependency, pending, err = s.contextDependencies(ctx, n, r, p, final)
+	} else {
+		dependency, pending, err = s.dependencies(ctx, n, r, final)
+	}
 	if err != nil {
 		return err
 	}
@@ -415,6 +422,8 @@ func (s *Session) scanPrerequisite(ctx context.Context, dependency Dependency, c
 func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinition, p Plan, final bool) (Decision, bool, error) {
 	d := Decision{Rule: r.Key, Subject: NodeRef{s.documentID, n.header.ID}, Outcome: OutcomePass}
 	switch p.kind {
+	case planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+		return s.evaluateContextPlan(ctx, n, r.Key, p, final)
 	case planTimeline:
 		return s.evaluateTimeline(ctx, n, r.Key, p.timeline, final)
 	case planChordDuration, planNumeralKey:

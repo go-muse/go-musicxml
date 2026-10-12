@@ -22,6 +22,20 @@ var timelineAssessmentEngine = sync.OnceValues(buildTimelineAssessmentEngine)
 func newTimelineAssessmentEngine() (*validation.Engine, error) { return timelineAssessmentEngine() }
 
 func buildTimelineAssessmentEngine() (*validation.Engine, error) {
+	d, err := buildTimelineAssessmentDefinitions()
+	if err != nil {
+		return nil, err
+	}
+	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	if err != nil {
+		return nil, err
+	}
+	return validation.NewEngine(catalog)
+}
+
+// Definition reuse composes a new explicit profile without changing this frozen
+// timeline catalog, its semantic revision, or its normative closure.
+func buildTimelineAssessmentDefinitions() (*assessmentDefinitions, error) {
 	d, err := buildModelAssessmentDefinitions()
 	if err != nil {
 		return nil, err
@@ -106,9 +120,6 @@ func buildTimelineAssessmentEngine() (*validation.Engine, error) {
 			profiles[i].Support = append(profiles[i].Support, validation.RuleSupport{Rule: rule.Key, State: validation.ImplementationAvailable})
 		}
 	}
-	catalog, err := validation.NewCatalog(d.rules, profiles, d.plans)
-	if err != nil {
-		return nil, err
-	}
-	return validation.NewEngine(catalog)
+	d.profiles = profiles
+	return d, nil
 }

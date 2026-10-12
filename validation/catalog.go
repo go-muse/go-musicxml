@@ -168,6 +168,11 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 					return nil, err
 				}
 			}
+			if plan, exists := c.plans[rule.Predicate]; exists && plan.isContext() {
+				if err := plan.validateContextRules(rule, c, closure); err != nil {
+					return nil, err
+				}
+			}
 			if support.State == ImplementationAvailable {
 				plan, exists := c.plans[rule.Predicate]
 				if !exists {
@@ -204,6 +209,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 				return nil, contract("schema profile", "conflicting schemas in one assembly")
 			}
 			schemas[plan.schema.assembly] = plan.schema
+		}
+		if err := validateContextProfile(c, closure, schemas); err != nil {
+			return nil, err
 		}
 		if err := validateTimelineProfile(c, closure, schemas); err != nil {
 			return nil, err
