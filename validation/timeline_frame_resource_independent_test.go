@@ -187,3 +187,18 @@ func TestIndependentTimelineFrameWitnessSurvivesChordOnset(t *testing.T) {
 		t.Fatalf("chord onset erased witnessed q1 bound: member%t err%v", member, err)
 	}
 }
+
+func TestIndependentTimelinePartialIndexAndFrameMapShapes(t *testing.T) {
+	indexWidth := int64(unsafe.Sizeof(stateIndexScope{})) + int64(unsafe.Sizeof(stateIndexBucket{}))
+	// Concurrent old/new map tables plus separately grown publication IDs.
+	indexMinimum := 3*indexWidth + 4*int64(unsafe.Sizeof(int(0)))
+	if stateIndexPublicationBytes < indexMinimum {
+		t.Fatalf("index admission%d below changed map/bucket bound%d", stateIndexPublicationBytes, indexMinimum)
+	}
+	frameWidth := int64(unsafe.Sizeof(timelineFrame{})) + int64(unsafe.Sizeof(Rational{}))
+	frameMinimum := 4*frameWidth + 128
+	if timelineFrameReserveBytes < frameMinimum {
+		t.Fatalf("frame admission%d below map bound%d", timelineFrameReserveBytes, frameMinimum)
+	}
+	t.Logf("index minimum%d allowance%d; frame minimum%d allowance%d", indexMinimum, stateIndexPublicationBytes, frameMinimum, timelineFrameReserveBytes)
+}
