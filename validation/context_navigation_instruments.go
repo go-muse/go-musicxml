@@ -251,3 +251,54 @@ func navigationAttachInstrumentUpdates(ctx context.Context, s *Session, timeline
 	}
 	return initial, nil
 }
+
+// Unchanged initial declarations survive a control re-entry. A field whose
+// provenance is an executed change has no proved carry-versus-reset policy.
+func navigationInvalidateField[T any](ctx context.Context, s *Session, v *NavigationStateValue[T], initial [][]navigationInstrumentUpdate) error {
+	if v.Value.State == EvidenceAbsent || v.Value.State == "" {
+		return nil
+	}
+	for _, group := range initial {
+		for _, u := range group {
+			same, err := stateSameRef(ctx, s, v.Source, u.Source)
+			if err != nil {
+				return err
+			}
+			if same {
+				return nil
+			}
+		}
+	}
+	if err := s.step(ctx, 1); err != nil {
+		return err
+	}
+	v.Value = stateUnknown[T]("navigation-reentry-state-unresolved")
+	return nil
+}
+func navigationInvalidateInstrument(ctx context.Context, s *Session, v *NavigationInstrumentState, initial [][]navigationInstrumentUpdate) error {
+	if err := navigationInvalidateField(ctx, s, &v.Sound, initial); err != nil {
+		return err
+	}
+	if err := navigationInvalidateField(ctx, s, &v.Performance, initial); err != nil {
+		return err
+	}
+	if err := navigationInvalidateField(ctx, s, &v.Virtual, initial); err != nil {
+		return err
+	}
+	for _, x := range []*NavigationStateValue[Integer]{&v.Channel, &v.Bank, &v.Program, &v.Unpitched, &v.DevicePort} {
+		if err := navigationInvalidateField(ctx, s, x, initial); err != nil {
+			return err
+		}
+	}
+	for _, x := range []*NavigationStateValue[string]{&v.Name, &v.DeviceName} {
+		if err := navigationInvalidateField(ctx, s, x, initial); err != nil {
+			return err
+		}
+	}
+	for _, x := range []*NavigationStateValue[Decimal]{&v.Volume, &v.Pan, &v.Elevation} {
+		if err := navigationInvalidateField(ctx, s, x, initial); err != nil {
+			return err
+		}
+	}
+	return nil
+}

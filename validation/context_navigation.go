@@ -98,11 +98,11 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 			if e != nil {
 				return nil, e
 			}
-			updates, e := navigationReadListening(r, node)
+			updates, e := navigationReadListening(r, node, fact.Part)
 			if e != nil {
 				return nil, e
 			}
-			row := contextNavigationNode{event: navigationEvent{Source: NodeRef{s.documentID, id}, Kind: NavigationListening, Listening: updates}, part: fact.Part, position: fact.Position, value: NavigationContextResult{Kind: NavigationListening, Part: fact.Part, Listening: updates}}
+			row := contextNavigationNode{event: navigationEvent{Source: NodeRef{s.documentID, id}, Kind: NavigationListening, Listening: updates}, part: fact.Part, position: fact.Position, value: NavigationContextResult{Kind: NavigationListening, Part: fact.Part, Listening: updates, TargetsDistinct: navigationListeningDistinct(r, node, updates)}}
 			if fact.Position.State == EvidenceKnown {
 				v := fact.Position.Value
 				row.value.Position = Evidence[ContextPosition]{State: EvidenceKnown, Value: ContextPosition{Part: v.Part, Measure: v.Measure, MeasureOrdinal: v.MeasureOrdinal, Offset: v.Offset, UnprovedFrame: v.UnprovedFrame}}
@@ -114,7 +114,7 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 			}
 		}
 		if note, ok := timeline.Playback.Notes[id]; ok {
-			noteListening, recommended, distinct, e := navigationReadNoteListening(r, node)
+			noteListening, recommended, distinct, e := navigationReadNoteListening(r, node, note.Origin.Part)
 			if e != nil {
 				return nil, e
 			}
@@ -138,9 +138,12 @@ func navigationReadRows(ctx context.Context, s *Session, p *contextPlan, timelin
 			if kind == NavigationFine {
 				if label.State == EvidenceKnown && label.Value == "yes" {
 					row.value.DurationUnchanged = navigationKnownBool(true)
-				} else {
-					row.value.DurationUnchanged = navigationKnownBool(false)
+				} else if label.State == EvidenceKnown {
+					row.value.DurationUnchanged = stateUnknown[bool]("navigation-fine-duration-units-unresolved")
 					row.value.FineDuration = stateUnknown[Decimal]("navigation-fine-duration-units-unresolved")
+				} else {
+					row.value.DurationUnchanged = stateUnavailable[string, bool](label)
+					row.value.FineDuration = stateUnavailable[string, Decimal](label)
 				}
 			}
 			if err := navigationAppend(ctx, s, &rows, row); err != nil {
@@ -451,6 +454,9 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 	if timeline == nil {
 		timeline = &timelineService{}
 	}
+	if err = navigationPublishGraphics(ctx, s, p, key, timeline); err != nil {
+		return Decision{}, false, err
+	}
 	rows, err := navigationReadRows(ctx, s, p, timeline)
 	if err != nil {
 		return Decision{}, false, err
@@ -467,7 +473,7 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 		}
 		if row.part.State != EvidenceKnown {
 			row.value.Complete = stateUnavailable[NodeRef, bool](row.part)
-			if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.event.Source, Property: ContextProperty("navigation"), Navigation: &row.value}); err != nil {
+			if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.event.Source, Property: ContextPropertyNavigation, Navigation: &row.value}); err != nil {
 				return Decision{}, false, err
 			}
 			continue
@@ -525,11 +531,11 @@ func evaluateContextNavigation(ctx context.Context, s *Session, n *factNode, key
 		}
 		for i := range partRows {
 			v := &partRows[i]
-			if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: v.event.Source, Property: ContextProperty("navigation"), Navigation: &v.value}); err != nil {
+			if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: v.event.Source, Property: ContextPropertyNavigation, Navigation: &v.value}); err != nil {
 				return Decision{}, false, err
 			}
 		}
-		if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.part.Value, Property: ContextProperty("navigation-traversal"), Navigation: &traversal}); err != nil {
+		if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.part.Value, Property: ContextPropertyNavigationTraversal, Navigation: &traversal}); err != nil {
 			return Decision{}, false, err
 		}
 	}

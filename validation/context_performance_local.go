@@ -2,6 +2,13 @@ package validation
 
 func performanceLocal(r *contextReader, key RuleKey, n *factNode, out *TimingContextResult) bool {
 	publish := false
+	// This conditional role does not assert that the current instrument is fretted.
+	if r.attributeOwner(n, "perf-fingering-substitution") {
+		publishPerformanceScalar(r, key, n, "performance-fretted-instrument-role", Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "stopping-finger"}})
+	}
+	if r.matches(n, "perf-pluck") {
+		publishPerformanceScalar(r, key, n, "performance-fretted-instrument-role", Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "plucking-finger"}})
+	}
 	if r.matches(n, "perf-fret") {
 		publish = true
 		out.Kind = "fret"

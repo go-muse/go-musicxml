@@ -70,12 +70,18 @@ func performanceBuildSwing(r *contextReader, service *timelineService) (performa
 func performanceNoteSwing(r *contextReader, service *timelineService, h *performanceSwingHistory, n *factNode, out *TimingContextResult) {
 	typ := stateText(r.childScalar(n, "perf-type"))
 	out.SwingRealized = stateUnknown[bool]("swing-pair-pass-unavailable")
-	// Known ineligible antecedents do not require active chronology.
-	if out.Grace.State == EvidenceKnown && out.Grace.Value || typ.State == EvidenceAbsent {
-		out.SwingEligible = Evidence[bool]{State: EvidenceKnown, Value: false}
-		out.SwingRealized = Evidence[bool]{State: EvidenceKnown, Value: false}
+	// Known false nominal or grace/type antecedents need no active chronology.
+	local, err := performanceSwingEligible(r.ctx, r.s, typ, stateUnknown[string]("active-swing-unavailable"), out.Duration, out.Grace)
+	if err != nil {
+		r.err = err
 		return
 	}
+	if local.State == EvidenceKnown && !local.Value {
+		out.SwingEligible = local
+		out.SwingRealized = local
+		return
+	}
+
 	if h.global.State != EvidenceKnown {
 		out.SwingEligible = h.global
 		return

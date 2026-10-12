@@ -57,7 +57,7 @@ type SpanPosition = ContextPosition
 // SpanContextResult is an owned endpoint projection. A known Association means
 // Members identifies a supported object, not that all score spans are balanced.
 // Members lists semantic start/stop boundaries (or the single self-contained
-// endpoint); continuations refer to those same boundaries. Included is used for
+// endpoint, or all identified simultaneous arpeggiation marks); continuations refer to those same boundaries. Included is used for
 // established part-group score-part membership. Unavailable evidence retains
 // its cause. NumberExplicit preserves provenance independently of value identity.
 type SpanContextResult struct {
@@ -90,6 +90,7 @@ func cloneSpanContext(ctx context.Context, s *Session, p *SpanContextResult) (*S
 
 type spanEndpoint struct {
 	ref                 NodeRef
+	relationSide        NodeID
 	payload             SpanContextResult
 	complete            Evidence[bool]
 	pitch, guard, lyric string

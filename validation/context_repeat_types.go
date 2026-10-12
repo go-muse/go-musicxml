@@ -17,6 +17,7 @@ const (
 // Start/Stop are established half-open range endpoints; absent Stop may mean
 // continuation to part end only when Complete is known. AllStaves is symbolic.
 type RepeatContextResult struct {
+	Notes                     []RepeatNoteScope
 	Kind                      RepeatStyleKind
 	Part                      Evidence[NodeRef]
 	AllStaves                 Evidence[bool]
@@ -80,5 +81,8 @@ func contextRepeatDefaults(result *RepeatContextResult) {
 }
 
 func contextRepeatPropertyValid(property ContextProperty) bool {
-	return property == ContextProperty("repeat-style") || property == ContextProperty("navigation-traversal")
+	return property == ContextPropertyNavigationTraversal
 }
+
+// ContextPropertyNavigationTraversal identifies a bounded part traversal snapshot.
+const ContextPropertyNavigationTraversal ContextProperty = "navigation-traversal"

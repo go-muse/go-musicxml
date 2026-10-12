@@ -1,15 +1,17 @@
 package validation
 
 const (
-	spanRole_metronome        contextRole = "span.metronome"
-	spanRole_frame            contextRole = "span.frame"
-	spanRole_frameNote        contextRole = "span.frameNote"
-	spanRole_frameString      contextRole = "span.frameString"
-	spanRole_frameFret        contextRole = "span.frameFret"
-	spanRole_bracketLineEnd   contextRole = "span.bracketLineEnd"
-	spanRole_bracketEndLength contextRole = "span.bracketEndLength"
-	spanRole_noteAttack       contextRole = "span.noteAttack"
-	spanRole_noteRelease      contextRole = "span.noteRelease"
+	spanRole_tremoloSMuFL      contextRole = "span.tremoloSMuFL"
+	spanRole_metronomeRelation contextRole = "span.metronomeRelation"
+	spanRole_metronome         contextRole = "span.metronome"
+	spanRole_frame             contextRole = "span.frame"
+	spanRole_frameNote         contextRole = "span.frameNote"
+	spanRole_frameString       contextRole = "span.frameString"
+	spanRole_frameFret         contextRole = "span.frameFret"
+	spanRole_bracketLineEnd    contextRole = "span.bracketLineEnd"
+	spanRole_bracketEndLength  contextRole = "span.bracketEndLength"
+	spanRole_noteAttack        contextRole = "span.noteAttack"
+	spanRole_noteRelease       contextRole = "span.noteRelease"
 
 	spanRole_noteTimeOnly                  contextRole = "span.noteTimeOnly"
 	spanRole_arpeggiate_arpeggio_direction contextRole = "span.arpeggiate_direction"
@@ -138,6 +140,7 @@ const (
 
 func contextSpanBindingSpecs() []contextBindingSpec {
 	return []contextBindingSpec{
+		{Role: spanRole_metronomeRelation, Owner: "metronome", Name: "metronome-relation", Type: "xs:string", Attribute: false, Count: 1},
 		{Role: spanRole_metronome, Owner: "", Name: "metronome", Type: "metronome", Attribute: false, Count: -1},
 		{Role: spanRole_frame, Owner: "", Name: "frame", Type: "frame", Attribute: false, Count: -1},
 		{Role: spanRole_frameNote, Owner: "", Name: "frame-note", Type: "frame-note", Attribute: false, Count: -1},
@@ -231,6 +234,7 @@ func contextSpanBindingSpecs() []contextBindingSpec {
 		{Role: spanRole_tied_type, Owner: "tied", Name: "type", Type: "tied-type", Attribute: true, Count: 1},
 		{Role: spanRole_tied_number, Owner: "tied", Name: "number", Type: "number-level", Attribute: true, Count: 1},
 		{Role: spanRole_tied_line_type, Owner: "tied", Name: "line-type", Type: "line-type", Attribute: true, Count: 1},
+		{Role: spanRole_tremoloSMuFL, Owner: "tremolo", Name: "smufl", Type: "smufl-glyph-name", Attribute: true, Count: 1},
 		{Role: spanRole_tremolo_type, Owner: "tremolo", Name: "type", Type: "tremolo-type", Attribute: true, Count: 1},
 		{Role: spanRole_tuplet_type, Owner: "tuplet", Name: "type", Type: "start-stop", Attribute: true, Count: 1},
 		{Role: spanRole_tuplet_number, Owner: "tuplet", Name: "number", Type: "number-level", Attribute: true, Count: 1},

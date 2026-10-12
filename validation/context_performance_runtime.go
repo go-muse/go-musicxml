@@ -6,6 +6,12 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 	if !final {
 		return Decision{}, true, nil
 	}
+	tb, err := p.Schema.sharedTimelineBindings()
+	if err != nil {
+		return Decision{}, false, err
+	}
+	sr := &stateReader{ctx: ctx, s: s, b: tb}
+	partOrder := int64(0)
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
 	service := s.timeline[p.Timeline]
 	swingHistory, err := performanceBuildSwing(r, service)
@@ -102,6 +108,9 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			out.BendNegativeSatisfied = proof.Satisfied
 			storePerformanceBend(r, key, n, proof)
 		}
+		if performanceLocalState(r, sr, n, &out, &partOrder) {
+			publish = true
+		}
 		if performanceLocal(r, key, n, &out) {
 			publish = true
 		}
@@ -114,6 +123,17 @@ func evaluateContextPerformance(ctx context.Context, s *Session, _ *factNode, ke
 			if r.err == nil {
 				r.err = performanceAdvice(ctx, s, &out, "swing-ratio-reduced", reduced)
 			}
+		}
+		if out.Kind == "sound" && r.err == nil {
+			grouped := performanceInstrumentGrouping(sr, n, out.Part)
+			if sr.err != nil {
+				r.err = sr.err
+			} else {
+				r.err = performanceAdvice(ctx, s, &out, "sound-instrument-grouping", grouped)
+			}
+		}
+		if publish && service != nil && service.Final && r.err == nil {
+			r.err = performanceStateAdvice(ctx, s, service, n, &out)
 		}
 		if r.err != nil {
 			break

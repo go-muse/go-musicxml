@@ -3,6 +3,7 @@ package validation
 import "context"
 
 const (
+	contextRepeatAnyNote         contextRole = "repeat-any-note"
 	contextRepeatNotePitch       contextRole = "repeat-note-pitch"
 	contextRepeatNoteRest        contextRole = "repeat-note-rest"
 	contextRepeatNoteUnpitched   contextRole = "repeat-note-unpitched"
@@ -23,6 +24,7 @@ const (
 
 func contextRepeatContentBindingSpecs() []contextBindingSpec {
 	return []contextBindingSpec{
+		{Role: contextRepeatAnyNote, Name: "note", Type: "note", Count: -1},
 		{Role: contextRepeatNotePitch, Owner: "note", Name: "pitch", Type: "pitch", Count: 4},
 		{Role: contextRepeatNoteRest, Owner: "note", Name: "rest", Type: "rest", Count: 4},
 		{Role: contextRepeatNoteUnpitched, Owner: "note", Name: "unpitched", Type: "unpitched", Count: 4},
@@ -279,7 +281,18 @@ func contextRepeatMeasureEqual(ctx context.Context, s *Session, notes []contextR
 func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, timeline *timelineService, rows []contextRepeatRecord) error {
 	var notes []contextRepeatNote
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	coverage := navigationKnownBool(true)
 	for _, id := range s.sequence {
+		node := s.nodes[id]
+		coverage = stateMergeGap(coverage, r.complete(node))
+		if node.header.Declaration.State != EvidenceKnown {
+			coverage = stateMergeGap(coverage, stateUnavailable[DeclarationID, bool](node.header.Declaration))
+		}
+		if r.matches(node, contextRepeatAnyNote) {
+			if _, ok := timeline.Playback.Notes[id]; !ok {
+				coverage = stateMergeGap(coverage, stateUnknown[bool]("context-repeat-note-universe-incomplete"))
+			}
+		}
 		if _, ok := timeline.Playback.Notes[id]; !ok {
 			continue
 		}
@@ -294,6 +307,10 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 	}
 	for i := range rows {
 		row := &rows[i]
+		if coverage.State != EvidenceKnown || !coverage.Value {
+			row.value.ContentEquivalent = coverage
+			continue
+		}
 		if err := contextRepeatBeatProof(ctx, s, notes, rows, row); err != nil {
 			return err
 		}

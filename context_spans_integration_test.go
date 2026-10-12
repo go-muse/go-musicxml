@@ -76,6 +76,14 @@ func spanTestEngine(t *testing.T, withTimeline bool) (*validation.Engine, []vali
 }
 func spanBoth(t *testing.T, source string, withTimeline bool, check func(*testing.T, validation.Report)) {
 	t.Helper()
+	spanBothWithFailures(t, source, withTimeline, false, check)
+}
+func spanBothWithFailures(t *testing.T, source string, withTimeline, allowFailures bool, check func(*testing.T, validation.Report)) {
+	t.Helper()
+	spanBothWithGap(t, source, withTimeline, allowFailures, "", check)
+}
+func spanBothWithGap(t *testing.T, source string, withTimeline, allowFailures bool, gapName string, check func(*testing.T, validation.Report)) {
+	t.Helper()
 	engine, profiles := spanTestEngine(t, withTimeline)
 	for _, profile := range profiles {
 		t.Run(string(profile.Target), func(t *testing.T) {
@@ -92,13 +100,14 @@ func spanBoth(t *testing.T, source string, withTimeline bool, check func(*testin
 			if err != nil {
 				t.Fatal(err)
 			}
+			sink := &timelineGapSink{Session: session, headers: map[validation.NodeID]validation.NodeHeader{}, gapName: gapName}
 			var report validation.Report
 			if profile.Target == validation.TargetModel {
 				doc, err := Decode(strings.NewReader(source))
 				if err != nil {
 					t.Fatal(err)
 				}
-				_, walkErr := walkModel(ctx, doc, session, account, documentID, modelWalkOptions{})
+				_, walkErr := walkModel(ctx, doc, sink, account, documentID, modelWalkOptions{})
 				report, err = session.Finish(ctx, validation.Completion{InputComplete: walkErr == nil, Syntax: validation.SyntaxNotAssessed, Cause: walkErr})
 				if walkErr != nil {
 					t.Fatal(walkErr)
@@ -108,7 +117,7 @@ func spanBoth(t *testing.T, source string, withTimeline bool, check func(*testin
 				if e != nil {
 					t.Fatal(e)
 				}
-				observer, e := newSourceFactObserver(ctx, session, account)
+				observer, e := newSourceFactObserver(ctx, sink, account)
 				if e != nil {
 					t.Fatal(e)
 				}
@@ -121,7 +130,7 @@ func spanBoth(t *testing.T, source string, withTimeline bool, check func(*testin
 			if !report.InputComplete {
 				t.Fatalf("incomplete input: %s", localFindings(report))
 			}
-			if report.Counts.Fail != 0 {
+			if !allowFailures && report.Counts.Fail != 0 {
 				t.Fatalf("fixture unexpectedly invalid: %s", localFindings(report))
 			}
 			check(t, report)
@@ -302,6 +311,264 @@ func TestContextSpanFrameMetronomeAndSingleDomains(t *testing.T) {
 				if e.Association.State != validation.EvidenceKnown {
 					t.Fatalf("domain %s %+v", f, e)
 				}
+			}
+		}
+	})
+}
+
+func TestContextSpanTiesPitchPassAndLocalOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		body     string
+		family   validation.SpanFamily
+		paired   bool
+		property validation.ContextProperty
+		want     string
+	}{
+		{"enharmonic", `<note><pitch><step>C</step><alter>1</alter><octave>4</octave></pitch><duration>1</duration><notations><tied type="start" number="1"/></notations></note><note><pitch><step>D</step><alter>-1</alter><octave>4</octave></pitch><duration>1</duration><notations><tied type="stop" number="1"/></notations></note>`, validation.SpanTied, true, validation.ContextPropertySpanPitchEquivalentRecommended, "true"},
+		{"inequivalent-advisory", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><notations><tied type="start" number="1"/></notations></note><note><pitch><step>D</step><octave>4</octave></pitch><duration>1</duration><notations><tied type="stop" number="1"/></notations></note>`, validation.SpanTied, true, validation.ContextPropertySpanPitchEquivalentRecommended, "false"},
+		{"all-pass-absent-voice-instrument", timelineNote("1", "", `<tie type="start"/>`) + timelineNote("1", "", `<tie type="stop"/>`), validation.SpanTie, true, "", ""},
+		{"equivalent-pass-spellings", timelineNote("1", "", `<tie type="start" time-only="1, 2"/>`) + timelineNote("1", "", `<tie type="stop" time-only="1,2"/>`), validation.SpanTie, true, "", ""},
+		{"different-pass-guards", timelineNote("1", "", `<tie type="start" time-only="1"/>`) + timelineNote("1", "", `<tie type="stop" time-only="2"/>`), validation.SpanTie, false, "", ""},
+		{"attack-discouraged", `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><tie type="start"/></note><note attack="0"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><tie type="stop"/></note>`, validation.SpanTie, true, validation.ContextPropertySpanTieAttackRecommended, "false"},
+		{"sound-start-stop-advisory", timelineNote("1", "", `<tie type="start"/><tie type="stop"/>`), validation.SpanTie, true, validation.ContextPropertySpanSameNoteOrderRecommended, "false"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			spanBoth(t, (localFixture{body: `<attributes><divisions>1</divisions></attributes>` + tc.body}).xml(), true, func(t *testing.T, r validation.Report) {
+				es := spanResults(r, tc.family)
+				if len(es) != 2 {
+					t.Fatalf("ties %+v", es)
+				}
+				for _, e := range es {
+					if (e.Association.State == validation.EvidenceKnown) != tc.paired {
+						t.Fatalf("pairing %+v", e)
+					}
+				}
+				if tc.property != "" {
+					vs := spanProperty(r, tc.property)
+					found := false
+					for _, v := range vs {
+						if v.State == validation.EvidenceKnown && v.Value.Text == tc.want {
+							found = true
+						}
+					}
+					if !found {
+						t.Fatalf("property %s %+v want %s", tc.property, vs, tc.want)
+					}
+				}
+			})
+		})
+	}
+}
+func TestContextSpanNestedTupletOverrideAndNonLIFOClose(t *testing.T) {
+	body := `<attributes><divisions>3</divisions></attributes>` + timelineNote("2", "", `<type>quarter</type><time-modification><actual-notes>3</actual-notes><normal-notes>2</normal-notes></time-modification><notations><tuplet type="start" number="1"/></notations>`) + timelineNote("1", "", `<type>eighth</type><time-modification><actual-notes>9</actual-notes><normal-notes>4</normal-notes><normal-type>quarter</normal-type></time-modification><notations><tuplet type="start" number="2"><tuplet-actual><tuplet-number>3</tuplet-number><tuplet-type>eighth</tuplet-type></tuplet-actual><tuplet-normal><tuplet-number>1</tuplet-number><tuplet-type>quarter</tuplet-type></tuplet-normal></tuplet></notations>`) + timelineNote("1", "", `<type>eighth</type><time-modification><actual-notes>9</actual-notes><normal-notes>4</normal-notes><normal-type>quarter</normal-type></time-modification><notations><tuplet type="stop" number="1"/><tuplet type="stop" number="2"/></notations>`)
+	spanBoth(t, (localFixture{body: body}).xml(), true, func(t *testing.T, r validation.Report) {
+		es := spanResults(r, validation.SpanTuplet)
+		if len(es) != 4 {
+			t.Fatal(es)
+		}
+		for _, e := range es {
+			if e.Association.State != validation.EvidenceKnown {
+				t.Fatal(e)
+			}
+		}
+		actual := spanProperty(r, validation.ContextPropertySpanTupletActualNumber)
+		normal := spanProperty(r, validation.ContextPropertySpanTupletNormalNumber)
+		if actual[1].Value.Integer.String() != "3" || normal[1].Value.Integer.String() != "1" {
+			t.Fatalf("cumulative ratio overwrote display %+v %+v", actual, normal)
+		}
+	})
+}
+func TestContextSpanLyricExtensionHistoricalAndSelectorScope(t *testing.T) {
+	for _, version := range []string{"2.0", "4.0"} {
+		source := `<score-partwise version="` + version + `"><part-list><score-part id="P1"><part-name>Singer</part-name></score-part></part-list><part id="P1"><measure number="1">` + timelineNote("1", "", `<lyric number="verse-A"><text>word</text><extend/></lyric>`) + `</measure></part></score-partwise>`
+		spanBoth(t, source, false, func(t *testing.T, r validation.Report) {
+			es := spanResults(r, validation.SpanLyricExtend)
+			if len(es) != 1 {
+				t.Fatal(es)
+			}
+			if version == "2.0" {
+				if es[0].Role.State != validation.EvidenceKnown || es[0].Role.Value != "start" {
+					t.Fatal(es)
+				}
+			} else if es[0].Role.State != validation.EvidenceUnknown {
+				t.Fatal("invented 4.0 start")
+			}
+		})
+	}
+	body := `<attributes><divisions>1</divisions></attributes>` + timelineNote("1", "", `<lyric number="A"><text>a</text><extend type="start"/></lyric><lyric number="B"><text>b</text><extend type="start"/></lyric>`) + timelineNote("1", "", `<lyric number="A"><extend type="stop"/></lyric><lyric number="B"><extend type="stop"/></lyric>`)
+	spanBoth(t, (localFixture{body: body}).xml(), true, func(t *testing.T, r validation.Report) {
+		es := spanResults(r, validation.SpanLyricExtend)
+		if len(es) != 4 {
+			t.Fatal(es)
+		}
+		for _, e := range es {
+			if e.Association.State != validation.EvidenceKnown {
+				t.Fatal(e)
+			}
+		}
+		if es[0].Members[0] == es[1].Members[0] {
+			t.Fatal("lyric lines merged")
+		}
+	})
+}
+func TestContextSpanTremoloAndBarlineRecommendations(t *testing.T) {
+	body := `<attributes><divisions>2</divisions></attributes>` + timelineNote("3", "", `<type>half</type><dot/><time-modification><actual-notes>2</actual-notes><normal-notes>1</normal-notes></time-modification><notations><ornaments><tremolo type="start">2</tremolo></ornaments></notations>`) + timelineNote("3", "", `<type>half</type><dot/><time-modification><actual-notes>2</actual-notes><normal-notes>1</normal-notes></time-modification><notations><ornaments><tremolo type="stop">2</tremolo></ornaments></notations>`) + timelineNote("1", "", `<notations><ornaments><tremolo type="unmeasured">2</tremolo></ornaments></notations>`) + `<barline><wavy-line type="start"/></barline>`
+	spanBoth(t, (localFixture{body: body}).xml(), true, func(t *testing.T, r validation.Report) {
+		for _, p := range []validation.ContextProperty{validation.ContextPropertySpanTremoloRatioRecommended, validation.ContextPropertySpanTremoloDurationRecommended} {
+			vs := spanProperty(r, p)
+			if len(vs) != 2 {
+				t.Fatal(vs)
+			}
+			for _, v := range vs {
+				if v.State != validation.EvidenceKnown || v.Value.Text != "true" {
+					t.Fatalf("%s %+v", p, v)
+				}
+			}
+		}
+		for _, p := range []validation.ContextProperty{validation.ContextPropertySpanTremoloMarksRecommended, validation.ContextPropertySpanBarlineContinueRecommended} {
+			vs := spanProperty(r, p)
+			if len(vs) != 1 || vs[0].Value.Text != "false" {
+				t.Fatalf("advisory %s %+v", p, vs)
+			}
+		}
+	})
+}
+
+func TestContextSpanVerticalChordMembership(t *testing.T) {
+	for _, family := range []validation.SpanFamily{validation.SpanArpeggiate, validation.SpanNonArpeggiate} {
+		t.Run(string(family), func(t *testing.T) {
+			mark := func(typ, number string) string {
+				if family == validation.SpanArpeggiate {
+					return `<arpeggiate number="` + number + `"/>`
+				}
+				return `<non-arpeggiate type="` + typ + `" number="` + number + `"/>`
+			}
+			note := func(chord, typ, number, staff string) string {
+				return `<note>` + chord + `<pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><staff>` + staff + `</staff><notations>` + mark(typ, number) + `</notations></note>`
+			}
+			body := `<attributes><divisions>1</divisions><staves>2</staves></attributes>` + note("", "bottom", "1", "1") + note("<chord/>", "top", "1", "2") + note("", "bottom", "2", "1") + note("<chord/>", "top", "2", "1")
+			spanBoth(t, (localFixture{body: body}).xml(), true, func(t *testing.T, r validation.Report) {
+				es := spanResults(r, family)
+				if len(es) != 4 {
+					t.Fatal(es)
+				}
+				for i, e := range es {
+					if e.Association.State != validation.EvidenceKnown || len(e.Members) != 2 {
+						t.Fatalf("%d %+v", i, e)
+					}
+				}
+				if es[0].Members[0] == es[2].Members[0] {
+					t.Fatal("different onsets merged")
+				}
+			})
+		})
+	}
+}
+func TestContextSpanMetronomeRelationSeparatesSides(t *testing.T) {
+	body := `<direction><direction-type><metronome><metronome-note><metronome-type>quarter</metronome-type><metronome-tied type="start"/></metronome-note><metronome-relation>equals</metronome-relation><metronome-note><metronome-type>quarter</metronome-type><metronome-tied type="stop"/></metronome-note></metronome></direction-type></direction>`
+	spanBoth(t, (localFixture{body: body}).xml(), false, func(t *testing.T, r validation.Report) {
+		for _, e := range spanResults(r, validation.SpanMetronomeTied) {
+			if e.Association.State == validation.EvidenceKnown {
+				t.Fatalf("cross-side association %+v", e)
+			}
+		}
+	})
+}
+
+func TestContextSpanTremoloSMuFLLocalConditions(t *testing.T) {
+	for _, tc := range []struct {
+		name, mark, want string
+		state            validation.EvidenceState
+	}{
+		{"unmeasured-default", `<tremolo type="unmeasured">0</tremolo>`, "buzzRoll", validation.EvidenceKnown},
+		{"unmeasured-explicit", `<tremolo type="unmeasured" smufl="unvalidatedGlyph">0</tremolo>`, "unvalidatedGlyph", validation.EvidenceKnown},
+		{"single-ignored", `<tremolo type="single" smufl="unvalidatedGlyph">1</tremolo>`, "", validation.EvidenceAbsent},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			spanBoth(t, (localFixture{body: timelineNote("1", "", `<notations><ornaments>`+tc.mark+`</ornaments></notations>`)}).xml(), false, func(t *testing.T, r validation.Report) {
+				v := spanProperty(r, validation.ContextPropertySpanTremoloSMuFL)[0]
+				if v.State != tc.state || v.Value.Text != tc.want {
+					t.Fatal(v)
+				}
+			})
+		})
+	}
+}
+
+func TestContextSpanInvalidScalarCauseBothAdapters(t *testing.T) {
+	body := `<attributes><divisions>1</divisions></attributes>` + timelineNote("1", "", `<notations><slur type="start"/></notations>`) + timelineNote("1", "", `<notations><slur type="start" number="99"/></notations>`) + timelineNote("1", "", `<notations><slur type="stop"/></notations>`)
+	spanBothWithFailures(t, (localFixture{body: body}).xml(), true, true, func(t *testing.T, r validation.Report) {
+		es := spanResults(r, validation.SpanSlur)
+		if len(es) != 3 {
+			t.Fatal(es)
+		}
+		if r.Counts.Fail == 0 {
+			t.Fatal("missing XSD scalar owner failure")
+		}
+		for _, e := range es {
+			if e.Association.State != validation.EvidenceInvalid || e.Association.Cause == nil {
+				t.Fatal(e)
+			}
+			if e.Role.State != validation.EvidenceKnown {
+				t.Fatal("lost independent role")
+			}
+		}
+	})
+}
+func TestContextSpanPartGroupEmptyReuseAndMissingBoundary(t *testing.T) {
+	source := `<score-partwise version="4.0"><part-list><part-group type="start" number="A"/><part-group type="stop" number="A"/><part-group type="start" number="A"/><score-part id="P1"><part-name>Piano</part-name></score-part><part-group type="stop" number="A"><group-name>ignored</group-name><group-symbol>brace</group-symbol></part-group><part-group type="start" number="B"/></part-list><part id="P1"><measure number="1"/></part></score-partwise>`
+	spanBoth(t, source, false, func(t *testing.T, r validation.Report) {
+		es := spanResults(r, validation.SpanPartGroup)
+		if len(es) != 5 {
+			t.Fatal(es)
+		}
+		if es[0].Association.State != validation.EvidenceKnown || len(es[0].Included) != 0 || len(es[2].Included) != 1 || es[4].Association.State != validation.EvidenceUnknown {
+			t.Fatal(es)
+		}
+		active := spanProperty(r, validation.ContextPropertySpanGroupStopContentActive)
+		if active[3].Value.Text != "false" {
+			t.Fatal(active)
+		}
+	})
+}
+
+func TestContextSpanMissingEnumerationBothAdapters(t *testing.T) {
+	for _, tc := range []struct {
+		name, gap, body string
+		family          validation.SpanFamily
+	}{
+		{"slur-domain", "measure", timelineNote("1", "", `<notations><slur type="start"/></notations>`) + timelineNote("1", "", `<notations><slur type="stop"/></notations>`), validation.SpanSlur},
+		{"note-vertical", "note", timelineNote("1", "", `<notations><arpeggiate/></notations>`), validation.SpanArpeggiate},
+		{"local-let-ring-survives", "measure", timelineNote("1", "", `<notations><tied type="let-ring"/></notations>`), validation.SpanTied},
+		{"local-tie-stub-survives", "measure", timelineNote("1", "", `<notations><tied type="start"/><tied type="stop"/></notations>`), validation.SpanTied},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			spanBothWithGap(t, (localFixture{body: `<attributes><divisions>1</divisions></attributes>` + tc.body}).xml(), true, false, tc.gap, func(t *testing.T, r validation.Report) {
+				es := spanResults(r, tc.family)
+				if len(es) == 0 {
+					t.Fatal("no projections")
+				}
+				for _, e := range es {
+					if strings.Contains(tc.name, "survives") {
+						if e.Association.State != validation.EvidenceKnown {
+							t.Fatal(e)
+						}
+					} else if e.Association.State == validation.EvidenceKnown {
+						t.Fatal("fabricated closed enumeration", e)
+					}
+					if e.Role.State != validation.EvidenceKnown && tc.family != validation.SpanArpeggiate {
+						t.Fatal("lost local role")
+					}
+				}
+			})
+		})
+	}
+	source := `<score-partwise version="4.0"><part-list><part-group type="start"/><score-part id="P1"><part-name>Piano</part-name></score-part><part-group type="stop"/></part-list><part id="P1"><measure number="1"/></part></score-partwise>`
+	spanBothWithGap(t, source, false, false, "part-list", func(t *testing.T, r validation.Report) {
+		for _, e := range spanResults(r, validation.SpanPartGroup) {
+			if e.Association.State == validation.EvidenceKnown || len(e.Included) > 0 {
+				t.Fatal("incomplete group interval", e)
 			}
 		}
 	})

@@ -53,7 +53,21 @@ type TimingTuning struct {
 }
 
 // TimingContextResult retains exact encoded-score evidence; it does not assert physical playback.
+// Kind selects the applicable fields; unrelated fields are absent. Positions and
+// durations use exact quarter-note units. WrittenPitch and tuning pitches count
+// semitones from C0; SoundingPitch adds only established encoded transposition.
+// ReferenceVelocity is dynamics percent times 90/100, without MIDI quantization.
+// Pan uses 0 front, -90 left, +90 right and +/-180 rear; elevation uses 0 level,
+// +90 above and -90 below. FretOpenString identifies encoded fret zero.
+// PitchIntent describes separately unavailable external intended pitch, never a
+// guessed obligation to agree with the encoded written or sounding projection.
+// Advisory values are optional guidance, not mandatory conformance decisions.
 type TimingContextResult struct {
+	AllStaves    Evidence[bool]
+	ScopeStaff   Evidence[Integer]
+	PartOrder    Evidence[Integer]
+	MeasureLabel Evidence[string]
+
 	Advisories  []TimingAdvisory
 	CursorAfter Evidence[ContextPosition]
 	SwingRatio  Evidence[Rational]
@@ -220,6 +234,10 @@ func cloneTimingTuning(p TimingTuning) TimingTuning {
 }
 func cloneTimingContextResult(p TimingContextResult) TimingContextResult {
 	q := p
+	q.AllStaves = cloneEvidence(p.AllStaves)
+	q.ScopeStaff = cloneEvidence(p.ScopeStaff)
+	q.PartOrder = cloneEvidence(p.PartOrder)
+	q.MeasureLabel = cloneEvidence(p.MeasureLabel)
 	q.Advisories = cloneTimingAdvice(p.Advisories)
 	q.CursorAfter = cloneEvidence(p.CursorAfter)
 	q.SwingRatio = cloneEvidence(p.SwingRatio)
@@ -367,7 +385,110 @@ func performanceDonor(v graceDonorTiming) TimingDonor {
 	return TimingDonor{Note: v.Note, Raw: v.Raw, DonorDuration: v.DonorDuration, Fraction: v.Fraction, StolenDuration: v.StolenDuration}
 }
 func newTimingContext(kind Code) TimingContextResult {
-	return TimingContextResult{Kind: kind, CursorAfter: Evidence[ContextPosition]{State: EvidenceAbsent}, SwingRatio: Evidence[Rational]{State: EvidenceAbsent}, Attack: absentTimingAdjustment(), Release: absentTimingAdjustment(), MakeTime: absentTimingAdjustment(), Previous: absentTimingDonor(), Following: absentTimingDonor(), PlayComplete: Evidence[bool]{State: EvidenceAbsent}, FretNumber: Evidence[Integer]{State: EvidenceAbsent}, FretOpenString: Evidence[bool]{State: EvidenceAbsent}, EditorialPlaybackSuppressed: Evidence[bool]{State: EvidenceAbsent}, TrillIncludesInitialSound: Evidence[bool]{State: EvidenceAbsent}, TrillExcludesClosingTurn: Evidence[bool]{State: EvidenceAbsent}, LayoutOrigin: Evidence[NodeRef]{State: EvidenceAbsent}, TuningBottomUp: Evidence[bool]{State: EvidenceAbsent}, StaffTopDown: Evidence[bool]{State: EvidenceAbsent}, RootAlterPrintObject: Evidence[bool]{State: EvidenceAbsent}, EffectiveTempo: Evidence[Decimal]{State: EvidenceAbsent}, EffectiveDynamics: Evidence[Decimal]{State: EvidenceAbsent}, EffectivePizzicato: Evidence[bool]{State: EvidenceAbsent}, EffectiveVelocity: Evidence[Rational]{State: EvidenceAbsent}, PitchIntent: Evidence[Rational]{State: EvidenceAbsent}, Origin: Evidence[ContextPosition]{State: EvidenceAbsent}, Position: Evidence[ContextPosition]{State: EvidenceAbsent}, End: Evidence[ContextPosition]{State: EvidenceAbsent}, Duration: Evidence[Rational]{State: EvidenceAbsent}, PrincipalDuration: Evidence[Rational]{State: EvidenceAbsent}, Principal: Evidence[NodeRef]{State: EvidenceAbsent}, Units: Evidence[Decimal]{State: EvidenceAbsent}, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Part: Evidence[NodeRef]{State: EvidenceAbsent}, ScoreOnset: Evidence[ContextPosition]{State: EvidenceAbsent}, ScoreEnd: Evidence[ContextPosition]{State: EvidenceAbsent}, Chord: Evidence[bool]{State: EvidenceAbsent}, Grace: Evidence[bool]{State: EvidenceAbsent}, Cue: Evidence[bool]{State: EvidenceAbsent}, BendsComplete: Evidence[bool]{State: EvidenceAbsent}, GraceNode: Evidence[NodeRef]{State: EvidenceAbsent}, StealPrevious: Evidence[Decimal]{State: EvidenceAbsent}, StealFollowing: Evidence[Decimal]{State: EvidenceAbsent}, Anchor: Evidence[NodeRef]{State: EvidenceAbsent}, AnchorPosition: Evidence[ContextPosition]{State: EvidenceAbsent}, AnchorStaff: Evidence[Integer]{State: EvidenceAbsent}, AnchorVoice: Evidence[string]{State: EvidenceAbsent}, ChainPosition: Evidence[ContextPosition]{State: EvidenceAbsent}, ChainEnd: Evidence[ContextPosition]{State: EvidenceAbsent}, GroupStart: Evidence[NodeRef]{State: EvidenceAbsent}, FiguresComplete: Evidence[bool]{State: EvidenceAbsent}, DurationRaw: Evidence[Decimal]{State: EvidenceAbsent}, AnchorUnits: Evidence[Decimal]{State: EvidenceAbsent}, DurationUnits: Evidence[Decimal]{State: EvidenceAbsent}, Tempo: Evidence[Decimal]{State: EvidenceAbsent}, Dynamics: Evidence[Decimal]{State: EvidenceAbsent}, ReferenceVelocity: Evidence[Rational]{State: EvidenceAbsent}, EndDynamics: Evidence[Decimal]{State: EvidenceAbsent}, EndReferenceVelocity: Evidence[Rational]{State: EvidenceAbsent}, Pizzicato: Evidence[bool]{State: EvidenceAbsent}, TimeOnly: Evidence[string]{State: EvidenceAbsent}, Pan: Evidence[Decimal]{State: EvidenceAbsent}, Elevation: Evidence[Decimal]{State: EvidenceAbsent}, MIDIUnpitched: Evidence[Integer]{State: EvidenceAbsent}, MIDINote: Evidence[Rational]{State: EvidenceAbsent}, SwingType: Evidence[string]{State: EvidenceAbsent}, SwingFirst: Evidence[Integer]{State: EvidenceAbsent}, SwingSecond: Evidence[Integer]{State: EvidenceAbsent}, Straight: Evidence[bool]{State: EvidenceAbsent}, SwingEligible: Evidence[bool]{State: EvidenceAbsent}, SwingRealized: Evidence[bool]{State: EvidenceAbsent}, SwungOnset: Evidence[ContextPosition]{State: EvidenceAbsent}, SwungEnd: Evidence[ContextPosition]{State: EvidenceAbsent}, BendAlter: Evidence[Decimal]{State: EvidenceAbsent}, PreBend: Evidence[bool]{State: EvidenceAbsent}, BendRelease: Evidence[bool]{State: EvidenceAbsent}, BendNegativeApplicable: Evidence[bool]{State: EvidenceAbsent}, BendNegativeSatisfied: Evidence[bool]{State: EvidenceAbsent}, Staves: Evidence[Integer]{State: EvidenceAbsent}, Instruments: Evidence[Integer]{State: EvidenceAbsent}, StaffExists: Evidence[bool]{State: EvidenceAbsent}, TranspositionChromatic: Evidence[Decimal]{State: EvidenceAbsent}, TranspositionDiatonic: Evidence[Integer]{State: EvidenceAbsent}, TranspositionOctave: Evidence[Integer]{State: EvidenceAbsent}, ChromaticDisplacement: Evidence[Rational]{State: EvidenceAbsent}, DiatonicDisplacement: Evidence[Rational]{State: EvidenceAbsent}, DoublingAbove: Evidence[bool]{State: EvidenceAbsent}, WrittenStep: Evidence[string]{State: EvidenceAbsent}, WrittenAlter: Evidence[Decimal]{State: EvidenceAbsent}, WrittenOctave: Evidence[Integer]{State: EvidenceAbsent}, WrittenPitch: Evidence[Rational]{State: EvidenceAbsent}, SoundingPitch: Evidence[Rational]{State: EvidenceAbsent}, StaffType: Evidence[string]{State: EvidenceAbsent}, Capo: Evidence[Integer]{State: EvidenceAbsent}, KeyFifths: Evidence[Integer]{State: EvidenceAbsent}, KeyMode: Evidence[string]{State: EvidenceAbsent}, KeyCancel: Evidence[Integer]{State: EvidenceAbsent}, CancelLocation: Evidence[string]{State: EvidenceAbsent}, TimeSymbol: Evidence[string]{State: EvidenceAbsent}, TimeSeparator: Evidence[string]{State: EvidenceAbsent}, SenzaMisura: Evidence[string]{State: EvidenceAbsent}, TimePrintObject: Evidence[bool]{State: EvidenceAbsent}, ClefSign: Evidence[string]{State: EvidenceAbsent}, ClefLine: Evidence[Integer]{State: EvidenceAbsent}, ClefOctave: Evidence[Integer]{State: EvidenceAbsent}}
+	return TimingContextResult{
+		Kind:         kind,
+		AllStaves:    Evidence[bool]{State: EvidenceAbsent},
+		ScopeStaff:   Evidence[Integer]{State: EvidenceAbsent},
+		PartOrder:    Evidence[Integer]{State: EvidenceAbsent},
+		MeasureLabel: Evidence[string]{State: EvidenceAbsent},
+		CursorAfter:  Evidence[ContextPosition]{State: EvidenceAbsent},
+		SwingRatio:   Evidence[Rational]{State: EvidenceAbsent},
+		Attack:       absentTimingAdjustment(), Release: absentTimingAdjustment(), MakeTime: absentTimingAdjustment(), Previous: absentTimingDonor(), Following: absentTimingDonor(), PlayComplete: Evidence[bool]{State: EvidenceAbsent},
+		FretNumber:                  Evidence[Integer]{State: EvidenceAbsent},
+		FretOpenString:              Evidence[bool]{State: EvidenceAbsent},
+		EditorialPlaybackSuppressed: Evidence[bool]{State: EvidenceAbsent},
+		TrillIncludesInitialSound:   Evidence[bool]{State: EvidenceAbsent},
+		TrillExcludesClosingTurn:    Evidence[bool]{State: EvidenceAbsent},
+		LayoutOrigin:                Evidence[NodeRef]{State: EvidenceAbsent},
+		TuningBottomUp:              Evidence[bool]{State: EvidenceAbsent},
+		StaffTopDown:                Evidence[bool]{State: EvidenceAbsent},
+		RootAlterPrintObject:        Evidence[bool]{State: EvidenceAbsent},
+		EffectiveTempo:              Evidence[Decimal]{State: EvidenceAbsent},
+		EffectiveDynamics:           Evidence[Decimal]{State: EvidenceAbsent},
+		EffectivePizzicato:          Evidence[bool]{State: EvidenceAbsent},
+		EffectiveVelocity:           Evidence[Rational]{State: EvidenceAbsent},
+		PitchIntent:                 Evidence[Rational]{State: EvidenceAbsent},
+		Origin:                      Evidence[ContextPosition]{State: EvidenceAbsent},
+		Position:                    Evidence[ContextPosition]{State: EvidenceAbsent},
+		End:                         Evidence[ContextPosition]{State: EvidenceAbsent},
+		Duration:                    Evidence[Rational]{State: EvidenceAbsent},
+		PrincipalDuration:           Evidence[Rational]{State: EvidenceAbsent},
+		Principal:                   Evidence[NodeRef]{State: EvidenceAbsent},
+		Units:                       Evidence[Decimal]{State: EvidenceAbsent},
+		Staff:                       Evidence[Integer]{State: EvidenceAbsent},
+		Voice:                       Evidence[string]{State: EvidenceAbsent},
+		Part:                        Evidence[NodeRef]{State: EvidenceAbsent},
+		ScoreOnset:                  Evidence[ContextPosition]{State: EvidenceAbsent},
+		ScoreEnd:                    Evidence[ContextPosition]{State: EvidenceAbsent},
+		Chord:                       Evidence[bool]{State: EvidenceAbsent},
+		Grace:                       Evidence[bool]{State: EvidenceAbsent},
+		Cue:                         Evidence[bool]{State: EvidenceAbsent},
+		BendsComplete:               Evidence[bool]{State: EvidenceAbsent},
+		GraceNode:                   Evidence[NodeRef]{State: EvidenceAbsent},
+		StealPrevious:               Evidence[Decimal]{State: EvidenceAbsent},
+		StealFollowing:              Evidence[Decimal]{State: EvidenceAbsent},
+		Anchor:                      Evidence[NodeRef]{State: EvidenceAbsent},
+		AnchorPosition:              Evidence[ContextPosition]{State: EvidenceAbsent},
+		AnchorStaff:                 Evidence[Integer]{State: EvidenceAbsent},
+		AnchorVoice:                 Evidence[string]{State: EvidenceAbsent},
+		ChainPosition:               Evidence[ContextPosition]{State: EvidenceAbsent},
+		ChainEnd:                    Evidence[ContextPosition]{State: EvidenceAbsent},
+		GroupStart:                  Evidence[NodeRef]{State: EvidenceAbsent},
+		FiguresComplete:             Evidence[bool]{State: EvidenceAbsent},
+		DurationRaw:                 Evidence[Decimal]{State: EvidenceAbsent},
+		AnchorUnits:                 Evidence[Decimal]{State: EvidenceAbsent},
+		DurationUnits:               Evidence[Decimal]{State: EvidenceAbsent},
+		Tempo:                       Evidence[Decimal]{State: EvidenceAbsent},
+		Dynamics:                    Evidence[Decimal]{State: EvidenceAbsent},
+		ReferenceVelocity:           Evidence[Rational]{State: EvidenceAbsent},
+		EndDynamics:                 Evidence[Decimal]{State: EvidenceAbsent},
+		EndReferenceVelocity:        Evidence[Rational]{State: EvidenceAbsent},
+		Pizzicato:                   Evidence[bool]{State: EvidenceAbsent},
+		TimeOnly:                    Evidence[string]{State: EvidenceAbsent},
+		Pan:                         Evidence[Decimal]{State: EvidenceAbsent},
+		Elevation:                   Evidence[Decimal]{State: EvidenceAbsent},
+		MIDIUnpitched:               Evidence[Integer]{State: EvidenceAbsent},
+		MIDINote:                    Evidence[Rational]{State: EvidenceAbsent},
+		SwingType:                   Evidence[string]{State: EvidenceAbsent},
+		SwingFirst:                  Evidence[Integer]{State: EvidenceAbsent},
+		SwingSecond:                 Evidence[Integer]{State: EvidenceAbsent},
+		Straight:                    Evidence[bool]{State: EvidenceAbsent},
+		SwingEligible:               Evidence[bool]{State: EvidenceAbsent},
+		SwingRealized:               Evidence[bool]{State: EvidenceAbsent},
+		SwungOnset:                  Evidence[ContextPosition]{State: EvidenceAbsent},
+		SwungEnd:                    Evidence[ContextPosition]{State: EvidenceAbsent},
+		BendAlter:                   Evidence[Decimal]{State: EvidenceAbsent},
+		PreBend:                     Evidence[bool]{State: EvidenceAbsent},
+		BendRelease:                 Evidence[bool]{State: EvidenceAbsent},
+		BendNegativeApplicable:      Evidence[bool]{State: EvidenceAbsent},
+		BendNegativeSatisfied:       Evidence[bool]{State: EvidenceAbsent},
+		Staves:                      Evidence[Integer]{State: EvidenceAbsent},
+		Instruments:                 Evidence[Integer]{State: EvidenceAbsent},
+		StaffExists:                 Evidence[bool]{State: EvidenceAbsent},
+		TranspositionChromatic:      Evidence[Decimal]{State: EvidenceAbsent},
+		TranspositionDiatonic:       Evidence[Integer]{State: EvidenceAbsent},
+		TranspositionOctave:         Evidence[Integer]{State: EvidenceAbsent},
+		ChromaticDisplacement:       Evidence[Rational]{State: EvidenceAbsent},
+		DiatonicDisplacement:        Evidence[Rational]{State: EvidenceAbsent},
+		DoublingAbove:               Evidence[bool]{State: EvidenceAbsent},
+		WrittenStep:                 Evidence[string]{State: EvidenceAbsent},
+		WrittenAlter:                Evidence[Decimal]{State: EvidenceAbsent},
+		WrittenOctave:               Evidence[Integer]{State: EvidenceAbsent},
+		WrittenPitch:                Evidence[Rational]{State: EvidenceAbsent},
+		SoundingPitch:               Evidence[Rational]{State: EvidenceAbsent},
+		StaffType:                   Evidence[string]{State: EvidenceAbsent},
+		Capo:                        Evidence[Integer]{State: EvidenceAbsent},
+		KeyFifths:                   Evidence[Integer]{State: EvidenceAbsent},
+		KeyMode:                     Evidence[string]{State: EvidenceAbsent},
+		KeyCancel:                   Evidence[Integer]{State: EvidenceAbsent},
+		CancelLocation:              Evidence[string]{State: EvidenceAbsent},
+		TimeSymbol:                  Evidence[string]{State: EvidenceAbsent},
+		TimeSeparator:               Evidence[string]{State: EvidenceAbsent},
+		SenzaMisura:                 Evidence[string]{State: EvidenceAbsent},
+		TimePrintObject:             Evidence[bool]{State: EvidenceAbsent},
+		ClefSign:                    Evidence[string]{State: EvidenceAbsent},
+		ClefLine:                    Evidence[Integer]{State: EvidenceAbsent},
+		ClefOctave:                  Evidence[Integer]{State: EvidenceAbsent}}
 }
 
 func absentTimingAdjustment() TimingAdjustment {

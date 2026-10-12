@@ -17,6 +17,7 @@ const (
 // NavigationNoteListening retains target scopes without choosing an application's
 // assessment policy. RecommendedAssess remains advice, separate from Override.
 type NavigationNoteListening struct {
+	PlayerTarget                        Evidence[NodeRef]
 	Source                              NodeRef
 	Kind                                NavigationNoteListenKind
 	Player, TimeOnly                    Evidence[string]
@@ -67,7 +68,7 @@ func navigationScopeAll(v Evidence[string]) Evidence[bool] {
 	}
 	return stateUnavailable[string, bool](v)
 }
-func navigationReadNoteListening(r *contextReader, n *factNode) ([]NavigationNoteListening, Evidence[bool], Evidence[bool], error) {
+func navigationReadNoteListening(r *contextReader, n *factNode, part Evidence[NodeRef]) ([]NavigationNoteListening, Evidence[bool], Evidence[bool], error) {
 	_, cue := r.child(n, contextNavNoteCue)
 	recommended := stateUnavailable[bool, bool](cue)
 	if cue.State == EvidenceAbsent {
@@ -83,7 +84,7 @@ func navigationReadNoteListening(r *contextReader, n *factNode) ([]NavigationNot
 		return nil, recommended, present, r.err
 	}
 	var out []NavigationNoteListening
-	distinct := navigationKnownBool(true)
+	distinct := r.complete(listen)
 	for _, ch := range listen.children {
 		kind := NavigationNoteListenKind("")
 		player, time := contextRole(""), contextRole("")
@@ -105,6 +106,7 @@ func navigationReadNoteListening(r *contextReader, n *factNode) ([]NavigationNot
 			continue
 		}
 		v := NavigationNoteListening{Source: NodeRef{r.s.documentID, ch.header.ID}, Kind: kind, Player: stateText(r.attribute(ch, player)), TimeOnly: stateText(r.attribute(ch, time)), Override: Evidence[bool]{State: EvidenceAbsent}, RecommendedAssess: recommended, OtherType: Evidence[string]{State: EvidenceAbsent}, Value: Evidence[string]{State: EvidenceAbsent}, Active: stateUnknown[bool]("navigation-pass-domain-unavailable")}
+		v.PlayerTarget = navigationResolvePlayer(r, part, v.Player)
 		v.AllPlayers = navigationScopeAll(v.Player)
 		v.AllPasses = navigationScopeAll(v.TimeOnly)
 		if v.TimeOnly.State == EvidenceAbsent {

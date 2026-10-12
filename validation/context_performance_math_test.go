@@ -102,3 +102,12 @@ func TestPerformanceMissingCapoAndUnknownUnits(t *testing.T) {
 		t.Fatal(eligible, err)
 	}
 }
+func TestPerformanceSwingFalseAntecedentDominatesUnknown(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	d, _ := NewRational(big.NewRat(3, 4))
+	got, err := performanceSwingEligible(context.Background(), s, Evidence[string]{State: EvidenceKnown, Value: "eighth"}, Evidence[string]{State: EvidenceUnknown, Reason: "active-unknown"}, Evidence[Rational]{State: EvidenceKnown, Value: d}, Evidence[bool]{State: EvidenceUnknown, Reason: "grace-unknown"})
+	if err != nil || got.State != EvidenceKnown || got.Value {
+		t.Errorf("known nominal mismatch must be ineligible: %+v %v", got, err)
+	}
+}

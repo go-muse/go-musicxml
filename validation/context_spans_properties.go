@@ -3,6 +3,8 @@ package validation
 // Span property identifiers describe independent typed projections; advisory
 // values do not change document validity.
 const (
+	ContextPropertySpanTremoloSMuFL               ContextProperty = "span.tremolo-smufl"
+	ContextPropertySpanTremoloSMuFLActive         ContextProperty = "span.tremolo-smufl-active"
 	ContextPropertySpanEndpointMeaning            ContextProperty = "span.endpoint-meaning"
 	ContextPropertySpanEndLength                  ContextProperty = "span.end-length"
 	ContextPropertySpanEndLengthApplicable        ContextProperty = "span.end-length-applicable"
@@ -60,6 +62,8 @@ const (
 
 func contextSpanPropertyValid(p ContextProperty) bool {
 	switch p {
+	case ContextPropertySpanTremoloSMuFL, ContextPropertySpanTremoloSMuFLActive:
+		return true
 	case ContextPropertySpanEndpointMeaning, ContextPropertySpanEndLength, ContextPropertySpanEndLengthApplicable, ContextPropertySpanDisplayOctaves, ContextPropertySpanTremoloDurationRecommended:
 		return true
 	case ContextPropertySpanLineType, ContextPropertySpanLineShape, ContextPropertySpanSize, ContextPropertySpanFan, ContextPropertySpanFanApplicable, ContextPropertySpanRepeater, ContextPropertySpanTupletBracket, ContextPropertySpanTupletShowNumber, ContextPropertySpanTupletShowType, ContextPropertySpanTupletActualNumber, ContextPropertySpanTupletActualType, ContextPropertySpanTupletActualDots, ContextPropertySpanTupletNormalNumber, ContextPropertySpanTupletNormalType, ContextPropertySpanTupletNormalDots, ContextPropertySpanBeamGrace, ContextPropertySpanBeamCue, ContextPropertySpanGroupStopContentActive, ContextPropertySpanGroupSymbol, ContextPropertySpanPedalLine, ContextPropertySpanPedalSign, ContextPropertySpanPedalAbbreviated, ContextPropertySpanPedalAbbreviatedActive, ContextPropertySpanPedalAlignmentActive, ContextPropertySpanPedalLineRoleActive, ContextPropertySpanWedgeSpreadActive, ContextPropertySpanWedgeNiente, ContextPropertySpanWedgeNienteActive, ContextPropertySpanHammerMarking, ContextPropertySpanArpeggioDirection, ContextPropertySpanPlaybackEffect, ContextPropertySpanTimeOnly, ContextPropertySpanTimeModificationActual, ContextPropertySpanTimeModificationNormal, ContextPropertySpanTimeModificationMeaning, ContextPropertySpanCurrentType, ContextPropertySpanCurrentDots, ContextPropertySpanNormalType, ContextPropertySpanNormalDots, ContextPropertySpanLyricSyllable, ContextPropertySpanTieAttackRecommended, ContextPropertySpanTieReleaseRecommended, ContextPropertySpanSameNoteOrderRecommended, ContextPropertySpanPitchEquivalentRecommended, ContextPropertySpanBarlineContinueRecommended, ContextPropertySpanTremoloMarksRecommended, ContextPropertySpanTremoloRatioRecommended:

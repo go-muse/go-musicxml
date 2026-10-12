@@ -15,14 +15,15 @@ const (
 // NavigationListeningStatement is a player-qualified instruction. Absent Player
 // is symbolic all-players scope. Active and fields preserve independent causes.
 type NavigationListeningStatement struct {
-	Source   NodeRef
-	Kind     NavigationListeningKind
-	Player   Evidence[string]
-	Type     Evidence[string]
-	Latency  Evidence[Decimal]
-	Value    Evidence[string]
-	TimeOnly Evidence[string]
-	Active   Evidence[bool]
+	PlayerTarget Evidence[NodeRef]
+	Source       NodeRef
+	Kind         NavigationListeningKind
+	Player       Evidence[string]
+	Type         Evidence[string]
+	Latency      Evidence[Decimal]
+	Value        Evidence[string]
+	TimeOnly     Evidence[string]
+	Active       Evidence[bool]
 }
 
 const (
@@ -39,7 +40,7 @@ const (
 )
 
 func navigationListeningBindingSpecs() []contextBindingSpec {
-	return []contextBindingSpec{
+	return append([]contextBindingSpec{
 		{Role: contextNavListening, Name: "listening", Type: "listening", Count: -1},
 		{Role: contextNavSync, Owner: "listening", Name: "sync", Type: "sync", Count: 1},
 		{Role: contextNavOtherListening, Owner: "listening", Name: "other-listening", Type: "other-listening", Count: 1},
@@ -50,10 +51,10 @@ func navigationListeningBindingSpecs() []contextBindingSpec {
 		{Role: contextNavOtherType, Owner: "other-listening", Name: "type", Type: "xs:token", Attribute: true, Count: 1},
 		{Role: contextNavOtherPlayer, Owner: "other-listening", Name: "player", Type: "xs:IDREF", Attribute: true, Count: 1},
 		{Role: contextNavOtherTime, Owner: "other-listening", Name: "time-only", Type: "time-only", Attribute: true, Count: 1},
-	}
+	}, navigationPlayerBindingSpecs()...)
 }
 
-func navigationReadListening(r *contextReader, n *factNode) ([]NavigationListeningStatement, error) {
+func navigationReadListening(r *contextReader, n *factNode, part Evidence[NodeRef]) ([]NavigationListeningStatement, error) {
 	var out []NavigationListeningStatement
 	for _, ch := range n.children {
 		kind := NavigationListeningKind("")
@@ -74,6 +75,7 @@ func navigationReadListening(r *contextReader, n *factNode) ([]NavigationListeni
 			continue
 		}
 		v := NavigationListeningStatement{Source: NodeRef{r.s.documentID, ch.header.ID}, Kind: kind, Player: stateText(r.attribute(ch, playerRole)), Type: stateText(r.attribute(ch, typeRole)), TimeOnly: stateText(r.attribute(ch, timeRole)), Latency: Evidence[Decimal]{State: EvidenceAbsent}, Value: Evidence[string]{State: EvidenceAbsent}, Active: stateUnknown[bool]("navigation-pass-domain-unavailable")}
+		v.PlayerTarget = navigationResolvePlayer(r, part, v.Player)
 		if v.TimeOnly.State == EvidenceAbsent {
 			v.Active = navigationKnownBool(true)
 		}
@@ -106,8 +108,8 @@ func navigationApplyListening(ctx context.Context, s *Session, current []Navigat
 		next.Type = navigationConditionalValue(next.Type, guard)
 		next.Latency = navigationConditionalValue(next.Latency, guard)
 		next.Value = navigationConditionalValue(next.Value, guard)
-		if next.Player.State != EvidenceKnown && next.Player.State != EvidenceAbsent {
-			next.Active = stateMergeGap(next.Active, stateUnavailable[string, bool](next.Player))
+		if next.Player.State != EvidenceAbsent && next.PlayerTarget.State != EvidenceKnown {
+			next.Active = stateMergeGap(next.Active, stateUnavailable[NodeRef, bool](next.PlayerTarget))
 			next.Type = stateUnavailable[bool, string](next.Active)
 			next.Latency = stateUnavailable[bool, Decimal](next.Active)
 			next.Value = stateUnavailable[bool, string](next.Active)
@@ -134,4 +136,29 @@ func navigationApplyListening(ctx context.Context, s *Session, current []Navigat
 		current = append(current, stateClone(next))
 	}
 	return current, nil
+}
+
+// Distinctness is the pinned attribute-value advice, not an assertion that
+// selector sets are disjoint or that conflicting updates have a precedence.
+func navigationListeningDistinct(r *contextReader, n *factNode, rows []NavigationListeningStatement) Evidence[bool] {
+	result := r.complete(n)
+	for i, a := range rows {
+		for _, b := range rows[:i] {
+			if a.Kind != b.Kind {
+				continue
+			}
+			same, err := navigationSameTarget(r.ctx, r.s, a.Player, a.TimeOnly, b.Player, b.TimeOnly)
+			if err != nil {
+				r.err = err
+				return stateUnknown[bool]("context-interrupted")
+			}
+			if same.State == EvidenceKnown && same.Value {
+				return navigationKnownBool(false)
+			}
+			if same.State != EvidenceKnown {
+				result = stateMergeGap(result, same)
+			}
+		}
+	}
+	return result
 }

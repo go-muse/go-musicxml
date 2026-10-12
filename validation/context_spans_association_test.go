@@ -109,3 +109,22 @@ func TestContextSpanCloneOwnsMembersAndCause(t *testing.T) {
 		t.Fatal("borrowed output")
 	}
 }
+
+func TestContextSpanCompetingUnprovedIdentityBlocksPair(t *testing.T) {
+	for _, state := range []EvidenceState{EvidenceInvalid, EvidenceUnknown, EvidenceUnsupported} {
+		t.Run(string(state), func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			a := spanTestEndpoint(t, 1, SpanSlur, "start", 1)
+			b := spanTestEndpoint(t, 2, SpanSlur, "stop", 1)
+			gap := spanTestEndpoint(t, 3, SpanSlur, "start", 1)
+			gap.payload.Number = Evidence[Atomic]{State: state, Reason: "unproved-number", Cause: &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: gap.ref}}
+			if err := associateSpanEndpoints(context.Background(), s, []*spanEndpoint{a, gap, b}, nil); err != nil {
+				t.Fatal(err)
+			}
+			if a.payload.Association.State != state || a.payload.Association.Cause == nil {
+				t.Fatal(a.payload.Association)
+			}
+		})
+	}
+}

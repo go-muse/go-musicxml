@@ -422,7 +422,7 @@ func (s *Session) scanPrerequisite(ctx context.Context, dependency Dependency, c
 func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinition, p Plan, final bool) (Decision, bool, error) {
 	d := Decision{Rule: r.Key, Subject: NodeRef{s.documentID, n.header.ID}, Outcome: OutcomePass}
 	switch p.kind {
-	case planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
 		return s.evaluateContextPlan(ctx, n, r.Key, p, final)
 	case planTimeline:
 		return s.evaluateTimeline(ctx, n, r.Key, p.timeline, final)

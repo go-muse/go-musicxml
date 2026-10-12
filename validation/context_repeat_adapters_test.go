@@ -10,8 +10,12 @@ import (
 
 func repeatAssessBoth(t *testing.T, body string, check func(*testing.T, validation.Report)) {
 	t.Helper()
+	repeatAssessHeader(t, body, `<part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>`, check)
+}
+
+func repeatAssessHeader(t *testing.T, body, header string, check func(*testing.T, validation.Report)) {
+	t.Helper()
 	for _, timewise := range []bool{false, true} {
-		header := `<part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>`
 		source := `<score-partwise version="4.0">` + header + `<part id="P1"><measure number="A">` + body + `</measure></part></score-partwise>`
 		if timewise {
 			source = `<score-timewise version="4.0">` + header + `<measure number="A"><part id="P1">` + body + `</part></measure></score-timewise>`
@@ -249,4 +253,239 @@ func TestRepeatAdaptersInstrumentPassUpdates(t *testing.T) {
 			t.Fatalf("model=%v missing initial=%v update=%v findings=%+v", model, initial, updated, report.Findings)
 		}
 	}
+}
+
+func TestRepeatAdaptersGraphicPlaybackAdvice(t *testing.T) {
+	for _, symbol := range []string{"segno", "coda"} {
+		for _, sound := range []bool{false, true} {
+			suffix := ""
+			if sound {
+				suffix = `<sound ` + symbol + `="A"/>`
+			}
+			repeatAssessBoth(t, `<direction><direction-type><`+symbol+`/></direction-type>`+suffix+`</direction>`, func(t *testing.T, r validation.Report) {
+				found := false
+				for _, c := range r.Context {
+					if c.Navigation == nil {
+						continue
+					}
+					v := c.Navigation
+					if v.Kind != validation.NavigationGraphicSegno && v.Kind != validation.NavigationGraphicCoda {
+						continue
+					}
+					found = true
+					if v.PlaybackSoundNeeded.State != validation.EvidenceKnown || !v.PlaybackSoundNeeded.Value {
+						t.Fatalf("missing playback advice: %+v", v)
+					}
+					want := validation.EvidenceAbsent
+					if sound {
+						want = validation.EvidenceKnown
+					}
+					if v.LocalPlaybackSound.State != want {
+						t.Fatalf("sound=%v association %+v", sound, v)
+					}
+				}
+				if !found {
+					t.Fatal("missing graphic advisory")
+				}
+			})
+		}
+	}
+}
+
+func TestRepeatAdaptersEmptyEndingAndFine(t *testing.T) {
+	repeatAssessBoth(t, `<attributes><divisions>1</divisions></attributes><barline location="left"><ending number="" type="start">ad lib.</ending></barline><note><rest/><duration>1</duration></note><sound fine="yes"/>`, func(t *testing.T, r validation.Report) {
+		ending, fine := false, false
+		for _, c := range r.Context {
+			if c.Navigation == nil {
+				continue
+			}
+			v := c.Navigation
+			if v.Kind == validation.NavigationEnding {
+				ending = true
+				if v.EndingNumber.State != validation.EvidenceKnown || v.EndingNumber.Value != "" || v.Guard.State != validation.EvidenceUnknown {
+					t.Fatalf("empty ending %+v", v)
+				}
+			}
+			if v.Kind == validation.NavigationFine {
+				fine = true
+				if v.DurationUnchanged.State != validation.EvidenceKnown || !v.DurationUnchanged.Value {
+					t.Fatalf("fine yes %+v", v)
+				}
+			}
+		}
+		if !ending || !fine {
+			t.Fatalf("ending=%v fine=%v", ending, fine)
+		}
+	})
+}
+
+func TestRepeatAdaptersListeningDistinctAndAssessment(t *testing.T) {
+	for _, duplicate := range []bool{false, true} {
+		second := ` time-only="2"`
+		if duplicate {
+			second = ""
+		}
+		repeatAssessBoth(t, `<listening><sync type="none"/><sync type="bar"`+second+`/></listening><note><rest/><duration>1</duration><listen><assess type="no"/><assess type="yes"`+second+`/></listen></note>`, func(t *testing.T, r validation.Report) {
+			listening, note := false, false
+			for _, c := range r.Context {
+				if c.Navigation == nil {
+					continue
+				}
+				v := c.Navigation
+				if v.Kind == validation.NavigationListening || v.Kind == validation.NavigationNote {
+					if v.TargetsDistinct.State != validation.EvidenceKnown || v.TargetsDistinct.Value == duplicate {
+						t.Fatalf("duplicate=%v advice %+v", duplicate, v)
+					}
+					if v.Kind == validation.NavigationListening {
+						listening = true
+					} else {
+						note = true
+						if v.RecommendedAssess.State != validation.EvidenceKnown || !v.RecommendedAssess.Value || len(v.NoteListening) != 2 || v.NoteListening[0].Override.State != validation.EvidenceKnown || v.NoteListening[0].Override.Value {
+							t.Fatalf("assessment %+v", v)
+						}
+					}
+				}
+			}
+			if !listening || !note {
+				t.Fatalf("missing advice listening=%v note=%v", listening, note)
+			}
+		})
+	}
+	repeatAssessBoth(t, `<note><cue/><rest/><duration>1</duration></note>`, func(t *testing.T, r validation.Report) {
+		found := false
+		for _, c := range r.Context {
+			if c.Navigation != nil && c.Navigation.Kind == validation.NavigationNote {
+				found = true
+				if c.Navigation.RecommendedAssess.State != validation.EvidenceKnown || c.Navigation.RecommendedAssess.Value {
+					t.Fatalf("cue advice %+v", c.Navigation)
+				}
+			}
+		}
+		if !found {
+			t.Fatal("missing cue")
+		}
+	})
+}
+
+func TestRepeatAdaptersPlayerReferenceScope(t *testing.T) {
+	for _, defined := range []bool{false, true} {
+		player := ""
+		if defined {
+			player = `<player id="R"><player-name>Reader</player-name></player>`
+		}
+		header := `<part-list><score-part id="P1"><part-name>Piano</part-name>` + player + `</score-part></part-list>`
+		repeatAssessHeader(t, `<listening><sync type="none" player="R"/></listening><note><rest/><duration>1</duration><listen><assess type="no" player="R"/></listen></note>`, header, func(t *testing.T, r validation.Report) {
+			found := 0
+			for _, c := range r.Context {
+				if c.Navigation == nil {
+					continue
+				}
+				v := c.Navigation
+				if v.Kind == validation.NavigationListening {
+					for _, x := range v.Listening {
+						found++
+						if (x.PlayerTarget.State == validation.EvidenceKnown) != defined {
+							t.Fatalf("defined=%v player %+v", defined, x)
+						}
+					}
+				}
+				if v.Kind == validation.NavigationNote {
+					for _, x := range v.NoteListening {
+						found++
+						if (x.PlayerTarget.State == validation.EvidenceKnown) != defined || x.AllPlayers.State != validation.EvidenceKnown || x.AllPlayers.Value || x.AllPasses.State != validation.EvidenceKnown || !x.AllPasses.Value {
+							t.Fatalf("defined=%v scope %+v", defined, x)
+						}
+					}
+				}
+			}
+			if found != 2 {
+				t.Fatalf("found=%d", found)
+			}
+		})
+	}
+}
+
+func TestRepeatAdaptersEmptyTargetRequiresSoundCoverage(t *testing.T) {
+	for _, proved := range []bool{false, true} {
+		boundary := ""
+		if proved {
+			boundary = `<direction><direction-type><words>endpoint witness</words></direction-type></direction>`
+		}
+		for _, timewise := range []bool{false, true} {
+			measures := []string{`<attributes><divisions>1</divisions></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>` + boundary, `<attributes><measure-style><measure-repeat type="start">1</measure-repeat></measure-style></attributes>`, `<attributes><measure-style><measure-repeat type="stop">1</measure-repeat></measure-style></attributes>`}
+			source := `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1">`
+			if timewise {
+				source = `<score-timewise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list>`
+			}
+			for _, body := range measures {
+				if timewise {
+					source += `<measure number="same"><part id="P1">` + body + `</part></measure>`
+				} else {
+					source += `<measure number="same">` + body + `</measure>`
+				}
+			}
+			if timewise {
+				source += `</score-timewise>`
+			} else {
+				source += `</part></score-partwise>`
+			}
+			for _, model := range []bool{false, true} {
+				var r validation.Report
+				var err error
+				if model {
+					doc, e := musicxml.Decode(strings.NewReader(source))
+					if e != nil {
+						t.Fatal(e)
+					}
+					r, err = musicxml.AssessModel(context.Background(), doc, musicxml.AssessmentOptions{Profile: musicxml.ProfileModelContext})
+				} else {
+					r, err = musicxml.InspectXML(context.Background(), strings.NewReader(source), musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceContext})
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
+				found := false
+				for _, c := range r.Context {
+					if c.Repeat == nil || c.Repeat.Kind != validation.RepeatStyleMeasure || c.Repeat.Type.Value != "start" {
+						continue
+					}
+					found = true
+					v := c.Repeat.ContentEquivalent
+					if proved && (v.State != validation.EvidenceKnown || v.Value) {
+						t.Fatalf("proved=%v timewise=%v model=%v: %+v", proved, timewise, model, v)
+					}
+					if !proved && v.State == validation.EvidenceKnown {
+						t.Fatalf("terminal end alone proved empty content: %+v", v)
+					}
+				}
+				if !found {
+					t.Fatal("missing measure repeat")
+				}
+			}
+		}
+	}
+}
+
+func TestRepeatAdaptersSlashVoiceAndStopScope(t *testing.T) {
+	repeatAssessBoth(t, `<attributes><divisions>1</divisions><measure-style><slash type="start"><slash-type>quarter</slash-type><except-voice>1</except-voice></slash></measure-style></attributes><note><rest/><duration>1</duration><voice>1</voice></note><note><rest/><duration>1</duration><voice>2</voice></note><attributes><measure-style><slash type="stop"/></measure-style></attributes><note><rest/><duration>1</duration><voice>2</voice></note>`, func(t *testing.T, r validation.Report) {
+		found := false
+		for _, c := range r.Context {
+			if c.Repeat == nil || c.Repeat.Kind != validation.RepeatStyleSlash || c.Repeat.Type.Value != "start" {
+				continue
+			}
+			found = true
+			rows := c.Repeat.Notes
+			if len(rows) != 3 {
+				t.Fatalf("scope rows %+v", rows)
+			}
+			for i, want := range []bool{false, true, false} {
+				if rows[i].Applies.State != validation.EvidenceKnown || rows[i].Applies.Value != want {
+					t.Fatalf("note %d scope %+v", i, rows[i])
+				}
+			}
+		}
+		if !found {
+			t.Fatal("missing slash range")
+		}
+	})
 }

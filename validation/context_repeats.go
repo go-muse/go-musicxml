@@ -62,7 +62,7 @@ func contextRepeatBindingSpecs() []contextBindingSpec {
 		{Role: contextRepeatAfterJump, Owner: "repeat", Name: "after-jump", Type: "yes-no", Attribute: true, Count: 1},
 		{Role: contextEndingType, Owner: "ending", Name: "type", Type: "start-stop-discontinue", Attribute: true, Count: 1},
 		{Role: contextEndingNumber, Owner: "ending", Name: "number", Type: "ending-number", Attribute: true, Count: 1},
-	}, append(contextRepeatContentBindingSpecs(), append(navigationListeningBindingSpecs(), navigationNoteListeningBindings()...)...)...)
+	}, append(contextRepeatContentBindingSpecs(), append(navigationListeningBindingSpecs(), append(navigationNoteListeningBindings(), navigationGraphicBindings()...)...)...)...)
 }
 
 type contextRepeatRecord struct {
@@ -440,12 +440,15 @@ func evaluateContextRepeats(ctx context.Context, s *Session, n *factNode, key Ru
 	if err = contextRepeatPairRanges(ctx, s, timeline, result.Records); err != nil {
 		return Decision{}, false, err
 	}
+	if err = contextRepeatNoteScopes(ctx, s, timeline, result.Records); err != nil {
+		return Decision{}, false, err
+	}
 	if err = contextRepeatProveContent(ctx, s, p, timeline, result.Records); err != nil {
 		return Decision{}, false, err
 	}
 	for i := range result.Records {
 		row := &result.Records[i]
-		if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.source, Property: ContextProperty("repeat-style"), Repeat: &row.value}); err != nil {
+		if err = s.publishContextResult(ctx, ContextResult{Provider: key, Subject: row.source, Property: ContextPropertyRepeat, Repeat: &row.value}); err != nil {
 			return Decision{}, false, err
 		}
 	}

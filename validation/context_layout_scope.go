@@ -9,6 +9,7 @@ type layoutFrame struct {
 	page, system               Evidence[NodeRef]
 	first                      Evidence[bool]
 	pageNumber                 uint64
+	parity                     Evidence[bool]
 	pageLayout, systemLayout   *factNode
 	pageCertain, systemCertain bool
 }
@@ -18,6 +19,10 @@ type layoutScopes struct {
 	timeline                     *timelineService
 	defaults                     *factNode
 	pageComplete, systemComplete Evidence[bool]
+	staffDefaults                map[string]layoutStaffBucket
+	staffOverrides               map[NodeID]map[string]layoutStaffBucket
+	staffUnknown                 bool
+	widths                       map[NodeID]layoutSystemWidth
 }
 
 func (l *layoutScopes) supports(attribute string) Evidence[bool] {
@@ -123,13 +128,12 @@ func (l *layoutScopes) firstVisible(blocks []timelineMeasureBlock) (Evidence[Nod
 		}
 		visible := details.Value.Value.effectivePrintObject().Effective
 		spacing := details.Value.Value.effectivePrintSpacing().Effective
-		// A hidden staff retaining space still occupies the vertical system order.
+		// Visibility selects the first visible system staff; spacing remains an
+		// independent prerequisite for proving hidden-staff exclusion.
 		if visible.State == EvidenceKnown && visible.Value {
 			return b.part, nil
 		}
-		if spacing.State == EvidenceKnown && spacing.Value {
-			return b.part, nil
-		}
+
 		if visible.State != EvidenceKnown || spacing.State != EvidenceKnown {
 			return stateUnknown[NodeRef]("first-visible-staff-unavailable"), nil
 		}
@@ -185,12 +189,15 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 	if sortError != nil {
 		return sortError
 	}
-	l := layoutScopes{r: r, key: key, timeline: s.timeline[p.Timeline], defaults: defaults}
+	l := layoutScopes{r: r, key: key, timeline: s.timeline[p.Timeline], defaults: defaults, staffDefaults: make(map[string]layoutStaffBucket), staffOverrides: make(map[NodeID]map[string]layoutStaffBucket), widths: make(map[NodeID]layoutSystemWidth)}
+	if err = l.readStaffLayouts(defaults, l.staffDefaults); err != nil {
+		return err
+	}
 	l.pageComplete = l.supports("new-page")
 	l.systemComplete = l.supports("new-system")
 	pageDefaults, _ := l.child(defaults, "page-layout")
 	systemDefaults, _ := l.child(defaults, "system-layout")
-	frame := layoutFrame{pageCertain: true, systemCertain: true, first: Evidence[bool]{State: EvidenceKnown, Value: true}, pageNumber: 1}
+	frame := layoutFrame{pageCertain: true, systemCertain: true, first: Evidence[bool]{State: EvidenceKnown, Value: true}, pageNumber: 1, parity: Evidence[bool]{State: EvidenceKnown, Value: true}}
 	for start := 0; start < len(ordered); {
 		end := start + 1
 		for end < len(ordered) && ordered[end].ordinal == ordered[start].ordinal {
@@ -251,6 +258,12 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 			frame.page = Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{s.documentID, group[0].measure.header.ID}}
 			frame.system = frame.page
 		}
+		if !initial && systemBreak.State == EvidenceKnown && systemBreak.Value {
+			if err = s.retain(512); err != nil {
+				return err
+			}
+			l.staffOverrides = make(map[NodeID]map[string]layoutStaffBucket)
+		}
 		if !initial {
 			if pageBreak.State == EvidenceKnown && pageBreak.Value {
 				frame.pageLayout = nil
@@ -260,10 +273,14 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 				frame.page = Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{s.documentID, group[0].measure.header.ID}}
 				frame.system = frame.page
 				frame.pageNumber++
+				if frame.parity.State == EvidenceKnown {
+					frame.parity.Value = !frame.parity.Value
+				}
 				frame.first = Evidence[bool]{State: EvidenceKnown, Value: true}
 			} else {
 				if pageBreak.State != EvidenceKnown {
 					frame.pageCertain = false
+					frame.parity = stateUnknown[bool]("physical-page-parity-unavailable")
 					frame.page = stateUnknown[NodeRef]("page-membership-unavailable")
 				}
 				if systemBreak.State == EvidenceKnown && systemBreak.Value {
@@ -326,46 +343,35 @@ func evaluateLayoutScopes(ctx context.Context, s *Session, key RuleKey, p *conte
 					return err
 				}
 			}
+			if err = l.publishDividers(b, frame, systemDefaults); err != nil {
+				return err
+			}
+			if err = l.addWidth(b, frame, first, pageDefaults, systemDefaults); err != nil {
+				return err
+			}
+			if err = l.publishMargins(b, frame, pageDefaults, systemDefaults); err != nil {
+				return err
+			}
 			if err = l.publishStaffLayouts(b, first, frame); err != nil {
 				return err
 			}
 		}
 		start = end
 	}
-	return r.err
-}
-func (l *layoutScopes) publishStaffLayouts(b timelineMeasureBlock, first Evidence[NodeRef], frame layoutFrame) error {
-	// Preserve each encoded sparse selector, including default number=1 across
-	// all score parts. No loop is bounded by an untrusted staves value.
-	r := l.r
-	print, _ := l.child(b.content, "print")
-	for _, owner := range []*factNode{l.defaults, print} {
-		if owner == nil {
-			continue
-		}
-		for _, staff := range owner.children {
-			if !r.step(1) {
-				return r.err
-			}
-			if !r.matches(staff, layoutRole("staff-layout")) {
-				continue
-			}
-			number := r.attribute(staff, layoutRole("staff-layout.@number"))
-			if number.State == EvidenceAbsent {
-				number = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: localOne}}
-			}
-			raw := l.scalar(staff, "staff-distance")
-			active := stateUnknown[bool]("first-visible-staff-unavailable")
-			if first.State == EvidenceKnown && b.part.State == EvidenceKnown && number.State == EvidenceKnown && frame.system.State == EvidenceKnown {
-				active = Evidence[bool]{State: EvidenceKnown, Value: !(first.Value == b.part.Value && number.Value.Integer.String() == "1")}
-			}
-			if err := l.publish(staff, "staff-number", number, number, Evidence[bool]{State: EvidenceKnown, Value: true}, NodeRef{r.s.documentID, b.measure.header.ID}, frame, staff); err != nil {
-				return err
-			}
-			if err := l.publish(staff, "staff-distance", raw, raw, active, NodeRef{r.s.documentID, b.measure.header.ID}, frame, staff); err != nil {
-				return err
-			}
-		}
+	if r.err != nil {
+		return r.err
 	}
-	return r.err
+	return l.publishWidths()
+}
+
+func layoutSortStrings(r *contextReader, values []string) error {
+	var err error
+	sort.Slice(values, func(i, j int) bool {
+		if err != nil {
+			return false
+		}
+		err = r.s.step(r.ctx, 1+int64(len(values[i])+len(values[j])))
+		return values[i] < values[j]
+	})
+	return err
 }

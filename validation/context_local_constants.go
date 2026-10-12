@@ -34,4 +34,7 @@ var localConstantRules = []localConstantRule{
 	{Element: "caesura", Type: "caesura", Property: "empty-caesura", Default: "normal", Kind: AtomicString, Empty: true},
 	{Element: "fermata", Type: "fermata", Property: "fermata-shape", Default: "normal", Kind: AtomicString, Empty: true},
 	{Element: "fermata", Type: "fermata", Attribute: "type", AttributeType: "upright-inverted", Property: "fermata-orientation", Default: "upright", Kind: AtomicString},
+	{Element: "stopped", Type: "empty-placement-smufl", Attribute: "smufl", AttributeType: "smufl-glyph-name", Property: "stopped-smufl", Default: "brassMuteClosed", Kind: AtomicString},
+	{Element: "open", Type: "empty-placement-smufl", Attribute: "smufl", AttributeType: "smufl-glyph-name", Property: "open-smufl", Default: "brassMuteOpen", Kind: AtomicString},
+	{Element: "half-muted", Type: "empty-placement-smufl", Attribute: "smufl", AttributeType: "smufl-glyph-name", Property: "half-muted-smufl", Default: "brassMuteHalfClosed", Kind: AtomicString},
 }

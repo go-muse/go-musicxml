@@ -92,34 +92,40 @@ func layoutStatic(r *contextReader, key RuleKey, n *factNode) error {
 			return err
 		}
 	}
-	if r.matches(n, layoutRole("direction")) {
-		raw := layoutAttribute(r, n, "directive")
+	parent := s.nodes[n.header.Parent]
+	if r.matches(parent, layoutRole("direction-type")) {
+		direction := s.nodes[parent.header.Parent]
+		raw := layoutAttribute(r, direction, "directive")
 		active := yes
-		for _, dt := range n.children {
-			if !r.step(1) {
-				return r.err
-			}
-			if !r.matches(dt, layoutRole("direction-type")) {
-				continue
-			}
-			for _, ch := range dt.children {
-				if !r.step(1) {
-					return r.err
-				}
-				for _, name := range []string{"default-x", "justify", "halign"} {
-					v := layoutAttribute(r, ch, name)
-					if v.State == EvidenceKnown {
-						active.Value = false
-					} else if v.State != EvidenceAbsent && active.Value {
-						active = stateUnavailable[Atomic, bool](v)
-					}
-				}
+		for _, name := range []string{"default-x", "justify", "halign"} {
+			v := layoutAttribute(r, n, name)
+			if v.State == EvidenceKnown {
+				active = Evidence[bool]{State: EvidenceKnown, Value: false}
+				break
+			} else if v.State != EvidenceAbsent {
+				active = stateUnavailable[Atomic, bool](v)
 			}
 		}
 		if err := publish("directive", raw, raw, active, ContextUnitNone, "time-signature-or-first-notational-element"); err != nil {
 			return err
 		}
 	}
+	for _, names := range [][2]string{{"group-name", "group-name-display"}, {"group-abbreviation", "group-abbreviation-display"}} {
+		if !r.matches(n, layoutRole(names[0])) {
+			continue
+		}
+		_, e := r.child(parent, layoutRole(names[1]))
+		active := yes
+		if e.State == EvidenceKnown {
+			active.Value = false
+		} else if e.State != EvidenceAbsent {
+			active = e
+		}
+		if err := publish("display-active", r.scalar(n), localBoolAtomic(active), active, ContextUnitNone, "corresponding-name-display-overrides-deprecated-format"); err != nil {
+			return err
+		}
+	}
+
 	if r.matches(n, layoutRole("dynamics")) {
 		raw := layoutAttribute(r, n, "placement")
 		value := raw

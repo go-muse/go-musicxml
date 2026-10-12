@@ -222,6 +222,8 @@ func (s *Session) evaluateContextPlan(ctx context.Context, n *factNode, key Rule
 	var d Decision
 	var pending bool
 	switch p.kind {
+	case planContextOpusLayout:
+		d, pending, err = evaluateContextOpusLayout(ctx, s, n, key, p.context, final)
 	case planContextLocal:
 		d, pending, err = evaluateContextLocal(ctx, s, n, key, p.context, final)
 	case planContextSpans:

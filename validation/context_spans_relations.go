@@ -142,7 +142,7 @@ func spanModificationFacts(r *contextReader, key RuleKey, n *factNode) {
 	spanPublish(r, key, n, ContextPropertySpanCurrentType, typ)
 	spanPublish(r, key, n, ContextPropertySpanCurrentDots, spanCountChildren(r, note, spanRole_noteDot))
 	spanPublish(r, key, n, ContextPropertySpanNormalType, spanDefault(r.childScalar(n, spanRole_normalType), typ))
-	spanPublish(r, key, n, ContextPropertySpanNormalDots, spanCountChildren(r, n, spanRole_normalDot))
+	spanPublish(r, key, n, ContextPropertySpanNormalDots, spanEffectiveNormalDots(r, n, spanCountChildren(r, note, spanRole_noteDot)))
 }
 func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
 	complete := r.complete(n)
@@ -213,6 +213,9 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 		}
 		if e.payload.Family == SpanWedge && role.State == EvidenceKnown && role.Value == "stop" {
 			active := stateUnknown[Atomic]("span-wedge-start-required")
+			if e.payload.Association.State != EvidenceKnown {
+				active = stateUnavailable[bool, Atomic](e.payload.Association)
+			}
 			if start != nil && start.payload.Role.State == EvidenceKnown {
 				active = spanBool(start.payload.Role.Value != "diminuendo")
 			}
@@ -241,6 +244,8 @@ func spanRelationalFacts(r *contextReader, key RuleKey, es []*spanEndpoint, time
 					if prior, ok := lastFan[start.ref]; ok {
 						if fan.State == EvidenceKnown && prior.State == EvidenceKnown {
 							applicable = spanBool(fan.Value.Text != prior.Value.Text)
+						} else if fan.State != EvidenceKnown {
+							applicable = stateUnavailable[Atomic, Atomic](fan)
 						} else {
 							applicable = stateUnavailable[Atomic, Atomic](prior)
 						}

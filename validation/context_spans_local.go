@@ -110,7 +110,7 @@ func spanTupletFacts(r *contextReader, key RuleKey, n, note *factNode) {
 		actual = r.childScalar(mod, spanRole_actualNotes)
 		normal = r.childScalar(mod, spanRole_normalNotes)
 		normalType = spanDefault(r.childScalar(mod, spanRole_normalType), currentType)
-		normalDots = spanCountChildren(r, mod, spanRole_normalDot)
+		normalDots = spanEffectiveNormalDots(r, mod, currentDots)
 	}
 	for _, side := range []struct {
 		role              contextRole
@@ -180,6 +180,14 @@ func spanLocalFacts(r *contextReader, key RuleKey, n, note *factNode, e *spanEnd
 		spanAttrDefault(r, key, n, spanRole_slide_line_type, ContextPropertySpanLineType, spanString("solid"))
 		spanPublish(r, key, n, ContextPropertySpanPlaybackEffect, spanString("continuous-pitch"))
 	case SpanOctaveShift:
+		meaning := stateUnavailable[string, Atomic](role)
+		if role.State == EvidenceKnown {
+			meaning = stateUnknown[Atomic]("span-octave-direction-start-required")
+			if role.Value == "up" || role.Value == "down" {
+				meaning = spanString("display-" + role.Value + "-from-note-pitch")
+			}
+		}
+		spanPublish(r, key, n, ContextPropertySpanEndpointMeaning, meaning)
 		size := spanAttrDefault(r, key, n, spanRole_octave_shift_size, ContextPropertySpanSize, spanInteger(8))
 		oct := stateUnavailable[Atomic, Atomic](size)
 		if size.State == EvidenceKnown {
@@ -216,6 +224,17 @@ func spanLocalFacts(r *contextReader, key RuleKey, n, note *factNode, e *spanEnd
 			spanPublish(r, key, n, ContextPropertySpanBarlineContinueRecommended, v)
 		}
 	case SpanTremolo:
+		glyph := stateUnavailable[string, Atomic](role)
+		active := stateUnavailable[string, Atomic](role)
+		if role.State == EvidenceKnown {
+			active = spanBool(role.Value == "unmeasured")
+			glyph = Evidence[Atomic]{State: EvidenceAbsent}
+			if role.Value == "unmeasured" {
+				glyph = spanDefault(r.attribute(n, spanRole_tremoloSMuFL), spanString("buzzRoll"))
+			}
+		}
+		spanPublish(r, key, n, ContextPropertySpanTremoloSMuFL, glyph)
+		spanPublish(r, key, n, ContextPropertySpanTremoloSMuFLActive, active)
 		if role.State == EvidenceKnown && role.Value == "unmeasured" {
 			v := r.scalar(n)
 			if v.State == EvidenceKnown && v.Value.Kind == AtomicInteger {
@@ -333,4 +352,30 @@ func spanLocalFacts(r *contextReader, key RuleKey, n, note *factNode, e *spanEnd
 			spanPublish(r, key, n, ContextPropertySpanWedgeNienteActive, active)
 		}
 	}
+}
+
+// spanEffectiveNormalDots does not invent a dotted-note inheritance rule. The
+// normal-type documentation describes a group with normal-dot but specifies
+// only the type fallback. Explicit normal-type disambiguates an undotted normal
+// side (see the official tuplet-dot example); an omitted group on a dotted note
+// leaves its effective normal-dot interpretation unresolved.
+func spanEffectiveNormalDots(r *contextReader, mod *factNode, current Evidence[Atomic]) Evidence[Atomic] {
+	typ := r.childScalar(mod, spanRole_normalType)
+	dots := spanCountChildren(r, mod, spanRole_normalDot)
+	if typ.State == EvidenceKnown {
+		return dots
+	}
+	if typ.State != EvidenceAbsent {
+		return stateUnavailable[Atomic, Atomic](typ)
+	}
+	if dots.State != EvidenceKnown {
+		return dots
+	}
+	if current.State != EvidenceKnown {
+		return stateUnavailable[Atomic, Atomic](current)
+	}
+	if current.Value.Kind == AtomicInteger && current.Value.Integer.value.Sign() == 0 {
+		return dots
+	}
+	return stateUnknown[Atomic]("span-normal-dots-omitted-group-interpretation")
 }

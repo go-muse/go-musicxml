@@ -29,6 +29,9 @@ type layoutFormatting struct {
 }
 
 func newLayoutFormatting(r *contextReader, key RuleKey) (*layoutFormatting, error) {
+	if !r.step(1) {
+		return nil, r.err
+	}
 	if err := r.s.retain(2048); err != nil {
 		return nil, err
 	}
@@ -42,11 +45,23 @@ func newLayoutFormatting(r *contextReader, key RuleKey) (*layoutFormatting, erro
 			continue
 		}
 		if n.header.Parent == 0 {
-			f.closed = r.enumerated(n)
+			f.closed = timelineMergeAvailability(f.closed, r.enumerated(n))
 		}
 		if r.matches(n, layoutRole("defaults")) {
-			f.defaults = n
-			f.closed = r.enumerated(n)
+			if f.defaults != nil {
+				f.closed = stateUnknown[bool]("multiple-defaults-publishers")
+			} else {
+				f.defaults = n
+			}
+			for _, ch := range n.children {
+				if !r.step(1) {
+					return nil, r.err
+				}
+				if ch.header.Declaration.State != EvidenceKnown {
+					f.closed = stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+				}
+			}
+			f.closed = timelineMergeAvailability(f.closed, r.enumerated(n))
 		}
 		font, lang := r.matches(n, layoutRole("lyric-font")), r.matches(n, layoutRole("lyric-language"))
 		if !font && !lang {
@@ -87,13 +102,16 @@ func layoutPublisherKeyFor(name, number Evidence[Atomic]) (layoutPublisherKey, b
 }
 func layoutAttribute(r *contextReader, n *factNode, name string) Evidence[Atomic] {
 	role := layoutRole("@" + name)
+	if name == "smufl" && r.attributeOwner(n, layoutRole("elision.@smufl")) {
+		role = layoutRole("elision.@smufl")
+	}
 	if !r.attributeOwner(n, role) {
 		return Evidence[Atomic]{State: EvidenceAbsent}
 	}
 	return localRawAttribute(r, n, role)
 }
 func layoutLanguage(r *contextReader, n *factNode) Evidence[Atomic] {
-	for _, owner := range []string{"formatted-text", "formatted-text-id", "text-element-data", "lyric-language"} {
+	for _, owner := range []string{"formatted-text", "formatted-text-id", "text-element-data", "lyric-language", "accidental-text"} {
 		role := layoutRole("lang." + owner)
 		if r.attributeOwner(n, role) {
 			return localRawAttribute(r, n, role)
@@ -119,6 +137,9 @@ func (f *layoutFormatting) lyricValue(lyric *factNode, component int) layoutForm
 		}
 		if match.State != EvidenceKnown {
 			value = stateUnavailable[bool, Atomic](match)
+		}
+		if !r.step(1 + atomicLogicalBytes(result.Value.Value) + atomicLogicalBytes(value.Value)) {
+			return
 		}
 		result.Value = layoutConsensusPair(result.Value, value)
 		if result.Origin.Node == 0 {
@@ -198,6 +219,9 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 	}
 	for i, name := range layoutFormatNames {
 		role := layoutRole("@" + name)
+		if name == "smufl" && r.attributeOwner(n, layoutRole("elision.@smufl")) {
+			role = layoutRole("elision.@smufl")
+		}
 		owns := r.attributeOwner(n, role)
 		if name == "language" {
 			owns = true
@@ -326,6 +350,15 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 			}
 		}
 		payload := &LayoutContextResult{Raw: raw, Applicability: Evidence[bool]{State: EvidenceKnown, Value: true}, Scope: ref, Origin: value.Origin, Provenance: provenance}
+		if name == "rotation" {
+			payload.Basis = "positive-clockwise-about-alignment-point"
+		}
+		if name == "font-size" && value.Value.State == EvidenceKnown && value.Value.Value.Kind == AtomicDecimal {
+			payload.Unit = ContextUnitPoints
+		}
+		if name == "line-height" && value.Value.State == EvidenceKnown && value.Value.Value.Kind == AtomicDecimal {
+			payload.Unit = ContextUnitPercent
+		}
 		if err := r.s.publishContextResult(r.ctx, ContextResult{Provider: f.key, Subject: ref, Property: ContextProperty("layout." + name), Value: value.Value, Layout: payload}); err != nil {
 			return err
 		}

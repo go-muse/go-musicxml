@@ -133,8 +133,23 @@ func performanceMovement(r *contextReader, service *timelineService, n *factNode
 						return true
 					}
 					if a > 0 && b < 0 {
-						boundary = Evidence[bool]{State: EvidenceKnown, Value: false}
-						break
+						if v.Value.State != EvidenceKnown {
+							boundary = stateUnavailable[Decimal, bool](v.Value)
+							continue
+						}
+						if out.Units.State != EvidenceKnown {
+							boundary = stateUnavailable[Decimal, bool](out.Units)
+							continue
+						}
+						equal, e := r.s.sameTimelineUnits(r.ctx, out.Units, v.Value)
+						if e != nil {
+							r.err = e
+							return true
+						}
+						if !equal {
+							boundary = Evidence[bool]{State: EvidenceKnown, Value: false}
+							break
+						}
 					}
 				}
 				for _, g := range service.State.Divisions.Gaps {
@@ -159,4 +174,175 @@ func performanceMovement(r *contextReader, service *timelineService, n *factNode
 		}
 	}
 	return true
+}
+
+func performanceStateAdvice(ctx context.Context, s *Session, service *timelineService, n *factNode, out *TimingContextResult) error {
+	if out.Part.State != EvidenceKnown {
+		return nil
+	}
+	if out.Kind == "note" {
+		identified := stateUnavailable[Integer, bool](out.Instruments)
+		if out.Instruments.State == EvidenceKnown {
+			if out.Instruments.Value.value.Cmp(stateOne().value) <= 0 {
+				identified = Evidence[bool]{State: EvidenceAbsent}
+			} else {
+				identified = stateUnknown[bool]("note-instrument-enumeration-unavailable")
+				for _, set := range service.State.NoteInstruments {
+					if err := s.step(ctx, 1); err != nil {
+						return err
+					}
+					if set.Note.Node != n.header.ID {
+						continue
+					}
+					identified = set.Complete
+					if identified.State == EvidenceKnown {
+						identified.Value = len(set.References) > 0
+						for _, ref := range set.References {
+							if err := s.step(ctx, 1); err != nil {
+								return err
+							}
+							if ref.State != EvidenceKnown {
+								identified = stateUnavailable[NodeRef, bool](ref)
+								break
+							}
+						}
+					}
+					break
+				}
+			}
+		}
+		if err := performanceAdvice(ctx, s, out, "multi-instrument-note-identifier", identified); err != nil {
+			return err
+		}
+	}
+	if out.Kind == "note" || out.Kind == "event" {
+		count := 0
+		initial := false
+		complete := Evidence[bool]{State: EvidenceKnown, Value: true}
+		for _, v := range service.State.Divisions.Publications {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			same, err := stateSameRef(ctx, s, v.Position.Part, out.Part.Value)
+			if err != nil {
+				return err
+			}
+			if !same {
+				continue
+			}
+			count++
+			initial = v.Position.MeasureOrdinal == 0 && !v.Position.UnprovedFrame && v.Position.Offset.value.Sign() == 0
+			if v.Value.State != EvidenceKnown {
+				complete = stateUnavailable[Decimal, bool](v.Value)
+			}
+		}
+		for _, g := range service.State.Divisions.Gaps {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			same, err := stateSameRef(ctx, s, g.Part, out.Part.Value)
+			if err != nil {
+				return err
+			}
+			if same {
+				complete = g.Availability
+			}
+		}
+		if complete.State == EvidenceKnown {
+			complete.Value = count == 1 && initial
+		}
+		if err := performanceAdvice(ctx, s, out, "one-initial-divisions-per-part", complete); err != nil {
+			return err
+		}
+	}
+	if out.ChromaticDisplacement.State == EvidenceKnown {
+		value := out.ChromaticDisplacement.Value
+		cmp, e := s.rationalCmp(ctx, value, timelineOctaveSemitones)
+		if e != nil {
+			return e
+		}
+		neg, e := s.rationalCmp(ctx, value, performanceRatio(-12, 1))
+		if e != nil {
+			return e
+		}
+		v := Evidence[bool]{State: EvidenceAbsent}
+		if cmp >= 0 || neg <= 0 {
+			v = stateUnavailable[Integer, bool](out.TranspositionOctave)
+			if out.TranspositionOctave.State == EvidenceAbsent {
+				v = Evidence[bool]{State: EvidenceKnown, Value: false}
+			} else if out.TranspositionOctave.State == EvidenceKnown {
+				v = Evidence[bool]{State: EvidenceKnown, Value: out.TranspositionOctave.Value.value.Sign() != 0}
+			}
+		}
+		if e = performanceAdvice(ctx, s, out, "octave-change-for-octave-interval", v); e != nil {
+			return e
+		}
+	}
+	return nil
+}
+
+func performanceInstrumentGrouping(r *stateReader, n *factNode, part Evidence[NodeRef]) Evidence[bool] {
+	complete := r.complete(n)
+	if complete.State != EvidenceKnown {
+		return complete
+	}
+	out := Evidence[bool]{State: EvidenceKnown, Value: true}
+	var current NodeRef
+	seen := []NodeRef{}
+	for _, ch := range n.children {
+		if !r.step(1) {
+			return stateUnknown[bool]("context-interrupted")
+		}
+		var role timelineRole
+		switch {
+		case r.matches(ch, timelineRoleSoundMidiInstrument):
+			role = timelineRoleMidiInstrumentID
+		case r.matches(ch, timelineRoleSoundMidiDevice):
+			role = timelineRoleMidiDeviceID
+		case r.matches(ch, timelineRoleSoundInstrumentChange):
+			role = timelineRoleInstrumentChangeID
+		case r.matches(ch, timelineRoleSoundPlay):
+			role = timelineRolePlayID
+		default:
+			continue
+		}
+		if part.State != EvidenceKnown {
+			return stateUnavailable[NodeRef, bool](part)
+		}
+		id := r.reference(ch, role, part.Value)
+		if id.State != EvidenceKnown {
+			if id.State == EvidenceAbsent {
+				return stateUnknown[bool]("instrument-grouping-selector-unspecified")
+			}
+			return stateUnavailable[NodeRef, bool](id)
+		}
+		sameCurrent, e := stateSameRef(r.ctx, r.s, current, id.Value)
+		if e != nil {
+			r.err = e
+			return stateUnknown[bool]("context-interrupted")
+		}
+		if sameCurrent {
+			continue
+		}
+		for _, old := range seen {
+			if !r.step(1) {
+				return stateUnknown[bool]("context-interrupted")
+			}
+			same, e := stateSameRef(r.ctx, r.s, old, id.Value)
+			if e != nil {
+				r.err = e
+				return stateUnknown[bool]("context-interrupted")
+			}
+			if same {
+				return Evidence[bool]{State: EvidenceKnown, Value: false}
+			}
+		}
+		if e := r.s.retain(128); e != nil {
+			r.err = e
+			return stateUnknown[bool]("context-interrupted")
+		}
+		seen = append(seen, id.Value)
+		current = id.Value
+	}
+	return out
 }

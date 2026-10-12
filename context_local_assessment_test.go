@@ -350,3 +350,68 @@ func TestLocalHorizontalTurnSlashDoesNotSelectGrace(t *testing.T) {
 		}
 	}
 }
+
+func TestLocalTechnicalSMuFLDefaultsAndExplicitNames(t *testing.T) {
+	engine := localContextTestEngine(t)
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			for _, explicit := range []bool{false, true} {
+				attr := ""
+				if explicit {
+					attr = ` smufl="customUnregisteredName"`
+				}
+				body := `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><notations><technical><stopped` + attr + `/><open` + attr + `/><half-muted` + attr + `/><up-bow/></technical></notations></note>`
+				report := localContextAssess(t, engine, localContextFixture(body, tw), model)
+				if !report.Satisfied() {
+					t.Fatal(localFindings(report))
+				}
+				expected := map[string]string{"stopped-smufl": "brassMuteClosed", "open-smufl": "brassMuteOpen", "half-muted-smufl": "brassMuteHalfClosed"}
+				for property, want := range expected {
+					count := 0
+					for _, f := range report.Context {
+						if f.Property != validation.ContextProperty("local."+property) {
+							continue
+						}
+						count++
+						if explicit {
+							want = "customUnregisteredName"
+						}
+						if f.Value.State != validation.EvidenceKnown || f.Value.Value.Text != want {
+							t.Fatalf("%s %+v", property, f)
+						}
+						if !explicit && f.Layout.Raw.State != validation.EvidenceAbsent {
+							t.Fatalf("default raw: %+v", f)
+						}
+					}
+					if count != 1 {
+						t.Fatalf("%s count %d", property, count)
+					}
+				}
+			}
+		}
+	}
+}
+
+func TestLocalTechnicalSMuFLInvalidDoesNotDefault(t *testing.T) {
+	engine := localContextTestEngine(t)
+	body := `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><notations><technical><stopped smufl="not valid"/><open smufl="not valid"/><half-muted smufl="not valid"/></technical></notations></note>`
+	for _, tw := range []bool{false, true} {
+		for _, model := range []bool{false, true} {
+			report := localContextAssess(t, engine, localContextFixture(body, tw), model)
+			for _, property := range []validation.ContextProperty{validation.ContextLocalStoppedSMuFL, validation.ContextLocalOpenSMuFL, validation.ContextLocalHalfMutedSMuFL} {
+				count := 0
+				for _, f := range report.Context {
+					if f.Property == property {
+						count++
+						if f.Value.State != validation.EvidenceInvalid || f.Value.Cause == nil {
+							t.Fatalf("%s invalid prerequisite replaced: %+v", property, f)
+						}
+					}
+				}
+				if count != 1 {
+					t.Fatalf("%s missing", property)
+				}
+			}
+		}
+	}
+}

@@ -145,8 +145,8 @@ func (p Plan) valid() error {
 		return contract("plan", "parameters exceed the finite configuration bound")
 	}
 	switch p.kind {
-	case planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
-		return p.context.valid()
+	case planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+		return p.context.valid(p.kind)
 	case planTimeline:
 		return p.timeline.valid()
 	case planChordDuration, planNumeralKey:

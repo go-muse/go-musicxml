@@ -53,6 +53,11 @@ func contextNamedType(name string) ComponentID {
 	}
 	return timelineNamedType(name)
 }
+func contextAssemblyType(assembly Assembly, name string) ComponentID {
+	t := contextNamedType(name)
+	t.Assembly = assembly
+	return t
+}
 func contextBindingSpecs() []contextBindingSpec {
 	out := []contextBindingSpec{{Role: contextRoleTimeOnly, Name: "time-only", Type: "time-only", Attribute: true, Count: -1}}
 	out = append(out, contextBindingSpec{Role: contextRoleFigureNumber, Owner: "figure", Name: "figure-number", Type: "style-text", Count: 1})
@@ -63,13 +68,16 @@ func contextBindingSpecs() []contextBindingSpec {
 	return out
 }
 func compileContextBindings(schema *CompiledSchema) (*contextBindings, error) {
+	if schema != nil && schema.kernel != nil && schema.assembly == AssemblyOpus {
+		return compileContextBindingSpecs(schema, contextOpusLayoutBindingSpecs())
+	}
 	if schema == nil || schema.kernel == nil || schema.assembly != AssemblyMusicXML {
 		return nil, contract("context schema", "compiled MusicXML assembly required")
 	}
 	return compileContextBindingSpecs(schema, contextBindingSpecs())
 }
 func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSpec) (*contextBindings, error) {
-	if schema == nil || schema.kernel == nil || schema.assembly != AssemblyMusicXML || len(specs) > 4096 {
+	if schema == nil || schema.kernel == nil || (schema.assembly != AssemblyMusicXML && schema.assembly != AssemblyOpus) || len(specs) > 4096 {
 		return nil, contract("context bindings", "bounded MusicXML roles required")
 	}
 	type useKey struct {
@@ -93,11 +101,11 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 		if _, exists := b.Roles[spec.Role]; exists {
 			return nil, contract("context binding role", "duplicate role")
 		}
-		candidates := index[useKey{contextNamedType(spec.Owner), QName{Space: spec.Space, Local: spec.Name}, spec.Attribute}]
+		candidates := index[useKey{contextAssemblyType(schema.assembly, spec.Owner), QName{Space: spec.Space, Local: spec.Name}, spec.Attribute}]
 		if spec.Owner == "" {
 			candidates = nil
 			for _, u := range uses {
-				if u.Attribute == spec.Attribute && u.Name == (QName{Space: spec.Space, Local: spec.Name}) && u.DeclaredTypeKnown && u.DeclaredType == contextNamedType(spec.Type) {
+				if u.Attribute == spec.Attribute && u.Name == (QName{Space: spec.Space, Local: spec.Name}) && u.DeclaredTypeKnown && u.DeclaredType == contextAssemblyType(schema.assembly, spec.Type) {
 					candidates = append(candidates, u)
 				}
 			}
@@ -107,7 +115,7 @@ func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSp
 		}
 		bound := make([]SchemaUse, len(candidates))
 		for i, u := range candidates {
-			if !validDeclaration(u.Declaration) || !u.OwnerTypeKnown || !u.DeclaredTypeKnown || (spec.Type != "#anonymous" && u.DeclaredType != contextNamedType(spec.Type)) || (spec.Type == "#anonymous" && (u.DeclaredType.Name != (QName{}) || u.DeclaredType.Occurrence == "")) {
+			if !validDeclaration(u.Declaration) || !u.OwnerTypeKnown || !u.DeclaredTypeKnown || (spec.Type != "#anonymous" && u.DeclaredType != contextAssemblyType(schema.assembly, spec.Type)) || (spec.Type == "#anonymous" && (u.DeclaredType.Name != (QName{}) || u.DeclaredType.Occurrence == "")) {
 				return nil, contract("context binding "+spec.Owner+"/"+spec.Name, "exact declared type unavailable or mismatched")
 			}
 			// Schema.Uses returns owned values; retain only this fixed selected table.

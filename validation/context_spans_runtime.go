@@ -384,10 +384,17 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 	}
 	gaps := make(map[NodeRef]Evidence[bool])
 	localGaps := make(map[NodeRef]Evidence[bool])
+	var metronomeSide NodeID
 	for order, id := range s.sequence {
 		node := s.nodes[id]
 		if !r.step(1) {
 			break
+		}
+		if r.matches(node, spanRole_metronome) {
+			metronomeSide = node.header.ID
+		}
+		if r.matches(node, spanRole_metronomeRelation) {
+			metronomeSide = node.header.ID
 		}
 		complete := r.enumerated(node)
 		if complete.State != EvidenceKnown || !complete.Value || node.header.Declaration.State != EvidenceKnown {
@@ -447,6 +454,9 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 			if e == nil {
 				break
 			}
+			if binding.family == SpanMetronomeTied {
+				e.relationSide = metronomeSide
+			}
 			if timeline == nil && service.Timeline.State != "" && service.Timeline.State != EvidenceAbsent && service.Timeline.State != EvidenceKnown {
 				e.payload.Position = stateUnavailable[bool, SpanPosition](service.Timeline)
 				if e.payload.Domain.State != EvidenceKnown {
@@ -488,6 +498,9 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 		}
 	}
 	if err = associateSpanEndpoints(ctx, s, out.endpoints, timeline); err != nil {
+		return Decision{}, false, err
+	}
+	if err = spanVerticalMembership(ctx, s, out.endpoints); err != nil {
 		return Decision{}, false, err
 	}
 	if err = spanPartGroupMembers(r, out.endpoints); err != nil {

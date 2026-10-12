@@ -23,4 +23,7 @@ const (
 	ContextLocalEmptyCaesura           ContextProperty = "local.empty-caesura"
 	ContextLocalFermataShape           ContextProperty = "local.fermata-shape"
 	ContextLocalFermataOrientation     ContextProperty = "local.fermata-orientation"
+	ContextLocalStoppedSMuFL           ContextProperty = "local.stopped-smufl"
+	ContextLocalOpenSMuFL              ContextProperty = "local.open-smufl"
+	ContextLocalHalfMutedSMuFL         ContextProperty = "local.half-muted-smufl"
 )

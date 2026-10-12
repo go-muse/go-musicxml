@@ -12,19 +12,21 @@ type NavigationKind string
 
 // Navigation context kinds do not imply that their execution is established.
 const (
-	NavigationNote      NavigationKind = "note"
-	NavigationSound     NavigationKind = "sound"
-	NavigationListening NavigationKind = "listening"
-	NavigationForward   NavigationKind = "forward-repeat"
-	NavigationBackward  NavigationKind = "backward-repeat"
-	NavigationSegno     NavigationKind = "segno"
-	NavigationCoda      NavigationKind = "coda"
-	NavigationDaCapo    NavigationKind = "dacapo"
-	NavigationDalSegno  NavigationKind = "dalsegno"
-	NavigationToCoda    NavigationKind = "tocoda"
-	NavigationFine      NavigationKind = "fine"
-	NavigationEnding    NavigationKind = "ending"
-	NavigationTraversal NavigationKind = "traversal"
+	NavigationGraphicSegno NavigationKind = "graphic-segno"
+	NavigationGraphicCoda  NavigationKind = "graphic-coda"
+	NavigationNote         NavigationKind = "note"
+	NavigationSound        NavigationKind = "sound"
+	NavigationListening    NavigationKind = "listening"
+	NavigationForward      NavigationKind = "forward-repeat"
+	NavigationBackward     NavigationKind = "backward-repeat"
+	NavigationSegno        NavigationKind = "segno"
+	NavigationCoda         NavigationKind = "coda"
+	NavigationDaCapo       NavigationKind = "dacapo"
+	NavigationDalSegno     NavigationKind = "dalsegno"
+	NavigationToCoda       NavigationKind = "tocoda"
+	NavigationFine         NavigationKind = "fine"
+	NavigationEnding       NavigationKind = "ending"
+	NavigationTraversal    NavigationKind = "traversal"
 )
 
 // NavigationPassFrame identifies one established repeat region and its local pass.
@@ -54,6 +56,9 @@ type NavigationOccurrence struct {
 // NavigationContextResult preserves encoded values, applicability, target and
 // bounded occurrence evidence. Complete describes traversal extent only.
 type NavigationContextResult struct {
+	// PlaybackSoundNeeded is advice for a graphic; LocalPlaybackSound is its labelled sibling, if established.
+	PlaybackSoundNeeded                Evidence[bool]
+	LocalPlaybackSound                 Evidence[NodeRef]
 	NoteListening                      []NavigationNoteListening
 	RecommendedAssess, TargetsDistinct Evidence[bool]
 	InitialSyncMode                    Evidence[string]
@@ -250,6 +255,39 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 	}
 	tempo, dynamics := Evidence[Decimal]{State: EvidenceAbsent}, Evidence[Decimal]{State: EvidenceAbsent}
 	pizzicato := Evidence[bool]{State: EvidenceAbsent}
+	invalidateReentry := func() error {
+		// Carrying performance state across a jump is source-sensitive. Preserve
+		// exact source facts separately; no absent instruction becomes a reset.
+		if tempo.State != EvidenceAbsent {
+			tempo = stateUnknown[Decimal]("navigation-reentry-state-unresolved")
+		}
+		if dynamics.State != EvidenceAbsent {
+			dynamics = stateUnknown[Decimal]("navigation-reentry-state-unresolved")
+		}
+		if pizzicato.State != EvidenceAbsent {
+			pizzicato = stateUnknown[bool]("navigation-reentry-state-unresolved")
+		}
+		for i := range play {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			play[i].Active = stateUnknown[bool]("navigation-reentry-play-unresolved")
+		}
+		for i := range instruments {
+			if err := navigationInvalidateInstrument(ctx, s, &instruments[i], initial); err != nil {
+				return err
+			}
+		}
+		for i := range listening {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			listening[i].Type = stateUnknown[string]("navigation-reentry-listening-unresolved")
+			listening[i].Latency = stateUnknown[Decimal]("navigation-reentry-listening-unresolved")
+			listening[i].Value = stateUnknown[string]("navigation-reentry-listening-unresolved")
+		}
+		return nil
+	}
 	for pc := 0; pc < len(events); {
 		if err = s.step(ctx, 1); err != nil {
 			return out, err
@@ -397,6 +435,9 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 				return out, e
 			}
 			if cmp > 0 {
+				if err = invalidateReentry(); err != nil {
+					return out, err
+				}
 				frames[len(frames)-1].pass++
 				pc = event.Target.Value
 				continue
@@ -425,29 +466,8 @@ func runNavigation(ctx context.Context, s *Session, events []navigationEvent, in
 			if event.Kind == NavigationDaCapo || event.Kind == NavigationDalSegno {
 				epoch++
 			}
-			// Carrying performance state across a jump is source-sensitive. Preserve
-			// exact source facts separately; no absent instruction becomes a reset.
-			if tempo.State != EvidenceAbsent {
-				tempo = stateUnknown[Decimal]("navigation-reentry-state-unresolved")
-			}
-			if dynamics.State != EvidenceAbsent {
-				dynamics = stateUnknown[Decimal]("navigation-reentry-state-unresolved")
-			}
-			if pizzicato.State != EvidenceAbsent {
-				pizzicato = stateUnknown[bool]("navigation-reentry-state-unresolved")
-			}
-			for i := range play {
-				play[i].Active = stateUnknown[bool]("navigation-reentry-play-unresolved")
-			}
-			for i := range instruments {
-				v := &instruments[i]
-				u := navigationInstrumentUpdate{Source: event.Source, Sound: v.Sound.Value, Performance: v.Performance.Value, Virtual: v.Virtual.Value, Channel: v.Channel.Value, Bank: v.Bank.Value, Program: v.Program.Value, Unpitched: v.Unpitched.Value, Name: v.Name.Value, DeviceName: v.DeviceName.Value, DevicePort: v.DevicePort.Value, Volume: v.Volume.Value, Pan: v.Pan.Value, Elevation: v.Elevation.Value}
-				navigationApplyInstrumentFields(v, u, stateUnknown[bool]("navigation-reentry-state-unresolved"))
-			}
-			for i := range listening {
-				listening[i].Type = stateUnknown[string]("navigation-reentry-listening-unresolved")
-				listening[i].Latency = stateUnknown[Decimal]("navigation-reentry-listening-unresolved")
-				listening[i].Value = stateUnknown[string]("navigation-reentry-listening-unresolved")
+			if err = invalidateReentry(); err != nil {
+				return out, err
 			}
 			frames = frames[:0]
 			pc = event.Target.Value

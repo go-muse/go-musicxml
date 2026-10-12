@@ -28,7 +28,7 @@ func performanceTimelineFact(ctx context.Context, s *Session, service *timelineS
 		out.Attack = performanceAdjustment(v.Attack)
 		out.Release = performanceAdjustment(v.Release)
 		out.BendsComplete = v.BendsComplete
-		if err := s.retain(int64(len(v.Bends)) * 4096); err != nil {
+		if err := stateRetainCount(s, len(v.Bends), 4096); err != nil {
 			return out, false, err
 		}
 		out.Bends = make([]TimingBend, len(v.Bends))
@@ -206,7 +206,7 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 		out.KeyFifths = k.Fifths
 		out.KeyMode = k.Mode
 		out.KeyCancel = k.Cancel
-		out.CancelLocation = stateWithDefault(k.CancelLocation, "left", "cancel-location-left").Effective
+		out.CancelLocation = performanceCancelLocation(k)
 	} else {
 		out.KeyFifths = stateUnavailable[keyState, Integer](key.Value)
 		out.KeyMode = stateUnavailable[keyState, string](key.Value)
@@ -297,7 +297,7 @@ func performanceEffectiveState(ctx context.Context, s *Session, service *timelin
 		d := details.Value.Value
 		out.StaffType = d.effectiveType().Effective
 		out.Capo = d.Capo
-		if err := s.retain(int64(len(d.Tunings)) * 2048); err != nil {
+		if err := stateRetainCount(s, len(d.Tunings), 2048); err != nil {
 			return err
 		}
 		out.Tunings = make([]TimingTuning, len(d.Tunings))

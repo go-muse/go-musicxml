@@ -3,6 +3,7 @@ package validation
 import "slices"
 
 const (
+	planContextOpusLayout      planKind = "opus-context-layout"
 	planFigureNumberNumeric    planKind = "musicxml-figure-number-numeric"
 	planGraphicalRepeatContent planKind = "musicxml-graphical-repeat-content"
 	planBendReleaseSign        planKind = "musicxml-bend-release-sign"
@@ -75,7 +76,23 @@ func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planFigureNumberNumeric, ContextPlanSpec{Schema: schema})
 }
 
+// NewOpusLayoutContextPlan projects only locally encoded Opus pagination hints.
+// It never resolves score links or supplies application-dependent page choices.
+func NewOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error) {
+	return newContextPlan(planContextOpusLayout, ContextPlanSpec{Schema: schema})
+}
+
+func contextPlanAssembly(kind planKind) Assembly {
+	if kind == planContextOpusLayout {
+		return AssemblyOpus
+	}
+	return AssemblyMusicXML
+}
+
 func newContextPlan(kind planKind, spec ContextPlanSpec) (Plan, error) {
+	if spec.Schema == nil || spec.Schema.assembly != contextPlanAssembly(kind) {
+		return Plan{}, contract("context schema", "exact plan assembly required")
+	}
 	if (kind == planContextRepeats || kind == planContextNavigation) && !catalogKey(spec.TimelineProvider) {
 		return Plan{}, contract("context timeline", "exact provider revision required")
 	}
@@ -87,13 +104,13 @@ func newContextPlan(kind planKind, spec ContextPlanSpec) (Plan, error) {
 }
 func (p Plan) isContext() bool {
 	switch p.kind {
-	case planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
 		return true
 	}
 	return false
 }
-func (p *contextPlan) valid() error {
-	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Schema.assembly != AssemblyMusicXML || p.Bindings == nil || p.revision != contextSemanticRevision {
+func (p *contextPlan) valid(kind planKind) error {
+	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Schema.assembly != contextPlanAssembly(kind) || p.Bindings == nil || p.revision != contextSemanticRevision {
 		return contract("context plan", "sealed MusicXML schema and exact context revision required")
 	}
 	if p.Timeline != (RuleKey{}) && !catalogKey(p.Timeline) {
@@ -135,7 +152,7 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 	if !p.isContext() {
 		return nil
 	}
-	if err := p.context.valid(); err != nil {
+	if err := p.context.valid(p.kind); err != nil {
 		return err
 	}
 	if r.Category != CategoryNormative || r.Class != ClassMandatory {
@@ -175,8 +192,8 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 		if !matched {
 			return contract("time-only selector", "exact type owning a bound time-only use required")
 		}
-	} else if r.Scope != ScopeDocument || r.Role != RoleContextProvider || r.Selector.Assembly == nil || *r.Selector.Assembly != AssemblyMusicXML || r.Selector.Component != nil || r.Selector.Declaration != nil {
-		return contract("context provider", "document provider with exact MusicXML assembly selector required")
+	} else if r.Scope != ScopeDocument || r.Role != RoleContextProvider || r.Selector.Assembly == nil || *r.Selector.Assembly != contextPlanAssembly(p.kind) || r.Selector.Component != nil || r.Selector.Declaration != nil {
+		return contract("context provider", "document provider with exact plan assembly selector required")
 	}
 	if p.context.Timeline != (RuleKey{}) {
 		dep := Dependency{Kind: DependencyRule, Rule: p.context.Timeline, Relation: RelationDocument}
@@ -233,9 +250,9 @@ func validateContextProfile(c *CompiledCatalog, closure map[RuleKey]bool, schema
 		if !ok || !p.isContext() {
 			continue
 		}
-		schema := schemas[AssemblyMusicXML]
+		schema := schemas[contextPlanAssembly(p.kind)]
 		if schema == nil || schema.Digest() != p.context.Schema.Digest() {
-			return contract("context schema", "matching selected XSD MusicXML schema required")
+			return contract("context schema", "matching selected XSD context assembly schema required")
 		}
 		if p.kind != planTimeOnlyOrder && p.kind != planFigureNumberNumeric && p.kind != planBendReleaseSign && p.kind != planGraphicalRepeatContent {
 			if seen[p.kind] {

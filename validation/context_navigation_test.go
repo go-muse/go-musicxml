@@ -182,3 +182,34 @@ func TestContextNavigationOwnedProjection(t *testing.T) {
 		t.Fatalf("aliases %+v", copy)
 	}
 }
+
+func TestContextNavigationBackwardReentryStateIsNotInferred(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	events := []navigationEvent{
+		{Source: NodeRef{"d", 1}, Kind: NavigationForward},
+		{Source: NodeRef{"d", 2}, Kind: NavigationNote, PassDomain: navigationSingleRepeatPass},
+		{Source: NodeRef{"d", 3}, Kind: NavigationSound, Tempo: stateKnown(stateDecimal(t, 80, 1)), Guard: stateKnown("1"), PassDomain: navigationSingleRepeatPass},
+		{Source: NodeRef{"d", 4}, Kind: NavigationBackward, Target: stateKnown(0), Times: stateKnown(stateInt(t, 2))},
+	}
+	got, err := runNavigation(context.Background(), s, events)
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := 0
+	for _, o := range got.Traversal {
+		if o.Source.Node != 2 {
+			continue
+		}
+		seen++
+		if seen == 1 && o.Tempo.State != EvidenceAbsent {
+			t.Fatalf("initial %+v", o)
+		}
+		if seen == 2 && o.Tempo.State != EvidenceUnknown {
+			t.Fatalf("reentry carried without proof %+v", o)
+		}
+	}
+	if seen != 2 {
+		t.Fatalf("seen=%d", seen)
+	}
+}

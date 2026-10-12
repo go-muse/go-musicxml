@@ -70,6 +70,16 @@ func buildContextAssessmentEngine() (*validation.Engine, error) {
 		d.rules = append(d.rules, r)
 		d.plans = append(d.plans, validation.PlanBinding{ID: r.Predicate, Plan: plan})
 	}
+
+	opusAssembly := validation.AssemblyOpus
+	opusPlan, err := validation.NewOpusLayoutContextPlan(d.schemas[opusAssembly])
+	if err != nil {
+		return nil, err
+	}
+	opusKey := validation.RuleKey{ID: "MX40-CONTEXT-opus-pagination", Revision: 1}
+	opusRule := validation.RuleDefinition{Key: opusKey, Class: validation.ClassMandatory, Role: validation.RoleContextProvider, Category: validation.CategoryNormative, Targets: []validation.Target{validation.TargetSource, validation.TargetModel}, Scope: validation.ScopeDocument, Selector: validation.Selector{Assembly: &opusAssembly}, Predicate: string(opusKey.ID), Text: validation.RuleText{Title: "Local Opus pagination context", Explanation: "Retain explicit score new-page hints and application-dependent absence within this Opus only; never follow linked scores.", Message: "Local Opus pagination projection did not finish."}, Sources: []validation.SourceRef{{IDs: []string{"MX40-PROSE-opus-new-page-default"}, URL: "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/opus.xsd#L92", Locator: "Opus score new-page application default"}}}
+	d.rules = append(d.rules, opusRule)
+	d.plans = append(d.plans, validation.PlanBinding{ID: opusRule.Predicate, Plan: opusPlan})
 	for _, consumer := range []struct {
 		id, subject, title, explanation, provider string
 		line                                      int

@@ -83,6 +83,9 @@ func performanceWrittenPitch(r *contextReader, n *factNode, out *TimingContextRe
 	out.PitchIntent = stateUnknown[Rational]("external-written-or-sounding-intent-unavailable")
 	pitch, c := r.child(n, "perf-pitch")
 	if c.State != EvidenceKnown {
+		if c.State == EvidenceAbsent {
+			out.PitchIntent = Evidence[Rational]{State: EvidenceAbsent}
+		}
 		out.WrittenPitch = stateUnavailable[bool, Rational](c)
 		return
 	}

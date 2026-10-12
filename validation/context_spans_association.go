@@ -4,12 +4,19 @@ import "context"
 
 type spanAssociationKey struct {
 	voiceSpecified                     bool
+	relationSide                       NodeID
 	domain                             NodeRef
 	family                             SpanFamily
 	identity                           SpanIdentityKind
 	number, pitch, guard, voice, lyric string
 	grace, cue                         bool
 }
+type spanAssociationGapKey struct {
+	domain NodeRef
+	family SpanFamily
+	side   NodeID
+}
+
 type spanAssociationRun struct {
 	indices  []int
 	complete Evidence[bool]
@@ -73,7 +80,7 @@ func spanAtomicKey(ctx context.Context, s *Session, v Evidence[Atomic]) (string,
 }
 func spanKey(ctx context.Context, s *Session, e *spanEndpoint) (spanAssociationKey, bool, error) {
 	p := e.payload
-	k := spanAssociationKey{family: p.Family, identity: p.Identity}
+	k := spanAssociationKey{family: p.Family, identity: p.Identity, relationSide: e.relationSide}
 	if p.Domain.State != EvidenceKnown {
 		return k, false, nil
 	}
@@ -139,6 +146,7 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 		return err
 	}
 	runs := make(map[spanAssociationKey]*spanAssociationRun)
+	gaps := make(map[spanAssociationGapKey]Evidence[bool])
 	for i, e := range es {
 		if err := s.step(ctx, 1); err != nil {
 			return err
@@ -160,6 +168,28 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 			return err
 		}
 		if !ok {
+			g := spanAssociationGapKey{family: e.payload.Family, side: e.relationSide}
+			if e.payload.Domain.State == EvidenceKnown {
+				g.domain = e.payload.Domain.Value
+			}
+			v := stateUnknown[bool]("span-competing-identity-unproved")
+			if e.payload.Domain.State != EvidenceKnown {
+				v = stateUnavailable[NodeRef, bool](e.payload.Domain)
+			} else if e.payload.Number.State != EvidenceKnown && e.payload.Number.State != EvidenceAbsent {
+				v = stateUnavailable[Atomic, bool](e.payload.Number)
+			} else if e.payload.Voice.State != EvidenceKnown && e.payload.Voice.State != EvidenceAbsent && e.payload.Family == SpanBeam {
+				v = stateUnavailable[string, bool](e.payload.Voice)
+			}
+			v = timelineMergeAvailability(v, e.complete)
+			if old, found := gaps[g]; found {
+				gaps[g] = timelineMergeAvailability(old, v)
+			} else {
+				if err := s.retain(512); err != nil {
+					return err
+				}
+				gaps[g] = v
+			}
+			e.payload.Association = v
 			continue
 		}
 		run := runs[k]
@@ -178,9 +208,14 @@ func associateSpanEndpoints(ctx context.Context, s *Session, es []*spanEndpoint,
 			run.complete = timelineMergeAvailability(run.complete, e.complete)
 		}
 	}
-	for _, run := range runs {
+	for key, run := range runs {
 		if err := s.step(ctx, 1); err != nil {
 			return err
+		}
+		for _, g := range []spanAssociationGapKey{{domain: key.domain, family: key.family, side: key.relationSide}, {family: key.family, side: key.relationSide}} {
+			if v, ok := gaps[g]; ok {
+				run.complete = timelineMergeAvailability(run.complete, v)
+			}
 		}
 		if run.complete.State != EvidenceKnown || !run.complete.Value {
 			for _, i := range run.indices {

@@ -74,6 +74,8 @@ func contextPerformanceBindingSpecs() []contextBindingSpec {
 }
 
 var performanceElements = []contextBindingSpec{
+	{Role: "perf-pluck", Owner: "technical", Name: "pluck", Type: "placement-text", Count: 1},
+	{Role: "perf-measure-label", Name: "number", Type: "xs:token", Attribute: true, Count: -1},
 	{Role: "perf-backup", Name: "backup", Type: "backup", Count: -1},
 	{Role: "perf-forward", Name: "forward", Type: "forward", Count: -1},
 	{Role: "perf-level", Name: "level", Type: "level", Count: -1},
@@ -112,7 +114,7 @@ var performanceElements = []contextBindingSpec{
 }
 
 func contextPerformancePropertyValid(p ContextProperty) bool {
-	if p == "performance-figure-prefix" || p == "performance-figure-suffix" || p == "performance" || p == "performance-default" || p == "performance-numbering" || p == "performance-origin" || p == "performance-open-string" {
+	if p == "performance-fretted-instrument-role" || p == "performance-figure-prefix" || p == "performance-figure-suffix" {
 		return true
 	}
 	for _, d := range performanceDefaults {

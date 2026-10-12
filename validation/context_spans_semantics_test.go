@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"math/big"
 	"testing"
 )
 
@@ -71,6 +72,7 @@ func TestContextSpanDefaultFieldsFiveAxes(t *testing.T) {
 		property        ContextProperty
 		def, override   Evidence[Atomic]
 	}{
+		{"tremolo-smufl", spanRole_tremolo, spanRole_tremoloSMuFL, SpanTremolo, ContextPropertySpanTremoloSMuFL, spanString("buzzRoll"), spanString("unvalidatedGlyph")},
 		{"octave-size", spanRole_octaveShift, spanRole_octave_shift_size, SpanOctaveShift, ContextPropertySpanSize, spanInteger(8), spanInteger(15)},
 		{"bracket-line", spanRole_bracket, spanRole_bracket_line_type, SpanBracket, ContextPropertySpanLineType, spanString("solid"), spanString("dashed")},
 		{"glissando-line", spanRole_glissando, spanRole_glissando_line_type, SpanGlissando, ContextPropertySpanLineType, spanString("wavy"), spanString("solid")},
@@ -109,6 +111,9 @@ func TestContextSpanDefaultFieldsFiveAxes(t *testing.T) {
 						spanLocalFacts(other, RuleKey{"spans", 1}, on, nil, e)
 					}
 					e := spanTestEndpoint(t, n.header.ID, tc.family, "start", 1)
+					if tc.family == SpanTremolo {
+						e.payload.Role.Value = "unmeasured"
+					}
 					spanLocalFacts(r, RuleKey{"spans", 1}, n, note, e)
 					got := spanUnitValue(t, r, tc.property)
 					if got.State != want.State {
@@ -185,6 +190,9 @@ func TestContextSpanTupletFallbackIndependentFields(t *testing.T) {
 					t.Fatal(nd)
 				}
 			case "missing-normal-type":
+				if nd.State != EvidenceUnknown {
+					t.Fatalf("unproved normal-dot fallback: %+v", nd)
+				}
 				if nt.Value.Text != "eighth" {
 					t.Fatal(nt)
 				}
@@ -232,5 +240,318 @@ func TestContextSpanResourcesCancellationAndOwnership(t *testing.T) {
 	}
 	if len(r.s.contextResults) != count || r.s.retained != retained {
 		t.Fatal("repeated query rebuilt service")
+	}
+}
+
+func TestContextSpanEndpointAvailabilityByFamily(t *testing.T) {
+	for _, binding := range spanFamilies {
+		binding := binding
+		t.Run(string(binding.node), func(t *testing.T) {
+			for _, axis := range []string{"positive", "invalid-role", "missing-role-capability", "default-number", "explicit-number", "invalid-number"} {
+				t.Run(axis, func(t *testing.T) {
+					r := spanUnitReader(t)
+					note := spanUnitNode(r, spanRole_note, nil)
+					n := spanUnitNode(r, binding.node, note)
+					role := "start"
+					switch binding.family {
+					case SpanBeam:
+						role = "begin"
+					case SpanOctaveShift:
+						role = "down"
+					case SpanWedge:
+						role = "crescendo"
+					case SpanNonArpeggiate:
+						role = "top"
+					}
+					roleValue := spanString(role)
+					cause := &DecisionRef{Rule: RuleKey{"shape", 1}, Subject: NodeRef{r.s.documentID, n.header.ID}}
+					if axis == "invalid-role" {
+						roleValue = Evidence[Atomic]{State: EvidenceInvalid, Reason: "test-role-invalid", Cause: cause}
+					}
+					if axis == "missing-role-capability" {
+						roleValue = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "test-role-unavailable"}
+					}
+					if binding.role != "" {
+						spanUnitAttribute(r, n, binding.role, roleValue)
+					} else if binding.family == SpanBeam {
+						n.end.Scalar.Value = roleValue
+					}
+					if binding.number != "" && (axis == "explicit-number" || axis == "invalid-number") {
+						v := spanInteger(2)
+						if binding.family == SpanGrouping || binding.family == SpanPartGroup {
+							v = spanString("named")
+						}
+						if axis == "invalid-number" {
+							v = Evidence[Atomic]{State: EvidenceInvalid, Reason: "test-number-invalid", Cause: cause}
+						}
+						spanUnitAttribute(r, n, binding.number, v)
+					}
+					domains := map[NodeID]Evidence[NodeRef]{note.header.ID: {State: EvidenceKnown, Value: NodeRef{r.s.documentID, 100}}}
+					e := spanExtract(r, RuleKey{"spans", 1}, n, binding, nil, domains, 1)
+					if r.err != nil {
+						t.Fatal(r.err)
+					}
+					if binding.role != "" || binding.family == SpanBeam {
+						switch axis {
+						case "invalid-role":
+							if e.payload.Role.State != EvidenceInvalid || e.payload.Role.Cause == nil || *e.payload.Role.Cause != *cause {
+								t.Fatal(e.payload.Role)
+							}
+						case "missing-role-capability":
+							if e.payload.Role.State != EvidenceUnsupported {
+								t.Fatal(e.payload.Role)
+							}
+						default:
+							if e.payload.Role.State != EvidenceKnown || e.payload.Role.Value != role {
+								t.Fatal(e.payload.Role)
+							}
+						}
+					}
+					if binding.number != "" {
+						switch axis {
+						case "invalid-number":
+							if e.payload.Number.State != EvidenceInvalid || e.payload.Association.State != EvidenceInvalid || e.payload.Association.Cause == nil {
+								t.Fatalf("invalid number lost %+v", e.payload)
+							}
+						case "default-number":
+							if binding.family == SpanTied {
+								if e.payload.Identity != SpanIdentityImpliedTie || e.payload.Number.State != EvidenceAbsent {
+									t.Fatal(e.payload)
+								}
+							} else if e.payload.Number.State != EvidenceKnown {
+								t.Fatal(e.payload.Number)
+							}
+						case "explicit-number":
+							if e.payload.Number.State != EvidenceKnown || !e.payload.NumberExplicit.Value {
+								t.Fatal(e.payload)
+							}
+						}
+					}
+				})
+			}
+		})
+	}
+}
+func TestContextSpanUnmatchedAndUnknownPositionAreNotDefects(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	es := []*spanEndpoint{spanTestEndpoint(t, 1, SpanSlur, "start", 1), spanTestEndpoint(t, 2, SpanSlur, "stop", 1), spanTestEndpoint(t, 3, SpanSlur, "start", 2)}
+	for _, e := range es {
+		e.payload.Position = stateUnknown[SpanPosition]("unknown-cursor")
+	}
+	if err := associateSpanEndpoints(context.Background(), s, es, &timelineService{}); err != nil {
+		t.Fatal(err)
+	}
+	if es[0].payload.Association.State != EvidenceKnown || es[1].payload.Association.State != EvidenceKnown {
+		t.Fatal("unknown chronology erased document association")
+	}
+	if es[2].payload.Association.State != EvidenceUnknown {
+		t.Fatal("unmatched endpoint fabricated closure")
+	}
+}
+
+func TestContextSpanOctaveDirectionMeaning(t *testing.T) {
+	for _, role := range []string{"up", "down", "stop", "continue"} {
+		t.Run(role, func(t *testing.T) {
+			r := spanUnitReader(t)
+			n := spanUnitNode(r, spanRole_octaveShift, nil)
+			e := spanTestEndpoint(t, n.header.ID, SpanOctaveShift, role, 1)
+			spanLocalFacts(r, RuleKey{"spans", 1}, n, nil, e)
+			got := spanUnitValue(t, r, ContextPropertySpanEndpointMeaning)
+			if role == "up" || role == "down" {
+				if got.State != EvidenceKnown || got.Value.Text != "display-"+role+"-from-note-pitch" {
+					t.Fatal(got)
+				}
+			} else if got.State != EvidenceUnknown {
+				t.Fatal(got)
+			}
+		})
+	}
+}
+
+func TestContextSpanVerticalIdentityGapBlocksCertainty(t *testing.T) {
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	a := spanTestEndpoint(t, 1, SpanArpeggiate, "", 1)
+	b := spanTestEndpoint(t, 2, SpanArpeggiate, "", 1)
+	z, _ := NewRational(big.NewRat(0, 1))
+	for _, e := range []*spanEndpoint{a, b} {
+		e.payload.Position = Evidence[SpanPosition]{State: EvidenceKnown, Value: SpanPosition{Part: NodeRef{"d", 10}, Measure: NodeRef{"d", 20}, Offset: z}}
+	}
+	b.payload.Number = Evidence[Atomic]{State: EvidenceInvalid, Reason: "bad-number", Cause: &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: b.ref}}
+	if err := spanVerticalMembership(context.Background(), s, []*spanEndpoint{a, b}); err != nil {
+		t.Fatal(err)
+	}
+	if a.payload.Association.State != EvidenceInvalid || a.payload.Association.Cause == nil {
+		t.Fatal(a.payload.Association)
+	}
+}
+
+func TestContextSpanConditionalFieldsFiveAxes(t *testing.T) {
+	type tc struct {
+		name              string
+		family            SpanFamily
+		node, attr        contextRole
+		role, otherRole   string
+		value, otherValue Evidence[Atomic]
+		property          ContextProperty
+		want, otherWant   Evidence[Atomic]
+	}
+	cases := []tc{
+		{"pedal-line-types", SpanPedal, spanRole_pedal, spanRole_pedal_line, "change", "change", spanString("yes"), spanString("no"), ContextPropertySpanPedalLineRoleActive, spanBool(true), spanBool(false)},
+		{"pedal-sign-default", SpanPedal, spanRole_pedal, spanRole_pedal_line, "start", "start", spanString("no"), spanString("yes"), ContextPropertySpanPedalSign, spanString("yes"), spanString("no")},
+		{"pedal-abbreviation", SpanPedal, spanRole_pedal, spanRole_pedal_sign, "start", "stop", spanString("yes"), spanString("yes"), ContextPropertySpanPedalAbbreviatedActive, spanBool(true), spanBool(false)},
+		{"pedal-alignment", SpanPedal, spanRole_pedal, spanRole_pedal_sign, "start", "start", spanString("yes"), spanString("no"), ContextPropertySpanPedalAlignmentActive, spanBool(true), spanBool(false)},
+		{"bracket-end-length", SpanBracket, spanRole_bracket, spanRole_bracketLineEnd, "start", "start", spanString("up"), spanString("none"), ContextPropertySpanEndLengthApplicable, spanBool(true), spanBool(false)},
+		{name: "wedge-spread", family: SpanWedge, node: spanRole_wedge, role: "crescendo", otherRole: "diminuendo", property: ContextPropertySpanWedgeSpreadActive, want: spanBool(false), otherWant: spanBool(true)},
+		{name: "wedge-niente-end", family: SpanWedge, node: spanRole_wedge, role: "crescendo", otherRole: "diminuendo", property: ContextPropertySpanWedgeNienteActive, want: spanBool(true), otherWant: spanBool(false)},
+		{name: "barre-string-end", family: SpanBarre, node: spanRole_barre, role: "start", otherRole: "stop", property: ContextPropertySpanEndpointMeaning, want: spanString("lower-pitched-higher-numbered-string"), otherWant: spanString("higher-pitched-lower-numbered-string")},
+		{name: "barline-wavy", family: SpanWavyLine, node: spanRole_barlineWavy, role: "continue", otherRole: "start", property: ContextPropertySpanBarlineContinueRecommended, want: spanBool(true), otherWant: spanBool(false)},
+		{name: "non-arpeggiate-ends", family: SpanNonArpeggiate, node: spanRole_nonArpeggiate, role: "top", otherRole: "bottom", property: ContextPropertySpanEndpointMeaning, want: spanString("top-note-of-graphical-bracket"), otherWant: spanString("bottom-note-of-graphical-bracket")},
+		{name: "group-stop-content", family: SpanPartGroup, node: spanRole_partGroup, role: "start", otherRole: "stop", property: ContextPropertySpanGroupStopContentActive, want: spanBool(true), otherWant: spanBool(false)},
+		{name: "grouping-stop-content", family: SpanGrouping, node: spanRole_grouping, role: "start", otherRole: "stop", property: ContextPropertySpanGroupStopContentActive, want: spanBool(true), otherWant: stateUnknown[Atomic]("span-grouping-stop-content-may-be-ignored")},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			for _, axis := range []string{"positive", "negative", "boundary", "missing-fact", "interaction"} {
+				t.Run(axis, func(t *testing.T) {
+					r := spanUnitReader(t)
+					n := spanUnitNode(r, c.node, nil)
+					e := spanTestEndpoint(t, n.header.ID, c.family, c.role, 1)
+					want := c.want
+					value := c.value
+					cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: e.ref}
+					if axis == "boundary" {
+						e.payload.Role.Value = c.otherRole
+						value = c.otherValue
+						want = c.otherWant
+					}
+					if axis == "negative" || axis == "missing-fact" {
+						state, reason := EvidenceInvalid, Code("invalid-antecedent")
+						if axis == "missing-fact" {
+							state, reason = EvidenceUnknown, "missing-antecedent"
+							cause = nil
+						}
+						want = Evidence[Atomic]{State: state, Reason: reason, Cause: cause}
+						if c.attr != "" {
+							value = want
+						} else {
+							e.payload.Role = Evidence[string]{State: state, Reason: reason, Cause: cause}
+						}
+					}
+					if c.attr != "" {
+						spanUnitAttribute(r, n, c.attr, value)
+					}
+					if axis == "interaction" {
+						other := spanUnitReader(t)
+						on := spanUnitNode(other, c.node, nil)
+						oe := spanTestEndpoint(t, on.header.ID, c.family, c.otherRole, 1)
+						if c.attr != "" {
+							spanUnitAttribute(other, on, c.attr, c.otherValue)
+						}
+						spanLocalFacts(other, RuleKey{"spans", 1}, on, nil, oe)
+					}
+					spanLocalFacts(r, RuleKey{"spans", 1}, n, nil, e)
+					got := spanUnitValue(t, r, c.property)
+					if got.State != want.State || got.State == EvidenceKnown && (got.Value.Text != want.Value.Text || got.Value.Kind != want.Value.Kind) {
+						t.Fatalf("got %+v want %+v", got, want)
+					}
+					if want.Cause != nil && (got.Cause == nil || *want.Cause != *got.Cause) {
+						t.Fatal("lost prerequisite cause")
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestContextSpanHammerTextAndGroupSymbolFiveAxes(t *testing.T) {
+	for _, family := range []SpanFamily{SpanHammerOn, SpanPullOff, SpanPartGroup} {
+		t.Run(string(family), func(t *testing.T) {
+			for _, axis := range []string{"positive", "negative", "boundary", "missing-fact", "interaction"} {
+				t.Run(axis, func(t *testing.T) {
+					r := spanUnitReader(t)
+					nr := spanRole_hammerOn
+					if family == SpanPullOff {
+						nr = spanRole_pullOff
+					}
+					if family == SpanPartGroup {
+						nr = spanRole_partGroup
+					}
+					n := spanUnitNode(r, nr, nil)
+					e := spanTestEndpoint(t, n.header.ID, family, "start", 1)
+					prop := ContextPropertySpanHammerMarking
+					want := spanString("H")
+					cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: e.ref}
+					if family == SpanPartGroup {
+						prop = ContextPropertySpanGroupSymbol
+						want = spanString("none")
+					}
+					switch axis {
+					case "negative":
+						want = Evidence[Atomic]{State: EvidenceInvalid, Reason: "test-scalar-invalid", Cause: cause}
+					case "missing-fact":
+						want = stateUnknown[Atomic]("test-scalar-unavailable")
+					case "boundary":
+						if family == SpanPartGroup {
+							want = spanString("brace")
+						} else {
+							want = stateUnknown[Atomic]("span-hammer-marking-application-dependent")
+						}
+					}
+					if family == SpanPartGroup {
+						if axis == "boundary" || axis == "negative" {
+							ch := spanUnitNode(r, spanRole_groupSymbol, n)
+							ch.end.Scalar.Value = want
+						}
+						if axis == "missing-fact" {
+							n.end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "test-scalar-unavailable"}
+						}
+					} else {
+						n.end.Scalar.Value = want
+						if axis == "boundary" {
+							n.end.Scalar.Value = spanString("")
+						}
+					}
+					if axis == "interaction" {
+						other := spanUnitReader(t)
+						on := spanUnitNode(other, nr, nil)
+						on.end.Scalar.Value = spanString("different")
+						oe := spanTestEndpoint(t, on.header.ID, family, "stop", 1)
+						spanLocalFacts(other, RuleKey{"spans", 1}, on, nil, oe)
+					}
+					spanLocalFacts(r, RuleKey{"spans", 1}, n, nil, e)
+					got := spanUnitValue(t, r, prop)
+					if got.State != want.State || got.State == EvidenceKnown && got.Value.Text != want.Value.Text {
+						t.Fatalf("got %+v want %+v", got, want)
+					}
+					if want.Cause != nil && (got.Cause == nil || *got.Cause != *cause) {
+						t.Fatal("lost cause")
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestContextSpanBeamContinuationFanCause(t *testing.T) {
+	r := spanUnitReader(t)
+	a := spanUnitNode(r, spanRole_beam, nil)
+	b := spanUnitNode(r, spanRole_beam, nil)
+	spanUnitAttribute(r, a, spanRole_beam_fan, spanString("accel"))
+	cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: NodeRef{r.s.documentID, b.header.ID}}
+	spanUnitAttribute(r, b, spanRole_beam_fan, Evidence[Atomic]{State: EvidenceInvalid, Reason: "fan-invalid", Cause: cause})
+	ae := spanTestEndpoint(t, a.header.ID, SpanBeam, "begin", 1)
+	be := spanTestEndpoint(t, b.header.ID, SpanBeam, "continue", 1)
+	ae.ref.DocumentID = r.s.documentID
+	be.ref.DocumentID = r.s.documentID
+	for _, e := range []*spanEndpoint{ae, be} {
+		e.payload.Association = Evidence[bool]{State: EvidenceKnown, Value: true}
+		e.payload.Members = []NodeRef{ae.ref, be.ref}
+	}
+	spanRelationalFacts(r, RuleKey{"spans", 1}, []*spanEndpoint{ae, be}, nil)
+	got := spanUnitValue(t, r, ContextPropertySpanFanApplicable)
+	if got.State != EvidenceInvalid || got.Cause == nil || *got.Cause != *cause {
+		t.Fatal(got)
 	}
 }
