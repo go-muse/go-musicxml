@@ -239,3 +239,55 @@ func TestGraceNeighborsLongGroupDefaultBudgetsAndAtomicFailure(t *testing.T) {
 		t.Fatalf("context quota published subset: %v", err)
 	}
 }
+
+func TestGraceNeighborsScratchReleasedAndOrdinaryFastPath(t *testing.T) {
+	s, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	for _, id := range []NodeID{20, 30} {
+		n := v.NoteOrigins[id]
+		n.GraceTiming.Value.StealPrevious = stateAbsent[Decimal]()
+		n.GraceTiming.Value.StealFollowing = stateAbsent[Decimal]()
+		v.NoteOrigins[id] = n
+	}
+	before := rationalUsage(t, s, BudgetBufferedBytes)
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if got := rationalUsage(t, s, BudgetBufferedBytes) - before; got != 8192 {
+		t.Fatalf("scratch retained: delta %d, want two 4096-byte records", got)
+	}
+	s, v, b, blocks = graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	for _, id := range []NodeID{20, 30} {
+		n := v.NoteOrigins[id]
+		n.Grace = stateKnown(false)
+		v.NoteOrigins[id] = n
+	}
+	before = rationalUsage(t, s, BudgetBufferedBytes)
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if got := rationalUsage(t, s, BudgetBufferedBytes); got != before {
+		t.Fatalf("ordinary score allocated %d bytes", got-before)
+	}
+}
+
+func TestGraceNeighborIdentityDoesNotClaimContinuousTime(t *testing.T) {
+	s, v, b, blocks := graceNeighborFixture(t, OrderSource, stateKnown("a"))
+	// A forward gap separates the ordinary note from the following grace run.
+	// The previous note identity is still known; this is not performed scheduling.
+	for _, id := range []NodeID{20, 30, 40} {
+		n := v.NoteOrigins[id]
+		n.ScoreOnset = timelineAt(blocks[0], stateKnown(mustRational(t, 3, 1)))
+		if id == 40 {
+			n.ScoreEnd = timelineAt(blocks[0], stateKnown(mustRational(t, 5, 1)))
+		}
+		v.NoteOrigins[id] = n
+	}
+	forward := stateNode(b, timelineRoleForward, 60, stateAbsent[Atomic]())
+	blocks[0].content.children = append(blocks[0].content.children[:1], append([]*factNode{forward}, blocks[0].content.children[1:]...)...)
+	if err := v.resolveGraceNeighbors(context.Background(), s, b, blocks); err != nil {
+		t.Fatal(err)
+	}
+	if got := v.GraceNeighbors[20].Previous; got.Note.State != EvidenceKnown || got.Note.Value.Node != 10 || got.StolenDuration.Value.String() != "1/4" {
+		t.Fatalf("chronological donor lost across forward gap: %+v", got)
+	}
+}
