@@ -4,9 +4,10 @@ import "math/big"
 
 // MaxExactValueBytes is the finite per-value constructor limit, in bytes. It
 // independently bounds significant integer magnitude storage (the numerator
-// plus denominator for a decimal) and canonical decimal output. Intermediate
-// arithmetic is bounded by these inputs and the checked output scale. This
-// constructor safety cap is separate from an assessment's scalar/buffer limits.
+// plus denominator for a decimal or rational) and canonical decimal/fraction
+// output. Constructor intermediates are bounded by these inputs and checked
+// output growth. This safety cap is separate from an assessment's scalar/buffer
+// limits and the rational arithmetic service's shared work accounting.
 const MaxExactValueBytes = 1 << 20
 
 // Integer is an immutable exact integer. Its zero value is uninitialized, not

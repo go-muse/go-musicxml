@@ -213,11 +213,14 @@ and already-canceled contexts fail before model traversal.
 | `ProfileModelXSD` | `musicxml-4.0/model-xsd` | Current generated structure/value XSD plus required model representation checks |
 | `ProfileModelLocal` | `musicxml-4.0/model-local` | The same model checks plus the explicitly selected local musical and typed-reference clauses |
 | `ProfileSourceLocal` | `musicxml-4.0/source-local` | Original single-pass source XSD plus those same local clauses; used with `InspectXML` or strict `DecodeAssessed` |
+| `ProfileModelTimeline` | `musicxml-4.0/model-timeline` | Model-local scope plus the bounded exact timeline/effective-state provider and selected chord/numeral consumers |
+| `ProfileSourceTimeline` | `musicxml-4.0/source-timeline` | Source-local scope plus the same timeline provider and consumers on original input |
 
 These are bounded implementations under final verification, not a claim of
 whole-MusicXML conformance or completed batch acceptance. The complete selected
 clause list, exclusions, test evidence and remaining owners are in the
-[model assessment scope](docs/validation/model-assessment-scope.md). Each profile
+[model assessment scope](docs/validation/model-assessment-scope.md) and
+[timeline scope](docs/validation/TIMELINE_ASSESSMENT_SCOPE.md). Each profile
 supports the three roots above; score-only local predicates are inapplicable to
 opus and never assess linked opus/score content. Version selection is the pinned
 MusicXML 4.0 schema, not an invented requirement that the `version` attribute
@@ -277,10 +280,12 @@ work/retention. No input-byte charge is invented for the existing object graph,
 and the 64 MiB default live-buffer limit is not a model-size or heap guarantee.
 No schema, DTD or linked resource is fetched.
 
-For budget sizing, the following Go 1.27.2 linux/amd64 measurements use the
-shared account and verify success at the exact minimum allowance and resource
-failure one byte/step below it. These are fixture-specific costs after compact
-optional-attribute absence storage, not universal per-node constants:
+For XSD-only budget sizing, the following Go 1.27.2 linux/amd64 measurements
+use `ProfileModelXSD` or `ProfileSourceXSDPreview`, with a shared account and
+verified success at the exact minimum allowance and resource failure one
+byte/step below it. These are fixture-specific costs after compact
+optional-attribute absence storage, not universal per-node constants or
+local/timeline-profile measurements:
 
 | Input and target | Nodes | Minimum live-buffer allowance (bytes) | Rule steps |
 | --- | ---: | ---: | ---: |
@@ -326,11 +331,166 @@ path retains schema/session facts and exact current-value/report semantics;
 these measurements disclose the remaining cost rather than promising a
 throughput or memory improvement. Cold initialization adds further cost.
 
+### Exact timeline and effective-state profiles
+
+Select `ProfileModelTimeline` with `AssessModel`, or `ProfileSourceTimeline`
+with `InspectXML` / the explicit assessment in strict `DecodeAssessed`.
+These profiles use a separately compiled engine and add exactly three required
+bindings to their corresponding local profile: `MX40-TIMELINE-effective-state@1`,
+`MX40-TIMELINE-chord-duration-bound@1`, and
+`MX40-TIMELINE-numeral-requires-key@1`. Model/source have 39/37 required keys,
+respectively, with no additional transitive-only keys. The existing XSD/local
+catalogs and their digests remain frozen. Legacy `Validate` remains XSD-only;
+ordinary `Decode` and `Encode` do not select a timeline profile.
+
+The session-owned provider retains exact rational musical positions and typed
+divisions, key, time, clef, staff, transpose and instrument histories. It includes
+independent display/sound/listening offsets, note attack/release/bend origins,
+proved grace donors, figured-bass anchors and anchor-based durations, direction
+association, barline/navigation statements, and sparse sound/instrument/MIDI
+statements. These are bounded context facts, not additional rejection rules.
+A provider pass means indexing and finalization completed; it does not assert
+that every optional or ambiguous fact is known. This release does not expose a
+general public timeline-query or playback API.
+
+The selected consumers check each duration-bearing chord tone against its
+established principal note, not the preceding chord tone, and require a valid
+local numeral-key or an applicable explicitly encoded key at the harmony's
+unshifted score origin and staff. Display offsets cannot borrow a future key.
+No initial C major, meter, clef, tempo or divisions value is invented. An own
+valid numeral-key remains an independent alternative when fallback timeline
+evidence is unavailable.
+For the duration-only chord bound, the principal is the established preceding
+non-chord `<note>` element, including a duration-bearing rest. The bound does
+not decide pitch-based chord eligibility or musical/rendering intent; a rest
+principal uses the same shorter/equal/longer duration comparison.
+
+When harmony staff is omitted in a multi-staff part, encoded-key presence can
+still be proved if the AllStaves-only baseline and every observed staff-scoped
+publication/gap partition agree. This does not select a staff or a concrete key,
+and it never enumerates the encoded staff count. The baseline is retained even
+when numbered publications appear to cover all staves. If the projection can
+vary with staff, it remains Unknown with `timeline-staff-unresolved`; malformed
+or unavailable prerequisite evidence retains its actual causal reason. General
+concrete-key queries still require resolved staff evidence.
+A projection may prove encoded-key presence, or an unchanged divisions value,
+without identifying a unique latest publisher. This requires an independently
+established baseline and independently valid same-result alternatives; missing,
+invalid or hidden candidates remain causal. Actual source witnesses survive,
+and uncertain inheritance is retained rather than replaced by fabricated
+provenance.
+
+
+Exact established regions remain usable when another region is incomplete.
+Unknown same-time conflicts, missing staff/voice/anchor evidence, and unsettled
+cursor movement across divisions boundaries retain their specific causes;
+they are not silently defaulted or turned into new musical violations.
+Signed offsets remain exact local coordinates; continuing-state selection across
+measure frames also needs established containment/order evidence. No measure
+length is invented from meter or a terminal note endpoint.
+Cursor normalization is checked against complete unit history. Staged proofs use
+only independently established prior-stage origins/units; derived descendants
+cannot certify an unresolved ancestor or its frame bound. Final facts are
+replaced only after successful closure.
+
+Grace donor identity does not establish continuous playback time. Figured-bass
+consecutive-chain positions are explicitly derived context, not a sum-duration
+restriction. Instrument state means latest applicable encoded statements, with
+exclusive solo/ensemble and atomic virtual descriptors, not a reconstructed
+synthesizer configuration. A sound `time-only` guard is retained on raw updates;
+without repeat-pass evidence, only its stated effective properties become
+unavailable, and omitted properties make no update. The reviewed
+[offset](docs/validation/timeline-offset-interpretation.md),
+[note-origin](docs/validation/timeline-note-origin-interpretation.md), and
+[instrument](docs/validation/timeline-instrument-statements.md) contracts state
+the exact source interpretations and remaining boundaries.
+
+The profiles retain all target-specific XSD, representation and unread-DTD
+limits. Full repeat/span, layout, performance realization, author intent,
+packages, linked content and external dictionaries are outside their closure.
+Opus selection assesses that document only. Predicate counts and the two
+consumer milestones are not complete MusicXML coverage or a ceiling on the
+provider's typed-state responsibilities. Final acceptance evidence is tracked
+in the [full ownership ledger](docs/validation/timeline-assessment-ownership.json).
+
+Timeline arithmetic, indexes and retained context share the session's finite
+budgets; a small input can still exceed work or memory limits.
+Contained state histories use indexed lookup; exceptional ambiguous cross-frame
+candidate comparisons can be quadratic under those same limits. Exceptional
+reconstruction can retain both old and staged services until session cleanup;
+that conservative cost remains charged, with no automatic budget increase.
+The earlier XSD-only costs are not timeline capacity promises. A matched
+same-head budget probe at published `632a969` decoded the unchanged
+`MozartTrio.musicxml` once, then assessed its **2,516 model nodes** under each
+profile. Exact minimum buffer/step limits pass; one byte/step below fails with
+the corresponding typed resource error. Both profiles also pass defaults.
+
+| Resource | `ProfileModelLocal` | `ProfileModelTimeline` | Timeline increment | Increment per node |
+| --- | ---: | ---: | ---: | ---: |
+| Minimum `MaxBufferedBytes` (logical live bytes) | 18,155,049 | 21,077,650 | 2,922,601 (+16.1%) | 1,161.61 bytes |
+| Minimum `MaxRuleSteps` | 2,848,163 | 4,193,534 | 1,345,371 (+47.2%) | 534.73 steps |
+| Cumulative context facts consumed | 0 | 1,199 | 1,199 | 0.476550 facts |
+
+The respective local/timeline totals are **7,215.84 / 8,377.44 logical bytes**
+and **1,132.02 / 1,666.75 steps per node** for this fixture. The timeline requires
+`MaxContextFacts=1199`; 1198 fails. Local consumes no context facts here: 1 is
+merely its smallest expressible positive limit, because 0 selects the default.
+A local session with zero remaining context allowance also succeeds. These
+per-node averages are sizing observations, not universal coefficients: scalar
+size, types, attributes, diagnostics, state histories and ambiguous cross-frame
+reconstruction change the work, retained scratch and publication counts.
+
+`MaxBufferedBytes` accounts for conservatively admitted logical live retained
+data and scratch, including overlapping old/staged services. The minimum above
+is found by successful-run boundary search; it is not the account's usage after
+`Finish`, when this fixture's live gauge is zero. Cumulative allocated bytes
+(`B/op` or a `TotalAlloc` difference) also count temporary allocations released
+within a run; neither metric is process RSS or a Go heap ceiling. Compiled
+metadata, runtime caches, allocator overhead and the caller's model are not a
+promise made by the session's live-buffer allowance. Defaults remain **64 MiB
+live buffer, 20 million rule steps and one million context facts**. Size finite
+overrides for the selected profile and handle resource incompleteness.
+
+Matched warmed **1,000-note** results at production `22ae68a` (the same production
+code as `632a969`) disclose the incremental timeline cost:
+
+| Target | Local median time | Timeline median time | Time ratio | Allocated bytes/op, local → timeline |
+| --- | ---: | ---: | ---: | ---: |
+| Source | 211.05 ms | 292.55 ms | 1.39× | 52,677,464 → 78,759,784 (1.50×) |
+| Model | 211.73 ms | 263.81 ms | 1.25× | 48,341,472 → 74,423,784 (1.54×) |
+
+These are five separate warmed runs per case, Go 1.27.2 linux/amd64,
+`GOMAXPROCS=4`, 200 ms per sample, with finite timing-only limits of 512 MiB
+buffer and 2^34 steps. Source includes parsing; model reuses a decoded model.
+The [independent resource checkpoint](docs/validation/evidence/timeline-resource-independent-checkpoint.md)
+records ranges, allocation counts and controls. Shared-host timing noise remains;
+the medians do not establish universal throughput or default-budget capacity.
+
+The [PR 35 review](https://github.com/go-muse/go-musicxml/pull/35#discussion_r4246488604)
+additionally reported these matched local/timeline figures at `632a969`:
+
+| Model fixture | Local time | Timeline time | Cumulative allocation, local → timeline |
+| --- | ---: | ---: | ---: |
+| `MozaChloSample.musicxml` | 68 ms | 76 ms | Not reported |
+| `MozartTrio.musicxml`, measures repeated 10× | 0.61 s | 0.71 s | 269 MB → 344 MB |
+| Same, 50× | 3.88 s | 4.50 s | 1.44 GB → 1.83 GB |
+
+The replicated cases used lifted budgets. These timing/allocation values are
+reviewer-reported, not independently remeasured here; their exact budget values,
+sampling method and MB/GB convention were not supplied. The independently
+reproduced budget boundaries, finite probe limits, raw output and procedure are
+in the [PR 35 budget evidence](docs/validation/evidence/pr35-timeline-budget-costs.md).
+**B5-PERF-01 remains outstanding** with the shared validation kernel/session
+workstream and final batch-9 reconciliation. Incremental timeline measurements
+and initialization improvements do not close the older matched-performance
+obligation.
+
 ## Fact-stream validation foundation
 
 The `validation` subpackage exports `NewCatalog`, eight generic sealed typed-plan
 constructors, the sealed shared-schema `NewXSDPlan`, bounded local relation and
-typed-reference constructors, `NewModelRepresentationPlan`, `NewEngine`, and
+typed-reference constructors, `NewModelRepresentationPlan`, `NewTimelinePlan`,
+`NewChordDurationPlan`, `NewNumeralKeyPlan`, `NewEngine`, and
 explicit-profile fact sessions using `Open`, `Attribute`, optional
 `CompleteAttributes`/`ModelRepresentation`, `Close` and `Finish`. The optional
 attribute-closure event seals explicit start-tag enumeration before children;
@@ -355,6 +515,14 @@ The additive local constructors are `NewDistinctChildAttributePlan`,
 `ReferenceOwner` binds the exact provider rule/revision defining matching scope.
 These sealed constructors require bounded exact selectors/parameters and copy
 retained inputs. They are not a callback ABI or a linked-resource resolver.
+
+`NewTimelinePlan(TimelinePlanSpec)` requires the exact compiled MusicXML schema
+and both part-reference owners. `NewChordDurationPlan(TimelineConsumerSpec)` and
+`NewNumeralKeyPlan(TimelineConsumerSpec)` require the matching schema and exact
+provider rule/revision; their rule definitions must also declare that document
+dependency. Sealed role/type validation rejects similarly named but incompatible
+schema declarations. These plans do not add generic interpretation to unrelated
+context keys or expose mutable session state.
 
 `Session.ModelRepresentation` accepts one bounded `ModelRepresentationFact` for
 the currently open model occurrence before `Close`. `ModelProblem` identifies a
@@ -412,7 +580,23 @@ not discard the underlying causes available through `errors.Is`/`errors.As`.
 by child sessions. All limits, charging owners, exact-value constructor caps,
 plan boundaries and remaining obligations are documented in the
 [foundation scope](docs/validation/foundation-scope.md). Numeric constructor
-resource limits are not XSD facets. `DecodeOptions` and generated public field
+resource limits are not XSD facets. `validation.Rational` / `NewRational` add
+an immutable reduced fraction for musical positions, including nonterminating
+values such as `1/3`; they do not widen `Decimal` or XSD `Atomic`. The zero wrapper
+is uninitialized. `Value` returns a copy, `String` returns a canonical fraction
+(or an integer), and `ByteSize` counts significant magnitude plus text. Constructor
+inputs, intermediate magnitude and canonical output are statically bounded by
+`MaxExactValueBytes`; overly large unreduced inputs may be refused even if they
+would cancel. Internal session arithmetic additionally precharges conservative
+quadratic work and live scratch before normalization, cross-products or rendering.
+Work counts architecture-independent logical bulk units (32-bit limbs and
+four-byte text chunks), not individual bits or literal machine instructions;
+large operands retain quadratic costs. Its output is retained until `Finish`;
+resource rejection means incomplete
+assessment, not musical invalidity. Cancellation is checked before and after
+synchronous `math/big` calls, which cannot be preempted in flight.
+
+`DecodeOptions` and generated public field
 representations remain unchanged. The additive model-representation event is
 required only when its corresponding sealed plan is selected; older generic
 fact sessions and the source preview retain their contracts.
@@ -434,7 +618,8 @@ assessment of the original file. DTD closure remains later work.
 
 `InspectXML(ctx, reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})`
 assesses original XML without creating a Go document. Use `ProfileSourceLocal`
-instead to add the frozen local clauses. An empty/unknown profile,
+to add the frozen local clauses, or `ProfileSourceTimeline` to add the bounded
+timeline provider and consumers described above. An empty/unknown profile,
 invalid budgets, or an already canceled context fail before the first input read.
 A nil operation error does not imply acceptance: inspect `Report.Satisfied()`.
 Ordinary normative failures return a report with no operational error. Syntax,

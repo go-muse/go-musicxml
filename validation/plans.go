@@ -45,6 +45,8 @@ const (
 // Plan is an immutable sealed typed program. Its zero value is invalid; use a
 // constructor. Plans contain no callback, XML parser, runtime expression or DSL.
 type Plan struct {
+	timeline         *timelinePlan
+	timelineConsumer *timelineConsumerPlan
 	modelAssembly    Assembly
 	local            *localPlan
 	reference        *referencePlan
@@ -142,6 +144,10 @@ func (p Plan) valid() error {
 		return contract("plan", "parameters exceed the finite configuration bound")
 	}
 	switch p.kind {
+	case planTimeline:
+		return p.timeline.valid()
+	case planChordDuration, planNumeralKey:
+		return p.timelineConsumer.valid()
 	case planModelRepresentation:
 		if !validAssembly(p.modelAssembly) {
 			return contract("model representation plan", "valid assembly required")
@@ -212,12 +218,11 @@ func validateComparison(c Comparison, a Atomic) error {
 	return nil
 }
 func (p Plan) clone() Plan {
+	p.timeline = p.timeline.clone()
+	p.timelineConsumer = p.timelineConsumer.clone()
 	p.local = p.local.clone()
 	p.reference = p.reference.clone()
-	if p.schema != nil {
-		schema := *p.schema
-		p.schema = &schema
-	}
+	p.schema = p.schema.snapshot()
 	p.children = append([]DeclarationID(nil), p.children...)
 	for i := range p.children {
 		p.children[i] = cloneDeclaration(p.children[i])
@@ -242,6 +247,9 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
+	if p.isTimeline() {
+		return p.validateTimelineFor(r)
+	}
 	if (p.kind == planLocal || p.kind == planTypedReference) && (r.Scope != ScopeNode || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate) {
 		return contract("local plan", "required normative node predicate required")
 	}
@@ -298,6 +306,12 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	return nil
 }
 func (p Plan) digestValue() any {
+	if p.kind == planTimeline {
+		return p.timeline.digest()
+	}
+	if p.kind == planChordDuration || p.kind == planNumeralKey {
+		return p.timelineConsumer.digest(p.kind)
+	}
 	if p.kind == planModelRepresentation {
 		return struct {
 			Kind     planKind
@@ -343,7 +357,7 @@ func (p Plan) digestValue() any {
 	}{p.kind, p.children, p.minimum, p.maximum, p.attribute, p.required, p.comparison, a, p.key, p.relation}
 }
 func (p Plan) configSize() int64 {
-	n := p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
+	n := p.timeline.size() + p.timelineConsumer.size() + p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
 	for _, d := range p.children {
 		n += int64(64 + len(d.OwnerOccurrence) + len(d.Occurrence))
 	}

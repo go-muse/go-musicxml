@@ -93,8 +93,8 @@ construction and compressed `.mxl` round trips in
 | Read or write compressed MusicXML | `DecodeMXL`, typed `DecodeMXL...` helpers, `As...` accessors, and `EncodeMXL` |
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
-| Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal` |
-| Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal` |
+| Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline` |
+| Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline` |
 | Construct scores and opus documents | `NewScorePartwise`, `NewScoreTimewise`, `NewOpusDocument` |
 | Construct common notes | `NewPitchedNote`, `NewRestNote` |
 | Resolve linked opus documents | `MXLPackage.ResolveOpus` |
@@ -142,6 +142,16 @@ XSD/representation scope without those local clauses. All three document roots
 are supported; score-only clauses are inapplicable to opus. Linked content is
 not assessed.
 
+Select `ProfileModelTimeline` or `ProfileSourceTimeline` to add exact musical
+positions, typed effective-state histories and the selected chord-duration and
+numeral-key checks. Chord tones are bounded by their principal note; numeral
+fallback uses an explicitly encoded key at the harmony's unshifted score origin.
+The provider also retains bounded note/offset, grace, figured-bass, direction,
+staff and instrument context. A completed provider does not imply every
+ambiguous fact is known. The separate timeline engine leaves the existing
+XSD/local profiles and legacy `Validate` unchanged. See the
+[timeline scope and evidence](docs/validation/TIMELINE_ASSESSMENT_SCOPE.md).
+
 Always inspect `Report.Satisfied()`: a nil error alone is not acceptance.
 Ordinary violations live in the report; cancellation/resource interruptions
 return their cause and a partial report. Model locations are field/index paths
@@ -151,20 +161,25 @@ Optional nil and present-zero fields remain distinct; `XMLName` is ignored
 transport metadata.
 
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
-`ProfileSourceLocal` (XSD plus the same local clauses) or the unchanged
+`ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged
 `ProfileSourceXSDPreview` (XSD only). Unread external DOCTYPE subsets still make
-both source profiles incomplete, including `Chant.musicxml`, `MozartTrio.musicxml`
+all source profiles incomplete, including `Chant.musicxml`, `MozartTrio.musicxml`
 and `MozaChloSample.musicxml`. Strict assessed decoding returns no document for
 those original files. There is no new DTD trust, stripping, fetching or ignore
 policy. The two DOCTYPE-free official opus examples are a separate assessable
 source case.
 
 These bounded implementations are under final verification. They do not establish
-complete MusicXML conformance, timeline/repeat semantics, author intent, package
+complete MusicXML conformance, full repeat/playback/layout semantics, author intent, package
 or linked-resource validity. See the [scope and evidence](docs/validation/model-assessment-scope.md)
 and [API contract](API.md#direct-current-model-assessment); no profile is selected
 implicitly. A runnable [direct-model example](model_assessment_example_test.go)
 shows explicit profile selection and the model report axes.
+
+All assessment profiles share finite resource budgets; input byte size alone
+does not predict their cost. B5-PERF-01 remains an open shared validation
+kernel/session performance obligation, with final reconciliation in batch 9;
+timeline improvements do not close it. See the [API limits](API.md#exact-timeline-and-effective-state-profiles).
 
 ## Compressed MXL and opus
 

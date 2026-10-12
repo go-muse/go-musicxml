@@ -1,0 +1,23 @@
+=== RUN   TestPR35TimelineBudgetEvidence
+=== RUN   TestPR35TimelineBudgetEvidence/musicxml-4.0/model-local
+    timeline_budget_evidence_test.go:79: DEFAULTS satisfied=true
+    timeline_budget_evidence_test.go:143: BOUNDARY kind=buffered-bytes limit=18155049 satisfied=true
+    timeline_budget_evidence_test.go:155: BOUNDARY kind=buffered-bytes limit=18155048 satisfied=false error=validation: resource limit exceeded: buffered-bytes (limit 18155048, used 18154863, requested 186)
+    timeline_budget_evidence_test.go:143: BOUNDARY kind=rule-steps limit=2848163 satisfied=true
+    timeline_budget_evidence_test.go:155: BOUNDARY kind=rule-steps limit=2848162 satisfied=false error=validation: resource limit exceeded: rule-steps (limit 2848162, used 2848162, requested 1)
+    timeline_budget_evidence_test.go:135: BOUNDARY kind=context-facts used=0 smallest_positive_limit=1 satisfied=true; remaining=0 preconsumed=1 satisfied=true (zero configured selects defaults)
+    timeline_budget_evidence_test.go:164: MEASURE nodes=2516 min_buffer=18155049 steps=2848163 context_facts=0 buffer_per_node=7215.8382 steps_per_node=1132.0203 context_per_node=0.000000 combined_minima_satisfied=true post_finish_live_buffer=0
+=== RUN   TestPR35TimelineBudgetEvidence/musicxml-4.0/model-timeline
+    timeline_budget_evidence_test.go:79: DEFAULTS satisfied=true
+    timeline_budget_evidence_test.go:143: BOUNDARY kind=buffered-bytes limit=21077650 satisfied=true
+    timeline_budget_evidence_test.go:155: BOUNDARY kind=buffered-bytes limit=21077649 satisfied=false error=validation: resource limit exceeded: buffered-bytes (limit 21077649, used 21072914, requested 4736)
+    timeline_budget_evidence_test.go:143: BOUNDARY kind=rule-steps limit=4193534 satisfied=true
+    timeline_budget_evidence_test.go:155: BOUNDARY kind=rule-steps limit=4193533 satisfied=false error=validation: resource limit exceeded: rule-steps (limit 4193533, used 4193533, requested 1)
+    timeline_budget_evidence_test.go:143: BOUNDARY kind=context-facts limit=1199 satisfied=true
+    timeline_budget_evidence_test.go:155: BOUNDARY kind=context-facts limit=1198 satisfied=false error=validation: resource limit exceeded: context-facts (limit 1198, used 1198, requested 1)
+    timeline_budget_evidence_test.go:164: MEASURE nodes=2516 min_buffer=21077650 steps=4193534 context_facts=1199 buffer_per_node=8377.4444 steps_per_node=1666.7464 context_per_node=0.476550 combined_minima_satisfied=true post_finish_live_buffer=0
+--- PASS: TestPR35TimelineBudgetEvidence (12.21s)
+    --- PASS: TestPR35TimelineBudgetEvidence/musicxml-4.0/model-local (4.89s)
+    --- PASS: TestPR35TimelineBudgetEvidence/musicxml-4.0/model-timeline (7.30s)
+PASS
+ok  	github.com/go-muse/go-musicxml	12.217s

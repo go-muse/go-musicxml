@@ -95,12 +95,12 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 	}
 	internedSchemas := make(map[string]*CompiledSchema)
 	for _, binding := range plans {
-		if binding.Plan.kind == planXSD {
-			key := string(binding.Plan.schema.assembly) + ":" + binding.Plan.schema.Digest()
+		if schema := binding.Plan.boundSchema(); schema != nil {
+			key := string(schema.assembly) + ":" + schema.Digest()
 			if existing := internedSchemas[key]; existing != nil {
-				binding.Plan.schema = existing
+				binding.Plan = binding.Plan.withBoundSchema(existing)
 			} else {
-				internedSchemas[key] = binding.Plan.schema
+				internedSchemas[key] = schema
 			}
 		}
 		if !catalogID(binding.ID) {
@@ -163,6 +163,11 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			if !slices.Contains(rule.Targets, profile.Target) {
 				return nil, contract("profile target", "required or transitive rule does not support target")
 			}
+			if plan, exists := c.plans[rule.Predicate]; exists && plan.isTimeline() {
+				if err := plan.validateTimelineRules(rule, c, closure); err != nil {
+					return nil, err
+				}
+			}
 			if support.State == ImplementationAvailable {
 				plan, exists := c.plans[rule.Predicate]
 				if !exists {
@@ -199,6 +204,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 				return nil, contract("schema profile", "conflicting schemas in one assembly")
 			}
 			schemas[plan.schema.assembly] = plan.schema
+		}
+		if err := validateTimelineProfile(c, closure, schemas); err != nil {
+			return nil, err
 		}
 		if len(schemas) != 0 {
 			for _, name := range profile.SupportedRoots {
@@ -675,6 +683,13 @@ func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *c
 			}
 		}
 		if plan, ok := c.plans[rule.Predicate]; ok {
+			if plan.kind == planTimeline {
+				for _, owner := range plan.timeline.PartOwners {
+					if err := add(consumer, catalogPhase{rule: owner.Rule}); err != nil {
+						return nil, err
+					}
+				}
+			}
 			if plan.kind == planContextCompare {
 				reads[catalogFactBinding{key: plan.key, document: plan.relation == RelationDocument}] = true
 			}
@@ -896,10 +911,10 @@ func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []Plan
 		if err := binding.Plan.valid(); err != nil {
 			return err
 		}
-		if binding.Plan.kind == planXSD {
-			key := string(binding.Plan.schema.assembly) + ":" + binding.Plan.schema.Digest()
+		if schema := binding.Plan.boundSchema(); schema != nil {
+			key := string(schema.assembly) + ":" + schema.Digest()
 			if !seenSchemas[key] {
-				b.take(binding.Plan.schema.kernel.LogicalBytes())
+				b.take(schema.kernel.LogicalBytes())
 				if !b.ok() {
 					break
 				}

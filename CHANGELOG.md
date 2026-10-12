@@ -9,6 +9,26 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add explicit `ProfileModelTimeline` and `ProfileSourceTimeline` through a
+  separate engine, preserving frozen XSD/local profiles and legacy XSD-only
+  `Validate`. The bounded provider retains exact musical chronology and typed
+  effective state; selected consumers check principal-note chord duration bounds
+  and explicit numeral-key or encoded key at the unshifted harmony score origin.
+- Add sealed `NewTimelinePlan`, `NewChordDurationPlan` and `NewNumeralKeyPlan`,
+  finalized note/offset/grace/figured-bass/direction context and sparse encoded
+  instrument/MIDI statements. Unknown dependencies retain local causal evidence;
+  provider completion is not a claim that every fact is known. Publish the full
+  clause/requirement ownership ledger without promoting frozen source statuses
+  or claiming complete repeat, layout, playback or MusicXML conformance.
+- Keep B5-PERF-01 outstanding under shared validation kernel/session ownership
+  and final batch-9 reconciliation. New timeline resource improvements do not
+  discharge the earlier matched-performance obligation. Final integrated
+  acceptance and actual 386 execution remain separately evidenced gates.
+- Add immutable `validation.Rational` with bounded canonical fractions, separate
+  from XSD decimals, and shared-session metered exact arithmetic for musical
+  positions. Arithmetic reserves conservative work and scratch before big-number
+  operations and keeps resource exhaustion distinct from invalidity.
+
 - Add direct `AssessModel` with explicit `ProfileModelXSD` and
   `ProfileModelLocal`, plus `ProfileSourceLocal` for the same bounded local
   clauses on original input. Preserve the existing generated `Assess` type.
@@ -21,9 +41,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   local instrument-link split; date and MIDI existence share existing
   consequences. These counts are not conformance coverage.
 - Publish the bounded model/local scope and executable-evidence ledger with
-  unchanged planning contracts and remaining batches 6–9. Final combined review,
-  aggregate checks and exact-head CI evidence remain pending; this entry does
-  not claim production readiness or actual 386 execution on the local host.
+  unchanged planning contracts and remaining batches 6–9. Batch-5 combined
+  review and aggregate checks passed; [PR #34](https://github.com/go-muse/go-musicxml/pull/34)
+  merged as `146400c`, with all nine [postmerge CI jobs](https://github.com/go-muse/go-musicxml/actions/runs/38202157871)
+  passing on that exact main commit. This historical checkpoint does not close
+  batch-6 acceptance or B5-PERF-01, or claim complete MusicXML conformance.
 
 - Add opt-in single-pass `InspectXML` and `DecodeAssessed` with explicit
   `ProfileSourceXSDPreview`, original-byte locations, bounded retained facts and

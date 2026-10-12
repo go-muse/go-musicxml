@@ -33,7 +33,28 @@ func newModelAssessmentEngine() (*validation.Engine, error) { return modelAssess
 
 // The preview catalog remains separate so adding target-specific local profiles
 // cannot silently change its obligation list or catalog digest.
+type assessmentDefinitions struct {
+	rules    []validation.RuleDefinition
+	profiles []validation.Profile
+	plans    []validation.PlanBinding
+	schemas  map[validation.Assembly]*validation.CompiledSchema
+}
+
 func buildModelAssessmentEngine() (*validation.Engine, error) {
+	d, err := buildModelAssessmentDefinitions()
+	if err != nil {
+		return nil, err
+	}
+	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	if err != nil {
+		return nil, err
+	}
+	return validation.NewEngine(catalog)
+}
+
+// Reusing definition construction does not broaden the frozen compiled catalog.
+// Each target family receives an independent catalog and therefore its own digest.
+func buildModelAssessmentDefinitions() (*assessmentDefinitions, error) {
 	modelXSD := validation.Profile{
 		ID: ProfileModelXSD, MusicXMLVersion: "4.0", Target: validation.TargetModel,
 		RegistryCommit:   assessmentRegistryCommit,
@@ -56,6 +77,7 @@ func buildModelAssessmentEngine() (*validation.Engine, error) {
 	}
 	var rules []validation.RuleDefinition
 	var plans []validation.PlanBinding
+	schemas := make(map[validation.Assembly]*validation.CompiledSchema)
 	for _, input := range []struct {
 		assembly validation.Assembly
 		data     validation.SchemaData
@@ -68,6 +90,7 @@ func buildModelAssessmentEngine() (*validation.Engine, error) {
 		if err != nil {
 			return nil, err
 		}
+		schemas[input.assembly] = schema
 		for _, operation := range []struct {
 			check                       validation.XSDCheck
 			title, explanation, locator string
@@ -139,9 +162,5 @@ func buildModelAssessmentEngine() (*validation.Engine, error) {
 			plans = append(plans, local.plans...)
 		}
 	}
-	catalog, err := validation.NewCatalog(rules, []validation.Profile{modelXSD, modelLocal, sourceLocal}, plans)
-	if err != nil {
-		return nil, err
-	}
-	return validation.NewEngine(catalog)
+	return &assessmentDefinitions{rules: rules, profiles: []validation.Profile{modelXSD, modelLocal, sourceLocal}, plans: plans, schemas: schemas}, nil
 }
