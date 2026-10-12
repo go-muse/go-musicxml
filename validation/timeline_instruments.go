@@ -64,7 +64,11 @@ func (h *timelineState) addInstrumentChange(ctx context.Context, s *Session, id 
 			return e
 		}
 		if h.InstrumentChanges[i].Instrument == id {
-			return publishState(ctx, s, &h.InstrumentChanges[i].History, p)
+			if e := publishState(ctx, s, &h.InstrumentChanges[i].History, p); e != nil {
+				return e
+			}
+			h.InstrumentChanges[i].discardStatementIndices(s)
+			return nil
 		}
 	}
 	if e := s.retain(256); e != nil {
@@ -76,114 +80,6 @@ func (h *timelineState) addInstrumentChange(ctx context.Context, s *Session, id 
 	}
 	h.InstrumentChanges = append(h.InstrumentChanges, candidate)
 	return nil
-}
-func stateChangedProperty[T any](v Evidence[T]) Evidence[T] {
-	if v.State == EvidenceAbsent || v.State == "" {
-		return stateUnknown[T]("instrument-change-omission-unresolved")
-	}
-	return v
-}
-func stateEffectiveChange(v instrumentState) instrumentState {
-	v.Sound = stateChangedProperty(v.Sound)
-	v.Solo = stateChangedProperty(v.Solo)
-	v.Ensemble = stateChangedProperty(v.Ensemble)
-	v.Virtual = stateChangedProperty(v.Virtual)
-	if v.Virtual.State == EvidenceKnown {
-		v.Virtual.Value.Library = stateChangedProperty(v.Virtual.Value.Library)
-		v.Virtual.Value.Name = stateChangedProperty(v.Virtual.Value.Name)
-	}
-	return v
-}
-func (h *timelineState) effectiveInstrument(ctx context.Context, s *Session, pos musicalPosition, id NodeRef) (stateResult[instrumentState], error) {
-	out := stateResult[instrumentState]{}
-	closure, e := h.closure(ctx, s, pos)
-	if e != nil {
-		return out, e
-	}
-	if closure.State != EvidenceKnown {
-		return stateUnavailableResult[bool, instrumentState](ctx, s, closure)
-	}
-	var history *stateHistory[instrumentState]
-	for i := range h.InstrumentChanges {
-		if e = s.step(ctx, 1); e != nil {
-			return out, e
-		}
-		if h.InstrumentChanges[i].Instrument == id {
-			history = &h.InstrumentChanges[i].History
-			break
-		}
-	}
-	var latest *musicalPosition
-	if history != nil {
-		for i := range history.Publications {
-			p := &history.Publications[i].Position
-			if e = s.step(ctx, 1); e != nil {
-				return out, e
-			}
-			if p.Part != pos.Part {
-				continue
-			}
-			cmp, x := stateComparePosition(ctx, s, *p, pos)
-			if x != nil {
-				return out, x
-			}
-			if cmp > 0 {
-				continue
-			}
-			if latest == nil {
-				latest = p
-			} else {
-				cmp, x = stateComparePosition(ctx, s, *p, *latest)
-				if x != nil {
-					return out, x
-				}
-				if cmp > 0 {
-					latest = p
-				}
-			}
-		}
-	}
-	for _, g := range h.InstrumentGaps {
-		if e = s.step(ctx, 1); e != nil {
-			return out, e
-		}
-		if g.Part == pos.Part && g.FirstMeasure <= pos.MeasureOrdinal && (latest == nil || latest.MeasureOrdinal <= g.LastMeasure) {
-			return stateUnavailableResult[bool, instrumentState](ctx, s, g.Availability)
-		}
-	}
-	if history != nil {
-		out, e = queryState(ctx, s, h, history, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[instrumentState])
-		if e != nil {
-			return out, e
-		}
-		if out.Value.State != EvidenceAbsent {
-			if out.Value.State == EvidenceKnown {
-				out.Value.Value = stateEffectiveChange(out.Value.Value)
-			}
-			return out, nil
-		}
-	}
-	out.Value = Evidence[instrumentState]{State: EvidenceAbsent}
-	for _, d := range h.Definitions {
-		if e = s.step(ctx, 1); e != nil {
-			return out, e
-		}
-		if d.Part != pos.Part || d.Instrument != id {
-			continue
-		}
-		if _, e = stateReserve(ctx, s, d); e != nil {
-			return out, e
-		}
-		if out.Value.State == EvidenceAbsent {
-			out.Value = stateClone(d.Value)
-			out.Provenance = stateClone(d.Provenance)
-		} else {
-			out.Value = stateUnknown[instrumentState]("timeline-instrument-definition-conflict")
-			return out, nil
-		}
-	}
-	out.Inherited = out.Value.State != EvidenceAbsent
-	return out, nil
 }
 func (r *stateReader) instrument(n *factNode, change bool) Evidence[instrumentState] {
 	complete := r.complete(n)
@@ -484,12 +380,12 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 				return e
 			}
 			item := instrumentChanges{Instrument: id.Value}
-			if e := addStateGap(ctx, s, &item.History, g); e != nil {
+			if e := item.addStatementGap(ctx, s, g, r.instrument(ch, true)); e != nil {
 				return e
 			}
 			h.InstrumentChanges = append(h.InstrumentChanges, item)
 		} else {
-			if e := addStateGap(ctx, s, &h.InstrumentChanges[at].History, g); e != nil {
+			if e := h.InstrumentChanges[at].addStatementGap(ctx, s, g, r.instrument(ch, true)); e != nil {
 				return e
 			}
 		}

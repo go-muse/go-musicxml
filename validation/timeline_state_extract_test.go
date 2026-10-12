@@ -154,10 +154,10 @@ func TestTimelineStateInstrumentIdentitySetsAndContinuingChanges(t *testing.T) {
 			t.Fatalf("instrument bleed %+v,%v", r, e)
 		}
 	}
-	// Omitted change properties are explicitly unresolved; absence cannot silently
-	// reset them, and the unapproved omission-as-inherit policy is not invented.
+	// Omitted top-level fields make no new encoded statement. With no initial
+	// descriptor, absence remains absence; no playback default is invented.
 	r, e := h.effectiveInstrument(context.Background(), s, statePosition(t, 2, 0, 1), i2)
-	if e != nil || r.Value.Value.Virtual.State != EvidenceUnknown || r.Value.Value.Virtual.Reason != "instrument-change-omission-unresolved" {
+	if e != nil || r.Value.Value.Virtual.State != EvidenceAbsent {
 		t.Fatalf("invented property reset %+v,%v", r, e)
 	}
 }

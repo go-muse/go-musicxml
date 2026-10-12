@@ -132,8 +132,10 @@ type noteInstrumentSet struct {
 	Complete   Evidence[bool]
 }
 type instrumentChanges struct {
-	Instrument NodeRef
-	History    stateHistory[instrumentState]
+	Instrument       NodeRef
+	History          stateHistory[instrumentState]
+	statementIndices [3]*stateHistoryIndex
+	statementGaps    [3][]stateGap
 }
 
 type timelineState struct {
