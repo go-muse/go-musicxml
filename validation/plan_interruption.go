@@ -2,13 +2,15 @@ package validation
 
 import "errors"
 
-// provedPlanInterruption is produced only after a sealed local/reference
-// operator has established its own false consequence. It does not infer proof
-// from an arbitrary nonzero Decision returned alongside an error.
+// provedPlanInterruption is produced only after a sealed local, reference or
+// timeline operator has established its own false consequence. It does not infer
+// proof from an arbitrary nonzero Decision returned alongside an error.
 type provedPlanInterruption struct {
 	node      NodeID
 	local     *localPlan
 	reference *referencePlan
+	timeline  *timelineConsumerPlan
+	kind      planKind
 	decision  Decision
 	cause     error
 }
@@ -31,7 +33,16 @@ func (s *Session) recordProvedPlanInterruption(r RuleDefinition, n *factNode, p 
 	if !ok || proof.node != n.header.ID || proof.decision.Outcome != OutcomeFail {
 		return err
 	}
-	if !((p.kind == planLocal && proof.local == p.local && proof.reference == nil) || (p.kind == planTypedReference && proof.reference == p.reference && proof.local == nil)) {
+	matched := false
+	switch p.kind {
+	case planLocal:
+		matched = proof.local == p.local && proof.reference == nil && proof.timeline == nil && proof.kind == ""
+	case planTypedReference:
+		matched = proof.reference == p.reference && proof.local == nil && proof.timeline == nil && proof.kind == ""
+	case planChordDuration, planNumeralKey:
+		matched = proof.timeline != nil && proof.timeline == p.timelineConsumer && proof.kind == p.kind && proof.local == nil && proof.reference == nil
+	}
+	if !matched {
 		return err
 	}
 	// record latches the outcome before diagnostics or dependency-cache storage.
