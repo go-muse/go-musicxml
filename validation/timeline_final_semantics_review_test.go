@@ -876,3 +876,54 @@ func TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds(t *testing.T) {
 		t.Errorf("proved backup upper bound failed to preserve later unconditional repair: %+v err=%v", later, err)
 	}
 }
+
+// A later observed ordinary-note origin may depend on the very excursion whose
+// units are being certified. Only an independently established bound can rule
+// out the different-valued declaration in the following frame.
+func TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound(t *testing.T) {
+	for _, independent := range []bool{false, true} {
+		t.Run(map[bool]string{false: "dependent-recovered-bound", true: "independent-bound-control"}[independent], func(t *testing.T) {
+			ctx := context.Background()
+			s, svc, b := runtimeFixture(t)
+			attrs := func(id NodeID, units int64) *factNode {
+				return stateNode(b, timelineRoleAttributes, id, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, id+1, stateAtomicDecimal(t, units, 1)))
+			}
+			move := func(role timelineRole, id NodeID, duration int64) *factNode {
+				durationRole := timelineRoleForwardDuration
+				if role == timelineRoleBackup {
+					durationRole = timelineRoleBackupDuration
+				}
+				return stateNode(b, role, id, stateAbsent[Atomic](), stateNode(b, durationRole, id+1, stateAtomicDecimal(t, duration, 1)))
+			}
+			children := []*factNode{attrs(20, 1)}
+			if independent {
+				// The departure of this wholly in-frame rewind is an observed
+				// unshifted origin at 11 before the excursion under review.
+				children = append(children, runtimeNote(t, b, 30, 11, false), move(timelineRoleBackup, 40, 9))
+			} else {
+				children = append(children, runtimeNote(t, b, 30, 2, false))
+			}
+			children = append(children, move(timelineRoleForward, 50, 8), move(timelineRoleBackup, 60, 9), runtimeNote(t, b, 70, 10, false), stateNode(b, timelineRoleSound, 80, stateAbsent[Atomic]()))
+			blocks := []timelineMeasureBlock{runtimeBlock(b, 0, children...), runtimeBlock(b, 1, attrs(90, 2), runtimeNote(t, b, 100, 2, false))}
+			for _, block := range blocks {
+				if err := svc.readMeasure(ctx, s, b, block); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := svc.finalizeTimingOrigins(ctx, s, b, blocks); err != nil {
+				t.Fatal(err)
+			}
+			if first := svc.Facts[30]; first.Position.State != EvidenceKnown || first.End.State != EvidenceKnown {
+				t.Fatalf("independent prefix lost: %+v", first)
+			}
+			movement, descendant := svc.Facts[50], svc.Facts[80]
+			if !independent {
+				if movement.Duration.State == EvidenceKnown || descendant.Position.State == EvidenceKnown {
+					t.Fatalf("excursion used its dependent recovered bound to certify its own units: movement=%+v descendant=%+v", movement, descendant)
+				}
+			} else if movement.Duration.State != EvidenceKnown || movement.Duration.Value.String() != "8" || descendant.Position.State != EvidenceKnown || descendant.Position.Value.Offset.String() != "11" {
+				t.Fatalf("independently contained excursion control lost: movement=%+v descendant=%+v", movement, descendant)
+			}
+		})
+	}
+}
