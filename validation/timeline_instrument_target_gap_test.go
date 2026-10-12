@@ -250,3 +250,35 @@ func TestTimelineConditionalRepairSearchCancellation(t *testing.T) {
 	}
 	t.Logf("conditional suffix cancellation boundaries: %d", calls)
 }
+
+func TestTimelineKnownPositionHiddenInstrumentPublisherStartsAtPoint(t *testing.T) {
+	ctx := context.Background()
+	s, svc, b := runtimeFixture(t)
+	h := &svc.State
+	stateClose(t, s, h, 0)
+	at := statePosition(t, 0, 2, 1)
+	id := NodeRef{"d", 71}
+	sound := stateNode(b, timelineRoleSound, 90, stateAbsent[Atomic]())
+	sound.end.ChildrenComplete = stateUnknown[bool]("hidden-publisher")
+	if err := h.readInstrumentChanges(ctx, s, b, sound, at); err != nil {
+		t.Fatal(err)
+	}
+	for _, q := range []int64{1, 3} {
+		at.Offset = mustRational(t, q, 1)
+		got, err := h.effectiveInstrumentStatements(ctx, s, at, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		midi, err := h.effectiveMIDIStatements(ctx, s, at, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := EvidenceAbsent
+		if q == 3 {
+			want = EvidenceUnknown
+		}
+		if got.Sound.Value.State != want || got.Performance.Value.State != want || got.Virtual.Value.State != want || midi.Program.Value.State != want {
+			t.Fatalf("q%d hidden publisher locality: instrument=%+v midi=%+v", q, got, midi.Program)
+		}
+	}
+}

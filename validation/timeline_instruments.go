@@ -342,7 +342,7 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 	children, complete := r.children(n, timelineRoleSoundInstrumentChange)
 	gap := func(availability Evidence[bool]) error {
 		availability = stateConditionalValue(availability, condition)
-		g := stateGap{Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: availability}
+		g := stateGap{Position: &pos, Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: availability}
 		if _, e := stateReserve(ctx, s, g); e != nil {
 			return e
 		}
@@ -353,7 +353,7 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 		if r.err != nil {
 			return r.err
 		}
-		if err := h.gapMIDIStatements(ctx, s, stateGap{Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateConditionalValue(complete, condition)}); err != nil {
+		if err := h.gapMIDIStatements(ctx, s, stateGap{Position: &pos, Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateConditionalValue(complete, condition)}); err != nil {
 			return err
 		}
 		return gap(complete)
