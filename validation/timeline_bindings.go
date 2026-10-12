@@ -193,6 +193,9 @@ const (
 	timelineRoleGraceStealPrevious
 	timelineRoleGraceStealFollowing
 	timelineRoleGraceMakeTime
+	timelineRoleFiguredBass
+	timelineRoleFiguredBassFigure
+	timelineRoleFiguredBassDuration
 	timelineRoleLimit
 )
 
@@ -226,6 +229,8 @@ var timelineRoleShapes = [...]timelineRoleShape{
 	{timelineRoleLineDetailColor, "line-detail", "color", "color", 1, true},
 	{timelineRoleLineDetailLineType, "line-detail", "line-type", "line-type", 1, true},
 	{timelineRoleLineDetailPrintObject, "line-detail", "print-object", "yes-no", 1, true},
+	{timelineRoleFiguredBassFigure, "figured-bass", "figure", "figure", 1, false},
+	{timelineRoleFiguredBassDuration, "figured-bass", "duration", "positive-divisions", 1, false},
 	{timelineRoleNoteAttack, "note", "attack", "divisions", 1, true},
 	{timelineRoleNoteRelease, "note", "release", "divisions", 1, true},
 	{timelineRoleNoteNotations, "note", "notations", "notations", 1, false},
@@ -507,7 +512,7 @@ func compileTimelineBindings(schema *CompiledSchema) (*timelineBindings, error) 
 		for _, event := range []struct {
 			role timelineRole
 			name string
-		}{{timelineRoleNote, "note"}, {timelineRoleBackup, "backup"}, {timelineRoleForward, "forward"}, {timelineRoleAttributes, "attributes"}, {timelineRoleHarmony, "harmony"}, {timelineRoleDirection, "direction"}, {timelineRoleSound, "sound"}, {timelineRoleListening, "listening"}} {
+		}{{timelineRoleNote, "note"}, {timelineRoleBackup, "backup"}, {timelineRoleForward, "forward"}, {timelineRoleAttributes, "attributes"}, {timelineRoleHarmony, "harmony"}, {timelineRoleDirection, "direction"}, {timelineRoleSound, "sound"}, {timelineRoleListening, "listening"}, {timelineRoleFiguredBass, "figured-bass"}} {
 			events, e := find(h.Content, event.name, event.name, 1, false)
 			if e != nil {
 				return nil, e
@@ -607,7 +612,7 @@ func (b *timelineBindings) size() int64 {
 // when its underlying graph has been changed to another value family.
 func timelineExpectedShape(name string) (xsd.TypeContentShape, bool) {
 	switch name {
-	case "", "attributes", "note", "backup", "forward", "direction", "harmony", "clef", "double", "empty", "for-part", "grace", "instrument", "instrument-change", "interchangeable", "key", "line-detail", "listening", "midi-instrument", "numeral", "numeral-key", "part-clef", "part-list", "part-transpose", "play", "score-instrument", "score-part", "sound", "staff-details", "staff-tuning", "swing", "time", "transpose", "virtual-instrument", "bend", "notations", "technical", "release":
+	case "", "attributes", "note", "backup", "forward", "direction", "harmony", "clef", "double", "empty", "for-part", "grace", "instrument", "instrument-change", "interchangeable", "key", "line-detail", "listening", "midi-instrument", "numeral", "numeral-key", "part-clef", "part-list", "part-transpose", "play", "score-instrument", "score-part", "sound", "staff-details", "staff-tuning", "swing", "time", "transpose", "virtual-instrument", "bend", "notations", "technical", "release", "figured-bass", "figure":
 		return xsd.ShapeComplex | xsd.ShapeElements, true
 	case "cancel", "key-octave":
 		return xsd.ShapeComplex | xsd.ShapeInteger, true

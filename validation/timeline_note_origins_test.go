@@ -3,6 +3,7 @@ package validation
 import (
 	"context"
 	"errors"
+	"strconv"
 	"testing"
 )
 
@@ -193,4 +194,32 @@ func TestNoteOriginsReuseKnownEndAndBoundRecordAllocation(t *testing.T) {
 	if err := limitedService.readNoteOrigins(context.Background(), limited, b, n, fact, stateKnown(stateDecimal(t, 3, 1))); !errors.Is(err, ErrResourceLimit) || len(limitedService.NoteOrigins) != 0 {
 		t.Fatalf("budget failure published: %v", err)
 	}
+}
+
+func TestNoteOriginsMidReadCancellationAndSignedOffset(t *testing.T) {
+	for _, at := range []int{3, 10, 20} {
+		t.Run(strconv.Itoa(at), func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			service := &timelineService{}
+			b := noteOriginBindings()
+			n := runtimeNote(t, b, 20, 6, false)
+			ctx := &rationalCancelContext{Context: context.Background(), at: at}
+			if err := service.readNoteOrigins(ctx, s, b, n, noteOriginFact(t), stateKnown(stateDecimal(t, 3, 1))); !errors.Is(err, context.Canceled) || len(service.NoteOrigins) != 0 {
+				t.Fatalf("mid-read cancellation published: %v", err)
+			}
+		})
+	}
+	s := rationalSession(t, Budgets{})
+	defer s.cleanup()
+	service := &timelineService{}
+	b := noteOriginBindings()
+	n := runtimeNote(t, b, 20, 6, false)
+	stateAttribute(b, n, timelineRoleNoteAttack, stateAtomicDecimal(t, -1, 1).Value)
+	fact := noteOriginFact(t)
+	fact.Position.Value.Offset = timelineZero
+	if err := service.readNoteOrigins(context.Background(), s, b, n, fact, stateKnown(stateDecimal(t, 3, 1))); err != nil {
+		t.Fatal(err)
+	}
+	noteOriginCheckPosition(t, service.NoteOrigins[20].Attack.Position, "-1/3")
 }

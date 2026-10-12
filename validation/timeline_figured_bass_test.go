@@ -125,3 +125,22 @@ func TestFiguredBassOriginScopeAndCancellation(t *testing.T) {
 		t.Fatalf("canceled publication: %v", err)
 	}
 }
+
+func TestFiguredBassOriginLaterUnknownMarkersDoNotMaskEarlierAnchor(t *testing.T) {
+	for _, laterFirst := range []bool{false, true} {
+		t.Run(map[bool]string{false: "later-last", true: "later-first"}[laterFirst], func(t *testing.T) {
+			s, service, b, block := figuredOriginFixture(t, OrderSource)
+			late := block.content.children[1]
+			late.end.ChildrenComplete = stateUnknown[bool]("later-note-branches-unavailable")
+			if !laterFirst {
+				block.content.children[1], block.content.children[3] = block.content.children[3], block.content.children[1]
+			}
+			if err := service.resolveFiguredBassOrigins(context.Background(), s, b, block); err != nil {
+				t.Fatal(err)
+			}
+			if got := service.FiguredBassOrigins[10].Anchor; got.State != EvidenceKnown || got.Value.Node != 40 {
+				t.Fatalf("later unknown branch poisoned earlier anchor: %+v", got)
+			}
+		})
+	}
+}

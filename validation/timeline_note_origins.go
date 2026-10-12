@@ -177,7 +177,7 @@ func (service *timelineService) readNoteOrigins(ctx context.Context, s *Session,
 		return contract("note timing origins", "duplicate publication")
 	}
 	// Admit fixed record and map storage before retaining any new collection.
-	if err := s.retain(8192); err != nil {
+	if err := s.retain(4096); err != nil {
 		return err
 	}
 	out := noteTimingOrigin{Note: NodeRef{s.documentID, note.header.ID}, Part: fact.Part, Staff: fact.Staff, Voice: fact.Voice, ScoreOnset: fact.Position, Duration: fact.Duration, GraceTiming: Evidence[graceTimingOrigin]{State: EvidenceAbsent}}
