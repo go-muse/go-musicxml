@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"runtime"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -350,4 +352,28 @@ func TestIndependentTimelineRuntimeExactModelTenth(t *testing.T) {
 		t.Fatal("model float silently rounded to source decimal")
 	}
 	t.Logf("1000 exact-model notes: work=%d retained=%d last=%s", rationalUsage(t, s, BudgetRuleSteps), rationalUsage(t, s, BudgetBufferedBytes), want)
+}
+
+func TestIndependentTimelineRejectsBeforeLargePayloadClone(t *testing.T) {
+	s := rationalSession(t, Budgets{MaxBufferedBytes: 1})
+	defer s.cleanup()
+	h := &stateHistory[timeState]{}
+	payload := strings.Repeat("3", 1<<20)
+	p := statePublication[timeState]{Position: statePosition(t, 0, 1, 3), Scope: stateScope{AllStaves: true}, Value: stateKnown(timeState{Pairs: []timePair{{Beats: stateKnown(payload), BeatType: stateKnown("4")}}})}
+	runtime.GC()
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	err := publishState(context.Background(), s, h, p)
+	runtime.ReadMemStats(&after)
+	if !errors.Is(err, ErrResourceLimit) || !errors.Is(err, ErrIncompleteAssessment) || len(h.Publications) != 0 || h.index != nil || rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+		t.Fatalf("rejected publication escaped: %v count=%d", err, len(h.Publications))
+	}
+	if allocated := after.TotalAlloc - before.TotalAlloc; allocated > 64<<10 {
+		t.Fatalf("cloned large string before buffer charge: allocated=%d", allocated)
+	} else {
+		t.Logf("rejected 1MiB payload clone allocated only %d bytes in preflight/error handling", allocated)
+	}
+	if rationalUsage(t, s, BudgetRuleSteps) < 1<<20 {
+		t.Fatal("large input traversal/string-copy work not metered")
+	}
 }
