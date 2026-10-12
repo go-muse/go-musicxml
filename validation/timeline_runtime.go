@@ -82,7 +82,15 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 	// unobserved terminal End. Cursor excursions cannot create new witnesses.
 	prefix, principalPrefix, monotone := true, false, true
 	cursorPlacement := stateGapPlacement{}
+	positiveUnits := false
+	if len(service.unitPositive) != 0 && block.part.State == EvidenceKnown {
+		if err := s.step(ctx, 1+int64(len(block.part.Value.DocumentID))); err != nil {
+			return err
+		}
+		positiveUnits = service.unitPositive[block.part.Value]
+	}
 	units := Evidence[Decimal]{State: EvidenceAbsent}
+	unitPlacementUnproved := false
 	origin := timelineAt(block, cursor.Position)
 	if origin.State == EvidenceKnown {
 		inherited, err := service.State.effectiveDivisions(ctx, s, origin.Value)
@@ -90,6 +98,12 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			return err
 		}
 		units = inherited.Value
+		if service.unitGates != nil && units.State != EvidenceKnown {
+			unitPlacementUnproved, err = service.State.displacedUnitDependency(ctx, s, origin.Value)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	unitGate, err := timelineUnitPlacementGap(r, block, units)
 	if err != nil {
@@ -152,6 +166,10 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		if unitGap.State != EvidenceAbsent {
 			selectedUnits = unitGap
 		}
+		normalization, normalizationOverride := service.unitNormalizations[event.header.ID]
+		if normalizationOverride {
+			selectedUnits = normalization.Units
+		}
 		switch {
 		case r.matches(event, timelineRoleNote):
 			movement.Kind = timelineMovementNote
@@ -193,6 +211,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			if unitGap.State != EvidenceAbsent {
 				units = unitGap
 			}
+			if normalizationOverride {
+				units = normalization.Units
+			}
 			movement.Kind = timelineMovementBackup
 			raw := stateDecimalValue(r.childScalar(event, timelineRoleBackupDuration))
 			rawMovement = raw
@@ -209,6 +230,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		case r.matches(event, timelineRoleForward):
 			if unitGap.State != EvidenceAbsent {
 				units = unitGap
+			}
+			if normalizationOverride {
+				units = normalization.Units
 			}
 			movement.Kind = timelineMovementForward
 			raw := stateDecimalValue(r.childScalar(event, timelineRoleForwardDuration))
@@ -232,6 +256,9 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 			fact.Voice = stateText(r.childScalar(event, timelineRoleDirectionVoice))
 		}
 		if movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && !movement.Chord.Value {
+			if normalizationOverride {
+				units = normalization.Units
+			}
 			principalUnits = units
 		}
 		if r.err != nil {
@@ -289,13 +316,13 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 				}
 			}
 			if cursor.Position.State != EvidenceKnown {
-				cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, block.part, rawMovement, movement.Kind == timelineMovementBackup, service.unitGates[event.header.ID].PositiveDirection)
+				cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, rawMovement, movement.Kind == timelineMovementBackup, positiveUnits || service.unitGates[event.header.ID].PositiveDirection)
 			}
-		} else if movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && !movement.Chord.Value && movement.Grace.State == EvidenceKnown && !movement.Grace.Value && cursor.Position.State != EvidenceKnown && cursorPlacement.Displaced {
+		} else if movement.Kind == timelineMovementNote && movement.Chord.State == EvidenceKnown && !movement.Chord.Value && movement.Grace.State == EvidenceKnown && !movement.Grace.Value && cursor.Position.State != EvidenceKnown && (cursorPlacement.Displaced || normalizationOverride && !normalization.Restored || unitPlacementUnproved) {
 			// An ordinary note advances the unknown cursor. A prior upper
 			// bound does not bound its new end; an established lower survives
 			// only an assessed positive duration and positive unit-domain proof.
-			cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, block.part, stateDecimalValue(r.childScalar(event, timelineRoleNoteDuration)), false)
+			cursorPlacement = service.movementPlacement(fact.Position, cursorPlacement, stateDecimalValue(r.childScalar(event, timelineRoleNoteDuration)), false, positiveUnits)
 		}
 		if movement.Kind == timelineMovementBackup || movement.Duration.State == EvidenceKnown && movement.Duration.Value.value.Sign() < 0 {
 			monotone = false
@@ -384,6 +411,13 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 					units, err = service.State.effectiveDivisionsEvidence(ctx, s, fact.Position.Value)
 					if err != nil {
 						return err
+					}
+					unitPlacementUnproved = false
+					if units.State != EvidenceKnown {
+						unitPlacementUnproved, err = service.State.displacedUnitDependency(ctx, s, fact.Position.Value)
+						if err != nil {
+							return err
+						}
 					}
 				}
 			}

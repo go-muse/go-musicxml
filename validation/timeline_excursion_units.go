@@ -57,12 +57,8 @@ func (v *timelineService) recordUnitExcursion(ctx context.Context, s *Session, i
 
 // A directional bound survives unavailable normalization only after a complete
 // positive-unit-domain proof. No sign is inferred from an unavailable scalar.
-func (v *timelineService) movementPlacement(origin Evidence[musicalPosition], prior stateGapPlacement, part Evidence[NodeRef], raw Evidence[Decimal], back bool, positiveDirection ...bool) stateGapPlacement {
+func (v *timelineService) movementPlacement(origin Evidence[musicalPosition], prior stateGapPlacement, raw Evidence[Decimal], back, positive bool) stateGapPlacement {
 	out := stateGapPlacement{Displaced: true}
-	positive := len(positiveDirection) != 0 && positiveDirection[0]
-	if part.State == EvidenceKnown && v.unitPositive[part.Value] {
-		positive = true
-	}
 	if !positive || raw.State != EvidenceKnown || raw.Value.value.Sign() < 0 {
 		return out
 	}
@@ -231,10 +227,16 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 	// Least-proof construction: every unresolved excursion is stopped before
 	// any bound or publisher coordinate is used to certify it. Restoring only
 	// independently proved gates grows knowledge; a cycle cannot start itself.
-	stage, err := v.rebuildUnitStage(ctx, s, b, blocks, gates, positive)
+	var normalizations map[NodeID]timelineNormalizationGate
+	stage, err := v.rebuildUnitStage(ctx, s, b, blocks, gates, positive, normalizations)
 	if err != nil {
 		return err
 	}
+	stage, err = v.closeUnitStage(ctx, s, b, blocks, gates, positive, normalizations, stage)
+	if err != nil {
+		return err
+	}
+	normalizations = stage.unitNormalizations
 	for {
 		progress := 0
 		for _, exc := range v.unitExcursions {
@@ -275,16 +277,26 @@ func (v *timelineService) finalizeExcursionUnits(ctx context.Context, s *Session
 				gates[exc.Node] = gate
 			}
 		}
+		restored, e := stage.restoreNormalizations(ctx, s, blocks)
+		if e != nil {
+			return e
+		}
+		progress += restored
 		if progress == 0 {
 			break
 		}
-		stage, err = v.rebuildUnitStage(ctx, s, b, blocks, gates, positive)
+		stage, err = v.rebuildUnitStage(ctx, s, b, blocks, gates, positive, normalizations)
 		if err != nil {
 			return err
 		}
+		stage, err = v.closeUnitStage(ctx, s, b, blocks, gates, positive, normalizations, stage)
+		if err != nil {
+			return err
+		}
+		normalizations = stage.unitNormalizations
 	}
 	// Rebuild once with final owned causes; the prior stage stays immutable.
-	stage, err = v.rebuildUnitStage(ctx, s, b, blocks, gates, positive)
+	stage, err = v.rebuildUnitStage(ctx, s, b, blocks, gates, positive, normalizations)
 	if err != nil {
 		return err
 	}
@@ -422,7 +434,7 @@ func (v *timelineService) proveExcursion(ctx context.Context, s *Session, exc ti
 // Reconstruct only from canonical source blocks. No optimistic cursor/bound is
 // copied. Definitions and closure evidence are immutable inputs; public result
 // paths retain their usual independent ownership. Every other map is fresh.
-func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *timelineBindings, blocks []timelineMeasureBlock, gates map[NodeID]timelineExcursionGate, positive map[NodeRef]bool) (*timelineService, error) {
+func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *timelineBindings, blocks []timelineMeasureBlock, gates map[NodeID]timelineExcursionGate, positive map[NodeRef]bool, normalizationMaps ...map[NodeID]timelineNormalizationGate) (*timelineService, error) {
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
@@ -430,6 +442,9 @@ func (v *timelineService) rebuildUnitStage(ctx context.Context, s *Session, b *t
 		return nil, err
 	}
 	out := &timelineService{Facts: make(map[NodeID]timelineEventFact), unitGates: gates, unitPositive: positive, unitProofFinal: true}
+	if len(normalizationMaps) != 0 {
+		out.unitNormalizations = normalizationMaps[0]
+	}
 	out.State.Closures = v.State.Closures[:len(v.State.Closures):len(v.State.Closures)]
 	for _, closure := range v.State.Closures {
 		if err := s.step(ctx, 1); err != nil {

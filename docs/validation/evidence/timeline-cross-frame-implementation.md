@@ -117,3 +117,28 @@ remaining locked; global gates also stop descendant lexical normalization; and a
 new positioned divisions statement must actually repair the effective history
 before it restores duration units. These groups and the complete validation
 suite (apart from the separately owned association group above) are GREEN.
+
+## Complete-history normalization closure
+
+Independent RED `ae1c680` showed that a sequential stopped stage still needed
+closure: a later negative excursion's displaced divisions publisher can affect
+an earlier normalized note. Before any stage supplies certificate premises,
+retained known normalizations are checked against its complete effective history.
+An unsupported normalization is stopped and reconstructed; descendants retain
+displaced placement metadata, including already-unavailable new-frame units.
+Scope-filtered independently repaired gaps do not widen an ordinary cursor.
+
+Each event can acquire one normalization gate, undergo at most three strict
+availability-rank upgrades, and restore once from an independently retained
+origin and known units in the preceding closed stage. Each excursion can acquire
+one direction qualifier and be removed once. Every progressing pass consumes
+one of these finite transitions. No stopped descendant bound certifies its own
+restoration. A defensive contract check rejects any purported independent proof
+that weakens under refinement. Note-only/no-excursion histories avoid this path.
+
+`TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes`
+and the existing causal/directional/circularity controls are GREEN. At this
+checkpoint `5023dbe` remains explicitly pending the lead's disjoint raw same-value
+divisions certificate, needed because generic unavailable-position gaps discard
+an otherwise known equal scalar. The new closure does not claim that positive
+restoration control fixed before the certificate is integrated.

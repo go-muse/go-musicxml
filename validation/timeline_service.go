@@ -7,6 +7,7 @@ import "context"
 type timelineService struct {
 	unitExcursions     []timelineUnitExcursion
 	unitGates          map[NodeID]timelineExcursionGate
+	unitNormalizations map[NodeID]timelineNormalizationGate
 	unitPositive       map[NodeRef]bool
 	unitProofFinal     bool
 	State              timelineState
