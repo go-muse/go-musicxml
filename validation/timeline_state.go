@@ -267,6 +267,33 @@ func stateCopy(v reflect.Value) reflect.Value {
 	}
 }
 func stateClone[T any](v T) T { return stateCopy(reflect.ValueOf(v)).Interface().(T) }
+
+// Each copied record reserves its own growth allowance; unrelated history never
+// inflates query retention. Traversal work is charged before the actual copy.
+func stateRetainCopy(ctx context.Context, s *Session, v any) error {
+	n, e := stateMeasure(ctx, s, reflect.ValueOf(v))
+	if e != nil {
+		return e
+	}
+	n, e = rationalCheckedMul(BudgetBufferedBytes, n, 2)
+	if e != nil {
+		return e
+	}
+	if _, e = AllocationSize(n); e != nil {
+		return e
+	}
+	return s.retain(n)
+}
+func stateRetainCount(s *Session, count int, width int64) error {
+	n, e := rationalCheckedMul(BudgetBufferedBytes, int64(count), width)
+	if e != nil {
+		return e
+	}
+	if _, e = AllocationSize(n); e != nil {
+		return e
+	}
+	return s.retain(n)
+}
 func stateReserve(ctx context.Context, s *Session, value any) (int64, error) {
 	n, e := stateMeasure(ctx, s, reflect.ValueOf(value))
 	if e != nil {
@@ -464,23 +491,6 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 		out.Value = Evidence[V]{State: EvidenceAbsent}
 		return out, nil
 	}
-	// Reserve result/provenance capacity before materializing any merge. Query
-	// records are session-owned, like their source history, until cleanup.
-	capacity := int64(len(history.Publications))
-	cost, e := rationalCheckedMul(BudgetBufferedBytes, capacity, 128)
-	if e != nil {
-		return out, e
-	}
-	cost, e = rationalCheckedAdd(BudgetBufferedBytes, cost, history.Publications[best].bytes)
-	if e != nil {
-		return out, e
-	}
-	if _, e = AllocationSize(cost); e != nil {
-		return out, e
-	}
-	if e = s.retain(cost); e != nil {
-		return out, e
-	}
 	selected := history.Publications[best]
 	projectValue := func(p statePublication[T]) Evidence[V] {
 		if p.Value.State != EvidenceKnown {
@@ -512,7 +522,11 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 		if cmp != 0 {
 			continue
 		}
-		if e = s.step(ctx, p.bytes+selected.bytes); e != nil {
+		compareCost, x := rationalCheckedAdd(BudgetRuleSteps, p.bytes, selected.bytes)
+		if x != nil {
+			return stateResult[V]{}, x
+		}
+		if e = s.step(ctx, compareCost); e != nil {
 			return stateResult[V]{}, e
 		}
 		candidate := projectValue(p)
@@ -536,12 +550,18 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 				}
 			}
 			if !duplicate {
+				if e = stateRetainCopy(ctx, s, pr); e != nil {
+					return stateResult[V]{}, e
+				}
 				out.Provenance = append(out.Provenance, stateClone(pr))
 			}
 		}
 	}
 	if conflict && (out.Value.State == EvidenceKnown || out.Value.State == EvidenceAbsent) {
 		out.Value = stateUnknown[V]("timeline-state-conflict")
+	}
+	if e = stateRetainCopy(ctx, s, out.Value); e != nil {
+		return stateResult[V]{}, e
 	}
 	out.Value = stateClone(out.Value)
 	cmp, e := stateComparePosition(ctx, s, selected.Position, pos)
@@ -552,7 +572,10 @@ func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, his
 	return out, nil
 }
 func stateWhole[T any](v T) Evidence[T] { return Evidence[T]{State: EvidenceKnown, Value: v} }
-func stateOne() Integer                 { return Integer{value: big.NewInt(1), text: "1", bytes: 2} }
+
+var timelineOne = Integer{value: big.NewInt(1), text: "1", bytes: 2}
+
+func stateOne() Integer { return timelineOne }
 func (h *timelineState) effectiveCount(ctx context.Context, s *Session, hist *stateHistory[Integer], pos musicalPosition) (stateResult[Integer], error) {
 	r, e := queryState(ctx, s, h, hist, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[Integer])
 	if e != nil {
@@ -613,16 +636,31 @@ func (s *Session) stateRationalInteger(ctx context.Context, v Integer) (Rational
 	if !v.Valid() {
 		return Rational{}, contract("timeline integer", "uninitialized integer")
 	}
-	// Decimal construction here is exact integer embedding, not a text parse. The
-	// existing rational copy primitive meters its owned numerator/denominator.
-	if e := s.step(ctx, v.ByteSize()); e != nil {
+	// Exact integer embedding, without parsing. Scratch is charged and released
+	// separately from the immutable rational output retained by the arithmetic.
+	cost, e := rationalCheckedAdd(BudgetBufferedBytes, v.ByteSize(), 128)
+	if e != nil {
 		return Rational{}, e
 	}
-	if e := s.retain(v.ByteSize() + 128); e != nil {
+	if e = s.account.Check(BudgetScalarBytes, v.ByteSize()); e != nil {
 		return Rational{}, e
 	}
+	if e = s.step(ctx, cost); e != nil {
+		return Rational{}, e
+	}
+	if _, e = AllocationSize(cost); e != nil {
+		return Rational{}, e
+	}
+	if e = s.account.Charge(BudgetBufferedBytes, cost); e != nil {
+		return Rational{}, e
+	}
+	defer func() { _ = s.account.Release(BudgetBufferedBytes, cost) }()
 	return s.rationalFromDecimal(ctx, Decimal{value: new(big.Rat).SetInt(v.value), text: v.text, bytes: v.bytes + 1})
 }
+
+var timelineOctaveSemitones = Rational{value: big.NewRat(12, 1), text: "12", bytes: 4}
+var timelineOctaveSteps = Rational{value: big.NewRat(7, 1), text: "7", bytes: 3}
+
 func (v transposeState) contributions(ctx context.Context, s *Session) (Evidence[Rational], Evidence[Rational], error) {
 	c, d := stateUnavailable[Decimal, Rational](v.Chromatic), stateUnavailable[Integer, Rational](v.Diatonic)
 	if v.OctaveChange.State != EvidenceKnown && v.OctaveChange.State != EvidenceAbsent {
@@ -640,7 +678,10 @@ func (v transposeState) contributions(ctx context.Context, s *Session) (Evidence
 		if !oct.Valid() {
 			return base, nil
 		}
-		constant := Rational{value: big.NewRat(multiple, 1), text: "constant", bytes: 16}
+		constant := timelineOctaveSemitones
+		if multiple == 7 {
+			constant = timelineOctaveSteps
+		}
 		delta, e := s.rationalMul(ctx, oct, constant)
 		if e != nil {
 			return Rational{}, e

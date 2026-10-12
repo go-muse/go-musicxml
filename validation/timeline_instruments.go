@@ -114,6 +114,45 @@ func (h *timelineState) effectiveInstrument(ctx context.Context, s *Session, pos
 			break
 		}
 	}
+	var latest *musicalPosition
+	if history != nil {
+		for i := range history.Publications {
+			p := &history.Publications[i].Position
+			if e = s.step(ctx, 1); e != nil {
+				return out, e
+			}
+			if p.Part != pos.Part {
+				continue
+			}
+			cmp, x := stateComparePosition(ctx, s, *p, pos)
+			if x != nil {
+				return out, x
+			}
+			if cmp > 0 {
+				continue
+			}
+			if latest == nil {
+				latest = p
+			} else {
+				cmp, x = stateComparePosition(ctx, s, *p, *latest)
+				if x != nil {
+					return out, x
+				}
+				if cmp > 0 {
+					latest = p
+				}
+			}
+		}
+	}
+	for _, g := range h.InstrumentGaps {
+		if e = s.step(ctx, 1); e != nil {
+			return out, e
+		}
+		if g.Part == pos.Part && g.FirstMeasure <= pos.MeasureOrdinal && (latest == nil || latest.MeasureOrdinal <= g.LastMeasure) {
+			out.Value = stateUnavailable[bool, instrumentState](g.Availability)
+			return out, nil
+		}
+	}
 	if history != nil {
 		out, e = queryState(ctx, s, h, history, pos, Evidence[Integer]{State: EvidenceKnown, Value: stateOne()}, stateWhole[instrumentState])
 		if e != nil {
@@ -123,15 +162,6 @@ func (h *timelineState) effectiveInstrument(ctx context.Context, s *Session, pos
 			if out.Value.State == EvidenceKnown {
 				out.Value.Value = stateEffectiveChange(out.Value.Value)
 			}
-			return out, nil
-		}
-	}
-	for _, g := range h.InstrumentGaps {
-		if e = s.step(ctx, 1); e != nil {
-			return out, e
-		}
-		if g.Part == pos.Part && g.FirstMeasure <= pos.MeasureOrdinal {
-			out.Value = stateUnavailable[bool, instrumentState](g.Availability)
 			return out, nil
 		}
 	}
@@ -237,7 +267,7 @@ func (r *stateReader) play(n *factNode) Evidence[playState] {
 	if !r.step(int64(len(n.children))) {
 		return stateUnknown[playState]("timeline-interrupted")
 	}
-	if e := r.s.retain(int64(len(n.children)) * 512); e != nil {
+	if e := stateRetainCount(r.s, len(n.children), 512); e != nil {
 		r.err = e
 		return stateUnknown[playState]("timeline-interrupted")
 	}
@@ -330,7 +360,7 @@ func (h *timelineState) readNoteInstruments(ctx context.Context, s *Session, b *
 	}
 	children, complete := r.children(n, timelineRoleNoteInstrument)
 	record := noteInstrumentSet{Note: NodeRef{DocumentID: s.documentID, Node: n.header.ID}, Part: part, Complete: complete}
-	if e := s.retain(int64(len(children)) * 256); e != nil {
+	if e := stateRetainCount(s, len(children), 256); e != nil {
 		return e
 	}
 	for _, ch := range children {

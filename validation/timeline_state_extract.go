@@ -40,7 +40,7 @@ func (r *stateReader) complete(n *factNode) Evidence[bool] {
 	if n.end.Order.State != EvidenceKnown {
 		return stateUnavailable[OrderKind, bool](n.end.Order)
 	}
-	if n.end.Order.Value != OrderSource && n.end.Order.Value != OrderModelContent {
+	if n.end.Order.Value != OrderSource && n.end.Order.Value != OrderModelContent && n.end.Order.Value != OrderModelFields {
 		return stateUnknown[bool]("timeline-content-order-unavailable")
 	}
 	if r.s.schema != nil {
@@ -95,17 +95,29 @@ func (r *stateReader) children(n *factNode, role timelineRole) ([]*factNode, Evi
 	return out, complete
 }
 func (r *stateReader) child(n *factNode, role timelineRole) (*factNode, Evidence[bool]) {
-	found, e := r.children(n, role)
-	if e.State != EvidenceKnown {
-		return nil, e
+	complete := r.complete(n)
+	if complete.State != EvidenceKnown || !complete.Value {
+		return nil, complete
 	}
-	if len(found) == 0 {
+	var found *factNode
+	for _, ch := range n.children {
+		if !r.step(1) {
+			return nil, stateUnknown[bool]("timeline-interrupted")
+		}
+		if ch.header.Declaration.State != EvidenceKnown {
+			return nil, stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+		}
+		if r.matches(ch, role) {
+			if found != nil {
+				return nil, stateUnknown[bool]("timeline-multiple-children")
+			}
+			found = ch
+		}
+	}
+	if found == nil {
 		return nil, Evidence[bool]{State: EvidenceAbsent}
 	}
-	if len(found) != 1 {
-		return nil, stateUnknown[bool]("timeline-multiple-children")
-	}
-	return found[0], e
+	return found, complete
 }
 func (r *stateReader) scalar(n *factNode) Evidence[Atomic] {
 	if n == nil {
@@ -219,7 +231,7 @@ func (r *stateReader) key(n *factNode) Evidence[keyState] {
 		return stateUnknown[keyState]("timeline-interrupted")
 	}
 	// Precharge variable compound records independently of their source nodes.
-	if e := r.s.retain(int64(len(n.children)) * 1024); e != nil {
+	if e := stateRetainCount(r.s, len(n.children), 1024); e != nil {
 		r.err = e
 		return stateUnknown[keyState]("timeline-interrupted")
 	}
@@ -251,7 +263,7 @@ func (r *stateReader) timePairs(n *factNode, beats, beatType timelineRole) []tim
 	if !r.step(int64(len(n.children))) {
 		return nil
 	}
-	if e := r.s.retain(int64(len(n.children)) * 512); e != nil {
+	if e := stateRetainCount(r.s, len(n.children), 512); e != nil {
 		r.err = e
 		return nil
 	}
@@ -406,4 +418,119 @@ func (h *timelineState) readAttributes(ctx context.Context, s *Session, b *timel
 		}
 	}
 	return r.err
+}
+
+// gapAttributes records only potentially published families. An unplaced key
+// cannot erase divisions, and an unrelated unavailable duration is not itself an
+// attribute publisher. Unknown exact declarations are narrowed by known exact
+// declared type when available; no local-name recovery is used.
+func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timelineBindings, n *factNode, part NodeRef, measureOrdinal uint64, position Evidence[musicalPosition]) error {
+	if position.State == EvidenceKnown || position.State == EvidenceAbsent {
+		return contract("timeline attribute gap", "unavailable position evidence required")
+	}
+	r := &stateReader{ctx: ctx, s: s, b: b}
+	complete := r.complete(n)
+	generic := stateGap{Part: part, FirstMeasure: measureOrdinal, LastMeasure: measureOrdinal, Scope: stateScope{AllStaves: true}, Availability: stateUnavailable[musicalPosition, bool](position)}
+	if complete.State != EvidenceKnown {
+		generic.Availability = complete
+	}
+	publish := func(ch *factNode, role timelineRole, g stateGap) {
+		switch role {
+		case timelineRoleAttributesDivisions:
+			r.err = addStateGap(ctx, s, &h.Divisions, g)
+		case timelineRoleAttributesKey:
+			r.err = addStateGap(ctx, s, &h.Keys, g)
+		case timelineRoleAttributesTime:
+			r.err = addStateGap(ctx, s, &h.Times, g)
+		case timelineRoleAttributesStaves:
+			r.err = addStateGap(ctx, s, &h.Staves, g)
+		case timelineRoleAttributesInstruments:
+			r.err = addStateGap(ctx, s, &h.Instruments, g)
+		case timelineRoleAttributesClef:
+			added := Evidence[bool]{State: EvidenceUnknown}
+			if ch != nil {
+				added = stateYesNo(r.attribute(ch, timelineRoleClefAdditional))
+			}
+			if r.err != nil {
+				return
+			}
+			if added.State != EvidenceKnown || !added.Value {
+				r.err = addStateGap(ctx, s, &h.Clefs, g)
+			}
+			if r.err == nil && (added.State != EvidenceKnown && added.State != EvidenceAbsent || added.State == EvidenceKnown && added.Value) {
+				r.err = addStateGap(ctx, s, &h.AdditionalClefs, g)
+			}
+		case timelineRoleAttributesTranspose:
+			r.err = addStateGap(ctx, s, &h.Transpose, g)
+		case timelineRoleAttributesForPart:
+			r.err = addStateGap(ctx, s, &h.CreatedPartTranspose, g)
+			if r.err == nil {
+				r.err = addStateGap(ctx, s, &h.CreatedPartClefs, g)
+			}
+		}
+	}
+	roles := [...]timelineRole{timelineRoleAttributesDivisions, timelineRoleAttributesKey, timelineRoleAttributesTime, timelineRoleAttributesStaves, timelineRoleAttributesInstruments, timelineRoleAttributesClef, timelineRoleAttributesTranspose, timelineRoleAttributesForPart}
+	if complete.State != EvidenceKnown {
+		for _, role := range roles {
+			publish(nil, role, generic)
+			if r.err != nil {
+				return r.err
+			}
+		}
+		return nil
+	}
+	for _, ch := range n.children {
+		for _, role := range roles {
+			if !r.potential(ch, role) {
+				continue
+			}
+			g := generic
+			scopeRole := timelineRoleInvalid
+			switch role {
+			case timelineRoleAttributesKey:
+				scopeRole = timelineRoleKeyNumber
+			case timelineRoleAttributesTime:
+				scopeRole = timelineRoleTimeNumber
+			case timelineRoleAttributesClef:
+				scopeRole = timelineRoleClefNumber
+			case timelineRoleAttributesTranspose:
+				scopeRole = timelineRoleTransposeNumber
+			case timelineRoleAttributesForPart:
+				scopeRole = timelineRoleForPartNumber
+			}
+			if scopeRole != timelineRoleInvalid && ch.header.Declaration.State == EvidenceKnown {
+				scope := r.scope(ch, scopeRole, role == timelineRoleAttributesClef)
+				if scope.State == EvidenceKnown {
+					g.Scope = scope.Value
+				} else {
+					g.Availability = stateUnavailable[stateScope, bool](scope)
+				}
+			}
+			if ch.header.Declaration.State != EvidenceKnown {
+				g.Availability = stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+			}
+			publish(ch, role, g)
+			if r.err != nil {
+				return r.err
+			}
+		}
+	}
+	return r.err
+}
+func (r *stateReader) potential(n *factNode, role timelineRole) bool {
+	if n.header.Declaration.State == EvidenceKnown {
+		return r.matches(n, role)
+	}
+	if n.header.Type.State != EvidenceKnown {
+		return true
+	}
+	for _, u := range r.b.Roles[role] {
+		if !r.step(1) {
+			return false
+		}
+		if u.DeclaredTypeKnown && u.DeclaredType == n.header.Type.Value {
+			return true
+		}
+	}
+	return false
 }
