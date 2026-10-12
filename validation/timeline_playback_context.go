@@ -197,7 +197,7 @@ func (p *timelinePlaybackContext) readBarline(ctx context.Context, s *Session, b
 		}
 		return contract("barline context", "exact barline declaration required")
 	}
-	out := barlinePlaybackContext{Origin: playbackOriginAt(s, n, block, fact), RawLocation: stateText(r.attribute(n, timelineRoleBarlineLocation)), Navigation: r.navigation(n, true)}
+	out := barlinePlaybackContext{Origin: playbackOriginAt(s, n, block, fact), RawLocation: stateText(r.playbackRawAttribute(n, timelineRoleBarlineLocation)), Navigation: r.navigation(n, true)}
 	out.Location = out.RawLocation
 	if out.RawLocation.State == EvidenceAbsent {
 		out.Location = Evidence[string]{State: EvidenceKnown, Value: "right"}
@@ -319,4 +319,25 @@ func (p *timelinePlaybackContext) gapAll(ctx context.Context, s *Session, part N
 		return err
 	}
 	return addStateGap(ctx, s, &p.Pizzicato, gap)
+}
+
+// Preserve physical presence separately from an XSD defaulted effective scalar.
+// Exact declaration/name matching and validated values remain shared with XSD.
+func (r *stateReader) playbackRawAttribute(n *factNode, role timelineRole) Evidence[Atomic] {
+	selector, ok := r.b.attribute(role)
+	if !ok {
+		return Evidence[Atomic]{State: EvidenceUnsupported, Reason: "timeline-attribute-binding-unavailable"}
+	}
+	if r.err != nil {
+		return stateUnknown[Atomic]("timeline-interrupted")
+	}
+	presence, _, err := r.s.attributeEvidence(r.ctx, n, selector)
+	if err != nil {
+		r.err = err
+		return stateUnknown[Atomic]("timeline-interrupted")
+	}
+	if presence.State != EvidenceKnown {
+		return stateUnavailable[bool, Atomic](presence)
+	}
+	return r.attribute(n, role)
 }
