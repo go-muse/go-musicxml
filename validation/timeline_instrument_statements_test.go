@@ -108,3 +108,18 @@ func TestTimelineInstrumentPropertySourcesConflictAndGap(t *testing.T) {
 		t.Fatalf("property-local gap escaped: %+v err=%v", fields, err)
 	}
 }
+
+func TestTimelineInstrumentChoicePreservesStrongestCause(t *testing.T) {
+	cause := &DecisionRef{Rule: RuleKey{ID: "choice-shape", Revision: 1}, Subject: NodeRef{"d", 123}}
+	for _, reverse := range []bool{false, true} {
+		value := instrumentState{Solo: stateUnknown[bool]("unavailable"), Ensemble: Evidence[ensembleState]{State: EvidenceInvalid, Reason: "bad-choice", Cause: cause}}
+		if reverse {
+			value.Solo = Evidence[bool]{State: EvidenceInvalid, Reason: "bad-choice", Cause: cause}
+			value.Ensemble = stateUnknown[ensembleState]("unavailable")
+		}
+		got := instrumentPerformanceStatement(value)
+		if got.State != EvidenceInvalid || got.Cause != cause {
+			t.Fatalf("reverse=%v lost stronger cause: %+v", reverse, got)
+		}
+	}
+}

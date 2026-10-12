@@ -151,6 +151,9 @@ type timelineState struct {
 	InstrumentChanges                        []instrumentChanges
 	InstrumentGaps                           []stateGap
 	MIDI                                     []instrumentRecord[midiState]
+	midiStatements                           *recordStatementStore[midiState]
+	deviceStatements                         *recordStatementStore[midiDeviceState]
+	MIDIUnknownGaps                          []stateGap
 	MIDIDevices                              []instrumentRecord[midiDeviceState]
 	Play                                     []instrumentRecord[playState]
 	Closures                                 []stateClosure

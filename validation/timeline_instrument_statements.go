@@ -29,11 +29,14 @@ func instrumentVirtualStatement(v instrumentState) Evidence[virtualInstrumentSta
 }
 func instrumentPerformanceStatement(v instrumentState) Evidence[instrumentPerformanceState] {
 	solo, ensemble := statementEvidence(v.Solo), statementEvidence(v.Ensemble)
-	if solo.State != EvidenceKnown && solo.State != EvidenceAbsent {
-		return stateUnavailable[bool, instrumentPerformanceState](solo)
+	availability := Evidence[bool]{State: EvidenceKnown, Value: true}
+	for _, value := range [2]Evidence[bool]{solo, stateUnavailable[ensembleState, bool](ensemble)} {
+		if value.State != EvidenceKnown && value.State != EvidenceAbsent {
+			availability = stateMergeGap(availability, value)
+		}
 	}
-	if ensemble.State != EvidenceKnown && ensemble.State != EvidenceAbsent {
-		return stateUnavailable[ensembleState, instrumentPerformanceState](ensemble)
+	if availability.State != EvidenceKnown {
+		return stateUnavailable[bool, instrumentPerformanceState](availability)
 	}
 	if solo.State == EvidenceKnown && ensemble.State == EvidenceKnown {
 		return stateUnknown[instrumentPerformanceState]("timeline-instrument-choice-conflict")
@@ -56,7 +59,8 @@ func (v *instrumentChanges) discardStatementIndices(s *Session) {
 // A filtered index owns indices only; raw immutable publications remain in their
 // original owner. The view passed to queryState has Count exactly rawlen, so it
 // never rebuilds or discards this separately owned index. Failed construction
-// releases candidate bytes and does not publish a partial cache.
+// releases candidate bytes and does not publish a partial cache. Projectors must
+// remain closed fixed-field presence accessors, never variable-length traversals.
 func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory[T], cached **stateHistoryIndex, project func(T) Evidence[V]) (*stateHistoryIndex, error) {
 	if *cached != nil && (*cached).Count == len(raw.Publications) {
 		return *cached, nil
@@ -92,7 +96,9 @@ func statementIndex[T, V any](ctx context.Context, s *Session, raw *stateHistory
 		}
 		for _, i := range bucket {
 			p := raw.Publications[i]
-			if err = s.step(ctx, p.bytes+1); err != nil {
+			// The closed projectors inspect presence only; immutable payload magnitudes
+			// and strings are not traversed until query comparison/copy.
+			if err = s.step(ctx, 1); err != nil {
 				return nil, err
 			}
 			if p.Value.State == EvidenceKnown && statementEvidence(project(p.Value.Value)).State == EvidenceAbsent {

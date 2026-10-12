@@ -637,5 +637,5 @@ func (h *timelineState) gapInstrumentPublisher(ctx context.Context, s *Session, 
 		return e
 	}
 	h.InstrumentGaps = append(h.InstrumentGaps, stateClone(g))
-	return nil
+	return h.gapMIDIStatements(ctx, s, g)
 }

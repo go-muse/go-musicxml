@@ -4,7 +4,8 @@ import "context"
 
 // Raw sound records distinguish declaration defaults, note-local instructions,
 // and positioned continuing changes. They retain assessed values without a
-// playback engine, MIDI routing, package lookup, or omitted-property policy.
+// playback engine, MIDI routing or package lookup. Effective encoded-statement
+// selection is separate and preserves these unmerged raw records.
 type midiState struct {
 	Channel, Bank, Program, Unpitched Evidence[Integer]
 	Name                              Evidence[string]
@@ -194,7 +195,7 @@ func (r *stateReader) play(n *factNode) Evidence[playState] {
 	}
 	return Evidence[playState]{State: EvidenceKnown, Value: v}
 }
-func (h *timelineState) rawInstrumentRecords(r *stateReader, n *factNode, part, note NodeRef, pos Evidence[musicalPosition], midi, device, play timelineRole) {
+func (h *timelineState) rawInstrumentRecords(r *stateReader, n *factNode, part, note NodeRef, pos Evidence[musicalPosition], midi, device, play timelineRole, ordinal uint64) {
 	for _, ch := range n.children {
 		source := NodeRef{DocumentID: r.s.documentID, Node: ch.header.ID}
 		switch {
@@ -203,19 +204,17 @@ func (h *timelineState) rawInstrumentRecords(r *stateReader, n *factNode, part, 
 			if r.err != nil {
 				return
 			}
-			if _, r.err = stateReserve(r.ctx, r.s, record); r.err != nil {
+			if r.err = h.addMIDIRecord(r.ctx, r.s, record, ordinal); r.err != nil {
 				return
 			}
-			h.MIDI = append(h.MIDI, stateClone(record))
 		case device != timelineRoleInvalid && r.matches(ch, device):
 			record := instrumentRecord[midiDeviceState]{Part: part, Source: source, Note: note, Position: pos, Instrument: r.reference(ch, timelineRoleMidiDeviceID, part), Value: Evidence[midiDeviceState]{State: EvidenceKnown, Value: midiDeviceState{Name: stateText(r.scalar(ch)), Port: stateInteger(r.attribute(ch, timelineRoleMidiDevicePort))}}}
 			if r.err != nil {
 				return
 			}
-			if _, r.err = stateReserve(r.ctx, r.s, record); r.err != nil {
+			if r.err = h.addMIDIDeviceRecord(r.ctx, r.s, record, ordinal); r.err != nil {
 				return
 			}
-			h.MIDIDevices = append(h.MIDIDevices, stateClone(record))
 		case play != timelineRoleInvalid && r.matches(ch, play):
 			record := instrumentRecord[playState]{Part: part, Source: source, Note: note, Position: pos, Instrument: r.reference(ch, timelineRolePlayID, part), Value: r.play(ch)}
 			if r.err != nil {
@@ -254,7 +253,7 @@ func (h *timelineState) readInstrumentDefinitions(ctx context.Context, s *Sessio
 			return e
 		}
 	}
-	h.rawInstrumentRecords(r, n, part, NodeRef{}, Evidence[musicalPosition]{State: EvidenceAbsent}, timelineRoleScorePartMidiInstrument, timelineRoleScorePartMidiDevice, timelineRoleInvalid)
+	h.rawInstrumentRecords(r, n, part, NodeRef{}, Evidence[musicalPosition]{State: EvidenceAbsent}, timelineRoleScorePartMidiInstrument, timelineRoleScorePartMidiDevice, timelineRoleInvalid, 0)
 	return r.err
 }
 func (h *timelineState) readNoteInstruments(ctx context.Context, s *Session, b *timelineBindings, n *factNode, part NodeRef) error {
@@ -279,7 +278,7 @@ func (h *timelineState) readNoteInstruments(ctx context.Context, s *Session, b *
 	if e := h.addNoteInstruments(ctx, s, record); e != nil {
 		return e
 	}
-	h.rawInstrumentRecords(r, n, part, record.Note, Evidence[musicalPosition]{State: EvidenceAbsent}, timelineRoleInvalid, timelineRoleInvalid, timelineRoleNotePlay)
+	h.rawInstrumentRecords(r, n, part, record.Note, Evidence[musicalPosition]{State: EvidenceAbsent}, timelineRoleInvalid, timelineRoleInvalid, timelineRoleNotePlay, 0)
 	return r.err
 }
 func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b *timelineBindings, n *factNode, pos musicalPosition) error {
@@ -303,6 +302,9 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 		if r.err != nil {
 			return r.err
 		}
+		if err := h.gapMIDIStatements(ctx, s, stateGap{Part: pos.Part, FirstMeasure: pos.MeasureOrdinal, LastMeasure: pos.MeasureOrdinal, Scope: stateScope{AllStaves: true}, Availability: complete}); err != nil {
+			return err
+		}
 		return gap(complete)
 	}
 	for _, ch := range children {
@@ -321,7 +323,7 @@ func (h *timelineState) readInstrumentChanges(ctx context.Context, s *Session, b
 			return e
 		}
 	}
-	h.rawInstrumentRecords(r, n, pos.Part, NodeRef{}, Evidence[musicalPosition]{State: EvidenceKnown, Value: pos}, timelineRoleSoundMidiInstrument, timelineRoleSoundMidiDevice, timelineRoleSoundPlay)
+	h.rawInstrumentRecords(r, n, pos.Part, NodeRef{}, Evidence[musicalPosition]{State: EvidenceKnown, Value: pos}, timelineRoleSoundMidiInstrument, timelineRoleSoundMidiDevice, timelineRoleSoundPlay, pos.MeasureOrdinal)
 	return r.err
 }
 
@@ -350,6 +352,9 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 	}
 	if complete.State != EvidenceKnown {
 		g.Availability = stateMergeGap(g.Availability, complete)
+		if err := h.gapMIDIStatements(ctx, s, g); err != nil {
+			return err
+		}
 		return global(g)
 	}
 	for _, ch := range children {
@@ -390,6 +395,6 @@ func (h *timelineState) gapInstrumentChanges(ctx context.Context, s *Session, b 
 			}
 		}
 	}
-	h.rawInstrumentRecords(r, n, part, NodeRef{}, availability, timelineRoleSoundMidiInstrument, timelineRoleSoundMidiDevice, timelineRoleSoundPlay)
+	h.rawInstrumentRecords(r, n, part, NodeRef{}, availability, timelineRoleSoundMidiInstrument, timelineRoleSoundMidiDevice, timelineRoleSoundPlay, ordinal)
 	return r.err
 }
