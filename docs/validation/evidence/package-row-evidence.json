@@ -7218,7 +7218,7 @@
       "function": "TestPackageVerificationPipeline",
       "line": 12,
       "end_line_bound": 40,
-      "file_sha256": "49a8f96bff8f8c2e06d4d2cce10185d02470f6375a5c12f05661d53fb4ca78a7"
+      "file_sha256": "fd31b94416aa8ea6c22a44d59fd3ea2e11aa1112edfab3e7a978c022ad7236f9"
     },
     "resource_body_test.go::TestResourceBodyEmptyCloseFailureAndNoProgress": {
       "file": "resource_body_test.go",

@@ -31,7 +31,7 @@ func TestPackageVerificationPipeline(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, command := range []string{"python3 scripts/verify-package-inventory.py --strict-evidence", "python3 scripts/test-package-inventory.py"} {
+		for _, command := range []string{"go run ./cmd/package-inventory verify --strict-evidence", "go run ./cmd/package-inventory test", "go test -count=1 ./internal/packageinventory"} {
 			if !strings.Contains(string(raw), command) {
 				t.Errorf("%s omits %s", path, command)
 			}

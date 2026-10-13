@@ -6,7 +6,6 @@ Contributions are welcome.
 
 - Go 1.27 or later
 - Git
-- Python 3.9 or later for the standard-library-only package inventory checks
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
 
@@ -47,20 +46,29 @@ The full race stage uses an explicit finite 15-minute per-package timeout; its
 CI job retains a 20-minute cap. This allows host-timing headroom for the complete
 uncached race suite without skipping tests or changing assessment budgets.
 
-Package obligation inventories also have standard-library Python checks,
+Package obligation inventories also have standard-library Go checks,
 required in the Linux CI jobs:
 
 ```bash
-python3 scripts/verify-package-inventory.py --strict-evidence
-python3 scripts/test-package-inventory.py
-python3 scripts/test-package-inventory-maintenance.py
+go run ./cmd/package-inventory verify --strict-evidence
+go run ./cmd/package-inventory test
+go test -count=1 ./internal/packageinventory
 ```
 
 These verify preserved original records, exact test routes, canonical LF/CRLF
 hash equivalence and rejection of real mutations. Existing Linux quality and
 release jobs require them without adding a CI job or changing the seven Go
-stages. Python is not a library runtime dependency. The required-xmllint job
+stages. No Python installation is needed for development or CI inventory checks.
+The required-xmllint job
 explicitly includes the original-byte container/sounds differential test.
+
+The compiled command also works without a Go installation: build it with
+`go build -o package-inventory ./cmd/package-inventory`, then run
+`./package-inventory verify --strict-evidence`. The `verify` and `refresh`
+commands accept `--root`, `--manifest`, `--evidence`, `--archive-dir`, and
+`--output`; `test` accepts the same flags except `--archive-dir`. Historical
+inventory snapshots retain their original command text and observations;
+use the Go commands above for current checkouts.
 
 ### Updating inspected test hashes
 
@@ -69,17 +77,17 @@ test bytes. After a reviewed edit to one of the routed Go test files, preview th
 current test-file hash changes with:
 
 ```bash
-python3 scripts/refresh-package-inventory.py
+go run ./cmd/package-inventory refresh
 ```
 
 The default is a read-only dry run. Inspect `changed_test_files` and
 `changed_test_routes`, then explicitly apply the same narrow update and verify:
 
 ```bash
-python3 scripts/refresh-package-inventory.py --write
-python3 scripts/verify-package-inventory.py --strict-evidence
-python3 scripts/test-package-inventory.py
-python3 scripts/test-package-inventory-maintenance.py
+go run ./cmd/package-inventory refresh --write
+go run ./cmd/package-inventory verify --strict-evidence
+go run ./cmd/package-inventory test
+go test -count=1 ./internal/packageinventory
 git diff -- docs/validation/evidence/package-row-evidence.json
 ```
 
@@ -116,12 +124,13 @@ an entire source file or all IDs merely to make CI pass.
 After that review, reconcile only those explicit IDs in the additive manifest's
 `preserved_collections` and applicable `selected` routes. Retain the old source
 and execution evidence; do not relabel old observations as new execution.
-Canonical record hashes use UTF-8 JSON with sorted keys, `ensure_ascii=False`
-and separators `(',', ':')`. Source-file SHA-256 and `bytes` cover the full file
+Canonical record hashes use compact UTF-8 JSON with sorted keys, no ASCII or
+HTML escaping, and lossless integer values. Source-file SHA-256 and `bytes` cover
+the full file
 after replacing CRLF with LF only. Review the affected whole-file hash/size
 changes alongside the per-ID diffs. Original denominators remain fixed; a new
 inventory scope needs a separately reviewed format/denominator change. Run the
-strict verifier and both Python control suites after the reviewed reconciliation.
+strict verifier and both Go control suites after the reviewed reconciliation.
 
 ## Generated code
 
