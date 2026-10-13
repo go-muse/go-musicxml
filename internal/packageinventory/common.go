@@ -442,14 +442,15 @@ func (f *bufferedFile) Write(p []byte) (int, error) { return f.writer.Write(p) }
 func (f *bufferedFile) Flush() error                { return f.writer.Flush() }
 
 type fileOps struct {
-	stat       func(string) (os.FileInfo, error)
-	createTemp func(string, string) (atomicFile, error)
-	rename     func(string, string) error
-	remove     func(string) error
+	evalSymlinks func(string) (string, error)
+	stat         func(string) (os.FileInfo, error)
+	createTemp   func(string, string) (atomicFile, error)
+	rename       func(string, string) error
+	remove       func(string) error
 }
 
 func defaultFileOps() fileOps {
-	return fileOps{os.Stat, func(dir, pattern string) (atomicFile, error) {
+	return fileOps{filepath.EvalSymlinks, os.Stat, func(dir, pattern string) (atomicFile, error) {
 		f, err := os.CreateTemp(dir, pattern)
 		if err != nil {
 			return nil, err
@@ -532,7 +533,34 @@ func checkedResolve(path string, ops fileOps) (string, error) {
 	if _, err := ops.stat(resolved); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return "", err
 	}
-	return resolved, nil
+	return canonicalExistingPrefix(resolved, ops.evalSymlinks)
+}
+
+// The component walk has already resolved symlink/.. ordering. Normalize native
+// spellings only now: Windows short names and long names must compare equally
+// even when a protected endpoint does not exist yet. EvalSymlinks requires an
+// existing path, so retain each absent suffix component until a prefix exists.
+func canonicalExistingPrefix(path string, eval func(string) (string, error)) (string, error) {
+	prefix := path
+	var suffix []string
+	for {
+		normalized, err := eval(prefix)
+		if err == nil {
+			for i := len(suffix) - 1; i >= 0; i-- {
+				normalized = filepath.Join(normalized, suffix[i])
+			}
+			return normalized, nil
+		}
+		if !errors.Is(err, os.ErrNotExist) {
+			return "", err
+		}
+		parent := filepath.Dir(prefix)
+		if parent == prefix {
+			return "", err
+		}
+		suffix = append(suffix, filepath.Base(prefix))
+		prefix = parent
+	}
 }
 func resolveRoot(root string, ops fileOps) (string, error) {
 	s, err := checkedResolve(root, ops)

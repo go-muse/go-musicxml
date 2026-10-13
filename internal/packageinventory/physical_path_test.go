@@ -172,3 +172,88 @@ func TestPhysicalDirectoryIdentityDistinguishesAliasesAndWrongParents(t *testing
 		t.Error("different physical parent directories were treated as identical")
 	}
 }
+
+// Inject just native spelling expansion, after real component traversal. Linux
+// has no Windows 8.3 aliases; the Windows test below exercises the real API.
+func TestMissingOutputAliasCanonicalizesExistingPrefix(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	long := filepath.Join(root, "LongDirectoryName")
+	short := filepath.Join(root, "LONGDI~1")
+	other := filepath.Join(root, "OtherDirectory")
+	for _, path := range []string{long, short, other} {
+		if err := os.Mkdir(path, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ops := defaultFileOps()
+	calls := 0
+	ops.evalSymlinks = func(path string) (string, error) {
+		calls++
+		if path == short {
+			return long, nil
+		}
+		return filepath.EvalSymlinks(path)
+	}
+	for _, suffix := range []string{"report.json", filepath.Join("missing", "nested", "report.json")} {
+		output := filepath.Join(short, suffix)
+		protected := filepath.Join(long, suffix)
+		if err := rejectAlias(output, []string{protected}, ops); err == nil || !strings.Contains(err.Error(), "protected input") {
+			t.Fatalf("missing-final spelling alias accepted: %v", err)
+		}
+		if err := rejectAlias(output, []string{filepath.Join(other, suffix)}, ops); err != nil {
+			t.Fatalf("different directory rejected: %v", err)
+		}
+		if _, err := os.Stat(output); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("output changed: %v", err)
+		}
+	}
+	if calls == 0 {
+		t.Fatal("native spelling normalizer was not used")
+	}
+}
+
+func TestExistingPrefixNormalizationFollowsPhysicalTraversal(t *testing.T) {
+	t.Parallel()
+	_, nested, traversed := physicalTraversalFixture(t)
+	ops := defaultFileOps()
+	calls := 0
+	ops.evalSymlinks = func(path string) (string, error) {
+		calls++
+		for _, component := range strings.Split(filepath.ToSlash(path), "/") {
+			if component == ".." {
+				return "", errors.New("raw parent traversal reached native normalization")
+			}
+		}
+		return filepath.EvalSymlinks(path)
+	}
+	suffix := filepath.Join("missing", "nested", "report.json")
+	got, err := checkedResolve(traversed+string(filepath.Separator)+suffix, ops)
+	if err != nil {
+		t.Fatal(err)
+	}
+	prefix, err := filepath.EvalSymlinks(nested)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(prefix, suffix); got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+	if calls == 0 {
+		t.Fatal("native spelling normalizer was not used")
+	}
+}
+
+func TestExistingPrefixNormalizationFailsClosed(t *testing.T) {
+	t.Parallel()
+	failure := errors.New("cannot canonicalize existing prefix")
+	ops := defaultFileOps()
+	ops.evalSymlinks = func(string) (string, error) { return "", failure }
+	path := filepath.Join(t.TempDir(), "missing", "report.json")
+	if _, err := checkedResolve(path, ops); !errors.Is(err, failure) {
+		t.Fatalf("canonicalization error ignored: %v", err)
+	}
+	if err := rejectAlias(path, nil, ops); !errors.Is(err, failure) {
+		t.Fatalf("output accepted after canonicalization error: %v", err)
+	}
+}

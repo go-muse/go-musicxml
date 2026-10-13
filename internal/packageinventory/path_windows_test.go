@@ -1,9 +1,11 @@
 package packageinventory
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -62,5 +64,71 @@ func TestWindowsMissingPathAliasesIgnoreCase(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "Missing-Result.json")
 	if err := rejectAlias(path, []string{strings.ToUpper(path)}, defaultFileOps()); err == nil {
 		t.Fatal("case-insensitive missing-path alias accepted")
+	}
+}
+
+func windowsShortPath(t *testing.T, path string) string {
+	t.Helper()
+	pointer, err := syscall.UTF16PtrFromString(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	buffer := make([]uint16, 256)
+	for {
+		count, err := syscall.GetShortPathName(pointer, &buffer[0], uint32(len(buffer)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count == 0 {
+			t.Fatal("GetShortPathName returned an empty path")
+		}
+		if int(count) < len(buffer) {
+			return syscall.UTF16ToString(buffer[:count])
+		}
+		buffer = make([]uint16, count+1)
+	}
+}
+
+func TestWindowsMissingOutputShortNameAliases(t *testing.T) {
+	t.Parallel()
+	root, nested, _ := physicalTraversalFixture(t)
+	short := windowsShortPath(t, root)
+	long, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("native short path=%q, long path=%q", short, long)
+	// Hosts that disable new 8.3 names still run every check; on the GitHub runner
+	// the existing RUNNER~1 user-directory alias exercises real short expansion.
+	for _, spelling := range []string{short, strings.ToUpper(long)} {
+		resolved, err := checkedResolve(spelling, defaultFileOps())
+		if err != nil || resolved != long {
+			t.Fatalf("resolved=%q, want long form %q: %v", resolved, long, err)
+		}
+		for _, suffix := range []string{"report.json", filepath.Join("missing", "nested", "report.json")} {
+			output, protected := filepath.Join(spelling, suffix), filepath.Join(long, suffix)
+			if err := rejectAlias(output, []string{protected}, defaultFileOps()); err == nil || !strings.Contains(err.Error(), "protected input") {
+				t.Fatalf("missing short/long alias accepted: %q / %q: %v", output, protected, err)
+			}
+			if err := rejectAlias(output, []string{filepath.Join(t.TempDir(), suffix)}, defaultFileOps()); err != nil {
+				t.Fatalf("wrong-directory negative control: %v", err)
+			}
+			if _, err := os.Stat(output); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("output changed: %v", err)
+			}
+		}
+		// Native normalization must happen after, not before, following alias/..
+		// into nested. filepath.Join here would deliberately destroy the fixture.
+		output := spelling + `\alias\..\missing\report.json`
+		longNested, err := filepath.EvalSymlinks(nested)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := rejectAlias(output, []string{filepath.Join(longNested, "missing", "report.json")}, defaultFileOps()); err == nil {
+			t.Fatal("physical-parent short-name alias accepted")
+		}
+		if err := rejectAlias(output, []string{filepath.Join(long, "missing", "report.json")}, defaultFileOps()); err != nil {
+			t.Fatalf("lexical-parent negative control: %v", err)
+		}
 	}
 }
