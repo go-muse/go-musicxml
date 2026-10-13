@@ -22,7 +22,10 @@ func (r *sourceXMLTokenReader) entityReference(name string, context sourceXMLEnt
 			if r.standalone == sourceDTDStandaloneYes && !r.referenceInExternalMarkup() && declaration.Origin.ExternalMarkup {
 				return 0, r.syntax("standalone XML entity reference requires an internal declaration")
 			}
-			err := r.pushEntity(sourceXMLEntityInput{Name: name, Replacement: declaration.Replacement, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationRecord: declaration, ExternalMarkup: declaration.Origin.ExternalMarkup || r.referenceInExternalMarkup()}, context, use)
+			// The nested reference belongs to this declaration's replacement text.
+			// A PE-origin caller cannot move a directly declared alias's references
+			// into a PE for XML 1.0 section 4.1's standalone-domain condition.
+			err := r.pushEntity(sourceXMLEntityInput{Name: declaration.Name, Replacement: declaration.Replacement, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationRecord: declaration, ExternalMarkup: declaration.Origin.ExternalMarkup}, context, use)
 			return sourceXMLExpandedRune, err
 		}
 		state := r.dtdStore.State()

@@ -280,7 +280,8 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		run.startupReport = report
 		return run, errors.Join(cause, finishErr)
 	}
-	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner})
+	internalDTD := config != nil && config.Profile == ProfileSourceInternalDTD
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner, InternalDTD: internalDTD})
 	if err != nil {
 		return fail(err)
 	}
@@ -289,6 +290,14 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		run.source.observer, err = newSourceFactObserverWithIdentity(ctx, run.session, run.account, run.documentID, run.entry)
 		if err != nil {
 			return fail(err)
+		}
+		if internalDTD {
+			const originBridgeBytes = 512
+			if err := run.account.Charge(validation.BudgetBufferedBytes, originBridgeBytes); err != nil {
+				return fail(err)
+			}
+			run.source.observer.retained += originBridgeBytes
+			run.source.observer.origins = &sourceOriginObserver{engine: config.Engine, session: run.session, profile: config.Profile}
 		}
 	}
 	return run, nil
@@ -324,6 +333,9 @@ func (r *sourceAssessmentRun) finishInput(cause error) (validation.Completion, e
 		inputComplete = r.source.eof && summary.InputComplete
 		if r.source.failure != nil && !errors.Is(cause, r.source.failure) {
 			cause = errors.Join(r.source.failure, cause)
+		}
+		if inputComplete && cause == nil {
+			cause = r.source.observer.sealSourceOrigins(r.ctx)
 		}
 		cause = errors.Join(cause, r.source.observer.close(), r.source.lexical.Close())
 	}

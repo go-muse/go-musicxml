@@ -610,3 +610,26 @@ func TestSourceInternalClosedDTDUnboundPrefixIsSyntax(t *testing.T) {
 		t.Fatalf("legacy changed: %v", err)
 	}
 }
+
+func TestSourceEntityFrameBorrowsStoredIdentity(t *testing.T) {
+	name := strings.Repeat("entity", 100)
+	source := `<!DOCTYPE r [<!ENTITY ` + name + ` 'text'>]><r>&` + name + `;</r>`
+	account, _ := validation.NewBudgetAccount(validation.Budgets{})
+	r, err := newSourceXMLTokenReader(strings.NewReader(source), sourceXMLConfig{Context: context.Background(), Account: account, InternalDTD: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	for r.entity == nil {
+		if _, err = r.Token(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	declaration, ok := r.dtdStore.Entity(name, false)
+	if !ok {
+		t.Fatal("missing declaration")
+	}
+	if unsafe.StringData(r.entity.input.Name) != unsafe.StringData(declaration.Name) {
+		t.Fatal("frame retains token-owned reference spelling instead of store identity")
+	}
+}

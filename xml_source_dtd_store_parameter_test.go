@@ -187,8 +187,11 @@ func TestSourceDTDStoreDefaultDeclarationDomainWithStandalone(t *testing.T) {
 	if _, err := r.Token(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := r.Token(); err != nil {
-		t.Errorf("PE-local unavailable default reference became fatal: %v", err)
+	_, err := r.Token()
+	var unsupported *sourceXMLUnsupportedError
+	var syntax *xml.SyntaxError
+	if !errors.As(err, &unsupported) || unsupported.Reason != "dtd-entity-declared-validity-unassessed" || errors.As(err, &syntax) {
+		t.Errorf("PE-local unavailable default requires capability evidence, not a WFC violation: %v", err)
 	}
 }
 

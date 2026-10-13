@@ -810,6 +810,12 @@ func (r *sourceXMLTokenReader) start() (xml.Token, error) {
 		attributes = append(attributes, xml.Attr{Name: aName, Value: value})
 		metadata = append(metadata, m)
 	}
+	if r.internalDTD {
+		attributes, metadata, err = r.applyDTDAttributes(nameString, attributes, metadata)
+		if err != nil {
+			return nil, err
+		}
+	}
 	r.metadata.Attributes = metadata
 	if err = r.open(name, attributes); err != nil {
 		return nil, err

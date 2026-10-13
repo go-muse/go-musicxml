@@ -20,11 +20,19 @@ var sourceAssessmentEngine = sync.OnceValues(buildSourceAssessmentEngine)
 func newSourceAssessmentEngine() (*validation.Engine, error) { return sourceAssessmentEngine() }
 
 func buildSourceAssessmentEngine() (*validation.Engine, error) {
+	return buildSourceXSDProfileEngine(false)
+}
+
+func buildSourceXSDProfileEngine(internalDTD bool) (*validation.Engine, error) {
 	profile := validation.Profile{
 		ID: ProfileSourceXSDPreview, MusicXMLVersion: "4.0", Target: validation.TargetSource,
 		RegistryCommit:   "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
 		SupportedRoots:   []validation.QName{{Local: "score-partwise"}, {Local: "score-timewise"}, {Local: "opus"}},
 		NormativeClosure: "Preview source-only execution of the pinned generated MusicXML 4.0 score and opus XSD assemblies. Counts are selected per-node composite XSD operation instances, not research-record coverage. Mandatory XML syntax is separate. Files with an unread external DOCTYPE subset cannot satisfy this preview, including the three committed official score samples. Reached unavailable metadata, opaque/open-content, DTD infoset and unsupported value/identity capabilities remain incomplete. MusicXML prose, current-model traversal, packages, links, external dictionaries and broad production conformance are excluded.",
+	}
+	if internalDTD {
+		profile.ID = ProfileSourceInternalDTD
+		profile.NormativeClosure = "Explicit source-only assessment of the pinned MusicXML 4.0 score and opus XSD assemblies after bounded processing of actually read internal DTD declarations, general entities, attribute normalization and defaults. Source-origin projections describe admitted element and attribute occurrences, not per-character scalar segmentation. Unread external declarations, unelected parameter-entity forms and unresolved declaration well-formedness remain incomplete. No external retrieval, validating DTD processor, package adoption, model-history reconstruction, musical prose, dictionary or full XML conformance claim is made. Counts are selected operation instances, not original research-record coverage."
 	}
 	var rules []validation.RuleDefinition
 	var plans []validation.PlanBinding
@@ -56,6 +64,12 @@ func buildSourceAssessmentEngine() (*validation.Engine, error) {
 				return nil, err
 			}
 			key := validation.RuleKey{ID: validation.RuleID("MX40-SOURCE-XSD-" + string(input.assembly) + "-" + string(operation.check)), Revision: 1}
+			if internalDTD {
+				key.Revision = 2
+				if operation.check == validation.XSDCheckAttributes {
+					operation.explanation = "Effective attributes after selected bounded internal-DTD normalization and defaulting must satisfy XSD permitted, required, prohibited, fixed and datatype constraints. Physical specifiedness is retained separately. Standard schema-instance attributes retain their specific contracts."
+				}
+			}
 			assembly := input.assembly
 			rule := validation.RuleDefinition{Key: key, Selector: validation.Selector{Assembly: &assembly}, Scope: validation.ScopeNode,
 				Targets: []validation.Target{validation.TargetSource}, Class: validation.ClassMandatory, Role: validation.RolePredicate, Category: validation.CategoryNormative,
@@ -70,6 +84,24 @@ func buildSourceAssessmentEngine() (*validation.Engine, error) {
 			}
 			if operation.check == validation.XSDCheckIdentity {
 				rule.Scope = validation.ScopeDocument
+			}
+			rules = append(rules, rule)
+			plans = append(plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
+			profile.Required = append(profile.Required, key)
+			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
+		}
+		if internalDTD {
+			plan, err := validation.NewSourceOriginPlan(input.assembly)
+			if err != nil {
+				return nil, err
+			}
+			assembly := input.assembly
+			key := validation.RuleKey{ID: validation.RuleID("MX40-SOURCE-ORIGIN-" + string(assembly)), Revision: 1}
+			rule := validation.RuleDefinition{
+				Key: key, Selector: validation.Selector{Assembly: &assembly}, Scope: validation.ScopeDocument,
+				Targets: []validation.Target{validation.TargetSource}, Class: validation.ClassMandatory, Role: validation.RoleContextProvider, Category: validation.CategoryNormative,
+				Predicate: string(key.ID), Text: validation.RuleText{Title: "Source occurrence provenance", Explanation: "Each admitted source element and attribute occurrence retains physical specifiedness and independently available physical, declaration and reference sites. Complete enumeration is sealed explicitly; unavailable required provenance remains incomplete.", Message: "Source occurrence provenance is incomplete."},
+				Sources: []validation.SourceRef{{IDs: []string{"XML-1.0-Fifth-Edition", "XML-Infoset-Second-Edition"}, URL: "https://www.w3.org/TR/2004/REC-xml-infoset-20040204/", Locator: "2.2; 2.3; specified and origin information; bounded occurrence projection"}},
 			}
 			rules = append(rules, rule)
 			plans = append(plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
