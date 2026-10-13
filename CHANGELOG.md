@@ -9,6 +9,13 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add explicit package-target `ProfileResourceGraph`, `ProfileMXLSource` and
+  `ProfileMXLModel` metadata with sealed package/root/link checks, distinct
+  capability policy and optional advice, and fixed intrinsic catalog digest
+  tables. Preserve all eight earlier profiles and source/model entry-point
+  selection. Current-model discarded schema hints remain an explicit selected
+  discovery limitation; current packages do not fabricate original ZIP evidence.
+
 - Add source-only container and sounds XSD profiles with separately generated
   exact assembly bindings, preserving all eight earlier profiles and digests.
   Sounds adds owned directional mapping context with explicit absence, exact

@@ -371,7 +371,9 @@ func catalogCompareDeps(a, b Dependency) int {
 	return cmp.Compare(a.Relation, b.Relation)
 }
 
-func catalogValidateRule(r RuleDefinition) error {
+func catalogValidateRule(r RuleDefinition) error { return catalogValidateRuleMode(r, true) }
+
+func catalogValidateRuleMode(r RuleDefinition, xmlSelector bool) error {
 	if !catalogKey(r.Key) {
 		return contract("rule key", "nonempty stable ID and positive revision required")
 	}
@@ -413,7 +415,7 @@ func catalogValidateRule(r RuleDefinition) error {
 	if r.Selector.Assembly != nil {
 		branches++
 	}
-	if branches != 1 {
+	if xmlSelector && branches != 1 {
 		return contract("rule selector", "exactly one branch required")
 	}
 	if r.Selector.Assembly != nil && !validAssembly(*r.Selector.Assembly) {
@@ -473,7 +475,9 @@ func catalogValidateRule(r RuleDefinition) error {
 	return nil
 }
 
-func catalogValidateProfile(p Profile) error {
+func catalogValidateProfile(p Profile) error { return catalogValidateProfileMode(p, true) }
+
+func catalogValidateProfileMode(p Profile, xmlRoots bool) error {
 	if !catalogID(string(p.ID)) || !catalogID(p.MusicXMLVersion) || !catalogID(p.RegistryCommit) {
 		return contract("profile identity", "ID, version and registry pin required")
 	}
@@ -496,7 +500,7 @@ func catalogValidateProfile(p Profile) error {
 		}
 		required[key] = true
 	}
-	if len(p.SupportedRoots) == 0 {
+	if xmlRoots && len(p.SupportedRoots) == 0 {
 		return contract("profile roots", "at least one explicit root required")
 	}
 	roots := make(map[QName]bool, len(p.SupportedRoots))

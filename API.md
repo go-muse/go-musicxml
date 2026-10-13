@@ -919,3 +919,84 @@ closed content access returns a session error. Getters produce defensive,
 caller-owned API copies of already admitted immutable data; retaining adapters
 must account for their own working copies. Existing `Finish`, options, profile
 identities and ordinary assessment behavior are unchanged.
+
+### Sealed package and resource contracts
+
+`validation.NewPackageCatalog` accepts closed `PackageRuleBinding` selectors and
+constructor-produced `PackagePlan` operations separately from XML catalogs.
+Package rules carry an empty XML selector, package scope and exclusive package
+target. Package profiles carry no XML roots and include a fixed assembly/target
+intrinsic profile/digest table. Existing `NewCatalog` XML invariants and catalog
+digests remain unchanged. The package catalog is metadata, not a parser or a
+runtime expression language.
+
+`ResourceRequest` and `ResourceResult` have exactly one corresponding document,
+image, association or role branch. Core validators check bounded shape and exact
+request identity; only root orchestration reads and verifies streams. Every
+returned nonnil body transfers ownership even on error or rejected metadata.
+A newly returned alias body still consumes actual external byte/work quotas;
+parse reuse does not establish transport-byte reuse. Caller resolver code owns
+transport and redirect authorization; validation cannot control I/O it already
+performed. Source pins use verified SHA-256 digests. Current state uses opaque
+per-run snapshot identity, never an invented source hash.
+
+Association replies bind complete source/target pins, exact local subjects and
+normalized IDs. Partial mapping misses are unknown; known negative membership
+requires authoritative exact relation coverage. Optional target IDs must have
+verified kind/owner when supplied, but there is no required cross-file ID equality
+or bijection. Role results echo the whole bounded package request scope. Image
+metadata names an explicit common dimension unit and never infers MusicXML tenths
+or physical density.
+
+### Named package and resource-graph profiles
+
+The additive `ProfileResourceGraph`, `ProfileMXLSource` and `ProfileMXLModel`
+identities select separate bounded graph/package scopes. Every graph report has
+`TargetPackage`, package subject selectors and an empty XML `SupportedRoots`
+list. None is accepted as a standalone `InspectXML` or `AssessModel` profile,
+and none grants resolver or filesystem/network authority.
+
+- `ProfileResourceGraph` describes a finite selected resource graph rooted in
+  source XML or a current model. Plain document boundaries do not assert ZIP
+  facts. Authorized nested MXL boundaries receive applicable package checks.
+- `ProfileMXLSource` describes original raw-MXL evidence and source intrinsic
+  reports. A decoded current model cannot substitute for original XML proof.
+- `ProfileMXLModel` describes the current primary `Document`, represented package
+  fields and separately selected retained source resources. Original headers,
+  compression/encryption, physical order and original container lexical presence
+  are outside its current-boundary claim. They are never recovered by encoding
+  the package. Raw checks remain active for separately reached raw-MXL boundaries.
+
+All three select the same sealed, representation-conditional check inventory.
+Mandatory package/root/link/association conditions stay separate from optional
+mimetype, group, image and filename/MIME advice, compression observation and
+schema-discovery capability policy. Existing intrinsic XSD/local predicates are
+reused rather than copied into package reports. Per-report counts remain scoped;
+the catalog does not claim one rule per research record or full conformance.
+
+The fixed intrinsic table is part of the package catalog digest. Every profile
+pins source MusicXML/Opus to `ProfileSourceLinks`, source Container to
+`ProfileSourceContainer` and source Sounds to `ProfileSourceSounds`.
+`ProfileResourceGraph` and `ProfileMXLModel` additionally pin current-model
+MusicXML/Opus to `ProfileModelLinks`. Raw-MXL source assessment accepts no current
+model row. There are no Container/Sounds `Document` model roots. Digests derive
+from the actual compiled intrinsic catalogs, including their selected providers;
+they are not copied constants that can drift from auxiliary metadata changes.
+
+Selected schema-hint discovery is an important current-model limitation. A
+current model cannot establish absent or complete original xsi hints that its
+representation discarded. Therefore the graph/package assessment can remain
+incomplete even when its intrinsic current-model report is satisfied and it has
+no outgoing links. Source discovery separately preserves namespace/location
+pairs and an unmatched trailing URI. It never changes the accepted odd/even
+`list(anyURI)` datatype contract or automatically loads/selects schemas.
+
+Read the profile's `NormativeClosure` for its exact bounded claim. Central-only
+mimetype extra fields, other leading padding families, the complete media-type
+set, outer compressed-rootfile indirection, unproved association/role evidence
+and full ZIP/JAR/DEFLATE closure remain explicit interpretation/capability gaps
+when reached. Technical nested traversal does not settle normative indirection.
+The pinned MusicXML 4.0 schema is not a universal instance `version=4.0`
+restriction. All eight earlier profile identities, digests and report shapes are
+unchanged. See [package profile scope](docs/validation/package-profile-scope.md)
+for the sealed check inventory and provenance.
