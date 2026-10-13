@@ -325,6 +325,12 @@ func TestMXLAssessmentZIPCompressedWorkWithoutOutput(t *testing.T) {
 	defer assessmentZIPClose(t, a, account)
 	r := &mxlAssessmentCompressedReader{archive: a, raw: strings.NewReader(strings.Repeat("x", 8192))}
 	var buffer [8192]byte
+	for i := 0; i < 2; i++ {
+		n, err := r.Read(buffer[:])
+		if err != nil || n != 4096 {
+			t.Fatalf("bounded compressed read %d: %d %v", i, n, err)
+		}
+	}
 	n, e := r.Read(buffer[:])
 	var resource *validation.ResourceError
 	if n != 0 || !errors.As(e, &resource) || resource.Kind != validation.BudgetRuleSteps {
@@ -338,7 +344,15 @@ func TestMXLAssessmentZIPEmptyDeflateBlocksBounded(t *testing.T) {
 	packed := bytes.Repeat([]byte{0, 0, 0, 255, 255}, 5000)
 	packed = append(packed, 1, 0, 0, 255, 255)
 	b := assessmentZIPBytes([]assessmentZIPFixture{{name: "a", method: 8, packed: packed}}, nil, "")
-	account := assessmentZIPAccount(t, validation.Budgets{MaxRuleSteps: int64(len(b)) + 1000})
+	// First measure only archive admission, then allow four more work units.
+	probe := assessmentZIPAccount(t, validation.Budgets{})
+	observed, err := openMXLAssessmentArchive(context.Background(), bytes.NewReader(b), MXLOptions{}, probe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	admission, _ := probe.Usage(validation.BudgetRuleSteps)
+	assessmentZIPClose(t, observed, probe)
+	account := assessmentZIPAccount(t, validation.Budgets{MaxRuleSteps: admission + 4})
 	a, e := openMXLAssessmentArchive(context.Background(), bytes.NewReader(b), MXLOptions{}, account)
 	defer assessmentZIPClose(t, a, account)
 	if e != nil {

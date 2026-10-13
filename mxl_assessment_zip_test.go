@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"hash/crc32"
 	"testing"
 
@@ -172,7 +173,7 @@ func TestMXLAssessmentZIPRawHeaders(t *testing.T) {
 }
 func TestMXLAssessmentZIPDescriptors(t *testing.T) {
 	for _, size := range []int{12, 16} {
-		t.Run(string(rune('A'+size)), func(t *testing.T) {
+		t.Run(fmt.Sprint(size), func(t *testing.T) {
 			b := assessmentZIPBytes([]assessmentZIPFixture{{name: "a", body: "abc", flags: 8, descriptor: size}}, nil, "")
 			account := assessmentZIPAccount(t, validation.Budgets{})
 			a, e := openMXLAssessmentArchive(context.Background(), bytes.NewReader(b), MXLOptions{}, account)

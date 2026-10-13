@@ -19,6 +19,9 @@ import (
 // Supported envelopes are ordinary single-volume, non-ZIP64 STORE/DEFLATE,
 // including 12- and 16-byte descriptors. Errors below do not make normative
 // decisions. In particular local and central mimetype extras stay independent.
+// Framing failures wrap zip.ErrFormat; entry reads preserve zip.ErrChecksum,
+// io.ErrUnexpectedEOF and flate.CorruptInputError as transport errors. They are
+// operation failures, not MusicXML normative findings.
 const (
 	mxlZIPOwnerBytes  int64 = 1024
 	mxlZIPReadScratch int64 = 4096
@@ -39,7 +42,14 @@ func (e *mxlAssessmentZIPCapabilityError) Error() string {
 	return "MXL ZIP assessment capability unavailable: " + e.feature
 }
 
-type mxlAssessmentZIPPolicyError struct{ reason string }
+type mxlAssessmentZIPPolicyError struct {
+	reason string
+	cause  error
+}
+
+func (e *mxlAssessmentZIPPolicyError) Unwrap() error {
+	return errors.Join(validation.ErrProcessingPolicy, e.cause)
+}
 
 func (e *mxlAssessmentZIPPolicyError) Error() string {
 	return "MXL ZIP assessment processing policy: " + e.reason
@@ -209,6 +219,8 @@ func (a *mxlAssessmentArchive) release(n int64) {
 // readBounded charges primary bytes; expanded streams are metered underneath
 // archive/zip so its checksum wrapper cannot hide counts. Its one-byte EOF probe can
 // discover an excess at an exact limit without max+1 arithmetic or retention.
+// Read attempts (including empty reads/EOF probes) and append/copy work each
+// charge a unit per at most 4096 bytes. Byte quotas still use exact counts.
 // Capacity growth is reserved while the old backing array is still live.
 func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind validation.BudgetKind, expanded bool) ([]byte, error) {
 	if err := a.reserve(mxlZIPReadScratch); err != nil {
@@ -261,7 +273,7 @@ func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind v
 					return data, err
 				}
 			}
-			if err = a.step(int64(n)); err != nil {
+			if err = a.step(1); err != nil {
 				return data, err
 			}
 			target := int64(len(data)) + int64(n)
@@ -288,7 +300,10 @@ func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind v
 					return data, err
 				}
 				next := make([]byte, len(data), size)
-				copy(next, data)
+				if err = a.copyBytes(next, data); err != nil {
+					a.release(capacity)
+					return data, err
+				}
 				a.release(int64(cap(data)))
 				data = next
 			}
@@ -306,6 +321,20 @@ func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind v
 			return data, readErr
 		}
 	}
+}
+
+// copyBytes meters actual relocation, rather than a rounded charge followed by
+// one unbounded copy. Both backing arrays stay reserved until this completes.
+func (a *mxlAssessmentArchive) copyBytes(dst, src []byte) error {
+	for at := 0; at < len(src); {
+		if err := a.step(1); err != nil {
+			return err
+		}
+		n := min(int(mxlZIPReadScratch), len(src)-at)
+		copy(dst[at:at+n], src[at:at+n])
+		at += n
+	}
+	return nil
 }
 
 func mxlZIPU16(b []byte, at int) uint16 { return binary.LittleEndian.Uint16(b[at : at+2]) }
@@ -374,21 +403,24 @@ func (a *mxlAssessmentArchive) endRecord() (mxlAssessmentZIPEnd, error) {
 			}
 			continue
 		}
-		if mxlZIPU16(h, 4) != 0 || mxlZIPU16(h, 6) != 0 || mxlZIPU16(h, 8) != mxlZIPU16(h, 10) {
-			return zero, &mxlAssessmentZIPCapabilityError{feature: "multi-volume archive"}
-		}
-		if mxlZIPU16(h, 10) == 0xffff || mxlZIPU32(h, 12) == 0xffffffff || mxlZIPU32(h, 16) == 0xffffffff {
-			return zero, &mxlAssessmentZIPCapabilityError{feature: "ZIP64 envelope"}
-		}
-		if p >= 20 && mxlZIPU32(a.data[p-20:p], 0) == 0x07064b50 {
-			return zero, &mxlAssessmentZIPCapabilityError{feature: "ZIP64 locator"}
-		}
 		start, size := int64(mxlZIPU32(h, 16)), int64(mxlZIPU32(h, 12))
 		if start > int64(p) || size != int64(p)-start {
+			// Sentinel fields cannot frame an ordinary directory. A ZIP64 claim
+			// needs its own framed end/locator chain; arbitrary signature bytes
+			// in a comment cannot identify an unsupported envelope feature.
+			if a.framedZIP64End(p) {
+				return zero, &mxlAssessmentZIPCapabilityError{feature: "ZIP64 envelope"}
+			}
 			if start <= int64(p) && size < int64(p)-start {
 				envelopeFeature = "preamble or bytes outside ordinary directory envelope"
 			}
 			continue
+		}
+		if mxlZIPU16(h, 4) != 0 || mxlZIPU16(h, 6) != 0 || mxlZIPU16(h, 8) != mxlZIPU16(h, 10) {
+			return zero, &mxlAssessmentZIPCapabilityError{feature: "multi-volume archive"}
+		}
+		if mxlZIPU16(h, 10) == 0xffff {
+			return zero, &mxlAssessmentZIPCapabilityError{feature: "ZIP64 envelope"}
 		}
 		comment := a.data[p+22:]
 		if err := a.account.Check(validation.BudgetScalarBytes, int64(len(comment))); err != nil {
@@ -412,6 +444,30 @@ func (a *mxlAssessmentArchive) endRecord() (mxlAssessmentZIPEnd, error) {
 		return zero, &mxlAssessmentZIPCapabilityError{feature: envelopeFeature}
 	}
 	return zero, mxlZIPFormat("missing or truncated end-of-central-directory record")
+}
+
+// framedZIP64End recognizes only the bounded end-record chain and directory
+// extent. It does not admit ZIP64 parsing or consult signatures inside ordinary
+// directory fields. All uint64 offsets are bounded before conversion/slicing.
+func (a *mxlAssessmentArchive) framedZIP64End(end int) bool {
+	if end < 20+56 {
+		return false
+	}
+	locator := a.data[end-20 : end]
+	if mxlZIPU32(locator, 0) != 0x07064b50 {
+		return false
+	}
+	offset := binary.LittleEndian.Uint64(locator[8:16])
+	if offset > uint64(end-20-56) {
+		return false
+	}
+	record := a.data[int(offset) : int(offset)+56]
+	if mxlZIPU32(record, 0) != 0x06064b50 || binary.LittleEndian.Uint64(record[4:12]) != uint64(end-20)-offset-12 {
+		return false
+	}
+	size := binary.LittleEndian.Uint64(record[40:48])
+	start := binary.LittleEndian.Uint64(record[48:56])
+	return start <= offset && size == offset-start
 }
 
 // Mirrors only Go 1.27's bounded EOCD choice, not its parser. Admission does not
@@ -525,10 +581,10 @@ func (a *mxlAssessmentArchive) observe() error {
 			return err
 		}
 		if !validMXLPath(e.central.name, e.directory) {
-			return &mxlAssessmentZIPPolicyError{reason: "unsafe or noncanonical archive path"}
+			return &mxlAssessmentZIPPolicyError{reason: "unsafe or noncanonical archive path", cause: ErrMXLInvalidPath}
 		}
 		if _, ok := a.index[e.central.name]; ok {
-			return &mxlAssessmentZIPPolicyError{reason: "duplicate archive name"}
+			return &mxlAssessmentZIPPolicyError{reason: "duplicate archive name", cause: ErrMXLDuplicateEntry}
 		}
 		a.index[e.central.name] = i
 		a.physical[i] = i
@@ -547,10 +603,10 @@ func (a *mxlAssessmentArchive) observe() error {
 		if err = a.checkExtra(e.central.extra); err != nil {
 			return err
 		}
-		if e.central.flags&0x2041 != 0 && unsupported == nil {
+		if (e.local.flags|e.central.flags)&0x2041 != 0 && unsupported == nil {
 			unsupported = &mxlAssessmentZIPCapabilityError{feature: "encrypted entry"}
 		}
-		if e.central.flags & ^uint16(0x080e) != 0 && unsupported == nil {
+		if (e.local.flags|e.central.flags) & ^uint16(0x080e) != 0 && unsupported == nil {
 			unsupported = &mxlAssessmentZIPCapabilityError{feature: "unreviewed general-purpose ZIP flags"}
 		}
 		if e.central.method != zip.Store && e.central.method != zip.Deflate && unsupported == nil {
@@ -572,7 +628,7 @@ func (a *mxlAssessmentArchive) observe() error {
 		}
 		e := &a.entries[i]
 		if e.localOffset < next {
-			return &mxlAssessmentZIPPolicyError{reason: "overlapping or reused local entry range"}
+			return &mxlAssessmentZIPPolicyError{reason: "overlapping local entry range"}
 		}
 		if e.localOffset != next {
 			return &mxlAssessmentZIPCapabilityError{feature: "preamble or unindexed bytes between local entries"}
@@ -648,7 +704,7 @@ func (a *mxlAssessmentArchive) observeLocal(e *mxlAssessmentZIPEntry, centralSta
 	v := a.data[int(e.localOffset+30):int(e.localOffset+30+n+x)]
 	e.local = mxlZIPLocalHeader(h, v, n)
 	e.localObserved = true
-	if e.local.name != e.central.name || e.local.method != e.central.method || e.local.flags != e.central.flags {
+	if e.local.name != e.central.name || e.local.method != e.central.method || e.local.flags&0x2049 != e.central.flags&0x2049 {
 		return mxlZIPFormat("local/central header disagreement")
 	}
 	if e.local.compressed == math.MaxUint32 || e.local.uncompressed == math.MaxUint32 {

@@ -38,8 +38,10 @@ type PackageEntryObservation struct {
 	Location          Location
 	Local, Central    ZIPHeaderObservation
 	HeaderAssociation Evidence[bool]
-	UTF8Name          Evidence[bool]
-	PhysicalOrder     Evidence[uint64]
+	// UTF8Name reports observed byte validity, not a declared encoding.
+	// The EFS encoding flag remains separate in Local.Flags and Central.Flags.
+	UTF8Name      Evidence[bool]
+	PhysicalOrder Evidence[uint64]
 }
 
 // PackageMimetypeObservation carries an original initial byte prefix (at most

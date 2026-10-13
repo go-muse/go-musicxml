@@ -1045,6 +1045,12 @@ copy storage; returned copies belong to the caller. Package completion releases
 all live leases, while immutable `AssessmentBundle` getters remain available.
 `PackageSession.TerminalCause` reads the accumulated terminal error without
 charging work or admitting another event, including after completion.
+Adapters can preserve `validation.ErrProcessingPolicy` alongside existing legacy
+error identities for genuine technical processing refusals. The terminal report
+uses category `policy` and reason `processing-policy`, remaining incomplete rather
+than claiming normative invalidity. Resource limits, cancellation, deadlines and
+established malformed-source evidence retain their existing higher precedence;
+ordinary transport failures and unsupported formats must not acquire this marker.
 `AssessmentBundle.OmittedPackageDiagnostics` preserves the first omitted blocking
 package rule/subject/boundary/outcome/category/reason and a saturating omission
 count when intrinsic children exhaust shared diagnostic quotas. Its fixed 6 KiB
@@ -1066,7 +1072,9 @@ or successful package completion.
 address the whole document; only schema-ID NCName shorthand is implemented.
 Complete exact ID absence fails, incomplete ID scopes stay unknown, and other
 fragment grammars stay unsupported. Unknown/absent selected targets still charge
-linked-document admission. Each known edge uses its own nonroot adoption.
+linked-document admission. Each known edge uses its own nonroot adoption distinct
+from its source. A target may belong to another explicitly admitted package
+boundary; a known empty fragment target must be its exact nonzero adopted root.
 
 `ObserveImageMetadata` accepts an exact image request/result for a selected
 intrinsic template. Bundle image advice exposes exact dimensionless aspect ratios
@@ -1140,6 +1148,16 @@ a profile implicitly. Both return `(validation.AssessmentBundle, error)`. These 
 preserve all legacy decode, encode, resolve and transport behavior. The caller's
 reader stays open; no built-in filesystem or network resolver is introduced.
 
+The raw observer supports ordinary single-volume, non-ZIP64 STORE/DEFLATE
+archives with unsigned or signed data descriptors. Unsupported features are
+processing limitations, not normative MusicXML violations. Symbolic-link-mode
+entries are refused by transport policy even though no paths are extracted or
+links followed; this intentionally differs from legacy decoding. Unsafe paths
+and duplicate names retain `ErrMXLInvalidPath` and `ErrMXLDuplicateEntry` through
+`errors.Is`. Descriptor/encryption flag disagreements are framing errors;
+independent EFS and compression-level flags are retained, while unsupported bits
+in either header remain explicit capability limitations.
+
 Raw assessment retains independent observed local/central header facts, original
 mimetype prefixes and complete or explicitly partial entry inventories. The
 original container is assessed once with `ProfileSourceContainer`; ordered
@@ -1178,7 +1196,10 @@ released on completion, including technical errors and cancellation.
 
 Zero-valued graph budget fields select finite defaults, including 64 MiB each for
 primary input, external represented bytes and buffered working storage,
-20,000,000 rule steps and depth 1024. The independent MXL byte defaults are
+20,000,000 rule steps and depth 1024. ZIP transport, CRC and buffer relocation
+charge bounded work units of at most 4096 bytes, with empty reads and EOF probes
+also charged; byte quotas remain exact and growing buffers reserve old and new
+storage simultaneously. The independent MXL byte defaults are
 64 MiB archive, 1 MiB metadata, 256 MiB document/per-resource and 512 MiB aggregate
 selected resources. The stricter applicable limit wins; those legacy byte caps
 do not enlarge the shared graph account. Set finite overrides explicitly when
@@ -1277,9 +1298,14 @@ selected source-link template and effective retrieval context. Distinct aliases
 remain distinct even when their verified parse is reused. A name derived from an
 HTTP(S)/file retrieval URI is an escaped last path segment, not a claim about a
 physical filename; escaped slashes are never decoded into new member boundaries.
-Opaque/custom retrieval URIs may leave the optional name unavailable. Missing or
-invalid supplied external MIME remains absent or invalid rather than receiving a
-guessed default. Optional advice never supplies a document classification rule.
+Opaque/custom retrieval URIs may leave the optional name unavailable. Malformed
+or unreviewed supplied external MIME remains Unknown; absent MIME stays absent
+rather than receiving a guessed default. Optional advice never supplies a document classification rule.
+
+`PackageEntryObservation.UTF8Name` reports whether the observed name bytes are
+valid UTF-8. It does not prove the writer's declared encoding. The EFS bit remains
+separately available in `Local.Flags` and `Central.Flags`; the bounded name advice
+does not impose a mandatory EFS rule.
 
 An original ZIP entry with a non-UTF8 byte name may retain `RawName` header
 observation independently of transport path policy. Raw names are bounded exact

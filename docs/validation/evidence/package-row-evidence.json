@@ -7045,140 +7045,140 @@
       "function": "TestMXLAssessmentZIPCRCAndDecompressionAreTechnical",
       "line": 185,
       "end_line_bound": 224,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPCommentsAndFakeSignatures": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPCommentsAndFakeSignatures",
       "line": 140,
       "end_line_bound": 162,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPDeflateAndExactPrefixes": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPDeflateAndExactPrefixes",
       "line": 43,
       "end_line_bound": 63,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPEmptyAndTruncations": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPEmptyAndTruncations",
       "line": 395,
       "end_line_bound": 415,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPEnvelopeAndPolicy": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPEnvelopeAndPolicy",
       "line": 64,
       "end_line_bound": 139,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPExternalLegacyGap": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPExternalLegacyGap",
       "line": 249,
       "end_line_bound": 308,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPHeaderMatrix": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPHeaderMatrix",
       "line": 26,
       "end_line_bound": 42,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPLiteralNamesAndDirectory": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPLiteralNamesAndDirectory",
       "line": 322,
       "end_line_bound": 340,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPOverlappingRanges": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPOverlappingRanges",
       "line": 309,
       "end_line_bound": 321,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPPartialFactsAndNoAlias": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPPartialFactsAndNoAlias",
       "line": 163,
       "end_line_bound": 184,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_adversarial_test.go::TestMXLAssessmentZIPPhysicalSorting": {
       "file": "mxl_assessment_zip_adversarial_test.go",
       "function": "TestMXLAssessmentZIPPhysicalSorting",
       "line": 341,
       "end_line_bound": 360,
-      "file_sha256": "784edaf0c040dd5f64903b2a0ade3cb81099cc4f7b4607852d33201c5f95b362"
+      "file_sha256": "ec5c18f8e0617c399cadd7ba7e6a8496ae09f2235cca323f948e73fc02da294c"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPAdmissionBeforeRead": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPAdmissionBeforeRead",
       "line": 161,
       "end_line_bound": 199,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPBorrowedByteOwnership": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPBorrowedByteOwnership",
       "line": 213,
       "end_line_bound": 239,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPBudgetsExactAndOneUnder": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPBudgetsExactAndOneUnder",
       "line": 15,
       "end_line_bound": 84,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPCallerReaderOwnership": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPCallerReaderOwnership",
       "line": 200,
       "end_line_bound": 212,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPCancellationAtEveryPoll": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPCancellationAtEveryPoll",
       "line": 240,
       "end_line_bound": 265,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPCompressedWorkWithoutOutput": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPCompressedWorkWithoutOutput",
       "line": 319,
       "end_line_bound": 334,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPEmptyDeflateBlocksBounded": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPEmptyDeflateBlocksBounded",
       "line": 335,
       "end_line_bound": 356,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPFiveLegacyCaps": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPFiveLegacyCaps",
       "line": 113,
       "end_line_bound": 160,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_budget_test.go::TestMXLAssessmentZIPOverflowAndHostInt": {
       "file": "mxl_assessment_zip_budget_test.go",
       "function": "TestMXLAssessmentZIPOverflowAndHostInt",
       "line": 266,
       "end_line_bound": 295,
-      "file_sha256": "bdca2920a03a44061f04fe9b5fe47722e7af60bfcbff898466037cf83908a5f2"
+      "file_sha256": "357705706e7fd7663e701dcf7605b75b1b9ad76e13aa84715397fa75b3bb0977"
     },
     "mxl_assessment_zip_independent_test.go::TestIndependentZIPBorrowedAccount": {
       "file": "mxl_assessment_zip_independent_test.go",
@@ -7206,21 +7206,21 @@
       "function": "TestMXLAssessmentZIPDescriptors",
       "line": 173,
       "end_line_bound": 189,
-      "file_sha256": "6b6807a1e3472ab4fd0bbe57378f04cf52760fd16adae358c7a9432b417c7830"
+      "file_sha256": "abc6745fcdf4b5cb36b00ae8fb56ba2c7a0acd278356762d05e6496786eac686"
     },
     "mxl_assessment_zip_test.go::TestMXLAssessmentZIPMismatchIsTechnical": {
       "file": "mxl_assessment_zip_test.go",
       "function": "TestMXLAssessmentZIPMismatchIsTechnical",
       "line": 190,
       "end_line_bound": 201,
-      "file_sha256": "6b6807a1e3472ab4fd0bbe57378f04cf52760fd16adae358c7a9432b417c7830"
+      "file_sha256": "abc6745fcdf4b5cb36b00ae8fb56ba2c7a0acd278356762d05e6496786eac686"
     },
     "mxl_assessment_zip_test.go::TestMXLAssessmentZIPRawHeaders": {
       "file": "mxl_assessment_zip_test.go",
       "function": "TestMXLAssessmentZIPRawHeaders",
       "line": 150,
       "end_line_bound": 172,
-      "file_sha256": "6b6807a1e3472ab4fd0bbe57378f04cf52760fd16adae358c7a9432b417c7830"
+      "file_sha256": "abc6745fcdf4b5cb36b00ae8fb56ba2c7a0acd278356762d05e6496786eac686"
     },
     "package_catalog_test.go::TestPackageIntrinsicSourceDiscoveryAvailableForEveryAssembly": {
       "file": "package_catalog_test.go",

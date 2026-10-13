@@ -3,12 +3,12 @@ package musicxml
 import (
 	"archive/zip"
 	"bytes"
+	"compress/flate"
 	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"os"
 	"strings"
 	"testing"
@@ -82,9 +82,8 @@ func TestMXLAssessmentZIPEnvelopeAndPolicy(t *testing.T) {
 		{"reused-offset", func(b []byte) []byte {
 			p := assessmentZIPCentral(b)
 			assessmentZIPSet32(b, p+47+42, 0)
-			b[p+47+46] = 'a'
 			return b
-		}, "policy"},
+		}, "technical"},
 		{"symlink", func(b []byte) []byte {
 			p := assessmentZIPCentral(b)
 			assessmentZIPSet16(b, p+4, 3<<8|20)
@@ -92,7 +91,7 @@ func TestMXLAssessmentZIPEnvelopeAndPolicy(t *testing.T) {
 			return b
 		}, "policy"},
 		{"multi-disk", func(b []byte) []byte { assessmentZIPSet16(b, len(b)-18, 1); return b }, "capability"},
-		{"zip64", func(b []byte) []byte { assessmentZIPSet32(b, len(b)-10, math.MaxUint32); return b }, "capability"},
+		{"zip64", func([]byte) []byte { return reviewZIP64Envelope() }, "capability"},
 		{"trailing", func(b []byte) []byte { return append(b, 0) }, "capability"},
 		{"preamble", func(b []byte) []byte { return append([]byte("junk"), b...) }, "capability"},
 		{"unfamiliar-method", func(b []byte) []byte {
@@ -118,6 +117,9 @@ func TestMXLAssessmentZIPEnvelopeAndPolicy(t *testing.T) {
 			ok := tc.kind == "technical" && errors.Is(e, zip.ErrFormat) || tc.kind == "capability" && errors.As(e, &capability) || tc.kind == "policy" && errors.As(e, &policy)
 			if !ok {
 				t.Fatalf("wanted %s, got %T %v", tc.kind, e, e)
+			}
+			if tc.name == "reused-offset" && e.Error() != mxlZIPFormat("local/central header disagreement").Error() {
+				t.Fatalf("distinct-name reused offset did not reach association check: %v", e)
 			}
 			if a != nil && a.ready {
 				t.Fatal("unsafe archive ready")
@@ -206,8 +208,20 @@ func TestMXLAssessmentZIPCRCAndDecompressionAreTechnical(t *testing.T) {
 					t.Fatal(e)
 				}
 				_, e = a.readEntry(0, mxlAssessmentResource)
-				if e == nil {
-					t.Fatal("corruption accepted")
+				switch {
+				case corrupt == "short-size":
+					if !errors.Is(e, io.ErrUnexpectedEOF) {
+						t.Fatalf("size mismatch identity: %v", e)
+					}
+				case corrupt == "broken-body" && method == zip.Deflate:
+					var corruptInput flate.CorruptInputError
+					if !errors.As(e, &corruptInput) {
+						t.Fatalf("DEFLATE corruption identity: %v", e)
+					}
+				default:
+					if !errors.Is(e, zip.ErrChecksum) {
+						t.Fatalf("checksum identity: %v", e)
+					}
 				}
 				if corrupt != "broken-body" {
 					used, _ := account.Usage(validation.BudgetExternalBytes)
@@ -315,7 +329,7 @@ func TestMXLAssessmentZIPOverlappingRanges(t *testing.T) {
 	a, e := openMXLAssessmentArchive(context.Background(), bytes.NewReader(b), MXLOptions{}, account)
 	defer assessmentZIPClose(t, a, account)
 	var policy *mxlAssessmentZIPPolicyError
-	if !errors.As(e, &policy) || !strings.Contains(policy.reason, "overlapping") || a.reader != nil {
+	if !errors.As(e, &policy) || policy.reason != "overlapping local entry range" || a.reader != nil {
 		t.Fatalf("overlap not rejected before reader: %v", e)
 	}
 }
@@ -360,7 +374,7 @@ func TestMXLAssessmentZIPPhysicalSorting(t *testing.T) {
 }
 func TestMXLAssessmentZIPDescriptorCorruptionAndPlaceholders(t *testing.T) {
 	for _, signed := range []int{12, 16} {
-		for _, change := range []string{"nonzero-placeholder", "wrong-descriptor", "wrong-local-size", "truncated-descriptor"} {
+		for _, change := range []string{"nonzero-placeholder", "wrong-descriptor", "wrong-local-size", "body-outside-local-area", "truncated-descriptor"} {
 			t.Run(fmt.Sprintf("%d-%s", signed, change), func(t *testing.T) {
 				b := assessmentZIPBytes([]assessmentZIPFixture{{name: "a", body: "abc", flags: 8, descriptor: signed}}, nil, "")
 				p := assessmentZIPCentral(b)
@@ -371,9 +385,14 @@ func TestMXLAssessmentZIPDescriptorCorruptionAndPlaceholders(t *testing.T) {
 					b[34+signed-1] ^= 1
 				case "wrong-local-size":
 					assessmentZIPSet32(b, 22, 4)
-				case "truncated-descriptor":
+				case "body-outside-local-area":
 					assessmentZIPSet32(b, p+20, 100)
 					assessmentZIPSet32(b, 18, 100)
+				case "truncated-descriptor":
+					// Remove one descriptor byte, then relocate the intact central
+					// directory and EOCD together. Body sizes remain exact.
+					b = append(b[:p-1], b[p:]...)
+					assessmentZIPSet32(b, len(b)-6, uint32(p-1))
 				}
 				account := assessmentZIPAccount(t, validation.Budgets{})
 				a, e := openMXLAssessmentArchive(context.Background(), bytes.NewReader(b), MXLOptions{}, account)
@@ -385,8 +404,19 @@ func TestMXLAssessmentZIPDescriptorCorruptionAndPlaceholders(t *testing.T) {
 					if _, e = a.readEntry(0, mxlAssessmentResource); e != nil {
 						t.Fatal(e)
 					}
-				} else if !errors.Is(e, zip.ErrFormat) {
-					t.Fatalf("descriptor corruption not technical: %v", e)
+				} else {
+					reason := map[string]string{
+						"wrong-descriptor":        "descriptor/central disagreement",
+						"wrong-local-size":        "inconsistent descriptor placeholders",
+						"body-outside-local-area": "entry body outside local area",
+						"truncated-descriptor":    "truncated descriptor",
+					}[change]
+					if change == "truncated-descriptor" && signed == 16 {
+						reason = "truncated signed descriptor"
+					}
+					if !errors.Is(e, zip.ErrFormat) || e.Error() != mxlZIPFormat(reason).Error() {
+						t.Fatalf("wanted format reason %q, got %v", reason, e)
+					}
 				}
 			})
 		}

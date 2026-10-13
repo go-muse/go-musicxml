@@ -630,6 +630,8 @@ func terminalClassification(err error, malformedSource bool) (DiagnosticCategory
 		return CategoryResource, "deadline-exceeded"
 	case malformedSource:
 		return CategorySyntax, "malformed-source"
+	case errors.Is(err, ErrProcessingPolicy):
+		return CategoryPolicy, "processing-policy"
 	}
 	var root *UnsupportedRootError
 	if errors.As(err, &root) {

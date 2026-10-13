@@ -18,6 +18,12 @@ var ErrInvalidSession = errors.New("validation: invalid session")
 // ErrResourceLimit identifies exhaustion of an assessment resource limit.
 var ErrResourceLimit = errors.New("validation: resource limit exceeded")
 
+// ErrProcessingPolicy identifies a technical processing refusal by an adapter's
+// explicit policy. It does not identify a normative document violation, malformed
+// syntax, unsupported capability, or an ordinary unavailable transport. Adapters
+// may preserve this marker alongside their existing public error identities.
+var ErrProcessingPolicy = errors.New("validation: processing policy refusal")
+
 // IncompleteError describes interrupted or unsupported assessment and preserves
 // its underlying cause, including cancellation and independent resource errors.
 type IncompleteError struct {

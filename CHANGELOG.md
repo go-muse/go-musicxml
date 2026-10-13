@@ -7,6 +7,18 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Meter ZIP reads, decompression, CRC and actual buffer relocation in bounded
+  4096-byte work units, preserving exact byte quotas and simultaneous live-buffer
+  peaks without changing defaults.
+
+- Frame ZIP end records before classifying unsupported envelope features; do not
+  mistake central-comment locator bytes for ZIP64 records. Preserve independent
+  non-framing header flags and legacy unsafe-path/duplicate-name error identities.
+- Document symbolic-link refusal as an assessment transport limitation and UTF8Name
+  as observed byte validity with independently retained EFS flags.
+
 ### Added
 
 - Reduce local-resource snapshot measurement/copy allocations and account owned
@@ -19,6 +31,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   typed availability/cause evidence, odd schema-hint pairing is known false,
   and snapshot headers identify selection of the assembly-local link plan.
   DTD-wide hint gaps occupy one root row while observed descendant hints remain.
+- Add a processing-policy error marker for adapter refusals, preserving existing
+  error identities and distinguishing policy incompleteness from normative failure.
+
 - Preserve the first omitted blocking package diagnostic in a fixed prepaid
   summary independent of shared diagnostic quotas. Expose read-only package
   terminal causes and retain original intrinsic terminal classifications.

@@ -129,7 +129,7 @@ func (a *mxlAssessmentArchive) readEntry(index int, role mxlAssessmentEntryRole)
 		if n > 4096 {
 			n = 4096
 		}
-		if err = a.step(int64(n)); err != nil {
+		if err = a.step(1); err != nil {
 			return data, err
 		}
 		_, _ = hash.Write(data[p : p+n])
@@ -162,7 +162,7 @@ type mxlAssessmentExpandedReader struct {
 
 func (r *mxlAssessmentExpandedReader) Read(p []byte) (int, error) {
 	if len(p) == 0 {
-		return 0, nil
+		return 0, r.archive.step(1)
 	}
 	if r.automatic && !r.classified {
 		empty := 0
@@ -222,7 +222,7 @@ func (r *mxlAssessmentExpandedReader) readData(p []byte) (int, error) {
 	if a.account.Limits().MaxExternalBytes-used < remaining {
 		remaining = a.account.Limits().MaxExternalBytes - used
 	}
-	want := int64(len(p))
+	want := min(int64(len(p)), mxlZIPReadScratch)
 	if want > remaining {
 		want = remaining
 	}
@@ -248,7 +248,7 @@ func (r *mxlAssessmentExpandedReader) readData(p []byte) (int, error) {
 		if a.sharedExpanded != nil {
 			*a.sharedExpanded += int64(n)
 		}
-		if err = a.step(int64(n)); err != nil {
+		if err = a.step(1); err != nil {
 			return 0, err
 		}
 	}
@@ -277,7 +277,7 @@ func (r *mxlAssessmentCompressedReader) Read(p []byte) (int, error) {
 		return 0, mxlZIPFormat("invalid compressed reader count")
 	}
 	if n > 0 {
-		if chargeErr := r.archive.step(int64(n)); chargeErr != nil {
+		if chargeErr := r.archive.step(1); chargeErr != nil {
 			return 0, chargeErr
 		}
 	}
