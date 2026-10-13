@@ -3,19 +3,20 @@ package validation
 import "slices"
 
 const (
-	planContextSoundsMapping   planKind = "sounds-context-mapping"
-	planContextOpusLayout      planKind = "opus-context-layout"
-	planFigureNumberNumeric    planKind = "musicxml-figure-number-numeric"
-	planGraphicalRepeatContent planKind = "musicxml-graphical-repeat-content"
-	planBendReleaseSign        planKind = "musicxml-bend-release-sign"
-	planContextLocal           planKind = "musicxml-context-local"
-	planContextSpans           planKind = "musicxml-context-spans"
-	planContextRepeats         planKind = "musicxml-context-repeats"
-	planContextNavigation      planKind = "musicxml-context-navigation"
-	planContextLayout          planKind = "musicxml-context-layout"
-	planContextPerformance     planKind = "musicxml-context-performance"
-	planTimeOnlyOrder          planKind = "musicxml-time-only-order"
-	contextSemanticRevision    uint32   = 1
+	planContextContainerMetadata planKind = "container-context-metadata"
+	planContextSoundsMapping     planKind = "sounds-context-mapping"
+	planContextOpusLayout        planKind = "opus-context-layout"
+	planFigureNumberNumeric      planKind = "musicxml-figure-number-numeric"
+	planGraphicalRepeatContent   planKind = "musicxml-graphical-repeat-content"
+	planBendReleaseSign          planKind = "musicxml-bend-release-sign"
+	planContextLocal             planKind = "musicxml-context-local"
+	planContextSpans             planKind = "musicxml-context-spans"
+	planContextRepeats           planKind = "musicxml-context-repeats"
+	planContextNavigation        planKind = "musicxml-context-navigation"
+	planContextLayout            planKind = "musicxml-context-layout"
+	planContextPerformance       planKind = "musicxml-context-performance"
+	planTimeOnlyOrder            planKind = "musicxml-time-only-order"
+	contextSemanticRevision      uint32   = 1
 )
 
 // ContextPlanSpec binds a sealed context family to immutable MusicXML schema
@@ -90,7 +91,16 @@ func NewSoundsMappingContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextSoundsMapping, ContextPlanSpec{Schema: schema})
 }
 
+// NewContainerMetadataContextPlan projects ordered source container metadata.
+// Only the exact container assembly and source target are supported.
+func NewContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
+	return newContextPlan(planContextContainerMetadata, ContextPlanSpec{Schema: schema})
+}
+
 func contextPlanAssembly(kind planKind) Assembly {
+	if kind == planContextContainerMetadata {
+		return AssemblyContainer
+	}
 	if kind == planContextSoundsMapping {
 		return AssemblySounds
 	}
@@ -121,7 +131,7 @@ func newContextPlan(kind planKind, spec ContextPlanSpec) (Plan, error) {
 }
 func (p Plan) isContext() bool {
 	switch p.kind {
-	case planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
 		return true
 	}
 	return false
@@ -176,6 +186,9 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 		return contract("context rule", "normative mandatory family contract required")
 	}
 	for _, target := range r.Targets {
+		if p.kind == planContextContainerMetadata && target != TargetSource {
+			return contract("container context target", "source-only assembly required")
+		}
 		if p.kind == planContextSoundsMapping && target != TargetSource {
 			return contract("sounds context target", "source-only assembly required")
 		}

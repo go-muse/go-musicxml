@@ -28,6 +28,42 @@ create a new rejection rule, or cause schema retrieval. This source profile does
 not inspect archive entries, mimetype bytes, rootfile targets or package roles.
 All such package obligations remain independently selected work.
 
+## Ordered container metadata
+
+The sealed `NewContainerMetadataContextPlan` binds the exact global container
+root, rootfiles and rootfile uses, and full-path/media-type attribute slots.
+`ContextPropertyContainerMetadata` publishes one typed `ContainerContextResult`
+per observed exact occurrence, in source order. It reuses the existing assessed
+session and its original locations; no second parse, generic fact-tree export,
+entry lookup, media-type classification or graph rule runs here.
+
+The root and each rootfiles occurrence carry `Content` evidence for their own
+complete, grammar-valid ordered child inventory. Consumers must inspect both
+levels and the containing assessment's input/syntax completeness before claiming
+an exhaustive rootfile list. Unknown, unsupported, invalid or skipped child
+bindings cannot become complete absence. Each rootfile's one-based `Ordinal` is
+known only when its rootfiles inventory is complete. Separate rootfiles parents
+retain separate identities, even when invalid root grammar permits no complete
+single inventory. Local rootfile attribute failures remain independent of
+otherwise proved source position.
+
+Raw full-path/media-type lexemes preserve XML normalization; effective fields
+use the shared XSD xs:token collapse semantics. Optional omission remains absent,
+including its raw evidence, while an explicitly empty token remains known empty.
+Missing required full-path retains absent raw evidence and invalid effective
+evidence with the XSD attribute prerequisite cause. No default MIME type or
+mandatory nonempty-token rule is invented.
+
+`TestAuxiliaryContainerMetadata*` covers source token/order/identity controls,
+missing required fields, malformed/foreign/skipped-child inventory, source-only
+and exact assembly/selector/schema-digest binding, owned reports and frozen
+profile JSON. `TestContainerMetadata*` separately exercises unavailable
+value/lexeme/binding/order/enumeration causes, exact declaration homonyms,
+publication ownership, exact/one-under retained/work/fact budgets and every
+observed provider/publication cancellation poll. The original behavioral test
+failed before production changes because the source-only profile published no
+container metadata, then passed with the same source and expected four rows.
+
 ## Directional sounds evidence
 
 A separate sealed sounds context plan binds exact declaration uses. `sound`

@@ -16,6 +16,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   selection. Current-model discarded schema hints remain an explicit selected
   discovery limitation; current packages do not fabricate original ZIP evidence.
 
+- Add source-only ordered container metadata projections through
+  `NewContainerMetadataContextPlan` and `ContextResult.Container`. Exact source
+  identities, raw/effective token fields, required-attribute causes and guarded
+  inventory/order remain distinct. This reuses the assessed source session and
+  does not assert package graph rules or alter the eight earlier profile reports.
+
 - Add source-only container and sounds XSD profiles with separately generated
   exact assembly bindings, preserving all eight earlier profiles and digests.
   Sounds adds owned directional mapping context with explicit absence, exact

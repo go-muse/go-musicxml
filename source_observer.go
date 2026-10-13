@@ -436,7 +436,7 @@ func (s *observingXMLSource) Token() (xml.Token, error) {
 	}
 	token, err := s.decoder.Token()
 	if err != nil {
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF {
 			s.eof = true
 		} else {
 			s.failure = err

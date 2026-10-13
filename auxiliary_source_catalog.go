@@ -7,7 +7,8 @@ import (
 )
 
 // ProfileSourceContainer assesses original container XML against the pinned
-// container XSD assembly. Package entries, root targets and ZIP rules are outside
+// container XSD assembly and projects exact ordered rootfile metadata.
+// Package entries, root targets and ZIP rules are outside
 // this source-only profile. It does not add a Document model root.
 const ProfileSourceContainer validation.ProfileID = "musicxml-4.0/source-container"
 
@@ -81,6 +82,21 @@ func buildAuxiliarySourceAssessmentEngine() (*validation.Engine, error) {
 			plans = append(plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
 			profile.Required = append(profile.Required, key)
 			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
+		}
+
+		if input.assembly == validation.AssemblyContainer {
+			plan, err := validation.NewContainerMetadataContextPlan(schema)
+			if err != nil {
+				return nil, err
+			}
+			assembly := validation.AssemblyContainer
+			key := validation.RuleKey{ID: "MX40-CONTEXT-container-metadata", Revision: 1}
+			rule := validation.RuleDefinition{Key: key, Class: validation.ClassMandatory, Role: validation.RoleContextProvider, Category: validation.CategoryNormative, Targets: []validation.Target{validation.TargetSource}, Scope: validation.ScopeDocument, Selector: validation.Selector{Assembly: &assembly}, Predicate: string(key.ID), Text: validation.RuleText{Title: "Ordered container metadata evidence", Explanation: "Retain exact container, rootfiles and rootfile source occurrences with prerequisite-qualified inventory, order and raw/effective token fields. Provider completion makes no package or linked-target conformance assertion.", Message: "Container metadata projection did not finish."}, Sources: []validation.SourceRef{{IDs: []string{"MusicXML-4.0-container.xsd"}, URL: "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd", Locator: "container, rootfiles and rootfile declarations"}}}
+			rules = append(rules, rule)
+			plans = append(plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
+			profile.Required = append(profile.Required, key)
+			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
+			profile.NormativeClosure += " Exact ordered container/rootfiles/rootfile metadata is independently owned. Raw lexemes, effective token values, absence and invalid prerequisites remain distinct; incomplete child bindings never certify complete inventory."
 		}
 		if input.assembly == validation.AssemblySounds {
 			plan, err := validation.NewSoundsMappingContextPlan(schema)

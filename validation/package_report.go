@@ -2,7 +2,6 @@ package validation
 
 import (
 	"context"
-	"errors"
 	"reflect"
 )
 
@@ -167,9 +166,8 @@ func (a *ResourceAdoption) ContextAt(ctx context.Context, i int) (ContextResult,
 	if i < 0 || i >= len(v.contexts) {
 		return ContextResult{}, false, nil
 	}
-	out := stateClone(v.contexts[i])
-	resourceRemap(reflect.ValueOf(&out).Elem(), v.header.DocumentID, a.value.documentID)
-	return out, true, nil
+	out, err := resourceLiveCopy(ctx, a.owner.account, v.contexts[i], v.header.DocumentID, a.value.documentID)
+	return out, err == nil, err
 }
 
 // IDAt returns a copied exact ID state with remapped owners and causal origins.
@@ -187,9 +185,8 @@ func (a *ResourceAdoption) IDAt(ctx context.Context, i int) (ResourceIDFact, boo
 	if i < 0 || i >= len(v.ids) {
 		return ResourceIDFact{}, false, nil
 	}
-	out := stateClone(v.ids[i])
-	resourceRemap(reflect.ValueOf(&out).Elem(), v.header.DocumentID, a.value.documentID)
-	return out, true, nil
+	out, err := resourceLiveCopy(ctx, a.owner.account, v.ids[i], v.header.DocumentID, a.value.documentID)
+	return out, err == nil, err
 }
 
 // Report returns an owned remapped display report without changing canonical
@@ -205,9 +202,7 @@ func (a *ResourceAdoption) Report(ctx context.Context) (Report, error) {
 		return Report{}, e
 	}
 	v := a.value.resource.snapshot
-	out := stateClone(v.report)
-	resourceRemap(reflect.ValueOf(&out).Elem(), v.header.DocumentID, a.value.documentID)
-	return out, nil
+	return resourceLiveCopy(ctx, a.owner.account, v.report, v.header.DocumentID, a.value.documentID)
 }
 
 // Finish is terminal even when canceled. It preserves admitted known findings,
@@ -328,5 +323,3 @@ func (s *PackageSession) cleanup() {
 	s.output = nil
 	s.failure = nil
 }
-
-var _ = errors.Is

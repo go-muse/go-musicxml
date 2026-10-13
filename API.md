@@ -842,9 +842,29 @@ identities and digests. `AssessmentOptions` and `validation.Report` retain their
 existing fields. A foreign or wrong root is a profile-admission error; ordinary
 in-scope schema violations appear in the report with a nil operation error.
 
-The container profile assesses XML structure, attributes and values only. It
-does not prove ZIP properties, entry existence, rootfile target kind, media-type
-classification or score/part ordering. The sounds profile additionally selects
+The container profile selects `validation.NewContainerMetadataContextPlan` in
+addition to its XSD operations. Its exact source-only provider publishes
+`ContextPropertyContainerMetadata` records with an optional
+`ContextResult.Container` payload of type `ContainerContextResult`:
+
+- `Role` distinguishes `ContainerRoot`, `ContainerRootfiles` and `ContainerRootfile`
+- `Container` and `Parent` preserve exact source identities; the root has no parent
+- `FullPathRaw` and `MediaTypeRaw` preserve XML-normalized source lexemes, while
+  `FullPath` and `MediaType` retain assessed `xs:token` values
+- Optional omission differs from a known empty string. Missing required
+  `full-path` has absent raw evidence and invalid effective evidence with the
+  exact XSD prerequisite cause
+- `Content` proves complete, grammar-valid ordered child-role inventory for that
+  occurrence. A complete rootfile inventory requires both the root and rootfiles
+  guards; malformed or skipped children never turn a known subset into completeness
+- `Ordinal` is one-based within a rootfiles parent and known only when that
+  parent's inventory is complete. Non-rootfile attribute and ordinal fields are absent
+
+These projections come from the same assessed source session, without reparsing
+XML or exporting a generic fact tree. They do not prove ZIP properties, entry
+existence, rootfile target kind, media-type classification or score/part ordering.
+A consumer must also honor the containing assessment's input/syntax completeness.
+The sounds profile additionally selects
 `validation.NewSoundsMappingContextPlan`. Its sealed source-only provider adds
 `ContextPropertySoundMapping` records with a `ContextResult.SoundMapping`
 payload of type `SoundMappingContextResult`:
@@ -868,7 +888,7 @@ ensemble restriction, library access, playback, or cross-file correspondence is
 performed. Existing source DTD, capability, cancellation and finite budget limits
 still apply. See [auxiliary source scope](docs/validation/auxiliary-source-scope.md).
 
-`ContextResult` gains one optional typed payload field; clients using unkeyed
+`ContextResult` gains optional `SoundMapping` and `Container` typed payload fields; clients using unkeyed
 composite literals for that struct must migrate to keyed literals. This additive
 context-family extension does not change the `Report` or options struct shapes.
 

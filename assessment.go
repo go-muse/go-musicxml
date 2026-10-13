@@ -296,7 +296,7 @@ func (r *sourceAssessmentRun) drain() error {
 	}
 	for {
 		_, err := r.source.Token()
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF {
 			return nil
 		}
 		if err != nil {

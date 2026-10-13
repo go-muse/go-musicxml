@@ -155,6 +155,9 @@ func resourceSelectedContext(p ContextProperty) bool {
 // It is not a public reflection or predicate hook. Numeric wrappers are immutable;
 // all other pointers in these fixed acyclic record graphs are measured deeply.
 func resourceMeasure(ctx context.Context, a *Account, v reflect.Value) (int64, error) {
+	return resourceMeasureAs(ctx, a, v, "")
+}
+func resourceMeasureAs(ctx context.Context, a *Account, v reflect.Value, to string) (int64, error) {
 	if ctx == nil {
 		return 0, contract("context", "must not be nil")
 	}
@@ -178,6 +181,12 @@ func resourceMeasure(ctx context.Context, a *Account, v reflect.Value) (int64, e
 		}
 	}
 	total := int64(32)
+	if v.CanInterface() {
+		switch v.Interface().(type) {
+		case NodeRef, Location:
+			total += int64(len(to))
+		}
+	}
 	add := func(x int64, e error) error {
 		if e != nil {
 			return e
@@ -189,19 +198,19 @@ func resourceMeasure(ctx context.Context, a *Account, v reflect.Value) (int64, e
 	switch v.Kind() {
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
-			if err := add(resourceMeasure(ctx, a, v.Field(i))); err != nil {
+			if err := add(resourceMeasureAs(ctx, a, v.Field(i), to)); err != nil {
 				return 0, err
 			}
 		}
 	case reflect.Slice:
 		for i := 0; i < v.Len(); i++ {
-			if err := add(resourceMeasure(ctx, a, v.Index(i))); err != nil {
+			if err := add(resourceMeasureAs(ctx, a, v.Index(i), to)); err != nil {
 				return 0, err
 			}
 		}
 	case reflect.Pointer:
 		if !v.IsNil() {
-			if err := add(resourceMeasure(ctx, a, v.Elem())); err != nil {
+			if err := add(resourceMeasureAs(ctx, a, v.Elem(), to)); err != nil {
 				return 0, err
 			}
 		}
@@ -255,7 +264,7 @@ func (s *Session) resourceIDs(ctx context.Context) ([]ResourceIDFact, error) {
 		scalar := s.schema.run.Scalar(bound.binding)
 		results := s.schema.run.Results(bound.binding)
 		if n.header.Parent != 0 && scalar.Builtin == "ID" && scalar.Known && results.Scalar.Valid && results.Declaration.Valid && n.header.Declaration.State == EvidenceKnown {
-			fact, e := s.resourceID(ctx, n, part, scalar.Value.Text, n.header.Declaration.Value)
+			fact, e := s.resourceID(ctx, n, n.header.Parent, part, scalar.Value.Text, n.header.Declaration.Value)
 			if e != nil {
 				return nil, e
 			}
@@ -268,7 +277,7 @@ func (s *Session) resourceIDs(ctx context.Context) ([]ResourceIDFact, error) {
 			if a.Scalar.Builtin != "ID" || !a.Present || !a.TypeValid || !a.DeclarationValid || !a.Scalar.Known {
 				continue
 			}
-			fact, e := s.resourceID(ctx, n, part, a.Scalar.Value.Text, s.schema.active.declaration(a.Use))
+			fact, e := s.resourceID(ctx, n, n.header.ID, part, a.Scalar.Value.Text, s.schema.active.declaration(a.Use))
 			if e != nil {
 				return nil, e
 			}
@@ -277,7 +286,7 @@ func (s *Session) resourceIDs(ctx context.Context) ([]ResourceIDFact, error) {
 	}
 	return out, nil
 }
-func (s *Session) resourceID(ctx context.Context, n *factNode, part NodeRef, value string, declaration DeclarationID) (ResourceIDFact, error) {
+func (s *Session) resourceID(ctx context.Context, n *factNode, actualOwner NodeID, part NodeRef, value string, declaration DeclarationID) (ResourceIDFact, error) {
 	resolved, e := s.schema.run.ResolveIdentity(ctx, value)
 	if e != nil {
 		return ResourceIDFact{}, e
@@ -296,18 +305,6 @@ func (s *Session) resourceID(ctx context.Context, n *factNode, part NodeRef, val
 		} else {
 			unique = Evidence[bool]{State: EvidenceUnknown, Reason: "ambiguous-resource-id"}
 		}
-	}
-	actualOwner := NodeID(resolved.Owner)
-	if actualOwner == 0 {
-		if NodeID(resolved.FirstOwner) == n.header.ID || NodeID(resolved.FirstOwner) == n.header.Parent {
-			actualOwner = NodeID(resolved.FirstOwner)
-		} else if NodeID(resolved.SecondOwner) == n.header.ID || NodeID(resolved.SecondOwner) == n.header.Parent {
-			actualOwner = NodeID(resolved.SecondOwner)
-		}
-	}
-	if actualOwner == 0 {
-		actualOwner = n.header.ID
-		unique = Evidence[bool]{State: EvidenceUnknown, Reason: "resource-id-has-no-containing-owner"}
 	}
 	owner := Evidence[NodeRef]{State: EvidenceAbsent}
 	if part.Node != 0 {
@@ -359,9 +356,9 @@ func (s *ResourceSnapshot) IDCount() int {
 	return len(s.ids)
 }
 
-// ContextAt returns an owned API copy; these caller-owned getter copies do not
-// consume or retain root Account storage. Retaining work adapters admit their
-// own storage. Content access after Close is rejected.
+// ContextAt admits temporary copy storage and work against the live Account.
+// The returned copy is caller-owned; adapters separately admit lasting storage.
+// Content access after Close is rejected.
 func (s *ResourceSnapshot) ContextAt(ctx context.Context, i int) (ContextResult, bool, error) {
 	if e := s.live(); e != nil {
 		return ContextResult{}, false, e
@@ -375,7 +372,8 @@ func (s *ResourceSnapshot) ContextAt(ctx context.Context, i int) (ContextResult,
 	if i < 0 || i >= len(s.contexts) {
 		return ContextResult{}, false, nil
 	}
-	return stateClone(s.contexts[i]), true, nil
+	out, err := resourceLiveCopy(ctx, s.account, s.contexts[i], "", "")
+	return out, err == nil, err
 }
 
 // IDAt returns an independently owned schema ID occurrence.
@@ -392,11 +390,12 @@ func (s *ResourceSnapshot) IDAt(ctx context.Context, i int) (ResourceIDFact, boo
 	if i < 0 || i >= len(s.ids) {
 		return ResourceIDFact{}, false, nil
 	}
-	return stateClone(s.ids[i]), true, nil
+	out, err := resourceLiveCopy(ctx, s.account, s.ids[i], "", "")
+	return out, err == nil, err
 }
 
 // Report returns a defensive caller-owned API copy of the canonical intrinsic
-// report. It never consults a released Account.
+// report, admitting temporary copy storage and work while its Account is live.
 func (s *ResourceSnapshot) Report(ctx context.Context) (Report, error) {
 	if e := s.live(); e != nil {
 		return Report{}, e
@@ -407,7 +406,7 @@ func (s *ResourceSnapshot) Report(ctx context.Context) (Report, error) {
 	if e := ctx.Err(); e != nil {
 		return Report{}, e
 	}
-	return stateClone(s.report), nil
+	return resourceLiveCopy(ctx, s.account, s.report, "", "")
 }
 
 // Close releases standalone snapshot ownership once. After successful package
@@ -473,5 +472,92 @@ func resourceRemap(value reflect.Value, from, to string) {
 		if !value.IsNil() {
 			resourceRemap(value.Elem(), from, to)
 		}
+	}
+}
+
+// resourceLiveCopy meters the entire closed value before allocating. The scratch
+// lease spans copying and remapping, with cancellation checks at every record.
+// The caller owns a successful returned value outside the live Account.
+func resourceLiveCopy[T any](ctx context.Context, a *Account, value T, from, to string) (T, error) {
+	var zero T
+	n, err := resourceMeasureAs(ctx, a, reflect.ValueOf(value), to)
+	if err != nil {
+		return zero, err
+	}
+	if err = a.Charge(BudgetBufferedBytes, n); err != nil {
+		return zero, err
+	}
+	defer a.Release(BudgetBufferedBytes, n)
+	out, err := resourceCopyAs(ctx, reflect.ValueOf(value), from, to)
+	if err != nil {
+		return zero, err
+	}
+	if err = ctx.Err(); err != nil {
+		return zero, err
+	}
+	return out.Interface().(T), nil
+}
+func resourceCopyAs(ctx context.Context, v reflect.Value, from, to string) (reflect.Value, error) {
+	if err := ctx.Err(); err != nil {
+		return reflect.Value{}, err
+	}
+	if !v.IsValid() {
+		return v, nil
+	}
+	if v.CanInterface() {
+		switch v.Interface().(type) {
+		case Integer, Decimal, Rational:
+			return v, nil
+		}
+	}
+	switch v.Kind() {
+	case reflect.Struct:
+		out := reflect.New(v.Type()).Elem()
+		for i := 0; i < v.NumField(); i++ {
+			c, e := resourceCopyAs(ctx, v.Field(i), from, to)
+			if e != nil {
+				return reflect.Value{}, e
+			}
+			out.Field(i).Set(c)
+		}
+		if from != "" && out.CanInterface() {
+			switch out.Interface().(type) {
+			case NodeRef, Location:
+				if out.FieldByName("DocumentID").String() == from {
+					out.FieldByName("DocumentID").SetString(strings.Clone(to))
+				}
+			}
+		}
+		return out, nil
+	case reflect.Slice:
+		if v.IsNil() {
+			return reflect.Zero(v.Type()), nil
+		}
+		out := reflect.MakeSlice(v.Type(), v.Len(), v.Len())
+		for i := 0; i < v.Len(); i++ {
+			c, e := resourceCopyAs(ctx, v.Index(i), from, to)
+			if e != nil {
+				return reflect.Value{}, e
+			}
+			out.Index(i).Set(c)
+		}
+		return out, nil
+	case reflect.Pointer:
+		if v.IsNil() {
+			return reflect.Zero(v.Type()), nil
+		}
+		c, e := resourceCopyAs(ctx, v.Elem(), from, to)
+		if e != nil {
+			return reflect.Value{}, e
+		}
+		out := reflect.New(v.Type().Elem())
+		out.Elem().Set(c)
+		return out, nil
+	case reflect.String:
+		out := reflect.New(v.Type()).Elem()
+		out.SetString(strings.Clone(v.String()))
+		return out, nil
+	default:
+		return v, nil
 	}
 }

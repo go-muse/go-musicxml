@@ -173,3 +173,119 @@ func TestResourceSnapshotRetainsActualTypeElementIDs(t *testing.T) {
 		t.Fatalf("id=%+v err=%v", id, err)
 	}
 }
+
+func snapshotElementIDs(t *testing.T, values []string, complete bool) (*Session, Report, *ResourceSnapshot, error) {
+	t.Helper()
+	id := &SchemaElement{Name: SchemaName{Local: "value"}, Type: SchemaTypeRef{Name: SchemaName{Space: "http://www.w3.org/2001/XMLSchema", Local: "ID"}}}
+	item := &SchemaElement{Name: SchemaName{Local: "item"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: id}}}}}}
+	root := &SchemaElement{Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: "sequence", Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Children: []*SchemaParticle{{Kind: "element", Occurrence: SchemaOccurrence{Min: 0, Max: 10}, Element: item}}}}}}
+	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{{Local: "root"}: root}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := sourceSchemaEngineFor(t, schema, XSDCheckBinding, XSDCheckDeclaration, XSDCheckAttributes, XSDCheckScalar, XSDCheckContent, XSDCheckIdentity)
+	s, err := e.Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := schemaPendingHeader()
+	if err = s.Open(context.Background(), h); err != nil {
+		t.Fatal(err)
+	}
+	for i, value := range values {
+		itemh := h
+		itemh.ID = NodeID(2 + i*2)
+		itemh.Parent = 1
+		itemh.Name = QName{Local: "item"}
+		itemh.Location.Path = "/root/item"
+		if err = s.Open(context.Background(), itemh); err != nil {
+			t.Fatal(err)
+		}
+		vh := h
+		vh.ID = itemh.ID + 1
+		vh.Parent = itemh.ID
+		vh.Name = QName{Local: "value"}
+		vh.Location.Path = "/root/item/value"
+		if err = s.Open(context.Background(), vh); err != nil {
+			t.Fatal(err)
+		}
+		end := schemaLexemeEnd(value)
+		end.ID = vh.ID
+		if err = s.Close(context.Background(), end); err != nil {
+			t.Fatal(err)
+		}
+		end = schemaLexemeEnd("")
+		end.ID = itemh.ID
+		if err = s.Close(context.Background(), end); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
+		t.Fatal(err)
+	}
+	r, snap, err := s.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: complete, Syntax: SyntaxWellFormed})
+	return s, r, snap, err
+}
+
+func TestResourceSnapshotThreeAmbiguousElementOwners(t *testing.T) {
+	s, r, snap, err := snapshotElementIDs(t, []string{"dup", "dup", "dup"}, true)
+	if err != nil || snap == nil {
+		t.Fatalf("snapshot=%v err=%v report=%+v", snap, err, r)
+	}
+	defer snap.Close()
+	if snap.IDCount() != 3 {
+		t.Fatalf("IDCount=%d", snap.IDCount())
+	}
+	for i := 0; i < 3; i++ {
+		f, ok, err := snap.IDAt(context.Background(), i)
+		if err != nil || !ok {
+			t.Fatal(err)
+		}
+		if f.Subject != (NodeRef{"source", NodeID(2 + i*2)}) {
+			t.Errorf("occurrence %d: actual containing owner %+v, want node %d", i, f.Subject, 2+i*2)
+		}
+		if f.Source != (NodeRef{"source", NodeID(3 + i*2)}) {
+			t.Errorf("occurrence %d: source %+v", i, f.Source)
+		}
+		if f.Unique.State != EvidenceInvalid || f.Unique.Cause == nil {
+			t.Errorf("occurrence %d: lost duplicate cause: %+v", i, f.Unique)
+		}
+	}
+	if r.Conformance != ConformanceViolated {
+		t.Errorf("lost identity failure: %+v", r)
+	}
+	_ = snap.Close()
+	if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
+		t.Errorf("leaked %d", used)
+	}
+}
+
+func TestResourceSnapshotLiveCopyAdmissionAndWork(t *testing.T) {
+	s := snapshotTestSession(t, "bad")
+	_, snap, err := s.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer snap.Close()
+	before, _ := s.account.Usage(BudgetRuleSteps)
+	used, _ := s.account.Usage(BudgetBufferedBytes)
+	if _, err = snap.Report(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	after, _ := s.account.Usage(BudgetRuleSteps)
+	if after <= before {
+		t.Fatal("live copy bypassed work admission")
+	}
+	if now, _ := s.account.Usage(BudgetBufferedBytes); now != used {
+		t.Fatalf("temporary lease leaked: %d != %d", now, used)
+	}
+	hold := s.account.Limits().MaxBufferedBytes - used
+	if err = s.account.Charge(BudgetBufferedBytes, hold); err != nil {
+		t.Fatal(err)
+	}
+	_, err = snap.Report(context.Background())
+	_ = s.account.Release(BudgetBufferedBytes, hold)
+	if !errors.Is(err, ErrResourceLimit) {
+		t.Fatalf("copy admitted before capacity: %v", err)
+	}
+}
