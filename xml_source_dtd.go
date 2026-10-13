@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 // sourceDTDInput is the existing source cursor, never a second XML parser.
@@ -42,9 +44,13 @@ const (
 )
 
 type sourceDTDParser struct {
-	input sourceDTDInput
-	info  sourceDTDInfo
-	err   error
+	input                    sourceDTDInput
+	info                     sourceDTDInfo
+	err                      error
+	store                    *sourceDTDStore
+	capture                  *sourceDTDText
+	origin                   sourceDTDOrigin
+	literalGeneralReferences bool
 }
 
 // parseSourceDTD starts immediately after the literal <!DOCTYPE. It consumes
@@ -69,7 +75,12 @@ func (p *sourceDTDParser) doctype() {
 		}
 		p.info.ExternalSubset = true
 		p.info.Unsupported = true
-		p.externalID(false)
+		publicID, systemID := p.externalID(false)
+		if p.store != nil {
+			p.store.state.ExternalSubsetUnread = true
+			p.store.state.PublicID = publicID
+			p.store.state.SystemID = systemID
+		}
 		p.space()
 	}
 	if p.peek() == '[' {
@@ -89,13 +100,24 @@ func (p *sourceDTDParser) subset() {
 			return
 		case '%':
 			p.read()
-			p.name(sourceDTDNCName, false)
+			name := p.name(sourceDTDNCName, p.store != nil)
 			p.expect(';')
 			if p.err == nil {
 				p.info.HasParameterReferences = true
-				p.unsupported("parameter-entity replacement in an internal DTD subset")
+				if p.store == nil {
+					p.unsupported("parameter-entity replacement in an internal DTD subset")
+				} else {
+					p.info.Unsupported = true
+					p.info.WellFormednessIncomplete = true
+					p.store.state.ParameterEntityUnread = true
+					if p.store.state.FirstUnreadParameter == "" {
+						p.store.state.FirstUnreadParameter = name
+					}
+					p.store.state.BindingCutoff = p.store.state.Standalone != sourceDTDStandaloneYes
+				}
 			}
 		case '<':
+			p.origin = p.declarationOrigin()
 			p.read()
 			switch p.peek() {
 			case '?':
@@ -138,17 +160,20 @@ func (p *sourceDTDParser) declaration() {
 		p.entity()
 	case "NOTATION":
 		p.info.HasNotationDeclarations = true
-		p.name(sourceDTDNCName, false)
+		d := sourceDTDDeclaration{Kind: sourceDTDNotationDeclaration, Origin: p.origin}
+		d.Name = p.name(sourceDTDNCName, p.store != nil)
 		p.requireSpace()
-		p.externalID(true)
+		d.PublicID, d.SystemID = p.externalID(true)
 		p.endDeclaration()
+		p.collect(d)
 	default:
 		p.fail("unknown markup declaration in internal DTD subset")
 	}
 }
 
 func (p *sourceDTDParser) element() {
-	p.name(sourceDTDQName, false)
+	d := sourceDTDDeclaration{Kind: sourceDTDElementDeclaration, Origin: p.origin}
+	d.Name = p.name(sourceDTDQName, p.store != nil)
 	p.requireSpace()
 	if p.peek() != '(' {
 		keyword := p.keyword()
@@ -166,6 +191,7 @@ func (p *sourceDTDParser) element() {
 		}
 	}
 	p.endDeclaration()
+	p.collect(d)
 }
 
 // children recognizes nested sequence/choice groups without recursive calls.
@@ -245,7 +271,7 @@ func (p *sourceDTDParser) occurrence() {
 }
 
 func (p *sourceDTDParser) attlist() {
-	p.name(sourceDTDQName, false)
+	element := p.name(sourceDTDQName, p.store != nil)
 	for p.err == nil {
 		space := p.space()
 		if p.peek() == '>' {
@@ -256,27 +282,60 @@ func (p *sourceDTDParser) attlist() {
 			p.fail("attribute definitions in ATTLIST require whitespace")
 			return
 		}
-		p.name(sourceDTDQName, false)
+		// An attribute's origin spans its own definition, not a fabricated physical
+		// attribute on an instance element or the entire enclosing ATTLIST.
+		d := sourceDTDDeclaration{Kind: sourceDTDAttributeDeclaration, Element: element, Origin: p.declarationOrigin()}
+		d.Name = p.name(sourceDTDQName, p.store != nil)
 		p.requireSpace()
-		p.attributeType()
+		d.AttributeType, d.RawType = p.attributeType()
 		p.requireSpace()
-		p.attributeDefault()
+		d.DefaultKind, d.RawValue = p.attributeDefault()
+		d.HasGeneralReferences = p.literalGeneralReferences
+		p.collect(d)
 	}
 }
 
-func (p *sourceDTDParser) attributeType() {
+func (p *sourceDTDParser) attributeType() (kind, raw string) {
+	var text sourceDTDText
+	if p.store != nil {
+		text.store = p.store
+		p.capture = &text
+		defer text.close()
+		defer func() { p.capture = nil }()
+	}
 	if p.peek() == '(' {
+		kind = "ENUMERATION"
 		p.enumeration(sourceDTDNmtoken)
-		return
+	} else {
+		switch p.keyword() {
+		case "CDATA":
+			kind = "CDATA"
+		case "ID":
+			kind = "ID"
+		case "IDREF":
+			kind = "IDREF"
+		case "IDREFS":
+			kind = "IDREFS"
+		case "ENTITY":
+			kind = "ENTITY"
+		case "ENTITIES":
+			kind = "ENTITIES"
+		case "NMTOKEN":
+			kind = "NMTOKEN"
+		case "NMTOKENS":
+			kind = "NMTOKENS"
+		case "NOTATION":
+			kind = "NOTATION"
+			p.requireSpace()
+			p.enumeration(sourceDTDNCName)
+		default:
+			p.fail("unknown DTD attribute type")
+		}
 	}
-	switch p.keyword() {
-	case "CDATA", "ID", "IDREF", "IDREFS", "ENTITY", "ENTITIES", "NMTOKEN", "NMTOKENS":
-	case "NOTATION":
-		p.requireSpace()
-		p.enumeration(sourceDTDNCName)
-	default:
-		p.fail("unknown DTD attribute type")
+	if p.store != nil && p.err == nil {
+		raw, p.err = text.string()
 	}
+	return kind, raw
 }
 
 func (p *sourceDTDParser) enumeration(kind sourceDTDNameKind) {
@@ -293,70 +352,83 @@ func (p *sourceDTDParser) enumeration(kind sourceDTDNameKind) {
 	p.expect(')')
 }
 
-func (p *sourceDTDParser) attributeDefault() {
+func (p *sourceDTDParser) attributeDefault() (sourceDTDDefaultKind, string) {
+	kind := sourceDTDDefaultValue
+	p.literalGeneralReferences = false
 	if p.peek() == '#' {
 		p.read()
 		switch p.keyword() {
-		case "REQUIRED", "IMPLIED":
-			return
+		case "REQUIRED":
+			return sourceDTDDefaultRequired, ""
+		case "IMPLIED":
+			return sourceDTDDefaultImplied, ""
 		case "FIXED":
+			kind = sourceDTDDefaultFixed
 			p.requireSpace()
 		default:
 			p.fail("unknown DTD attribute default declaration")
-			return
+			return "", ""
 		}
 	}
-	p.quoted(sourceDTDAttributeLiteral)
+	raw, _ := p.quoted(sourceDTDAttributeLiteral)
+	return kind, raw
 }
 
 func (p *sourceDTDParser) entity() {
-	parameter := p.peek() == '%'
-	if parameter {
+	d := sourceDTDDeclaration{Kind: sourceDTDGeneralEntityDeclaration, Origin: p.origin}
+	d.Parameter = p.peek() == '%'
+	if d.Parameter {
+		d.Kind = sourceDTDParameterEntityDeclaration
 		p.read()
 		p.requireSpace()
 	}
-	p.name(sourceDTDNCName, false)
+	d.Name = p.name(sourceDTDNCName, p.store != nil)
 	p.requireSpace()
 	if r := p.peek(); r == '\'' || r == '"' {
-		p.quoted(sourceDTDEntityLiteral)
+		d.RawValue, d.Replacement = p.quoted(sourceDTDEntityLiteral)
+		d.HasGeneralReferences = p.literalGeneralReferences
 		p.endDeclaration()
+		p.collect(d)
 		return
 	}
-	p.externalID(false)
+	d.External = true
+	d.PublicID, d.SystemID = p.externalID(false)
 	space := p.space()
-	if p.peek() == 'N' && !parameter {
+	if p.peek() == 'N' && !d.Parameter {
 		if !space {
 			p.fail("NDATA requires preceding whitespace")
 			return
 		}
 		p.literal("NDATA")
 		p.requireSpace()
-		p.name(sourceDTDNCName, false)
+		d.Notation = p.name(sourceDTDNCName, p.store != nil)
 	}
 	p.endDeclaration()
+	p.collect(d)
 }
 
 // Public identifiers may omit their system literal only in NOTATION.
-func (p *sourceDTDParser) externalID(publicOnly bool) {
+func (p *sourceDTDParser) externalID(publicOnly bool) (publicID, systemID string) {
 	switch p.keyword() {
 	case "SYSTEM":
 		p.requireSpace()
-		p.quoted(sourceDTDSystemLiteral)
+		systemID, _ = p.quoted(sourceDTDSystemLiteral)
 	case "PUBLIC":
 		p.requireSpace()
-		p.quoted(sourceDTDPublicLiteral)
+		publicID, _ = p.quoted(sourceDTDPublicLiteral)
 		space := p.space()
 		if r := p.peek(); publicOnly && r != '\'' && r != '"' {
-			return
+			return publicID, systemID
 		}
 		if !space {
 			p.fail("PUBLIC system literal requires whitespace")
-			return
+			return publicID, systemID
 		}
-		p.quoted(sourceDTDSystemLiteral)
+		systemID, _ = p.quoted(sourceDTDSystemLiteral)
 	default:
 		p.fail("expected SYSTEM or PUBLIC external identifier")
 	}
+	return publicID, systemID
 }
 
 type sourceDTDQuotedKind uint8
@@ -368,17 +440,35 @@ const (
 	sourceDTDAttributeLiteral
 )
 
-func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) {
+func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacementValue string) {
+	p.literalGeneralReferences = false
 	quote := p.read()
 	if quote != '\'' && quote != '"' {
 		p.fail("expected a quoted DTD literal")
-		return
+		return "", ""
+	}
+	var raw, replacement sourceDTDText
+	if p.store != nil {
+		raw.store, replacement.store = p.store, p.store
+		p.capture = &raw
+		defer raw.close()
+		defer replacement.close()
+		defer func() { p.capture = nil }()
 	}
 	for p.err == nil {
-		r := p.read()
-		if p.err != nil || r == quote {
-			return
+		r := p.peek()
+		if r == quote {
+			p.capture = nil
+			p.read()
+			break
 		}
+		start := len(raw.value)
+		r = p.read()
+		if p.err != nil {
+			break
+		}
+		numeric := false
+		decoded := rune(0)
 		switch kind {
 		case sourceDTDPublicLiteral:
 			if !sourceDTDPublicChar(r) {
@@ -386,23 +476,43 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) {
 			}
 		case sourceDTDEntityLiteral, sourceDTDAttributeLiteral:
 			if r == '&' {
-				p.reference()
+				decoded, numeric = p.reference()
+				if !numeric {
+					p.literalGeneralReferences = true
+				}
 			} else if kind == sourceDTDEntityLiteral && r == '%' {
 				p.fail("parameter-entity reference inside internal DTD declaration")
 			} else if kind == sourceDTDAttributeLiteral && r == '<' {
 				p.fail("literal < in DTD attribute default")
 			}
 		}
+		if p.store != nil && kind == sourceDTDEntityLiteral && p.err == nil {
+			// XML 4.5 constructs entity replacement text now: decode numeric character
+			// references once, but retain general-reference spellings for their eventual
+			// recognition context. RawValue separately preserves the lexical spelling.
+			if numeric {
+				p.err = replacement.appendRune(decoded)
+			} else {
+				p.err = replacement.append(raw.value[start:])
+			}
+		}
 	}
+	if p.store != nil && p.err == nil {
+		rawValue, p.err = raw.string()
+		if p.err == nil && kind == sourceDTDEntityLiteral {
+			replacementValue, p.err = replacement.string()
+		}
+	}
+	return rawValue, replacementValue
 }
 
 // reference checks syntax and character legality without expanding entities or
 // retaining arbitrarily many leading zeroes in a numeric character reference.
-func (p *sourceDTDParser) reference() {
+func (p *sourceDTDParser) reference() (rune, bool) {
 	if p.peek() != '#' {
 		p.name(sourceDTDNCName, false)
 		p.expect(';')
-		return
+		return 0, false
 	}
 	p.read()
 	base := uint32(10)
@@ -419,7 +529,7 @@ func (p *sourceDTDParser) reference() {
 			if !hasDigit || !sourceXMLChar(rune(value)) {
 				p.fail("invalid XML character reference in DTD")
 			}
-			return
+			return rune(value), true
 		}
 		var digit uint32
 		switch {
@@ -431,16 +541,17 @@ func (p *sourceDTDParser) reference() {
 			digit = uint32(r - 'A' + 10)
 		default:
 			p.fail("invalid numeric character reference in DTD")
-			return
+			return 0, false
 		}
 		if value > (0x10FFFF-digit)/base {
 			p.fail("XML character reference exceeds Unicode range")
-			return
+			return 0, false
 		}
 		value = value*base + digit
 		hasDigit = true
 		p.read()
 	}
+	return 0, false
 }
 
 func (p *sourceDTDParser) processingInstruction() {
@@ -577,14 +688,18 @@ func (p *sourceDTDParser) reserveBytes(n int64) bool {
 	if p.err != nil {
 		return false
 	}
-	if budget, ok := p.input.(sourceDTDBufferBudget); ok && n != 0 {
+	if p.store != nil {
+		p.err = p.store.reserve(n)
+	} else if budget, ok := p.input.(sourceDTDBufferBudget); ok && n != 0 {
 		p.err = budget.ReserveDTDBytes(n)
 	}
 	return p.err == nil
 }
 
 func (p *sourceDTDParser) releaseBytes(n int64) {
-	if budget, ok := p.input.(sourceDTDBufferBudget); ok && n != 0 {
+	if p.store != nil {
+		p.store.release(n)
+	} else if budget, ok := p.input.(sourceDTDBufferBudget); ok && n != 0 {
 		budget.ReleaseDTDBytes(n)
 	}
 }
@@ -592,6 +707,12 @@ func (p *sourceDTDParser) releaseBytes(n int64) {
 func (p *sourceDTDParser) checkNameBytes(n int64) {
 	if p.err != nil {
 		return
+	}
+	if p.store != nil {
+		p.err = p.store.account.Check(validation.BudgetScalarBytes, n)
+		if p.err != nil {
+			return
+		}
 	}
 	if check, ok := p.input.(interface{ CheckDTDNameBytes(int64) error }); ok {
 		p.err = check.CheckDTDNameBytes(n)
@@ -654,6 +775,12 @@ func (p *sourceDTDParser) peek() rune {
 	if p.err != nil {
 		return 0
 	}
+	if p.store != nil {
+		p.err = p.store.check()
+		if p.err != nil {
+			return 0
+		}
+	}
 	r, err := p.input.Peek()
 	p.inputError(err)
 	return r
@@ -663,8 +790,17 @@ func (p *sourceDTDParser) read() rune {
 	if p.err != nil {
 		return 0
 	}
+	if p.store != nil {
+		p.err = p.store.check()
+		if p.err != nil {
+			return 0
+		}
+	}
 	r, err := p.input.Read()
 	p.inputError(err)
+	if p.capture != nil && p.err == nil {
+		p.err = p.capture.appendRune(r)
+	}
 	return r
 }
 
@@ -696,4 +832,81 @@ func sourceDTDPublicChar(r rune) bool {
 	return r == ' ' || r == '\r' || r == '\n' ||
 		r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' ||
 		strings.ContainsRune("-'()+,./:=?;!*#@$_%", r)
+}
+
+// DTDPosition is optional because grammar-only callers historically did not
+// provide coordinates. SpanAvailable explicitly distinguishes absent evidence
+// from a real declaration whose offset could happen to be zero.
+func (p *sourceDTDParser) declarationOrigin() sourceDTDOrigin {
+	origin := sourceDTDOrigin{Region: sourceDTDInternalSubset}
+	if position, ok := p.input.(interface{ DTDPosition() sourceXMLPosition }); ok {
+		origin.SpanAvailable = true
+		origin.Span.Start = position.DTDPosition()
+	}
+	return origin
+}
+func (p *sourceDTDParser) collect(d sourceDTDDeclaration) {
+	if p.store == nil || p.err != nil {
+		return
+	}
+	if position, ok := p.input.(interface{ DTDPosition() sourceXMLPosition }); ok && d.Origin.SpanAvailable {
+		d.Origin.Span.End = position.DTDPosition()
+	}
+	p.err = p.store.add(d)
+}
+
+// XML 4.1's direct ATTLIST-default order rule is a WFC, distinct from
+// the validity-only ordering of indirect references and ordinary EntityValue
+// forward references. Check every read definition, including ignored bindings
+// and defaults which no instance element ever uses. Unknown unread declarations
+// remain unavailable evidence; an actually known later binding proves the order
+// violation without fetching anything. Normalization/indirect WFCs remain for
+// the effective-attribute layer, which must also inspect unused defaults.
+func (p *sourceDTDParser) checkDefaultReferences() {
+	for _, d := range p.store.declarations {
+		if d.Kind != sourceDTDAttributeDeclaration || !d.HasGeneralReferences {
+			continue
+		}
+		raw := d.RawValue
+		for i := 0; i < len(raw); i++ {
+			if p.err = p.store.check(); p.err != nil {
+				return
+			}
+			if raw[i] != '&' || raw[i+1] == '#' {
+				continue
+			}
+			start := i + 1
+			i = start
+			for raw[i] != ';' {
+				if p.err = p.store.check(); p.err != nil {
+					return
+				}
+				i++
+			}
+			if p.err = p.store.account.Charge(validation.BudgetEvents, 1); p.err != nil {
+				return
+			}
+			name := raw[start:i]
+			switch name {
+			case "amp", "lt", "gt", "apos", "quot":
+				continue
+			}
+			entity, known := p.store.Entity(name, false)
+			if !known {
+				if p.store.state.Standalone == sourceDTDStandaloneYes || (!p.store.state.ExternalSubsetUnread && !p.store.state.ParameterEntityUnread) {
+					p.fail("undeclared general entity in DTD attribute default")
+					return
+				}
+				continue
+			}
+			if entity.Origin.Sequence >= d.Origin.Sequence {
+				p.fail("general entity declaration must precede its direct reference in a DTD attribute default")
+				return
+			}
+			if entity.External {
+				p.fail("external entity reference in DTD attribute default")
+				return
+			}
+		}
+	}
 }
