@@ -57,13 +57,16 @@ has no presence bit.
 ## Independent semantic coverage
 
 The committed `resource_graph_independent_{partial,row,metadata}_test.go` matrices
-contain 266 named leaf cases. The target-kind supplement adds 12 cases for Opus
+contain 267 named leaf cases. The target-kind supplement adds 12 cases for Opus
 score links to partwise/timewise targets and wrong-kind Opus targets across source,
 current-model, raw-MXL and current-MXL entry points. A further 22 independent
 XML-depth cases cover exact/refused primary/local/external/nested paths, graph-hop
 independence, plain siblings and contextual reuse of an already cached deep source.
-Each ordinary CI execution
-runs the matrices once; repeated focused independent runs are separate evidence.
+These total 301 cases on the linked-target correction tree `321be6e` (published
+`10b7a49`), verified from the completed uncached race event stream. The earlier
+300-case acceptance record remains historical: a later explicit `<opus/>`
+control added the extra partial-target case. Each ordinary CI execution runs
+the matrices once; repeated focused independent runs are separate evidence.
 
 The matrices cover optional image ratios and unavailable dimensions, exact URI
 bases, attachment positions/causes, prefix semantics, MIME defaults and parameters,
@@ -217,6 +220,29 @@ Focused RED log SHA-256 values are
 whole-tree acceptance. Final exact-tree local stages and published-head CI remain
 separate gates below. Original requirement/status/owner records are unchanged;
 the inventory refresher updates only current hashes of changed routed test files.
+
+## Round 3 exact-buffer checkpoint
+
+An independent repeat on the linked-target baseline `7e271f4` (tree `321be6e`)
+and corrected production candidate `a99d5ab` (tree `37469d6`, identical to remote
+commit `9ea6c67`) found identical thresholds. The additive
+[Round 3 witness](evidence/package-buffer-witness-round3-20261013.json) records
+the exact commits/trees, original input hashes, command, environment and log
+hashes. Every minimum succeeds and one byte below returns `ErrResourceLimit`.
+
+| Original source | Source-links minimum | Graph minimum |
+| --- | ---: | ---: |
+| MozartTrio | 36,961,992 | 40,946,102 |
+| MozaChloSample | 46,681,595 | 51,400,647 |
+
+The 18-byte increase over the historical graph witness above is retained profile
+metadata: `NormativeClosure` gained ` and linked-target`, and
+`profileLogicalBytes` charges that string. Source-links minima and default
+budgets are unchanged. Original DOCTYPEs and MozaChlo's UTF-16BE BOM are retained.
+Both graphs fit the unchanged 64 MiB limit while unread-DTD incompleteness stays
+explicit. These logical admission thresholds are not heap/RSS or benchmark
+results. The measured production tree precedes this documentation/evidence
+commit; this record does not claim the later commit was itself measured.
 
 ## Final verification gate
 

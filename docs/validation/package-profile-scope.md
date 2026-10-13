@@ -84,9 +84,9 @@ does not override the actual pinned published container schema.
   hints remain valid `list(anyURI)` values when their members are valid.
   Known-false pairing yields `OutcomeFail` under `CategoryCapability`,
   `ClassPolicy` and `RolePredicate`, retaining `schema-location-unmatched-token`
-  and the exact
-  provider/subject cause. It blocks `Satisfied()` through `BlockingProblems`
-  without adding normative `Counts.Fail` or establishing `ConformanceViolated`.
+  and the exact provider/subject cause. It blocks `Satisfied()` through
+  `BlockingProblems` without adding normative `Counts.Fail` or establishing
+  `ConformanceViolated`.
   Known-false pairing alone does not make assessment incomplete. No hint fetches
   or selects a schema.
 - Original ZIP compression, encryption, extras, entry order and original container

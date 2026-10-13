@@ -1056,9 +1056,10 @@ pairs and an unmatched trailing URI. It never changes the accepted odd/even
 
 Read the profile's `NormativeClosure` for its exact bounded claim. Central-only
 mimetype extra fields, other leading padding families, the complete media-type
-set, outer compressed-rootfile and linked-target indirection, unproved association/role evidence
-and full ZIP/JAR/DEFLATE closure remain explicit interpretation/capability gaps
-when reached. Technical nested traversal does not settle normative indirection.
+set, outer compressed-rootfile and linked-target indirection, unproved
+association/role evidence and full ZIP/JAR/DEFLATE closure remain explicit
+interpretation/capability gaps when reached. Technical nested traversal does not
+settle normative indirection.
 The pinned MusicXML 4.0 schema is not a universal instance `version=4.0`
 restriction. All eight earlier profile identities, digests and report shapes are
 unchanged. See [package profile scope](docs/validation/package-profile-scope.md)

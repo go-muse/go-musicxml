@@ -1,0 +1,105 @@
+{
+  "format": "musicxml-package-buffer-witness-round3-1",
+  "measurement_commit": "a99d5ab98d7d5659b7586b69ac9df32f0d080c3d",
+  "measurement_tree": "37469d62091e87c6517fec9e42399b07a2df196c",
+  "identical_remote_tree_commit": "9ea6c67c9b74e81f6998b368466309e6d9eaf2b1",
+  "started_at": "2026-10-13T16:26:31Z",
+  "finished_at": "2026-10-13T16:27:08Z",
+  "worktree_clean_at_start": true,
+  "worktree_clean_after": true,
+  "command": "MUSICXML_SNAPSHOT_BUFFER_WITNESS=1 go test -count=1 -run '^TestResourceReviewOfficialExactBufferWitness$' -v .",
+  "environment": {
+    "go": "go1.27.2",
+    "GOOS": "linux",
+    "GOARCH": "amd64",
+    "GOMAXPROCS": 2,
+    "GOFLAGS": "-p=1"
+  },
+  "result": "PASS",
+  "exit_code": 0,
+  "wall_seconds": 36.876,
+  "log_sha256": "d0904f8146b53a0ffad46ba660d1e5a86abb488a24d43f5160639fb6a554d2e7",
+  "witness_test_source": {
+    "path": "resource_snapshot_budget_review_test.go",
+    "sha256": "cdf4fe286d1328f83756eb33be5c7bde21faf7382ea3135dffd40f4bc1df35ad",
+    "size_bytes": 3341
+  },
+  "logical_buffer_default_bytes": 67108864,
+  "scope": "Exact logical MaxBufferedBytes admission thresholds for original official XML source inputs. Not heap/RSS, not whole-suite, race, 386, benchmark, or remote CI certification.",
+  "provenance_note": "This measurement identifies the clean commit/tree that was actually executed. A later docs/evidence commit may include this record but must not be represented as the measured commit/tree.",
+  "assertions": "The existing test binary-searches each minimum, then requires nil error at the exact minimum and errors.Is(err, validation.ErrResourceLimit) one byte below. Original inputs, including DOCTYPEs and UTF-16 BOM, are read directly from the clean measured tree.",
+  "samples": [
+    {
+      "source": "testdata/official/MozartTrio.musicxml",
+      "sha256": "8d491c8db4d19c886ec157e2c26fdda91ee8faa801e24b31aaf8cf092d73c63f",
+      "size_bytes": 94916,
+      "encoding": "UTF-8",
+      "prefix_hex": "3c3f786d6c2076657273696f6e3d2231",
+      "doctype": "<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 4.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">",
+      "source_bytes_unchanged_after": true,
+      "source_links_minimum_bytes": 36961992,
+      "source_links_one_under_bytes": 36961991,
+      "source_links_minimum_success_and_one_under_err_resource_limit_asserted": true,
+      "graph_minimum_bytes": 40946102,
+      "graph_one_under_bytes": 40946101,
+      "graph_minimum_success_and_one_under_err_resource_limit_asserted": true
+    },
+    {
+      "source": "testdata/official/MozaChloSample.musicxml",
+      "sha256": "4323af5d7daa23ee3ae4fc27ff51274e98055a775824c49d3f4312f7586bc23e",
+      "size_bytes": 223068,
+      "encoding": "UTF-16BE with BOM",
+      "prefix_hex": "feff003c003f0078006d006c00200076",
+      "doctype": "<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 4.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">",
+      "source_bytes_unchanged_after": true,
+      "source_links_minimum_bytes": 46681595,
+      "source_links_one_under_bytes": 46681594,
+      "source_links_minimum_success_and_one_under_err_resource_limit_asserted": true,
+      "graph_minimum_bytes": 51400647,
+      "graph_one_under_bytes": 51400646,
+      "graph_minimum_success_and_one_under_err_resource_limit_asserted": true
+    }
+  ],
+  "baseline": {
+    "measurement_commit": "7e271f4fb5d1ae888fc3cb95f3b42bb8a112658b",
+    "measurement_tree": "321be6e42ac1b12373c1f2e6d2d4918602eaf0fc",
+    "started_at": "2026-10-13T16:26:09Z",
+    "finished_at": "2026-10-13T16:26:46Z",
+    "result": "PASS",
+    "log_sha256": "3fb3ef1337573e55339fce9962c9785d20d72d648cee3197e9707b8237aaa80b",
+    "samples": [
+      {
+        "source": "testdata/official/MozartTrio.musicxml",
+        "sha256": "8d491c8db4d19c886ec157e2c26fdda91ee8faa801e24b31aaf8cf092d73c63f",
+        "size_bytes": 94916,
+        "encoding": "UTF-8",
+        "prefix_hex": "3c3f786d6c2076657273696f6e3d2231",
+        "doctype": "<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 4.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">",
+        "source_bytes_unchanged_after": true,
+        "source_links_minimum_bytes": 36961992,
+        "source_links_one_under_bytes": 36961991,
+        "source_links_minimum_success_and_one_under_err_resource_limit_asserted": true,
+        "graph_minimum_bytes": 40946102,
+        "graph_one_under_bytes": 40946101,
+        "graph_minimum_success_and_one_under_err_resource_limit_asserted": true
+      },
+      {
+        "source": "testdata/official/MozaChloSample.musicxml",
+        "sha256": "4323af5d7daa23ee3ae4fc27ff51274e98055a775824c49d3f4312f7586bc23e",
+        "size_bytes": 223068,
+        "encoding": "UTF-16BE with BOM",
+        "prefix_hex": "feff003c003f0078006d006c00200076",
+        "doctype": "<!DOCTYPE score-partwise PUBLIC \"-//Recordare//DTD MusicXML 4.0 Partwise//EN\" \"http://www.musicxml.org/dtds/partwise.dtd\">",
+        "source_bytes_unchanged_after": true,
+        "source_links_minimum_bytes": 46681595,
+        "source_links_one_under_bytes": 46681594,
+        "source_links_minimum_success_and_one_under_err_resource_limit_asserted": true,
+        "graph_minimum_bytes": 51400647,
+        "graph_one_under_bytes": 51400646,
+        "graph_minimum_success_and_one_under_err_resource_limit_asserted": true
+      }
+    ]
+  },
+  "comparison": "The baseline and corrected production candidate have identical thresholds. Compared with the historical witness at tree 2faaa347, graph minima increase by 18 logical bytes because the profile NormativeClosure text gained \" and linked-target\"; profileLogicalBytes accounts this retained metadata. Source-links minima and all default budgets are unchanged.",
+  "limits": "Original DOCTYPE-bearing source reports remain incomplete due to unread DTDs. Operational budget completion is not conformance, RSS/heap measurement, unrestricted readiness or B5-PERF closure."
+}
