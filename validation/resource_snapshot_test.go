@@ -6,9 +6,13 @@ import (
 	"testing"
 )
 
-func snapshotTestSession(t *testing.T, text string) *Session {
+func snapshotTestSession(t *testing.T, text string, budgets ...Budgets) *Session {
 	t.Helper()
-	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	opts := RunOptions{DocumentID: "source", Profile: "source-schema-test"}
+	if len(budgets) > 0 {
+		opts.Budgets = budgets[0]
+	}
+	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), opts)
 	if err != nil {
 		t.Fatal(err)
 	}

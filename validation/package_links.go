@@ -2,7 +2,7 @@ package validation
 
 import (
 	"context"
-	"reflect"
+	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
 // ObserveEdge binds one finalized local link template to exact adopted target
@@ -16,9 +16,21 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	if source == nil || e.Template >= uint64(len(source.resource.snapshot.contexts)) {
 		return s.fail(contract("package edge", "exact source adoption/template required"))
 	}
+	if s.boundaries[source.packageID].sealed || source.expansion.owner != source.id || source.expansion.sealed {
+		return s.fail(contract("edge package", "source scope already sealed"))
+	}
 	template := source.resource.snapshot.contexts[e.Template]
 	if template.Resource == nil || template.Resource.Link == nil || template.Resource.Link.Kind == ResourceBookmark {
 		return s.fail(contract("package edge", "selected outgoing link template required"))
+	}
+	for _, id := range s.edgeOrder {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
+		old := s.edges[id]
+		if old.Source == e.Source && old.Template == e.Template {
+			return s.fail(contract("edge template", "one selected edge per adopted template"))
+		}
 	}
 	if err := validateEvidence(e.Target, "edge target"); err != nil {
 		return s.fail(err)
@@ -37,14 +49,34 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 		if target == nil {
 			return s.fail(contract("edge target", "unknown adoption"))
 		}
+		if target.root {
+			return s.fail(contract("edge target", "fresh nonroot adoption required"))
+		}
+		for _, id := range s.edgeOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
+			if err := s.event(ctx, "edge adoption scan"); err != nil {
+				return err
+			}
+			old := s.edges[id]
+			if old.Target.State == EvidenceKnown && old.Target.Value == e.Target.Value {
+				return s.fail(contract("edge target", "target adoption already belongs to an edge"))
+			}
+		}
 		target.resource.required = true
 		if e.FragmentTarget.State == EvidenceKnown {
-			if e.FragmentTarget.Value.DocumentID != target.documentID || !s.adoptedNodeKnown(target, e.FragmentTarget.Value.Node) {
+			if e.FragmentTarget.Value.DocumentID != target.documentID || !s.adoptedNodeKnown(ctx, target, e.FragmentTarget.Value.Node) {
 				return s.fail(contract("fragment target", "target outside exact adopted snapshot"))
 			}
 		}
 	} else if e.FragmentTarget.State == EvidenceKnown {
 		return s.fail(contract("fragment target", "known fragment requires known target"))
+	}
+	if e.Target.State != EvidenceKnown {
+		if err := s.account.Charge(BudgetLinkedDocuments, 1); err != nil {
+			return s.fail(err)
+		}
 	}
 	if err := s.admit(ctx, e, 512); err != nil {
 		return err
@@ -52,28 +84,39 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	if err := s.subject(e.ID, PackageSubjectEdge); err != nil {
 		return s.fail(err)
 	}
+	source.expansion.edges[e.Template] = e.ID
 	s.edges[e.ID] = stateClone(e)
+	s.subjectPackages[e.ID] = source.packageID
 	s.edgeOrder = append(s.edgeOrder, e.ID)
 	return nil
 }
-func (s *PackageSession) adoptedNodeKnown(a *packageAdoption, node NodeID) bool {
+func (s *PackageSession) adoptedNodeKnown(ctx context.Context, a *packageAdoption, node NodeID) bool {
 	if node == a.resource.snapshot.header.Root.Node {
 		return true
 	}
 	for _, id := range a.resource.snapshot.ids {
+		if err := s.scan(ctx, 1); err != nil {
+			return false
+		}
 		if id.Subject.Node == node {
 			return true
 		}
 	}
 	for _, v := range a.resource.snapshot.contexts {
+		if err := s.scan(ctx, 1); err != nil {
+			return false
+		}
 		if v.Subject.Node == node {
 			return true
 		}
 	}
 	return false
 }
-func (s *PackageSession) adoptionForPin(pin ResourcePin, doc string) *packageAdoption {
+func (s *PackageSession) adoptionForPin(ctx context.Context, pin ResourcePin, doc string) *packageAdoption {
 	for _, id := range s.adoptionOrder {
+		if err := s.scan(ctx, 1); err != nil {
+			return nil
+		}
 		a := s.adoptions[id]
 		if a.documentID == doc && a.resource.pin == pin {
 			return a
@@ -81,8 +124,11 @@ func (s *PackageSession) adoptionForPin(pin ResourcePin, doc string) *packageAdo
 	}
 	return nil
 }
-func (s *PackageSession) resourceForPin(pin ResourcePin) *packageResource {
+func (s *PackageSession) resourceForPin(ctx context.Context, pin ResourcePin) *packageResource {
 	for _, id := range s.resourceOrder {
+		if err := s.scan(ctx, 1); err != nil {
+			return nil
+		}
 		r := s.resources[id]
 		if r.pin == pin {
 			return r
@@ -90,16 +136,22 @@ func (s *PackageSession) resourceForPin(pin ResourcePin) *packageResource {
 	}
 	return nil
 }
-func snapshotExactID(snapshot *ResourceSnapshot, value string, node NodeID, kind string, part NodeID) bool {
+func snapshotExactID(ctx context.Context, s *PackageSession, snapshot *ResourceSnapshot, value string, node NodeID, kind string, part NodeID) bool {
 	for _, v := range snapshot.ids {
+		if err := s.scan(ctx, 1); err != nil {
+			return false
+		}
 		if v.Value == value && v.Subject.Node == node && v.Kind.State == EvidenceKnown && v.Kind.Value == (QName{Local: kind}) && v.Unique.State == EvidenceKnown && v.Unique.Value && (part == 0 || v.Part.State == EvidenceKnown && v.Part.Value.Node == part) {
 			return true
 		}
 	}
 	return false
 }
-func snapshotIDByValue(snapshot *ResourceSnapshot, value string, kind string) (ResourceIDFact, bool) {
+func snapshotIDByValue(ctx context.Context, s *PackageSession, snapshot *ResourceSnapshot, value string, kind string) (ResourceIDFact, bool) {
 	for _, v := range snapshot.ids {
+		if err := s.scan(ctx, 1); err != nil {
+			return ResourceIDFact{}, false
+		}
 		if v.Value == value && v.Kind.State == EvidenceKnown && v.Kind.Value == (QName{Local: kind}) && v.Unique.State == EvidenceKnown && v.Unique.Value {
 			return v, true
 		}
@@ -114,21 +166,35 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 	if err := s.event(ctx, "ObserveAssociation"); err != nil {
 		return err
 	}
+	release, err := s.temporary(ctx, struct {
+		Request AssociationRequest
+		Result  AssociationResult
+	}{q, r})
+	if err != nil {
+		return err
+	}
+	defer release()
 	request := ResourceRequest{ID: q.ID, Association: &q}
 	result := ResourceResult{RequestID: q.ID, State: EvidenceKnown, Association: &r}
 	if err := ValidateResourceResult(request, result); err != nil {
 		return s.fail(err)
 	}
-	source := s.adoptionForPin(q.Source, q.SourcePart.DocumentID)
-	target := s.resourceForPin(q.Target)
+	source := s.adoptionForPin(ctx, q.Source, q.SourcePart.DocumentID)
+	target := s.resourceForPin(ctx, q.Target)
 	if source == nil || target == nil {
 		return s.fail(contract("association scope", "exact admitted source adoption and target pin required"))
 	}
-	if !snapshotExactID(source.resource.snapshot, q.PartID, q.SourcePart.Node, "score-part", q.SourcePart.Node) || !snapshotExactID(source.resource.snapshot, q.InstrumentID, q.SourceInstrument.Node, "score-instrument", q.SourcePart.Node) {
+	if s.boundaries[source.packageID].sealed || source.expansion.owner != source.id || source.expansion.sealed {
+		return s.fail(contract("association package", "source scope already sealed"))
+	}
+	if !snapshotExactID(ctx, s, source.resource.snapshot, q.PartID, q.SourcePart.Node, "score-part", q.SourcePart.Node) || !snapshotExactID(ctx, s, source.resource.snapshot, q.InstrumentID, q.SourceInstrument.Node, "score-instrument", q.SourcePart.Node) {
 		return s.fail(contract("association source", "unique schema-proved local part/instrument required"))
 	}
 	var localLink, localInstrument bool
 	for _, v := range source.resource.snapshot.contexts {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		p := v.Resource
 		if p == nil {
 			continue
@@ -142,6 +208,9 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 	}
 	matchedEdge := false
 	for _, edgeID := range s.edgeOrder {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		edge := s.edges[edgeID]
 		if edge.Source != source.id || edge.Target.State != EvidenceKnown {
 			continue
@@ -165,18 +234,21 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 	var targetPart ResourceIDFact
 	if r.TargetPartID.State == EvidenceKnown {
 		var ok bool
-		targetPart, ok = snapshotIDByValue(target.snapshot, r.TargetPartID.Value, "score-part")
+		targetPart, ok = snapshotIDByValue(ctx, s, target.snapshot, r.TargetPartID.Value, "score-part")
 		if !ok {
 			return s.fail(contract("association target part", "supplied ID must resolve uniquely to score-part"))
 		}
 	}
 	if r.TargetInstrumentID.State == EvidenceKnown {
-		instrument, ok := snapshotIDByValue(target.snapshot, r.TargetInstrumentID.Value, "score-instrument")
+		instrument, ok := snapshotIDByValue(ctx, s, target.snapshot, r.TargetInstrumentID.Value, "score-instrument")
 		if !ok || r.TargetPartID.State == EvidenceKnown && (instrument.Part.State != EvidenceKnown || instrument.Part.Value.Node != targetPart.Subject.Node) {
 			return s.fail(contract("association target instrument", "unique score-instrument with optional supplied owner required"))
 		}
 	}
 	for _, old := range s.associations {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		if old.request.ID == q.ID {
 			return s.fail(contract("association request", "duplicate response"))
 		}
@@ -196,8 +268,13 @@ func (s *PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult)
 	if err := s.event(ctx, "ObserveRoles"); err != nil {
 		return err
 	}
+	release, err := s.temporary(ctx, r)
+	if err != nil {
+		return err
+	}
+	defer release()
 	q := r.Request
-	if s.boundaries[q.Package] == nil {
+	if s.boundaries[q.Package] == nil || s.boundaries[q.Package].sealed {
 		return s.fail(contract("role scope", "unknown package"))
 	}
 	if _, ok := s.roles[q.Package]; ok {
@@ -207,8 +284,14 @@ func (s *PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult)
 		return s.fail(err)
 	}
 	for _, pin := range q.Resources {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		scoped := false
 		for _, id := range s.adoptionOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
 			a := s.adoptions[id]
 			if a.packageID == q.Package && a.resource.pin == pin {
 				scoped = true
@@ -217,6 +300,9 @@ func (s *PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult)
 		}
 		if !scoped {
 			for _, id := range s.rootfileOrder {
+				if err := s.scan(ctx, 1); err != nil {
+					return err
+				}
 				r := s.rootfiles[id]
 				if r.Package == q.Package && r.Resource.State == EvidenceKnown && s.resources[r.Resource.Value].pin == pin {
 					scoped = true
@@ -239,6 +325,9 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 	switch r.Selector.Kind {
 	case PackageSubjectEdge:
 		for _, id := range s.edgeOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
 			edge := s.edges[id]
 			source := s.adoptions[edge.Source]
 			template := source.resource.snapshot.contexts[edge.Template]
@@ -246,16 +335,20 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 			if support := s.catalog.supports[s.profile.ID][r.Rule.Key]; support.State == ImplementationUnsupported {
 				d.Outcome = OutcomeUnsupported
 				d.Reason = support.Reason
-			} else if pre, ok := s.prerequisites(r.Rule, id); !ok {
+			} else if pre, ok := s.prerequisites(ctx, r.Rule, id); !ok {
 				d = pre
 			} else if r.Plan.check == PackageCheckLinkTarget {
-				d = s.linkTargetDecision(d, edge, template)
+				d = s.linkTargetDecision(ctx, d, edge, template)
 			} else {
-				d = s.groupDecision(d, edge, template)
+				d = s.groupDecision(ctx, d, edge, template)
 			}
 			location := Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/edge[" + string(edge.Source) + "]"}
 			if len(template.Origins) > 0 {
-				d.Related = append(d.Related, template.Origins[0])
+				origin := template.Origins[0]
+				if origin.DocumentID == source.resource.snapshot.header.DocumentID {
+					origin.DocumentID = source.documentID
+				}
+				d.Related = append(d.Related, origin)
 			}
 			if err := s.record(ctx, r.Rule, id, d, location, true); err != nil {
 				return err
@@ -265,12 +358,25 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 		// Every selected instrument-link template creates an obligation even when no
 		// provider reply arrived. Missing capability is never an empty-table pass.
 		for _, aid := range s.adoptionOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
 			a := s.adoptions[aid]
+			if a.expansion.owner != aid {
+				continue
+			}
 			for _, v := range a.resource.snapshot.contexts {
+				if err := s.scan(ctx, 1); err != nil {
+					return err
+				}
 				if v.Resource == nil || v.Resource.Instrument == nil {
 					continue
 				}
+				if err := s.admit(ctx, v.Subject, 256); err != nil {
+					return err
+				}
 				id := s.internalSubject(PackageSubjectAssociation)
+				s.subjectPackages[id] = a.packageID
 				d := s.baseDecision(r.Rule.Key, id)
 				local := v.Resource.Instrument.Target
 				if local.State != EvidenceKnown {
@@ -279,6 +385,9 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 					d.Outcome = OutcomeUnknown
 					d.Reason = "instrument-association-evidence-unavailable"
 					for _, association := range s.associations {
+						if err := s.scan(ctx, 1); err != nil {
+							return err
+						}
 						q := association.request
 						if q.Source == a.resource.pin && q.InstrumentLink.DocumentID == a.documentID && q.InstrumentLink.Node == v.Subject.Node {
 							d = packageEvidenceDecision(d, association.result.Membership)
@@ -302,12 +411,18 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 		}
 	case PackageSubjectResource:
 		for _, id := range s.resourceOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
 			resource := s.resources[id]
 			d := s.baseDecision(r.Rule.Key, resource.subject)
 			d.Outcome = OutcomeNotApplicable
 			d.Reason = "schema-hints-proven-absent"
 			found := false
 			for _, v := range resource.snapshot.contexts {
+				if err := s.scan(ctx, 1); err != nil {
+					return err
+				}
 				if v.Resource == nil || v.Resource.SchemaHints == nil {
 					continue
 				}
@@ -338,10 +453,10 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 	}
 	return nil
 }
-func (s *PackageSession) linkTargetDecision(d Decision, e PackageEdgeObservation, v ContextResult) Decision {
+func (s *PackageSession) linkTargetDecision(ctx context.Context, d Decision, e PackageEdgeObservation, v ContextResult) Decision {
 	link := v.Resource.Link
 	if link.Href.Value.State != EvidenceKnown {
-		return packageEvidenceDecision(d, link.Href.Value)
+		return packageAdoptDecision(packageRequiredEvidenceDecision(d, link.Href.Value), s.adoptions[e.Source])
 	}
 	if e.Target.State != EvidenceKnown {
 		d = packageEvidenceDecision(d, e.Target)
@@ -354,7 +469,7 @@ func (s *PackageSession) linkTargetDecision(d Decision, e PackageEdgeObservation
 	target := s.adoptions[e.Target.Value]
 	root := target.resource.snapshot.header.Name
 	if root.State != EvidenceKnown {
-		return packageEvidenceDecision(d, root)
+		return packageAdoptDecision(packageRequiredEvidenceDecision(d, root), target)
 	}
 	wantScore := link.Kind == ResourceOpusScore || link.Kind == ResourcePartLink
 	wantOpus := link.Kind == ResourceOpusLink || link.Kind == ResourceScoreWorkOpus
@@ -363,15 +478,25 @@ func (s *PackageSession) linkTargetDecision(d Decision, e PackageEdgeObservation
 		d.Reason = "wrong-linked-document-kind"
 		return d
 	}
-	if e.Fragment.State == EvidenceKnown {
-		if e.FragmentTarget.State != EvidenceKnown {
-			return packageEvidenceDecision(d, e.FragmentTarget)
+	if e.Fragment.State == EvidenceKnown && e.Fragment.Value != "" {
+		if !xsd.ValidXSDNCName(e.Fragment.Value) {
+			d.Outcome = OutcomeUnsupported
+			d.Reason = "fragment-grammar-unimplemented"
+			return d
 		}
 		matching := false
 		for _, id := range target.resource.snapshot.ids {
-			if id.Value == e.Fragment.Value && id.Subject.Node == e.FragmentTarget.Value.Node {
+			if err := s.scan(ctx, 1); err != nil {
+				return d
+			}
+			if id.Value == e.Fragment.Value {
 				if id.Unique.State != EvidenceKnown || !id.Unique.Value {
-					return packageEvidenceDecision(d, id.Unique)
+					return packageAdoptDecision(packageRequiredEvidenceDecision(d, id.Unique), target)
+				}
+				if e.FragmentTarget.State == EvidenceKnown && id.Subject.Node != e.FragmentTarget.Value.Node {
+					d.Outcome = OutcomeUnknown
+					d.Reason = "fragment-target-identity-mismatch"
+					return d
 				}
 				matching = true
 				break
@@ -379,43 +504,61 @@ func (s *PackageSession) linkTargetDecision(d Decision, e PackageEdgeObservation
 		}
 		if !matching {
 			d.Outcome = OutcomeUnknown
-			d.Reason = "fragment-interpretation-unavailable"
+			d.Reason = "fragment-id-scope-incomplete"
+			if knownComplete(target.resource.snapshot.header.IDScopeComplete) {
+				d.Outcome = OutcomeFail
+				d.Reason = "fragment-id-absent"
+			}
 			return d
 		}
+	} else if e.Fragment.State != EvidenceAbsent && e.Fragment.State != EvidenceKnown {
+		return packageRequiredEvidenceDecision(d, e.Fragment)
 	}
 	d.Outcome = OutcomePass
 	d.Reason = "linked-target-kind-established"
 	return d
 }
-func (s *PackageSession) groupDecision(d Decision, e PackageEdgeObservation, v ContextResult) Decision {
+func (s *PackageSession) groupDecision(ctx context.Context, d Decision, e PackageEdgeObservation, v ContextResult) Decision {
 	if e.Target.State != EvidenceKnown {
 		return packageEvidenceDecision(d, e.Target)
 	}
 	source := s.adoptions[e.Source]
 	target := s.adoptions[e.Target.Value]
-	values := []string{}
-	for _, c := range source.resource.snapshot.contexts {
-		if c.Resource != nil && c.Resource.Group != nil && c.Resource.Group.Linked && c.Resource.Owner.Node == v.Subject.Node {
-			if c.Resource.Group.Value.State != EvidenceKnown {
-				return packageEvidenceDecision(d, c.Resource.Group.Value)
-			}
-			values = append(values, c.Resource.Group.Value.Value)
-		}
-	}
-	if len(values) == 0 {
-		d.Outcome = OutcomeNotApplicable
-		d.Reason = "no-group-link-advice"
-		return d
-	}
-	if !knownComplete(target.resource.snapshot.header.ScopeComplete) {
+	if !knownComplete(source.resource.snapshot.header.ScopeComplete) || !knownComplete(target.resource.snapshot.header.ScopeComplete) {
 		d.Outcome = OutcomeUnknown
-		d.Reason = "target-group-scope-incomplete"
+		d.Reason = "group-scope-incomplete"
 		return d
 	}
-	for _, value := range values {
-		matched := false
-		for _, c := range target.resource.snapshot.contexts {
-			if c.Resource != nil && c.Resource.Group != nil && !c.Resource.Group.Linked && c.Resource.Group.Value.State == EvidenceKnown && c.Resource.Group.Value.Value == value {
+	found := false
+	for _, c := range source.resource.snapshot.contexts {
+		if err := s.scan(ctx, 1); err != nil {
+			return d
+		}
+		if s.scan(ctx, 1) != nil {
+			return d
+		}
+		if c.Resource == nil || c.Resource.Group == nil || !c.Resource.Group.Linked || c.Resource.Owner.Node != v.Subject.Node {
+			continue
+		}
+		found = true
+		value := c.Resource.Group.Value
+		if value.State != EvidenceKnown {
+			return packageAdoptDecision(packageRequiredEvidenceDecision(d, value), source)
+		}
+		matched, uncertain := false, false
+		for _, candidate := range target.resource.snapshot.contexts {
+			if s.scan(ctx, 1+int64(len(value.Value))) != nil {
+				return d
+			}
+			if candidate.Resource == nil || candidate.Resource.Group == nil || candidate.Resource.Group.Linked {
+				continue
+			}
+			other := candidate.Resource.Group.Value
+			if other.State != EvidenceKnown {
+				uncertain = true
+				continue
+			}
+			if other.Value == value.Value {
 				matched = true
 				break
 			}
@@ -423,12 +566,28 @@ func (s *PackageSession) groupDecision(d Decision, e PackageEdgeObservation, v C
 		if !matched {
 			d.Outcome = OutcomeFail
 			d.Reason = "group-link-string-mismatch"
+			if uncertain {
+				d.Outcome = OutcomeUnknown
+				d.Reason = "target-group-value-unavailable"
+			}
 			return d
 		}
+	}
+	if !found {
+		d.Outcome = OutcomeNotApplicable
+		d.Reason = "no-group-link-advice"
+		return d
 	}
 	d.Outcome = OutcomePass
 	d.Reason = "group-link-strings-match"
 	return d
 }
 
-var _ = reflect.DeepEqual
+func packageAdoptDecision(d Decision, a *packageAdoption) Decision {
+	if d.Cause != nil && d.Cause.Subject.DocumentID == a.resource.snapshot.header.DocumentID {
+		c := *d.Cause
+		c.Subject.DocumentID = a.documentID
+		d.Cause = &c
+	}
+	return d
+}

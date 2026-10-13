@@ -43,6 +43,7 @@ type packageAdoption struct {
 	documentID string
 	root       bool
 	packageID  PackageID
+	expansion  *resourceExpansion
 }
 type packageAssociation struct {
 	id      PackageFactID
@@ -54,41 +55,43 @@ type packageAssociation struct {
 // parser, resolver invocation, XML Open method, arbitrary facts or callbacks.
 // Every ingress error is terminal; Finish must run once even after cancellation.
 type PackageSession struct {
-	catalog       *CompiledPackageCatalog
-	profile       Profile
-	documentID    string
-	account       *Account
-	lease         resourceLeaseOwner
-	accumulator   *reportAccumulator
-	boundaries    map[PackageID]*packageBoundary
-	boundaryOrder []PackageID
-	entries       map[PackageFactID]PackageEntryObservation
-	entryOrder    []PackageFactID
-	entryNames    map[PackageID]map[string]PackageFactID
-	mimetypes     map[PackageFactID]PackageMimetypeObservation
-	rootfiles     map[PackageFactID]PackageRootfileObservation
-	rootfileOrder []PackageFactID
-	edges         map[PackageFactID]PackageEdgeObservation
-	edgeOrder     []PackageFactID
-	associations  []packageAssociation
-	roles         map[PackageID]ResourceRoleResult
-	resources     map[ResourceAssessmentID]*packageResource
-	resourceOrder []ResourceAssessmentID
-	resourceKeys  map[packageResourceKey]ResourceAssessmentID
-	pins          map[packageCanonicalKey]ResourcePin
-	adoptions     map[ResourceAdoptionID]*packageAdoption
-	adoptionOrder []ResourceAdoptionID
-	documents     map[string]bool
-	subjects      map[PackageFactID]PackageSubjectKind
-	decisions     map[packageDecisionKey]Decision
-	nextInternal  PackageFactID
-	rootAdoption  bool
-	retained      int64
-	terminal      error
-	finished      bool
-	finalizing    bool
-	output        *assessmentBundleData
-	failure       *ResourceFailureSummary
+	catalog         *CompiledPackageCatalog
+	profile         Profile
+	documentID      string
+	account         *Account
+	lease           resourceLeaseOwner
+	accumulator     *reportAccumulator
+	boundaries      map[PackageID]*packageBoundary
+	boundaryOrder   []PackageID
+	entries         map[PackageFactID]PackageEntryObservation
+	entryOrder      []PackageFactID
+	entryNames      map[PackageID]map[string]PackageFactID
+	mimetypes       map[PackageFactID]PackageMimetypeObservation
+	rootfiles       map[PackageFactID]PackageRootfileObservation
+	rootfileOrder   []PackageFactID
+	edges           map[PackageFactID]PackageEdgeObservation
+	edgeOrder       []PackageFactID
+	associations    []packageAssociation
+	roles           map[PackageID]ResourceRoleResult
+	resources       map[ResourceAssessmentID]*packageResource
+	resourceOrder   []ResourceAssessmentID
+	resourceKeys    map[packageResourceKey]ResourceAssessmentID
+	pins            map[packageCanonicalKey]ResourcePin
+	adoptions       map[ResourceAdoptionID]*packageAdoption
+	expansions      map[resourceExpansionKey]*resourceExpansion
+	adoptionOrder   []ResourceAdoptionID
+	documents       map[string]bool
+	subjects        map[PackageFactID]PackageSubjectKind
+	subjectPackages map[PackageFactID]PackageID
+	decisions       map[packageDecisionKey]Decision
+	nextInternal    PackageFactID
+	rootAdoption    bool
+	retained        int64
+	terminal        error
+	finished        bool
+	finalizing      bool
+	output          *assessmentBundleData
+	failure         *ResourceFailureSummary
 }
 
 // Begin validates configuration/cancellation before allocating a package run.
@@ -126,7 +129,7 @@ func (c *CompiledPackageCatalog) Begin(ctx context.Context, opts RunOptions) (*P
 	if err := a.Charge(BudgetBufferedBytes, reserve); err != nil {
 		return nil, err
 	}
-	s := &PackageSession{catalog: c, profile: binding.Profile, documentID: strings.Clone(opts.DocumentID), account: a, retained: reserve, nextInternal: ^PackageFactID(0), boundaries: map[PackageID]*packageBoundary{}, entries: map[PackageFactID]PackageEntryObservation{}, entryNames: map[PackageID]map[string]PackageFactID{}, mimetypes: map[PackageFactID]PackageMimetypeObservation{}, rootfiles: map[PackageFactID]PackageRootfileObservation{}, edges: map[PackageFactID]PackageEdgeObservation{}, roles: map[PackageID]ResourceRoleResult{}, resources: map[ResourceAssessmentID]*packageResource{}, resourceKeys: map[packageResourceKey]ResourceAssessmentID{}, pins: map[packageCanonicalKey]ResourcePin{}, adoptions: map[ResourceAdoptionID]*packageAdoption{}, documents: map[string]bool{opts.DocumentID: true}, subjects: map[PackageFactID]PackageSubjectKind{}, decisions: map[packageDecisionKey]Decision{}}
+	s := &PackageSession{catalog: c, profile: binding.Profile, documentID: strings.Clone(opts.DocumentID), account: a, retained: reserve, nextInternal: ^PackageFactID(0), boundaries: map[PackageID]*packageBoundary{}, entries: map[PackageFactID]PackageEntryObservation{}, entryNames: map[PackageID]map[string]PackageFactID{}, mimetypes: map[PackageFactID]PackageMimetypeObservation{}, rootfiles: map[PackageFactID]PackageRootfileObservation{}, edges: map[PackageFactID]PackageEdgeObservation{}, roles: map[PackageID]ResourceRoleResult{}, resources: map[ResourceAssessmentID]*packageResource{}, resourceKeys: map[packageResourceKey]ResourceAssessmentID{}, pins: map[packageCanonicalKey]ResourcePin{}, adoptions: map[ResourceAdoptionID]*packageAdoption{}, expansions: map[resourceExpansionKey]*resourceExpansion{}, documents: map[string]bool{opts.DocumentID: true}, subjects: map[PackageFactID]PackageSubjectKind{}, subjectPackages: map[PackageFactID]PackageID{}, decisions: map[packageDecisionKey]Decision{}}
 	s.accumulator = newReportAccumulator(binding.Profile, a)
 	s.output = &assessmentBundleData{}
 	return s, nil
@@ -212,7 +215,11 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 	if !validID(string(p.ID)) || (p.Parent != "" && !validID(string(p.Parent))) || p.ID == p.Parent {
 		return s.fail(contract("package identity", "invalid boundary identity"))
 	}
-	if err := validateResourcePin(p.Pin); err != nil {
+	if p.PinUnavailable {
+		if p.Representation != ResourceRawMXL || p.Pin.Digest != "" || p.Pin.SnapshotID != "" || !packageIdentityText(p.Pin.CanonicalID) || !validText(p.Pin.Revision, maxIdentityBytes) {
+			return s.fail(contract("package prefix identity", "raw incomplete boundary needs unavailable whole-body pin"))
+		}
+	} else if err := validateResourcePin(p.Pin); err != nil {
 		return s.fail(err)
 	}
 	if p.Representation != p.Pin.Representation || p.Representation == ResourceBinary {
@@ -224,11 +231,14 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 	depth := int64(1)
 	if p.Parent != "" {
 		parent := s.boundaries[p.Parent]
-		if parent == nil {
+		if parent == nil || parent.sealed {
 			return s.fail(contract("package parent", "parent must already be admitted"))
 		}
 		depth = parent.depth + 1
 		for ancestor := parent; ancestor != nil; ancestor = s.boundaries[ancestor.identity.Parent] {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
 			if err := s.account.Charge(BudgetRuleSteps, 1); err != nil {
 				return s.fail(err)
 			}
@@ -246,7 +256,7 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 		return s.fail(&ResourceError{Kind: BudgetDepth, Limit: s.account.Limits().MaxDepth, Requested: depth})
 	}
 	key := packageCanonicalKey{p.Pin.CanonicalID, p.Pin.Revision, p.Pin.Representation}
-	if old, ok := s.pins[key]; ok && old != p.Pin {
+	if old, ok := s.pins[key]; !p.PinUnavailable && ok && old != p.Pin {
 		return s.fail(contract("package pin", "canonical identity content conflict"))
 	}
 	if err := s.admit(ctx, p, 1024); err != nil {
@@ -255,9 +265,12 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 	p = stateClone(p)
 	b := &packageBoundary{identity: p, depth: depth, subject: s.internalSubject(PackageSubjectPackage)}
 	s.boundaries[p.ID] = b
+	s.subjectPackages[b.subject] = p.ID
 	s.boundaryOrder = append(s.boundaryOrder, p.ID)
 	s.entryNames[p.ID] = map[string]PackageFactID{}
-	s.pins[key] = p.Pin
+	if !p.PinUnavailable {
+		s.pins[key] = p.Pin
+	}
 	return nil
 }
 func validateZIPHeader(h ZIPHeaderObservation) error {
@@ -319,6 +332,7 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 	}
 	e = stateClone(e)
 	s.entries[e.ID] = e
+	s.subjectPackages[e.ID] = e.Package
 	s.entryOrder = append(s.entryOrder, e.ID)
 	s.entryNames[e.Package][e.Name] = e.ID
 	return s.evaluateEntry(ctx, e, false)
@@ -331,7 +345,7 @@ func (s *PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeO
 		return err
 	}
 	e, ok := s.entries[m.Entry]
-	if !ok || e.Name != "mimetype" {
+	if !ok || e.Name != "mimetype" || s.boundaries[e.Package].sealed {
 		return s.fail(contract("mimetype", "exact admitted mimetype entry required"))
 	}
 	if _, ok = s.mimetypes[m.Entry]; ok {
@@ -353,6 +367,7 @@ func (s *PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeO
 		return err
 	}
 	s.mimetypes[m.Entry] = stateClone(m)
+	s.output.mimetypes = append(s.output.mimetypes, s.mimetypes[m.Entry])
 	return s.evaluateEntry(ctx, e, false)
 }
 
@@ -368,10 +383,13 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 	if err := validateLocation(r.Location, TargetPackage, s.documentID); err != nil {
 		return s.fail(err)
 	}
-	if !validResourceNode(r.Source) {
+	if !validResourceNode(r.Source) && !(b.identity.Representation == ResourceCurrentMXL && r.Source == (NodeRef{}) && r.Location.Path != "") {
 		return s.fail(contract("rootfile source", "actual container occurrence required"))
 	}
 	for _, v := range []Evidence[string]{r.FullPath, r.MediaType} {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		if err := validateEvidence(v, "rootfile value"); err != nil {
 			return s.fail(err)
 		}
@@ -402,6 +420,9 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 		resource.required = true
 	}
 	for _, id := range s.rootfileOrder {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		if old := s.rootfiles[id]; old.Package == r.Package && old.Ordinal == r.Ordinal {
 			return s.fail(contract("rootfile order", "duplicate encoded ordinal"))
 		}
@@ -413,6 +434,7 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 		return s.fail(err)
 	}
 	s.rootfiles[r.ID] = stateClone(r)
+	s.subjectPackages[r.ID] = r.Package
 	s.rootfileOrder = append(s.rootfileOrder, r.ID)
 	return nil
 }
@@ -427,6 +449,9 @@ func (s *PackageSession) SealEnumeration(ctx context.Context, e PackageEnumerati
 		return s.fail(contract("package enumeration", "unopened or already sealed boundary"))
 	}
 	for _, v := range []Evidence[bool]{e.Entries, e.Rootfiles, e.Edges, e.Roles} {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		if err := validateEvidence(v, "package enumeration"); err != nil {
 			return s.fail(err)
 		}
@@ -472,6 +497,9 @@ func (s *PackageSession) AddResource(ctx context.Context, pin ResourcePin, snaps
 	}
 	allowed := false
 	for _, b := range s.catalog.profiles[s.profile.ID].Intrinsic {
+		if err := s.scan(ctx, 1); err != nil {
+			return "", err
+		}
 		if (snapshot.header.Assembly.State == EvidenceKnown && b.Assembly == snapshot.header.Assembly.Value || snapshot.header.Assembly.State != EvidenceKnown && !snapshot.report.Satisfied()) && b.Target == snapshot.header.Target && b.Profile == snapshot.header.Profile && b.CatalogDigest == snapshot.header.CatalogDigest {
 			allowed = true
 			break
@@ -509,17 +537,14 @@ func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmen
 		return "", err
 	}
 	r := s.resources[id]
-	if opts.Package == "" && len(s.boundaryOrder) == 1 {
-		opts.Package = s.boundaryOrder[0]
-	}
-	if s.boundaries[opts.Package] == nil {
+	if s.boundaries[opts.Package] == nil || s.boundaries[opts.Package].sealed {
 		return "", s.fail(contract("resource adoption", "explicit admitted package scope required"))
 	}
-	if r == nil || !validID(opts.DocumentID) {
+	if r == nil || !validID(opts.DocumentID) || !validText(opts.BaseURI, 16384) || !validText(opts.ArchiveEntry, 4096) {
 		return "", s.fail(contract("resource adoption", "known resource and explicit document identity required"))
 	}
 	if opts.Root {
-		if s.rootAdoption || opts.DocumentID != r.snapshot.header.DocumentID {
+		if s.rootAdoption || opts.DocumentID != r.snapshot.header.DocumentID || s.boundaries[opts.Package].identity.Parent != "" {
 			return "", s.fail(contract("root adoption", "one primary canonical occurrence required"))
 		}
 	} else if s.documents[opts.DocumentID] {
@@ -530,14 +555,15 @@ func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmen
 			return "", s.fail(err)
 		}
 	}
-	if err := s.admit(ctx, opts, 512); err != nil {
+	if err := s.admit(ctx, opts, 1536); err != nil {
 		return "", err
 	}
 	aid := ResourceAdoptionID("adoption-" + strconv.Itoa(len(s.adoptionOrder)+1))
 	a := &packageAdoption{id: aid, resource: r, documentID: strings.Clone(opts.DocumentID), root: opts.Root, packageID: opts.Package}
+	a.expansion = s.newExpansion(aid, id, opts)
 	s.adoptions[aid] = a
 	s.adoptionOrder = append(s.adoptionOrder, aid)
-	s.output.adoptions = append(s.output.adoptions, bundleAdoption{resource: id, documentID: a.documentID})
+	s.output.adoptions = append(s.output.adoptions, bundleAdoption{resource: id, documentID: a.documentID, context: ResourceAdoptionContext{Adoption: aid, Assessment: id, DocumentID: a.documentID, Package: a.packageID, BaseURI: a.expansion.key.baseURI, ArchiveEntry: a.expansion.key.archiveEntry, ExpansionOwner: a.expansion.owner}})
 	s.documents[opts.DocumentID] = true
 	if opts.Root {
 		s.rootAdoption = true
@@ -550,24 +576,66 @@ func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmen
 // an admitted snapshot. It cannot certify success. One pre-reserved terminal
 // summary preserves exact known truth when a full report copy is refused.
 func (s *PackageSession) RecordResourceFailure(ctx context.Context, pin ResourcePin, report Report, cause error) error {
-	if s == nil || s.finished || s.account == nil {
-		return &SessionError{Operation: "RecordResourceFailure", Reason: "closed package"}
+	if s == nil || s.finished || s.account == nil || s.failure != nil {
+		return &SessionError{Operation: "RecordResourceFailure", Reason: "closed package or terminal resource already recorded"}
 	}
 	if report.Satisfied() && cause == nil {
 		return s.fail(contract("failed resource", "successful report needs no failure ingress"))
 	}
-	if err := validateResourcePin(pin); err != nil {
+	complete := Evidence[bool]{State: EvidenceKnown, Value: true}
+	if pin.Digest == "" && pin.SnapshotID == "" {
+		if !packageIdentityText(pin.CanonicalID) || !validText(pin.Revision, maxIdentityBytes) || (pin.Representation != ResourceSourceXML && pin.Representation != ResourceCurrentModel && pin.Representation != ResourceRawMXL && pin.Representation != ResourceCurrentMXL) {
+			return s.fail(contract("failed resource", "bounded unavailable identity required"))
+		}
+		complete = Evidence[bool]{State: EvidenceUnknown, Reason: "full-resource-pin-unavailable"}
+	} else if err := validateResourcePin(pin); err != nil {
 		return s.fail(err)
 	}
-	// Bounded summary fields are copied from prevalidated source identity; no new
-	// cancellable allocation admission is needed to publish this terminal reserve.
 	if !validTarget(report.Target) || !validID(string(report.Profile.ID)) || !validResourceDigest(report.Profile.CatalogDigest) {
 		return s.fail(contract("failed resource", "exact original report target/profile/digest required"))
 	}
-	category, reason := terminalClassification(cause, false)
-	s.failure = &ResourceFailureSummary{Pin: stateClone(pin), Target: report.Target, Profile: ProfileID(strings.Clone(string(report.Profile.ID))), CatalogDigest: strings.Clone(report.Profile.CatalogDigest), Counts: report.Counts, Conformance: report.Conformance, Terminal: TerminalSummary{Category: category, Reason: reason}, DiagnosticsTruncated: true, MetadataTruncated: true}
 	if cause == nil {
 		cause = &IncompleteError{Reason: "intrinsic-resource-failure"}
 	}
+	category, reason := terminalClassification(cause, false)
+	summary := &ResourceFailureSummary{Pin: stateClone(pin), PinComplete: complete, Target: report.Target, Profile: ProfileID(strings.Clone(string(report.Profile.ID))), CatalogDigest: strings.Clone(report.Profile.CatalogDigest), Counts: report.Counts, Conformance: report.Conformance, Terminal: TerminalSummary{Category: category, Reason: reason}, DiagnosticsTruncated: true, MetadataTruncated: true}
+	// Attempt ordinary full retention first. Cancellation/quota refusal cannot
+	// prevent the already reserved independent count/identity summary below.
+	if n, err := resourceMeasure(ctx, s.account, reflect.ValueOf(report)); err == nil {
+		if err = s.account.Charge(BudgetBufferedBytes, n); err == nil {
+			s.retained += n
+			copy := stateClone(report)
+			s.output.failureReport = &copy
+			summary.DiagnosticsTruncated = false
+			summary.MetadataTruncated = false
+		}
+	}
+	s.failure = summary
 	return s.fail(cause)
+}
+
+// scan charges repeated bounded iteration independently of the original ingress.
+func (s *PackageSession) scan(ctx context.Context, n int64) error {
+	if ctx == nil {
+		return s.fail(contract("context", "must not be nil"))
+	}
+	if err := ctx.Err(); err != nil {
+		return s.fail(err)
+	}
+	return s.fail(s.account.Charge(BudgetRuleSteps, n))
+}
+
+func (s *PackageSession) temporary(ctx context.Context, v any) (func(), error) {
+	n, err := resourceMeasure(ctx, s.account, reflect.ValueOf(v))
+	if err != nil {
+		return nil, s.fail(err)
+	}
+	n, err = rationalCheckedMul(BudgetBufferedBytes, n, 2)
+	if err != nil {
+		return nil, s.fail(err)
+	}
+	if err = s.account.Charge(BudgetBufferedBytes, n); err != nil {
+		return nil, s.fail(err)
+	}
+	return func() { _ = s.account.Release(BudgetBufferedBytes, n) }, nil
 }

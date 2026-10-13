@@ -15,7 +15,8 @@ import (
 // AssessmentOptions selects an explicit target-specific profile and finite shared limits.
 // An empty or unknown Profile is invalid; zero budget fields select defaults.
 // Source and model profiles describe their bounded target-specific scope and
-// cannot be interchanged. No package assessment profile is provided. Source
+// cannot be interchanged. Standalone source/model entry points reject the
+// separate package/resource-graph profiles. Source
 // facts also have fixed identity limits: 1024
 // UTF-8 bytes per local name or prefix, 4096 per namespace URI, and 65536 in-scope
 // namespace bindings. Exceeding these is incomplete, never malformed XML.

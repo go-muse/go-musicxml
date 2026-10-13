@@ -1020,3 +1020,59 @@ The pinned MusicXML 4.0 schema is not a universal instance `version=4.0`
 restriction. All eight earlier profile identities, digests and report shapes are
 unchanged. See [package profile scope](docs/validation/package-profile-scope.md)
 for the sealed check inventory and provenance.
+
+`CompiledPackageCatalog.Begin` creates a typed `PackageSession` over one shared
+account. `OpenPackage` establishes acyclic encapsulation with independent entry
+namespaces; linked cycles use fresh adoptions of canonical intrinsic assessments.
+`AddResource` transfers only a core-created snapshot on the identical account.
+`AdoptResource` requires explicit package scope, a fresh document ID for each
+linked occurrence, and an explicit single root marker. Successful transfer
+invalidates the old snapshot owner. Live indexed reads admit work and temporary
+copy storage; returned copies belong to the caller. Package completion releases
+all live leases, while immutable `AssessmentBundle` getters remain available.
+
+The bundle retains one package report and one report per canonical intrinsic
+assessment. Required child failures cannot be flattened away or multiplied by
+edge count. `RecordResourceFailure` is write-once, preserves the original failed
+report if ordinary admission permits, and otherwise uses its reserved explicitly
+truncated identity/count summary. An unavailable full content pin is marked as
+such and cannot enter successful resource or package ingress.
+
+`ObserveEdge` consumes a once URI-decoded fragment component. Empty fragments
+address the whole document; only schema-ID NCName shorthand is implemented.
+Complete exact ID absence fails, incomplete ID scopes stay unknown, and other
+fragment grammars stay unsupported. Unknown/absent selected targets still charge
+linked-document admission. Each known edge uses its own nonroot adoption.
+
+`ObserveImageMetadata` accepts an exact image request/result for a selected
+intrinsic template. Bundle image advice exposes exact dimensionless aspect ratios
+and agreement with two specified dimensions. Pixel dimensions require explicit
+pixel-aspect-ratio evidence; physical dimensions use their stated common unit.
+No DPI, rendering result, or pixels-to-tenths conversion is inferred. Missing
+optional metadata remains nonblocking advice. `ObserveFileMetadata` supplies
+bounded scoped filename/media-type recommendations; suffixes never prove content
+validity. Bundle getters also preserve supplied mimetype prefix observations.
+
+A `CurrentMXL` boundary assesses representable logical rootfile/resource relations.
+It excludes the original ZIP container-entry representation and raw header claims,
+which cannot be reconstructed from a model. A raw boundary keeps those obligations.
+`PackageIdentity.PinUnavailable` is restricted to an observed raw MXL prefix with
+no whole-body digest. It never enters canonical pin tables and unconditionally
+keeps the bundle incomplete, while preserving already known local violations.
+
+Resource expansion is explicitly scoped by canonical assessment, package boundary,
+`BaseURI`, and `ArchiveEntry`. Profile/digest identity is part of the canonical
+assessment; resolver configuration is fixed by the enclosing run. `ExpansionOwner`
+returns the first adoption for that exact context. Only that owner may publish
+outgoing edges, association replies and selected image metadata. Aliases keep
+fresh document IDs and linked-document charges, including cycle/back references.
+`SealResourceExpansion` requires complete intrinsic scope and exact coverage of
+all outgoing templates before accepting a complete assertion. Each owner must be
+sealed before its package inventory. Unsealed, failed or partial expansions keep
+the whole bundle incomplete; aliases do not convert in-progress work into vacuity.
+`AdoptionContext` exposes this immutable context and completion evidence.
+
+Image requests carry the same explicit base URI, package and archive-entry scope,
+which must match their exact source expansion. Canonical identity is never used
+as a retrieval base. Known numeric image fields individually consume the scalar
+limit even when another field is unavailable and no ratio can be calculated.

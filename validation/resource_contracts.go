@@ -112,10 +112,13 @@ type ResourceRoleResult struct {
 // ImageMetadataRequest selects intrinsic image metadata without rendering or
 // executing media. Media type is explicit and never inferred from a suffix.
 type ImageMetadataRequest struct {
-	ID              ResourceRequestID
-	Source          ResourcePin
-	Subject         NodeRef
-	Href, MediaType string
+	// These are the exact retrieval context, separate from canonical identity.
+	BaseURI, ArchiveEntry string
+	Package               PackageID
+	ID                    ResourceRequestID
+	Source                ResourcePin
+	Subject               NodeRef
+	Href, MediaType       string
 }
 
 // ImageDimensionUnit identifies the common unit used by intrinsic dimensions.
@@ -279,7 +282,7 @@ func validateRoleRequest(q ResourceRoleRequest) error {
 	return nil
 }
 func validateImageRequest(q ImageMetadataRequest) error {
-	if !validID(string(q.ID)) || !validResourceNode(q.Subject) || !validText(q.Href, 16384) || !validText(q.MediaType, 4096) {
+	if !validID(string(q.ID)) || !validResourceNode(q.Subject) || !validText(q.Href, 16384) || !validText(q.MediaType, 4096) || !validText(q.BaseURI, 16384) || !validText(q.ArchiveEntry, 4096) || (q.Package != "" && !validID(string(q.Package))) {
 		return contract("image request", "invalid identity or bounded source fields")
 	}
 	return validateResourcePin(q.Source)
@@ -386,6 +389,9 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 			return contract("association result", "typed relation payload only")
 		}
 		a := r.Association
+		if err := validateAssociationRequest(a.Request); err != nil {
+			return err
+		}
 		if !reflect.DeepEqual(a.Request, *q.Association) {
 			return contract("association result", "exact echoed request/pins required")
 		}
@@ -414,6 +420,9 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 			return contract("role result", "typed role payload only")
 		}
 		v := r.Roles
+		if err := validateRoleRequest(v.Request); err != nil {
+			return err
+		}
 		if len(v.Request.Resources) > 65536 || !reflect.DeepEqual(v.Request, *q.Roles) {
 			return contract("role result", "full exact request scope must be echoed")
 		}
@@ -431,6 +440,9 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 		}
 		if err := validateAuthority(v.Authority, len(v.Resources) > 0 || v.ScopeComplete.State == EvidenceKnown && v.ScopeComplete.Value); err != nil {
 			return err
+		}
+		if v.ScopeComplete.State == EvidenceKnown && v.ScopeComplete.Value && !v.Authority.ExactRelationComplete {
+			return contract("role result", "complete role scope requires exact authority")
 		}
 		allowed := make(map[ResourcePin]bool, len(q.Roles.Resources))
 		for _, p := range q.Roles.Resources {
@@ -467,6 +479,9 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 			return contract("image result", "typed image metadata only")
 		}
 		v := r.Image
+		if err := validateImageRequest(v.Request); err != nil {
+			return err
+		}
 		if !reflect.DeepEqual(v.Request, *q.Image) {
 			return contract("image result", "exact request must be echoed")
 		}

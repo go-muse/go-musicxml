@@ -64,3 +64,21 @@ func TestAssociationResultPartialMissAndEchoBinding(t *testing.T) {
 		t.Fatal("stale target accepted")
 	}
 }
+
+func TestRoleCompleteScopeRequiresExactAuthority(t *testing.T) {
+	q := ResourceRoleRequest{ID: "roles", Package: "package", Resources: []ResourcePin{testResourcePin("source")}, ScopeComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
+	r := ResourceRoleResult{Request: q, ScopeComplete: q.ScopeComplete, Authority: EvidenceAuthority{ID: "roles-provider", Provenance: []SourceRef{{IDs: []string{"scope"}, URL: "https://example.test/roles", Locator: "all"}}}}
+	request := ResourceRequest{ID: q.ID, Roles: &q}
+	result := ResourceResult{RequestID: q.ID, State: EvidenceKnown, Roles: &r}
+	if err := ValidateResourceResult(request, result); err == nil {
+		t.Fatal("complete role scope accepted without exact authority")
+	}
+	r.Authority.ExactRelationComplete = true
+	if err := ValidateResourceResult(request, result); err != nil {
+		t.Fatal(err)
+	}
+	r.Request.Resources[0].SnapshotID = "stale"
+	if err := ValidateResourceResult(request, result); err == nil {
+		t.Fatal("stale current identity accepted")
+	}
+}

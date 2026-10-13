@@ -1,0 +1,313 @@
+package musicxml
+
+import (
+	"bytes"
+	"errors"
+
+	"github.com/go-muse/go-musicxml/validation"
+)
+
+type graphCanonicalKey struct {
+	canonical      string
+	representation validation.ResourceRepresentation
+}
+type graphResourceKey struct {
+	pin     validation.ResourcePin
+	profile validation.ProfileID
+}
+type graphResource struct {
+	pin     validation.ResourcePin
+	profile validation.ProfileID
+	id      validation.ResourceAssessmentID
+}
+type graphExpansionKey struct {
+	resource validation.ResourceAssessmentID
+	pkg      validation.PackageID
+	base     resourceURIBase
+}
+type graphExpansion struct {
+	resource *graphResource
+	adoption validation.ResourceAdoptionID
+	pkg      validation.PackageID
+	base     resourceURIBase
+	depth    int64
+}
+
+func (g *resourceGraphRun) cacheResource(pin validation.ResourcePin, profile validation.ProfileID, id validation.ResourceAssessmentID) (*graphResource, error) {
+	key := graphResourceKey{pin, profile}
+	if old := g.cache[key]; old != nil {
+		return old, nil
+	}
+	canonical := graphCanonicalKey{pin.CanonicalID, pin.Representation}
+	if old, ok := g.pins[canonical]; ok && old != pin {
+		return nil, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed content"}
+	}
+	if err := g.reserve(1024 + 2*int64(len(pin.CanonicalID)+len(pin.Revision)+len(pin.Digest)+len(pin.SnapshotID)+len(profile))); err != nil {
+		return nil, err
+	}
+	r := &graphResource{pin, profile, id}
+	g.cache[key] = r
+	g.pins[canonical] = pin
+	return r, nil
+}
+func (g *resourceGraphRun) enqueue(r *graphResource, adoption validation.ResourceAdoptionID, pkg validation.PackageID, base resourceURIBase, depth int64) error {
+	if err := g.ctx.Err(); err != nil {
+		return err
+	}
+	owner, ownerErr := g.session.ExpansionOwner(g.ctx, adoption)
+	if ownerErr != nil {
+		return ownerErr
+	}
+	adoption = owner
+	key := graphExpansionKey{r.id, pkg, base}
+	if g.expanded[key] {
+		return nil
+	}
+	if depth > g.options.account.Limits().MaxDepth {
+		return &validation.ResourceError{Kind: validation.BudgetDepth, Limit: g.options.account.Limits().MaxDepth, Requested: depth}
+	}
+	if err := g.reserve(1024 + 2*int64(len(base.RetrievalURI)+len(base.Entry)+len(pkg))); err != nil {
+		return err
+	}
+	g.expanded[key] = true
+	g.queue = append(g.queue, graphExpansion{r, adoption, pkg, base, depth})
+	return nil
+}
+func (g *resourceGraphRun) walkResources() error {
+	for at := 0; at < len(g.queue); at++ {
+		item := g.queue[at]
+		if err := g.options.account.Charge(validation.BudgetRuleSteps, 1); err != nil {
+			return err
+		}
+		a, err := g.session.Adoption(g.ctx, item.adoption)
+		if err != nil {
+			return err
+		}
+		for i := 0; i < a.ContextCount(); i++ {
+			v, ok, err := a.ContextAt(g.ctx, i)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				continue
+			}
+			if v.Resource == nil {
+				continue
+			}
+			if v.Resource.Image != nil {
+				if err = g.walkImage(item, uint64(i), v); err != nil {
+					return err
+				}
+			}
+			if v.Resource.Link != nil && v.Resource.Link.Kind != validation.ResourceBookmark {
+				if err = g.walkLink(item, uint64(i), v); err != nil {
+					return err
+				}
+			}
+		}
+		if g.options.selected[ResourceAssociations] && g.options.resolver != nil {
+			for i := 0; i < a.ContextCount(); i++ {
+				v, ok, e := a.ContextAt(g.ctx, i)
+				if e != nil {
+					return e
+				}
+				if ok && v.Resource != nil && v.Resource.Instrument != nil {
+					if e = g.walkAssociation(item, v); e != nil {
+						return e
+					}
+				}
+			}
+		}
+		completeness := a.Header().ScopeComplete
+		if err = g.session.SealResourceExpansion(g.ctx, item.adoption, completeness); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func unavailableTarget(state validation.EvidenceState, reason validation.Code, cause *validation.DecisionRef) validation.Evidence[validation.ResourceAdoptionID] {
+	return validation.Evidence[validation.ResourceAdoptionID]{State: state, Reason: reason, Cause: cause}
+}
+func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validation.ContextResult) error {
+	release, err := resourceWorkingLease(g.ctx, g.options.account, v)
+	if err != nil {
+		return err
+	}
+	defer release()
+	link := v.Resource.Link
+	target := unavailableTarget(validation.EvidenceUnknown, "resolver-not-selected", nil)
+	fragment := link.Fragment
+	fragmentTarget := validation.Evidence[validation.NodeRef]{State: validation.EvidenceUnknown, Reason: "target-unavailable"}
+	href := link.Href.Value
+	var child *graphResource
+	var childBase resourceURIBase
+	var loadErr error
+	if href.State != validation.EvidenceKnown {
+		switch href.State {
+		case validation.EvidenceInvalid, validation.EvidenceUnsupported, validation.EvidenceUnknown:
+			target = unavailableTarget(href.State, href.Reason, href.Cause)
+		default:
+			target = unavailableTarget(validation.EvidenceUnknown, "local-href-unavailable", nil)
+		}
+	} else if href.Value.Kind != validation.AtomicString {
+		target = unavailableTarget(validation.EvidenceUnknown, "local-href-type-unavailable", nil)
+	} else {
+		base := item.base
+		base.ArchiveRoot = link.Kind == validation.ResourceScoreLink || link.Kind == validation.ResourcePartLink
+		resolved, uriErr := resolveAssessmentResourceURI(g.ctx, g.options.account, base, href.Value.Text)
+		if uriErr != nil {
+			var unavailable *resourceURIUnavailable
+			if errors.As(uriErr, &unavailable) {
+				target = unavailableTarget(validation.EvidenceUnsupported, unavailable.reason, nil)
+			} else {
+				loadErr = uriErr
+			}
+		} else {
+			fragment = validation.Evidence[string]{State: validation.EvidenceAbsent}
+			if resolved.FragmentPresent {
+				fragment = validation.Evidence[string]{State: validation.EvidenceKnown, Value: resolved.Fragment}
+			}
+			if resolved.SameEntity {
+				child, childBase = item.resource, item.base
+			} else if resolved.ArchivePath != "" {
+				target = unavailableTarget(validation.EvidenceUnknown, "archive-resource-unavailable", nil)
+			} else if g.options.selected[ResourceDocuments] && g.options.resolver != nil {
+				child, childBase, target, loadErr = g.loadExternalDocument(item, v, href.Value.Text, resolved)
+			}
+		}
+	}
+	if child != nil && loadErr == nil {
+		aid, e := g.session.AdoptResource(g.ctx, child.id, validation.ResourceAdoptionOptions{DocumentID: g.next("adoption"), Package: item.pkg, BaseURI: childBase.RetrievalURI, ArchiveEntry: childBase.Entry})
+		if e != nil {
+			return e
+		}
+		target = validation.Evidence[validation.ResourceAdoptionID]{State: validation.EvidenceKnown, Value: aid}
+		fragmentTarget, e = g.resolveFragment(aid, fragment)
+		if e != nil {
+			return e
+		}
+		if e = g.enqueue(child, aid, item.pkg, childBase, item.depth+1); e != nil {
+			return e
+		}
+	}
+	g.sequence++
+	edgeErr := g.session.ObserveEdge(g.ctx, validation.PackageEdgeObservation{ID: validation.PackageFactID(g.sequence), Source: item.adoption, Template: index, Target: target, Fragment: fragment, FragmentTarget: fragmentTarget})
+	if edgeErr == nil && target.State == validation.EvidenceKnown && child != nil {
+		if e := g.reserve(512); e != nil {
+			return errors.Join(loadErr, e)
+		}
+		g.linked[graphLinkKey{item.adoption, v.Subject.Node}] = graphLinkedTarget{child, target.Value}
+	}
+	return errors.Join(loadErr, edgeErr)
+}
+func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.Evidence[validation.ResourceAdoptionID], error) {
+	unknown := unavailableTarget(validation.EvidenceUnknown, "resource-unavailable", nil)
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	if err != nil {
+		return nil, resourceURIBase{}, unknown, err
+	}
+	profile, _ := engine.Profile(ProfileSourceLinks)
+	request := validation.ResourceRequest{ID: validation.ResourceRequestID(g.next("request")), Document: &validation.ResourceDocumentRequest{Source: item.resource.pin, Subject: v.Subject, Kind: validation.LinkedResourceAuto, RequiredProfile: ProfileSourceLinks, CatalogDigest: profile.CatalogDigest, BaseURI: item.base.RetrievalURI, Href: href, Package: item.pkg}}
+	if err = validation.ValidateResourceRequest(request); err != nil {
+		return nil, resourceURIBase{}, unknown, err
+	}
+	release, err := resourceWorkingLease(g.ctx, g.options.account, request)
+	if err != nil {
+		return nil, resourceURIBase{}, unknown, err
+	}
+	defer release()
+	if err = g.ctx.Err(); err != nil {
+		return nil, resourceURIBase{}, unknown, err
+	}
+	result, resolveErr := g.options.resolver.Resolve(g.ctx, request)
+	if resolveErr != nil {
+		if result.Body != nil {
+			resolveErr = errors.Join(resolveErr, result.Body.Close())
+		}
+		return nil, resourceURIBase{}, unknown, resolveErr
+	}
+	if err = validation.ValidateResourceResult(request, result); err != nil {
+		if result.Body != nil {
+			err = errors.Join(err, result.Body.Close())
+		}
+		return nil, resourceURIBase{}, unknown, err
+	}
+	if result.State != validation.EvidenceKnown {
+		return nil, resourceURIBase{}, unavailableTarget(result.State, result.Reason, nil), nil
+	}
+	body, err := readAssessmentResourceBody(g.ctx, g.options.account, result.Body)
+	if err != nil {
+		return nil, resourceURIBase{}, unknown, err
+	}
+	defer body.close()
+	if body.digest != result.Pin.Digest {
+		return nil, resourceURIBase{}, unknown, &validation.ConfigurationError{Field: "resource digest", Reason: "returned bytes do not match immutable pin"}
+	}
+	base := resourceURIBase{RetrievalURI: result.RetrievalURI}
+	if base.RetrievalURI != "" {
+		if _, err = resolveAssessmentResourceURI(g.ctx, g.options.account, base, ""); err != nil {
+			return nil, base, unknown, err
+		}
+	}
+	canonical := graphCanonicalKey{result.Pin.CanonicalID, result.Pin.Representation}
+	if old, ok := g.pins[canonical]; ok && old != result.Pin {
+		return nil, base, unknown, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed content"}
+	}
+	if result.Pin.Representation == validation.ResourceRawMXL {
+		return nil, base, unavailableTarget(validation.EvidenceUnsupported, "nested-package-indirection", nil), nil
+	}
+	key := graphResourceKey{result.Pin, ProfileSourceLinks}
+	if cached := g.cache[key]; cached != nil {
+		return cached, base, unknown, nil
+	}
+	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: g.next("source"), Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesAccounted})
+	if intrinsic.Snapshot == nil {
+		if intrinsic.Report.Requested {
+			err = g.session.RecordResourceFailure(g.ctx, result.Pin, intrinsic.Report, intrinsic.Err)
+		}
+		return nil, base, unknown, errors.Join(intrinsic.Err, err)
+	}
+	id, err := g.session.AddResource(g.ctx, result.Pin, intrinsic.Snapshot, true)
+	if err != nil {
+		intrinsic.Snapshot.Close()
+		return nil, base, unknown, err
+	}
+	resource, err := g.cacheResource(result.Pin, ProfileSourceLinks, id)
+	return resource, base, unknown, errors.Join(intrinsic.Err, err)
+}
+func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fragment validation.Evidence[string]) (validation.Evidence[validation.NodeRef], error) {
+	if fragment.State == validation.EvidenceAbsent {
+		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceAbsent}, nil
+	}
+	if fragment.State != validation.EvidenceKnown {
+		return validation.Evidence[validation.NodeRef]{State: fragment.State, Reason: fragment.Reason, Cause: fragment.Cause}, nil
+	}
+	a, err := g.session.Adoption(g.ctx, aid)
+	if err != nil {
+		return validation.Evidence[validation.NodeRef]{}, err
+	}
+	header := a.Header()
+	if fragment.Value == "" {
+		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceKnown, Value: header.Root}, nil
+	}
+	if !sourceXMLNCName(fragment.Value) {
+		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceUnsupported, Reason: "fragment-scheme-unavailable"}, nil
+	}
+	for i := 0; i < a.IDCount(); i++ {
+		id, ok, err := a.IDAt(g.ctx, i)
+		if err != nil {
+			return validation.Evidence[validation.NodeRef]{}, err
+		}
+		if !ok || id.Value != fragment.Value {
+			continue
+		}
+		if id.Unique.State == validation.EvidenceKnown && id.Unique.Value {
+			return validation.Evidence[validation.NodeRef]{State: validation.EvidenceKnown, Value: id.Subject}, nil
+		}
+		return validation.Evidence[validation.NodeRef]{State: id.Unique.State, Reason: id.Unique.Reason, Cause: id.Unique.Cause}, nil
+	}
+	if header.IDScopeComplete.State == validation.EvidenceKnown && header.IDScopeComplete.Value {
+		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceAbsent}, nil
+	}
+	return validation.Evidence[validation.NodeRef]{State: validation.EvidenceUnknown, Reason: "fragment-id-scope-incomplete"}, nil
+}

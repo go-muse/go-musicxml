@@ -32,6 +32,14 @@ func (s *PackageSession) record(ctx context.Context, r RuleDefinition, id Packag
 	if _, ok := s.decisions[k]; ok {
 		return nil
 	}
+	if support := s.catalog.supports[s.profile.ID][r.Key]; support.State == ImplementationUnsupported {
+		d.Outcome = OutcomeUnsupported
+		d.Reason = support.Reason
+		d.Cause = nil
+	}
+	if pre, ok := s.prerequisites(ctx, r, id); !ok {
+		d = pre
+	}
 	if !final && d.Outcome != OutcomeFail && d.Outcome != OutcomePass && d.Outcome != OutcomeNotApplicable {
 		return nil
 	}
@@ -56,15 +64,28 @@ func (s *PackageSession) record(ctx context.Context, r RuleDefinition, id Packag
 	}
 	return nil
 }
-func (s *PackageSession) prerequisites(r RuleDefinition, id PackageFactID) (Decision, bool) {
+func (s *PackageSession) prerequisites(ctx context.Context, r RuleDefinition, id PackageFactID) (Decision, bool) {
 	for _, dep := range r.Requires {
+		if err := s.scan(ctx, 1); err != nil {
+			return s.baseDecision(r.Key, id), false
+		}
 		d := s.baseDecision(r.Key, id)
 		if dep.Kind != DependencyRule {
 			d.Outcome = OutcomeUnsupported
 			d.Reason = "package-capability-unavailable"
 			return d, false
 		}
-		predecessor, ok := s.decisions[packageDecisionKey{dep.Rule, id}]
+		subject := id
+		if dep.Relation == RelationDocument {
+			if b := s.boundaries[s.subjectPackages[id]]; b != nil {
+				subject = b.subject
+			} else {
+				d.Outcome = OutcomeUnknown
+				d.Reason = "package-prerequisite-scope-unavailable"
+				return d, false
+			}
+		}
+		predecessor, ok := s.decisions[packageDecisionKey{dep.Rule, subject}]
 		if !ok {
 			d.Outcome = OutcomeUnknown
 			d.Reason = "package-prerequisite-pending"
@@ -82,6 +103,9 @@ func (s *PackageSession) prerequisites(r RuleDefinition, id PackageFactID) (Deci
 func (s *PackageSession) evaluateEntry(ctx context.Context, e PackageEntryObservation, final bool) error {
 	b := s.boundaries[e.Package]
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		r := s.catalog.rules[key]
 		if r.Selector.Kind != PackageSubjectEntry {
 			continue
@@ -90,7 +114,7 @@ func (s *PackageSession) evaluateEntry(ctx context.Context, e PackageEntryObserv
 		if support := s.catalog.supports[s.profile.ID][key]; support.State == ImplementationUnsupported {
 			d.Outcome = OutcomeUnsupported
 			d.Reason = support.Reason
-		} else if pre, ok := s.prerequisites(r.Rule, e.ID); !ok {
+		} else if pre, ok := s.prerequisites(ctx, r.Rule, e.ID); !ok {
 			d = pre
 		} else {
 			switch r.Plan.check {
@@ -111,12 +135,22 @@ func (s *PackageSession) evaluateEntry(ctx context.Context, e PackageEntryObserv
 					}
 				}
 			case PackageCheckEntryNameAdvice:
+				if b.identity.Representation != ResourceRawMXL {
+					d.Outcome = OutcomeNotApplicable
+					d.Reason = "original-entry-encoding-unavailable"
+					break
+				}
 				d = packageEvidenceDecision(d, e.UTF8Name)
 				if e.UTF8Name.State == EvidenceKnown && !e.UTF8Name.Value {
 					d.Outcome = OutcomeFail
 					d.Reason = "legacy-entry-name-encoding"
 				}
 			case PackageCheckCompressionObservation:
+				if b.identity.Representation != ResourceRawMXL {
+					d.Outcome = OutcomeNotApplicable
+					d.Reason = "original-compression-unavailable"
+					break
+				}
 				d = packageEvidenceDecision(d, e.Central.Method)
 				if e.Central.Method.State == EvidenceKnown {
 					d.Outcome = OutcomePass
@@ -156,10 +190,10 @@ func packageStoredDecision(d Decision, e PackageEntryObservation) Decision {
 	}
 	for _, h := range []ZIPHeaderObservation{e.Local, e.Central} {
 		if h.Method.State != EvidenceKnown {
-			return packageEvidenceDecision(d, h.Method)
+			return packageRequiredEvidenceDecision(d, h.Method)
 		}
 		if h.Flags.State != EvidenceKnown {
-			return packageEvidenceDecision(d, h.Flags)
+			return packageRequiredEvidenceDecision(d, h.Flags)
 		}
 	}
 	if e.Local.Method.Value != e.Central.Method.Value || e.Local.Flags.Value&1 != e.Central.Flags.Value&1 {
@@ -181,14 +215,16 @@ func packageExtraDecision(d Decision, e PackageEntryObservation) Decision {
 		d.Reason = "mimetype-local-extra-field"
 		return d
 	}
-	if e.HeaderAssociation.State != EvidenceKnown || !e.HeaderAssociation.Value {
-		return packageEvidenceDecision(d, e.HeaderAssociation)
+	for _, v := range []Evidence[bool]{e.Local.Present, e.Central.Present, e.HeaderAssociation} {
+		if v.State != EvidenceKnown || !v.Value {
+			return packageRequiredEvidenceDecision(d, v)
+		}
 	}
 	if e.Local.ExtraLength.State != EvidenceKnown {
-		return packageEvidenceDecision(d, e.Local.ExtraLength)
+		return packageRequiredEvidenceDecision(d, e.Local.ExtraLength)
 	}
 	if e.Central.ExtraLength.State != EvidenceKnown {
-		return packageEvidenceDecision(d, e.Central.ExtraLength)
+		return packageRequiredEvidenceDecision(d, e.Central.ExtraLength)
 	}
 	if e.Central.ExtraLength.Value > 0 {
 		d.Outcome = OutcomeUnknown
@@ -234,6 +270,9 @@ func packagePrefixDecision(d Decision, m PackageMimetypeObservation) Decision {
 }
 func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundary) error {
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
 		r := s.catalog.rules[key]
 		if r.Selector.Kind != PackageSubjectPackage {
 			continue
@@ -242,14 +281,14 @@ func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundar
 		if support := s.catalog.supports[s.profile.ID][key]; support.State == ImplementationUnsupported {
 			d.Outcome = OutcomeUnsupported
 			d.Reason = support.Reason
-		} else if pre, ok := s.prerequisites(r.Rule, b.subject); !ok {
+		} else if pre, ok := s.prerequisites(ctx, r.Rule, b.subject); !ok {
 			d = pre
 		} else {
 			switch r.Plan.check {
 			case PackageCheckContainerPath:
-				if b.identity.Representation != ResourceRawMXL && b.identity.Representation != ResourceCurrentMXL {
+				if b.identity.Representation != ResourceRawMXL {
 					d.Outcome = OutcomeNotApplicable
-					d.Reason = "no-package-container"
+					d.Reason = "outside-original-container-scope"
 				} else if _, ok := s.entryNames[b.identity.ID]["META-INF/container.xml"]; ok {
 					d.Outcome = OutcomePass
 					d.Reason = "exact-container-entry"
@@ -294,7 +333,7 @@ func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundar
 					d.Outcome = OutcomeNotApplicable
 					d.Reason = "outside-package-role-scope"
 				} else {
-					d = s.scoreBeforeParts(d, b)
+					d = s.scoreBeforeParts(ctx, d, b)
 				}
 			}
 		}
@@ -304,13 +343,17 @@ func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundar
 	}
 	return nil
 }
-func (s *PackageSession) scoreBeforeParts(d Decision, b *packageBoundary) Decision {
+func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *packageBoundary) Decision {
 	roles, known := s.roles[b.identity.ID]
 	if known {
 		var score, part bool
+		uncertain := false
 		var first ResourcePin
 		firstKnown := false
 		for _, id := range s.rootfileOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return d
+			}
 			r := s.rootfiles[id]
 			if r.Package == b.identity.ID && r.Ordinal == 1 && r.Resource.State == EvidenceKnown {
 				if resource := s.resources[r.Resource.Value]; resource != nil {
@@ -321,6 +364,10 @@ func (s *PackageSession) scoreBeforeParts(d Decision, b *packageBoundary) Decisi
 		}
 		firstScore := Evidence[bool]{State: EvidenceUnknown, Reason: "primary-score-role-unavailable"}
 		for _, r := range roles.Resources {
+			if err := s.scan(ctx, 1); err != nil {
+				return d
+			}
+			uncertain = uncertain || r.Membership.State != EvidenceKnown
 			if r.Membership.State == EvidenceKnown && r.Membership.Value {
 				score = score || r.Role == ResourceRoleScore
 				part = part || r.Role == ResourceRoleIndividualPart
@@ -337,7 +384,7 @@ func (s *PackageSession) scoreBeforeParts(d Decision, b *packageBoundary) Decisi
 			}
 			return d
 		}
-		if roles.ScopeComplete.State == EvidenceKnown && roles.ScopeComplete.Value && (!score || !part) {
+		if roles.ScopeComplete.State == EvidenceKnown && roles.ScopeComplete.Value && !uncertain && (!score || !part) {
 			d.Outcome = OutcomeNotApplicable
 			d.Reason = "complete-role-scope-excludes-score-parts"
 			return d
@@ -349,25 +396,46 @@ func (s *PackageSession) scoreBeforeParts(d Decision, b *packageBoundary) Decisi
 		primary := PackageFactID(0)
 		roots := 0
 		for _, id := range s.rootfileOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return d
+			}
 			r := s.rootfiles[id]
 			if r.Package == b.identity.ID {
 				roots++
 				if r.Ordinal == 1 && r.Entry.State == EvidenceKnown && r.Resource.State == EvidenceKnown {
 					resource := s.resources[r.Resource.Value]
-					if resource != nil && knownComplete(resource.snapshot.header.ScopeComplete) {
-						primary = r.Entry.Value
+					if resource != nil && knownComplete(resource.snapshot.header.ScopeComplete) && resource.snapshot.header.Name.State == EvidenceKnown && packageMusicRoot(resource.snapshot.header.Name.Value) {
+						noLinks := true
+						for _, v := range resource.snapshot.contexts {
+							if s.scan(ctx, 1) != nil {
+								return d
+							}
+							if v.Resource != nil && v.Resource.Link != nil && v.Resource.Link.Kind != ResourceBookmark {
+								noLinks = false
+								break
+							}
+						}
+						if noLinks {
+							primary = r.Entry.Value
+						}
 					}
 				}
 			}
 		}
 		minimal := roots == 1 && primary != 0
 		for _, id := range s.entryOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return d
+			}
 			e := s.entries[id]
 			if e.Package == b.identity.ID && e.Name != "META-INF/container.xml" && e.Name != "mimetype" && id != primary {
 				minimal = false
 			}
 		}
 		for _, id := range s.edgeOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return d
+			}
 			edge := s.edges[id]
 			if a := s.adoptions[edge.Source]; a != nil && a.packageID == b.identity.ID {
 				minimal = false
@@ -462,6 +530,9 @@ func (s *PackageSession) mediaDecision(ctx context.Context, d Decision, v Eviden
 	typ = strings.ToLower(typ)
 	if typ == "application/vnd.recordare.musicxml+xml" {
 		for key := range parameters {
+			if err := s.scan(ctx, 1); err != nil {
+				return d
+			}
 			if key != "charset" {
 				d.Outcome = OutcomeUnknown
 				d.Reason = "musicxml-media-parameter-unresolved"
@@ -484,5 +555,14 @@ func (s *PackageSession) mediaDecision(ctx context.Context, d Decision, v Eviden
 	}
 	d.Outcome = OutcomeUnknown
 	d.Reason = "musicxml-media-type-set-unresolved"
+	return d
+}
+
+func packageRequiredEvidenceDecision[T comparable](d Decision, e Evidence[T]) Decision {
+	d = packageEvidenceDecision(d, e)
+	if d.Outcome == OutcomeNotApplicable || d.Outcome == OutcomePass {
+		d.Outcome = OutcomeUnknown
+		d.Reason = "required-evidence-unavailable"
+	}
 	return d
 }

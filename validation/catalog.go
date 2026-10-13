@@ -819,10 +819,13 @@ func catalogDigest(c *CompiledCatalog) (string, error) {
 // Check collection lengths before traversing or copying them; the budget also
 // bounds the validation/digest work attributable to untrusted configuration.
 func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []PlanBinding) error {
+	return catalogCheckBoundsRemaining(rules, profiles, plans, catalogMaxBytes)
+}
+func catalogCheckBoundsRemaining(rules []RuleDefinition, profiles []Profile, plans []PlanBinding, remaining int64) error {
 	if len(rules) > catalogMaxRules || len(plans) > catalogMaxRules || len(profiles) > catalogMaxProfiles {
 		return contract("catalog size", "top-level collection limit exceeded")
 	}
-	b := catalogBudget{remaining: catalogMaxBytes}
+	b := catalogBudget{remaining: remaining}
 	b.slots(len(rules))
 	b.slots(len(profiles))
 	b.slots(len(plans))

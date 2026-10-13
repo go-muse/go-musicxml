@@ -11,15 +11,20 @@ type bundleResource struct {
 	required bool
 }
 type bundleAdoption struct {
+	context    ResourceAdoptionContext
 	resource   ResourceAssessmentID
 	documentID string
 }
 type assessmentBundleData struct {
-	report      Report
-	resources   []bundleResource
-	adoptions   []bundleAdoption
-	enumeration bool
-	failure     *ResourceFailureSummary
+	report        Report
+	resources     []bundleResource
+	adoptions     []bundleAdoption
+	enumeration   bool
+	failure       *ResourceFailureSummary
+	failureReport *Report
+	images        []packageImageAdvice
+	files         []PackageFileMetadataObservation
+	mimetypes     []PackageMimetypeObservation
 }
 
 // AssessmentBundle is an immutable core-created collection of one package/graph
@@ -94,6 +99,15 @@ func (b AssessmentBundle) Failure() (ResourceFailureSummary, bool) {
 		return ResourceFailureSummary{}, false
 	}
 	return stateClone(*b.data.failure), true
+}
+
+// FailureReport returns the original retained failed-child report when ordinary
+// admission succeeded. Failure always retains the bounded summary otherwise.
+func (b AssessmentBundle) FailureReport() (Report, bool) {
+	if b.data == nil || b.data.failureReport == nil {
+		return Report{}, false
+	}
+	return stateClone(*b.data.failureReport), true
 }
 
 // ResourceAdoption is a cheap package-owned immutable view. Its accessors rebind
@@ -244,7 +258,7 @@ func (s *PackageSession) Finish(ctx context.Context, end PackageCompletion) (Ass
 					if support := s.catalog.supports[s.profile.ID][key]; support.State == ImplementationUnsupported {
 						d.Outcome = OutcomeUnsupported
 						d.Reason = support.Reason
-					} else if pre, ok := s.prerequisites(r.Rule, id); !ok {
+					} else if pre, ok := s.prerequisites(ctx, r.Rule, id); !ok {
 						d = pre
 					} else {
 						d = s.rootfileDecision(ctx, d, v, r.Plan.check)
@@ -252,6 +266,10 @@ func (s *PackageSession) Finish(ctx context.Context, end PackageCompletion) (Ass
 					if err := s.record(ctx, r.Rule, id, d, v.Location, true); err != nil {
 						break
 					}
+				}
+			case PackageSubjectImage, PackageSubjectMetadata:
+				if err := s.evaluateAdvice(ctx, r); err != nil {
+					s.fail(err)
 				}
 			case PackageSubjectEdge, PackageSubjectAssociation, PackageSubjectResource:
 				if err := s.evaluateResourceRule(ctx, r); err != nil {
@@ -266,7 +284,11 @@ func (s *PackageSession) Finish(ctx context.Context, end PackageCompletion) (Ass
 	complete := end.InputComplete && len(s.boundaries) > 0 && s.terminal == nil
 	for _, id := range s.boundaryOrder {
 		b := s.boundaries[id]
-		complete = complete && b.sealed && knownComplete(b.enumeration.Entries) && knownComplete(b.enumeration.Rootfiles) && knownComplete(b.enumeration.Edges) && knownComplete(b.enumeration.Roles)
+		complete = complete && !b.identity.PinUnavailable && b.sealed && knownComplete(b.enumeration.Entries) && knownComplete(b.enumeration.Rootfiles) && knownComplete(b.enumeration.Edges) && knownComplete(b.enumeration.Roles)
+	}
+	for _, id := range s.adoptionOrder {
+		a := s.adoptions[id]
+		complete = complete && a.expansion.sealed && knownComplete(a.expansion.complete)
 	}
 	if !complete {
 		s.accumulator.incomplete()
@@ -284,6 +306,10 @@ func (s *PackageSession) Finish(ctx context.Context, end PackageCompletion) (Ass
 	// release clears the snapshot field, never mutates the transferred backing data.
 	for i, id := range s.resourceOrder {
 		out.resources[i].required = s.resources[id].required
+	}
+	for i, id := range s.adoptionOrder {
+		a := s.adoptions[id]
+		out.adoptions[i].context.ExpansionComplete = a.expansion.complete
 	}
 	bundle := AssessmentBundle{data: out}
 	s.finished = true
@@ -317,8 +343,10 @@ func (s *PackageSession) cleanup() {
 	s.resourceKeys = nil
 	s.pins = nil
 	s.adoptions = nil
+	s.expansions = nil
 	s.documents = nil
 	s.subjects = nil
+	s.subjectPackages = nil
 	s.decisions = nil
 	s.output = nil
 	s.failure = nil

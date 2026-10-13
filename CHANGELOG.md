@@ -29,6 +29,16 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   lookup, unique-primary rule or ordinary Decode behavior changes are introduced.
   `ContextResult` gains the optional `SoundMapping` payload; use keyed literals.
 
+- Add separate sealed package/resource catalogs, one-account typed graph sessions,
+  canonical assessment bundles and fresh reference-remapped adoptions. Preserve
+  known failures through terminal admission refusal and optional scoped image,
+  filename/media-type and mimetype observations without rendering or I/O in core.
+
+- Add alternate terminal `validation.Session.FinishWithResourceSnapshot` with
+  immutable intrinsic resource facts, retained ownership and unconditional best
+  report preservation on snapshot admission failure. Ordinary `Finish` and
+  existing profile semantics remain unchanged.
+
 - Add explicit nonfetching `ProfileSourceLinks` and `ProfileModelLinks`, typed
   owned local resource projections, exact link/bookmark attachment, XLink
   defaults, image/group/instrument metadata and schema-hint discovery pairs.

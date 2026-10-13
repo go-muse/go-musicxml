@@ -112,6 +112,18 @@ func buildAuxiliarySourceAssessmentEngine() (*validation.Engine, error) {
 			profile.Support = append(profile.Support, validation.RuleSupport{Rule: key, State: validation.ImplementationAvailable})
 			profile.NormativeClosure += " Exact sound/any/solo/ensemble directional mapping context is independently owned. Omitted primary has no default; competing preferences and empty mappings remain data."
 		}
+		hints, err := validation.NewSchemaHintContextPlan(schema)
+		if err != nil {
+			return nil, err
+		}
+		assembly := input.assembly
+		hintKey := validation.RuleKey{ID: validation.RuleID("MX40-RESOURCE-schema-hints/" + string(assembly)), Revision: 1}
+		hintRule := validation.RuleDefinition{Key: hintKey, Class: validation.ClassMandatory, Role: validation.RoleContextProvider, Category: validation.CategoryNormative, Targets: []validation.Target{validation.TargetSource}, Scope: validation.ScopeDocument, Selector: validation.Selector{Assembly: &assembly}, Predicate: string(hintKey.ID), Text: validation.RuleText{Title: "Schema hint discovery pairs", Explanation: "Retain source discovery pairs independently of the accepted XSD list(anyURI) datatype; never fetch or select hinted schemas.", Message: "Schema hint projection did not finish."}, Sources: []validation.SourceRef{{IDs: []string{"REQ-DEF-XSI-SCHEMALOC", "REQ-DEF-XSI-NONAMESPACE"}, URL: "https://www.w3.org/TR/2004/REC-xmlschema-1-20041028/#schema-loc", Locator: "XML Schema 1.0 Second Edition Part1 section4.3.2"}}}
+		rules = append(rules, hintRule)
+		plans = append(plans, validation.PlanBinding{ID: hintRule.Predicate, Plan: hints})
+		profile.Required = append(profile.Required, hintKey)
+		profile.Support = append(profile.Support, validation.RuleSupport{Rule: hintKey, State: validation.ImplementationAvailable})
+		profile.NormativeClosure += " Source schema-hint discovery retains complete pairs and unmatched trailing URI without changing the datatype or performing retrieval."
 		profiles = append(profiles, profile)
 	}
 	catalog, err := validation.NewCatalog(rules, profiles, plans)

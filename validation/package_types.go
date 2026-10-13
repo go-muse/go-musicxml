@@ -12,6 +12,9 @@ type PackageIdentity struct {
 	Parent         PackageID
 	Representation ResourceRepresentation
 	Pin            ResourcePin
+	// PinUnavailable admits only a raw MXL prefix with no verified whole-body
+	// digest. Such a boundary is never canonical and can never certify completion.
+	PinUnavailable bool
 }
 
 // ZIPHeaderObservation preserves independent original-header evidence.
@@ -58,7 +61,10 @@ type PackageRootfileObservation struct {
 }
 
 // PackageEdgeObservation binds an encoded intrinsic template to a fresh target
-// adoption. Fragment absent and present-empty are distinct. The core validates
+// adoption. Fragment is the once URI-decoded component: absent and present-empty
+// are distinct; empty addresses the whole document. Only schema-ID shorthand
+// (the schema kernel NCName grammar) is implemented; other grammars stay unsupported.
+// The core validates
 // supplied fragment targets against the adopted schema-qualified identity index.
 type PackageEdgeObservation struct {
 	ID             PackageFactID
@@ -85,15 +91,19 @@ type PackageCompletion struct {
 // ResourceAdoptionOptions distinguishes the single primary root adoption from
 // all linked occurrences, each of which charges LinkedDocuments even on reuse.
 type ResourceAdoptionOptions struct {
-	Package    PackageID
-	DocumentID string
-	Root       bool
+	// BaseURI and ArchiveEntry are exact effective retrieval context, never inferred
+	// from canonical resource identity. They participate in expansion equivalence.
+	BaseURI, ArchiveEntry string
+	Package               PackageID
+	DocumentID            string
+	Root                  bool
 }
 
 // ResourceFailureSummary preserves known child truth when the quota refuses a
 // complete retained report. It is explicitly incomplete, not a synthetic Report.
 type ResourceFailureSummary struct {
 	Pin                                     ResourcePin
+	PinComplete                             Evidence[bool]
 	Target                                  Target
 	Profile                                 ProfileID
 	CatalogDigest                           string

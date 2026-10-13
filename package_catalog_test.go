@@ -1,6 +1,7 @@
 package musicxml
 
 import (
+	"context"
 	"errors"
 	"reflect"
 	"slices"
@@ -11,6 +12,15 @@ import (
 )
 
 func TestPackageProfilesExactSelectionAndMetadata(t *testing.T) {
+	for got, want := range map[validation.ProfileID]string{
+		ProfileResourceGraph: "musicxml-4.0/resource-graph",
+		ProfileMXLSource:     "musicxml-4.0/mxl-source",
+		ProfileMXLModel:      "musicxml-4.0/mxl-model",
+	} {
+		if string(got) != want {
+			t.Errorf("profile ID=%q want %q", got, want)
+		}
+	}
 	catalog, err := newPackageAssessmentCatalog()
 	if err != nil {
 		t.Fatal(err)
@@ -220,4 +230,48 @@ func TestPackageProfilesDoNotMutateFrozenEight(t *testing.T) {
 	// Original baseline includes exact profile metadata, complete report content,
 	// counts and original JSON field shape, rather than only digest equality.
 	TestAuxiliaryFrozenEightProfiles(t)
+}
+
+func TestPackageIntrinsicSourceDiscoveryAvailableForEveryAssembly(t *testing.T) {
+	// The package pairing consumer requires a real source discovery projection
+	// from every permitted intrinsic assembly, including auxiliaries. A pinned
+	// digest alone must not hide an omitted prerequisite provider.
+	rows, err := packageIntrinsicProfiles()
+	if err != nil {
+		t.Fatal(err)
+	}
+	sources := map[validation.Assembly]string{
+		validation.AssemblyMusicXML:  resourceScore(""),
+		validation.AssemblyOpus:      "<opus></opus>",
+		validation.AssemblyContainer: `<container><rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`,
+		validation.AssemblySounds:    `<sounds><sound id="s"><any/></sound></sounds>`,
+	}
+	for _, row := range rows {
+		if row.Target != validation.TargetSource {
+			continue
+		}
+		t.Run(string(row.Assembly), func(t *testing.T) {
+			source := strings.Replace(sources[row.Assembly], ">", ` xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:a a.xsd trailing">`, 1)
+			report, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: row.Profile})
+			if err != nil || !report.Satisfied() {
+				t.Fatalf("odd source hint changed intrinsic datatype validity: %v %+v", err, report)
+			}
+			found := false
+			for _, fact := range report.Context {
+				if fact.Resource == nil || fact.Resource.SchemaHints == nil {
+					continue
+				}
+				h := fact.Resource.SchemaHints
+				if h.Raw.State == validation.EvidenceKnown && h.Raw.Value == "urn:a a.xsd trailing" {
+					found = true
+					if h.Complete.State != validation.EvidenceUnknown || len(h.Pairs) != 1 || h.Trailing.State != validation.EvidenceKnown || h.Trailing.Value != "trailing" {
+						t.Errorf("discovery evidence lost: %+v", h)
+					}
+				}
+			}
+			if !found {
+				t.Error("selected intrinsic profile omitted source schema-hint discovery evidence")
+			}
+		})
+	}
 }

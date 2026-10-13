@@ -166,7 +166,7 @@ func NewPackageCatalog(rules []PackageRuleBinding, profiles []PackageProfileBind
 	if !extra.ok() {
 		return nil, contract("package catalog size", "intrinsic table exceeds compilation bounds")
 	}
-	if err := catalogCheckBounds(rr, pp, nil); err != nil {
+	if err := catalogCheckBoundsRemaining(rr, pp, nil, extra.remaining); err != nil {
 		return nil, err
 	}
 	c := &CompiledPackageCatalog{rules: make(map[RuleKey]PackageRuleBinding, len(rules)), profiles: make(map[ProfileID]PackageProfileBinding, len(profiles)), orders: make(map[ProfileID][]RuleKey, len(profiles)), supports: make(map[ProfileID]map[RuleKey]RuleSupport, len(profiles))}
@@ -201,6 +201,23 @@ func NewPackageCatalog(rules []PackageRuleBinding, profiles []PackageProfileBind
 		b.Rule = cloneRule(r)
 		c.rules[b.Rule.Key] = b
 		metadata[b.Rule.Key] = b.Rule
+	}
+	for _, rule := range c.rules {
+		for _, dep := range rule.Rule.Requires {
+			if dep.Kind != DependencyRule {
+				continue
+			}
+			provider, ok := c.rules[dep.Rule]
+			if !ok {
+				continue
+			}
+			if dep.Relation == RelationSameNode && provider.Selector.Kind != rule.Selector.Kind {
+				return nil, contract("package dependency", "same subject needs identical selector kinds")
+			}
+			if dep.Relation == RelationDocument && (provider.Selector.Kind != PackageSubjectPackage || rule.Selector.Kind == PackageSubjectResource) {
+				return nil, contract("package dependency", "document relation requires package-boundary provider and scoped consumer")
+			}
+		}
 	}
 	order, err := catalogOrder(metadata)
 	if err != nil {

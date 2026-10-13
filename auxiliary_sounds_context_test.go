@@ -257,10 +257,10 @@ func TestAuxiliarySourceOwnershipAndBudgets(t *testing.T) {
 		}
 	}
 	text := `<sounds><sound id="a"><any/><any/></sound></sounds>`
-	for _, limit := range []int64{2, 3} {
+	for _, limit := range []int64{3, 4} {
 		r, err := InspectXML(context.Background(), strings.NewReader(text), AssessmentOptions{Profile: ProfileSourceSounds, Budgets: validation.Budgets{MaxContextFacts: limit}})
-		if limit == 3 {
-			if err != nil || !r.Satisfied() || len(r.Context) != 3 {
+		if limit == 4 {
+			if err != nil || !r.Satisfied() || len(r.Context) != 4 {
 				t.Fatalf("exact context budget: %v %+v", err, r)
 			}
 		} else if !errors.Is(err, validation.ErrResourceLimit) || r.Satisfied() || len(r.Context) > int(limit) {
