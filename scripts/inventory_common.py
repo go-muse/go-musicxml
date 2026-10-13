@@ -1,4 +1,7 @@
-"""Shared safe I/O for development-only package inventory tools (Python 3.9+)."""
+"""Shared safe I/O for standard-library inventory checks required in Linux CI.
+
+The tools support Python 3.9 and later; Python is not a library runtime dependency.
+"""
 import hashlib
 import json
 import os
@@ -59,10 +62,23 @@ def read_json(path):
         raise InventoryError(f'cannot parse JSON: {path}: {exc}') from exc
 
 
+def checked_resolve(path):
+    """Allow missing paths, but never suppress symlink loops or other I/O errors."""
+    # Since Python 3.13 non-strict Path.resolve() suppresses symlink-loop errors.
+    # Probe with stat() first so ELOOP remains an error on every supported Python.
+    # Only ENOENT is allowed: a new output or a dangling, non-cyclic symlink may
+    # legitimately be absent and still needs canonicalization for alias checks.
+    try:
+        path.stat()
+    except FileNotFoundError:
+        pass
+    return path.resolve()
+
+
 def resolve_root(root):
     """Keep filesystem resolution errors inside the tools' JSON failure boundary."""
     try:
-        return root.resolve()
+        return checked_resolve(root)
     except (OSError, RuntimeError) as exc:
         raise InventoryError(f'cannot resolve inventory root: {root}: {exc}') from exc
 
@@ -79,10 +95,10 @@ def reject_alias(output, protected):
     """Reject lexical, symlink and hard-link aliases before creating a tempfile."""
     output = Path(output)
     try:
-        resolved = output.resolve()
+        resolved = checked_resolve(output)
         for path in protected:
             path = Path(path)
-            if resolved == path.resolve() or (output.exists() and path.exists() and output.samefile(path)):
+            if resolved == checked_resolve(path) or (output.exists() and path.exists() and output.samefile(path)):
                 raise InventoryError(f'output aliases protected input: {output} ({path})')
     except (OSError, RuntimeError) as exc:
         raise InventoryError(f'cannot validate output path: {output}: {exc}') from exc

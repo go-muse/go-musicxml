@@ -10,6 +10,8 @@ from pathlib import Path
 import sys
 sys.dont_write_bytecode = True
 
+# Load trusted sibling helpers even with Python's -I / -P safe-path modes.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from inventory_common import (InventoryError, atomic_write_json,
                               emit_result, reject_alias)
 

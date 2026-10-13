@@ -12,6 +12,8 @@ sys.dont_write_bytecode = True
 import tempfile
 from pathlib import Path
 
+# Load trusted sibling helpers even with Python's -I / -P safe-path modes.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from inventory_common import (InventoryError, emit_result, failure_result, input_paths, inputs_known,
                               read_json, reject_alias, require, resolve_root)
 

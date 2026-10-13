@@ -54,9 +54,9 @@ class MaintenanceTests(unittest.TestCase):
         for path, value in [(MANIFEST, self.m), (EVIDENCE, self.e)]:
             (self.root / path).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
 
-    def run_tool(self, script='verify-package-inventory', *args, expected=0, env=None):
-        run = subprocess.run([sys.executable, str(SCRIPTS / (script + '.py')), '--root', str(self.root), *args],
-                             text=True, encoding='utf-8', capture_output=True, env=env)
+    def run_tool(self, script='verify-package-inventory', *args, expected=0, env=None, python_flags=()):
+        run = subprocess.run([sys.executable, *python_flags, str(SCRIPTS / (script + '.py')), '--root', str(self.root), *args],
+                             text=True, encoding='utf-8', capture_output=True, env=env, cwd=self.root)
         try:
             result = json.loads(run.stdout)
         except ValueError:
@@ -275,11 +275,113 @@ class MaintenanceTests(unittest.TestCase):
 
     def test_cyclic_output_symlink_returns_json_failure(self):
         alias = self.root / 'cycle.json'
-        alias.symlink_to(alias)
         for script in ['verify-package-inventory', 'refresh-package-inventory', 'test-package-inventory']:
             with self.subTest(script=script):
+                alias.unlink(missing_ok=True)
+                alias.symlink_to(alias)
                 result = self.run_tool(script, '--output', str(alias), expected=1)
                 self.assertIn('cannot validate output path', '\n'.join(result['failures']))
+                self.assertTrue(alias.is_symlink())
+                self.assertEqual(os.readlink(alias), str(alias))
+                self.assertEqual(list(self.root.glob('.cycle.json.*')), [])
+                alias.unlink()
+
+    def test_indirect_and_parent_cycles_fail_without_changing_links_or_evidence(self):
+        first = self.root / 'cycle-first'
+        second = self.root / 'cycle-second'
+        self.mutate_test()
+        before = (self.root / EVIDENCE).read_bytes()
+        output = self.root / 'preserved.json'
+        output.write_text('preserve existing output')
+        for script in ['verify-package-inventory', 'refresh-package-inventory', 'test-package-inventory']:
+            for path in [first, first / 'child']:
+                for kind in ['root', 'output']:
+                    with self.subTest(script=script, path=path, kind=kind):
+                        first.unlink(missing_ok=True)
+                        second.unlink(missing_ok=True)
+                        first.symlink_to(second.name)
+                        second.symlink_to(first.name)
+                        (self.root / EVIDENCE).write_bytes(before)
+                        args = ['--write'] if script == 'refresh-package-inventory' else []
+                        if kind == 'root':
+                            args += ['--root', str(path), '--output', str(output)]
+                            message = 'cannot resolve inventory root'
+                        else:
+                            args += ['--output', str(path)]
+                            message = 'cannot validate output path'
+                        result = self.run_tool(script, *args, expected=1)
+                        self.assertIn(message, '\n'.join(result['failures']))
+                        self.assertEqual(os.readlink(first), second.name)
+                        self.assertEqual(os.readlink(second), first.name)
+                        self.assertEqual((self.root / EVIDENCE).read_bytes(), before)
+                        self.assertEqual(output.read_text(), 'preserve existing output')
+                        self.assertEqual(list(self.root.glob('.cycle-first.*')), [])
+
+    def test_missing_output_and_dangling_symlink_remain_supported(self):
+        missing = self.root / 'missing-target.json'
+        for script in ['verify-package-inventory', 'refresh-package-inventory', 'test-package-inventory']:
+            for kind in ['missing', 'dangling']:
+                with self.subTest(script=script, kind=kind):
+                    output = self.root / 'new-result.json'
+                    if kind == 'dangling':
+                        output.symlink_to(missing.name)
+                    result = self.run_tool(script, '--output', str(output))
+                    self.assertEqual(json.loads(output.read_text()), result)
+                    self.assertFalse(output.is_symlink())
+                    self.assertFalse(missing.exists())
+                    output.unlink()
+
+    def test_dangling_protected_alias_and_cyclic_input_are_rejected(self):
+        common = module('inventory_common')
+        output = self.root / 'new-result.json'
+        dangling = self.root / 'dangling.json'
+        dangling.symlink_to(output.name)
+        cycle = self.root / 'cyclic-input.json'
+        cycle.symlink_to(cycle.name)
+        for protected, message in [(dangling, 'output aliases protected input'),
+                                   (cycle, 'cannot validate output path')]:
+            with self.subTest(protected=protected):
+                with self.assertRaisesRegex(common.InventoryError, message):
+                    common.reject_alias(output, [protected])
+                self.assertFalse(output.exists())
+                self.assertTrue(protected.is_symlink())
+
+    def test_symlinked_parent_output_cannot_replace_protected_input(self):
+        alias = self.root / 'root-alias'
+        alias.symlink_to(self.root, target_is_directory=True)
+        target = self.root / MANIFEST
+        before = target.read_bytes()
+        for script in ['verify-package-inventory', 'refresh-package-inventory', 'test-package-inventory']:
+            with self.subTest(script=script):
+                result = self.run_tool(script, '--output', str(alias / MANIFEST), expected=1)
+                self.assertIn('output aliases protected input', '\n'.join(result['failures']))
+                self.assertEqual(target.read_bytes(), before)
+                self.assertTrue(alias.is_symlink())
+
+    def test_isolated_and_safe_path_invocations_use_trusted_sibling_modules(self):
+        # A caller's working directory must not supply this executable module.
+        (self.root / 'inventory_common.py').write_text('raise RuntimeError("untrusted cwd import")\n')
+        flags = ['-I']
+        if sys.version_info >= (3, 11):
+            flags.append('-P')
+        for flag in flags:
+            for script in ['verify-package-inventory', 'refresh-package-inventory', 'test-package-inventory']:
+                with self.subTest(flag=flag, script=script):
+                    self.run_tool(script, python_flags=[flag])
+
+    def test_path_probe_errors_fail_closed_before_any_output_write(self):
+        common = module('inventory_common')
+        output = self.root / 'new-result.json'
+        for error in [PermissionError('permission denied'), OSError('path probe failed')]:
+            with self.subTest(error=error), mock.patch.object(Path, 'stat', side_effect=error), \
+                 mock.patch.object(common.tempfile, 'NamedTemporaryFile') as temporary:
+                with self.assertRaisesRegex(common.InventoryError, 'cannot resolve inventory root'):
+                    common.resolve_root(self.root)
+                with contextlib.redirect_stdout(io.StringIO()):
+                    result = common.failure_result(common.InventoryError('original failure'))
+                    self.assertEqual(common.emit_result(result, output), 1)
+                self.assertIn('cannot validate output path', '\n'.join(result['failures']))
+                temporary.assert_not_called()
 
     def test_evidence_alias_of_source_cannot_be_written(self):
         target = self.root / 'link_intent_test.go'
