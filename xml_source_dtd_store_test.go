@@ -88,7 +88,7 @@ func TestSourceDTDStoreFirstBindingAndLexicalKeys(t *testing.T) {
 func TestSourceDTDStoreParameterCutoffStandalone(t *testing.T) {
 	for _, standalone := range []sourceDTDStandalone{sourceDTDStandaloneAbsent, sourceDTDStandaloneNo, sourceDTDStandaloneYes} {
 		t.Run(string(standalone), func(t *testing.T) {
-			s, info := dtdStoreParse(t, ` r SYSTEM 'unread.dtd' [<!ENTITY early 'kept'><!ATTLIST r early CDATA 'kept'>%missing;<!ENTITY late 'later'><!ATTLIST r late CDATA 'later'><!NOTATION n PUBLIC 'n'>]>`, standalone)
+			s, info := dtdStoreParse(t, ` r SYSTEM 'unread.dtd' [<!ENTITY % missing SYSTEM 'unread.ent'><!ENTITY early 'kept'><!ATTLIST r early CDATA 'kept'>%missing;<!ENTITY late 'later'><!ATTLIST r late CDATA 'later'><!NOTATION n PUBLIC 'n'>]>`, standalone)
 			if _, ok := s.Entity("early", false); !ok {
 				t.Error("lost earlier entity")
 			}

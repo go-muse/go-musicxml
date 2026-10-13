@@ -63,7 +63,7 @@ func TestDTDAuditParameterFrameDepth(t *testing.T) {
 }
 
 func TestDTDAuditParameterCannotSupplyPartialDeclaration(t *testing.T) {
-	for _, body := range []string{`<!ENTITY`, `<!ENTITY e`, `<!ENTITY e 'x'`, `<!ATTLIST r a CDATA 'x'`, `<!--x--`, `<?pi x?`, `&#37;later`, `<![INCLUDE[<!ELEMENT r EMPTY>]]>`, `]`, `>`} {
+	for _, body := range []string{`<!ENTITY`, `<!ENTITY e`, `<!ENTITY e 'x'`, `<!ATTLIST r a CDATA 'x'`, `<!--x--`, `<?pi x?`, `&#37;later`, `]`, `>`} {
 		source := `<!DOCTYPE r [<!ENTITY % p "` + body + `">%p;>]><r/>`
 		_, _, _, err := sourceEntityScan(t, source)
 		var syntax *xml.SyntaxError

@@ -84,7 +84,7 @@ func TestSourceDTDStoreParameterNestedAndGeneratedDeclaration(t *testing.T) {
 }
 
 func TestSourceDTDStoreParameterCannotBorrowBoundaries(t *testing.T) {
-	for _, body := range []string{`<!ENTITY e 'x'`, `<!--missing end`, `<?pi missing end`, `<!ELEMENT r (r`, `%missing`, `]>`, `<![IGNORE[abc]]>`} {
+	for _, body := range []string{`<!ENTITY e 'x'`, `<!--missing end`, `<?pi missing end`, `<!ELEMENT r (r`, `%missing`, `]>`} {
 		text := `<!DOCTYPE r [<!ENTITY % p "` + body + `">%p;]><r/>`
 		r := dtdStoreParameterReader(t, text)
 		_, err := r.Token()

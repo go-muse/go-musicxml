@@ -20,7 +20,7 @@ type sourceDTDInput interface {
 
 // sourceDTDInfo distinguishes checked local declaration grammar from unavailable
 // DTD semantics. Unsupported does not imply that the declaration is malformed.
-// Even when parsing succeeds, declared defaults/entities are not interpreted.
+// The legacy grammar-only path does not interpret declared defaults/entities.
 type sourceDTDInfo struct {
 	// WellFormednessIncomplete distinguishes unassessed declaration WFCs
 	// (for example entity declaration order/recursion) from known token grammar.
@@ -51,6 +51,8 @@ type sourceDTDParser struct {
 	capture                  *sourceDTDText
 	origin                   sourceDTDOrigin
 	literalGeneralReferences bool
+	inDeclaration            bool
+	lastPeek                 rune
 	parameters               []*sourceDTDDeclaration
 }
 
@@ -116,7 +118,7 @@ func (p *sourceDTDParser) subset() {
 			}
 			return
 		case '%':
-			origin := p.declarationOrigin()
+			origin := p.referenceOrigin()
 			p.read()
 			name := p.name(sourceDTDNCName, p.store != nil)
 			p.expect(';')
@@ -132,6 +134,12 @@ func (p *sourceDTDParser) subset() {
 				origin.Span.End = position.DTDPosition()
 			}
 			declaration, known := p.store.Entity(name, true)
+			// XML 4.1 Entity Declared is a WFC for standalone references
+			// outside PEs; absent/no standalone PE declaration order is a VC.
+			if p.store.state.Standalone == sourceDTDStandaloneYes && !origin.ExternalMarkup && (!known || declaration.Origin.ExternalMarkup) {
+				p.fail("Entity Declared: standalone parameter entity reference requires a declaration outside parameter entities")
+				return
+			}
 			if input, ok := p.input.(sourceDTDParameterInput); ok && known && !declaration.External {
 				next, err := p.store.growPointers(p.parameters)
 				if err != nil {
@@ -157,7 +165,7 @@ func (p *sourceDTDParser) subset() {
 			}
 			p.store.state.BindingCutoff = p.store.state.Standalone != sourceDTDStandaloneYes
 		case '<':
-			p.origin = p.declarationOrigin()
+			start := p.referenceOrigin()
 			p.read()
 			switch p.peek() {
 			case '?':
@@ -170,6 +178,18 @@ func (p *sourceDTDParser) subset() {
 					p.comment()
 					continue
 				}
+				if p.peek() == '[' && start.ExternalMarkup {
+					p.parameterDeclarationUnsupported("conditional section in parameter entity replacement")
+					return
+				}
+				// Only real declarations need an ancestry snapshot. The two ASCII
+				// prefix bytes were consumed while distinguishing comments/PIs.
+				p.origin = p.declarationOrigin()
+				if p.origin.SpanAvailable {
+					p.origin.Span.Start = start.Span.Start
+				} else if n := len(p.origin.Ancestry); n != 0 {
+					p.origin.Ancestry[n-1].ReplacementOffset = max(0, p.origin.Ancestry[n-1].ReplacementOffset-2)
+				}
 				p.declaration()
 			default:
 				p.fail("expected a declaration, comment or processing instruction in DTD")
@@ -181,6 +201,8 @@ func (p *sourceDTDParser) subset() {
 }
 
 func (p *sourceDTDParser) declaration() {
+	p.inDeclaration = true
+	defer func() { p.inDeclaration = false }()
 	keyword := p.keyword()
 	p.requireSpace()
 	p.info.HasDeclarations = true
@@ -420,7 +442,9 @@ func (p *sourceDTDParser) entity() {
 	if d.Parameter {
 		d.Kind = sourceDTDParameterEntityDeclaration
 		p.read()
-		p.requireSpace()
+		if !p.space() {
+			p.parameterDeclarationReference()
+		}
 	}
 	d.Name = p.name(sourceDTDNCName, p.store != nil)
 	p.requireSpace()
@@ -483,6 +507,10 @@ const (
 func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacementValue string) {
 	p.literalGeneralReferences = false
 	quote := p.read()
+	if quote == '%' && p.inDeclaration {
+		p.parameterDeclarationReference()
+		return "", ""
+	}
 	if quote != '\'' && quote != '"' {
 		p.fail("expected a quoted DTD literal")
 		return "", ""
@@ -521,7 +549,7 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 					p.literalGeneralReferences = true
 				}
 			} else if kind == sourceDTDEntityLiteral && r == '%' {
-				p.fail("parameter-entity reference inside internal DTD declaration")
+				p.parameterDeclarationReference()
 			} else if kind == sourceDTDAttributeLiteral && r == '<' {
 				p.fail("literal < in DTD attribute default")
 			}
@@ -807,7 +835,11 @@ func (p *sourceDTDParser) literal(s string) {
 
 func (p *sourceDTDParser) expect(want rune) {
 	if got := p.read(); got != want {
-		p.fail("unexpected delimiter in DTD declaration")
+		if got == '%' && p.inDeclaration {
+			p.parameterDeclarationReference()
+		} else {
+			p.fail("unexpected delimiter in DTD declaration")
+		}
 	}
 }
 
@@ -822,6 +854,7 @@ func (p *sourceDTDParser) peek() rune {
 		}
 	}
 	r, err := p.input.Peek()
+	p.lastPeek = r
 	p.inputError(err)
 	return r
 }
@@ -837,6 +870,7 @@ func (p *sourceDTDParser) read() rune {
 		}
 	}
 	r, err := p.input.Read()
+	p.lastPeek = 0
 	p.inputError(err)
 	if p.capture != nil && p.err == nil {
 		p.err = p.capture.appendRune(r)
@@ -854,8 +888,35 @@ func (p *sourceDTDParser) inputError(err error) {
 
 func (p *sourceDTDParser) fail(message string) {
 	if p.err == nil {
+		if p.inDeclaration && p.lastPeek == '%' {
+			p.parameterDeclarationReference()
+			return
+		}
 		p.err = p.input.SyntaxError(message)
 	}
+}
+
+func (p *sourceDTDParser) parameterDeclarationReference() {
+	if p.err != nil {
+		return
+	}
+	if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
+		p.parameterDeclarationUnsupported("parameter entity reference within a PE-carried declaration")
+		return
+	}
+	p.err = p.input.SyntaxError("PEs in Internal Subset: parameter-entity reference inside a markup declaration is not allowed in the internal subset")
+}
+
+func (p *sourceDTDParser) parameterDeclarationUnsupported(feature string) {
+	if p.err != nil {
+		return
+	}
+	p.info.Unsupported = true
+	p.info.WellFormednessIncomplete = true
+	if p.store != nil {
+		p.store.state.ParameterEntityUnread = true
+	}
+	p.err = &sourceXMLUnsupportedError{Feature: feature, Reason: "dtd-parameter-reference-in-declaration-unread"}
 }
 
 func (p *sourceDTDParser) unsupported(feature string) {
@@ -877,24 +938,34 @@ func sourceDTDPublicChar(r rune) bool {
 // DTDPosition is optional because grammar-only callers historically did not
 // provide coordinates. SpanAvailable explicitly distinguishes absent evidence
 // from a real declaration whose offset could happen to be zero.
-func (p *sourceDTDParser) declarationOrigin() sourceDTDOrigin {
+// referenceOrigin is a cheap transient use-site header, never retained as a
+// declaration origin. PushDTDParameter needs only the physical use span. A PE
+// reference's active ancestry is captured later for declarations it introduces.
+func (p *sourceDTDParser) referenceOrigin() sourceDTDOrigin {
 	origin := sourceDTDOrigin{Region: sourceDTDInternalSubset, AncestryComplete: true}
-	if p.store != nil {
-		if input, ok := p.input.(interface {
-			DTDParameterOrigin() (sourceDTDOrigin, error)
-		}); ok {
-			origin, p.err = input.DTDParameterOrigin()
-			return origin
-		}
-		if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
-			return sourceDTDOrigin{Region: sourceDTDParameterEntityRegion, ExternalMarkup: true}
-		}
+	if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
+		return sourceDTDOrigin{Region: sourceDTDParameterEntityRegion, ExternalMarkup: true}
 	}
 	if position, ok := p.input.(interface{ DTDPosition() sourceXMLPosition }); ok {
 		origin.SpanAvailable = true
 		origin.Span.Start = position.DTDPosition()
 	}
 	return origin
+}
+func (p *sourceDTDParser) declarationOrigin() sourceDTDOrigin {
+	if p.err != nil {
+		return sourceDTDOrigin{}
+	}
+	if p.store != nil {
+		if input, ok := p.input.(sourceDTDParameterInput); ok {
+			origin, err := input.DTDParameterOrigin()
+			if p.err == nil {
+				p.err = err
+			}
+			return origin
+		}
+	}
+	return p.referenceOrigin()
 }
 func (p *sourceDTDParser) collect(d sourceDTDDeclaration) {
 	if p.store == nil || p.err != nil {
@@ -945,21 +1016,25 @@ func (p *sourceDTDParser) checkDefaultReferences() {
 			entity, known := p.store.Entity(name, false)
 			if !known {
 				if !d.Origin.ExternalMarkup && (p.store.state.Standalone == sourceDTDStandaloneYes || (!p.store.state.ExternalSubsetUnread && !p.info.HasParameterReferences)) {
-					p.fail("undeclared general entity in DTD attribute default")
+					p.failAt(d.Origin, "undeclared general entity in DTD attribute default")
 					return
 				}
 				continue
 			}
 			if p.store.state.Standalone == sourceDTDStandaloneYes && !d.Origin.ExternalMarkup && entity.Origin.ExternalMarkup {
-				p.fail("standalone DTD default reference requires a declaration outside parameter entities")
+				p.failAt(d.Origin, "standalone DTD default reference requires a declaration outside parameter entities")
 				return
 			}
 			if entity.Origin.Sequence >= d.Origin.Sequence {
-				p.fail("general entity declaration must precede its direct reference in a DTD attribute default")
+				p.failAt(d.Origin, "general entity declaration must precede its direct reference in a DTD attribute default")
+				return
+			}
+			if entity.Notation != "" {
+				p.failAt(d.Origin, "unparsed XML entity cannot be referenced")
 				return
 			}
 			if entity.External {
-				p.fail("external entity reference in DTD attribute default")
+				p.failAt(d.Origin, "external entity reference in DTD attribute default")
 				return
 			}
 		}
@@ -970,8 +1045,17 @@ func (p *sourceDTDParser) checkDefaultReferences() {
 // sentinel is legal only in subset's between-declarations dispatch; Read must
 // reject it so names, literals, comments and declarations cannot borrow caller
 // bytes. An unread entity uses the ordinary XML 5.1 binding cutoff instead.
+// DTDParameterOrigin returns a borrowed snapshot valid until its next call;
+// collect copies retained declaration ancestry before another snapshot is taken.
 type sourceDTDParameterInput interface {
 	PushDTDParameter(*sourceDTDDeclaration, sourceDTDOrigin) error
 	FinishDTDParameter() error
 	DTDInParameter() bool
+	DTDParameterOrigin() (sourceDTDOrigin, error)
+}
+
+func (p *sourceDTDParser) failAt(origin sourceDTDOrigin, message string) {
+	if p.err == nil {
+		p.err = sourceDTDDiagnosticAt(p.input.SyntaxError(message), origin)
+	}
 }
