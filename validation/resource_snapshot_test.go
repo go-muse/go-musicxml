@@ -293,3 +293,32 @@ func TestResourceSnapshotLiveCopyAdmissionAndWork(t *testing.T) {
 		t.Fatalf("copy admitted before capacity: %v", err)
 	}
 }
+
+func TestResourceSnapshotRetainsRejectedRootNameWithoutSchemaIdentity(t *testing.T) {
+	s, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := schemaPendingHeader()
+	h.Name = QName{Local: "sounds"}
+	err = s.Open(context.Background(), h)
+	var unsupported *UnsupportedRootError
+	if !errors.As(err, &unsupported) {
+		t.Fatalf("Open error=%v", err)
+	}
+	report, snap, err := s.FinishWithResourceSnapshot(context.Background(), Completion{Cause: err, Syntax: SyntaxIncomplete})
+	if snap == nil || !errors.As(err, &unsupported) {
+		t.Fatalf("snapshot=%v err=%v", snap, err)
+	}
+	defer snap.Close()
+	header := snap.Header()
+	if header.Name.State != EvidenceKnown || header.Name.Value != h.Name {
+		t.Fatalf("lost observed rejected root: %+v", header)
+	}
+	if header.Root.Node != 0 || header.Assembly.State != EvidenceUnknown || header.ScopeComplete.State != EvidenceUnknown {
+		t.Fatalf("invented accepted identity: %+v", header)
+	}
+	if report.Profile.ID != header.Profile || report.Target != header.Target {
+		t.Fatal("original report identity lost")
+	}
+}

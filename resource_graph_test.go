@@ -101,6 +101,7 @@ func TestResourceGraphNoResolverForUnselectedOrInvalidHref(t *testing.T) {
 		selected bool
 	}{
 		{`<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="child.musicxml"/></opus>`, false},
+		{`<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="child.musicxml" xlink:actuate="onLoad" xlink:show="embed"/></opus>`, false},
 		{`<opus><score/></opus>`, true},
 		{`<opus xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://e.test/schema.xsd"/>`, true},
 	} {

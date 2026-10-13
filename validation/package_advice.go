@@ -142,7 +142,7 @@ func (s *PackageSession) ObserveImageMetadata(ctx context.Context, source Resour
 	subject := s.internalSubject(PackageSubjectImage)
 	s.subjectPackages[subject] = a.packageID
 	s.output.images = append(s.output.images, packageImageAdvice{subject: subject, value: stateClone(advice)})
-	return nil
+	return s.evaluateNewAdvice(ctx, s.output.images[len(s.output.images)-1:], nil)
 }
 
 // ObserveFileMetadata retains optional filename/MIME advice for an exact scope.
@@ -190,11 +190,25 @@ func (s *PackageSession) ObserveFileMetadata(ctx context.Context, v PackageFileM
 	}
 	s.subjectPackages[v.ID] = v.Package
 	s.output.files = append(s.output.files, stateClone(v))
+	return s.evaluateNewAdvice(ctx, nil, s.output.files[len(s.output.files)-1:])
+}
+func (s *PackageSession) evaluateNewAdvice(ctx context.Context, images []packageImageAdvice, files []PackageFileMetadataObservation) error {
+	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
+		if err := s.evaluateAdviceValues(ctx, s.catalog.rules[key], images, files, false); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 func (s *PackageSession) evaluateAdvice(ctx context.Context, r PackageRuleBinding) error {
+	return s.evaluateAdviceValues(ctx, r, s.output.images, s.output.files, true)
+}
+func (s *PackageSession) evaluateAdviceValues(ctx context.Context, r PackageRuleBinding, images []packageImageAdvice, files []PackageFileMetadataObservation, final bool) error {
 	if r.Selector.Kind == PackageSubjectImage {
-		for _, v := range s.output.images {
+		for _, v := range images {
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
@@ -207,13 +221,13 @@ func (s *PackageSession) evaluateAdvice(ctx context.Context, r PackageRuleBindin
 					d.Reason = "image-aspect-ratio-changed"
 				}
 			}
-			if err := s.record(ctx, r.Rule, v.subject, d, Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/image[" + string(v.value.Request.ID) + "]"}, true); err != nil {
+			if err := s.record(ctx, r.Rule, v.subject, d, Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/image[" + string(v.value.Request.ID) + "]"}, final); err != nil {
 				return err
 			}
 		}
 	}
 	if r.Selector.Kind == PackageSubjectMetadata {
-		for _, v := range s.output.files {
+		for _, v := range files {
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
@@ -249,7 +263,7 @@ func (s *PackageSession) evaluateAdvice(ctx context.Context, r PackageRuleBindin
 			} else if v.MediaType.State != EvidenceAbsent && d.Outcome != OutcomeFail {
 				d = packageEvidenceDecision(d, v.MediaType)
 			}
-			if err := s.record(ctx, r.Rule, v.ID, d, s.location(v.Package), true); err != nil {
+			if err := s.record(ctx, r.Rule, v.ID, d, s.location(v.Package), final); err != nil {
 				return err
 			}
 		}

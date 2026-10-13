@@ -85,6 +85,11 @@ type graphLinkedTarget struct {
 }
 
 func (g *resourceGraphRun) walkAssociation(item graphExpansion, v validation.ContextResult) error {
+	release, err := resourceWorkingLease(g.ctx, g.options.account, v)
+	if err != nil {
+		return err
+	}
+	defer release()
 	p := v.Resource
 	if p.Part.State != validation.EvidenceKnown || p.Instrument.Target.State != validation.EvidenceKnown {
 		return nil
@@ -101,7 +106,13 @@ func (g *resourceGraphRun) walkAssociation(item graphExpansion, v validation.Con
 	if err != nil {
 		return err
 	}
-	root := child.Header().Name
+	header := child.Header()
+	headerRelease, err := resourceWorkingLease(g.ctx, g.options.account, header)
+	if err != nil {
+		return err
+	}
+	defer headerRelease()
+	root := header.Name
 	if root.State != validation.EvidenceKnown || root.Value.Space != "" || (root.Value.Local != "score-partwise" && root.Value.Local != "score-timewise") {
 		return nil
 	}
@@ -111,24 +122,37 @@ func (g *resourceGraphRun) walkAssociation(item graphExpansion, v validation.Con
 		if e != nil {
 			return e
 		}
+		idRelease, e := resourceWorkingLease(g.ctx, g.options.account, id)
+		if e != nil {
+			return e
+		}
 		if !ok || id.Unique.State != validation.EvidenceKnown || !id.Unique.Value || id.Kind.State != validation.EvidenceKnown {
+			idRelease()
 			continue
 		}
 		if id.Subject == p.Part.Value && id.Kind.Value.Local == "score-part" {
+			selectedRelease, e := resourceWorkingLease(g.ctx, g.options.account, id.Value)
+			if e != nil {
+				idRelease()
+				return e
+			}
+			defer selectedRelease()
 			partID = id.Value
 		}
 		if id.Subject == p.Instrument.Target.Value && id.Kind.Value.Local == "score-instrument" && id.Part.State == validation.EvidenceKnown && id.Part.Value == p.Part.Value {
+			selectedRelease, e := resourceWorkingLease(g.ctx, g.options.account, id.Value)
+			if e != nil {
+				idRelease()
+				return e
+			}
+			defer selectedRelease()
 			instrumentID = id.Value
 		}
+		idRelease()
 	}
 	if partID == "" || instrumentID == "" {
 		return nil
 	}
-	release, err := resourceWorkingLease(g.ctx, g.options.account, v)
-	if err != nil {
-		return err
-	}
-	defer release()
 	q := validation.AssociationRequest{ID: validation.ResourceRequestID(g.next("association")), Kind: validation.AssociationInstrumentPartFile, Source: item.resource.pin, Target: target.resource.pin, SourcePart: p.Part.Value, SourceInstrument: p.Instrument.Target.Value, PartID: partID, InstrumentID: instrumentID, PartLink: p.Owner, InstrumentLink: v.Subject}
 	result, err := g.resolveMetadata(validation.ResourceRequest{ID: q.ID, Association: &q})
 	if err != nil {

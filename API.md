@@ -1120,3 +1120,56 @@ rootfile string storage is separately bounded by the metadata cap. Newly returne
 external aliases count again even when their verified intrinsic parse is cached.
 Caller and resolver I/O cancellation remains cooperative; all owned leases are
 released on completion, including technical errors and cancellation.
+
+## Selected resource graph entry points
+
+`InspectXMLWithResources(ctx, reader, LinkedAssessmentOptions)` assesses original
+MusicXML/Opus source; `AssessModelWithResources(ctx, document,
+LinkedAssessmentOptions)` assesses the current model directly. Both require
+`Graph.Profile = ProfileResourceGraph` and return
+`(validation.AssessmentBundle, error)`. MXL entry points require their corresponding
+`ProfileMXLSource` or `ProfileMXLModel` explicitly. `Graph.Budgets` creates one
+finite account shared by all parsing, snapshots, graph work, metadata and packages.
+No child gets a fresh budget. Ordinary normative findings can have a nil operation
+error; callers must inspect `bundle.Satisfied()` as well as the error.
+
+`Dependencies` is a closed, duplicate-free selection of `ResourceDocuments`,
+`ResourceImages`, `ResourceAssociations` and `ResourceRoles`. An empty selection
+invokes no external resolver. A nil or typed-nil `Resolver` leaves selected
+external dependencies unavailable. Invalid options are rejected before input or
+resolver I/O. Package-local traversal uses only the supplied package resources;
+XLink `show`/`actuate` intent does not authorize external retrieval. Schema hints,
+DTD declarations, external entities and XInclude never start hidden loads.
+
+The caller-provided `validation.ResourceResolver` owns transport, custom-scheme
+and redirect authorization, including cooperative cancellation of blocked I/O.
+The library verifies exact request/result identities, resource pins and actual
+returned bytes. Those checks do not sandbox I/O already performed by the resolver.
+Transferred document bodies close exactly once, including rejected responses and
+read errors; caller-owned primary readers remain open.
+
+`Identity.CanonicalID` is a cache identity, not a retrieval base. An empty identity
+becomes run-local. `Identity.RetrievalURI`, when supplied, is an absolute URI and
+is the only supplied primary external retrieval base. Actual source digests cannot
+be overridden by metadata; current models receive fresh opaque snapshot identities.
+The first verified canonical representation pin is immutable for the run. A
+changed returned revision cannot silently replace the same requested resource.
+Each newly returned body is read, charged and verified even when its intrinsic
+parse can be reused. Distinct base/package/archive contexts expand independently;
+cycle aliases preserve separate adopted document identities and linked quotas.
+
+`PackageReport`, `ResourceReport`, `Adoption` and `AdoptionContext` expose separately
+scoped results. Counts are not a flattened total over references. `Failure` exposes
+a terminal summary, and `FailureReport` exposes its complete original report when
+retention was admitted. A truncated fallback is explicit and cannot satisfy the
+bundle. Published getters return independent owned values and support concurrent
+reads; live sessions, snapshots and adoptions require serialized single-owner use.
+Additional selected XML resources, including later XML rootfiles and archive-local
+XML edges, obey both document and resource byte caps. A metered fixed four-byte
+prefix classifies local selected bytes before growing body allocation. ZIP content
+uses archive and resource caps; other content uses its selected XML cap. Names
+and declared media types do not select the representation. The prefix counts once
+in shared byte usage, including when later classification rejects the body. Graph depth follows the actual incoming link path
+through package boundaries instead of restarting at a nested primary. Package
+containment depth remains independently checked. Same-context backreferences
+reuse the admitted expansion rather than manufacturing a normative cycle error.

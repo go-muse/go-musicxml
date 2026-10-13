@@ -117,3 +117,18 @@ func TestPackageKnownEdgeFailureSurvivesLaterCancellation(t *testing.T) {
 		t.Fatalf("known wrong-kind edge lost: %v %+v", err, bundle.PackageReport())
 	}
 }
+
+func TestPackageKnownRootfileFailuresSurviveOperationStop(t *testing.T) {
+	for _, check := range []PackageCheck{PackageCheckFirstRootMusicXML, PackageCheckRootfileRoot, PackageCheckFirstMediaType} {
+		s, a, _ := packageAdviceFixtureCheck(t, check)
+		r := PackageRootfileObservation{ID: 1, Package: "outer", Source: NodeRef{"container", 2}, Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfiles[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "score.xml"}, MediaType: Evidence[string]{State: EvidenceKnown, Value: "image/png"}, Entry: Evidence[PackageFactID]{State: EvidenceUnknown, Reason: "entry-unavailable"}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceKnown, Value: s.adoptions[a].resource.id}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}}
+		if err := s.ObserveRootfile(context.Background(), r); err != nil {
+			t.Fatal(err)
+		}
+		stop := errors.New("later-operation-stop")
+		b, err := s.Finish(context.Background(), PackageCompletion{Cause: stop})
+		if !errors.Is(err, stop) || b.PackageReport().Counts.Fail != 1 || b.PackageReport().Conformance != ConformanceViolated {
+			t.Fatalf("%s lost known rootfile failure: %v %+v", check, err, b.PackageReport())
+		}
+	}
+}

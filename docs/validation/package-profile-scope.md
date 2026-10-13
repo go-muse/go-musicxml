@@ -90,7 +90,9 @@ does not override the actual pinned published container schema.
   type-set closure, outer rootfile-to-compressed-package substitution and unknown
   role/association interpretations remain explicit incomplete cases when reached.
   Technical nested traversal alone does not settle outer indirection semantics.
-- Full ZIP/JAR/DEFLATE normative closure and external dictionaries are excluded.
+- Full ZIP/JAR/DEFLATE normative closure and external dictionaries remain open
+  obligations assigned to the final external-closure batch. This bounded profile
+  does not discharge them or remove them from the obligation inventory.
   Ordinary archive opening, a decoded child, a successful root-kind check, a
   filename, or matching cross-file ID strings never certify whole conformance.
 - There is no instance-wide `version=4.0` rule, invented role inference, universal

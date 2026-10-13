@@ -16,6 +16,8 @@ const (
 	mxlAssessmentMetadata mxlAssessmentEntryRole = iota
 	mxlAssessmentDocument
 	mxlAssessmentResource
+	mxlAssessmentLinkedDocument
+	mxlAssessmentPrimaryDocument
 )
 
 // This includes the DEFLATE history window, Huffman tables, input buffering,
@@ -41,6 +43,7 @@ func (a *mxlAssessmentArchive) readEntry(index int, role mxlAssessmentEntryRole)
 		return nil, &validation.ConfigurationError{Field: "entry", Reason: "index outside admitted inventory"}
 	}
 	var limit int64
+	documentLimit, archiveLimit, automatic := mxlAssessmentRepresentationLimits(role, a.limits)
 	switch role {
 	case mxlAssessmentMetadata:
 		limit = a.limits.metadataSize
@@ -48,6 +51,8 @@ func (a *mxlAssessmentArchive) readEntry(index int, role mxlAssessmentEntryRole)
 		limit = a.limits.documentSize
 	case mxlAssessmentResource:
 		limit = a.limits.resourceSize
+	case mxlAssessmentLinkedDocument, mxlAssessmentPrimaryDocument:
+		limit = max(documentLimit, archiveLimit)
 	default:
 		return nil, &validation.ConfigurationError{Field: "entry role", Reason: "unknown role"}
 	}
@@ -66,6 +71,12 @@ func (a *mxlAssessmentArchive) readEntry(index int, role mxlAssessmentEntryRole)
 	}
 	content := &a.contents[index]
 	if content.attempted {
+		if automatic {
+			cap := mxlAssessmentRepresentationLimit(content.prefix[:content.prefixLength], documentLimit, archiveLimit)
+			if entry.central.uncompressed > cap || int64(len(content.data)) > cap {
+				return content.data, errors.Join(ErrMXLTooLarge, content.err)
+			}
+		}
 		return content.data, content.err
 	}
 	content.attempted = true
@@ -85,6 +96,10 @@ func (a *mxlAssessmentArchive) readEntry(index int, role mxlAssessmentEntryRole)
 		return nil, err
 	}
 	defer a.release(mxlZIPDecompressorScratch)
+	if automatic {
+		a.activeEntryLimit = limit
+		defer func() { a.activeEntryLimit = 0 }()
+	}
 	// Meter below archive/zip's checksum reader: on a size mismatch that reader
 	// can hide the final underlying n. We still charge those expanded bytes once.
 	// These fixed built-ins are not caller-provided executable overrides.
@@ -96,7 +111,7 @@ func (a *mxlAssessmentArchive) readEntry(index int, role mxlAssessmentEntryRole)
 		} else {
 			body = flate.NewReader(raw)
 		}
-		return &mxlAssessmentExpandedReader{archive: a, body: body, limit: limit, content: content}
+		return &mxlAssessmentExpandedReader{archive: a, body: body, limit: limit, content: content, automatic: automatic, documentLimit: documentLimit, archiveLimit: archiveLimit, declared: entry.central.uncompressed}
 	})
 	stream, err := a.reader.File[index].Open()
 	if err != nil {
@@ -134,13 +149,61 @@ func (a *mxlAssessmentArchive) readOpenedEntry(stream io.ReadCloser, limit int64
 }
 
 type mxlAssessmentExpandedReader struct {
-	content     *mxlAssessmentZIPContent
-	archive     *mxlAssessmentArchive
-	body        io.ReadCloser
-	limit, seen int64
+	content                               *mxlAssessmentZIPContent
+	archive                               *mxlAssessmentArchive
+	body                                  io.ReadCloser
+	limit, seen                           int64
+	automatic, classified                 bool
+	documentLimit, archiveLimit, declared int64
+	prefix                                [4]byte
+	prefixLength, prefixAt                int
+	prefixErr                             error
 }
 
 func (r *mxlAssessmentExpandedReader) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	if r.automatic && !r.classified {
+		empty := 0
+		for r.prefixLength < len(r.prefix) {
+			n, err := r.readData(r.prefix[r.prefixLength:])
+			r.prefixLength += n
+			if err != nil {
+				r.prefixErr = err
+				break
+			}
+			if n == 0 {
+				empty++
+				if empty >= 100 {
+					r.prefixErr = io.ErrNoProgress
+					break
+				}
+			} else {
+				empty = 0
+			}
+		}
+		r.limit = mxlAssessmentRepresentationLimit(r.prefix[:r.prefixLength], r.documentLimit, r.archiveLimit)
+		r.archive.activeEntryLimit = r.limit
+		r.classified = true
+		if r.seen > r.limit || r.declared > r.limit {
+			return 0, errors.Join(ErrMXLTooLarge, r.prefixErr)
+		}
+	}
+	if r.automatic && r.prefixAt < r.prefixLength {
+		n := copy(p, r.prefix[r.prefixAt:r.prefixLength])
+		r.prefixAt += n
+		if r.prefixAt == r.prefixLength {
+			return n, r.prefixErr
+		}
+		return n, nil
+	}
+	if r.automatic && r.prefixErr != nil {
+		return 0, r.prefixErr
+	}
+	return r.readData(p)
+}
+func (r *mxlAssessmentExpandedReader) readData(p []byte) (int, error) {
 	a := r.archive
 	if err := a.step(1); err != nil {
 		return 0, err
@@ -150,7 +213,7 @@ func (r *mxlAssessmentExpandedReader) Read(p []byte) (int, error) {
 	}
 	remaining := r.limit - r.seen
 	if a.expandedRemaining() < remaining {
-		remaining = a.limits.resourcesSize - a.expanded
+		remaining = a.expandedRemaining()
 	}
 	used, err := a.account.Usage(validation.BudgetExternalBytes)
 	if err != nil {
@@ -229,4 +292,26 @@ func (a *mxlAssessmentArchive) expandedRemaining() int64 {
 		used = *a.sharedExpanded
 	}
 	return a.limits.resourcesSize - used
+}
+
+// Auto classification consumes a fixed four-byte prefix in the same bounded
+// decompressor stream. The prefix is never separately recharged or retained in
+// a growing body before the representation-specific cap is selected.
+func mxlAssessmentRepresentationLimits(role mxlAssessmentEntryRole, limits mxlLimits) (document, archive int64, automatic bool) {
+	switch role {
+	case mxlAssessmentPrimaryDocument:
+		return limits.documentSize, min(limits.archiveSize, limits.resourceSize), true
+	case mxlAssessmentLinkedDocument:
+		return min(limits.documentSize, limits.resourceSize), min(limits.archiveSize, limits.resourceSize), true
+	}
+	return 0, 0, false
+}
+func mxlAssessmentZIPPrefixBytes(prefix []byte) bool {
+	return len(prefix) >= 4 && prefix[0] == 'P' && prefix[1] == 'K' && ((prefix[2] == 3 && prefix[3] == 4) || (prefix[2] == 5 && prefix[3] == 6))
+}
+func mxlAssessmentRepresentationLimit(prefix []byte, document, archive int64) int64 {
+	if mxlAssessmentZIPPrefixBytes(prefix) {
+		return archive
+	}
+	return document
 }

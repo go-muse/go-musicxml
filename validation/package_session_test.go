@@ -261,3 +261,56 @@ func TestPackageCurrentContainerExcludesOriginalEntryClaim(t *testing.T) {
 		}
 	}
 }
+
+func TestPackageFailureReportOwnedWhenAffordableAndSummaryOnRefusal(t *testing.T) {
+	for _, refuse := range []bool{false, true} {
+		s := beginPackageFixture(t, PackageCheckMimetypeStored)
+		child := snapshotTestSession(t, "bad")
+		report, snapshot, err := child.FinishWithResourceSnapshot(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = snapshot.Close()
+		want := report.Findings[0].Reason
+		var hold int64
+		if refuse {
+			used, _ := s.account.Usage(BudgetBufferedBytes)
+			hold = s.account.Limits().MaxBufferedBytes - used
+			if err = s.account.Charge(BudgetBufferedBytes, hold); err != nil {
+				t.Fatal(err)
+			}
+		}
+		stop := errors.New("intrinsic-operation-stop")
+		if err = s.RecordResourceFailure(context.Background(), ResourcePin{CanonicalID: "unread-source", Representation: ResourceSourceXML}, report, stop); !errors.Is(err, stop) {
+			t.Fatal(err)
+		}
+		report.Findings[0].Reason = "mutated-input"
+		bundle, err := s.Finish(context.Background(), PackageCompletion{})
+		if !errors.Is(err, stop) {
+			t.Fatal(err)
+		}
+		full, ok := bundle.FailureReport()
+		summary, present := bundle.Failure()
+		if !present || summary.Counts.Fail != 1 || bundle.Satisfied() {
+			t.Fatal("failure truth lost")
+		}
+		if refuse {
+			if ok || !summary.DiagnosticsTruncated || !summary.MetadataTruncated {
+				t.Fatal("refused full report represented as complete")
+			}
+			_ = s.account.Release(BudgetBufferedBytes, hold)
+		} else {
+			if !ok || full.Findings[0].Reason != want || summary.DiagnosticsTruncated || summary.MetadataTruncated {
+				t.Fatalf("affordable best report lost: %t %+v", ok, summary)
+			}
+			full.Findings[0].Reason = "mutated-getter"
+			again, _ := bundle.FailureReport()
+			if again.Findings[0].Reason != want {
+				t.Fatal("failure getter aliases backing report")
+			}
+		}
+		if used, _ := s.account.Usage(BudgetBufferedBytes); used != 0 {
+			t.Fatalf("refuse=%t leaked=%d", refuse, used)
+		}
+	}
+}

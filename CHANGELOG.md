@@ -52,11 +52,6 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Reuse existing XSD/local and Opus prerequisites; preserve all eight older
   profiles/digests and distinguish optional discovery gaps from datatype errors.
 
-- Add alternate terminal `validation.Session.FinishWithResourceSnapshot` with
-  immutable intrinsic resource facts, retained ownership and unconditional best
-  report preservation on snapshot admission failure. Ordinary `Finish` and
-  existing profile semantics remain unchanged.
-
 - Add explicit `ProfileModelContext` and `ProfileSourceContext`, preserving all
   frozen XSD/local/timeline profiles and XSD-only `Validate`. The new bounded
   providers expose owned repeat/navigation, type-specific span, local default,

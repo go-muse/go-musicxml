@@ -37,7 +37,8 @@ Single stages can be run directly, for example
 `generated`, `format-check`, `test`, `vet`, `race`, and `fuzz` are shortcuts
 for the same stages, and the CI jobs run them from the same script. The source-reader, direct-model, bounded context-profile, auxiliary-source and two
 validation-core fuzz targets each run 10,000 counted executions by default
-(`VALIDATION_FUZZ_TIME` overrides this count). The Linux test job also executes
+(`VALIDATION_FUZZ_TIME` overrides this count). The MXL round-trip and raw ZIP
+assessment-observer targets each run 10,000 executions (`MXL_FUZZ_TIME`). The Linux test job also executes
 `GOARCH=386 go test -count=1 ./...` to exercise host-width contracts.
 The full race stage uses an explicit finite 15-minute per-package timeout; its
 CI job retains a 20-minute cap. This allows host-timing headroom for the complete

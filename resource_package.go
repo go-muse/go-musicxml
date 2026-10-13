@@ -21,6 +21,8 @@ type graphPackageKey struct {
 }
 type graphPackage struct {
 	id, parent                     validation.PackageID
+	depth                          int64
+	rootfiles                      []validation.PackageRootfileObservation
 	pin                            validation.ResourcePin
 	archive                        *mxlAssessmentArchive
 	entries                        map[string]validation.PackageFactID
@@ -137,6 +139,11 @@ func (g *resourceGraphRun) entryPin(p *graphPackage, path, digest string, repres
 	return pin
 }
 func (g *resourceGraphRun) newPackage(pin validation.ResourcePin, parent validation.PackageID, retrieval string, a *mxlAssessmentArchive) (*graphPackage, error) {
+	completePin := pin.Digest != "" || pin.SnapshotID != ""
+	canonical := graphCanonicalKey{pin.CanonicalID, pin.Representation}
+	if old, ok := g.pins[canonical]; completePin && ok && old != pin {
+		return nil, &validation.ConfigurationError{Field: "package pin", Reason: "canonical identity changed revision or content"}
+	}
 	if err := g.reserve(2048 + 2*int64(len(retrieval)+len(pin.CanonicalID)+len(pin.Revision)+len(pin.Digest)+len(pin.SnapshotID))); err != nil {
 		return nil, err
 	}
@@ -147,8 +154,11 @@ func (g *resourceGraphRun) newPackage(pin validation.ResourcePin, parent validat
 	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: id, Parent: parent, Representation: pin.Representation, Pin: pin, PinUnavailable: pin.Representation == validation.ResourceRawMXL && pin.Digest == ""}); err != nil {
 		return nil, err
 	}
-	p := &graphPackage{id: id, parent: parent, pin: pin, archive: a, entries: make(map[string]validation.PackageFactID), entriesComplete: packageUnknown[bool]("entry-inventory-unavailable"), rootsComplete: packageUnknown[bool]("rootfile-inventory-unavailable")}
+	p := &graphPackage{id: id, parent: parent, depth: 1, pin: pin, archive: a, entries: make(map[string]validation.PackageFactID), entriesComplete: packageUnknown[bool]("entry-inventory-unavailable"), rootsComplete: packageUnknown[bool]("rootfile-inventory-unavailable")}
 	g.packages[id] = p
+	if completePin {
+		g.pins[canonical] = pin
+	}
 	g.packageList = append(g.packageList, p)
 	if pin.Digest != "" || pin.SnapshotID != "" {
 		g.packageContexts[graphPackageKey{pin, parent, retrieval}] = p
@@ -160,6 +170,9 @@ func (g *resourceGraphRun) newPackage(pin validation.ResourcePin, parent validat
 // snapshot. The supplied archive owner must outlive every graph expansion.
 // An existing ancestor is a legal linked backreference, never new containment.
 func (g *resourceGraphRun) importRawPackage(a *mxlAssessmentArchive, pin validation.ResourcePin, parent validation.PackageID, retrieval string, isPrimary bool) (*graphResource, resourceURIBase, validation.PackageID, error) {
+	return g.importRawPackageAtDepth(a, pin, parent, retrieval, isPrimary, 1)
+}
+func (g *resourceGraphRun) importRawPackageAtDepth(a *mxlAssessmentArchive, pin validation.ResourcePin, parent validation.PackageID, retrieval string, isPrimary bool, depth int64) (*graphResource, resourceURIBase, validation.PackageID, error) {
 	for ancestor := g.packages[parent]; ancestor != nil; ancestor = g.packages[ancestor.parent] {
 		if err := g.options.account.Charge(validation.BudgetRuleSteps, 1); err != nil {
 			return nil, resourceURIBase{}, "", err
@@ -174,10 +187,14 @@ func (g *resourceGraphRun) importRawPackage(a *mxlAssessmentArchive, pin validat
 	if p := g.packageContexts[key]; p != nil {
 		return p.primary, p.primaryBase, p.primaryPackage, nil
 	}
+	if depth > g.options.account.Limits().MaxDepth {
+		return nil, resourceURIBase{}, "", &validation.ResourceError{Kind: validation.BudgetDepth, Limit: g.options.account.Limits().MaxDepth, Requested: depth}
+	}
 	p, err := g.newPackage(pin, parent, retrieval, a)
 	if err != nil {
 		return nil, resourceURIBase{}, "", err
 	}
+	p.depth = depth
 	if err = g.observeRawEntries(p); err != nil {
 		return nil, resourceURIBase{}, p.id, err
 	}
@@ -214,7 +231,7 @@ func (g *resourceGraphRun) importRawPackage(a *mxlAssessmentArchive, pin validat
 		return nil, resourceURIBase{}, p.id, err
 	}
 	base := resourceURIBase{RetrievalURI: retrieval, Archive: true, Entry: mxlContainerPath}
-	if err = g.enqueue(container, aid, p.id, base, 1); err != nil {
+	if err = g.enqueue(container, aid, p.id, base, p.depth); err != nil {
 		return nil, resourceURIBase{}, p.id, err
 	}
 	err = g.consumeContainer(p, aid, retrieval, isPrimary)
@@ -386,9 +403,7 @@ func (g *resourceGraphRun) consumeContainer(p *graphPackage, aid validation.Reso
 		}
 		r := validation.PackageRootfileObservation{ID: g.packageFact(), Package: p.id, Source: row.Subject, Location: g.packageLocation(mxlContainerPath, "rootfile["+strconv.FormatUint(c.Ordinal.Value, 10)+"]"), Ordinal: c.Ordinal.Value, FullPath: atomicPackageString(c.FullPath), MediaType: atomicPackageString(c.MediaType), Entry: packageUnknown[validation.PackageFactID]("rootfile-entry-unavailable"), Resource: packageUnknown[validation.ResourceAssessmentID]("rootfile-resource-unavailable"), Indirection: packageKnown(false)}
 		err = g.loadRootfile(p, &r, retrieval, isPrimary && r.Ordinal == 1)
-		if err == nil {
-			err = g.session.ObserveRootfile(g.ctx, r)
-		}
+		err = errors.Join(err, g.recordRootfile(p, r))
 		release()
 		if err != nil {
 			return err
@@ -436,7 +451,7 @@ func (g *resourceGraphRun) loadRootfile(p *graphPackage, r *validation.PackageRo
 		return nil
 	}
 	r.Entry = packageKnown(entry)
-	nested, other, err := g.packageMediaKind(r.MediaType)
+	_, other, err := g.packageMediaKind(r.MediaType)
 	if err != nil {
 		return err
 	}
@@ -447,21 +462,20 @@ func (g *resourceGraphRun) loadRootfile(p *graphPackage, r *validation.PackageRo
 		r.Resource = packageUnknown[validation.ResourceAssessmentID]("rootfile-path-policy")
 		return nil
 	}
-	if nested {
-		if err := g.checkNestedArchiveSize(p, path); err != nil {
-			return err
-		}
+	role := mxlAssessmentPrimaryDocument
+	if r.Ordinal != 1 {
+		role = mxlAssessmentLinkedDocument
 	}
-	data, err := g.packageEntryBytes(p, path, mxlAssessmentDocument)
+	data, err := g.packageEntryBytes(p, path, role)
 	if err != nil {
 		return err
 	}
 	var resource *graphResource
 	var base resourceURIBase
 	targetPackage := p.id
-	if nested || bytes.HasPrefix(data, []byte{'P', 'K', 3, 4}) {
+	if mxlAssessmentZIPPrefixBytes(data) {
 		r.Indirection = packageKnown(true)
-		resource, base, targetPackage, err = g.importNestedPackage(p, path, data, retrieval, isPrimary)
+		resource, base, targetPackage, err = g.importNestedPackage(p, path, data, retrieval, isPrimary, p.depth+1)
 	} else {
 		var doc string
 		resource, doc, err = g.assessPackageSource(p, path, data, ProfileSourceLinks)
@@ -487,9 +501,9 @@ func (g *resourceGraphRun) adoptPackageResource(resource *graphResource, doc str
 	if err != nil {
 		return err
 	}
-	return g.enqueue(resource, aid, pkg, base, 1)
+	return g.enqueue(resource, aid, pkg, base, g.packages[pkg].depth)
 }
-func (g *resourceGraphRun) importNestedPackage(p *graphPackage, path string, data []byte, retrieval string, primary bool) (*graphResource, resourceURIBase, validation.PackageID, error) {
+func (g *resourceGraphRun) importNestedPackage(p *graphPackage, path string, data []byte, retrieval string, primary bool, depth int64) (*graphResource, resourceURIBase, validation.PackageID, error) {
 	digest, err := g.packageDigest(data)
 	if err != nil {
 		return nil, resourceURIBase{}, "", err
@@ -507,7 +521,7 @@ func (g *resourceGraphRun) importNestedPackage(p *graphPackage, path string, dat
 		archive.Close()
 		return nil, resourceURIBase{}, "", errors.Join(readErr, err)
 	}
-	resource, base, pkg, err := g.importRawPackage(archive, pin, p.id, retrieval, primary)
+	resource, base, pkg, err := g.importRawPackageAtDepth(archive, pin, p.id, retrieval, primary, depth)
 	return resource, base, pkg, errors.Join(readErr, err)
 }
 func (g *resourceGraphRun) packageEntryBytes(p *graphPackage, path string, role mxlAssessmentEntryRole) ([]byte, error) {
@@ -538,12 +552,12 @@ func (g *resourceGraphRun) loadArchiveDocument(item graphExpansion, path string)
 		}
 		return nil, resourceURIBase{}, p.id, unavailable, nil
 	}
-	data, err := g.packageEntryBytes(p, path, mxlAssessmentResource)
+	data, err := g.packageEntryBytes(p, path, mxlAssessmentLinkedDocument)
 	if err != nil {
 		return nil, resourceURIBase{}, p.id, unavailable, err
 	}
-	if bytes.HasPrefix(data, []byte{'P', 'K', 3, 4}) {
-		resource, base, pkg, err := g.importNestedPackage(p, path, data, item.base.RetrievalURI, false)
+	if mxlAssessmentZIPPrefixBytes(data) {
+		resource, base, pkg, err := g.importNestedPackage(p, path, data, item.base.RetrievalURI, false, item.depth+1)
 		return resource, base, pkg, unavailable, err
 	}
 	resource, _, err := g.assessPackageSource(p, path, data, ProfileSourceLinks)
@@ -560,17 +574,21 @@ func (g *resourceGraphRun) sealPackages() error {
 	return nil
 }
 
-func (g *resourceGraphRun) checkNestedArchiveSize(p *graphPackage, path string) error {
-	limits, err := g.mxlOptions.limits()
+// recordRootfile transfers a measured owned observation into the package's
+// metadata inventory; cleanup releases it after all metadata consumers finish.
+func (g *resourceGraphRun) recordRootfile(p *graphPackage, r validation.PackageRootfileObservation) error {
+	if err := g.session.ObserveRootfile(g.ctx, r); err != nil {
+		return err
+	}
+	release, err := resourceWorkingLease(g.ctx, g.options.account, r)
 	if err != nil {
 		return err
 	}
-	if p.archive != nil {
-		if index, ok := p.archive.index[path]; ok && p.archive.entries[index].central.uncompressed > limits.archiveSize {
-			return ErrMXLTooLarge
-		}
-	} else if int64(len(p.current[path])) > limits.archiveSize {
-		return ErrMXLTooLarge
+	if err = g.reserve(2048); err != nil {
+		release()
+		return err
 	}
+	p.rootfiles = append(p.rootfiles, r)
+	g.packageLeases = append(g.packageLeases, release)
 	return nil
 }

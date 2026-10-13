@@ -335,7 +335,10 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 	s.subjectPackages[e.ID] = e.Package
 	s.entryOrder = append(s.entryOrder, e.ID)
 	s.entryNames[e.Package][e.Name] = e.ID
-	return s.evaluateEntry(ctx, e, false)
+	if err := s.evaluateEntry(ctx, e, false); err != nil {
+		return err
+	}
+	return s.evaluateBoundary(ctx, s.boundaries[e.Package])
 }
 
 // ObserveMimetype copies at most 64 original initial bytes, never stripped or
@@ -368,7 +371,10 @@ func (s *PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeO
 	}
 	s.mimetypes[m.Entry] = stateClone(m)
 	s.output.mimetypes = append(s.output.mimetypes, s.mimetypes[m.Entry])
-	return s.evaluateEntry(ctx, e, false)
+	if err := s.evaluateEntry(ctx, e, false); err != nil {
+		return err
+	}
+	return s.evaluateBoundary(ctx, s.boundaries[e.Package])
 }
 
 // ObserveRootfile preserves actual encoded order and causal scalar states.
@@ -436,7 +442,10 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 	s.rootfiles[r.ID] = stateClone(r)
 	s.subjectPackages[r.ID] = r.Package
 	s.rootfileOrder = append(s.rootfileOrder, r.ID)
-	return nil
+	if err := s.evaluateRootfile(ctx, r, false); err != nil {
+		return err
+	}
+	return s.evaluateBoundary(ctx, b)
 }
 
 // SealEnumeration records each independent complete/incomplete scope exactly once.

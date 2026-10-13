@@ -67,6 +67,9 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 		return nil, err
 	}
 	h := ResourceSnapshotHeader{DocumentID: s.documentID, Root: NodeRef{DocumentID: s.documentID}, Profile: s.profile.ID, CatalogDigest: s.profile.CatalogDigest, Target: s.profile.Target, InputComplete: s.inputComplete, Syntax: report.Syntax, Name: Evidence[QName]{State: EvidenceUnknown, Reason: "resource-root-unavailable"}, Assembly: Evidence[Assembly]{State: EvidenceUnknown, Reason: "resource-assembly-unavailable"}, ScopeComplete: Evidence[bool]{State: EvidenceUnknown, Reason: "resource-scope-incomplete"}}
+	if s.rejectedRootName.Local != "" {
+		h.Name = Evidence[QName]{State: EvidenceKnown, Value: s.rejectedRootName}
+	}
 	if s.root != nil {
 		h.Root.Node = s.root.header.ID
 		h.Name = Evidence[QName]{State: EvidenceKnown, Value: s.root.header.Name}

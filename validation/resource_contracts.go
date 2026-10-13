@@ -85,18 +85,60 @@ const (
 	ResourceRoleOther          ResourceRole = "other"
 )
 
+// ResourceRoleMember identifies one literal member in Request.Package. A pin
+// proves content identity, not membership. BaseURI is exact retrieval context,
+// not transport authority; absent differs from a known empty string.
+type ResourceRoleMember struct {
+	Resource     ResourcePin
+	ArchiveEntry string
+	BaseURI      Evidence[string]
+}
+type resourceRoleMemberKey struct {
+	pin         ResourcePin
+	entry, base string
+	baseState   EvidenceState
+}
+
+func roleMemberKey(m ResourceRoleMember) resourceRoleMemberKey {
+	return resourceRoleMemberKey{m.Resource, m.ArchiveEntry, m.BaseURI.Value, m.BaseURI.State}
+}
+func validateRoleMember(m ResourceRoleMember) error {
+	if err := validateResourcePin(m.Resource); err != nil {
+		return err
+	}
+	if m.ArchiveEntry == "" || !validText(m.ArchiveEntry, 4096) {
+		return contract("role member", "exact bounded archive member required")
+	}
+	if err := validateEvidence(m.BaseURI, "role member base"); err != nil {
+		return err
+	}
+	if m.BaseURI.State != EvidenceKnown && m.BaseURI.State != EvidenceAbsent {
+		return contract("role member base", "exact presence or absence required")
+	}
+	if !validText(m.BaseURI.Value, 16384) {
+		return contract("role member base", "bounded retrieval context required")
+	}
+	return nil
+}
+
 // ResourceRoleFact supplies one exact resource-to-role membership assertion.
+// Member is required when Request.Members is present; nil preserves the legacy
+// pin-only protocol. Result facts may be reordered independently of the request.
 type ResourceRoleFact struct {
 	Resource   ResourcePin
+	Member     *ResourceRoleMember
 	Role       ResourceRole
 	Membership Evidence[bool]
 }
 
 // ResourceRoleRequest names all requested resources and scope completeness.
 type ResourceRoleRequest struct {
-	ID            ResourceRequestID
-	Package       PackageID
-	Resources     []ResourcePin
+	ID        ResourceRequestID
+	Package   PackageID
+	Resources []ResourcePin
+	// Members preserves distinct package contexts for duplicate content. Resources
+	// is the deduplicated pin inventory; the complete ordered request is echoed.
+	Members       []ResourceRoleMember
 	ScopeComplete Evidence[bool]
 }
 
@@ -256,7 +298,7 @@ func validateAssociationRequest(q AssociationRequest) error {
 	return nil
 }
 func validateRoleRequest(q ResourceRoleRequest) error {
-	if !validID(string(q.ID)) || !validID(string(q.Package)) || len(q.Resources) > 65536 {
+	if !validID(string(q.ID)) || !validID(string(q.Package)) || len(q.Resources) > 65536 || len(q.Members) > 65536 {
 		return contract("role request", "bounded exact package scope required")
 	}
 	if err := validateEvidence(q.ScopeComplete, "role scope"); err != nil {
@@ -278,6 +320,25 @@ func validateRoleRequest(q ResourceRoleRequest) error {
 			return contract("role request", "duplicate resource pin")
 		}
 		seen[p] = true
+	}
+
+	if len(q.Members) > 0 {
+		members := make(map[resourceRoleMemberKey]bool, len(q.Members))
+		covered := make(map[ResourcePin]bool, len(q.Resources))
+		for _, m := range q.Members {
+			if err := validateRoleMember(m); err != nil {
+				return err
+			}
+			key := roleMemberKey(m)
+			if members[key] || !seen[m.Resource] {
+				return contract("role member", "duplicate member or missing inventory pin")
+			}
+			members[key] = true
+			covered[m.Resource] = true
+		}
+		if len(covered) != len(seen) {
+			return contract("role member", "pin inventory differs from member scope")
+		}
 	}
 	return nil
 }
@@ -448,18 +509,35 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 		for _, p := range q.Roles.Resources {
 			allowed[p] = true
 		}
-		seen := make(map[struct {
-			p ResourcePin
-			r ResourceRole
-		}]bool, len(v.Resources))
+		members := make(map[resourceRoleMemberKey]bool, len(q.Roles.Members))
+		for _, m := range q.Roles.Members {
+			members[roleMemberKey(m)] = true
+		}
+		type factKey struct {
+			p      ResourcePin
+			r      ResourceRole
+			member resourceRoleMemberKey
+		}
+		seen := make(map[factKey]bool, len(v.Resources))
 		for _, f := range v.Resources {
 			if !allowed[f.Resource] || (f.Role != ResourceRoleScore && f.Role != ResourceRoleIndividualPart && f.Role != ResourceRoleOther) {
 				return contract("role result", "unrequested resource or unknown role")
 			}
-			key := struct {
-				p ResourcePin
-				r ResourceRole
-			}{f.Resource, f.Role}
+			key := factKey{p: f.Resource, r: f.Role}
+			if len(q.Roles.Members) > 0 {
+				if f.Member == nil || f.Member.Resource != f.Resource {
+					return contract("role result", "exact requested member required")
+				}
+				if err := validateRoleMember(*f.Member); err != nil {
+					return err
+				}
+				key.member = roleMemberKey(*f.Member)
+				if !members[key.member] {
+					return contract("role result", "unrequested member")
+				}
+			} else if f.Member != nil {
+				return contract("role result", "member outside legacy pin-only request")
+			}
 			if seen[key] {
 				return contract("role result", "duplicate resource role")
 			}

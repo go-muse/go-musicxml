@@ -113,7 +113,7 @@ func resolveAssessmentResourceURI(ctx context.Context, account *validation.Accou
 	}
 	if ref.IsAbs() {
 		out.RetrievalURI = ref.String()
-		if base.RetrievalURI != "" {
+		if !base.Archive && base.RetrievalURI != "" {
 			b, e := url.Parse(base.RetrievalURI)
 			if e == nil {
 				b.Fragment, b.RawFragment = "", ""
@@ -142,7 +142,7 @@ func resolveAssessmentResourceURI(ctx context.Context, account *validation.Accou
 	}
 	resolved := b.ResolveReference(ref)
 	out.RetrievalURI = resolved.String()
-	out.SameEntity = current || out.RetrievalURI == b.String()
+	out.SameEntity = !base.Archive && (current || out.RetrievalURI == b.String())
 	if err := ctx.Err(); err != nil {
 		return resolvedResourceURI{}, err
 	}

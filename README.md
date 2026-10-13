@@ -95,6 +95,10 @@ construction and compressed `.mxl` round trips in
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
 | Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
 | Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
+| Assess local links without fetching | `ProfileSourceLinks`, `ProfileModelLinks` |
+| Assess original auxiliary XML | `ProfileSourceContainer`, `ProfileSourceSounds` |
+| Assess a selected resource graph | `InspectXMLWithResources`, `AssessModelWithResources`, `ProfileResourceGraph` |
+| Assess original or current MXL packages | `InspectMXL`, `AssessMXLPackage`, `ProfileMXLSource`, `ProfileMXLModel` |
 | Construct scores and opus documents | `NewScorePartwise`, `NewScoreTimewise`, `NewOpusDocument` |
 | Construct common notes | `NewPitchedNote`, `NewRestNote` |
 | Resolve linked opus documents | `MXLPackage.ResolveOpus` |
@@ -189,9 +193,10 @@ those original files. There is no new DTD trust, stripping, fetching or ignore
 policy. The two DOCTYPE-free official opus examples are a separate assessable
 source case.
 
-These bounded implementations are under final verification. They do not establish
-complete MusicXML conformance, full repeat/playback/layout semantics, author intent, package
-or linked-resource validity. See the [scope and evidence](docs/validation/model-assessment-scope.md)
+These intrinsic profiles do not establish complete MusicXML conformance, full
+repeat/playback/layout semantics, author intent, or package and linked-resource
+validity. Separate additive graph/package profiles assess bounded selected
+resource obligations as described below. See the [scope and evidence](docs/validation/model-assessment-scope.md)
 and [API contract](API.md#direct-current-model-assessment); no profile is selected
 implicitly. A runnable [direct-model example](model_assessment_example_test.go)
 shows explicit profile selection and the model report axes.
@@ -200,6 +205,28 @@ All assessment profiles share finite resource budgets; input byte size alone
 does not predict their cost. B5-PERF-01 remains an open shared validation
 kernel/session performance obligation, with final reconciliation in batch 9;
 timeline improvements do not close it. See the [API limits](API.md#exact-timeline-and-effective-state-profiles).
+
+## Bounded packages and resource graphs
+
+Use `InspectXMLWithResources` or `AssessModelWithResources` with explicit
+`ProfileResourceGraph`, or `InspectMXL` / `AssessMXLPackage` with their source /
+current MXL profiles. The returned bundle preserves a package report and separate
+canonical intrinsic reports. Check both the error and `bundle.Satisfied()`.
+Original headers/container bytes and current package fields have different,
+explicit scopes; current models are never serialized to manufacture source proof.
+
+External retrieval and image/association/role metadata require an explicitly
+selected dependency and caller-provided resolver. Empty selections perform no
+external I/O. The resolver owns transport authorization; no built-in network,
+filesystem, schema-hint, DTD or entity fetching is introduced. One finite account
+covers the complete graph, including aliases and nested packages; legacy MXL byte
+caps also apply. Unavailable providers, incomplete inventories and unsupported
+ZIP/media/indirection interpretations remain explicit gaps. Current models cannot
+recover discarded original schema hints and can therefore remain incomplete even
+without outgoing links. See the [package scope](docs/validation/package-profile-scope.md)
+and [graph API](API.md#selected-resource-graph-entry-points) for exact contracts.
+Runnable [source graph and MXL examples](resource_assessment_example_test.go)
+show explicit profile selection and bundle acceptance checks.
 
 ## Compressed MXL and opus
 
@@ -232,7 +259,7 @@ type assertion through `AsScorePartwise`, `AsScoreTimewise`, and
   document with `xmllint` against the bundled MusicXML 4.0 XSD without network
   access.
 - CI runs tests, module and generation reproducibility checks, and formatting
-  checks on Linux, macOS, and Windows, plus the race detector and seven fuzz
+  checks on Linux, macOS, and Windows, plus the race detector and ten counted fuzz
   targets.
 
 ## Limitations

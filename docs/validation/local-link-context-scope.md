@@ -3,7 +3,9 @@
 The additive `ProfileSourceLinks` and `ProfileModelLinks` compose the existing
 XSD/local predicates with nonfetching resource projections. Existing eight
 profiles, catalog digests, options, defaults and legacy MXL APIs are unchanged.
-This increment does not implement a package or resolver API. Its finalized
+These intrinsic profiles perform no package traversal or resolver invocation.
+The additive graph/package entry points compose them separately; see
+[package profile scope](package-profile-scope.md). Their finalized
 resource records are suitable inputs to a separately selected resource snapshot
 and graph consumer.
 

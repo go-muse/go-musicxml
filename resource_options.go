@@ -16,6 +16,7 @@ import (
 // resolver owns transport, custom-scheme and redirect authorization.
 type ResourceDependency string
 
+// Explicit external dependency classes; each selection is independent.
 const (
 	ResourceDocuments    ResourceDependency = "documents"
 	ResourceImages       ResourceDependency = "image-metadata"

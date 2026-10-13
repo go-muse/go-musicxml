@@ -134,6 +134,7 @@ type Session struct {
 	enumerationIncomplete   bool
 	collectingIdentity      bool
 	root                    *factNode
+	rejectedRootName        QName
 	retained, depth         int64
 }
 
@@ -324,6 +325,9 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 			}
 		}
 		if !found {
+			// The validated header lease already admits these QName bytes. Retain
+			// only the observed name; no accepted occurrence or schema is invented.
+			s.rejectedRootName = QName{Space: strings.Clone(node.Name.Space), Local: strings.Clone(node.Name.Local)}
 			return s.fail(&UnsupportedRootError{Name: node.Name, Profile: s.profile.ID})
 		}
 	} else if node.Parent != s.stack[len(s.stack)-1].header.ID {
@@ -660,6 +664,7 @@ func (s *Session) cleanup() {
 	s.sequence = nil
 	s.stack = nil
 	s.root = nil
+	s.rejectedRootName = QName{}
 	s.decisions = nil
 	s.successful = nil
 	s.documentPrerequisites = nil

@@ -303,6 +303,30 @@ func (s *PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult)
 	if err := ValidateResourceResult(ResourceRequest{ID: q.ID, Roles: &q}, ResourceResult{RequestID: q.ID, State: EvidenceKnown, Roles: &r}); err != nil {
 		return s.fail(err)
 	}
+
+	for _, member := range q.Members {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
+		scoped := false
+		for _, id := range s.adoptionOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
+			a := s.adoptions[id]
+			base := Evidence[string]{State: EvidenceAbsent}
+			if a.expansion.key.baseURI != "" {
+				base = Evidence[string]{State: EvidenceKnown, Value: a.expansion.key.baseURI}
+			}
+			if a.packageID == q.Package && a.resource.pin == member.Resource && a.expansion.key.archiveEntry == member.ArchiveEntry && base.State == member.BaseURI.State && base.Value == member.BaseURI.Value {
+				scoped = true
+				break
+			}
+		}
+		if !scoped {
+			return s.fail(contract("role member", "exact same-package context was not admitted"))
+		}
+	}
 	for _, pin := range q.Resources {
 		if err := s.scan(ctx, 1); err != nil {
 			return err
@@ -338,7 +362,7 @@ func (s *PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult)
 		return err
 	}
 	s.roles[q.Package] = stateClone(r)
-	return nil
+	return s.evaluateBoundary(ctx, s.boundaries[q.Package])
 }
 
 func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRuleBinding) error {

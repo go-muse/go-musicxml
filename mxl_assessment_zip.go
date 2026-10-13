@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -98,6 +99,7 @@ type mxlAssessmentArchive struct {
 	retained, expanded       int64
 	closed                   bool
 	inputComplete            bool
+	activeEntryLimit         int64  // Nonzero only during selected bounded prefix classification.
 	sharedExpanded           *int64 // Optional root-run aggregate; does not own another Account.
 }
 
@@ -222,7 +224,7 @@ func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind v
 		}
 		remaining := limit - int64(len(data))
 		if expanded && a.expandedRemaining() < remaining {
-			remaining = a.limits.resourcesSize - a.expanded
+			remaining = a.expandedRemaining()
 		}
 		used, err := a.account.Usage(kind)
 		if err != nil {
@@ -246,10 +248,13 @@ func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind v
 		if n < 0 || n > int(want) {
 			return data, fmt.Errorf("%w: invalid Reader count", zip.ErrFormat)
 		}
+		if expanded && a.activeEntryLimit > 0 && a.activeEntryLimit < limit {
+			limit = a.activeEntryLimit
+		}
 		if n > 0 {
 			emptyReads = 0
 			if int64(n) > limit-int64(len(data)) {
-				return data, ErrMXLTooLarge
+				return data, errors.Join(ErrMXLTooLarge, readErr)
 			}
 			if !expanded {
 				if err = a.account.Charge(kind, int64(n)); err != nil {

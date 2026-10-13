@@ -320,8 +320,11 @@ func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundar
 					} else if known && m.ContentComplete.State == EvidenceKnown && m.ContentComplete.Value && m.ByteLength.State == EvidenceKnown {
 						want := []byte("application/vnd.recordare.musicxml")
 						if m.ByteLength.Value == uint64(len(want)) && bytes.Equal(m.Prefix, want) {
-							d.Outcome = OutcomePass
-							d.Reason = "mimetype-recommended-content"
+							d = packageEvidenceDecision(d, e.PhysicalOrder)
+							if e.PhysicalOrder.State == EvidenceKnown {
+								d.Outcome = OutcomePass
+								d.Reason = "mimetype-recommended-content"
+							}
 						} else {
 							d.Outcome = OutcomeFail
 							d.Reason = "mimetype-recommended-content"
@@ -349,6 +352,7 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 		var score, part bool
 		uncertain := false
 		var first ResourcePin
+		var firstPath string
 		firstKnown := false
 		for _, id := range s.rootfileOrder {
 			if err := s.scan(ctx, 1); err != nil {
@@ -358,11 +362,58 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 			if r.Package == b.identity.ID && r.Ordinal == 1 && r.Resource.State == EvidenceKnown {
 				if resource := s.resources[r.Resource.Value]; resource != nil {
 					first = resource.pin
-					firstKnown = true
+					firstPath = r.FullPath.Value
+					firstKnown = r.FullPath.State == EvidenceKnown
 				}
 			}
 		}
 		firstScore := Evidence[bool]{State: EvidenceUnknown, Reason: "primary-score-role-unavailable"}
+		firstMembers := 0
+		for _, m := range roles.Request.Members {
+			if s.scan(ctx, 1) != nil {
+				return d
+			}
+			if firstKnown && m.Resource == first && m.ArchiveEntry == firstPath {
+				firstMembers++
+			}
+		}
+		// Complete provider scope cannot turn missing score/part classifications
+		// into negative membership. Every requested row has independent states.
+		for _, pin := range roles.Request.Resources {
+			if s.scan(ctx, 1) != nil {
+				return d
+			}
+			if len(roles.Request.Members) > 0 {
+				break
+			}
+			scoreKnown, partKnown := false, false
+			for _, f := range roles.Resources {
+				if s.scan(ctx, 1) != nil {
+					return d
+				}
+				if f.Resource == pin && f.Membership.State == EvidenceKnown {
+					scoreKnown = scoreKnown || f.Role == ResourceRoleScore
+					partKnown = partKnown || f.Role == ResourceRoleIndividualPart
+				}
+			}
+			uncertain = uncertain || !scoreKnown || !partKnown
+		}
+		for _, m := range roles.Request.Members {
+			if s.scan(ctx, 1) != nil {
+				return d
+			}
+			scoreKnown, partKnown := false, false
+			for _, f := range roles.Resources {
+				if s.scan(ctx, 1) != nil {
+					return d
+				}
+				if f.Member != nil && roleMemberKey(*f.Member) == roleMemberKey(m) && f.Membership.State == EvidenceKnown {
+					scoreKnown = scoreKnown || f.Role == ResourceRoleScore
+					partKnown = partKnown || f.Role == ResourceRoleIndividualPart
+				}
+			}
+			uncertain = uncertain || !scoreKnown || !partKnown
+		}
 		for _, r := range roles.Resources {
 			if err := s.scan(ctx, 1); err != nil {
 				return d
@@ -372,7 +423,7 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 				score = score || r.Role == ResourceRoleScore
 				part = part || r.Role == ResourceRoleIndividualPart
 			}
-			if firstKnown && r.Resource == first && r.Role == ResourceRoleScore {
+			if firstKnown && r.Resource == first && r.Role == ResourceRoleScore && (len(roles.Request.Members) == 0 || firstMembers == 1 && r.Member != nil && r.Member.ArchiveEntry == firstPath) {
 				firstScore = r.Membership
 			}
 		}
@@ -384,7 +435,7 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 			}
 			return d
 		}
-		if roles.ScopeComplete.State == EvidenceKnown && roles.ScopeComplete.Value && !uncertain && (!score || !part) {
+		if b.sealed && roles.ScopeComplete.State == EvidenceKnown && roles.ScopeComplete.Value && !uncertain && (!score || !part) {
 			d.Outcome = OutcomeNotApplicable
 			d.Reason = "complete-role-scope-excludes-score-parts"
 			return d
@@ -466,11 +517,16 @@ func (s *PackageSession) rootfileDecision(ctx context.Context, d Decision, r Pac
 	if check == PackageCheckFirstMediaType {
 		return s.mediaDecision(ctx, d, r.MediaType)
 	}
-	media := s.mediaDecision(ctx, d, r.MediaType)
-	if check == PackageCheckRootfileRoot && r.Ordinal != 1 && media.Outcome == OutcomeFail {
-		d.Outcome = OutcomeNotApplicable
-		d.Reason = "nonmusicxml-alternate"
-		return d
+	if check == PackageCheckRootfileRoot && r.Ordinal != 1 {
+		media := s.mediaDecision(ctx, d, r.MediaType)
+		if media.Outcome == OutcomeFail {
+			d.Outcome = OutcomeNotApplicable
+			d.Reason = "nonmusicxml-alternate"
+			return d
+		}
+		if media.Outcome != OutcomePass {
+			return media
+		}
 	}
 	if r.Indirection.State == EvidenceKnown && r.Indirection.Value {
 		d.Outcome = OutcomeUnknown
@@ -565,4 +621,32 @@ func packageRequiredEvidenceDecision[T comparable](d Decision, e Evidence[T]) De
 		d.Reason = "required-evidence-unavailable"
 	}
 	return d
+}
+
+func (s *PackageSession) evaluateRootfile(ctx context.Context, observation PackageRootfileObservation, final bool) error {
+	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
+		r := s.catalog.rules[key]
+		if r.Selector.Kind != PackageSubjectRootfile {
+			continue
+		}
+		if err := s.evaluateRootfileRule(ctx, r, observation, final); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (s *PackageSession) evaluateRootfileRule(ctx context.Context, r PackageRuleBinding, v PackageRootfileObservation, final bool) error {
+	d := s.baseDecision(r.Rule.Key, v.ID)
+	if support := s.catalog.supports[s.profile.ID][r.Rule.Key]; support.State == ImplementationUnsupported {
+		d.Outcome = OutcomeUnsupported
+		d.Reason = support.Reason
+	} else if pre, ok := s.prerequisites(ctx, r.Rule, v.ID); !ok {
+		d = pre
+	} else {
+		d = s.rootfileDecision(ctx, d, v, r.Plan.check)
+	}
+	return s.record(ctx, r.Rule, v.ID, d, v.Location, final)
 }

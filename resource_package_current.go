@@ -168,7 +168,7 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 				return err
 			}
 		}
-		if err = g.session.ObserveRootfile(g.ctx, root); err != nil {
+		if err = g.recordRootfile(p, root); err != nil {
 			return err
 		}
 	}
@@ -186,32 +186,70 @@ func (g *resourceGraphRun) currentPackageEntryBytes(p *graphPackage, path string
 	if err != nil {
 		return nil, err
 	}
+	if err = g.ctx.Err(); err != nil {
+		return nil, err
+	}
+	documentLimit, archiveLimit, automatic := mxlAssessmentRepresentationLimits(role, limits)
 	limit := limits.resourceSize
 	switch role {
 	case mxlAssessmentMetadata:
 		limit = limits.metadataSize
 	case mxlAssessmentDocument:
 		limit = limits.documentSize
+	case mxlAssessmentPrimaryDocument, mxlAssessmentLinkedDocument:
+		limit = max(documentLimit, archiveLimit)
 	}
-	data, exists := p.current[path]
+	// Once copied, classify only our independent immutable copy, even if a caller
+	// violates the no-mutation contract after this particular selection.
+	data, exists := p.copied[path]
+	cached := exists
+	if !cached {
+		data, exists = p.current[path]
+	}
 	if !exists {
 		return nil, ErrMXLRootFileNotFound
 	}
 	if int64(len(data)) > limit {
 		return nil, ErrMXLTooLarge
 	}
-	if copied, ok := p.copied[path]; ok {
-		return copied, nil
+	if cached {
+		if automatic && int64(len(data)) > mxlAssessmentRepresentationLimit(data[:min(4, len(data))], documentLimit, archiveLimit) {
+			return nil, ErrMXLTooLarge
+		}
+		return data, nil
 	}
 	if int64(len(data)) > limits.resourcesSize-g.mxlExpanded {
 		return nil, ErrMXLTooLarge
 	}
-	if err = g.options.account.Charge(validation.BudgetExternalBytes, int64(len(data))); err != nil {
+	used, err := g.options.account.Usage(validation.BudgetExternalBytes)
+	if err != nil {
 		return nil, err
+	}
+	if int64(len(data)) > g.options.account.Limits().MaxExternalBytes-used {
+		return nil, &validation.ResourceError{Kind: validation.BudgetExternalBytes, Limit: g.options.account.Limits().MaxExternalBytes, Used: used, Requested: int64(len(data))}
+	}
+	prefixLength := 0
+	if automatic {
+		prefixLength = min(4, len(data))
+		if err = g.options.account.Charge(validation.BudgetExternalBytes, int64(prefixLength)); err != nil {
+			return nil, err
+		}
+		g.mxlExpanded += int64(prefixLength)
+		if err = g.options.account.Charge(validation.BudgetRuleSteps, int64(prefixLength)+1); err != nil {
+			return nil, err
+		}
+		limit = mxlAssessmentRepresentationLimit(data[:prefixLength], documentLimit, archiveLimit)
+		if int64(len(data)) > limit {
+			return nil, ErrMXLTooLarge
+		}
 	}
 	if err = g.reserve(int64(len(data)) + 256); err != nil {
 		return nil, err
 	}
+	if err = g.options.account.Charge(validation.BudgetExternalBytes, int64(len(data)-prefixLength)); err != nil {
+		return nil, err
+	}
+	g.mxlExpanded += int64(len(data) - prefixLength)
 	copied := make([]byte, len(data))
 	for at := 0; at < len(data); {
 		if err = g.ctx.Err(); err != nil {
@@ -224,7 +262,6 @@ func (g *resourceGraphRun) currentPackageEntryBytes(p *graphPackage, path string
 		copy(copied[at:at+n], data[at:at+n])
 		at += n
 	}
-	g.mxlExpanded += int64(len(data))
 	p.copied[path] = copied
 	return copied, nil
 }

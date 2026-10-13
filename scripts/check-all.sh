@@ -103,6 +103,8 @@ stage_fuzz() {
         -fuzztime="$check_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzMXLPackageRoundTrip$' \
         -fuzztime="$check_mxl_fuzz_time" .
+    "$check_go" test -run='^$' -fuzz='^FuzzMXLAssessmentZIPObserver$' \
+        -fuzztime="$check_mxl_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzMXLLinkResolution$' \
         -fuzztime="$check_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzSourceXMLReader$' \

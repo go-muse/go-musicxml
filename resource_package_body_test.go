@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -101,6 +102,30 @@ func TestPackageBodyCancellationJoinedCausesAndClose(t *testing.T) {
 			t.Fatal(err)
 		}
 		live, _ := g.options.account.Usage(validation.BudgetBufferedBytes)
+		if live != 0 {
+			t.Fatal(live)
+		}
+	}
+}
+
+func TestPackageBodyOverrunProbeChargesActualSharedBytes(t *testing.T) {
+	for _, external := range []int64{5, 6, 100} {
+		g := packageBodyRun(t, context.Background(), MXLOptions{MaxResourceBytes: 5})
+		account, err := validation.NewBudgetAccount(validation.Budgets{MaxExternalBytes: external})
+		if err != nil {
+			t.Fatal(err)
+		}
+		g.options.account = account
+		body := &resourceTestBody{Reader: strings.NewReader("123456")}
+		out, err := g.readExternalPackageBody(graphExpansion{pkg: "inside"}, validation.ResourcePin{Representation: validation.ResourceSourceXML}, body)
+		used, _ := account.Usage(validation.BudgetExternalBytes)
+		if out != nil || !errors.Is(err, ErrMXLTooLarge) || used != min(external, 6) || body.closed != 1 {
+			t.Fatal(out, err, used, body.closed)
+		}
+		if external == 5 && !errors.Is(err, validation.ErrResourceLimit) {
+			t.Fatal("hidden shared probe overflow", err)
+		}
+		live, _ := account.Usage(validation.BudgetBufferedBytes)
 		if live != 0 {
 			t.Fatal(live)
 		}

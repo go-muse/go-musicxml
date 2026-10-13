@@ -253,17 +253,10 @@ func (s *PackageSession) Finish(ctx context.Context, end PackageCompletion) (Ass
 			switch r.Selector.Kind {
 			case PackageSubjectRootfile:
 				for _, id := range s.rootfileOrder {
-					v := s.rootfiles[id]
-					d := s.baseDecision(key, id)
-					if support := s.catalog.supports[s.profile.ID][key]; support.State == ImplementationUnsupported {
-						d.Outcome = OutcomeUnsupported
-						d.Reason = support.Reason
-					} else if pre, ok := s.prerequisites(ctx, r.Rule, id); !ok {
-						d = pre
-					} else {
-						d = s.rootfileDecision(ctx, d, v, r.Plan.check)
+					if err := s.scan(ctx, 1); err != nil {
+						break
 					}
-					if err := s.record(ctx, r.Rule, id, d, v.Location, true); err != nil {
+					if err := s.evaluateRootfileRule(ctx, r, s.rootfiles[id], true); err != nil {
 						break
 					}
 				}

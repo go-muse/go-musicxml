@@ -59,7 +59,23 @@ func (r *packageCappedBody) Read(p []byte) (int, error) {
 	r.seen += admitted
 	r.run.mxlExpanded += admitted
 	if int64(n) > remaining {
-		return int(admitted), errors.Join(ErrMXLTooLarge, err)
+		// The rejected EOF-probe byte is read but never retained. The body
+		// owner accounts the returned prefix; this wrapper alone accounts the
+		// withheld probe, provided that does not steal the prefix's remaining
+		// shared budget. At shared exhaustion the owner still admits its full
+		// allowed prefix, and we preserve the extra byte's limit cause.
+		a := r.run.options.account
+		used, usageErr := a.Usage(validation.BudgetExternalBytes)
+		limit := a.Limits().MaxExternalBytes
+		var probeErr error
+		if usageErr != nil {
+			probeErr = usageErr
+		} else if int64(n) <= limit-used {
+			probeErr = errors.Join(a.Charge(validation.BudgetExternalBytes, int64(n)-admitted), a.Charge(validation.BudgetRuleSteps, int64(n)-admitted))
+		} else {
+			probeErr = &validation.ResourceError{Kind: validation.BudgetExternalBytes, Limit: limit, Used: used + min(admitted, limit-used), Requested: int64(n) - min(admitted, limit-used)}
+		}
+		return int(admitted), errors.Join(ErrMXLTooLarge, probeErr, err)
 	}
 	return n, err
 }

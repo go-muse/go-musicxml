@@ -21,6 +21,7 @@ type resourceGraphRun struct {
 	pins             map[graphCanonicalKey]validation.ResourcePin
 	expanded         map[graphExpansionKey]bool
 	queue            []graphExpansion
+	packageLeases    []func()
 	packageList      []*graphPackage
 	packages         map[validation.PackageID]*graphPackage
 	packageContexts  map[graphPackageKey]*graphPackage
@@ -85,6 +86,14 @@ func (g *resourceGraphRun) close() {
 		body.close()
 	}
 	g.resourceBodies = nil
+	for _, release := range g.packageLeases {
+		release()
+	}
+	g.packageLeases = nil
+	g.packageList = nil
+	g.packages = nil
+	g.packageContexts = nil
+	g.packageDocuments = nil
 	if g.retained != 0 {
 		_ = g.options.account.Release(validation.BudgetBufferedBytes, g.retained)
 		g.retained = 0

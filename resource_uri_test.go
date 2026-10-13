@@ -30,6 +30,9 @@ func TestResourceURIReferenceContexts(t *testing.T) {
 		{name: "empty URI segments", base: resourceURIBase{Archive: true, ArchiveRoot: true, Entry: "score.musicxml"}, href: "/scores//../first.musicxml", path: "scores/first.musicxml"},
 		{name: "custom absolute resolver URI", href: "urn:example:score", uri: "urn:example:score"},
 		{name: "opaque current entity", base: resourceURIBase{RetrievalURI: "urn:example:score"}, href: "#id", uri: "urn:example:score", fragment: "id", present: true, same: true},
+		{name: "archive transport URI is not contained XML", base: resourceURIBase{Archive: true, Entry: "main.opus", RetrievalURI: "https://e.test/inner.mxl"}, href: "https://e.test/inner.mxl#id", uri: "https://e.test/inner.mxl", fragment: "id", present: true},
+		{name: "archive network-path URI is not contained XML", base: resourceURIBase{Archive: true, Entry: "main.opus", RetrievalURI: "https://e.test/inner.mxl"}, href: "//e.test/inner.mxl", uri: "https://e.test/inner.mxl"},
+		{name: "plain absolute same entity", base: resourceURIBase{RetrievalURI: "https://e.test/score.musicxml"}, href: "https://e.test/score.musicxml", uri: "https://e.test/score.musicxml", same: true},
 		{name: "absolute external in archive", base: resourceURIBase{Archive: true, Entry: "score.musicxml"}, href: "https://elsewhere.test/s.musicxml#id", uri: "https://elsewhere.test/s.musicxml", fragment: "id", present: true},
 	}
 	for _, tt := range tests {

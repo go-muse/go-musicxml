@@ -134,6 +134,17 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 		return err
 	}
 	defer release()
+	// Serialized graph ingress charges exactly one linked occurrence below.
+	// Refuse a known-exhausted admission before invoking caller I/O or parsing a
+	// local target. Core keeps the actual cumulative charge; this is no recharge.
+	used, err := g.options.account.Usage(validation.BudgetLinkedDocuments)
+	if err != nil {
+		return err
+	}
+	limit := g.options.account.Limits().MaxLinkedDocuments
+	if used >= limit {
+		return &validation.ResourceError{Kind: validation.BudgetLinkedDocuments, Limit: limit, Used: used, Requested: 1}
+	}
 	link := v.Resource.Link
 	target := unavailableTarget(validation.EvidenceUnknown, "resolver-not-selected", nil)
 	fragment := link.Fragment
@@ -187,6 +198,11 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 		if e != nil {
 			return e
 		}
+		fragmentRelease, leaseErr := resourceWorkingLease(g.ctx, g.options.account, fragmentTarget)
+		if leaseErr != nil {
+			return leaseErr
+		}
+		defer fragmentRelease()
 		if e = g.enqueue(child, aid, childPackage, childBase, item.depth+1); e != nil {
 			return e
 		}
@@ -272,7 +288,7 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, v validatio
 			archive.Close()
 			return nil, base, item.pkg, unknown, errors.Join(readErr, err)
 		}
-		resource, childBase, pkg, importErr := g.importRawPackage(archive, result.Pin, item.pkg, result.RetrievalURI, false)
+		resource, childBase, pkg, importErr := g.importRawPackageAtDepth(archive, result.Pin, item.pkg, result.RetrievalURI, false, item.depth+1)
 		return resource, childBase, pkg, unknown, errors.Join(readErr, importErr)
 	}
 	key := graphResourceKey{result.Pin, ProfileSourceLinks}
@@ -306,6 +322,11 @@ func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fr
 		return validation.Evidence[validation.NodeRef]{}, err
 	}
 	header := a.Header()
+	headerRelease, err := resourceWorkingLease(g.ctx, g.options.account, header)
+	if err != nil {
+		return validation.Evidence[validation.NodeRef]{}, err
+	}
+	defer headerRelease()
 	if fragment.Value == "" {
 		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceKnown, Value: header.Root}, nil
 	}
