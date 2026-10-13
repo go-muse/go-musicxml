@@ -477,6 +477,7 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 			d.Outcome = OutcomeNotApplicable
 			d.Reason = "schema-hints-proven-absent"
 			found := false
+			unavailable := false
 			for _, v := range resource.snapshot.contexts {
 				if err := s.scan(ctx, 1); err != nil {
 					return err
@@ -499,15 +500,23 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 					break
 				}
 				if h.Complete.State != EvidenceKnown {
-					d = packageEvidenceDecision(d, h.Complete)
-					if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
-						d.Outcome = OutcomeUnknown
+					// Retain the first unavailable outcome and cause, but keep
+					// scanning: any proved pairing gap is conclusive even when
+					// another observed hint list cannot be assessed.
+					if !unavailable {
+						d = packageEvidenceDecision(d, h.Complete)
+						if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
+							d.Outcome = OutcomeUnknown
+						}
+						d.Reason = "schema-discovery-pairing-unavailable"
+						unavailable = true
 					}
-					d.Reason = "schema-discovery-pairing-unavailable"
-					break
+					continue
 				}
-				d.Outcome = OutcomePass
-				d.Reason = "schema-discovery-complete-pairs"
+				if !unavailable {
+					d.Outcome = OutcomePass
+					d.Reason = "schema-discovery-complete-pairs"
+				}
 			}
 			if !found {
 				d.Outcome = OutcomeUnsupported
@@ -569,6 +578,11 @@ func (s *PackageSession) unprovidedAssociationDecision(ctx context.Context, d De
 			return d
 		}
 		edge := s.edges[id]
+		if edge.Indirection.State == EvidenceKnown && !edge.Indirection.Value {
+			// Missing provider evidence on a direct edge keeps its own
+			// association reason, independently of target availability.
+			return d
+		}
 		if edge.Target.State != EvidenceKnown {
 			return packageRequiredEvidenceDecision(d, edge.Target)
 		}
