@@ -10,6 +10,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"testing/iotest"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -100,9 +101,15 @@ func (r independentCancelResourceReader) Read(p []byte) (int, error) {
 }
 
 func TestIndependentResourceBodyExactAndOneUnder(t *testing.T) {
-	for _, size := range []int{0, 1, 4096, 4097, 8192, 8193} {
+	// Each <=4096-byte read/append/digest attempt costs one unit, including
+	// bytes.Reader's final EOF read. Capacity growth also costs one unit per
+	// <=4096 bytes relocated; these totals are independent contract expectations.
+	for _, budget := range []struct {
+		size  int
+		steps int64
+	}{{0, 1}, {1, 2}, {4096, 2}, {4097, 4}, {8192, 4}, {8193, 7}, {65537, 49}} {
+		size, steps := budget.size, budget.steps
 		data := bytes.Repeat([]byte{'x'}, size)
-		steps := int64(size + (size+4095)/4096 + 1)
 		peak := int64(4608)
 		capn := 0
 		for seen := 0; seen < size; {
@@ -119,11 +126,12 @@ func TestIndependentResourceBodyExactAndOneUnder(t *testing.T) {
 			name string
 			b    validation.Budgets
 			ok   bool
+			kind validation.BudgetKind
 		}{
-			{"exact", validation.Budgets{MaxExternalBytes: max(1, int64(size)), MaxRuleSteps: steps, MaxBufferedBytes: peak}, true},
-			{"buffer one under", validation.Budgets{MaxBufferedBytes: peak - 1}, false},
-			{"work one under", validation.Budgets{MaxRuleSteps: max(1, steps-1)}, size == 0},
-			{"external one under", validation.Budgets{MaxExternalBytes: max(1, int64(size)-1)}, size <= 1},
+			{"exact", validation.Budgets{MaxExternalBytes: max(1, int64(size)), MaxRuleSteps: steps, MaxBufferedBytes: peak}, true, ""},
+			{"buffer one under", validation.Budgets{MaxBufferedBytes: peak - 1}, false, validation.BudgetBufferedBytes},
+			{"work one under", validation.Budgets{MaxRuleSteps: max(1, steps-1)}, size == 0, validation.BudgetRuleSteps},
+			{"external one under", validation.Budgets{MaxExternalBytes: max(1, int64(size)-1)}, size <= 1, validation.BudgetExternalBytes},
 		} {
 			t.Run(fmt.Sprintf("%d/%s", size, tc.name), func(t *testing.T) {
 				a := adapterAccount(t, tc.b)
@@ -147,11 +155,62 @@ func TestIndependentResourceBodyExactAndOneUnder(t *testing.T) {
 					if out.bytes != nil || out.digest != "" || out.account != nil {
 						t.Fatal("lease not invalidated")
 					}
-				} else if out != nil || !errors.Is(err, validation.ErrResourceLimit) {
-					t.Fatalf("got %v err %v", out, err)
+				} else {
+					var limit *validation.ResourceError
+					if out != nil || !errors.Is(err, validation.ErrResourceLimit) || !errors.As(err, &limit) || limit.Kind != tc.kind {
+						t.Fatalf("out present %v err %v want %s refusal", out != nil, err, tc.kind)
+					}
 				}
 				if body.closed != 1 {
 					t.Fatalf("closes %d", body.closed)
+				}
+				adapterClean(t, a)
+			})
+		}
+	}
+}
+
+func TestIndependentResourceBodyShortReadsWorkAdmission(t *testing.T) {
+	// Short reads are separately admitted, even when many fit in one scratch
+	// block. One-byte reads grow at powers of two: relocations through 4096
+	// bytes each cost one unit, then 8192/16384/32768/65536 cost 2/4/8/16.
+	for _, tc := range []struct {
+		size  int
+		steps int64
+	}{{0, 1}, {1, 2}, {4096, 4109}, {4097, 4111}, {8192, 8206}, {8193, 8209}, {65537, 65581}} {
+		for _, oneUnder := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%d/one_under_%v", tc.size, oneUnder), func(t *testing.T) {
+				steps := tc.steps
+				if oneUnder {
+					steps--
+				}
+				// A zero configured limit means the default, so the empty-body
+				// one-under case can only exercise the minimum positive limit.
+				a := adapterAccount(t, validation.Budgets{MaxRuleSteps: max(1, steps)})
+				data := bytes.Repeat([]byte{'x'}, tc.size)
+				reader := &independentRecordingReader{Reader: iotest.OneByteReader(bytes.NewReader(data))}
+				body := &resourceTestBody{Reader: reader}
+				out, err := readAssessmentResourceBody(context.Background(), a, body)
+				if !oneUnder || tc.size == 0 {
+					if err != nil || out == nil || !bytes.Equal(out.bytes, data) || out.digest != fmt.Sprintf("%x", sha256.Sum256(data)) {
+						t.Fatalf("out present %v err %v", out != nil, err)
+					}
+					if reader.reads != tc.size+1 || adapterUsage(t, a, validation.BudgetRuleSteps) != tc.steps {
+						t.Fatalf("reads %d work %d want reads %d work %d", reader.reads, adapterUsage(t, a, validation.BudgetRuleSteps), tc.size+1, tc.steps)
+					}
+					out.close()
+					out.close()
+				} else {
+					var limit *validation.ResourceError
+					if out != nil || !errors.Is(err, validation.ErrResourceLimit) || !errors.As(err, &limit) || limit.Kind != validation.BudgetRuleSteps {
+						t.Fatalf("out present %v err %v", out != nil, err)
+					}
+					if reader.reads != tc.size || adapterUsage(t, a, validation.BudgetRuleSteps) != steps || limit.Requested != 1 {
+						t.Fatalf("reads %d work %d want reads %d work %d; refusal %+v", reader.reads, adapterUsage(t, a, validation.BudgetRuleSteps), tc.size, steps, limit)
+					}
+				}
+				if body.closed != 1 || !bytes.Equal(reader.data, data) || adapterUsage(t, a, validation.BudgetExternalBytes) != int64(tc.size) {
+					t.Fatalf("closes %d read bytes %d charged bytes %d", body.closed, len(reader.data), adapterUsage(t, a, validation.BudgetExternalBytes))
 				}
 				adapterClean(t, a)
 			})

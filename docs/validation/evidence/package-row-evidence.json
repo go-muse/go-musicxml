@@ -7529,49 +7529,49 @@
       "function": "TestIndependentResourceBodyCauseAndCleanupMatrix",
       "line": 162,
       "end_line_bound": 200,
-      "file_sha256": "d3169b34d90730ce9c20eefc5acf0268b474db07e8cd15639d1dd099d65a401e"
+      "file_sha256": "35febaa508bc7678ed7efeeab658a97bf14028168a774a4a3c66cd22e9644256"
     },
     "resource_loader_independent_test.go::TestIndependentResourceBodyExternalBudgetBoundsActualRead": {
       "file": "resource_loader_independent_test.go",
       "function": "TestIndependentResourceBodyExternalBudgetBoundsActualRead",
       "line": 463,
       "end_line_bound": 484,
-      "file_sha256": "d3169b34d90730ce9c20eefc5acf0268b474db07e8cd15639d1dd099d65a401e"
+      "file_sha256": "35febaa508bc7678ed7efeeab658a97bf14028168a774a4a3c66cd22e9644256"
     },
     "resource_loader_independent_test.go::TestIndependentResourceCancellationBoundaries": {
       "file": "resource_loader_independent_test.go",
       "function": "TestIndependentResourceCancellationBoundaries",
       "line": 405,
       "end_line_bound": 462,
-      "file_sha256": "d3169b34d90730ce9c20eefc5acf0268b474db07e8cd15639d1dd099d65a401e"
+      "file_sha256": "35febaa508bc7678ed7efeeab658a97bf14028168a774a4a3c66cd22e9644256"
     },
     "resource_loader_independent_test.go::TestIndependentResourceIntrinsicBufferAdmissionKeepsKnownFailure": {
       "file": "resource_loader_independent_test.go",
       "function": "TestIndependentResourceIntrinsicBufferAdmissionKeepsKnownFailure",
       "line": 496,
       "end_line_bound": 543,
-      "file_sha256": "d3169b34d90730ce9c20eefc5acf0268b474db07e8cd15639d1dd099d65a401e"
+      "file_sha256": "35febaa508bc7678ed7efeeab658a97bf14028168a774a4a3c66cd22e9644256"
     },
     "resource_loader_independent_test.go::TestIndependentResourceIntrinsicSharedLimitsAndNoEncoding": {
       "file": "resource_loader_independent_test.go",
       "function": "TestIndependentResourceIntrinsicSharedLimitsAndNoEncoding",
       "line": 259,
       "end_line_bound": 300,
-      "file_sha256": "d3169b34d90730ce9c20eefc5acf0268b474db07e8cd15639d1dd099d65a401e"
+      "file_sha256": "35febaa508bc7678ed7efeeab658a97bf14028168a774a4a3c66cd22e9644256"
     },
     "resource_loader_independent_test.go::TestIndependentResourceIntrinsicSnapshotAdmissionKeepsBestReport": {
       "file": "resource_loader_independent_test.go",
       "function": "TestIndependentResourceIntrinsicSnapshotAdmissionKeepsBestReport",
       "line": 301,
       "end_line_bound": 368,
-      "file_sha256": "d3169b34d90730ce9c20eefc5acf0268b474db07e8cd15639d1dd099d65a401e"
+      "file_sha256": "35febaa508bc7678ed7efeeab658a97bf14028168a774a4a3c66cd22e9644256"
     },
     "resource_loader_independent_test.go::TestIndependentResourceURIRFCAndBoundaries": {
       "file": "resource_loader_independent_test.go",
       "function": "TestIndependentResourceURIRFCAndBoundaries",
       "line": 17,
       "end_line_bound": 101,
-      "file_sha256": "d3169b34d90730ce9c20eefc5acf0268b474db07e8cd15639d1dd099d65a401e"
+      "file_sha256": "35febaa508bc7678ed7efeeab658a97bf14028168a774a4a3c66cd22e9644256"
     },
     "resource_options_test.go::TestResourceOptionsEmptyAndTypedNilResolver": {
       "file": "resource_options_test.go",
