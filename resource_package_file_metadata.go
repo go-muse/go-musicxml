@@ -1,7 +1,6 @@
 package musicxml
 
 import (
-	"mime"
 	"net/url"
 	"strconv"
 	"strings"
@@ -18,11 +17,8 @@ type graphFileMetadataKey struct {
 	template            uint64
 }
 
-// observePackageFileMetadata is the final metadata seam. File observations are
-// ingressed as soon as their immutable bytes are verified, before parsing can
-// fail. Nothing is fetched, reparsed or promoted to a resource by this pass.
-func (g *resourceGraphRun) observePackageFileMetadata() error { return g.ctx.Err() }
-
+// File observations are ingressed as soon as their immutable bytes are verified,
+// before parsing can fail. This does not fetch or promote bytes to a resource.
 func (g *resourceGraphRun) observeFileMetadata(v validation.PackageFileMetadataObservation) error {
 	key := graphFileMetadataKey{v.Package, v.Pin, v.BaseURI, v.ArchiveEntry, v.Location.Path, v.Entry, v.Source, v.Template}
 	if g.fileMetadata[key] {
@@ -48,10 +44,10 @@ func (g *resourceGraphRun) observeFileMetadata(v validation.PackageFileMetadataO
 	return nil
 }
 
-func (g *resourceGraphRun) observeLocalFileMetadata(p *graphPackage, path string, data []byte, retrieval string, location validation.Location, media validation.Evidence[string]) error {
+func (g *resourceGraphRun) observeLocalFileMetadata(p *graphPackage, path string, data []byte, retrieval string, location validation.Location, media validation.Evidence[string]) (validation.ResourcePin, error) {
 	digest, err := g.packageDigest(data)
 	if err != nil {
-		return err
+		return validation.ResourcePin{}, err
 	}
 	representation := validation.ResourceSourceXML
 	if mxlAssessmentZIPPrefixBytes(data) {
@@ -59,7 +55,7 @@ func (g *resourceGraphRun) observeLocalFileMetadata(p *graphPackage, path string
 	}
 	pin := g.entryPin(p, path, digest, representation)
 	v := validation.PackageFileMetadataObservation{ID: g.packageFact(), Package: p.id, Pin: pin, Name: packageKnown(path), MediaType: media, Location: location, BaseURI: retrieval, ArchiveEntry: path, Entry: p.entries[path]}
-	return g.observeFileMetadata(v)
+	return pin, g.observeFileMetadata(v)
 }
 
 // URI names preserve escaped path spelling, so %2F never becomes a different
@@ -95,16 +91,15 @@ func (g *resourceGraphRun) externalFileMedia(value string) (validation.Evidence[
 	if value == "" {
 		return validation.Evidence[string]{State: validation.EvidenceAbsent}, nil
 	}
-	if err := g.options.account.Charge(validation.BudgetRuleSteps, int64(len(value))+1); err != nil {
+	if err := packageEvidenceTextLimit("supplied media-type", value); err != nil {
 		return validation.Evidence[string]{}, err
 	}
-	scratch := int64(len(value))*16 + 1024
-	if err := g.options.account.Charge(validation.BudgetBufferedBytes, scratch); err != nil {
+	kind, err := validation.ClassifyResourceMediaType(g.ctx, g.options.account, value)
+	if err != nil {
 		return validation.Evidence[string]{}, err
 	}
-	defer g.options.account.Release(validation.BudgetBufferedBytes, scratch)
-	if _, _, err := mime.ParseMediaType(value); err != nil {
-		return validation.Evidence[string]{State: validation.EvidenceInvalid, Reason: "supplied-media-type-invalid"}, nil
+	if kind.State != validation.EvidenceKnown {
+		return packageUnknown[string](kind.Reason), nil
 	}
 	return packageKnown(value), nil
 }
@@ -117,7 +112,7 @@ func (g *resourceGraphRun) observeExternalFileMetadata(item graphExpansion, inde
 	if err != nil {
 		return err
 	}
-	v := validation.PackageFileMetadataObservation{ID: g.packageFact(), Package: item.pkg, Pin: result.Pin, Name: name, MediaType: media, Location: g.packageLocation(item.base.Entry, "external-document["+strconv.FormatUint(index, 10)+"]/retrieval-uri"), BaseURI: base.RetrievalURI, Source: item.adoption, Template: index, Href: href}
+	v := validation.PackageFileMetadataObservation{ID: g.packageFact(), Package: item.pkg, Pin: result.Pin, Name: name, MediaType: media, Location: g.packageLocation(g.packages[item.pkg], item.base.Entry, "external-document["+strconv.FormatUint(index, 10)+"]/retrieval-uri"), BaseURI: base.RetrievalURI, Source: item.adoption, Template: index, Href: href}
 	return g.observeFileMetadata(v)
 }
 func (g *resourceGraphRun) observeBoundaryFileMetadata(p *graphPackage, retrieval string) error {
@@ -128,7 +123,7 @@ func (g *resourceGraphRun) observeBoundaryFileMetadata(p *graphPackage, retrieva
 	if err != nil {
 		return err
 	}
-	return g.observeFileMetadata(validation.PackageFileMetadataObservation{ID: g.packageFact(), Package: p.id, Pin: p.pin, Name: name, MediaType: validation.Evidence[string]{State: validation.EvidenceAbsent}, Location: g.packageLocation("", "package/retrieval-uri"), BaseURI: retrieval})
+	return g.observeFileMetadata(validation.PackageFileMetadataObservation{ID: g.packageFact(), Package: p.id, Pin: p.pin, Name: name, MediaType: validation.Evidence[string]{State: validation.EvidenceAbsent}, Location: g.packageLocation(p, "", "package/retrieval-uri"), BaseURI: retrieval})
 }
 func (g *resourceGraphRun) observeCurrentPrimaryFileMetadata(p *graphPackage, r validation.PackageRootfileObservation, retrieval string) error {
 	if p.primary == nil || r.FullPath.State != validation.EvidenceKnown {

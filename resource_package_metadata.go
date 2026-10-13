@@ -2,7 +2,7 @@ package musicxml
 
 import (
 	"errors"
-	"math"
+	"fmt"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -12,7 +12,7 @@ import (
 // Unread/unpinned members keep scope incomplete; names and XML roots never
 // classify a resource as a score or individual part.
 func (g *resourceGraphRun) observePackageMetadata() error {
-	if err := g.observePackageFileMetadata(); err != nil {
+	if err := g.ctx.Err(); err != nil {
 		return err
 	}
 	return g.observePackageRoles()
@@ -34,7 +34,8 @@ func (g *resourceGraphRun) observePackageRoles() error {
 		// Package role I/O requires a complete usable local package inventory
 		// and at least one selected musical-document context. Plain XML roots
 		// are outside packageList and never dispatch this capability. Container
-		// metadata alone does not create a musical-role request.
+		// metadata alone does not create a musical-role request. Once dispatched,
+		// the all-member contract includes its admitted container context too.
 		if p.entriesComplete.State != validation.EvidenceKnown || !p.entriesComplete.Value || p.rootsComplete.State != validation.EvidenceKnown || !p.rootsComplete.Value {
 			continue
 		}
@@ -73,10 +74,7 @@ func (g *resourceGraphRun) observePackageRoleScope(p *graphPackage) error {
 		}
 	}
 	if count > 65536 {
-		return &validation.ConfigurationError{Field: "package role scope", Reason: "too many exact member contexts"}
-	}
-	if count > (math.MaxInt64-1024)/4096 {
-		return &validation.ConfigurationError{Field: "package role scope", Reason: "allocation overflow"}
+		return &validation.IncompleteError{Reason: "package-role-scope-too-large", Cause: fmt.Errorf("%w: fixed limit of 65536 exact member contexts (observed %d)", validation.ErrResourceLimit, count)}
 	}
 	size := 1024 + count*4096
 	if _, err := validation.AllocationSize(size); err != nil {

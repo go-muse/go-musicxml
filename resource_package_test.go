@@ -64,16 +64,16 @@ func TestPackageGraphCurrentDirectModelAndNoInputMutation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	value := &MXLPackage{Document: doc, Resources: []MXLResource{{Path: "unused.dat", Data: []byte("unchanged")}}}
+	value := &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "selected.opus"}}, Resources: []MXLResource{{Path: "selected.opus", Data: []byte(`<opus/>`)}}}
 	b, err := AssessMXLPackage(context.Background(), value, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
-	if err != nil || b.ResourceCount() != 1 {
+	if err != nil || b.ResourceCount() != 2 {
 		t.Fatal(err, b.PackageReport().Findings)
 	}
 	_, r, _ := b.ResourceReport(0)
 	if r.Target != validation.TargetModel || r.Profile.ID != ProfileModelLinks {
 		t.Fatal(r)
 	}
-	if len(value.RootFiles) != 0 || string(value.Resources[0].Data) != "unchanged" {
+	if len(value.RootFiles) != 2 || value.RootFiles[0].FullPath != "main.opus" || value.RootFiles[1].FullPath != "selected.opus" || value.Resources[0].Path != "selected.opus" || string(value.Resources[0].Data) != `<opus/>` {
 		t.Fatal("mutated current package")
 	}
 }

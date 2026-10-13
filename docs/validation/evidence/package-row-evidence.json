@@ -7759,42 +7759,42 @@
       "function": "TestPackageFileMetadataBeforeFailedParse",
       "line": 14,
       "end_line_bound": 31,
-      "file_sha256": "c381f0b1dba65290c44b2a29a7705f8ab5436141c2aa39649dbd692ab20e0861"
+      "file_sha256": "b30e80cfbc925fc4a3852e503bd63f22dc88f99246fa6fd153e89ec78639632e"
     },
     "resource_package_file_metadata_test.go::TestPackageFileMetadataExcludesContainerAndPreservesEmpty": {
       "file": "resource_package_file_metadata_test.go",
       "function": "TestPackageFileMetadataExcludesContainerAndPreservesEmpty",
       "line": 127,
       "end_line_bound": 147,
-      "file_sha256": "c381f0b1dba65290c44b2a29a7705f8ab5436141c2aa39649dbd692ab20e0861"
+      "file_sha256": "b30e80cfbc925fc4a3852e503bd63f22dc88f99246fa6fd153e89ec78639632e"
     },
     "resource_package_file_metadata_test.go::TestPackageFileMetadataExternalAliasesAndEscapedName": {
       "file": "resource_package_file_metadata_test.go",
       "function": "TestPackageFileMetadataExternalAliasesAndEscapedName",
       "line": 32,
       "end_line_bound": 57,
-      "file_sha256": "c381f0b1dba65290c44b2a29a7705f8ab5436141c2aa39649dbd692ab20e0861"
+      "file_sha256": "b30e80cfbc925fc4a3852e503bd63f22dc88f99246fa6fd153e89ec78639632e"
     },
     "resource_package_file_metadata_test.go::TestPackageFileMetadataNestedSameNamesAndCurrent": {
       "file": "resource_package_file_metadata_test.go",
       "function": "TestPackageFileMetadataNestedSameNamesAndCurrent",
       "line": 58,
       "end_line_bound": 92,
-      "file_sha256": "c381f0b1dba65290c44b2a29a7705f8ab5436141c2aa39649dbd692ab20e0861"
+      "file_sha256": "b30e80cfbc925fc4a3852e503bd63f22dc88f99246fa6fd153e89ec78639632e"
     },
     "resource_package_file_metadata_test.go::TestPackageFileMetadataOptionalAndInvalidMIME": {
       "file": "resource_package_file_metadata_test.go",
       "function": "TestPackageFileMetadataOptionalAndInvalidMIME",
       "line": 93,
       "end_line_bound": 110,
-      "file_sha256": "c381f0b1dba65290c44b2a29a7705f8ab5436141c2aa39649dbd692ab20e0861"
+      "file_sha256": "b30e80cfbc925fc4a3852e503bd63f22dc88f99246fa6fd153e89ec78639632e"
     },
     "resource_package_file_metadata_test.go::TestPackageFileMetadataSurvivesResourceAdmissionRefusal": {
       "file": "resource_package_file_metadata_test.go",
       "function": "TestPackageFileMetadataSurvivesResourceAdmissionRefusal",
       "line": 111,
       "end_line_bound": 126,
-      "file_sha256": "c381f0b1dba65290c44b2a29a7705f8ab5436141c2aa39649dbd692ab20e0861"
+      "file_sha256": "b30e80cfbc925fc4a3852e503bd63f22dc88f99246fa6fd153e89ec78639632e"
     },
     "resource_package_independent_test.go::TestIndependentMXLLinkDepthIsNotResetByPackage": {
       "file": "resource_package_independent_test.go",
@@ -7857,70 +7857,70 @@
       "function": "TestPackageGraphCurrentDirectModelAndNoInputMutation",
       "line": 62,
       "end_line_bound": 79,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphLocalCycleParsesOnce": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphLocalCycleParsesOnce",
       "line": 97,
       "end_line_bound": 104,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphMXLArchiveContainerDocumentCaps": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphMXLArchiveContainerDocumentCaps",
       "line": 144,
       "end_line_bound": 164,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphNestedExpandedCapIsAggregate": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphNestedExpandedCapIsAggregate",
       "line": 125,
       "end_line_bound": 143,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphNestedRawKeepsIndirectionGate": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphNestedRawKeepsIndirectionGate",
       "line": 80,
       "end_line_bound": 96,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphRawMandatoryIndependentNegative": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphRawMandatoryIndependentNegative",
       "line": 39,
       "end_line_bound": 53,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphRawPrefixFailureSurvivesBrokenEnvelope": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphRawPrefixFailureSurvivesBrokenEnvelope",
       "line": 54,
       "end_line_bound": 61,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphRawPrimaryAndSourceContainer": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphRawPrimaryAndSourceContainer",
       "line": 25,
       "end_line_bound": 38,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphRawReadFailureRetainsObservedLocalViolation": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphRawReadFailureRetainsObservedLocalViolation",
       "line": 116,
       "end_line_bound": 124,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_package_test.go::TestPackageGraphRejectConfigurationBeforeRead": {
       "file": "resource_package_test.go",
       "function": "TestPackageGraphRejectConfigurationBeforeRead",
       "line": 105,
       "end_line_bound": 115,
-      "file_sha256": "d4b2ff26c05f2b5f5b50649f7e0247048e4b081716f7cb9d4ae9f1dda38941b4"
+      "file_sha256": "eddf31f28aebd8b88bf74e0802b0ce75a8958da024c032265f4363e43672d3e2"
     },
     "resource_uri_test.go::TestResourceURIBoundedUnsupported": {
       "file": "resource_uri_test.go",

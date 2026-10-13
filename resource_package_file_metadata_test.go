@@ -104,7 +104,7 @@ func TestPackageFileMetadataOptionalAndInvalidMIME(t *testing.T) {
 		t.Fatal(absent, err)
 	}
 	invalid, err := g.externalFileMedia("not a MIME")
-	if err != nil || invalid.State != validation.EvidenceInvalid {
+	if err != nil || invalid.State != validation.EvidenceUnknown {
 		t.Fatal(invalid, err)
 	}
 }
