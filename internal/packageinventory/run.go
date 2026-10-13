@@ -25,25 +25,20 @@ func (r *runner) run(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	command := args[0]
+	if command == "-h" || command == "--help" || command == "help" {
+		fmt.Fprintln(stderr, "usage: package-inventory {verify|refresh|test} [options]")
+		for _, name := range []string{"verify", "refresh", "test"} {
+			fmt.Fprintln(stderr)
+			var help runner
+			help.commandFlags(name, stderr).Usage()
+		}
+		return 0
+	}
 	if command != "verify" && command != "refresh" && command != "test" {
 		fmt.Fprintf(stderr, "unknown command: %s\n", command)
 		return 2
 	}
-	flags := flag.NewFlagSet(command, flag.ContinueOnError)
-	flags.SetOutput(stderr)
-	flags.StringVar(&r.opts.root, "root", ".", "repository root")
-	flags.StringVar(&r.opts.manifest, "manifest", defaultManifest, "ownership manifest")
-	flags.StringVar(&r.opts.evidence, "evidence", defaultEvidence, "row evidence")
-	flags.StringVar(&r.opts.output, "output", "", "atomic result JSON output (never an input)")
-	if command != "test" {
-		flags.StringVar(&r.opts.archive, "archive-dir", "", "external archive directory (raw bytes)")
-	}
-	if command == "verify" {
-		flags.BoolVar(&r.opts.strict, "strict-evidence", false, "fail for changed inspected test bytes")
-	}
-	if command == "refresh" {
-		flags.BoolVar(&r.opts.write, "write", false, "update only current tests[].file_sha256 after complete preflight")
-	}
+	flags := r.commandFlags(command, stderr)
 	if err := flags.Parse(args[1:]); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			return 0
@@ -64,6 +59,28 @@ func (r *runner) run(args []string, stdout, stderr io.Writer) int {
 		result = guard(r.controls)
 	}
 	return r.emitResult(result, stdout)
+}
+func (r *runner) commandFlags(command string, stderr io.Writer) *flag.FlagSet {
+	flags := flag.NewFlagSet(command, flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.StringVar(&r.opts.root, "root", ".", "repository root")
+	flags.StringVar(&r.opts.manifest, "manifest", defaultManifest, "ownership manifest")
+	flags.StringVar(&r.opts.evidence, "evidence", defaultEvidence, "row evidence")
+	flags.StringVar(&r.opts.output, "output", "", "atomic result JSON output (never an input)")
+	if command != "test" {
+		flags.StringVar(&r.opts.archive, "archive-dir", "", "external archive directory (raw bytes)")
+	}
+	if command == "verify" {
+		flags.BoolVar(&r.opts.strict, "strict-evidence", false, "fail for changed inspected test bytes")
+	}
+	if command == "refresh" {
+		flags.BoolVar(&r.opts.write, "write", false, "update only current tests[].file_sha256 after complete preflight")
+	}
+	flags.Usage = func() {
+		fmt.Fprintf(stderr, "usage: package-inventory %s [options]\n", command)
+		flags.PrintDefaults()
+	}
+	return flags
 }
 func resultFailures(result map[string]any) []string {
 	if failures, ok := result["failures"].([]string); ok {
