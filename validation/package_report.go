@@ -16,15 +16,16 @@ type bundleAdoption struct {
 	documentID string
 }
 type assessmentBundleData struct {
-	report        Report
-	resources     []bundleResource
-	adoptions     []bundleAdoption
-	enumeration   bool
-	failure       *ResourceFailureSummary
-	failureReport *Report
-	images        []packageImageAdvice
-	files         []PackageFileMetadataObservation
-	mimetypes     []PackageMimetypeObservation
+	report             Report
+	omittedDiagnostics *packageDiagnosticSummaryData
+	resources          []bundleResource
+	adoptions          []bundleAdoption
+	enumeration        bool
+	failure            *ResourceFailureSummary
+	failureReport      *Report
+	images             []packageImageAdvice
+	files              []PackageFileMetadataObservation
+	mimetypes          []PackageMimetypeObservation
 }
 
 // AssessmentBundle is an immutable core-created collection of one package/graph
@@ -253,6 +254,9 @@ func (s *PackageSession) Finish(ctx context.Context, end PackageCompletion) (Ass
 			switch r.Selector.Kind {
 			case PackageSubjectRootfile:
 				for _, id := range s.rootfileOrder {
+					if _, ok := s.decisions[packageDecisionKey{r.Rule.Key, id}]; ok {
+						continue
+					}
 					if err := s.scan(ctx, 1); err != nil {
 						break
 					}

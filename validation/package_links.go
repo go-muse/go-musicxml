@@ -58,9 +58,6 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
-			if err := s.event(ctx, "edge adoption scan"); err != nil {
-				return err
-			}
 			old := s.edges[id]
 			if old.Target.State == EvidenceKnown && old.Target.Value == e.Target.Value {
 				return s.fail(contract("edge target", "target adoption already belongs to an edge"))
@@ -379,6 +376,9 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 	switch r.Selector.Kind {
 	case PackageSubjectEdge:
 		for _, id := range s.edgeOrder {
+			if _, ok := s.decisions[packageDecisionKey{r.Rule.Key, id}]; ok {
+				continue
+			}
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
@@ -461,6 +461,13 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 			}
 			resource := s.resources[id]
 			d := s.baseDecision(r.Rule.Key, resource.subject)
+			if resource.snapshot.header.Target == TargetModel {
+				d.Outcome, d.Reason = OutcomeUnknown, "schema-discovery-pairing-unavailable"
+				if err := s.record(ctx, r.Rule, resource.subject, d, Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/resource[" + string(id) + "]"}, true); err != nil {
+					return err
+				}
+				continue
+			}
 			d.Outcome = OutcomeNotApplicable
 			d.Reason = "schema-hints-proven-absent"
 			found := false
@@ -579,9 +586,6 @@ func (s *PackageSession) groupDecision(ctx context.Context, d Decision, e Packag
 		if err := s.scan(ctx, 1); err != nil {
 			return d
 		}
-		if s.scan(ctx, 1) != nil {
-			return d
-		}
 		if c.Resource == nil || c.Resource.Group == nil || !c.Resource.Group.Linked || c.Resource.Owner.Node != v.Subject.Node {
 			continue
 		}
@@ -639,6 +643,9 @@ func packageAdoptDecision(d Decision, a *packageAdoption) Decision {
 
 func (s *PackageSession) evaluateEdge(ctx context.Context, e PackageEdgeObservation, final bool) error {
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if _, ok := s.decisions[packageDecisionKey{key, e.ID}]; ok {
+			continue
+		}
 		if err := s.scan(ctx, 1); err != nil {
 			return err
 		}
@@ -652,6 +659,9 @@ func (s *PackageSession) evaluateEdge(ctx context.Context, e PackageEdgeObservat
 	return nil
 }
 func (s *PackageSession) evaluateEdgeRule(ctx context.Context, r PackageRuleBinding, edge PackageEdgeObservation, final bool) error {
+	if _, ok := s.decisions[packageDecisionKey{r.Rule.Key, edge.ID}]; ok {
+		return nil
+	}
 	source := s.adoptions[edge.Source]
 	template := source.resource.snapshot.contexts[edge.Template]
 	d := s.baseDecision(r.Rule.Key, edge.ID)
@@ -673,7 +683,7 @@ func (s *PackageSession) evaluateEdgeRule(ctx context.Context, r PackageRuleBind
 		}
 		d.Related = append(d.Related, origin)
 	}
-	return s.record(ctx, r.Rule, edge.ID, d, location, final)
+	return s.recordPrepared(ctx, r.Rule, edge.ID, d, location, final)
 }
 
 // roleUniverseComplete separates provider request coverage from the whole

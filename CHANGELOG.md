@@ -19,6 +19,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   typed availability/cause evidence, odd schema-hint pairing is known false,
   and snapshot headers identify selection of the assembly-local link plan.
   DTD-wide hint gaps occupy one root row while observed descendant hints remain.
+- Preserve the first omitted blocking package diagnostic in a fixed prepaid
+  summary independent of shared diagnostic quotas. Expose read-only package
+  terminal causes and retain original intrinsic terminal classifications.
+
 - Add one bounded declared-MIME classifier shared by package checks and adapters,
   with transient parsing scratch, case-insensitive registered types and explicit
   unknown parameter policy. Binary members do not receive MusicXML suffix advice.

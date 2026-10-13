@@ -214,6 +214,10 @@ current MXL profiles. The returned bundle preserves a package report and separat
 canonical intrinsic reports. Check both the error and `bundle.Satisfied()`.
 Original headers/container bytes and current package fields have different,
 explicit scopes; current models are never serialized to manufacture source proof.
+The shipped graph/package profiles select schema-discovery evidence that current
+models discard. Consequently `AssessModelWithResources` and `AssessMXLPackage`
+bundles remain incomplete and cannot be `Satisfied()`, even when their intrinsic
+current-model reports are satisfied. The discarded hint history stays Unknown.
 
 External retrieval and image/association/role metadata require an explicitly
 selected dependency and caller-provided resolver. Empty selections perform no

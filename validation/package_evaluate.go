@@ -26,6 +26,9 @@ func (s *PackageSession) baseDecision(key RuleKey, id PackageFactID) Decision {
 	return Decision{Rule: key, Subject: NodeRef{s.documentID, NodeID(id)}, Outcome: OutcomeUnknown, Reason: "package-evidence-unavailable"}
 }
 func (s *PackageSession) record(ctx context.Context, r RuleDefinition, id PackageFactID, d Decision, location Location, final bool) error {
+	if s.terminal != nil {
+		return s.terminal
+	}
 	k := packageDecisionKey{r.Key, id}
 	if _, ok := s.decisions[k]; ok {
 		return nil
@@ -34,10 +37,23 @@ func (s *PackageSession) record(ctx context.Context, r RuleDefinition, id Packag
 		d.Outcome = OutcomeUnsupported
 		d.Reason = support.Reason
 		d.Cause = nil
-	}
-	if pre, ok := s.prerequisites(ctx, r, id); !ok {
+	} else if pre, ok := s.prerequisites(ctx, r, id); !ok {
 		d = pre
 	}
+	return s.recordPrepared(ctx, r, id, d, location, final)
+}
+
+// recordPrepared accepts a decision whose support and dependencies were checked
+// by its evaluator. Other ingress paths use record to perform those checks once.
+func (s *PackageSession) recordPrepared(ctx context.Context, r RuleDefinition, id PackageFactID, d Decision, location Location, final bool) error {
+	if s.terminal != nil {
+		return s.terminal
+	}
+	k := packageDecisionKey{r.Key, id}
+	if _, ok := s.decisions[k]; ok {
+		return nil
+	}
+
 	if !final && d.Outcome != OutcomeFail && d.Outcome != OutcomePass && d.Outcome != OutcomeNotApplicable {
 		return nil
 	}
@@ -53,13 +69,19 @@ func (s *PackageSession) record(ctx context.Context, r RuleDefinition, id Packag
 	if err := s.accumulator.recordOutcome(r, d); err != nil {
 		return s.fail(err)
 	}
+	// Established findings precede the optional dependency-cache retention.
+	// A cache refusal must not erase the only explanation of an authoritative count.
+	before := len(s.accumulator.report.Findings)
+	if err := s.accumulator.storeDiagnostic(r, d, location); err != nil {
+		return s.fail(err)
+	}
+	if len(s.accumulator.report.Findings) == before {
+		s.output.omittedDiagnostics.capture(r, d, s.subjectPackages[id])
+	}
 	if err := s.admit(ctx, d, 256); err != nil {
 		return err
 	}
 	s.decisions[k] = cloneDecision(d)
-	if err := s.accumulator.storeDiagnostic(r, d, location); err != nil {
-		return s.fail(err)
-	}
 	return nil
 }
 func (s *PackageSession) prerequisites(ctx context.Context, r RuleDefinition, id PackageFactID) (Decision, bool) {
@@ -101,6 +123,9 @@ func (s *PackageSession) prerequisites(ctx context.Context, r RuleDefinition, id
 func (s *PackageSession) evaluateEntry(ctx context.Context, e PackageEntryObservation, final bool) error {
 	b := s.boundaries[e.Package]
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if _, ok := s.decisions[packageDecisionKey{key, e.ID}]; ok {
+			continue
+		}
 		if err := s.scan(ctx, 1); err != nil {
 			return err
 		}
@@ -156,7 +181,7 @@ func (s *PackageSession) evaluateEntry(ctx context.Context, e PackageEntryObserv
 				}
 			}
 		}
-		if err := s.record(ctx, r.Rule, e.ID, d, e.Location, final); err != nil {
+		if err := s.recordPrepared(ctx, r.Rule, e.ID, d, e.Location, final); err != nil {
 			return err
 		}
 	}
@@ -201,10 +226,6 @@ func packageStoredDecision(d Decision, e PackageEntryObservation) Decision {
 	}
 	d.Outcome = OutcomePass
 	d.Reason = "mimetype-stored-unencrypted"
-	if e.Central.Method.Value != 0 || e.Central.Flags.Value&1 != 0 {
-		d.Outcome = OutcomeFail
-		d.Reason = "mimetype-compressed-or-encrypted"
-	}
 	return d
 }
 func packageExtraDecision(d Decision, e PackageEntryObservation) Decision {
@@ -268,6 +289,9 @@ func packagePrefixDecision(d Decision, m PackageMimetypeObservation) Decision {
 }
 func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundary) error {
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if _, ok := s.decisions[packageDecisionKey{key, b.subject}]; ok {
+			continue
+		}
 		if err := s.scan(ctx, 1); err != nil {
 			return err
 		}
@@ -341,7 +365,7 @@ func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundar
 				}
 			}
 		}
-		if err := s.record(ctx, r.Rule, b.subject, d, s.location(b.identity.ID), b.sealed || s.finalizing); err != nil {
+		if err := s.recordPrepared(ctx, r.Rule, b.subject, d, s.location(b.identity.ID), b.sealed || s.finalizing); err != nil {
 			return err
 		}
 	}
@@ -461,7 +485,7 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 				roots++
 				if r.Ordinal == 1 && r.Entry.State == EvidenceKnown && r.Resource.State == EvidenceKnown {
 					resource := s.resources[r.Resource.Value]
-					if resource != nil && knownComplete(resource.snapshot.header.ScopeComplete) && resource.snapshot.header.Name.State == EvidenceKnown && packageMusicRoot(resource.snapshot.header.Name.Value) {
+					if resource != nil && resource.snapshot.header.LinkProjectionSelected && knownComplete(resource.snapshot.header.ScopeComplete) && resource.snapshot.header.Name.State == EvidenceKnown && packageMusicRoot(resource.snapshot.header.Name.Value) {
 						noLinks := true
 						for _, v := range resource.snapshot.contexts {
 							if s.scan(ctx, 1) != nil {
@@ -547,10 +571,8 @@ func (s *PackageSession) rootfileDecision(ctx context.Context, d Decision, r Pac
 		}
 		return d
 	}
+	// ObserveRootfile admits a Known resource only when its assessment exists.
 	resource := s.resources[r.Resource.Value]
-	if resource == nil {
-		return d
-	}
 	name := resource.snapshot.header.Name
 	d = packageEvidenceDecision(d, name)
 	if name.State == EvidenceKnown {
@@ -602,6 +624,9 @@ func packageRequiredEvidenceDecision[T comparable](d Decision, e Evidence[T]) De
 
 func (s *PackageSession) evaluateRootfile(ctx context.Context, observation PackageRootfileObservation, final bool) error {
 	for _, key := range s.catalog.orders[s.profile.ID] {
+		if _, ok := s.decisions[packageDecisionKey{key, observation.ID}]; ok {
+			continue
+		}
 		if err := s.scan(ctx, 1); err != nil {
 			return err
 		}
@@ -616,6 +641,9 @@ func (s *PackageSession) evaluateRootfile(ctx context.Context, observation Packa
 	return nil
 }
 func (s *PackageSession) evaluateRootfileRule(ctx context.Context, r PackageRuleBinding, v PackageRootfileObservation, final bool) error {
+	if _, ok := s.decisions[packageDecisionKey{r.Rule.Key, v.ID}]; ok {
+		return nil
+	}
 	d := s.baseDecision(r.Rule.Key, v.ID)
 	if support := s.catalog.supports[s.profile.ID][r.Rule.Key]; support.State == ImplementationUnsupported {
 		d.Outcome = OutcomeUnsupported
@@ -625,5 +653,5 @@ func (s *PackageSession) evaluateRootfileRule(ctx context.Context, r PackageRule
 	} else {
 		d = s.rootfileDecision(ctx, d, v, r.Plan.check)
 	}
-	return s.record(ctx, r.Rule, v.ID, d, v.Location, final)
+	return s.recordPrepared(ctx, r.Rule, v.ID, d, v.Location, final)
 }

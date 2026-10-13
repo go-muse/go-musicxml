@@ -129,15 +129,26 @@ func (c *CompiledPackageCatalog) Begin(ctx context.Context, opts RunOptions) (*P
 			return nil, err
 		}
 	}
-	reserve := packageTerminalReserveBytes + 4096 + profileLogicalBytes(binding.Profile)
+	reserve := packageTerminalReserveBytes + packageDiagnosticReserveBytes + 4096 + profileLogicalBytes(binding.Profile)
 	if err := a.Charge(BudgetBufferedBytes, reserve); err != nil {
 		return nil, err
 	}
 	s := &PackageSession{catalog: c, profile: binding.Profile, documentID: strings.Clone(opts.DocumentID), account: a, retained: reserve, nextInternal: ^PackageFactID(0), boundaries: map[PackageID]*packageBoundary{}, entries: map[PackageFactID]PackageEntryObservation{}, entryNames: map[PackageID]map[string]PackageFactID{}, rawEntryNames: map[PackageID]map[string]PackageFactID{}, mimetypes: map[PackageFactID]PackageMimetypeObservation{}, rootfiles: map[PackageFactID]PackageRootfileObservation{}, edges: map[PackageFactID]PackageEdgeObservation{}, roles: map[PackageID]ResourceRoleResult{}, resources: map[ResourceAssessmentID]*packageResource{}, resourceKeys: map[packageResourceKey]ResourceAssessmentID{}, pins: map[packageCanonicalKey]ResourcePin{}, adoptions: map[ResourceAdoptionID]*packageAdoption{}, expansions: map[resourceExpansionKey]*resourceExpansion{}, documents: map[string]bool{opts.DocumentID: true}, subjects: map[PackageFactID]PackageSubjectKind{}, subjectPackages: map[PackageFactID]PackageID{}, decisions: map[packageDecisionKey]Decision{}}
 	s.accumulator = newReportAccumulator(binding.Profile, a)
-	s.output = &assessmentBundleData{}
+	s.output = &assessmentBundleData{omittedDiagnostics: &packageDiagnosticSummaryData{}}
 	return s, nil
 }
+
+// TerminalCause returns the accumulated terminal error without charging work or
+// changing session state. It remains available after Finish; nil means no terminal
+// error was recorded. Ordinary ingress is still refused after a terminal error.
+func (s *PackageSession) TerminalCause() error {
+	if s == nil {
+		return nil
+	}
+	return s.terminal
+}
+
 func (s *PackageSession) event(ctx context.Context, op string) error {
 	if s == nil || s.finished || s.account == nil {
 		return &SessionError{Operation: op, Reason: "closed or uninitialized package"}
@@ -248,12 +259,6 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 		for ancestor := parent; ancestor != nil; ancestor = s.boundaries[ancestor.identity.Parent] {
 			if err := s.scan(ctx, 1); err != nil {
 				return err
-			}
-			if err := s.account.Charge(BudgetRuleSteps, 1); err != nil {
-				return s.fail(err)
-			}
-			if err := ctx.Err(); err != nil {
-				return s.fail(err)
 			}
 			if !p.PinUnavailable && !ancestor.identity.PinUnavailable && ancestor.identity.Pin == p.Pin {
 				return s.fail(contract("package ancestry", "immutable package cannot contain itself under a fresh boundary ID"))
@@ -664,6 +669,10 @@ func (s *PackageSession) RecordResourceFailure(ctx context.Context, pin Resource
 		cause = &IncompleteError{Reason: "intrinsic-resource-failure"}
 	}
 	category, reason := terminalClassification(cause, false)
+	if report.Terminal != nil {
+		category = DiagnosticCategory(strings.Clone(reportBoundedValue(string(report.Terminal.Category), reportTerminalBytes)))
+		reason = Code(strings.Clone(reportBoundedValue(string(report.Terminal.Reason), reportTerminalBytes)))
+	}
 	summary := &ResourceFailureSummary{Pin: stateClone(pin), PinComplete: complete, Target: report.Target, Profile: ProfileID(strings.Clone(string(report.Profile.ID))), CatalogDigest: strings.Clone(report.Profile.CatalogDigest), Counts: report.Counts, Conformance: report.Conformance, Terminal: TerminalSummary{Category: category, Reason: reason}, DiagnosticsTruncated: true, MetadataTruncated: true}
 	// Attempt ordinary full retention first. Cancellation/quota refusal cannot
 	// prevent the already reserved independent count/identity summary below.
@@ -682,6 +691,9 @@ func (s *PackageSession) RecordResourceFailure(ctx context.Context, pin Resource
 
 // scan charges repeated bounded iteration independently of the original ingress.
 func (s *PackageSession) scan(ctx context.Context, n int64) error {
+	if s.terminal != nil {
+		return s.terminal
+	}
 	if ctx == nil {
 		return s.fail(contract("context", "must not be nil"))
 	}

@@ -77,8 +77,10 @@ does not override the actual pinned published container schema.
 ## Boundaries that affect readiness
 
 - Current models cannot prove discarded original xsi hints absent or complete.
-  Selected schema discovery can therefore keep a minimal model graph incomplete
-  even when its intrinsic model report is satisfied. Source odd-length hints
+  With schema discovery selected by the shipped profiles, every current-model
+  graph/package bundle therefore remains incomplete and cannot be Satisfied,
+  even when its intrinsic model report is satisfied. Discarded history is an
+  explicit Unknown capability result, never a proven absence. Source odd-length hints
   remain valid `list(anyURI)` values when their members are valid; unmatched
   discovery evidence is an independent capability result. No hint fetches or
   selects a schema.
@@ -95,6 +97,9 @@ does not override the actual pinned published container schema.
   does not discharge them or remove them from the obligation inventory.
   Ordinary archive opening, a decoded child, a successful root-kind check, a
   filename, or matching cross-file ID strings never certify whole conformance.
+  Minimal-package no-links vacuity additionally requires the snapshot's explicit
+  selected-link-plan witness and complete intrinsic scope; empty unselected
+  projections cannot certify the absence of separate parts.
 - There is no instance-wide `version=4.0` rule, invented role inference, universal
   XPointer, required renderer or implicit HTTP/filesystem access. Auxiliary
   source assemblies, local link facts and core budgets retain their own limits.

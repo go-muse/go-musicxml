@@ -1016,9 +1016,11 @@ they are not copied constants that can drift from auxiliary metadata changes.
 
 Selected schema-hint discovery is an important current-model limitation. A
 current model cannot establish absent or complete original xsi hints that its
-representation discarded. Therefore the graph/package assessment can remain
-incomplete even when its intrinsic current-model report is satisfied and it has
-no outgoing links. Source discovery separately preserves namespace/location
+representation discarded. With the shipped schema-discovery capability rule
+selected, every current-model graph/package bundle remains incomplete and cannot
+be `Satisfied()`, even when its intrinsic current-model report is satisfied and
+it has no outgoing links. The discovery result is explicitly Unknown, never a
+reconstructed absence claim. Source discovery separately preserves namespace/location
 pairs and an unmatched trailing URI. It never changes the accepted odd/even
 `list(anyURI)` datatype contract or automatically loads/selects schemas.
 
@@ -1041,6 +1043,14 @@ linked occurrence, and an explicit single root marker. Successful transfer
 invalidates the old snapshot owner. Live indexed reads admit work and temporary
 copy storage; returned copies belong to the caller. Package completion releases
 all live leases, while immutable `AssessmentBundle` getters remain available.
+`PackageSession.TerminalCause` reads the accumulated terminal error without
+charging work or admitting another event, including after completion.
+`AssessmentBundle.OmittedPackageDiagnostics` preserves the first omitted blocking
+package rule/subject/boundary/outcome/category/reason and a saturating omission
+count when intrinsic children exhaust shared diagnostic quotas. Its fixed 6 KiB
+reserve is charged at Begin, and capture allocates nothing after exhaustion. It
+is separate from Findings and does not expand MaxDiagnostics; full locations,
+causal detail and rule messages may be omitted. Counts remain authoritative.
 
 The bundle retains one package report and one report per canonical intrinsic
 assessment. Required child failures cannot be flattened away or multiplied by

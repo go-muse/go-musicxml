@@ -90,9 +90,6 @@ func (s *PackageSession) ObserveImageMetadata(ctx context.Context, source Resour
 		if err := s.scan(ctx, 1); err != nil {
 			return err
 		}
-		if err := s.event(ctx, "image uniqueness"); err != nil {
-			return err
-		}
 		if old.value.Request.ID == q.ID || old.value.Source == source && old.value.Template == template {
 			return s.fail(contract("image response", "duplicate selected image response"))
 		}
@@ -231,9 +228,6 @@ func (s *PackageSession) validateFileMetadataScope(ctx context.Context, b *packa
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
-			if err := s.event(ctx, "file member context"); err != nil {
-				return err
-			}
 			a := s.adoptions[id]
 			base = base || a.packageID == v.Package && a.expansion.key.baseURI == v.BaseURI
 		}
@@ -271,9 +265,6 @@ func (s *PackageSession) validateFileMetadataScope(ctx context.Context, b *packa
 		if err := s.scan(ctx, 1); err != nil {
 			return err
 		}
-		if err := s.event(ctx, "file metadata scope"); err != nil {
-			return err
-		}
 		a := s.adoptions[id]
 		if a.packageID == v.Package && a.resource.pin == v.Pin && (!context || a.expansion.key.baseURI == v.BaseURI && a.expansion.key.archiveEntry == v.ArchiveEntry) {
 			scoped = true
@@ -302,6 +293,9 @@ func (s *PackageSession) evaluateAdvice(ctx context.Context, r PackageRuleBindin
 func (s *PackageSession) evaluateAdviceValues(ctx context.Context, r PackageRuleBinding, images []packageImageAdvice, files []PackageFileMetadataObservation, final bool) error {
 	if r.Selector.Kind == PackageSubjectImage {
 		for _, v := range images {
+			if _, ok := s.decisions[packageDecisionKey{r.Rule.Key, v.subject}]; ok {
+				continue
+			}
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
@@ -321,6 +315,9 @@ func (s *PackageSession) evaluateAdviceValues(ctx context.Context, r PackageRule
 	}
 	if r.Selector.Kind == PackageSubjectMetadata {
 		for _, v := range files {
+			if _, ok := s.decisions[packageDecisionKey{r.Rule.Key, v.ID}]; ok {
+				continue
+			}
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
