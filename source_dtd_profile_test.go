@@ -123,3 +123,17 @@ func TestSourceInternalDTDModePreflightAndLegacyIsolation(t *testing.T) {
 		t.Fatalf("mismatched engine: error=%v reads=%d", err, reader.reads)
 	}
 }
+
+func TestSourceInternalDTDUnverifiedDeclarationClosureIsIncomplete(t *testing.T) {
+	for _, subset := range []string{`<!ENTITY unused '&unused;'>`, `<!ENTITY amp 'wrong'>`} {
+		t.Run(subset, func(t *testing.T) {
+			input := `<!DOCTYPE score-partwise [` + subset + `]>` + assessedScore("1", "")
+			report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+			// InspectXML records ordinary unsupported assessment in the report;
+			// nil error is not acceptance and does not imply syntax closure.
+			if err != nil || report.Satisfied() || report.Syntax != validation.SyntaxIncomplete || !report.InputComplete {
+				t.Fatalf("unverified declaration closure: err=%v syntax=%s complete=%t satisfied=%t", err, report.Syntax, report.InputComplete, report.Satisfied())
+			}
+		})
+	}
+}

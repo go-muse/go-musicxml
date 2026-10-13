@@ -109,6 +109,8 @@ stage_fuzz() {
         -fuzztime="$check_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzSourceXMLReader$' \
         -fuzztime="$check_validation_fuzz_time" .
+    "$check_go" test -run='^$' -fuzz='^FuzzSourceInternalDTDFrames$' \
+        -fuzztime="$check_validation_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzAssessCurrentModel$' \
         -fuzztime="$check_validation_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzContextAssessment$' \

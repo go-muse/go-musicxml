@@ -772,7 +772,54 @@ defines its exact support, ownership, verification and remaining obligations.
 and retains all source-parser/XSD/DTD limits. Empty accordion registration, for
 example, passes the XSD-only preview and legacy `Validate`, but fails either local
 profile. Strict source-local decode withholds that otherwise converted document.
-No DTD stripping, fetching, trust or ignore-DTD option is introduced.
+These existing profiles introduce no DTD stripping, fetching, trust or ignore-DTD option.
+
+### Selected internal-DTD source profile
+
+`ProfileSourceInternalDTD` (`musicxml-4.0/source-internal-dtd`) is a separate
+developmental profile for `InspectXML` and the source phase of `DecodeAssessed`.
+It supports the three score/Opus roots and reuses the six sealed XSD operations
+after bounded processing of actually read internal declarations. It applies
+supported internal entity replacements, attribute defaults and declared
+non-CDATA normalization before namespace expansion, assessment and conversion.
+It does not compose the local/timeline/context/package profiles. Existing
+profiles, plain `Decode`, nil-assessment decode and current-model behavior are
+unchanged. External subsets/entities are never fetched; their missing evidence
+remains incomplete. This is not a validating DTD processor or general XML
+processor-conformance claim.
+
+The new `ContextResult.SourceOrigin` pointer carries owned typed occurrence
+evidence, selected only by source-origin providers. `Specified` distinguishes
+an original physical occurrence from an effective default or entity-generated
+markup; it does not replace `AttributeFact.Presence`. Physical, declaration and
+use sites have independent availability. Synthetic locations do not invent a
+physical byte offset. The adapter reports start-tag/attribute occurrence origins,
+not per-character value-segment provenance. A physical attribute containing an
+entity reference remains physically specified. Missing precise transformed-value
+coordinates must not be interpreted as original value coordinates.
+
+This additive public struct field requires migration of external **unkeyed**
+`ContextResult` literals; use keyed fields. Its `omitempty` tag preserves old
+profile JSON when no source-origin payload is present. Existing profile digests
+and revisions are frozen; the new profile uses distinct operation revisions.
+Custom source engines can select `NewSourceOriginPlan`, discover its exact
+assembly provider with `Engine.SourceOriginProvider`, submit `Session.SourceOrigin`
+and seal occurrence enumeration with `Session.CompleteSourceOrigins`. The session
+checks admitted occurrence ownership, duplicate slots, assembly, completeness,
+owned copies and the shared account. Current-model and resource-snapshot export
+do not support this source-only evidence; a failed export preserves the intrinsic
+report and never implies a valid resource adoption.
+
+Internal expansion requires the existing nonnil assessment account. Original
+input bytes and hashes exclude replacements and defaults. `MaxEvents` additionally
+meters replacement UTF-8 bytes, tokenized-normalization bytes and invocations;
+buffered declarations, stacks,
+effective attributes and report copies share `MaxBufferedBytes`. Effective nodes
+and attributes retain normal ingress charges. A separate finite 64-frame entity
+nesting ceiling applies alongside XML depth. Refusal is resource incompleteness,
+not XML invalidity. No default budgets are raised. See the
+[precise scope, limitations and requirement contributions](docs/validation/dtd-infoset-scope.md)
+and [verification evidence](docs/validation/dtd-infoset-evidence.md).
 
 Positions use zero-based original-byte offsets, including BOMs, and one-based
 decoded-character lines/columns. CRLF is one line break. If either coordinate

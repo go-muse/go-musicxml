@@ -38,6 +38,11 @@ referenced characters. This can change decoded string values for such input.
 
 ## DTD boundary
 
+This section records the legacy and existing source-profile boundary. The
+explicitly selected `ProfileSourceInternalDTD` has the separately documented
+[bounded internal-DTD contract](dtd-infoset-scope.md); it does not change the
+profiles described below or authorize external loading.
+
 The no-fetch reader checks the local grammar of DOCTYPE, ELEMENT, ATTLIST,
 ENTITY, NOTATION, comments and PIs. Empty and comment/PI-only internal subsets
 are supported. A DOCTYPE/root-name mismatch is a DTD validity matter and is not
