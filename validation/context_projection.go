@@ -49,11 +49,12 @@ type ContextResult struct {
 	SoundMapping *SoundMappingContextResult `json:",omitempty"`
 	Resource     *ResourceContextResult     `json:",omitempty"`
 	Container    *ContainerContextResult    `json:",omitempty"`
+	SourceOrigin *SourceOriginContextResult `json:",omitempty"`
 }
 
 func validContextProperty(p ContextProperty) bool {
 	switch p {
-	case ContextPropertyContainerMetadata, ContextPropertySoundMapping, ContextPropertySpan, ContextPropertyRepeat, ContextPropertyNavigation, ContextPropertyTiming:
+	case ContextPropertySourceOrigin, ContextPropertyContainerMetadata, ContextPropertySoundMapping, ContextPropertySpan, ContextPropertyRepeat, ContextPropertyNavigation, ContextPropertyTiming:
 		return true
 	}
 	return resourcePropertyValid(p) || contextLocalPropertyValid(p) || contextSpanPropertyValid(p) || contextRepeatPropertyValid(p) || contextPerformancePropertyValid(p)
@@ -71,7 +72,7 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 		return contract("context projection", "exact provider, subject and closed property required")
 	}
 	payloads := 0
-	for _, present := range []bool{in.Span != nil, in.Repeat != nil, in.Navigation != nil, in.Layout != nil, in.Timing != nil, in.SoundMapping != nil, in.Resource != nil, in.Container != nil} {
+	for _, present := range []bool{in.Span != nil, in.Repeat != nil, in.Navigation != nil, in.Layout != nil, in.Timing != nil, in.SoundMapping != nil, in.Resource != nil, in.Container != nil, in.SourceOrigin != nil} {
 		if present {
 			payloads++
 		}
@@ -81,6 +82,8 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 	}
 	expected := "scalar"
 	switch in.Property {
+	case ContextPropertySourceOrigin:
+		expected = "source-origin"
 	case ContextPropertyContainerMetadata:
 		expected = "container-metadata"
 	case ContextPropertySoundMapping:
@@ -100,11 +103,16 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 			expected = "layout"
 		}
 	}
-	matched := expected == "container-metadata" && in.Container != nil || expected == "sound-mapping" && in.SoundMapping != nil || expected == "scalar" && payloads == 0 || expected == "span" && in.Span != nil || expected == "repeat" && in.Repeat != nil || expected == "navigation" && in.Navigation != nil || expected == "timing" && in.Timing != nil || expected == "layout" && in.Layout != nil || expected == "resource" && resourcePayloadValid(in.Property, in.Resource)
+	matched := expected == "source-origin" && in.SourceOrigin != nil || expected == "container-metadata" && in.Container != nil || expected == "sound-mapping" && in.SoundMapping != nil || expected == "scalar" && payloads == 0 || expected == "span" && in.Span != nil || expected == "repeat" && in.Repeat != nil || expected == "navigation" && in.Navigation != nil || expected == "timing" && in.Timing != nil || expected == "layout" && in.Layout != nil || expected == "resource" && resourcePayloadValid(in.Property, in.Resource)
 	if !matched {
 		return contract("context projection", "property and typed payload must match")
 	}
 
+	if in.SourceOrigin != nil {
+		if err = validateSourceOrigin(ctx, s, in.SourceOrigin, in.Subject); err != nil {
+			return err
+		}
+	}
 	if err = s.account.Charge(BudgetContextFacts, 1); err != nil {
 		return err
 	}
@@ -179,6 +187,9 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 		return err
 	}
 	if out.Container, err = cloneContainerContext(ctx, s, in.Container); err != nil {
+		return err
+	}
+	if out.SourceOrigin, err = cloneSourceOriginContext(ctx, s, in.SourceOrigin); err != nil {
 		return err
 	}
 	if err = s.step(ctx, 1); err != nil {

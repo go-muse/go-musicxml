@@ -23,14 +23,15 @@ type PlanBinding struct {
 // A catalog makes only its profiles' explicit claims; no MusicXML profile is
 // implicitly supplied by this package.
 type CompiledCatalog struct {
-	schemas     map[ProfileID]map[Assembly]*CompiledSchema
-	rules       map[RuleKey]RuleDefinition
-	profiles    map[ProfileID]Profile
-	plans       map[string]Plan
-	orders      map[ProfileID][]RuleKey
-	modelOrders map[ProfileID][]RuleKey
-	phases      map[ProfileID][]catalogPhase
-	supports    map[ProfileID]map[RuleKey]RuleSupport
+	sourceOrigins map[ProfileID]map[Assembly]RuleKey
+	schemas       map[ProfileID]map[Assembly]*CompiledSchema
+	rules         map[RuleKey]RuleDefinition
+	profiles      map[ProfileID]Profile
+	plans         map[string]Plan
+	orders        map[ProfileID][]RuleKey
+	modelOrders   map[ProfileID][]RuleKey
+	phases        map[ProfileID][]catalogPhase
+	supports      map[ProfileID]map[RuleKey]RuleSupport
 }
 
 // A declaration's registration phase collects every eligible subject before
@@ -209,6 +210,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 				return nil, contract("schema profile", "conflicting schemas in one assembly")
 			}
 			schemas[plan.schema.assembly] = plan.schema
+		}
+		if err := validateSourceOriginProfile(c, owned, closure, supports, schemas); err != nil {
+			return nil, err
 		}
 		if err := validateContextProfile(c, closure, schemas); err != nil {
 			return nil, err

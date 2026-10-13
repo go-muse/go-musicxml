@@ -45,6 +45,7 @@ const (
 // Plan is an immutable sealed typed program. Its zero value is invalid; use a
 // constructor. Plans contain no callback, XML parser, runtime expression or DSL.
 type Plan struct {
+	sourceAssembly   Assembly
 	context          *contextPlan
 	timeline         *timelinePlan
 	timelineConsumer *timelineConsumerPlan
@@ -145,6 +146,10 @@ func (p Plan) valid() error {
 		return contract("plan", "parameters exceed the finite configuration bound")
 	}
 	switch p.kind {
+	case planSourceOrigin:
+		if !validAssembly(p.sourceAssembly) {
+			return contract("source origin assembly", "exact supported assembly required")
+		}
 	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
 		return p.context.valid(p.kind)
 	case planTimeline:
@@ -242,6 +247,7 @@ func (p Plan) clone() Plan {
 	})
 	p.kind = planKind(strings.Clone(string(p.kind)))
 	p.modelAssembly = Assembly(strings.Clone(string(p.modelAssembly)))
+	p.sourceAssembly = Assembly(strings.Clone(string(p.sourceAssembly)))
 	p.comparison = Comparison(strings.Clone(string(p.comparison)))
 	p.relation = RelationKind(strings.Clone(string(p.relation)))
 	p.key = strings.Clone(p.key)
@@ -251,6 +257,9 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
+	if p.kind == planSourceOrigin {
+		return p.validateSourceOriginFor(r)
+	}
 	if p.isContext() {
 		return p.validateContextFor(r)
 	}
@@ -313,6 +322,13 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	return nil
 }
 func (p Plan) digestValue() any {
+	if p.kind == planSourceOrigin {
+		return struct {
+			Kind     planKind
+			Revision uint32
+			Assembly Assembly
+		}{p.kind, 1, p.sourceAssembly}
+	}
 	if p.isContext() {
 		return p.context.digest(p.kind)
 	}

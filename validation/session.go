@@ -110,6 +110,11 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	sourceOriginSeen        map[sourceOriginSubject]struct{}
+	sourceOriginExpected    uint64
+	sourceOriginUncertain   bool
+	sourceOriginUnavailable bool
+	sourceOriginSeal        *Evidence[bool]
 	contextServices         map[RuleKey]*contextService
 	contextResults          []ContextResult
 	timeline                map[RuleKey]*timelineService
@@ -354,6 +359,9 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 	s.nodes[node.ID] = retained
 	s.sequence = append(s.sequence, node.ID)
 	s.stack = append(s.stack, retained)
+	if s.sourceOriginKey() != (RuleKey{}) {
+		s.sourceOriginExpected++
+	}
 	return nil
 }
 
@@ -390,6 +398,13 @@ func (s *Session) Attribute(ctx context.Context, attribute AttributeFact) error 
 		}
 	}
 	n.attributes = append(n.attributes, cloneAttribute(attribute))
+	if s.sourceOriginKey() != (RuleKey{}) {
+		if attribute.Presence.State == EvidenceKnown && attribute.Presence.Value {
+			s.sourceOriginExpected++
+		} else if attribute.Presence.State != EvidenceAbsent {
+			s.sourceOriginUncertain = true
+		}
+	}
 	return nil
 }
 
@@ -646,6 +661,11 @@ func terminalClassification(err error, malformedSource bool) (DiagnosticCategory
 	return CategoryCapability, "assessment-interrupted"
 }
 func (s *Session) cleanup() {
+	s.sourceOriginSeen = nil
+	s.sourceOriginSeal = nil
+	s.sourceOriginExpected = 0
+	s.sourceOriginUncertain = false
+	s.sourceOriginUnavailable = false
 	if s.schema != nil && s.schema.run != nil {
 		_ = s.schema.run.Close()
 	}
