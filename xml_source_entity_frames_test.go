@@ -305,7 +305,7 @@ func TestSourceEntityOriginKeepsByteOffsetAfterCoordinateOverflow(t *testing.T) 
 		t.Fatal(err)
 	}
 	origin := r.Metadata().Origin
-	if origin == nil || !origin.PhysicalAvailable || origin.Physical.End.ByteOffset != 4 || origin.Physical.Start.Line != 0 {
+	if origin == nil || !origin.PhysicalAvailable || r.Metadata().Span.End.ByteOffset != 4 || r.Metadata().Span.Start.Line != 0 {
 		t.Fatalf("origin=%+v", origin)
 	}
 }

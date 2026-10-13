@@ -16,7 +16,8 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 		return nil, nil, &validation.SessionError{Operation: "DTD attributes", Reason: "attribute metadata mismatch"}
 	}
 	declared := r.dtdStore.Attributes(element)
-	if len(declared) == 0 {
+	declarationsComplete := r.dtdStore.State().AttributeDeclarationsComplete
+	if len(declared) == 0 && declarationsComplete {
 		return attributes, metadata, nil
 	}
 	// Keys borrow the already owned attribute strings. Per-entry allowance also
@@ -46,6 +47,12 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 		}
 		declaration, found := r.dtdStore.Attribute(element, lexical)
 		if !found {
+			if !declarationsComplete && metadata[i].Origin != nil {
+				// Missing from the read store is not known absence when unread
+				// declarations may still determine this physical attribute.
+				metadata[i].Origin.DeclarationExpected = true
+				metadata[i].Origin.DeclarationUnavailableReason = "dtd-infoset-unavailable"
+			}
 			continue
 		}
 		if metadata[i].Origin != nil {

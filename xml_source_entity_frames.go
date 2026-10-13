@@ -20,6 +20,10 @@ const (
 const sourceXMLEntityMaxDepth = 64
 const sourceXMLEntityFrameBytes = 512
 
+// ErrEntityNestingLimit identifies the independent 64-entity replacement ceiling.
+// The returned error also wraps a validation.ResourceError with BudgetDepth.
+var ErrEntityNestingLimit = errors.New("musicxml: entity replacement nesting limit")
+
 var errSourceEntityBoundary = errors.New("XML entity replacement boundary")
 
 type sourceXMLEntityInput struct {
@@ -52,15 +56,21 @@ func (r *sourceXMLTokenReader) pushEntity(input sourceXMLEntityInput, context so
 	if err := r.cursor.contextErr(); err != nil {
 		return err
 	}
-	depth := 1
+	depth, entities := 1, 0
+	if input.Name != "" {
+		entities = 1
+	}
 	for frame := r.entity; frame != nil; frame = frame.parent {
-		if frame.input.Name == input.Name && frame.input.Parameter == input.Parameter {
+		if input.Name != "" && frame.input.Name == input.Name && frame.input.Parameter == input.Parameter {
 			return r.syntax("recursive XML entity " + sourceXMLDiagnosticValue(input.Name))
 		}
 		depth++
+		if frame.input.Name != "" {
+			entities++
+		}
 	}
-	if depth > sourceXMLEntityMaxDepth {
-		return fmt.Errorf("musicxml: entity replacement nesting limit: %w", &validation.ResourceError{Kind: validation.BudgetDepth, Limit: sourceXMLEntityMaxDepth, Used: int64(depth - 1), Requested: 1})
+	if entities > sourceXMLEntityMaxDepth {
+		return fmt.Errorf("%w: %w", ErrEntityNestingLimit, &validation.ResourceError{Kind: validation.BudgetDepth, Limit: sourceXMLEntityMaxDepth, Used: int64(entities - 1), Requested: 1})
 	}
 	replacementBytes := int64(len(input.Replacement))
 	if input.Padded {
@@ -86,6 +96,12 @@ func (r *sourceXMLTokenReader) finishEntity(context sourceXMLEntityContext) erro
 	}
 	if len(r.frames) != frame.entryDepth || r.needEnd {
 		return r.syntax("entity replacement is not balanced XML content")
+	}
+	if context == sourceEntityContent && r.dtdStore != nil {
+		if err := r.dtdStore.entityContentRead(frame.input.DeclarationRecord); err != nil {
+			return err
+		}
+		r.dtd.WellFormednessIncomplete = r.dtdStore.State().WellFormednessIncomplete
 	}
 	r.entity = frame.parent
 	if r.account != nil {
@@ -168,4 +184,13 @@ func (f *sourceXMLEntityFrame) length() int {
 		n += 2
 	}
 	return n
+}
+
+// replacementOffset excludes the XML-mandated synthetic PE padding.
+func (f *sourceXMLEntityFrame) replacementOffset() int64 {
+	offset := f.offset
+	if f.input.Padded {
+		offset--
+	}
+	return int64(max(0, min(offset, len(f.input.Replacement))))
 }

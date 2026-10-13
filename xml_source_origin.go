@@ -15,30 +15,27 @@ type sourceXMLOriginStep struct {
 	Entity                             string
 	DeclarationAvailable, UseAvailable bool
 	Declaration, Use                   sourceXMLSpan
-	ReplacementOffset                  int64
-	DeclarationRecord                  *sourceDTDDeclaration
 }
 type sourceXMLOrigin struct {
 	Kind                               sourceXMLOriginKind
 	DeclarationExpected, UseExpected   bool
-	DeclarationRecord                  *sourceDTDDeclaration
+	DeclarationUnavailableReason       string
 	Specified                          bool
 	PhysicalAvailable                  bool
-	Physical                           sourceXMLSpan
 	DeclarationAvailable, UseAvailable bool
 	Declaration, Use                   sourceXMLSpan
 	Ancestry                           []sourceXMLOriginStep
 	AncestryComplete                   bool
 }
 
-func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified bool, physical sourceXMLSpan) error {
+func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified bool) error {
 	if !r.internalDTD {
 		return nil
 	}
 	if err := r.tokenReserve(256); err != nil {
 		return err
 	}
-	out := &sourceXMLOrigin{Kind: sourceOriginPhysical, Specified: specified, PhysicalAvailable: true, Physical: physical, AncestryComplete: true}
+	out := &sourceXMLOrigin{Kind: sourceOriginPhysical, Specified: specified, PhysicalAvailable: true, AncestryComplete: true}
 	*target = out
 	if r.entity == nil {
 		return nil
@@ -46,10 +43,8 @@ func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified
 	frame := r.entity
 	out.Kind = sourceOriginEntity
 	out.DeclarationExpected, out.UseExpected = true, true
-	out.DeclarationRecord = frame.input.DeclarationRecord
 	out.Specified = false
 	out.PhysicalAvailable = false
-	out.Physical = sourceXMLSpan{}
 	out.Declaration = frame.input.Declaration
 	out.DeclarationAvailable = frame.input.DeclarationAvailable
 	out.Use = frame.use
@@ -59,7 +54,7 @@ func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified
 	}
 	out.Ancestry = make([]sourceXMLOriginStep, frame.depth)
 	for i := frame.depth - 1; frame != nil; i-- {
-		out.Ancestry[i] = sourceXMLOriginStep{Entity: frame.input.Name, DeclarationAvailable: frame.input.DeclarationAvailable, Declaration: frame.input.Declaration, UseAvailable: frame.useAvailable, Use: frame.use, ReplacementOffset: int64(frame.offset), DeclarationRecord: frame.input.DeclarationRecord}
+		out.Ancestry[i] = sourceXMLOriginStep{Entity: frame.input.Name, DeclarationAvailable: frame.input.DeclarationAvailable, Declaration: frame.input.Declaration, UseAvailable: frame.useAvailable, Use: frame.use}
 		frame = frame.parent
 	}
 	return nil

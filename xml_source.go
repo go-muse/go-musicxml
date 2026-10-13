@@ -78,6 +78,7 @@ type sourceXMLTokenReader struct {
 	dtdStore                                                   *sourceDTDStore
 	standalone                                                 sourceDTDStandalone
 	dtdBytes                                                   int64
+	dtdOriginScratch                                           []sourceDTDOriginStep
 	err                                                        error
 }
 
@@ -126,6 +127,7 @@ func (r *sourceXMLTokenReader) Close() error {
 	r.tokenOwned, r.retained, r.mapOwned = 0, 0, 0
 	r.frames = nil
 	r.entity = nil
+	r.dtdOriginScratch = nil
 	r.namespaces = nil
 	return nil
 }
@@ -161,8 +163,11 @@ func (r *sourceXMLTokenReader) releaseToken() {
 func (r *sourceXMLTokenReader) syntax(message string) error { return r.cursor.syntax(message) }
 func (r *sourceXMLTokenReader) must() (sourceXMLUnit, error) {
 	u, err := r.take()
-	if err == io.EOF || errors.Is(err, errSourceEntityBoundary) {
-		return u, r.syntax("unexpected EOF or entity boundary in XML token")
+	if err == io.EOF {
+		return u, r.syntax("unexpected EOF")
+	}
+	if errors.Is(err, errSourceEntityBoundary) {
+		return u, r.syntax("entity boundary splits XML token")
 	}
 	return u, err
 }
@@ -343,106 +348,112 @@ func (r *sourceXMLTokenReader) Token() (token xml.Token, err error) {
 			r.err = err
 		}
 	}()
-	r.releaseToken()
-	if err = r.cursor.ctx.Err(); err != nil {
-		return nil, err
-	}
-	if r.needEnd {
-		r.needEnd = false
-		r.metadata.EmptyEnd = true
-		r.metadata.Span = sourceXMLSpan{Start: r.position(), End: r.position()}
-		if err = r.captureOrigin(&r.metadata.Origin, true, r.metadata.Span); err != nil {
+	for {
+		r.releaseToken()
+		if err = r.cursor.ctx.Err(); err != nil {
 			return nil, err
 		}
-		name := r.frames[len(r.frames)-1].name
-		r.pop()
+		if r.needEnd {
+			r.needEnd = false
+			r.metadata.EmptyEnd = true
+			r.metadata.Span = sourceXMLSpan{Start: r.position(), End: r.position()}
+			if err = r.captureOrigin(&r.metadata.Origin, true); err != nil {
+				return nil, err
+			}
+			name := r.frames[len(r.frames)-1].name
+			r.pop()
+			if err = r.event(); err != nil {
+				return nil, err
+			}
+			return xml.EndElement{Name: name}, nil
+		}
+		for r.entity != nil && r.entity.offset == r.entity.length() && !r.entity.hasCached {
+			if err = r.finishEntity(sourceEntityContent); err != nil {
+				return nil, err
+			}
+		}
+		first := !r.seenToken
+		u, e := r.peek()
+		if e != nil {
+			if e == io.EOF {
+				if len(r.frames) > 0 {
+					return nil, r.syntax("unexpected EOF")
+				}
+				if !r.seenRoot {
+					return nil, ErrEmptyDocument
+				}
+				r.complete = true
+				return nil, io.EOF
+			}
+			return nil, e
+		}
+		r.metadata.Span.Start = u.Start
+		if u.Rune == '<' {
+			if err = r.captureOrigin(&r.metadata.Origin, true); err != nil {
+				return nil, err
+			}
+		}
+		if first && strings.HasPrefix(r.cursor.encoding, "utf16") && !r.cursor.bom && u.Rune != '<' {
+			return nil, r.syntax("UTF-16 without a byte order mark requires an encoding declaration")
+		}
 		if err = r.event(); err != nil {
 			return nil, err
 		}
-		return xml.EndElement{Name: name}, nil
-	}
-	for r.entity != nil && r.entity.offset == r.entity.length() && !r.entity.hasCached {
-		if err = r.finishEntity(sourceEntityContent); err != nil {
-			return nil, err
-		}
-	}
-	first := !r.seenToken
-	u, e := r.peek()
-	if e != nil {
-		if e == io.EOF {
-			if len(r.frames) > 0 {
-				return nil, r.syntax("unexpected EOF")
-			}
-			if !r.seenRoot {
-				return nil, ErrEmptyDocument
-			}
-			r.complete = true
-			return nil, io.EOF
-		}
-		return nil, e
-	}
-	r.metadata.Span.Start = u.Start
-	if err = r.captureOrigin(&r.metadata.Origin, true, sourceXMLSpan{Start: u.Start}); err != nil {
-		return nil, err
-	}
-	if first && strings.HasPrefix(r.cursor.encoding, "utf16") && !r.cursor.bom && u.Rune != '<' {
-		return nil, r.syntax("UTF-16 without a byte order mark requires an encoding declaration")
-	}
-	if err = r.event(); err != nil {
-		return nil, err
-	}
-	r.seenToken = true
-	if u.Rune != '<' {
-		token, err = r.text(false)
-	} else {
-		_ = r.discard()
-		u, err = r.must()
-		if err != nil {
-			return nil, err
-		}
-		switch u.Rune {
-		case '/':
-			token, err = r.end()
-		case '?':
-			token, err = r.instruction(first)
-		case '!':
+		r.seenToken = true
+		if u.Rune != '<' {
+			token, err = r.text(false)
+		} else {
+			_ = r.discard()
 			u, err = r.must()
 			if err != nil {
 				return nil, err
 			}
 			switch u.Rune {
-			case '-':
-				if err = r.literal("-"); err == nil {
-					token, err = r.comment()
+			case '/':
+				token, err = r.end()
+			case '?':
+				token, err = r.instruction(first)
+			case '!':
+				u, err = r.must()
+				if err != nil {
+					return nil, err
 				}
-			case '[':
-				if err = r.literal("CDATA["); err == nil {
-					r.metadata.CDATA = true
-					token, err = r.text(true)
-				}
-			case 'D':
-				if err = r.literal("OCTYPE"); err == nil {
-					token, err = r.doctypeToken()
+				switch u.Rune {
+				case '-':
+					if err = r.literal("-"); err == nil {
+						token, err = r.comment()
+					}
+				case '[':
+					if err = r.literal("CDATA["); err == nil {
+						r.metadata.CDATA = true
+						token, err = r.text(true)
+					}
+				case 'D':
+					if err = r.literal("OCTYPE"); err == nil {
+						token, err = r.doctypeToken()
+					}
+				default:
+					err = r.syntax("unknown XML markup declaration")
 				}
 			default:
-				err = r.syntax("unknown XML markup declaration")
+				// The first name character is already consumed; preserve its exact unit.
+				r.unread(u)
+				token, err = r.start()
 			}
-		default:
-			// The first name character is already consumed; preserve its exact unit.
-			r.unread(u)
-			token, err = r.start()
 		}
-	}
-	r.metadata.Span.End = r.position()
-	if r.metadata.Origin != nil && r.metadata.Origin.Kind == sourceOriginPhysical {
-		r.metadata.Origin.Physical = r.metadata.Span
-	}
-	if err == nil && first && strings.HasPrefix(r.cursor.encoding, "utf16") && !r.cursor.bom {
-		if p, ok := token.(xml.ProcInst); !ok || p.Target != "xml" {
-			return nil, r.syntax("UTF-16 without a byte order mark requires an encoding declaration")
+		if text, ok := token.(xml.CharData); err == nil && ok && len(text) == 0 && !r.metadata.CDATA && r.internalDTD {
+			// Expansion can end without character data or begin with markup.
+			// Advance iteratively, never exposing synthetic empty text tokens.
+			continue
 		}
+		r.metadata.Span.End = r.position()
+		if err == nil && first && strings.HasPrefix(r.cursor.encoding, "utf16") && !r.cursor.bom {
+			if p, ok := token.(xml.ProcInst); !ok || p.Target != "xml" {
+				return nil, r.syntax("UTF-16 without a byte order mark requires an encoding declaration")
+			}
+		}
+		return token, err
 	}
-	return token, err
 }
 func (r *sourceXMLTokenReader) event() error {
 	if r.account != nil {
@@ -589,9 +600,6 @@ func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
 			last1, last2 = 0, 0
 			if c == sourceXMLExpandedRune {
 				r.metadata.Span = sourceXMLSpan{}
-				if err = r.captureOrigin(&r.metadata.Origin, true, sourceXMLSpan{}); err != nil {
-					return nil, err
-				}
 				continue
 			}
 		} else {
@@ -606,6 +614,11 @@ func (r *sourceXMLTokenReader) text(cdata bool) (xml.Token, error) {
 	}
 	if len(r.frames) == 0 && (cdata || r.metadata.Reference) {
 		return nil, r.syntax("references and CDATA are not allowed outside the root element")
+	}
+	if len(b.data) != 0 {
+		if err := r.captureOrigin(&r.metadata.Origin, true); err != nil {
+			return nil, err
+		}
 	}
 	return xml.CharData(b.data), nil
 }
@@ -780,7 +793,7 @@ func (r *sourceXMLTokenReader) start() (xml.Token, error) {
 			return nil, err
 		}
 		m.ValueSpan = span
-		if err = r.captureOrigin(&m.Origin, true, sourceXMLSpan{Start: m.NameSpan.Start, End: r.position()}); err != nil {
+		if err = r.captureOrigin(&m.Origin, true); err != nil {
 			return nil, err
 		}
 		m.NamespaceDeclaration = aName.Space == "xmlns" || aName.Space == "" && aName.Local == "xmlns"
@@ -1165,8 +1178,9 @@ func (r *sourceXMLTokenReader) Peek() (rune, error) {
 	return u.Rune, err
 }
 func (r *sourceXMLTokenReader) Read() (rune, error) {
+	physical := r.entity == nil
 	u, err := r.must()
-	if err == nil {
+	if err == nil && physical {
 		r.dtdBytes += int64(utf8.RuneLen(u.Rune))
 		err = r.checkScalar(r.dtdBytes)
 	}
@@ -1191,6 +1205,7 @@ func (r *sourceXMLTokenReader) doctypeToken() (xml.Token, error) {
 		r.dtdStore, err = newSourceDTDStore(r.cursor.ctx, r.account, r.standalone)
 		if err == nil {
 			info, err = parseSourceDTDWithStore(r, r.dtdStore)
+			r.releaseDTDOriginScratch()
 		}
 	} else {
 		info, err = parseSourceDTD(r)

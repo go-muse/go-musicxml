@@ -67,7 +67,7 @@ func (r *sourceXMLTokenReader) attributeValue(quote rune, owner *sourceXMLEntity
 		}
 		if err != nil {
 			if err == io.EOF {
-				err = r.syntax("unexpected EOF in attribute value")
+				err = r.syntax("unexpected EOF")
 			}
 			return "", sourceXMLPosition{}, err
 		}

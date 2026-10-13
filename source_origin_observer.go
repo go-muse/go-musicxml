@@ -70,7 +70,11 @@ func (o *sourceFactObserver) publishSourceOrigin(frame *sourceObserverFrame, att
 	if in.DeclarationAvailable {
 		out.Declaration = o.sourceOriginSite(in.Declaration)
 	} else if in.Kind == sourceOriginDefault || in.Kind == sourceOriginEntity || in.DeclarationExpected {
-		out.Declaration = validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: "source-origin-declaration-unavailable"}
+		reason := "source-origin-declaration-unavailable"
+		if in.DeclarationUnavailableReason != "" {
+			reason = in.DeclarationUnavailableReason
+		}
+		out.Declaration = validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: validation.Code(reason)}
 	}
 	if in.UseAvailable {
 		out.Use = o.sourceOriginSite(in.Use)
@@ -105,5 +109,9 @@ func (o *sourceFactObserver) sealSourceOrigins(ctx context.Context) error {
 	if o == nil || o.origins == nil || o.origins.key == (validation.RuleKey{}) {
 		return nil
 	}
-	return o.origins.session.CompleteSourceOrigins(ctx, o.origins.key, validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true})
+	complete := validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}
+	if o.dtdUnavailable {
+		complete = validation.Evidence[bool]{State: validation.EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
+	}
+	return o.origins.session.CompleteSourceOrigins(ctx, o.origins.key, complete)
 }
