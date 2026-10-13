@@ -154,6 +154,8 @@ func TestXMLDocumentWhitespaceAgainstXMLLint(t *testing.T) {
 
 func runXMLReadingAgainstXMLLint(t *testing.T, cases []xmlReadingCase) {
 	t.Helper()
+	// Both TestXMLDocumentWhitespaceAgainstXMLLint and
+	// TestXMLDocumentLexicalAgainstXMLLint use this scheduling boundary.
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {

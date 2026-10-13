@@ -70,6 +70,39 @@ commands accept `--root`, `--manifest`, `--evidence`, `--archive-dir`, and
 inventory snapshots retain their original command text and observations;
 use the Go commands above for current checkouts.
 
+### Compatibility of maintenance output
+
+The Go tools preserve the checked records, hash conventions and result fields,
+but do not promise byte-identical Python output. Result object keys are sorted;
+failure lists follow deterministic Go key traversal rather than Python document
+order. Compare failure content independent of order, preserving multiplicity.
+The first malformed-field diagnostic can also differ. The migration's
+parsed-output parity evidence covers its enumerated fixtures and mutations,
+not every possible malformed input or ordering of failures.
+
+The strict JSON reader rejects the non-standard `NaN`, `Infinity` and
+`-Infinity` literals accepted by Python's permissive JSON decoder. Floating
+values used in canonical hashes must also have a finite binary64 representation;
+an overflowing token such as `1e400` cannot be canonicalized as infinity. An
+unused unknown-metadata token is not canonicalized merely by parsing: `1e400`
+remains accepted and byte-preserved through a narrow current-hash refresh.
+Integer tokens retain arbitrary precision. These are explicit compatibility
+differences, not a claim of parity with Python's non-finite extensions.
+
+The line-anchored function-route matcher uses Go's RE2 ASCII whitespace class:
+tab, newline, form feed, carriage return and space. Python's additional
+vertical-tab and Unicode whitespace matches are not retained. This deliberately
+narrowed text check is not a Go parser and does not establish source validity;
+the actual Go test run remains a separate requirement.
+
+Parallel test scheduling aims to reduce wall time, not total CPU or memory.
+Independent cases retain their own mutable data and assessment accounts, while
+only immutable engines are reused. More simultaneous cases and xmllint processes
+can increase system CPU and peak memory. Both the whitespace and lexical XML
+oracle matrices use the shared parallel helper; Go's `-parallel` limit bounds
+their active cases. Compare wall time, CPU and memory separately on the actual
+runner rather than extrapolating a many-core local speedup.
+
 ### Updating inspected test hashes
 
 The inventory deliberately rejects changed original sources and stale inspected
