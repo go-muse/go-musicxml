@@ -264,7 +264,7 @@ func TestPackageIntrinsicSourceDiscoveryAvailableForEveryAssembly(t *testing.T) 
 				h := fact.Resource.SchemaHints
 				if h.Raw.State == validation.EvidenceKnown && h.Raw.Value == "urn:a a.xsd trailing" {
 					found = true
-					if h.Complete.State != validation.EvidenceUnknown || len(h.Pairs) != 1 || h.Trailing.State != validation.EvidenceKnown || h.Trailing.Value != "trailing" {
+					if h.Complete.State != validation.EvidenceKnown || h.Complete.Value || h.Complete.Reason != "schema-location-unmatched-token" || len(h.Pairs) != 1 || h.Trailing.State != validation.EvidenceKnown || h.Trailing.Value != "trailing" {
 						t.Errorf("discovery evidence lost: %+v", h)
 					}
 				}
