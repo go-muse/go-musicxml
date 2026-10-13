@@ -573,11 +573,10 @@ func TestMaintenanceMissingSourceAndTestFilesAreJSONFailures(t *testing.T) {
 	t.Parallel()
 	f := newMaintenanceFixture(t)
 	source := maintenanceFirst(mo(f.m["source_files"]))
-	// Current test routes retain inventory spelling; source I/O errors name
-	// the resolved native filesystem path.
+	// Source and test diagnostics retain the repository-relative inventory label.
 	for _, tc := range []struct{ path, diagnosticPath string }{
 		{"link_intent_test.go", "link_intent_test.go"},
-		{source, filepath.FromSlash(source)},
+		{source, source},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
 			if err := os.Remove(f.path(tc.path)); err != nil {
@@ -659,12 +658,11 @@ func TestMaintenanceMalformedJSONAndShapesHaveUsefulErrors(t *testing.T) {
 	t.Parallel()
 	f := newMaintenanceFixture(t)
 	source := maintenanceFirst(mo(f.m["source_files"]))
-	// Explicit input labels retain their supplied spelling. Only repository
-	// source paths have been resolved to native separators before parsing.
+	// Explicit input and repository-source labels retain their supplied spelling.
 	for _, tc := range []struct{ path, data, diagnosticPath string }{
 		{maintenanceManifest, "{", maintenanceManifest},
 		{maintenanceEvidence, "[]", maintenanceEvidence},
-		{source, "not JSON", filepath.FromSlash(source)},
+		{source, "not JSON", source},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
 			old := f.read(tc.path)
@@ -687,12 +685,18 @@ func TestMaintenanceMissingGitIsAWarningNotTraceback(t *testing.T) {
 	f := newMaintenanceFixture(t)
 	result := f.binary(t, "verify", 0, true)
 	maintenanceEqual(t, result["observed_current_head"], "unavailable")
-	found := false
+	warning := ""
 	for _, w := range ma(result["warnings"]) {
-		found = found || strings.Contains(strings.ToLower(ms(w)), "git")
+		if strings.HasPrefix(ms(w), "git observation unavailable:") {
+			warning = ms(w)
+		}
 	}
-	if !found {
-		t.Fatalf("missing git warning: %#v", result)
+	resolvedRoot, err := filepath.EvalSymlinks(f.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"git -C ", fmt.Sprintf("%q", resolvedRoot), "rev-parse HEAD"} {
+		maintenanceContains(t, warning, want)
 	}
 }
 

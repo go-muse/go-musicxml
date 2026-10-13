@@ -1,7 +1,10 @@
 package packageinventory
 
 import (
+	"errors"
+	"fmt"
 	"go/token"
+	"math/big"
 	"os"
 	"os/exec"
 	"path"
@@ -181,9 +184,9 @@ func (r *runner) loadInputs() string {
 		ep = joinUnclean(root, ep)
 	}
 	r.protected = r.inputPaths(root, nil, nil, mp, ep)
-	r.manifest = readJSON(mp)
-	r.evidenceBytes = readBytes(ep)
-	r.evidence = node{parseJSON(r.evidenceBytes, ep), ep}
+	r.manifest = readJSONNamed(mp, r.opts.manifest)
+	r.evidenceBytes = readBytesNamed(ep, r.opts.evidence)
+	r.evidence = node{parseJSON(r.evidenceBytes, r.opts.evidence), r.opts.evidence}
 	r.protected = r.inputPaths(root, r.manifest.value, r.evidence.value, mp, ep)
 	r.known = inputsKnown(r.manifest.value, r.evidence.value, r.opts.archive != "")
 	r.manifest.object()
@@ -245,7 +248,7 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 		if n, ok := loaded[name]; ok {
 			return n
 		}
-		n := readJSON(repositoryPath(root, name))
+		n := readJSONNamed(repositoryPath(root, name), name)
 		loaded[name] = n
 		return n
 	}
@@ -309,10 +312,10 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 	for _, name := range sortedKeys(sources) {
 		record := node{sources[name], "source_files/" + name}
 		record.fields(map[string]string{"sha256": "string", "bytes": "integer"})
-		data := canonicalLF(readBytes(repositoryPath(root, name)))
+		data := canonicalLF(readBytesNamed(repositoryPath(root, name), name))
 		load(name)
 		check(digest(data) == record.get("sha256").text(), "changed original source: "+name)
-		check(int64(len(data)) == record.get("bytes").integer(), "changed original source size: "+name)
+		check(record.get("bytes").integerValue().Cmp(big.NewInt(int64(len(data)))) == 0, "changed original source size: "+name)
 	}
 	retained := map[string]int{}
 	collections := m.get("preserved_collections")
@@ -323,20 +326,20 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 		actual.list()
 		rows := collection.get("records")
 		retained[name] = len(rows.list())
-		check(int64(len(rows.list())) == collection.get("count").integer() && len(rows.list()) == len(actual.list()), "record count: "+name)
+		check(collection.get("count").integerValue().Cmp(big.NewInt(int64(len(rows.list())))) == 0 && len(rows.list()) == len(actual.list()), "record count: "+name)
 		ids := map[string]bool{}
-		indices := map[int64]bool{}
+		indices := map[string]bool{}
 		for i := range rows.list() {
 			route := rows.at(i)
 			route.fields(map[string]string{"id": "string", "index": "integer", "sha256": "string"})
-			id, index := route.get("id").text(), route.get("index").integer()
+			id, index := route.get("id").text(), route.get("index").integerValue()
 			ids[id] = true
-			indices[index] = true
-			check(index >= 0, "negative record index: "+id)
-			if index < 0 || index >= int64(len(actual.list())) {
+			indices[index.String()] = true
+			check(index.Sign() >= 0, "negative record index: "+id)
+			if index.Sign() < 0 || index.Cmp(big.NewInt(int64(len(actual.list())))) >= 0 {
 				continue
 			}
-			original := actual.at(int(index))
+			original := actual.at(int(index.Int64()))
 			original.object()
 			check(original.get(collection.get("id_field").text()).value == id, "ID route: "+id)
 			check(digest(canonicalJSON(original.value)) == route.get("sha256").text(), "original record: "+id)
@@ -348,7 +351,7 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 		check(len(ids) == len(rows.list()), "duplicate ID: "+name)
 		complete := len(indices) == len(actual.list())
 		for i := range actual.list() {
-			complete = complete && indices[int64(i)]
+			complete = complete && indices[strconv.Itoa(i)]
 		}
 		check(complete, "lost index: "+name)
 	}
@@ -357,8 +360,8 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 	countMatches := func(wanted map[string]int) bool {
 		ok := true
 		for _, key := range sortedKeys(wanted) {
-			n := m.get("counts").get(key).integer()
-			ok = ok && n == int64(wanted[key])
+			n := m.get("counts").get(key).integerValue()
+			ok = ok && n.Cmp(big.NewInt(int64(wanted[key]))) == 0
 		}
 		return ok
 	}
@@ -503,7 +506,7 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 		}
 		inspection, ok := inspected[file]
 		if !ok {
-			inspection = inspectTestFunctions(readBytes(p))
+			inspection = inspectTestFunctions(readBytesNamed(p, file))
 			inspected[file] = inspection
 		}
 		data := inspection.data
@@ -527,8 +530,8 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 			info, err := os.Stat(p)
 			check(err == nil && info.Mode().IsRegular(), "missing archive: "+name)
 			if err == nil && info.Mode().IsRegular() {
-				data := readBytes(p)
-				check(digest(data) == record.get("sha256").text() && int64(len(data)) == record.get("bytes").integer(), "changed archive: "+name)
+				data := readBytesNamed(p, name)
+				check(digest(data) == record.get("sha256").text() && record.get("bytes").integerValue().Cmp(big.NewInt(int64(len(data)))) == 0, "changed archive: "+name)
 			}
 		}
 		historical := e.get("historical_tests")
@@ -540,7 +543,7 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 			info, err := os.Stat(p)
 			check(err == nil && info.Mode().IsRegular(), "missing archived test: "+name)
 			if err == nil && info.Mode().IsRegular() {
-				data := readBytes(p)
+				data := readBytesNamed(p, name)
 				check(digest(data) == record.get("file_sha256").text(), "changed archived test bytes: "+name)
 				if !utf8.Valid(data) {
 					fail("invalid inventory: %s: invalid UTF-8 archived test", name)
@@ -565,10 +568,10 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 		warnings = append(warnings, "Test bytes moved since inspection; refresh the row matrix before final acceptance.")
 	}
 	head, worktree := "unavailable", "unavailable"
-	headBytes, err := exec.Command("git", "-C", root, "rev-parse", "HEAD").Output()
+	headBytes, err := gitOutput(root, "rev-parse", "HEAD")
 	if err == nil {
 		var status []byte
-		status, err = exec.Command("git", "-C", root, "status", "--porcelain").Output()
+		status, err = gitOutput(root, "status", "--porcelain")
 		if err == nil {
 			head, worktree = strings.TrimSpace(string(headBytes)), strings.TrimSpace(string(status))
 		}
@@ -582,6 +585,26 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 	}
 	return map[string]any{"result": result, "observed_current_head": head, "observed_worktree_status": worktree, "historical_observation": map[string]any{"head": m.get("snapshot").get("head_at_end").value, "state": m.get("snapshot").optional("state", "").value, "interpretation": "historical source/test observation; not current exact-head acceptance"}, "retained_counts": retained, "selected_counts": selectedCounts, "test_functions": len(e.get("tests").object()), "axes_without_runtime_route": emptyAxes, "external_archive": archiveState, "stale_test_files": stale, "warnings": warnings, "failures": failures, "repository_hash_convention": "SHA-256 and sizes after CRLF-to-LF only; JSON field values unmodified; external archives raw-byte exact", "semantic_resource_execution_acceptance": "NOT CLAIMED; independent final tree, seven local stages and nine exact-head CI jobs still required"}
 }
+
+// Git is an optional observation, but a failed command must remain diagnosable.
+func gitOutput(root string, args ...string) ([]byte, error) {
+	out, err := exec.Command("git", append([]string{"-C", root}, args...)...).Output()
+	if err == nil {
+		return out, nil
+	}
+	detail := ""
+	var exit *exec.ExitError
+	if errors.As(err, &exit) {
+		if stderr := strings.TrimSpace(string(exit.Stderr)); stderr != "" {
+			detail = ": " + stderr
+		}
+	}
+	return nil, fmt.Errorf("git -C %q %s: %w%s", root, strings.Join(args, " "), err, detail)
+}
+
+// Function matching is intentionally a textual check, not Go syntax validation.
+// Go regexp \s accepts only tab, LF, form feed, CR and space; unlike Python,
+// it does not accept vertical tab or Unicode whitespace.
 func hasFunction(data []byte, function string) bool {
 	return regexp.MustCompile(`(?m)^func\s+` + regexp.QuoteMeta(function) + `\s*\(`).Match(data)
 }
@@ -595,7 +618,7 @@ type testFunctionIndex struct {
 }
 
 // Index each freshly read file once, rather than rescanning it for every route.
-// Unusual non-identifier route strings retain the exact legacy regex behavior.
+// Unusual non-identifier route strings fall back to the same direct matcher.
 // The index lives only for this verification; later mutations are always reread.
 func inspectTestFunctions(data []byte) testFunctionIndex {
 	index := testFunctionIndex{data: data, names: map[string]bool{}, hash: digest(canonicalLF(data))}

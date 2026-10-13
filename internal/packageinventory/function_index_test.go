@@ -36,3 +36,36 @@ func TestFunctionIndexHashIsFreshAndCRLFOnly(t *testing.T) {
 		t.Fatal("lone CR normalized")
 	}
 }
+
+func TestFunctionMatchersUseDocumentedASCIIWhitespace(t *testing.T) {
+	t.Parallel()
+	for _, tc := range []struct {
+		name, whitespace string
+		want             bool
+	}{
+		{"space", " ", true},
+		{"tab", "\t", true},
+		{"newline", "\n", true},
+		{"form-feed", "\f", true},
+		{"carriage-return", "\r", true},
+		{"vertical-tab", "\v", false},
+		{"file-separator", "\u001c", false},
+		{"next-line", "\u0085", false},
+		{"no-break-space", "\u00a0", false},
+		{"em-space", "\u2003", false},
+		{"line-separator", "\u2028", false},
+		{"ideographic-space", "\u3000", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, source := range []string{"func" + tc.whitespace + "TestWhitespace() {}", "func TestWhitespace" + tc.whitespace + "() {}"} {
+				data := []byte(source)
+				if got := hasFunction(data, "TestWhitespace"); got != tc.want {
+					t.Errorf("direct matcher source=%q matched=%t want=%t", source, got, tc.want)
+				}
+				if got := inspectTestFunctions(data).contains("TestWhitespace"); got != tc.want {
+					t.Errorf("indexed matcher source=%q matched=%t want=%t", source, got, tc.want)
+				}
+			}
+		})
+	}
+}

@@ -3,8 +3,12 @@ package packageinventory
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -192,4 +196,161 @@ func TestRepositoryPathPreservesArchiveBaseTraversal(t *testing.T) {
 	if err := rejectAlias(f.path("nested/artifact"), []string{repositoryPath(base, "artifact")}, defaultFileOps()); err == nil {
 		t.Fatal("archive alias not protected")
 	}
+}
+
+func TestRepositorySourceFailuresUseInventoryLabels(t *testing.T) {
+	t.Parallel()
+	for _, mutation := range []string{"missing", "malformed"} {
+		t.Run(mutation, func(t *testing.T) {
+			f := newMaintenanceFixture(t)
+			source := maintenanceFirst(mo(f.m["source_files"]))
+			want := "cannot read input: " + source + ":"
+			if mutation == "missing" {
+				if err := os.Remove(f.path(source)); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				f.write(source, []byte("not JSON"))
+				want = "cannot parse JSON: " + source + ":"
+			}
+			before := f.read(maintenanceEvidence)
+			for _, command := range []string{"verify", "refresh"} {
+				args := []string{}
+				if command == "refresh" {
+					args = append(args, "--write")
+				}
+				failures := maintenanceFailures(f.run(t, command, 1, args...))
+				if !strings.HasPrefix(failures, want) {
+					t.Errorf("%s diagnostic=%q, want repository label prefix %q", command, failures, want)
+				}
+				maintenanceEqual(t, f.read(maintenanceEvidence), before)
+			}
+		})
+	}
+}
+
+func TestGitFailureWarningIncludesCommandAndStderr(t *testing.T) {
+	t.Parallel()
+	git, err := exec.LookPath("git")
+	if err != nil {
+		t.Skip("git is not installed; empty-PATH behavior is tested separately")
+	}
+	for _, phase := range []string{"rev-parse", "status"} {
+		t.Run(phase, func(t *testing.T) {
+			f := newMaintenanceFixture(t)
+			run := func(args ...string) {
+				t.Helper()
+				cmd := exec.Command(git, append([]string{"-C", f.root}, args...)...)
+				if out, err := cmd.CombinedOutput(); err != nil {
+					t.Fatalf("git %v: %v: %s", args, err, out)
+				}
+			}
+			run("init", "--quiet")
+			args := []string{"rev-parse", "HEAD"}
+			if phase == "status" {
+				run("-c", "user.name=Inventory Test", "-c", "user.email=inventory@example.invalid", "commit", "--quiet", "--allow-empty", "-m", "published head")
+				f.write(".git/index", []byte("invalid index"))
+				args = []string{"status", "--porcelain"}
+			}
+			_, err := exec.Command(git, append([]string{"-C", f.root}, args...)...).Output()
+			var exit *exec.ExitError
+			if !errors.As(err, &exit) || len(bytes.TrimSpace(exit.Stderr)) == 0 {
+				t.Fatalf("expected git failure with stderr, got %v", err)
+			}
+			resolvedRoot, err := filepath.EvalSymlinks(f.root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			result := f.run(t, "verify", 0)
+			maintenanceEqual(t, result["observed_current_head"], "unavailable")
+			maintenanceEqual(t, result["observed_worktree_status"], "unavailable")
+			warning := ""
+			for _, value := range ma(result["warnings"]) {
+				if strings.HasPrefix(ms(value), "git observation unavailable:") {
+					warning = ms(value)
+				}
+			}
+			for _, want := range []string{"git -C ", strconv.Quote(resolvedRoot), strings.Join(args, " "), strings.TrimSpace(string(exit.Stderr))} {
+				if !strings.Contains(warning, want) {
+					t.Errorf("warning=%q missing diagnostic context %q", warning, want)
+				}
+			}
+			if strings.TrimSpace(warning) != warning {
+				t.Errorf("git warning contains surrounding whitespace: %q", warning)
+			}
+		})
+	}
+}
+
+func TestOversizedInventoryIntegersRemainIntegrityFailures(t *testing.T) {
+	t.Parallel()
+	huge := json.Number("99999999999999999999")
+	for _, tc := range []struct {
+		name   string
+		mutate func(*maintenanceFixture) []string
+	}{
+		{"source-size", func(f *maintenanceFixture) []string {
+			source := maintenanceFirst(mo(f.m["source_files"]))
+			mo(mo(f.m["source_files"])[source])["bytes"] = huge
+			return []string{"changed original source size: " + source}
+		}},
+		{"collection-count", func(f *maintenanceFixture) []string {
+			mf(f.m, "preserved_collections", "requirements")["count"] = huge
+			return []string{"record count: requirements"}
+		}},
+		{"declared-counts", func(f *maintenanceFixture) []string {
+			mo(f.m["counts"])["requirements"] = huge
+			mo(f.m["counts"])["selected_engineering"] = huge
+			return []string{"declared original denominator drift", "declared selected denominator drift"}
+		}},
+		{"positive-index", func(f *maintenanceFixture) []string {
+			mo(ma(mf(f.m, "preserved_collections", "requirements")["records"])[0])["index"] = huge
+			return []string{"lost index: requirements"}
+		}},
+		{"negative-index", func(f *maintenanceFixture) []string {
+			record := mo(ma(mf(f.m, "preserved_collections", "requirements")["records"])[0])
+			record["index"] = json.Number("-99999999999999999999")
+			return []string{"negative record index: " + ms(record["id"]), "lost index: requirements"}
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newMaintenanceFixture(t)
+			want := tc.mutate(f)
+			f.save()
+			before := f.read(maintenanceEvidence)
+			for _, command := range []string{"verify", "refresh"} {
+				args := []string{}
+				if command == "refresh" {
+					args = append(args, "--write")
+				}
+				result := f.run(t, command, 1, args...)
+				failures := maintenanceFailures(result)
+				for _, text := range want {
+					maintenanceContains(t, failures, text)
+				}
+				if strings.Contains(failures, "invalid inventory integer") || result["test_functions"] == nil {
+					t.Fatalf("integer overflow aborted verification instead of reporting integrity failures: %#v", result)
+				}
+				maintenanceEqual(t, f.read(maintenanceEvidence), before)
+			}
+		})
+	}
+}
+
+func TestOversizedArchiveSizeRemainsIntegrityFailure(t *testing.T) {
+	t.Parallel()
+	f := newMaintenanceFixture(t)
+	data := []byte("raw archive bytes\r\n")
+	name := "oversized-record.bin"
+	f.write(name, data)
+	f.m["external_archive"] = []any{map[string]any{"artifact": name, "sha256": maintenanceDigest(data), "bytes": json.Number("99999999999999999999")}}
+	f.save()
+	before := f.read(maintenanceEvidence)
+	result := f.run(t, "refresh", 1, "--archive-dir", f.root, "--write")
+	maintenanceContains(t, maintenanceFailures(result), "changed archive: "+name)
+	if result["test_functions"] == nil {
+		t.Fatalf("integer overflow aborted verification instead of reporting integrity failures: %#v", result)
+	}
+	maintenanceEqual(t, f.read(maintenanceEvidence), before)
+	maintenanceEqual(t, f.read(name), data)
 }
