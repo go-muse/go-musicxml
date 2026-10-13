@@ -2,7 +2,6 @@ package musicxml
 
 import (
 	"context"
-	"errors"
 	"github.com/go-muse/go-musicxml/validation"
 	"io"
 )
@@ -36,11 +35,11 @@ func assessResourceSource(ctx context.Context, reader io.Reader, config sourceAs
 	out.Digest, out.DigestComplete = summary.ReadPrefixSHA256, summary.DigestComplete
 	completion, err := run.finishInput(inputErr)
 	if err != nil {
-		out.Err = errors.Join(inputErr, err)
+		out.Err = joinResourceErrors(inputErr, err)
 		return
 	}
 	out.Report, out.Snapshot, err = run.session.FinishWithResourceSnapshot(ctx, completion)
-	out.Err = errors.Join(inputErr, err)
+	out.Err = joinResourceErrors(inputErr, err)
 	return
 }
 func assessResourceModel(ctx context.Context, document Document, config assessmentRunConfig) (out resourceIntrinsicResult) {
@@ -53,10 +52,10 @@ func assessResourceModel(ctx context.Context, document Document, config assessme
 	out.XMLDepth = status.XMLDepth
 	completion, err := run.finishInput(walkErr)
 	if err != nil {
-		out.Err = errors.Join(walkErr, err)
+		out.Err = joinResourceErrors(walkErr, err)
 		return
 	}
 	out.Report, out.Snapshot, err = run.session.FinishWithResourceSnapshot(ctx, completion)
-	out.Err = errors.Join(walkErr, err)
+	out.Err = joinResourceErrors(walkErr, err)
 	return
 }

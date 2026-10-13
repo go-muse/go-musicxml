@@ -1257,7 +1257,9 @@ advice does not reconstruct an original source filename or MIME declaration.
 The first verified canonical representation pin is immutable for the run. A
 changed returned revision cannot silently replace the same requested resource.
 Each newly returned body is read, charged and verified even when its intrinsic
-parse can be reused. Distinct base/package/archive contexts expand independently;
+parse can be reused. A raw-MXL alias that reuses an existing package releases its
+new body immediately instead of retaining another borrowed archive. Distinct
+base/package/archive contexts expand independently;
 cycle aliases preserve separate adopted document identities and linked quotas.
 
 `PackageReport`, `ResourceReport`, `Adoption` and `AdoptionContext` expose separately
@@ -1276,6 +1278,11 @@ Graph depth follows the actual incoming link path through package boundaries
 instead of restarting at a nested primary. Package containment depth remains
 independently checked. Same-context backreferences
 reuse the admitted expansion rather than manufacturing a normative cycle error.
+At the graph-depth boundary, an unknown target is refused before resolver I/O or
+archive-member selection. Reuse requires an already proved exact request or
+archive expansion context; matching retrieval URI text alone does not establish
+canonical identity. Every reused incoming edge still receives its own adoption
+and linked-document charge.
 
 Optional file advice preserves exact presentation provenance. Original rootfile
 name/media fields retain absent versus present-empty evidence; current rootfiles

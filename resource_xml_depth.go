@@ -35,5 +35,5 @@ func (g *resourceGraphRun) checkIntrinsicXMLDepth(r *graphResource, pkg validati
 	if limit == 0 || r.xmlDepth <= limit {
 		return nil
 	}
-	return errors.Join(fmt.Errorf("%w: maximum is %d elements", ErrXMLTooDeep, limit), &validation.ResourceError{Kind: validation.BudgetDepth, Limit: int64(limit), Used: int64(limit), Requested: 1})
+	return errors.Join(fmt.Errorf("%w: maximum is %d elements", ErrXMLTooDeep, limit), &validation.ResourceError{Kind: validation.BudgetDepth, Limit: int64(limit), Used: int64(r.xmlDepth), Requested: 0})
 }

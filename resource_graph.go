@@ -32,6 +32,7 @@ type resourceGraphRun struct {
 	mxlOptions       MXLOptions
 	mxlExpanded      int64
 	linked           map[graphLinkKey]graphLinkedTarget
+	documentTargets  map[graphDocumentKey]graphDocumentTarget
 }
 
 func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
@@ -52,6 +53,7 @@ func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, pr
 		return nil, err
 	}
 	g.linked = make(map[graphLinkKey]graphLinkedTarget)
+	g.documentTargets = make(map[graphDocumentKey]graphDocumentTarget)
 	g.cache = make(map[graphResourceKey]*graphResource)
 	g.pins = make(map[graphCanonicalKey]validation.ResourcePin)
 	g.expanded = make(map[graphExpansionKey]bool)
@@ -96,6 +98,7 @@ func (g *resourceGraphRun) close() {
 	g.packages = nil
 	g.packageContexts = nil
 	g.packageDocuments = nil
+	g.documentTargets = nil
 	if g.retained != 0 {
 		_ = g.options.account.Release(validation.BudgetBufferedBytes, g.retained)
 		g.retained = 0
@@ -119,7 +122,7 @@ func (g *resourceGraphRun) primaryPin(representation validation.ResourceRepresen
 func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error) {
 	b, e := g.session.Finish(g.ctx, validation.PackageCompletion{InputComplete: err == nil, Cause: err})
 	g.close()
-	return b, errors.Join(err, e)
+	return b, joinResourceErrors(err, e)
 }
 
 // InspectXMLWithResources assesses original MusicXML/Opus bytes and explicitly
@@ -189,7 +192,7 @@ func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin val
 	if result.Err != nil {
 		return g.finish(result.Err)
 	}
-	resource, cacheErr := g.cacheResource(pin, result.Report.Profile.ID, rid, result.XMLDepth, result.Err == nil)
+	resource, cacheErr := g.cacheResource(pin, result.Report.Profile.ID, rid, result.XMLDepth, true)
 	if cacheErr != nil {
 		return g.finish(cacheErr)
 	}
@@ -214,12 +217,24 @@ func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin val
 // or later admission fails. Call only before successful AddResource transfers
 // the snapshot; afterward the session already owns its canonical report.
 func (g *resourceGraphRun) retainUntransferredIntrinsic(result resourceIntrinsicResult, pin validation.ResourcePin, admissionErr error) error {
-	err := errors.Join(result.Err, admissionErr)
+	err := joinResourceErrors(result.Err, admissionErr)
 	if result.Snapshot != nil {
-		err = errors.Join(err, result.Snapshot.Close())
+		err = joinResourceErrors(err, result.Snapshot.Close())
 	}
 	if result.Report.Requested {
-		err = errors.Join(err, g.session.RecordResourceFailure(g.ctx, pin, result.Report, err))
+		err = joinResourceErrors(err, g.session.RecordResourceFailure(g.ctx, pin, result.Report, err))
 	}
 	return err
+}
+
+// joinResourceErrors preserves unrelated causes without repeating a cause that
+// the other error already wraps. In particular Finish includes its input cause.
+func joinResourceErrors(a, b error) error {
+	if a == nil || errors.Is(b, a) {
+		return b
+	}
+	if b == nil || errors.Is(a, b) {
+		return a
+	}
+	return errors.Join(a, b)
 }

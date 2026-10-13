@@ -71,6 +71,8 @@ func readAssessmentResourceBody(ctx context.Context, a *validation.Account, body
 		if err = ctx.Err(); err != nil {
 			return nil, err
 		}
+		// One unit admits one <=4096-byte read, append and digest operation,
+		// including empty attempts and the bounded over-limit probe.
 		if err = a.Charge(validation.BudgetRuleSteps, 1); err != nil {
 			return nil, err
 		}
@@ -97,9 +99,8 @@ func readAssessmentResourceBody(ctx context.Context, a *validation.Account, body
 			if int64(n) > remaining {
 				byteErr = &validation.ResourceError{Kind: validation.BudgetExternalBytes, Limit: limit, Used: limit, Requested: 1}
 			}
-			workErr := a.Charge(validation.BudgetRuleSteps, int64(n))
-			if byteErr != nil || workErr != nil {
-				return nil, errors.Join(byteErr, workErr, readErr)
+			if byteErr != nil {
+				return nil, errors.Join(byteErr, readErr)
 			}
 			if int64(len(owned.bytes)) > math.MaxInt64-int64(n) {
 				return nil, &validation.ConfigurationError{Field: "resource bytes", Reason: "size overflow"}
@@ -118,7 +119,21 @@ func readAssessmentResourceBody(ctx context.Context, a *validation.Account, body
 					return nil, errors.Join(err, readErr)
 				}
 				next := make([]byte, len(owned.bytes), size)
-				copy(next, owned.bytes)
+				// Both capacities stay admitted until the relocation completes. Each
+				// charged unit copies at most one bounded scratch-sized block.
+				for at := 0; at < len(owned.bytes); {
+					if copyErr := ctx.Err(); copyErr != nil {
+						_ = a.Release(validation.BudgetBufferedBytes, capacity)
+						return nil, errors.Join(copyErr, readErr)
+					}
+					if copyErr := a.Charge(validation.BudgetRuleSteps, 1); copyErr != nil {
+						_ = a.Release(validation.BudgetBufferedBytes, capacity)
+						return nil, errors.Join(copyErr, readErr)
+					}
+					end := resourceBodyChunkEnd(at, len(owned.bytes))
+					copy(next[at:end], owned.bytes[at:end])
+					at = end
+				}
 				old := int64(cap(owned.bytes))
 				owned.bytes = next
 				owned.retained += capacity - old
@@ -145,3 +160,6 @@ func readAssessmentResourceBody(ctx context.Context, a *validation.Account, body
 	owned.digest = hex.EncodeToString(digest.Sum(nil))
 	return owned, nil
 }
+
+// resourceBodyChunkEnd cannot overflow even at the maximum native slice index.
+func resourceBodyChunkEnd(at, length int) int { return at + min(4096, length-at) }

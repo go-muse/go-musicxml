@@ -47,7 +47,7 @@ func (g *resourceGraphRun) resolveMetadata(request validation.ResourceRequest) (
 	if err := validation.ValidateResourceRequest(request); err != nil {
 		return validation.ResourceResult{}, err
 	}
-	release, err := resourceWorkingLease(g.ctx, g.options.account, request)
+	release, err := resourceWorkingLease(g.ctx, g.options.account, [2]validation.ResourceRequest{request, request})
 	if err != nil {
 		return validation.ResourceResult{}, err
 	}
@@ -55,7 +55,16 @@ func (g *resourceGraphRun) resolveMetadata(request validation.ResourceRequest) (
 	if err = g.ctx.Err(); err != nil {
 		return validation.ResourceResult{}, err
 	}
-	result, err := g.options.resolver.Resolve(g.ctx, request)
+	callback := request
+	if request.Image != nil {
+		value := *request.Image
+		callback.Image = &value
+	}
+	if request.Association != nil {
+		value := *request.Association
+		callback.Association = &value
+	}
+	result, err := g.options.resolver.Resolve(g.ctx, callback)
 	if result.Body != nil {
 		err = errors.Join(err, result.Body.Close())
 		result.Body = nil

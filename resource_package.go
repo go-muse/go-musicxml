@@ -198,22 +198,11 @@ func (g *resourceGraphRun) importRawPackageAtDepth(a *mxlAssessmentArchive, pin 
 	return g.importRawPackageAtEntry(a, pin, parent, retrieval, "", isPrimary, depth)
 }
 func (g *resourceGraphRun) importRawPackageAtEntry(a *mxlAssessmentArchive, pin validation.ResourcePin, parent validation.PackageID, retrieval, entry string, isPrimary bool, depth int64) (*graphResource, resourceURIBase, validation.PackageID, error) {
-	for ancestor := g.packages[parent]; ancestor != nil; ancestor = g.packages[ancestor.parent] {
-		if err := g.options.account.Charge(validation.BudgetRuleSteps, 1); err != nil {
-			return nil, resourceURIBase{}, "", err
-		}
-		if ancestor.pin == pin {
-			base := ancestor.primaryBase
-			base.RetrievalURI = retrieval
-			return ancestor.primary, base, ancestor.primaryPackage, nil
-		}
-	}
-	key := graphPackageKey{pin, parent, retrieval}
-	if p := g.packageContexts[key]; p != nil {
-		return p.primary, p.primaryBase, p.primaryPackage, nil
+	if resource, base, pkg, known, err := g.existingRawPackage(pin, parent, retrieval); known || err != nil {
+		return resource, base, pkg, err
 	}
 	if depth > g.options.account.Limits().MaxDepth {
-		return nil, resourceURIBase{}, "", &validation.ResourceError{Kind: validation.BudgetDepth, Limit: g.options.account.Limits().MaxDepth, Requested: depth}
+		return nil, resourceURIBase{}, "", &validation.ResourceError{Kind: validation.BudgetDepth, Limit: g.options.account.Limits().MaxDepth, Used: depth - 1, Requested: 1}
 	}
 	p, err := g.newPackageAtEntry(pin, parent, retrieval, entry, a)
 	if err != nil {
@@ -467,7 +456,13 @@ func (g *resourceGraphRun) consumeContainer(p *graphPackage, aid validation.Reso
 			return err
 		}
 		err = g.loadRootfile(p, &r, retrieval, isPrimary && r.Ordinal == 1)
-		err = errors.Join(err, g.recordRootfile(p, r))
+		if terminal := g.session.TerminalCause(); terminal != nil {
+			if !errors.Is(err, terminal) {
+				err = errors.Join(err, terminal)
+			}
+		} else {
+			err = errors.Join(err, g.recordRootfile(p, r))
+		}
 		release()
 		if err != nil {
 			return err
@@ -601,7 +596,9 @@ func (g *resourceGraphRun) loadArchiveDocument(item graphExpansion, path string)
 		return nil, resourceURIBase{}, item.pkg, unavailable, nil
 	}
 	if p.primary != nil && path == p.primaryPath {
-		return p.primary, p.primaryBase, p.primaryPackage, unavailable, nil
+		base := p.primaryBase
+		base.RetrievalURI = item.base.RetrievalURI
+		return p.primary, base, p.primaryPackage, unavailable, nil
 	}
 	if _, ok := p.entries[path]; !ok {
 		if p.entriesComplete.State == validation.EvidenceKnown && p.entriesComplete.Value {
@@ -654,4 +651,24 @@ func (g *resourceGraphRun) recordRootfile(p *graphPackage, r validation.PackageR
 	p.rootfiles = append(p.rootfiles, r)
 	g.packageLeases = append(g.packageLeases, release)
 	return nil
+}
+
+// existingRawPackage proves reuse with the same immutable pin and encapsulation
+// context as importRawPackageAtEntry. It changes no target interpretation.
+func (g *resourceGraphRun) existingRawPackage(pin validation.ResourcePin, parent validation.PackageID, retrieval string) (*graphResource, resourceURIBase, validation.PackageID, bool, error) {
+	for ancestor := g.packages[parent]; ancestor != nil; ancestor = g.packages[ancestor.parent] {
+		if err := g.options.account.Charge(validation.BudgetRuleSteps, 1); err != nil {
+			return nil, resourceURIBase{}, "", false, err
+		}
+		if ancestor.pin == pin {
+			base := ancestor.primaryBase
+			base.RetrievalURI = retrieval
+			return ancestor.primary, base, ancestor.primaryPackage, true, nil
+		}
+	}
+	key := graphPackageKey{pin, parent, retrieval}
+	if p := g.packageContexts[key]; p != nil {
+		return p.primary, p.primaryBase, p.primaryPackage, true, nil
+	}
+	return nil, resourceURIBase{}, "", false, nil
 }
