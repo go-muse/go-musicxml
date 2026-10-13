@@ -200,23 +200,29 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 					if err != nil {
 						return err
 					}
-					if !ok {
-						return g.graphDepthError(item.depth)
+					if ok {
+						child, childBase, childPackage = known.resource, known.base, known.pkg
+					} else {
+						unavailable, selectable, err := g.archiveDocumentInventory(item, resolved.ArchivePath)
+						if err != nil {
+							return err
+						}
+						if selectable {
+							return g.graphDepthError(item.depth)
+						}
+						target = unavailable
 					}
-					child, childBase, childPackage = known.resource, known.base, known.pkg
 				} else {
 					child, childBase, childPackage, target, loadErr = g.loadArchiveDocument(item, resolved.ArchivePath)
 				}
 			} else if g.options.selected[ResourceDocuments] && g.options.resolver != nil {
 				if item.depth >= g.options.account.Limits().MaxDepth {
-					known, ok := g.knownDocumentTarget(item, index, href.Value.Text)
-					if !ok {
-						return g.graphDepthError(item.depth)
-					}
-					child, childBase, childPackage = known.resource, known.base, known.pkg
-				} else {
-					child, childBase, childPackage, target, loadErr = g.loadExternalDocument(item, index, v, href.Value.Text, resolved)
+					// Each expansion walks this template only once. An earlier
+					// request cannot prove this target without another callback,
+					// and URI text alone cannot establish canonical identity.
+					return g.graphDepthError(item.depth)
 				}
+				child, childBase, childPackage, target, loadErr = g.loadExternalDocument(item, index, v, href.Value.Text, resolved)
 			}
 		}
 	}
@@ -254,11 +260,6 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 			return errors.Join(loadErr, e)
 		}
 		g.linked[graphLinkKey{item.adoption, v.Subject.Node}] = graphLinkedTarget{child, target.Value}
-		if loadErr == nil {
-			if e := g.rememberDocumentTarget(item, index, href.Value.Text, graphDocumentTarget{child, childBase, childPackage}); e != nil {
-				return e
-			}
-		}
 	}
 	return errors.Join(loadErr, edgeErr)
 }

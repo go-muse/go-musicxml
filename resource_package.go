@@ -585,24 +585,53 @@ func (g *resourceGraphRun) packageEntryBytes(p *graphPackage, path string, role 
 	return g.currentPackageEntryBytes(p, path, role)
 }
 
+// archiveDocumentInventory returns whether a path could select a document.
+// Missing targets need no read or expansion: only a complete local inventory
+// proves absence. Preserve primary identity precedence and exact package/path
+// spelling; an incomplete inventory carries its own unavailable evidence.
+func (g *resourceGraphRun) archiveDocumentInventory(item graphExpansion, path string) (validation.Evidence[validation.ResourceAdoptionID], bool, error) {
+	unavailable := unavailableTarget(validation.EvidenceUnknown, "archive-resource-unavailable", nil)
+	if err := g.ctx.Err(); err != nil {
+		return unavailable, false, err
+	}
+	if err := g.session.TerminalCause(); err != nil {
+		return unavailable, false, err
+	}
+	if err := g.options.account.Charge(validation.BudgetRuleSteps, int64(len(path))+1); err != nil {
+		return unavailable, false, err
+	}
+	p := g.packages[item.pkg]
+	if p == nil {
+		return unavailable, false, nil
+	}
+	if p.primary != nil && path == p.primaryPath {
+		return unavailable, true, nil
+	}
+	if _, ok := p.entries[path]; ok {
+		return unavailable, true, nil
+	}
+	if p.entriesComplete.State == validation.EvidenceKnown && p.entriesComplete.Value {
+		return unavailableTarget(validation.EvidenceAbsent, "", nil), false, nil
+	}
+	switch p.entriesComplete.State {
+	case validation.EvidenceUnknown, validation.EvidenceUnsupported, validation.EvidenceInvalid:
+		unavailable = unavailableTarget(p.entriesComplete.State, p.entriesComplete.Reason, p.entriesComplete.Cause)
+	}
+	return unavailable, false, nil
+}
+
 // loadArchiveDocument binds literal resolved paths to their exact encapsulation.
 // No filename or href spelling can alias another package's resource inventory.
 func (g *resourceGraphRun) loadArchiveDocument(item graphExpansion, path string) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], error) {
-	unavailable := unavailableTarget(validation.EvidenceUnknown, "archive-resource-unavailable", nil)
-	p := g.packages[item.pkg]
-	if p == nil {
-		return nil, resourceURIBase{}, item.pkg, unavailable, nil
+	unavailable, selectable, err := g.archiveDocumentInventory(item, path)
+	if err != nil || !selectable {
+		return nil, resourceURIBase{}, item.pkg, unavailable, err
 	}
+	p := g.packages[item.pkg]
 	if p.primary != nil && path == p.primaryPath {
 		base := p.primaryBase
 		base.RetrievalURI = item.base.RetrievalURI
 		return p.primary, base, p.primaryPackage, unavailable, nil
-	}
-	if _, ok := p.entries[path]; !ok {
-		if p.entriesComplete.State == validation.EvidenceKnown && p.entriesComplete.Value {
-			unavailable = unavailableTarget(validation.EvidenceAbsent, "", nil)
-		}
-		return nil, resourceURIBase{}, p.id, unavailable, nil
 	}
 	data, err := g.packageEntryBytes(p, path, mxlAssessmentLinkedDocument)
 	if err != nil {

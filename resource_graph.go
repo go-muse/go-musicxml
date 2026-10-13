@@ -32,7 +32,6 @@ type resourceGraphRun struct {
 	mxlOptions       MXLOptions
 	mxlExpanded      int64
 	linked           map[graphLinkKey]graphLinkedTarget
-	documentTargets  map[graphDocumentKey]graphDocumentTarget
 }
 
 func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
@@ -53,7 +52,6 @@ func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, pr
 		return nil, err
 	}
 	g.linked = make(map[graphLinkKey]graphLinkedTarget)
-	g.documentTargets = make(map[graphDocumentKey]graphDocumentTarget)
 	g.cache = make(map[graphResourceKey]*graphResource)
 	g.pins = make(map[graphCanonicalKey]validation.ResourcePin)
 	g.expanded = make(map[graphExpansionKey]bool)
@@ -98,7 +96,6 @@ func (g *resourceGraphRun) close() {
 	g.packages = nil
 	g.packageContexts = nil
 	g.packageDocuments = nil
-	g.documentTargets = nil
 	if g.retained != 0 {
 		_ = g.options.account.Release(validation.BudgetBufferedBytes, g.retained)
 		g.retained = 0

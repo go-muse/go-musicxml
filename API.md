@@ -1360,11 +1360,13 @@ Graph depth follows the actual incoming link path through package boundaries
 instead of restarting at a nested primary. Package containment depth remains
 independently checked. Same-context backreferences
 reuse the admitted expansion rather than manufacturing a normative cycle error.
-At the graph-depth boundary, an unknown target is refused before resolver I/O or
-archive-member selection. Reuse requires an already proved exact request or
+At the graph-depth boundary, a new target expansion is refused before resolver
+I/O or archive-member selection. Reuse requires a same-entity or already admitted
 archive expansion context; matching retrieval URI text alone does not establish
-canonical identity. Every reused incoming edge still receives its own adoption
-and linked-document charge.
+canonical identity. A missing member in a complete local archive inventory still
+produces an authoritative-absence finding without I/O; an incomplete inventory
+leaves the target unknown. Every reused incoming edge still receives its own
+adoption and linked-document charge.
 
 Optional file advice preserves exact presentation provenance. Original rootfile
 name/media fields retain absent versus present-empty evidence; current rootfiles

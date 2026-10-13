@@ -2,46 +2,14 @@ package musicxml
 
 import "github.com/go-muse/go-musicxml/validation"
 
-// This cache records already proved request contexts, never URI-to-canonical
-// equivalence. Fixed resolver/catalog/profile configuration belongs to the run;
-// source pin, template, href, package and effective base remain exact keys.
-type graphDocumentKey struct {
-	source   validation.ResourcePin
-	profile  validation.ProfileID
-	pkg      validation.PackageID
-	base     resourceURIBase
-	template uint64
-	href     string
-}
 type graphDocumentTarget struct {
 	resource *graphResource
 	base     resourceURIBase
 	pkg      validation.PackageID
 }
 
-func documentRequestKey(item graphExpansion, index uint64, href string) graphDocumentKey {
-	return graphDocumentKey{item.resource.pin, item.resource.profile, item.pkg, item.base, index, href}
-}
 func (g *resourceGraphRun) admittedDocumentTarget(target graphDocumentTarget) bool {
 	return target.resource != nil && g.expanded[graphExpansionKey{target.resource.id, target.pkg, target.base}]
-}
-func (g *resourceGraphRun) knownDocumentTarget(item graphExpansion, index uint64, href string) (graphDocumentTarget, bool) {
-	target, ok := g.documentTargets[documentRequestKey(item, index, href)]
-	return target, ok && g.admittedDocumentTarget(target)
-}
-func (g *resourceGraphRun) rememberDocumentTarget(item graphExpansion, index uint64, href string, target graphDocumentTarget) error {
-	if !g.admittedDocumentTarget(target) {
-		return nil
-	}
-	key := documentRequestKey(item, index, href)
-	if _, ok := g.documentTargets[key]; ok {
-		return nil
-	}
-	if err := g.reserve(1024 + 2*int64(len(href))); err != nil {
-		return err
-	}
-	g.documentTargets[key] = target
-	return nil
 }
 func (g *resourceGraphRun) graphDepthError(parent int64) error {
 	return &validation.ResourceError{Kind: validation.BudgetDepth, Limit: g.options.account.Limits().MaxDepth, Used: parent, Requested: 1}
