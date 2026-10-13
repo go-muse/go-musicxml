@@ -1,6 +1,7 @@
 package packageinventory
 
 import (
+	"go/token"
 	"os"
 	"os/exec"
 	"path"
@@ -488,7 +489,7 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 	check(reflect.DeepEqual(auxIDs, newIDs), "auxiliary source ID denominator drift")
 	check(reflect.DeepEqual(usedTests, keysSet(e.get("tests").object())), "unreferenced or missing current test records")
 	r.hashes = map[string]string{}
-	inspected := map[string][]byte{}
+	inspected := map[string]testFunctionIndex{}
 	for _, ref := range sortedKeys(e.get("tests").object()) {
 		record := e.get("tests").get(ref)
 		record.fields(map[string]string{"file": "string", "function": "string", "file_sha256": "string"})
@@ -500,19 +501,20 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 			check(false, "missing test file: "+file)
 			continue
 		}
-		data, ok := inspected[file]
+		inspection, ok := inspected[file]
 		if !ok {
-			data = readBytes(p)
-			inspected[file] = data
+			inspection = inspectTestFunctions(readBytes(p))
+			inspected[file] = inspection
 		}
+		data := inspection.data
 		if !utf8.Valid(data) {
 			fail("invalid inventory: %s: invalid UTF-8 test file", file)
 		}
-		r.hashes[file] = digest(canonicalLF(data))
+		r.hashes[file] = inspection.hash
 		if r.hashes[file] != record.get("file_sha256").text() {
 			stale = append(stale, file)
 		}
-		check(hasFunction(data, function), "missing test function: "+file+"::"+function)
+		check(inspection.contains(function), "missing test function: "+file+"::"+function)
 	}
 	archiveState := "not verified: supply --archive-dir to verify external archive bytes"
 	if r.opts.archive != "" {
@@ -582,4 +584,30 @@ func (r *runner) verifyLoaded(root string) map[string]any {
 }
 func hasFunction(data []byte, function string) bool {
 	return regexp.MustCompile(`(?m)^func\s+` + regexp.QuoteMeta(function) + `\s*\(`).Match(data)
+}
+
+var testFunctionDeclaration = regexp.MustCompile(`(?m)^func\s+([^\s(]+)\s*\(`)
+
+type testFunctionIndex struct {
+	data  []byte
+	names map[string]bool
+	hash  string
+}
+
+// Index each freshly read file once, rather than rescanning it for every route.
+// Unusual non-identifier route strings retain the exact legacy regex behavior.
+// The index lives only for this verification; later mutations are always reread.
+func inspectTestFunctions(data []byte) testFunctionIndex {
+	index := testFunctionIndex{data: data, names: map[string]bool{}, hash: digest(canonicalLF(data))}
+	for _, match := range testFunctionDeclaration.FindAllSubmatch(data, -1) {
+		index.names[string(match[1])] = true
+	}
+	return index
+}
+
+func (index testFunctionIndex) contains(name string) bool {
+	if token.IsIdentifier(name) {
+		return index.names[name]
+	}
+	return hasFunction(index.data, name)
 }
