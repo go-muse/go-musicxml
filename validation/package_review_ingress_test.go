@@ -141,7 +141,7 @@ func TestPackageReviewEdgeFragmentContracts(t *testing.T) {
 			if tc.state == EvidenceUnknown {
 				fragment.Reason = "unresolved"
 			}
-			e := PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Fragment: fragment, FragmentTarget: Evidence[NodeRef]{State: EvidenceKnown, Value: node}}
+			e := PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: fragment, FragmentTarget: Evidence[NodeRef]{State: EvidenceKnown, Value: node}}
 			err := s.ObserveEdge(context.Background(), e)
 			if (err != nil) != tc.wantErr {
 				t.Errorf("error=%v wantErr=%t", err, tc.wantErr)
@@ -155,7 +155,7 @@ func TestPackageReviewEdgeFindingsIdentifyTemplate(t *testing.T) {
 	a := s.adoptions[source]
 	a.resource.snapshot.contexts = append(a.resource.snapshot.contexts, stateClone(a.resource.snapshot.contexts[0]))
 	for i := 0; i < 2; i++ {
-		e := PackageEdgeObservation{ID: PackageFactID(i + 1), Source: source, Template: uint64(i), Target: Evidence[ResourceAdoptionID]{State: EvidenceUnknown, Reason: "unresolved"}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}
+		e := PackageEdgeObservation{ID: PackageFactID(i + 1), Source: source, Template: uint64(i), Target: Evidence[ResourceAdoptionID]{State: EvidenceUnknown, Reason: "unresolved"}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}
 		if err := s.ObserveEdge(context.Background(), e); err != nil {
 			t.Fatal(err)
 		}
@@ -211,7 +211,7 @@ func TestPackageReviewRejectedRelationsDoNotRequireResource(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 10, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"optional-view", 1}}})
+				err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 10, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"optional-view", 1}}})
 				if err == nil {
 					t.Fatal("contradictory edge accepted")
 				}

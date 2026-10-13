@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func packageAssociationFixture(t *testing.T) (*PackageSession, AssociationRequest) {
+func packageAssociationFixture(t *testing.T, indirection ...Evidence[bool]) (*PackageSession, AssociationRequest) {
 	t.Helper()
 	s, source, sourcePin := packageAdviceFixtureCheck(t, PackageCheckInstrumentAssociation)
 	sourceSnapshot := s.adoptions[source].resource.snapshot
@@ -16,7 +16,7 @@ func packageAssociationFixture(t *testing.T) (*PackageSession, AssociationReques
 		return ResourceIDFact{Value: value, Subject: subject, Source: subject, Kind: Evidence[QName]{State: EvidenceKnown, Value: QName{Local: kind}}, Part: Evidence[NodeRef]{State: EvidenceKnown, Value: owner}, Unique: Evidence[bool]{State: EvidenceKnown, Value: true}}
 	}
 	sourceSnapshot.ids = []ResourceIDFact{id("P1", part, "score-part", part), id("I1", instrument, "score-instrument", part)}
-	sourceSnapshot.contexts = []ContextResult{{Subject: NodeRef{"source", 3}, Resource: &ResourceContextResult{Part: Evidence[NodeRef]{State: EvidenceKnown, Value: part}, Link: &ResourceLinkContext{Kind: ResourcePartLink, Href: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "part.xml"}}}}}}, {Subject: NodeRef{"source", 4}, Resource: &ResourceContextResult{Part: Evidence[NodeRef]{State: EvidenceKnown, Value: part}, Instrument: &ResourceInstrumentContext{Target: Evidence[NodeRef]{State: EvidenceKnown, Value: instrument}}}}}
+	sourceSnapshot.contexts = []ContextResult{{Subject: NodeRef{"source", 3}, Resource: &ResourceContextResult{Part: Evidence[NodeRef]{State: EvidenceKnown, Value: part}, Link: &ResourceLinkContext{Kind: ResourcePartLink, Href: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "part.xml"}}}}}}, {Subject: NodeRef{"source", 4}, Resource: &ResourceContextResult{Owner: NodeRef{"source", 3}, Part: Evidence[NodeRef]{State: EvidenceKnown, Value: part}, Instrument: &ResourceInstrumentContext{Target: Evidence[NodeRef]{State: EvidenceKnown, Value: instrument}}}}}
 	child, err := sourceSchemaEngine(t, XSDCheckScalar).Begin(context.Background(), RunOptions{DocumentID: "target", Profile: "source-schema-test", Account: s.account})
 	if err != nil {
 		t.Fatal(err)
@@ -46,7 +46,11 @@ func packageAssociationFixture(t *testing.T) (*PackageSession, AssociationReques
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}); err != nil {
+	edge := PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}
+	if len(indirection) != 0 {
+		edge.Indirection = indirection[0]
+	}
+	if err = s.ObserveEdge(context.Background(), edge); err != nil {
 		t.Fatal(err)
 	}
 	return s, AssociationRequest{ID: "association", Kind: AssociationInstrumentPartFile, Source: sourcePin, Target: targetPin, SourcePart: part, SourceInstrument: instrument, PartLink: NodeRef{"source", 3}, InstrumentLink: NodeRef{"source", 4}, PartID: "P1", InstrumentID: "I1"}

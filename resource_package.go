@@ -32,6 +32,7 @@ type graphPackage struct {
 	primaryPath                    string
 	archiveEntry                   string
 	primaryPackage                 validation.PackageID
+	primaryIndirect                bool
 	primaryBase                    resourceURIBase
 	entriesComplete, rootsComplete validation.Evidence[bool]
 }
@@ -543,6 +544,7 @@ func (g *resourceGraphRun) loadRootfile(p *graphPackage, r *validation.PackageRo
 		r.Resource = packageKnown(resource.id)
 		if r.Ordinal == 1 {
 			p.primary, p.primaryBase, p.primaryPath, p.primaryPackage = resource, base, path, targetPackage
+			p.primaryIndirect = r.Indirection.State == validation.EvidenceKnown && r.Indirection.Value
 		}
 	}
 	return err
@@ -622,31 +624,34 @@ func (g *resourceGraphRun) archiveDocumentInventory(item graphExpansion, path st
 
 // loadArchiveDocument binds literal resolved paths to their exact encapsulation.
 // No filename or href spelling can alias another package's resource inventory.
-func (g *resourceGraphRun) loadArchiveDocument(item graphExpansion, path string) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], error) {
+func (g *resourceGraphRun) loadArchiveDocument(item graphExpansion, path string) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], bool, error) {
+	indirect := false
 	unavailable, selectable, err := g.archiveDocumentInventory(item, path)
 	if err != nil || !selectable {
-		return nil, resourceURIBase{}, item.pkg, unavailable, err
+		return nil, resourceURIBase{}, item.pkg, unavailable, indirect, err
 	}
 	p := g.packages[item.pkg]
 	if p.primary != nil && path == p.primaryPath {
+		indirect = p.primaryIndirect
 		base := p.primaryBase
 		base.RetrievalURI = item.base.RetrievalURI
-		return p.primary, base, p.primaryPackage, unavailable, nil
+		return p.primary, base, p.primaryPackage, unavailable, indirect, nil
 	}
 	data, err := g.packageEntryBytes(p, path, mxlAssessmentLinkedDocument)
 	if err != nil {
-		return nil, resourceURIBase{}, p.id, unavailable, err
+		return nil, resourceURIBase{}, p.id, unavailable, indirect, err
 	}
 	pin, err := g.observeLocalFileMetadata(p, path, data, item.base.RetrievalURI, g.packageLocation(p, path, "selected-archive-document"), validation.Evidence[string]{State: validation.EvidenceAbsent})
 	if err != nil {
-		return nil, resourceURIBase{}, p.id, unavailable, err
+		return nil, resourceURIBase{}, p.id, unavailable, indirect, err
 	}
 	if mxlAssessmentZIPPrefixBytes(data) {
+		indirect = true
 		resource, base, pkg, err := g.importNestedPackage(p, path, data, pin, item.base.RetrievalURI, false, item.depth+1)
-		return resource, base, pkg, unavailable, err
+		return resource, base, pkg, unavailable, indirect, err
 	}
 	resource, _, err := g.assessVerifiedPackageSource(p, path, data, ProfileSourceLinks, pin)
-	return resource, resourceURIBase{RetrievalURI: item.base.RetrievalURI, Archive: true, Entry: path}, p.id, unavailable, err
+	return resource, resourceURIBase{RetrievalURI: item.base.RetrievalURI, Archive: true, Entry: path}, p.id, unavailable, indirect, err
 }
 func (g *resourceGraphRun) sealPackages() error {
 	// IDs are assigned and appended through deterministic entry/rootfile order;

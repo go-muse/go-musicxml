@@ -178,9 +178,11 @@ func TestFinalQANestedXMLDepthCacheContext(t *testing.T) {
 				}
 			}
 			if mode == "plain-after-package" {
-				if e != nil || !b.Satisfied() {
+				if e != nil || !b.EnumerationComplete() || b.PackageReport().Counts.Fail != 0 {
 					t.Fatalf("nested cap leaked into plain sibling: %v %+v", e, b.PackageReport())
 				}
+				requireIndirectionContextUnknown(t, b, 1)
+				requireIndirectionIntrinsicSatisfied(t, b)
 			} else {
 				if !errors.Is(e, validation.ErrResourceLimit) || !errors.Is(e, ErrXMLTooDeep) || b.EnumerationComplete() {
 					t.Fatalf("canonical cache bypassed contextual XML cap: %v complete%v", e, b.EnumerationComplete())

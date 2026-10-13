@@ -6,6 +6,7 @@ type graphDocumentTarget struct {
 	resource *graphResource
 	base     resourceURIBase
 	pkg      validation.PackageID
+	indirect bool
 }
 
 func (g *resourceGraphRun) admittedDocumentTarget(target graphDocumentTarget) bool {
@@ -25,7 +26,7 @@ func (g *resourceGraphRun) knownArchiveTarget(item graphExpansion, path string) 
 		// must already be admitted independently before it can bypass depth.
 		base := p.primaryBase
 		base.RetrievalURI = item.base.RetrievalURI
-		target := graphDocumentTarget{p.primary, base, p.primaryPackage}
+		target := graphDocumentTarget{p.primary, base, p.primaryPackage, p.primaryIndirect}
 		if g.admittedDocumentTarget(target) {
 			return target, true, nil
 		}
@@ -38,7 +39,7 @@ func (g *resourceGraphRun) knownArchiveTarget(item graphExpansion, path string) 
 			return graphDocumentTarget{}, false, err
 		}
 		if known.pkg == item.pkg && known.base.Archive && known.base.Entry == path && known.base.RetrievalURI == item.base.RetrievalURI {
-			target := graphDocumentTarget{known.resource, known.base, known.pkg}
+			target := graphDocumentTarget{known.resource, known.base, known.pkg, false}
 			if g.admittedDocumentTarget(target) {
 				return target, true, nil
 			}

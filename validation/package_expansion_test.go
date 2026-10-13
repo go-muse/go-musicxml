@@ -38,7 +38,7 @@ func TestPackageSelfCycleExpansionHasOneOwnerAndFreshAdoptions(t *testing.T) {
 	if err != nil || got != owner {
 		t.Fatalf("alias owner=%s err=%v", got, err)
 	}
-	if err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: owner, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: alias}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}); err != nil {
+	if err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: owner, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: alias}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}); err != nil {
 		t.Fatal(err)
 	}
 	sealFixtureExpansions(t, s)
@@ -107,7 +107,7 @@ func TestPackageKnownEdgeFailureSurvivesLaterCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}); err != nil {
+	if err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}); err != nil {
 		t.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())

@@ -1056,7 +1056,7 @@ pairs and an unmatched trailing URI. It never changes the accepted odd/even
 
 Read the profile's `NormativeClosure` for its exact bounded claim. Central-only
 mimetype extra fields, other leading padding families, the complete media-type
-set, outer compressed-rootfile indirection, unproved association/role evidence
+set, outer compressed-rootfile and linked-target indirection, unproved association/role evidence
 and full ZIP/JAR/DEFLATE closure remain explicit interpretation/capability gaps
 when reached. Technical nested traversal does not settle normative indirection.
 The pinned MusicXML 4.0 schema is not a universal instance `version=4.0`
@@ -1113,6 +1113,16 @@ full retention may still succeed within the shared quotas.
 
 `ObserveEdge` consumes a once URI-decoded fragment component. Empty fragments
 address the whole document; only schema-ID NCName shorthand is implemented.
+Each observation requires explicit `Indirection` evidence. Known false asserts
+that the adopted XML is the directly selected target; known true records an
+archive-to-primary substitution. Omitted evidence is invalid ingress, not an
+implicit direct-target claim. An indirect target retains its adopted inner XML
+and intrinsic report, while outer target, applicable group-link and association
+predicates remain Unknown with `nested-link-indirection-unresolved`. Its outer
+fragment is not resolved against the inner primary's ID index, and the root
+adapter does not request an association proof for that substituted target.
+Indirection belongs to the incoming occurrence: direct XML members, inner
+outgoing links and aliases retain their own independently established evidence.
 Complete exact ID absence fails, incomplete ID scopes stay unknown, and other
 fragment grammars stay unsupported. Unknown/absent selected targets still charge
 linked-document admission. Each known edge uses its own nonroot adoption distinct
@@ -1252,7 +1262,9 @@ identify rootfile occurrences without inventing source XML nodes.
 Every package-local member identity incorporates the exact enclosing package pin
 and literal path unambiguously. Nested archives keep separate entry scopes and
 share the root account. Raw nested technical traversal preserves its inner source
-reports and the outer rootfile-indirection interpretation gap. Parse reuse is
+reports and the outer rootfile/linked-target indirection interpretation gaps.
+Neither a matching nor a different inner XML root settles the outer direct-target
+predicate. Parse reuse is
 canonical resource/profile-specific; graph expansion additionally includes the
 actual package and effective retrieval context. The primary is seeded before
 archive-local backreferences, and a repeated reference is a distinct adoption.

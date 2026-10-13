@@ -20,7 +20,7 @@ func packageAdviceFixtureCheck(t *testing.T, check PackageCheck, budgets ...Budg
 	// A closed typed projection fixture avoids parser/I/O dependencies.
 	snap.contexts = []ContextResult{{Subject: NodeRef{"source", 2}, Property: "resource.image", Resource: &ResourceContextResult{Owner: NodeRef{"source", 1}, Image: &ResourceImageContext{Source: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "image.png"}}}, MediaType: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "image/png"}}}, Width: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "10")}}}, Height: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "5")}}}}}}}
 	rules, p := packageFixture(t, check)
-	if check == PackageCheckImageScaling || check == PackageCheckFileMetadataAdvice {
+	if check == PackageCheckImageScaling || check == PackageCheckFileMetadataAdvice || check == PackageCheckGroupMatch {
 		rules[0].Rule.Class = ClassRecommendation
 		rules[0].Rule.Role = RoleAdvisory
 		rules[0].Rule.Category = CategoryAdvisory
@@ -113,7 +113,7 @@ func TestPackageUnresolvedEdgeChargesLinkedAdmission(t *testing.T) {
 	snap := s.adoptions[a].resource.snapshot
 	snap.contexts[0].Resource.Image = nil
 	snap.contexts[0].Resource.Link = &ResourceLinkContext{Kind: ResourceScoreLink, Href: ResourceAttribute{Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: "unavailable"}}}}
-	err := s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: a, Target: Evidence[ResourceAdoptionID]{State: EvidenceUnknown, Reason: "unavailable"}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}})
+	err := s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: a, Target: Evidence[ResourceAdoptionID]{State: EvidenceUnknown, Reason: "unavailable"}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}})
 	if err != nil {
 		t.Fatal(err)
 	}

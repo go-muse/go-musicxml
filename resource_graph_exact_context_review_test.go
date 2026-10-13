@@ -76,7 +76,7 @@ func TestReviewArchivePrimaryDifferentBaseNeedsOwnExpansion(t *testing.T) {
 	if target, ok, err := g.knownArchiveTarget(child, "main.opus"); err != nil || !ok || target.resource != primary || target.pkg != "root" || target.base != alias {
 		t.Errorf("exact admitted alias was not retained: target=%+v ok=%t err=%v", target, ok, err)
 	}
-	_, base, pkg, _, err := g.loadArchiveDocument(child, "main.opus")
+	_, base, pkg, _, _, err := g.loadArchiveDocument(child, "main.opus")
 	if err != nil || base != alias || pkg != "root" {
 		t.Errorf("normal primary selection lost alias context: base=%+v pkg=%s err=%v", base, pkg, err)
 	}

@@ -165,6 +165,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 	href := link.Href.Value
 	var child *graphResource
 	var childBase resourceURIBase
+	var childIndirect bool
 	childPackage := item.pkg
 	var loadErr error
 	if href.State != validation.EvidenceKnown {
@@ -201,7 +202,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 						return err
 					}
 					if ok {
-						child, childBase, childPackage = known.resource, known.base, known.pkg
+						child, childBase, childPackage, childIndirect = known.resource, known.base, known.pkg, known.indirect
 					} else {
 						unavailable, selectable, err := g.archiveDocumentInventory(item, resolved.ArchivePath)
 						if err != nil {
@@ -213,7 +214,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 						target = unavailable
 					}
 				} else {
-					child, childBase, childPackage, target, loadErr = g.loadArchiveDocument(item, resolved.ArchivePath)
+					child, childBase, childPackage, target, childIndirect, loadErr = g.loadArchiveDocument(item, resolved.ArchivePath)
 				}
 			} else if g.options.selected[ResourceDocuments] && g.options.resolver != nil {
 				if item.depth >= g.options.account.Limits().MaxDepth {
@@ -222,7 +223,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 					// and URI text alone cannot establish canonical identity.
 					return g.graphDepthError(item.depth)
 				}
-				child, childBase, childPackage, target, loadErr = g.loadExternalDocument(item, index, v, href.Value.Text, resolved)
+				child, childBase, childPackage, target, childIndirect, loadErr = g.loadExternalDocument(item, index, v, href.Value.Text, resolved)
 			}
 		}
 	}
@@ -238,7 +239,11 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 			return errors.Join(loadErr, e)
 		}
 		target = validation.Evidence[validation.ResourceAdoptionID]{State: validation.EvidenceKnown, Value: aid}
-		fragmentTarget, e = g.resolveFragment(aid, fragment)
+		if childIndirect {
+			fragmentTarget = packageUnknown[validation.NodeRef]("nested-link-indirection-unresolved")
+		} else {
+			fragmentTarget, e = g.resolveFragment(aid, fragment)
+		}
 		if e != nil {
 			return errors.Join(loadErr, e)
 		}
@@ -254,8 +259,8 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 		}
 	}
 	g.sequence++
-	edgeErr := g.session.ObserveEdge(g.ctx, validation.PackageEdgeObservation{ID: validation.PackageFactID(g.sequence), Source: item.adoption, Template: index, Target: target, Fragment: fragment, FragmentTarget: fragmentTarget})
-	if edgeErr == nil && target.State == validation.EvidenceKnown && child != nil {
+	edgeErr := g.session.ObserveEdge(g.ctx, validation.PackageEdgeObservation{ID: validation.PackageFactID(g.sequence), Source: item.adoption, Template: index, Target: target, Indirection: packageKnown(childIndirect), Fragment: fragment, FragmentTarget: fragmentTarget})
+	if edgeErr == nil && target.State == validation.EvidenceKnown && child != nil && !childIndirect {
 		if e := g.reserve(512); e != nil {
 			return errors.Join(loadErr, e)
 		}
@@ -263,24 +268,25 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 	}
 	return errors.Join(loadErr, edgeErr)
 }
-func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint64, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], error) {
+func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint64, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], bool, error) {
+	indirect := false
 	unknown := unavailableTarget(validation.EvidenceUnknown, "resource-unavailable", nil)
 	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
 	if err != nil {
-		return nil, resourceURIBase{}, item.pkg, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
 	profile, _ := engine.Profile(ProfileSourceLinks)
 	request := validation.ResourceRequest{ID: validation.ResourceRequestID(g.next("request")), Document: &validation.ResourceDocumentRequest{Source: item.resource.pin, Subject: v.Subject, Kind: validation.LinkedResourceAuto, RequiredProfile: ProfileSourceLinks, CatalogDigest: profile.CatalogDigest, BaseURI: item.base.RetrievalURI, Href: href, Package: item.pkg}}
 	if err = validation.ValidateResourceRequest(request); err != nil {
-		return nil, resourceURIBase{}, item.pkg, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
 	release, err := resourceWorkingLease(g.ctx, g.options.account, [2]validation.ResourceRequest{request, request})
 	if err != nil {
-		return nil, resourceURIBase{}, item.pkg, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
 	defer release()
 	if err = g.ctx.Err(); err != nil {
-		return nil, resourceURIBase{}, item.pkg, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
 	callback := request
 	document := *request.Document
@@ -290,16 +296,16 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint6
 		if result.Body != nil {
 			resolveErr = errors.Join(resolveErr, result.Body.Close())
 		}
-		return nil, resourceURIBase{}, item.pkg, unknown, resolveErr
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, resolveErr
 	}
 	if err = validation.ValidateResourceResult(request, result); err != nil {
 		if result.Body != nil {
 			err = errors.Join(err, result.Body.Close())
 		}
-		return nil, resourceURIBase{}, item.pkg, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
 	if result.State != validation.EvidenceKnown {
-		return nil, resourceURIBase{}, item.pkg, unavailableTarget(result.State, result.Reason, nil), nil
+		return nil, resourceURIBase{}, item.pkg, unavailableTarget(result.State, result.Reason, nil), indirect, nil
 	}
 	base := resourceURIBase{RetrievalURI: result.RetrievalURI}
 	if base.RetrievalURI != "" {
@@ -310,14 +316,14 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint6
 			if errors.As(err, &unavailable) {
 				err = &validation.ConfigurationError{Field: "resource retrieval URI", Reason: string(unavailable.reason)}
 			}
-			return nil, base, item.pkg, unknown, errors.Join(err, result.Body.Close())
+			return nil, base, item.pkg, unknown, indirect, errors.Join(err, result.Body.Close())
 		}
 		base.RetrievalURI = resolvedBase.RetrievalURI
 		result.RetrievalURI = base.RetrievalURI
 	}
 	body, err := g.readExternalPackageBody(item, result.Pin, result.Body)
 	if err != nil {
-		return nil, resourceURIBase{}, item.pkg, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
 	bodyOwned := false
 	defer func() {
@@ -326,52 +332,53 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint6
 		}
 	}()
 	if body.digest != result.Pin.Digest {
-		return nil, resourceURIBase{}, item.pkg, unknown, &validation.ConfigurationError{Field: "resource digest", Reason: "returned bytes do not match immutable pin"}
+		return nil, resourceURIBase{}, item.pkg, unknown, indirect, &validation.ConfigurationError{Field: "resource digest", Reason: "returned bytes do not match immutable pin"}
 	}
 
 	canonical := graphCanonicalKey{result.Pin.CanonicalID, result.Pin.Representation}
 	if old, ok := g.pins[canonical]; ok && old != result.Pin {
-		return nil, base, item.pkg, unknown, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed revision or content"}
+		return nil, base, item.pkg, unknown, indirect, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed revision or content"}
 	}
 	if err = g.observeExternalFileMetadata(item, index, result, base, href); err != nil {
-		return nil, base, item.pkg, unknown, err
+		return nil, base, item.pkg, unknown, indirect, err
 	}
 	if result.Pin.Representation == validation.ResourceRawMXL {
+		indirect = true
 		// Alias bodies were still read, charged and digest-verified above. Reuse
 		// only the importer's exact pin/context proof, before borrowing another
 		// archive or retaining a body that no new boundary will need.
 		if resource, childBase, pkg, known, lookupErr := g.existingRawPackage(result.Pin, item.pkg, result.RetrievalURI); known || lookupErr != nil {
-			return resource, childBase, pkg, unknown, lookupErr
+			return resource, childBase, pkg, unknown, indirect, lookupErr
 		}
 		if err = g.ownResourceBody(body); err != nil {
-			return nil, base, item.pkg, unknown, err
+			return nil, base, item.pkg, unknown, indirect, err
 		}
 		bodyOwned = true
 		archive, readErr := borrowMXLAssessmentArchive(g.ctx, body.bytes, g.mxlOptions, g.options.account)
 		if archive == nil {
-			return nil, base, item.pkg, unknown, readErr
+			return nil, base, item.pkg, unknown, indirect, readErr
 		}
 		if err = g.ownArchive(archive); err != nil {
 			archive.Close()
-			return nil, base, item.pkg, unknown, joinResourceErrors(readErr, err)
+			return nil, base, item.pkg, unknown, indirect, joinResourceErrors(readErr, err)
 		}
 		resource, childBase, pkg, importErr := g.importRawPackageAtDepth(archive, result.Pin, item.pkg, result.RetrievalURI, false, item.depth+1)
-		return resource, childBase, pkg, unknown, joinResourceErrors(readErr, importErr)
+		return resource, childBase, pkg, unknown, indirect, joinResourceErrors(readErr, importErr)
 	}
 	key := graphResourceKey{result.Pin, ProfileSourceLinks}
 	if cached := g.cache[key]; cached != nil {
-		return cached, base, item.pkg, unknown, g.checkIntrinsicXMLDepth(cached, item.pkg)
+		return cached, base, item.pkg, unknown, indirect, g.checkIntrinsicXMLDepth(cached, item.pkg)
 	}
 	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: g.next("source"), Profile: ProfileSourceLinks, XMLDepth: g.intrinsicXMLDepth(item.pkg), Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if intrinsic.Snapshot == nil {
-		return nil, base, item.pkg, unknown, g.retainUntransferredIntrinsic(intrinsic, result.Pin, nil)
+		return nil, base, item.pkg, unknown, indirect, g.retainUntransferredIntrinsic(intrinsic, result.Pin, nil)
 	}
 	id, err := g.session.AddResource(g.ctx, result.Pin, intrinsic.Snapshot, true)
 	if err != nil {
-		return nil, base, item.pkg, unknown, g.retainUntransferredIntrinsic(intrinsic, result.Pin, err)
+		return nil, base, item.pkg, unknown, indirect, g.retainUntransferredIntrinsic(intrinsic, result.Pin, err)
 	}
 	resource, err := g.cacheResource(result.Pin, ProfileSourceLinks, id, intrinsic.XMLDepth, intrinsic.Err == nil)
-	return resource, base, item.pkg, unknown, errors.Join(intrinsic.Err, err)
+	return resource, base, item.pkg, unknown, indirect, errors.Join(intrinsic.Err, err)
 }
 func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fragment validation.Evidence[string]) (validation.Evidence[validation.NodeRef], error) {
 	if fragment.State == validation.EvidenceAbsent {

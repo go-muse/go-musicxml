@@ -76,11 +76,15 @@ type PackageRootfileObservation struct {
 // (the schema kernel NCName grammar) is implemented; other grammars stay unsupported.
 // The core validates
 // supplied fragment targets against the adopted schema-qualified identity index.
+// Indirection is required adapter evidence: Known false asserts the target is
+// direct; Known true records traversal through a nested package and does not
+// establish that package's primary document as the encoded link destination.
 type PackageEdgeObservation struct {
 	ID             PackageFactID
 	Source         ResourceAdoptionID
 	Template       uint64
 	Target         Evidence[ResourceAdoptionID]
+	Indirection    Evidence[bool]
 	Fragment       Evidence[string]
 	FragmentTarget Evidence[NodeRef]
 }

@@ -41,9 +41,11 @@ func TestPackageGraphExternalRawMXLAndAliasContexts(t *testing.T) {
 	source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a.mxl"/><opus-link xlink:href="https://e.test/b.mxl"/></opus>`
 	resolver := &packageResolverFixture{data: map[string][]byte{"https://e.test/a.mxl": archive, "https://e.test/b.mxl": archive}, canonical: map[string]string{"https://e.test/a.mxl": "same", "https://e.test/b.mxl": "same"}}
 	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(source), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}})
-	if err != nil || !b.Satisfied() || b.ResourceCount() != 3 || resolver.calls != 2 {
+	if err != nil || b.Satisfied() || !b.EnumerationComplete() || b.ResourceCount() != 3 || resolver.calls != 2 {
 		t.Fatalf("err=%v resources=%d calls=%d findings=%v", err, b.ResourceCount(), resolver.calls, b.PackageReport().Findings)
 	}
+	requireIndirectionContextUnknown(t, b, 2)
+	requireIndirectionIntrinsicSatisfied(t, b)
 	contexts := map[string]validation.PackageID{}
 	for i := 0; i < b.AdoptionCount(); i++ {
 		a, _ := b.AdoptionContext(i)

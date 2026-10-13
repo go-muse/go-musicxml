@@ -184,7 +184,39 @@ Its review record identifies final scoped commit
 that the earlier log was executed on the later packaged tree. The new witness
 supersedes the earlier graph thresholds only for the explicitly measured tree.
 It does not rerun benchmarks or certify whole-tree stages, race, actual 386,
-remote CI or the unfinished archive-to-primary linked-target indirection work.
+remote CI or the subsequent archive-to-primary linked-target correction.
+
+## 2026-10-13 linked-target indirection regression
+
+Review thread `4255994212` exposed a false direct-target judgment after the
+loader substituted a linked archive's primary XML. The unchanged packaged base
+`be3e0f8436f9f53f9650fd86fb5533839ee82608` (tree
+`a4afcea40e31e361521d539bcd6a38b437ed34ca`, identical to published `21c22f6`)
+failed the new public regression in all 16 raw/current/external cases. Matching
+inner roots falsely passed and different inner roots falsely failed the outer
+predicate. Six additional context regressions reproduced fragment, association,
+primary-path, depth and ancestor-alias cases while direct XML controls passed.
+
+The correction adds required per-edge `Indirection` evidence, preserves inner
+reports and keeps outer target-dependent predicates Unknown with
+`nested-link-indirection-unresolved`. Core tests cover unavailable/invalid
+evidence and owned causes, local prerequisite precedence, immediate and final
+association decisions, direct controls and resource admission. Public tests also
+retain inner failures, independent inner associations/images, cancellation and
+post-import edge-admission cleanup. Independent integration review additionally
+identified the missing-provider association reason; a separate public/core RED
+regression precedes that correction.
+
+Focused RED log SHA-256 values are
+`c8550b6b30c810086c13e3362cb344a9211d9bcf30bc14b61632dbc29e53711e`
+(16 public cases),
+`c53838adbb7d5b19b9695dcd67074284b0258e9c756562899ae631acf913fee0`
+(six context regressions), and
+`0b7624cf7f57a1262d1fe458a20661dc476feaf7a0ff85ea217288560b5222c9`
+(initial core evidence matrix). These are historical regression artifacts, not
+whole-tree acceptance. Final exact-tree local stages and published-head CI remain
+separate gates below. Original requirement/status/owner records are unchanged;
+the inventory refresher updates only current hashes of changed routed test files.
 
 ## Final verification gate
 

@@ -170,9 +170,11 @@ func TestMXLAssessmentXMLDepthDefaultAndPlainSibling(t *testing.T) {
 	r := &xmlDepthResolver{data: map[string][]byte{"https://e.test/a.mxl": packageGraphBytes(`<opus/>`, "main.xml", ""), "https://e.test/deep.xml": []byte(deep)}}
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://e.test/a.mxl"/><opus-link xlink:href="https://e.test/deep.xml"/></opus>`
 	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(root), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
-	if err != nil || !b.Satisfied() {
+	if err != nil || !b.EnumerationComplete() || b.PackageReport().Counts.Fail != 0 {
 		t.Fatal("MXL cap leaked into plain sibling", err, b.PackageReport())
 	}
+	requireIndirectionContextUnknown(t, b, 1)
+	requireIndirectionIntrinsicSatisfied(t, b)
 	r = &xmlDepthResolver{data: map[string][]byte{"https://e.test/a.mxl": packageGraphBytes(deep, "main.xml", "")}}
 	b, err = InspectXMLWithResources(context.Background(), strings.NewReader(depthLink("https://e.test/a.mxl")), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph, Budgets: validation.Budgets{MaxDepth: 512}}, Dependencies: []ResourceDependency{ResourceDocuments}, Resolver: r})
 	requireXMLDepth(t, b, err, defaultMaxXMLDepth)

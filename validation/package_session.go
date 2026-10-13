@@ -50,6 +50,7 @@ type packageAdoption struct {
 }
 type packageAssociation struct {
 	id      PackageFactID
+	edge    PackageFactID
 	request AssociationRequest
 	result  AssociationResult
 }

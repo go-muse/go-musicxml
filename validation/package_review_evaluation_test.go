@@ -37,7 +37,7 @@ func TestPackageReviewSettledDecisionsDoNotRepeatWork(t *testing.T) {
 			case "edge":
 				var source, target ResourceAdoptionID
 				s, source, target = reviewEdgeFixture(t)
-				v := PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}
+				v := PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Indirection: Evidence[bool]{State: EvidenceKnown, Value: false}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}
 				if err := s.ObserveEdge(context.Background(), v); err != nil {
 					t.Fatal(err)
 				}

@@ -265,7 +265,7 @@ func TestReviewGraphArchiveInventoryPrerequisiteLookup(t *testing.T) {
 			}
 			before, _ := g.options.account.Usage(validation.BudgetBufferedBytes)
 			steps, _ := g.options.account.Usage(validation.BudgetRuleSteps)
-			child, base, pkg, target, err := g.loadArchiveDocument(graphExpansion{pkg: "root", depth: 3}, path)
+			child, base, pkg, target, _, err := g.loadArchiveDocument(graphExpansion{pkg: "root", depth: 3}, path)
 			if wantErr != nil {
 				if !errors.Is(err, wantErr) || target.State == validation.EvidenceAbsent {
 					t.Errorf("terminal prerequisite bypassed: err=%v want=%v target=%+v", err, wantErr, target)

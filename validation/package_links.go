@@ -40,6 +40,9 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	if err := validateEvidence(e.Target, "edge target"); err != nil {
 		return s.fail(err)
 	}
+	if err := validateEvidence(e.Indirection, "edge indirection"); err != nil {
+		return s.fail(err)
+	}
 	if err := validateEvidence(e.Fragment, "edge fragment"); err != nil {
 		return s.fail(err)
 	}
@@ -219,7 +222,7 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 			localInstrument = true
 		}
 	}
-	matchedEdge := false
+	var matchedEdge PackageFactID
 	for _, edgeID := range s.edgeOrder {
 		if err := s.scan(ctx, 1); err != nil {
 			return err
@@ -231,11 +234,11 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 		template := source.resource.snapshot.contexts[edge.Template]
 		targetAdoption := s.adoptions[edge.Target.Value]
 		if template.Subject.Node == q.PartLink.Node && targetAdoption != nil && targetAdoption.resource.pin == q.Target {
-			matchedEdge = true
+			matchedEdge = edgeID
 			break
 		}
 	}
-	if !matchedEdge {
+	if matchedEdge == 0 {
 		return s.fail(contract("association target", "selected part-link edge must bind this target pin"))
 	}
 	if !localLink || !localInstrument {
@@ -271,7 +274,7 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 	}
 	id := s.internalSubject(PackageSubjectAssociation)
 	s.subjectPackages[id] = source.packageID
-	association := packageAssociation{id: id, request: stateClone(q), result: stateClone(r)}
+	association := packageAssociation{id: id, edge: matchedEdge, request: stateClone(q), result: stateClone(r)}
 	s.associations = append(s.associations, association)
 	target.required = true
 	for _, key := range s.catalog.orders[s.profile.ID] {
@@ -282,11 +285,7 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 		if binding.Selector.Kind != PackageSubjectAssociation {
 			continue
 		}
-		d := packageEvidenceDecision(s.baseDecision(key, id), r.Membership)
-		if r.Membership.State == EvidenceKnown && !r.Membership.Value {
-			d.Outcome = OutcomeFail
-			d.Reason = "instrument-not-in-linked-part"
-		}
+		d := s.associationDecision(s.baseDecision(key, id), association)
 		if err := s.record(ctx, binding.Rule, id, d, Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/association[" + source.documentID + "]"}, false); err != nil {
 			return err
 		}
@@ -435,19 +434,20 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 				} else {
 					d.Outcome = OutcomeUnknown
 					d.Reason = "instrument-association-evidence-unavailable"
+					matched := false
 					for _, association := range s.associations {
 						if err := s.scan(ctx, 1); err != nil {
 							return err
 						}
 						q := association.request
 						if q.Source == a.resource.pin && q.InstrumentLink.DocumentID == a.documentID && q.InstrumentLink.Node == v.Subject.Node {
-							d = packageEvidenceDecision(d, association.result.Membership)
-							if association.result.Membership.State == EvidenceKnown && !association.result.Membership.Value {
-								d.Outcome = OutcomeFail
-								d.Reason = "instrument-not-in-linked-part"
-							}
+							d = s.associationDecision(d, association)
+							matched = true
 							break
 						}
+					}
+					if !matched {
+						d = s.unprovidedAssociationDecision(ctx, d, a, v)
 					}
 				}
 				if d.Cause != nil && d.Cause.Subject.DocumentID == a.resource.snapshot.header.DocumentID {
@@ -520,6 +520,66 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 	}
 	return nil
 }
+
+// Technical traversal establishes an intrinsic assessment, not that a nested
+// package's primary is the encoded link destination. Only an explicit direct
+// assertion permits target-dependent predicates to consume that assessment.
+func packageEdgeIndirectionDecision(d Decision, e PackageEdgeObservation) (Decision, bool) {
+	if e.Indirection.State != EvidenceKnown {
+		return packageRequiredEvidenceDecision(d, e.Indirection), false
+	}
+	if e.Indirection.Value {
+		d.Outcome = OutcomeUnknown
+		d.Reason = "nested-link-indirection-unresolved"
+		return d, false
+	}
+	return d, true
+}
+
+func (s *PackageSession) associationDecision(d Decision, association packageAssociation) Decision {
+	d, direct := packageEdgeIndirectionDecision(d, s.edges[association.edge])
+	if !direct {
+		return d
+	}
+	d = packageEvidenceDecision(d, association.result.Membership)
+	if association.result.Membership.State == EvidenceKnown && !association.result.Membership.Value {
+		d.Outcome = OutcomeFail
+		d.Reason = "instrument-not-in-linked-part"
+	}
+	return d
+}
+
+// An adapter need not request membership for an unresolved indirect destination.
+// The observed owning part-link still explains the outer obligation's uncertainty
+// even without a provider result. Match exact local ownership, never a shared pin
+// or another part-link in the same score-part.
+func (s *PackageSession) unprovidedAssociationDecision(ctx context.Context, d Decision, source *packageAdoption, v ContextResult) Decision {
+	for index, template := range source.resource.snapshot.contexts {
+		if err := s.scan(ctx, 1); err != nil {
+			return d
+		}
+		if template.Subject != v.Resource.Owner || template.Resource == nil || template.Resource.Link == nil || template.Resource.Link.Kind != ResourcePartLink {
+			continue
+		}
+		if href := template.Resource.Link.Href.Value; href.State != EvidenceKnown {
+			return packageRequiredEvidenceDecision(d, href)
+		}
+		id, observed := source.expansion.edges[uint64(index)]
+		if !observed {
+			return d
+		}
+		edge := s.edges[id]
+		if edge.Target.State != EvidenceKnown {
+			return packageRequiredEvidenceDecision(d, edge.Target)
+		}
+		if gated, direct := packageEdgeIndirectionDecision(d, edge); !direct {
+			return gated
+		}
+		return d
+	}
+	return d
+}
+
 func (s *PackageSession) linkTargetDecision(ctx context.Context, d Decision, e PackageEdgeObservation, v ContextResult) Decision {
 	link := v.Resource.Link
 	if link.Href.Value.State != EvidenceKnown {
@@ -532,6 +592,9 @@ func (s *PackageSession) linkTargetDecision(ctx context.Context, d Decision, e P
 			d.Reason = "linked-resource-authoritatively-absent"
 		}
 		return d
+	}
+	if gated, direct := packageEdgeIndirectionDecision(d, e); !direct {
+		return gated
 	}
 	target := s.adoptions[e.Target.Value]
 	root := target.resource.snapshot.header.Name
@@ -586,17 +649,10 @@ func (s *PackageSession) linkTargetDecision(ctx context.Context, d Decision, e P
 	return d
 }
 func (s *PackageSession) groupDecision(ctx context.Context, d Decision, e PackageEdgeObservation, v ContextResult) Decision {
-	if e.Target.State != EvidenceKnown {
-		return packageEvidenceDecision(d, e.Target)
-	}
 	source := s.adoptions[e.Source]
-	target := s.adoptions[e.Target.Value]
-	if !knownComplete(source.resource.snapshot.header.ScopeComplete) || !knownComplete(target.resource.snapshot.header.ScopeComplete) {
-		d.Outcome = OutcomeUnknown
-		d.Reason = "group-scope-incomplete"
-		return d
-	}
 	found := false
+	// Establish applicability and preserve local invalidity before consuming any
+	// target evidence. A nested link with no group-link creates no group advice.
 	for _, c := range source.resource.snapshot.contexts {
 		if err := s.scan(ctx, 1); err != nil {
 			return d
@@ -605,10 +661,40 @@ func (s *PackageSession) groupDecision(ctx context.Context, d Decision, e Packag
 			continue
 		}
 		found = true
-		value := c.Resource.Group.Value
-		if value.State != EvidenceKnown {
+		if value := c.Resource.Group.Value; value.State != EvidenceKnown {
 			return packageAdoptDecision(packageRequiredEvidenceDecision(d, value), source)
 		}
+	}
+	if !found {
+		d.Outcome, d.Reason = OutcomeNotApplicable, "no-group-link-advice"
+		if !knownComplete(source.resource.snapshot.header.ScopeComplete) {
+			d.Outcome, d.Reason = OutcomeUnknown, "group-scope-incomplete"
+		}
+		return d
+	}
+	if href := v.Resource.Link.Href.Value; href.State != EvidenceKnown {
+		return packageAdoptDecision(packageRequiredEvidenceDecision(d, href), source)
+	}
+	if e.Target.State != EvidenceKnown {
+		return packageEvidenceDecision(d, e.Target)
+	}
+	if gated, direct := packageEdgeIndirectionDecision(d, e); !direct {
+		return gated
+	}
+	target := s.adoptions[e.Target.Value]
+	if !knownComplete(source.resource.snapshot.header.ScopeComplete) || !knownComplete(target.resource.snapshot.header.ScopeComplete) {
+		d.Outcome = OutcomeUnknown
+		d.Reason = "group-scope-incomplete"
+		return d
+	}
+	for _, c := range source.resource.snapshot.contexts {
+		if err := s.scan(ctx, 1); err != nil {
+			return d
+		}
+		if c.Resource == nil || c.Resource.Group == nil || !c.Resource.Group.Linked || c.Resource.Owner.Node != v.Subject.Node {
+			continue
+		}
+		value := c.Resource.Group.Value
 		matched, uncertain := false, false
 		for _, candidate := range target.resource.snapshot.contexts {
 			if s.scan(ctx, 1+int64(len(value.Value))) != nil {
@@ -636,11 +722,6 @@ func (s *PackageSession) groupDecision(ctx context.Context, d Decision, e Packag
 			}
 			return d
 		}
-	}
-	if !found {
-		d.Outcome = OutcomeNotApplicable
-		d.Reason = "no-group-link-advice"
-		return d
 	}
 	d.Outcome = OutcomePass
 	d.Reason = "group-link-strings-match"

@@ -69,8 +69,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   assessment with separate container and musical intrinsic reports, exact local
   header evidence, finite package-local graphs, nested archive scopes and shared
   quotas. Current models are assessed directly without encoding or recovering
-  discarded source history; outer compressed-rootfile interpretation remains
-  explicit.
+  discarded source history; outer compressed-rootfile and linked-target
+  interpretation remains explicit. Incoming archive-to-primary substitutions
+  retain their own uncertainty without discarding inner XML reports.
 
 - Add explicit package-target `ProfileResourceGraph`, `ProfileMXLSource` and
   `ProfileMXLModel` metadata with sealed package/root/link checks, distinct
