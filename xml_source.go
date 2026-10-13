@@ -341,6 +341,13 @@ func (r *sourceXMLTokenReader) Token() (token xml.Token, err error) {
 		return nil, &sourceXMLUnsupportedError{Feature: "closed XML source", Reason: "source-closed"}
 	}
 	defer func() {
+		// Only the completed-document path may expose EOF. A scanner can
+		// exhaust input while still inside markup, for example after a
+		// processing-instruction target or an XML declaration value. Preserve
+		// non-EOF transport/resource causes, including errors joined with EOF.
+		if err == io.EOF && !r.complete {
+			err = r.syntax("unexpected EOF")
+		}
 		if errors.Is(err, errSourceEntityBoundary) {
 			err = r.syntax("entity boundary splits XML token")
 		}

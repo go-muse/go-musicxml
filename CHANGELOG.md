@@ -9,6 +9,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Classify EOF inside unfinished XML markup as a syntax error in the shared
+  source reader, preserving the cause through ordinary and assessed decode and
+  rejecting truncated processing instructions after an otherwise complete root.
+
 - Meter ZIP reads, decompression, CRC and actual buffer relocation in bounded
   4096-byte work units, preserving exact byte quotas and simultaneous live-buffer
   peaks without changing defaults.

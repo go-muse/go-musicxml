@@ -17,6 +17,7 @@ const (
 	dtdOracleParserError
 	dtdOracleValidityCascade
 	dtdOracleValidityOnly
+	dtdOraclePredefinedError
 )
 
 type dtdReaderDisposition uint8
@@ -81,6 +82,18 @@ func TestSourceInternalDTDAgainstXMLLint(t *testing.T) {
 		// A validating constraint violation can make libxml2 report an internal
 		// parser cascade and exit 1. The bounded reader remains non-validating.
 		{"duplicate-element-parameter-validity-cascade", `<!DOCTYPE r [<!ENTITY % p "<!ELEMENT r EMPTY>">%p;%p;]><r/>`, dtdOracleValidityCascade, dtdReaderComplete, "Redefinition of element"},
+		{"predefined-lt-valid", `<!DOCTYPE r [<!ENTITY lt "&#38;#60;">]><r/>`, dtdOracleClean, dtdReaderComplete, ""},
+		{"predefined-amp-valid", `<!DOCTYPE r [<!ENTITY amp "&#38;#38;">]><r/>`, dtdOracleClean, dtdReaderComplete, ""},
+		{"predefined-gt-valid", `<!DOCTYPE r [<!ENTITY gt ">">]><r/>`, dtdOracleClean, dtdReaderComplete, ""},
+		{"predefined-apos-valid", `<!DOCTYPE r [<!ENTITY apos "&#39;">]><r/>`, dtdOracleClean, dtdReaderComplete, ""},
+		{"predefined-quot-valid", `<!DOCTYPE r [<!ENTITY quot "&#34;">]><r/>`, dtdOracleClean, dtdReaderComplete, ""},
+		// libxml2 reports these redeclaration errors with exit zero. The bounded
+		// reader preserves incomplete closure instead of inventing a WFC failure.
+		{"predefined-lt-invalid", `<!DOCTYPE r [<!ENTITY lt "x">]><r/>`, dtdOraclePredefinedError, dtdReaderIncomplete, "invalid redeclaration of predefined entity"},
+		{"predefined-amp-invalid", `<!DOCTYPE r [<!ENTITY amp "x">]><r/>`, dtdOraclePredefinedError, dtdReaderIncomplete, "invalid redeclaration of predefined entity"},
+		{"predefined-gt-invalid", `<!DOCTYPE r [<!ENTITY gt "x">]><r/>`, dtdOraclePredefinedError, dtdReaderIncomplete, "invalid redeclaration of predefined entity"},
+		{"predefined-apos-invalid", `<!DOCTYPE r [<!ENTITY apos "x">]><r/>`, dtdOraclePredefinedError, dtdReaderIncomplete, "invalid redeclaration of predefined entity"},
+		{"predefined-quot-invalid", `<!DOCTYPE r [<!ENTITY quot "x">]><r/>`, dtdOraclePredefinedError, dtdReaderIncomplete, "invalid redeclaration of predefined entity"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			if err := dtdOracleFixtureSafe(tc.input); err != nil {
@@ -136,9 +149,39 @@ func dtdOracleCheckObservation(want dtdOracleObservation, signature string, outp
 		}
 		return nil
 	}
+	if want == dtdOraclePredefinedError {
+		if err != nil {
+			return errors.New("wanted exit-zero predefined-entity diagnostic")
+		}
+		const diagnostic = "xmlAddEntity: invalid redeclaration of predefined entity"
+		line := strings.TrimSpace(text)
+		if line == "error : "+diagnostic {
+			return nil
+		}
+		for _, name := range []string{"lt", "amp", "gt", "apos", "quot"} {
+			if line == "warning : "+diagnostic+" '"+name+"'" {
+				return nil
+			}
+		}
+		return errors.New("wanted only the pinned predefined-entity diagnostic")
+	}
 	if want == dtdOracleClean {
 		if err != nil || len(bytes.TrimSpace(output)) != 0 {
 			return errors.New("wanted clean oracle observation")
+		}
+		return nil
+	}
+	// libxml2 2.12.10 reports the repeated declaration's validity diagnostic
+	// without the older 2.9.14 parser/internal-error cascade and exits zero.
+	// Admit only that pinned diagnostic, never an arbitrary successful exit.
+	if want == dtdOracleValidityCascade && err == nil {
+		if signature == "" || !strings.Contains(text, "validity error") || strings.Contains(text, "parser error") || strings.Contains(text, "internal error") || strings.Contains(text, "warning:") || strings.Contains(text, "warning :") {
+			return errors.New("wanted standalone repeated-declaration validity diagnostic")
+		}
+		for _, line := range strings.Split(text, "\n") {
+			if strings.Contains(line, "error :") && (!strings.Contains(line, "validity error :") || !strings.Contains(line, signature)) {
+				return errors.New("unexpected additional oracle error")
+			}
 		}
 		return nil
 	}
@@ -170,5 +213,23 @@ func TestSourceDTDOracleFixtureScope(t *testing.T) {
 	}
 	if dtdOracleCheckObservation(dtdOracleClean, "", []byte("parser error: Entity not defined"), nil) == nil {
 		t.Fatal("exit zero diagnostic mistaken for clean oracle")
+	}
+	const predefined = "error : xmlAddEntity: invalid redeclaration of predefined entity\n"
+	if err := dtdOracleCheckObservation(dtdOraclePredefinedError, "", []byte(predefined), nil); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name, output string
+		err          error
+	}{
+		{"nonzero-error", predefined, errors.New("nonzero oracle exit")},
+		{"clean-stderr", "", nil},
+		{"parser-error", predefined + "parser error: invalid XML", nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if dtdOracleCheckObservation(dtdOraclePredefinedError, "", []byte(tc.output), tc.err) == nil {
+				t.Fatal("different oracle outcome accepted as predefined redeclaration diagnostic")
+			}
+		})
 	}
 }

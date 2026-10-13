@@ -187,8 +187,8 @@ transport metadata.
 
 The separate developmental `ProfileSourceInternalDTD` processes bounded internal
 declarations, entity replacements and effective attributes with typed occurrence
-origins. It never fetches external DTDs and does not change the existing profiles;
-see its [scope and retained obligations](docs/validation/dtd-infoset-scope.md).
+origins. External DTDs are not fetched, and existing profiles do not opt into this
+processing. See its [scope and retained obligations](docs/validation/dtd-infoset-scope.md).
 
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged

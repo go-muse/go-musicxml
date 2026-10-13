@@ -81,6 +81,10 @@ separate typed causes. `xml.SyntaxError.Line` identifies a decoded-source
 recognition position, not an attribute-start location. Source assessment findings
 supply explicit original-byte positions where available.
 
+Truncated processing instructions and XML declarations are syntax errors,
+including an unfinished processing instruction after a complete root. These
+errors do not expose a decoded document or become successful end-of-input.
+
 Literal attribute tabs and line endings normalize to spaces, while numeric
 references preserve their referenced whitespace. Contradictory BOM/encoding
 declarations, undeclared prefixes, malformed declaration/DTD grammar and illegal
@@ -784,9 +788,15 @@ supported internal entity replacements, attribute defaults and declared
 non-CDATA normalization before namespace expansion, assessment and conversion.
 It does not compose the local/timeline/context/package profiles. Existing
 profiles, plain `Decode`, nil-assessment decode and current-model behavior are
-unchanged. External subsets/entities are never fetched; their missing evidence
+unchanged with respect to DTD processing. External subsets/entities are never
+fetched; their missing evidence
 remains incomplete. This is not a validating DTD processor or general XML
 processor-conformance claim.
+
+The shared scanner also corrects an earlier malformed-tail acceptance bug:
+truncated processing instructions/declarations now retain their XML syntax
+cause across existing decoding modes. This does not enable DTD expansion in
+those modes.
 
 The new `ContextResult.SourceOrigin` pointer carries owned typed occurrence
 evidence, selected only by source-origin providers. `Specified` distinguishes
