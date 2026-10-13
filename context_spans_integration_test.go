@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -36,11 +37,45 @@ func (s *spanGapSink) Close(ctx context.Context, n validation.NodeEnd) error {
 	return s.Session.Close(ctx, n)
 }
 
+type spanEngineFixture struct {
+	engine   *validation.Engine
+	profiles []validation.Profile
+}
+
+// The compiled engines are immutable; the two provider configurations have
+// distinct caches. Never share accounts, sessions, models, sinks or reports.
+var spanTestEngineWithoutTimeline = sync.OnceValues(func() (spanEngineFixture, error) {
+	return buildSpanTestEngine(false)
+})
+var spanTestEngineWithTimeline = sync.OnceValues(func() (spanEngineFixture, error) {
+	return buildSpanTestEngine(true)
+})
+
 func spanTestEngine(t *testing.T, withTimeline bool) (*validation.Engine, []validation.Profile) {
 	t.Helper()
-	d, err := buildModelAssessmentDefinitions()
+	get := spanTestEngineWithoutTimeline
+	if withTimeline {
+		get = spanTestEngineWithTimeline
+	}
+	fixture, err := get()
 	if err != nil {
 		t.Fatal(err)
+	}
+	// Preserve the fixture's original profile metadata while giving each caller
+	// its own slices, including the nested required/support/root inventories.
+	profiles := append([]validation.Profile(nil), fixture.profiles...)
+	for i := range profiles {
+		profiles[i].Required = append([]validation.RuleKey(nil), profiles[i].Required...)
+		profiles[i].Support = append([]validation.RuleSupport(nil), profiles[i].Support...)
+		profiles[i].SupportedRoots = append([]validation.QName(nil), profiles[i].SupportedRoots...)
+	}
+	return fixture.engine, profiles
+}
+
+func buildSpanTestEngine(withTimeline bool) (spanEngineFixture, error) {
+	d, err := buildModelAssessmentDefinitions()
+	if err != nil {
+		return spanEngineFixture{}, err
 	}
 	schema := d.schemas[validation.AssemblyMusicXML]
 	assembly := validation.AssemblyMusicXML
@@ -57,20 +92,20 @@ func spanTestEngine(t *testing.T, withTimeline bool) (*validation.Engine, []vali
 		for i, part := range b.namedElementUses("part") {
 			a, err := b.typeAttribute(part.DeclaredType, "id")
 			if err != nil {
-				t.Fatal(err)
+				return spanEngineFixture{}, err
 			}
 			owners = append(owners, validation.ReferenceOwner{Declaration: part.Declaration, Attribute: a, Rule: validation.RuleKey{ID: validation.RuleID("MX40-LOCAL-part-id-target/use-" + strconv.Itoa(i+1)), Revision: 1}})
 		}
 		timeline = validation.RuleKey{ID: "span-test.timeline", Revision: 1}
 		p, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: owners})
 		if err != nil {
-			t.Fatal(err)
+			return spanEngineFixture{}, err
 		}
 		add(timeline, p, nil)
 	}
 	p, err := validation.NewSpanContextPlan(validation.ContextPlanSpec{Schema: schema, TimelineProvider: timeline})
 	if err != nil {
-		t.Fatal(err)
+		return spanEngineFixture{}, err
 	}
 	var deps []validation.Dependency
 	if withTimeline {
@@ -92,13 +127,13 @@ func spanTestEngine(t *testing.T, withTimeline bool) (*validation.Engine, []vali
 	}
 	c, err := validation.NewCatalog(d.rules, profiles, d.plans)
 	if err != nil {
-		t.Fatal(err)
+		return spanEngineFixture{}, err
 	}
 	engine, err := validation.NewEngine(c)
 	if err != nil {
-		t.Fatal(err)
+		return spanEngineFixture{}, err
 	}
-	return engine, profiles
+	return spanEngineFixture{engine: engine, profiles: profiles}, nil
 }
 func spanBoth(t *testing.T, source string, withTimeline bool, check func(*testing.T, validation.Report)) {
 	t.Helper()

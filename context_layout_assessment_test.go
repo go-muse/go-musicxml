@@ -53,6 +53,7 @@ func layoutFacts(r validation.Report, property string) []validation.ContextResul
 	return out
 }
 func TestLayoutFormattingFiveAxes(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, body, property, text string
 		state                      validation.EvidenceState
@@ -78,6 +79,7 @@ func TestLayoutFormattingFiveAxes(t *testing.T) {
 	}
 }
 func TestLayoutLyricPublishersFiveAxes(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, defaults, lyric, property, text string
 		state                                 validation.EvidenceState
@@ -105,6 +107,7 @@ func TestLayoutLyricPublishersFiveAxes(t *testing.T) {
 	}
 }
 func TestLayoutPageSystemMeasureLifetimes(t *testing.T) {
+	t.Parallel()
 	for _, tw := range []bool{false, true} {
 		for _, model := range []bool{false, true} {
 			header := `<identification><encoding><supports element="print" attribute="new-page" value="yes" type="yes"/><supports element="print" attribute="new-system" value="yes" type="yes"/></encoding></identification><defaults><page-layout><page-height>100</page-height><page-width>80</page-width></page-layout><system-layout><system-distance>20</system-distance><top-system-distance>10</top-system-distance></system-layout></defaults><part-list><score-part id="P1"><part-name>A</part-name></score-part></part-list>`
@@ -158,6 +161,7 @@ func TestLayoutPageSystemMeasureLifetimes(t *testing.T) {
 	}
 }
 func TestLayoutGeometryPrecedenceFiveAxes(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, body, property string
 		active               bool
@@ -184,6 +188,7 @@ func TestLayoutGeometryPrecedenceFiveAxes(t *testing.T) {
 	}
 }
 func TestLayoutStaffDefaultsApplyAcrossParts(t *testing.T) {
+	t.Parallel()
 	for _, tw := range []bool{false, true} {
 		for _, model := range []bool{false, true} {
 			header := `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults><part-list><score-part id="P1"><part-name>A</part-name></score-part><score-part id="P2"><part-name>B</part-name></score-part></part-list>`
@@ -226,6 +231,7 @@ func TestLayoutStaffDefaultsApplyAcrossParts(t *testing.T) {
 	}
 }
 func TestLayoutPageMarginsAndNegativeSystemInsets(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<print><system-layout><system-margins><left-margin>-5</left-margin><right-margin>3</right-margin></system-margins></system-layout></print>`, `<defaults><page-layout><page-height>100</page-height><page-width>80</page-width><page-margins><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins></page-layout></defaults>`, func(t *testing.T, r validation.Report) {
 		for _, tc := range []struct{ property, want string }{{"effective-left-margin", "5"}, {"effective-right-margin", "13"}} {
 			v := layoutFacts(r, tc.property)
@@ -236,6 +242,7 @@ func TestLayoutPageMarginsAndNegativeSystemInsets(t *testing.T) {
 	})
 }
 func TestLayoutSystemDividerMidpointAndWidthMismatch(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<print/>`, `<defaults><page-layout><page-height>100</page-height><page-width>100</page-width><page-margins><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins></page-layout><system-layout><system-margins><left-margin>0</left-margin><right-margin>0</right-margin></system-margins><system-distance>30</system-distance><system-dividers><left-divider/><right-divider/></system-dividers></system-layout></defaults>`, func(t *testing.T, r validation.Report) {
 		v := layoutFacts(r, "left-divider-y")
 		if len(v) != 1 || v[0].Layout.Conversion.Value.String() != "15" || v[0].Layout.Applicability.Value {
@@ -244,6 +251,7 @@ func TestLayoutSystemDividerMidpointAndWidthMismatch(t *testing.T) {
 	})
 }
 func TestLayoutScalarDefaultsUseSpecificFields(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name, body, header, property, text string
 		state                              validation.EvidenceState
@@ -287,6 +295,7 @@ func TestLayoutScalarDefaultsUseSpecificFields(t *testing.T) {
 	}
 }
 func TestLayoutHarmonyAndMetronomeComponentInheritance(t *testing.T) {
+	t.Parallel()
 	for _, body := range []string{`<harmony font-family="Parent" font-style="italic"><root><root-step font-family="Child">C</root-step></root><kind>major</kind></harmony>`, `<direction><direction-type><metronome font-family="Parent" font-style="italic"><beat-unit>quarter</beat-unit><per-minute font-family="Child">120ish</per-minute></metronome></direction-type></direction>`} {
 		layoutReports(t, body, "", func(t *testing.T, r validation.Report) {
 			families := layoutFacts(r, "font-family")
@@ -313,6 +322,7 @@ func TestLayoutHarmonyAndMetronomeComponentInheritance(t *testing.T) {
 	}
 }
 func TestLayoutFormattingAndGeometryAgainstPinnedSchema(t *testing.T) {
+	t.Parallel()
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
 		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {
@@ -350,6 +360,7 @@ func TestLayoutFormattingAndGeometryAgainstPinnedSchema(t *testing.T) {
 	}
 }
 func TestLayoutHiddenSpaceAndVisiblePublisherAreSeparate(t *testing.T) {
+	t.Parallel()
 	for _, cfg := range []struct{ object, spacing string }{{"no", "yes"}, {"no", "no"}, {"no", "invalid"}, {"yes", "yes"}, {"invalid", "yes"}} {
 		spacing, object := cfg.spacing, cfg.object
 		for _, tw := range []bool{false, true} {
@@ -391,6 +402,7 @@ func TestLayoutHiddenSpaceAndVisiblePublisherAreSeparate(t *testing.T) {
 	}
 }
 func TestLayoutSystemSelectorsAndAdvisoriesRemainContext(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct{ body, property, want string }{
 		{`<direction system="none"><direction-type><words>text</words></direction-type></direction>`, "system", "none"},
 		{`<direction system="also-top"><direction-type><words>text</words></direction-type></direction>`, "system", "also-top"},
@@ -418,6 +430,7 @@ func TestLayoutSystemSelectorsAndAdvisoriesRemainContext(t *testing.T) {
 	}
 }
 func TestLayoutZeroScalingAndLyricAlignmentAreIndependent(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><lyric><text>la</text></lyric></note>`, `<defaults><scaling><millimeters>7</millimeters><tenths>0</tenths></scaling></defaults>`, func(t *testing.T, r validation.Report) {
 		scaling := layoutFacts(r, "millimeters-per-tenth")
 		if len(scaling) != 1 || scaling[0].Layout.Conversion.State != validation.EvidenceUnknown || scaling[0].Layout.Conversion.Reason != "zero-scaling-denominator" {
@@ -442,6 +455,7 @@ func TestLayoutZeroScalingAndLyricAlignmentAreIndependent(t *testing.T) {
 	})
 }
 func TestLayoutCreditInheritanceAndPhysicalPage(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<print new-page="yes" page-number="99"/>`, `<credit><credit-words font-family="CreditFont" default-x="5" default-y="10">first</credit-words><credit-words>second</credit-words></credit>`, func(t *testing.T, r validation.Report) {
 		page := layoutFacts(r, "credit-page")
 		if len(page) != 1 || page[0].Value.Value.Integer.String() != "1" {
@@ -472,6 +486,7 @@ func TestLayoutCreditInheritanceAndPhysicalPage(t *testing.T) {
 	})
 }
 func TestLayoutWidthComparisonFiveAxes(t *testing.T) {
+	t.Parallel()
 	defaults := `<identification><encoding><supports element="print" attribute="new-page" value="yes" type="yes"/><supports element="print" attribute="new-system" value="yes" type="yes"/></encoding></identification><defaults><page-layout><page-height>100</page-height><page-width>100</page-width><page-margins><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins></page-layout><system-layout><system-margins><left-margin>0</left-margin><right-margin>0</right-margin></system-margins></system-layout></defaults>`
 	for _, tc := range []struct {
 		name, width string
@@ -510,6 +525,7 @@ func TestLayoutWidthComparisonFiveAxes(t *testing.T) {
 	}
 }
 func TestLayoutBlankPagesUsePhysicalParity(t *testing.T) {
+	t.Parallel()
 	header := `<defaults><page-layout><page-margins type="odd"><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins><page-margins type="even"><left-margin>20</left-margin><right-margin>20</right-margin><top-margin>20</top-margin><bottom-margin>20</bottom-margin></page-margins></page-layout></defaults>`
 	layoutReports(t, `<print new-page="yes" blank-page="1" page-number="99"/>`, header, func(t *testing.T, r validation.Report) {
 		v := layoutFacts(r, "page-left-margin")
@@ -519,6 +535,7 @@ func TestLayoutBlankPagesUsePhysicalParity(t *testing.T) {
 	})
 }
 func TestLayoutGroupDisplayPriorityAndExplicitOverride(t *testing.T) {
+	t.Parallel()
 	for _, abbrev := range []bool{false, true} {
 		name, display := "group-name", "group-name-display"
 		if abbrev {
@@ -574,6 +591,7 @@ func TestLayoutGroupDisplayPriorityAndExplicitOverride(t *testing.T) {
 }
 
 func TestLayoutWordFontDoesNotCrossNotationDomains(t *testing.T) {
+	t.Parallel()
 	body := `<direction><direction-type><dynamics><p/></dynamics></direction-type></direction><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type><notehead>normal</notehead></note><direction><direction-type><symbol>segno</symbol></direction-type></direction><direction><direction-type><words>dolce</words></direction-type></direction>`
 	layoutReports(t, body, `<defaults><music-font font-size="20"/><word-font font-family="Words"/></defaults>`, func(t *testing.T, r validation.Report) {
 		facts := layoutFacts(r, "font-family")
@@ -596,6 +614,7 @@ func TestLayoutWordFontDoesNotCrossNotationDomains(t *testing.T) {
 }
 
 func TestLayoutParallelPrintPositionsUseMusicalOffsets(t *testing.T) {
+	t.Parallel()
 	for _, tw := range []bool{false, true} {
 		for _, model := range []bool{false, true} {
 			for _, mode := range []string{"equal", "different", "rewound", "unavailable", "one-publisher"} {

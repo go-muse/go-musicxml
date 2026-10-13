@@ -20,6 +20,7 @@ import (
 )
 
 func TestIndependentContextDefaultResourceMatrix(t *testing.T) {
+	t.Parallel()
 	fixtures := map[string]string{}
 	for _, count := range []int{100, 1000} {
 		fixtures[fmt.Sprintf("notes%d", count)] = independentTimelineScore(count, false, "1")

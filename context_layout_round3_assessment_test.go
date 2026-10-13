@@ -9,6 +9,7 @@ import (
 const layoutRound3Margins = `<page-layout><page-margins type="odd"><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins><page-margins type="even"><left-margin>20</left-margin><right-margin>20</right-margin><top-margin>20</top-margin><bottom-margin>20</bottom-margin></page-margins></page-layout>`
 
 func TestLayoutRound3NewSystemOwnsIncompleteWidth(t *testing.T) {
+	t.Parallel()
 	header := layoutRound1Supports + `<defaults><page-layout><page-height>100</page-height><page-width>100</page-width><page-margins><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins></page-layout><system-layout><system-margins><left-margin>0</left-margin><right-margin>0</right-margin></system-margins></system-layout></defaults>`
 	layoutRound1Reports(t, header, [][]string{{``, ``, `<print new-system="yes"/><attributes><staff-details print-object="invalid"/></attributes>`, `<attributes><staff-details print-object="yes"/></attributes>`}}, []string{"40", "40", "40", "80"}, func(t *testing.T, r validation.Report) {
 		rows := layoutFacts(r, "width-outcome")
@@ -25,6 +26,7 @@ func TestLayoutRound3NewSystemOwnsIncompleteWidth(t *testing.T) {
 }
 
 func TestLayoutRound3BlankPageConsensus(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		name, other string
 		want        validation.EvidenceState
@@ -74,6 +76,7 @@ func TestLayoutRound3BlankPageConsensus(t *testing.T) {
 }
 
 func TestLayoutRound3StaffApplicabilityPreservesCause(t *testing.T) {
+	t.Parallel()
 	for _, attr := range []string{`print-object="invalid"`, `print-object="no" print-spacing="invalid"`} {
 		t.Run(attr, func(t *testing.T) {
 			layoutRound1Reports(t, layoutRound1Supports+`<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`, [][]string{{`<attributes><staff-details ` + attr + `/></attributes>`}}, nil, func(t *testing.T, r validation.Report) {
@@ -90,6 +93,7 @@ func TestLayoutRound3StaffApplicabilityPreservesCause(t *testing.T) {
 }
 
 func TestLayoutRound3AllCutawayPublisherIsUnresolved(t *testing.T) {
+	t.Parallel()
 	for _, reverse := range []bool{false, true} {
 		t.Run(fmt.Sprint(reverse), func(t *testing.T) {
 			hidden := `<attributes><staff-details print-object="no" print-spacing="no"/></attributes>`
@@ -109,6 +113,7 @@ func TestLayoutRound3AllCutawayPublisherIsUnresolved(t *testing.T) {
 }
 
 func TestLayoutRound3DerivedProvenance(t *testing.T) {
+	t.Parallel()
 	for _, explicit := range []bool{false, true} {
 		t.Run(fmt.Sprint(explicit), func(t *testing.T) {
 			attr := ""
@@ -141,6 +146,7 @@ func TestLayoutRound3DerivedProvenance(t *testing.T) {
 }
 
 func TestLayoutRound3BlankPageAbsentAndIgnoredControls(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct{ name, p1, p2, want string }{
 		{"all-absent", `<print new-page="yes"/>`, `<print new-page="yes"/>`, "10"},
 		{"ignored", `<print new-page="no" blank-page="1"/>`, `<print new-page="no"/>`, "10"},
@@ -169,12 +175,14 @@ func TestLayoutRound3BlankPageAbsentAndIgnoredControls(t *testing.T) {
 }
 
 func TestLayoutRound3AllCutawayWithoutOverrideKeepsDefaults(t *testing.T) {
+	t.Parallel()
 	layoutRound1Reports(t, `<defaults><system-layout><system-distance>20</system-distance></system-layout></defaults>`, [][]string{{`<attributes><staff-details print-object="no" print-spacing="no"/></attributes>`}}, nil, func(t *testing.T, r validation.Report) {
 		layoutMatrixValues(t, r, "system-distance", lmk("20"))
 	})
 }
 
 func TestLayoutRound3CutawayPublisherRepairsAtNextSystem(t *testing.T) {
+	t.Parallel()
 	header := layoutRound1Supports + `<defaults><page-layout><page-height>100</page-height><page-width>100</page-width></page-layout><system-layout><system-distance>20</system-distance></system-layout></defaults>`
 	layoutRound1Reports(t, header, [][]string{{`<print><system-layout><system-distance>73</system-distance></system-layout></print><attributes><staff-details print-object="no" print-spacing="no"/></attributes>`, `<print new-system="yes"/><attributes><staff-details print-object="yes"/></attributes>`}}, nil, func(t *testing.T, r validation.Report) {
 		layoutMatrixValues(t, r, "system-distance", lmu(), lmk("20"))
@@ -183,6 +191,7 @@ func TestLayoutRound3CutawayPublisherRepairsAtNextSystem(t *testing.T) {
 }
 
 func TestLayoutRound3BlankDisagreementDoesNotHideInvalidBreak(t *testing.T) {
+	t.Parallel()
 	for _, initial := range []bool{false, true} {
 		for _, reverse := range []bool{false, true} {
 			t.Run(fmt.Sprintf("initial=%t/reverse=%t", initial, reverse), func(t *testing.T) {

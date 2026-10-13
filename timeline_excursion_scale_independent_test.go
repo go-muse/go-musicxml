@@ -12,6 +12,7 @@ import (
 // All movement units are identical. These ordinary forward-only documents
 // exercise excursion inventory without semantic gate reconstruction.
 func TestIndependentTimelineUniformExcursionPracticalDefaults(t *testing.T) {
+	t.Parallel()
 	for _, count := range []int{100, 1000} {
 		for _, repeated := range []bool{false, true} {
 			var body strings.Builder

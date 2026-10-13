@@ -5,21 +5,32 @@ import (
 	"encoding/xml"
 	"github.com/go-muse/go-musicxml/validation"
 	"strings"
+	"sync"
 	"testing"
 )
 
 // This independent harness selects the real local context provider over the
 // unchanged source/model prerequisites. It never selects unfinished siblings.
+var cachedLocalContextTestEngine = sync.OnceValues(buildLocalContextTestEngine)
+
 func localContextTestEngine(t *testing.T) *validation.Engine {
 	t.Helper()
-	d, err := buildModelAssessmentDefinitions()
+	engine, err := cachedLocalContextTestEngine()
 	if err != nil {
 		t.Fatal(err)
+	}
+	return engine
+}
+
+func buildLocalContextTestEngine() (*validation.Engine, error) {
+	d, err := buildModelAssessmentDefinitions()
+	if err != nil {
+		return nil, err
 	}
 	schema := d.schemas[validation.AssemblyMusicXML]
 	plan, err := validation.NewLocalContextPlan(schema)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	key := validation.RuleKey{ID: "test-local-context", Revision: 1}
 	assembly := validation.AssemblyMusicXML
@@ -34,13 +45,13 @@ func localContextTestEngine(t *testing.T) *validation.Engine {
 	}
 	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	engine, err := validation.NewEngine(catalog)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
-	return engine
+	return engine, nil
 }
 func localContextAssess(t *testing.T, engine *validation.Engine, source string, model bool) validation.Report {
 	t.Helper()

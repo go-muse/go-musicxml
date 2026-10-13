@@ -19,6 +19,7 @@ func TestIndependentTimelinePracticalDirectionCandidates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	assertReadOnlyModelFixture(t, source, doc)
 	for _, liftedBuffer := range []bool{false, true} {
 		for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline, ProfileModelLocal, ProfileModelTimeline} {
 			label := string(p)
@@ -28,6 +29,7 @@ func TestIndependentTimelinePracticalDirectionCandidates(t *testing.T) {
 				budget.MaxBufferedBytes = 512 << 20
 			}
 			t.Run(label, func(t *testing.T) {
+				t.Parallel()
 				var report validation.Report
 				var err error
 				if p == ProfileSourceLocal || p == ProfileSourceTimeline {
@@ -57,6 +59,7 @@ func TestIndependentTimelinePracticalFiguredBassCandidates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	assertReadOnlyModelFixture(t, source, doc)
 	for _, liftedBuffer := range []bool{false, true} {
 		for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline, ProfileModelLocal, ProfileModelTimeline} {
 			label := string(p)
@@ -66,6 +69,7 @@ func TestIndependentTimelinePracticalFiguredBassCandidates(t *testing.T) {
 				budget.MaxBufferedBytes = 512 << 20
 			}
 			t.Run(label, func(t *testing.T) {
+				t.Parallel()
 				var report validation.Report
 				var err error
 				if p == ProfileSourceLocal || p == ProfileSourceTimeline {
@@ -110,6 +114,7 @@ func TestIndependentTimelinePracticalGraceCandidates(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		assertReadOnlyModelFixture(t, source, doc)
 		for _, liftedBuffer := range []bool{false, true} {
 			for _, p := range []validation.ProfileID{ProfileSourceLocal, ProfileSourceTimeline, ProfileModelLocal, ProfileModelTimeline} {
 				label := name + "/" + string(p)
@@ -119,6 +124,7 @@ func TestIndependentTimelinePracticalGraceCandidates(t *testing.T) {
 					budget.MaxBufferedBytes = 512 << 20
 				}
 				t.Run(label, func(t *testing.T) {
+					t.Parallel()
 					var report validation.Report
 					var err error
 					if p == ProfileSourceLocal || p == ProfileSourceTimeline {

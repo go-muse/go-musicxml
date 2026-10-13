@@ -84,6 +84,7 @@ func layoutMatrixHarmony(kind string) string {
 }
 
 func TestLayoutMatrixFormattingFields(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		check, axis, body, property string
 		want                        []layoutMatrixValue
@@ -159,6 +160,7 @@ func TestLayoutMatrixFormattingFields(t *testing.T) {
 }
 
 func TestLayoutMatrixUseSiteDefaults(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct{ check, element, container, defaultEnclosure string }{
 		{"words-defaults", "words", "direction", "none"}, {"rehearsal-defaults", "rehearsal", "direction", "square"}, {"name-display-defaults", "display-text", "name", "none"},
 	} {
@@ -215,6 +217,7 @@ func TestLayoutMatrixUseSiteDefaults(t *testing.T) {
 }
 
 func TestLayoutMatrixApplicationChoices(t *testing.T) {
+	t.Parallel()
 	frame := func(attrs string) string {
 		return `<harmony><root><root-step>C</root-step></root><kind>major</kind><frame ` + attrs + `><frame-strings>6</frame-strings><frame-frets>4</frame-frets><frame-note><string>1</string><fret>0</fret></frame-note></frame></harmony>`
 	}
@@ -262,6 +265,7 @@ func TestLayoutMatrixApplicationChoices(t *testing.T) {
 }
 
 func TestLayoutMatrixIndependentEditorialAndKindFields(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		check      string
 		properties []string
@@ -296,6 +300,7 @@ func TestLayoutMatrixIndependentEditorialAndKindFields(t *testing.T) {
 // Numeric source spellings that cannot survive decoding get distinct current-
 // model invalid values. This is current-model evidence, not source equivalence.
 func TestLayoutMatrixNonFiniteCurrentGeometry(t *testing.T) {
+	t.Parallel()
 	for _, tw := range []bool{false, true} {
 		for _, target := range []string{"source", "model"} {
 			t.Run(fmt.Sprintf("%s/timewise=%v", target, tw), func(t *testing.T) {
@@ -332,6 +337,7 @@ func TestLayoutMatrixNonFiniteCurrentGeometry(t *testing.T) {
 }
 
 func TestLayoutMatrixCoordinatesAndRelations(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		check, axis, body, header, property, basis string
 		want                                       []layoutMatrixValue
@@ -375,6 +381,7 @@ func TestLayoutMatrixCoordinatesAndRelations(t *testing.T) {
 }
 
 func TestLayoutMatrixBezierControlPoints(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, attrs   string
 		first, second bool
@@ -409,6 +416,7 @@ func TestLayoutMatrixBezierControlPoints(t *testing.T) {
 }
 
 func TestLayoutMatrixDirectiveAndPageApplicability(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, attrs string
 		state       validation.EvidenceState
@@ -462,6 +470,7 @@ func TestLayoutMatrixDirectiveAndPageApplicability(t *testing.T) {
 }
 
 func TestLayoutMatrixDynamicsPlacement(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, body string
 		want       []layoutMatrixValue
@@ -479,6 +488,7 @@ func TestLayoutMatrixDynamicsPlacement(t *testing.T) {
 }
 
 func TestLayoutMatrixTextAlternativePrecedence(t *testing.T) {
+	t.Parallel()
 	for _, owner := range []string{"elision", "tap"} {
 		for _, tc := range []struct {
 			axis, text, alternative string
@@ -521,6 +531,7 @@ func TestLayoutMatrixTextAlternativePrecedence(t *testing.T) {
 }
 
 func TestLayoutMatrixLyricSelectorComponents(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, defaults, lyric, property string
 		want                            layoutMatrixValue
@@ -555,6 +566,7 @@ func TestLayoutMatrixLyricSelectorComponents(t *testing.T) {
 }
 
 func TestLayoutMatrixComponentInheritance(t *testing.T) {
+	t.Parallel()
 	for _, use := range []string{"harmony", "metronome"} {
 		for _, tc := range []struct {
 			axis, parent, child string
@@ -591,6 +603,7 @@ func TestLayoutMatrixComponentInheritance(t *testing.T) {
 }
 
 func TestLayoutMatrixSystemSelectors(t *testing.T) {
+	t.Parallel()
 	for _, owner := range []string{"direction", "measure-numbering"} {
 		for _, tc := range []struct {
 			axis, attr string
@@ -621,6 +634,7 @@ func TestLayoutMatrixSystemSelectors(t *testing.T) {
 }
 
 func TestLayoutMatrixCreditPageAndComponents(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, page, first, second string
 		pageWant, formatWant      layoutMatrixValue
@@ -665,6 +679,7 @@ func TestLayoutMatrixCreditPageAndComponents(t *testing.T) {
 }
 
 func TestLayoutMatrixScalingAndInsets(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, mm, tenths, left, sys string
 		ratio, inset                layoutMatrixValue
@@ -752,6 +767,7 @@ func layoutMatrixMeasures(t *testing.T, header string, bodies []string, check fu
 }
 
 func TestLayoutMatrixScopedOverrides(t *testing.T) {
+	t.Parallel()
 	supports := `<identification><encoding><supports element="print" attribute="new-page" value="yes" type="yes"/><supports element="print" attribute="new-system" value="yes" type="yes"/></encoding></identification>`
 	defaults := `<defaults><page-layout><page-height>100</page-height><page-width>80</page-width></page-layout><system-layout><system-distance>20</system-distance><top-system-distance>10</top-system-distance></system-layout></defaults>`
 	first := `<print><page-layout><page-height>200</page-height><page-width>80</page-width></page-layout><system-layout><system-distance>30</system-distance></system-layout><measure-layout><measure-distance>7</measure-distance></measure-layout></print>`
@@ -782,6 +798,7 @@ func TestLayoutMatrixScopedOverrides(t *testing.T) {
 }
 
 func TestLayoutMatrixDividers(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, distance, attrs string
 		want                  layoutMatrixValue
@@ -813,6 +830,7 @@ func TestLayoutMatrixDividers(t *testing.T) {
 }
 
 func TestLayoutMatrixArrowheadAndAbsentOwners(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, content string
 		count         int
@@ -856,6 +874,7 @@ func TestLayoutMatrixArrowheadAndAbsentOwners(t *testing.T) {
 }
 
 func TestLayoutMatrixPageMarginSelection(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, typ string
 		print     bool
@@ -879,6 +898,7 @@ func TestLayoutMatrixPageMarginSelection(t *testing.T) {
 }
 
 func TestLayoutMatrixLyricAlignmentDefaults(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, attrs       string
 		placement, halign layoutMatrixValue
@@ -910,6 +930,7 @@ func TestLayoutMatrixLyricAlignmentDefaults(t *testing.T) {
 }
 
 func TestLayoutMatrixStaffOverrideLifetime(t *testing.T) {
+	t.Parallel()
 	header := `<identification><encoding><supports element="print" attribute="new-page" value="yes" type="yes"/><supports element="print" attribute="new-system" value="yes" type="yes"/></encoding></identification><defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`
 	for _, tc := range []struct {
 		axis, second string
@@ -930,6 +951,7 @@ func TestLayoutMatrixStaffOverrideLifetime(t *testing.T) {
 }
 
 func TestLayoutMatrixDefaultsStayComponentLocal(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, defaults, attrs string
 		want                  layoutMatrixValue
@@ -956,6 +978,7 @@ func TestLayoutMatrixDefaultsStayComponentLocal(t *testing.T) {
 }
 
 func TestLayoutMatrixEmptyLanguageClears(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, first, second string
 		want                layoutMatrixValue
@@ -983,6 +1006,7 @@ func TestLayoutMatrixEmptyLanguageClears(t *testing.T) {
 }
 
 func TestLayoutMatrixInheritedTextDefaults(t *testing.T) {
+	t.Parallel()
 	for _, tc := range []struct {
 		axis, first, second string
 		cross               bool
@@ -1024,6 +1048,7 @@ func TestLayoutMatrixInheritedTextDefaults(t *testing.T) {
 }
 
 func TestLayoutMatrixNameTextDefaults(t *testing.T) {
+	t.Parallel()
 	for _, element := range []string{"display-text", "accidental-text"} {
 		for _, tc := range []struct {
 			axis, attrs         string

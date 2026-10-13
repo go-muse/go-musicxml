@@ -7,6 +7,7 @@ import (
 )
 
 func TestLayoutRound3ConflictingBreakPreservesCauseInEveryOrder(t *testing.T) {
+	t.Parallel()
 	permutations := [][3]int{{0, 1, 2}, {0, 2, 1}, {1, 0, 2}, {1, 2, 0}, {2, 0, 1}, {2, 1, 0}}
 	for _, invalid := range []bool{false, true} {
 		for _, initial := range []bool{false, true} {
@@ -64,6 +65,7 @@ func TestLayoutRound3ConflictingBreakPreservesCauseInEveryOrder(t *testing.T) {
 }
 
 func TestLayoutRound3UnavailableSelectionKeepsStrongerBreakCause(t *testing.T) {
+	t.Parallel()
 	for _, invalid := range []bool{false, true} {
 		for _, initial := range []bool{false, true} {
 			for _, reverse := range []bool{false, true} {

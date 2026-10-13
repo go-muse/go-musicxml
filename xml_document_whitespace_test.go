@@ -164,6 +164,10 @@ func runXMLReadingAgainstXMLLint(t *testing.T, cases []xmlReadingCase) {
 	for _, root := range []string{"score-partwise", "score-timewise", "opus", "container"} {
 		for _, test := range cases {
 			t.Run(root+"/"+test.name, func(t *testing.T) {
+				// Each case owns its bytes, commands and decoder state. Go's
+				// -parallel limit bounds active cases (and oracle processes);
+				// every encoding still invokes xmllint on its original bytes.
+				t.Parallel()
 				input := xmlWellFormednessInput(test.input, root)
 				if root == "container" {
 					input = strings.Replace(input, `</container>`, `<rootfiles><rootfile full-path="score.musicxml"/></rootfiles></container>`, 1)

@@ -11,6 +11,7 @@ import (
 // family providers. It is an incremental cost diagnostic, not a public profile
 // or a normative scope claim; ingress and the accepted timeline remain selected.
 func TestIndependentContextFamilyCostAttribution(t *testing.T) {
+	t.Parallel()
 	doc, err := Decode(strings.NewReader(independentTimelineScore(100, false, "1")))
 	if err != nil {
 		t.Fatal(err)
@@ -99,6 +100,7 @@ func TestIndependentContextFamilyCostAttribution(t *testing.T) {
 }
 
 func TestIndependentContextOrdinaryHundredNotesDefaultWork(t *testing.T) {
+	t.Parallel()
 	source := independentTimelineScore(100, false, "1")
 	doc, err := Decode(strings.NewReader(source))
 	if err != nil {
@@ -118,6 +120,7 @@ func TestIndependentContextOrdinaryHundredNotesDefaultWork(t *testing.T) {
 }
 
 func TestIndependentContextFullSharedAccountCost(t *testing.T) {
+	t.Parallel()
 	engine, err := newContextAssessmentEngine()
 	if err != nil {
 		t.Fatal(err)
