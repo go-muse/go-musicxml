@@ -77,6 +77,7 @@ func TestGrammarParticlesAgainstSchema(t *testing.T) {
 	require.NoError(t, err)
 	for _, test := range validationGrammarCases() {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &validationGrammarGenerated, test.source), test.issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "grammar-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})

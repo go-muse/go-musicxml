@@ -132,6 +132,7 @@ func TestElementValueConstraintsAgainstSchema(t *testing.T) {
 	require.NoError(t, err)
 	for _, test := range validationElementValueCases() {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			context := validateAttributeSource(t, &validationNilGenerated, test.source)
 			wantValid := test.constraint == ""
 			assert.Equal(t, wantValid, len(context.Issues) == 0, "internal validation: %v", context.Issues)

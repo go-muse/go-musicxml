@@ -125,6 +125,7 @@ func TestSchemaHintDatatypesAgainstSchema(t *testing.T) {
 		}
 		for _, test := range validationSchemaHintDatatypeCases(carrier) {
 			t.Run(kind+"/"+test.name, func(t *testing.T) {
+				t.Parallel()
 				assertValidationIssues(t, validateAttributeSource(t, &validationSchemaHintGenerated, test.source), test.issues)
 				if !test.oracleComparable {
 					t.Log("internal normative URI grammar case; bounded libxml2 URI-parser discrepancy")

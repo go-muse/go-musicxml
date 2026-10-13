@@ -99,6 +99,7 @@ func TestBuiltinListLengthsAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertBuiltinListAssessment(t, assessAttributeSource(t, &validationBuiltinListGenerated, test.source), test)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "builtin-list-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})

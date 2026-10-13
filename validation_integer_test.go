@@ -155,6 +155,7 @@ func TestIntegerValueSpacesAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &validationIntegerGenerated, test.source), test.issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "integer-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})
@@ -162,6 +163,7 @@ func TestIntegerValueSpacesAgainstSchema(t *testing.T) {
 	for _, value := range []string{"18446744073709551615", "18446744073709551616", "-1", "1.0"} {
 		source := validationIntegerScore(value)
 		t.Run("staves/"+value, func(t *testing.T) {
+			t.Parallel()
 			valid := value[0] != '-' && !strings.Contains(value, ".")
 			var issues []string
 			if !valid {

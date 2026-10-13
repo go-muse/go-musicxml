@@ -107,12 +107,14 @@ func TestDecimalComparisonsAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &validationDecimalGenerated, test.source), test.issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "decimal-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})
 	}
 	for _, value := range []string{"0.000000000000000001", "1.0000000000000001", "0", "-0.0", "-0.01", "1e0"} {
 		t.Run("divisions/"+value, func(t *testing.T) {
+			t.Parallel()
 			source := validationDecimalScore(value)
 			var issues []string
 			if value == "1e0" {

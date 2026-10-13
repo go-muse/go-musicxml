@@ -288,6 +288,7 @@ func TestElementAttributeContractsAgainstSchema(t *testing.T) {
 	})
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			schema := test.schema
 			if schema == "" {
 				schema = "musicxml.xsd"

@@ -100,6 +100,7 @@ func TestXSD10IdentityBindingsAgainstSchema(t *testing.T) {
 	require.NoError(t, err)
 	for _, test := range validationIdentityCases() {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &validationIdentityGenerated, test.source), test.issues)
 			if test.oracleComparable {
 				assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "identity-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)

@@ -78,6 +78,7 @@ func TestUnionMemberFlatteningAgainstSchema(t *testing.T) {
 	require.NoError(t, err)
 	for _, test := range validationUnionMemberCases() {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &validationUnionMemberGenerated, test.source), test.issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "union-member-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})

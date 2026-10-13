@@ -347,6 +347,7 @@ func TestNilContractsAgainstSchema(t *testing.T) {
 		t.Run(group.name, func(t *testing.T) {
 			for _, test := range group.cases {
 				t.Run(test.name, func(t *testing.T) {
+					t.Parallel()
 					schema := &validationNilGenerated
 					schemaFile := filepath.Join("testdata", "validation", "nil-contract.xsd")
 					if group.name == "MusicXML" {
