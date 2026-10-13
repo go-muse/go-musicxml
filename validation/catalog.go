@@ -371,7 +371,9 @@ func catalogCompareDeps(a, b Dependency) int {
 	return cmp.Compare(a.Relation, b.Relation)
 }
 
-func catalogValidateRule(r RuleDefinition) error {
+func catalogValidateRule(r RuleDefinition) error { return catalogValidateRuleMode(r, true) }
+
+func catalogValidateRuleMode(r RuleDefinition, xmlSelector bool) error {
 	if !catalogKey(r.Key) {
 		return contract("rule key", "nonempty stable ID and positive revision required")
 	}
@@ -413,7 +415,7 @@ func catalogValidateRule(r RuleDefinition) error {
 	if r.Selector.Assembly != nil {
 		branches++
 	}
-	if branches != 1 {
+	if xmlSelector && branches != 1 {
 		return contract("rule selector", "exactly one branch required")
 	}
 	if r.Selector.Assembly != nil && !validAssembly(*r.Selector.Assembly) {
@@ -473,7 +475,9 @@ func catalogValidateRule(r RuleDefinition) error {
 	return nil
 }
 
-func catalogValidateProfile(p Profile) error {
+func catalogValidateProfile(p Profile) error { return catalogValidateProfileMode(p, true) }
+
+func catalogValidateProfileMode(p Profile, xmlRoots bool) error {
 	if !catalogID(string(p.ID)) || !catalogID(p.MusicXMLVersion) || !catalogID(p.RegistryCommit) {
 		return contract("profile identity", "ID, version and registry pin required")
 	}
@@ -496,7 +500,7 @@ func catalogValidateProfile(p Profile) error {
 		}
 		required[key] = true
 	}
-	if len(p.SupportedRoots) == 0 {
+	if xmlRoots && len(p.SupportedRoots) == 0 {
 		return contract("profile roots", "at least one explicit root required")
 	}
 	roots := make(map[QName]bool, len(p.SupportedRoots))
@@ -691,6 +695,16 @@ func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *c
 			}
 		}
 		if plan, ok := c.plans[rule.Predicate]; ok {
+			if resourceLinkPlan(plan.kind) || resourceHintPlan(plan.kind) {
+				for prerequisite := range closure {
+					provider := c.plans[c.rules[prerequisite].Predicate]
+					if (resourceLinkPlan(plan.kind) && provider.kind == planTypedReference) || (provider.kind == planXSD && provider.schema.assembly == plan.context.Schema.assembly) {
+						if err := add(consumer, catalogPhase{rule: prerequisite}); err != nil {
+							return nil, err
+						}
+					}
+				}
+			}
 			if plan.kind == planTimeline {
 				for _, owner := range plan.timeline.PartOwners {
 					if err := add(consumer, catalogPhase{rule: owner.Rule}); err != nil {
@@ -805,10 +819,13 @@ func catalogDigest(c *CompiledCatalog) (string, error) {
 // Check collection lengths before traversing or copying them; the budget also
 // bounds the validation/digest work attributable to untrusted configuration.
 func catalogCheckBounds(rules []RuleDefinition, profiles []Profile, plans []PlanBinding) error {
+	return catalogCheckBoundsRemaining(rules, profiles, plans, catalogMaxBytes)
+}
+func catalogCheckBoundsRemaining(rules []RuleDefinition, profiles []Profile, plans []PlanBinding, remaining int64) error {
 	if len(rules) > catalogMaxRules || len(plans) > catalogMaxRules || len(profiles) > catalogMaxProfiles {
 		return contract("catalog size", "top-level collection limit exceeded")
 	}
-	b := catalogBudget{remaining: catalogMaxBytes}
+	b := catalogBudget{remaining: remaining}
 	b.slots(len(rules))
 	b.slots(len(profiles))
 	b.slots(len(plans))

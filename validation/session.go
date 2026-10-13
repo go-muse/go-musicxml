@@ -134,6 +134,7 @@ type Session struct {
 	enumerationIncomplete   bool
 	collectingIdentity      bool
 	root                    *factNode
+	rejectedRootName        QName
 	retained, depth         int64
 }
 
@@ -324,6 +325,9 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 			}
 		}
 		if !found {
+			// The validated header lease already admits these QName bytes. Retain
+			// only the observed name; no accepted occurrence or schema is invented.
+			s.rejectedRootName = QName{Space: strings.Clone(node.Name.Space), Local: strings.Clone(node.Name.Local)}
 			return s.fail(&UnsupportedRootError{Name: node.Name, Profile: s.profile.ID})
 		}
 	} else if node.Parent != s.stack[len(s.stack)-1].header.ID {
@@ -492,14 +496,19 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 // normative violations have nil operation errors; terminal failures return an
 // IncompleteError preserving actual causes. A second Finish returns no report.
 func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
+	report, _, err := s.finishResource(ctx, end, false)
+	return report, err
+}
+
+func (s *Session) finishResource(ctx context.Context, end Completion, snapshot bool) (Report, *ResourceSnapshot, error) {
 	if s == nil {
-		return Report{}, &SessionError{Operation: "Finish", Reason: "nil session"}
+		return Report{}, nil, &SessionError{Operation: "Finish", Reason: "nil session"}
 	}
 	if s.finished {
-		return Report{}, &SessionError{Operation: "Finish", Reason: "session already finished"}
+		return Report{}, nil, &SessionError{Operation: "Finish", Reason: "session already finished"}
 	}
 	if s.catalog == nil || s.account == nil || s.accumulator == nil {
-		return Report{}, &SessionError{Operation: "Finish", Reason: "uninitialized session"}
+		return Report{}, nil, &SessionError{Operation: "Finish", Reason: "uninitialized session"}
 	}
 	s.finished = true
 	eventsValid := s.terminalCause == nil
@@ -566,10 +575,27 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 	}
 	report := s.accumulator.finish(s.inputComplete, end.Syntax)
 	report.Context = s.contextResults
-	if s.terminalCause != nil {
-		return report, &IncompleteError{Reason: "session-terminated", Cause: s.terminalCause}
+	var resource *ResourceSnapshot
+	if snapshot {
+		var snapshotErr error
+		resource, snapshotErr = s.makeResourceSnapshot(ctx, report)
+		if snapshotErr != nil {
+			addCause(snapshotErr)
+			report.AssessmentComplete = false
+			if report.Counts.Fail == 0 {
+				report.Conformance = ConformanceUndetermined
+			}
+			if report.Terminal == nil {
+				category, reason := terminalClassification(snapshotErr, malformedSource)
+				report.Terminal = &TerminalSummary{Category: category, Reason: reason}
+				report.BlockingProblems++
+			}
+		}
 	}
-	return report, nil
+	if s.terminalCause != nil {
+		return report, resource, &IncompleteError{Reason: "session-terminated", Cause: s.terminalCause}
+	}
+	return report, resource, nil
 }
 func (s *Session) validateCompletion(end Completion) error {
 	if s.profile.Target == TargetSource {
@@ -604,6 +630,8 @@ func terminalClassification(err error, malformedSource bool) (DiagnosticCategory
 		return CategoryResource, "deadline-exceeded"
 	case malformedSource:
 		return CategorySyntax, "malformed-source"
+	case errors.Is(err, ErrProcessingPolicy):
+		return CategoryPolicy, "processing-policy"
 	}
 	var root *UnsupportedRootError
 	if errors.As(err, &root) {
@@ -638,6 +666,7 @@ func (s *Session) cleanup() {
 	s.sequence = nil
 	s.stack = nil
 	s.root = nil
+	s.rejectedRootName = QName{}
 	s.decisions = nil
 	s.successful = nil
 	s.documentPrerequisites = nil

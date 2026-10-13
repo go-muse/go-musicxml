@@ -29,41 +29,93 @@ func AssessModel(ctx context.Context, document Document, options AssessmentOptio
 	return report, err
 }
 
+// Root entry points create one account; child orchestration calls the configured
+// constructor below and never recurses through AssessModel.
 func assessModel(ctx context.Context, document Document, options AssessmentOptions, walkOptions modelWalkOptions) (validation.Report, modelWalkStatus, error) {
-	if ctx == nil {
-		return validation.Report{}, modelWalkStatus{}, &validation.ConfigurationError{Field: "context", Reason: "must not be nil"}
+	if err := assessmentContext(ctx, "canceled-before-model"); err != nil {
+		return validation.Report{}, modelWalkStatus{}, err
 	}
-	if err := ctx.Err(); err != nil {
-		return validation.Report{}, modelWalkStatus{}, &validation.IncompleteError{Reason: "canceled-before-model", Cause: err}
-	}
-	if options.Profile != ProfileModelXSD && options.Profile != ProfileModelLocal && options.Profile != ProfileModelTimeline && options.Profile != ProfileModelContext {
-		return validation.Report{}, modelWalkStatus{}, &validation.ConfigurationError{Field: "profile", Reason: "unknown, empty or incompatible explicit model profile"}
+	engine, err := modelAssessmentEngineForProfile(options.Profile)
+	if err != nil {
+		return validation.Report{}, modelWalkStatus{}, err
 	}
 	account, err := validation.NewBudgetAccount(options.Budgets)
 	if err != nil {
 		return validation.Report{}, modelWalkStatus{}, err
 	}
-	// This sealed root check does not walk fields or invoke a model method.
-	if _, err := validationSchemaForDocument(document); err != nil {
-		return validation.Report{}, modelWalkStatus{}, err
-	}
-	var engine *validation.Engine
-	if options.Profile == ProfileModelContext {
-		engine, err = newContextAssessmentEngine()
-	} else if options.Profile == ProfileModelTimeline {
-		engine, err = newTimelineAssessmentEngine()
-	} else {
-		engine, err = newModelAssessmentEngine()
-	}
+	config := assessmentRunConfig{Account: account, DocumentID: modelDocumentID, Profile: options.Profile, Engine: engine}
+	return assessModelWithConfig(ctx, document, config, walkOptions)
+}
+
+func assessModelWithConfig(ctx context.Context, document Document, config assessmentRunConfig, walkOptions modelWalkOptions) (validation.Report, modelWalkStatus, error) {
+	run, err := newModelAssessmentRun(ctx, document, config)
 	if err != nil {
 		return validation.Report{}, modelWalkStatus{}, err
 	}
-	session, err := engine.Begin(ctx, validation.RunOptions{DocumentID: modelDocumentID, Profile: options.Profile, Account: account})
-	if err != nil {
-		return validation.Report{}, modelWalkStatus{}, err
-	}
-	status, walkErr := walkModel(ctx, document, session, account, modelDocumentID, walkOptions)
-	// Every admitted session is finished exactly once, including interruption.
-	report, finishErr := session.Finish(ctx, validation.Completion{InputComplete: walkErr == nil, Syntax: validation.SyntaxNotAssessed, Cause: walkErr})
+	status, walkErr := run.walk(walkOptions)
+	report, finishErr := run.finish(walkErr)
 	return report, status, errors.Join(walkErr, finishErr)
+}
+
+type modelAssessmentRun struct {
+	ctx                   context.Context
+	document              Document
+	account               *validation.Account
+	session               *validation.Session
+	documentID, entry     string
+	xmlDepth              int
+	walked, inputFinished bool
+	walkErr               error
+}
+
+func newModelAssessmentRun(ctx context.Context, document Document, config assessmentRunConfig) (*modelAssessmentRun, error) {
+	if err := assessmentContext(ctx, "canceled-before-model"); err != nil {
+		return nil, err
+	}
+	if err := config.validate(validation.TargetModel); err != nil {
+		return nil, err
+	}
+	// This sealed root check does not walk fields or invoke any model method.
+	if _, err := validationSchemaForDocument(document); err != nil {
+		return nil, err
+	}
+	session, err := config.Engine.Begin(ctx, validation.RunOptions{DocumentID: config.DocumentID, Profile: config.Profile, Account: config.Account})
+	if err != nil {
+		return nil, err
+	}
+	return &modelAssessmentRun{ctx: ctx, document: document, account: config.Account, session: session, documentID: config.DocumentID, entry: config.Entry, xmlDepth: config.XMLDepth}, nil
+}
+
+func (r *modelAssessmentRun) walk(options modelWalkOptions) (modelWalkStatus, error) {
+	if r.walked || r.inputFinished {
+		return modelWalkStatus{}, &validation.SessionError{Operation: "model walk", Reason: "input already traversed or finalized"}
+	}
+	r.walked = true
+	options.Entry = r.entry
+	options.XMLDepth = r.xmlDepth
+	status, err := walkModel(r.ctx, r.document, r.session, r.account, r.documentID, options)
+	r.walkErr = err
+	return status, err
+}
+
+// The walker releases its own scratch before this seam; the session still owns
+// intrinsic facts until exactly one ordinary or resource-snapshot finalizer.
+func (r *modelAssessmentRun) finishInput(cause error) (validation.Completion, error) {
+	if r.inputFinished {
+		return validation.Completion{}, &validation.SessionError{Operation: "model finish", Reason: "input already finalized"}
+	}
+	r.inputFinished = true
+	r.document = nil
+	if r.walkErr != nil && !errors.Is(cause, r.walkErr) {
+		cause = errors.Join(r.walkErr, cause)
+	}
+	return validation.Completion{InputComplete: r.walked && cause == nil, Syntax: validation.SyntaxNotAssessed, Cause: cause}, nil
+}
+
+func (r *modelAssessmentRun) finish(cause error) (validation.Report, error) {
+	completion, err := r.finishInput(cause)
+	if err != nil {
+		return validation.Report{}, err
+	}
+	return r.session.Finish(r.ctx, completion)
 }

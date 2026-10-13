@@ -103,6 +103,8 @@ stage_fuzz() {
         -fuzztime="$check_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzMXLPackageRoundTrip$' \
         -fuzztime="$check_mxl_fuzz_time" .
+    "$check_go" test -run='^$' -fuzz='^FuzzMXLAssessmentZIPObserver$' \
+        -fuzztime="$check_mxl_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzMXLLinkResolution$' \
         -fuzztime="$check_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzSourceXMLReader$' \
@@ -110,6 +112,8 @@ stage_fuzz() {
     "$check_go" test -run='^$' -fuzz='^FuzzAssessCurrentModel$' \
         -fuzztime="$check_validation_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzContextAssessment$' \
+        -fuzztime="$check_validation_fuzz_time" .
+    "$check_go" test -run='^$' -fuzz='^FuzzAuxiliarySourceAssessment$' \
         -fuzztime="$check_validation_fuzz_time" .
     "$check_go" test -run='^$' -fuzz='^FuzzReportFieldIsBoundedEscapedUTF8$' \
           -fuzztime="$check_validation_fuzz_time" ./validation

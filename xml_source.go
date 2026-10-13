@@ -13,9 +13,10 @@ import (
 )
 
 type sourceXMLConfig struct {
-	Context  context.Context
-	Account  *validation.Account
-	MaxDepth int
+	Context   context.Context
+	Account   *validation.Account
+	MaxDepth  int
+	ByteOwner sourceByteOwner
 }
 type sourceXMLAttribute struct {
 	NameSpan, ValueSpan  sourceXMLSpan
@@ -61,6 +62,7 @@ type sourceXMLTokenReader struct {
 	cursor                                                     *sourceXMLCursor
 	account                                                    *validation.Account
 	maxDepth                                                   int64
+	peakDepth                                                  int
 	metadata                                                   sourceXMLTokenMeta
 	tokenOwned, retained, mapOwned                             int64
 	frames                                                     []sourceXMLFrame
@@ -76,7 +78,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 	if config.MaxDepth < 0 {
 		return nil, ErrInvalidDecodeOptions
 	}
-	cursor, err := newSourceXMLCursor(input, config.Context, config.Account)
+	cursor, err := newSourceXMLCursorWithByteOwner(input, config.Context, config.Account, config.ByteOwner)
 	if err != nil {
 		return nil, err
 	}
@@ -897,6 +899,9 @@ func (r *sourceXMLTokenReader) open(name xml.Name, attributes []xml.Attr) error 
 		expanded[expandedName] = true
 	}
 	r.frames = append(r.frames, frame)
+	if len(r.frames) > r.peakDepth {
+		r.peakDepth = len(r.frames)
+	}
 	return nil
 }
 func (r *sourceXMLTokenReader) pop() {

@@ -1,0 +1,114 @@
+--- FAIL: TestAuxiliarySourceAssemblies (0.00s)
+    --- FAIL: TestAuxiliarySourceAssemblies/container_minimal (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_multiple_token_values (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_percent_literal (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_missing_rootfiles (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_empty_rootfiles (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_duplicate_rootfiles (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_missing_full_path (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_unknown_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_rootfiles_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_rootfile_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_empty_content (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_root_text (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_rootfiles_text (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_wrong_root (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_foreign_root (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_foreign_child (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_qualified_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_nil (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_same_actual_type (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/container_wrong_actual_type (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_empty_mapping (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_repeated_any (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_solo_ensemble_branch (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_only_solo (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_only_ensemble (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_empty_root (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_missing_id (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_invalid_id (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_duplicate_id (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_normalized_id_primary (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_invalid_reverse_primary (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_invalid_any_primary (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_invalid_solo_primary (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_invalid_ensemble_primary (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_number_empty (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_number_whitespace (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_mixed_branches (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_reversed_sequence (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_any_nested_content (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_solo_nested_content (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_ensemble_nested_content (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_root_text (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_sound_text (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_unknown_root_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_unknown_sound_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_unknown_any_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_unknown_solo_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_unknown_ensemble_attribute (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_foreign_root (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_foreign_mapping (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_foreign_primary (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_wrong_root (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_nil (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_same_actual_type (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+    --- FAIL: TestAuxiliarySourceAssemblies/sounds_wrong_actual_type (0.00s)
+        auxiliary_source_assessment_test.go:79: profile unavailable or operation failed: validation: invalid configuration: profile: unknown or empty explicit source profile
+FAIL
+FAIL	github.com/go-muse/go-musicxml	0.007s
+FAIL

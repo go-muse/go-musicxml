@@ -23,15 +23,20 @@ func DefaultDecodeOptions() DecodeOptions {
 	return DecodeOptions{MaxXMLDepth: defaultMaxXMLDepth}
 }
 
-// MXLOptions controls resource limits for compressed MusicXML decoding.
+// MXLOptions controls resource limits for compressed MusicXML decoding and
+// package assessment.
 //
 // Zero values select the package defaults. Negative values and XML depths
 // above the documented maximum are invalid.
 type MXLOptions struct {
-	MaxArchiveBytes   int64
-	MaxMetadataBytes  int64
-	MaxDocumentBytes  int64
-	MaxResourceBytes  int64
+	MaxArchiveBytes  int64
+	MaxMetadataBytes int64
+	MaxDocumentBytes int64
+	MaxResourceBytes int64
+	// MaxResourcesBytes caps additional resource bytes in DecodeMXLPackage,
+	// excluding mimetype, container and primary entries. Package assessment
+	// instead counts all selected expanded entries (including those three),
+	// current resource copies and bounded external bodies in package scope.
 	MaxResourcesBytes int64
 	// MaxXMLDepth has the same zero default and 4096 maximum as DecodeOptions.
 	MaxXMLDepth int

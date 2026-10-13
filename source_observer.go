@@ -52,24 +52,29 @@ func (b *sourceScalarBuffer) String() string { return string(b.data) }
 // owns the retained document facts and all node, attribute and depth charges.
 // Neither schema defaults nor model-derived values are source evidence.
 type sourceFactObserver struct {
-	ctx            context.Context
-	sink           sourceFactSink
-	account        *validation.Account
-	stack          []*sourceObserverFrame
-	bindings       map[string]string
-	next           validation.NodeID
-	retained       int64
-	dtdUnavailable bool
-	last           validation.Location
-	lastRetained   int64
+	ctx               context.Context
+	sink              sourceFactSink
+	account           *validation.Account
+	documentID, entry string
+	stack             []*sourceObserverFrame
+	bindings          map[string]string
+	next              validation.NodeID
+	retained          int64
+	dtdUnavailable    bool
+	last              validation.Location
+	lastRetained      int64
 }
 
 func newSourceFactObserver(ctx context.Context, sink sourceFactSink, account *validation.Account) (*sourceFactObserver, error) {
+	return newSourceFactObserverWithIdentity(ctx, sink, account, sourceDocumentID, "")
+}
+
+func newSourceFactObserverWithIdentity(ctx context.Context, sink sourceFactSink, account *validation.Account, documentID, entry string) (*sourceFactObserver, error) {
 	const fixed = 256
 	if err := account.Charge(validation.BudgetBufferedBytes, fixed); err != nil {
 		return nil, err
 	}
-	return &sourceFactObserver{ctx: ctx, sink: sink, account: account, bindings: map[string]string{"xml": "http://www.w3.org/XML/1998/namespace"}, retained: fixed}, nil
+	return &sourceFactObserver{ctx: ctx, sink: sink, account: account, documentID: documentID, entry: entry, bindings: map[string]string{"xml": "http://www.w3.org/XML/1998/namespace"}, retained: fixed}, nil
 }
 
 func (o *sourceFactObserver) observe(token xml.Token, meta sourceXMLTokenMeta) error {
@@ -266,7 +271,7 @@ func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMet
 	if o.dtdUnavailable {
 		state, reason = validation.EvidenceUnsupported, "dtd-infoset-unavailable"
 	}
-	location := sourceLocation(path, meta.Span.Start)
+	location := o.location(path, meta.Span.Start)
 	if err := o.rememberLocation(location); err != nil {
 		return err
 	}
@@ -311,7 +316,7 @@ func (o *sourceFactObserver) attribute(frame *sourceObserverFrame, attr xml.Attr
 	if o.dtdUnavailable && !meta.NamespaceDeclaration {
 		scalar.Lexeme = validation.Evidence[string]{State: validation.EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
 	}
-	return o.sink.Attribute(o.ctx, validation.AttributeFact{Owner: frame.id, Name: name, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Presence: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}, Scalar: scalar, Location: sourceLocation(path, meta.NameSpan.Start)})
+	return o.sink.Attribute(o.ctx, validation.AttributeFact{Owner: frame.id, Name: name, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Presence: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}, Scalar: scalar, Location: o.location(path, meta.NameSpan.Start)})
 }
 func sourceDisplayName(name validation.QName) string {
 	if name.Space == "" {
@@ -342,8 +347,8 @@ func sourceNameCapacity(name validation.QName) error {
 func sourceLexeme(value string) validation.Scalar {
 	return validation.Scalar{Lexeme: validation.Evidence[string]{State: validation.EvidenceKnown, Value: value}, Value: validation.Evidence[validation.Atomic]{State: validation.EvidenceUnknown, Reason: "schema-binding-pending"}}
 }
-func sourceLocation(path string, position sourceXMLPosition) validation.Location {
-	return validation.Location{Target: validation.TargetSource, DocumentID: sourceDocumentID, Path: path, Position: &validation.SourcePosition{ByteOffset: position.ByteOffset, Line: position.Line, Column: position.Column, CoordinateSpace: "original-bytes"}}
+func (o *sourceFactObserver) location(path string, position sourceXMLPosition) validation.Location {
+	return validation.Location{Target: validation.TargetSource, DocumentID: o.documentID, Entry: o.entry, Path: path, Position: &validation.SourcePosition{ByteOffset: position.ByteOffset, Line: position.Line, Column: position.Column, CoordinateSpace: "original-bytes"}}
 }
 
 // The last source location outlives its closing frame when a mapper reports a
@@ -431,7 +436,7 @@ func (s *observingXMLSource) Token() (xml.Token, error) {
 	}
 	token, err := s.decoder.Token()
 	if err != nil {
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF {
 			s.eof = true
 		} else {
 			s.failure = err

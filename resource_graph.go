@@ -1,0 +1,237 @@
+package musicxml
+
+import (
+	"context"
+	"encoding/hex"
+	"errors"
+	"io"
+	"strconv"
+
+	"github.com/go-muse/go-musicxml/validation"
+)
+
+type resourceGraphRun struct {
+	ctx              context.Context
+	options          resourceRunOptions
+	session          *validation.PackageSession
+	namespace        string
+	sequence         uint64
+	retained         int64
+	cache            map[graphResourceKey]*graphResource
+	pins             map[graphCanonicalKey]validation.ResourcePin
+	expanded         map[graphExpansionKey]bool
+	queue            []graphExpansion
+	packageLeases    []func()
+	fileMetadata     map[graphFileMetadataKey]bool
+	packageList      []*graphPackage
+	packages         map[validation.PackageID]*graphPackage
+	packageContexts  map[graphPackageKey]*graphPackage
+	archives         []*mxlAssessmentArchive
+	resourceBodies   []*assessmentResourceBody
+	packageDocuments map[validation.ResourceAssessmentID]string
+	mxlOptions       MXLOptions
+	mxlExpanded      int64
+	linked           map[graphLinkKey]graphLinkedTarget
+}
+
+func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
+	cfg, err := validateLinkedAssessmentOptions(ctx, options, profile)
+	if err != nil {
+		return nil, err
+	}
+	catalog, err := newPackageAssessmentCatalog()
+	if err != nil {
+		return nil, err
+	}
+	namespace, err := newResourceRunIdentity()
+	if err != nil {
+		return nil, err
+	}
+	g := &resourceGraphRun{ctx: ctx, options: cfg, namespace: namespace}
+	if err = g.reserve(2048 + 2*int64(len(namespace)+len(cfg.identity.CanonicalID)+len(cfg.identity.Revision)+len(cfg.identity.RetrievalURI))); err != nil {
+		return nil, err
+	}
+	g.linked = make(map[graphLinkKey]graphLinkedTarget)
+	g.cache = make(map[graphResourceKey]*graphResource)
+	g.pins = make(map[graphCanonicalKey]validation.ResourcePin)
+	g.expanded = make(map[graphExpansionKey]bool)
+	g.packages = make(map[validation.PackageID]*graphPackage)
+	g.packageContexts = make(map[graphPackageKey]*graphPackage)
+	g.packageDocuments = make(map[validation.ResourceAssessmentID]string)
+	g.session, err = catalog.Begin(ctx, validation.RunOptions{DocumentID: namespace + "-package", Profile: profile, Account: cfg.account})
+	if err != nil {
+		g.close()
+		return nil, err
+	}
+	return g, nil
+}
+func (g *resourceGraphRun) reserve(n int64) error {
+	if err := g.ctx.Err(); err != nil {
+		return err
+	}
+	if _, err := validation.AllocationSize(n); err != nil {
+		return err
+	}
+	if err := g.options.account.Charge(validation.BudgetBufferedBytes, n); err != nil {
+		return err
+	}
+	g.retained += n
+	return nil
+}
+func (g *resourceGraphRun) close() {
+	for i := len(g.archives) - 1; i >= 0; i-- {
+		g.archives[i].Close()
+	}
+	g.archives = nil
+	for _, body := range g.resourceBodies {
+		body.close()
+	}
+	g.resourceBodies = nil
+	for _, release := range g.packageLeases {
+		release()
+	}
+	g.packageLeases = nil
+	g.fileMetadata = nil
+	g.packageList = nil
+	g.packages = nil
+	g.packageContexts = nil
+	g.packageDocuments = nil
+	if g.retained != 0 {
+		_ = g.options.account.Release(validation.BudgetBufferedBytes, g.retained)
+		g.retained = 0
+	}
+}
+func (g *resourceGraphRun) next(prefix string) string {
+	g.sequence++
+	return g.namespace + "-" + prefix + "-" + strconv.FormatUint(g.sequence, 10)
+}
+func (g *resourceGraphRun) primaryPin(representation validation.ResourceRepresentation, digest string) validation.ResourcePin {
+	id := g.options.identity.CanonicalID
+	if id == "" {
+		id = g.namespace + "-primary"
+	}
+	p := validation.ResourcePin{CanonicalID: id, Revision: g.options.identity.Revision, Representation: representation, Digest: digest}
+	if representation == validation.ResourceCurrentModel || representation == validation.ResourceCurrentMXL {
+		p.SnapshotID = g.next("snapshot")
+	}
+	return p
+}
+func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error) {
+	b, e := g.session.Finish(g.ctx, validation.PackageCompletion{InputComplete: err == nil, Cause: err})
+	g.close()
+	return b, joinResourceErrors(err, e)
+}
+
+// InspectXMLWithResources assesses original MusicXML/Opus bytes and explicitly
+// selected resource dependencies in one finite account. The caller reader stays
+// open. Ordinary normative findings have nil operation error; inspect Satisfied.
+// The resolver owns transport authorization and blocked-I/O cancellation.
+func InspectXMLWithResources(ctx context.Context, reader io.Reader, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
+	if reader == nil {
+		return validation.AssessmentBundle{}, ErrNilReader
+	}
+	g, err := startResourceGraph(ctx, options, ProfileResourceGraph)
+	if err != nil {
+		return validation.AssessmentBundle{}, err
+	}
+	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	if err != nil {
+		return g.finish(err)
+	}
+	id := g.next("source")
+	result := assessResourceSource(ctx, reader, sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	digest := ""
+	if result.DigestComplete {
+		digest = hex.EncodeToString(result.Digest[:])
+	}
+	pin := g.primaryPin(validation.ResourceSourceXML, digest)
+	return g.finishPrimary(result, pin, id)
+}
+
+// AssessModelWithResources walks the current model directly and never encodes it
+// to recover source history. Its opaque representation identity is fresh each
+// run. Lost xsi discovery metadata remains explicitly unavailable.
+func AssessModelWithResources(ctx context.Context, document Document, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
+	if _, err := validationSchemaForDocument(document); err != nil {
+		return validation.AssessmentBundle{}, err
+	}
+	g, err := startResourceGraph(ctx, options, ProfileResourceGraph)
+	if err != nil {
+		return validation.AssessmentBundle{}, err
+	}
+	engine, err := modelAssessmentEngineForProfile(ProfileModelLinks)
+	if err != nil {
+		return g.finish(err)
+	}
+	id := g.next("model")
+	pin := g.primaryPin(validation.ResourceCurrentModel, "")
+	result := assessResourceModel(ctx, document, assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileModelLinks, Engine: engine})
+	return g.finishPrimary(result, pin, id)
+}
+func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin validation.ResourcePin, id string) (validation.AssessmentBundle, error) {
+	if result.Snapshot == nil || pin.Representation == validation.ResourceSourceXML && !result.DigestComplete {
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, nil))
+	}
+	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin, BaseURI: g.options.identity.RetrievalURI}); err != nil {
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
+	}
+	if err := g.observeBoundaryFileMetadata(&graphPackage{id: "root", pin: pin}, g.options.identity.RetrievalURI); err != nil {
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
+	}
+	rid, err := g.session.AddResource(g.ctx, pin, result.Snapshot, true)
+	if err != nil {
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
+	}
+	aid, err := g.session.AdoptResource(g.ctx, rid, validation.ResourceAdoptionOptions{DocumentID: id, Root: true, Package: "root", BaseURI: g.options.identity.RetrievalURI})
+	if err != nil {
+		return g.finish(errors.Join(result.Err, err))
+	}
+	if result.Err != nil {
+		return g.finish(result.Err)
+	}
+	resource, cacheErr := g.cacheResource(pin, result.Report.Profile.ID, rid, result.XMLDepth, true)
+	if cacheErr != nil {
+		return g.finish(cacheErr)
+	}
+	err = g.enqueue(resource, aid, "root", resourceURIBase{RetrievalURI: g.options.identity.RetrievalURI}, 1)
+	if err == nil {
+		err = g.walkResources()
+	}
+	if err == nil {
+		err = g.observePackageMetadata()
+	}
+	if err == nil {
+		err = g.sealPackages()
+	}
+	if err == nil {
+		known := validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}
+		err = g.session.SealEnumeration(g.ctx, validation.PackageEnumeration{Package: "root", Entries: known, Rootfiles: known, Edges: known, Roles: known})
+	}
+	return g.finish(err)
+}
+
+// retainUntransferredIntrinsic preserves the independent best report when export
+// or later admission fails. Call only before successful AddResource transfers
+// the snapshot; afterward the session already owns its canonical report.
+func (g *resourceGraphRun) retainUntransferredIntrinsic(result resourceIntrinsicResult, pin validation.ResourcePin, admissionErr error) error {
+	err := joinResourceErrors(result.Err, admissionErr)
+	if result.Snapshot != nil {
+		err = joinResourceErrors(err, result.Snapshot.Close())
+	}
+	if result.Report.Requested {
+		err = joinResourceErrors(err, g.session.RecordResourceFailure(g.ctx, pin, result.Report, err))
+	}
+	return err
+}
+
+// joinResourceErrors preserves unrelated causes without repeating a cause that
+// the other error already wraps. In particular Finish includes its input cause.
+func joinResourceErrors(a, b error) error {
+	if a == nil || errors.Is(b, a) {
+		return b
+	}
+	if b == nil || errors.Is(a, b) {
+		return a
+	}
+	return errors.Join(a, b)
+}

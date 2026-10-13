@@ -11,10 +11,12 @@ type ContextProperty string
 
 // Compound context properties have explicit typed payloads.
 const (
-	ContextPropertySpan       ContextProperty = "span"
-	ContextPropertyRepeat     ContextProperty = "graphical-repeat"
-	ContextPropertyNavigation ContextProperty = "navigation"
-	ContextPropertyTiming     ContextProperty = "timing"
+	ContextPropertyContainerMetadata ContextProperty = "container.metadata"
+	ContextPropertySoundMapping      ContextProperty = "sounds.mapping"
+	ContextPropertySpan              ContextProperty = "span"
+	ContextPropertyRepeat            ContextProperty = "graphical-repeat"
+	ContextPropertyNavigation        ContextProperty = "navigation"
+	ContextPropertyTiming            ContextProperty = "timing"
 )
 
 // ContextPosition is an established encoded-score coordinate, not a playback
@@ -42,14 +44,19 @@ type ContextResult struct {
 	Navigation *NavigationContextResult
 	Layout     *LayoutContextResult
 	Timing     *TimingContextResult
+	// New payload families omit nil to preserve the eight original profiles
+	// byte-for-byte; the historical payload fields retain explicit JSON nulls.
+	SoundMapping *SoundMappingContextResult `json:",omitempty"`
+	Resource     *ResourceContextResult     `json:",omitempty"`
+	Container    *ContainerContextResult    `json:",omitempty"`
 }
 
 func validContextProperty(p ContextProperty) bool {
 	switch p {
-	case ContextPropertySpan, ContextPropertyRepeat, ContextPropertyNavigation, ContextPropertyTiming:
+	case ContextPropertyContainerMetadata, ContextPropertySoundMapping, ContextPropertySpan, ContextPropertyRepeat, ContextPropertyNavigation, ContextPropertyTiming:
 		return true
 	}
-	return contextLocalPropertyValid(p) || contextSpanPropertyValid(p) || contextRepeatPropertyValid(p) || contextPerformancePropertyValid(p)
+	return resourcePropertyValid(p) || contextLocalPropertyValid(p) || contextSpanPropertyValid(p) || contextRepeatPropertyValid(p) || contextPerformancePropertyValid(p)
 }
 
 const contextResultReserveBytes int64 = 1536
@@ -64,7 +71,7 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 		return contract("context projection", "exact provider, subject and closed property required")
 	}
 	payloads := 0
-	for _, present := range []bool{in.Span != nil, in.Repeat != nil, in.Navigation != nil, in.Layout != nil, in.Timing != nil} {
+	for _, present := range []bool{in.Span != nil, in.Repeat != nil, in.Navigation != nil, in.Layout != nil, in.Timing != nil, in.SoundMapping != nil, in.Resource != nil, in.Container != nil} {
 		if present {
 			payloads++
 		}
@@ -74,6 +81,10 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 	}
 	expected := "scalar"
 	switch in.Property {
+	case ContextPropertyContainerMetadata:
+		expected = "container-metadata"
+	case ContextPropertySoundMapping:
+		expected = "sound-mapping"
 	case ContextPropertySpan, ContextPropertySpanLyricSyllable:
 		expected = "span"
 	case ContextPropertyRepeat:
@@ -83,11 +94,13 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 	case ContextPropertyTiming:
 		expected = "timing"
 	default:
-		if contextLocalPropertyValid(in.Property) {
+		if resourcePropertyValid(in.Property) {
+			expected = "resource"
+		} else if contextLocalPropertyValid(in.Property) {
 			expected = "layout"
 		}
 	}
-	matched := expected == "scalar" && payloads == 0 || expected == "span" && in.Span != nil || expected == "repeat" && in.Repeat != nil || expected == "navigation" && in.Navigation != nil || expected == "timing" && in.Timing != nil || expected == "layout" && in.Layout != nil
+	matched := expected == "container-metadata" && in.Container != nil || expected == "sound-mapping" && in.SoundMapping != nil || expected == "scalar" && payloads == 0 || expected == "span" && in.Span != nil || expected == "repeat" && in.Repeat != nil || expected == "navigation" && in.Navigation != nil || expected == "timing" && in.Timing != nil || expected == "layout" && in.Layout != nil || expected == "resource" && resourcePayloadValid(in.Property, in.Resource)
 	if !matched {
 		return contract("context projection", "property and typed payload must match")
 	}
@@ -159,6 +172,15 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 	if out.Timing, err = cloneTimingContext(ctx, s, in.Timing); err != nil {
 		return err
 	}
+	if out.SoundMapping, err = cloneSoundMappingContext(ctx, s, in.SoundMapping); err != nil {
+		return err
+	}
+	if out.Resource, err = cloneResourceContext(ctx, s, in.Resource); err != nil {
+		return err
+	}
+	if out.Container, err = cloneContainerContext(ctx, s, in.Container); err != nil {
+		return err
+	}
 	if err = s.step(ctx, 1); err != nil {
 		return err
 	}
@@ -222,6 +244,14 @@ func (s *Session) evaluateContextPlan(ctx context.Context, n *factNode, key Rule
 	var d Decision
 	var pending bool
 	switch p.kind {
+	case planContextContainerMetadata:
+		d, pending, err = evaluateContextContainerMetadata(ctx, s, n, key, p.context, final)
+	case planContextSoundsMapping:
+		d, pending, err = evaluateContextSoundsMapping(ctx, s, n, key, p.context, final)
+	case planContextMusicXMLLinks, planContextOpusLinks:
+		d, pending, err = evaluateResourceLinks(ctx, s, n, key, p.context, final)
+	case planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints:
+		d, pending, err = evaluateResourceHints(ctx, s, n, key, p.context, final)
 	case planContextOpusLayout:
 		d, pending, err = evaluateContextOpusLayout(ctx, s, n, key, p.context, final)
 	case planContextLocal:

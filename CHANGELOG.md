@@ -7,7 +7,108 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Meter ZIP reads, decompression, CRC and actual buffer relocation in bounded
+  4096-byte work units, preserving exact byte quotas and simultaneous live-buffer
+  peaks without changing defaults.
+
+- Frame ZIP end records before classifying unsupported envelope features; do not
+  mistake central-comment locator bytes for ZIP64 records. Preserve independent
+  non-framing header flags and legacy unsafe-path/duplicate-name error identities.
+
+- Document symbolic-link refusal as an assessment transport limitation and UTF8Name
+  as observed byte validity with independently retained EFS flags.
+
+- Preserve known-false schema-hint pairing as a blocking capability-policy failure
+  with its exact context cause, without making it a normative XSD violation.
+  Snapshot link-selection witnesses require an available sealed local-link plan
+  for the established assembly; selection remains separate from scope completion.
+
 ### Added
+
+- Reduce local-resource snapshot measurement/copy allocations and account owned
+  byte slices contiguously; original MozartTrio and MozaChlo source graphs now
+  fit the existing default buffer while retaining unread-DTD incompleteness.
+  Snapshot-admission failure remains terminal/incomplete and transferred
+  snapshot getters explicitly report package ownership.
+
+- Refine the unreleased resource context API: subject declarations now carry
+  typed availability/cause evidence, odd schema-hint pairing is known false,
+  and snapshot headers identify selection of the assembly-local link plan.
+  DTD-wide hint gaps occupy one root row while observed descendant hints remain.
+
+- Tighten package failure and ownership contracts: require established intrinsic
+  assemblies, keep the root as its exact context owner, and reject contradictory
+  failure metadata or duplicate transferred assessments. Post-terminal failure
+  summaries retain bounded original facts without admitting new work.
+
+- Add a processing-policy error marker for adapter refusals, preserving existing
+  error identities and distinguishing policy incompleteness from normative failure.
+
+- Preserve the first omitted blocking package diagnostic in a fixed prepaid
+  summary independent of shared diagnostic quotas. Expose read-only package
+  terminal causes and retain original intrinsic terminal classifications.
+
+- Add one bounded declared-MIME classifier shared by package checks and adapters,
+  with transient parsing scratch, case-insensitive registered types and explicit
+  unknown parameter policy. Binary members do not receive MusicXML suffix advice.
+
+- Add explicit `InspectXMLWithResources` and `AssessModelWithResources` entry
+  points with caller-selected resolver dependencies, immutable pin verification,
+  exact base/member expansion contexts and one finite shared account. Preserve
+  the best independent intrinsic report through later admission failure.
+
+- Add sealed package-role member discovery and metadata-only observed-file
+  advice. Exact file observations retain pin/provenance consistency without
+  creating parsed resource, ID, role or closure capabilities. Primary retrieval
+  names remain distinct from canonical identity and original source history;
+  raw non-UTF8 byte names retain optional advice without safe-path admission.
+
+- Add `InspectMXL` and `AssessMXLPackage` for bounded original/current MXL
+  assessment with separate container and musical intrinsic reports, exact local
+  header evidence, finite package-local graphs, nested archive scopes and shared
+  quotas. Current models are assessed directly without encoding or recovering
+  discarded source history; outer compressed-rootfile and linked-target
+  interpretation remains explicit. Incoming archive-to-primary substitutions
+  retain their own uncertainty without discarding inner XML reports.
+
+- Add explicit package-target `ProfileResourceGraph`, `ProfileMXLSource` and
+  `ProfileMXLModel` metadata with sealed package/root/link checks, distinct
+  capability policy and optional advice, and fixed intrinsic catalog digest
+  tables. Preserve all eight earlier profiles and source/model entry-point
+  selection. Current-model discarded schema hints remain an explicit selected
+  discovery limitation; current packages do not fabricate original ZIP evidence.
+
+- Add source-only ordered container metadata projections through
+  `NewContainerMetadataContextPlan` and `ContextResult.Container`. Exact source
+  identities, raw/effective token fields, required-attribute causes and guarded
+  inventory/order remain distinct. This reuses the assessed source session and
+  does not assert package graph rules or alter the eight earlier profile reports.
+
+- Add source-only container and sounds XSD profiles with separately generated
+  exact assembly bindings, preserving all eight earlier profiles and digests.
+  Sounds adds owned directional mapping context with explicit absence, exact
+  string/NMTOKEN domains and causal invalid fields. No Document roots, dictionary
+  lookup, unique-primary rule or ordinary Decode behavior changes are introduced.
+  `ContextResult` gains three optional payloads: `SoundMapping`, `Resource` and
+  `Container`. Migrate unkeyed composite literals to keyed literals.
+
+- Add separate sealed package/resource catalogs, one-account typed graph sessions,
+  canonical assessment bundles and fresh reference-remapped adoptions. Preserve
+  known failures through terminal admission refusal and optional scoped image,
+  filename/media-type and mimetype observations without rendering or I/O in core.
+
+- Add alternate terminal `validation.Session.FinishWithResourceSnapshot` with
+  immutable intrinsic resource facts, retained ownership and unconditional best
+  report preservation on snapshot admission failure. Ordinary `Finish` and
+  existing profile semantics remain unchanged.
+
+- Add explicit nonfetching `ProfileSourceLinks` and `ProfileModelLinks`, typed
+  owned local resource projections, exact link/bookmark attachment, XLink
+  defaults, image/group/instrument metadata and schema-hint discovery pairs.
+  Reuse existing XSD/local and Opus prerequisites; preserve all eight older
+  profiles/digests and distinguish optional discovery gaps from datatype errors.
 
 - Add explicit `ProfileModelContext` and `ProfileSourceContext`, preserving all
   frozen XSD/local/timeline profiles and XSD-only `Validate`. The new bounded
@@ -15,6 +116,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   layout and performance context, with exact prerequisite causes and separate
   optional unknowns. Mandatory consumers cover numeric time-only ordering and
   narrowly established bend/repeat content antecedents.
+
 - Add the sealed context plan constructors and `Report.Context` projections,
   including assembly-specific local Opus version and pagination facts without
   following links. External packages/resolvers, dictionaries, disputed normative
@@ -26,16 +128,19 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `Validate`. The bounded provider retains exact musical chronology and typed
   effective state; selected consumers check principal-note chord duration bounds
   and explicit numeral-key or encoded key at the unshifted harmony score origin.
+
 - Add sealed `NewTimelinePlan`, `NewChordDurationPlan` and `NewNumeralKeyPlan`,
   finalized note/offset/grace/figured-bass/direction context and sparse encoded
   instrument/MIDI statements. Unknown dependencies retain local causal evidence;
   provider completion is not a claim that every fact is known. Publish the full
   clause/requirement ownership ledger without promoting frozen source statuses
   or claiming complete repeat, layout, playback or MusicXML conformance.
+
 - Keep B5-PERF-01 outstanding under shared validation kernel/session ownership
   and final batch-9 reconciliation. New timeline resource improvements do not
   discharge the earlier matched-performance obligation. Final integrated
   acceptance and actual 386 execution remain separately evidenced gates.
+
 - Add immutable `validation.Rational` with bounded canonical fractions, separate
   from XSD decimals, and shared-session metered exact arithmetic for musical
   positions. Arithmetic reserves conservative work and scratch before big-number
@@ -46,12 +151,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   clauses on original input. Preserve the existing generated `Assess` type.
   Model reports use current field/index evidence without original XML positions;
   finite `float64` decimals mean their exact binary rational value.
+
 - Add generated representation metadata, bounded iterative traversal,
   model-representation facts and sealed local/typed-reference plans sharing
   the authoritative XSD kernel and actual-ID owner resolution. The selected
   scope has 22 local runtime bindings for 19 whole candidate clauses plus one
   local instrument-link split; date and MIDI existence share existing
   consequences. These counts are not conformance coverage.
+
 - Publish the bounded model/local scope and executable-evidence ledger with
   unchanged planning contracts and remaining batches 6–9. Batch-5 combined
   review and aggregate checks passed; [PR #34](https://github.com/go-muse/go-musicxml/pull/34)
@@ -66,9 +173,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   subsets prevent source acceptance, including all three committed official score
   samples; strict assessed decoding returns no document for those files. The two
   committed DOCTYPE-free opus examples are within the preview's assessable scope.
+
 - Reuse one XML-neutral authoritative XSD kernel through immutable schema
   snapshots and sealed binding/declaration/attribute/scalar/content/identity
   plans. Composite predicates count once while retaining multiple issue details.
+
 - Add counted fragmented-input source-scanner fuzzing and require raw-source XSD
   oracle tests. Linux CI now executes all packages with `GOARCH=386`.
 
@@ -77,9 +186,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   causal context/identity outcomes and independently inspectable reports.
   A separate pinned inspection inventory preserves all 2,560 research records;
   it does not enable a production MusicXML profile or source/model adapter.
+
 - Export `ErrIncompleteAssessment` with identical root/core sentinel identity
   and typed incomplete causes, preserving pure and joined legacy XSD outcomes
   independently of the later direct-model `Validate` migration below.
+
 - Execute `GOARCH=386 go test -count=1 ./validation` in the Linux CI test job
   for actual 32-bit host-width coverage. Add the validation-core fuzz targets
   `FuzzReportFieldIsBoundedEscapedUTF8` and `FuzzSessionLifecycle` to `check-all`,

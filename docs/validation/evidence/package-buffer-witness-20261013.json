@@ -1,0 +1,46 @@
+{
+  "format": "musicxml-package-buffer-witness-1",
+  "started_at": "2026-10-13T14:29:34Z",
+  "commit": "861aec472c61ae284c25908684ad680dd32d4060",
+  "tree": "2faaa347078bc1be8ee27ec526e75d265bc2ed4a",
+  "worktree_clean_at_start": true,
+  "identical_published_tree_commit": "a9a53a135fd9214cc5a60818add27dc6108bf2e4",
+  "command": "MUSICXML_SNAPSHOT_BUFFER_WITNESS=1 go test -count=1 -run '^TestResourceReviewOfficialExactBufferWitness$' -v .",
+  "environment": {
+    "go": "go1.27.2",
+    "GOOS": "linux",
+    "GOARCH": "amd64",
+    "GOMAXPROCS": 2,
+    "GOFLAGS": "-p=1"
+  },
+  "result": "PASS",
+  "test_seconds": 18.87,
+  "log_sha256": "3bd9dfabe78e182c8f73f6ec11ecd96e97ff7071dc4e2a27f8c1076f2e578aa2",
+  "assertions": "Every listed source-links and graph minimum succeeded; one byte below each returned ErrResourceLimit. The test uses the exact original source bytes.",
+  "samples": [
+    {
+      "source": "testdata/official/MozartTrio.musicxml",
+      "source_sha256": "8d491c8db4d19c886ec157e2c26fdda91ee8faa801e24b31aaf8cf092d73c63f",
+      "source_links_minimum_bytes": 36961992,
+      "graph_minimum_bytes": 40946084,
+      "earlier_corrected_graph_minimum_bytes": 40939940,
+      "graph_delta_bytes": 6144
+    },
+    {
+      "source": "testdata/official/MozaChloSample.musicxml",
+      "source_sha256": "4323af5d7daa23ee3ae4fc27ff51274e98055a775824c49d3f4312f7586bc23e",
+      "source_links_minimum_bytes": 46681595,
+      "graph_minimum_bytes": 51400629,
+      "earlier_corrected_graph_minimum_bytes": 51394485,
+      "graph_delta_bytes": 6144
+    }
+  ],
+  "earlier_corrected_measurement_provenance": {
+    "final_scoped_review_commit": "d52560b911852eeb37fb4b8390c1f5ebdc39aa9b",
+    "final_scoped_review_tree": "371fde64e76b0ff63f7175986ae444b6bba2aaed",
+    "log_sha256": "564acd57ceca10720262ff72ffcaf49455f3c5c262c4ae2a51146da329ea97a6",
+    "interpretation": "Historical snapshot/local-link correction log retained separately. The final scoped review revision is provenance, not a claim that the earlier log executed on the later packaged tree."
+  },
+  "graph_delta_explanation": "Each graph minimum increases by the 6144-byte packageDiagnosticReserveBytes prepaid at CompiledPackageCatalog.Begin. Source-links minima are unchanged.",
+  "limitations": "Logical admission thresholds, not heap/RSS. Unchanged 64 MiB default, unread-DTD incompleteness and unfinished archive-to-primary linked-target indirection remain. No benchmark rerun, whole-tree stages, race, actual 386 or remote CI certification."
+}

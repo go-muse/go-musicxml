@@ -3,6 +3,7 @@ package musicxml
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"reflect"
 	"strconv"
@@ -21,8 +22,15 @@ type modelFactSink interface {
 	Close(context.Context, validation.NodeEnd) error
 }
 
-type modelWalkOptions struct{ LegacyPaths bool }
-type modelWalkStatus struct{ HasProblems, HasCycle, DepthExceeded bool }
+type modelWalkOptions struct {
+	XMLDepth    int
+	LegacyPaths bool
+	Entry       string
+}
+type modelWalkStatus struct {
+	HasProblems, HasCycle, DepthExceeded bool
+	XMLDepth                             int
+}
 type modelPointer struct {
 	typ     reflect.Type
 	address uintptr
@@ -133,7 +141,7 @@ func (w *modelWalker) release(frame *modelWalkFrame, amount int64) {
 	}
 }
 func (w *modelWalker) location(path string) validation.Location {
-	return validation.Location{Target: validation.TargetModel, DocumentID: w.documentID, Path: path}
+	return validation.Location{Target: validation.TargetModel, DocumentID: w.documentID, Entry: w.options.Entry, Path: path}
 }
 func modelQName(name modelName) validation.QName {
 	return validation.QName{Space: name.Space, Local: name.Local}
@@ -178,6 +186,16 @@ func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kin
 		}
 	} else if kind == 0 {
 		return modelMetadataError("missing occurrence descriptor")
+	}
+	// Count every represented XML occurrence, including scalar leaf elements.
+	// No frame storage or sink occurrence is admitted beyond the private cap.
+	if w.options.XMLDepth > 0 && len(w.stack) >= w.options.XMLDepth {
+		w.status.DepthExceeded = true
+		resource := &validation.ResourceError{Kind: validation.BudgetDepth, Limit: int64(w.options.XMLDepth), Used: int64(len(w.stack)), Requested: 1}
+		if int64(w.options.XMLDepth) < w.account.Limits().MaxDepth {
+			return errors.Join(fmt.Errorf("%w: maximum is %d elements", ErrXMLTooDeep, w.options.XMLDepth), resource)
+		}
+		return resource
 	}
 	if len(w.stack) == cap(w.stack) {
 		if int64(cap(w.stack)) > math.MaxInt64/16 {
@@ -238,6 +256,9 @@ func (w *modelWalker) push(value reflect.Value, descriptor *modelDescriptor, kin
 		frame.goPath = strings.Clone(goPath)
 	}
 	w.stack = append(w.stack, frame)
+	if len(w.stack) > w.status.XMLDepth {
+		w.status.XMLDepth = len(w.stack)
+	}
 	if pointer.address != 0 {
 		w.active[pointer] = true
 	}

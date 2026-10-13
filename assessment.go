@@ -15,7 +15,8 @@ import (
 // AssessmentOptions selects an explicit target-specific profile and finite shared limits.
 // An empty or unknown Profile is invalid; zero budget fields select defaults.
 // Source and model profiles describe their bounded target-specific scope and
-// cannot be interchanged. No package assessment profile is provided. Source
+// cannot be interchanged. Standalone source/model entry points reject the
+// separate package/resource-graph profiles. Source
 // facts also have fixed identity limits: 1024
 // UTF-8 bytes per local name or prefix, 4096 per namespace URI, and 65536 in-scope
 // namespace bindings. Exceeding these is incomplete, never malformed XML.
@@ -145,7 +146,7 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 		mapErr = decoder.DecodeElement(document, &start)
 	}
 	var conversionErr error
-	conversionLocation := validation.Location{Target: validation.TargetSource, DocumentID: sourceDocumentID}
+	conversionLocation := validation.Location{Target: validation.TargetSource, DocumentID: run.documentID, Entry: run.entry}
 	var conversionNode validation.NodeID
 	if mapErr != nil {
 		state := validation.ConversionFailed
@@ -196,20 +197,53 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 	return result, err
 }
 
-type sourceAssessmentRun struct {
-	ctx           context.Context
-	account       *validation.Account
-	session       *validation.Session
-	source        *observingXMLSource
-	startupReport validation.Report
+type sourceAssessmentConfig struct {
+	assessmentRunConfig
+	ByteOwner sourceByteOwner
 }
 
+type sourceAssessmentRun struct {
+	ctx               context.Context
+	account           *validation.Account
+	session           *validation.Session
+	source            *observingXMLSource
+	documentID, entry string
+	inputFinished     bool
+	startupReport     validation.Report
+}
+
+// Public wrappers alone create the root account. Resource orchestration supplies
+// the same account to every child via newSourceAssessmentRunWithConfig.
 func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode DecodeOptions, assessment *AssessmentOptions, converting bool) (*sourceAssessmentRun, error) {
-	if ctx == nil {
-		return nil, &validation.ConfigurationError{Field: "context", Reason: "must not be nil"}
+	if err := assessmentContext(ctx, "canceled-before-source"); err != nil {
+		return nil, err
 	}
-	if err := ctx.Err(); err != nil {
-		return nil, &validation.IncompleteError{Reason: "canceled-before-source", Cause: err}
+	if reader == nil {
+		return nil, ErrNilReader
+	}
+	if _, err := decode.xmlDepth(); err != nil {
+		return nil, err
+	}
+	var config *sourceAssessmentConfig
+	if assessment != nil {
+		engine, err := sourceAssessmentEngineForProfile(assessment.Profile)
+		if err != nil {
+			return nil, err
+		}
+		account, err := validation.NewBudgetAccount(assessment.Budgets)
+		if err != nil {
+			return nil, err
+		}
+		config = &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine}, ByteOwner: sourceBytesPrimary}
+	}
+	return newSourceAssessmentRunWithConfig(ctx, reader, decode, config, converting)
+}
+
+// A nil config is only the existing unassessed permissive transport. A nonnil
+// config always requires an existing account and an explicit selected profile.
+func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, decode DecodeOptions, config *sourceAssessmentConfig, converting bool) (*sourceAssessmentRun, error) {
+	if err := assessmentContext(ctx, "canceled-before-source"); err != nil {
+		return nil, err
 	}
 	if reader == nil {
 		return nil, ErrNilReader
@@ -218,59 +252,41 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if err != nil {
 		return nil, err
 	}
-	run := &sourceAssessmentRun{ctx: ctx}
-	if assessment != nil {
-		if assessment.Profile != ProfileSourceXSDPreview && assessment.Profile != ProfileSourceLocal && assessment.Profile != ProfileSourceTimeline && assessment.Profile != ProfileSourceContext {
-			return nil, &validation.ConfigurationError{Field: "profile", Reason: "unknown or empty explicit source profile"}
-		}
-		run.account, err = validation.NewBudgetAccount(assessment.Budgets)
-		if err != nil {
+	run := &sourceAssessmentRun{ctx: ctx, documentID: sourceDocumentID}
+	byteOwner := sourceBytesPrimary
+	if config != nil {
+		if err := config.validate(validation.TargetSource); err != nil {
 			return nil, err
 		}
-		// Inspection has no model depth contract. Decode enforces its explicit or
-		// default maximum in addition to the assessment account's scope limit.
+		if err := config.ByteOwner.validate(); err != nil {
+			return nil, err
+		}
+		run.account, run.documentID, run.entry = config.Account, config.DocumentID, config.Entry
+		byteOwner = config.ByteOwner
+		// Ordinary inspection has no decode/model depth contract. A resource
+		// adapter can deliberately supply its separate MXL XML-depth cap.
 		if !converting {
-			maxDepth = 0
+			maxDepth = config.XMLDepth
+		} else if config.XMLDepth > 0 && config.XMLDepth < maxDepth {
+			maxDepth = config.XMLDepth
 		}
-		var engine *validation.Engine
-		var engineErr error
-		if assessment.Profile == ProfileSourceContext {
-			engine, engineErr = newContextAssessmentEngine()
-		} else if assessment.Profile == ProfileSourceTimeline {
-			engine, engineErr = newTimelineAssessmentEngine()
-		} else if assessment.Profile == ProfileSourceLocal {
-			engine, engineErr = newModelAssessmentEngine()
-		} else {
-			engine, engineErr = newSourceAssessmentEngine()
-		}
-		if engineErr != nil {
-			return nil, engineErr
-		}
-		run.session, err = engine.Begin(ctx, validation.RunOptions{DocumentID: sourceDocumentID, Profile: assessment.Profile, Account: run.account})
+		run.session, err = config.Engine.Begin(ctx, validation.RunOptions{DocumentID: run.documentID, Profile: config.Profile, Account: run.account})
 		if err != nil {
 			return nil, err
 		}
 	}
 	fail := func(cause error) (*sourceAssessmentRun, error) {
-		if run.source != nil {
-			report, finishErr := run.finish(cause)
-			run.startupReport = report
-			return run, errors.Join(cause, finishErr)
-		}
-		if run.session != nil {
-			report, finishErr := run.session.Finish(ctx, validation.Completion{Syntax: validation.SyntaxIncomplete, Cause: cause})
-			run.startupReport = report
-			return run, errors.Join(cause, finishErr)
-		}
-		return nil, cause
+		report, finishErr := run.finish(cause)
+		run.startupReport = report
+		return run, errors.Join(cause, finishErr)
 	}
-	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth})
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner})
 	if err != nil {
 		return fail(err)
 	}
 	run.source = &observingXMLSource{ctx: ctx, lexical: lexical, decoder: xml.NewTokenDecoder(lexical), musicXMLRoot: converting}
 	if run.session != nil {
-		run.source.observer, err = newSourceFactObserver(ctx, run.session, run.account)
+		run.source.observer, err = newSourceFactObserverWithIdentity(ctx, run.session, run.account, run.documentID, run.entry)
 		if err != nil {
 			return fail(err)
 		}
@@ -279,9 +295,12 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 }
 
 func (r *sourceAssessmentRun) drain() error {
+	if r.inputFinished || r.source == nil {
+		return &validation.SessionError{Operation: "source drain", Reason: "input unavailable or finalized"}
+	}
 	for {
 		_, err := r.source.Token()
-		if errors.Is(err, io.EOF) {
+		if err == io.EOF {
 			return nil
 		}
 		if err != nil {
@@ -289,13 +308,24 @@ func (r *sourceAssessmentRun) drain() error {
 		}
 	}
 }
-func (r *sourceAssessmentRun) finish(cause error) (validation.Report, error) {
-	summary := r.source.lexical.Summary()
-	observerErr := r.source.observer.close()
-	parserErr := r.source.lexical.Close()
-	cause = errors.Join(cause, observerErr, parserErr)
-	if r.session == nil {
-		return validation.Report{}, cause
+
+// finishInput closes only adapter-owned parsing state and returns the exact
+// completion for one terminal core finalizer. A future resource finalizer uses
+// this same seam before exporting its owned snapshot and cleaning the session.
+func (r *sourceAssessmentRun) finishInput(cause error) (validation.Completion, error) {
+	if r.inputFinished {
+		return validation.Completion{}, &validation.SessionError{Operation: "source finish", Reason: "input already finalized"}
+	}
+	r.inputFinished = true
+	var summary sourceXMLSummary
+	inputComplete := false
+	if r.source != nil {
+		summary = r.source.lexical.Summary()
+		inputComplete = r.source.eof && summary.InputComplete
+		if r.source.failure != nil && !errors.Is(cause, r.source.failure) {
+			cause = errors.Join(r.source.failure, cause)
+		}
+		cause = errors.Join(cause, r.source.observer.close(), r.source.lexical.Close())
 	}
 	syntax := validation.SyntaxIncomplete
 	if summary.SyntaxComplete {
@@ -306,8 +336,20 @@ func (r *sourceAssessmentRun) finish(cause error) (validation.Report, error) {
 			syntax = validation.SyntaxMalformed
 		}
 	}
-	return r.session.Finish(r.ctx, validation.Completion{InputComplete: r.source.eof && summary.InputComplete, Syntax: syntax, Cause: cause})
+	return validation.Completion{InputComplete: inputComplete, Syntax: syntax, Cause: cause}, nil
 }
+
+func (r *sourceAssessmentRun) finish(cause error) (validation.Report, error) {
+	completion, err := r.finishInput(cause)
+	if err != nil {
+		return validation.Report{}, err
+	}
+	if r.session == nil {
+		return validation.Report{}, completion.Cause
+	}
+	return r.session.Finish(r.ctx, completion)
+}
+
 func sourceFatalError(err error) bool {
 	return err != nil && (errors.Is(err, validation.ErrResourceLimit) || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, validation.ErrInvalidSession))
 }
@@ -355,7 +397,7 @@ func (r *sourceAssessmentRun) conversionFinding(state validation.ConversionState
 	if err := r.account.Charge(validation.BudgetDiagnostics, 1); err != nil {
 		return nil
 	}
-	return []validation.Finding{{Decision: validation.Decision{Rule: validation.RuleKey{ID: "musicxml.model-conversion", Revision: 1}, Subject: validation.NodeRef{DocumentID: sourceDocumentID, Node: node}, Outcome: validation.OutcomeFail, Reason: validation.Code(state)}, Category: validation.CategoryModel, Location: location}}
+	return []validation.Finding{{Decision: validation.Decision{Rule: validation.RuleKey{ID: "musicxml.model-conversion", Revision: 1}, Subject: validation.NodeRef{DocumentID: r.documentID, Node: node}, Outcome: validation.OutcomeFail, Reason: validation.Code(state)}, Category: validation.CategoryModel, Location: location}}
 }
 
 // assessedModelTokenReader reserves logical model-candidate retention before

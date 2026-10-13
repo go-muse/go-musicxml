@@ -830,3 +830,592 @@ Public sentinel errors are intended for `errors.Is`, including
 `ErrDocumentTooDeep` and `ErrDocumentCycle` for unsafe programmatically built
 models. `UnsupportedRootError`, `MXLLinkError`, and `ValidationError` provide
 structured context and are intended for `errors.As`.
+
+## Auxiliary source assemblies
+
+`InspectXML` also accepts `ProfileSourceContainer` and `ProfileSourceSounds`.
+Each profile admits only its no-namespace root (`container` or `sounds`) and
+uses separately generated, pinned XSD metadata with exact assembly-qualified
+bindings. They do not add `Document` implementations or change `Decode`,
+`DecodeAssessed` conversion, `AssessModel`, `Validate`, or existing profile
+identities and digests. `AssessmentOptions` and `validation.Report` retain their
+existing fields. A foreign or wrong root is a profile-admission error; ordinary
+in-scope schema violations appear in the report with a nil operation error.
+
+The container profile selects `validation.NewContainerMetadataContextPlan` in
+addition to its XSD operations. Its exact source-only provider publishes
+`ContextPropertyContainerMetadata` records with an optional
+`ContextResult.Container` payload of type `ContainerContextResult`:
+
+- `Role` distinguishes `ContainerRoot`, `ContainerRootfiles` and `ContainerRootfile`
+- `Container` and `Parent` preserve exact source identities; the root has no parent
+- `FullPathRaw` and `MediaTypeRaw` preserve XML-normalized source lexemes, while
+  `FullPath` and `MediaType` retain assessed `xs:token` values
+- Optional omission differs from a known empty string. Missing required
+  `full-path` has absent raw evidence and invalid effective evidence with the
+  exact XSD prerequisite cause
+- `Content` proves complete, grammar-valid ordered child-role inventory for that
+  occurrence. A complete rootfile inventory requires both the root and rootfiles
+  guards; malformed or skipped children never turn a known subset into completeness
+- `Ordinal` is one-based within a rootfiles parent and known only when that
+  parent's inventory is complete. Non-rootfile attribute and ordinal fields are absent
+
+These projections come from the same assessed source session, without reparsing
+XML or exporting a generic fact tree. They do not prove ZIP properties, entry
+existence, rootfile target kind, media-type classification or score/part ordering.
+A consumer must also honor the containing assessment's input/syntax completeness.
+The sounds profile additionally selects
+`validation.NewSoundsMappingContextPlan`. Its sealed source-only provider adds
+`ContextPropertySoundMapping` records with a `ContextResult.SoundMapping`
+payload of type `SoundMappingContextResult`:
+
+- `Role` distinguishes sound, any, solo and ensemble in the sounds assembly
+- `Direction` distinguishes `SoundMappingToMusicXML` (sound reverse preference)
+  from `SoundMappingFromMusicXML` (mapping-child forward preference)
+- `Sound` and `SoundID` identify the owning occurrence and its assessed ID value;
+  document-wide uniqueness remains an independent XSD identity obligation
+- `LibraryID` preserves exact `xs:string` content, including whitespace and empty
+  values; `Number` preserves the optional ensemble `xs:NMTOKEN` domain
+- `Primary` preserves explicit yes/no, omission and causal invalid/unavailable
+  evidence. There is no omission default or unique-primary requirement
+- `Content` separately records the owning sound's grammar/enumeration evidence
+
+Every alternative is a separate owned record in original source order. Known
+fields remain available alongside invalid independent fields or content.
+Provider completion means projection finished, not that every value is known or
+that an application choice has been made. No sound dictionary lookup, numerical
+ensemble restriction, library access, playback, or cross-file correspondence is
+performed. Existing source DTD, capability, cancellation and finite budget limits
+still apply. See [auxiliary source scope](docs/validation/auxiliary-source-scope.md).
+
+`ContextResult` gains three optional typed payload fields: `SoundMapping`,
+`Resource` and `Container`. Clients using unkeyed composite literals for that
+struct must migrate to keyed literals. This additive context-family extension
+does not change the `Report` or options struct shapes.
+
+## Nonfetching local resource context
+
+`ProfileSourceLinks` and `ProfileModelLinks` select XSD/local prerequisites plus
+bounded local resource projections, without timeline, package parsing, URI
+resolution or I/O. `validation.NewLocalLinkContextPlan` binds exact MusicXML or
+Opus uses; `validation.NewSchemaHintContextPlan` binds standard xsi hint discovery
+for one exact supported assembly. Existing eight profiles and option shapes are
+unchanged.
+
+`validation.ContextResult.Resource` is an optional, owned
+`ResourceContextResult`, with exactly one branch: `ResourceLinkContext`,
+`ResourceImageContext`, `ResourceSchemaHintsContext`, `ResourceGroupContext` or
+`ResourceInstrumentContext`. `ResourceAttribute` exposes independent `Presence`,
+`Raw` and effective validated `Value` evidence. `SchemaHintPair` retains namespace,
+location and source origin. `ResourceLinkKind` distinguishes the score-link,
+part-link, opus-score, opus-link, score-work-opus and bookmark families.
+
+`ContextResourceLink`, `ContextResourceImage`, `ContextResourceSchemaHints`,
+`ContextResourceGroup` and `ContextResourceInstrument` identify those branches.
+`ResourceScoreLink`, `ResourcePartLink`, `ResourceOpusScore`, `ResourceOpusLink`,
+`ResourceScoreWorkOpus` and `ResourceBookmark` are the closed link kinds.
+
+`ResourceContextResult.SubjectDeclaration` is `Evidence[DeclarationID]`; consumers
+read `.Value` only when `.State` is known, and retain unavailable reason/cause.
+Known absence is different from unknown, unsupported and invalid evidence.
+Missing attachment targets do not fail a new mandatory predicate. Schema-hint
+pairing is known false for an observed unmatched token and known true for zero
+or evenly paired tokens. `Raw`/`NoNamespace.Presence` distinguish absent from
+explicitly empty hints. Intrinsic extraction can still succeed; this does not
+change the accepted XSD list(anyURI) datatype. A separately selected package
+consumer records known-false pairing as `OutcomeFail` under
+`CategoryCapability`, `ClassPolicy` and `RolePredicate`. It retains
+`schema-location-unmatched-token` and the exact context provider/subject cause.
+That policy failure blocks `Satisfied()` through `BlockingProblems`; it does not
+increment normative `Counts.Fail` or establish `ConformanceViolated`. Known-false
+pairing alone does not make assessment incomplete. Direct models expose unavailable
+xsi source history, which remains Unknown. XLink onLoad is metadata and grants no
+retrieval authority.
+See [local resource scope](docs/validation/local-link-context-scope.md) for the
+bounded descendant-selection, image advice and exact typed-reference contracts.
+
+### Owned intrinsic resource snapshots
+
+`validation.Session.FinishWithResourceSnapshot` is an additive alternate terminal
+finalizer. It runs the selected intrinsic phases before admitting an immutable
+`ResourceSnapshot`, and releases session storage exactly once. Its first return
+retains intrinsic findings. If snapshot admission fails, that returned `Report`
+is also marked incomplete with a terminal summary; absent a known violation, its
+conformance becomes undetermined. The returned operation error carries the cause.
+A snapshot retains the canonical report, exact root/profile/assembly, selected
+resource projections and schema-determined ID states under the same budget
+account until `Close` or successful transfer to package assessment. It never
+parses, fetches, retains a model, or exposes a post-finalization fact view.
+`ResourceSnapshotHeader.LinkProjectionSelected` records selection of an
+`ImplementationAvailable` sealed local-link plan for the established assembly.
+It does not assert projection or scope completion. Absent or unsupported
+implementation support does not establish that witness. An empty projection from
+a profile without the witness proves no link absence.
+
+Snapshots are single-goroutine objects. Serialize getters, ownership transfer and
+`Close`. Standalone `Close` is idempotent. Closed header/count access returns zero;
+closed content access returns a session error. Transferred content access
+reports that ownership belongs to the package, rather than reporting a closed
+or uninitialized snapshot. Getters produce defensive,
+caller-owned API copies of already admitted immutable data; retaining adapters
+must account for their own working copies. Existing `Finish`, options, profile
+identities and ordinary assessment behavior are unchanged.
+
+### Sealed package and resource contracts
+
+`validation.NewPackageCatalog` accepts closed `PackageRuleBinding` selectors and
+constructor-produced `PackagePlan` operations separately from XML catalogs.
+Package rules carry an empty XML selector, package scope and exclusive package
+target. Package profiles carry no XML roots and include a fixed assembly/target
+intrinsic profile/digest table. Existing `NewCatalog` XML invariants and catalog
+digests remain unchanged. The package catalog is metadata, not a parser or a
+runtime expression language.
+
+`ResourceRequest` and `ResourceResult` have exactly one corresponding document,
+image, association or role branch. Core validators check bounded shape and exact
+request identity; only root orchestration reads and verifies streams.
+`ResourceDocumentRequest.RequestedRevision` is available to low-level callers,
+but root orchestration leaves it empty because the target canonical identity and
+revision are not known before resolving. A retrieval URI is not a revision pin.
+`ResourceResult.RetrievalURI` is the optional external retrieval base for a
+returned document. Empty leaves that base unavailable. When nonempty, it must
+parse as an absolute URI; its fragment is ignored for retrieval context. Root
+orchestration rejects malformed or relative values with
+`validation.ErrInvalidConfiguration` after the resolver callback returns and
+before reading the body. This checks returned evidence; it does not sandbox the
+resolver's already-performed transport.
+Every returned nonnil body transfers ownership even on error or rejected
+metadata.
+A newly returned alias body still consumes actual external byte/work quotas;
+parse reuse does not establish transport-byte reuse. Caller resolver code owns
+transport and redirect authorization; validation cannot control I/O it already
+performed. Source pins use verified SHA-256 digests. Current state uses opaque
+per-run snapshot identity, never an invented source hash.
+
+Returned bodies grow in owned contiguous buffers. Growth admits the old and new
+capacities simultaneously before releasing the old buffer; spare retained
+capacity can approach twice the body length. Even when external-byte and work
+allowances suffice, a 33 MiB body cannot fit the default 64 MiB buffered-byte
+limit: growth alone gives an approximately 32 MiB body ceiling before other live
+storage and scratch. `MaxExternalBytes` is not a promise that a body of that
+size fits the independent work and live-buffer budgets. Use explicit finite
+overrides when the selected workload needs them.
+
+Association replies bind complete source/target pins, exact local subjects and
+normalized IDs. Partial mapping misses are unknown; known negative membership
+requires authoritative exact relation coverage. Optional target IDs must have
+verified kind/owner when supplied, but there is no required cross-file ID equality
+or bijection. Role results echo the whole bounded package request scope. Image
+metadata names an explicit common dimension unit and never infers MusicXML tenths
+or physical density.
+
+### Named package and resource-graph profiles
+
+The additive `ProfileResourceGraph`, `ProfileMXLSource` and `ProfileMXLModel`
+identities select separate bounded graph/package scopes. Every graph report has
+`TargetPackage`, package subject selectors and an empty XML `SupportedRoots`
+list. None is accepted as a standalone `InspectXML` or `AssessModel` profile,
+and none grants resolver or filesystem/network authority.
+
+- `ProfileResourceGraph` describes a finite selected resource graph rooted in
+  source XML or a current model. Plain document boundaries do not assert ZIP
+  facts. Authorized nested MXL boundaries receive applicable package checks.
+- `ProfileMXLSource` describes original raw-MXL evidence and source intrinsic
+  reports. A decoded current model cannot substitute for original XML proof.
+- `ProfileMXLModel` describes the current primary `Document`, represented package
+  fields and separately selected retained source resources. Original headers,
+  compression/encryption, physical order and original container lexical presence
+  are outside its current-boundary claim. They are never recovered by encoding
+  the package. Raw checks remain active for separately reached raw-MXL boundaries.
+
+All three select the same sealed, representation-conditional check inventory.
+Mandatory package/root/link/association conditions stay separate from optional
+mimetype, group, image and filename/MIME advice, compression observation and
+schema-discovery capability policy. Existing intrinsic XSD/local predicates are
+reused rather than copied into package reports. Per-report counts remain scoped;
+the catalog does not claim one rule per research record or full conformance.
+
+The fixed intrinsic table is part of the package catalog digest. Every profile
+pins source MusicXML/Opus to `ProfileSourceLinks`, source Container to
+`ProfileSourceContainer` and source Sounds to `ProfileSourceSounds`.
+`ProfileResourceGraph` and `ProfileMXLModel` additionally pin current-model
+MusicXML/Opus to `ProfileModelLinks`. Raw-MXL source assessment accepts no current
+model row. There are no Container/Sounds `Document` model roots. Digests derive
+from the actual compiled intrinsic catalogs, including their selected providers;
+they are not copied constants that can drift from auxiliary metadata changes.
+
+Selected schema-hint discovery is an important current-model limitation. A
+current model cannot establish absent or complete original xsi hints that its
+representation discarded. With the shipped schema-discovery capability rule
+selected, every current-model graph/package bundle remains incomplete and cannot
+be `Satisfied()`, even when its intrinsic current-model report is satisfied and
+it has no outgoing links. The discovery result is explicitly Unknown, never a
+reconstructed absence claim. Source discovery separately preserves namespace/location
+pairs and an unmatched trailing URI. It never changes the accepted odd/even
+`list(anyURI)` datatype contract or automatically loads/selects schemas.
+
+Read the profile's `NormativeClosure` for its exact bounded claim. Central-only
+mimetype extra fields, other leading padding families, the complete media-type
+set, outer compressed-rootfile and linked-target indirection, unproved
+association/role evidence and full ZIP/JAR/DEFLATE closure remain explicit
+interpretation/capability gaps when reached. Technical nested traversal does not
+settle normative indirection.
+The pinned MusicXML 4.0 schema is not a universal instance `version=4.0`
+restriction. All eight earlier profile identities, digests and report shapes are
+unchanged. See [package profile scope](docs/validation/package-profile-scope.md)
+for the sealed check inventory and provenance.
+
+`CompiledPackageCatalog.Begin` creates a typed `PackageSession` over one shared
+account. `OpenPackage` establishes acyclic encapsulation with independent entry
+namespaces; linked cycles use fresh adoptions of canonical intrinsic assessments.
+`AddResource` transfers only a core-created snapshot on the identical account.
+It requires an established assembly matching the fixed target/profile/catalog
+interpretation, regardless of whether the intrinsic report is satisfied. An
+unknown assembly is refused explicitly; `RecordResourceFailure` preserves the
+untransferred original failure rather than inventing an assembly from table rows.
+`AdoptResource` requires explicit package scope, a fresh document ID for each
+linked occurrence, and an explicit single root marker.
+The root must own its exact expansion context: a root adoption is refused if an
+earlier linked adoption already owns that same assessment/package/base/member
+context. A different context remains independently adoptable. Successful transfer
+invalidates the old snapshot owner. Live indexed reads admit work and temporary
+copy storage; returned copies belong to the caller. Package completion releases
+all live leases, while immutable `AssessmentBundle` getters remain available.
+`PackageSession.TerminalCause` reads the accumulated terminal error without
+charging work or admitting another event, including after completion.
+Adapters can preserve `validation.ErrProcessingPolicy` alongside existing legacy
+error identities for genuine technical processing refusals. The terminal report
+uses category `policy` and reason `processing-policy`, remaining incomplete rather
+than claiming normative invalidity. Resource limits, cancellation, deadlines and
+established malformed-source evidence retain their existing higher precedence;
+ordinary transport failures and unsupported formats must not acquire this marker.
+`AssessmentBundle.OmittedPackageDiagnostics` preserves the first omitted blocking
+package rule/subject/boundary/outcome/category/reason and a saturating omission
+count when intrinsic children exhaust shared diagnostic quotas. Its fixed 6 KiB
+reserve is charged at Begin, and capture allocates nothing after exhaustion. It
+is separate from Findings and does not expand MaxDiagnostics; full locations,
+causal detail and rule messages may be omitted. Counts remain authoritative.
+
+The bundle retains one package report and one report per canonical intrinsic
+assessment. Required child failures cannot be flattened away or multiplied by
+edge count. `RecordResourceFailure` is write-once and preserves the best original
+intrinsic report of an untransferred child when export or later package admission
+fails.
+If ordinary report retention is refused, its reserved explicitly truncated
+identity/count summary still preserves independently known results. An unavailable
+full content pin is marked as such and cannot establish canonical resource identity
+or successful package completion.
+Failure-only ingress accepts nonnil canceled contexts and prior terminal errors
+without charging new work or attempting a full report copy after termination.
+It validates bounded conformance/count/target metadata and pin consistency before
+storing anything, and refuses an already transferred exact assessment. Invalid
+failure metadata cannot replace an existing blocker. Before termination, ordinary
+full retention may still succeed within the shared quotas.
+
+`ObserveEdge` consumes a once URI-decoded fragment component. Empty fragments
+address the whole document; only schema-ID NCName shorthand is implemented.
+Each observation requires explicit `Indirection` evidence. Known false asserts
+that the adopted XML is the directly selected target; known true records an
+archive-to-primary substitution. Omitted evidence is invalid ingress, not an
+implicit direct-target claim. An indirect target retains its adopted inner XML
+and intrinsic report, while outer target, applicable group-link and association
+predicates remain Unknown with `nested-link-indirection-unresolved`. Its outer
+fragment is not resolved against the inner primary's ID index, and the root
+adapter does not request an association proof for that substituted target.
+Indirection belongs to the incoming occurrence: direct XML members, inner
+outgoing links and aliases retain their own independently established evidence.
+Complete exact ID absence fails, incomplete ID scopes stay unknown, and other
+fragment grammars stay unsupported. Unknown/absent selected targets still charge
+linked-document admission. Each known edge uses its own nonroot adoption distinct
+from its source. A target may belong to another explicitly admitted package
+boundary; a known empty fragment target must be its exact nonzero adopted root.
+`MaxLinkedDocuments` counts nonroot adoptions, not just external resolver calls.
+The first linked raw-MXL package can require three admissions: container, primary
+and incoming edge. An exhausted counter is checked before I/O, but positive
+remaining capacity does not guarantee that all internal adoptions will fit; their
+number depends on the returned content.
+
+`ObserveImageMetadata` accepts an exact image request/result for a selected
+intrinsic template. Bundle image advice exposes exact dimensionless aspect ratios
+and agreement with two specified dimensions. Pixel dimensions require explicit
+pixel-aspect-ratio evidence; physical dimensions use their stated common unit.
+No DPI, rendering result, or pixels-to-tenths conversion is inferred. Missing
+optional metadata remains nonblocking advice. `ObserveFileMetadata` supplies
+bounded scoped filename/media-type recommendations; suffixes never prove content
+validity. Binary members are outside this MusicXML filename/media advice scope.
+`validation.ClassifyResourceMediaType(ctx, account, value)` shares bounded declared
+MIME applicability across package checks and adapters. It accepts registered
+MusicXML base types case-insensitively, including the XML type's optional charset;
+unreviewed parameters and types remain Unknown. It never verifies content or a
+resource pin. Callers preserve absent and invalid evidence before invoking it;
+present-empty is unresolved. Scalar/step costs and temporary parse scratch use
+the supplied account; cancellation/quota errors remain errors. Bundle getters also
+preserve supplied mimetype prefix observations; incomplete retained prefixes cannot
+prove content mismatch.
+
+`ObserveRootfile.Source` is a well-formed adapter-asserted provenance reference,
+not a core-verified membership claim about an adopted container snapshot. The raw
+adapter remains responsible for parsing the original container and projecting its
+actual rootfile occurrences; existing container and scalar obligations are unchanged.
+
+A `ResourceCurrentMXL` boundary assesses representable logical rootfile/resource
+relations. It excludes the original ZIP container-entry representation and raw
+header claims, which cannot be reconstructed from a model. A `ResourceRawMXL`
+boundary keeps those obligations. `PackageIdentity.PinUnavailable` is restricted
+to an observed raw MXL prefix with no whole-body digest. It never enters
+canonical pin tables and unconditionally keeps the bundle incomplete, while
+preserving already known local violations.
+
+Resource expansion is explicitly scoped by canonical assessment, package
+boundary, `BaseURI`, and `ArchiveEntry`. Profile/digest identity is part of the
+canonical assessment; resolver configuration is fixed by the enclosing run.
+`ExpansionOwner` returns the first adoption for that exact context. Only that
+owner may publish outgoing edges, association replies and selected image
+metadata. Aliases keep fresh document IDs and linked-document charges, including
+cycle/back references. `SealResourceExpansion` requires complete intrinsic scope
+and exact coverage of all outgoing templates before accepting a complete
+assertion. Each owner must be sealed before its package inventory. A retained
+child snapshot may still support an independently known target-kind finding
+after an intrinsic error; it does not authorize continued child expansion after
+that error. Unsealed, failed or partial expansions keep the whole bundle
+incomplete; aliases do not convert in-progress work into vacuity.
+`AdoptionContext` exposes this immutable context and completion evidence.
+
+Image requests carry the same explicit base URI, package and archive-entry scope,
+which must match their exact source expansion. Canonical identity is never used
+as a retrieval base. Known numeric image fields individually consume the scalar
+limit even when another field is unavailable and no ratio can be calculated.
+
+### Package role member scope
+
+`SealResourceMembers` closes admitted member discovery separately from outgoing
+expansion and final package enumeration. A complete role request requires that
+seal and coverage of every admitted member context. Each `ResourceRoleMember`
+keeps the immutable pin, literal archive entry and explicit base evidence;
+identical bytes at two member paths are not one role occurrence. Exact member
+records and the resource pin list are echoed by the provider. Legacy pin-only
+scope cannot resolve an ambiguous physical-member association.
+
+A nested role request has a boundary-local member path, package identity and
+resource pin, but no enclosing archive-entry chain. Its `BaseURI` alone is not a
+self-contained nested retrieval address; a provider requiring that chain cannot
+recover it from the request. Diagnostic parent/entry provenance does not extend
+the provider request.
+
+The final package `Roles` seal records completion of the selected observation
+pass. It does not prove authoritative or complete role classification; separate
+`ScopeComplete` and exact score/individual-part membership evidence govern that
+claim. A relevant request includes every admitted member, including
+`META-INF/container.xml`. Complete negative coverage requires explicit
+score=false and individual-part=false evidence for that container member too.
+
+Role requests are dispatched only with selected `ResourceRoles`, a supplied
+resolver, a usable package inventory and a selected musical document. Plain
+XML/model roots do not themselves create package-role requests. Nested raw
+packages reached from them may do so. Neither root kind, suffix nor media type
+classifies a document as a score or individual part. Unread or unpinned entries
+keep the requested role universe incomplete; the literal `mimetype` metadata
+record is the only physical-entry exclusion. Complete provider coverage of a
+smaller selected table cannot establish absence of roles outside that table.
+This includes directory entries and binary or unread members without admitted
+role contexts. Such a package cannot produce a satisfied bundle under the
+shipped profile, even if the provider classifies every requested member. This
+conservative capability limit does not mean that those physical entries make an
+MXL invalid.
+
+## Original and current MXL assessment
+
+`InspectMXL(ctx, reader, MXLAssessmentOptions)` requires
+`Graph.Profile = ProfileMXLSource`;
+`AssessMXLPackage(ctx, package, MXLAssessmentOptions)` requires
+`Graph.Profile = ProfileMXLModel`. Neither chooses a profile implicitly.
+Both return `(validation.AssessmentBundle, error)`. These additive
+entry points preserve all legacy decode, encode, resolve and transport behavior.
+The caller's reader stays open; no built-in filesystem or network resolver is
+introduced.
+
+The raw observer supports ordinary single-volume, non-ZIP64 STORE/DEFLATE
+archives with unsigned or signed data descriptors. Unsupported features are
+processing limitations, not normative MusicXML violations. Symbolic-link-mode
+entries are refused by transport policy even though no paths are extracted or
+links followed; this intentionally differs from legacy decoding. Unsafe paths
+and duplicate names retain `ErrMXLInvalidPath` and `ErrMXLDuplicateEntry` through
+`errors.Is`. Descriptor/encryption flag disagreements are framing errors;
+independent EFS and compression-level flags are retained, while unsupported bits
+in either header remain explicit capability limitations.
+
+Raw assessment retains independent observed local/central header facts, original
+mimetype prefixes and complete or explicitly partial entry inventories. The
+original container is assessed once with `ProfileSourceContainer`; ordered
+rootfiles come from that exact immutable source snapshot. Root and rootfiles
+content proofs both gate complete enumeration. Later established non-MusicXML
+alternate renditions are not fed to the musical XML parser. Primary target kind,
+media type and intrinsic child conformance remain separate evidence.
+
+Current package assessment walks `Document` directly with `ProfileModelLinks`.
+An empty `RootFiles` uses the encoder's current-state `score.musicxml` default;
+empty current media-type fields follow its omission convention. This does not
+recover the original container, source order, headers or attribute presence.
+Selected `Resources` bytes receive admitted independent copies before parsing.
+Callers must not mutate any inputs during assessment. Current field locations
+identify rootfile occurrences without inventing source XML nodes.
+
+Every package-local member identity incorporates the exact enclosing package pin
+and literal path unambiguously. Nested archives keep separate entry scopes and
+share the root account. Raw nested technical traversal preserves its inner source
+reports and the outer rootfile/linked-target indirection interpretation gaps.
+Neither a matching nor a different inner XML root settles the outer direct-target
+predicate. Parse reuse is
+canonical resource/profile-specific; graph expansion additionally includes the
+actual package and effective retrieval context. The primary is seeded before
+archive-local backreferences, and a repeated reference is a distinct adoption.
+
+All five `MXLOptions` byte caps remain independent of graph budgets. Raw
+archive, metadata, document and resource limits apply to their represented byte
+streams; `MaxResourcesBytes` is aggregate across all selected expanded entry
+bytes, selected current resource copies and bounded external bodies in package
+scope. For assessment, this aggregate includes selected `mimetype`, container
+and primary entry bytes. Legacy `DecodeMXLPackage` excludes those three entries
+and caps only additional resources with `MaxResourcesBytes`; the aggregate has
+different scope at these entry points. Nested compressed entry bytes and their
+inner expansion are distinct represented bytes. Current models have no
+compressed archive or serialized primary XML bytes to measure; no encoding is
+performed to fabricate those measurements. Current rootfile string storage is
+separately bounded by the metadata cap. Newly returned external aliases count
+again even when their verified intrinsic parse is cached. Caller and resolver
+I/O cancellation remains cooperative; all owned leases are released on
+completion, including technical errors and cancellation.
+
+Zero-valued graph budget fields select finite defaults, including 64 MiB each for
+primary input, external represented bytes and buffered working storage,
+20,000,000 rule steps and depth 1024. ZIP transport, CRC and buffer relocation
+charge bounded work units of at most 4096 bytes, with empty reads and EOF probes
+also charged; byte quotas remain exact and growing buffers reserve old and new
+storage simultaneously. The independent MXL byte defaults are
+64 MiB archive, 1 MiB metadata, 256 MiB document/per-resource and 512 MiB aggregate
+selected resources. The stricter applicable limit wins; those legacy byte caps
+do not enlarge the shared graph account. Set finite overrides explicitly when
+needed. For example, set `Graph.Budgets.MaxBufferedBytes` to `128 << 20`
+(134,217,728 bytes) for a finite buffer-only increase; other limits stay at their
+defaults. Raising a budget does not recover unread-DTD or discarded-model
+evidence. Exhaustion is incomplete processing, not a MusicXML violation or proof
+of conformance.
+
+`MXL.MaxXMLDepth` independently limits represented XML element depth, including
+scalar leaves, for container/primary/local XML and selected linked XML reached
+from an actual MXL context. Zero uses the existing MXL default of 256; values
+above 4096 or below zero are rejected before input is read. The shared
+`Graph.Budgets.MaxDepth` remains active separately for XML/model and graph/package
+depth. A smaller XML cap does not restrict the number of shallow graph hops.
+Plain XML siblings remain governed by their graph settings. Cached intrinsic
+assessments retain a bounded peak-depth witness, checked against each receiving
+MXL context before adoption; reuse never bypasses the cap or reparses canonical
+bytes. Depth refusal is incomplete processing and preserves known reports.
+
+## Selected resource graph entry points
+
+`InspectXMLWithResources(ctx, reader, LinkedAssessmentOptions)` assesses original
+MusicXML/Opus source; `AssessModelWithResources(ctx, document,
+LinkedAssessmentOptions)` assesses the current model directly. Both require
+`Graph.Profile = ProfileResourceGraph` and return
+`(validation.AssessmentBundle, error)`. MXL entry points require their corresponding
+`ProfileMXLSource` or `ProfileMXLModel` explicitly. `Graph.Budgets` creates one
+finite account shared by all parsing, snapshots, graph work, metadata and packages.
+No child gets a fresh budget. Ordinary normative findings can have a nil operation
+error; callers must inspect `bundle.Satisfied()` as well as the error.
+
+`Dependencies` is a closed, duplicate-free selection of `ResourceDocuments`,
+`ResourceImages`, `ResourceAssociations` and `ResourceRoles`. An empty selection
+invokes no external resolver. A nil or typed-nil `Resolver` leaves selected
+external dependencies unavailable. Invalid options are rejected before input or
+resolver I/O. Package-local traversal uses only the supplied package resources;
+XLink `show`/`actuate` intent does not authorize external retrieval. Schema hints,
+DTD declarations, external entities and XInclude never start hidden loads.
+
+The caller-provided `validation.ResourceResolver` owns transport, custom-scheme
+and redirect authorization, including cooperative cancellation of blocked I/O.
+The library verifies exact request/result identities, resource pins and actual
+returned bytes. Those checks do not sandbox I/O already performed by the resolver.
+Transferred document bodies close exactly once, including rejected responses and
+read errors; caller-owned primary readers remain open.
+
+`Identity.CanonicalID` is a cache identity, not a retrieval base. An empty identity
+becomes run-local. `Identity.RetrievalURI`, when supplied, is an absolute URI and
+is the only supplied primary external retrieval base. Actual source digests cannot
+be overridden by metadata; current models receive fresh opaque snapshot identities.
+Optional primary filename advice uses the actual supplied retrieval URI of the
+admitted source/current boundary, never its canonical identity. Current-state
+advice does not reconstruct an original source filename or MIME declaration.
+The first verified canonical representation pin is immutable for the run. A
+changed returned revision cannot silently replace the same requested resource.
+Each newly returned body is read, charged and verified even when its intrinsic
+parse can be reused. A raw-MXL alias that reuses an existing package releases its
+new body immediately instead of retaining another borrowed archive. Distinct
+base/package/archive contexts expand independently;
+cycle aliases preserve separate adopted document identities and linked quotas.
+
+`PackageReport`, `ResourceReport`, `Adoption` and `AdoptionContext` expose separately
+scoped results. Counts are not a flattened total over references. `Failure` exposes
+a terminal summary, and `FailureReport` exposes its complete original report when
+retention was admitted while the package session was healthy. After ordinary
+package admission terminates, even newly freed storage does not reopen report
+measurement or copying: failure ingress retains only the prepaid bounded summary.
+A truncated fallback is explicit and cannot satisfy the bundle. Published getters
+return independent owned values and support concurrent reads; live sessions,
+snapshots and adoptions require serialized single-owner use.
+Additional selected XML resources, including later XML rootfiles and archive-local
+XML edges, obey both document and resource byte caps. A metered fixed four-byte
+prefix classifies local selected bytes before growing body allocation. ZIP content
+uses archive and resource caps; other content uses its selected XML cap. Names
+and declared media types do not select the representation. The prefix counts once
+in shared byte usage, including when later classification rejects the body.
+Graph depth follows the actual incoming link path through package boundaries
+instead of restarting at a nested primary. Package containment depth remains
+independently checked. Same-context backreferences
+reuse the admitted expansion rather than manufacturing a normative cycle error.
+At the graph-depth boundary, a new target expansion is refused before resolver
+I/O or archive-member selection. Reuse requires a same-entity or already admitted
+archive expansion context; matching retrieval URI text alone does not establish
+canonical identity. A missing member in a complete local archive inventory still
+produces an authoritative-absence finding without I/O; an incomplete inventory
+leaves the target unknown. Every reused incoming edge still receives its own
+adoption and linked-document charge.
+
+Optional file advice preserves exact presentation provenance. Original rootfile
+name/media fields retain absent versus present-empty evidence; current rootfiles
+retain current-field provenance. A selected local member or resolver body receives
+metadata-only observation after its complete byte digest is verified, before XML
+parsing or snapshot export. Core `ObserveFileMetadata` requires either an admitted
+physical `Entry` or an exact selected `Source`/`Template`/`Href` occurrence,
+with those modes mutually exclusive; existing boundary/adoption observations
+retain their exact optional context. For the same canonical identity, revision
+and representation, observed file bytes must agree with earlier and later
+admitted pins, without granting parsed capabilities. Root orchestration emits one
+observation per exact occurrence/context, so later adoption does not duplicate
+its advice. This observation cannot admit a parsed resource, adoption, ID, role,
+root validity or graph closure. Consequently known advice may
+survive an independent parsing/export error without certifying that file as valid.
+Unselected auxiliary container/sounds parsing does not acquire musical-file advice.
+
+File metadata is scoped to the admitted package plus exact member occurrence or
+selected source-link template and effective retrieval context. Distinct aliases
+remain distinct even when their verified parse is reused. A name derived from an
+HTTP(S)/file retrieval URI is an escaped last path segment, not a claim about a
+physical filename; escaped slashes are never decoded into new member boundaries.
+Opaque/custom retrieval URIs may leave the optional name unavailable. Malformed
+or unreviewed supplied external MIME remains Unknown; absent MIME stays absent
+rather than receiving a guessed default. Optional advice never supplies a document
+classification rule.
+
+`PackageEntryObservation.UTF8Name` reports whether the observed name bytes are
+valid UTF-8. It does not prove the writer's declared encoding. The EFS bit remains
+separately available in `Local.Flags` and `Central.Flags`; the bounded name advice
+does not impose a mandatory EFS rule.
+
+An original ZIP entry with a non-UTF8 byte name may retain `RawName` header
+observation independently of transport path policy. Raw names are bounded exact
+bytes, exclusive with textual `Name`, and do not enter safe member lookup or
+rootfile, file-metadata or role-completeness capabilities. Encoding advice uses
+an ASCII hexadecimal diagnostic label; no legacy decoding or filename
+normalization is inferred. The existing unsafe-path operation error still stops
+selection, while an independently observed encoding recommendation remains visible.

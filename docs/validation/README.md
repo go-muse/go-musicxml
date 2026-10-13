@@ -1,8 +1,9 @@
 # Validation design and requirements
 
-Status: **PROPOSED broader architecture; implemented foundation/source preview;
-bounded direct-model/local implementation under final verification**.
-Research snapshot: 8 October 2026.
+Status: **implemented bounded foundation/source, direct-model/local, timeline,
+context, auxiliary-source and package/link scopes; broader normative closure
+remains unfinished**. Index reviewed: 13 October 2026. Individual historical
+acceptance snapshots remain dated evidence, not current exact-head acceptance.
 
 This directory contains the proposed validation architecture and package-facing
 guides. MusicXML 4.0 requirements evidence is maintained in the separate
@@ -18,8 +19,8 @@ or a new validation profile complete.
 
 The [timeline/effective-state scope and ownership ledger](TIMELINE_ASSESSMENT_SCOPE.md)
 retains the complete batch-6 target, source translations, open interpretation
-gates and future owners. It is planned scope/provenance evidence; implementation
-and exact-head acceptance evidence remain separately pending.
+gates and future owners. Its planning/provenance snapshot is separate from the
+implemented bounded timeline profiles and current exact-head acceptance.
 
 ## Reading order
 
@@ -27,9 +28,19 @@ Start with the [direct-model/local scope and ownership evidence](model-assessmen
 for `AssessModel`, the direct XSD-only `Validate` migration and explicit local
 profiles. Then read the [source assessment scope and ownership ledger](source-assessment-scope.md)
 for the unchanged developmental source preview, and the [foundation scope](foundation-scope.md)
-for generic fact/catalog/report contracts. Final verification of the bounded
-model/local implementation is pending. The proposal pages below describe wider
-future contracts; package/link/timeline and full normative closure remain unimplemented.
+for generic fact/catalog/report contracts. Continue with the implemented bounded
+scopes and their explicit limitations:
+
+- [Context assessment](context-assessment-scope.md)
+- [Auxiliary container and sounds sources](auxiliary-source-scope.md)
+- [Nonfetching local link context](local-link-context-scope.md)
+- [Package assessment scope and ownership](package-assessment-scope.md)
+- [Package implementation and acceptance evidence](package-assessment-evidence.md)
+- [Package and resource-graph profiles](package-profile-scope.md)
+
+The proposal pages below describe the wider architecture. Implemented bounded
+package/link/timeline support does not establish full normative closure; exact-head
+verification is distinct from the historical acceptance records.
 
 1. [Architecture proposal](architecture.md): one XML parse, optional strict source
    validation, direct model validation, shared rules, and self-contained diagnostics.
