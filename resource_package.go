@@ -457,9 +457,7 @@ func (g *resourceGraphRun) consumeContainer(p *graphPackage, aid validation.Reso
 		}
 		err = g.loadRootfile(p, &r, retrieval, isPrimary && r.Ordinal == 1)
 		if terminal := g.session.TerminalCause(); terminal != nil {
-			if !errors.Is(err, terminal) {
-				err = errors.Join(err, terminal)
-			}
+			err = joinResourceErrors(err, terminal)
 		} else {
 			err = errors.Join(err, g.recordRootfile(p, r))
 		}

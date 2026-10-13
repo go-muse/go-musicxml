@@ -31,6 +31,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   typed availability/cause evidence, odd schema-hint pairing is known false,
   and snapshot headers identify selection of the assembly-local link plan.
   DTD-wide hint gaps occupy one root row while observed descendant hints remain.
+- Tighten package failure and ownership contracts: require established intrinsic
+  assemblies, keep the root as its exact context owner, and reject contradictory
+  failure metadata or duplicate transferred assessments. Post-terminal failure
+  summaries retain bounded original facts without admitting new work.
+
 - Add a processing-policy error marker for adapter refusals, preserving existing
   error identities and distinguishing policy incompleteness from normative failure.
 

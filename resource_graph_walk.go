@@ -221,10 +221,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 		}
 	}
 	if terminal := g.session.TerminalCause(); terminal != nil {
-		if errors.Is(loadErr, terminal) {
-			return loadErr
-		}
-		return errors.Join(loadErr, terminal)
+		return joinResourceErrors(loadErr, terminal)
 	}
 	// A retained intrinsic snapshot can prove its observed root even when that
 	// child failed syntax or root support. Preserve that evidence, but never

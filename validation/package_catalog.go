@@ -85,7 +85,9 @@ type PackageRuleBinding struct {
 }
 
 // IntrinsicProfileBinding fixes an assembly/representation interpretation in the
-// package catalog digest; individual cache hits cannot weaken it.
+// package catalog digest; individual cache hits cannot weaken it. Snapshot
+// transfer requires a known matching assembly, even for failed reports. If the
+// assembly is unavailable, preserve failure through RecordResourceFailure.
 type IntrinsicProfileBinding struct {
 	Assembly      Assembly
 	Target        Target

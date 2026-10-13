@@ -358,8 +358,12 @@ func TestFinalQARootKindsAndFirstMediaPublic(t *testing.T) {
 	for _, root := range []string{`<score-partwise xmlns="urn:foreign"/>`, `<score-timewise xmlns="urn:foreign"/>`, `<opus xmlns="urn:foreign"/>`} {
 		t.Run("foreign/"+root, func(t *testing.T) {
 			b, e := InspectMXL(context.Background(), bytes.NewReader(packageGraphBytes(root, "first.xml", "")), packageGraphOptions())
-			if e == nil || b.PackageReport().Conformance != validation.ConformanceViolated || !finalQAFinding(b, "wrong-rootfile-document-kind", validation.OutcomeFail) {
+			if !errors.Is(e, ErrUnsupportedRoot) || !errors.Is(e, validation.ErrInvalidConfiguration) || b.Satisfied() || b.EnumerationComplete() || b.ResourceCount() != 1 || b.AdoptionCount() != 1 {
 				t.Fatalf("foreign root accepted: %v %+v", e, b.PackageReport())
+			}
+			finalQAOriginalSourceFailure(t, b, root)
+			if finalQAFinding(b, "wrong-rootfile-document-kind", validation.OutcomeFail) {
+				t.Fatal("unadmitted assembly manufactured a package kind predicate")
 			}
 		})
 	}

@@ -7402,77 +7402,77 @@
       "function": "TestFinalQAEmptyFragmentCannotInventRoot",
       "line": 213,
       "end_line_bound": 268,
-      "file_sha256": "d6bd52d99eafe83e649ab7a4b8af1c6b31d7ae11865f2708c96bbdd5791d4dd9"
+      "file_sha256": "edfedf74e4fdae5edbc0b3d1d7aa77d77ba9d97b718f01b1e81dc3b004b5158f"
     },
     "resource_graph_independent_partial_test.go::TestFinalQAKnownWrongKindSurvivesLaterFailure": {
       "file": "resource_graph_independent_partial_test.go",
       "function": "TestFinalQAKnownWrongKindSurvivesLaterFailure",
       "line": 269,
       "end_line_bound": 308,
-      "file_sha256": "d6bd52d99eafe83e649ab7a4b8af1c6b31d7ae11865f2708c96bbdd5791d4dd9"
+      "file_sha256": "edfedf74e4fdae5edbc0b3d1d7aa77d77ba9d97b718f01b1e81dc3b004b5158f"
     },
     "resource_graph_independent_partial_test.go::TestFinalQAPartialTargetAcrossEntrypoints": {
       "file": "resource_graph_independent_partial_test.go",
       "function": "TestFinalQAPartialTargetAcrossEntrypoints",
       "line": 54,
       "end_line_bound": 136,
-      "file_sha256": "d6bd52d99eafe83e649ab7a4b8af1c6b31d7ae11865f2708c96bbdd5791d4dd9"
+      "file_sha256": "edfedf74e4fdae5edbc0b3d1d7aa77d77ba9d97b718f01b1e81dc3b004b5158f"
     },
     "resource_graph_independent_partial_test.go::TestFinalQAPartialTargetAdmissionGuardsAndCleanup": {
       "file": "resource_graph_independent_partial_test.go",
       "function": "TestFinalQAPartialTargetAdmissionGuardsAndCleanup",
       "line": 137,
       "end_line_bound": 212,
-      "file_sha256": "d6bd52d99eafe83e649ab7a4b8af1c6b31d7ae11865f2708c96bbdd5791d4dd9"
+      "file_sha256": "edfedf74e4fdae5edbc0b3d1d7aa77d77ba9d97b718f01b1e81dc3b004b5158f"
     },
     "resource_graph_independent_row_test.go::TestFinalQACompressedLinkFamilyBases": {
       "file": "resource_graph_independent_row_test.go",
       "function": "TestFinalQACompressedLinkFamilyBases",
       "line": 122,
       "end_line_bound": 182,
-      "file_sha256": "493cb506141e31e646d70113ddd3079880afcc6a468590cfe94213d92c9d67e4"
+      "file_sha256": "19e5bab8106f68862eb33e331d8b6a56427c6c615e4ac332b3d36bbd50eb78cb"
     },
     "resource_graph_independent_row_test.go::TestFinalQAImageSemanticTargets": {
       "file": "resource_graph_independent_row_test.go",
       "function": "TestFinalQAImageSemanticTargets",
       "line": 22,
       "end_line_bound": 121,
-      "file_sha256": "493cb506141e31e646d70113ddd3079880afcc6a468590cfe94213d92c9d67e4"
+      "file_sha256": "19e5bab8106f68862eb33e331d8b6a56427c6c615e4ac332b3d36bbd50eb78cb"
     },
     "resource_graph_independent_row_test.go::TestFinalQALocalAttachmentSourceModelAxes": {
       "file": "resource_graph_independent_row_test.go",
       "function": "TestFinalQALocalAttachmentSourceModelAxes",
       "line": 368,
       "end_line_bound": 420,
-      "file_sha256": "493cb506141e31e646d70113ddd3079880afcc6a468590cfe94213d92c9d67e4"
+      "file_sha256": "19e5bab8106f68862eb33e331d8b6a56427c6c615e4ac332b3d36bbd50eb78cb"
     },
     "resource_graph_independent_row_test.go::TestFinalQAMimetypeAdvisoryAndLegacyOmission": {
       "file": "resource_graph_independent_row_test.go",
       "function": "TestFinalQAMimetypeAdvisoryAndLegacyOmission",
       "line": 223,
       "end_line_bound": 279,
-      "file_sha256": "493cb506141e31e646d70113ddd3079880afcc6a468590cfe94213d92c9d67e4"
+      "file_sha256": "19e5bab8106f68862eb33e331d8b6a56427c6c615e4ac332b3d36bbd50eb78cb"
     },
     "resource_graph_independent_row_test.go::TestFinalQAMimetypePrefixSemanticClassifiers": {
       "file": "resource_graph_independent_row_test.go",
       "function": "TestFinalQAMimetypePrefixSemanticClassifiers",
       "line": 183,
       "end_line_bound": 222,
-      "file_sha256": "493cb506141e31e646d70113ddd3079880afcc6a468590cfe94213d92c9d67e4"
+      "file_sha256": "19e5bab8106f68862eb33e331d8b6a56427c6c615e4ac332b3d36bbd50eb78cb"
     },
     "resource_graph_independent_row_test.go::TestFinalQARootKindsAndFirstMediaPublic": {
       "file": "resource_graph_independent_row_test.go",
       "function": "TestFinalQARootKindsAndFirstMediaPublic",
       "line": 303,
       "end_line_bound": 367,
-      "file_sha256": "493cb506141e31e646d70113ddd3079880afcc6a468590cfe94213d92c9d67e4"
+      "file_sha256": "19e5bab8106f68862eb33e331d8b6a56427c6c615e4ac332b3d36bbd50eb78cb"
     },
     "resource_graph_independent_row_test.go::TestFinalQAUTF8EntryAdvicePublic": {
       "file": "resource_graph_independent_row_test.go",
       "function": "TestFinalQAUTF8EntryAdvicePublic",
       "line": 280,
       "end_line_bound": 302,
-      "file_sha256": "493cb506141e31e646d70113ddd3079880afcc6a468590cfe94213d92c9d67e4"
+      "file_sha256": "19e5bab8106f68862eb33e331d8b6a56427c6c615e4ac332b3d36bbd50eb78cb"
     },
     "resource_graph_independent_target_kind_test.go::TestFinalQAOpusScoreTargetKinds": {
       "file": "resource_graph_independent_target_kind_test.go",
@@ -7563,14 +7563,14 @@
       "function": "TestQAPostExportRetentionKeepsBoundedSummaryWhenWorkRefused",
       "line": 33,
       "end_line_bound": 54,
-      "file_sha256": "08b1e06f7aa64226fefb2db0e21c937e39f3930292790282b2e4ccbe61359657"
+      "file_sha256": "88700da6e6afad7cff6e6c94cdccc4c0af6ad16a7c60440079441f5c8dd38358"
     },
     "resource_graph_transfer_retention_test.go::TestQAPostExportRetentionKeepsFullReportWhenAffordable": {
       "file": "resource_graph_transfer_retention_test.go",
       "function": "TestQAPostExportRetentionKeepsFullReportWhenAffordable",
       "line": 12,
       "end_line_bound": 32,
-      "file_sha256": "08b1e06f7aa64226fefb2db0e21c937e39f3930292790282b2e4ccbe61359657"
+      "file_sha256": "88700da6e6afad7cff6e6c94cdccc4c0af6ad16a7c60440079441f5c8dd38358"
     },
     "resource_intrinsic_test.go::TestResourcePrerequisitePublicInspectPreservesJoinedEOF": {
       "file": "resource_intrinsic_test.go",
@@ -7647,56 +7647,56 @@
       "function": "TestPackageGraphCleanupAtCancellationBoundaries",
       "line": 195,
       "end_line_bound": 230,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_adversarial_test.go::TestPackageGraphContainerGatesAndLiteralPaths": {
       "file": "resource_package_adversarial_test.go",
       "function": "TestPackageGraphContainerGatesAndLiteralPaths",
       "line": 24,
       "end_line_bound": 44,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_adversarial_test.go::TestPackageGraphCurrentResourceCopyIsIndependent": {
       "file": "resource_package_adversarial_test.go",
       "function": "TestPackageGraphCurrentResourceCopyIsIndependent",
       "line": 231,
       "end_line_bound": 261,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_adversarial_test.go::TestPackageGraphLaterAlternateAndCurrentPrimaryBackreference": {
       "file": "resource_package_adversarial_test.go",
       "function": "TestPackageGraphLaterAlternateAndCurrentPrimaryBackreference",
       "line": 45,
       "end_line_bound": 73,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_adversarial_test.go::TestPackageGraphNestedAggregateByteCaps": {
       "file": "resource_package_adversarial_test.go",
       "function": "TestPackageGraphNestedAggregateByteCaps",
       "line": 94,
       "end_line_bound": 111,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_adversarial_test.go::TestPackageGraphRawExactByteOwnership": {
       "file": "resource_package_adversarial_test.go",
       "function": "TestPackageGraphRawExactByteOwnership",
       "line": 112,
       "end_line_bound": 149,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_adversarial_test.go::TestPackageGraphSiblingArchivesHaveDistinctNamespaces": {
       "file": "resource_package_adversarial_test.go",
       "function": "TestPackageGraphSiblingArchivesHaveDistinctNamespaces",
       "line": 74,
       "end_line_bound": 93,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_adversarial_test.go::TestPackageSharedExpandedReaderBoundsReadBeforeIO": {
       "file": "resource_package_adversarial_test.go",
       "function": "TestPackageSharedExpandedReaderBoundsReadBeforeIO",
       "line": 150,
       "end_line_bound": 194,
-      "file_sha256": "a6975338d55ac154892d374170126a9af544c8428093a99b6213f3a037462710"
+      "file_sha256": "e13f69889ca15dc9f2f7726d5b97e7d28499d0cbc82f23f92b16e3938d569ca3"
     },
     "resource_package_body_test.go::TestPackageBodyCancellationJoinedCausesAndClose": {
       "file": "resource_package_body_test.go",
@@ -7745,14 +7745,14 @@
       "function": "TestPackageGraphExternalRawMXLAndAliasContexts",
       "line": 39,
       "end_line_bound": 62,
-      "file_sha256": "d22e0ee17c062628f4e2f93df0f98500e59e648f920db182a7b49cd7ee1f7385"
+      "file_sha256": "0509af6956a10394ac373ee4f3541809a578f71f6194dfebe3d926c5e02cf822"
     },
     "resource_package_external_test.go::TestPackageGraphWrongRootRetainsIndependentViolation": {
       "file": "resource_package_external_test.go",
       "function": "TestPackageGraphWrongRootRetainsIndependentViolation",
       "line": 101,
       "end_line_bound": 106,
-      "file_sha256": "d22e0ee17c062628f4e2f93df0f98500e59e648f920db182a7b49cd7ee1f7385"
+      "file_sha256": "0509af6956a10394ac373ee4f3541809a578f71f6194dfebe3d926c5e02cf822"
     },
     "resource_package_file_metadata_test.go::TestPackageFileMetadataBeforeFailedParse": {
       "file": "resource_package_file_metadata_test.go",

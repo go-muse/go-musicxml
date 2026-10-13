@@ -172,7 +172,13 @@ func (s *PackageSession) fail(err error) error {
 		if s.terminal == nil {
 			s.terminal = err
 		} else if !errors.Is(s.terminal, err) {
-			s.terminal = errors.Join(s.terminal, err)
+			if errors.Is(err, s.terminal) {
+				// A later wrapper already preserves the terminal cause. Retain
+				// its additional context without repeating the original chain.
+				s.terminal = err
+			} else {
+				s.terminal = errors.Join(s.terminal, err)
+			}
 		}
 	}
 	return err
@@ -431,7 +437,10 @@ func (s *PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeO
 	return s.evaluateBoundary(ctx, s.boundaries[e.Package])
 }
 
-// ObserveRootfile preserves actual encoded order and causal scalar states.
+// ObserveRootfile preserves adapter-observed encoded order and causal scalar
+// states. Source is well-formed provenance supplied by the adapter, not a checked
+// membership claim about an adopted container snapshot. Raw adapters remain
+// responsible for original container parsing and exact rootfile projection.
 func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileObservation) error {
 	if err := s.event(ctx, "ObserveRootfile"); err != nil {
 		return err
@@ -444,7 +453,7 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 		return s.fail(err)
 	}
 	if !validResourceNode(r.Source) && !(b.identity.Representation == ResourceCurrentMXL && r.Source == (NodeRef{}) && r.Location.Path != "") {
-		return s.fail(contract("rootfile source", "actual container occurrence required"))
+		return s.fail(contract("rootfile source", "well-formed source reference required"))
 	}
 	for _, v := range []Evidence[string]{r.FullPath, r.MediaType} {
 		if err := s.scan(ctx, 1); err != nil {
@@ -560,12 +569,15 @@ func (s *PackageSession) AddResource(ctx context.Context, pin ResourcePin, snaps
 	if pin.Representation == ResourceSourceXML && snapshot.header.Target != TargetSource || pin.Representation == ResourceCurrentModel && snapshot.header.Target != TargetModel || pin.Representation != ResourceSourceXML && pin.Representation != ResourceCurrentModel {
 		return "", s.fail(contract("resource transfer", "pin and intrinsic representation mismatch"))
 	}
+	if snapshot.header.Assembly.State != EvidenceKnown {
+		return "", s.fail(contract("resource transfer", "established intrinsic assembly required"))
+	}
 	allowed := false
 	for _, b := range s.catalog.profiles[s.profile.ID].Intrinsic {
 		if err := s.scan(ctx, 1); err != nil {
 			return "", err
 		}
-		if (snapshot.header.Assembly.State == EvidenceKnown && b.Assembly == snapshot.header.Assembly.Value || snapshot.header.Assembly.State != EvidenceKnown && !snapshot.report.Satisfied()) && b.Target == snapshot.header.Target && b.Profile == snapshot.header.Profile && b.CatalogDigest == snapshot.header.CatalogDigest {
+		if b.Assembly == snapshot.header.Assembly.Value && b.Target == snapshot.header.Target && b.Profile == snapshot.header.Profile && b.CatalogDigest == snapshot.header.CatalogDigest {
 			allowed = true
 			break
 		}
@@ -618,6 +630,10 @@ func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmen
 		if s.rootAdoption || opts.DocumentID != r.snapshot.header.DocumentID || s.boundaries[opts.Package].identity.Parent != "" {
 			return "", s.fail(contract("root adoption", "one primary canonical occurrence required"))
 		}
+		key := resourceExpansionKey{id, opts.Package, opts.BaseURI, opts.ArchiveEntry}
+		if s.expansions[key] != nil {
+			return "", s.fail(contract("root adoption", "primary context already has an expansion owner"))
+		}
 	} else if s.documents[opts.DocumentID] {
 		return "", s.fail(contract("resource adoption", "fresh occurrence identity required"))
 	}
@@ -645,25 +661,53 @@ func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmen
 
 // RecordResourceFailure is failure-only ingress after a child could not produce
 // an admitted snapshot. It cannot certify success. One pre-reserved terminal
-// summary preserves exact known truth when a full report copy is refused.
+// summary preserves exact known truth when a full report copy is refused. This
+// prepaid failure-only ingress is allowed after a terminal error or cancellation;
+// it admits no normal work then and makes no new rule-step charge. Context must
+// still be nonnil, and contradictory identity/report metadata is rejected before
+// storing anything. A transferred assessment must use its existing report.
 func (s *PackageSession) RecordResourceFailure(ctx context.Context, pin ResourcePin, report Report, cause error) error {
 	if s == nil || s.finished || s.account == nil || s.failure != nil {
 		return &SessionError{Operation: "RecordResourceFailure", Reason: "closed package or terminal resource already recorded"}
+	}
+	if ctx == nil {
+		return s.fail(contract("context", "must not be nil"))
 	}
 	if report.Satisfied() && cause == nil {
 		return s.fail(contract("failed resource", "successful report needs no failure ingress"))
 	}
 	complete := Evidence[bool]{State: EvidenceKnown, Value: true}
 	if pin.Digest == "" && pin.SnapshotID == "" {
-		if !packageIdentityText(pin.CanonicalID) || !validText(pin.Revision, maxIdentityBytes) || (pin.Representation != ResourceSourceXML && pin.Representation != ResourceCurrentModel && pin.Representation != ResourceRawMXL && pin.Representation != ResourceCurrentMXL) {
+		if !packageIdentityText(pin.CanonicalID) || !validText(pin.Revision, maxIdentityBytes) || (pin.Representation != ResourceSourceXML && pin.Representation != ResourceCurrentModel) {
 			return s.fail(contract("failed resource", "bounded unavailable identity required"))
 		}
 		complete = Evidence[bool]{State: EvidenceUnknown, Reason: "full-resource-pin-unavailable"}
 	} else if err := validateResourcePin(pin); err != nil {
 		return s.fail(err)
 	}
-	if !validTarget(report.Target) || !validID(string(report.Profile.ID)) || !validResourceDigest(report.Profile.CatalogDigest) {
+	if !report.Requested || !validID(string(report.Profile.ID)) || !validResourceDigest(report.Profile.CatalogDigest) || report.Profile.Target != report.Target {
 		return s.fail(contract("failed resource", "exact original report target/profile/digest required"))
+	}
+	if pin.Representation == ResourceSourceXML && report.Target != TargetSource || pin.Representation == ResourceCurrentModel && report.Target != TargetModel || pin.Representation != ResourceSourceXML && pin.Representation != ResourceCurrentModel {
+		return s.fail(contract("failed resource", "pin and intrinsic representation mismatch"))
+	}
+	switch report.Conformance {
+	case ConformanceConformant, ConformanceViolated, ConformanceUndetermined:
+	default:
+		return s.fail(contract("failed resource", "unknown conformance state"))
+	}
+	if (report.Counts.Fail != 0) != (report.Conformance == ConformanceViolated) || report.Conformance == ConformanceConformant && (report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0) {
+		return s.fail(contract("failed resource", "counts contradict conformance state"))
+	}
+	if report.Terminal != nil && (!validCategory(report.Terminal.Category) || !validID(string(report.Terminal.Reason)) || len(report.Terminal.Reason) > reportTerminalBytes) {
+		return s.fail(contract("failed resource", "invalid bounded terminal summary"))
+	}
+	canonical := packageCanonicalKey{pin.CanonicalID, pin.Revision, pin.Representation}
+	if old, ok := s.pins[canonical]; ok && old != pin {
+		return s.fail(contract("failed resource", "canonical identity conflicts with admitted pin"))
+	}
+	if _, ok := s.resourceKeys[packageResourceKey{pin, report.Profile.ID, report.Profile.CatalogDigest}]; ok {
+		return s.fail(contract("failed resource", "assessment already transferred"))
 	}
 	if cause == nil {
 		cause = &IncompleteError{Reason: "intrinsic-resource-failure"}
@@ -676,13 +720,15 @@ func (s *PackageSession) RecordResourceFailure(ctx context.Context, pin Resource
 	summary := &ResourceFailureSummary{Pin: stateClone(pin), PinComplete: complete, Target: report.Target, Profile: ProfileID(strings.Clone(string(report.Profile.ID))), CatalogDigest: strings.Clone(report.Profile.CatalogDigest), Counts: report.Counts, Conformance: report.Conformance, Terminal: TerminalSummary{Category: category, Reason: reason}, DiagnosticsTruncated: true, MetadataTruncated: true}
 	// Attempt ordinary full retention first. Cancellation/quota refusal cannot
 	// prevent the already reserved independent count/identity summary below.
-	if n, err := resourceMeasure(ctx, s.account, reflect.ValueOf(report)); err == nil {
-		if err = s.account.Charge(BudgetBufferedBytes, n); err == nil {
-			s.retained += n
-			copy := stateClone(report)
-			s.output.failureReport = &copy
-			summary.DiagnosticsTruncated = false
-			summary.MetadataTruncated = false
+	if s.terminal == nil && ctx.Err() == nil {
+		if n, err := resourceMeasure(ctx, s.account, reflect.ValueOf(report)); err == nil {
+			if err = s.account.Charge(BudgetBufferedBytes, n); err == nil {
+				s.retained += n
+				copy := stateClone(report)
+				s.output.failureReport = &copy
+				summary.DiagnosticsTruncated = false
+				summary.MetadataTruncated = false
+			}
 		}
 	}
 	s.failure = summary

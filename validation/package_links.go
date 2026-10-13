@@ -18,7 +18,10 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	if source == nil || e.Template >= uint64(len(source.resource.snapshot.contexts)) {
 		return s.fail(contract("package edge", "exact source adoption/template required"))
 	}
-	if s.boundaries[source.packageID].sealed || source.expansion.owner != source.id || source.expansion.sealed {
+	if source.expansion.owner != source.id {
+		return s.fail(contract("edge package", "source adoption is not the expansion owner"))
+	}
+	if s.boundaries[source.packageID].sealed || source.expansion.sealed {
 		return s.fail(contract("edge package", "source scope already sealed"))
 	}
 	template := source.resource.snapshot.contexts[e.Template]
@@ -191,7 +194,10 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 	if source == nil || target == nil {
 		return s.fail(contract("association scope", "exact admitted source adoption and target pin required"))
 	}
-	if s.boundaries[source.packageID].sealed || source.expansion.owner != source.id || source.expansion.sealed {
+	if source.expansion.owner != source.id {
+		return s.fail(contract("association package", "source adoption is not the expansion owner"))
+	}
+	if s.boundaries[source.packageID].sealed || source.expansion.sealed {
 		return s.fail(contract("association package", "source scope already sealed"))
 	}
 	if !snapshotExactID(ctx, s, source.resource.snapshot, q.PartID, q.SourcePart.Node, "score-part", q.SourcePart.Node) || !snapshotExactID(ctx, s, source.resource.snapshot, q.InstrumentID, q.SourceInstrument.Node, "score-instrument", q.SourcePart.Node) {

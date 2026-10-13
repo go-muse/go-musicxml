@@ -54,7 +54,10 @@ type PackageMimetypeObservation struct {
 }
 
 // PackageRootfileObservation keeps encoded order and token semantics, including
-// absent media-type versus present-empty and explicit nested indirection.
+// absent media-type versus present-empty and explicit nested indirection. Source
+// is an adapter-asserted well-formed provenance reference, not a checked adopted
+// container membership capability. Raw adapters must project original container
+// occurrences; current MXL may use zero Source with an explicit Location.Path.
 type PackageRootfileObservation struct {
 	ID                  PackageFactID
 	Package             PackageID
@@ -106,8 +109,9 @@ type ResourceAdoptionOptions struct {
 	Root                  bool
 }
 
-// ResourceFailureSummary preserves known child truth when the quota refuses a
-// complete retained report. It is explicitly incomplete, not a synthetic Report.
+// ResourceFailureSummary preserves known child truth when ordinary full-report
+// retention is refused or the package session is already terminal. It is
+// explicitly incomplete, not a synthetic Report.
 type ResourceFailureSummary struct {
 	Pin                                     ResourcePin
 	PinComplete                             Evidence[bool]

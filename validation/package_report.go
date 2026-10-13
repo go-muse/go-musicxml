@@ -103,7 +103,9 @@ func (b AssessmentBundle) Failure() (ResourceFailureSummary, bool) {
 }
 
 // FailureReport returns the original retained failed-child report when ordinary
-// admission succeeded. Failure always retains the bounded summary otherwise.
+// admission succeeded before the package became terminal. Post-terminal failure
+// ingress never attempts a new full copy, even if storage remains available;
+// Failure retains the bounded summary instead.
 func (b AssessmentBundle) FailureReport() (Report, bool) {
 	if b.data == nil || b.data.failureReport == nil {
 		return Report{}, false

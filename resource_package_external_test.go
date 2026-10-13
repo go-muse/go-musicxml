@@ -99,8 +99,18 @@ func TestPackageGraphExternalRawBodyCloseError(t *testing.T) {
 	}
 }
 func TestPackageGraphWrongRootRetainsIndependentViolation(t *testing.T) {
+	original, originalErr := InspectXML(context.Background(), strings.NewReader(`<sounds/>`), AssessmentOptions{Profile: ProfileSourceLinks})
+	if originalErr == nil || original.Terminal == nil {
+		t.Fatalf("missing rejected-root fixture: %+v %v", original, originalErr)
+	}
 	b, err := InspectMXL(context.Background(), bytes.NewReader(packageGraphBytes(`<sounds/>`, "main.musicxml", "")), packageGraphOptions())
-	if err == nil || b.ResourceCount() != 2 || b.PackageReport().Conformance != validation.ConformanceViolated {
+	if !errors.Is(err, ErrUnsupportedRoot) || b.ResourceCount() != 1 || b.Satisfied() || b.EnumerationComplete() {
 		t.Fatal(err, b.ResourceCount(), b.PackageReport().Findings)
+	}
+	// The original rejected-root result remains independent; an unknown
+	// assembly cannot be transferred to invent a package rootfile predicate.
+	failure, ok := b.Failure()
+	if !ok || failure.Target != original.Target || failure.Profile != original.Profile.ID || failure.CatalogDigest != original.Profile.CatalogDigest || failure.Counts != original.Counts || failure.Conformance != original.Conformance || failure.Terminal != *original.Terminal {
+		t.Fatalf("unadmitted original root result lost: %+v", failure)
 	}
 }

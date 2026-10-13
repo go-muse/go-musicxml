@@ -46,8 +46,14 @@ func (s *PackageSession) ObserveImageMetadata(ctx context.Context, source Resour
 		return err
 	}
 	a := s.adoptions[source]
-	if a == nil || template >= uint64(len(a.resource.snapshot.contexts)) || s.boundaries[a.packageID].sealed || a.expansion.owner != a.id || a.expansion.sealed {
+	if a == nil || template >= uint64(len(a.resource.snapshot.contexts)) {
 		return s.fail(contract("image template", "exact source adoption/template required"))
+	}
+	if a.expansion.owner != a.id {
+		return s.fail(contract("image package", "source adoption is not the expansion owner"))
+	}
+	if s.boundaries[a.packageID].sealed || a.expansion.sealed {
+		return s.fail(contract("image package", "source scope already sealed"))
 	}
 	v := a.resource.snapshot.contexts[template]
 	if v.Resource == nil || v.Resource.Image == nil {

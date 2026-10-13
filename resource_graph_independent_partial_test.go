@@ -51,17 +51,35 @@ func finalQAWrongKind(b validation.AssessmentBundle) bool {
 	}
 	return false
 }
+
+// Refused assembly evidence retains the original intrinsic result through the
+// bounded failure channel, without creating a canonical resource or kind proof.
+func finalQAOriginalSourceFailure(t *testing.T, b validation.AssessmentBundle, source string) {
+	t.Helper()
+	original, err := InspectXML(context.Background(), strings.NewReader(source), AssessmentOptions{Profile: ProfileSourceLinks})
+	if err == nil || original.Terminal == nil {
+		t.Fatal("fixture needs an original terminal intrinsic result", err)
+	}
+	f, ok := b.Failure()
+	if !ok || f.Target != original.Target || f.Profile != original.Profile.ID || f.CatalogDigest != original.Profile.CatalogDigest || f.Counts != original.Counts || f.Conformance != original.Conformance || f.Terminal != *original.Terminal || !f.MetadataTruncated || !f.DiagnosticsTruncated {
+		t.Fatalf("unadmitted original child result lost: got=%+v want=%+v", f, original)
+	}
+	if _, ok := b.FailureReport(); ok {
+		t.Fatal("terminal assembly refusal admitted a new full report")
+	}
+}
+
 func TestFinalQAPartialTargetAcrossEntrypoints(t *testing.T) {
 	for _, mode := range []string{"xml", "model", "raw-mxl", "current-mxl"} {
 		for _, tc := range []struct {
-			name, body string
-			wrong      bool
+			name, body        string
+			wrong, unadmitted bool
 		}{
-			{"unsupported-local", `<sounds/>`, true},
-			{"unsupported-qname", `<score-partwise xmlns="urn:unsupported"/>`, true},
-			{"partial-syntax-wrong", `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://final-qa.test/forbidden.opus"/>`, true},
-			{"partial-syntax-score", `<score-partwise>`, false},
-			{"empty-root", ``, false},
+			{"unsupported-local", `<sounds/>`, false, true},
+			{"unsupported-qname", `<score-partwise xmlns="urn:unsupported"/>`, false, true},
+			{"partial-syntax-wrong", `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><opus-link xlink:href="https://final-qa.test/forbidden.opus"/>`, true, false},
+			{"partial-syntax-score", `<score-partwise>`, false, false},
+			{"empty-root", ``, false, true},
 		} {
 			for _, fragment := range []string{"", "#", "#missing"} {
 				t.Run(mode+"/"+tc.name+"/"+fragment, func(t *testing.T) {
@@ -73,14 +91,24 @@ func TestFinalQAPartialTargetAcrossEntrypoints(t *testing.T) {
 					})
 					source := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="https://final-qa.test/target.xml` + fragment + `"/><score xlink:href="https://final-qa.test/never.xml"/></opus>`
 					b, e := finalQARun(t, mode, source, context.Background(), finalQAOptions(r))
-					if e == nil || errors.Is(e, validation.ErrInvalidConfiguration) || calls != 1 || body.closed != 1 || b.Satisfied() || b.EnumerationComplete() {
+					if e == nil || errors.Is(e, validation.ErrInvalidConfiguration) != tc.unadmitted || calls != 1 || body.closed != 1 || b.Satisfied() || b.EnumerationComplete() {
 						t.Fatalf("err=%v calls=%d closes=%d satisfied=%v complete=%v", e, calls, body.closed, b.Satisfied(), b.EnumerationComplete())
 					}
 					if finalQAWrongKind(b) != tc.wrong {
 						t.Fatalf("wrong-kind=%v expected=%v: %+v", finalQAWrongKind(b), tc.wrong, b.PackageReport().Findings)
 					}
+					if tc.unadmitted {
+						finalQAOriginalSourceFailure(t, b, tc.body)
+						if tc.name != "empty-root" && !errors.Is(e, ErrUnsupportedRoot) {
+							t.Fatal("original unsupported-root error lost", e)
+						}
+					}
 					wantResources := 2
 					wantAdoptions := 2
+					if tc.unadmitted {
+						wantResources--
+						wantAdoptions--
+					}
 					if mode == "raw-mxl" {
 						wantResources++
 						wantAdoptions++
@@ -183,10 +211,16 @@ func TestFinalQAPartialTargetAdmissionGuardsAndCleanup(t *testing.T) {
 			if e == nil || calls != 1 || body.closed != 1 || b.Satisfied() || b.EnumerationComplete() {
 				t.Fatalf("err=%v calls=%d closed=%d bundle=%+v", e, calls, body.closed, b)
 			}
-			allow := mode == "partial-syntax" || mode == "unsupported-qname" || mode == "empty-root"
+			allow := mode == "partial-syntax"
 			want := 1
 			if allow {
 				want = 2
+			}
+			if mode == "unsupported-qname" || mode == "empty-root" {
+				finalQAOriginalSourceFailure(t, b, target)
+				if !errors.Is(e, validation.ErrInvalidConfiguration) {
+					t.Fatal("unknown assembly was not refused", e)
+				}
 			}
 			if b.AdoptionCount() != want {
 				t.Fatalf("adopted after %s: %d want %d err=%v", mode, b.AdoptionCount(), want, e)
@@ -211,7 +245,7 @@ func TestFinalQAPartialTargetAdmissionGuardsAndCleanup(t *testing.T) {
 }
 
 func TestFinalQAEmptyFragmentCannotInventRoot(t *testing.T) {
-	for _, target := range []string{"", "<!-- no root -->", "<sounds/>", "<opus>"} {
+	for _, target := range []string{"", "<!-- no root -->", "<sounds/>", "<opus>", "<opus/>"} {
 		t.Run(target, func(t *testing.T) {
 			ctx := context.Background()
 			g, e := startResourceGraph(ctx, finalQAOptions(nil), ProfileResourceGraph)
@@ -231,7 +265,28 @@ func TestFinalQAEmptyFragmentCannotInventRoot(t *testing.T) {
 			if e = g.session.OpenPackage(ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); e != nil {
 				t.Fatal(e)
 			}
+			header := r.Snapshot.Header()
 			rid, e := g.session.AddResource(ctx, pin, r.Snapshot, true)
+			if header.Assembly.State != validation.EvidenceKnown {
+				if !errors.Is(e, validation.ErrInvalidConfiguration) || rid != "" {
+					t.Fatalf("unknown assembly admitted: id=%q error=%v", rid, e)
+				}
+				if got := r.Snapshot.Header(); got.Root != header.Root || got.Assembly.State != header.Assembly.State {
+					t.Fatal("rejected transfer changed original header")
+				}
+				e = g.retainUntransferredIntrinsic(r, pin, e)
+				b, _ := g.finish(e)
+				finalQAOriginalSourceFailure(t, b, target)
+				if b.ResourceCount() != 0 || b.AdoptionCount() != 0 || b.Satisfied() {
+					t.Fatal("unknown assembly invented an adopted fragment root")
+				}
+				for _, kind := range []validation.BudgetKind{validation.BudgetBufferedBytes, validation.BudgetDepth} {
+					if used, _ := g.options.account.Usage(kind); used != 0 {
+						t.Errorf("refused snapshot gauge %v=%d", kind, used)
+					}
+				}
+				return
+			}
 			if e != nil {
 				t.Fatal(e)
 			}

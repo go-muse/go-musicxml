@@ -45,3 +45,18 @@ func TestResourceGraphCoreReviewCurrentModelDiscoveryUnknown(t *testing.T) {
 		}
 	}
 }
+
+func TestResourceGraphCoreReviewUnknownAssemblyUsesFailureChannel(t *testing.T) {
+	b, err := InspectXMLWithResources(context.Background(), strings.NewReader(`<unexpected-root/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}})
+	if err == nil || b.Satisfied() || b.ResourceCount() != 0 {
+		t.Errorf("unestablished assembly admitted as canonical: error=%v resources=%d", err, b.ResourceCount())
+	}
+	failure, ok := b.Failure()
+	if !ok || failure.Target != validation.TargetSource || failure.Terminal.Reason != "unsupported-root" {
+		t.Errorf("failed original summary lost: %+v exists=%t", failure, ok)
+	}
+	original, ok := b.FailureReport()
+	if !ok || original.Target != validation.TargetSource || original.Terminal == nil || original.Terminal.Reason != "unsupported-root" {
+		t.Errorf("failed original report lost: %+v exists=%t", original, ok)
+	}
+}

@@ -30,7 +30,7 @@ func TestPackageGraphContainerGatesAndLiteralPaths(t *testing.T) {
 		{"literal percent", `<container><rootfiles><rootfile full-path="a%20b.opus"/></rootfiles></container>`, "a%20b.opus", true, 2},
 		{"collapsed token", `<container><rootfiles><rootfile full-path="  a b.opus&#x9; "/></rootfiles></container>`, "a b.opus", true, 2},
 		{"unbound child", `<container><unknown/><rootfiles><rootfile full-path="main.opus"/></rootfiles></container>`, "main.opus", false, 1},
-		{"wrong container root", `<sounds/>`, "main.opus", false, 1},
+		{"wrong container root", `<sounds/>`, "main.opus", false, 0},
 		{"missing path", `<container><rootfiles><rootfile/></rootfiles></container>`, "main.opus", true, 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -38,6 +38,13 @@ func TestPackageGraphContainerGatesAndLiteralPaths(t *testing.T) {
 			b, err := InspectMXL(context.Background(), bytes.NewReader(data), packageGraphOptions())
 			if (err != nil && tc.name != "wrong container root") || b.ResourceCount() != tc.reports || b.EnumerationComplete() != tc.complete {
 				t.Fatalf("err=%v resources=%d enum=%v findings=%v", err, b.ResourceCount(), b.EnumerationComplete(), b.PackageReport().Findings)
+			}
+			if tc.name == "wrong container root" {
+				original, originalErr := InspectXML(context.Background(), strings.NewReader(tc.container), AssessmentOptions{Profile: ProfileSourceContainer})
+				failure, ok := b.Failure()
+				if !errors.Is(err, ErrUnsupportedRoot) || originalErr == nil || original.Terminal == nil || !ok || failure.Target != original.Target || failure.Profile != original.Profile.ID || failure.CatalogDigest != original.Profile.CatalogDigest || failure.Counts != original.Counts || failure.Conformance != original.Conformance || failure.Terminal != *original.Terminal {
+					t.Fatalf("unadmitted original container failure lost: %+v error=%v", failure, err)
+				}
 			}
 		})
 	}

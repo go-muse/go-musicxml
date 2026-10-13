@@ -1038,8 +1038,15 @@ for the sealed check inventory and provenance.
 account. `OpenPackage` establishes acyclic encapsulation with independent entry
 namespaces; linked cycles use fresh adoptions of canonical intrinsic assessments.
 `AddResource` transfers only a core-created snapshot on the identical account.
+It requires an established assembly matching the fixed target/profile/catalog
+interpretation, regardless of whether the intrinsic report is satisfied. An
+unknown assembly is refused explicitly; `RecordResourceFailure` preserves the
+untransferred original failure rather than inventing an assembly from table rows.
 `AdoptResource` requires explicit package scope, a fresh document ID for each
-linked occurrence, and an explicit single root marker. Successful transfer
+linked occurrence, and an explicit single root marker.
+The root must own its exact expansion context: a root adoption is refused if an
+earlier linked adoption already owns that same assessment/package/base/member
+context. A different context remains independently adoptable. Successful transfer
 invalidates the old snapshot owner. Live indexed reads admit work and temporary
 copy storage; returned copies belong to the caller. Package completion releases
 all live leases, while immutable `AssessmentBundle` getters remain available.
@@ -1067,6 +1074,12 @@ If ordinary report retention is refused, its reserved explicitly truncated
 identity/count summary still preserves independently known results. An unavailable
 full content pin is marked as such and cannot establish canonical resource identity
 or successful package completion.
+Failure-only ingress accepts nonnil canceled contexts and prior terminal errors
+without charging new work or attempting a full report copy after termination.
+It validates bounded conformance/count/target metadata and pin consistency before
+storing anything, and refuses an already transferred exact assessment. Invalid
+failure metadata cannot replace an existing blocker. Before termination, ordinary
+full retention may still succeed within the shared quotas.
 
 `ObserveEdge` consumes a once URI-decoded fragment component. Empty fragments
 address the whole document; only schema-ID NCName shorthand is implemented.
@@ -1093,6 +1106,11 @@ present-empty is unresolved. Scalar/step costs and temporary parse scratch use
 the supplied account; cancellation/quota errors remain errors. Bundle getters also
 preserve supplied mimetype prefix observations; incomplete retained prefixes cannot
 prove content mismatch.
+
+`ObserveRootfile.Source` is a well-formed adapter-asserted provenance reference,
+not a core-verified membership claim about an adopted container snapshot. The raw
+adapter remains responsible for parsing the original container and projecting its
+actual rootfile occurrences; existing container and scalar obligations are unchanged.
 
 A `CurrentMXL` boundary assesses representable logical rootfile/resource relations.
 It excludes the original ZIP container-entry representation and raw header claims,
@@ -1265,8 +1283,10 @@ cycle aliases preserve separate adopted document identities and linked quotas.
 `PackageReport`, `ResourceReport`, `Adoption` and `AdoptionContext` expose separately
 scoped results. Counts are not a flattened total over references. `Failure` exposes
 a terminal summary, and `FailureReport` exposes its complete original report when
-retention was admitted. A truncated fallback is explicit and cannot satisfy the
-bundle. Published getters return independent owned values and support concurrent
+retention was admitted while the package session was healthy. After ordinary
+package admission terminates, even newly freed storage does not reopen report
+measurement or copying: failure ingress retains only the prepaid bounded summary.
+A truncated fallback is explicit and cannot satisfy the bundle. Published getters return independent owned values and support concurrent
 reads; live sessions, snapshots and adoptions require serialized single-owner use.
 Additional selected XML resources, including later XML rootfiles and archive-local
 XML edges, obey both document and resource byte caps. A metered fixed four-byte
