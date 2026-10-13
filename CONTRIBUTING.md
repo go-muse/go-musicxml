@@ -102,6 +102,12 @@ can increase system CPU and peak memory. Both the whitespace and lexical XML
 oracle matrices use the shared parallel helper; Go's `-parallel` limit bounds
 their active cases. Compare wall time, CPU and memory separately on the actual
 runner rather than extrapolating a many-core local speedup.
+The existing Linux race job records its available CPU count and memory, then
+wraps the unchanged race command with `/usr/bin/time -v`. User and system CPU
+can exceed wall time on multiple cores. Its maximum resident-set measurement
+is a maximum child/process observation, not the aggregate peak of simultaneous
+processes or a proof of whole-job memory headroom. The wrapper preserves the
+race command's exit status; no additional measurement-only run is required.
 
 ### Updating inspected test hashes
 

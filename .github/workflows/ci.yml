@@ -112,7 +112,11 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run tests with race detector
-        run: bash scripts/check-all.sh race
+        run: |
+          printf 'Available CPUs: '
+          nproc
+          awk '/^MemTotal:/ { print }' /proc/meminfo
+          /usr/bin/time -v bash scripts/check-all.sh race
 
   xsd-conformance:
     name: External XSD conformance
