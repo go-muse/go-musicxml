@@ -1,0 +1,2748 @@
+{
+  "format": "musicxml-auxiliary-source-ownership-1",
+  "baseline_commit": "3d3d936fa4ba250083da03651cbfb4bbbe936914",
+  "registry_commit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+  "scope": "Source-only auxiliary prerequisite. Original statuses unchanged. No package/link or transitive normative closure claimed.",
+  "xsd_instances": [
+    {
+      "research_id": "MX40-REQ-02988c14d5bee3ae",
+      "instance_id": "INSTANCE-MX40-REQ-02988c14d5bee3ae",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-schema_namespace_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L2",
+      "source_xpath": "/xs:schema",
+      "scope_occurrence_id": "MX40-XSD-84710f8df5f9c8c4",
+      "parameters": {
+        "target_namespace": "",
+        "element_form": "qualified",
+        "attribute_form": "unqualified",
+        "block_default": "",
+        "final_default": ""
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-FORM"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal",
+          "container same actual type"
+        ],
+        "negative": [
+          "container missing rootfiles",
+          "container foreign root",
+          "container nil",
+          "container wrong actual type"
+        ],
+        "boundary": [
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container wrong root",
+          "container root text",
+          "container unknown attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-03dab235234bdbe8",
+      "instance_id": "INSTANCE-MX40-REQ-03dab235234bdbe8",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L44",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sounds']/xs:sequence[1]/xs:element[@name='sound']",
+      "scope_occurrence_id": "MX40-XSD-101b4bc7b0203c3a",
+      "parameters": {
+        "expanded_name": "{}sound",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-b2a992dff4a61919",
+          "expanded_name": "{}sound"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": {
+          "min": 1,
+          "max": "unbounded",
+          "min_origin": "XSD_language_default",
+          "max_origin": "explicit"
+        },
+        "block": "",
+        "final": "",
+        "is_document_root": false
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-15881b7ea7a469ea"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds repeated any",
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds mixed branches",
+          "sounds reversed sequence",
+          "sounds sound nil"
+        ],
+        "boundary": [
+          "sounds only solo",
+          "sounds only ensemble",
+          "sounds empty mapping"
+        ],
+        "interaction": [
+          "sounds sound text",
+          "sounds unknown sound attribute",
+          "sounds duplicate id"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-1091d3ca027ff57d",
+      "instance_id": "INSTANCE-MX40-REQ-1091d3ca027ff57d",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L39",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sounds']",
+      "scope_occurrence_id": "MX40-XSD-34fbf4327e890aab",
+      "parameters": {
+        "type_id": "MX40-XSD-34fbf4327e890aab",
+        "name": "sounds",
+        "content_category": "element_only",
+        "mixed": false,
+        "attributes": [],
+        "content": {
+          "origin_id": "MX40-XSD-ac065346775630c3",
+          "kind": "sequence",
+          "via_reference_ids": [],
+          "occurs": {
+            "min": 1,
+            "max": "1",
+            "min_origin": "XSD_language_default",
+            "max_origin": "XSD_language_default"
+          },
+          "children": [
+            {
+              "origin_id": "MX40-XSD-101b4bc7b0203c3a",
+              "kind": "element",
+              "via_reference_ids": [],
+              "occurs": {
+                "min": 1,
+                "max": "unbounded",
+                "min_origin": "XSD_language_default",
+                "max_origin": "explicit"
+              },
+              "expanded_name": "{}sound",
+              "type": {
+                "kind": "schema_component",
+                "id": "MX40-XSD-b2a992dff4a61919",
+                "expanded_name": "{}sound"
+              }
+            }
+          ]
+        },
+        "inheritance_chain": [],
+        "scalar": null,
+        "wildcard_attributes": false,
+        "attribute_count": 0
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-03dab235234bdbe8",
+          "INSTANCE-MX40-REQ-15881b7ea7a469ea",
+          "INSTANCE-MX40-REQ-c885289c83db264e"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds same actual type"
+        ],
+        "negative": [
+          "sounds empty root",
+          "sounds foreign root",
+          "sounds nil",
+          "sounds wrong actual type"
+        ],
+        "boundary": [
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds root text",
+          "sounds unknown root attribute",
+          "sounds wrong root"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-11178e89461fca8c",
+      "instance_id": "INSTANCE-MX40-REQ-11178e89461fca8c",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L138",
+      "source_xpath": "/xs:schema/xs:element[@name='container']",
+      "scope_occurrence_id": "MX40-XSD-bec3f2587cf2fe7c",
+      "parameters": {
+        "expanded_name": "{}container",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-633e0e53aa457465",
+          "expanded_name": "{}container"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": null,
+        "block": "extension substitution",
+        "final": "#all",
+        "is_document_root": true
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-a6859e3d0e08eef9"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-BLOCK",
+          "INSTANCE-MX40-REQ-LANG-FINAL",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal",
+          "container same actual type"
+        ],
+        "negative": [
+          "container missing rootfiles",
+          "container foreign root",
+          "container nil",
+          "container wrong actual type"
+        ],
+        "boundary": [
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container wrong root",
+          "container root text",
+          "container unknown attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [
+        "Pinned assembly has no derived root candidate or substitution-group member. Root block/final bits are asserted by TestAuxiliaryGeneratedSchemaMetadata; executable generic derivation semantics remain in the existing XSI suite. No instance using these unchanged schemas can instantiate that unavailable candidate."
+      ],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-113fef85bdd6c20d",
+      "instance_id": "INSTANCE-MX40-REQ-113fef85bdd6c20d",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L133",
+      "source_xpath": "/xs:schema/xs:complexType[@name='rootfile']/xs:attribute[@name='media-type']",
+      "scope_occurrence_id": "MX40-XSD-4e189138029e5c0a",
+      "parameters": {
+        "use": "optional",
+        "use_origin": "XSD_language_default",
+        "resolved_type": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-token",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}token",
+          "name": "token",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#token"
+        },
+        "expanded_name": "{}media-type",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-LANG-TYPE-token"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container multiple token values"
+        ],
+        "negative": [
+          "container qualified media type"
+        ],
+        "boundary": [
+          "container minimal",
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container rootfile attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-11abcc0680c2b627",
+      "instance_id": "INSTANCE-MX40-REQ-11abcc0680c2b627",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-simple_value_domain",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L27",
+      "source_xpath": "/xs:schema/xs:simpleType[@name='yes-no']",
+      "scope_occurrence_id": "MX40-XSD-62fac361613af0c2",
+      "parameters": {
+        "kind": "restriction",
+        "type_id": "MX40-XSD-62fac361613af0c2",
+        "origin_id": "MX40-XSD-c2687ccadb74a94d",
+        "base": {
+          "kind": "builtin",
+          "type_id": "XSD10-TYPE-token",
+          "whiteSpace": "collapse"
+        },
+        "facet_layer": [
+          {
+            "id": "MX40-XSD-5913d4fc583345c1",
+            "facet": "enumeration",
+            "value": "yes"
+          },
+          {
+            "id": "MX40-XSD-7f04f3a176a3c180",
+            "facet": "enumeration",
+            "value": "no"
+          }
+        ]
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-LANG-TYPE-token",
+          "INSTANCE-MX40-REQ-d6983b9210767737"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds normalized id primary",
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds invalid reverse primary",
+          "sounds invalid any primary",
+          "sounds invalid solo primary",
+          "sounds invalid ensemble primary"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds foreign primary"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-11df0f934f8ede78",
+      "instance_id": "INSTANCE-MX40-REQ-11df0f934f8ede78",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L111",
+      "source_xpath": "/xs:schema/xs:complexType[@name='container']/xs:sequence[1]/xs:element[@name='rootfiles']",
+      "scope_occurrence_id": "MX40-XSD-07d56faeb384924e",
+      "parameters": {
+        "expanded_name": "{}rootfiles",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-49343389fc6c52fc",
+          "expanded_name": "{}rootfiles"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": {
+          "min": 1,
+          "max": "1",
+          "min_origin": "XSD_language_default",
+          "max_origin": "XSD_language_default"
+        },
+        "block": "",
+        "final": "",
+        "is_document_root": false
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-b39058e88bcd6cf3"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal"
+        ],
+        "negative": [
+          "container empty rootfiles",
+          "container duplicate rootfiles",
+          "container rootfiles nil"
+        ],
+        "boundary": [
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container rootfiles text",
+          "container rootfiles attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-1373853ebf1091f6",
+      "instance_id": "INSTANCE-MX40-REQ-1373853ebf1091f6",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L64",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:attribute[@name='primary']",
+      "scope_occurrence_id": "MX40-XSD-45d4fb901e135cbb",
+      "parameters": {
+        "use": "optional",
+        "use_origin": "XSD_language_default",
+        "resolved_type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-62fac361613af0c2",
+          "expanded_name": "{}yes-no"
+        },
+        "expanded_name": "{}primary",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds normalized id primary"
+        ],
+        "negative": [
+          "sounds invalid reverse primary"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds foreign primary"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-15881b7ea7a469ea",
+      "instance_id": "INSTANCE-MX40-REQ-15881b7ea7a469ea",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L48",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']",
+      "scope_occurrence_id": "MX40-XSD-b2a992dff4a61919",
+      "parameters": {
+        "type_id": "MX40-XSD-b2a992dff4a61919",
+        "name": "sound",
+        "content_category": "element_only",
+        "mixed": false,
+        "attributes": [
+          {
+            "use_origin_id": "MX40-XSD-608e7fda27d68bed",
+            "declaration_id": "MX40-XSD-608e7fda27d68bed",
+            "via_reference_ids": [],
+            "expanded_name": "{}id",
+            "use": "required",
+            "type": {
+              "kind": "builtin",
+              "id": "XSD10-TYPE-ID",
+              "expanded_name": "{http://www.w3.org/2001/XMLSchema}ID",
+              "name": "ID",
+              "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#ID"
+            },
+            "default": null,
+            "fixed": null
+          },
+          {
+            "use_origin_id": "MX40-XSD-45d4fb901e135cbb",
+            "declaration_id": "MX40-XSD-45d4fb901e135cbb",
+            "via_reference_ids": [],
+            "expanded_name": "{}primary",
+            "use": "optional",
+            "type": {
+              "kind": "schema_component",
+              "id": "MX40-XSD-62fac361613af0c2",
+              "expanded_name": "{}yes-no"
+            },
+            "default": null,
+            "fixed": null
+          }
+        ],
+        "content": {
+          "origin_id": "MX40-XSD-7d17c1ca592b643f",
+          "kind": "choice",
+          "via_reference_ids": [],
+          "occurs": {
+            "min": 1,
+            "max": "1",
+            "min_origin": "XSD_language_default",
+            "max_origin": "XSD_language_default"
+          },
+          "children": [
+            {
+              "origin_id": "MX40-XSD-0be3c80b829d0a3f",
+              "kind": "element",
+              "via_reference_ids": [],
+              "occurs": {
+                "min": 0,
+                "max": "unbounded",
+                "min_origin": "explicit",
+                "max_origin": "explicit"
+              },
+              "expanded_name": "{}any",
+              "type": {
+                "kind": "schema_component",
+                "id": "MX40-XSD-f32742f74090968e",
+                "expanded_name": "{}any"
+              }
+            },
+            {
+              "origin_id": "MX40-XSD-967dbfb5de74398b",
+              "kind": "sequence",
+              "via_reference_ids": [],
+              "occurs": {
+                "min": 1,
+                "max": "1",
+                "min_origin": "XSD_language_default",
+                "max_origin": "XSD_language_default"
+              },
+              "children": [
+                {
+                  "origin_id": "MX40-XSD-eefd5bebdb35d5b7",
+                  "kind": "element",
+                  "via_reference_ids": [],
+                  "occurs": {
+                    "min": 0,
+                    "max": "unbounded",
+                    "min_origin": "explicit",
+                    "max_origin": "explicit"
+                  },
+                  "expanded_name": "{}solo",
+                  "type": {
+                    "kind": "schema_component",
+                    "id": "MX40-XSD-026bfecb3160f68f",
+                    "expanded_name": "{}solo"
+                  }
+                },
+                {
+                  "origin_id": "MX40-XSD-ca4870a3911c7a77",
+                  "kind": "element",
+                  "via_reference_ids": [],
+                  "occurs": {
+                    "min": 0,
+                    "max": "unbounded",
+                    "min_origin": "explicit",
+                    "max_origin": "explicit"
+                  },
+                  "expanded_name": "{}ensemble",
+                  "type": {
+                    "kind": "schema_component",
+                    "id": "MX40-XSD-cca860be79f7015b",
+                    "expanded_name": "{}ensemble"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "inheritance_chain": [],
+        "scalar": null,
+        "wildcard_attributes": false,
+        "attribute_count": 2
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627",
+          "INSTANCE-MX40-REQ-1373853ebf1091f6",
+          "INSTANCE-MX40-REQ-185dfdf0a0956f4a",
+          "INSTANCE-MX40-REQ-33b4dc7814f9bf7b",
+          "INSTANCE-MX40-REQ-4752c5eca52971b1",
+          "INSTANCE-MX40-REQ-478d115b86103eb0",
+          "INSTANCE-MX40-REQ-5e59a71c263c5dc4",
+          "INSTANCE-MX40-REQ-871ca98c7ca67797",
+          "INSTANCE-MX40-REQ-937f261e67dbe164",
+          "INSTANCE-MX40-REQ-LANG-TYPE-ID",
+          "INSTANCE-MX40-REQ-dbe7b0177d6981d7",
+          "INSTANCE-MX40-REQ-f75660cde4507954"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds repeated any",
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds mixed branches",
+          "sounds reversed sequence",
+          "sounds sound nil"
+        ],
+        "boundary": [
+          "sounds only solo",
+          "sounds only ensemble",
+          "sounds empty mapping"
+        ],
+        "interaction": [
+          "sounds sound text",
+          "sounds unknown sound attribute",
+          "sounds duplicate id"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-185dfdf0a0956f4a",
+      "instance_id": "INSTANCE-MX40-REQ-185dfdf0a0956f4a",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L96",
+      "source_xpath": "/xs:schema/xs:complexType[@name='solo']",
+      "scope_occurrence_id": "MX40-XSD-026bfecb3160f68f",
+      "parameters": {
+        "type_id": "MX40-XSD-026bfecb3160f68f",
+        "name": "solo",
+        "content_category": "simple",
+        "mixed": false,
+        "attributes": [
+          {
+            "use_origin_id": "MX40-XSD-1d7a5e11ace5ee24",
+            "declaration_id": "MX40-XSD-1d7a5e11ace5ee24",
+            "via_reference_ids": [],
+            "expanded_name": "{}primary",
+            "use": "optional",
+            "type": {
+              "kind": "schema_component",
+              "id": "MX40-XSD-62fac361613af0c2",
+              "expanded_name": "{}yes-no"
+            },
+            "default": null,
+            "fixed": null
+          }
+        ],
+        "content": null,
+        "inheritance_chain": [
+          {
+            "derivation_id": "MX40-XSD-68e95cad3e57d35f",
+            "method": "extension",
+            "base_id": "XSD10-TYPE-string"
+          }
+        ],
+        "scalar": {
+          "kind": "simpleContent_extension",
+          "type_id": "MX40-XSD-026bfecb3160f68f",
+          "origin_id": "MX40-XSD-68e95cad3e57d35f",
+          "base": {
+            "kind": "builtin",
+            "type_id": "XSD10-TYPE-string",
+            "whiteSpace": "preserve"
+          },
+          "facet_layer": []
+        },
+        "wildcard_attributes": false,
+        "attribute_count": 1
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627",
+          "INSTANCE-MX40-REQ-7de1a25c1fd1384e",
+          "INSTANCE-MX40-REQ-9afc2f787093064f",
+          "INSTANCE-MX40-REQ-LANG-TYPE-string"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch",
+          "sounds only solo"
+        ],
+        "negative": [
+          "sounds solo nested content",
+          "sounds invalid solo primary",
+          "sounds solo nil"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds only solo"
+        ],
+        "interaction": [
+          "sounds reversed sequence",
+          "sounds unknown solo attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-24d1f8d84390f06c",
+      "instance_id": "INSTANCE-MX40-REQ-24d1f8d84390f06c",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L91",
+      "source_xpath": "/xs:schema/xs:complexType[@name='ensemble']/xs:simpleContent[1]/xs:extension[1]/xs:attribute[@name='primary']",
+      "scope_occurrence_id": "MX40-XSD-c6e6d73a3702caa1",
+      "parameters": {
+        "use": "optional",
+        "use_origin": "XSD_language_default",
+        "resolved_type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-62fac361613af0c2",
+          "expanded_name": "{}yes-no"
+        },
+        "expanded_name": "{}primary",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds invalid ensemble primary"
+        ],
+        "boundary": [
+          "sounds only ensemble"
+        ],
+        "interaction": [
+          "sounds ensemble nested content"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-319f94784c15f22b",
+      "instance_id": "INSTANCE-MX40-REQ-319f94784c15f22b",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L126",
+      "source_xpath": "/xs:schema/xs:complexType[@name='rootfile']",
+      "scope_occurrence_id": "MX40-XSD-c0e9dab6fec27cc4",
+      "parameters": {
+        "type_id": "MX40-XSD-c0e9dab6fec27cc4",
+        "name": "rootfile",
+        "content_category": "empty",
+        "mixed": false,
+        "attributes": [
+          {
+            "use_origin_id": "MX40-XSD-3488d7804ca67345",
+            "declaration_id": "MX40-XSD-3488d7804ca67345",
+            "via_reference_ids": [],
+            "expanded_name": "{}full-path",
+            "use": "required",
+            "type": {
+              "kind": "builtin",
+              "id": "XSD10-TYPE-token",
+              "expanded_name": "{http://www.w3.org/2001/XMLSchema}token",
+              "name": "token",
+              "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#token"
+            },
+            "default": null,
+            "fixed": null
+          },
+          {
+            "use_origin_id": "MX40-XSD-4e189138029e5c0a",
+            "declaration_id": "MX40-XSD-4e189138029e5c0a",
+            "via_reference_ids": [],
+            "expanded_name": "{}media-type",
+            "use": "optional",
+            "type": {
+              "kind": "builtin",
+              "id": "XSD10-TYPE-token",
+              "expanded_name": "{http://www.w3.org/2001/XMLSchema}token",
+              "name": "token",
+              "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#token"
+            },
+            "default": null,
+            "fixed": null
+          }
+        ],
+        "content": null,
+        "inheritance_chain": [],
+        "scalar": null,
+        "wildcard_attributes": false,
+        "attribute_count": 2
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-113fef85bdd6c20d",
+          "INSTANCE-MX40-REQ-LANG-TYPE-token",
+          "INSTANCE-MX40-REQ-ecd4fc466fda42aa"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal"
+        ],
+        "negative": [
+          "container missing full path",
+          "container rootfile nil"
+        ],
+        "boundary": [
+          "container multiple token values",
+          "container percent literal"
+        ],
+        "interaction": [
+          "container empty content",
+          "container rootfile attribute",
+          "container foreign child"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-33b4dc7814f9bf7b",
+      "instance_id": "INSTANCE-MX40-REQ-33b4dc7814f9bf7b",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L63",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:attribute[@name='id']",
+      "scope_occurrence_id": "MX40-XSD-608e7fda27d68bed",
+      "parameters": {
+        "use": "required",
+        "use_origin": "explicit",
+        "resolved_type": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-ID",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}ID",
+          "name": "ID",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#ID"
+        },
+        "expanded_name": "{}id",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-LANG-TYPE-ID"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping"
+        ],
+        "negative": [
+          "sounds missing id",
+          "sounds invalid id",
+          "sounds duplicate id"
+        ],
+        "boundary": [
+          "sounds normalized id primary"
+        ],
+        "interaction": [
+          "sounds repeated any"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-3b9ff316cf1aa198",
+      "instance_id": "INSTANCE-MX40-REQ-3b9ff316cf1aa198",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-extension_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L89",
+      "source_xpath": "/xs:schema/xs:complexType[@name='ensemble']/xs:simpleContent[1]/xs:extension[1]",
+      "scope_occurrence_id": "MX40-XSD-fb5b02be45af2ba3",
+      "parameters": {
+        "base": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-string",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}string",
+          "name": "string",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#string"
+        },
+        "extension_child_ids": [
+          "MX40-XSD-d68967a306bb25a0",
+          "MX40-XSD-c6e6d73a3702caa1"
+        ]
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-24d1f8d84390f06c",
+          "INSTANCE-MX40-REQ-LANG-TYPE-string",
+          "INSTANCE-MX40-REQ-bac5429f72bb68b0"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-EXTEND"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch",
+          "sounds only ensemble"
+        ],
+        "negative": [
+          "sounds ensemble nested content",
+          "sounds invalid ensemble primary",
+          "sounds ensemble nil",
+          "sounds number whitespace"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds only ensemble"
+        ],
+        "interaction": [
+          "sounds reversed sequence",
+          "sounds unknown ensemble attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-4752c5eca52971b1",
+      "instance_id": "INSTANCE-MX40-REQ-4752c5eca52971b1",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L80",
+      "source_xpath": "/xs:schema/xs:complexType[@name='ensemble']",
+      "scope_occurrence_id": "MX40-XSD-cca860be79f7015b",
+      "parameters": {
+        "type_id": "MX40-XSD-cca860be79f7015b",
+        "name": "ensemble",
+        "content_category": "simple",
+        "mixed": false,
+        "attributes": [
+          {
+            "use_origin_id": "MX40-XSD-d68967a306bb25a0",
+            "declaration_id": "MX40-XSD-d68967a306bb25a0",
+            "via_reference_ids": [],
+            "expanded_name": "{}number",
+            "use": "optional",
+            "type": {
+              "kind": "builtin",
+              "id": "XSD10-TYPE-NMTOKEN",
+              "expanded_name": "{http://www.w3.org/2001/XMLSchema}NMTOKEN",
+              "name": "NMTOKEN",
+              "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#NMTOKEN"
+            },
+            "default": null,
+            "fixed": null
+          },
+          {
+            "use_origin_id": "MX40-XSD-c6e6d73a3702caa1",
+            "declaration_id": "MX40-XSD-c6e6d73a3702caa1",
+            "via_reference_ids": [],
+            "expanded_name": "{}primary",
+            "use": "optional",
+            "type": {
+              "kind": "schema_component",
+              "id": "MX40-XSD-62fac361613af0c2",
+              "expanded_name": "{}yes-no"
+            },
+            "default": null,
+            "fixed": null
+          }
+        ],
+        "content": null,
+        "inheritance_chain": [
+          {
+            "derivation_id": "MX40-XSD-fb5b02be45af2ba3",
+            "method": "extension",
+            "base_id": "XSD10-TYPE-string"
+          }
+        ],
+        "scalar": {
+          "kind": "simpleContent_extension",
+          "type_id": "MX40-XSD-cca860be79f7015b",
+          "origin_id": "MX40-XSD-fb5b02be45af2ba3",
+          "base": {
+            "kind": "builtin",
+            "type_id": "XSD10-TYPE-string",
+            "whiteSpace": "preserve"
+          },
+          "facet_layer": []
+        },
+        "wildcard_attributes": false,
+        "attribute_count": 2
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627",
+          "INSTANCE-MX40-REQ-24d1f8d84390f06c",
+          "INSTANCE-MX40-REQ-3b9ff316cf1aa198",
+          "INSTANCE-MX40-REQ-LANG-TYPE-NMTOKEN",
+          "INSTANCE-MX40-REQ-LANG-TYPE-string",
+          "INSTANCE-MX40-REQ-bac5429f72bb68b0"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch",
+          "sounds only ensemble"
+        ],
+        "negative": [
+          "sounds ensemble nested content",
+          "sounds invalid ensemble primary",
+          "sounds ensemble nil",
+          "sounds number whitespace"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds only ensemble"
+        ],
+        "interaction": [
+          "sounds reversed sequence",
+          "sounds unknown ensemble attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-478d115b86103eb0",
+      "instance_id": "INSTANCE-MX40-REQ-478d115b86103eb0",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L57",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:choice[1]/xs:element[@name='any']",
+      "scope_occurrence_id": "MX40-XSD-0be3c80b829d0a3f",
+      "parameters": {
+        "expanded_name": "{}any",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-f32742f74090968e",
+          "expanded_name": "{}any"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": {
+          "min": 0,
+          "max": "unbounded",
+          "min_origin": "explicit",
+          "max_origin": "explicit"
+        },
+        "block": "",
+        "final": "",
+        "is_document_root": false
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-f75660cde4507954"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds repeated any"
+        ],
+        "negative": [
+          "sounds any nested content",
+          "sounds invalid any primary",
+          "sounds any nil"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds unknown any attribute",
+          "sounds foreign mapping"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-5e59a71c263c5dc4",
+      "instance_id": "INSTANCE-MX40-REQ-5e59a71c263c5dc4",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L59",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:choice[1]/xs:sequence[1]/xs:element[@name='solo']",
+      "scope_occurrence_id": "MX40-XSD-eefd5bebdb35d5b7",
+      "parameters": {
+        "expanded_name": "{}solo",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-026bfecb3160f68f",
+          "expanded_name": "{}solo"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": {
+          "min": 0,
+          "max": "unbounded",
+          "min_origin": "explicit",
+          "max_origin": "explicit"
+        },
+        "block": "",
+        "final": "",
+        "is_document_root": false
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-185dfdf0a0956f4a"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch",
+          "sounds only solo"
+        ],
+        "negative": [
+          "sounds solo nested content",
+          "sounds invalid solo primary",
+          "sounds solo nil"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds only solo"
+        ],
+        "interaction": [
+          "sounds reversed sequence",
+          "sounds unknown solo attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-7698e8f1bd9d479a",
+      "instance_id": "INSTANCE-MX40-REQ-7698e8f1bd9d479a",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L111",
+      "source_xpath": "/xs:schema/xs:element[@name='sounds']",
+      "scope_occurrence_id": "MX40-XSD-5f10a765c020acdf",
+      "parameters": {
+        "expanded_name": "{}sounds",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-34fbf4327e890aab",
+          "expanded_name": "{}sounds"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": null,
+        "block": "extension substitution",
+        "final": "#all",
+        "is_document_root": true
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-1091d3ca027ff57d"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-BLOCK",
+          "INSTANCE-MX40-REQ-LANG-FINAL",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds same actual type"
+        ],
+        "negative": [
+          "sounds empty root",
+          "sounds foreign root",
+          "sounds nil",
+          "sounds wrong actual type"
+        ],
+        "boundary": [
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds root text",
+          "sounds unknown root attribute",
+          "sounds wrong root"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [
+        "Pinned assembly has no derived root candidate or substitution-group member. Root block/final bits are asserted by TestAuxiliaryGeneratedSchemaMetadata; executable generic derivation semantics remain in the existing XSI suite. No instance using these unchanged schemas can instantiate that unavailable candidate."
+      ],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-7b7cf58939b5c0b1",
+      "instance_id": "INSTANCE-MX40-REQ-7b7cf58939b5c0b1",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-particle_sequence",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L110",
+      "source_xpath": "/xs:schema/xs:complexType[@name='container']/xs:sequence[1]",
+      "scope_occurrence_id": "MX40-XSD-2615b777b609bd9b",
+      "parameters": {
+        "operator": "sequence",
+        "children_in_source_order": [
+          "MX40-XSD-07d56faeb384924e"
+        ],
+        "occurs": {
+          "min": 1,
+          "max": "1",
+          "min_origin": "XSD_language_default",
+          "max_origin": "XSD_language_default"
+        }
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11df0f934f8ede78"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-ORDER"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal",
+          "container same actual type"
+        ],
+        "negative": [
+          "container missing rootfiles",
+          "container foreign root",
+          "container nil",
+          "container wrong actual type"
+        ],
+        "boundary": [
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container wrong root",
+          "container root text",
+          "container unknown attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-7de1a25c1fd1384e",
+      "instance_id": "INSTANCE-MX40-REQ-7de1a25c1fd1384e",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L104",
+      "source_xpath": "/xs:schema/xs:complexType[@name='solo']/xs:simpleContent[1]/xs:extension[1]/xs:attribute[@name='primary']",
+      "scope_occurrence_id": "MX40-XSD-1d7a5e11ace5ee24",
+      "parameters": {
+        "use": "optional",
+        "use_origin": "XSD_language_default",
+        "resolved_type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-62fac361613af0c2",
+          "expanded_name": "{}yes-no"
+        },
+        "expanded_name": "{}primary",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds invalid solo primary"
+        ],
+        "boundary": [
+          "sounds only solo"
+        ],
+        "interaction": [
+          "sounds solo nested content"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-871ca98c7ca67797",
+      "instance_id": "INSTANCE-MX40-REQ-871ca98c7ca67797",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L60",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:choice[1]/xs:sequence[1]/xs:element[@name='ensemble']",
+      "scope_occurrence_id": "MX40-XSD-ca4870a3911c7a77",
+      "parameters": {
+        "expanded_name": "{}ensemble",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-cca860be79f7015b",
+          "expanded_name": "{}ensemble"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": {
+          "min": 0,
+          "max": "unbounded",
+          "min_origin": "explicit",
+          "max_origin": "explicit"
+        },
+        "block": "",
+        "final": "",
+        "is_document_root": false
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-4752c5eca52971b1"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch",
+          "sounds only ensemble"
+        ],
+        "negative": [
+          "sounds ensemble nested content",
+          "sounds invalid ensemble primary",
+          "sounds ensemble nil",
+          "sounds number whitespace"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds only ensemble"
+        ],
+        "interaction": [
+          "sounds reversed sequence",
+          "sounds unknown ensemble attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-937f261e67dbe164",
+      "instance_id": "INSTANCE-MX40-REQ-937f261e67dbe164",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-particle_choice",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L56",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:choice[1]",
+      "scope_occurrence_id": "MX40-XSD-7d17c1ca592b643f",
+      "parameters": {
+        "operator": "choice",
+        "children_in_source_order": [
+          "MX40-XSD-0be3c80b829d0a3f",
+          "MX40-XSD-967dbfb5de74398b"
+        ],
+        "occurs": {
+          "min": 1,
+          "max": "1",
+          "min_origin": "XSD_language_default",
+          "max_origin": "XSD_language_default"
+        }
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-478d115b86103eb0",
+          "INSTANCE-MX40-REQ-dbe7b0177d6981d7"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CHOICE",
+          "INSTANCE-MX40-REQ-LANG-OCCURS"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds repeated any",
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds mixed branches",
+          "sounds reversed sequence",
+          "sounds sound nil"
+        ],
+        "boundary": [
+          "sounds only solo",
+          "sounds only ensemble",
+          "sounds empty mapping"
+        ],
+        "interaction": [
+          "sounds sound text",
+          "sounds unknown sound attribute",
+          "sounds duplicate id"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-9afc2f787093064f",
+      "instance_id": "INSTANCE-MX40-REQ-9afc2f787093064f",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-extension_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L103",
+      "source_xpath": "/xs:schema/xs:complexType[@name='solo']/xs:simpleContent[1]/xs:extension[1]",
+      "scope_occurrence_id": "MX40-XSD-68e95cad3e57d35f",
+      "parameters": {
+        "base": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-string",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}string",
+          "name": "string",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#string"
+        },
+        "extension_child_ids": [
+          "MX40-XSD-1d7a5e11ace5ee24"
+        ]
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-7de1a25c1fd1384e",
+          "INSTANCE-MX40-REQ-LANG-TYPE-string"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-EXTEND"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch",
+          "sounds only solo"
+        ],
+        "negative": [
+          "sounds solo nested content",
+          "sounds invalid solo primary",
+          "sounds solo nil"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds only solo"
+        ],
+        "interaction": [
+          "sounds reversed sequence",
+          "sounds unknown solo attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-a6859e3d0e08eef9",
+      "instance_id": "INSTANCE-MX40-REQ-a6859e3d0e08eef9",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L106",
+      "source_xpath": "/xs:schema/xs:complexType[@name='container']",
+      "scope_occurrence_id": "MX40-XSD-633e0e53aa457465",
+      "parameters": {
+        "type_id": "MX40-XSD-633e0e53aa457465",
+        "name": "container",
+        "content_category": "element_only",
+        "mixed": false,
+        "attributes": [],
+        "content": {
+          "origin_id": "MX40-XSD-2615b777b609bd9b",
+          "kind": "sequence",
+          "via_reference_ids": [],
+          "occurs": {
+            "min": 1,
+            "max": "1",
+            "min_origin": "XSD_language_default",
+            "max_origin": "XSD_language_default"
+          },
+          "children": [
+            {
+              "origin_id": "MX40-XSD-07d56faeb384924e",
+              "kind": "element",
+              "via_reference_ids": [],
+              "occurs": {
+                "min": 1,
+                "max": "1",
+                "min_origin": "XSD_language_default",
+                "max_origin": "XSD_language_default"
+              },
+              "expanded_name": "{}rootfiles",
+              "type": {
+                "kind": "schema_component",
+                "id": "MX40-XSD-49343389fc6c52fc",
+                "expanded_name": "{}rootfiles"
+              }
+            }
+          ]
+        },
+        "inheritance_chain": [],
+        "scalar": null,
+        "wildcard_attributes": false,
+        "attribute_count": 0
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11df0f934f8ede78",
+          "INSTANCE-MX40-REQ-7b7cf58939b5c0b1",
+          "INSTANCE-MX40-REQ-b39058e88bcd6cf3"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal",
+          "container same actual type"
+        ],
+        "negative": [
+          "container missing rootfiles",
+          "container foreign root",
+          "container nil",
+          "container wrong actual type"
+        ],
+        "boundary": [
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container wrong root",
+          "container root text",
+          "container unknown attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-a80ee7625389e06d",
+      "instance_id": "INSTANCE-MX40-REQ-a80ee7625389e06d",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-element_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L122",
+      "source_xpath": "/xs:schema/xs:complexType[@name='rootfiles']/xs:sequence[1]/xs:element[@name='rootfile']",
+      "scope_occurrence_id": "MX40-XSD-99050c5ff2b62345",
+      "parameters": {
+        "expanded_name": "{}rootfile",
+        "type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-c0e9dab6fec27cc4",
+          "expanded_name": "{}rootfile"
+        },
+        "nillable": false,
+        "abstract": false,
+        "occurs": {
+          "min": 1,
+          "max": "unbounded",
+          "min_origin": "XSD_language_default",
+          "max_origin": "explicit"
+        },
+        "block": "",
+        "final": "",
+        "is_document_root": false
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-319f94784c15f22b"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-NIL",
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-TYPE",
+          "INSTANCE-MX40-REQ-LANG-XSI"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal"
+        ],
+        "negative": [
+          "container missing full path",
+          "container rootfile nil"
+        ],
+        "boundary": [
+          "container multiple token values",
+          "container percent literal"
+        ],
+        "interaction": [
+          "container empty content",
+          "container rootfile attribute",
+          "container foreign child"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-b272e4c22ed1b2ee",
+      "instance_id": "INSTANCE-MX40-REQ-b272e4c22ed1b2ee",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L75",
+      "source_xpath": "/xs:schema/xs:complexType[@name='any']/xs:simpleContent[1]/xs:extension[1]/xs:attribute[@name='primary']",
+      "scope_occurrence_id": "MX40-XSD-d68ebc1380cac9e8",
+      "parameters": {
+        "use": "optional",
+        "use_origin": "XSD_language_default",
+        "resolved_type": {
+          "kind": "schema_component",
+          "id": "MX40-XSD-62fac361613af0c2",
+          "expanded_name": "{}yes-no"
+        },
+        "expanded_name": "{}primary",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds normalized id primary"
+        ],
+        "negative": [
+          "sounds invalid any primary"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds any nested content"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-b39058e88bcd6cf3",
+      "instance_id": "INSTANCE-MX40-REQ-b39058e88bcd6cf3",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L115",
+      "source_xpath": "/xs:schema/xs:complexType[@name='rootfiles']",
+      "scope_occurrence_id": "MX40-XSD-49343389fc6c52fc",
+      "parameters": {
+        "type_id": "MX40-XSD-49343389fc6c52fc",
+        "name": "rootfiles",
+        "content_category": "element_only",
+        "mixed": false,
+        "attributes": [],
+        "content": {
+          "origin_id": "MX40-XSD-7400bf0dbf62d186",
+          "kind": "sequence",
+          "via_reference_ids": [],
+          "occurs": {
+            "min": 1,
+            "max": "1",
+            "min_origin": "XSD_language_default",
+            "max_origin": "XSD_language_default"
+          },
+          "children": [
+            {
+              "origin_id": "MX40-XSD-99050c5ff2b62345",
+              "kind": "element",
+              "via_reference_ids": [],
+              "occurs": {
+                "min": 1,
+                "max": "unbounded",
+                "min_origin": "XSD_language_default",
+                "max_origin": "explicit"
+              },
+              "expanded_name": "{}rootfile",
+              "type": {
+                "kind": "schema_component",
+                "id": "MX40-XSD-c0e9dab6fec27cc4",
+                "expanded_name": "{}rootfile"
+              }
+            }
+          ]
+        },
+        "inheritance_chain": [],
+        "scalar": null,
+        "wildcard_attributes": false,
+        "attribute_count": 0
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-319f94784c15f22b",
+          "INSTANCE-MX40-REQ-a80ee7625389e06d",
+          "INSTANCE-MX40-REQ-caa0ad180f2a8955"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal"
+        ],
+        "negative": [
+          "container empty rootfiles",
+          "container duplicate rootfiles",
+          "container rootfiles nil"
+        ],
+        "boundary": [
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container rootfiles text",
+          "container rootfiles attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-bac5429f72bb68b0",
+      "instance_id": "INSTANCE-MX40-REQ-bac5429f72bb68b0",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L90",
+      "source_xpath": "/xs:schema/xs:complexType[@name='ensemble']/xs:simpleContent[1]/xs:extension[1]/xs:attribute[@name='number']",
+      "scope_occurrence_id": "MX40-XSD-d68967a306bb25a0",
+      "parameters": {
+        "use": "optional",
+        "use_origin": "XSD_language_default",
+        "resolved_type": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-NMTOKEN",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}NMTOKEN",
+          "name": "NMTOKEN",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#NMTOKEN"
+        },
+        "expanded_name": "{}number",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-LANG-TYPE-NMTOKEN"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds number empty",
+          "sounds number whitespace"
+        ],
+        "boundary": [
+          "sounds only ensemble"
+        ],
+        "interaction": [
+          "sounds unknown ensemble attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-bf22dca6b28a5775",
+      "instance_id": "INSTANCE-MX40-REQ-bf22dca6b28a5775",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-extension_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L74",
+      "source_xpath": "/xs:schema/xs:complexType[@name='any']/xs:simpleContent[1]/xs:extension[1]",
+      "scope_occurrence_id": "MX40-XSD-69b9e309ac908643",
+      "parameters": {
+        "base": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-string",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}string",
+          "name": "string",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#string"
+        },
+        "extension_child_ids": [
+          "MX40-XSD-d68ebc1380cac9e8"
+        ]
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-LANG-TYPE-string",
+          "INSTANCE-MX40-REQ-b272e4c22ed1b2ee"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-EXTEND"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds repeated any"
+        ],
+        "negative": [
+          "sounds any nested content",
+          "sounds invalid any primary",
+          "sounds any nil"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds unknown any attribute",
+          "sounds foreign mapping"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-c885289c83db264e",
+      "instance_id": "INSTANCE-MX40-REQ-c885289c83db264e",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-particle_sequence",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L43",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sounds']/xs:sequence[1]",
+      "scope_occurrence_id": "MX40-XSD-ac065346775630c3",
+      "parameters": {
+        "operator": "sequence",
+        "children_in_source_order": [
+          "MX40-XSD-101b4bc7b0203c3a"
+        ],
+        "occurs": {
+          "min": 1,
+          "max": "1",
+          "min_origin": "XSD_language_default",
+          "max_origin": "XSD_language_default"
+        }
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-03dab235234bdbe8"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-ORDER"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds same actual type"
+        ],
+        "negative": [
+          "sounds empty root",
+          "sounds foreign root",
+          "sounds nil",
+          "sounds wrong actual type"
+        ],
+        "boundary": [
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds root text",
+          "sounds unknown root attribute",
+          "sounds wrong root"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-caa0ad180f2a8955",
+      "instance_id": "INSTANCE-MX40-REQ-caa0ad180f2a8955",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-particle_sequence",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L121",
+      "source_xpath": "/xs:schema/xs:complexType[@name='rootfiles']/xs:sequence[1]",
+      "scope_occurrence_id": "MX40-XSD-7400bf0dbf62d186",
+      "parameters": {
+        "operator": "sequence",
+        "children_in_source_order": [
+          "MX40-XSD-99050c5ff2b62345"
+        ],
+        "occurs": {
+          "min": 1,
+          "max": "1",
+          "min_origin": "XSD_language_default",
+          "max_origin": "XSD_language_default"
+        }
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-a80ee7625389e06d"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-ORDER"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal"
+        ],
+        "negative": [
+          "container empty rootfiles",
+          "container duplicate rootfiles",
+          "container rootfiles nil"
+        ],
+        "boundary": [
+          "container multiple token values"
+        ],
+        "interaction": [
+          "container rootfiles text",
+          "container rootfiles attribute"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-d6983b9210767737",
+      "instance_id": "INSTANCE-MX40-REQ-d6983b9210767737",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-restriction_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L31",
+      "source_xpath": "/xs:schema/xs:simpleType[@name='yes-no']/xs:restriction[1]",
+      "scope_occurrence_id": "MX40-XSD-c2687ccadb74a94d",
+      "parameters": {
+        "base": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-token",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}token",
+          "name": "token",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#token"
+        },
+        "enumeration_alternatives": [
+          {
+            "value": "yes",
+            "origin_id": "MX40-XSD-5913d4fc583345c1"
+          },
+          {
+            "value": "no",
+            "origin_id": "MX40-XSD-7f04f3a176a3c180"
+          }
+        ],
+        "patterns": [],
+        "other_facets": []
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-LANG-TYPE-token"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-RESTRICT"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds normalized id primary",
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds invalid reverse primary",
+          "sounds invalid any primary",
+          "sounds invalid solo primary",
+          "sounds invalid ensemble primary"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds foreign primary"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-dbe7b0177d6981d7",
+      "instance_id": "INSTANCE-MX40-REQ-dbe7b0177d6981d7",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-particle_sequence",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L58",
+      "source_xpath": "/xs:schema/xs:complexType[@name='sound']/xs:choice[1]/xs:sequence[1]",
+      "scope_occurrence_id": "MX40-XSD-967dbfb5de74398b",
+      "parameters": {
+        "operator": "sequence",
+        "children_in_source_order": [
+          "MX40-XSD-eefd5bebdb35d5b7",
+          "MX40-XSD-ca4870a3911c7a77"
+        ],
+        "occurs": {
+          "min": 1,
+          "max": "1",
+          "min_origin": "XSD_language_default",
+          "max_origin": "XSD_language_default"
+        }
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-5e59a71c263c5dc4",
+          "INSTANCE-MX40-REQ-871ca98c7ca67797"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-OCCURS",
+          "INSTANCE-MX40-REQ-LANG-ORDER"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds repeated any",
+          "sounds solo ensemble branch"
+        ],
+        "negative": [
+          "sounds mixed branches",
+          "sounds reversed sequence",
+          "sounds sound nil"
+        ],
+        "boundary": [
+          "sounds only solo",
+          "sounds only ensemble",
+          "sounds empty mapping"
+        ],
+        "interaction": [
+          "sounds sound text",
+          "sounds unknown sound attribute",
+          "sounds duplicate id"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-ecd4fc466fda42aa",
+      "instance_id": "INSTANCE-MX40-REQ-ecd4fc466fda42aa",
+      "schema_assembly": "container.xsd",
+      "template_id": "CHECK-XSD-attribute_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/container.xsd#L132",
+      "source_xpath": "/xs:schema/xs:complexType[@name='rootfile']/xs:attribute[@name='full-path']",
+      "scope_occurrence_id": "MX40-XSD-3488d7804ca67345",
+      "parameters": {
+        "use": "required",
+        "use_origin": "explicit",
+        "resolved_type": {
+          "kind": "builtin",
+          "id": "XSD10-TYPE-token",
+          "expanded_name": "{http://www.w3.org/2001/XMLSchema}token",
+          "name": "token",
+          "source_url": "https://www.w3.org/TR/2004/REC-xmlschema-2-20041028/#token"
+        },
+        "expanded_name": "{}full-path",
+        "ref_target": null,
+        "default": null,
+        "fixed": null
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-LANG-TYPE-token"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-ATTRUSE",
+          "INSTANCE-MX40-REQ-LANG-NAME",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "container minimal"
+        ],
+        "negative": [
+          "container missing full path",
+          "container qualified attribute"
+        ],
+        "boundary": [
+          "container multiple token values",
+          "container percent literal"
+        ],
+        "interaction": [
+          "container foreign child"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-f75660cde4507954",
+      "instance_id": "INSTANCE-MX40-REQ-f75660cde4507954",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-complex_content_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L67",
+      "source_xpath": "/xs:schema/xs:complexType[@name='any']",
+      "scope_occurrence_id": "MX40-XSD-f32742f74090968e",
+      "parameters": {
+        "type_id": "MX40-XSD-f32742f74090968e",
+        "name": "any",
+        "content_category": "simple",
+        "mixed": false,
+        "attributes": [
+          {
+            "use_origin_id": "MX40-XSD-d68ebc1380cac9e8",
+            "declaration_id": "MX40-XSD-d68ebc1380cac9e8",
+            "via_reference_ids": [],
+            "expanded_name": "{}primary",
+            "use": "optional",
+            "type": {
+              "kind": "schema_component",
+              "id": "MX40-XSD-62fac361613af0c2",
+              "expanded_name": "{}yes-no"
+            },
+            "default": null,
+            "fixed": null
+          }
+        ],
+        "content": null,
+        "inheritance_chain": [
+          {
+            "derivation_id": "MX40-XSD-69b9e309ac908643",
+            "method": "extension",
+            "base_id": "XSD10-TYPE-string"
+          }
+        ],
+        "scalar": {
+          "kind": "simpleContent_extension",
+          "type_id": "MX40-XSD-f32742f74090968e",
+          "origin_id": "MX40-XSD-69b9e309ac908643",
+          "base": {
+            "kind": "builtin",
+            "type_id": "XSD10-TYPE-string",
+            "whiteSpace": "preserve"
+          },
+          "facet_layer": []
+        },
+        "wildcard_attributes": false,
+        "attribute_count": 1
+      },
+      "composition": "aggregate_reuse_view",
+      "plan_dependencies": {
+        "schema_component": [
+          "INSTANCE-MX40-REQ-11abcc0680c2b627",
+          "INSTANCE-MX40-REQ-LANG-TYPE-string",
+          "INSTANCE-MX40-REQ-b272e4c22ed1b2ee",
+          "INSTANCE-MX40-REQ-bf22dca6b28a5775"
+        ],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-CLOSED",
+          "INSTANCE-MX40-REQ-LANG-TEXT",
+          "INSTANCE-MX40-REQ-LANG-TYPE"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds repeated any"
+        ],
+        "negative": [
+          "sounds any nested content",
+          "sounds invalid any primary",
+          "sounds any nil"
+        ],
+        "boundary": [
+          "sounds empty mapping",
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds unknown any attribute",
+          "sounds foreign mapping"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    },
+    {
+      "research_id": "MX40-REQ-f957f106dfd9ea8d",
+      "instance_id": "INSTANCE-MX40-REQ-f957f106dfd9ea8d",
+      "schema_assembly": "sounds.xsd",
+      "template_id": "CHECK-XSD-schema_namespace_contract",
+      "source_url": "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xsd#L2",
+      "source_xpath": "/xs:schema",
+      "scope_occurrence_id": "MX40-XSD-d978c3ce0b039255",
+      "parameters": {
+        "target_namespace": "",
+        "element_form": "qualified",
+        "attribute_form": "unqualified",
+        "block_default": "",
+        "final_default": ""
+      },
+      "composition": "source_contract",
+      "plan_dependencies": {
+        "schema_component": [],
+        "language_semantics": [
+          "INSTANCE-MX40-REQ-LANG-FORM"
+        ]
+      },
+      "fixture_axes": {
+        "positive": [
+          "sounds empty mapping",
+          "sounds same actual type"
+        ],
+        "negative": [
+          "sounds empty root",
+          "sounds foreign root",
+          "sounds nil",
+          "sounds wrong actual type"
+        ],
+        "boundary": [
+          "sounds repeated any"
+        ],
+        "interaction": [
+          "sounds root text",
+          "sounds unknown root attribute",
+          "sounds wrong root"
+        ],
+        "missing_fact": [
+          "TestAuxiliarySourceUnavailableEvidence"
+        ]
+      },
+      "runtime_test": "TestAuxiliarySourceAssemblies",
+      "oracle_test": "TestAuxiliarySourceAgainstOriginalSchema",
+      "metadata_test": "TestAuxiliaryGeneratedSchemaMetadata",
+      "precise_unavailable_branches": [],
+      "target_limits": {
+        "model": "Unavailable: no auxiliary Document root; TestAuxiliarySoundsAssemblyAndSourceOnly verifies the boundary.",
+        "package": "Independent later integration consumes the source report; this source prerequisite does not claim package-target execution."
+      }
+    }
+  ],
+  "sounds_context": [
+    {
+      "research_id": "MX40-PROSE-sounds-primary-direction",
+      "check_id": "CHECK-context-sounds-primary-direction",
+      "role": "sound",
+      "selected_contribution": "reverse primary",
+      "tests": [
+        "TestAuxiliarySoundsDirectionalMappings",
+        "TestAuxiliarySoundsCausalInvalidFields",
+        "TestAuxiliarySoundsBrokenGrammarRetainsKnownSound",
+        "TestSoundsMappingUnavailableEvidence",
+        "TestSoundsMappingExactDeclarationAndCancellation",
+        "TestSoundsMappingOwnedPayloadAndAdmission"
+      ],
+      "boundaries": [
+        "No unique or exactly-one primary requirement",
+        "No primary omission default",
+        "No dictionary lookup or application-library selection",
+        "No model root; package use is independent later integration"
+      ]
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-any-primary",
+      "check_id": "CHECK-context-sounds-any-primary",
+      "role": "any",
+      "selected_contribution": "forward primary, exact string",
+      "tests": [
+        "TestAuxiliarySoundsDirectionalMappings",
+        "TestAuxiliarySoundsCausalInvalidFields",
+        "TestAuxiliarySoundsBrokenGrammarRetainsKnownSound",
+        "TestSoundsMappingUnavailableEvidence",
+        "TestSoundsMappingExactDeclarationAndCancellation",
+        "TestSoundsMappingOwnedPayloadAndAdmission"
+      ],
+      "boundaries": [
+        "No unique or exactly-one primary requirement",
+        "No primary omission default",
+        "No dictionary lookup or application-library selection",
+        "No model root; package use is independent later integration"
+      ]
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-solo-primary",
+      "check_id": "CHECK-context-sounds-solo-primary",
+      "role": "solo",
+      "selected_contribution": "forward primary, exact string",
+      "tests": [
+        "TestAuxiliarySoundsDirectionalMappings",
+        "TestAuxiliarySoundsCausalInvalidFields",
+        "TestAuxiliarySoundsBrokenGrammarRetainsKnownSound",
+        "TestSoundsMappingUnavailableEvidence",
+        "TestSoundsMappingExactDeclarationAndCancellation",
+        "TestSoundsMappingOwnedPayloadAndAdmission"
+      ],
+      "boundaries": [
+        "No unique or exactly-one primary requirement",
+        "No primary omission default",
+        "No dictionary lookup or application-library selection",
+        "No model root; package use is independent later integration"
+      ]
+    },
+    {
+      "research_id": "MX40-PROSE-sounds-ensemble-primary",
+      "check_id": "CHECK-context-sounds-ensemble-primary",
+      "role": "ensemble",
+      "selected_contribution": "forward primary, exact string and NMTOKEN number",
+      "tests": [
+        "TestAuxiliarySoundsDirectionalMappings",
+        "TestAuxiliarySoundsCausalInvalidFields",
+        "TestAuxiliarySoundsBrokenGrammarRetainsKnownSound",
+        "TestSoundsMappingUnavailableEvidence",
+        "TestSoundsMappingExactDeclarationAndCancellation",
+        "TestSoundsMappingOwnedPayloadAndAdmission"
+      ],
+      "boundaries": [
+        "No unique or exactly-one primary requirement",
+        "No primary omission default",
+        "No dictionary lookup or application-library selection",
+        "No model root; package use is independent later integration"
+      ]
+    }
+  ]
+}

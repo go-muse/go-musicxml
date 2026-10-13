@@ -691,6 +691,16 @@ func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *c
 			}
 		}
 		if plan, ok := c.plans[rule.Predicate]; ok {
+			if resourceLinkPlan(plan.kind) || resourceHintPlan(plan.kind) {
+				for prerequisite := range closure {
+					provider := c.plans[c.rules[prerequisite].Predicate]
+					if (resourceLinkPlan(plan.kind) && provider.kind == planTypedReference) || (provider.kind == planXSD && provider.schema.assembly == plan.context.Schema.assembly) {
+						if err := add(consumer, catalogPhase{rule: prerequisite}); err != nil {
+							return nil, err
+						}
+					}
+				}
+			}
 			if plan.kind == planTimeline {
 				for _, owner := range plan.timeline.PartOwners {
 					if err := add(consumer, catalogPhase{rule: owner.Rule}); err != nil {

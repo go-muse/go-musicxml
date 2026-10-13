@@ -1,0 +1,24 @@
+{
+  "format": "musicxml-auxiliary-source-authentic-test-trace-1",
+  "baseline_commit": "3d3d936fa4ba250083da03651cbfb4bbbe936914",
+  "baseline_tree": "af0c381754eb49a5f645fe9a08483c4c96d21f51",
+  "red": {
+    "command": "go test -p 1 -run '^TestAuxiliarySourceAssemblies$' .",
+    "exit_code": 1,
+    "phase": "Executed with the initial 55-case test matrix before production edits in this task worktree. New profiles were supplied as string IDs so the test compiled and failed on actual missing dispatch rather than undefined new symbols.",
+    "log": "auxiliary-source-baseline-red.log",
+    "log_sha256": "684261164647ce49db493f08584acaf181294f6217fbed2343f522180d330869",
+    "observed_failure": "unknown or empty explicit source profile"
+  },
+  "green": {
+    "focused_command": "go test -p 1 -run '^TestAuxiliary' .",
+    "core_command": "go test -p 1 -run '^TestSoundsMapping' -v ./validation",
+    "source_oracle_cases": 62,
+    "provider_cancellation_polls": 235,
+    "publication_cancellation_polls": 136,
+    "copy_fixture_exact_retained_bytes": 5239,
+    "copy_fixture_exact_rule_steps": 455,
+    "meaning": "Initial source matrix passes after implementation; final matrix adds seven nonnillability/qualified-attribute controls. Additional focused tests assert projection semantics, limits, owned graphs, unavailable evidence, generated metadata, inventory and frozen profile reports."
+  },
+  "scope": "Task-level evidence, not full batch-8 acceptance. Actual 386 run attempted but runtime returns exec format error; no execution pass claimed. Full integrated acceptance and exact-head CI remain independent."
+}

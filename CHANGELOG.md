@@ -9,6 +9,19 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add source-only container and sounds XSD profiles with separately generated
+  exact assembly bindings, preserving all eight earlier profiles and digests.
+  Sounds adds owned directional mapping context with explicit absence, exact
+  string/NMTOKEN domains and causal invalid fields. No Document roots, dictionary
+  lookup, unique-primary rule or ordinary Decode behavior changes are introduced.
+  `ContextResult` gains the optional `SoundMapping` payload; use keyed literals.
+
+- Add explicit nonfetching `ProfileSourceLinks` and `ProfileModelLinks`, typed
+  owned local resource projections, exact link/bookmark attachment, XLink
+  defaults, image/group/instrument metadata and schema-hint discovery pairs.
+  Reuse existing XSD/local and Opus prerequisites; preserve all eight older
+  profiles/digests and distinguish optional discovery gaps from datatype errors.
+
 - Add explicit `ProfileModelContext` and `ProfileSourceContext`, preserving all
   frozen XSD/local/timeline profiles and XSD-only `Validate`. The new bounded
   providers expose owned repeat/navigation, type-specific span, local default,

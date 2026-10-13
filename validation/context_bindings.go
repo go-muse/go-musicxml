@@ -89,6 +89,9 @@ func contextBindingSpecs() []contextBindingSpec {
 	return out
 }
 func compileContextBindings(schema *CompiledSchema) (*contextBindings, error) {
+	if schema != nil && schema.kernel != nil && schema.assembly == AssemblySounds {
+		return compileContextBindingSpecs(schema, contextSoundsMappingBindingSpecs())
+	}
 	if schema != nil && schema.kernel != nil && schema.assembly == AssemblyOpus {
 		return compileContextBindingSpecs(schema, contextOpusLayoutBindingSpecs())
 	}
@@ -98,7 +101,7 @@ func compileContextBindings(schema *CompiledSchema) (*contextBindings, error) {
 	return compileContextBindingSpecs(schema, contextBindingSpecs())
 }
 func compileContextBindingSpecs(schema *CompiledSchema, specs []contextBindingSpec) (*contextBindings, error) {
-	if schema == nil || schema.kernel == nil || (schema.assembly != AssemblyMusicXML && schema.assembly != AssemblyOpus) || len(specs) > 4096 {
+	if schema == nil || schema.kernel == nil || (schema.assembly != AssemblyMusicXML && schema.assembly != AssemblyOpus && schema.assembly != AssemblySounds) || len(specs) > 4096 {
 		return nil, contract("context bindings", "bounded MusicXML roles required")
 	}
 	type useKey struct {

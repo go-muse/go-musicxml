@@ -59,6 +59,27 @@ func (e *sourceXMLUnsupportedError) Error() string {
 }
 func (e *sourceXMLUnsupportedError) Unwrap() error { return validation.ErrIncompleteAssessment }
 
+// sourceByteOwner is a closed private mode, not an arbitrary BudgetKind.
+// Zero preserves ordinary primary-input behavior. Accounted buffers belong to
+// the root loader, which has already charged their immutable original bytes;
+// parsing still charges every buffer, event and evaluation operation.
+type sourceByteOwner uint8
+
+const (
+	sourceBytesPrimary sourceByteOwner = iota
+	sourceBytesExternal
+	sourceBytesAccounted
+)
+
+func (owner sourceByteOwner) validate() error {
+	switch owner {
+	case sourceBytesPrimary, sourceBytesExternal, sourceBytesAccounted:
+		return nil
+	default:
+		return &validation.ConfigurationError{Field: "byte owner", Reason: "unknown source byte ownership mode"}
+	}
+}
+
 const sourceXMLCursorBytes = 4096
 
 type sourceXMLCursor struct {
@@ -66,6 +87,7 @@ type sourceXMLCursor struct {
 	ctx                context.Context
 	cancelable         bool
 	account            *validation.Account
+	byteOwner          sourceByteOwner
 	data               [sourceXMLCursorBytes]byte
 	at, n              int
 	pendingErr         error
@@ -88,6 +110,16 @@ type sourceXMLCursor struct {
 }
 
 func newSourceXMLCursor(r io.Reader, ctx context.Context, a *validation.Account) (*sourceXMLCursor, error) {
+	return newSourceXMLCursorWithByteOwner(r, ctx, a, sourceBytesPrimary)
+}
+
+func newSourceXMLCursorWithByteOwner(r io.Reader, ctx context.Context, a *validation.Account, owner sourceByteOwner) (*sourceXMLCursor, error) {
+	if err := owner.validate(); err != nil {
+		return nil, err
+	}
+	if owner != sourceBytesPrimary && a == nil {
+		return nil, &validation.ConfigurationError{Field: "Account", Reason: "non-primary bytes require the root account"}
+	}
 	if r == nil {
 		return nil, ErrNilReader
 	}
@@ -102,7 +134,7 @@ func newSourceXMLCursor(r io.Reader, ctx context.Context, a *validation.Account)
 			return nil, err
 		}
 	}
-	return &sourceXMLCursor{source: r, ctx: ctx, cancelable: ctx.Done() != nil, account: a, digest: sha256.New(), encoding: "utf8", position: sourceXMLPosition{Line: 1, Column: 1}}, nil
+	return &sourceXMLCursor{source: r, ctx: ctx, cancelable: ctx.Done() != nil, account: a, byteOwner: owner, digest: sha256.New(), encoding: "utf8", position: sourceXMLPosition{Line: 1, Column: 1}}, nil
 }
 func (c *sourceXMLCursor) close() {
 	if !c.closed {
@@ -136,18 +168,36 @@ func (c *sourceXMLCursor) byte() (byte, error) {
 			return 0, c.pendingErr
 		}
 		size := len(c.data)
-		var remaining int64 = -1
-		if c.account != nil {
-			used, err := c.account.Usage(validation.BudgetInputBytes)
+		var remaining, limit int64
+		kind := validation.BudgetInputBytes
+		chargedInput := c.account != nil && c.byteOwner != sourceBytesAccounted
+		if chargedInput {
+			limit = c.account.Limits().MaxInputBytes
+			if c.byteOwner == sourceBytesExternal {
+				kind, limit = validation.BudgetExternalBytes, c.account.Limits().MaxExternalBytes
+			}
+			used, err := c.account.Usage(kind)
 			if err != nil {
 				return 0, err
 			}
-			remaining = c.account.Limits().MaxInputBytes - used
+			remaining = limit - used
 			if remaining < int64(size) {
 				size = int(remaining) + 1
 			}
 		}
-		n, err := c.source.Read(c.data[:size])
+		// Ordinary and eventual reads use one validation/accounting path. In
+		// particular no-progress retries cannot bypass ownership or cancellation.
+		var n int
+		var err error
+		for attempts := 0; attempts < 100; attempts++ {
+			if err = c.contextErr(); err != nil {
+				return 0, err
+			}
+			n, err = c.source.Read(c.data[:size])
+			if n != 0 || err != nil {
+				break
+			}
+		}
 		if n < 0 || n > size {
 			return 0, fmt.Errorf("musicxml: invalid XML reader count %d", n)
 		}
@@ -155,16 +205,13 @@ func (c *sourceXMLCursor) byte() (byte, error) {
 		if n > 0 {
 			c.reads += int64(n)
 			_, _ = c.digest.Write(c.data[:n])
-			if c.account != nil {
-				charged := int64(n)
-				if charged > remaining {
-					charged = remaining
-				}
-				if chargeErr := c.account.Charge(validation.BudgetInputBytes, charged); chargeErr != nil {
+			if chargedInput {
+				charged := min(int64(n), remaining)
+				if chargeErr := c.account.Charge(kind, charged); chargeErr != nil {
 					return 0, chargeErr
 				}
 				if int64(n) > remaining {
-					c.pendingErr = &validation.ResourceError{Kind: validation.BudgetInputBytes, Limit: c.account.Limits().MaxInputBytes, Used: c.account.Limits().MaxInputBytes, Requested: 1}
+					c.pendingErr = &validation.ResourceError{Kind: kind, Limit: limit, Used: limit, Requested: 1}
 					c.n = 0
 					return 0, c.pendingErr
 				}
@@ -178,46 +225,9 @@ func (c *sourceXMLCursor) byte() (byte, error) {
 			c.n = 0
 			return 0, contextErr
 		}
-		if n == 0 && err == nil { // A bounded no-progress loop does not spin forever.
-			for attempts := 0; attempts < 99; attempts++ {
-				n, err = c.source.Read(c.data[:size])
-				if n != 0 || err != nil {
-					break
-				}
-				if contextErr := c.contextErr(); contextErr != nil {
-					return 0, contextErr
-				}
-			}
-			if n == 0 && err == nil {
-				c.pendingErr = io.ErrNoProgress
-				return 0, c.pendingErr
-			}
-			// Account this eventual read through the same invariant as the first.
-			if n < 0 || n > size {
-				return 0, fmt.Errorf("musicxml: invalid XML reader count %d", n)
-			}
-			c.at, c.n = 0, n
-			if n > 0 {
-				c.reads += int64(n)
-				_, _ = c.digest.Write(c.data[:n])
-				if c.account != nil {
-					charged := int64(n)
-					if charged > remaining {
-						charged = remaining
-					}
-					if e := c.account.Charge(validation.BudgetInputBytes, charged); e != nil {
-						return 0, e
-					}
-					if int64(n) > remaining {
-						c.pendingErr = &validation.ResourceError{Kind: validation.BudgetInputBytes, Limit: c.account.Limits().MaxInputBytes, Used: c.account.Limits().MaxInputBytes, Requested: 1}
-						c.n = 0
-						return 0, c.pendingErr
-					}
-				}
-			}
-			if err != nil {
-				c.pendingErr = err
-			}
+		if n == 0 && err == nil {
+			c.pendingErr = io.ErrNoProgress
+			return 0, c.pendingErr
 		}
 	}
 	b := c.data[c.at]

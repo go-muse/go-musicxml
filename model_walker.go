@@ -21,7 +21,10 @@ type modelFactSink interface {
 	Close(context.Context, validation.NodeEnd) error
 }
 
-type modelWalkOptions struct{ LegacyPaths bool }
+type modelWalkOptions struct {
+	LegacyPaths bool
+	Entry       string
+}
 type modelWalkStatus struct{ HasProblems, HasCycle, DepthExceeded bool }
 type modelPointer struct {
 	typ     reflect.Type
@@ -133,7 +136,7 @@ func (w *modelWalker) release(frame *modelWalkFrame, amount int64) {
 	}
 }
 func (w *modelWalker) location(path string) validation.Location {
-	return validation.Location{Target: validation.TargetModel, DocumentID: w.documentID, Path: path}
+	return validation.Location{Target: validation.TargetModel, DocumentID: w.documentID, Entry: w.options.Entry, Path: path}
 }
 func modelQName(name modelName) validation.QName {
 	return validation.QName{Space: name.Space, Local: name.Local}

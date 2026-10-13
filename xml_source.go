@@ -13,9 +13,10 @@ import (
 )
 
 type sourceXMLConfig struct {
-	Context  context.Context
-	Account  *validation.Account
-	MaxDepth int
+	Context   context.Context
+	Account   *validation.Account
+	MaxDepth  int
+	ByteOwner sourceByteOwner
 }
 type sourceXMLAttribute struct {
 	NameSpan, ValueSpan  sourceXMLSpan
@@ -76,7 +77,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 	if config.MaxDepth < 0 {
 		return nil, ErrInvalidDecodeOptions
 	}
-	cursor, err := newSourceXMLCursor(input, config.Context, config.Account)
+	cursor, err := newSourceXMLCursorWithByteOwner(input, config.Context, config.Account, config.ByteOwner)
 	if err != nil {
 		return nil, err
 	}

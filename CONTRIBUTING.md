@@ -35,7 +35,7 @@ Single stages can be run directly, for example
 `bash scripts/check-all.sh mod generate`; the stages are `mod`, `generate`,
 `format`, `test`, `vet`, `race`, and `fuzz`. The Make targets `mod-check`,
 `generated`, `format-check`, `test`, `vet`, `race`, and `fuzz` are shortcuts
-for the same stages, and the CI jobs run them from the same script. The source-reader, direct-model, bounded context-profile and two
+for the same stages, and the CI jobs run them from the same script. The source-reader, direct-model, bounded context-profile, auxiliary-source and two
 validation-core fuzz targets each run 10,000 counted executions by default
 (`VALIDATION_FUZZ_TIME` overrides this count). The Linux test job also executes
 `GOARCH=386 go test -count=1 ./...` to exercise host-width contracts.
@@ -53,8 +53,10 @@ not fetch the research registry, and does not create executable rule bindings.
 Change its reviewed inputs/generator and regenerate; never edit the compressed
 output or promote planning statuses merely because a helper test passes.
 
-XSD-generated production files use `schema/musicxml-4.0`; the test-only
-`zz_generated_nil_validation_test.go`
+XSD-generated production files use `schema/musicxml-4.0`;
+`zz_generated_container_validation.go` and `zz_generated_sounds_validation.go`
+provide source-only auxiliary assemblies, without new generated Document roots.
+The test-only `zz_generated_nil_validation_test.go`
 uses `testdata/validation/nil-contract.xsd` for nil, element value-constraint and
 content-category contracts. `zz_generated_integer_validation_test.go` uses
 `testdata/validation/integer-contract.xsd` for exact integer value-space contracts.

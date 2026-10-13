@@ -830,3 +830,74 @@ Public sentinel errors are intended for `errors.Is`, including
 `ErrDocumentTooDeep` and `ErrDocumentCycle` for unsafe programmatically built
 models. `UnsupportedRootError`, `MXLLinkError`, and `ValidationError` provide
 structured context and are intended for `errors.As`.
+
+## Auxiliary source assemblies
+
+`InspectXML` also accepts `ProfileSourceContainer` and `ProfileSourceSounds`.
+Each profile admits only its no-namespace root (`container` or `sounds`) and
+uses separately generated, pinned XSD metadata with exact assembly-qualified
+bindings. They do not add `Document` implementations or change `Decode`,
+`DecodeAssessed` conversion, `AssessModel`, `Validate`, or existing profile
+identities and digests. `AssessmentOptions` and `validation.Report` retain their
+existing fields. A foreign or wrong root is a profile-admission error; ordinary
+in-scope schema violations appear in the report with a nil operation error.
+
+The container profile assesses XML structure, attributes and values only. It
+does not prove ZIP properties, entry existence, rootfile target kind, media-type
+classification or score/part ordering. The sounds profile additionally selects
+`validation.NewSoundsMappingContextPlan`. Its sealed source-only provider adds
+`ContextPropertySoundMapping` records with a `ContextResult.SoundMapping`
+payload of type `SoundMappingContextResult`:
+
+- `Role` distinguishes sound, any, solo and ensemble in the sounds assembly
+- `Direction` distinguishes `SoundMappingToMusicXML` (sound reverse preference)
+  from `SoundMappingFromMusicXML` (mapping-child forward preference)
+- `Sound` and `SoundID` identify the owning occurrence and its assessed ID value;
+  document-wide uniqueness remains an independent XSD identity obligation
+- `LibraryID` preserves exact `xs:string` content, including whitespace and empty
+  values; `Number` preserves the optional ensemble `xs:NMTOKEN` domain
+- `Primary` preserves explicit yes/no, omission and causal invalid/unavailable
+  evidence. There is no omission default or unique-primary requirement
+- `Content` separately records the owning sound's grammar/enumeration evidence
+
+Every alternative is a separate owned record in original source order. Known
+fields remain available alongside invalid independent fields or content.
+Provider completion means projection finished, not that every value is known or
+that an application choice has been made. No sound dictionary lookup, numerical
+ensemble restriction, library access, playback, or cross-file correspondence is
+performed. Existing source DTD, capability, cancellation and finite budget limits
+still apply. See [auxiliary source scope](docs/validation/auxiliary-source-scope.md).
+
+`ContextResult` gains one optional typed payload field; clients using unkeyed
+composite literals for that struct must migrate to keyed literals. This additive
+context-family extension does not change the `Report` or options struct shapes.
+
+## Nonfetching local resource context
+
+`ProfileSourceLinks` and `ProfileModelLinks` select XSD/local prerequisites plus
+bounded local resource projections, without timeline, package parsing, URI
+resolution or I/O. `validation.NewLocalLinkContextPlan` binds exact MusicXML or
+Opus uses; `validation.NewSchemaHintContextPlan` binds standard xsi hint discovery
+for one exact supported assembly. Existing eight profiles and option shapes are
+unchanged.
+
+`validation.ContextResult.Resource` is an optional, owned
+`ResourceContextResult`, with exactly one branch: `ResourceLinkContext`,
+`ResourceImageContext`, `ResourceSchemaHintsContext`, `ResourceGroupContext` or
+`ResourceInstrumentContext`. `ResourceAttribute` exposes independent `Presence`,
+`Raw` and effective validated `Value` evidence. `SchemaHintPair` retains namespace,
+location and source origin. `ResourceLinkKind` distinguishes the score-link,
+part-link, opus-score, opus-link, score-work-opus and bookmark families.
+
+`ContextResourceLink`, `ContextResourceImage`, `ContextResourceSchemaHints`,
+`ContextResourceGroup` and `ContextResourceInstrument` identify those branches.
+`ResourceScoreLink`, `ResourcePartLink`, `ResourceOpusScore`, `ResourceOpusLink`,
+`ResourceScoreWorkOpus` and `ResourceBookmark` are the closed link kinds.
+
+Known absence is different from unknown, unsupported and invalid evidence.
+Missing attachment targets do not fail a new mandatory predicate. Schema-hint
+pairing can remain incomplete while intrinsic extraction succeeds; this does not
+change the accepted XSD list(anyURI) datatype. Direct models expose unavailable
+xsi source history. XLink onLoad is metadata and grants no retrieval authority.
+See [local resource scope](docs/validation/local-link-context-scope.md) for the
+bounded descendant-selection, image advice and exact typed-reference contracts.

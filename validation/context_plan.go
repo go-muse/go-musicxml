@@ -3,6 +3,7 @@ package validation
 import "slices"
 
 const (
+	planContextSoundsMapping   planKind = "sounds-context-mapping"
 	planContextOpusLayout      planKind = "opus-context-layout"
 	planFigureNumberNumeric    planKind = "musicxml-figure-number-numeric"
 	planGraphicalRepeatContent planKind = "musicxml-graphical-repeat-content"
@@ -83,9 +84,24 @@ func NewOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextOpusLayout, ContextPlanSpec{Schema: schema})
 }
 
+// NewSoundsMappingContextPlan projects the four directional sounds mapping roles.
+// Only the exact sounds assembly and source target are supported.
+func NewSoundsMappingContextPlan(schema *CompiledSchema) (Plan, error) {
+	return newContextPlan(planContextSoundsMapping, ContextPlanSpec{Schema: schema})
+}
+
 func contextPlanAssembly(kind planKind) Assembly {
-	if kind == planContextOpusLayout {
+	if kind == planContextSoundsMapping {
+		return AssemblySounds
+	}
+	if kind == planContextOpusLayout || kind == planContextOpusLinks || kind == planContextOpusHints {
 		return AssemblyOpus
+	}
+	if kind == planContextContainerHints {
+		return AssemblyContainer
+	}
+	if kind == planContextSoundsHints {
+		return AssemblySounds
 	}
 	return AssemblyMusicXML
 }
@@ -105,7 +121,7 @@ func newContextPlan(kind planKind, spec ContextPlanSpec) (Plan, error) {
 }
 func (p Plan) isContext() bool {
 	switch p.kind {
-	case planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
 		return true
 	}
 	return false
@@ -160,6 +176,9 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 		return contract("context rule", "normative mandatory family contract required")
 	}
 	for _, target := range r.Targets {
+		if p.kind == planContextSoundsMapping && target != TargetSource {
+			return contract("sounds context target", "source-only assembly required")
+		}
 		if target != TargetSource && target != TargetModel {
 			return contract("context target", "only source/current-model targets supported")
 		}
