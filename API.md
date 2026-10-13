@@ -901,3 +901,21 @@ change the accepted XSD list(anyURI) datatype. Direct models expose unavailable
 xsi source history. XLink onLoad is metadata and grants no retrieval authority.
 See [local resource scope](docs/validation/local-link-context-scope.md) for the
 bounded descendant-selection, image advice and exact typed-reference contracts.
+
+### Owned intrinsic resource snapshots
+
+`validation.Session.FinishWithResourceSnapshot` is an additive alternate terminal
+finalizer. It runs the selected intrinsic phases before admitting an immutable
+`ResourceSnapshot`, and releases session storage exactly once. Its first return
+is always the best ordinary `Report`, including when snapshot admission fails.
+A snapshot retains the canonical report, exact root/profile/assembly, selected
+resource projections and schema-determined ID states under the same budget
+account until `Close` or successful transfer to package assessment. It never
+parses, fetches, retains a model, or exposes a post-finalization fact view.
+
+Snapshots are single-goroutine objects. Serialize getters, ownership transfer and
+`Close`. Standalone `Close` is idempotent. Closed header/count access returns zero;
+closed content access returns a session error. Getters produce defensive,
+caller-owned API copies of already admitted immutable data; retaining adapters
+must account for their own working copies. Existing `Finish`, options, profile
+identities and ordinary assessment behavior are unchanged.
