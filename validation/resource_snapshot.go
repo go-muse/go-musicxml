@@ -9,8 +9,9 @@ import (
 // ResourceSnapshotHeader identifies an intrinsic assessment without confusing
 // occurrence identity, schema assembly, root kind and assessment completeness.
 type ResourceSnapshotHeader struct {
-	// LinkProjectionSelected records selection of the sealed local-link plan for
-	// the established assembly. It does not assert projection or scope completion.
+	// LinkProjectionSelected records selection of an available sealed local-link
+	// plan for the established assembly. It does not assert projection or scope
+	// completion.
 	LinkProjectionSelected bool
 	DocumentID             string
 	Root                   NodeRef
@@ -86,6 +87,11 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 		for _, key := range s.catalog.orders[s.profile.ID] {
 			if err := s.step(ctx, 1); err != nil {
 				return nil, err
+			}
+			// Match evaluate's support gate: an unsupported or missing entry
+			// returns before running the plan and cannot witness link absence.
+			if s.catalog.supports[s.profile.ID][key].State != ImplementationAvailable {
+				continue
 			}
 			kind := s.catalog.plans[s.catalog.rules[key].Predicate].kind
 			if (kind == planContextMusicXMLLinks && h.Assembly.Value == AssemblyMusicXML) || (kind == planContextOpusLinks && h.Assembly.Value == AssemblyOpus) {

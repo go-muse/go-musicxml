@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -56,35 +57,73 @@ func TestPackageReviewSettledDecisionsDoNotRepeatWork(t *testing.T) {
 }
 
 func TestPackageReviewMinimalVacuityRequiresSelectedLinks(t *testing.T) {
-	for _, selected := range []bool{false, true} {
-		s, adoption, _ := packageAdviceFixtureCheck(t, PackageCheckScoreBeforeParts)
-		resource := s.adoptions[adoption].resource
-		resource.snapshot.header.Name = Evidence[QName]{State: EvidenceKnown, Value: QName{Local: "score-partwise"}}
-		resource.snapshot.header.LinkProjectionSelected = selected
-		resource.snapshot.contexts = nil
-		for i, name := range []string{"META-INF/container.xml", "score.musicxml"} {
-			if err := s.ObserveEntry(context.Background(), packageTestEntry(PackageFactID(i+1), name)); err != nil {
+	for _, tc := range []struct {
+		name     string
+		kind     planKind
+		support  ImplementationState
+		selected bool
+	}{
+		{"schema-only", "", "", false},
+		{"available-links", planContextMusicXMLLinks, ImplementationAvailable, true},
+		{"unsupported-links", planContextMusicXMLLinks, ImplementationUnsupported, false},
+		{"missing-support", planContextMusicXMLLinks, "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			snapshot := selectionWitnessSnapshot(t, tc.kind, tc.support)
+			// Supply the established musical root kind for this miniature schema;
+			// retain the real finalized support witness and empty projection.
+			snapshot.header.Name = Evidence[QName]{State: EvidenceKnown, Value: QName{Local: "score-partwise"}}
+			rules, profiles := packageFixture(t, PackageCheckScoreBeforeParts)
+			h := snapshot.Header()
+			profiles[0].Intrinsic = []IntrinsicProfileBinding{{Assembly: h.Assembly.Value, Target: h.Target, Profile: h.Profile, CatalogDigest: h.CatalogDigest}}
+			catalog, err := NewPackageCatalog(rules, profiles)
+			if err != nil {
 				t.Fatal(err)
 			}
-		}
-		root := PackageRootfileObservation{ID: 3, Package: "outer", Source: NodeRef{"container", 1}, Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfile[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "score.musicxml"}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceKnown, Value: 2}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceKnown, Value: resource.id}, Indirection: Evidence[bool]{State: EvidenceKnown}}
-		if err := s.ObserveRootfile(context.Background(), root); err != nil {
-			t.Fatal(err)
-		}
-		sealFixtureExpansions(t, s)
-		if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
-			t.Fatal(err)
-		}
-		b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
-		if err != nil {
-			t.Fatal(err)
-		}
-		r := b.PackageReport()
-		if b.Satisfied() != selected {
-			t.Errorf("link projection selected=%t report=%+v", selected, r)
-		}
-		if !selected && (r.Counts.Unknown != 1 || r.Counts.NotApplicable != 0) {
-			t.Errorf("unselected links inferred absent: %+v", r)
-		}
+			s, err := catalog.Begin(context.Background(), RunOptions{DocumentID: "package", Profile: "test.package", Account: snapshot.account})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = s.OpenPackage(context.Background(), packageTestIdentity()); err != nil {
+				t.Fatal(err)
+			}
+			pin := ResourcePin{CanonicalID: "score", Representation: ResourceSourceXML, Digest: strings.Repeat("c", 64)}
+			resourceID, err := s.AddResource(context.Background(), pin, snapshot, true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err = s.AdoptResource(context.Background(), resourceID, ResourceAdoptionOptions{Package: "outer", DocumentID: "source", Root: true}); err != nil {
+				t.Fatal(err)
+			}
+			for i, name := range []string{"META-INF/container.xml", "score.musicxml"} {
+				if err := s.ObserveEntry(context.Background(), packageTestEntry(PackageFactID(i+1), name)); err != nil {
+					t.Fatal(err)
+				}
+			}
+			root := PackageRootfileObservation{ID: 3, Package: "outer", Source: NodeRef{"container", 1}, Location: Location{Target: TargetPackage, DocumentID: "package", Path: "/rootfile[1]"}, Ordinal: 1, FullPath: Evidence[string]{State: EvidenceKnown, Value: "score.musicxml"}, MediaType: Evidence[string]{State: EvidenceAbsent}, Entry: Evidence[PackageFactID]{State: EvidenceKnown, Value: 2}, Resource: Evidence[ResourceAssessmentID]{State: EvidenceKnown, Value: resourceID}, Indirection: Evidence[bool]{State: EvidenceKnown}}
+			if err := s.ObserveRootfile(context.Background(), root); err != nil {
+				t.Fatal(err)
+			}
+			sealFixtureExpansions(t, s)
+			if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+				t.Fatal(err)
+			}
+			b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			r := b.PackageReport()
+			// Check the package report as well as the bundle: an intrinsic
+			// Unsupported result must not mask a false package-level proof.
+			if b.Satisfied() != tc.selected || r.Satisfied() != tc.selected {
+				t.Errorf("link projection selected=%t report=%+v", tc.selected, r)
+			}
+			if !tc.selected && (r.Counts.Unknown != 1 || r.Counts.NotApplicable != 0 || len(r.Findings) != 1 || r.Findings[0].Reason != "package-score-part-role-evidence-unavailable") {
+				t.Errorf("unselected links inferred absent: %+v", r)
+			}
+			if tc.selected && r.Counts.NotApplicable != 1 {
+				t.Errorf("available link projection did not prove minimal vacuity: %+v", r)
+			}
+		})
 	}
 }

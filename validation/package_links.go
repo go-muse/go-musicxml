@@ -489,7 +489,16 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 				if h.Raw.State == EvidenceAbsent && h.NoNamespace.Presence.State == EvidenceAbsent {
 					continue
 				}
-				if h.Complete.State != EvidenceKnown || !h.Complete.Value {
+				if h.Complete.State == EvidenceKnown && !h.Complete.Value {
+					// Pairing is a capability-policy predicate, not an XSD
+					// datatype rule. A proved gap blocks readiness without
+					// claiming a normative violation or unavailable evidence.
+					d.Outcome = OutcomeFail
+					d.Reason = h.Complete.Reason
+					d.Cause = &DecisionRef{Rule: v.Provider, Subject: v.Subject}
+					break
+				}
+				if h.Complete.State != EvidenceKnown {
 					d = packageEvidenceDecision(d, h.Complete)
 					if d.Outcome == OutcomePass || d.Outcome == OutcomeNotApplicable {
 						d.Outcome = OutcomeUnknown
