@@ -177,9 +177,36 @@ func TestPhysicalDirectoryIdentityDistinguishesAliasesAndWrongParents(t *testing
 // has no Windows 8.3 aliases; the Windows test below exercises the real API.
 func TestMissingOutputAliasCanonicalizesExistingPrefix(t *testing.T) {
 	t.Parallel()
-	root := t.TempDir()
+	for _, kind := range []string{"direct", "symlinked"} {
+		t.Run(kind, func(t *testing.T) {
+			parent := t.TempDir()
+			root := filepath.Join(parent, "physical-root")
+			if err := os.Mkdir(root, 0700); err != nil {
+				t.Fatal(err)
+			}
+			if kind == "symlinked" {
+				alias := filepath.Join(parent, "root-alias")
+				if err := os.Symlink(root, alias); err != nil {
+					t.Fatal(err)
+				}
+				root = alias
+			}
+			testMissingOutputAliasCanonicalizesExistingPrefix(t, root)
+		})
+	}
+}
+
+func testMissingOutputAliasCanonicalizesExistingPrefix(t *testing.T, root string) {
+	t.Helper()
+	// The injected native spelling hook runs after physical traversal. Its
+	// fixture spellings must use that same physical prefix, including when
+	// the platform temporary directory or this explicit root is a symlink.
+	physicalRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
 	long := filepath.Join(root, "LongDirectoryName")
-	short := filepath.Join(root, "LONGDI~1")
+	short := filepath.Join(root, "EmulatedNativeSpelling")
 	other := filepath.Join(root, "OtherDirectory")
 	for _, path := range []string{long, short, other} {
 		if err := os.Mkdir(path, 0700); err != nil {
@@ -190,10 +217,11 @@ func TestMissingOutputAliasCanonicalizesExistingPrefix(t *testing.T) {
 	calls := 0
 	ops.evalSymlinks = func(path string) (string, error) {
 		calls++
-		if path == short {
-			return long, nil
+		normalized, err := filepath.EvalSymlinks(path)
+		if err == nil && normalized == filepath.Join(physicalRoot, "EmulatedNativeSpelling") {
+			return filepath.Join(physicalRoot, "LongDirectoryName"), nil
 		}
-		return filepath.EvalSymlinks(path)
+		return normalized, err
 	}
 	for _, suffix := range []string{"report.json", filepath.Join("missing", "nested", "report.json")} {
 		output := filepath.Join(short, suffix)
