@@ -51,6 +51,7 @@ type sourceDTDParser struct {
 	capture                  *sourceDTDText
 	origin                   sourceDTDOrigin
 	literalGeneralReferences bool
+	parameters               []*sourceDTDDeclaration
 }
 
 // parseSourceDTD starts immediately after the literal <!DOCTYPE. It consumes
@@ -96,26 +97,65 @@ func (p *sourceDTDParser) subset() {
 	for p.err == nil {
 		p.space()
 		switch p.peek() {
+		case sourceDTDParameterBoundary:
+			input, ok := p.input.(sourceDTDParameterInput)
+			if p.store == nil || !ok || len(p.parameters) == 0 || !input.DTDInParameter() {
+				p.fail("unexpected parameter entity boundary in DTD")
+				return
+			}
+			d := p.parameters[len(p.parameters)-1]
+			if p.err = input.FinishDTDParameter(); p.err != nil {
+				return
+			}
+			p.parameters = p.parameters[:len(p.parameters)-1]
+			p.err = p.store.parameterRead(d)
 		case ']':
+			if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
+				p.fail("parameter entity cannot close the caller DTD subset")
+				return
+			}
 			return
 		case '%':
+			origin := p.declarationOrigin()
 			p.read()
 			name := p.name(sourceDTDNCName, p.store != nil)
 			p.expect(';')
-			if p.err == nil {
-				p.info.HasParameterReferences = true
-				if p.store == nil {
-					p.unsupported("parameter-entity replacement in an internal DTD subset")
-				} else {
-					p.info.Unsupported = true
-					p.info.WellFormednessIncomplete = true
-					p.store.state.ParameterEntityUnread = true
-					if p.store.state.FirstUnreadParameter == "" {
-						p.store.state.FirstUnreadParameter = name
-					}
-					p.store.state.BindingCutoff = p.store.state.Standalone != sourceDTDStandaloneYes
-				}
+			if p.err != nil {
+				return
 			}
+			p.info.HasParameterReferences = true
+			if p.store == nil {
+				p.unsupported("parameter-entity replacement in an internal DTD subset")
+				return
+			}
+			if position, ok := p.input.(interface{ DTDPosition() sourceXMLPosition }); ok && origin.SpanAvailable {
+				origin.Span.End = position.DTDPosition()
+			}
+			declaration, known := p.store.Entity(name, true)
+			if input, ok := p.input.(sourceDTDParameterInput); ok && known && !declaration.External {
+				next, err := p.store.growPointers(p.parameters)
+				if err != nil {
+					p.err = err
+					return
+				}
+				p.parameters = next
+				p.err = input.PushDTDParameter(declaration, origin)
+				p.releaseBytes(int64(len(name)))
+				if p.err != nil {
+					return
+				}
+				p.parameters = append(p.parameters, declaration)
+				continue
+			}
+			p.info.Unsupported = true
+			p.info.WellFormednessIncomplete = true
+			p.store.state.ParameterEntityUnread = true
+			if p.store.state.FirstUnreadParameter == "" {
+				p.store.state.FirstUnreadParameter = name
+			} else {
+				p.releaseBytes(int64(len(name)))
+			}
+			p.store.state.BindingCutoff = p.store.state.Standalone != sourceDTDStandaloneYes
 		case '<':
 			p.origin = p.declarationOrigin()
 			p.read()
@@ -838,7 +878,18 @@ func sourceDTDPublicChar(r rune) bool {
 // provide coordinates. SpanAvailable explicitly distinguishes absent evidence
 // from a real declaration whose offset could happen to be zero.
 func (p *sourceDTDParser) declarationOrigin() sourceDTDOrigin {
-	origin := sourceDTDOrigin{Region: sourceDTDInternalSubset}
+	origin := sourceDTDOrigin{Region: sourceDTDInternalSubset, AncestryComplete: true}
+	if p.store != nil {
+		if input, ok := p.input.(interface {
+			DTDParameterOrigin() (sourceDTDOrigin, error)
+		}); ok {
+			origin, p.err = input.DTDParameterOrigin()
+			return origin
+		}
+		if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
+			return sourceDTDOrigin{Region: sourceDTDParameterEntityRegion, ExternalMarkup: true}
+		}
+	}
 	if position, ok := p.input.(interface{ DTDPosition() sourceXMLPosition }); ok {
 		origin.SpanAvailable = true
 		origin.Span.Start = position.DTDPosition()
@@ -893,11 +944,15 @@ func (p *sourceDTDParser) checkDefaultReferences() {
 			}
 			entity, known := p.store.Entity(name, false)
 			if !known {
-				if p.store.state.Standalone == sourceDTDStandaloneYes || (!p.store.state.ExternalSubsetUnread && !p.store.state.ParameterEntityUnread) {
+				if !d.Origin.ExternalMarkup && (p.store.state.Standalone == sourceDTDStandaloneYes || (!p.store.state.ExternalSubsetUnread && !p.info.HasParameterReferences)) {
 					p.fail("undeclared general entity in DTD attribute default")
 					return
 				}
 				continue
+			}
+			if p.store.state.Standalone == sourceDTDStandaloneYes && !d.Origin.ExternalMarkup && entity.Origin.ExternalMarkup {
+				p.fail("standalone DTD default reference requires a declaration outside parameter entities")
+				return
 			}
 			if entity.Origin.Sequence >= d.Origin.Sequence {
 				p.fail("general entity declaration must precede its direct reference in a DTD attribute default")
@@ -909,4 +964,14 @@ func (p *sourceDTDParser) checkDefaultReferences() {
 			}
 		}
 	}
+}
+
+// The same scanner may elect whole-declaration internal PE frames. A boundary
+// sentinel is legal only in subset's between-declarations dispatch; Read must
+// reject it so names, literals, comments and declarations cannot borrow caller
+// bytes. An unread entity uses the ordinary XML 5.1 binding cutoff instead.
+type sourceDTDParameterInput interface {
+	PushDTDParameter(*sourceDTDDeclaration, sourceDTDOrigin) error
+	FinishDTDParameter() error
+	DTDInParameter() bool
 }

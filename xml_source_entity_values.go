@@ -19,15 +19,18 @@ func (r *sourceXMLTokenReader) entityReference(name string, context sourceXMLEnt
 				}
 				return 0, &sourceXMLUnsupportedError{Feature: "external general entity replacement", Reason: "dtd-external-entity-unread"}
 			}
-			if r.standalone == sourceDTDStandaloneYes && declaration.Origin.ExternalMarkup {
+			if r.standalone == sourceDTDStandaloneYes && !r.referenceInExternalMarkup() && declaration.Origin.ExternalMarkup {
 				return 0, r.syntax("standalone XML entity reference requires an internal declaration")
 			}
-			err := r.pushEntity(sourceXMLEntityInput{Name: name, Replacement: declaration.Replacement, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable}, context, use)
+			err := r.pushEntity(sourceXMLEntityInput{Name: name, Replacement: declaration.Replacement, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationRecord: declaration, ExternalMarkup: declaration.Origin.ExternalMarkup || r.referenceInExternalMarkup()}, context, use)
 			return sourceXMLExpandedRune, err
 		}
 		state := r.dtdStore.State()
-		if r.standalone != sourceDTDStandaloneYes && (state.ExternalSubsetUnread || state.ParameterEntityUnread) {
+		if (r.standalone != sourceDTDStandaloneYes || r.referenceInExternalMarkup()) && (state.ExternalSubsetUnread || state.ParameterEntityUnread) {
 			return 0, &sourceXMLUnsupportedError{Feature: "entity declaration depends on unread DTD content", Reason: "dtd-entity-declaration-unread"}
+		}
+		if (r.standalone != sourceDTDStandaloneYes || r.referenceInExternalMarkup()) && state.ParameterEntityReferences {
+			return 0, &sourceXMLUnsupportedError{Feature: "undeclared general entity requires DTD validity assessment", Reason: "dtd-entity-declared-validity-unassessed"}
 		}
 	}
 	return 0, r.syntax("undeclared XML entity " + sourceXMLDiagnosticValue(name))
@@ -96,7 +99,7 @@ func (r *sourceXMLTokenReader) attributeValue(quote rune, owner *sourceXMLEntity
 	}
 }
 func (r *sourceXMLTokenReader) dtdAttributeValue(raw string, declaration sourceDTDOrigin) (string, error) {
-	input := sourceXMLEntityInput{Replacement: raw, Declaration: declaration.Span, DeclarationAvailable: declaration.SpanAvailable}
+	input := sourceXMLEntityInput{Replacement: raw, Declaration: declaration.Span, DeclarationAvailable: declaration.SpanAvailable, ExternalMarkup: declaration.ExternalMarkup}
 	if err := r.pushEntity(input, sourceEntityAttribute, r.metadata.Span); err != nil {
 		return "", err
 	}
@@ -106,4 +109,8 @@ func (r *sourceXMLTokenReader) dtdAttributeValue(raw string, declaration sourceD
 		err = r.finishEntity(sourceEntityAttribute)
 	}
 	return value, err
+}
+
+func (r *sourceXMLTokenReader) referenceInExternalMarkup() bool {
+	return r.entity != nil && r.entity.input.ExternalMarkup
 }

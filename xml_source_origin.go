@@ -16,9 +16,12 @@ type sourceXMLOriginStep struct {
 	DeclarationAvailable, UseAvailable bool
 	Declaration, Use                   sourceXMLSpan
 	ReplacementOffset                  int64
+	DeclarationRecord                  *sourceDTDDeclaration
 }
 type sourceXMLOrigin struct {
 	Kind                               sourceXMLOriginKind
+	DeclarationExpected, UseExpected   bool
+	DeclarationRecord                  *sourceDTDDeclaration
 	Specified                          bool
 	PhysicalAvailable                  bool
 	Physical                           sourceXMLSpan
@@ -42,6 +45,8 @@ func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified
 	}
 	frame := r.entity
 	out.Kind = sourceOriginEntity
+	out.DeclarationExpected, out.UseExpected = true, true
+	out.DeclarationRecord = frame.input.DeclarationRecord
 	out.Specified = false
 	out.PhysicalAvailable = false
 	out.Physical = sourceXMLSpan{}
@@ -54,7 +59,7 @@ func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified
 	}
 	out.Ancestry = make([]sourceXMLOriginStep, frame.depth)
 	for i := frame.depth - 1; frame != nil; i-- {
-		out.Ancestry[i] = sourceXMLOriginStep{Entity: frame.input.Name, DeclarationAvailable: frame.input.DeclarationAvailable, Declaration: frame.input.Declaration, UseAvailable: frame.useAvailable, Use: frame.use, ReplacementOffset: int64(frame.offset)}
+		out.Ancestry[i] = sourceXMLOriginStep{Entity: frame.input.Name, DeclarationAvailable: frame.input.DeclarationAvailable, Declaration: frame.input.Declaration, UseAvailable: frame.useAvailable, Use: frame.use, ReplacementOffset: int64(frame.offset), DeclarationRecord: frame.input.DeclarationRecord}
 		frame = frame.parent
 	}
 	return nil

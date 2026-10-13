@@ -9,6 +9,7 @@ import (
 	"io"
 	"strings"
 	"testing"
+	"unicode/utf16"
 	"unsafe"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -454,5 +455,158 @@ func TestSourceEntityParameterFramePadding(t *testing.T) {
 	used, _ := a.Usage(validation.BudgetEvents)
 	if used != 6 {
 		t.Fatalf("padding/reference/frame/UTF8 work=%d want6", used)
+	}
+}
+
+func TestSourceDTDParameterOriginKeepsDeclarationRecord(t *testing.T) {
+	a, _ := validation.NewBudgetAccount(validation.Budgets{})
+	r, err := newSourceXMLTokenReader(strings.NewReader(""), sourceXMLConfig{Context: context.Background(), Account: a, InternalDTD: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	declaration := &sourceDTDDeclaration{Name: "p", Replacement: "", Parameter: true}
+	if err = r.PushDTDParameter(declaration, sourceDTDOrigin{SpanAvailable: true}); err != nil {
+		t.Fatal(err)
+	}
+	origin, err := r.DTDParameterOrigin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if origin.SpanAvailable || !origin.ExternalMarkup || !origin.AncestryComplete || len(origin.Ancestry) != 1 || origin.Ancestry[0].DeclarationRecord != declaration || !origin.Ancestry[0].UseAvailable {
+		t.Fatalf("origin=%+v", origin)
+	}
+	for range 2 {
+		if _, err = r.Read(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err = r.FinishDTDParameter(); err != nil {
+		t.Fatal(err)
+	}
+	if origin.Ancestry[0].Entity != "p" {
+		t.Fatal("snapshot mutated on frame release")
+	}
+	if unsafe.Sizeof(sourceDTDOriginStep{}) > 160 {
+		t.Fatalf("DTD ancestry size=%d", unsafe.Sizeof(sourceDTDOriginStep{}))
+	}
+}
+
+func TestSourceInternalEntityOriginalEncodingDigest(t *testing.T) {
+	source := `<!DOCTYPE r [<!ENTITY e "é">]><r>&e;é</r>`
+	variants := map[string]string{"utf8": source, "utf8-bom": "\xef\xbb\xbf" + source}
+	for _, little := range []bool{true, false} {
+		data := []byte{0xff, 0xfe}
+		name := "utf16le"
+		if !little {
+			data = []byte{0xfe, 0xff}
+			name = "utf16be"
+		}
+		for _, unit := range utf16.Encode([]rune(source)) {
+			if little {
+				data = append(data, byte(unit), byte(unit>>8))
+			} else {
+				data = append(data, byte(unit>>8), byte(unit))
+			}
+		}
+		variants[name] = string(data)
+	}
+	for name, input := range variants {
+		t.Run(name, func(t *testing.T) {
+			tokens, _, summary, err := sourceEntityScan(t, input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var text strings.Builder
+			for _, token := range tokens {
+				if chars, ok := token.(xml.CharData); ok {
+					text.Write(chars)
+				}
+			}
+			if text.String() != "éé" {
+				t.Fatalf("text=%q", text.String())
+			}
+			if summary.ReadPrefixSHA256 != sha256.Sum256([]byte(input)) || summary.BytesRead != int64(len(input)) || summary.BytesConsumed != int64(len(input)) || !summary.DigestComplete {
+				t.Fatalf("summary=%+v", summary)
+			}
+		})
+	}
+}
+func TestSourceInternalEntityDataAndTerminalReadError(t *testing.T) {
+	source := `<!DOCTYPE r [<!ENTITY e "<x/>">]><r>&e;</r>`
+	boom := errors.New("terminal source error")
+	for _, terminal := range []error{io.EOF, boom} {
+		a, _ := validation.NewBudgetAccount(validation.Budgets{})
+		read := false
+		input := sourceEntityReadFunc(func(p []byte) (int, error) {
+			if read {
+				return 0, terminal
+			}
+			read = true
+			return copy(p, source), terminal
+		})
+		r, err := newSourceXMLTokenReader(input, sourceXMLConfig{Context: context.Background(), Account: a, InternalDTD: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for err == nil {
+			_, err = r.Token()
+		}
+		if !errors.Is(err, terminal) {
+			t.Fatalf("terminal=%v got=%v", terminal, err)
+		}
+		summary := r.Summary()
+		if summary.InputComplete != (terminal == io.EOF) || summary.ReadPrefixSHA256 != sha256.Sum256([]byte(source)) {
+			t.Fatalf("summary=%+v", summary)
+		}
+		r.Close()
+		used, _ := a.Usage(validation.BudgetBufferedBytes)
+		if used != 0 {
+			t.Fatalf("retained=%d", used)
+		}
+	}
+}
+func TestSourceEntityFrameCancellationAtEveryDepth(t *testing.T) {
+	for depth := 1; depth <= sourceXMLEntityMaxDepth; depth++ {
+		ctx, cancel := context.WithCancel(context.Background())
+		a, _ := validation.NewBudgetAccount(validation.Budgets{})
+		r, err := newSourceXMLTokenReader(strings.NewReader("physical"), sourceXMLConfig{Context: ctx, Account: a, InternalDTD: true})
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i := 0; i < depth; i++ {
+			if err = r.pushEntity(sourceXMLEntityInput{Name: fmt.Sprintf("e%d", i), Replacement: "x"}, sourceEntityContent, sourceXMLSpan{}); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if _, err = r.peek(); err != nil {
+			t.Fatal(err)
+		}
+		cancel()
+		if _, err = r.take(); !errors.Is(err, context.Canceled) {
+			t.Fatalf("depth=%d err=%v", depth, err)
+		}
+		if r.entity.offset != 0 || r.Summary().BytesRead != 0 {
+			t.Fatalf("depth=%d consumed canceled data", depth)
+		}
+		r.Close()
+		used, _ := a.Usage(validation.BudgetBufferedBytes)
+		if used != 0 {
+			t.Fatalf("depth=%d retained=%d", depth, used)
+		}
+	}
+}
+
+func TestSourceInternalClosedDTDUnboundPrefixIsSyntax(t *testing.T) {
+	source := `<!DOCTYPE p:r [<!ATTLIST p:r a CDATA #IMPLIED>]><p:r/>`
+	_, _, _, err := sourceEntityScan(t, source)
+	var syntax *xml.SyntaxError
+	if !errors.As(err, &syntax) {
+		t.Fatalf("closed declarations: %v", err)
+	}
+	_, err = sourceScan(t, source)
+	var unsupported *sourceXMLUnsupportedError
+	if !errors.As(err, &unsupported) {
+		t.Fatalf("legacy changed: %v", err)
 	}
 }

@@ -46,14 +46,31 @@ const (
 
 type sourceDTDRegion string
 
-const sourceDTDInternalSubset sourceDTDRegion = "internal-subset"
+const (
+	sourceDTDInternalSubset        sourceDTDRegion = "internal-subset"
+	sourceDTDParameterEntityRegion sourceDTDRegion = "parameter-entity"
+)
+
+// An ancestry entry distinguishes a parameter entity's declaration from the
+// particular reference which entered its replacement. DeclarationRecord retains
+// provenance for a declaration itself generated in a no-longer-active entity.
+// All records and name strings are borrowed from this same store.
+type sourceDTDOriginStep struct {
+	Entity                             string
+	DeclarationAvailable, UseAvailable bool
+	Declaration, Use                   sourceXMLSpan
+	ReplacementOffset                  int64
+	DeclarationRecord                  *sourceDTDDeclaration
+}
 
 type sourceDTDOrigin struct {
-	Sequence       int64
-	Region         sourceDTDRegion
-	Span           sourceXMLSpan
-	SpanAvailable  bool
-	ExternalMarkup bool
+	Sequence         int64
+	Region           sourceDTDRegion
+	Span             sourceXMLSpan
+	SpanAvailable    bool
+	ExternalMarkup   bool
+	Ancestry         []sourceDTDOriginStep
+	AncestryComplete bool
 }
 type sourceDTDDeclaration struct {
 	Kind                                       sourceDTDDeclarationKind
@@ -77,6 +94,7 @@ type sourceDTDStoreState struct {
 	AttributeDeclarationsComplete, UnparsedEntitiesComplete                           bool
 	WellFormednessIncomplete                                                          bool
 	ExternalSubsetUnread, ParameterEntityUnread, BindingCutoff                        bool
+	ParameterEntityReferences                                                         bool
 	FirstUnreadParameter                                                              string
 }
 
@@ -95,14 +113,15 @@ type sourceDTDStoreKey struct {
 	element, name string
 }
 type sourceDTDStore struct {
-	context        context.Context
-	account        *validation.Account
-	state          sourceDTDStoreState
-	declarations   []*sourceDTDDeclaration
-	bindings       map[sourceDTDStoreKey]*sourceDTDDeclaration
-	attributes     map[string][]*sourceDTDDeclaration
-	owned          int64
-	parsed, closed bool
+	parametersRead         map[*sourceDTDDeclaration]bool
+	context                context.Context
+	account                *validation.Account
+	state                  sourceDTDStoreState
+	declarations           []*sourceDTDDeclaration
+	bindings               map[sourceDTDStoreKey]*sourceDTDDeclaration
+	attributes             map[string][]*sourceDTDDeclaration
+	owned                  int64
+	parsed, closed, failed bool
 }
 
 func newSourceDTDStore(ctx context.Context, account *validation.Account, standalone sourceDTDStandalone) (*sourceDTDStore, error) {
@@ -134,6 +153,7 @@ func (s *sourceDTDStore) Close() error {
 	err := s.account.Release(validation.BudgetBufferedBytes, s.owned)
 	s.owned = 0
 	s.declarations, s.bindings, s.attributes = nil, nil, nil
+	s.parametersRead = nil
 	s.state = sourceDTDStoreState{}
 	return err
 }
@@ -199,14 +219,27 @@ func parseSourceDTDWithStore(input sourceDTDInput, store *sourceDTDStore) (sourc
 	}
 	store.parsed = true
 	p := sourceDTDParser{input: input, store: store}
+	defer func() { store.release(int64(cap(p.parameters)) * int64(unsafe.Sizeof((*sourceDTDDeclaration)(nil)))) }()
 	p.doctype()
+	if p.err == nil {
+		p.err = store.check()
+	}
 	grammarComplete := p.err == nil
 	if p.err == nil {
 		p.checkDefaultReferences()
 	}
 	store.state.Name = p.info.Name
+	store.failed = p.err != nil
+	store.state.ParameterEntityReferences = p.info.HasParameterReferences
 	store.state.GrammarComplete = grammarComplete
-	store.state.WellFormednessIncomplete = store.state.EntityWellFormednessIncomplete || store.state.DefaultWellFormednessIncomplete || store.state.PredefinedEntityWellFormednessIncomplete || store.state.ParameterEntityWellFormednessIncomplete || store.state.ParameterEntityUnread || p.err != nil
+	store.state.ParameterEntityWellFormednessIncomplete = false
+	for _, d := range store.declarations {
+		if d.Parameter && !store.parametersRead[d] {
+			store.state.ParameterEntityWellFormednessIncomplete = true
+			break
+		}
+	}
+	store.refreshWellFormedness()
 	p.info.WellFormednessIncomplete = store.state.WellFormednessIncomplete
 	complete := p.err == nil && !store.state.ExternalSubsetUnread && !store.state.ParameterEntityUnread
 	store.state.DeclarationsComplete = complete
@@ -295,7 +328,7 @@ func (s *sourceDTDStore) add(d sourceDTDDeclaration) error {
 	// proves arbitrary unused replacement/reference contexts free of recursion.
 	switch d.Kind {
 	case sourceDTDGeneralEntityDeclaration:
-		if !d.External && strings.ContainsRune(d.Replacement, '&') {
+		if !d.External && (strings.ContainsAny(d.Replacement, "&<") || strings.Contains(d.Replacement, "]]>")) {
 			s.state.EntityWellFormednessIncomplete = true
 		}
 		switch d.Name {
@@ -308,6 +341,11 @@ func (s *sourceDTDStore) add(d sourceDTDDeclaration) error {
 		if d.HasGeneralReferences {
 			s.state.DefaultWellFormednessIncomplete = true
 		}
+	}
+	var originErr error
+	d.Origin, originErr = s.copyOrigin(d.Origin)
+	if originErr != nil {
+		return originErr
 	}
 	record := new(sourceDTDDeclaration)
 	*record = d
@@ -384,3 +422,64 @@ func (b *sourceDTDText) string() (string, error) {
 	return string(b.value), nil
 }
 func (b *sourceDTDText) close() { b.store.release(int64(cap(b.value))); b.value = nil }
+
+func (s *sourceDTDStore) copyOrigin(origin sourceDTDOrigin) (sourceDTDOrigin, error) {
+	if len(origin.Ancestry) == 0 {
+		return origin, nil
+	}
+	const stepBytes = int64(160)
+	if int64(len(origin.Ancestry)) > math.MaxInt64/stepBytes {
+		return sourceDTDOrigin{}, &validation.ResourceError{Kind: validation.BudgetBufferedBytes, Requested: math.MaxInt64}
+	}
+	if err := s.reserve(int64(len(origin.Ancestry)) * stepBytes); err != nil {
+		return sourceDTDOrigin{}, err
+	}
+	ancestry := make([]sourceDTDOriginStep, len(origin.Ancestry))
+	copy(ancestry, origin.Ancestry)
+	origin.Ancestry = ancestry
+	return origin, nil
+}
+func (s *sourceDTDStore) parameterRead(d *sourceDTDDeclaration) error {
+	if s.parametersRead[d] {
+		return nil
+	}
+	if s.parametersRead == nil {
+		if err := s.reserve(sourceDTDStoreMapBytes); err != nil {
+			return err
+		}
+		s.parametersRead = make(map[*sourceDTDDeclaration]bool)
+	}
+	if err := s.reserve(sourceDTDStoreIndexBytes); err != nil {
+		return err
+	}
+	s.parametersRead[d] = true
+	return nil
+}
+
+// completeDefaultWellFormedness records the caller's successful context-correct
+// validation of every processable read default, including unused and duplicate
+// definitions. XML 5.1 cutoff definitions must not be replacement-processed;
+// they retain their own uncertainty. Other closure cells are never discharged.
+func (s *sourceDTDStore) completeDefaultWellFormedness() error {
+	if err := s.check(); err != nil {
+		return err
+	}
+	if !s.parsed || s.failed || !s.state.GrammarComplete {
+		return &validation.ConfigurationError{Field: "DTDStore", Reason: "default verification requires a successful parse"}
+	}
+	incomplete := false
+	for _, d := range s.declarations {
+		if err := s.check(); err != nil {
+			return err
+		}
+		if d.Kind == sourceDTDAttributeDeclaration && d.IgnoredReason == sourceDTDIgnoredCutoff && d.HasGeneralReferences {
+			incomplete = true
+		}
+	}
+	s.state.DefaultWellFormednessIncomplete = incomplete
+	s.refreshWellFormedness()
+	return nil
+}
+func (s *sourceDTDStore) refreshWellFormedness() {
+	s.state.WellFormednessIncomplete = s.state.EntityWellFormednessIncomplete || s.state.DefaultWellFormednessIncomplete || s.state.PredefinedEntityWellFormednessIncomplete || s.state.ParameterEntityWellFormednessIncomplete || s.state.ParameterEntityUnread || s.failed || !s.state.GrammarComplete
+}

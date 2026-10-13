@@ -26,8 +26,10 @@ type sourceXMLEntityInput struct {
 	Name, Replacement    string
 	Parameter            bool
 	Padded               bool
+	ExternalMarkup       bool
 	Declaration          sourceXMLSpan
 	DeclarationAvailable bool
+	DeclarationRecord    *sourceDTDDeclaration
 }
 type sourceXMLEntityFrame struct {
 	parent                    *sourceXMLEntityFrame

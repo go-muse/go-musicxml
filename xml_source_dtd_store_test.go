@@ -292,7 +292,7 @@ func (in *sourceDTDStoreCancelInput) DTDPosition() sourceXMLPosition {
 }
 func TestSourceDTDStoreCancellationAndOrigins(t *testing.T) {
 	text := ` r [<!ENTITY e 'numeric &#65; and &amp;'><!ATTLIST r a CDATA 'default'>]>`
-	for at := 1; at < len(text); at++ {
+	for at := 1; at <= len(text); at++ {
 		a := dtdStoreAccount(t, validation.Budgets{})
 		ctx, cancel := context.WithCancel(context.Background())
 		s, err := newSourceDTDStore(ctx, a, sourceDTDStandaloneAbsent)
@@ -360,5 +360,32 @@ func TestSourceDTDStoreDirectDefaultReferenceOrder(t *testing.T) {
 		` r [%unread;<!ATTLIST r a CDATA '&unknown;'>]>`,
 	} {
 		dtdStoreParse(t, text, sourceDTDStandaloneAbsent)
+	}
+}
+
+func TestSourceDTDStoreDefaultClosureDischargesOnlyVerifiedCell(t *testing.T) {
+	s, _ := dtdStoreParse(t, ` r [<!ENTITY e '&later;'><!ENTITY later 'x'><!ENTITY amp 'wrong'><!ENTITY % p 'unused'><!ATTLIST r a CDATA '&e;'>]>`, sourceDTDStandaloneAbsent)
+	if err := s.completeDefaultWellFormedness(); err != nil {
+		t.Fatal(err)
+	}
+	state := s.State()
+	if state.DefaultWellFormednessIncomplete || !state.EntityWellFormednessIncomplete || !state.PredefinedEntityWellFormednessIncomplete || !state.ParameterEntityWellFormednessIncomplete || !state.WellFormednessIncomplete {
+		t.Errorf("unrelated closure erased: %+v", state)
+	}
+	cutoff, _ := dtdStoreParse(t, ` r [%unread;<!ATTLIST r a CDATA '&unknown;'>]>`, sourceDTDStandaloneAbsent)
+	if err := cutoff.completeDefaultWellFormedness(); err != nil {
+		t.Fatal(err)
+	}
+	if !cutoff.State().DefaultWellFormednessIncomplete {
+		t.Error("unprocessed cutoff default claimed checked")
+	}
+	a := dtdStoreAccount(t, validation.Budgets{})
+	fresh, err := newSourceDTDStore(context.Background(), a, sourceDTDStandaloneAbsent)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fresh.Close()
+	if err := fresh.completeDefaultWellFormedness(); err == nil {
+		t.Error("unparsed store claimed checked")
 	}
 }

@@ -1190,12 +1190,28 @@ func (r *sourceXMLTokenReader) doctypeToken() (xml.Token, error) {
 		info, err = parseSourceDTD(r)
 	}
 	r.dtd = info
-	if keepErr := r.reserve(int64(len(info.Name))); keepErr != nil {
-		return nil, keepErr
-	}
-	r.retained += int64(len(info.Name))
-	if err != nil {
-		return nil, err
+	if r.internalDTD {
+		// Selected names belong to the store. Preserve a parsing failure before
+		// any later admission, including default validation and token spelling.
+		if err != nil {
+			return nil, err
+		}
+		if err = r.validateDTDDefaults(); err != nil {
+			return nil, err
+		}
+		state := r.dtdStore.State()
+		r.dtd.WellFormednessIncomplete = state.WellFormednessIncomplete
+		// Effective attributes and XML WFC closure are independent axes. An
+		// unused entity declaration is not a missing attribute dependency.
+		r.dtd.Unsupported = !state.AttributeDeclarationsComplete
+	} else {
+		if keepErr := r.reserve(int64(len(info.Name))); keepErr != nil {
+			return nil, keepErr
+		}
+		r.retained += int64(len(info.Name))
+		if err != nil {
+			return nil, err
+		}
 	}
 	if r.seenRoot {
 		return nil, r.syntax("DOCTYPE must precede the root element")
@@ -1220,6 +1236,9 @@ func (r *sourceXMLTokenReader) ReleaseDTDBytes(n int64) {
 }
 
 func (r *sourceXMLTokenReader) unboundPrefix(prefix string) error {
+	if r.internalDTD && r.dtdStore != nil && r.dtdStore.State().AttributeDeclarationsComplete {
+		return r.syntax("undeclared XML namespace prefix " + sourceXMLDiagnosticValue(prefix))
+	}
 	if r.dtd.HasAttributeDeclarations || r.dtd.ExternalSubset || r.dtd.HasParameterReferences {
 		return &sourceXMLUnsupportedError{Feature: "namespace bindings requiring DTD default attributes", Reason: "dtd-namespace-binding-unavailable"}
 	}
