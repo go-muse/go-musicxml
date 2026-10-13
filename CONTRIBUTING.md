@@ -50,6 +50,7 @@ Package obligation inventories also have development-only Python checks:
 ```bash
 python3 scripts/verify-package-inventory.py --strict-evidence
 python3 scripts/test-package-inventory.py
+python3 scripts/test-package-inventory-maintenance.py
 ```
 
 These verify preserved original records, exact test routes, canonical LF/CRLF
@@ -57,6 +58,67 @@ hash equivalence and rejection of real mutations. Existing Linux quality and
 release jobs require them without adding a CI job or changing the seven Go
 stages. Python is not a library runtime dependency. The required-xmllint job
 explicitly includes the original-byte container/sounds differential test.
+
+### Updating inspected test hashes
+
+The inventory deliberately rejects changed original sources and stale inspected
+test bytes. After a reviewed edit to one of the routed Go test files, preview the
+current test-file hash changes with:
+
+```bash
+python3 scripts/refresh-package-inventory.py
+```
+
+The default is a read-only dry run. Inspect `changed_test_files` and
+`changed_test_routes`, then explicitly apply the same narrow update and verify:
+
+```bash
+python3 scripts/refresh-package-inventory.py --write
+python3 scripts/verify-package-inventory.py --strict-evidence
+python3 scripts/test-package-inventory.py
+python3 scripts/test-package-inventory-maintenance.py
+git diff -- docs/validation/evidence/package-row-evidence.json
+```
+
+Commit the reviewed test edit and corresponding current `tests[].file_sha256`
+changes together. The refresher first runs the verifier's complete preflight:
+original source-file hashes and sizes, canonical record values, statuses,
+original/selected denominators, source pointers, five-axis routes and exact named
+test functions must remain valid. A missing function, record, source or route
+blocks the update. LF and CRLF checkouts have the same hashes; every other byte
+change remains significant. The tool only replaces current test hash fields,
+including all duplicated routes for the same file. Repeating `--write` with no
+changed hashes is a byte-for-byte no-op.
+
+No original record, source-file hash, status, owner, line hint, snapshot,
+`historical_tests`, execution result or acceptance claim is refreshed. This does
+not execute the Go tests or certify their assertions. Rerun affected tests and
+retain new exact-head execution evidence separately before final acceptance.
+Result JSON is printed on stdout. Optional `--output PATH` saves an atomic JSON
+report; it cannot alias any input, including symlinks or hard links. If malformed
+inputs prevent a complete alias check, the failure report stays on stdout.
+`--write` also uses a same-directory temporary file and atomic replacement; a
+write, close or replacement failure leaves the prior evidence file intact and
+reports any temporary-file cleanup failure.
+
+### Reviewing original source-record changes
+
+There is deliberately no blanket source-hash refresh switch. Editing a pinned
+planning or ownership source, including whitespace or any status/owner field,
+requires a separate reviewed source reconciliation before test hashes can be
+refreshed. The review must name each changed original record ID and source
+pointer, its old/new values and the reason and review reference. Do not approve
+an entire source file or all IDs merely to make CI pass.
+
+After that review, reconcile only those explicit IDs in the additive manifest's
+`preserved_collections` and applicable `selected` routes. Retain the old source
+and execution evidence; do not relabel old observations as new execution.
+Canonical record hashes use UTF-8 JSON with sorted keys, `ensure_ascii=False`
+and separators `(',', ':')`. Source-file SHA-256 and `bytes` cover the full file
+after replacing CRLF with LF only. Review the affected whole-file hash/size
+changes alongside the per-ID diffs. Original denominators remain fixed; a new
+inventory scope needs a separately reviewed format/denominator change. Run the
+strict verifier and both Python control suites after the reviewed reconciliation.
 
 ## Generated code
 

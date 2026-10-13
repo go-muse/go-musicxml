@@ -5,25 +5,20 @@ Use --archive-dir for the separately preserved complete evidence archive. Absenc
 of that directory is reported explicitly; repository originals remain verifiable.
 No files are changed unless --output is supplied, which writes the result only.
 """
-import argparse, hashlib, json, re, subprocess, sys
+import argparse
+import posixpath
+import re
+import subprocess
+import sys
+sys.dont_write_bytecode = True
 from pathlib import Path
 
-
-def digest(data):
-    return hashlib.sha256(data).hexdigest()
-
-
-def canonical_lf(data):
-    """Normalize checkout CRLF only; never strip lone CR or other content."""
-    return data.replace(b"\r\n", b"\n")
+from inventory_common import (InventoryError, canonical, canonical_lf, digest,
+                              emit_result, failure_result, field, input_paths, inputs_known,
+                              read_bytes, read_json, repository_path, require)
 
 
-def canonical(value):
-    return digest(json.dumps(value, ensure_ascii=False, sort_keys=True,
-                             separators=(",", ":")).encode())
-
-
-def main():
+def argument_parser(include_strict=True):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path("."))
     parser.add_argument("--manifest", type=Path,
@@ -31,15 +26,37 @@ def main():
     parser.add_argument("--evidence", type=Path,
                         default=Path("docs/validation/evidence/package-row-evidence.json"))
     parser.add_argument("--archive-dir", type=Path)
-    parser.add_argument("--strict-evidence", action="store_true",
-                        help="fail if inspected test bytes changed; still not acceptance")
+    if include_strict:
+        parser.add_argument("--strict-evidence", action="store_true",
+                            help="fail if inspected test bytes changed; still not acceptance")
     parser.add_argument("--output", type=Path)
-    args = parser.parse_args()
+    return parser
+
+
+def verify(args):
+    """Complete read-only preflight reused by the narrow test-hash refresher."""
     root = args.root.resolve()
     manifest_path = args.manifest if args.manifest.is_absolute() else root / args.manifest
     evidence_path = args.evidence if args.evidence.is_absolute() else root / args.evidence
-    m = json.loads(manifest_path.read_text(encoding="utf-8"))
-    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    args.inputs_known = False
+    args.protected_inputs = input_paths(root, {}, {}, manifest_path, evidence_path)
+    try:
+        m = read_json(manifest_path)
+        evidence = read_json(evidence_path)
+        args.protected_inputs = input_paths(root, m, evidence, manifest_path, evidence_path, args.archive_dir)
+        args.inputs_known = inputs_known(m, evidence)
+        require(m, dict, str(manifest_path))
+        require(evidence, dict, str(evidence_path))
+        args.manifest_value, args.evidence_value = m, evidence
+        args.evidence_path = evidence_path
+        return verify_loaded(args, root, m, evidence)
+    except InventoryError as exc:
+        return failure_result(exc)
+    except (KeyError, IndexError, TypeError, ValueError, UnicodeError, OSError, AttributeError) as exc:
+        return failure_result(InventoryError(f'invalid inventory: {manifest_path} / {evidence_path}: {type(exc).__name__}: {exc}'))
+
+
+def verify_loaded(args, root, m, evidence):
     failures, stale, warnings = [], [], []
     loaded = {}
 
@@ -49,43 +66,104 @@ def main():
 
     def load(path):
         if path not in loaded:
-            loaded[path] = json.loads((root / path).read_text(encoding="utf-8"))
+            loaded[path] = read_json(repository_path(root, path))
         return loaded[path]
 
     def resolve(path, pointer):
-        value = load(path)
-        for key in pointer.removeprefix("#").strip("/").split("/"):
-            key = key.replace("~1", "/").replace("~0", "~")
-            value = value[int(key)] if isinstance(value, list) else value[key]
-        return value
+        location = f'{path}#{pointer.removeprefix("#")}' if isinstance(pointer, str) else f'{path}#{pointer!r}'
+        try:
+            require(path, str, 'source route path')
+            require(pointer, str, location)
+            if path not in m['source_files']:
+                raise InventoryError('source route is not declared in source_files: ' + path)
+            value = load(path)
+            pointer = pointer.removeprefix('#')
+            if pointer and not pointer.startswith('/'):
+                raise ValueError('pointer must be empty or start with /')
+            for key in pointer[1:].split('/') if pointer else []:
+                if re.search(r'~(?![01])', key):
+                    raise ValueError('invalid JSON pointer escape')
+                key = key.replace('~1', '/').replace('~0', '~')
+                if isinstance(value, list):
+                    if not re.fullmatch(r'0|[1-9][0-9]*', key):
+                        raise ValueError('array index must be a nonnegative canonical integer')
+                    value = value[int(key)]
+                elif isinstance(value, dict):
+                    value = value[key]
+                else:
+                    raise TypeError('cannot traverse a scalar')
+            return value
+        except (KeyError, IndexError, TypeError, ValueError, InventoryError) as exc:
+            raise InventoryError(f'unresolvable pointer: {location}: {exc}') from exc
 
+    def route_source(route, key):
+        source = field(route, key, str, 'source route')
+        if '#' not in source:
+            raise InventoryError(f'unresolvable pointer: {source}: missing # separator')
+        return source.split('#', 1)
+
+    def fields(record, location, **schema):
+        for key, kind in schema.items():
+            field(record, key, kind, location)
+
+    # Validate input shapes before interpreting their values or considering writes.
+    fields(m, 'manifest', hashing=dict, source_files=dict, preserved_collections=dict,
+           selected=dict, counts=dict, snapshot=dict, external_archive=list)
+    fields(evidence, 'evidence', rows=dict, tests=dict, historical_tests=dict,
+           auxiliary_xsd_axes=list, hashing=dict)
+    check(field(evidence['hashing'], 'test_file_sha256', str, 'evidence/hashing').startswith('sha256-crlf-to-lf-v1;'),
+          'unsupported or unspecified test hash convention')
+    check(len(m['source_files']) == 17, 'source file denominator drift')
     check(m.get("hashing", {}).get("repository_text") == "sha256-crlf-to-lf-v1",
           "unsupported or unspecified repository hash convention")
     for path, record in m["source_files"].items():
-        data = canonical_lf((root / path).read_bytes())
+        fields(record, 'source_files/' + path, sha256=str, bytes=int)
+        data = canonical_lf(read_bytes(repository_path(root, path)))
+        load(path)  # Parse every source, not only the ones reached by selected routes.
         check(digest(data) == record["sha256"], "changed original source: " + path)
         check(len(data) == record["bytes"], "changed original source size: " + path)
     retained_counts = {}
     for name, collection in m["preserved_collections"].items():
-        actual = resolve(collection["source"], collection["pointer"])
+        fields(collection, 'preserved_collections/' + name,
+               source=str, pointer=str, records=list, count=int, id_field=str)
+        actual = require(resolve(collection['source'], collection['pointer']), list,
+                         collection['source'] + collection['pointer'])
+        for route in collection['records']:
+            fields(route, 'preserved_collections/' + name, id=str, index=int, sha256=str)
+            check(route['index'] >= 0, 'negative record index: ' + route['id'])
         rows = collection["records"]
         retained_counts[name] = len(rows)
         check(len(rows) == collection["count"] == len(actual), "record count: " + name)
         check(len({r["id"] for r in rows}) == len(rows), "duplicate ID: " + name)
         check({r["index"] for r in rows} == set(range(len(actual))), "lost index: " + name)
         for route in rows:
-            if route["index"] >= len(actual):
+            if not 0 <= route["index"] < len(actual):
                 continue
-            original = actual[route["index"]]
+            original = require(actual[route["index"]], dict, "original record: " + route["id"])
             check(original[collection["id_field"]] == route["id"], "ID route: " + route["id"])
             check(canonical(original) == route["sha256"], "original record: " + route["id"])
-            for key, value in route.get("original_status_fields", {}).items():
+            statuses = require(route.get("original_status_fields", {}), dict, "original_status_fields/" + route["id"])
+            for key, value in statuses.items():
                 check(original.get(key) == value, "status promotion: " + route["id"] + "/" + key)
     wanted = {"requirements": 95, "context_checks": 307, "context_dispositions": 291,
               "constraint_checks": 51, "issue_gates": 28, "retained_splits": 20,
               "retained_source_contracts": 42, "retained_candidate_dispositions": 29,
               "source_subclauses": 2, "retained_boundaries": 2}
     check(retained_counts == wanted, "preserved denominator drift")
+    check(all(m['counts'].get(name) == count for name, count in wanted.items()),
+          'declared original denominator drift')
+    selected_denominators = {'selected_engineering': 44, 'selected_context': 24,
+                             'selected_constraints': 10, 'selected_issue_gates': 5,
+                             'selected_xsd_total': 175, 'new_auxiliary_xsd': 36,
+                             'new_container_xsd': 11, 'new_sounds_xsd': 25,
+                             'reused_transitive_xsd': 139, 'selected_new_translations': 0}
+    check(all(m['counts'].get(name) == count for name, count in selected_denominators.items()),
+          'declared selected denominator drift')
+    for category, rows in m['selected'].items():
+        require(rows, list, 'selected/' + category)
+        for route in rows:
+            fields(route, 'selected/' + category, id=str, owner=str)
+            check(bool(route['owner'].strip()), 'missing selected owner: ' + route['id'])
     selected_counts = {k: len(v) for k, v in m["selected"].items()}
     check(selected_counts == {"requirements": 44, "context_checks": 24,
                               "constraint_checks": 10, "issue_gates": 5,
@@ -95,17 +173,18 @@ def main():
         for route in m["selected"][category]:
             check(route["id"] not in selected_ids, "duplicate selected ID: " + route["id"])
             selected_ids.add(route["id"])
-            path, pointer = route["original_source"].split("#", 1)
-            original = resolve(path, pointer)
+            path, pointer = route_source(route, "original_source")
+            original = require(resolve(path, pointer), dict, route["original_source"])
             check(original["id"] == route["id"], "selected source ID: " + route["id"])
             check(canonical(original) == route["original_record_sha256"],
                   "selected original record: " + route["id"])
             check(bool(route["owner"]) and bool(route["bounded_contribution"]),
                   "missing selected owner/contribution: " + route["id"])
     check(selected_ids == set(evidence["rows"]), "missing/extra row evidence")
+    check(len({r["id"] for r in m["selected"]["issue_gates"]}) == 5, "duplicate selected issue ID")
     for route in m["selected"]["issue_gates"]:
-        path, pointer = route["source"].split("#", 1)
-        original = resolve(path, pointer)
+        path, pointer = route_source(route, "source")
+        original = require(resolve(path, pointer), dict, route["source"])
         check(original["id"] == route["id"], "issue ID: " + route["id"])
         check(original["disposition"] == route["original_disposition"] == "decision_required",
               "issue disposition promotion: " + route["id"])
@@ -116,33 +195,65 @@ def main():
     check(sum(r["selection"] == "new_auxiliary" for r in xsd) == 36, "new auxiliary count")
     check(sum(r["selection"] == "reused_transitive" for r in xsd) == 139, "reused XSD count")
     for route in xsd:
-        path, pointer = route["source"].split("#", 1)
-        original = resolve(path, pointer)
+        path, pointer = route_source(route, "source")
+        original = require(resolve(path, pointer), dict, route["source"])
         check(original["id"] == route["id"] and canonical(original) == route["record_sha256"],
               "selected XSD record: " + route["id"])
         check(original["status"] == route["original_status"], "XSD status: " + route["id"])
     axes = {"positive", "negative", "boundary", "missing_fact", "interaction"}
     empty_axes = 0
-    for id, row in evidence["rows"].items():
-        check(set(row["axes"]) == axes, "missing original evidence axis: " + id)
-        for axis, claims in row["axes"].items():
-            empty_axes += not bool(claims["tests"] or claims.get("archived_tests"))
-            for archived_ref in claims.get("archived_tests", []):
-                check(archived_ref in evidence.get("historical_tests", {}), "unknown archived test: " + archived_ref)
-            for ref in claims["tests"]:
-                check(ref in evidence["tests"], "unknown test route: " + id + "/" + ref)
-    check(len(evidence["auxiliary_xsd_axes"]) == 36, "auxiliary axis count")
-    for record in evidence["tests"].values():
-        path = root / record["file"]
+    used_test_routes = set()
+    def check_axes(id, row):
+        nonlocal empty_axes
+        fields(row, 'evidence row/' + id, axes=dict)
+        check(set(row['axes']) == axes, 'missing original evidence axis: ' + id)
+        for axis, claims in row['axes'].items():
+            fields(claims, id + '/' + axis, tests=list)
+            require(claims.get('archived_tests', []), list, id + '/' + axis + '/archived_tests')
+            empty_axes += not bool(claims['tests'] or claims.get('archived_tests'))
+            for archived_ref in claims.get('archived_tests', []):
+                require(archived_ref, str, id + '/archived_tests')
+                check(archived_ref in evidence['historical_tests'], 'unknown archived test: ' + archived_ref)
+            for ref in claims['tests']:
+                require(ref, str, id + '/tests')
+                used_test_routes.add(ref)
+                check(ref in evidence['tests'], 'unknown test route: ' + id + '/' + ref)
+
+    for id, row in evidence['rows'].items():
+        check_axes(id, row)
+    check(len(evidence['auxiliary_xsd_axes']) == 36, 'auxiliary axis count')
+    auxiliary_ids = set()
+    for row in evidence['auxiliary_xsd_axes']:
+        fields(row, 'auxiliary_xsd_axes', id=str, source=str)
+        check(row['id'] not in auxiliary_ids, 'duplicate auxiliary axis ID: ' + row['id'])
+        auxiliary_ids.add(row['id'])
+        # These pointers are relative to the evidence document's committed location.
+        source, pointer = route_source(row, 'source')
+        source = posixpath.normpath(posixpath.join('docs/validation/evidence', source))
+        original = require(resolve(source, pointer), dict, row['source'])
+        check(original.get('instance_id') == row['id'], 'auxiliary source ID: ' + row['id'])
+        check_axes(row['id'], row)
+    check(auxiliary_ids == {r['id'] for r in xsd if r['selection'] == 'new_auxiliary'},
+          'auxiliary source ID denominator drift')
+    check(used_test_routes == set(evidence['tests']), 'unreferenced or missing current test records')
+    args.current_test_hashes = {}
+    inspected = {}
+    for ref, record in evidence['tests'].items():
+        fields(record, 'tests/' + ref, file=str, function=str, file_sha256=str)
+        check(ref == record['file'] + '::' + record['function'], 'test route key mismatch: ' + ref)
+        path = repository_path(root, record['file'])
         if not path.is_file():
-            failures.append("missing test file: " + record["file"])
+            failures.append('missing test file: ' + record['file'])
             continue
-        data = path.read_bytes()
-        if digest(canonical_lf(data)) != record["file_sha256"]:
-            stale.append(record["file"])
-        check(re.search(r"^func\s+" + re.escape(record["function"]) + r"\s*\(",
-                        data.decode(), re.M) is not None,
-              "missing test function: " + record["file"] + "::" + record["function"])
+        if record['file'] not in inspected:
+            inspected[record['file']] = read_bytes(path)
+        data = inspected[record['file']]
+        args.current_test_hashes[record['file']] = digest(canonical_lf(data))
+        if args.current_test_hashes[record['file']] != record['file_sha256']:
+            stale.append(record['file'])
+        check(re.search(r'^func\s+' + re.escape(record['function']) + r'\s*\(',
+                        data.decode('utf-8'), re.M) is not None,
+              'missing test function: ' + record['file'] + '::' + record['function'])
     archive_state = "not verified: supply --archive-dir to verify external archive bytes"
     if args.archive_dir:
         for artifact in m["external_archive"]:
@@ -154,6 +265,7 @@ def main():
                       "changed archive: " + artifact["artifact"])
         for record in evidence.get("historical_tests", {}).values():
             path = args.archive_dir / record["artifact"]
+            check(path.is_file(), "missing archived test: " + record["artifact"])
             if path.is_file():
                 data = path.read_bytes()
                 check(digest(data) == record["file_sha256"], "changed archived test bytes: " + record["artifact"])
@@ -170,7 +282,8 @@ def main():
     try:
         head = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True, stderr=subprocess.DEVNULL).strip()
         worktree = subprocess.check_output(["git", "-C", str(root), "status", "--porcelain"], text=True, stderr=subprocess.DEVNULL).strip()
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, OSError) as exc:
+        warnings.append(f"git observation unavailable: {exc}")
         head, worktree = "unavailable", "unavailable"
     if head != m["snapshot"]["head_at_end"] or worktree != m["snapshot"]["status_at_end"]:
         warnings.append("Integration differs from the observation. This is expected during active work, but is not exact-head acceptance.")
@@ -184,12 +297,14 @@ def main():
               "warnings": warnings, "failures": failures,
               "repository_hash_convention": "SHA-256 and sizes after CRLF-to-LF only; JSON field values unmodified; external archives raw-byte exact",
               "semantic_resource_execution_acceptance": "NOT CLAIMED; independent final tree, seven local stages and nine exact-head CI jobs still required"}
-    text = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
-    if args.output:
-        args.output.write_text(text, encoding="utf-8")
-    print(text, end="")
-    return bool(failures)
+    return result
 
 
-if __name__ == "__main__":
+def main():
+    args = argument_parser().parse_args()
+    result = verify(args)
+    return emit_result(result, args.output, args.protected_inputs, args.inputs_known)
+
+
+if __name__ == '__main__':
     sys.exit(main())
