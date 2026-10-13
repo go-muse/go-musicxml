@@ -39,6 +39,7 @@ func TestPinnedRegistryIfProvided(t *testing.T) {
 }
 
 func TestCorruptionsRejected(t *testing.T) {
+	source := testPlan(t)
 	tests := []struct {
 		name   string
 		mutate func(*plan)
@@ -126,7 +127,7 @@ func TestCorruptionsRejected(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := testPlan(t)
+			p := cloneCorruptionPlan(source)
 			tt.mutate(p)
 			if err := p.validate(); err == nil {
 				t.Fatal("corruption was accepted")

@@ -8338,28 +8338,28 @@
       "function": "TestSchemaHintDatatypeNamespacesAndOrdinaryErrors",
       "line": 167,
       "end_line_bound": 189,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hint_datatype_test.go::TestSchemaHintDatatypesAcrossElementKinds": {
       "file": "validation_schema_hint_datatype_test.go",
       "function": "TestSchemaHintDatatypesAcrossElementKinds",
       "line": 143,
       "end_line_bound": 166,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hint_datatype_test.go::TestSchemaHintDatatypesAgainstSchema": {
       "file": "validation_schema_hint_datatype_test.go",
       "function": "TestSchemaHintDatatypesAgainstSchema",
       "line": 111,
       "end_line_bound": 142,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hint_datatype_test.go::TestValidateSchemaHintDatatypes": {
       "file": "validation_schema_hint_datatype_test.go",
       "function": "TestValidateSchemaHintDatatypes",
       "line": 96,
       "end_line_bound": 110,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hints_test.go::TestSchemaLocationHintsDoNotFetch": {
       "file": "validation_schema_hints_test.go",

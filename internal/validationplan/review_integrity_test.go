@@ -20,6 +20,7 @@ func overlap(t *testing.T, p *plan, id string) object {
 	return nil
 }
 func TestCopiedOverlapClausesRejected(t *testing.T) {
+	source := testPlan(t)
 	pairs := map[string]string{
 		"fermata-upright": "one-note-visual-tie", "empty-fermata-normal": "horizontal-turn-slash",
 		"transpose-additive": "senza-misura", "bend-release-pair": "beam-fan-conditions",
@@ -30,7 +31,7 @@ func TestCopiedOverlapClausesRejected(t *testing.T) {
 	}
 	for own, other := range pairs {
 		t.Run(own, func(t *testing.T) {
-			p := testPlan(t)
+			p := cloneCorruptionPlan(source)
 			overlap(t, p, own)["additional_condition"] = overlap(t, p, other)["additional_condition"]
 			if err := p.validate(); err == nil {
 				t.Fatal("accepted another record's clause")
@@ -39,6 +40,7 @@ func TestCopiedOverlapClausesRejected(t *testing.T) {
 	}
 }
 func TestReviewCorruptionsRejected(t *testing.T) {
+	source := testPlan(t)
 	cases := []struct {
 		name   string
 		mutate func(*plan)
@@ -91,7 +93,7 @@ func TestReviewCorruptionsRejected(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			p := testPlan(t)
+			p := cloneCorruptionPlan(source)
 			c.mutate(p)
 			if err := p.validate(); err == nil {
 				t.Fatal("review corruption accepted")
