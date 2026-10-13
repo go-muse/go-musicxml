@@ -97,6 +97,8 @@ func buildSourceXSDProfileEngine(internalDTD bool) (*validation.Engine, error) {
 			}
 			assembly := input.assembly
 			key := validation.RuleKey{ID: validation.RuleID("MX40-SOURCE-ORIGIN-" + string(assembly)), Revision: 1}
+			// Specified projects original physical occurrence ownership, not the
+			// Infoset [specified] property of replacement-markup attributes.
 			rule := validation.RuleDefinition{
 				Key: key, Selector: validation.Selector{Assembly: &assembly}, Scope: validation.ScopeDocument,
 				Targets: []validation.Target{validation.TargetSource}, Class: validation.ClassMandatory, Role: validation.RoleContextProvider, Category: validation.CategoryNormative,

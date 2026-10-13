@@ -141,6 +141,8 @@ type Session struct {
 	root                    *factNode
 	rejectedRootName        QName
 	retained, depth         int64
+
+	attributeEnumerationIncomplete bool
 }
 
 // Begin validates configuration and cancellation before accepting input. It
@@ -465,6 +467,9 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 	}
 	if n.attributeSeal != nil && n.attributeSeal.State == EvidenceKnown && n.attributeSeal.Value && (end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value) {
 		return s.fail(&SessionError{Operation: "Close", Reason: "attribute completeness contradicts sealed start tag"})
+	}
+	if end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value {
+		s.attributeEnumerationIncomplete = true
 	}
 	n.end = cloneEnd(end)
 	n.closed = true

@@ -64,7 +64,16 @@ const contextResultReserveBytes int64 = 1536
 
 // publishContextResult is transactional with respect to visibility and live
 // retention. Cumulative work/fact counters are never refunded on interruption.
-func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (err error) {
+func (s *Session) publishContextResult(ctx context.Context, in ContextResult) error {
+	if err := s.validateContextResult(ctx, in); err != nil {
+		return err
+	}
+	return s.publishValidatedContextResult(ctx, in)
+}
+
+// validateContextResult performs all payload validation before any publication.
+// SourceOrigin also uses this gate before checking the admitted occurrence site.
+func (s *Session) validateContextResult(ctx context.Context, in ContextResult) (err error) {
 	if err = s.step(ctx, 1); err != nil {
 		return err
 	}
@@ -113,6 +122,14 @@ func (s *Session) publishContextResult(ctx context.Context, in ContextResult) (e
 			return err
 		}
 	}
+	return nil
+}
+
+// publishValidatedContextResult accepts only a value checked by
+// validateContextResult in the same call, with no intervening payload mutation.
+// Keep this private gate separate so SourceOrigin can check ownership before
+// appending without validating (and charging for) the payload a second time.
+func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextResult) (err error) {
 	if err = s.account.Charge(BudgetContextFacts, 1); err != nil {
 		return err
 	}

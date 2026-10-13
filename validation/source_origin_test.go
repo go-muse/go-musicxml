@@ -161,7 +161,9 @@ func TestSourceOriginDefaultAndEntityAttributeOwnership(t *testing.T) {
 			in.Specified = stateKnown(false)
 			in.Declaration = stateKnown(Location{Target: TargetSource, DocumentID: "source", Path: "/!DOCTYPE", Position: &SourcePosition{ByteOffset: 8, Line: 1, Column: 9, CoordinateSpace: "xml"}})
 			in.Use = stateKnown(Location{Target: TargetSource, DocumentID: "source", Path: "/root", Position: &SourcePosition{ByteOffset: 75, Line: 2, Column: 1, CoordinateSpace: "xml"}})
-			in.Ancestry = []SourceOriginStep{{Entity: "entity", Declaration: in.Declaration, Use: in.Use}}
+			if kind == SourceOriginEntity {
+				in.Ancestry = []SourceOriginStep{{Entity: "entity", Declaration: in.Declaration, Use: in.Use}}
+			}
 			if err := s.Attribute(ctx, sourceOriginAttribute(name, Location{Target: TargetSource, DocumentID: "source", Path: "/root/@value"})); err != nil {
 				t.Fatal(err)
 			}
@@ -170,10 +172,12 @@ func TestSourceOriginDefaultAndEntityAttributeOwnership(t *testing.T) {
 			}
 			name.Local = "changed"
 			in.Declaration.Value.Position.ByteOffset = 999
-			in.Ancestry[0].Entity = "changed"
-			in.Ancestry[0].Use.Value.Position.ByteOffset = 999
+			if kind == SourceOriginEntity {
+				in.Ancestry[0].Entity = "changed"
+				in.Ancestry[0].Use.Value.Position.ByteOffset = 999
+			}
 			out := s.contextResults[0].SourceOrigin
-			if out.Attribute.Local != "value" || out.Declaration.Value.Position.ByteOffset != 8 || out.Ancestry[0].Entity != "entity" || out.Use.Value.Position.ByteOffset != 75 {
+			if out.Attribute.Local != "value" || out.Declaration.Value.Position.ByteOffset != 8 || kind == SourceOriginEntity && out.Ancestry[0].Entity != "entity" || out.Use.Value.Position.ByteOffset != 75 {
 				t.Fatalf("aliased %+v", out)
 			}
 		})
@@ -549,6 +553,9 @@ func TestSourceOriginUnavailableComponentsRemainIncomplete(t *testing.T) {
 			ctx := context.Background()
 			h := schemaPendingHeader()
 			h.Location = sourceOriginPhysical().Physical.Value
+			if mode == "ancestry" {
+				h.Location.Position = nil
+			}
 			if err := s.Open(ctx, h); err != nil {
 				t.Fatal(err)
 			}
@@ -563,6 +570,8 @@ func TestSourceOriginUnavailableComponentsRemainIncomplete(t *testing.T) {
 				in.Declaration = in.Physical
 				in.Use = in.Physical
 				in.AncestryComplete = stateUnknown[bool]("expansion-chain-incomplete")
+				in.Physical = stateAbsent[Location]()
+				in.Specified = stateKnown(false)
 			case "specified":
 				in.Kind = SourceOriginUnavailable
 				in.Specified = stateUnknown[bool]("specifiedness-unavailable")
@@ -625,6 +634,8 @@ func TestSourceOriginAncestryBoundaryAndComponentCauses(t *testing.T) {
 	v.Kind = SourceOriginEntity
 	v.Declaration = v.Physical
 	v.Use = v.Physical
+	v.Physical = stateAbsent[Location]()
+	v.Specified = stateKnown(false)
 	v.Ancestry = make([]SourceOriginStep, SourceOriginAncestryLimit)
 	for i := range v.Ancestry {
 		v.Ancestry[i] = SourceOriginStep{Entity: "entity", Declaration: v.Declaration, Use: v.Use}
@@ -688,6 +699,8 @@ func TestSourceOriginEventAndScalarBoundaries(t *testing.T) {
 	v.Kind = SourceOriginEntity
 	v.Declaration = v.Physical
 	v.Use = v.Physical
+	v.Physical = stateAbsent[Location]()
+	v.Specified = stateKnown(false)
 	v.Ancestry = []SourceOriginStep{{Entity: "entity", Declaration: v.Declaration, Use: v.Use}}
 	for _, limit := range []int64{5, 6} {
 		s := rationalSession(t, Budgets{MaxScalarBytes: limit})

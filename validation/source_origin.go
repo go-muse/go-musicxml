@@ -1,9 +1,6 @@
 package validation
 
-import (
-	"context"
-	"reflect"
-)
+import "context"
 
 // SourceOriginKind distinguishes physical occurrences from DTD-provided values.
 type SourceOriginKind string
@@ -36,8 +33,12 @@ type SourceOriginStep struct {
 // Location; Declaration and Use identify their real sites separately. Specified
 // means an original physical occurrence: false for both DTD defaults and entity-
 // generated markup, true for physical attributes whose values expand entities.
-// This is distinct from effective AttributeFact.Presence. Each component's
-// availability is independent; unknown is never inferred as absence or a default.
+// Unlike Infoset [specified], this is false for attributes written in entity
+// replacement markup. Entity-kind physical origins are permitted only for
+// attributes whose values expand entities; element entity origins are synthetic.
+// Default origins carry no occurrence-expansion ancestry. This is distinct from
+// effective AttributeFact.Presence. Each component's availability is independent;
+// unknown is never inferred as absence or a default.
 type SourceOriginContextResult struct {
 	Subject          NodeRef
 	Attribute        *QName `json:",omitempty"`
@@ -116,10 +117,13 @@ func validateSourceOrigin(ctx context.Context, s *Session, in *SourceOriginConte
 			return contract("source origin physical", "physical origin contradicts specifiedness, sites, or ancestry")
 		}
 	case SourceOriginDefault:
-		if in.Attribute == nil || in.Specified.State != EvidenceKnown || in.Specified.Value || in.Physical.State == EvidenceKnown || in.Declaration.State == EvidenceAbsent || in.Use.State == EvidenceAbsent {
-			return contract("source origin default", "attribute default requires unspecified, nonphysical occurrence and declaration evidence")
+		if in.Attribute == nil || in.Specified.State != EvidenceKnown || in.Specified.Value || in.Physical.State == EvidenceKnown || in.Declaration.State == EvidenceAbsent || in.Use.State == EvidenceAbsent || len(in.Ancestry) != 0 {
+			return contract("source origin default", "attribute default requires unspecified, nonphysical occurrence, declaration evidence and no occurrence ancestry")
 		}
 	case SourceOriginEntity:
+		if in.Specified.State != EvidenceKnown || in.Specified.Value && (in.Attribute == nil || in.Physical.State != EvidenceKnown) || !in.Specified.Value && in.Physical.State == EvidenceKnown {
+			return contract("source origin entity", "entity markup must be unspecified and nonphysical; only a physical attribute value may be specified")
+		}
 		if in.AncestryComplete.State == EvidenceKnown && in.AncestryComplete.Value && len(in.Ancestry) == 0 {
 			return contract("source origin entity", "complete entity ancestry must include its expansion")
 		}
@@ -151,24 +155,6 @@ func validateSourceOrigin(ctx context.Context, s *Session, in *SourceOriginConte
 		}
 	}
 	return nil
-}
-func cloneSourceOriginContext(ctx context.Context, s *Session, in *SourceOriginContextResult) (*SourceOriginContextResult, error) {
-	if in == nil {
-		return nil, nil
-	}
-	size, err := resourceMeasure(ctx, s.account, reflect.ValueOf(*in))
-	if err != nil {
-		return nil, err
-	}
-	if err = s.retain(size); err != nil {
-		return nil, err
-	}
-	copy, err := resourceCopyAs(ctx, reflect.ValueOf(*in), "", "")
-	if err != nil {
-		return nil, err
-	}
-	out := copy.Interface().(SourceOriginContextResult)
-	return &out, nil
 }
 func (s *Session) sourceOriginKey() RuleKey {
 	if s == nil || s.catalog == nil || s.schema == nil || s.schema.active == nil {
@@ -226,7 +212,8 @@ func (s *Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 	if _, exists := s.sourceOriginSeen[slot]; exists {
 		return s.fail(&SessionError{Operation: "SourceOrigin", Reason: "duplicate origin for subject"})
 	}
-	if err = validateSourceOrigin(ctx, s, &in, in.Subject); err != nil {
+	publication := ContextResult{Provider: provider, Subject: in.Subject, Property: ContextPropertySourceOrigin, Value: Evidence[Atomic]{State: EvidenceAbsent}, SourceOrigin: &in}
+	if err = s.validateContextResult(ctx, publication); err != nil {
 		return s.fail(err)
 	}
 	if in.Physical.State == EvidenceKnown {
@@ -253,7 +240,7 @@ func (s *Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 	if err = s.retain(cost); err != nil {
 		return err
 	}
-	if err = s.publishContextResult(ctx, ContextResult{Provider: provider, Subject: in.Subject, Property: ContextPropertySourceOrigin, Value: Evidence[Atomic]{State: EvidenceAbsent}, SourceOrigin: &in}); err != nil {
+	if err = s.publishValidatedContextResult(ctx, publication); err != nil {
 		return err
 	}
 	if s.sourceOriginSeen == nil {
@@ -317,7 +304,7 @@ func (s *Session) evaluateSourceOrigins(ctx context.Context) (Decision, bool, er
 	if s.sourceOriginUnavailable {
 		return Decision{Outcome: OutcomeUnknown, Reason: "source-origin-components-unavailable"}, false, nil
 	}
-	if !e.Value || !s.inputComplete || s.enumerationIncomplete || s.sourceOriginUncertain {
+	if !e.Value || !s.inputComplete || s.enumerationIncomplete || s.attributeEnumerationIncomplete || s.sourceOriginUncertain {
 		return Decision{Outcome: OutcomeUnknown, Reason: "source-origin-enumeration-incomplete"}, false, nil
 	}
 	return Decision{Outcome: OutcomePass}, false, nil
