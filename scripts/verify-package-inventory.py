@@ -15,7 +15,7 @@ from pathlib import Path
 
 from inventory_common import (InventoryError, canonical, canonical_lf, digest,
                               emit_result, failure_result, field, input_paths, inputs_known,
-                              read_bytes, read_json, repository_path, require)
+                              read_bytes, read_json, repository_path, require, resolve_root)
 
 
 def argument_parser(include_strict=True):
@@ -35,12 +35,14 @@ def argument_parser(include_strict=True):
 
 def verify(args):
     """Complete read-only preflight reused by the narrow test-hash refresher."""
-    root = args.root.resolve()
-    manifest_path = args.manifest if args.manifest.is_absolute() else root / args.manifest
-    evidence_path = args.evidence if args.evidence.is_absolute() else root / args.evidence
     args.inputs_known = False
-    args.protected_inputs = input_paths(root, {}, {}, manifest_path, evidence_path)
+    args.protected_inputs = []
+    manifest_path, evidence_path = args.manifest, args.evidence
     try:
+        root = resolve_root(args.root)
+        manifest_path = args.manifest if args.manifest.is_absolute() else root / args.manifest
+        evidence_path = args.evidence if args.evidence.is_absolute() else root / args.evidence
+        args.protected_inputs = input_paths(root, {}, {}, manifest_path, evidence_path)
         m = read_json(manifest_path)
         evidence = read_json(evidence_path)
         args.protected_inputs = input_paths(root, m, evidence, manifest_path, evidence_path, args.archive_dir)

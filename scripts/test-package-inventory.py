@@ -13,7 +13,7 @@ import tempfile
 from pathlib import Path
 
 from inventory_common import (InventoryError, emit_result, failure_result, input_paths, inputs_known,
-                              read_json, reject_alias, require)
+                              read_json, reject_alias, require, resolve_root)
 
 
 def parse_verifier_result(run, name, expected):
@@ -42,7 +42,7 @@ def argument_parser():
 
 
 def run_controls(args):
-    root = args.root.resolve()
+    root = resolve_root(args.root)
     mp = args.manifest if args.manifest.is_absolute() else root / args.manifest
     ep = args.evidence if args.evidence.is_absolute() else root / args.evidence
     args.protected_inputs = input_paths(root, {}, {}, mp, ep)

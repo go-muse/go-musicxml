@@ -258,6 +258,20 @@ class MaintenanceTests(unittest.TestCase):
                     self.run_tool(script, '--output', str(alias), expected=1)
                     self.assertEqual(target.read_bytes(), before)
 
+    def test_cyclic_root_returns_json_failure_without_touching_output(self):
+        root = self.root / 'cyclic-root'
+        root.symlink_to(root)
+        output = self.root / 'existing-output.json'
+        output.write_text('preserve existing output')
+        for script in ['verify-package-inventory', 'refresh-package-inventory', 'test-package-inventory']:
+            for report_args in [[], ['--output', str(output)]]:
+                with self.subTest(script=script, report_args=report_args):
+                    result = self.run_tool(script, '--root', str(root), *report_args, expected=1)
+                    message = '\n'.join(result['failures'])
+                    self.assertIn('cannot resolve inventory root', message)
+                    self.assertIn(str(root), message)
+                    self.assertEqual(output.read_text(), 'preserve existing output')
+
     def test_cyclic_output_symlink_returns_json_failure(self):
         alias = self.root / 'cycle.json'
         alias.symlink_to(alias)

@@ -59,6 +59,14 @@ def read_json(path):
         raise InventoryError(f'cannot parse JSON: {path}: {exc}') from exc
 
 
+def resolve_root(root):
+    """Keep filesystem resolution errors inside the tools' JSON failure boundary."""
+    try:
+        return root.resolve()
+    except (OSError, RuntimeError) as exc:
+        raise InventoryError(f'cannot resolve inventory root: {root}: {exc}') from exc
+
+
 def repository_path(root, value):
     require(value, str, 'repository path')
     path = Path(value)
