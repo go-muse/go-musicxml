@@ -1,21 +1,25 @@
 package validation
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"reflect"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 const packageTerminalReserveBytes int64 = 16384
 
 type packageBoundary struct {
-	identity    PackageIdentity
-	subject     PackageFactID
-	depth       int64
-	enumeration PackageEnumeration
-	sealed      bool
+	identity        PackageIdentity
+	subject         PackageFactID
+	depth           int64
+	enumeration     PackageEnumeration
+	sealed          bool
+	membersSealed   bool
+	membersComplete Evidence[bool]
 }
 type packageDecisionKey struct {
 	rule    RuleKey
@@ -215,6 +219,12 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 	if !validID(string(p.ID)) || (p.Parent != "" && !validID(string(p.Parent))) || p.ID == p.Parent {
 		return s.fail(contract("package identity", "invalid boundary identity"))
 	}
+	if !validText(p.BaseURI, 16384) || !validText(p.ArchiveEntry, 4096) {
+		return s.fail(contract("package provenance", "bounded exact context required"))
+	}
+	if p.ArchiveEntry != "" && (p.Parent == "" || s.entryNames[p.Parent][p.ArchiveEntry] == 0) {
+		return s.fail(contract("package provenance", "exact admitted parent member required"))
+	}
 	if p.PinUnavailable {
 		if p.Representation != ResourceRawMXL || p.Pin.Digest != "" || p.Pin.SnapshotID != "" || !packageIdentityText(p.Pin.CanonicalID) || !validText(p.Pin.Revision, maxIdentityBytes) {
 			return s.fail(contract("package prefix identity", "raw incomplete boundary needs unavailable whole-body pin"))
@@ -300,7 +310,21 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 	if b == nil || b.sealed {
 		return s.fail(contract("entry package", "unopened or sealed scope"))
 	}
-	if !validText(e.Name, 4096) || e.Name == "" {
+	rawName := len(e.RawName) != 0
+	if rawName {
+		if len(e.RawName) > 4096 {
+			return s.fail(contract("entry raw name", "bounded bytes required"))
+		}
+		if err := s.account.Check(BudgetScalarBytes, int64(len(e.RawName))); err != nil {
+			return s.fail(err)
+		}
+		if err := s.scan(ctx, int64(len(e.RawName))); err != nil {
+			return err
+		}
+		if e.Name != "" || len(e.RawName) > 4096 || utf8.Valid(e.RawName) || b.identity.Representation != ResourceRawMXL {
+			return s.fail(contract("entry raw name", "bounded original non-UTF8 bytes exclusive with text required"))
+		}
+	} else if !validText(e.Name, 4096) || e.Name == "" {
 		return s.fail(contract("entry name", "bounded nonempty exact name required"))
 	}
 	if err := validateLocation(e.Location, TargetPackage, s.documentID); err != nil {
@@ -318,10 +342,23 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 	if err := validateEvidence(e.UTF8Name, "name encoding"); err != nil {
 		return s.fail(err)
 	}
+	if rawName && (e.UTF8Name.State != EvidenceKnown || e.UTF8Name.Value) {
+		return s.fail(contract("entry raw name", "exact observed non-UTF8 evidence required"))
+	}
 	if err := validateEvidence(e.PhysicalOrder, "physical order"); err != nil {
 		return s.fail(err)
 	}
-	if _, ok := s.entryNames[e.Package][e.Name]; ok {
+	if rawName {
+		for _, id := range s.entryOrder {
+			old := s.entries[id]
+			if err := s.scan(ctx, int64(len(old.RawName))+1); err != nil {
+				return err
+			}
+			if old.Package == e.Package && bytes.Equal(old.RawName, e.RawName) {
+				return s.fail(contract("entry identity", "duplicate exact raw name"))
+			}
+		}
+	} else if _, ok := s.entryNames[e.Package][e.Name]; ok {
 		return s.fail(contract("entry identity", "duplicate exact member name"))
 	}
 	if err := s.admit(ctx, e, 512); err != nil {
@@ -334,7 +371,9 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 	s.entries[e.ID] = e
 	s.subjectPackages[e.ID] = e.Package
 	s.entryOrder = append(s.entryOrder, e.ID)
-	s.entryNames[e.Package][e.Name] = e.ID
+	if !rawName {
+		s.entryNames[e.Package][e.Name] = e.ID
+	}
 	if err := s.evaluateEntry(ctx, e, false); err != nil {
 		return err
 	}
@@ -414,7 +453,7 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 	}
 	if r.Entry.State == EvidenceKnown {
 		e, ok := s.entries[r.Entry.Value]
-		if !ok || e.Package != r.Package || r.FullPath.State != EvidenceKnown || e.Name != r.FullPath.Value {
+		if !ok || len(e.RawName) != 0 || e.Package != r.Package || r.FullPath.State != EvidenceKnown || e.Name != r.FullPath.Value {
 			return s.fail(contract("rootfile entry", "exact same-package full-path association required"))
 		}
 	}
@@ -551,6 +590,12 @@ func (s *PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmen
 	}
 	if r == nil || !validID(opts.DocumentID) || !validText(opts.BaseURI, 16384) || !validText(opts.ArchiveEntry, 4096) {
 		return "", s.fail(contract("resource adoption", "known resource and explicit document identity required"))
+	}
+	if b := s.boundaries[opts.Package]; b.membersSealed {
+		key := resourceExpansionKey{id, opts.Package, opts.BaseURI, opts.ArchiveEntry}
+		if s.expansions[key] == nil {
+			return "", s.fail(contract("resource adoption", "member inventory already sealed"))
+		}
 	}
 	if opts.Root {
 		if s.rootAdoption || opts.DocumentID != r.snapshot.header.DocumentID || s.boundaries[opts.Package].identity.Parent != "" {

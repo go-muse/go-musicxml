@@ -38,6 +38,9 @@ func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessm
 		err = g.walkResources()
 	}
 	if err == nil {
+		err = g.observePackageMetadata()
+	}
+	if err == nil {
 		err = g.sealPackages()
 	}
 	return g.finish(err)
@@ -127,19 +130,15 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 	}
 	doc := g.next("model")
 	pin := g.entryPin(p, primaryPath, "", validation.ResourceCurrentModel)
-	intrinsic := assessResourceModel(g.ctx, value.Document, assessmentRunConfig{Account: g.options.account, DocumentID: doc, Entry: primaryPath, Profile: ProfileModelLinks, Engine: engine})
+	intrinsic := assessResourceModel(g.ctx, value.Document, assessmentRunConfig{Account: g.options.account, DocumentID: doc, Entry: primaryPath, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: ProfileModelLinks, Engine: engine})
 	if intrinsic.Snapshot == nil {
-		if intrinsic.Report.Requested {
-			err = g.session.RecordResourceFailure(g.ctx, pin, intrinsic.Report, intrinsic.Err)
-		}
-		return errors.Join(intrinsic.Err, err)
+		return g.retainUntransferredIntrinsic(intrinsic, pin, nil)
 	}
 	id, err := g.session.AddResource(g.ctx, pin, intrinsic.Snapshot, true)
 	if err != nil {
-		intrinsic.Snapshot.Close()
-		return errors.Join(intrinsic.Err, err)
+		return g.retainUntransferredIntrinsic(intrinsic, pin, err)
 	}
-	primary, err := g.cacheResource(pin, ProfileModelLinks, id)
+	primary, err := g.cacheResource(pin, ProfileModelLinks, id, intrinsic.XMLDepth, intrinsic.Err == nil)
 	if err != nil {
 		return errors.Join(intrinsic.Err, err)
 	}
@@ -163,6 +162,9 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 		if i == 0 {
 			root.Entry = packageKnown(p.entries[primaryPath])
 			root.Resource = packageKnown(primary.id)
+			if err = g.observeCurrentPrimaryFileMetadata(p, root, retrieval); err != nil {
+				return err
+			}
 		} else {
 			if err = g.loadRootfile(p, &root, retrieval, false); err != nil {
 				return err

@@ -348,7 +348,7 @@ func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundar
 }
 func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *packageBoundary) Decision {
 	roles, known := s.roles[b.identity.ID]
-	if known {
+	if known && b.membersSealed && knownComplete(b.membersComplete) {
 		var score, part bool
 		uncertain := false
 		var first ResourcePin
@@ -369,11 +369,12 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 		}
 		firstScore := Evidence[bool]{State: EvidenceUnknown, Reason: "primary-score-role-unavailable"}
 		firstMembers := 0
-		for _, m := range roles.Request.Members {
+		for _, id := range s.adoptionOrder {
 			if s.scan(ctx, 1) != nil {
 				return d
 			}
-			if firstKnown && m.Resource == first && m.ArchiveEntry == firstPath {
+			a := s.adoptions[id]
+			if firstKnown && a.packageID == b.identity.ID && a.resource.pin == first && a.expansion.owner == id && a.expansion.key.archiveEntry == firstPath {
 				firstMembers++
 			}
 		}
@@ -418,6 +419,10 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 			if err := s.scan(ctx, 1); err != nil {
 				return d
 			}
+			if len(roles.Request.Members) == 0 && s.rolePinAmbiguous(ctx, b.identity.ID, r.Resource) {
+				uncertain = true
+				continue
+			}
 			uncertain = uncertain || r.Membership.State != EvidenceKnown
 			if r.Membership.State == EvidenceKnown && r.Membership.Value {
 				score = score || r.Role == ResourceRoleScore
@@ -435,7 +440,7 @@ func (s *PackageSession) scoreBeforeParts(ctx context.Context, d Decision, b *pa
 			}
 			return d
 		}
-		if b.sealed && roles.ScopeComplete.State == EvidenceKnown && roles.ScopeComplete.Value && !uncertain && (!score || !part) {
+		if roles.ScopeComplete.State == EvidenceKnown && roles.ScopeComplete.Value && !uncertain && (!score || !part) && s.roleUniverseComplete(ctx, b, roles) {
 			d.Outcome = OutcomeNotApplicable
 			d.Reason = "complete-role-scope-excludes-score-parts"
 			return d

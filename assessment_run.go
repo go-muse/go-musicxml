@@ -18,6 +18,9 @@ type assessmentRunConfig struct {
 	Entry      string
 	Profile    validation.ProfileID
 	Engine     *validation.Engine
+	// XMLDepth is an independent per-document representation cap. Zero leaves
+	// inspection governed only by the shared account; MXL supplies its default.
+	XMLDepth int
 }
 
 func assessmentContext(ctx context.Context, reason validation.Code) error {
@@ -31,6 +34,9 @@ func assessmentContext(ctx context.Context, reason validation.Code) error {
 }
 
 func (c assessmentRunConfig) validate(target validation.Target) error {
+	if c.XMLDepth < 0 || c.XMLDepth > maximumXMLDepth {
+		return &validation.ConfigurationError{Field: "XMLDepth", Reason: "intrinsic XML cap must be between 0 and 4096"}
+	}
 	if c.Account == nil {
 		return &validation.ConfigurationError{Field: "Account", Reason: "intrinsic runs require the root account"}
 	}

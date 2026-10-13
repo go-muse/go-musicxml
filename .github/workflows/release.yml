@@ -83,6 +83,13 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libxml2-utils
 
+      - name: Verify package inventory and hash controls
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          python3 scripts/verify-package-inventory.py --strict-evidence
+          python3 scripts/test-package-inventory.py
+
       - name: Run full checks
         shell: bash
         run: |

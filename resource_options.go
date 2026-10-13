@@ -44,6 +44,8 @@ type LinkedAssessmentOptions struct {
 
 // MXLAssessmentOptions adds the existing independent archive processing caps.
 // MXL does not create another account; Graph.Budgets bounds the complete run.
+// MXL.MaxXMLDepth independently caps each represented XML document in an MXL
+// context (zero uses 256), without restricting graph hops between shallow XML.
 // Original raw ZIP evidence is available only to InspectMXL, never reconstructed
 // from the current object passed to AssessMXLPackage.
 type MXLAssessmentOptions struct {

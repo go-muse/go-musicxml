@@ -263,9 +263,12 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		}
 		run.account, run.documentID, run.entry = config.Account, config.DocumentID, config.Entry
 		byteOwner = config.ByteOwner
-		// Inspection has no model depth contract. Decode retains its own limit.
+		// Ordinary inspection has no decode/model depth contract. A resource
+		// adapter can deliberately supply its separate MXL XML-depth cap.
 		if !converting {
-			maxDepth = 0
+			maxDepth = config.XMLDepth
+		} else if config.XMLDepth > 0 && config.XMLDepth < maxDepth {
+			maxDepth = config.XMLDepth
 		}
 		run.session, err = config.Engine.Begin(ctx, validation.RunOptions{DocumentID: run.documentID, Profile: config.Profile, Account: run.account})
 		if err != nil {

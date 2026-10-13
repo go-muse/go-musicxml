@@ -28,6 +28,15 @@ type PackageFileMetadataObservation struct {
 	Package         PackageID
 	Pin             ResourcePin
 	Name, MediaType Evidence[string]
+	// Context is optional for legacy boundary/adoption observations. Entry and
+	// Source are mutually exclusive metadata-only occurrence capabilities; they
+	// never admit a parsed resource, adoption, role, ID or graph closure.
+	Location              Location
+	BaseURI, ArchiveEntry string
+	Entry                 PackageFactID
+	Source                ResourceAdoptionID
+	Template              uint64
+	Href                  string
 }
 
 // ObserveImageMetadata consumes only an explicitly selected image template and
@@ -157,19 +166,21 @@ func (s *PackageSession) ObserveFileMetadata(ctx context.Context, v PackageFileM
 	if err := validateResourcePin(v.Pin); err != nil {
 		return s.fail(err)
 	}
-	scoped := b.identity.Pin == v.Pin
-	for _, id := range s.adoptionOrder {
-		if err := s.scan(ctx, 1); err != nil {
-			return err
-		}
-		if err := s.event(ctx, "file metadata scope"); err != nil {
-			return err
-		}
-		a := s.adoptions[id]
-		scoped = scoped || a.packageID == v.Package && a.resource.pin == v.Pin
+	canonical := packageCanonicalKey{v.Pin.CanonicalID, v.Pin.Revision, v.Pin.Representation}
+	prior, pinned := s.pins[canonical]
+	if pinned && prior != v.Pin {
+		return s.fail(contract("file metadata pin", "canonical identity content conflict"))
 	}
-	if !scoped {
-		return s.fail(contract("file metadata", "pin outside exact package scope"))
+	if b.sealed || !validText(v.BaseURI, 16384) || !validText(v.ArchiveEntry, 4096) || !validText(v.Href, 16384) {
+		return s.fail(contract("file metadata", "live bounded exact context required"))
+	}
+	if v.Location != (Location{}) {
+		if err := validateLocation(v.Location, TargetPackage, s.documentID); err != nil {
+			return s.fail(err)
+		}
+	}
+	if err := s.validateFileMetadataScope(ctx, b, v); err != nil {
+		return s.fail(err)
 	}
 	for _, e := range []Evidence[string]{v.Name, v.MediaType} {
 		if err := s.scan(ctx, 1); err != nil {
@@ -182,16 +193,98 @@ func (s *PackageSession) ObserveFileMetadata(ctx context.Context, v PackageFileM
 			return s.fail(contract("file metadata", "bounded exact text required"))
 		}
 	}
-	if err := s.admit(ctx, v, 256); err != nil {
+	extra := int64(256)
+	if !pinned {
+		extra += 256
+	} // canonical lookup entry, separately from metadata
+	if err := s.admit(ctx, v, extra); err != nil {
 		return err
 	}
 	if err := s.subject(v.ID, PackageSubjectMetadata); err != nil {
 		return s.fail(err)
 	}
 	s.subjectPackages[v.ID] = v.Package
-	s.output.files = append(s.output.files, stateClone(v))
+	owned := stateClone(v)
+	// Pin consistency grants no parsed capabilities. Register only after all
+	// validation, storage and subject admission succeed; later promotion must
+	// use these exact immutable bytes while acquiring its own resource lease.
+	canonical = packageCanonicalKey{owned.Pin.CanonicalID, owned.Pin.Revision, owned.Pin.Representation}
+	s.pins[canonical] = owned.Pin
+	s.output.files = append(s.output.files, owned)
 	return s.evaluateNewAdvice(ctx, nil, s.output.files[len(s.output.files)-1:])
 }
+
+// Metadata-only admission proves only an observed file occurrence and its
+// supplied presentation fields. It deliberately does not populate resources,
+// adoptions, roots, roles or expansions.
+func (s *PackageSession) validateFileMetadataScope(ctx context.Context, b *packageBoundary, v PackageFileMetadataObservation) error {
+	if v.Entry != 0 && v.Source != "" {
+		return contract("file metadata", "entry and source occurrence modes are exclusive")
+	}
+	if v.Entry != 0 {
+		e, ok := s.entries[v.Entry]
+		if !ok || len(e.RawName) != 0 || e.Package != v.Package || e.Name != v.ArchiveEntry || v.Location == (Location{}) || v.Source != "" || v.Template != 0 || v.Href != "" {
+			return contract("file metadata", "exact admitted member occurrence required")
+		}
+		base := b.identity.BaseURI == v.BaseURI
+		for _, id := range s.adoptionOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
+			if err := s.event(ctx, "file member context"); err != nil {
+				return err
+			}
+			a := s.adoptions[id]
+			base = base || a.packageID == v.Package && a.expansion.key.baseURI == v.BaseURI
+		}
+		if !base {
+			return contract("file metadata", "member base must be an admitted package context")
+		}
+		if v.Pin.Representation != ResourceSourceXML && v.Pin.Representation != ResourceRawMXL && v.Pin.Representation != ResourceBinary {
+			return contract("file metadata", "member observation requires immutable byte pin")
+		}
+		if v.Name.State == EvidenceKnown && v.Name.Value != e.Name {
+			return contract("file metadata", "member name must be exact literal entry")
+		}
+		return nil
+	}
+	if v.Source != "" {
+		a := s.adoptions[v.Source]
+		if a == nil || a.packageID != v.Package || a.expansion.owner != a.id || a.expansion.sealed || v.Template >= uint64(len(a.resource.snapshot.contexts)) || v.ArchiveEntry != "" || v.Location == (Location{}) || v.Location.Entry != a.expansion.key.archiveEntry {
+			return contract("file metadata", "exact selected external occurrence required")
+		}
+		t := a.resource.snapshot.contexts[v.Template]
+		if t.Resource == nil || t.Resource.Link == nil || t.Resource.Link.Kind == ResourceBookmark || t.Resource.Link.Href.Value.State != EvidenceKnown || t.Resource.Link.Href.Value.Value.Kind != AtomicString || t.Resource.Link.Href.Value.Value.Text != v.Href {
+			return contract("file metadata", "external occurrence must match link template")
+		}
+		if v.Pin.Representation != ResourceSourceXML && v.Pin.Representation != ResourceRawMXL {
+			return contract("file metadata", "external document requires immutable XML or MXL pin")
+		}
+		return nil
+	}
+	if v.Template != 0 || v.Href != "" {
+		return contract("file metadata", "orphan source context")
+	}
+	context := v.BaseURI != "" || v.ArchiveEntry != ""
+	scoped := b.identity.Pin == v.Pin && (!context || b.identity.BaseURI == v.BaseURI && b.identity.ArchiveEntry == v.ArchiveEntry)
+	for _, id := range s.adoptionOrder {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
+		if err := s.event(ctx, "file metadata scope"); err != nil {
+			return err
+		}
+		a := s.adoptions[id]
+		if a.packageID == v.Package && a.resource.pin == v.Pin && (!context || a.expansion.key.baseURI == v.BaseURI && a.expansion.key.archiveEntry == v.ArchiveEntry) {
+			scoped = true
+		}
+	}
+	if !scoped {
+		return contract("file metadata", "pin outside exact package/context scope")
+	}
+	return nil
+}
+
 func (s *PackageSession) evaluateNewAdvice(ctx context.Context, images []packageImageAdvice, files []PackageFileMetadataObservation) error {
 	for _, key := range s.catalog.orders[s.profile.ID] {
 		if err := s.scan(ctx, 1); err != nil {
@@ -263,7 +356,11 @@ func (s *PackageSession) evaluateAdviceValues(ctx context.Context, r PackageRule
 			} else if v.MediaType.State != EvidenceAbsent && d.Outcome != OutcomeFail {
 				d = packageEvidenceDecision(d, v.MediaType)
 			}
-			if err := s.record(ctx, r.Rule, v.ID, d, s.location(v.Package), final); err != nil {
+			location := v.Location
+			if location == (Location{}) {
+				location = s.location(v.Package)
+			}
+			if err := s.record(ctx, r.Rule, v.ID, d, location, final); err != nil {
 				return err
 			}
 		}

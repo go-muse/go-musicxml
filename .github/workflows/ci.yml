@@ -50,6 +50,13 @@ jobs:
         shell: bash
         run: bash scripts/check-all.sh format
 
+      - name: Verify package inventory and hash controls
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          python3 scripts/verify-package-inventory.py --strict-evidence
+          python3 scripts/test-package-inventory.py
+
       - name: Run go vet
         shell: bash
         run: bash scripts/check-all.sh vet
@@ -128,7 +135,7 @@ jobs:
       - name: Validate corpus and raw XML/XSD contracts
         env:
           MUSICXML_REQUIRE_XMLLINT: "1"
-        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema|TestElementAttributeContractsAgainstSchema|TestNilContractsAgainstSchema|TestElementValueConstraintsAgainstSchema|TestFixedElementChildrenAgainstSchema|TestElementOnlyXMLWhitespaceAgainstSchema|TestEmptyComplexContentAgainstSchema|TestXMLDocumentWhitespaceAgainstXMLLint|TestXMLDocumentLexicalAgainstXMLLint|TestIntegerValueSpacesAgainstSchema|TestDecimalComparisonsAgainstSchema|TestDecimalDigitFacetsAgainstSchema|TestSimpleContentRestrictionsAgainstSchema|TestEffectiveWhitespaceAgainstSchema|TestPatternGroupsAgainstSchema|TestBuiltinListLengthsAgainstSchema|TestAggregateValuesAgainstSchema|TestUnionMemberFlatteningAgainstSchema|TestPrimitiveValuesAgainstSchema|TestDatatypeNamesAgainstSchema|TestDatatypeNamesProductionAgainstSchema|TestGrammarParticlesAgainstSchema|TestXSITypeAgainstSchema|TestSchemaHintDatatypesAgainstSchema|TestXSD10IdentityBindingsAgainstSchema|TestSourceAssessmentAgainstSchema)$' .
+        run: go test -count=1 -run='^(TestEncodedCorpusConformsToMusicXMLSchema|TestAnyURILexicalFormsAgainstOpusSchema|TestElementAttributeContractsAgainstSchema|TestNilContractsAgainstSchema|TestElementValueConstraintsAgainstSchema|TestFixedElementChildrenAgainstSchema|TestElementOnlyXMLWhitespaceAgainstSchema|TestEmptyComplexContentAgainstSchema|TestXMLDocumentWhitespaceAgainstXMLLint|TestXMLDocumentLexicalAgainstXMLLint|TestIntegerValueSpacesAgainstSchema|TestDecimalComparisonsAgainstSchema|TestDecimalDigitFacetsAgainstSchema|TestSimpleContentRestrictionsAgainstSchema|TestEffectiveWhitespaceAgainstSchema|TestPatternGroupsAgainstSchema|TestBuiltinListLengthsAgainstSchema|TestAggregateValuesAgainstSchema|TestUnionMemberFlatteningAgainstSchema|TestPrimitiveValuesAgainstSchema|TestDatatypeNamesAgainstSchema|TestDatatypeNamesProductionAgainstSchema|TestGrammarParticlesAgainstSchema|TestXSITypeAgainstSchema|TestSchemaHintDatatypesAgainstSchema|TestXSD10IdentityBindingsAgainstSchema|TestSourceAssessmentAgainstSchema|TestAuxiliarySourceAgainstOriginalSchema)$' .
 
   fuzz:
     name: Fuzz smoke

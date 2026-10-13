@@ -228,6 +228,18 @@ and [graph API](API.md#selected-resource-graph-entry-points) for exact contracts
 Runnable [source graph and MXL examples](resource_assessment_example_test.go)
 show explicit profile selection and bundle acceptance checks.
 
+Package-role replies apply to a sealed, exact member scope; unread entries remain
+unknown even if the selected provider table is complete. Optional file metadata
+may survive a parse or admission error, but cannot certify an XML target, role,
+ID or graph closure. Original non-UTF8 entry bytes may retain encoding advice
+without becoming safe member paths. Primary retrieval-name advice uses a supplied
+URI rather than the canonical cache identity or reconstructed model history.
+
+Default budgets are finite. Shared input, external bytes and working storage each
+default to 64 MiB, with 20,000,000 work steps and depth 1024; the separate MXL byte
+caps do not raise them. A satisfied bundle covers its named bounded profile,
+not full ZIP/JAR/DEFLATE, media-type or compressed-rootfile interpretation closure.
+
 ## Compressed MXL and opus
 
 `DecodeMXLPackage` retains alternate root files, images, PDFs, linked scores,

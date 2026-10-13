@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"context"
 	"errors"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -16,9 +17,10 @@ type graphResourceKey struct {
 	profile validation.ProfileID
 }
 type graphResource struct {
-	pin     validation.ResourcePin
-	profile validation.ProfileID
-	id      validation.ResourceAssessmentID
+	pin      validation.ResourcePin
+	profile  validation.ProfileID
+	id       validation.ResourceAssessmentID
+	xmlDepth int
 }
 type graphExpansionKey struct {
 	resource validation.ResourceAssessmentID
@@ -33,7 +35,7 @@ type graphExpansion struct {
 	depth    int64
 }
 
-func (g *resourceGraphRun) cacheResource(pin validation.ResourcePin, profile validation.ProfileID, id validation.ResourceAssessmentID) (*graphResource, error) {
+func (g *resourceGraphRun) cacheResource(pin validation.ResourcePin, profile validation.ProfileID, id validation.ResourceAssessmentID, xmlDepth int, reusable bool) (*graphResource, error) {
 	key := graphResourceKey{pin, profile}
 	if old := g.cache[key]; old != nil {
 		return old, nil
@@ -42,11 +44,15 @@ func (g *resourceGraphRun) cacheResource(pin validation.ResourcePin, profile val
 	if old, ok := g.pins[canonical]; ok && old != pin {
 		return nil, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed content"}
 	}
-	if err := g.reserve(1024 + 2*int64(len(pin.CanonicalID)+len(pin.Revision)+len(pin.Digest)+len(pin.SnapshotID)+len(profile))); err != nil {
+	if err := g.reserve(1040 + 2*int64(len(pin.CanonicalID)+len(pin.Revision)+len(pin.Digest)+len(pin.SnapshotID)+len(profile))); err != nil {
 		return nil, err
 	}
-	r := &graphResource{pin, profile, id}
-	g.cache[key] = r
+	r := &graphResource{pin, profile, id, xmlDepth}
+	// A partial intrinsic assessment remains available for known proofs, but
+	// cannot become a successful cache hit in a later, less restrictive context.
+	if reusable {
+		g.cache[key] = r
+	}
 	g.pins[canonical] = pin
 	return r, nil
 }
@@ -184,27 +190,32 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 			} else if resolved.ArchivePath != "" {
 				child, childBase, childPackage, target, loadErr = g.loadArchiveDocument(item, resolved.ArchivePath)
 			} else if g.options.selected[ResourceDocuments] && g.options.resolver != nil {
-				child, childBase, childPackage, target, loadErr = g.loadExternalDocument(item, v, href.Value.Text, resolved)
+				child, childBase, childPackage, target, loadErr = g.loadExternalDocument(item, index, v, href.Value.Text, resolved)
 			}
 		}
 	}
-	if child != nil && loadErr == nil {
+	// A retained intrinsic snapshot can prove its observed root even when that
+	// child failed syntax or root support. Preserve that evidence, but never
+	// expand more work after interruption or a child operation error.
+	if child != nil && g.ctx.Err() == nil && !errors.Is(loadErr, validation.ErrResourceLimit) && !errors.Is(loadErr, ErrMXLTooLarge) && !errors.Is(loadErr, context.Canceled) && !errors.Is(loadErr, context.DeadlineExceeded) {
 		aid, e := g.session.AdoptResource(g.ctx, child.id, validation.ResourceAdoptionOptions{DocumentID: g.next("adoption"), Package: childPackage, BaseURI: childBase.RetrievalURI, ArchiveEntry: childBase.Entry})
 		if e != nil {
-			return e
+			return errors.Join(loadErr, e)
 		}
 		target = validation.Evidence[validation.ResourceAdoptionID]{State: validation.EvidenceKnown, Value: aid}
 		fragmentTarget, e = g.resolveFragment(aid, fragment)
 		if e != nil {
-			return e
+			return errors.Join(loadErr, e)
 		}
 		fragmentRelease, leaseErr := resourceWorkingLease(g.ctx, g.options.account, fragmentTarget)
 		if leaseErr != nil {
-			return leaseErr
+			return errors.Join(loadErr, leaseErr)
 		}
 		defer fragmentRelease()
-		if e = g.enqueue(child, aid, childPackage, childBase, item.depth+1); e != nil {
-			return e
+		if loadErr == nil {
+			if e = g.enqueue(child, aid, childPackage, childBase, item.depth+1); e != nil {
+				return errors.Join(loadErr, e)
+			}
 		}
 	}
 	g.sequence++
@@ -217,7 +228,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 	}
 	return errors.Join(loadErr, edgeErr)
 }
-func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], error) {
+func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint64, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], error) {
 	unknown := unavailableTarget(validation.EvidenceUnknown, "resource-unavailable", nil)
 	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
 	if err != nil {
@@ -271,9 +282,13 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, v validatio
 			return nil, base, item.pkg, unknown, err
 		}
 	}
+
 	canonical := graphCanonicalKey{result.Pin.CanonicalID, result.Pin.Representation}
 	if old, ok := g.pins[canonical]; ok && old != result.Pin {
 		return nil, base, item.pkg, unknown, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed content"}
+	}
+	if err = g.observeExternalFileMetadata(item, index, result, base, href); err != nil {
+		return nil, base, item.pkg, unknown, err
 	}
 	if result.Pin.Representation == validation.ResourceRawMXL {
 		if err = g.ownResourceBody(body); err != nil {
@@ -293,21 +308,17 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, v validatio
 	}
 	key := graphResourceKey{result.Pin, ProfileSourceLinks}
 	if cached := g.cache[key]; cached != nil {
-		return cached, base, item.pkg, unknown, nil
+		return cached, base, item.pkg, unknown, g.checkIntrinsicXMLDepth(cached, item.pkg)
 	}
-	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: g.next("source"), Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesAccounted})
+	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: g.next("source"), Profile: ProfileSourceLinks, XMLDepth: g.intrinsicXMLDepth(item.pkg), Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if intrinsic.Snapshot == nil {
-		if intrinsic.Report.Requested {
-			err = g.session.RecordResourceFailure(g.ctx, result.Pin, intrinsic.Report, intrinsic.Err)
-		}
-		return nil, base, item.pkg, unknown, errors.Join(intrinsic.Err, err)
+		return nil, base, item.pkg, unknown, g.retainUntransferredIntrinsic(intrinsic, result.Pin, nil)
 	}
 	id, err := g.session.AddResource(g.ctx, result.Pin, intrinsic.Snapshot, true)
 	if err != nil {
-		intrinsic.Snapshot.Close()
-		return nil, base, item.pkg, unknown, err
+		return nil, base, item.pkg, unknown, g.retainUntransferredIntrinsic(intrinsic, result.Pin, err)
 	}
-	resource, err := g.cacheResource(result.Pin, ProfileSourceLinks, id)
+	resource, err := g.cacheResource(result.Pin, ProfileSourceLinks, id, intrinsic.XMLDepth, intrinsic.Err == nil)
 	return resource, base, item.pkg, unknown, errors.Join(intrinsic.Err, err)
 }
 func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fragment validation.Evidence[string]) (validation.Evidence[validation.NodeRef], error) {
@@ -328,6 +339,9 @@ func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fr
 	}
 	defer headerRelease()
 	if fragment.Value == "" {
+		if header.Root.Node == 0 {
+			return validation.Evidence[validation.NodeRef]{State: validation.EvidenceUnknown, Reason: "fragment-root-occurrence-unavailable"}, nil
+		}
 		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceKnown, Value: header.Root}, nil
 	}
 	if !sourceXMLNCName(fragment.Value) {

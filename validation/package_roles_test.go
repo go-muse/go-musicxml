@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func roleMemberFixture(t *testing.T) (*PackageSession, ResourceRoleRequest, ResourceRoleResult) {
+func roleMemberUnsealedFixture(t *testing.T) (*PackageSession, ResourceRoleRequest, ResourceRoleResult) {
 	t.Helper()
 	a, _ := NewBudgetAccount(Budgets{})
 	snap, _ := interruptionSnapshot(t, a, "canonical", "1")
@@ -59,6 +59,13 @@ func roleMemberFixture(t *testing.T) (*PackageSession, ResourceRoleRequest, Reso
 			member := m
 			r.Resources = append(r.Resources, ResourceRoleFact{Resource: pin, Member: &member, Role: role, Membership: Evidence[bool]{State: EvidenceKnown, Value: (i == 1) == (role == ResourceRoleScore)}})
 		}
+	}
+	return s, q, r
+}
+func roleMemberFixture(t *testing.T) (*PackageSession, ResourceRoleRequest, ResourceRoleResult) {
+	s, q, r := roleMemberUnsealedFixture(t)
+	if err := s.SealResourceMembers(context.Background(), "outer", Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
+		t.Fatal(err)
 	}
 	return s, q, r
 }
@@ -158,4 +165,92 @@ func TestPackageMissingRoleClassificationCannotProveExclusion(t *testing.T) {
 	if b.Satisfied() || b.PackageReport().Counts.NotApplicable != 0 {
 		t.Fatalf("missing classifications became exclusion: %+v", b.PackageReport())
 	}
+}
+
+func TestPackageLegacyPinRolesCannotClassifyAmbiguousMemberContexts(t *testing.T) {
+	s, q, r := roleMemberFixture(t)
+	q.Members = nil
+	r.Request = q
+	r.Resources = []ResourceRoleFact{{Resource: q.Resources[0], Role: ResourceRoleScore, Membership: Evidence[bool]{State: EvidenceKnown, Value: false}}, {Resource: q.Resources[0], Role: ResourceRoleIndividualPart, Membership: Evidence[bool]{State: EvidenceKnown, Value: true}}}
+	if err := s.ObserveRoles(context.Background(), r); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+		t.Fatal(err)
+	}
+	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.Satisfied() {
+		t.Fatal("legacy pin inferred membership across multiple contexts")
+	}
+}
+
+func TestPackageCompleteRoleRequestCannotOmitAdmittedMembers(t *testing.T) {
+	s, q, r := roleMemberFixture(t)
+	q.Members = q.Members[:1]
+	r.Request = q
+	r.Resources = r.Resources[:2]
+	// The listed member is authoritatively neither a score nor a part; the other
+	// admitted member is outside this response and cannot become negative space.
+	for i := range r.Resources {
+		r.Resources[i].Membership.Value = false
+	}
+	if err := s.ObserveRoles(context.Background(), r); err != nil {
+		s.Finish(context.Background(), PackageCompletion{})
+		return
+	}
+	if err := s.SealEnumeration(context.Background(), completePackage("outer")); err != nil {
+		t.Fatal(err)
+	}
+	b, err := s.Finish(context.Background(), PackageCompletion{InputComplete: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b.Satisfied() {
+		t.Fatal("subset role scope certified whole package")
+	}
+}
+
+func TestPackageMemberSealPreventsNewContextsButAllowsAliases(t *testing.T) {
+	s, _, _ := roleMemberFixture(t)
+	rid := s.resourceOrder[0]
+	if _, err := s.AdoptResource(context.Background(), rid, ResourceAdoptionOptions{Package: "outer", DocumentID: "alias", ArchiveEntry: "part.xml"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.AdoptResource(context.Background(), rid, ResourceAdoptionOptions{Package: "outer", DocumentID: "late", ArchiveEntry: "late.xml"}); err == nil {
+		t.Fatal("new member after seal")
+	}
+	s.Finish(context.Background(), PackageCompletion{})
+}
+func TestPackagePartialRolesWaitForExplicitMemberSeal(t *testing.T) {
+	s, _, r := roleMemberUnsealedFixture(t)
+	if err := s.ObserveRoles(context.Background(), r); err != nil {
+		t.Fatal(err)
+	}
+	if len(s.decisions) != 0 {
+		t.Fatal("unsealed member inventory certified roles")
+	}
+	if err := s.SealResourceMembers(context.Background(), "outer", Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	b, _ := s.Finish(ctx, PackageCompletion{})
+	if b.PackageReport().Counts.Fail != 1 {
+		t.Fatal("seal did not preserve independently proved failure")
+	}
+}
+func TestPackageCanceledMemberSealCannotCertifyInventory(t *testing.T) {
+	s, _, _ := roleMemberUnsealedFixture(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := s.SealResourceMembers(ctx, "outer", Evidence[bool]{State: EvidenceKnown, Value: true}); err == nil {
+		t.Fatal("canceled seal succeeded")
+	}
+	if s.boundaries["outer"].membersSealed {
+		t.Fatal("canceled seal changed inventory")
+	}
+	s.Finish(context.Background(), PackageCompletion{})
 }

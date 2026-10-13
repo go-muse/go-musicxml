@@ -6,6 +6,7 @@ Contributions are welcome.
 
 - Go 1.27 or later
 - Git
+- Python 3.9 or later for the standard-library-only package inventory checks
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
 
@@ -43,6 +44,19 @@ assessment-observer targets each run 10,000 executions (`MXL_FUZZ_TIME`). The Li
 The full race stage uses an explicit finite 15-minute per-package timeout; its
 CI job retains a 20-minute cap. This allows host-timing headroom for the complete
 uncached race suite without skipping tests or changing assessment budgets.
+
+Package obligation inventories also have development-only Python checks:
+
+```bash
+python3 scripts/verify-package-inventory.py --strict-evidence
+python3 scripts/test-package-inventory.py
+```
+
+These verify preserved original records, exact test routes, canonical LF/CRLF
+hash equivalence and rejection of real mutations. Existing Linux quality and
+release jobs require them without adding a CI job or changing the seven Go
+stages. Python is not a library runtime dependency. The required-xmllint job
+explicitly includes the original-byte container/sounds differential test.
 
 ## Generated code
 

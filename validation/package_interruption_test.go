@@ -70,6 +70,10 @@ func TestPackageEstablishedRoleFailureSurvivesCancellation(t *testing.T) {
 				}
 				interruptionAdopt(t, s, partID, "part", true, "")
 				interruptionAdopt(t, s, scoreID, "score-view", false, "")
+				sealFixtureExpansions(t, s)
+				if err = s.SealResourceMembers(context.Background(), "outer", Evidence[bool]{State: EvidenceKnown, Value: true}); err != nil {
+					t.Fatal(err)
+				}
 				q := ResourceRoleRequest{ID: "roles", Package: "outer", Resources: []ResourcePin{interruptionPin("part"), interruptionPin("score")}, ScopeComplete: Evidence[bool]{State: EvidenceKnown, Value: true}}
 				r := ResourceRoleResult{Request: q, ScopeComplete: q.ScopeComplete, Resources: []ResourceRoleFact{
 					{Resource: interruptionPin("part"), Role: ResourceRoleIndividualPart, Membership: Evidence[bool]{State: EvidenceKnown, Value: true}},

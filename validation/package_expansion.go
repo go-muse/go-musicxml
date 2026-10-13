@@ -105,3 +105,42 @@ func (s *PackageSession) newExpansion(id ResourceAdoptionID, r ResourceAssessmen
 	s.expansions[key] = expansion
 	return expansion
 }
+
+// SealResourceMembers closes the package's admitted expansion-context inventory
+// after graph discovery and before complete role proofs. It is distinct from
+// raw entry enumeration: an unread physical member still prevents role-universe
+// exclusion. Exact aliases remain permitted; new contexts are rejected.
+// A complete seal requires every existing expansion owner to be complete. Failed
+// or canceled admission never changes the seal; partial seals cannot prove roles.
+func (s *PackageSession) SealResourceMembers(ctx context.Context, pkg PackageID, complete Evidence[bool]) error {
+	if err := s.event(ctx, "SealResourceMembers"); err != nil {
+		return err
+	}
+	b := s.boundaries[pkg]
+	if b == nil || b.sealed || b.membersSealed {
+		return s.fail(contract("resource members", "open unsealed package inventory required"))
+	}
+	if err := validateEvidence(complete, "member enumeration"); err != nil {
+		return s.fail(err)
+	}
+	if complete.State == EvidenceAbsent {
+		return s.fail(contract("member enumeration", "absence is not completeness"))
+	}
+	if knownComplete(complete) {
+		for _, id := range s.adoptionOrder {
+			if err := s.scan(ctx, 1); err != nil {
+				return err
+			}
+			a := s.adoptions[id]
+			if a.packageID == pkg && a.expansion.owner == id && (!a.expansion.sealed || !knownComplete(a.expansion.complete)) {
+				return s.fail(contract("resource members", "complete expansion owners required"))
+			}
+		}
+	}
+	if err := s.admit(ctx, complete, 128); err != nil {
+		return err
+	}
+	b.membersComplete = stateClone(complete)
+	b.membersSealed = true
+	return s.evaluateBoundary(ctx, b)
+}

@@ -1033,10 +1033,13 @@ all live leases, while immutable `AssessmentBundle` getters remain available.
 
 The bundle retains one package report and one report per canonical intrinsic
 assessment. Required child failures cannot be flattened away or multiplied by
-edge count. `RecordResourceFailure` is write-once, preserves the original failed
-report if ordinary admission permits, and otherwise uses its reserved explicitly
-truncated identity/count summary. An unavailable full content pin is marked as
-such and cannot enter successful resource or package ingress.
+edge count. `RecordResourceFailure` is write-once and preserves the best original
+intrinsic report of an untransferred child when export or later package admission
+fails.
+If ordinary report retention is refused, its reserved explicitly truncated
+identity/count summary still preserves independently known results. An unavailable
+full content pin is marked as such and cannot establish canonical resource identity
+or successful package completion.
 
 `ObserveEdge` consumes a once URI-decoded fragment component. Empty fragments
 address the whole document; only schema-ID NCName shorthand is implemented.
@@ -1068,8 +1071,10 @@ outgoing edges, association replies and selected image metadata. Aliases keep
 fresh document IDs and linked-document charges, including cycle/back references.
 `SealResourceExpansion` requires complete intrinsic scope and exact coverage of
 all outgoing templates before accepting a complete assertion. Each owner must be
-sealed before its package inventory. Unsealed, failed or partial expansions keep
-the whole bundle incomplete; aliases do not convert in-progress work into vacuity.
+sealed before its package inventory. A retained child snapshot may still support
+an independently known target-kind finding after an intrinsic error; it does not
+authorize continued child expansion after that error. Unsealed, failed or partial
+expansions keep the whole bundle incomplete; aliases do not convert in-progress work into vacuity.
 `AdoptionContext` exposes this immutable context and completion evidence.
 
 Image requests carry the same explicit base URI, package and archive-entry scope,
@@ -1077,11 +1082,31 @@ which must match their exact source expansion. Canonical identity is never used
 as a retrieval base. Known numeric image fields individually consume the scalar
 limit even when another field is unavailable and no ratio can be calculated.
 
+### Package role member scope
+
+`SealResourceMembers` closes admitted member discovery separately from outgoing
+expansion and final package enumeration. A complete role request requires that
+seal and coverage of every admitted member context. Each `ResourceRoleMember`
+keeps the immutable pin, literal archive entry and explicit base evidence;
+identical bytes at two member paths are not one role occurrence. Exact member
+records and the resource pin list are echoed by the provider. Legacy pin-only
+scope cannot resolve an ambiguous physical-member association.
+
+Role requests are dispatched only with selected `ResourceRoles`, a supplied
+resolver, a usable package inventory and a selected musical document. Plain
+XML/model roots do not themselves create package-role requests. Nested raw
+packages reached from them may do so. Neither root kind, suffix nor media type
+classifies a document as a score or individual part. Unread or unpinned entries
+keep the requested role universe incomplete; the literal `mimetype` metadata
+record is the only physical-entry exclusion. Complete provider coverage of a
+smaller selected table cannot establish absence of roles outside that table.
+
 ## Original and current MXL assessment
 
-`InspectMXL(ctx, reader, MXLAssessmentOptions)` selects `ProfileMXLSource`;
-`AssessMXLPackage(ctx, package, MXLAssessmentOptions)` selects `ProfileMXLModel`.
-Both return `(validation.AssessmentBundle, error)`. These additive entry points
+`InspectMXL(ctx, reader, MXLAssessmentOptions)` requires
+`Graph.Profile = ProfileMXLSource`; `AssessMXLPackage(ctx, package,
+MXLAssessmentOptions)` requires `Graph.Profile = ProfileMXLModel`. Neither chooses
+a profile implicitly. Both return `(validation.AssessmentBundle, error)`. These additive entry points
 preserve all legacy decode, encode, resolve and transport behavior. The caller's
 reader stays open; no built-in filesystem or network resolver is introduced.
 
@@ -1121,6 +1146,26 @@ external aliases count again even when their verified intrinsic parse is cached.
 Caller and resolver I/O cancellation remains cooperative; all owned leases are
 released on completion, including technical errors and cancellation.
 
+Zero-valued graph budget fields select finite defaults, including 64 MiB each for
+primary input, external represented bytes and buffered working storage,
+20,000,000 rule steps and depth 1024. The independent MXL byte defaults are
+64 MiB archive, 1 MiB metadata, 256 MiB document/per-resource and 512 MiB aggregate
+selected resources. The stricter applicable limit wins; those legacy byte caps
+do not enlarge the shared graph account. Set finite overrides explicitly when
+needed. Exhaustion is incomplete processing, not a MusicXML violation or proof
+of conformance.
+
+`MXL.MaxXMLDepth` independently limits represented XML element depth, including
+scalar leaves, for container/primary/local XML and selected linked XML reached
+from an actual MXL context. Zero uses the existing MXL default of 256; values
+above 4096 or below zero are rejected before input is read. The shared
+`Graph.Budgets.MaxDepth` remains active separately for XML/model and graph/package
+depth. A smaller XML cap does not restrict the number of shallow graph hops.
+Plain XML siblings remain governed by their graph settings. Cached intrinsic
+assessments retain a bounded peak-depth witness, checked against each receiving
+MXL context before adoption; reuse never bypasses the cap or reparses canonical
+bytes. Depth refusal is incomplete processing and preserves known reports.
+
 ## Selected resource graph entry points
 
 `InspectXMLWithResources(ctx, reader, LinkedAssessmentOptions)` assesses original
@@ -1152,6 +1197,9 @@ read errors; caller-owned primary readers remain open.
 becomes run-local. `Identity.RetrievalURI`, when supplied, is an absolute URI and
 is the only supplied primary external retrieval base. Actual source digests cannot
 be overridden by metadata; current models receive fresh opaque snapshot identities.
+Optional primary filename advice uses the actual supplied retrieval URI of the
+admitted source/current boundary, never its canonical identity. Current-state
+advice does not reconstruct an original source filename or MIME declaration.
 The first verified canonical representation pin is immutable for the run. A
 changed returned revision cannot silently replace the same requested resource.
 Each newly returned body is read, charged and verified even when its intrinsic
@@ -1169,7 +1217,41 @@ XML edges, obey both document and resource byte caps. A metered fixed four-byte
 prefix classifies local selected bytes before growing body allocation. ZIP content
 uses archive and resource caps; other content uses its selected XML cap. Names
 and declared media types do not select the representation. The prefix counts once
-in shared byte usage, including when later classification rejects the body. Graph depth follows the actual incoming link path
-through package boundaries instead of restarting at a nested primary. Package
-containment depth remains independently checked. Same-context backreferences
+in shared byte usage, including when later classification rejects the body.
+Graph depth follows the actual incoming link path through package boundaries
+instead of restarting at a nested primary. Package containment depth remains
+independently checked. Same-context backreferences
 reuse the admitted expansion rather than manufacturing a normative cycle error.
+
+Optional file advice preserves exact presentation provenance. Original rootfile
+name/media fields retain absent versus present-empty evidence; current rootfiles
+retain current-field provenance. A selected local member or resolver body receives
+metadata-only observation after its complete byte digest is verified, before XML
+parsing or snapshot export. Core `ObserveFileMetadata` requires either an admitted
+physical `Entry` or an exact selected `Source`/`Template`/`Href` occurrence,
+with those modes mutually exclusive; existing boundary/adoption observations
+retain their exact optional context. For the same canonical identity, revision
+and representation, observed file bytes must agree with earlier and later
+admitted pins, without granting parsed capabilities. Root orchestration emits one
+observation per exact occurrence/context, so later adoption does not duplicate
+its advice. This observation cannot admit a parsed resource, adoption, ID, role,
+root validity or graph closure. Consequently known advice may
+survive an independent parsing/export error without certifying that file as valid.
+Unselected auxiliary container/sounds parsing does not acquire musical-file advice.
+
+File metadata is scoped to the admitted package plus exact member occurrence or
+selected source-link template and effective retrieval context. Distinct aliases
+remain distinct even when their verified parse is reused. A name derived from an
+HTTP(S)/file retrieval URI is an escaped last path segment, not a claim about a
+physical filename; escaped slashes are never decoded into new member boundaries.
+Opaque/custom retrieval URIs may leave the optional name unavailable. Missing or
+invalid supplied external MIME remains absent or invalid rather than receiving a
+guessed default. Optional advice never supplies a document classification rule.
+
+An original ZIP entry with a non-UTF8 byte name may retain `RawName` header
+observation independently of transport path policy. Raw names are bounded exact
+bytes, exclusive with textual `Name`, and do not enter safe member lookup or
+rootfile, file-metadata or role-completeness capabilities. Encoding advice uses
+an ASCII hexadecimal diagnostic label; no legacy decoding or filename
+normalization is inferred. The existing unsafe-path operation error still stops
+selection, while an independently observed encoding recommendation remains visible.

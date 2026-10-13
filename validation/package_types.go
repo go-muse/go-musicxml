@@ -12,6 +12,8 @@ type PackageIdentity struct {
 	Parent         PackageID
 	Representation ResourceRepresentation
 	Pin            ResourcePin
+	// BaseURI and ArchiveEntry retain exact admitted transport provenance.
+	BaseURI, ArchiveEntry string
 	// PinUnavailable admits only a raw MXL prefix with no verified whole-body
 	// digest. Such a boundary is never canonical and can never certify completion.
 	PinUnavailable bool
@@ -27,9 +29,12 @@ type ZIPHeaderObservation struct {
 // PackageEntryObservation is one exact bounded archive entry association.
 // Local proof remains usable independently of later central-directory failure.
 type PackageEntryObservation struct {
-	ID                PackageFactID
-	Package           PackageID
-	Name              string
+	ID      PackageFactID
+	Package PackageID
+	Name    string
+	// RawName retains an exact non-UTF8 byte name only for original-header
+	// observation. It is exclusive with Name and grants no path capability.
+	RawName           []byte
 	Location          Location
 	Local, Central    ZIPHeaderObservation
 	HeaderAssociation Evidence[bool]

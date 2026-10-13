@@ -10,6 +10,7 @@ import (
 	"mime"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -104,6 +105,9 @@ func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOpti
 		err = g.walkResources()
 	}
 	if err == nil {
+		err = g.observePackageMetadata()
+	}
+	if err == nil {
 		err = g.sealPackages()
 	}
 	return g.finish(err)
@@ -139,19 +143,22 @@ func (g *resourceGraphRun) entryPin(p *graphPackage, path, digest string, repres
 	return pin
 }
 func (g *resourceGraphRun) newPackage(pin validation.ResourcePin, parent validation.PackageID, retrieval string, a *mxlAssessmentArchive) (*graphPackage, error) {
+	return g.newPackageAtEntry(pin, parent, retrieval, "", a)
+}
+func (g *resourceGraphRun) newPackageAtEntry(pin validation.ResourcePin, parent validation.PackageID, retrieval, entry string, a *mxlAssessmentArchive) (*graphPackage, error) {
 	completePin := pin.Digest != "" || pin.SnapshotID != ""
 	canonical := graphCanonicalKey{pin.CanonicalID, pin.Representation}
 	if old, ok := g.pins[canonical]; completePin && ok && old != pin {
 		return nil, &validation.ConfigurationError{Field: "package pin", Reason: "canonical identity changed revision or content"}
 	}
-	if err := g.reserve(2048 + 2*int64(len(retrieval)+len(pin.CanonicalID)+len(pin.Revision)+len(pin.Digest)+len(pin.SnapshotID))); err != nil {
+	if err := g.reserve(2048 + 2*int64(len(retrieval)+len(entry)+len(pin.CanonicalID)+len(pin.Revision)+len(pin.Digest)+len(pin.SnapshotID))); err != nil {
 		return nil, err
 	}
 	id := validation.PackageID(g.next("boundary"))
 	if parent == "" {
 		id = "root"
 	}
-	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: id, Parent: parent, Representation: pin.Representation, Pin: pin, PinUnavailable: pin.Representation == validation.ResourceRawMXL && pin.Digest == ""}); err != nil {
+	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: id, Parent: parent, Representation: pin.Representation, Pin: pin, BaseURI: retrieval, ArchiveEntry: entry, PinUnavailable: pin.Representation == validation.ResourceRawMXL && pin.Digest == ""}); err != nil {
 		return nil, err
 	}
 	p := &graphPackage{id: id, parent: parent, depth: 1, pin: pin, archive: a, entries: make(map[string]validation.PackageFactID), entriesComplete: packageUnknown[bool]("entry-inventory-unavailable"), rootsComplete: packageUnknown[bool]("rootfile-inventory-unavailable")}
@@ -163,6 +170,9 @@ func (g *resourceGraphRun) newPackage(pin validation.ResourcePin, parent validat
 	if pin.Digest != "" || pin.SnapshotID != "" {
 		g.packageContexts[graphPackageKey{pin, parent, retrieval}] = p
 	}
+	if err := g.observeBoundaryFileMetadata(p, retrieval); err != nil {
+		return nil, err
+	}
 	return p, nil
 }
 
@@ -173,6 +183,9 @@ func (g *resourceGraphRun) importRawPackage(a *mxlAssessmentArchive, pin validat
 	return g.importRawPackageAtDepth(a, pin, parent, retrieval, isPrimary, 1)
 }
 func (g *resourceGraphRun) importRawPackageAtDepth(a *mxlAssessmentArchive, pin validation.ResourcePin, parent validation.PackageID, retrieval string, isPrimary bool, depth int64) (*graphResource, resourceURIBase, validation.PackageID, error) {
+	return g.importRawPackageAtEntry(a, pin, parent, retrieval, "", isPrimary, depth)
+}
+func (g *resourceGraphRun) importRawPackageAtEntry(a *mxlAssessmentArchive, pin validation.ResourcePin, parent validation.PackageID, retrieval, entry string, isPrimary bool, depth int64) (*graphResource, resourceURIBase, validation.PackageID, error) {
 	for ancestor := g.packages[parent]; ancestor != nil; ancestor = g.packages[ancestor.parent] {
 		if err := g.options.account.Charge(validation.BudgetRuleSteps, 1); err != nil {
 			return nil, resourceURIBase{}, "", err
@@ -190,7 +203,7 @@ func (g *resourceGraphRun) importRawPackageAtDepth(a *mxlAssessmentArchive, pin 
 	if depth > g.options.account.Limits().MaxDepth {
 		return nil, resourceURIBase{}, "", &validation.ResourceError{Kind: validation.BudgetDepth, Limit: g.options.account.Limits().MaxDepth, Requested: depth}
 	}
-	p, err := g.newPackage(pin, parent, retrieval, a)
+	p, err := g.newPackageAtEntry(pin, parent, retrieval, entry, a)
 	if err != nil {
 		return nil, resourceURIBase{}, "", err
 	}
@@ -258,6 +271,28 @@ func (g *resourceGraphRun) observeRawEntries(p *graphPackage) error {
 			return nil
 		}
 		e := validation.PackageEntryObservation{ID: g.packageFact(), Package: p.id, Name: entry.central.name, Location: g.packageLocation(entry.central.name, ""), Local: unavailableZIPHeader(), Central: observedZIPHeader(entry.central), HeaderAssociation: packageUnknown[bool]("header-association-unavailable"), UTF8Name: packageKnown(entry.utf8Name), PhysicalOrder: packageUnknown[uint64]("physical-order-unavailable")}
+		if !utf8.ValidString(entry.central.name) {
+			if err := g.options.account.Check(validation.BudgetScalarBytes, int64(len(entry.central.name))); err != nil {
+				return err
+			}
+			if err := g.options.account.Charge(validation.BudgetRuleSteps, int64(len(entry.central.name))+128); err != nil {
+				return err
+			}
+			// Preserve bytes without treating an ASCII diagnostic label as identity.
+			// The original transport policy still rejects this member for reading.
+			n := int64(len(entry.central.name))*2 + 512
+			if err := g.options.account.Charge(validation.BudgetBufferedBytes, n); err != nil {
+				return err
+			}
+			defer g.options.account.Release(validation.BudgetBufferedBytes, n)
+			e.Name = ""
+			e.RawName = []byte(entry.central.name)
+			label := hex.EncodeToString(e.RawName[:min(64, len(e.RawName))])
+			if len(e.RawName) > 64 {
+				label += "..."
+			}
+			e.Location = g.packageLocation("", "raw-entry-name-hex["+label+"]")
+		}
 		if entry.localObserved && entry.local.name == entry.central.name {
 			e.Local = observedZIPHeader(entry.local)
 		}
@@ -307,7 +342,9 @@ func (g *resourceGraphRun) recordPackageEntry(p *graphPackage, e validation.Pack
 	if err := g.session.ObserveEntry(g.ctx, e); err != nil {
 		return err
 	}
-	p.entries[strings.Clone(e.Name)] = e.ID
+	if len(e.RawName) == 0 {
+		p.entries[strings.Clone(e.Name)] = e.ID
+	}
 	return nil
 }
 func (g *resourceGraphRun) assessPackageSource(p *graphPackage, path string, data []byte, profile validation.ProfileID) (*graphResource, string, error) {
@@ -317,26 +354,22 @@ func (g *resourceGraphRun) assessPackageSource(p *graphPackage, path string, dat
 	}
 	pin := g.entryPin(p, path, digest, validation.ResourceSourceXML)
 	if cached := g.cache[graphResourceKey{pin, profile}]; cached != nil {
-		return cached, g.packageDocuments[cached.id], nil
+		return cached, g.packageDocuments[cached.id], g.checkIntrinsicXMLDepth(cached, p.id)
 	}
 	engine, err := sourceAssessmentEngineForProfile(profile)
 	if err != nil {
 		return nil, "", err
 	}
 	doc := g.next("source")
-	result := assessResourceSource(g.ctx, bytes.NewReader(data), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: doc, Entry: path, Profile: profile, Engine: engine}, ByteOwner: sourceBytesAccounted})
+	result := assessResourceSource(g.ctx, bytes.NewReader(data), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: doc, Entry: path, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: profile, Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if result.Snapshot == nil {
-		if result.Report.Requested {
-			err = g.session.RecordResourceFailure(g.ctx, pin, result.Report, result.Err)
-		}
-		return nil, doc, errors.Join(result.Err, err)
+		return nil, doc, g.retainUntransferredIntrinsic(result, pin, nil)
 	}
 	id, err := g.session.AddResource(g.ctx, pin, result.Snapshot, true)
 	if err != nil {
-		result.Snapshot.Close()
-		return nil, doc, errors.Join(result.Err, err)
+		return nil, doc, g.retainUntransferredIntrinsic(result, pin, err)
 	}
-	resource, err := g.cacheResource(pin, profile, id)
+	resource, err := g.cacheResource(pin, profile, id, result.XMLDepth, result.Err == nil)
 	if err == nil {
 		g.packageDocuments[id] = doc
 	}
@@ -470,6 +503,9 @@ func (g *resourceGraphRun) loadRootfile(p *graphPackage, r *validation.PackageRo
 	if err != nil {
 		return err
 	}
+	if err = g.observeLocalFileMetadata(p, path, data, retrieval, r.Location, r.MediaType); err != nil {
+		return err
+	}
 	var resource *graphResource
 	var base resourceURIBase
 	targetPackage := p.id
@@ -521,7 +557,7 @@ func (g *resourceGraphRun) importNestedPackage(p *graphPackage, path string, dat
 		archive.Close()
 		return nil, resourceURIBase{}, "", errors.Join(readErr, err)
 	}
-	resource, base, pkg, err := g.importRawPackageAtDepth(archive, pin, p.id, retrieval, primary, depth)
+	resource, base, pkg, err := g.importRawPackageAtEntry(archive, pin, p.id, retrieval, path, primary, depth)
 	return resource, base, pkg, errors.Join(readErr, err)
 }
 func (g *resourceGraphRun) packageEntryBytes(p *graphPackage, path string, role mxlAssessmentEntryRole) ([]byte, error) {
@@ -554,6 +590,9 @@ func (g *resourceGraphRun) loadArchiveDocument(item graphExpansion, path string)
 	}
 	data, err := g.packageEntryBytes(p, path, mxlAssessmentLinkedDocument)
 	if err != nil {
+		return nil, resourceURIBase{}, p.id, unavailable, err
+	}
+	if err = g.observeLocalFileMetadata(p, path, data, item.base.RetrievalURI, g.packageLocation(path, "selected-archive-document"), validation.Evidence[string]{State: validation.EvidenceAbsent}); err != nil {
 		return nil, resourceURIBase{}, p.id, unavailable, err
 	}
 	if mxlAssessmentZIPPrefixBytes(data) {

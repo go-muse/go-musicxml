@@ -15,7 +15,10 @@ type resourceIntrinsicResult struct {
 	Snapshot       *validation.ResourceSnapshot
 	Digest         [32]byte
 	DigestComplete bool
-	Err            error
+	// XMLDepth is the peak represented element depth, including scalar leaves.
+	// It certifies a maximum only when Err is nil; interrupted walks are partial.
+	XMLDepth int
+	Err      error
 }
 
 func assessResourceSource(ctx context.Context, reader io.Reader, config sourceAssessmentConfig) (out resourceIntrinsicResult) {
@@ -29,6 +32,7 @@ func assessResourceSource(ctx context.Context, reader io.Reader, config sourceAs
 	}
 	inputErr := run.drain()
 	summary := run.source.lexical.Summary()
+	out.XMLDepth = run.source.lexical.peakDepth
 	out.Digest, out.DigestComplete = summary.ReadPrefixSHA256, summary.DigestComplete
 	completion, err := run.finishInput(inputErr)
 	if err != nil {
@@ -45,7 +49,8 @@ func assessResourceModel(ctx context.Context, document Document, config assessme
 		out.Err = err
 		return
 	}
-	_, walkErr := run.walk(modelWalkOptions{})
+	status, walkErr := run.walk(modelWalkOptions{})
+	out.XMLDepth = status.XMLDepth
 	completion, err := run.finishInput(walkErr)
 	if err != nil {
 		out.Err = errors.Join(walkErr, err)

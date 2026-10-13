@@ -62,6 +62,7 @@ type sourceXMLTokenReader struct {
 	cursor                                                     *sourceXMLCursor
 	account                                                    *validation.Account
 	maxDepth                                                   int64
+	peakDepth                                                  int
 	metadata                                                   sourceXMLTokenMeta
 	tokenOwned, retained, mapOwned                             int64
 	frames                                                     []sourceXMLFrame
@@ -898,6 +899,9 @@ func (r *sourceXMLTokenReader) open(name xml.Name, attributes []xml.Attr) error 
 		expanded[expandedName] = true
 	}
 	r.frames = append(r.frames, frame)
+	if len(r.frames) > r.peakDepth {
+		r.peakDepth = len(r.frames)
+	}
 	return nil
 }
 func (r *sourceXMLTokenReader) pop() {

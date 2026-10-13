@@ -665,3 +665,100 @@ func (s *PackageSession) evaluateEdgeRule(ctx context.Context, r PackageRuleBind
 	}
 	return s.record(ctx, r.Rule, edge.ID, d, location, final)
 }
+
+// roleUniverseComplete separates provider request coverage from the whole
+// package universe. Unknown/unrequested physical members cannot disappear into
+// a complete but smaller table. Mimetype is the one literal non-XML metadata
+// record excluded by the package domain, independently of inferred roles.
+func (s *PackageSession) roleUniverseComplete(ctx context.Context, b *packageBoundary, roles ResourceRoleResult) bool {
+	if !b.sealed || !knownComplete(b.enumeration.Entries) || !knownComplete(b.enumeration.Rootfiles) || !knownComplete(b.enumeration.Edges) {
+		return false
+	}
+	for _, aid := range s.adoptionOrder {
+		if s.scan(ctx, 1) != nil {
+			return false
+		}
+		a := s.adoptions[aid]
+		if a.packageID != b.identity.ID || a.expansion.owner != aid || a.expansion.key.archiveEntry == "" {
+			continue
+		}
+		covered := false
+		for _, m := range roles.Request.Members {
+			if s.scan(ctx, 1) != nil {
+				return false
+			}
+			baseState := EvidenceAbsent
+			if a.expansion.key.baseURI != "" {
+				baseState = EvidenceKnown
+			}
+			covered = covered || m.Resource == a.resource.pin && m.ArchiveEntry == a.expansion.key.archiveEntry && m.BaseURI.State == baseState && m.BaseURI.Value == a.expansion.key.baseURI
+		}
+		if len(roles.Request.Members) == 0 {
+			for _, p := range roles.Request.Resources {
+				if s.scan(ctx, 1) != nil {
+					return false
+				}
+				covered = covered || p == a.resource.pin
+			}
+		}
+		if !covered {
+			return false
+		}
+	}
+	for _, eid := range s.entryOrder {
+		if s.scan(ctx, 1) != nil {
+			return false
+		}
+		entry := s.entries[eid]
+		if entry.Package != b.identity.ID || entry.Name == "mimetype" {
+			continue
+		}
+		if len(entry.RawName) != 0 {
+			return false
+		}
+		covered := false
+		for _, m := range roles.Request.Members {
+			if s.scan(ctx, 1) != nil {
+				return false
+			}
+			covered = covered || m.ArchiveEntry == entry.Name
+		}
+		if len(roles.Request.Members) == 0 {
+			for _, aid := range s.adoptionOrder {
+				if s.scan(ctx, 1) != nil {
+					return false
+				}
+				a := s.adoptions[aid]
+				if a.packageID != b.identity.ID || a.expansion.key.archiveEntry != entry.Name {
+					continue
+				}
+				for _, p := range roles.Request.Resources {
+					if s.scan(ctx, 1) != nil {
+						return false
+					}
+					covered = covered || p == a.resource.pin
+				}
+			}
+		}
+		if !covered {
+			return false
+		}
+	}
+	return true
+}
+func (s *PackageSession) rolePinAmbiguous(ctx context.Context, pkg PackageID, pin ResourcePin) bool {
+	count := 0
+	for _, id := range s.adoptionOrder {
+		if s.scan(ctx, 1) != nil {
+			return true
+		}
+		a := s.adoptions[id]
+		if a.packageID == pkg && a.resource.pin == pin && a.expansion.owner == id {
+			count++
+			if count > 1 {
+				return true
+			}
+		}
+	}
+	return false
+}

@@ -22,6 +22,7 @@ type resourceGraphRun struct {
 	expanded         map[graphExpansionKey]bool
 	queue            []graphExpansion
 	packageLeases    []func()
+	fileMetadata     map[graphFileMetadataKey]bool
 	packageList      []*graphPackage
 	packages         map[validation.PackageID]*graphPackage
 	packageContexts  map[graphPackageKey]*graphPackage
@@ -90,6 +91,7 @@ func (g *resourceGraphRun) close() {
 		release()
 	}
 	g.packageLeases = nil
+	g.fileMetadata = nil
 	g.packageList = nil
 	g.packages = nil
 	g.packageContexts = nil
@@ -168,23 +170,17 @@ func AssessModelWithResources(ctx context.Context, document Document, options Li
 }
 func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin validation.ResourcePin, id string) (validation.AssessmentBundle, error) {
 	if result.Snapshot == nil || pin.Representation == validation.ResourceSourceXML && !result.DigestComplete {
-		if result.Snapshot != nil {
-			_ = result.Snapshot.Close()
-		}
-		err := result.Err
-		if result.Report.Requested {
-			err = errors.Join(err, g.session.RecordResourceFailure(g.ctx, pin, result.Report, err))
-		}
-		return g.finish(err)
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, nil))
 	}
-	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin}); err != nil {
-		result.Snapshot.Close()
-		return g.finish(errors.Join(result.Err, err))
+	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin, BaseURI: g.options.identity.RetrievalURI}); err != nil {
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
+	}
+	if err := g.observeBoundaryFileMetadata(&graphPackage{id: "root", pin: pin}, g.options.identity.RetrievalURI); err != nil {
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
 	}
 	rid, err := g.session.AddResource(g.ctx, pin, result.Snapshot, true)
 	if err != nil {
-		result.Snapshot.Close()
-		return g.finish(errors.Join(result.Err, err))
+		return g.finish(g.retainUntransferredIntrinsic(result, pin, err))
 	}
 	aid, err := g.session.AdoptResource(g.ctx, rid, validation.ResourceAdoptionOptions{DocumentID: id, Root: true, Package: "root", BaseURI: g.options.identity.RetrievalURI})
 	if err != nil {
@@ -193,13 +189,16 @@ func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin val
 	if result.Err != nil {
 		return g.finish(result.Err)
 	}
-	resource, cacheErr := g.cacheResource(pin, result.Report.Profile.ID, rid)
+	resource, cacheErr := g.cacheResource(pin, result.Report.Profile.ID, rid, result.XMLDepth, result.Err == nil)
 	if cacheErr != nil {
 		return g.finish(cacheErr)
 	}
 	err = g.enqueue(resource, aid, "root", resourceURIBase{RetrievalURI: g.options.identity.RetrievalURI}, 1)
 	if err == nil {
 		err = g.walkResources()
+	}
+	if err == nil {
+		err = g.observePackageMetadata()
 	}
 	if err == nil {
 		err = g.sealPackages()
@@ -209,4 +208,18 @@ func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin val
 		err = g.session.SealEnumeration(g.ctx, validation.PackageEnumeration{Package: "root", Entries: known, Rootfiles: known, Edges: known, Roles: known})
 	}
 	return g.finish(err)
+}
+
+// retainUntransferredIntrinsic preserves the independent best report when export
+// or later admission fails. Call only before successful AddResource transfers
+// the snapshot; afterward the session already owns its canonical report.
+func (g *resourceGraphRun) retainUntransferredIntrinsic(result resourceIntrinsicResult, pin validation.ResourcePin, admissionErr error) error {
+	err := errors.Join(result.Err, admissionErr)
+	if result.Snapshot != nil {
+		err = errors.Join(err, result.Snapshot.Close())
+	}
+	if result.Report.Requested {
+		err = errors.Join(err, g.session.RecordResourceFailure(g.ctx, pin, result.Report, err))
+	}
+	return err
 }

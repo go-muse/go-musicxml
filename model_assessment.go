@@ -63,6 +63,7 @@ type modelAssessmentRun struct {
 	account               *validation.Account
 	session               *validation.Session
 	documentID, entry     string
+	xmlDepth              int
 	walked, inputFinished bool
 	walkErr               error
 }
@@ -82,7 +83,7 @@ func newModelAssessmentRun(ctx context.Context, document Document, config assess
 	if err != nil {
 		return nil, err
 	}
-	return &modelAssessmentRun{ctx: ctx, document: document, account: config.Account, session: session, documentID: config.DocumentID, entry: config.Entry}, nil
+	return &modelAssessmentRun{ctx: ctx, document: document, account: config.Account, session: session, documentID: config.DocumentID, entry: config.Entry, xmlDepth: config.XMLDepth}, nil
 }
 
 func (r *modelAssessmentRun) walk(options modelWalkOptions) (modelWalkStatus, error) {
@@ -91,6 +92,7 @@ func (r *modelAssessmentRun) walk(options modelWalkOptions) (modelWalkStatus, er
 	}
 	r.walked = true
 	options.Entry = r.entry
+	options.XMLDepth = r.xmlDepth
 	status, err := walkModel(r.ctx, r.document, r.session, r.account, r.documentID, options)
 	r.walkErr = err
 	return status, err

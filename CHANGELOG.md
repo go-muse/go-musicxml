@@ -9,6 +9,16 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add explicit `InspectXMLWithResources` and `AssessModelWithResources` entry
+  points with caller-selected resolver dependencies, immutable pin verification,
+  exact base/member expansion contexts and one finite shared account. Preserve
+  the best independent intrinsic report through later admission failure.
+- Add sealed package-role member discovery and metadata-only observed-file
+  advice. Exact file observations retain pin/provenance consistency without
+  creating parsed resource, ID, role or closure capabilities. Primary retrieval
+  names remain distinct from canonical identity and original source history;
+  raw non-UTF8 byte names retain optional advice without safe-path admission.
+
 - Add `InspectMXL` and `AssessMXLPackage` for bounded original/current MXL
   assessment with separate container and musical intrinsic reports, exact local
   header evidence, finite package-local graphs, nested archive scopes and shared
