@@ -1,7 +1,6 @@
 package validation
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"reflect"
@@ -70,6 +69,7 @@ type PackageSession struct {
 	entries         map[PackageFactID]PackageEntryObservation
 	entryOrder      []PackageFactID
 	entryNames      map[PackageID]map[string]PackageFactID
+	rawEntryNames   map[PackageID]map[string]PackageFactID
 	mimetypes       map[PackageFactID]PackageMimetypeObservation
 	rootfiles       map[PackageFactID]PackageRootfileObservation
 	rootfileOrder   []PackageFactID
@@ -133,7 +133,7 @@ func (c *CompiledPackageCatalog) Begin(ctx context.Context, opts RunOptions) (*P
 	if err := a.Charge(BudgetBufferedBytes, reserve); err != nil {
 		return nil, err
 	}
-	s := &PackageSession{catalog: c, profile: binding.Profile, documentID: strings.Clone(opts.DocumentID), account: a, retained: reserve, nextInternal: ^PackageFactID(0), boundaries: map[PackageID]*packageBoundary{}, entries: map[PackageFactID]PackageEntryObservation{}, entryNames: map[PackageID]map[string]PackageFactID{}, mimetypes: map[PackageFactID]PackageMimetypeObservation{}, rootfiles: map[PackageFactID]PackageRootfileObservation{}, edges: map[PackageFactID]PackageEdgeObservation{}, roles: map[PackageID]ResourceRoleResult{}, resources: map[ResourceAssessmentID]*packageResource{}, resourceKeys: map[packageResourceKey]ResourceAssessmentID{}, pins: map[packageCanonicalKey]ResourcePin{}, adoptions: map[ResourceAdoptionID]*packageAdoption{}, expansions: map[resourceExpansionKey]*resourceExpansion{}, documents: map[string]bool{opts.DocumentID: true}, subjects: map[PackageFactID]PackageSubjectKind{}, subjectPackages: map[PackageFactID]PackageID{}, decisions: map[packageDecisionKey]Decision{}}
+	s := &PackageSession{catalog: c, profile: binding.Profile, documentID: strings.Clone(opts.DocumentID), account: a, retained: reserve, nextInternal: ^PackageFactID(0), boundaries: map[PackageID]*packageBoundary{}, entries: map[PackageFactID]PackageEntryObservation{}, entryNames: map[PackageID]map[string]PackageFactID{}, rawEntryNames: map[PackageID]map[string]PackageFactID{}, mimetypes: map[PackageFactID]PackageMimetypeObservation{}, rootfiles: map[PackageFactID]PackageRootfileObservation{}, edges: map[PackageFactID]PackageEdgeObservation{}, roles: map[PackageID]ResourceRoleResult{}, resources: map[ResourceAssessmentID]*packageResource{}, resourceKeys: map[packageResourceKey]ResourceAssessmentID{}, pins: map[packageCanonicalKey]ResourcePin{}, adoptions: map[ResourceAdoptionID]*packageAdoption{}, expansions: map[resourceExpansionKey]*resourceExpansion{}, documents: map[string]bool{opts.DocumentID: true}, subjects: map[PackageFactID]PackageSubjectKind{}, subjectPackages: map[PackageFactID]PackageID{}, decisions: map[packageDecisionKey]Decision{}}
 	s.accumulator = newReportAccumulator(binding.Profile, a)
 	s.output = &assessmentBundleData{}
 	return s, nil
@@ -255,7 +255,7 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 			if err := ctx.Err(); err != nil {
 				return s.fail(err)
 			}
-			if ancestor.identity.Pin == p.Pin {
+			if !p.PinUnavailable && !ancestor.identity.PinUnavailable && ancestor.identity.Pin == p.Pin {
 				return s.fail(contract("package ancestry", "immutable package cannot contain itself under a fresh boundary ID"))
 			}
 		}
@@ -278,6 +278,7 @@ func (s *PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) err
 	s.subjectPackages[b.subject] = p.ID
 	s.boundaryOrder = append(s.boundaryOrder, p.ID)
 	s.entryNames[p.ID] = map[string]PackageFactID{}
+	s.rawEntryNames[p.ID] = map[string]PackageFactID{}
 	if !p.PinUnavailable {
 		s.pins[key] = p.Pin
 	}
@@ -296,7 +297,14 @@ func validateZIPHeader(h ZIPHeaderObservation) error {
 	if err := validateEvidence(h.Flags, "ZIP flags"); err != nil {
 		return err
 	}
-	return validateEvidence(h.ExtraLength, "ZIP extra length")
+	if err := validateEvidence(h.ExtraLength, "ZIP extra length"); err != nil {
+		return err
+	}
+	// Unknown framing can retain independent field observations; proven absence cannot.
+	if h.Present.State == EvidenceAbsent && (h.Method.State == EvidenceKnown || h.Flags.State == EvidenceKnown || h.ExtraLength.State == EvidenceKnown) {
+		return contract("ZIP header", "absent header cannot carry known fields")
+	}
+	return nil
 }
 
 // ObserveEntry copies exact independent local/central observations. It records
@@ -321,7 +329,7 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 		if err := s.scan(ctx, int64(len(e.RawName))); err != nil {
 			return err
 		}
-		if e.Name != "" || len(e.RawName) > 4096 || utf8.Valid(e.RawName) || b.identity.Representation != ResourceRawMXL {
+		if e.Name != "" || utf8.Valid(e.RawName) || b.identity.Representation != ResourceRawMXL {
 			return s.fail(contract("entry raw name", "bounded original non-UTF8 bytes exclusive with text required"))
 		}
 	} else if !validText(e.Name, 4096) || e.Name == "" {
@@ -349,19 +357,19 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 		return s.fail(err)
 	}
 	if rawName {
-		for _, id := range s.entryOrder {
-			old := s.entries[id]
-			if err := s.scan(ctx, int64(len(old.RawName))+1); err != nil {
-				return err
-			}
-			if old.Package == e.Package && bytes.Equal(old.RawName, e.RawName) {
-				return s.fail(contract("entry identity", "duplicate exact raw name"))
-			}
+		if _, ok := s.rawEntryNames[e.Package][string(e.RawName)]; ok {
+			return s.fail(contract("entry identity", "duplicate exact raw name"))
 		}
 	} else if _, ok := s.entryNames[e.Package][e.Name]; ok {
 		return s.fail(contract("entry identity", "duplicate exact member name"))
 	}
-	if err := s.admit(ctx, e, 512); err != nil {
+	// The raw-name index owns a distinct immutable string key. Admit its bytes
+	// before conversion rather than borrowing the caller's mutable byte slice.
+	extra := int64(512)
+	if rawName {
+		extra += int64(len(e.RawName))
+	}
+	if err := s.admit(ctx, e, extra); err != nil {
 		return err
 	}
 	if err := s.subject(e.ID, PackageSubjectEntry); err != nil {
@@ -371,7 +379,9 @@ func (s *PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObserva
 	s.entries[e.ID] = e
 	s.subjectPackages[e.ID] = e.Package
 	s.entryOrder = append(s.entryOrder, e.ID)
-	if !rawName {
+	if rawName {
+		s.rawEntryNames[e.Package][string(e.RawName)] = e.ID
+	} else {
 		s.entryNames[e.Package][e.Name] = e.ID
 	}
 	if err := s.evaluateEntry(ctx, e, false); err != nil {
@@ -462,7 +472,6 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 		if resource == nil {
 			return s.fail(contract("rootfile resource", "unknown assessment identity"))
 		}
-		resource.required = true
 	}
 	for _, id := range s.rootfileOrder {
 		if err := s.scan(ctx, 1); err != nil {
@@ -477,6 +486,9 @@ func (s *PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileO
 	}
 	if err := s.subject(r.ID, PackageSubjectRootfile); err != nil {
 		return s.fail(err)
+	}
+	if r.Resource.State == EvidenceKnown {
+		s.resources[r.Resource.Value].required = true
 	}
 	s.rootfiles[r.ID] = stateClone(r)
 	s.subjectPackages[r.ID] = r.Package

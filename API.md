@@ -1065,7 +1065,16 @@ pixel-aspect-ratio evidence; physical dimensions use their stated common unit.
 No DPI, rendering result, or pixels-to-tenths conversion is inferred. Missing
 optional metadata remains nonblocking advice. `ObserveFileMetadata` supplies
 bounded scoped filename/media-type recommendations; suffixes never prove content
-validity. Bundle getters also preserve supplied mimetype prefix observations.
+validity. Binary members are outside this MusicXML filename/media advice scope.
+`validation.ClassifyResourceMediaType(ctx, account, value)` shares bounded declared
+MIME applicability across package checks and adapters. It accepts registered
+MusicXML base types case-insensitively, including the XML type's optional charset;
+unreviewed parameters and types remain Unknown. It never verifies content or a
+resource pin. Callers preserve absent and invalid evidence before invoking it;
+present-empty is unresolved. Scalar/step costs and temporary parse scratch use
+the supplied account; cancellation/quota errors remain errors. Bundle getters also
+preserve supplied mimetype prefix observations; incomplete retained prefixes cannot
+prove content mismatch.
 
 A `CurrentMXL` boundary assesses representable logical rootfile/resource relations.
 It excludes the original ZIP container-entry representation and raw header claims,

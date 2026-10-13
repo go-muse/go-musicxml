@@ -194,6 +194,9 @@ func NewPackageCatalog(rules []PackageRuleBinding, profiles []PackageProfileBind
 		}
 		plans[r.Predicate] = b.Plan.check
 		for _, d := range r.Requires {
+			if d.Kind != DependencyRule {
+				return nil, contract("package dependency", "only compiled rule dependencies supported")
+			}
 			if d.Relation != RelationSameNode && d.Relation != RelationDocument {
 				return nil, contract("package dependency", "only exact subject or package scope relations supported")
 			}
@@ -204,9 +207,6 @@ func NewPackageCatalog(rules []PackageRuleBinding, profiles []PackageProfileBind
 	}
 	for _, rule := range c.rules {
 		for _, dep := range rule.Rule.Requires {
-			if dep.Kind != DependencyRule {
-				continue
-			}
 			provider, ok := c.rules[dep.Rule]
 			if !ok {
 				continue

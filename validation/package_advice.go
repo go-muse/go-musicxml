@@ -327,34 +327,42 @@ func (s *PackageSession) evaluateAdviceValues(ctx context.Context, r PackageRule
 			d := s.baseDecision(r.Rule.Key, v.ID)
 			d.Outcome = OutcomeNotApplicable
 			d.Reason = "file-metadata-absent"
-			compressed := v.Pin.Representation == ResourceRawMXL || v.Pin.Representation == ResourceCurrentMXL
-			if v.Name.State == EvidenceKnown {
-				d.Outcome = OutcomePass
-				d.Reason = "recommended-file-name"
-				name := v.Name.Value
-				if compressed && !strings.HasSuffix(name, ".mxl") || !compressed && !strings.HasSuffix(name, ".musicxml") && !strings.HasSuffix(name, ".xml") {
-					d.Outcome = OutcomeFail
-					d.Reason = "nonstandard-file-suffix"
-				} else if !compressed && strings.HasSuffix(name, ".xml") {
-					d.Reason = "legacy-xml-file-suffix"
+			if v.Pin.Representation != ResourceSourceXML && v.Pin.Representation != ResourceCurrentModel && v.Pin.Representation != ResourceRawMXL && v.Pin.Representation != ResourceCurrentMXL {
+				d.Reason = "file-metadata-outside-musicxml-scope"
+			} else {
+				compressed := v.Pin.Representation == ResourceRawMXL || v.Pin.Representation == ResourceCurrentMXL
+				if v.Name.State == EvidenceKnown {
+					d.Outcome, d.Reason = OutcomePass, "recommended-file-name"
+					name := v.Name.Value
+					if compressed && !strings.HasSuffix(name, ".mxl") || !compressed && !strings.HasSuffix(name, ".musicxml") && !strings.HasSuffix(name, ".xml") {
+						d.Outcome, d.Reason = OutcomeFail, "nonstandard-file-suffix"
+					} else if !compressed && strings.HasSuffix(name, ".xml") {
+						d.Reason = "legacy-xml-file-suffix"
+					}
+				} else if v.Name.State != EvidenceAbsent {
+					d = packageEvidenceDecision(d, v.Name)
 				}
-			} else if v.Name.State != EvidenceAbsent {
-				d = packageEvidenceDecision(d, v.Name)
-			}
-			if v.MediaType.State == EvidenceKnown {
-				want := "application/vnd.recordare.musicxml+xml"
-				if compressed {
-					want = "application/vnd.recordare.musicxml"
+				if v.MediaType.State == EvidenceKnown {
+					media, err := ClassifyResourceMediaType(ctx, s.account, v.MediaType.Value)
+					if err != nil {
+						return s.fail(err)
+					}
+					want := ResourceSourceXML
+					if compressed {
+						want = ResourceRawMXL
+					}
+					if media.State == EvidenceKnown && media.Value != want {
+						d.Outcome, d.Reason = OutcomeFail, "nonstandard-file-media-type"
+					} else if d.Outcome != OutcomeFail {
+						if media.State != EvidenceKnown {
+							d = packageEvidenceDecision(d, media)
+						} else if d.Outcome == OutcomeNotApplicable {
+							d.Outcome, d.Reason = OutcomePass, "recommended-file-media-type"
+						}
+					}
+				} else if v.MediaType.State != EvidenceAbsent && d.Outcome != OutcomeFail {
+					d = packageEvidenceDecision(d, v.MediaType)
 				}
-				if v.MediaType.Value != want {
-					d.Outcome = OutcomeFail
-					d.Reason = "nonstandard-file-media-type"
-				} else if d.Outcome == OutcomeNotApplicable {
-					d.Outcome = OutcomePass
-					d.Reason = "recommended-file-media-type"
-				}
-			} else if v.MediaType.State != EvidenceAbsent && d.Outcome != OutcomeFail {
-				d = packageEvidenceDecision(d, v.MediaType)
 			}
 			location := v.Location
 			if location == (Location{}) {
@@ -376,7 +384,7 @@ func (b AssessmentBundle) ImageAdviceCount() int {
 	return len(b.data.images)
 }
 
-// ImageAdviceAt returns an owned metadata/ratio copy after the account is closed.
+// ImageAdviceAt returns an owned metadata/ratio copy after package completion.
 func (b AssessmentBundle) ImageAdviceAt(i int) (PackageImageAdvice, bool) {
 	if b.data == nil || i < 0 || i >= len(b.data.images) {
 		return PackageImageAdvice{}, false

@@ -3,8 +3,6 @@ package validation
 import (
 	"bytes"
 	"context"
-	"mime"
-	"strings"
 )
 
 func packageEvidenceDecision[T comparable](d Decision, e Evidence[T]) Decision {
@@ -319,7 +317,10 @@ func (s *PackageSession) evaluateBoundary(ctx context.Context, b *packageBoundar
 						d.Reason = "mimetype-recommended-first"
 					} else if known && m.ContentComplete.State == EvidenceKnown && m.ContentComplete.Value && m.ByteLength.State == EvidenceKnown {
 						want := []byte("application/vnd.recordare.musicxml")
-						if m.ByteLength.Value == uint64(len(want)) && bytes.Equal(m.Prefix, want) {
+						if uint64(len(m.Prefix)) != m.ByteLength.Value {
+							d.Outcome = OutcomeUnknown
+							d.Reason = "mimetype-prefix-family-unresolved"
+						} else if m.ByteLength.Value == uint64(len(want)) && bytes.Equal(m.Prefix, want) {
 							d = packageEvidenceDecision(d, e.PhysicalOrder)
 							if e.PhysicalOrder.State == EvidenceKnown {
 								d.Outcome = OutcomePass
@@ -571,51 +572,22 @@ func (s *PackageSession) mediaDecision(ctx context.Context, d Decision, v Eviden
 	if v.State != EvidenceKnown {
 		return packageEvidenceDecision(d, v)
 	}
-	if err := s.account.Charge(BudgetRuleSteps, int64(len(v.Value))+1); err != nil {
+	media, err := ClassifyResourceMediaType(ctx, s.account, v.Value)
+	if err != nil {
 		s.fail(err)
 		return d
 	}
-	if ctx.Err() != nil {
-		s.fail(ctx.Err())
-		return d
+	if media.State != EvidenceKnown {
+		return packageEvidenceDecision(d, media)
 	}
-	if err := s.retain(int64(len(v.Value))*4 + 1024); err != nil {
-		return d
+	switch media.Value {
+	case ResourceSourceXML:
+		d.Outcome, d.Reason = OutcomePass, "registered-uncompressed-musicxml-type"
+	case ResourceRawMXL:
+		d.Outcome, d.Reason = OutcomePass, "registered-compressed-musicxml-type"
+	case ResourceBinary:
+		d.Outcome, d.Reason = OutcomeFail, "established-nonmusicxml-media-type"
 	}
-	typ, parameters, err := mime.ParseMediaType(v.Value)
-	if err != nil {
-		d.Outcome = OutcomeUnknown
-		d.Reason = "media-type-syntax-unresolved"
-		return d
-	}
-	typ = strings.ToLower(typ)
-	if typ == "application/vnd.recordare.musicxml+xml" {
-		for key := range parameters {
-			if err := s.scan(ctx, 1); err != nil {
-				return d
-			}
-			if key != "charset" {
-				d.Outcome = OutcomeUnknown
-				d.Reason = "musicxml-media-parameter-unresolved"
-				return d
-			}
-		}
-		d.Outcome = OutcomePass
-		d.Reason = "registered-uncompressed-musicxml-type"
-		return d
-	}
-	if typ == "application/vnd.recordare.musicxml" {
-		d.Outcome = OutcomePass
-		d.Reason = "registered-compressed-musicxml-type"
-		return d
-	}
-	if typ == "application/pdf" || strings.HasPrefix(typ, "image/") || strings.HasPrefix(typ, "audio/") || strings.HasPrefix(typ, "video/") {
-		d.Outcome = OutcomeFail
-		d.Reason = "established-nonmusicxml-media-type"
-		return d
-	}
-	d.Outcome = OutcomeUnknown
-	d.Reason = "musicxml-media-type-set-unresolved"
 	return d
 }
 

@@ -327,6 +327,7 @@ func (s *PackageSession) cleanup() {
 	s.boundaries = nil
 	s.entries = nil
 	s.entryNames = nil
+	s.rawEntryNames = nil
 	s.mimetypes = nil
 	s.rootfiles = nil
 	s.edges = nil

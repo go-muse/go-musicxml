@@ -3,11 +3,13 @@ package validation
 import (
 	"context"
 	"github.com/go-muse/go-musicxml/internal/xsd"
+	"strconv"
 )
 
 // ObserveEdge binds one finalized local link template to exact adopted target
 // evidence. Caller resolution cannot turn an unavailable local prerequisite into
-// success or use an unrelated template/foreign target occurrence.
+// success or use an unrelated template. The target must be a fresh nonroot
+// occurrence, but may belong to another admitted package boundary.
 func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservation) error {
 	if err := s.event(ctx, "ObserveEdge"); err != nil {
 		return err
@@ -49,7 +51,7 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 		if target == nil {
 			return s.fail(contract("edge target", "unknown adoption"))
 		}
-		if target.root {
+		if target.root || target.id == source.id {
 			return s.fail(contract("edge target", "fresh nonroot adoption required"))
 		}
 		for _, id := range s.edgeOrder {
@@ -64,8 +66,13 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 				return s.fail(contract("edge target", "target adoption already belongs to an edge"))
 			}
 		}
-		target.resource.required = true
 		if e.FragmentTarget.State == EvidenceKnown {
+			if e.Fragment.State != EvidenceKnown {
+				return s.fail(contract("fragment target", "known fragment component required"))
+			}
+			if e.Fragment.Value == "" && (e.FragmentTarget.Value.Node == 0 || e.FragmentTarget.Value.Node != target.resource.snapshot.header.Root.Node) {
+				return s.fail(contract("fragment target", "empty fragment addresses exact adopted root"))
+			}
 			if e.FragmentTarget.Value.DocumentID != target.documentID || !s.adoptedNodeKnown(ctx, target, e.FragmentTarget.Value.Node) {
 				return s.fail(contract("fragment target", "target outside exact adopted snapshot"))
 			}
@@ -84,6 +91,9 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	if err := s.subject(e.ID, PackageSubjectEdge); err != nil {
 		return s.fail(err)
 	}
+	if e.Target.State == EvidenceKnown {
+		s.adoptions[e.Target.Value].resource.required = true
+	}
 	source.expansion.edges[e.Template] = e.ID
 	s.edges[e.ID] = stateClone(e)
 	s.subjectPackages[e.ID] = source.packageID
@@ -91,7 +101,7 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	return s.evaluateEdge(ctx, e, false)
 }
 func (s *PackageSession) adoptedNodeKnown(ctx context.Context, a *packageAdoption, node NodeID) bool {
-	if node == a.resource.snapshot.header.Root.Node {
+	if node != 0 && node == a.resource.snapshot.header.Root.Node {
 		return true
 	}
 	for _, id := range a.resource.snapshot.ids {
@@ -655,7 +665,7 @@ func (s *PackageSession) evaluateEdgeRule(ctx context.Context, r PackageRuleBind
 	} else {
 		d = s.groupDecision(ctx, d, edge, template)
 	}
-	location := Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/edge[" + string(edge.Source) + "]"}
+	location := Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/edge[" + string(edge.Source) + "]/template[" + strconv.FormatUint(edge.Template, 10) + "]"}
 	if len(template.Origins) > 0 {
 		origin := template.Origins[0]
 		if origin.DocumentID == source.resource.snapshot.header.DocumentID {

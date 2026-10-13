@@ -3,7 +3,7 @@ package validation
 import (
 	"context"
 	"io"
-	"reflect"
+	"slices"
 )
 
 // ResourceRepresentation distinguishes immutable original bytes from current
@@ -453,7 +453,7 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 		if err := validateAssociationRequest(a.Request); err != nil {
 			return err
 		}
-		if !reflect.DeepEqual(a.Request, *q.Association) {
+		if a.Request != *q.Association {
 			return contract("association result", "exact echoed request/pins required")
 		}
 		if err := validateEvidence(a.Membership, "association membership"); err != nil {
@@ -484,7 +484,7 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 		if err := validateRoleRequest(v.Request); err != nil {
 			return err
 		}
-		if len(v.Request.Resources) > 65536 || !reflect.DeepEqual(v.Request, *q.Roles) {
+		if !equalRoleRequest(v.Request, *q.Roles) {
 			return contract("role result", "full exact request scope must be echoed")
 		}
 		if len(v.Resources) > 65536 {
@@ -560,7 +560,7 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 		if err := validateImageRequest(v.Request); err != nil {
 			return err
 		}
-		if !reflect.DeepEqual(v.Request, *q.Image) {
+		if v.Request != *q.Image {
 			return contract("image result", "exact request must be echoed")
 		}
 		if err := validateResourcePin(v.Resource); err != nil {
@@ -588,4 +588,24 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 		}
 	}
 	return nil
+}
+
+// Empty slices represent the same ordered scope whether nil or allocated.
+// Evidence still compares exact causal values, never pointer identity.
+func equalRoleRequest(a, b ResourceRoleRequest) bool {
+	return a.ID == b.ID && a.Package == b.Package &&
+		equalRoleEvidence(a.ScopeComplete, b.ScopeComplete) &&
+		slices.Equal(a.Resources, b.Resources) &&
+		slices.EqualFunc(a.Members, b.Members, func(a, b ResourceRoleMember) bool {
+			return a.Resource == b.Resource && a.ArchiveEntry == b.ArchiveEntry && equalRoleEvidence(a.BaseURI, b.BaseURI)
+		})
+}
+func equalRoleEvidence[T comparable](a, b Evidence[T]) bool {
+	if a.State != b.State || a.Value != b.Value || a.Reason != b.Reason {
+		return false
+	}
+	if a.Cause == nil || b.Cause == nil {
+		return a.Cause == b.Cause
+	}
+	return *a.Cause == *b.Cause
 }
