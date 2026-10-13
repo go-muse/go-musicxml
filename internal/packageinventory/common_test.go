@@ -147,7 +147,7 @@ func TestAtomicTemporaryDirectoryPreservesSymlinkTraversal(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if cleaned == expected {
+			if samePhysicalDirectory(t, cleaned, expected) {
 				t.Fatal("fixture does not distinguish lexical cleaning from symlink traversal")
 			}
 			ops := defaultFileOps()
@@ -157,7 +157,7 @@ func TestAtomicTemporaryDirectoryPreservesSymlinkTraversal(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				if resolved != expected {
+				if !samePhysicalDirectory(t, resolved, expected) {
 					t.Fatalf("temporary directory = %s, want %s", resolved, expected)
 				}
 				return create(dir, pattern)

@@ -57,7 +57,10 @@ func TestResolveStatsOnlyPhysicalPaths(t *testing.T) {
 		t.Fatal(err)
 	}
 	want, err := filepath.EvalSymlinks(nested)
-	if err != nil || got != want {
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !samePhysicalDirectory(t, got, want) {
 		t.Fatalf("resolved=%q want=%q err=%v", got, want, err)
 	}
 }
@@ -133,5 +136,39 @@ func TestResolveRejectsNonDirectoryIntermediateComponents(t *testing.T) {
 				t.Errorf("non-directory traversal %q resolved to %q", path, got)
 			}
 		}
+	}
+}
+
+func samePhysicalDirectory(t *testing.T, first, second string) bool {
+	t.Helper()
+	firstInfo, err := os.Stat(first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondInfo, err := os.Stat(second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !firstInfo.IsDir() || !secondInfo.IsDir() {
+		t.Fatalf("physical directory comparison requires directories: %q, %q", first, second)
+	}
+	return os.SameFile(firstInfo, secondInfo)
+}
+
+func TestPhysicalDirectoryIdentityDistinguishesAliasesAndWrongParents(t *testing.T) {
+	t.Parallel()
+	root, nested, _ := physicalTraversalFixture(t)
+	alias := filepath.Join(root, "directory-alias")
+	if err := os.Symlink(nested, alias); err != nil {
+		t.Fatal(err)
+	}
+	if nested == alias {
+		t.Fatal("fixture must use distinct directory spellings")
+	}
+	if !samePhysicalDirectory(t, nested, alias) {
+		t.Error("different spellings of the same physical directory were rejected")
+	}
+	if samePhysicalDirectory(t, root, alias) {
+		t.Error("different physical parent directories were treated as identical")
 	}
 }

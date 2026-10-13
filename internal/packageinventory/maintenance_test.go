@@ -572,13 +572,19 @@ func TestMaintenancePreservedStatusAndDenominatorsCannotBePromoted(t *testing.T)
 func TestMaintenanceMissingSourceAndTestFilesAreJSONFailures(t *testing.T) {
 	t.Parallel()
 	f := newMaintenanceFixture(t)
-	for _, p := range []string{"link_intent_test.go", maintenanceFirst(mo(f.m["source_files"]))} {
-		t.Run(p, func(t *testing.T) {
-			if err := os.Remove(f.path(p)); err != nil {
+	source := maintenanceFirst(mo(f.m["source_files"]))
+	// Current test routes retain inventory spelling; source I/O errors name
+	// the resolved native filesystem path.
+	for _, tc := range []struct{ path, diagnosticPath string }{
+		{"link_intent_test.go", "link_intent_test.go"},
+		{source, filepath.FromSlash(source)},
+	} {
+		t.Run(tc.path, func(t *testing.T) {
+			if err := os.Remove(f.path(tc.path)); err != nil {
 				t.Fatal(err)
 			}
-			maintenanceContains(t, maintenanceFailures(f.run(t, "refresh", 1, "--write")), p)
-			f.write(p, f.originals[p])
+			maintenanceContains(t, maintenanceFailures(f.run(t, "refresh", 1, "--write")), tc.diagnosticPath)
+			f.write(tc.path, f.originals[tc.path])
 		})
 	}
 }
@@ -652,11 +658,18 @@ func TestMaintenanceMalformedPointersProduceSpecificJSONErrors(t *testing.T) {
 func TestMaintenanceMalformedJSONAndShapesHaveUsefulErrors(t *testing.T) {
 	t.Parallel()
 	f := newMaintenanceFixture(t)
-	for _, tc := range []struct{ path, data string }{{maintenanceManifest, "{"}, {maintenanceEvidence, "[]"}, {maintenanceFirst(mo(f.m["source_files"])), "not JSON"}} {
+	source := maintenanceFirst(mo(f.m["source_files"]))
+	// Explicit input labels retain their supplied spelling. Only repository
+	// source paths have been resolved to native separators before parsing.
+	for _, tc := range []struct{ path, data, diagnosticPath string }{
+		{maintenanceManifest, "{", maintenanceManifest},
+		{maintenanceEvidence, "[]", maintenanceEvidence},
+		{source, "not JSON", filepath.FromSlash(source)},
+	} {
 		t.Run(tc.path, func(t *testing.T) {
 			old := f.read(tc.path)
 			f.write(tc.path, []byte(tc.data))
-			maintenanceContains(t, maintenanceFailures(f.run(t, "verify", 1)), tc.path)
+			maintenanceContains(t, maintenanceFailures(f.run(t, "verify", 1)), tc.diagnosticPath)
 			f.write(tc.path, old)
 		})
 	}
