@@ -80,10 +80,15 @@ does not override the actual pinned published container schema.
   With schema discovery selected by the shipped profiles, every current-model
   graph/package bundle therefore remains incomplete and cannot be Satisfied,
   even when its intrinsic model report is satisfied. Discarded history is an
-  explicit Unknown capability result, never a proven absence. Source odd-length hints
-  remain valid `list(anyURI)` values when their members are valid; unmatched
-  discovery evidence is an independent capability result. No hint fetches or
-  selects a schema.
+  explicit Unknown capability result, never a proven absence. Source odd-length
+  hints remain valid `list(anyURI)` values when their members are valid.
+  Known-false pairing yields `OutcomeFail` under `CategoryCapability`,
+  `ClassPolicy` and `RolePredicate`, retaining `schema-location-unmatched-token`
+  and the exact
+  provider/subject cause. It blocks `Satisfied()` through `BlockingProblems`
+  without adding normative `Counts.Fail` or establishing `ConformanceViolated`.
+  Known-false pairing alone does not make assessment incomplete. No hint fetches
+  or selects a schema.
 - Original ZIP compression, encryption, extras, entry order and original container
   lexical presence are outside a current MXL boundary's claim. No encode/reparse
   step can establish those facts. Separately reached raw nested packages still
@@ -98,8 +103,10 @@ does not override the actual pinned published container schema.
   Ordinary archive opening, a decoded child, a successful root-kind check, a
   filename, or matching cross-file ID strings never certify whole conformance.
   Minimal-package no-links vacuity additionally requires the snapshot's explicit
-  selected-link-plan witness and complete intrinsic scope; empty unselected
-  projections cannot certify the absence of separate parts.
+  selection witness for an `ImplementationAvailable` sealed local-link plan and
+  complete intrinsic scope. That witness alone asserts neither projection nor
+  scope completion. Absent or unsupported implementation support cannot establish
+  it; empty unselected projections cannot certify the absence of separate parts.
 - There is no instance-wide `version=4.0` rule, invented role inference, universal
   XPointer, required renderer or implicit HTTP/filesystem access. Auxiliary
   source assemblies, local link facts and core budgets retain their own limits.

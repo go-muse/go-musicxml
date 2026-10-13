@@ -15,6 +15,14 @@ was in progress at the separate 10:44 UTC observation.
 This dated checkpoint is not final acceptance and does not transfer the archived
 candidate's execution results to the published tree.
 
+A subsequent readback confirmed that run 38385055748 completed with failure. The
+stale all-assembly discovery test expected Unknown for an observed odd hint list;
+[commit 6b2bc2953d40ddcbc79f97f8b919548b4b95e1a6](https://github.com/go-muse/go-musicxml/commit/6b2bc2953d40ddcbc79f97f8b919548b4b95e1a6)
+corrected that expectation to the reviewed Known(false) pairing contract and
+updated only its current test-file hashes. The 10:44 UTC in-progress observation
+above remains historical; this terminal outcome neither rewrites it nor certifies
+any later tree. The failed run is not acceptance evidence.
+
 ## Test-first development and independent corrections
 
 The original unpublished development commits and task logs are preserved in the
@@ -101,7 +109,7 @@ original DTD-bearing raw wrappers have the same buffer limitation. Current packa
 objects fit defaults but retain current-model discovery incompleteness. These
 wrappers are not claimed to be an original official MXL corpus.
 
-## 2026-10-13 snapshot/local-link review remeasurement
+## Historical 2026-10-13 snapshot/local-link review remeasurement
 
 The earlier candidate figures above remain historical evidence. Fresh measurements
 from the published `7b5460af2e2028dc27079353e5f44f2901054d19` baseline reproduced
@@ -116,13 +124,13 @@ independent caller-returned report contract are unchanged.
 one byte below for each original source. No source bytes or DOCTYPEs are removed.
 These source-only results do not assess nested compressed-rootfile interpretation.
 
-| Original source | Published links minimum | Corrected links minimum | Published graph minimum | Corrected graph minimum |
+| Original source | Published links minimum | Earlier corrected links minimum | Published graph minimum | Earlier corrected graph minimum |
 | --- | ---: | ---: | ---: | ---: |
 | MozartTrio | 47,656,776 | 36,961,992 | 72,541,715 | 40,939,940 |
 | MozaChloSample | 60,222,816 | 46,681,595 | 91,412,475 | 51,394,485 |
 
-All values are logical buffered bytes, not process heap/RSS. Both corrected graph
-runs now fit the unchanged 64 MiB default and retain unread-DTD incompleteness.
+All values are logical buffered bytes, not process heap/RSS. Both earlier corrected
+graph runs fit the unchanged 64 MiB default and retain unread-DTD incompleteness.
 The ordinary default-budget regression checks both samples without claiming
 conformance. A 128 MiB buffer-only override remains a concrete finite option for
 other workloads, not a requirement for these corrected source cases.
@@ -141,6 +149,42 @@ work uses bounded 4 KiB blocks; byte slices retain per-byte work admission and
 contiguous storage/copying. Cancellation tests cover both block-copy paths and
 verify zero temporary retained bytes. This is scoped review evidence, not a new
 whole-tree, race, 386 or remote CI claim.
+
+## 2026-10-13 packaged-tree exact-buffer remeasurement
+
+An independent exact/one-byte-under run started at 14:29:34 UTC on the clean local
+packaged commit `861aec472c61ae284c25908684ad680dd32d4060`, tree
+`2faaa347078bc1be8ee27ec526e75d265bc2ed4a`. That tree is identical to published
+`a9a53a135fd9214cc5a60818add27dc6108bf2e4`. The command was:
+
+```bash
+MUSICXML_SNAPSHOT_BUFFER_WITNESS=1 go test -count=1 -run '^TestResourceReviewOfficialExactBufferWitness$' -v .
+```
+
+It passed with Go 1.27.2 on linux/amd64, `GOMAXPROCS=2` and `GOFLAGS=-p=1`.
+The committed [witness record](evidence/package-buffer-witness-20261013.json)
+retains the exact revision, tree, command, source hashes, thresholds and log hash.
+No original source bytes, DOCTYPEs or encoding were changed.
+
+| Original source | Source-links minimum | Graph minimum |
+| --- | ---: | ---: |
+| MozartTrio | 36,961,992 | 40,946,084 |
+| MozaChloSample | 46,681,595 | 51,400,629 |
+
+Each graph minimum is 6,144 bytes above the earlier corrected value, accounting
+for the fixed prepaid package diagnostic summary reserve. Source-links minima
+are unchanged. These exact logical admission thresholds remain below the
+unchanged 64 MiB default; they are not heap/RSS measurements. Unread-DTD
+incompleteness remains and no normative closure follows from fitting the budget.
+
+The earlier correction log and its allocation results above remain historical.
+Its review record identifies final scoped commit
+`d52560b911852eeb37fb4b8390c1f5ebdc39aa9b`, tree
+`371fde64e76b0ff63f7175986ae444b6bba2aaed`; that provenance is not an assertion
+that the earlier log was executed on the later packaged tree. The new witness
+supersedes the earlier graph thresholds only for the explicitly measured tree.
+It does not rerun benchmarks or certify whole-tree stages, race, actual 386,
+remote CI or the unfinished archive-to-primary linked-target indirection work.
 
 ## Final verification gate
 

@@ -16,8 +16,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Frame ZIP end records before classifying unsupported envelope features; do not
   mistake central-comment locator bytes for ZIP64 records. Preserve independent
   non-framing header flags and legacy unsafe-path/duplicate-name error identities.
+
 - Document symbolic-link refusal as an assessment transport limitation and UTF8Name
   as observed byte validity with independently retained EFS flags.
+
+- Preserve known-false schema-hint pairing as a blocking capability-policy failure
+  with its exact context cause, without making it a normative XSD violation.
+  Snapshot link-selection witnesses require an available sealed local-link plan
+  for the established assembly; selection remains separate from scope completion.
 
 ### Added
 

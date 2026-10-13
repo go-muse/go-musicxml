@@ -922,8 +922,15 @@ Missing attachment targets do not fail a new mandatory predicate. Schema-hint
 pairing is known false for an observed unmatched token and known true for zero
 or evenly paired tokens. `Raw`/`NoNamespace.Presence` distinguish absent from
 explicitly empty hints. Intrinsic extraction can still succeed; this does not
-change the accepted XSD list(anyURI) datatype. Direct models expose unavailable
-xsi source history. XLink onLoad is metadata and grants no retrieval authority.
+change the accepted XSD list(anyURI) datatype. A separately selected package
+consumer records known-false pairing as `OutcomeFail` under
+`CategoryCapability`, `ClassPolicy` and `RolePredicate`. It retains
+`schema-location-unmatched-token` and the exact context provider/subject cause.
+That policy failure blocks `Satisfied()` through `BlockingProblems`; it does not
+increment normative `Counts.Fail` or establish `ConformanceViolated`. Known-false
+pairing alone does not make assessment incomplete. Direct models expose unavailable
+xsi source history, which remains Unknown. XLink onLoad is metadata and grants no
+retrieval authority.
 See [local resource scope](docs/validation/local-link-context-scope.md) for the
 bounded descendant-selection, image advice and exact typed-reference contracts.
 
@@ -939,9 +946,11 @@ A snapshot retains the canonical report, exact root/profile/assembly, selected
 resource projections and schema-determined ID states under the same budget
 account until `Close` or successful transfer to package assessment. It never
 parses, fetches, retains a model, or exposes a post-finalization fact view.
-`ResourceSnapshotHeader.LinkProjectionSelected` records selection of the sealed
-local-link plan for the established assembly, independently of scope completion.
-An empty projection from a profile without that witness proves no link absence.
+`ResourceSnapshotHeader.LinkProjectionSelected` records selection of an
+`ImplementationAvailable` sealed local-link plan for the established assembly.
+It does not assert projection or scope completion. Absent or unsupported
+implementation support does not establish that witness. An empty projection from
+a profile without the witness proves no link absence.
 
 Snapshots are single-goroutine objects. Serialize getters, ownership transfer and
 `Close`. Standalone `Close` is idempotent. Closed header/count access returns zero;
@@ -968,6 +977,13 @@ request identity; only root orchestration reads and verifies streams.
 `ResourceDocumentRequest.RequestedRevision` is available to low-level callers,
 but root orchestration leaves it empty because the target canonical identity and
 revision are not known before resolving. A retrieval URI is not a revision pin.
+`ResourceResult.RetrievalURI` is the optional external retrieval base for a
+returned document. Empty leaves that base unavailable. When nonempty, it must
+parse as an absolute URI; its fragment is ignored for retrieval context. Root
+orchestration rejects malformed or relative values with
+`validation.ErrInvalidConfiguration` after the resolver callback returns and
+before reading the body. This checks returned evidence; it does not sandbox the
+resolver's already-performed transport.
 Every returned nonnil body transfers ownership even on error or rejected
 metadata.
 A newly returned alias body still consumes actual external byte/work quotas;
@@ -1331,8 +1347,9 @@ a terminal summary, and `FailureReport` exposes its complete original report whe
 retention was admitted while the package session was healthy. After ordinary
 package admission terminates, even newly freed storage does not reopen report
 measurement or copying: failure ingress retains only the prepaid bounded summary.
-A truncated fallback is explicit and cannot satisfy the bundle. Published getters return independent owned values and support concurrent
-reads; live sessions, snapshots and adoptions require serialized single-owner use.
+A truncated fallback is explicit and cannot satisfy the bundle. Published getters
+return independent owned values and support concurrent reads; live sessions,
+snapshots and adoptions require serialized single-owner use.
 Additional selected XML resources, including later XML rootfiles and archive-local
 XML edges, obey both document and resource byte caps. A metered fixed four-byte
 prefix classifies local selected bytes before growing body allocation. ZIP content
@@ -1372,7 +1389,8 @@ HTTP(S)/file retrieval URI is an escaped last path segment, not a claim about a
 physical filename; escaped slashes are never decoded into new member boundaries.
 Opaque/custom retrieval URIs may leave the optional name unavailable. Malformed
 or unreviewed supplied external MIME remains Unknown; absent MIME stays absent
-rather than receiving a guessed default. Optional advice never supplies a document classification rule.
+rather than receiving a guessed default. Optional advice never supplies a document
+classification rule.
 
 `PackageEntryObservation.UTF8Name` reports whether the observed name bytes are
 valid UTF-8. It does not prove the writer's declared encoding. The EFS bit remains

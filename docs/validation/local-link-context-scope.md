@@ -12,8 +12,9 @@ and graph consumer.
 ## Typed evidence and ownership
 
 `ContextResult.Resource` has exactly one named branch: link, image, schema hints,
-group or instrument. Its owner, typed evidence for the exact assembly-qualified subject declaration,
-local score-part, source/model location and all causal references remain explicit.
+group or instrument. Its owner, typed evidence for the exact assembly-qualified
+subject declaration, local score-part, source/model location and all causal
+references remain explicit.
 An unavailable subject declaration retains its own state, reason and cause.
 Copies own slices, strings, positions and causal records. Immutable numeric
 wrappers retain their normal ownership contract. The optional JSON member is
@@ -52,9 +53,10 @@ The implementation builds document-order indexes by name and by
 (name, per-parent ordinal), once, only if an exact link/bookmark is selected.
 Link-free documents retain a lightweight local-part index (256 logical bytes
 per node plus one fixed reserve); attachment-bearing documents retain the full
-1408-byte per-node index allowance plus four times the local-name byte count. Each selection uses bounded binary searches,
-not a new sibling/descendant scan. The exact integer is magnitude-checked before
-host-width conversion. Huge positions do not allocate sparse arrays.
+1408-byte per-node index allowance plus four times the local-name byte count.
+Each selection uses bounded binary searches, not a new sibling/descendant scan.
+The exact integer is magnitude-checked before host-width conversion. Huge positions
+do not allocate sparse arrays.
 
 ## Other local branches
 
@@ -74,7 +76,14 @@ gap is optional intrinsic context: successful extraction does not assert usable
 schema discovery. An observed odd token count is `Complete = Known(false)`;
 zero or evenly paired tokens are `Known(true)`. The unchanged `Raw` and
 `NoNamespace.Presence` fields distinguish absent hints from explicitly empty
-hints; completeness describes pairing, not presence.
+hints; completeness describes pairing, not presence. A separately selected package
+discovery consumer records known-false pairing as `OutcomeFail` under
+`CategoryCapability`, `ClassPolicy` and `RolePredicate`, preserving
+`schema-location-unmatched-token` and its exact provider/subject cause. This
+blocks `Satisfied()` through `BlockingProblems` without incrementing normative
+`Counts.Fail` or establishing `ConformanceViolated`. Known-false pairing alone
+does not make assessment incomplete. Unknown current-model xsi history remains
+Unknown.
 With an unread DTD, one root row retains the document-wide attribute-completeness
 gap. Descendant rows are emitted only for physically observed xsi hints, retaining
 their actual unavailable lexical/declaration evidence without inventing values.

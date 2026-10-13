@@ -23,6 +23,14 @@ was in progress at the separate 10:44 UTC observation.
 This dated checkpoint is not final acceptance and does not transfer the archived
 candidate's execution results to the published tree.
 
+A subsequent readback confirmed that run 38385055748 completed with failure. The
+stale all-assembly discovery test expected Unknown for an observed odd hint list;
+[commit 6b2bc2953d40ddcbc79f97f8b919548b4b95e1a6](https://github.com/go-muse/go-musicxml/commit/6b2bc2953d40ddcbc79f97f8b919548b4b95e1a6)
+corrected that expectation to the reviewed Known(false) pairing contract and
+updated only its current test-file hashes. The 10:44 UTC in-progress observation
+above remains historical; this terminal outcome neither rewrites it nor certifies
+any later tree. The failed run is not acceptance evidence.
+
 ## Preservation without a duplicate corpus
 
 Repository text hashes and byte counts use canonical LF (CRLF → LF only), matching the prior cross-platform evidence convention. Apart from the explicitly reviewed [36-record fixture-reference correction](evidence/auxiliary-fixture-reference-review.json), every other byte and original JSON field value remain unchanged; external archive hashes stay exact raw-byte hashes. The ownership manifest hashes the existing original documents and routes every retained obligation by its original ID and exact JSON pointer. Original status strings, source-language fields, source provenance, test contracts, overlaps, capabilities and accepted prior contributions remain in those complete documents. The external 8.9 MB annotated audit and original snapshot remain preserved by exact artifact hash; neither is copied into the repository.

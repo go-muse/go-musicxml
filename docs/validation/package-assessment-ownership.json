@@ -33,6 +33,17 @@
       "ci_observed_at": "2026-10-13 10:44 UTC",
       "ci_run_url": "https://github.com/go-muse/go-musicxml/actions/runs/38385055748",
       "ci_status_at_observation": "in progress"
+    },
+    "later_checkpoint_terminal_outcome": {
+      "ci_run_id": 38385055748,
+      "ci_run_url": "https://github.com/go-muse/go-musicxml/actions/runs/38385055748",
+      "ci_status": "completed",
+      "ci_conclusion": "failure",
+      "cause": "Stale all-assembly source-discovery expectation treated an observed odd hint list as Unknown instead of Known(false).",
+      "canonical_fix_commit": "6b2bc2953d40ddcbc79f97f8b919548b4b95e1a6",
+      "canonical_fix_url": "https://github.com/go-muse/go-musicxml/commit/6b2bc2953d40ddcbc79f97f8b919548b4b95e1a6",
+      "fix_scope": "Correct the named all-assembly test expectation and only its current test-file hashes; no original record, historical test or execution result was relabeled.",
+      "interpretation": "Terminal outcome appended separately. The earlier 2026-10-13 10:44 UTC in-progress observation remains unchanged; this failed run does not certify later-tree or final acceptance."
     }
   },
   "counts": {

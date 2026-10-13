@@ -225,16 +225,23 @@ type ResourceRequest struct {
 // The core validators never read or close it. Claimed pins require root byte
 // verification; newly returned alias bodies still consume external byte quotas.
 type ResourceResult struct {
-	RequestID               ResourceRequestID
-	State                   EvidenceState
-	Reason                  Code
-	Pin                     ResourcePin
-	RetrievalURI, MediaType string
-	Body                    io.ReadCloser
-	Image                   *ImageMetadataResult
-	Association             *AssociationResult
-	Roles                   *ResourceRoleResult
-	Authority               EvidenceAuthority
+	RequestID ResourceRequestID
+	State     EvidenceState
+	Reason    Code
+	Pin       ResourcePin
+	// RetrievalURI is the optional external retrieval base for a returned
+	// document. Empty leaves that base unavailable. When nonempty, root
+	// orchestration requires a parseable absolute URI and ignores its fragment.
+	// Malformed or relative values yield ErrInvalidConfiguration after Resolve
+	// returns and before Body is read. This validates returned evidence; it does
+	// not sandbox transport already performed by the resolver.
+	RetrievalURI string
+	MediaType    string
+	Body         io.ReadCloser
+	Image        *ImageMetadataResult
+	Association  *AssociationResult
+	Roles        *ResourceRoleResult
+	Authority    EvidenceAuthority
 }
 
 // ResourceResolver supplies explicitly selected resources or typed assertions.
