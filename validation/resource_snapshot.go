@@ -9,17 +9,20 @@ import (
 // ResourceSnapshotHeader identifies an intrinsic assessment without confusing
 // occurrence identity, schema assembly, root kind and assessment completeness.
 type ResourceSnapshotHeader struct {
-	DocumentID      string
-	Root            NodeRef
-	Name            Evidence[QName]
-	Assembly        Evidence[Assembly]
-	Profile         ProfileID
-	CatalogDigest   string
-	Target          Target
-	InputComplete   bool
-	Syntax          SyntaxState
-	ScopeComplete   Evidence[bool]
-	IDScopeComplete Evidence[bool]
+	// LinkProjectionSelected records selection of the sealed local-link plan for
+	// the established assembly. It does not assert projection or scope completion.
+	LinkProjectionSelected bool
+	DocumentID             string
+	Root                   NodeRef
+	Name                   Evidence[QName]
+	Assembly               Evidence[Assembly]
+	Profile                ProfileID
+	CatalogDigest          string
+	Target                 Target
+	InputComplete          bool
+	Syntax                 SyntaxState
+	ScopeComplete          Evidence[bool]
+	IDScopeComplete        Evidence[bool]
 }
 
 // ResourceIDFact is one schema-determined normalized ID and its exact owner.
@@ -75,6 +78,18 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 		h.Name = Evidence[QName]{State: EvidenceKnown, Value: s.root.header.Name}
 		if s.schema != nil && s.schema.active != nil {
 			h.Assembly = Evidence[Assembly]{State: EvidenceKnown, Value: s.schema.active.assembly}
+		}
+	}
+	if h.Assembly.State == EvidenceKnown {
+		for _, key := range s.catalog.orders[s.profile.ID] {
+			if err := s.step(ctx, 1); err != nil {
+				return nil, err
+			}
+			kind := s.catalog.plans[s.catalog.rules[key].Predicate].kind
+			if (kind == planContextMusicXMLLinks && h.Assembly.Value == AssemblyMusicXML) || (kind == planContextOpusLinks && h.Assembly.Value == AssemblyOpus) {
+				h.LinkProjectionSelected = true
+				break
+			}
 		}
 	}
 	if s.inputComplete && !s.enumerationIncomplete && s.terminalCause == nil {

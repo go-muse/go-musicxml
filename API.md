@@ -932,6 +932,9 @@ A snapshot retains the canonical report, exact root/profile/assembly, selected
 resource projections and schema-determined ID states under the same budget
 account until `Close` or successful transfer to package assessment. It never
 parses, fetches, retains a model, or exposes a post-finalization fact view.
+`ResourceSnapshotHeader.LinkProjectionSelected` records selection of the sealed
+local-link plan for the established assembly, independently of scope completion.
+An empty projection from a profile without that witness proves no link absence.
 
 Snapshots are single-goroutine objects. Serialize getters, ownership transfer and
 `Close`. Standalone `Close` is idempotent. Closed header/count access returns zero;
