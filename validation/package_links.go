@@ -88,7 +88,7 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	s.edges[e.ID] = stateClone(e)
 	s.subjectPackages[e.ID] = source.packageID
 	s.edgeOrder = append(s.edgeOrder, e.ID)
-	return nil
+	return s.evaluateEdge(ctx, e, false)
 }
 func (s *PackageSession) adoptedNodeKnown(ctx context.Context, a *packageAdoption, node NodeID) bool {
 	if node == a.resource.snapshot.header.Root.Node {
@@ -249,15 +249,35 @@ func (s *PackageSession) ObserveAssociation(ctx context.Context, q AssociationRe
 		if err := s.scan(ctx, 1); err != nil {
 			return err
 		}
-		if old.request.ID == q.ID {
+		if old.request.ID == q.ID || old.request.Source == q.Source && old.request.InstrumentLink == q.InstrumentLink {
 			return s.fail(contract("association request", "duplicate response"))
 		}
 	}
 	if err := s.admit(ctx, r, 1024); err != nil {
 		return err
 	}
-	s.associations = append(s.associations, packageAssociation{id: s.internalSubject(PackageSubjectAssociation), request: stateClone(q), result: stateClone(r)})
+	id := s.internalSubject(PackageSubjectAssociation)
+	s.subjectPackages[id] = source.packageID
+	association := packageAssociation{id: id, request: stateClone(q), result: stateClone(r)}
+	s.associations = append(s.associations, association)
 	target.required = true
+	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
+		binding := s.catalog.rules[key]
+		if binding.Selector.Kind != PackageSubjectAssociation {
+			continue
+		}
+		d := packageEvidenceDecision(s.baseDecision(key, id), r.Membership)
+		if r.Membership.State == EvidenceKnown && !r.Membership.Value {
+			d.Outcome = OutcomeFail
+			d.Reason = "instrument-not-in-linked-part"
+		}
+		if err := s.record(ctx, binding.Rule, id, d, Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/association[" + source.documentID + "]"}, false); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -328,29 +348,7 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 			if err := s.scan(ctx, 1); err != nil {
 				return err
 			}
-			edge := s.edges[id]
-			source := s.adoptions[edge.Source]
-			template := source.resource.snapshot.contexts[edge.Template]
-			d := s.baseDecision(r.Rule.Key, id)
-			if support := s.catalog.supports[s.profile.ID][r.Rule.Key]; support.State == ImplementationUnsupported {
-				d.Outcome = OutcomeUnsupported
-				d.Reason = support.Reason
-			} else if pre, ok := s.prerequisites(ctx, r.Rule, id); !ok {
-				d = pre
-			} else if r.Plan.check == PackageCheckLinkTarget {
-				d = s.linkTargetDecision(ctx, d, edge, template)
-			} else {
-				d = s.groupDecision(ctx, d, edge, template)
-			}
-			location := Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/edge[" + string(edge.Source) + "]"}
-			if len(template.Origins) > 0 {
-				origin := template.Origins[0]
-				if origin.DocumentID == source.resource.snapshot.header.DocumentID {
-					origin.DocumentID = source.documentID
-				}
-				d.Related = append(d.Related, origin)
-			}
-			if err := s.record(ctx, r.Rule, id, d, location, true); err != nil {
+			if err := s.evaluateEdgeRule(ctx, r, s.edges[id], true); err != nil {
 				return err
 			}
 		}
@@ -372,11 +370,24 @@ func (s *PackageSession) evaluateResourceRule(ctx context.Context, r PackageRule
 				if v.Resource == nil || v.Resource.Instrument == nil {
 					continue
 				}
-				if err := s.admit(ctx, v.Subject, 256); err != nil {
-					return err
+				id := PackageFactID(0)
+				for _, association := range s.associations {
+					if err := s.scan(ctx, 1); err != nil {
+						return err
+					}
+					q := association.request
+					if q.Source == a.resource.pin && q.InstrumentLink.DocumentID == a.documentID && q.InstrumentLink.Node == v.Subject.Node {
+						id = association.id
+						break
+					}
 				}
-				id := s.internalSubject(PackageSubjectAssociation)
-				s.subjectPackages[id] = a.packageID
+				if id == 0 {
+					if err := s.admit(ctx, v.Subject, 256); err != nil {
+						return err
+					}
+					id = s.internalSubject(PackageSubjectAssociation)
+					s.subjectPackages[id] = a.packageID
+				}
 				d := s.baseDecision(r.Rule.Key, id)
 				local := v.Resource.Instrument.Target
 				if local.State != EvidenceKnown {
@@ -590,4 +601,43 @@ func packageAdoptDecision(d Decision, a *packageAdoption) Decision {
 		d.Cause = &c
 	}
 	return d
+}
+
+func (s *PackageSession) evaluateEdge(ctx context.Context, e PackageEdgeObservation, final bool) error {
+	for _, key := range s.catalog.orders[s.profile.ID] {
+		if err := s.scan(ctx, 1); err != nil {
+			return err
+		}
+		r := s.catalog.rules[key]
+		if r.Selector.Kind == PackageSubjectEdge {
+			if err := s.evaluateEdgeRule(ctx, r, e, final); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+func (s *PackageSession) evaluateEdgeRule(ctx context.Context, r PackageRuleBinding, edge PackageEdgeObservation, final bool) error {
+	source := s.adoptions[edge.Source]
+	template := source.resource.snapshot.contexts[edge.Template]
+	d := s.baseDecision(r.Rule.Key, edge.ID)
+	if support := s.catalog.supports[s.profile.ID][r.Rule.Key]; support.State == ImplementationUnsupported {
+		d.Outcome = OutcomeUnsupported
+		d.Reason = support.Reason
+	} else if pre, ok := s.prerequisites(ctx, r.Rule, edge.ID); !ok {
+		d = pre
+	} else if r.Plan.check == PackageCheckLinkTarget {
+		d = s.linkTargetDecision(ctx, d, edge, template)
+	} else {
+		d = s.groupDecision(ctx, d, edge, template)
+	}
+	location := Location{Target: TargetPackage, DocumentID: s.documentID, Path: "/edge[" + string(edge.Source) + "]"}
+	if len(template.Origins) > 0 {
+		origin := template.Origins[0]
+		if origin.DocumentID == source.resource.snapshot.header.DocumentID {
+			origin.DocumentID = source.documentID
+		}
+		d.Related = append(d.Related, origin)
+	}
+	return s.record(ctx, r.Rule, edge.ID, d, location, final)
 }

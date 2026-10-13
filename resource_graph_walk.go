@@ -141,6 +141,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 	href := link.Href.Value
 	var child *graphResource
 	var childBase resourceURIBase
+	childPackage := item.pkg
 	var loadErr error
 	if href.State != validation.EvidenceKnown {
 		switch href.State {
@@ -170,14 +171,14 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 			if resolved.SameEntity {
 				child, childBase = item.resource, item.base
 			} else if resolved.ArchivePath != "" {
-				target = unavailableTarget(validation.EvidenceUnknown, "archive-resource-unavailable", nil)
+				child, childBase, childPackage, target, loadErr = g.loadArchiveDocument(item, resolved.ArchivePath)
 			} else if g.options.selected[ResourceDocuments] && g.options.resolver != nil {
-				child, childBase, target, loadErr = g.loadExternalDocument(item, v, href.Value.Text, resolved)
+				child, childBase, childPackage, target, loadErr = g.loadExternalDocument(item, v, href.Value.Text, resolved)
 			}
 		}
 	}
 	if child != nil && loadErr == nil {
-		aid, e := g.session.AdoptResource(g.ctx, child.id, validation.ResourceAdoptionOptions{DocumentID: g.next("adoption"), Package: item.pkg, BaseURI: childBase.RetrievalURI, ArchiveEntry: childBase.Entry})
+		aid, e := g.session.AdoptResource(g.ctx, child.id, validation.ResourceAdoptionOptions{DocumentID: g.next("adoption"), Package: childPackage, BaseURI: childBase.RetrievalURI, ArchiveEntry: childBase.Entry})
 		if e != nil {
 			return e
 		}
@@ -186,7 +187,7 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 		if e != nil {
 			return e
 		}
-		if e = g.enqueue(child, aid, item.pkg, childBase, item.depth+1); e != nil {
+		if e = g.enqueue(child, aid, childPackage, childBase, item.depth+1); e != nil {
 			return e
 		}
 	}
@@ -200,80 +201,98 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 	}
 	return errors.Join(loadErr, edgeErr)
 }
-func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.Evidence[validation.ResourceAdoptionID], error) {
+func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], error) {
 	unknown := unavailableTarget(validation.EvidenceUnknown, "resource-unavailable", nil)
 	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
 	if err != nil {
-		return nil, resourceURIBase{}, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, err
 	}
 	profile, _ := engine.Profile(ProfileSourceLinks)
 	request := validation.ResourceRequest{ID: validation.ResourceRequestID(g.next("request")), Document: &validation.ResourceDocumentRequest{Source: item.resource.pin, Subject: v.Subject, Kind: validation.LinkedResourceAuto, RequiredProfile: ProfileSourceLinks, CatalogDigest: profile.CatalogDigest, BaseURI: item.base.RetrievalURI, Href: href, Package: item.pkg}}
 	if err = validation.ValidateResourceRequest(request); err != nil {
-		return nil, resourceURIBase{}, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, err
 	}
 	release, err := resourceWorkingLease(g.ctx, g.options.account, request)
 	if err != nil {
-		return nil, resourceURIBase{}, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, err
 	}
 	defer release()
 	if err = g.ctx.Err(); err != nil {
-		return nil, resourceURIBase{}, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, err
 	}
 	result, resolveErr := g.options.resolver.Resolve(g.ctx, request)
 	if resolveErr != nil {
 		if result.Body != nil {
 			resolveErr = errors.Join(resolveErr, result.Body.Close())
 		}
-		return nil, resourceURIBase{}, unknown, resolveErr
+		return nil, resourceURIBase{}, item.pkg, unknown, resolveErr
 	}
 	if err = validation.ValidateResourceResult(request, result); err != nil {
 		if result.Body != nil {
 			err = errors.Join(err, result.Body.Close())
 		}
-		return nil, resourceURIBase{}, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, err
 	}
 	if result.State != validation.EvidenceKnown {
-		return nil, resourceURIBase{}, unavailableTarget(result.State, result.Reason, nil), nil
+		return nil, resourceURIBase{}, item.pkg, unavailableTarget(result.State, result.Reason, nil), nil
 	}
-	body, err := readAssessmentResourceBody(g.ctx, g.options.account, result.Body)
+	body, err := g.readExternalPackageBody(item, result.Pin, result.Body)
 	if err != nil {
-		return nil, resourceURIBase{}, unknown, err
+		return nil, resourceURIBase{}, item.pkg, unknown, err
 	}
-	defer body.close()
+	bodyOwned := false
+	defer func() {
+		if !bodyOwned {
+			body.close()
+		}
+	}()
 	if body.digest != result.Pin.Digest {
-		return nil, resourceURIBase{}, unknown, &validation.ConfigurationError{Field: "resource digest", Reason: "returned bytes do not match immutable pin"}
+		return nil, resourceURIBase{}, item.pkg, unknown, &validation.ConfigurationError{Field: "resource digest", Reason: "returned bytes do not match immutable pin"}
 	}
 	base := resourceURIBase{RetrievalURI: result.RetrievalURI}
 	if base.RetrievalURI != "" {
 		if _, err = resolveAssessmentResourceURI(g.ctx, g.options.account, base, ""); err != nil {
-			return nil, base, unknown, err
+			return nil, base, item.pkg, unknown, err
 		}
 	}
 	canonical := graphCanonicalKey{result.Pin.CanonicalID, result.Pin.Representation}
 	if old, ok := g.pins[canonical]; ok && old != result.Pin {
-		return nil, base, unknown, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed content"}
+		return nil, base, item.pkg, unknown, &validation.ConfigurationError{Field: "resource pin", Reason: "canonical identity changed content"}
 	}
 	if result.Pin.Representation == validation.ResourceRawMXL {
-		return nil, base, unavailableTarget(validation.EvidenceUnsupported, "nested-package-indirection", nil), nil
+		if err = g.ownResourceBody(body); err != nil {
+			return nil, base, item.pkg, unknown, err
+		}
+		bodyOwned = true
+		archive, readErr := borrowMXLAssessmentArchive(g.ctx, body.bytes, g.mxlOptions, g.options.account)
+		if archive == nil {
+			return nil, base, item.pkg, unknown, readErr
+		}
+		if err = g.ownArchive(archive); err != nil {
+			archive.Close()
+			return nil, base, item.pkg, unknown, errors.Join(readErr, err)
+		}
+		resource, childBase, pkg, importErr := g.importRawPackage(archive, result.Pin, item.pkg, result.RetrievalURI, false)
+		return resource, childBase, pkg, unknown, errors.Join(readErr, importErr)
 	}
 	key := graphResourceKey{result.Pin, ProfileSourceLinks}
 	if cached := g.cache[key]; cached != nil {
-		return cached, base, unknown, nil
+		return cached, base, item.pkg, unknown, nil
 	}
 	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: g.next("source"), Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if intrinsic.Snapshot == nil {
 		if intrinsic.Report.Requested {
 			err = g.session.RecordResourceFailure(g.ctx, result.Pin, intrinsic.Report, intrinsic.Err)
 		}
-		return nil, base, unknown, errors.Join(intrinsic.Err, err)
+		return nil, base, item.pkg, unknown, errors.Join(intrinsic.Err, err)
 	}
 	id, err := g.session.AddResource(g.ctx, result.Pin, intrinsic.Snapshot, true)
 	if err != nil {
 		intrinsic.Snapshot.Close()
-		return nil, base, unknown, err
+		return nil, base, item.pkg, unknown, err
 	}
 	resource, err := g.cacheResource(result.Pin, ProfileSourceLinks, id)
-	return resource, base, unknown, errors.Join(intrinsic.Err, err)
+	return resource, base, item.pkg, unknown, errors.Join(intrinsic.Err, err)
 }
 func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fragment validation.Evidence[string]) (validation.Evidence[validation.NodeRef], error) {
 	if fragment.State == validation.EvidenceAbsent {

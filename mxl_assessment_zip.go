@@ -97,6 +97,8 @@ type mxlAssessmentArchive struct {
 	ready                    bool
 	retained, expanded       int64
 	closed                   bool
+	inputComplete            bool
+	sharedExpanded           *int64 // Optional root-run aggregate; does not own another Account.
 }
 
 // openMXLAssessmentArchive owns its buffered compressed representation. The
@@ -117,6 +119,7 @@ func openMXLAssessmentArchive(ctx context.Context, reader io.Reader, options MXL
 		a.observePrefix()
 		return a, err
 	}
+	a.inputComplete = true
 	err = a.observe()
 	return a, err
 }
@@ -135,6 +138,7 @@ func borrowMXLAssessmentArchive(ctx context.Context, data []byte, options MXLOpt
 		return a, ErrMXLTooLarge
 	}
 	a.data = data
+	a.inputComplete = true
 	err = a.observe()
 	return a, err
 }
@@ -217,7 +221,7 @@ func (a *mxlAssessmentArchive) readBounded(reader io.Reader, limit int64, kind v
 			return data, err
 		}
 		remaining := limit - int64(len(data))
-		if expanded && a.limits.resourcesSize-a.expanded < remaining {
+		if expanded && a.expandedRemaining() < remaining {
 			remaining = a.limits.resourcesSize - a.expanded
 		}
 		used, err := a.account.Usage(kind)

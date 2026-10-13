@@ -1076,3 +1076,47 @@ Image requests carry the same explicit base URI, package and archive-entry scope
 which must match their exact source expansion. Canonical identity is never used
 as a retrieval base. Known numeric image fields individually consume the scalar
 limit even when another field is unavailable and no ratio can be calculated.
+
+## Original and current MXL assessment
+
+`InspectMXL(ctx, reader, MXLAssessmentOptions)` selects `ProfileMXLSource`;
+`AssessMXLPackage(ctx, package, MXLAssessmentOptions)` selects `ProfileMXLModel`.
+Both return `(validation.AssessmentBundle, error)`. These additive entry points
+preserve all legacy decode, encode, resolve and transport behavior. The caller's
+reader stays open; no built-in filesystem or network resolver is introduced.
+
+Raw assessment retains independent observed local/central header facts, original
+mimetype prefixes and complete or explicitly partial entry inventories. The
+original container is assessed once with `ProfileSourceContainer`; ordered
+rootfiles come from that exact immutable source snapshot. Root and rootfiles
+content proofs both gate complete enumeration. Later established non-MusicXML
+alternate renditions are not fed to the musical XML parser. Primary target kind,
+media type and intrinsic child conformance remain separate evidence.
+
+Current package assessment walks `Document` directly with `ProfileModelLinks`.
+An empty `RootFiles` uses the encoder's current-state `score.musicxml` default;
+empty current media-type fields follow its omission convention. This does not
+recover the original container, source order, headers or attribute presence.
+Selected `Resources` bytes receive admitted independent copies before parsing.
+Callers must not mutate any inputs during assessment. Current field locations
+identify rootfile occurrences without inventing source XML nodes.
+
+Every package-local member identity incorporates the exact enclosing package pin
+and literal path unambiguously. Nested archives keep separate entry scopes and
+share the root account. Raw nested technical traversal preserves its inner source
+reports and the outer rootfile-indirection interpretation gap. Parse reuse is
+canonical resource/profile-specific; graph expansion additionally includes the
+actual package and effective retrieval context. The primary is seeded before
+archive-local backreferences, and a repeated reference is a distinct adoption.
+
+All five `MXLOptions` byte caps remain independent of graph budgets. Raw archive,
+metadata, document and resource limits apply to their represented byte streams;
+`MaxResourcesBytes` is aggregate across all selected expanded entry bytes,
+selected current resource copies and bounded external bodies in package scope.
+Nested compressed entry bytes and their inner expansion are distinct represented
+bytes. Current models have no compressed archive or serialized primary XML bytes
+to measure; no encoding is performed to fabricate those measurements. Current
+rootfile string storage is separately bounded by the metadata cap. Newly returned
+external aliases count again even when their verified intrinsic parse is cached.
+Caller and resolver I/O cancellation remains cooperative; all owned leases are
+released on completion, including technical errors and cancellation.

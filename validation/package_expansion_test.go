@@ -98,3 +98,22 @@ func TestPackageUnsealedExpansionCannotCertify(t *testing.T) {
 		t.Fatal("in-progress expansion certified")
 	}
 }
+
+func TestPackageKnownEdgeFailureSurvivesLaterCancellation(t *testing.T) {
+	s, source, _ := packageAdviceFixtureCheck(t, PackageCheckLinkTarget)
+	fixtureLink(s, source)
+	s.adoptions[source].resource.snapshot.contexts[0].Resource.Link.Kind = ResourcePartLink
+	target, err := s.AdoptResource(context.Background(), s.adoptions[source].resource.id, ResourceAdoptionOptions{Package: "outer", DocumentID: "target-alias"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = s.ObserveEdge(context.Background(), PackageEdgeObservation{ID: 1, Source: source, Target: Evidence[ResourceAdoptionID]{State: EvidenceKnown, Value: target}, Fragment: Evidence[string]{State: EvidenceAbsent}, FragmentTarget: Evidence[NodeRef]{State: EvidenceAbsent}}); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	bundle, err := s.Finish(ctx, PackageCompletion{})
+	if !errors.Is(err, context.Canceled) || bundle.PackageReport().Counts.Fail != 1 || bundle.PackageReport().Conformance != ConformanceViolated {
+		t.Fatalf("known wrong-kind edge lost: %v %+v", err, bundle.PackageReport())
+	}
+}

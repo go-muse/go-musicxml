@@ -9,6 +9,13 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add `InspectMXL` and `AssessMXLPackage` for bounded original/current MXL
+  assessment with separate container and musical intrinsic reports, exact local
+  header evidence, finite package-local graphs, nested archive scopes and shared
+  quotas. Current models are assessed directly without encoding or recovering
+  discarded source history; outer compressed-rootfile interpretation remains
+  explicit.
+
 - Add explicit package-target `ProfileResourceGraph`, `ProfileMXLSource` and
   `ProfileMXLModel` metadata with sealed package/root/link checks, distinct
   capability policy and optional advice, and fixed intrinsic catalog digest

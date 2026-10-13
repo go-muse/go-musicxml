@@ -70,7 +70,7 @@ func (a *mxlAssessmentArchive) readEntry(index int, role mxlAssessmentEntryRole)
 	}
 	content.attempted = true
 	defer func() { content.data = data; content.err = err }()
-	if entry.central.uncompressed > a.limits.resourcesSize-a.expanded {
+	if entry.central.uncompressed > a.expandedRemaining() {
 		return nil, ErrMXLTooLarge
 	}
 	// Advertised bytes are a rejection hint, never the actual byte-charge owner.
@@ -149,7 +149,7 @@ func (r *mxlAssessmentExpandedReader) Read(p []byte) (int, error) {
 		return 0, nil
 	}
 	remaining := r.limit - r.seen
-	if a.limits.resourcesSize-a.expanded < remaining {
+	if a.expandedRemaining() < remaining {
 		remaining = a.limits.resourcesSize - a.expanded
 	}
 	used, err := a.account.Usage(validation.BudgetExternalBytes)
@@ -171,7 +171,7 @@ func (r *mxlAssessmentExpandedReader) Read(p []byte) (int, error) {
 		return 0, mxlZIPFormat("invalid decompressor count")
 	}
 	if n > 0 {
-		if int64(n) > r.limit-r.seen || int64(n) > a.limits.resourcesSize-a.expanded {
+		if int64(n) > r.limit-r.seen || int64(n) > a.expandedRemaining() {
 			return 0, ErrMXLTooLarge
 		}
 		if err = a.account.Charge(validation.BudgetExternalBytes, int64(n)); err != nil {
@@ -182,6 +182,9 @@ func (r *mxlAssessmentExpandedReader) Read(p []byte) (int, error) {
 		}
 		r.seen += int64(n)
 		a.expanded += int64(n)
+		if a.sharedExpanded != nil {
+			*a.sharedExpanded += int64(n)
+		}
 		if err = a.step(int64(n)); err != nil {
 			return 0, err
 		}
@@ -216,4 +219,14 @@ func (r *mxlAssessmentCompressedReader) Read(p []byte) (int, error) {
 		}
 	}
 	return n, err
+}
+
+// expandedRemaining preserves the private observer's standalone cap while a
+// graph-owned shared counter prevents nested boundaries from resetting it.
+func (a *mxlAssessmentArchive) expandedRemaining() int64 {
+	used := a.expanded
+	if a.sharedExpanded != nil {
+		used = *a.sharedExpanded
+	}
+	return a.limits.resourcesSize - used
 }

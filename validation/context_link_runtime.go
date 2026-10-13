@@ -175,11 +175,13 @@ func evaluateResourceLinks(ctx context.Context, s *Session, _ *factNode, key Rul
 			if kind == "" {
 				continue
 			}
-			link := &ResourceLinkContext{Kind: kind, Href: resourceAbsentAttribute(), Show: resourceAbsentAttribute(), Actuate: resourceAbsentAttribute(), Element: resourceAbsentAttribute(), Position: resourceAbsentAttribute(), Attachment: Evidence[NodeRef]{State: EvidenceAbsent}, Fragment: Evidence[string]{State: EvidenceAbsent}}
+			link := &ResourceLinkContext{PresentationIntent: Evidence[string]{State: EvidenceAbsent}, ActuationIntent: Evidence[string]{State: EvidenceAbsent}, Kind: kind, Href: resourceAbsentAttribute(), Show: resourceAbsentAttribute(), Actuate: resourceAbsentAttribute(), Element: resourceAbsentAttribute(), Position: resourceAbsentAttribute(), Attachment: Evidence[NodeRef]{State: EvidenceAbsent}, Fragment: Evidence[string]{State: EvidenceAbsent}}
 			if kind != ResourceBookmark {
 				link.Href = resourceAttribute(r, n, resourceRole(owner+".@href"))
 				link.Show = resourceAttribute(r, n, resourceRole(owner+".@show"))
 				link.Actuate = resourceAttribute(r, n, resourceRole(owner+".@actuate"))
+				link.PresentationIntent = resourceXLinkIntent(link.Show.Value, true)
+				link.ActuationIntent = resourceXLinkIntent(link.Actuate.Value, false)
 				href := resourceString(link.Href.Value)
 				if href.State != EvidenceKnown {
 					link.Fragment = stateUnavailable[string, string](href)
@@ -219,4 +221,24 @@ func resourceImageScaling(width, height Evidence[Atomic]) Evidence[string] {
 	default:
 		return Evidence[string]{State: EvidenceAbsent}
 	}
+}
+
+func resourceXLinkIntent(e Evidence[Atomic], presentation bool) Evidence[string] {
+	v := resourceString(e)
+	if v.State != EvidenceKnown {
+		return v
+	}
+	switch v.Value {
+	case "other", "none":
+		return Evidence[string]{State: EvidenceUnknown, Reason: "application-dependent-xlink-behavior"}
+	case "new", "replace", "embed":
+		if presentation {
+			return v
+		}
+	case "onRequest", "onLoad":
+		if !presentation {
+			return v
+		}
+	}
+	return Evidence[string]{State: EvidenceUnknown, Reason: "xlink-behavior-domain-unavailable"}
 }

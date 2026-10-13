@@ -82,3 +82,14 @@ wrong-assembly/foreign homonyms, direct-model edits, immediate marker siblings,
 ordinal agreement/disagreement, huge positions, missing/invalid/empty evidence,
 owned copies/remapping, bounded work, cancellation and retained-byte cleanup.
 Counts are predicate instances and projections, not conformance coverage ratios.
+
+## Bounded XLink behavior intent
+
+`ResourceLinkContext.PresentationIntent` preserves `new`, `replace` and `embed`
+recommendations. `ActuationIntent` preserves `onRequest` and `onLoad` intentions.
+For either axis, `other` and `none` leave application behavior Unknown; they do
+not forbid or authorize retrieval. Invalid fields retain their prerequisite cause.
+The independently retained Show/Actuate fields still distinguish encoded values
+from exact schema omission defaults. This follows XLink 1.0 section5.6 and the
+pinned MusicXML/Opus link-attributes defaults, without claiming full XLink
+application conformance or performing any renderer action.

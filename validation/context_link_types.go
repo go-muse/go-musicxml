@@ -41,11 +41,14 @@ type ResourceAttribute struct {
 // assessment. Known empty and absent fragments remain distinct. Actuate never
 // grants permission to load anything.
 type ResourceLinkContext struct {
-	Kind                ResourceLinkKind
-	Href, Show, Actuate ResourceAttribute
-	Element, Position   ResourceAttribute
-	Attachment          Evidence[NodeRef]
-	Fragment            Evidence[string]
+	// Intended XLink behavior, not rendering or retrieval authority. Other/none
+	// remain application-dependent; effective default fields stay separate.
+	PresentationIntent, ActuationIntent Evidence[string]
+	Kind                                ResourceLinkKind
+	Href, Show, Actuate                 ResourceAttribute
+	Element, Position                   ResourceAttribute
+	Attachment                          Evidence[NodeRef]
+	Fragment                            Evidence[string]
 }
 
 // ResourceImageContext preserves required source/MIME-type facts and dimension

@@ -11,17 +11,25 @@ import (
 )
 
 type resourceGraphRun struct {
-	ctx       context.Context
-	options   resourceRunOptions
-	session   *validation.PackageSession
-	namespace string
-	sequence  uint64
-	retained  int64
-	cache     map[graphResourceKey]*graphResource
-	pins      map[graphCanonicalKey]validation.ResourcePin
-	expanded  map[graphExpansionKey]bool
-	queue     []graphExpansion
-	linked    map[graphLinkKey]graphLinkedTarget
+	ctx              context.Context
+	options          resourceRunOptions
+	session          *validation.PackageSession
+	namespace        string
+	sequence         uint64
+	retained         int64
+	cache            map[graphResourceKey]*graphResource
+	pins             map[graphCanonicalKey]validation.ResourcePin
+	expanded         map[graphExpansionKey]bool
+	queue            []graphExpansion
+	packageList      []*graphPackage
+	packages         map[validation.PackageID]*graphPackage
+	packageContexts  map[graphPackageKey]*graphPackage
+	archives         []*mxlAssessmentArchive
+	resourceBodies   []*assessmentResourceBody
+	packageDocuments map[validation.ResourceAssessmentID]string
+	mxlOptions       MXLOptions
+	mxlExpanded      int64
+	linked           map[graphLinkKey]graphLinkedTarget
 }
 
 func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
@@ -45,6 +53,9 @@ func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, pr
 	g.cache = make(map[graphResourceKey]*graphResource)
 	g.pins = make(map[graphCanonicalKey]validation.ResourcePin)
 	g.expanded = make(map[graphExpansionKey]bool)
+	g.packages = make(map[validation.PackageID]*graphPackage)
+	g.packageContexts = make(map[graphPackageKey]*graphPackage)
+	g.packageDocuments = make(map[validation.ResourceAssessmentID]string)
 	g.session, err = catalog.Begin(ctx, validation.RunOptions{DocumentID: namespace + "-package", Profile: profile, Account: cfg.account})
 	if err != nil {
 		g.close()
@@ -66,6 +77,14 @@ func (g *resourceGraphRun) reserve(n int64) error {
 	return nil
 }
 func (g *resourceGraphRun) close() {
+	for i := len(g.archives) - 1; i >= 0; i-- {
+		g.archives[i].Close()
+	}
+	g.archives = nil
+	for _, body := range g.resourceBodies {
+		body.close()
+	}
+	g.resourceBodies = nil
 	if g.retained != 0 {
 		_ = g.options.account.Release(validation.BudgetBufferedBytes, g.retained)
 		g.retained = 0
@@ -172,6 +191,9 @@ func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin val
 	err = g.enqueue(resource, aid, "root", resourceURIBase{RetrievalURI: g.options.identity.RetrievalURI}, 1)
 	if err == nil {
 		err = g.walkResources()
+	}
+	if err == nil {
+		err = g.sealPackages()
 	}
 	if err == nil {
 		known := validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}

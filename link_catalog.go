@@ -66,7 +66,7 @@ func buildLinkAssessmentDefinitions() (*assessmentDefinitions, error) {
 		if err != nil {
 			return nil, err
 		}
-		add(assembly, "MX40-RESOURCE-local-links/"+string(assembly), "Local resource and attachment context", "Retain exact assembly-qualified local resource templates and existing typed references without fetching or inventing target requirements.", plan, []validation.SourceRef{{IDs: []string{"MX40-PROSE-link-element-position", "MX40-PROSE-image-scaling", "MX40-PROSE-group-link-match"}, URL: localSchemaSource(2354), Locator: "Exact local MusicXML/Opus link use bindings; external resolution excluded"}})
+		add(assembly, "MX40-RESOURCE-local-links/"+string(assembly), "Local resource and attachment context", "Retain exact assembly-qualified local resource templates and existing typed references without fetching or inventing target requirements.", plan, []validation.SourceRef{{IDs: []string{"MX40-PROSE-link-element-position", "MX40-PROSE-image-scaling", "MX40-PROSE-group-link-match"}, URL: localSchemaSource(2354), Locator: "Exact local MusicXML/Opus link use bindings; external resolution excluded"}, {IDs: []string{"MX40-PROSE-xlink-actuate-behavior", "MX40-PROSE-xlink-show-behavior"}, URL: "https://www.w3.org/TR/2001/REC-xlink-20010627/#link-behaviors", Locator: "XLink1.0 section5.6 intended behavior; no application or retrieval authority"}, {IDs: []string{"MX40-PROSE-xlink-show-default"}, URL: localSchemaSource(2369), Locator: "MusicXML link-attributes defaults; exact Opus counterpart opus.xsd52-53"}})
 		hints, err := validation.NewSchemaHintContextPlan(schema)
 		if err != nil {
 			return nil, err
