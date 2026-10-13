@@ -118,34 +118,58 @@ func TestResolveSymlinkBeforeParentTraversal(t *testing.T) {
 
 func TestAtomicTemporaryDirectoryPreservesSymlinkTraversal(t *testing.T) {
 	t.Parallel()
-	root := t.TempDir()
-	nested := filepath.Join(root, "nested")
-	if err := os.MkdirAll(filepath.Join(nested, "child"), 0700); err != nil {
-		t.Fatal(err)
-	}
-	alias := filepath.Join(root, "alias")
-	if err := os.Symlink(filepath.Join(nested, "child"), alias); err != nil {
-		t.Skip(err)
-	}
-	output := alias + string(filepath.Separator) + ".." + string(filepath.Separator) + "out.json"
-	ops := defaultFileOps()
-	create := ops.createTemp
-	ops.createTemp = func(dir, pattern string) (atomicFile, error) {
-		resolved, err := checkedResolve(dir, defaultFileOps())
-		if err != nil {
-			t.Fatal(err)
-		}
-		if resolved != nested {
-			t.Fatalf("temporary directory = %s, want %s", resolved, nested)
-		}
-		return create(dir, pattern)
-	}
-	if err := atomicWrite(output, []byte("{}\n"), ops); err != nil {
-		t.Fatal(err)
-	}
-	data, err := os.ReadFile(filepath.Join(nested, "out.json"))
-	if err != nil || string(data) != "{}\n" {
-		t.Fatalf("output=%q err=%v", data, err)
+	for _, name := range []string{"direct-root", "symlinked-root"} {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			if name == "symlinked-root" {
+				alias := filepath.Join(t.TempDir(), "root-alias")
+				if err := os.Symlink(root, alias); err != nil {
+					t.Fatal(err)
+				}
+				root = alias
+			}
+			nested := filepath.Join(root, "nested")
+			if err := os.MkdirAll(filepath.Join(nested, "child"), 0700); err != nil {
+				t.Fatal(err)
+			}
+			alias := filepath.Join(root, "alias")
+			if err := os.Symlink(filepath.Join(nested, "child"), alias); err != nil {
+				t.Skip(err)
+			}
+			output := alias + string(filepath.Separator) + ".." + string(filepath.Separator) + "out.json"
+			// TMPDIR itself may contain symlinks (for example /var on macOS).
+			// Compare physical directories using an independent filesystem oracle.
+			expected, err := filepath.EvalSymlinks(nested)
+			if err != nil {
+				t.Fatal(err)
+			}
+			cleaned, err := filepath.EvalSymlinks(filepath.Dir(output))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if cleaned == expected {
+				t.Fatal("fixture does not distinguish lexical cleaning from symlink traversal")
+			}
+			ops := defaultFileOps()
+			create := ops.createTemp
+			ops.createTemp = func(dir, pattern string) (atomicFile, error) {
+				resolved, err := checkedResolve(dir, defaultFileOps())
+				if err != nil {
+					t.Fatal(err)
+				}
+				if resolved != expected {
+					t.Fatalf("temporary directory = %s, want %s", resolved, expected)
+				}
+				return create(dir, pattern)
+			}
+			if err := atomicWrite(output, []byte("{}\n"), ops); err != nil {
+				t.Fatal(err)
+			}
+			data, err := os.ReadFile(filepath.Join(nested, "out.json"))
+			if err != nil || string(data) != "{}\n" {
+				t.Fatalf("output=%q err=%v", data, err)
+			}
+		})
 	}
 }
 

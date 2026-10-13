@@ -18,6 +18,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"unicode/utf8"
 )
 
@@ -325,7 +326,13 @@ func prettyJSON(v any) []byte {
 	return b.Bytes()
 }
 func readBytes(path string) []byte {
-	b, err := os.ReadFile(path)
+	// Resolve before native I/O: Windows normalizes '..' lexically before
+	// following symlinks, which could otherwise read a different input.
+	resolved, err := checkedResolve(path, defaultFileOps())
+	if err != nil {
+		fail("cannot read input: %s: %v", path, err)
+	}
+	b, err := os.ReadFile(resolved)
 	if err != nil {
 		fail("cannot read input: %s: %v", path, err)
 	}
@@ -341,7 +348,11 @@ func repositoryPath(root, value string) string {
 			fail("invalid repository path: %s", value)
 		}
 	}
-	return joinUnclean(root, value)
+	resolved, err := checkedResolve(joinUnclean(root, value), defaultFileOps())
+	if err != nil {
+		fail("cannot resolve repository path: %s: %v", value, err)
+	}
+	return resolved
 }
 
 // Joining an input path must not erase a symlink/.. pair before the filesystem
@@ -406,9 +417,6 @@ func defaultFileOps() fileOps {
 // Unlike EvalSymlinks, missing final paths and dangling links are supported.
 // Resolve components before '..' so a symlinked parent cannot hide an alias.
 func checkedResolve(path string, ops fileOps) (string, error) {
-	if _, err := ops.stat(path); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return "", err
-	}
 	if !filepath.IsAbs(path) {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -456,6 +464,9 @@ func checkedResolve(path string, ops fileOps) (string, error) {
 			return "", err
 		}
 		if info.Mode()&os.ModeSymlink == 0 {
+			if !info.IsDir() && len(parts) > 0 {
+				return "", &os.PathError{Op: "resolve", Path: candidate, Err: syscall.ENOTDIR}
+			}
 			resolved = candidate
 			continue
 		}
@@ -474,6 +485,9 @@ func checkedResolve(path string, ops fileOps) (string, error) {
 		}
 		parts = append(strings.Split(filepath.ToSlash(target), "/"), parts...)
 	}
+	if _, err := ops.stat(resolved); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return "", err
+	}
 	return resolved, nil
 }
 func resolveRoot(root string, ops fileOps) (string, error) {
@@ -488,7 +502,7 @@ func rejectAlias(output string, protected []string, ops fileOps) error {
 	if err != nil {
 		return fmt.Errorf("cannot validate output path: %s: %w", output, err)
 	}
-	outInfo, err := ops.stat(output)
+	outInfo, err := ops.stat(resolved)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("cannot validate output path: %s: %w", output, err)
 	}
@@ -497,7 +511,7 @@ func rejectAlias(output string, protected []string, ops fileOps) error {
 		if err != nil {
 			return fmt.Errorf("cannot validate output path: %s: %w", output, err)
 		}
-		info, err := ops.stat(path)
+		info, err := ops.stat(p)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("cannot validate output path: %s: %w", output, err)
 		}
@@ -515,6 +529,13 @@ func atomicWrite(path string, data []byte, ops fileOps) (err error) {
 	if dir == "" {
 		dir = "."
 	}
+	// Resolve only the parent before native tempfile/rename calls can clean it.
+	// Keep the final name: replacing a final symlink must not write its referent.
+	dir, err = checkedResolve(dir, ops)
+	if err != nil {
+		return fmt.Errorf("cannot write JSON atomically: %s: %w", path, err)
+	}
+	destination := filepath.Join(dir, name)
 	f, err := ops.createTemp(dir, "."+name+".*.tmp")
 	if err != nil {
 		return fmt.Errorf("cannot write JSON atomically: %s: %w", path, err)
@@ -553,5 +574,5 @@ func atomicWrite(path string, data []byte, ops fileOps) (err error) {
 	if err != nil {
 		return err
 	}
-	return ops.rename(tmp, path)
+	return ops.rename(tmp, destination)
 }

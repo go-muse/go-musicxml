@@ -938,6 +938,30 @@ func TestMaintenanceUnreferencedTestRecordIsRejected(t *testing.T) {
 	f.run(t, "refresh", 1, "--write")
 }
 
+func maintenanceWorkflowText(raw []byte) string {
+	return strings.ReplaceAll(string(raw), "\r\n", "\n")
+}
+
+func TestMaintenanceWorkflowLineEndings(t *testing.T) {
+	t.Parallel()
+	const lf = "jobs:\n  quality:\n    steps:\n      - name: Inventory\n"
+	for _, newline := range []string{"\n", "\r\n"} {
+		raw := strings.ReplaceAll(lf, "\n", newline)
+		if got := maintenanceWorkflowText([]byte(raw)); got != lf {
+			t.Fatalf("normalized workflow = %q, want %q", got, lf)
+		}
+	}
+	for _, changed := range []string{
+		strings.Replace(lf, "quality", "unexpected-job", 1),
+		strings.Replace(lf, "jobs:", "jobs :", 1),
+		strings.Replace(lf, "jobs:\n", "jobs:\r", 1),
+	} {
+		if maintenanceWorkflowText([]byte(changed)) == lf {
+			t.Fatalf("normalization concealed workflow mutation: %q", changed)
+		}
+	}
+}
+
 func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *testing.T) {
 	t.Parallel()
 	repo := maintenanceRepo(t)
@@ -946,7 +970,7 @@ func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *test
 		jobs []string
 	}{{"ci.yml", []string{"quality", "test", "race", "xsd-conformance", "fuzz"}}, {"release.yml", []string{"verify", "publish"}}} {
 		t.Run(tc.name, func(t *testing.T) {
-			text := string(maintenanceRead(t, filepath.Join(repo, ".github/workflows", tc.name)))
+			text := maintenanceWorkflowText(maintenanceRead(t, filepath.Join(repo, ".github/workflows", tc.name)))
 			parts := strings.SplitN(text, "jobs:\n", 2)
 			if len(parts) != 2 {
 				t.Fatal("missing jobs mapping")
