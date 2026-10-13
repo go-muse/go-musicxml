@@ -888,9 +888,10 @@ ensemble restriction, library access, playback, or cross-file correspondence is
 performed. Existing source DTD, capability, cancellation and finite budget limits
 still apply. See [auxiliary source scope](docs/validation/auxiliary-source-scope.md).
 
-`ContextResult` gains optional `SoundMapping` and `Container` typed payload fields; clients using unkeyed
-composite literals for that struct must migrate to keyed literals. This additive
-context-family extension does not change the `Report` or options struct shapes.
+`ContextResult` gains three optional typed payload fields: `SoundMapping`,
+`Resource` and `Container`. Clients using unkeyed composite literals for that
+struct must migrate to keyed literals. This additive context-family extension
+does not change the `Report` or options struct shapes.
 
 ## Nonfetching local resource context
 
@@ -963,13 +964,26 @@ runtime expression language.
 
 `ResourceRequest` and `ResourceResult` have exactly one corresponding document,
 image, association or role branch. Core validators check bounded shape and exact
-request identity; only root orchestration reads and verifies streams. Every
-returned nonnil body transfers ownership even on error or rejected metadata.
+request identity; only root orchestration reads and verifies streams.
+`ResourceDocumentRequest.RequestedRevision` is available to low-level callers,
+but root orchestration leaves it empty because the target canonical identity and
+revision are not known before resolving. A retrieval URI is not a revision pin.
+Every returned nonnil body transfers ownership even on error or rejected
+metadata.
 A newly returned alias body still consumes actual external byte/work quotas;
 parse reuse does not establish transport-byte reuse. Caller resolver code owns
 transport and redirect authorization; validation cannot control I/O it already
 performed. Source pins use verified SHA-256 digests. Current state uses opaque
 per-run snapshot identity, never an invented source hash.
+
+Returned bodies grow in owned contiguous buffers. Growth admits the old and new
+capacities simultaneously before releasing the old buffer; spare retained
+capacity can approach twice the body length. Even when external-byte and work
+allowances suffice, a 33 MiB body cannot fit the default 64 MiB buffered-byte
+limit: growth alone gives an approximately 32 MiB body ceiling before other live
+storage and scratch. `MaxExternalBytes` is not a promise that a body of that
+size fits the independent work and live-buffer budgets. Use explicit finite
+overrides when the selected workload needs them.
 
 Association replies bind complete source/target pins, exact local subjects and
 normalized IDs. Partial mapping misses are unknown; known negative membership
@@ -1088,6 +1102,11 @@ fragment grammars stay unsupported. Unknown/absent selected targets still charge
 linked-document admission. Each known edge uses its own nonroot adoption distinct
 from its source. A target may belong to another explicitly admitted package
 boundary; a known empty fragment target must be its exact nonzero adopted root.
+`MaxLinkedDocuments` counts nonroot adoptions, not just external resolver calls.
+The first linked raw-MXL package can require three admissions: container, primary
+and incoming edge. An exhausted counter is checked before I/O, but positive
+remaining capacity does not guarantee that all internal adoptions will fit; their
+number depends on the returned content.
 
 `ObserveImageMetadata` accepts an exact image request/result for a selected
 intrinsic template. Bundle image advice exposes exact dimensionless aspect ratios
@@ -1112,25 +1131,27 @@ not a core-verified membership claim about an adopted container snapshot. The ra
 adapter remains responsible for parsing the original container and projecting its
 actual rootfile occurrences; existing container and scalar obligations are unchanged.
 
-A `CurrentMXL` boundary assesses representable logical rootfile/resource relations.
-It excludes the original ZIP container-entry representation and raw header claims,
-which cannot be reconstructed from a model. A raw boundary keeps those obligations.
-`PackageIdentity.PinUnavailable` is restricted to an observed raw MXL prefix with
-no whole-body digest. It never enters canonical pin tables and unconditionally
-keeps the bundle incomplete, while preserving already known local violations.
+A `ResourceCurrentMXL` boundary assesses representable logical rootfile/resource
+relations. It excludes the original ZIP container-entry representation and raw
+header claims, which cannot be reconstructed from a model. A `ResourceRawMXL`
+boundary keeps those obligations. `PackageIdentity.PinUnavailable` is restricted
+to an observed raw MXL prefix with no whole-body digest. It never enters
+canonical pin tables and unconditionally keeps the bundle incomplete, while
+preserving already known local violations.
 
-Resource expansion is explicitly scoped by canonical assessment, package boundary,
-`BaseURI`, and `ArchiveEntry`. Profile/digest identity is part of the canonical
-assessment; resolver configuration is fixed by the enclosing run. `ExpansionOwner`
-returns the first adoption for that exact context. Only that owner may publish
-outgoing edges, association replies and selected image metadata. Aliases keep
-fresh document IDs and linked-document charges, including cycle/back references.
-`SealResourceExpansion` requires complete intrinsic scope and exact coverage of
-all outgoing templates before accepting a complete assertion. Each owner must be
-sealed before its package inventory. A retained child snapshot may still support
-an independently known target-kind finding after an intrinsic error; it does not
-authorize continued child expansion after that error. Unsealed, failed or partial
-expansions keep the whole bundle incomplete; aliases do not convert in-progress work into vacuity.
+Resource expansion is explicitly scoped by canonical assessment, package
+boundary, `BaseURI`, and `ArchiveEntry`. Profile/digest identity is part of the
+canonical assessment; resolver configuration is fixed by the enclosing run.
+`ExpansionOwner` returns the first adoption for that exact context. Only that
+owner may publish outgoing edges, association replies and selected image
+metadata. Aliases keep fresh document IDs and linked-document charges, including
+cycle/back references. `SealResourceExpansion` requires complete intrinsic scope
+and exact coverage of all outgoing templates before accepting a complete
+assertion. Each owner must be sealed before its package inventory. A retained
+child snapshot may still support an independently known target-kind finding
+after an intrinsic error; it does not authorize continued child expansion after
+that error. Unsealed, failed or partial expansions keep the whole bundle
+incomplete; aliases do not convert in-progress work into vacuity.
 `AdoptionContext` exposes this immutable context and completion evidence.
 
 Image requests carry the same explicit base URI, package and archive-entry scope,
@@ -1148,6 +1169,19 @@ identical bytes at two member paths are not one role occurrence. Exact member
 records and the resource pin list are echoed by the provider. Legacy pin-only
 scope cannot resolve an ambiguous physical-member association.
 
+A nested role request has a boundary-local member path, package identity and
+resource pin, but no enclosing archive-entry chain. Its `BaseURI` alone is not a
+self-contained nested retrieval address; a provider requiring that chain cannot
+recover it from the request. Diagnostic parent/entry provenance does not extend
+the provider request.
+
+The final package `Roles` seal records completion of the selected observation
+pass. It does not prove authoritative or complete role classification; separate
+`ScopeComplete` and exact score/individual-part membership evidence govern that
+claim. A relevant request includes every admitted member, including
+`META-INF/container.xml`. Complete negative coverage requires explicit
+score=false and individual-part=false evidence for that container member too.
+
 Role requests are dispatched only with selected `ResourceRoles`, a supplied
 resolver, a usable package inventory and a selected musical document. Plain
 XML/model roots do not themselves create package-role requests. Nested raw
@@ -1156,15 +1190,22 @@ classifies a document as a score or individual part. Unread or unpinned entries
 keep the requested role universe incomplete; the literal `mimetype` metadata
 record is the only physical-entry exclusion. Complete provider coverage of a
 smaller selected table cannot establish absence of roles outside that table.
+This includes directory entries and binary or unread members without admitted
+role contexts. Such a package cannot produce a satisfied bundle under the
+shipped profile, even if the provider classifies every requested member. This
+conservative capability limit does not mean that those physical entries make an
+MXL invalid.
 
 ## Original and current MXL assessment
 
 `InspectMXL(ctx, reader, MXLAssessmentOptions)` requires
-`Graph.Profile = ProfileMXLSource`; `AssessMXLPackage(ctx, package,
-MXLAssessmentOptions)` requires `Graph.Profile = ProfileMXLModel`. Neither chooses
-a profile implicitly. Both return `(validation.AssessmentBundle, error)`. These additive entry points
-preserve all legacy decode, encode, resolve and transport behavior. The caller's
-reader stays open; no built-in filesystem or network resolver is introduced.
+`Graph.Profile = ProfileMXLSource`;
+`AssessMXLPackage(ctx, package, MXLAssessmentOptions)` requires
+`Graph.Profile = ProfileMXLModel`. Neither chooses a profile implicitly.
+Both return `(validation.AssessmentBundle, error)`. These additive
+entry points preserve all legacy decode, encode, resolve and transport behavior.
+The caller's reader stays open; no built-in filesystem or network resolver is
+introduced.
 
 The raw observer supports ordinary single-volume, non-ZIP64 STORE/DEFLATE
 archives with unsigned or signed data descriptors. Unsupported features are
@@ -1200,17 +1241,21 @@ canonical resource/profile-specific; graph expansion additionally includes the
 actual package and effective retrieval context. The primary is seeded before
 archive-local backreferences, and a repeated reference is a distinct adoption.
 
-All five `MXLOptions` byte caps remain independent of graph budgets. Raw archive,
-metadata, document and resource limits apply to their represented byte streams;
-`MaxResourcesBytes` is aggregate across all selected expanded entry bytes,
-selected current resource copies and bounded external bodies in package scope.
-Nested compressed entry bytes and their inner expansion are distinct represented
-bytes. Current models have no compressed archive or serialized primary XML bytes
-to measure; no encoding is performed to fabricate those measurements. Current
-rootfile string storage is separately bounded by the metadata cap. Newly returned
-external aliases count again even when their verified intrinsic parse is cached.
-Caller and resolver I/O cancellation remains cooperative; all owned leases are
-released on completion, including technical errors and cancellation.
+All five `MXLOptions` byte caps remain independent of graph budgets. Raw
+archive, metadata, document and resource limits apply to their represented byte
+streams; `MaxResourcesBytes` is aggregate across all selected expanded entry
+bytes, selected current resource copies and bounded external bodies in package
+scope. For assessment, this aggregate includes selected `mimetype`, container
+and primary entry bytes. Legacy `DecodeMXLPackage` excludes those three entries
+and caps only additional resources with `MaxResourcesBytes`; the aggregate has
+different scope at these entry points. Nested compressed entry bytes and their
+inner expansion are distinct represented bytes. Current models have no
+compressed archive or serialized primary XML bytes to measure; no encoding is
+performed to fabricate those measurements. Current rootfile string storage is
+separately bounded by the metadata cap. Newly returned external aliases count
+again even when their verified intrinsic parse is cached. Caller and resolver
+I/O cancellation remains cooperative; all owned leases are released on
+completion, including technical errors and cancellation.
 
 Zero-valued graph budget fields select finite defaults, including 64 MiB each for
 primary input, external represented bytes and buffered working storage,

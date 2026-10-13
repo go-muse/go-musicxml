@@ -31,6 +31,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   typed availability/cause evidence, odd schema-hint pairing is known false,
   and snapshot headers identify selection of the assembly-local link plan.
   DTD-wide hint gaps occupy one root row while observed descendant hints remain.
+
 - Tighten package failure and ownership contracts: require established intrinsic
   assemblies, keep the root as its exact context owner, and reject contradictory
   failure metadata or duplicate transferred assessments. Post-terminal failure
@@ -51,6 +52,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   points with caller-selected resolver dependencies, immutable pin verification,
   exact base/member expansion contexts and one finite shared account. Preserve
   the best independent intrinsic report through later admission failure.
+
 - Add sealed package-role member discovery and metadata-only observed-file
   advice. Exact file observations retain pin/provenance consistency without
   creating parsed resource, ID, role or closure capabilities. Primary retrieval
@@ -82,7 +84,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Sounds adds owned directional mapping context with explicit absence, exact
   string/NMTOKEN domains and causal invalid fields. No Document roots, dictionary
   lookup, unique-primary rule or ordinary Decode behavior changes are introduced.
-  `ContextResult` gains the optional `SoundMapping` payload; use keyed literals.
+  `ContextResult` gains three optional payloads: `SoundMapping`, `Resource` and
+  `Container`. Migrate unkeyed composite literals to keyed literals.
 
 - Add separate sealed package/resource catalogs, one-account typed graph sessions,
   canonical assessment bundles and fresh reference-remapped adoptions. Preserve
@@ -106,6 +109,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   layout and performance context, with exact prerequisite causes and separate
   optional unknowns. Mandatory consumers cover numeric time-only ordering and
   narrowly established bend/repeat content antecedents.
+
 - Add the sealed context plan constructors and `Report.Context` projections,
   including assembly-specific local Opus version and pagination facts without
   following links. External packages/resolvers, dictionaries, disputed normative
@@ -117,16 +121,19 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `Validate`. The bounded provider retains exact musical chronology and typed
   effective state; selected consumers check principal-note chord duration bounds
   and explicit numeral-key or encoded key at the unshifted harmony score origin.
+
 - Add sealed `NewTimelinePlan`, `NewChordDurationPlan` and `NewNumeralKeyPlan`,
   finalized note/offset/grace/figured-bass/direction context and sparse encoded
   instrument/MIDI statements. Unknown dependencies retain local causal evidence;
   provider completion is not a claim that every fact is known. Publish the full
   clause/requirement ownership ledger without promoting frozen source statuses
   or claiming complete repeat, layout, playback or MusicXML conformance.
+
 - Keep B5-PERF-01 outstanding under shared validation kernel/session ownership
   and final batch-9 reconciliation. New timeline resource improvements do not
   discharge the earlier matched-performance obligation. Final integrated
   acceptance and actual 386 execution remain separately evidenced gates.
+
 - Add immutable `validation.Rational` with bounded canonical fractions, separate
   from XSD decimals, and shared-session metered exact arithmetic for musical
   positions. Arithmetic reserves conservative work and scratch before big-number
@@ -137,12 +144,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   clauses on original input. Preserve the existing generated `Assess` type.
   Model reports use current field/index evidence without original XML positions;
   finite `float64` decimals mean their exact binary rational value.
+
 - Add generated representation metadata, bounded iterative traversal,
   model-representation facts and sealed local/typed-reference plans sharing
   the authoritative XSD kernel and actual-ID owner resolution. The selected
   scope has 22 local runtime bindings for 19 whole candidate clauses plus one
   local instrument-link split; date and MIDI existence share existing
   consequences. These counts are not conformance coverage.
+
 - Publish the bounded model/local scope and executable-evidence ledger with
   unchanged planning contracts and remaining batches 6–9. Batch-5 combined
   review and aggregate checks passed; [PR #34](https://github.com/go-muse/go-musicxml/pull/34)
@@ -157,9 +166,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   subsets prevent source acceptance, including all three committed official score
   samples; strict assessed decoding returns no document for those files. The two
   committed DOCTYPE-free opus examples are within the preview's assessable scope.
+
 - Reuse one XML-neutral authoritative XSD kernel through immutable schema
   snapshots and sealed binding/declaration/attribute/scalar/content/identity
   plans. Composite predicates count once while retaining multiple issue details.
+
 - Add counted fragmented-input source-scanner fuzzing and require raw-source XSD
   oracle tests. Linux CI now executes all packages with `GOARCH=386`.
 
@@ -168,9 +179,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   causal context/identity outcomes and independently inspectable reports.
   A separate pinned inspection inventory preserves all 2,560 research records;
   it does not enable a production MusicXML profile or source/model adapter.
+
 - Export `ErrIncompleteAssessment` with identical root/core sentinel identity
   and typed incomplete causes, preserving pure and joined legacy XSD outcomes
   independently of the later direct-model `Validate` migration below.
+
 - Execute `GOARCH=386 go test -count=1 ./validation` in the Linux CI test job
   for actual 32-bit host-width coverage. Add the validation-core fuzz targets
   `FuzzReportFieldIsBoundedEscapedUTF8` and `FuzzSessionLifecycle` to `check-all`,

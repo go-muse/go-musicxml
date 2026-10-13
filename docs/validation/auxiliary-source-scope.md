@@ -16,7 +16,8 @@ No generated Go Document roots or permissive decode changes are introduced.
 
 The [36-record map](auxiliary-source-ownership.json) retains the exact 11
 container and 25 sounds research IDs, source locators and parameters, with
-concrete five-axis fixture references and explicit target limitations. These are
+four concrete fixture-case axes, a separate missing-fact test reference and
+explicit target limitations. These are
 research records composed through six XSD operation families, not 36 new runtime
 predicates or a global coverage denominator. Original transitive language
 contracts are reused through the existing shared XSD kernel; no new XSD dialect
@@ -42,10 +43,11 @@ complete, grammar-valid ordered child inventory. Consumers must inspect both
 levels and the containing assessment's input/syntax completeness before claiming
 an exhaustive rootfile list. Unknown, unsupported, invalid or skipped child
 bindings cannot become complete absence. Each rootfile's one-based `Ordinal` is
-known only when its rootfiles inventory is complete. Separate rootfiles parents
-retain separate identities, even when invalid root grammar permits no complete
-single inventory. Local rootfile attribute failures remain independent of
-otherwise proved source position.
+known only when its rootfiles inventory is complete. An invalid root grammar,
+such as duplicate rootfiles children, blocks the exact child declaration bindings.
+Only the root row and its `Content` cause are then projected; no rootfiles/rootfile
+rows or Known child ordinals are fabricated. Local rootfile attribute failures
+remain independent of otherwise proved source position.
 
 Raw full-path/media-type lexemes preserve XML normalization; effective fields
 use the shared XSD xs:token collapse semantics. Optional omission remains absent,

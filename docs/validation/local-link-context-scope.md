@@ -77,14 +77,16 @@ zero or evenly paired tokens are `Known(true)`. The unchanged `Raw` and
 hints; completeness describes pairing, not presence.
 With an unread DTD, one root row retains the document-wide attribute-completeness
 gap. Descendant rows are emitted only for physically observed xsi hints, retaining
-their actual unavailable lexical/declaration evidence without inventing values. A separately selected discovery consumer must assess that gap.
+their actual unavailable lexical/declaration evidence without inventing values.
+A separately selected discovery consumer must assess that gap.
 Model xsi history is unavailable, not known absent.
 
 ## Evidence and regression provenance
 
 `link_context_test.go` adapts only the schema-hint/composition ideas from the
 genuine unpublished batch-2 `qa_composed_contract_test.go` and
-`qa_composition_test.go`. Their original files are preserved unchanged. The new
+`qa_composition_test.go`. Those unpublished originals belong to the separate
+engineering archive; they are not checkout-verifiable repository files. The new
 current-API tests separately prove old odd-list datatype acceptance, typed new
 pairing incompleteness, and independently invalid hints alongside unavailable
 ENTITY context. The obsolete APIs and unrelated export harness are not replayed.
@@ -102,6 +104,6 @@ recommendations. `ActuationIntent` preserves `onRequest` and `onLoad` intentions
 For either axis, `other` and `none` leave application behavior Unknown; they do
 not forbid or authorize retrieval. Invalid fields retain their prerequisite cause.
 The independently retained Show/Actuate fields still distinguish encoded values
-from exact schema omission defaults. This follows XLink 1.0 section5.6 and the
+from exact schema omission defaults. This follows XLink 1.0 section 5.6 and the
 pinned MusicXML/Opus link-attributes defaults, without claiming full XLink
 application conformance or performing any renderer action.

@@ -10,7 +10,24 @@
     "status_at_start": "M .github/workflows/ci.yml\n M .github/workflows/release.yml\n M API.md\n M CONTRIBUTING.md\n M resource_options.go\n?? docs/validation/evidence/package-row-evidence.json\n?? docs/validation/package-assessment-evidence.md\n?? docs/validation/package-assessment-ownership.json\n?? docs/validation/package-assessment-scope.md\n?? package_verification_pipeline_test.go\n?? resource_graph_independent_xml_depth_test.go\n?? scripts/test-package-inventory.py\n?? scripts/verify-package-inventory.py",
     "status_at_end": "M .github/workflows/ci.yml\n M .github/workflows/release.yml\n M API.md\n M CONTRIBUTING.md\n M resource_options.go\n?? docs/validation/evidence/package-row-evidence.json\n?? docs/validation/package-assessment-evidence.md\n?? docs/validation/package-assessment-ownership.json\n?? docs/validation/package-assessment-scope.md\n?? package_verification_pipeline_test.go\n?? resource_graph_independent_xml_depth_test.go\n?? scripts/test-package-inventory.py\n?? scripts/verify-package-inventory.py",
     "state": "moving integration snapshot; not final acceptance",
-    "evidence_mode": "read-only original source routing and test-source inspection; no production changes; two focused aggregate budget regressions were independently executed at aa14daf and later integrated; listed source routes alone are not execution acceptance"
+    "evidence_mode": "read-only original source routing and test-source inspection; no production changes; two focused aggregate budget regressions were independently executed at aa14daf and later integrated; listed source routes alone are not execution acceptance",
+    "provenance_notice": "Historical private-worktree observation, clarified 2026-10-13. The unpublished candidate is referenced by the external engineering archive, not a checkout-verifiable published object. Original statuses and execution claims below are retained as historical evidence, not current acceptance.",
+    "published_reference": {
+      "commit": "7b5460af2e2028dc27079353e5f44f2901054d19",
+      "tree": "232598ae2bc28651f8de267770595f5c264470aa",
+      "purpose": "Repository-resolvable PR baseline only; historical executions are not repinned or certified for this tree."
+    },
+    "later_published_checkpoint": {
+      "commit": "e8db43747d46f4af42c0796e4fc71159b95e729e",
+      "tree": "ce61d65026931569aef1141398c8f4e1e671c638",
+      "published_at": "2026-10-13 10:41 UTC",
+      "publication_readback_at": "2026-10-13T10:42:04Z",
+      "ci_run_id": 38385055748,
+      "interpretation": "Dated incremental publication checkpoint only. Historical execution results remain pinned to their original observations; no final exact-head acceptance or completed CI result is claimed.",
+      "ci_observed_at": "2026-10-13 10:44 UTC",
+      "ci_run_url": "https://github.com/go-muse/go-musicxml/actions/runs/38385055748",
+      "ci_status_at_observation": "in progress"
+    }
   },
   "interpretation": "Each named test is a verified source location and bounded assertion route. No execution result or five-axis completion is inferred; empty tests and open_evidence_gaps preserve unmet verification obligations.",
   "rows": {
@@ -4621,9 +4638,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -4686,9 +4701,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -4749,9 +4762,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -4812,9 +4823,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -4872,9 +4881,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -4934,9 +4941,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -4994,9 +4999,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5052,9 +5055,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5117,9 +5118,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5179,9 +5178,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5236,9 +5233,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5297,9 +5292,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5356,9 +5349,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5419,9 +5410,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5482,9 +5471,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5543,9 +5530,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5605,9 +5590,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5668,9 +5651,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5733,9 +5714,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5790,9 +5769,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5853,9 +5830,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5918,9 +5893,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -5980,9 +5953,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6043,9 +6014,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6104,9 +6073,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6162,9 +6129,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6222,9 +6187,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6280,9 +6243,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6341,9 +6302,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6404,9 +6363,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6464,9 +6421,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6526,9 +6481,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6591,9 +6544,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6650,9 +6601,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6711,9 +6660,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6774,9 +6721,7 @@
           "execution": "historical source task trace exists; exact final run pending"
         },
         "missing_fact": {
-          "case_labels": [
-            "TestAuxiliarySourceUnavailableEvidence"
-          ],
+          "case_labels": [],
           "tests": [
             "auxiliary_sounds_context_test.go::TestAuxiliarySourceUnavailableEvidence"
           ],
@@ -6926,21 +6871,21 @@
       "function": "TestAuxiliaryGeneratedSchemaMetadata",
       "line": 130,
       "end_line_bound": 154,
-      "file_sha256": "7d117296443ea7a859e528e0774eb68270ed1328386447113bc50d9cb310cfc1"
+      "file_sha256": "8539f202af3828c060cc3a5a57075e1a565ccb11e69068a473e8e9397f64776d"
     },
     "auxiliary_source_assessment_test.go::TestAuxiliarySourceAgainstOriginalSchema": {
       "file": "auxiliary_source_assessment_test.go",
       "function": "TestAuxiliarySourceAgainstOriginalSchema",
       "line": 115,
       "end_line_bound": 129,
-      "file_sha256": "7d117296443ea7a859e528e0774eb68270ed1328386447113bc50d9cb310cfc1"
+      "file_sha256": "8539f202af3828c060cc3a5a57075e1a565ccb11e69068a473e8e9397f64776d"
     },
     "auxiliary_source_assessment_test.go::TestAuxiliarySourceAssemblies": {
       "file": "auxiliary_source_assessment_test.go",
       "function": "TestAuxiliarySourceAssemblies",
       "line": 92,
       "end_line_bound": 114,
-      "file_sha256": "7d117296443ea7a859e528e0774eb68270ed1328386447113bc50d9cb310cfc1"
+      "file_sha256": "8539f202af3828c060cc3a5a57075e1a565ccb11e69068a473e8e9397f64776d"
     },
     "context_opus_test.go::TestContextOpusAssemblyContract": {
       "file": "context_opus_test.go",

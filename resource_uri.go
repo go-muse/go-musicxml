@@ -86,8 +86,8 @@ func resolveAssessmentResourceURI(ctx context.Context, account *validation.Accou
 	if err := ctx.Err(); err != nil {
 		return resolvedResourceURI{}, err
 	}
-	// Empty and fragment-only references retain the current entity (RFC3986
-	// section4.4); the fragment's interpretation remains a separate graph fact.
+	// Empty and fragment-only references retain the current entity (RFC 3986
+	// section 4.4); the fragment's interpretation remains a separate graph fact.
 	current := ref.Scheme == "" && ref.Host == "" && ref.User == nil && ref.Opaque == "" && ref.Path == "" && ref.RawQuery == "" && !ref.ForceQuery
 	if base.Archive && current {
 		if !validMXLContentPath(base.Entry) {

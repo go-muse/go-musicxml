@@ -1,15 +1,29 @@
 # Package assessment acceptance evidence
 
-This is the bounded batch-8 implementation record. The [scope and ownership
+This is the bounded batch-8 implementation record, with historical candidate
+evidence distinguished from later review measurements. The [scope and ownership
 inventory](package-assessment-scope.md) preserves original obligations and later
 owners; this document records engineering evidence separately from normative
 closure. Full ZIP/JAR/DEFLATE, dictionaries and unresolved external interpretations
 remain explicit. B5-PERF-01 is not closed by these measurements.
 
+A later incremental checkpoint was published on 13 October 2026 at 10:41 UTC:
+`e8db43747d46f4af42c0796e4fc71159b95e729e` (tree
+`ce61d65026931569aef1141398c8f4e1e671c638`). Publication was confirmed by the
+10:42:04 UTC PR readback. [CI run 38385055748](https://github.com/go-muse/go-musicxml/actions/runs/38385055748)
+was in progress at the separate 10:44 UTC observation.
+This dated checkpoint is not final acceptance and does not transfer the archived
+candidate's execution results to the published tree.
+
 ## Test-first development and independent corrections
 
 The original unpublished development commits and task logs are preserved in the
-engineering archive. Logical publication milestones group each failing contract
+engineering archive. The private `388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f`
+commit/tree and the earlier publication report's `13d635ce` candidate are not
+checkout-verifiable published objects. The repository-resolvable PR baseline is
+`7b5460af2e2028dc27079353e5f44f2901054d19` (tree
+`232598ae2bc28651f8de267770595f5c264470aa`); naming it does not transfer any
+historical execution result to that tree. Logical publication milestones group each failing contract
 with its working implementation; a missing-API compilation failure is not
 presented as an executed semantic failure.
 
@@ -62,7 +76,7 @@ read-only. Adjusted source controls remove only the single external DOCTYPE;
 MozaChlo retains its UTF-16 big-endian BOM and declaration. Current models are
 walked directly after decoding, never encoded to reconstruct source history.
 
-At independently remeasured production candidate
+At the historically measured unpublished production candidate
 `388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f` (after XML-depth/witness corrections):
 
 | Workload | Default graph outcome | Explicit finite override |
@@ -130,9 +144,10 @@ whole-tree, race, 386 or remote CI claim.
 
 ## Final verification gate
 
-Independent semantic acceptance covers the final production candidate above;
-resource acceptance rechecks all four entry points and exact capacity boundaries.
-The final packaged-tree seven-stage run and exact published-head nine-job CI are
-recorded separately at publication. A native 386 cross-build does not
-count as actual 386 execution; the remote actual-386 job and required real xmllint
+The earlier semantic acceptance and seven-stage/nine-job pending fields describe
+the historical private candidate. They are preserved without turning source
+routes or later focused passes into final acceptance. Current final packaged-tree
+seven-stage results and exact published-head nine-job CI must be recorded
+separately with their own commit/tree and execution evidence. A native 386
+cross-build does not count as actual 386 execution; the remote actual-386 job and required real xmllint
 remain separate mandatory gates. Earlier candidate passes are not final-head CI.

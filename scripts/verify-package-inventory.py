@@ -113,6 +113,10 @@ def verify_loaded(args, root, m, evidence):
            selected=dict, counts=dict, snapshot=dict, external_archive=list)
     fields(evidence, 'evidence', rows=dict, tests=dict, historical_tests=dict,
            auxiliary_xsd_axes=list, hashing=dict)
+    corrections = require(m.get('reviewed_source_corrections', []), list,
+                          'reviewed_source_corrections')
+    for correction in corrections:
+        fields(correction, 'reviewed_source_corrections record', reconciliation=str)
     check(field(evidence['hashing'], 'test_file_sha256', str, 'evidence/hashing').startswith('sha256-crlf-to-lf-v1;'),
           'unsupported or unspecified test hash convention')
     check(len(m['source_files']) == 17, 'source file denominator drift')
@@ -235,6 +239,18 @@ def verify_loaded(args, root, m, evidence):
         original = require(resolve(source, pointer), dict, row['source'])
         check(original.get('instance_id') == row['id'], 'auxiliary source ID: ' + row['id'])
         check_axes(row['id'], row)
+        fixture_axes = field(original, 'fixture_axes', dict, row['source'])
+        check(set(fixture_axes) == axes - {'missing_fact'},
+              'auxiliary fixture route axis types: ' + row['id'])
+        for axis in axes - {'missing_fact'}:
+            labels = field(row['axes'][axis], 'case_labels', list, row['id'] + '/' + axis)
+            check(bool(labels) and labels == fixture_axes.get(axis),
+                  'auxiliary fixture route labels: ' + row['id'] + '/' + axis)
+        missing_test = field(original, 'missing_fact_test', str, row['source'])
+        missing = row['axes']['missing_fact']
+        check(missing.get('case_labels') == [] and
+              missing['tests'] == ['auxiliary_sounds_context_test.go::' + missing_test],
+              'auxiliary fixture route missing-fact test: ' + row['id'])
     check(auxiliary_ids == {r['id'] for r in xsd if r['selection'] == 'new_auxiliary'},
           'auxiliary source ID denominator drift')
     check(used_test_routes == set(evidence['tests']), 'unreferenced or missing current test records')
@@ -287,12 +303,15 @@ def verify_loaded(args, root, m, evidence):
     except (subprocess.CalledProcessError, OSError) as exc:
         warnings.append(f"git observation unavailable: {exc}")
         head, worktree = "unavailable", "unavailable"
-    if head != m["snapshot"]["head_at_end"] or worktree != m["snapshot"]["status_at_end"]:
-        warnings.append("Integration differs from the observation. This is expected during active work, but is not exact-head acceptance.")
-    elif worktree:
-        warnings.append("Observed integration remains dirty as recorded; inventory integrity does not establish final acceptance.")
+    # The preserved snapshot describes an unpublished historical observation.
+    # Comparing it to every later HEAD produces a permanent, uninformative warning;
+    # report both identities without implying either one is execution acceptance.
+    historical = {"head": m["snapshot"]["head_at_end"],
+                  "state": m["snapshot"].get("state", ""),
+                  "interpretation": "historical source/test observation; not current exact-head acceptance"}
     result = {"result": "FAIL" if failures else "PASS: inventory/source-route integrity only",
               "observed_current_head": head, "observed_worktree_status": worktree,
+              "historical_observation": historical,
               "retained_counts": retained_counts, "selected_counts": selected_counts,
               "test_functions": len(evidence["tests"]), "axes_without_runtime_route": empty_axes,
               "external_archive": archive_state, "stale_test_files": stale,

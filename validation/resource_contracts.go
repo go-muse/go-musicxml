@@ -198,13 +198,17 @@ const (
 // source context. Caller resolver code owns transport/redirect authorization;
 // these metadata fields cannot grant authority or control already-performed I/O.
 type ResourceDocumentRequest struct {
-	Source                           ResourcePin
-	Subject                          NodeRef
-	Kind                             LinkedResourceKind
-	RequiredProfile                  ProfileID
-	CatalogDigest                    string
-	BaseURI, Href, RequestedRevision string
-	Package                          PackageID
+	Source          ResourcePin
+	Subject         NodeRef
+	Kind            LinkedResourceKind
+	RequiredProfile ProfileID
+	CatalogDigest   string
+	BaseURI, Href   string
+	// RequestedRevision optionally pins the expected revision for a low-level
+	// caller. Root orchestration leaves it empty: target canonical identity is
+	// not known before resolving, and retrieval URIs are not revision pins.
+	RequestedRevision string
+	Package           PackageID
 }
 
 // ResourceRequest is a closed union: exactly one named branch must be populated.

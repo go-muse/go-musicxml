@@ -34,6 +34,7 @@ class MaintenanceTests(unittest.TestCase):
         cls.manifest = json.loads((ROOT / MANIFEST).read_text())
         cls.evidence = json.loads((ROOT / EVIDENCE).read_text())
         paths = set(cls.manifest['source_files'])
+        paths.update(record['reconciliation'] for record in cls.manifest.get('reviewed_source_corrections', []))
         paths.update(r['file'] for r in cls.evidence['tests'].values())
         cls.originals = {p: (ROOT / p).read_bytes() for p in paths}
 
@@ -425,6 +426,91 @@ class MaintenanceTests(unittest.TestCase):
             self.assertIn('python3 scripts/test-package-inventory.py', matching[0])
         stages = (SCRIPTS / 'check-all.sh').read_text()
         self.assertIn('all_stages=(mod generate format test vet race fuzz)', stages)
+
+    def test_reviewed_reconciliation_output_is_protected(self):
+        path = self.root / self.m['reviewed_source_corrections'][0]['reconciliation']
+        before = path.read_bytes()
+        for script in ['verify-package-inventory', 'refresh-package-inventory', 'test-package-inventory']:
+            with self.subTest(script=script):
+                path.write_bytes(before)
+                result = self.run_tool(script, '--output', str(path), expected=1)
+                self.assertIn('protected input', '\n'.join(result['failures']))
+                self.assertEqual(path.read_bytes(), before)
+
+    def test_malformed_reviewed_routes_cannot_write_evidence_or_output(self):
+        output = self.root / 'result.json'
+        output.write_text('existing result')
+        for routes in [None, {}, ['not a record'], [{}], [{'reconciliation': 7}]]:
+            with self.subTest(routes=routes):
+                self.m['reviewed_source_corrections'] = routes
+                self.save()
+                self.mutate_test()
+                before = (self.root / EVIDENCE).read_bytes()
+                result = self.refresh('--write', '--output', str(output), expected=1)
+                self.assertFalse(result['written'])
+                self.assertEqual((self.root / EVIDENCE).read_bytes(), before)
+                self.assertEqual(output.read_text(), 'existing result')
+
+    def test_reviewed_auxiliary_schema_diff_is_narrow_and_reproducible(self):
+        common = module('inventory_common')
+        review = json.loads((ROOT / 'docs/validation/evidence/auxiliary-fixture-reference-review.json').read_text())
+        self.assertEqual(review['review_comment_id'], 4255983792)
+        source = common.canonical_lf((ROOT / review['source']).read_bytes())
+        self.assertEqual(common.digest(source), review['after_sha256'])
+        self.assertEqual(len(source), review['after_bytes'])
+        original = json.loads(source)
+        records = {record['instance_id']: record for record in review['records']}
+        self.assertEqual(len(records), 36)
+        self.assertEqual(set(records), {row['instance_id'] for row in original['xsd_instances']})
+        for row in original['xsd_instances']:
+            record = records[row['instance_id']]
+            self.assertEqual(row['research_id'], record['research_id'])
+            self.assertEqual(common.canonical(row), record['after_record_sha256'])
+            self.assertEqual(record['changes'], [
+                {'field': 'fixture_axes.missing_fact', 'before': ['TestAuxiliarySourceUnavailableEvidence'], 'after_field_absent': True},
+                {'field': 'missing_fact_test', 'before_field_absent': True, 'after': 'TestAuxiliarySourceUnavailableEvidence'},
+            ])
+            self.assertEqual(row.pop('missing_fact_test'), 'TestAuxiliarySourceUnavailableEvidence')
+            self.assertNotIn('missing_fact', row['fixture_axes'])
+            row['fixture_axes']['missing_fact'] = ['TestAuxiliarySourceUnavailableEvidence']
+            self.assertEqual(common.canonical(row), record['before_record_sha256'])
+        # Reverse only the reviewed field relocation and recover the exact old LF
+        # source bytes. This proves every other value, status and owner survived.
+        restored = (json.dumps(original, ensure_ascii=False, indent=2) + '\n').encode()
+        self.assertEqual(common.digest(restored), review['before_sha256'])
+        self.assertEqual(len(restored), review['before_bytes'])
+        self.assertEqual(self.m['source_files'][review['source']],
+                         {'sha256': review['after_sha256'], 'bytes': review['after_bytes']})
+
+    def test_historical_observation_does_not_compare_current_head(self):
+        verifier = module('verify-package-inventory')
+        args = verifier.argument_parser().parse_args(['--root', str(self.root)])
+        with mock.patch.object(verifier.subprocess, 'check_output', side_effect=['published-head\n', '']):
+            result = verifier.verify(args)
+        self.assertEqual(result['failures'], [])
+        self.assertEqual(result['observed_current_head'], 'published-head')
+        self.assertEqual(result['historical_observation']['head'], self.m['snapshot']['head_at_end'])
+        self.assertIn('historical', result['historical_observation']['interpretation'])
+        self.assertFalse(any('Integration differs' in warning for warning in result['warnings']))
+
+    def test_auxiliary_fixture_routes_match_typed_original(self):
+        for mutation in ['unknown fixture', 'missing fixture', 'wrong axis', 'function as fixture', 'wrong function']:
+            with self.subTest(mutation=mutation):
+                self.e = copy.deepcopy(self.evidence)
+                axes = self.e['auxiliary_xsd_axes'][0]['axes']
+                if mutation == 'unknown fixture':
+                    axes['positive']['case_labels'] = ['unknown fixture']
+                elif mutation == 'missing fixture':
+                    axes['positive']['case_labels'] = []
+                elif mutation == 'wrong axis':
+                    axes['positive']['case_labels'] = axes['negative']['case_labels']
+                elif mutation == 'function as fixture':
+                    axes['missing_fact']['case_labels'] = ['TestAuxiliarySourceUnavailableEvidence']
+                else:
+                    axes['missing_fact']['tests'] = axes['positive']['tests']
+                self.save()
+                result = self.run_tool('verify-package-inventory', expected=1)
+                self.assertTrue(any('auxiliary fixture route' in failure for failure in result['failures']), result)
 
     def test_historical_hashes_are_never_refreshed(self):
         key = next(iter(self.e['historical_tests']))

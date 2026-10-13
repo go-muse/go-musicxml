@@ -240,7 +240,7 @@ without becoming safe member paths. Primary retrieval-name advice uses a supplie
 URI rather than the canonical cache identity or reconstructed model history.
 
 Default budgets are finite. Shared input, external bytes and working storage each
-default to 64 MiB, with 20,000,000 work steps and depth 1024; the separate MXL byte
+default to 64 MiB, with 20,000,000 rule steps and depth 1024; the separate MXL byte
 caps do not raise them. A satisfied bundle covers its named bounded profile,
 not full ZIP/JAR/DEFLATE, media-type or compressed-rootfile interpretation closure.
 

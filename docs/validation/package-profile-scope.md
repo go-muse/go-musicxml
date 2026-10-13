@@ -56,7 +56,7 @@ record IDs are provenance, not a count of independent executable obligations.
 | `instrument-association` | association | Exact instrument-to-part-file evidence after the existing local IDREF prerequisite | `MX40-PROSE-instrument-link-target` |
 | `group-match` | edge | Optional exact-string correspondence advice | `MX40-PROSE-group-link-match` |
 | `mimetype-advice` | package | Optional presence, first placement and exact US-ASCII MIME content | `MX40-PROSE-mxl-mimetype-first` |
-| `entry-name-advice` | entry | Optional UTF-8 interoperability advice, independent of path-security policy | `MX40-PROSE-mxl-entry-name-utf8` |
+| `entry-name-advice` | entry | Optional raw-byte UTF-8 interoperability advice. Path policy terminates on the first unsafe/non-UTF-8 name; that member may retain advice, but later members are unavailable | `MX40-PROSE-mxl-entry-name-utf8` |
 | `compression-observation` | entry | Capability context, not a normative DEFLATE-only rejection | `MX40-PROSE-mxl-deflate`, `MX40-PROSE-mxl-zip-format` |
 | `schema-hint-pairs` | resource | Capability policy for separately selected discovery pairing, never an XSD datatype predicate | `REQ-DEF-XSI-SCHEMALOC`, `REQ-DEF-XSI-NONAMESPACE` |
 | `image-scaling` | image | Optional one-dimension proportional/two-dimension independent advice, with typed compatible metadata | `MX40-PROSE-image-scaling` |
@@ -109,3 +109,9 @@ intrinsic tables, defensive metadata ownership, canonical digest sensitivity,
 wrong-profile rejection and the full frozen eight-profile regression. Graph,
 raw/current-MXL orchestration and typed predicate outcomes require their own
 runtime acceptance tests; these metadata tests do not stand in for them.
+
+Raw entry-name UTF-8 byte validity and the ZIP EFS flag are separate observations.
+A clear EFS flag does not make valid UTF-8 bytes invalid. The transport path
+policy still rejects unsafe or non-UTF-8 member names and stops inventorying at
+that first member. Its retained advice is not evidence about later entries and
+does not make the incomplete archive inventory complete.

@@ -16,7 +16,24 @@
     "status_at_start": "M .github/workflows/ci.yml\n M .github/workflows/release.yml\n M API.md\n M CONTRIBUTING.md\n M resource_options.go\n?? docs/validation/evidence/package-row-evidence.json\n?? docs/validation/package-assessment-evidence.md\n?? docs/validation/package-assessment-ownership.json\n?? docs/validation/package-assessment-scope.md\n?? package_verification_pipeline_test.go\n?? resource_graph_independent_xml_depth_test.go\n?? scripts/test-package-inventory.py\n?? scripts/verify-package-inventory.py",
     "status_at_end": "M .github/workflows/ci.yml\n M .github/workflows/release.yml\n M API.md\n M CONTRIBUTING.md\n M resource_options.go\n?? docs/validation/evidence/package-row-evidence.json\n?? docs/validation/package-assessment-evidence.md\n?? docs/validation/package-assessment-ownership.json\n?? docs/validation/package-assessment-scope.md\n?? package_verification_pipeline_test.go\n?? resource_graph_independent_xml_depth_test.go\n?? scripts/test-package-inventory.py\n?? scripts/verify-package-inventory.py",
     "state": "moving integration snapshot; not final acceptance",
-    "evidence_mode": "read-only original source routing and test-source inspection; no production changes; two focused aggregate budget regressions were independently executed at aa14daf and later integrated; listed source routes alone are not execution acceptance"
+    "evidence_mode": "read-only original source routing and test-source inspection; no production changes; two focused aggregate budget regressions were independently executed at aa14daf and later integrated; listed source routes alone are not execution acceptance",
+    "provenance_notice": "Historical private-worktree observation, clarified 2026-10-13. The unpublished candidate is referenced by the external engineering archive, not a checkout-verifiable published object. Original statuses and execution claims below are retained as historical evidence, not current acceptance.",
+    "published_reference": {
+      "commit": "7b5460af2e2028dc27079353e5f44f2901054d19",
+      "tree": "232598ae2bc28651f8de267770595f5c264470aa",
+      "purpose": "Repository-resolvable PR baseline only; historical executions are not repinned or certified for this tree."
+    },
+    "later_published_checkpoint": {
+      "commit": "e8db43747d46f4af42c0796e4fc71159b95e729e",
+      "tree": "ce61d65026931569aef1141398c8f4e1e671c638",
+      "published_at": "2026-10-13 10:41 UTC",
+      "publication_readback_at": "2026-10-13T10:42:04Z",
+      "ci_run_id": 38385055748,
+      "interpretation": "Dated incremental publication checkpoint only. Historical execution results remain pinned to their original observations; no final exact-head acceptance or completed CI result is claimed.",
+      "ci_observed_at": "2026-10-13 10:44 UTC",
+      "ci_run_url": "https://github.com/go-muse/go-musicxml/actions/runs/38385055748",
+      "ci_status_at_observation": "in progress"
+    }
   },
   "counts": {
     "requirements": 95,
@@ -113,8 +130,8 @@
       "bytes": 304239
     },
     "docs/validation/auxiliary-source-ownership.json": {
-      "sha256": "83c86901440747bfe6d4fcdb9ec536d0a1eb0317c4084923d214435feeaf1493",
-      "bytes": 100592
+      "sha256": "9b9cd616f16a1dfdbfd134ff3a086c9328eb97146625b16996fcd9738b6fc038",
+      "bytes": 99908
     },
     "docs/validation/evidence/context-reviewed-translations.json": {
       "sha256": "e2626410faa79bce51535e230d18e754c9fb8e10df1f08bc89aaa6a0e1ad4168",
@@ -11390,5 +11407,14 @@
     "repository_command": "python3 scripts/verify-package-inventory.py --root . --manifest docs/validation/package-assessment-ownership.json --evidence docs/validation/evidence/package-row-evidence.json",
     "complete_original_records": "All preserved collection records resolve directly from the existing hashed repository documents. Read all source_files to recover every omitted field and every unselected auxiliary array. The original external corpus is an additional verbatim historical audit, not a substitute for these originals.",
     "external_archive_option": "Supply --archive-dir PATH to verify all archived bytes and the full pinned source-language research corpus. External archive verification is reported separately; absence is not reported as verified."
-  }
+  },
+  "reviewed_source_corrections": [
+    {
+      "review_comment_id": 4255983792,
+      "source": "docs/validation/auxiliary-source-ownership.json",
+      "reconciliation": "docs/validation/evidence/auxiliary-fixture-reference-review.json",
+      "before_sha256": "83c86901440747bfe6d4fcdb9ec536d0a1eb0317c4084923d214435feeaf1493",
+      "after_sha256": "9b9cd616f16a1dfdbfd134ff3a086c9328eb97146625b16996fcd9738b6fc038"
+    }
+  ]
 }

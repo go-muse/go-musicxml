@@ -143,10 +143,10 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 		return err
 	}
 	defer release()
-	// Every incoming edge requires a linked occurrence below; importing a new
-	// package may additionally admit its container and rootfile resources.
-	// Refuse a known-exhausted admission before invoking caller I/O or parsing a
-	// local target. Core keeps the actual cumulative charge; this is no recharge.
+	// Refuse the known incoming-adoption exhaustion before caller I/O or parsing.
+	// Positive remaining capacity does not guarantee that returned content fits:
+	// a first linked raw MXL also needs container and primary adoptions. Core
+	// owns the cumulative charge; this precheck does not reserve or recharge it.
 	used, err := g.options.account.Usage(validation.BudgetLinkedDocuments)
 	if err != nil {
 		return err

@@ -6,17 +6,20 @@ import "sync"
 // documented finite default, and negative values are invalid. Byte limits count
 // bytes, and other limits count individual objects, events, or operations.
 type Budgets struct {
-	MaxInputBytes      int64
-	MaxExternalBytes   int64
-	MaxBufferedBytes   int64
-	MaxDepth           int64
-	MaxNodes           int64
-	MaxAttributes      int64
-	MaxEvents          int64
-	MaxScalarBytes     int64
-	MaxIDs             int64
-	MaxRuleSteps       int64
-	MaxContextFacts    int64
+	MaxInputBytes    int64
+	MaxExternalBytes int64
+	MaxBufferedBytes int64
+	MaxDepth         int64
+	MaxNodes         int64
+	MaxAttributes    int64
+	MaxEvents        int64
+	MaxScalarBytes   int64
+	MaxIDs           int64
+	MaxRuleSteps     int64
+	MaxContextFacts  int64
+	// MaxLinkedDocuments counts nonroot adoptions, including aliases and package
+	// internals. A first linked raw MXL may need container, primary and edge
+	// adoptions; it does not count just resolver calls.
 	MaxLinkedDocuments int64
 	MaxDiagnostics     int64
 	MaxDiagnosticBytes int64
@@ -64,7 +67,8 @@ const (
 	BudgetRuleSteps BudgetKind = "rule-steps"
 	// BudgetContextFacts counts cumulative context facts.
 	BudgetContextFacts BudgetKind = "context-facts"
-	// BudgetLinkedDocuments counts cumulative linked documents.
+	// BudgetLinkedDocuments counts cumulative nonroot adoptions, including
+	// aliases and package-internal container/primary adoptions.
 	BudgetLinkedDocuments BudgetKind = "linked-documents"
 	// BudgetDiagnostics counts cumulative stored diagnostics.
 	BudgetDiagnostics BudgetKind = "diagnostics"

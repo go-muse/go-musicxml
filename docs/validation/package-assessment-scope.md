@@ -1,10 +1,31 @@
 # Batch 8 package and linked-resource scope/evidence
 
-Observed integration head: `388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f`; end: `388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f`. This additive inventory is a moving-tree proposal, not final acceptance. It performs no production edits, original-plan rewrites or linguistic retranslations.
+Historical packaging snapshot, clarified on 13 October 2026. The observed private
+integration head was `388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f` (tree
+`6703aad89730a6f681065253ac32d1e3a5e8babd`). It was an unpublished development
+candidate, referenced by the separate engineering archive, not a checkout target
+in the published repository. The moving-tree proposal, dirty-worktree records,
+row caveats and pending gates below describe that historical observation. They
+are not the current acceptance status and are not relabeled as executed here.
+
+For a repository-resolvable publication reference, the PR baseline is
+`7b5460af2e2028dc27079353e5f44f2901054d19` (tree
+`232598ae2bc28651f8de267770595f5c264470aa`). That reference does not repin or
+certify the historical executions. Later review measurements are recorded in
+[package assessment evidence](package-assessment-evidence.md); final exact-head
+local/remote acceptance must be established separately.
+
+A later incremental checkpoint was published on 13 October 2026 at 10:41 UTC:
+`e8db43747d46f4af42c0796e4fc71159b95e729e` (tree
+`ce61d65026931569aef1141398c8f4e1e671c638`). Publication was confirmed by the
+10:42:04 UTC PR readback. [CI run 38385055748](https://github.com/go-muse/go-musicxml/actions/runs/38385055748)
+was in progress at the separate 10:44 UTC observation.
+This dated checkpoint is not final acceptance and does not transfer the archived
+candidate's execution results to the published tree.
 
 ## Preservation without a duplicate corpus
 
-Repository text hashes and byte counts use canonical LF (CRLF → LF only), matching the prior cross-platform evidence convention. Every other byte and every original JSON field value remain unchanged; external archive hashes stay exact raw-byte hashes. The ownership manifest hashes the existing original documents and routes every retained obligation by its original ID and exact JSON pointer. Original status strings, source-language fields, source provenance, test contracts, overlaps, capabilities and accepted prior contributions remain in those complete documents. The external 8.9 MB annotated audit and original snapshot remain preserved by exact artifact hash; neither is copied into the repository.
+Repository text hashes and byte counts use canonical LF (CRLF → LF only), matching the prior cross-platform evidence convention. Apart from the explicitly reviewed [36-record fixture-reference correction](evidence/auxiliary-fixture-reference-review.json), every other byte and original JSON field value remain unchanged; external archive hashes stay exact raw-byte hashes. The ownership manifest hashes the existing original documents and routes every retained obligation by its original ID and exact JSON pointer. Original status strings, source-language fields, source provenance, test contracts, overlaps, capabilities and accepted prior contributions remain in those complete documents. The external 8.9 MB annotated audit and original snapshot remain preserved by exact artifact hash; neither is copied into the repository.
 
 - 95 requirements, 307 context checks, 291 original dispositions, 51 constraints, 28 issue gates and 20 inherited splits remain retained.
 - The selected work is 44 engineering rows, 24 context rows, 10 constraints and 5 issue gates.
@@ -30,13 +51,13 @@ The separate row evidence map gives all five axes for each selected row, with ac
 | Auxiliary source | Independent container/sounds schemas and typed source projections | No generated auxiliary Document model root |
 | Raw MXL | Original ZIP observations, container source, ordered rootfiles, raw nested package boundaries | Bounded feature subset; outer compressed-root interpretation remains unresolved |
 | Current MXL | Direct primary model plus owned current resource bytes and logical rootfiles | No reconstructed original headers, physical order, original container source or lexical MIME presence |
-| Resource graph | Selected resolver branches, canonical parse and context-specific expansion, typed association/image/group/intent evidence | Exact role protocol, filemetadata and four-surface semantic routes are present; final acceptance remains pending and unknown authority is never truth |
+| Resource graph | Selected resolver branches, canonical parse and context-specific expansion, typed association/image/group/intent evidence | Exact role protocol, file metadata and four-surface semantic routes are present; final acceptance remains pending and unknown authority is never truth |
 
-## Scoped independent acceptance
+## Historical scoped independent acceptance
 
-Exact production 388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f (tree 6703aad89730a6f681065253ac32d1e3a5e8babd) has independent 300-case semantic acceptance, complete validation, focused root/core race, validation vet, unchanged eight-profile captures and refreshed finite-default sizing. The exact reports, commands, logs, test sources and hashes are pinned separately in the evidence archive. No active implementation omission is identified. These scoped passes do not replace whole-tree stages, real-xmllint, actual 386 or remote CI.
+The archived record for private candidate 388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f (tree 6703aad89730a6f681065253ac32d1e3a5e8babd) has independent 300-case semantic acceptance, complete validation, focused root/core race, validation vet, unchanged eight-profile captures and refreshed finite-default sizing. The exact reports, commands, logs, test sources and hashes are pinned separately in the evidence archive. That audit identified no active implementation omission at its observation. These scoped passes do not replace whole-tree stages, real-xmllint, actual 386 or remote CI.
 
-## Remaining acceptance gates
+## Acceptance gates pending at the historical observation
 
 - seven local stages plus nine exact-head remote jobs: pending final tree; actual 386 and real xmllint required. Owner: lead release/CI verification.
 
@@ -51,7 +72,7 @@ These are batch 8 completion gates. They must not be relabeled as batch 9 residu
 | `CHECK-context-compressed-relative-links` | Exact score link ZIP-root base, separate from containing Opus path and effective external retrieval base. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-context-part-link-archive-root` | Exact part-link ZIP-root base, separately proved linked target kind and association. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-context-group-link-match` | Optional exact-string target score-part/group comparison after reached target context, not graphical part-group. | Five-axis source routes recorded; final exact-head execution pending. |
-| `CHECK-context-mxl-entry-name-utf8` | Observed name encoding feeds advice; legacy encoding and path-safety policy are not a normative UTF-8-only rejection. | Five-axis source routes recorded; final exact-head execution pending. |
+| `CHECK-context-mxl-entry-name-utf8` | Observed raw-name UTF-8 validity feeds advice separately from EFS. The transport path policy stops at the first unsafe/non-UTF-8 name; that member may retain advice while later entries remain unavailable. This is not a normative UTF-8-only rule. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-context-mxl-deflate` | Expose ordinary entry method as observed capability; retain DEFLATE exclusivity and complete external closure gate. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-context-mxl-mimetype-first` | Optional presence, first physical entry, exact US-ASCII MIME content and legacy omission advice, separate from mandatory existing-entry checks. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-context-musicxml-file-types` | Supplied filename and media-type conventions, including .musicxml/.mxl/legacy .xml; no content inference. | Five-axis source routes recorded; final exact-head execution pending. |
@@ -155,7 +176,7 @@ These are batch 8 completion gates. They must not be relabeled as batch 9 residu
 
 All 20 split records are routed to their unchanged batch 7 ownership objects, not condensed into a new completed flag. Their batch 6 contributions, batch 7 consumers, exact remaining subclauses and later owner lists remain authoritative. Both B6 source-only subclause records remain intact; instrument-state linkage adds only exact association and does not claim playback or dictionary closure.
 
-## Freeze and acceptance procedure
+## Historical freeze and acceptance procedure
 
 1. Freeze the exact final commit and tree after the integrated semantic/resource evidence is reviewed; no active code omission is identified by this inventory.
 2. Regenerate this additive route proposal and run the inventory verifier; recheck changed test hashes. Do not rerun or rewrite completed linguistic/original records.

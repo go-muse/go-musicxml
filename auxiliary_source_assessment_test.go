@@ -115,7 +115,7 @@ func TestAuxiliarySourceAssemblies(t *testing.T) {
 func TestAuxiliarySourceAgainstOriginalSchema(t *testing.T) {
 	xmllint, err := exec.LookPath("xmllint")
 	if err != nil {
-		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") != "" {
+		if os.Getenv("MUSICXML_REQUIRE_XMLLINT") == "1" {
 			t.Fatal(err)
 		}
 		t.Skip("xmllint is unavailable")

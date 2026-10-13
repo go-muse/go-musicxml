@@ -1,0 +1,733 @@
+{
+  "format": "musicxml-reviewed-source-correction-1",
+  "review_comment_id": 4255983792,
+  "review_date": "2026-10-13",
+  "source": "docs/validation/auxiliary-source-ownership.json",
+  "scope": "Separate test-function references from fixture-case labels only. All other original record values, identities, owners, statuses and counts are unchanged. No execution or closure is inferred.",
+  "before_sha256": "83c86901440747bfe6d4fcdb9ec536d0a1eb0317c4084923d214435feeaf1493",
+  "before_bytes": 100592,
+  "after_sha256": "9b9cd616f16a1dfdbfd134ff3a086c9328eb97146625b16996fcd9738b6fc038",
+  "after_bytes": 99908,
+  "records": [
+    {
+      "instance_id": "INSTANCE-MX40-REQ-02988c14d5bee3ae",
+      "research_id": "MX40-REQ-02988c14d5bee3ae",
+      "before_record_sha256": "cd987fe9c00fb9c358da82b33972824655aa5d33750eace321bb6d8832d8f782",
+      "after_record_sha256": "8918560265d04738b3dd3e021ee247c2e7cfcaf929243f092fdee081887cb4b7",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-03dab235234bdbe8",
+      "research_id": "MX40-REQ-03dab235234bdbe8",
+      "before_record_sha256": "1e9fb49906b25d81dbb23ec9ef41aaf6902c2f560fcd2517546dcc929e71a527",
+      "after_record_sha256": "5803d35b2c5effa5bbf7174b94694345c761b3dd8e03c12545b07b1f77830695",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-1091d3ca027ff57d",
+      "research_id": "MX40-REQ-1091d3ca027ff57d",
+      "before_record_sha256": "a91b3014e2960522cc71a800380dbc386b42fca189c96c1ec1b7be4def9356d4",
+      "after_record_sha256": "af40152e8ebb44a27afeaa5d19075a13736a2e7681657fb8842c610eec1bc7a0",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-11178e89461fca8c",
+      "research_id": "MX40-REQ-11178e89461fca8c",
+      "before_record_sha256": "19f1f6b737dfa0d777fa500c74cc3a3b0e96befd676546656afdf6666736d0e4",
+      "after_record_sha256": "cf36cad172f1a34c28dffef50d815e1bf5c819bf2d2a6efbce31692d3a8fe8e7",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-113fef85bdd6c20d",
+      "research_id": "MX40-REQ-113fef85bdd6c20d",
+      "before_record_sha256": "569be1860896808a1828be6bd27557250bb488f02557a84935e1314a21e0891f",
+      "after_record_sha256": "05e809d4c35181fd69d7ab0227f6fb939b8a5f508529dcfe8551498cb22e2851",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-11abcc0680c2b627",
+      "research_id": "MX40-REQ-11abcc0680c2b627",
+      "before_record_sha256": "2801c552ad7981e34758ff3c06b7f561e23c14d022dc6833b2a5519ed774f0f9",
+      "after_record_sha256": "9057f89f3caf3afc9c1f56f9b00a415be739c50bde2c04e53dc4d7b8b5626190",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-11df0f934f8ede78",
+      "research_id": "MX40-REQ-11df0f934f8ede78",
+      "before_record_sha256": "15bdf1f780fd6d69e871f692b9febd1534280e573d82c50353186145cace5d91",
+      "after_record_sha256": "3e6c12a76ba8e67208f1fc3f0b34dd6b592d101985523013fdbd3b86bfff5126",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-1373853ebf1091f6",
+      "research_id": "MX40-REQ-1373853ebf1091f6",
+      "before_record_sha256": "3a6c6128867e45ca6f60b58570a523e279423b2ad222f2b300708951d852f5aa",
+      "after_record_sha256": "3a463e2cd84cbad2a058b5ebc1d5d98fc404c792f42d8ad98df71d17b1d3a77a",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-15881b7ea7a469ea",
+      "research_id": "MX40-REQ-15881b7ea7a469ea",
+      "before_record_sha256": "5fb39fd9cd4e3e2f751759ab937cd1c9c50d50c45fade21aaeaf208b6c6cbafc",
+      "after_record_sha256": "21754806be982f6138d876cf82565cdc2b7c92e6ca824e3cda180a934618de41",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-185dfdf0a0956f4a",
+      "research_id": "MX40-REQ-185dfdf0a0956f4a",
+      "before_record_sha256": "bd49f40b61a00167e9d00f43ea2183fd70bf7ca34b6e37b347740eec5cbbca88",
+      "after_record_sha256": "e826695ddcebcf9d0c024e031161fecebca484e19c4b1ebfe105fde3c5284c66",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-24d1f8d84390f06c",
+      "research_id": "MX40-REQ-24d1f8d84390f06c",
+      "before_record_sha256": "9a052f98a9e0ce10cf1f05e69f96eec338cecaaa0e9543109fe6d0a388a62adb",
+      "after_record_sha256": "15a3ac4bd294ba95b73b17fed6c916d32be9909062515e02566f87285f6e41d7",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-319f94784c15f22b",
+      "research_id": "MX40-REQ-319f94784c15f22b",
+      "before_record_sha256": "9b9167b16f0e141decf692588ae17f1c09fe1091309bbb4294e0c1738cf945f2",
+      "after_record_sha256": "2b3a1b1cdacd003bf6faf2f15dcf123f4fc180b665f4da24311d49f2464a79f4",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-33b4dc7814f9bf7b",
+      "research_id": "MX40-REQ-33b4dc7814f9bf7b",
+      "before_record_sha256": "e0e50bcc2e4a4ef202d44106296a8209635346c2fbba8720ecbcb93b70b9d474",
+      "after_record_sha256": "93ab76458b00183bca7a5cc3da830e598218989e96a941301ce42ef0e5ac77b4",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-3b9ff316cf1aa198",
+      "research_id": "MX40-REQ-3b9ff316cf1aa198",
+      "before_record_sha256": "bf9fcb23ddc0b922bfd59cbed921716f5a5ef2d99306989f2a3730cc2d6124de",
+      "after_record_sha256": "1ad0df3a9d1cb39f3069a0d429269a9157a0fed43d53cf5220268c8c07d5bde7",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-4752c5eca52971b1",
+      "research_id": "MX40-REQ-4752c5eca52971b1",
+      "before_record_sha256": "4864d5914069f0b2b4732d9bc45fd50a483fbe21a3ad1c745de82f87a88cd119",
+      "after_record_sha256": "5e8bd00a68e0e1dc36200799a1103039ae3b6d7485c07c8374d12a0d7cfadf81",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-478d115b86103eb0",
+      "research_id": "MX40-REQ-478d115b86103eb0",
+      "before_record_sha256": "1b0a9e90a334f90f7ba21c7ebb56d968fcf308bd2f7395372c43c22993986870",
+      "after_record_sha256": "2db1e7b27b81f9943de81a2de6ce8a5134973ee0808a547a4ae259cb0ed469cf",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-5e59a71c263c5dc4",
+      "research_id": "MX40-REQ-5e59a71c263c5dc4",
+      "before_record_sha256": "fc7e4d6884d725a9c5ec9afa7e2f4099ef23561278073e7dcbb62f825722121d",
+      "after_record_sha256": "1729b8d4dc8fe5d753eb8b0f46446286bf7a86de77893fc1d44852b607aa838b",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-7698e8f1bd9d479a",
+      "research_id": "MX40-REQ-7698e8f1bd9d479a",
+      "before_record_sha256": "4774ad8dd504e98d02b5498f75ddd944232d3aac0bf0c87e8637bf1cca9ca9ba",
+      "after_record_sha256": "61961ab671e119ccc121d58ea2753f64f201dc6a47d6f46401b7eecd7547c8ab",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-7b7cf58939b5c0b1",
+      "research_id": "MX40-REQ-7b7cf58939b5c0b1",
+      "before_record_sha256": "6f9ae32c123cda24145873a82d369e117bd95865d711dc9a03ffd27f6c596c12",
+      "after_record_sha256": "a31b35674cc532607c8d3d9616d2402ee203cd828c3d0ce76ea1b47470ba7cc6",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-7de1a25c1fd1384e",
+      "research_id": "MX40-REQ-7de1a25c1fd1384e",
+      "before_record_sha256": "7e17b29ef87c38be581710b5b12b624def1f11da840e882cf8899149909ec5c3",
+      "after_record_sha256": "979136c6aa9b47b2f3976e29c8c8bb05243f22ddc40bded7cb392e6707ab8e35",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-871ca98c7ca67797",
+      "research_id": "MX40-REQ-871ca98c7ca67797",
+      "before_record_sha256": "b47c4c8e6939cac3f0fe0ee2bf3ac9f9a131f2bcff86b0c203924d75e4cbc026",
+      "after_record_sha256": "8d1e17435db71f09656afc0de3464db7fbda5f0fe558080c134e932504b8eb73",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-937f261e67dbe164",
+      "research_id": "MX40-REQ-937f261e67dbe164",
+      "before_record_sha256": "e8841aface113bcc5c2d8f5af747fb76a3c113a3269448c7b52a146e6869ac93",
+      "after_record_sha256": "ba5035dbbd53fefc88ce66495c7073d965bf41b502fbeacf7cd5184ba0685190",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-9afc2f787093064f",
+      "research_id": "MX40-REQ-9afc2f787093064f",
+      "before_record_sha256": "c710e454838a440b72d19d1c3a82d3fd09f33db8c3bb5f1ae82dcb4c99f38960",
+      "after_record_sha256": "55fe507fc029d3723b56a57910d38bd427c05d0e31d4e80e832d7ba44f761fb0",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-a6859e3d0e08eef9",
+      "research_id": "MX40-REQ-a6859e3d0e08eef9",
+      "before_record_sha256": "c5cd15cc54be535d8a38259791c8d84cef35f6a83dda5b9d07318bc251ec716c",
+      "after_record_sha256": "b2380c947c9b523b88e6acd296aac35e4dbfa0ecb3e7ecbceec29e5f083b2067",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-a80ee7625389e06d",
+      "research_id": "MX40-REQ-a80ee7625389e06d",
+      "before_record_sha256": "c56bdbe4b1da381c3abe1f162c4fb2b48ecc145bab638314335cc8029948908b",
+      "after_record_sha256": "e9372cd593b096259f056d8cf853ec843ce44bd3325397ec044f0b58aa07d89d",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-b272e4c22ed1b2ee",
+      "research_id": "MX40-REQ-b272e4c22ed1b2ee",
+      "before_record_sha256": "dd33df89b4092635eb33eadf1d4448b7a42cda11287009bdd8ac397736e3125b",
+      "after_record_sha256": "ed4344e28ea444ab2db0f95f51b20139d5faf1e51fe907275e0ee0d1e07ec6f0",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-b39058e88bcd6cf3",
+      "research_id": "MX40-REQ-b39058e88bcd6cf3",
+      "before_record_sha256": "df94a9c9bfcd5972c683a5794822fad13a8313978025a0981bc9789c0d041e55",
+      "after_record_sha256": "599258270565f465bfe15b631adf0ccd7a3b68cf9cf109ed489606df3028f329",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-bac5429f72bb68b0",
+      "research_id": "MX40-REQ-bac5429f72bb68b0",
+      "before_record_sha256": "4c0f355e02eadf80d83e1f185a24ac70de358ffe00248c0bf344ea19ca0e3a9e",
+      "after_record_sha256": "bff6b69a535d120918a049cdf4a86e1a88a13f2f8dc5a9f2bd86a3d0c191f537",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-bf22dca6b28a5775",
+      "research_id": "MX40-REQ-bf22dca6b28a5775",
+      "before_record_sha256": "fe18d1d93d7cb1b41ab2691bf3f3f44fd4745497ab50d1668b93655bab21524a",
+      "after_record_sha256": "a2d073613a0074789f1f3d581dd3794e315c7fdceea1fc5ed16487d29b45b026",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-c885289c83db264e",
+      "research_id": "MX40-REQ-c885289c83db264e",
+      "before_record_sha256": "b2e08d0e21831b7dd9bc4a8ce98f520982d21f2ac3373f47394c900642ca76e3",
+      "after_record_sha256": "2653813785a1ab4b3bed0664f40ecaf0f6cbff0944a58a6c761d990aa322588c",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-caa0ad180f2a8955",
+      "research_id": "MX40-REQ-caa0ad180f2a8955",
+      "before_record_sha256": "6a281950120aea9a7644149e89217c13d1bc1ed2a0929ba913b9c57bb4780458",
+      "after_record_sha256": "8b70abc615b3219c58268e9bada4cf20780f013af82d1f854228eaa64e7a68f7",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-d6983b9210767737",
+      "research_id": "MX40-REQ-d6983b9210767737",
+      "before_record_sha256": "472554dc83cb537f3d6ce4fbd3b98a7b1a3ce68dacd8cb1b8d45d201a6858393",
+      "after_record_sha256": "a6ea1faa714f98d37e2eb1becfafa700a9ce43ee2945666af2b352a9142f955d",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-dbe7b0177d6981d7",
+      "research_id": "MX40-REQ-dbe7b0177d6981d7",
+      "before_record_sha256": "7b48f3d52cfcda650a4d479d4ad1bb17070db5bc5e96b15f1e5dea3fe4f6cd51",
+      "after_record_sha256": "ede199d35f82f3aaf015295a2ff9a4652cedceda5e5211d1673ed4d42f8b5866",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-ecd4fc466fda42aa",
+      "research_id": "MX40-REQ-ecd4fc466fda42aa",
+      "before_record_sha256": "56566a58e8dd01fb42da02f0b33c59bb0660c31c47ae80029315624416640613",
+      "after_record_sha256": "79410f0f1a6d0219163716269bf207aee704361316c1b7a7305b20d9e1a519bb",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-f75660cde4507954",
+      "research_id": "MX40-REQ-f75660cde4507954",
+      "before_record_sha256": "35d9e28d818602a8d9719fd07e489bfb72098765293756d76d395616f2f1c81b",
+      "after_record_sha256": "ca124d9482c59cae924ad48d0b686a6c7f9e2d1f02b1935acc983c6775432d07",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    },
+    {
+      "instance_id": "INSTANCE-MX40-REQ-f957f106dfd9ea8d",
+      "research_id": "MX40-REQ-f957f106dfd9ea8d",
+      "before_record_sha256": "c2b99ae1c92f4a861fe0811016b7a30249079363a6821e480e49063432bb2764",
+      "after_record_sha256": "41ffb6846971147a088b3397dfb1f9c21ed496afbc26082ba662ef47cc585ea2",
+      "changes": [
+        {
+          "field": "fixture_axes.missing_fact",
+          "before": [
+            "TestAuxiliarySourceUnavailableEvidence"
+          ],
+          "after_field_absent": true
+        },
+        {
+          "field": "missing_fact_test",
+          "before_field_absent": true,
+          "after": "TestAuxiliarySourceUnavailableEvidence"
+        }
+      ]
+    }
+  ]
+}

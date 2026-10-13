@@ -121,6 +121,10 @@ def input_paths(root, manifest, evidence, manifest_path, evidence_path, archive_
         'refresh-package-inventory.py', 'test-package-inventory.py'))
     if isinstance(manifest, dict) and isinstance(manifest.get('source_files'), dict):
         paths.extend(repository_path(root, name) for name in manifest['source_files'])
+    if isinstance(manifest, dict) and isinstance(manifest.get('reviewed_source_corrections'), list):
+        for record in manifest['reviewed_source_corrections']:
+            if isinstance(record, dict) and isinstance(record.get('reconciliation'), str):
+                paths.append(repository_path(root, record['reconciliation']))
     if isinstance(evidence, dict) and isinstance(evidence.get('tests'), dict):
         for record in evidence['tests'].values():
             if isinstance(record, dict) and isinstance(record.get('file'), str):
@@ -140,6 +144,9 @@ def input_paths(root, manifest, evidence, manifest_path, evidence_path, archive_
 def inputs_known(manifest, evidence):
     """Malformed routing tables cannot provide a complete safe output denylist."""
     return (isinstance(manifest, dict) and isinstance(manifest.get('source_files'), dict)
+            and isinstance(manifest.get('reviewed_source_corrections', []), list)
+            and all(isinstance(record, dict) and isinstance(record.get('reconciliation'), str)
+                    for record in manifest.get('reviewed_source_corrections', []))
             and isinstance(evidence, dict) and isinstance(evidence.get('tests'), dict)
             and all(isinstance(record, dict) and isinstance(record.get('file'), str)
                     for record in evidence['tests'].values()))
