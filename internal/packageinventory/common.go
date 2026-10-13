@@ -42,34 +42,67 @@ type node struct {
 func (n node) object() map[string]any {
 	v, ok := n.value.(map[string]any)
 	if !ok {
-		fail("invalid inventory type: %s: expected object, got %T", n.location, n.value)
+		fail("invalid inventory type: %s: expected object, got %s", n.location, jsonType(n.value))
 	}
 	return v
 }
 func (n node) list() []any {
 	v, ok := n.value.([]any)
 	if !ok {
-		fail("invalid inventory type: %s: expected array, got %T", n.location, n.value)
+		fail("invalid inventory type: %s: expected array, got %s", n.location, jsonType(n.value))
 	}
 	return v
 }
 func (n node) text() string {
 	v, ok := n.value.(string)
 	if !ok {
-		fail("invalid inventory type: %s: expected string, got %T", n.location, n.value)
+		fail("invalid inventory type: %s: expected string, got %s", n.location, jsonType(n.value))
 	}
 	return v
 }
-func (n node) integer() int64 {
+
+// Use JSON vocabulary rather than Go's decoder representation in diagnostics.
+func jsonType(value any) string {
+	switch v := value.(type) {
+	case nil:
+		return "null"
+	case bool:
+		return "boolean"
+	case string:
+		return "string"
+	case []any:
+		return "array"
+	case map[string]any:
+		return "object"
+	case json.Number:
+		if !strings.ContainsAny(string(v), ".eE") {
+			return "integer"
+		}
+		return "number"
+	default:
+		return "non-JSON value"
+	}
+}
+
+// Inventory integers have Python's arbitrary precision. Validate the token here;
+// counts and sizes are compared before any bounded machine-index conversion.
+func (n node) integerValue() *big.Int {
 	v, ok := n.value.(json.Number)
 	if !ok || strings.ContainsAny(string(v), ".eE") {
-		fail("invalid inventory type: %s: expected integer, got %T", n.location, n.value)
+		fail("invalid inventory type: %s: expected integer, got %s", n.location, jsonType(n.value))
 	}
-	i, err := strconv.ParseInt(string(v), 10, 64)
-	if err != nil {
-		fail("invalid inventory integer: %s: %v", n.location, err)
+	i, ok := new(big.Int).SetString(string(v), 10)
+	if !ok {
+		fail("invalid inventory integer: %s: %s", n.location, v)
 	}
 	return i
+}
+func (n node) integer() int64 {
+	i := n.integerValue()
+	if !i.IsInt64() {
+		fail("inventory integer out of machine range: %s: %s", n.location, i)
+	}
+	return i.Int64()
 }
 func (n node) get(key string) node {
 	v, ok := n.object()[key]
@@ -103,7 +136,7 @@ func (n node) fields(schema map[string]string) {
 		case "string":
 			v.text()
 		case "integer":
-			v.integer()
+			v.integerValue()
 		}
 	}
 }
@@ -325,20 +358,31 @@ func prettyJSON(v any) []byte {
 	}
 	return b.Bytes()
 }
-func readBytes(path string) []byte {
+func readBytes(path string) []byte { return readBytesNamed(path, path) }
+func readBytesNamed(path, displayName string) []byte {
+	reportReadError := func(err error) {
+		var pathError *os.PathError
+		if path != displayName && errors.As(err, &pathError) {
+			fail("cannot read input: %s: %s: %v", displayName, pathError.Op, pathError.Err)
+		}
+		fail("cannot read input: %s: %v", displayName, err)
+	}
 	// Resolve before native I/O: Windows normalizes '..' lexically before
 	// following symlinks, which could otherwise read a different input.
 	resolved, err := checkedResolve(path, defaultFileOps())
 	if err != nil {
-		fail("cannot read input: %s: %v", path, err)
+		reportReadError(err)
 	}
 	b, err := os.ReadFile(resolved)
 	if err != nil {
-		fail("cannot read input: %s: %v", path, err)
+		reportReadError(err)
 	}
 	return b
 }
-func readJSON(path string) node { return node{parseJSON(readBytes(path), path), path} }
+func readJSON(path string) node { return readJSONNamed(path, path) }
+func readJSONNamed(path, displayName string) node {
+	return node{parseJSON(readBytesNamed(path, displayName), displayName), displayName}
+}
 func repositoryPath(root, value string) string {
 	if filepath.IsAbs(value) {
 		fail("invalid repository path: %s", value)
