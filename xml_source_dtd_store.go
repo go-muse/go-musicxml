@@ -83,6 +83,7 @@ type sourceDTDDeclaration struct {
 	IgnoredReason                              sourceDTDIgnoredReason
 	Origin                                     sourceDTDOrigin
 	HasGeneralReferences                       bool
+	RequiresContentCheck                       bool
 }
 type sourceDTDStoreState struct {
 	Name                                                                              string
@@ -114,6 +115,8 @@ type sourceDTDStoreKey struct {
 }
 type sourceDTDStore struct {
 	parametersRead         map[*sourceDTDDeclaration]bool
+	entitiesContentRead    map[*sourceDTDDeclaration]bool
+	entitiesUnchecked      int64
 	context                context.Context
 	account                *validation.Account
 	state                  sourceDTDStoreState
@@ -153,7 +156,7 @@ func (s *sourceDTDStore) Close() error {
 	err := s.account.Release(validation.BudgetBufferedBytes, s.owned)
 	s.owned = 0
 	s.declarations, s.bindings, s.attributes = nil, nil, nil
-	s.parametersRead = nil
+	s.parametersRead, s.entitiesContentRead = nil, nil
 	s.state = sourceDTDStoreState{}
 	return err
 }
@@ -234,7 +237,7 @@ func parseSourceDTDWithStore(input sourceDTDInput, store *sourceDTDStore) (sourc
 	store.state.GrammarComplete = grammarComplete
 	store.state.ParameterEntityWellFormednessIncomplete = false
 	for _, d := range store.declarations {
-		if d.Parameter && !store.parametersRead[d] {
+		if d.Parameter && d.Binding && strings.Contains(d.Replacement, "%") && !store.parametersRead[d] {
 			store.state.ParameterEntityWellFormednessIncomplete = true
 			break
 		}
@@ -323,24 +326,25 @@ func (s *sourceDTDStore) add(d sourceDTDDeclaration) error {
 			s.attributes[d.Element] = group
 		}
 	}
-	// Residual proof obligations stay separate from declaration-domain closure.
-	// In particular a literal GE is closed without pretending a lexical graph
-	// proves arbitrary unused replacement/reference contexts free of recursion.
-	switch d.Kind {
-	case sourceDTDGeneralEntityDeclaration:
-		if !d.External && (strings.ContainsAny(d.Replacement, "&<") || strings.Contains(d.Replacement, "]]>")) {
+	// A declaration's immutable syntax facts are distinct from verification of
+	// one actual replacement context. Simple replacement text has no arbitrary
+	// reference/markup obligation; a successful content frame may prove the
+	// remaining content obligation later without bypassing any subsequent use.
+	if d.Kind == sourceDTDGeneralEntityDeclaration {
+		simple, predefined, err := s.entityReplacementClosure(d)
+		if err != nil {
+			return err
+		}
+		d.RequiresContentCheck = d.Binding && !d.External && !simple
+		if d.RequiresContentCheck {
+			s.entitiesUnchecked++
 			s.state.EntityWellFormednessIncomplete = true
 		}
-		switch d.Name {
-		case "amp", "lt", "gt", "apos", "quot":
+		if !predefined {
 			s.state.PredefinedEntityWellFormednessIncomplete = true
 		}
-	case sourceDTDParameterEntityDeclaration:
-		s.state.ParameterEntityWellFormednessIncomplete = true
-	case sourceDTDAttributeDeclaration:
-		if d.HasGeneralReferences {
-			s.state.DefaultWellFormednessIncomplete = true
-		}
+	} else if d.Kind == sourceDTDAttributeDeclaration && d.HasGeneralReferences {
+		s.state.DefaultWellFormednessIncomplete = true
 	}
 	var originErr error
 	d.Origin, originErr = s.copyOrigin(d.Origin)
@@ -482,4 +486,145 @@ func (s *sourceDTDStore) completeDefaultWellFormedness() error {
 }
 func (s *sourceDTDStore) refreshWellFormedness() {
 	s.state.WellFormednessIncomplete = s.state.EntityWellFormednessIncomplete || s.state.DefaultWellFormednessIncomplete || s.state.PredefinedEntityWellFormednessIncomplete || s.state.ParameterEntityWellFormednessIncomplete || s.state.ParameterEntityUnread || s.failed || !s.state.GrammarComplete
+}
+
+// entityContentRead discharges only the content-production obligation for this
+// bound declaration. Attribute-only expansion does not prove content syntax
+// (for example, literal ]]> is legal in an attribute), and every later reference
+// still passes all context-sensitive checks. Declaration records remain immutable.
+func (s *sourceDTDStore) entityContentRead(d *sourceDTDDeclaration) error {
+	if err := s.check(); err != nil {
+		return err
+	}
+	if d == nil || !d.RequiresContentCheck || s.entitiesContentRead[d] {
+		return nil
+	}
+	if s.entitiesContentRead == nil {
+		if err := s.reserve(sourceDTDStoreMapBytes); err != nil {
+			return err
+		}
+		s.entitiesContentRead = make(map[*sourceDTDDeclaration]bool)
+	}
+	if err := s.reserve(sourceDTDStoreIndexBytes); err != nil {
+		return err
+	}
+	s.entitiesContentRead[d] = true
+	s.entitiesUnchecked--
+	s.state.EntityWellFormednessIncomplete = s.entitiesUnchecked != 0
+	s.refreshWellFormedness()
+	return nil
+}
+
+// entityReplacementClosure checks only context-independent closed forms. XML
+// 4.6 describes replacement text, after 4.5 character-reference construction:
+// lt/amp require a character reference; gt/apos/quot also allow the character.
+// An unrecognized redeclaration remains incomplete, not a fabricated WFC error.
+func (s *sourceDTDStore) entityReplacementClosure(d sourceDTDDeclaration) (simple, predefined bool, err error) {
+	predefined = true
+	want := rune(0)
+	switch d.Name {
+	case "lt":
+		want = '<'
+	case "amp":
+		want = '&'
+	case "gt":
+		want = '>'
+	case "apos":
+		want = '\''
+	case "quot":
+		want = '"'
+	}
+	value := d.Replacement
+	if err = s.account.Charge(validation.BudgetEvents, int64(len(value))); err != nil {
+		return
+	}
+	if want != 0 {
+		predefined = !d.External && (want != '<' && want != '&' && value == string(want))
+		if !predefined && !d.External {
+			decoded, count, valid, e := s.replacementCharacterReference(value)
+			if e != nil {
+				return false, false, e
+			}
+			predefined = valid && count == len(value) && decoded == want
+		}
+		// A conforming predefined binding is interpreted by the scanner's built-in
+		// reference path, so it does not carry an ordinary GE content-frame obligation.
+		if predefined {
+			return true, true, nil
+		}
+	}
+	if d.External {
+		return true, predefined, nil
+	}
+	for i := 0; i < len(value); i++ {
+		if err = s.check(); err != nil {
+			return false, predefined, err
+		}
+		switch value[i] {
+		case '<':
+			return false, predefined, nil
+		case ']':
+			if strings.HasPrefix(value[i:], "]]>") {
+				return false, predefined, nil
+			}
+		case '&':
+			matched := false
+			for _, spelling := range []string{"&amp;", "&lt;", "&gt;", "&apos;", "&quot;"} {
+				if strings.HasPrefix(value[i:], spelling) {
+					i += len(spelling) - 1
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				_, count, valid, e := s.replacementCharacterReference(value[i:])
+				if e != nil {
+					return false, predefined, e
+				}
+				if !valid {
+					return false, predefined, nil
+				}
+				i += count - 1
+			}
+		}
+	}
+	return true, predefined, nil
+}
+
+// The replacement can introduce a new numeric reference not present in the
+// EntityValue spelling. Check it without allocating or overflowing, even with
+// arbitrarily many leading zeroes. The caller has admitted its inspection work.
+func (s *sourceDTDStore) replacementCharacterReference(value string) (rune, int, bool, error) {
+	if !strings.HasPrefix(value, "&#") {
+		return 0, 0, false, nil
+	}
+	i, base := 2, uint32(10)
+	if i < len(value) && value[i] == 'x' {
+		i++
+		base = 16
+	}
+	start, n := i, uint32(0)
+	for ; i < len(value); i++ {
+		if err := s.check(); err != nil {
+			return 0, 0, false, err
+		}
+		c := value[i]
+		if c == ';' {
+			return rune(n), i + 1, i > start && sourceXMLChar(rune(n)), nil
+		}
+		digit := uint32(16)
+		switch {
+		case c >= '0' && c <= '9':
+			digit = uint32(c - '0')
+		case base == 16 && c >= 'a' && c <= 'f':
+			digit = uint32(c-'a') + 10
+		case base == 16 && c >= 'A' && c <= 'F':
+			digit = uint32(c-'A') + 10
+		}
+		if digit >= base || n > (0x10ffff-digit)/base {
+			return 0, 0, false, nil
+		}
+		n = n*base + digit
+	}
+	return 0, 0, false, nil
 }

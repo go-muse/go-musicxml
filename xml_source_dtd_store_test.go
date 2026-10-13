@@ -211,7 +211,7 @@ func TestSourceDTDStoreSpecificClosureAndReplacement(t *testing.T) {
 		{input: ` r [<!ENTITY e '&#38;later;'>]>`, entity: true},
 		{input: ` r [<!ENTITY e 'safe'><!ATTLIST r a CDATA '&e;'>]>`, defaults: true},
 		{input: ` r [<!ENTITY amp 'wrong'>]>`, predefined: true},
-		{input: ` r [<!ENTITY % p '<!ELEMENT r EMPTY>'>]>`, parameter: true},
+		{input: ` r [<!ENTITY % p '<!ELEMENT r EMPTY>'>]>`},
 	} {
 		s, info := dtdStoreParse(t, tc.input, sourceDTDStandaloneAbsent)
 		state := s.State()
@@ -364,7 +364,7 @@ func TestSourceDTDStoreDirectDefaultReferenceOrder(t *testing.T) {
 }
 
 func TestSourceDTDStoreDefaultClosureDischargesOnlyVerifiedCell(t *testing.T) {
-	s, _ := dtdStoreParse(t, ` r [<!ENTITY e '&later;'><!ENTITY later 'x'><!ENTITY amp 'wrong'><!ENTITY % p 'unused'><!ATTLIST r a CDATA '&e;'>]>`, sourceDTDStandaloneAbsent)
+	s, _ := dtdStoreParse(t, ` r [<!ENTITY e '&later;'><!ENTITY later 'x'><!ENTITY amp 'wrong'><!ENTITY % p '&#37;p;'><!ATTLIST r a CDATA '&e;'>]>`, sourceDTDStandaloneAbsent)
 	if err := s.completeDefaultWellFormedness(); err != nil {
 		t.Fatal(err)
 	}
