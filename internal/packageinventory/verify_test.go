@@ -9,6 +9,7 @@ import (
 )
 
 func TestVerifyCommittedInventory(t *testing.T) {
+	t.Parallel()
 	root, err := filepath.Abs("../..")
 	if err != nil {
 		t.Fatal(err)
@@ -32,6 +33,7 @@ func TestVerifyCommittedInventory(t *testing.T) {
 }
 
 func TestSuppliedArchiveUsesExactBytesAndProtectedPaths(t *testing.T) {
+	t.Parallel()
 	for _, mutation := range []string{"unchanged", "CRLF", "size", "missing", "missing-function", "invalid-UTF8", "output-alias"} {
 		t.Run(mutation, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -94,6 +96,7 @@ func TestSuppliedArchiveUsesExactBytesAndProtectedPaths(t *testing.T) {
 }
 
 func TestToolInputsProtectedOutsideSelectedRoot(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	f.mutateTest()
 	beforeEvidence := f.read(maintenanceEvidence)
@@ -117,6 +120,7 @@ func TestToolInputsProtectedOutsideSelectedRoot(t *testing.T) {
 }
 
 func TestRefreshChangesOnlyHashTokenBytes(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	tests := mo(f.e["tests"])
 	old := ""
@@ -146,6 +150,7 @@ func TestRefreshChangesOnlyHashTokenBytes(t *testing.T) {
 }
 
 func TestRelativeInputPathsResolveSymlinkBeforeParent(t *testing.T) {
+	t.Parallel()
 	for _, kind := range []string{"manifest", "evidence"} {
 		t.Run(kind, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -174,6 +179,7 @@ func TestRelativeInputPathsResolveSymlinkBeforeParent(t *testing.T) {
 }
 
 func TestRepositoryPathPreservesArchiveBaseTraversal(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	f.write("nested/child/placeholder", nil)
 	f.write("nested/artifact", []byte("correct"))

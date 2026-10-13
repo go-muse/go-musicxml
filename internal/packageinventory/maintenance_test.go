@@ -3,6 +3,8 @@ package packageinventory
 // These 43 TestMaintenance functions map one-for-one, in the same order, to
 // the regression methods in the former test-package-inventory-maintenance.py.
 // Table-driven subtests retain every mutation and every command/path combination.
+// Top-level tests own independent fixtures and use testing's default parallel
+// limit; subtests that share a fixture intentionally remain sequential.
 
 import (
 	"bytes"
@@ -30,13 +32,13 @@ const maintenanceEvidence = "docs/validation/evidence/package-row-evidence.json"
 var maintenanceCommands = []string{"verify", "refresh", "test"}
 
 type maintenanceFixture struct {
-	t         *testing.T
+	t         testing.TB
 	root      string
 	m, e      map[string]any
 	originals map[string][]byte
 }
 
-func maintenanceRepo(t *testing.T) string {
+func maintenanceRepo(t testing.TB) string {
 	t.Helper()
 	root, err := filepath.Abs("../..")
 	if err != nil {
@@ -45,7 +47,7 @@ func maintenanceRepo(t *testing.T) string {
 	return root
 }
 
-func maintenanceRead(t *testing.T, path string) []byte {
+func maintenanceRead(t testing.TB, path string) []byte {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -54,7 +56,7 @@ func maintenanceRead(t *testing.T, path string) []byte {
 	return data
 }
 
-func maintenanceWrite(t *testing.T, path string, data []byte) {
+func maintenanceWrite(t testing.TB, path string, data []byte) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		t.Fatal(err)
@@ -64,53 +66,164 @@ func maintenanceWrite(t *testing.T, path string, data []byte) {
 	}
 }
 
-func maintenanceJSON(t *testing.T, data []byte) map[string]any {
+func maintenanceJSON(t testing.TB, data []byte) map[string]any {
 	t.Helper()
-	var value map[string]any
-	dec := json.NewDecoder(bytes.NewReader(data))
-	dec.UseNumber()
-	if err := dec.Decode(&value); err != nil {
+	value, err := maintenanceDecodeJSON(data)
+	if err != nil {
 		t.Fatalf("invalid JSON: %v\n%s", err, data)
-	}
-	if value == nil {
-		t.Fatal("expected JSON object")
 	}
 	return value
 }
 
-func maintenanceEncode(t *testing.T, value any) []byte {
+func maintenanceDecodeJSON(data []byte) (map[string]any, error) {
+	var value map[string]any
+	dec := json.NewDecoder(bytes.NewReader(data))
+	dec.UseNumber()
+	if err := dec.Decode(&value); err != nil {
+		return nil, err
+	}
+	if value == nil {
+		return nil, errors.New("expected JSON object")
+	}
+	return value, nil
+}
+
+func maintenanceEncode(t testing.TB, value any) []byte {
 	t.Helper()
+	data, err := maintenanceEncodeJSON(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}
+
+func maintenanceEncodeJSON(value any) ([]byte, error) {
 	var out bytes.Buffer
 	enc := json.NewEncoder(&out)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(value); err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
-	return out.Bytes()
+	return out.Bytes(), nil
 }
 
-func newMaintenanceFixture(t *testing.T) *maintenanceFixture {
-	t.Helper()
-	repo := maintenanceRepo(t)
-	f := &maintenanceFixture{t: t, root: t.TempDir(), originals: map[string][]byte{}}
-	f.m = maintenanceJSON(t, maintenanceRead(t, filepath.Join(repo, maintenanceManifest)))
-	f.e = maintenanceJSON(t, maintenanceRead(t, filepath.Join(repo, maintenanceEvidence)))
+// Only the original test inputs are shared. Every fixture gets recursively
+// copied values and source bytes, plus fresh files; command results and reads
+// of those files are never cached.
+type maintenanceFixtureBaseline struct {
+	m, e               map[string]any
+	originals          map[string][]byte
+	manifest, evidence []byte
+}
+
+type maintenanceFixtureCache struct {
+	once     sync.Once
+	baseline *maintenanceFixtureBaseline
+	err      error
+}
+
+var maintenanceBaseline maintenanceFixtureCache
+
+func (c *maintenanceFixtureCache) load(repo string) (*maintenanceFixtureBaseline, error) {
+	c.once.Do(func() {
+		// Do not call testing.Fatal inside Once: a failed load must leave an
+		// error for every caller, not a nil baseline after Goexit completes it.
+		c.baseline, c.err = maintenanceLoadBaseline(repo)
+	})
+	return c.baseline, c.err
+}
+
+func maintenanceLoadBaseline(repo string) (*maintenanceFixtureBaseline, error) {
+	readJSON := func(path string) (map[string]any, error) {
+		data, err := os.ReadFile(filepath.Join(repo, path))
+		if err != nil {
+			return nil, err
+		}
+		value, err := maintenanceDecodeJSON(data)
+		if err != nil {
+			return nil, fmt.Errorf("decode %s: %w", path, err)
+		}
+		return value, nil
+	}
+	baseline := &maintenanceFixtureBaseline{originals: map[string][]byte{}}
+	var err error
+	if baseline.m, err = readJSON(maintenanceManifest); err != nil {
+		return nil, err
+	}
+	if baseline.e, err = readJSON(maintenanceEvidence); err != nil {
+		return nil, err
+	}
 	paths := map[string]bool{}
-	for path := range mo(f.m["source_files"]) {
+	sources, ok := baseline.m["source_files"].(map[string]any)
+	if !ok {
+		return nil, errors.New("fixture manifest source_files must be an object")
+	}
+	for path := range sources {
 		paths[path] = true
 	}
-	for _, value := range ma(f.m["reviewed_source_corrections"]) {
-		paths[ms(mo(value)["reconciliation"])] = true
+	corrections, ok := baseline.m["reviewed_source_corrections"].([]any)
+	if !ok {
+		return nil, errors.New("fixture manifest reviewed_source_corrections must be an array")
 	}
-	for _, value := range mo(f.e["tests"]) {
-		paths[ms(mo(value)["file"])] = true
+	addPath := func(value any, key string) error {
+		record, ok := value.(map[string]any)
+		if !ok {
+			return fmt.Errorf("fixture %s record must be an object", key)
+		}
+		path, ok := record[key].(string)
+		if !ok || path == "" {
+			return fmt.Errorf("fixture %s path must be a nonempty string", key)
+		}
+		paths[path] = true
+		return nil
+	}
+	for _, value := range corrections {
+		if err := addPath(value, "reconciliation"); err != nil {
+			return nil, err
+		}
+	}
+	tests, ok := baseline.e["tests"].(map[string]any)
+	if !ok {
+		return nil, errors.New("fixture evidence tests must be an object")
+	}
+	for _, value := range tests {
+		if err := addPath(value, "file"); err != nil {
+			return nil, err
+		}
 	}
 	for path := range paths {
-		f.originals[path] = maintenanceRead(t, filepath.Join(repo, path))
+		if baseline.originals[path], err = os.ReadFile(filepath.Join(repo, path)); err != nil {
+			return nil, err
+		}
+	}
+	if baseline.manifest, err = maintenanceEncodeJSON(baseline.m); err != nil {
+		return nil, err
+	}
+	if baseline.evidence, err = maintenanceEncodeJSON(baseline.e); err != nil {
+		return nil, err
+	}
+	return baseline, nil
+}
+
+func newMaintenanceFixture(t testing.TB) *maintenanceFixture {
+	t.Helper()
+	baseline, err := maintenanceBaseline.load(maintenanceRepo(t))
+	if err != nil {
+		t.Fatalf("load maintenance fixture baseline: %v", err)
+	}
+	f := &maintenanceFixture{
+		t: t, root: t.TempDir(),
+		m: maintenanceClone(t, baseline.m), e: maintenanceClone(t, baseline.e),
+		originals: make(map[string][]byte, len(baseline.originals)),
+	}
+	for path, data := range baseline.originals {
+		f.originals[path] = bytes.Clone(data)
 		maintenanceWrite(t, f.path(path), f.originals[path])
 	}
-	f.save()
+	// Use the same encoding as save, computed once from immutable originals.
+	f.write(maintenanceManifest, baseline.manifest)
+	f.write(maintenanceEvidence, baseline.evidence)
 	return f
 }
 
@@ -131,8 +244,37 @@ func maintenanceFirst(m map[string]any) string {
 	sort.Strings(keys)
 	return keys[0]
 }
-func maintenanceClone(t *testing.T, m map[string]any) map[string]any {
-	return maintenanceJSON(t, maintenanceEncode(t, m))
+func maintenanceClone(t testing.TB, m map[string]any) map[string]any {
+	t.Helper()
+	return maintenanceCloneValue(m).(map[string]any)
+}
+
+func maintenanceCloneValue(value any) any {
+	switch value := value.(type) {
+	case map[string]any:
+		if value == nil {
+			return map[string]any(nil)
+		}
+		clone := make(map[string]any, len(value))
+		for key, item := range value {
+			clone[key] = maintenanceCloneValue(item)
+		}
+		return clone
+	case []any:
+		if value == nil {
+			return []any(nil)
+		}
+		clone := make([]any, len(value))
+		for i, item := range value {
+			clone[i] = maintenanceCloneValue(item)
+		}
+		return clone
+	case []byte:
+		return bytes.Clone(value)
+	default:
+		// JSON scalars, including json.Number's original token, are immutable.
+		return value
+	}
 }
 func (f *maintenanceFixture) path(p string) string {
 	return filepath.Join(f.root, filepath.FromSlash(p))
@@ -224,6 +366,7 @@ var maintenanceBuildError error
 
 func maintenanceBinary(t *testing.T) string {
 	t.Helper()
+	repo := maintenanceRepo(t)
 	maintenanceBuildOnce.Do(func() {
 		dir, err := os.MkdirTemp("", "package-inventory-binary-")
 		if err != nil {
@@ -235,7 +378,7 @@ func maintenanceBinary(t *testing.T) string {
 			maintenanceBinaryPath += ".exe"
 		}
 		command := exec.Command(filepath.Join(runtime.GOROOT(), "bin", "go"), "build", "-o", maintenanceBinaryPath, "./cmd/package-inventory")
-		command.Dir = maintenanceRepo(t)
+		command.Dir = repo
 		out, err := command.CombinedOutput()
 		if err != nil {
 			maintenanceBuildError = fmt.Errorf("build inventory executable: %w: %s", err, out)
@@ -275,6 +418,7 @@ func (f *maintenanceFixture) binary(t *testing.T, command string, expected int, 
 }
 
 func TestMaintenanceDryRunThenWriteOnlyCurrentHashesAndIdempotence(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	f.mutateTest()
 	oldM, oldE := f.read(maintenanceManifest), f.read(maintenanceEvidence)
@@ -301,6 +445,7 @@ func TestMaintenanceDryRunThenWriteOnlyCurrentHashesAndIdempotence(t *testing.T)
 }
 
 func TestMaintenanceCRLFAndMixedAreNoopButLoneCRIsNot(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	for name, data := range f.originals {
 		f.write(name, bytes.ReplaceAll(bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n")), []byte("\n"), []byte("\r\n")))
@@ -313,6 +458,7 @@ func TestMaintenanceCRLFAndMixedAreNoopButLoneCRIsNot(t *testing.T) {
 }
 
 func TestMaintenanceSourceWhitespaceStatusAndOwnerChangesAreBlocked(t *testing.T) {
+	t.Parallel()
 	for _, mutation := range []string{"whitespace", "status", "owner"} {
 		t.Run(mutation, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -334,6 +480,7 @@ func TestMaintenanceSourceWhitespaceStatusAndOwnerChangesAreBlocked(t *testing.T
 }
 
 func TestMaintenanceBlanketSourceRefreshIsNotSupported(t *testing.T) {
+	t.Parallel()
 	var out, err bytes.Buffer
 	if code := Run([]string{"refresh", "--refresh-sources"}, &out, &err); code == 0 {
 		t.Fatal("blanket source refresh unexpectedly supported")
@@ -341,6 +488,7 @@ func TestMaintenanceBlanketSourceRefreshIsNotSupported(t *testing.T) {
 }
 
 func TestMaintenanceDuplicateIssueRoutesAndDeclaredSelectedCountsAreRejected(t *testing.T) {
+	t.Parallel()
 	for _, which := range []string{"duplicate issue route", "selected count"} {
 		t.Run(which, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -357,6 +505,7 @@ func TestMaintenanceDuplicateIssueRoutesAndDeclaredSelectedCountsAreRejected(t *
 }
 
 func TestMaintenanceMalformedNestedTypesAndMissingMetadataAreJSONFailures(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		name   string
 		change func(*maintenanceFixture)
@@ -384,6 +533,7 @@ func TestMaintenanceMalformedNestedTypesAndMissingMetadataAreJSONFailures(t *tes
 }
 
 func TestMaintenanceSourceRecordHashIsNotRefreshed(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	mo(ma(mf(f.m, "preserved_collections", "requirements")["records"])[0])["sha256"] = strings.Repeat("0", 64)
 	f.save()
@@ -393,6 +543,7 @@ func TestMaintenanceSourceRecordHashIsNotRefreshed(t *testing.T) {
 }
 
 func TestMaintenancePreservedStatusAndDenominatorsCannotBePromoted(t *testing.T) {
+	t.Parallel()
 	for _, name := range []string{"status", "collection count", "selected row", "preserved row", "declared count"} {
 		t.Run(name, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -419,6 +570,7 @@ func TestMaintenancePreservedStatusAndDenominatorsCannotBePromoted(t *testing.T)
 }
 
 func TestMaintenanceMissingSourceAndTestFilesAreJSONFailures(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	for _, p := range []string{"link_intent_test.go", maintenanceFirst(mo(f.m["source_files"]))} {
 		t.Run(p, func(t *testing.T) {
@@ -432,6 +584,7 @@ func TestMaintenanceMissingSourceAndTestFilesAreJSONFailures(t *testing.T) {
 }
 
 func TestMaintenanceMissingAndInventedTestRoutesAreBlocked(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	tests := mo(f.e["tests"])
 	ref := maintenanceFirst(tests)
@@ -446,6 +599,7 @@ func TestMaintenanceMissingAndInventedTestRoutesAreBlocked(t *testing.T) {
 }
 
 func TestMaintenanceRouteKeyMustMatchFileAndFunction(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	tests := mo(f.e["tests"])
 	key := maintenanceFirst(tests)
@@ -456,6 +610,7 @@ func TestMaintenanceRouteKeyMustMatchFileAndFunction(t *testing.T) {
 }
 
 func TestMaintenanceAuxiliaryTestRoutesAndOriginalIDsAreValidated(t *testing.T) {
+	t.Parallel()
 	for _, name := range []string{"test", "id"} {
 		t.Run(name, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -473,6 +628,7 @@ func TestMaintenanceAuxiliaryTestRoutesAndOriginalIDsAreValidated(t *testing.T) 
 }
 
 func TestMaintenanceUndeclaredSourceRouteIsRejected(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	delete(mo(f.m["source_files"]), "docs/validation/plan/context-dispositions.json")
 	f.save()
@@ -480,6 +636,7 @@ func TestMaintenanceUndeclaredSourceRouteIsRejected(t *testing.T) {
 }
 
 func TestMaintenanceMalformedPointersProduceSpecificJSONErrors(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	for _, pointer := range []string{"#/absent", "#/requirements/nope", "#/requirements/999999", "#/requirements/-1", "#/requirements/00", "#/requirements/0/id/child", "#/bad~2escape", "requirements"} {
 		t.Run(pointer, func(t *testing.T) {
@@ -493,6 +650,7 @@ func TestMaintenanceMalformedPointersProduceSpecificJSONErrors(t *testing.T) {
 }
 
 func TestMaintenanceMalformedJSONAndShapesHaveUsefulErrors(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	for _, tc := range []struct{ path, data string }{{maintenanceManifest, "{"}, {maintenanceEvidence, "[]"}, {maintenanceFirst(mo(f.m["source_files"])), "not JSON"}} {
 		t.Run(tc.path, func(t *testing.T) {
@@ -512,6 +670,7 @@ func TestMaintenanceMalformedJSONAndShapesHaveUsefulErrors(t *testing.T) {
 }
 
 func TestMaintenanceMissingGitIsAWarningNotTraceback(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	result := f.binary(t, "verify", 0, true)
 	maintenanceEqual(t, result["observed_current_head"], "unavailable")
@@ -525,6 +684,7 @@ func TestMaintenanceMissingGitIsAWarningNotTraceback(t *testing.T) {
 }
 
 func TestMaintenanceOutputCannotAliasAnyInput(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	for _, path := range []string{maintenanceManifest, maintenanceEvidence, "link_intent_test.go", maintenanceFirst(mo(f.m["source_files"]))} {
 		for _, command := range maintenanceCommands {
@@ -538,6 +698,7 @@ func TestMaintenanceOutputCannotAliasAnyInput(t *testing.T) {
 }
 
 func TestMaintenanceSymlinkAndHardlinkOutputAliasesAreRejected(t *testing.T) {
+	t.Parallel()
 	for _, kind := range []string{"symlink", "hardlink"} {
 		t.Run(kind, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -559,6 +720,7 @@ func TestMaintenanceSymlinkAndHardlinkOutputAliasesAreRejected(t *testing.T) {
 }
 
 func TestMaintenanceCyclicRootReturnsJSONFailureWithoutTouchingOutput(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	root := f.path("cyclic-root")
 	maintenanceLink(t, root, root)
@@ -581,6 +743,7 @@ func TestMaintenanceCyclicRootReturnsJSONFailureWithoutTouchingOutput(t *testing
 }
 
 func TestMaintenanceCyclicOutputSymlinkReturnsJSONFailure(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	alias := f.path("cycle.json")
 	for _, command := range maintenanceCommands {
@@ -597,6 +760,7 @@ func TestMaintenanceCyclicOutputSymlinkReturnsJSONFailure(t *testing.T) {
 }
 
 func TestMaintenanceIndirectAndParentCyclesFailWithoutChangingLinksOrEvidence(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	first, second := f.path("cycle-first"), f.path("cycle-second")
 	f.mutateTest()
@@ -636,6 +800,7 @@ func TestMaintenanceIndirectAndParentCyclesFailWithoutChangingLinksOrEvidence(t 
 }
 
 func TestMaintenanceMissingOutputAndDanglingSymlinkRemainSupported(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	missing := f.path("missing-target.json")
 	for _, command := range maintenanceCommands {
@@ -669,6 +834,7 @@ func TestMaintenanceMissingOutputAndDanglingSymlinkRemainSupported(t *testing.T)
 // 31, 32, and 36 live in maintenance_fault_test.go.
 
 func TestMaintenanceSymlinkedParentOutputCannotReplaceProtectedInput(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	alias := f.path("root-alias")
 	maintenanceLink(t, f.root, alias)
@@ -683,6 +849,7 @@ func TestMaintenanceSymlinkedParentOutputCannotReplaceProtectedInput(t *testing.
 }
 
 func TestMaintenanceIsolatedAndSafePathInvocationsUseTrustedBinary(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	// An executable must not import code or discover a Python interpreter in the
 	// caller's working directory. These files are deliberately hostile decoys.
@@ -695,6 +862,7 @@ func TestMaintenanceIsolatedAndSafePathInvocationsUseTrustedBinary(t *testing.T)
 }
 
 func TestMaintenanceEvidenceAliasOfSourceCannotBeWritten(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	target := f.path("link_intent_test.go")
 	if err := os.Remove(target); err != nil {
@@ -709,6 +877,7 @@ func TestMaintenanceEvidenceAliasOfSourceCannotBeWritten(t *testing.T) {
 }
 
 func TestMaintenanceOutputReplaceFailureReturnsJSONAndLeavesNoTemp(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	dest := f.path("directory-output")
 	if err := os.Mkdir(dest, 0755); err != nil {
@@ -719,6 +888,7 @@ func TestMaintenanceOutputReplaceFailureReturnsJSONAndLeavesNoTemp(t *testing.T)
 }
 
 func TestMaintenanceMissingOutputDirectoryReturnsJSONWithoutClobberingInputs(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	before := f.read(maintenanceEvidence)
 	for _, command := range maintenanceCommands {
@@ -734,6 +904,7 @@ func TestMaintenanceMissingOutputDirectoryReturnsJSONWithoutClobberingInputs(t *
 }
 
 func TestMaintenanceRefreshChecksOutputAliasBeforeEvidenceWrite(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	f.mutateTest()
 	before := f.read(maintenanceEvidence)
@@ -746,6 +917,7 @@ func TestMaintenanceRefreshChecksOutputAliasBeforeEvidenceWrite(t *testing.T) {
 }
 
 func TestMaintenanceParseFailureDoesNotOverwriteUndiscoveredInput(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	f.write(maintenanceManifest, []byte("{"))
 	for _, command := range maintenanceCommands {
@@ -758,6 +930,7 @@ func TestMaintenanceParseFailureDoesNotOverwriteUndiscoveredInput(t *testing.T) 
 }
 
 func TestMaintenanceUnreferencedTestRecordIsRejected(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	mo(f.e["tests"])["unused.go::TestUnused"] = map[string]any{"file": "unused.go", "function": "TestUnused", "file_sha256": strings.Repeat("0", 64)}
 	f.write("unused.go", []byte("package musicxml\nfunc TestUnused(t *testing.T) {}\n"))
@@ -766,6 +939,7 @@ func TestMaintenanceUnreferencedTestRecordIsRejected(t *testing.T) {
 }
 
 func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *testing.T) {
+	t.Parallel()
 	repo := maintenanceRepo(t)
 	for _, tc := range []struct {
 		name string
@@ -808,6 +982,7 @@ func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *test
 }
 
 func TestMaintenanceReviewedReconciliationOutputIsProtected(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	path := ms(mo(ma(f.m["reviewed_source_corrections"])[0])["reconciliation"])
 	before := f.read(path)
@@ -821,6 +996,7 @@ func TestMaintenanceReviewedReconciliationOutputIsProtected(t *testing.T) {
 }
 
 func TestMaintenanceMalformedReviewedRoutesCannotWriteEvidenceOrOutput(t *testing.T) {
+	t.Parallel()
 	for _, routes := range []any{nil, map[string]any{}, []any{"not a record"}, []any{map[string]any{}}, []any{map[string]any{"reconciliation": 7}}} {
 		t.Run(fmt.Sprintf("%v", routes), func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -844,6 +1020,7 @@ func maintenanceDigest(data []byte) string {
 }
 
 func TestMaintenanceReviewedAuxiliarySchemaDiffIsNarrowAndReproducible(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	review := maintenanceJSON(t, maintenanceRead(t, filepath.Join(maintenanceRepo(t), "docs/validation/evidence/auxiliary-fixture-reference-review.json")))
 	maintenanceEqual(t, review["review_comment_id"], json.Number("4255983792"))
@@ -921,6 +1098,7 @@ func maintenanceRestoreReviewedBytes(t *testing.T, source []byte) []byte {
 }
 
 func TestMaintenanceHistoricalObservationDoesNotCompareCurrentHead(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	git, err := exec.LookPath("git")
 	if err != nil {
@@ -953,6 +1131,7 @@ func TestMaintenanceHistoricalObservationDoesNotCompareCurrentHead(t *testing.T)
 }
 
 func TestMaintenanceAuxiliaryFixtureRoutesMatchTypedOriginal(t *testing.T) {
+	t.Parallel()
 	for _, mutation := range []string{"unknown fixture", "missing fixture", "wrong axis", "function as fixture", "wrong function"} {
 		t.Run(mutation, func(t *testing.T) {
 			f := newMaintenanceFixture(t)
@@ -976,6 +1155,7 @@ func TestMaintenanceAuxiliaryFixtureRoutesMatchTypedOriginal(t *testing.T) {
 }
 
 func TestMaintenanceHistoricalHashesAreNeverRefreshed(t *testing.T) {
+	t.Parallel()
 	f := newMaintenanceFixture(t)
 	tests := mo(f.e["historical_tests"])
 	mo(tests[maintenanceFirst(tests)])["file_sha256"] = strings.Repeat("f", 64)

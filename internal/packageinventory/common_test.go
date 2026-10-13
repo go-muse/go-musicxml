@@ -9,6 +9,7 @@ import (
 )
 
 func TestCanonicalPythonCompatible(t *testing.T) {
+	t.Parallel()
 	raw := []byte(`{"z":"<&>\u2028\u2029é𝄞\b\f\n\r\t\u0001","a":[true,null,123456789012345678901234567890]}`)
 	got := canonicalJSON(parseJSON(raw, "golden"))
 	want := "{\"a\":[true,null,123456789012345678901234567890],\"z\":\"<&>\u2028\u2029é𝄞\\b\\f\\n\\r\\t\\u0001\"}"
@@ -21,6 +22,7 @@ func TestCanonicalPythonCompatible(t *testing.T) {
 }
 
 func TestStrictJSONRejectsAmbiguousInputs(t *testing.T) {
+	t.Parallel()
 	for _, raw := range [][]byte{[]byte(`{"a":1,"a":2}`), []byte(`{"a":{"x":0,"x":1}}`), []byte(`{} {}`), []byte(`{"a":NaN}`), {'"', 0xff, '"'}, []byte(`"\ud800"`)} {
 		t.Run(string(raw), func(t *testing.T) {
 			defer func() {
@@ -47,6 +49,7 @@ func TestStrictJSONRejectsAmbiguousInputs(t *testing.T) {
 }
 
 func TestAliasResolutionAndAtomicWrite(t *testing.T) {
+	t.Parallel()
 	dir := t.TempDir()
 	target := filepath.Join(dir, "target.json")
 	if err := os.WriteFile(target, []byte("original"), 0600); err != nil {
@@ -80,6 +83,7 @@ func TestAliasResolutionAndAtomicWrite(t *testing.T) {
 }
 
 func TestCanonicalFiniteNumberCompatibility(t *testing.T) {
+	t.Parallel()
 	cases := map[string]string{"1.0": "1.0", "1e0": "1.0", "1e15": "1000000000000000.0", "1e16": "1e+16", "1e-4": "0.0001", "1e-5": "1e-05", "-0.0": "-0.0", "-0": "0", "9007199254740993": "9007199254740993"}
 	for input, want := range cases {
 		t.Run(input, func(t *testing.T) {
@@ -91,6 +95,7 @@ func TestCanonicalFiniteNumberCompatibility(t *testing.T) {
 }
 
 func TestResolveSymlinkBeforeParentTraversal(t *testing.T) {
+	t.Parallel()
 	root := t.TempDir()
 	nested := filepath.Join(root, "nested")
 	if err := os.MkdirAll(filepath.Join(nested, "child"), 0700); err != nil {
@@ -112,6 +117,7 @@ func TestResolveSymlinkBeforeParentTraversal(t *testing.T) {
 }
 
 func TestAtomicTemporaryDirectoryPreservesSymlinkTraversal(t *testing.T) {
+	t.Parallel()
 	root := t.TempDir()
 	nested := filepath.Join(root, "nested")
 	if err := os.MkdirAll(filepath.Join(nested, "child"), 0700); err != nil {
@@ -144,6 +150,7 @@ func TestAtomicTemporaryDirectoryPreservesSymlinkTraversal(t *testing.T) {
 }
 
 func TestJoinUncleanUsesHostVolumeSemantics(t *testing.T) {
+	t.Parallel()
 	cases := []struct{ base, value, want string }{{"base", "child", "base" + string(filepath.Separator) + "child"}, {"", "child", "child"}}
 	if filepath.Separator == '\\' {
 		cases = append(cases, struct{ base, value, want string }{`C:`, `child`, `C:child`}, struct{ base, value, want string }{`\\server\share`, `child`, `\\server\share\child`})
