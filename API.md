@@ -797,6 +797,13 @@ physical byte offset. The adapter reports start-tag/attribute occurrence origins
 not per-character value-segment provenance. A physical attribute containing an
 entity reference remains physically specified. Missing precise transformed-value
 coordinates must not be interpreted as original value coordinates.
+`Specified` is not the XML Infoset `[specified]` property: an attribute in
+entity-generated markup is not physically specified here. Nested general-entity
+use sites and default use sites on entity-generated tags cannot currently be
+represented as physical coordinates; they remain Unknown and prevent origin
+provider satisfaction. This bounded vocabulary does not expose
+replacement-relative positions. A missing declaration in an unread external/PE domain is Unknown,
+not known absent. Sealing origins also requires complete attribute enumeration.
 
 This additive public struct field requires migration of external **unkeyed**
 `ContextResult` literals; use keyed fields. Its `omitempty` tag preserves old
@@ -810,16 +817,27 @@ owned copies and the shared account. Current-model and resource-snapshot export
 do not support this source-only evidence; a failed export preserves the intrinsic
 report and never implies a valid resource adoption.
 
-Internal expansion requires the existing nonnil assessment account. Original
-input bytes and hashes exclude replacements and defaults. `MaxEvents` additionally
-meters replacement UTF-8 bytes, tokenized-normalization bytes and invocations;
-buffered declarations, stacks,
-effective attributes and report copies share `MaxBufferedBytes`. Effective nodes
-and attributes retain normal ingress charges. A separate finite 64-frame entity
-nesting ceiling applies alongside XML depth. Refusal is resource incompleteness,
-not XML invalidity. No default budgets are raised. See the
-[precise scope, limitations and requirement contributions](docs/validation/dtd-infoset-scope.md)
-and [verification evidence](docs/validation/dtd-infoset-evidence.md).
+Internal expansion requires the existing non-nil assessment account. Original
+input bytes and hashes exclude replacements and defaults. `MaxEvents`
+additionally meters replacement UTF-8 bytes, tokenized-normalization bytes and
+invocations; buffered declarations, stacks, effective attributes and report
+copies share `MaxBufferedBytes`. Effective nodes and attributes retain normal
+ingress charges. A separate finite 64-named-entity nesting ceiling applies
+alongside XML depth; the accounted anonymous default-value frame does not consume
+a named-entity slot. `errors.Is(err, ErrEntityNestingLimit)` identifies this
+specific ceiling while `errors.As` still exposes its `validation.ResourceError`.
+Refusal is resource incompleteness, not XML invalidity. No default budgets are
+raised. See the [precise scope, limitations and requirement
+contributions](docs/validation/dtd-infoset-scope.md) and
+[verification evidence](docs/validation/dtd-infoset-evidence.md).
+
+Provenance has a material capacity cost. In the paired `MozartTrio.musicxml`
+measurement (94,916 original bytes, 3,687 occurrence rows), retained bytes before
+`Finish` were 22,588,921 with this profile versus 11,632,335 with source/XSD
+preview. Both completed input at the default 64 MiB limit, but remained
+assessment-incomplete because the external DTD was unread. These fixture-specific
+figures are not a general maximum document size; paths, ancestry and copied
+evidence affect admission.
 
 Positions use zero-based original-byte offsets, including BOMs, and one-based
 decoded-character lines/columns. CRLF is one line break. If either coordinate

@@ -60,6 +60,19 @@ processor requirement in those specifications has been implemented.
   In particular, a reference stored in a directly declared alias retains that
   declaration origin when invoked through a PE-origin default. Caller ancestry
   cannot make a standalone violation disappear.
+- Undeclared physical PE references under `standalone="yes"` are malformed.
+  Without that standalone condition, PE declaration precedence belongs to
+  section 4.1's validity constraint; unread evidence remains incomplete rather
+  than being relabeled as a proved well-formedness failure.
+- PE references within declarations carried by PE replacements, and conditional
+  sections there, exceed the whole-declaration bounded capability. They report
+  unsupported evidence rather than a fabricated syntax failure. The physical
+  internal-subset prohibition is still enforced.
+- Section 4.6's conformant predefined redeclarations are recognized after
+  declaration-time character-reference processing. `lt` and `amp` require a
+  character-reference replacement (double escaping in the declaration literal);
+  `gt`, `apos` and `quot` also permit their literal character. Unproved forms
+  retain incomplete closure.
 
 ## Provenance and ownership
 
@@ -69,6 +82,8 @@ attribute presence describes effective presence. Declaration and use sites are
 separate from the occurrence's physical site. Synthetic occurrences have no
 fabricated original position. Missing sites and incomplete ancestry remain
 explicitly unavailable; they do not become byte zero or known absence.
+This physical `Specified` flag differs from the XML Infoset `[specified]`
+property for attributes written in entity-generated markup.
 
 The adapter's public evidence is occurrence-level, not a segmented source map of
 every character in an effective scalar. Physically encoded attributes containing
@@ -76,10 +91,16 @@ entity references remain physically specified. Entity-created markup is
 synthetic. PE-created declaration positions can remain unavailable. Diagnostics
 must not label transformed value bytes as precise original scalar bytes. Full
 per-segment and downstream declaration-domain provenance remain open work.
+Nested general-entity use sites and defaults on entity-generated tags currently
+have no expressible replacement-relative public site. Their use evidence remains
+Unknown, so those occurrences cannot satisfy the origin provider even when
+their syntax has been proved. An unread declaration domain likewise cannot
+support a known-absent declaration claim.
 
 Providers are exact source/assembly plans with admitted-subject checks and one
 row per present slot. Final enumeration is sealed only after successful input
-completion. Owned getter copies, causal evidence and old JSON compatibility are
+completion and complete attribute enumeration. Owned getter copies, causal
+evidence and old JSON compatibility are
 part of the contract. Ancestry transport is bounded at 64; unavailable ancestry
 is reported, never silently truncated into complete evidence.
 
@@ -93,12 +114,33 @@ external evidence; this slice does not claim their source readiness.
 One existing account covers the scanner, declaration store, defaults, observer
 and session. Input hashes/bytes cover original bytes once. Internal replacement
 is not input or external traffic. Event work includes repeated replacement UTF-8
-bytes, tokenized-normalization bytes and reference/frame invocations before processing; sharing a declaration
-does not make repeated expansion free. Retained declarations, temporary copies,
-old/new growth peaks, frame state and owned facts reserve buffered bytes before
-allocation and release only their own charges. Nodes and effective attributes
-retain established ingress charges. The independent 64-frame replacement limit
-and XML depth both apply. Defaults remain finite and unchanged.
+bytes, tokenized-normalization bytes and reference/frame invocations before
+processing; sharing a declaration does not make repeated expansion free.
+Retained declarations, temporary copies, old/new growth peaks, frame state and
+owned facts reserve buffered bytes before allocation and release only their own
+charges. Nodes and effective attributes retain established ingress charges. The
+independent 64-named-entity replacement limit and XML depth both apply. The
+anonymous default-value frame retains its memory/work charges without consuming
+one named-entity slot. `ErrEntityNestingLimit` identifies this particular resource
+refusal while preserving the typed `validation.ResourceError`. Defaults remain
+finite and unchanged.
+
+Owned provenance reduces assessable capacity under those same limits. A paired
+measurement of unchanged `MozartTrio.musicxml` (94,916 bytes, 2,516 nodes and
+1,171 attributes) retained 22,588,921 bytes before `Finish`, versus 11,632,335
+for source/XSD preview. The earlier PR38 head retained 24,982,035 bytes; removing
+duplicate validation and auditing the typed copy reduced rule steps from
+3,726,713 to 2,345,211. With a common 24,000,000-byte limit the earlier head
+refused input and the correction completed it. At the default 64 MiB both
+completed input, with assessment still incomplete because the external DTD was
+unread. All retained account charges returned to zero after finalization. These are
+fixture-specific capacity observations, not a throughput or universal score-size
+promise, and do not close `B5-PERF-01`.
+
+Temporary expansion allocations can still be substantial before a finite limit
+is reached. The repeated-entity regression's default-budget refusal is caused
+by accumulated scalar bytes; selecting a tighter event limit can refuse earlier.
+The profile does not promise that every expansion stops first at `MaxEvents`.
 
 Cancellation is checked within bounded scans, normalization and replacement
 processing. It cannot interrupt an arbitrary blocking caller `Read`; callers

@@ -27,6 +27,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- `ErrEntityNestingLimit` identifies the bounded internal-DTD named-entity
+  nesting refusal while preserving its typed resource error.
+
+- Add developmental `ProfileSourceInternalDTD` for bounded original-source
+  internal declarations, entity replacement, attribute defaults and non-CDATA
+  normalization. Expose typed occurrence origins through
+  `SourceOriginContextResult`, `SourceOriginStep`, `SourceOriginKind`,
+  `NewSourceOriginPlan`, `Engine.SourceOriginProvider`, `Session.SourceOrigin`
+  and `Session.CompleteSourceOrigins`. External DTDs/entities remain unfetched;
+  this profile does not establish general XML/DTD or MusicXML conformance.
+
 - Reduce local-resource snapshot measurement/copy allocations and account owned
   byte slices contiguously; original MozartTrio and MozaChlo source graphs now
   fit the existing default buffer while retaining unread-DTD incompleteness.
@@ -198,6 +209,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   this count).
 
 ### Changed
+
+- Add optional `ContextResult.SourceOrigin` for selected source-origin providers.
+  External unkeyed `ContextResult` literals must migrate to keyed literals.
+  Its `omitempty` tag preserves existing profile JSON when the payload is absent.
 
 - Migrate legacy `Validate` and root `Validate` methods from Encode/reparse to
   direct current-model XSD assessment. Keep XSD-only scope, ignored `XMLName`,
