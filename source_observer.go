@@ -63,6 +63,7 @@ type sourceFactObserver struct {
 	dtdUnavailable    bool
 	last              validation.Location
 	lastRetained      int64
+	origins           *sourceOriginObserver
 }
 
 func newSourceFactObserver(ctx context.Context, sink sourceFactSink, account *validation.Account) (*sourceFactObserver, error) {
@@ -272,10 +273,16 @@ func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMet
 		state, reason = validation.EvidenceUnsupported, "dtd-infoset-unavailable"
 	}
 	location := o.location(path, meta.Span.Start)
+	if meta.Origin != nil && !meta.Origin.PhysicalAvailable {
+		location.Position = nil
+	}
 	if err := o.rememberLocation(location); err != nil {
 		return err
 	}
 	if err := o.sink.Open(o.ctx, validation.NodeHeader{ID: frame.id, Parent: parent, Name: name, Type: validation.Evidence[validation.ComponentID]{State: state, Reason: reason}, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Location: location, Bindings: bindings}); err != nil {
+		return err
+	}
+	if err := o.publishSourceOrigin(frame, nil, name, location, meta.Origin); err != nil {
 		return err
 	}
 	for i, attr := range value.Attr {
@@ -316,7 +323,14 @@ func (o *sourceFactObserver) attribute(frame *sourceObserverFrame, attr xml.Attr
 	if o.dtdUnavailable && !meta.NamespaceDeclaration {
 		scalar.Lexeme = validation.Evidence[string]{State: validation.EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
 	}
-	return o.sink.Attribute(o.ctx, validation.AttributeFact{Owner: frame.id, Name: name, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Presence: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}, Scalar: scalar, Location: o.location(path, meta.NameSpan.Start)})
+	location := o.location(path, meta.NameSpan.Start)
+	if meta.Origin != nil && !meta.Origin.PhysicalAvailable {
+		location.Position = nil
+	}
+	if err := o.sink.Attribute(o.ctx, validation.AttributeFact{Owner: frame.id, Name: name, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Presence: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}, Scalar: scalar, Location: location}); err != nil {
+		return err
+	}
+	return o.publishSourceOrigin(frame, &name, validation.QName{}, location, meta.Origin)
 }
 func sourceDisplayName(name validation.QName) string {
 	if name.Space == "" {
@@ -407,6 +421,7 @@ func (o *sourceFactObserver) close() error {
 	o.bindings = nil
 	o.last = validation.Location{}
 	o.lastRetained = 0
+	o.origins = nil
 	return nil
 }
 

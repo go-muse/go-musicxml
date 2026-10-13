@@ -61,7 +61,7 @@ func (r *sourceXMLTokenReader) appendASCII(b *sourceXMLBuilder, mode sourceASCII
 			maximum = int(remaining) + 1
 		}
 	}
-	span := r.cursor.asciiSpan(mode, quote, maximum)
+	span := r.asciiSpan(mode, quote, maximum)
 	if len(span) == 0 {
 		return false, nil
 	}
@@ -72,4 +72,12 @@ func (r *sourceXMLTokenReader) appendASCII(b *sourceXMLBuilder, mode sourceASCII
 	b.data = append(b.data, span...)
 	r.cursor.consumeASCII(span)
 	return true, nil
+}
+
+// The physical fast path cannot consume caller bytes under a replacement frame.
+func (r *sourceXMLTokenReader) asciiSpan(mode sourceASCIIMode, quote byte, maximum int) []byte {
+	if r.entity != nil {
+		return nil
+	}
+	return r.cursor.asciiSpan(mode, quote, maximum)
 }

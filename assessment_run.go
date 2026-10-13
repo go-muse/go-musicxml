@@ -72,6 +72,8 @@ func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation
 		return newAuxiliarySourceAssessmentEngine()
 	case ProfileSourceXSDPreview:
 		return newSourceAssessmentEngine()
+	case ProfileSourceInternalDTD:
+		return sourceInternalDTDEngine()
 	case ProfileSourceLocal:
 		return newModelAssessmentEngine()
 	case ProfileSourceTimeline:

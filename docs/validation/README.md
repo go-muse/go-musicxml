@@ -1,9 +1,10 @@
 # Validation design and requirements
 
 Status: **implemented bounded foundation/source, direct-model/local, timeline,
-context, auxiliary-source and package/link scopes; broader normative closure
-remains unfinished**. Index reviewed: 13 October 2026. Individual historical
-acceptance snapshots remain dated evidence, not current exact-head acceptance.
+context, auxiliary-source, internal-DTD and package/link scopes; broader normative
+closure remains unfinished**. Index reviewed: 13 October 2026. Individual
+historical acceptance snapshots remain dated evidence, not current exact-head
+acceptance.
 
 This directory contains the proposed validation architecture and package-facing
 guides. MusicXML 4.0 requirements evidence is maintained in the separate
@@ -31,6 +32,8 @@ for the unchanged developmental source preview, and the [foundation scope](found
 for generic fact/catalog/report contracts. Continue with the implemented bounded
 scopes and their explicit limitations:
 
+- [Bounded internal-DTD source infoset](dtd-infoset-scope.md)
+- [Internal-DTD verification evidence](dtd-infoset-evidence.md)
 - [Context assessment](context-assessment-scope.md)
 - [Auxiliary container and sounds sources](auxiliary-source-scope.md)
 - [Nonfetching local link context](local-link-context-scope.md)

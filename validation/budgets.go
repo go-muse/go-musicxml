@@ -57,7 +57,10 @@ const (
 	BudgetNodes BudgetKind = "nodes"
 	// BudgetAttributes counts cumulative input attributes.
 	BudgetAttributes BudgetKind = "attributes"
-	// BudgetEvents counts cumulative raw-token or fact-event work.
+	// BudgetEvents counts cumulative raw-token or fact-event work. The explicitly
+	// selected internal-DTD source profile also charges replacement UTF-8 bytes,
+	// tokenized-normalization bytes and entity/frame invocations before processing.
+	// Internal expansion is not external or original-input byte traffic.
 	BudgetEvents BudgetKind = "events"
 	// BudgetScalarBytes is a per-item scalar byte cap, not a cumulative quota.
 	BudgetScalarBytes BudgetKind = "scalar-bytes"

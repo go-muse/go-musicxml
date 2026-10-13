@@ -69,6 +69,9 @@ func (s *Session) FinishWithResourceSnapshot(ctx context.Context, end Completion
 }
 
 func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*ResourceSnapshot, error) {
+	if len(s.catalog.sourceOrigins[s.profile.ID]) != 0 {
+		return nil, &IncompleteError{Reason: "source-origin-resource-snapshot-unsupported"}
+	}
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}

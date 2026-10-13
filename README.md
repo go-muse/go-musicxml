@@ -95,6 +95,7 @@ construction and compressed `.mxl` round trips in
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
 | Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
 | Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
+| Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
 | Assess local links without fetching | `ProfileSourceLinks`, `ProfileModelLinks` |
 | Assess original auxiliary XML | `ProfileSourceContainer`, `ProfileSourceSounds` |
 | Assess a selected resource graph | `InspectXMLWithResources`, `AssessModelWithResources`, `ProfileResourceGraph` |
@@ -183,6 +184,11 @@ without invented XML positions. Finite decimal fields are assessed as their
 exact current binary rational value, so `float64(0.1)` is not decimal `1/10`.
 Optional nil and present-zero fields remain distinct; `XMLName` is ignored
 transport metadata.
+
+The separate developmental `ProfileSourceInternalDTD` processes bounded internal
+declarations, entity replacements and effective attributes with typed occurrence
+origins. External DTDs are not fetched, and existing profiles do not opt into this
+processing. See its [scope and retained obligations](docs/validation/dtd-infoset-scope.md).
 
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged
