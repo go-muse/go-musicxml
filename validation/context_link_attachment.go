@@ -33,8 +33,29 @@ type resourceLinkIndex struct {
 // an allocation, and repeated links do not rescan sibling or descendant trees.
 func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 	i := &resourceLinkIndex{}
+	// Other resource families still need local part ownership, but attachment
+	// indexes are useful only when an exact link/bookmark occurrence is selected.
+	attachments := false
+	for _, id := range r.s.sequence {
+		for _, role := range r.roles(r.s.nodes[id]) {
+			if role == resourceRole("link") || role == resourceRole("bookmark") {
+				attachments = true
+				break
+			}
+		}
+		if r.err != nil || attachments {
+			break
+		}
+	}
+	if r.err != nil {
+		return i
+	}
 	count := int64(len(r.s.sequence))
-	size, err := rationalCheckedMul(BudgetBufferedBytes, count+1, 1408)
+	perNode := int64(256)
+	if attachments {
+		perNode = 1408
+	}
+	size, err := rationalCheckedMul(BudgetBufferedBytes, count+1, perNode)
 	if err != nil {
 		r.err = err
 		return i
@@ -43,15 +64,18 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 		return i
 	}
 	i.bytes += size
-	i.position = make(map[NodeID]int)
-	i.end = make(map[NodeID]int)
-	i.complete = make(map[NodeID]Evidence[bool])
 	i.parts = make(map[NodeID]Evidence[NodeRef])
-	i.next = make(map[NodeID]Evidence[NodeRef])
-	i.nextContent = make(map[NodeID]Evidence[NodeRef])
-	i.names = make(map[string][]NodeID)
-	i.ordinals = make(map[resourceNameOrdinal][]NodeID)
-	counts := make(map[resourceParentName]uint64)
+	var counts map[resourceParentName]uint64
+	if attachments {
+		i.position = make(map[NodeID]int)
+		i.end = make(map[NodeID]int)
+		i.complete = make(map[NodeID]Evidence[bool])
+		i.next = make(map[NodeID]Evidence[NodeRef])
+		i.nextContent = make(map[NodeID]Evidence[NodeRef])
+		i.names = make(map[string][]NodeID)
+		i.ordinals = make(map[resourceNameOrdinal][]NodeID)
+		counts = make(map[resourceParentName]uint64)
+	}
 	partReferences := make(map[DeclarationID]resourcePartReference)
 	for _, key := range r.s.catalog.orders[r.s.profile.ID] {
 		if !r.step(1 + int64(len(key.ID))) {
@@ -74,8 +98,6 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 		if n == nil {
 			continue
 		}
-		i.position[id] = pos
-		i.end[id] = pos + 1
 		part := Evidence[NodeRef]{State: EvidenceAbsent}
 		if n.header.Parent != 0 {
 			part = i.parts[n.header.Parent]
@@ -104,6 +126,11 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 			}
 		}
 		i.parts[id] = part
+		if !attachments {
+			continue
+		}
+		i.position[id] = pos
+		i.end[id] = pos + 1
 		if n.header.Name.Space != "" || n.header.Declaration.State != EvidenceKnown || n.header.Declaration.Value.Assembly != r.b.assembly {
 			continue
 		}
@@ -121,6 +148,9 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 		ordinal := resourceNameOrdinal{name, counts[parent]}
 		i.ordinals[ordinal] = append(i.ordinals[ordinal], id)
 	}
+	if !attachments {
+		return i
+	}
 	for pos := len(r.s.sequence) - 1; pos >= 0; pos-- {
 		if !r.step(1) {
 			return i
@@ -130,7 +160,8 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 		if n == nil {
 			continue
 		}
-		complete := r.enumerated(n)
+		enumeration := r.enumerated(n)
+		complete := enumeration
 		next := Evidence[NodeRef]{State: EvidenceAbsent}
 		nextContent := next
 		for childIndex := len(n.children) - 1; childIndex >= 0; childIndex-- {
@@ -148,7 +179,7 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 			if marker {
 				i.next[child.header.ID] = next
 				i.nextContent[child.header.ID] = nextContent
-				if enumeration := r.enumerated(n); enumeration.State != EvidenceKnown || !enumeration.Value {
+				if enumeration.State != EvidenceKnown || !enumeration.Value {
 					gap := stateUnavailable[bool, NodeRef](enumeration)
 					i.next[child.header.ID] = gap
 					i.nextContent[child.header.ID] = gap

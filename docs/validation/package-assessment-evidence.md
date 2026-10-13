@@ -87,6 +87,47 @@ original DTD-bearing raw wrappers have the same buffer limitation. Current packa
 objects fit defaults but retain current-model discovery incompleteness. These
 wrappers are not claimed to be an original official MXL corpus.
 
+## 2026-10-13 snapshot/local-link review remeasurement
+
+The earlier candidate figures above remain historical evidence. Fresh measurements
+from the published `7b5460af2e2028dc27079353e5f44f2901054d19` baseline reproduced
+both graph thresholds exactly. The local-link correction avoids allocating full
+attachment indexes for link-free documents, retains a single document-wide DTD
+hint gap plus physically observed descendant hints, and removes reflected boxing
+from snapshot measurement/copying. The private canonical-report ownership and
+independent caller-returned report contract are unchanged.
+
+`TestResourceReviewOfficialExactBufferWitness`, enabled with
+`MUSICXML_SNAPSHOT_BUFFER_WITNESS=1`, checks the exact successful threshold and
+one byte below for each original source. No source bytes or DOCTYPEs are removed.
+These source-only results do not assess nested compressed-rootfile interpretation.
+
+| Original source | Published links minimum | Corrected links minimum | Published graph minimum | Corrected graph minimum |
+| --- | ---: | ---: | ---: | ---: |
+| MozartTrio | 47,656,776 | 36,961,992 | 72,541,715 | 40,939,940 |
+| MozaChloSample | 60,222,816 | 46,681,595 | 91,412,475 | 51,394,485 |
+
+All values are logical buffered bytes, not process heap/RSS. Both corrected graph
+runs now fit the unchanged 64 MiB default and retain unread-DTD incompleteness.
+The ordinary default-budget regression checks both samples without claiming
+conformance. A 128 MiB buffer-only override remains a concrete finite option for
+other workloads, not a requirement for these corrected source cases.
+
+One-iteration warmed benchmarks with Go 1.27.2, linux/amd64, GOMAXPROCS=2 and
+`-p=1` measured graph allocations as follows; timing is not a stable speed claim.
+
+| Original source | Published allocated bytes / objects | Corrected allocated bytes / objects |
+| --- | ---: | ---: |
+| MozartTrio | 181,427,488 / 3,058,618 | 46,919,440 / 510,442 |
+| MozaChloSample | 225,670,904 / 3,836,178 | 55,848,760 / 630,374 |
+
+The small owned-report measurement probe dropped from 168 allocations to zero.
+A 4096-byte slice now measures 4128 logical bytes rather than 131104. String copy
+work uses bounded 4 KiB blocks; byte slices retain per-byte work admission and
+contiguous storage/copying. Cancellation tests cover both block-copy paths and
+verify zero temporary retained bytes. This is scoped review evidence, not a new
+whole-tree, race, 386 or remote CI claim.
+
 ## Final verification gate
 
 Independent semantic acceptance covers the final production candidate above;

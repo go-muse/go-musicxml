@@ -9,6 +9,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Reduce local-resource snapshot measurement/copy allocations and account owned
+  byte slices contiguously; original MozartTrio and MozaChlo source graphs now
+  fit the existing default buffer while retaining unread-DTD incompleteness.
+  Snapshot-admission failure remains terminal/incomplete and transferred
+  snapshot getters explicitly report package ownership.
+
+- Refine the unreleased resource context API: subject declarations now carry
+  typed availability/cause evidence, odd schema-hint pairing is known false,
+  and snapshot headers identify selection of the assembly-local link plan.
+  DTD-wide hint gaps occupy one root row while observed descendant hints remain.
+
 - Add explicit `InspectXMLWithResources` and `AssessModelWithResources` entry
   points with caller-selected resolver dependencies, immutable pin verification,
   exact base/member expansion contexts and one finite shared account. Preserve

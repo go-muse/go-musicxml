@@ -68,7 +68,10 @@ type SchemaHintPair struct {
 
 // ResourceSchemaHintsContext separates discovery pairing from the unchanged XSD
 // list(anyURI) datatype. A trailing token is incomplete discovery, not a new XSD
-// datatype violation. Discarded model xsi attributes are never reconstructed.
+// datatype violation. Complete is Known(false) for an observed unmatched token
+// and Known(true) for zero or evenly paired tokens. Raw distinguishes absent
+// schemaLocation from an explicitly empty value; NoNamespace retains its own
+// presence. Discarded model xsi attributes are never reconstructed.
 type ResourceSchemaHintsContext struct {
 	Raw         Evidence[string]
 	Pairs       []SchemaHintPair
@@ -95,9 +98,10 @@ type ResourceInstrumentContext struct {
 // one named payload is populated. Owner is the containing occurrence (the root
 // owns itself); Part is
 // the local owning score-part when established. SubjectDeclaration identifies the
-// projected subject's exact assembly-qualified declaration use.
+// projected subject's exact assembly-qualified declaration use or its original
+// unavailability evidence, reason and cause.
 type ResourceContextResult struct {
-	SubjectDeclaration DeclarationID
+	SubjectDeclaration Evidence[DeclarationID]
 	Owner              NodeRef
 	Part               Evidence[NodeRef]
 	Link               *ResourceLinkContext
@@ -261,6 +265,7 @@ func remapResourceContextValue(v *ResourceContextResult, from, to string) {
 	if v == nil {
 		return
 	}
+	remapResourceEvidence(&v.SubjectDeclaration, from, to)
 	remapResourceNode(&v.Owner, from, to)
 	remapResourceNodeEvidence(&v.Part, from, to)
 	if p := v.Link; p != nil {

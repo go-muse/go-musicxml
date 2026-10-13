@@ -305,11 +305,8 @@ func stateCopy(v reflect.Value) reflect.Value {
 	if !v.IsValid() {
 		return v
 	}
-	if v.CanInterface() {
-		switch v.Interface().(type) {
-		case Integer, Decimal, Rational:
-			return v
-		}
+	if _, ok := resourceNumericFields[v.Type()]; ok {
+		return v
 	}
 	switch v.Kind() {
 	case reflect.Struct:
@@ -323,6 +320,10 @@ func stateCopy(v reflect.Value) reflect.Value {
 			return reflect.Zero(v.Type())
 		}
 		out := reflect.MakeSlice(v.Type(), v.Len(), v.Len())
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			reflect.Copy(out, v)
+			return out
+		}
 		for i := 0; i < v.Len(); i++ {
 			out.Index(i).Set(stateCopy(v.Index(i)))
 		}

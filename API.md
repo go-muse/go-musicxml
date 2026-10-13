@@ -914,9 +914,13 @@ part-link, opus-score, opus-link, score-work-opus and bookmark families.
 `ResourceScoreLink`, `ResourcePartLink`, `ResourceOpusScore`, `ResourceOpusLink`,
 `ResourceScoreWorkOpus` and `ResourceBookmark` are the closed link kinds.
 
+`ResourceContextResult.SubjectDeclaration` is `Evidence[DeclarationID]`; consumers
+read `.Value` only when `.State` is known, and retain unavailable reason/cause.
 Known absence is different from unknown, unsupported and invalid evidence.
 Missing attachment targets do not fail a new mandatory predicate. Schema-hint
-pairing can remain incomplete while intrinsic extraction succeeds; this does not
+pairing is known false for an observed unmatched token and known true for zero
+or evenly paired tokens. `Raw`/`NoNamespace.Presence` distinguish absent from
+explicitly empty hints. Intrinsic extraction can still succeed; this does not
 change the accepted XSD list(anyURI) datatype. Direct models expose unavailable
 xsi source history. XLink onLoad is metadata and grants no retrieval authority.
 See [local resource scope](docs/validation/local-link-context-scope.md) for the
@@ -927,7 +931,9 @@ bounded descendant-selection, image advice and exact typed-reference contracts.
 `validation.Session.FinishWithResourceSnapshot` is an additive alternate terminal
 finalizer. It runs the selected intrinsic phases before admitting an immutable
 `ResourceSnapshot`, and releases session storage exactly once. Its first return
-is always the best ordinary `Report`, including when snapshot admission fails.
+retains intrinsic findings. If snapshot admission fails, that returned `Report`
+is also marked incomplete with a terminal summary; absent a known violation, its
+conformance becomes undetermined. The returned operation error carries the cause.
 A snapshot retains the canonical report, exact root/profile/assembly, selected
 resource projections and schema-determined ID states under the same budget
 account until `Close` or successful transfer to package assessment. It never
@@ -938,7 +944,9 @@ An empty projection from a profile without that witness proves no link absence.
 
 Snapshots are single-goroutine objects. Serialize getters, ownership transfer and
 `Close`. Standalone `Close` is idempotent. Closed header/count access returns zero;
-closed content access returns a session error. Getters produce defensive,
+closed content access returns a session error. Transferred content access
+reports that ownership belongs to the package, rather than reporting a closed
+or uninitialized snapshot. Getters produce defensive,
 caller-owned API copies of already admitted immutable data; retaining adapters
 must account for their own working copies. Existing `Finish`, options, profile
 identities and ordinary assessment behavior are unchanged.
@@ -1155,7 +1163,10 @@ primary input, external represented bytes and buffered working storage,
 64 MiB archive, 1 MiB metadata, 256 MiB document/per-resource and 512 MiB aggregate
 selected resources. The stricter applicable limit wins; those legacy byte caps
 do not enlarge the shared graph account. Set finite overrides explicitly when
-needed. Exhaustion is incomplete processing, not a MusicXML violation or proof
+needed. For example, set `Graph.Budgets.MaxBufferedBytes` to `128 << 20`
+(134,217,728 bytes) for a finite buffer-only increase; other limits stay at their
+defaults. Raising a budget does not recover unread-DTD or discarded-model
+evidence. Exhaustion is incomplete processing, not a MusicXML violation or proof
 of conformance.
 
 `MXL.MaxXMLDepth` independently limits represented XML element depth, including

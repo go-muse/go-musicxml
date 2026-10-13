@@ -7,13 +7,13 @@ import (
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
-func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *int64) ResourceAttribute {
+func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *int64) (ResourceAttribute, bool) {
 	out := resourceAbsentAttribute()
 	q := QName{Space: xsd.XSINamespace, Local: name}
 	var a *AttributeFact
 	for i := range n.attributes {
 		if !r.step(1) {
-			return out
+			return out, false
 		}
 		if n.attributes[i].Name == q {
 			a = &n.attributes[i]
@@ -29,7 +29,7 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 			out.Raw = stateUnavailable[bool, string](out.Presence)
 			out.Value = stateUnavailable[bool, Atomic](out.Presence)
 		}
-		return out
+		return out, false
 	}
 	out.Presence = a.Presence
 	out.Raw = a.Scalar.Lexeme
@@ -38,11 +38,11 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 		if out.Presence.State == EvidenceKnown {
 			out.Value = Evidence[Atomic]{State: EvidenceAbsent}
 		}
-		return out
+		return out, true
 	}
 	if out.Raw.State != EvidenceKnown {
 		out.Value = stateUnavailable[string, Atomic](out.Raw)
-		return out
+		return out, true
 	}
 	// The kernel owns URI datatype validity. Discovery preserves any independent
 	// invalid hint cause even when another attribute or declaration is unavailable.
@@ -52,36 +52,36 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 		complete = complete && result.Complete
 		for _, issue := range result.Issues {
 			if !r.step(1) {
-				return out
+				return out, true
 			}
 			exactAttribute := issue.Attribute == (xsd.QName{Space: q.Space, Local: q.Local})
 			if issue.Attribute == (xsd.QName{}) {
 				if !r.step(int64(len(issue.Path)+len(n.header.Location.Path)+len(q.Space)+len(q.Local)) + 4) {
-					return out
+					return out, true
 				}
 				exactAttribute = resourceHintPathMatches(issue.Path, n.header.Location.Path, name)
 			}
 			if exactAttribute && issue.Subject == xsd.SubjectID(n.header.ID) {
 				out.Value, r.err = r.s.schemaInvalidValue(r.ctx, n, check)
-				return out
+				return out, true
 			}
 		}
 	}
 	if !complete {
 		out.Value = Evidence[Atomic]{State: EvidenceUnknown, Reason: "schema-hint-datatype-evidence-unavailable"}
-		return out
+		return out, true
 	}
 	if !r.step(1 + int64(len(out.Raw.Value))*2) {
-		return out
+		return out, true
 	}
 	if err := r.s.account.Charge(BudgetBufferedBytes, int64(len(out.Raw.Value))+32); err != nil {
 		r.err = err
-		return out
+		return out, true
 	}
 	*scratch += int64(len(out.Raw.Value)) + 32
 	normalized := xsd.CollapseWhitespace(out.Raw.Value)
 	out.Value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: normalized}}
-	return out
+	return out, true
 }
 func evaluateResourceHints(ctx context.Context, s *Session, _ *factNode, key RuleKey, p *contextPlan, final bool) (Decision, bool, error) {
 	if !final {
@@ -126,9 +126,9 @@ func projectResourceHintNode(r *contextReader, key RuleKey, n *factNode) error {
 			_ = s.account.Release(BudgetBufferedBytes, scratch)
 		}
 	}()
-	hint := resourceHintAttribute(r, n, "schemaLocation", &scratch)
-	noNamespace := resourceHintAttribute(r, n, "noNamespaceSchemaLocation", &scratch)
-	if n.header.Parent != 0 && hint.Presence.State == EvidenceAbsent && noNamespace.Presence.State == EvidenceAbsent {
+	hint, hintObserved := resourceHintAttribute(r, n, "schemaLocation", &scratch)
+	noNamespace, noNamespaceObserved := resourceHintAttribute(r, n, "noNamespaceSchemaLocation", &scratch)
+	if n.header.Parent != 0 && !hintObserved && !noNamespaceObserved {
 		return r.err
 	}
 	value := &ResourceSchemaHintsContext{Raw: hint.Raw, Trailing: Evidence[string]{State: EvidenceAbsent}, Complete: Evidence[bool]{State: EvidenceKnown, Value: true}, NoNamespace: noNamespace}
@@ -192,7 +192,7 @@ func projectResourceHintNode(r *contextReader, key RuleKey, n *factNode) error {
 				value.Trailing.Value = words[len(words)-1]
 			}
 			if hint.Value.State == EvidenceKnown {
-				value.Complete = Evidence[bool]{State: EvidenceUnknown, Reason: "schema-location-unmatched-token"}
+				value.Complete = Evidence[bool]{State: EvidenceKnown, Value: false, Reason: "schema-location-unmatched-token"}
 			}
 		}
 	}

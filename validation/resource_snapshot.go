@@ -58,8 +58,10 @@ type ResourceSnapshot struct {
 
 // FinishWithResourceSnapshot is an alternate terminal finalizer. It evaluates
 // all intrinsic phases before admitting and copying the selected owned facts,
-// then cleans the session exactly once. The best Report is always returned even
-// if snapshot admission fails. A nonnil snapshot must be closed or transferred
+// then cleans the session exactly once. Snapshot admission failure preserves
+// intrinsic findings but marks the returned Report incomplete/terminal; without
+// a known violation its conformance becomes undetermined. A nonnil snapshot must
+// be closed or transferred
 // to a package session sharing the exact same Account.
 func (s *Session) FinishWithResourceSnapshot(ctx context.Context, end Completion) (Report, *ResourceSnapshot, error) {
 	return s.finishResource(ctx, end, true)
@@ -169,6 +171,20 @@ func resourceSelectedContext(p ContextProperty) bool {
 	return false
 }
 
+// Numeric wrappers are immutable and cache their retained-byte size. Type
+// identity is checked before reading that private field, avoiding Interface
+// boxing for every traversed result field. Cache field indexes once as well.
+var resourceNumericFields = func() map[reflect.Type]int {
+	fields := make(map[reflect.Type]int, 3)
+	for _, typ := range []reflect.Type{reflect.TypeFor[Integer](), reflect.TypeFor[Decimal](), reflect.TypeFor[Rational]()} {
+		field, _ := typ.FieldByName("bytes")
+		fields[typ] = field.Index[0]
+	}
+	return fields
+}()
+
+const resourceCopyChunk = 4096
+
 // resourceMeasure is limited to closed library-defined transport/result values.
 // It is not a public reflection or predicate hook. Numeric wrappers are immutable;
 // all other pointers in these fixed acyclic record graphs are measured deeply.
@@ -188,22 +204,12 @@ func resourceMeasureAs(ctx context.Context, a *Account, v reflect.Value, to stri
 	if !v.IsValid() {
 		return 0, nil
 	}
-	if v.CanInterface() {
-		switch n := v.Interface().(type) {
-		case Integer:
-			return n.ByteSize() + 64, nil
-		case Decimal:
-			return n.ByteSize() + 64, nil
-		case Rational:
-			return n.ByteSize() + 64, nil
-		}
+	if field, ok := resourceNumericFields[v.Type()]; ok {
+		return v.Field(field).Int() + 64, nil
 	}
 	total := int64(32)
-	if v.CanInterface() {
-		switch v.Interface().(type) {
-		case NodeRef, Location:
-			total += int64(len(to))
-		}
+	if v.Type() == reflect.TypeFor[NodeRef]() || v.Type() == reflect.TypeFor[Location]() {
+		total += int64(len(to))
 	}
 	add := func(x int64, e error) error {
 		if e != nil {
@@ -221,6 +227,15 @@ func resourceMeasureAs(ctx context.Context, a *Account, v reflect.Value, to stri
 			}
 		}
 	case reflect.Slice:
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			if err := a.Charge(BudgetRuleSteps, int64(v.Len())); err != nil {
+				return 0, err
+			}
+			if err := add(int64(v.Len()), nil); err != nil {
+				return 0, err
+			}
+			break
+		}
 		for i := 0; i < v.Len(); i++ {
 			if err := add(resourceMeasureAs(ctx, a, v.Index(i), to)); err != nil {
 				return 0, err
@@ -233,7 +248,13 @@ func resourceMeasureAs(ctx context.Context, a *Account, v reflect.Value, to stri
 			}
 		}
 	case reflect.String:
-		if err := a.Charge(BudgetRuleSteps, int64(v.Len())); err != nil {
+		// String length is already available without scanning. Reserve copy work
+		// per bounded block rather than pretending measurement scans each byte.
+		blocks := int64(v.Len()) / resourceCopyChunk
+		if v.Len()%resourceCopyChunk != 0 {
+			blocks++
+		}
+		if err := a.Charge(BudgetRuleSteps, blocks); err != nil {
 			return 0, err
 		}
 		if err := add(int64(v.Len()), nil); err != nil {
@@ -344,7 +365,10 @@ func (s *Session) resourceID(ctx context.Context, n *factNode, actualOwner NodeI
 }
 
 func (s *ResourceSnapshot) live() error {
-	if s == nil || s.closed || s.account == nil || s.owner != nil {
+	if s != nil && s.owner != nil {
+		return &SessionError{Operation: "resource snapshot", Reason: "ownership transferred to package"}
+	}
+	if s == nil || s.closed || s.account == nil {
 		return &SessionError{Operation: "resource snapshot", Reason: "closed or uninitialized snapshot"}
 	}
 	return nil
@@ -461,21 +485,14 @@ func resourceRemap(value reflect.Value, from, to string) {
 	if !value.IsValid() {
 		return
 	}
-	if value.CanInterface() {
-		switch value.Interface().(type) {
-		case Integer, Decimal, Rational:
-			return
-		case NodeRef:
-			if value.FieldByName("DocumentID").String() == from {
-				value.FieldByName("DocumentID").SetString(strings.Clone(to))
-			}
-			return
-		case Location:
-			if value.FieldByName("DocumentID").String() == from {
-				value.FieldByName("DocumentID").SetString(strings.Clone(to))
-			}
-			return
+	if _, ok := resourceNumericFields[value.Type()]; ok {
+		return
+	}
+	if value.Type() == reflect.TypeFor[NodeRef]() || value.Type() == reflect.TypeFor[Location]() {
+		if value.FieldByName("DocumentID").String() == from {
+			value.FieldByName("DocumentID").SetString(strings.Clone(to))
 		}
+		return
 	}
 	switch value.Kind() {
 	case reflect.Struct:
@@ -516,66 +533,100 @@ func resourceLiveCopy[T any](ctx context.Context, a *Account, value T, from, to 
 	return out.Interface().(T), nil
 }
 func resourceCopyAs(ctx context.Context, v reflect.Value, from, to string) (reflect.Value, error) {
+	if ctx == nil {
+		return reflect.Value{}, contract("context", "must not be nil")
+	}
 	if err := ctx.Err(); err != nil {
 		return reflect.Value{}, err
 	}
 	if !v.IsValid() {
-		return v, nil
+		return v, ctx.Err()
 	}
-	if v.CanInterface() {
-		switch v.Interface().(type) {
-		case Integer, Decimal, Rational:
-			return v, nil
-		}
+	out := reflect.New(v.Type()).Elem()
+	if err := resourceCopyInto(ctx, out, v, from, to); err != nil {
+		return reflect.Value{}, err
+	}
+	return out, nil
+}
+
+// Fill already allocated destinations instead of allocating a reflected box for
+// every struct/string field. The root and mutable pointers/slices still own their
+// storage; immutable numeric values may safely share their private magnitude.
+func resourceCopyInto(ctx context.Context, out, v reflect.Value, from, to string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if _, ok := resourceNumericFields[v.Type()]; ok {
+		out.Set(v)
+		return nil
 	}
 	switch v.Kind() {
 	case reflect.Struct:
-		out := reflect.New(v.Type()).Elem()
 		for i := 0; i < v.NumField(); i++ {
-			c, e := resourceCopyAs(ctx, v.Field(i), from, to)
-			if e != nil {
-				return reflect.Value{}, e
+			if err := resourceCopyInto(ctx, out.Field(i), v.Field(i), from, to); err != nil {
+				return err
 			}
-			out.Field(i).Set(c)
 		}
-		if from != "" && out.CanInterface() {
-			switch out.Interface().(type) {
-			case NodeRef, Location:
-				if out.FieldByName("DocumentID").String() == from {
-					out.FieldByName("DocumentID").SetString(strings.Clone(to))
+		if from != "" && (v.Type() == reflect.TypeFor[NodeRef]() || v.Type() == reflect.TypeFor[Location]()) {
+			if out.FieldByName("DocumentID").String() == from {
+				text, err := resourceCopyString(ctx, to)
+				if err != nil {
+					return err
 				}
+				out.FieldByName("DocumentID").SetString(text)
 			}
 		}
-		return out, nil
 	case reflect.Slice:
 		if v.IsNil() {
-			return reflect.Zero(v.Type()), nil
+			return nil
 		}
-		out := reflect.MakeSlice(v.Type(), v.Len(), v.Len())
-		for i := 0; i < v.Len(); i++ {
-			c, e := resourceCopyAs(ctx, v.Index(i), from, to)
-			if e != nil {
-				return reflect.Value{}, e
+		out.Set(reflect.MakeSlice(v.Type(), v.Len(), v.Len()))
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			for start := 0; start < v.Len(); {
+				if err := ctx.Err(); err != nil {
+					return err
+				}
+				end := start + min(resourceCopyChunk, v.Len()-start)
+				reflect.Copy(out.Slice(start, end), v.Slice(start, end))
+				start = end
 			}
-			out.Index(i).Set(c)
+			return nil
 		}
-		return out, nil
+		for i := 0; i < v.Len(); i++ {
+			if err := resourceCopyInto(ctx, out.Index(i), v.Index(i), from, to); err != nil {
+				return err
+			}
+		}
 	case reflect.Pointer:
-		if v.IsNil() {
-			return reflect.Zero(v.Type()), nil
+		if !v.IsNil() {
+			out.Set(reflect.New(v.Type().Elem()))
+			return resourceCopyInto(ctx, out.Elem(), v.Elem(), from, to)
 		}
-		c, e := resourceCopyAs(ctx, v.Elem(), from, to)
-		if e != nil {
-			return reflect.Value{}, e
-		}
-		out := reflect.New(v.Type().Elem())
-		out.Elem().Set(c)
-		return out, nil
 	case reflect.String:
-		out := reflect.New(v.Type()).Elem()
-		out.SetString(strings.Clone(v.String()))
-		return out, nil
+		text, err := resourceCopyString(ctx, v.String())
+		if err != nil {
+			return err
+		}
+		out.SetString(text)
 	default:
-		return v, nil
+		out.Set(v)
 	}
+	return nil
+}
+
+func resourceCopyString(ctx context.Context, value string) (string, error) {
+	if len(value) <= resourceCopyChunk {
+		return strings.Clone(value), ctx.Err()
+	}
+	var out strings.Builder
+	out.Grow(len(value))
+	for start := 0; start < len(value); {
+		if err := ctx.Err(); err != nil {
+			return "", err
+		}
+		end := start + min(resourceCopyChunk, len(value)-start)
+		out.WriteString(value[start:end])
+		start = end
+	}
+	return out.String(), nil
 }

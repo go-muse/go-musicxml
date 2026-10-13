@@ -12,8 +12,9 @@ and graph consumer.
 ## Typed evidence and ownership
 
 `ContextResult.Resource` has exactly one named branch: link, image, schema hints,
-group or instrument. Its owner, exact assembly-qualified subject declaration,
+group or instrument. Its owner, typed evidence for the exact assembly-qualified subject declaration,
 local score-part, source/model location and all causal references remain explicit.
+An unavailable subject declaration retains its own state, reason and cause.
 Copies own slices, strings, positions and causal records. Immutable numeric
 wrappers retain their normal ownership contract. The optional JSON member is
 omitted for existing context records, preserving historical serialized reports.
@@ -48,7 +49,10 @@ target. Other cases retain the interpretation gap. Enumeration and order gaps
 retain their own evidence/cause; current-model order is not original source order.
 
 The implementation builds document-order indexes by name and by
-(name, per-parent ordinal), once. Each selection uses bounded binary searches,
+(name, per-parent ordinal), once, only if an exact link/bookmark is selected.
+Link-free documents retain a lightweight local-part index (256 logical bytes
+per node plus one fixed reserve); attachment-bearing documents retain the full
+1408-byte per-node index allowance plus four times the local-name byte count. Each selection uses bounded binary searches,
 not a new sibling/descendant scan. The exact integer is magnitude-checked before
 host-width conversion. Huge positions do not allocate sparse arrays.
 
@@ -67,7 +71,13 @@ assembly independently. It tokenizes only XML whitespace into discovery pairs,
 retains an unmatched final token, and never fetches or selects schemas. Existing
 fixed-schema zero/odd/even list(anyURI) acceptance remains unchanged. A pairing
 gap is optional intrinsic context: successful extraction does not assert usable
-schema discovery. A separately selected discovery consumer must assess that gap.
+schema discovery. An observed odd token count is `Complete = Known(false)`;
+zero or evenly paired tokens are `Known(true)`. The unchanged `Raw` and
+`NoNamespace.Presence` fields distinguish absent hints from explicitly empty
+hints; completeness describes pairing, not presence.
+With an unread DTD, one root row retains the document-wide attribute-completeness
+gap. Descendant rows are emitted only for physically observed xsi hints, retaining
+their actual unavailable lexical/declaration evidence without inventing values. A separately selected discovery consumer must assess that gap.
 Model xsi history is unavailable, not known absent.
 
 ## Evidence and regression provenance

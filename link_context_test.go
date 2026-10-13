@@ -186,8 +186,8 @@ func TestLinkContextSchemaHintsDiscoveryIsIndependent(t *testing.T) {
 	}{
 		{"empty", "", 0, validation.EvidenceKnown, ""},
 		{"pair", "urn:a a.xsd", 1, validation.EvidenceKnown, ""},
-		{"odd", "urn:a a.xsd extra", 1, validation.EvidenceUnknown, "extra"},
-		{"nbsp", "urn:a\u00a0a.xsd", 0, validation.EvidenceUnknown, "urn:a\u00a0a.xsd"},
+		{"odd", "urn:a a.xsd extra", 1, validation.EvidenceKnown, "extra"},
+		{"nbsp", "urn:a\u00a0a.xsd", 0, validation.EvidenceKnown, "urn:a\u00a0a.xsd"},
 		{"invalid", "urn:a %GG", 1, validation.EvidenceInvalid, ""},
 	}
 	for _, tc := range cases {
@@ -383,7 +383,7 @@ func TestLinkContextOpusFamiliesReuseLocalVersionAndPagination(t *testing.T) {
 	for _, fact := range facts {
 		if link := fact.Resource.Link; link != nil {
 			found = true
-			if link.Kind != validation.ResourceScoreWorkOpus || fact.Resource.SubjectDeclaration.Assembly != validation.AssemblyMusicXML {
+			if link.Kind != validation.ResourceScoreWorkOpus || fact.Resource.SubjectDeclaration.Value.Assembly != validation.AssemblyMusicXML {
 				t.Fatalf("wrong opus assembly: %+v", fact)
 			}
 		}

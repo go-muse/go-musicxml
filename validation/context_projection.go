@@ -34,16 +34,18 @@ type ContextPosition struct {
 // optional context does not itself assert a failed mandatory predicate.
 // Like Report, these are editable snapshots, not tamper-proof certificates.
 type ContextResult struct {
-	Provider     RuleKey
-	Subject      NodeRef
-	Property     ContextProperty
-	Value        Evidence[Atomic]
-	Origins      []Location
-	Span         *SpanContextResult
-	Repeat       *RepeatContextResult
-	Navigation   *NavigationContextResult
-	Layout       *LayoutContextResult
-	Timing       *TimingContextResult
+	Provider   RuleKey
+	Subject    NodeRef
+	Property   ContextProperty
+	Value      Evidence[Atomic]
+	Origins    []Location
+	Span       *SpanContextResult
+	Repeat     *RepeatContextResult
+	Navigation *NavigationContextResult
+	Layout     *LayoutContextResult
+	Timing     *TimingContextResult
+	// New payload families omit nil to preserve the eight original profiles
+	// byte-for-byte; the historical payload fields retain explicit JSON nulls.
 	SoundMapping *SoundMappingContextResult `json:",omitempty"`
 	Resource     *ResourceContextResult     `json:",omitempty"`
 	Container    *ContainerContextResult    `json:",omitempty"`
