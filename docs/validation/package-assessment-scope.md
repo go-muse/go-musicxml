@@ -1,5 +1,12 @@
 # Batch 8 package and linked-resource scope/evidence
 
+Current clarification, 14 October 2026: the historical central-only mimetype
+residual recorded below has been superseded by the
+[local-header source review](evidence/mimetype-local-header-review-20261014.md)
+and [current profile scope](package-profile-scope.md#mimetype-header-scope-reviewed-14-october-2026).
+The historical rows and original planning records remain unchanged; their old
+execution and interpretation status is not a current acceptance claim.
+
 Historical packaging snapshot, clarified on 13 October 2026. The observed private
 integration head was `388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f` (tree
 `6703aad89730a6f681065253ac32d1e3a5e8babd`). It was an unpublished development

@@ -597,11 +597,18 @@ func (a *mxlAssessmentArchive) observe() error {
 		if err = a.observeLocal(e, end.start); err != nil {
 			return err
 		}
-		if err = a.checkExtra(e.local.extra); err != nil {
+		if _, err = a.checkExtra(e.local.extra); err != nil {
 			return err
 		}
-		if err = a.checkExtra(e.central.extra); err != nil {
-			return err
+		framed, extraErr := a.checkExtra(e.central.extra)
+		if extraErr != nil {
+			return extraErr
+		}
+		if e.central.name == mxlMIMETypePath && !framed && unsupported == nil {
+			// This bounded capability is separate from MusicXML's local-only
+			// no-extra rule. Finish identity/range checks before returning it so
+			// the independently proved local predicate remains available.
+			unsupported = &mxlAssessmentZIPCapabilityError{feature: "unframed mimetype central extra field"}
 		}
 		if (e.local.flags|e.central.flags)&0x2041 != 0 && unsupported == nil {
 			unsupported = &mxlAssessmentZIPCapabilityError{feature: "encrypted entry"}
@@ -753,22 +760,27 @@ func (a *mxlAssessmentArchive) observeLocal(e *mxlAssessmentZIPEntry, centralSta
 	e.associated = true
 	return nil
 }
-func (a *mxlAssessmentArchive) checkExtra(extra string) error {
-	for p := 0; p+4 <= len(extra); {
+
+// checkExtra preserves raw uninterpreted fields and reports whether the
+// header-ID/data-size blocks are completely framed (Info-ZIP 1997, field D).
+// Framing completeness alone does not interpret or certify each extra kind.
+func (a *mxlAssessmentArchive) checkExtra(extra string) (bool, error) {
+	p := 0
+	for p+4 <= len(extra) {
 		if err := a.step(1); err != nil {
-			return err
+			return false, err
 		}
 		tag := uint16(extra[p]) | uint16(extra[p+1])<<8
 		n := int(extra[p+2]) | int(extra[p+3])<<8
 		if tag == 1 {
-			return &mxlAssessmentZIPCapabilityError{feature: "ZIP64 extra field"}
+			return false, &mxlAssessmentZIPCapabilityError{feature: "ZIP64 extra field"}
 		}
 		if n > len(extra)-p-4 {
-			return nil
-		} // Preserve uninterpreted malformed extras as raw facts.
+			return false, nil
+		}
 		p += 4 + n
 	}
-	return nil
+	return p == len(extra), nil
 }
 
 // Iterative heap sort needs no extra allocation and polls/charges every

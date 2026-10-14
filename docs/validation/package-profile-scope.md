@@ -46,7 +46,7 @@ record IDs are provenance, not a count of independent executable obligations.
 | --- | --- | --- | --- |
 | `container-path` | package | Mandatory exact `META-INF/container.xml` entry; independent container XSD report | `MX40-PROSE-mxl-container-path` |
 | `mimetype-stored` | entry | Existing raw mimetype is STORE and unencrypted; independent local/central evidence | `MX40-PROSE-mxl-mimetype-stored` |
-| `mimetype-no-extra` | entry | Mandatory local header clause; central-only interpretation remains unknown | `MX40-PROSE-mxl-mimetype-no-extra` |
+| `mimetype-no-extra` | entry | Mandatory local header clause; independently associated zero local extra passes even with central-only extras | `MX40-PROSE-mxl-mimetype-no-extra` |
 | `mimetype-no-prefix` | entry | Reviewed leading ASCII/NUL padding and five standard Unicode BOMs; other families remain unknown | `MX40-PROSE-mxl-mimetype-no-prefix` |
 | `first-root-musicxml` | rootfile | Mandatory actual musical kind for the first encoded rootfile | `MX40-PROSE-mxl-first-root-musicxml` |
 | `rootfile-root` | rootfile | MusicXML rootfiles have unqualified score-partwise/timewise/opus roots; known nonmusical alternates are separate | `MX40-PROSE-mxl-rootfile-document-root` |
@@ -74,6 +74,26 @@ The [dated compressed MXL tutorial](https://www.w3.org/2021/06/musicxml40/tutori
 provides publication context; its historical statement denying a container XSD
 does not override the actual pinned published container schema.
 
+## Mimetype header scope, reviewed 14 October 2026
+
+The adopted early-byte identification mechanism fixes the local payload position;
+central-directory extras cannot move it. The
+[dated source review](evidence/mimetype-local-header-review-20261014.md) follows
+MusicXML's own tutorial and adoption history through the exact EPUB 3.1 and
+OpenDocument 1.0 predecessors. This contextual evidence supersedes the older
+central-only interpretation gate; it is not a new user-selected ZIP profile or
+an express MusicXML erratum.
+
+A proved local extra is a failure, including when later transport is incomplete.
+A proved zero local extra with independently associated headers passes this one
+predicate regardless of central extra length. Unavailable local or association
+evidence remains unavailable. Separate raw ZIP checks still govern central
+record bounds, identity, flags/methods, entry layout, CRC and supported features.
+An incompletely framed mimetype central extra block produces a bounded transport
+capability error after identity checks; it does not reverse the local predicate
+or allow overall satisfaction. This narrow framing guard does not interpret
+unknown extra kinds, change unrelated-entry admission, or expand ZIP support.
+
 ## Boundaries that affect readiness
 
 - Current models cannot prove discarded original xsi hints absent or complete.
@@ -93,8 +113,8 @@ does not override the actual pinned published container schema.
   lexical presence are outside a current MXL boundary's claim. No encode/reparse
   step can establish those facts. Separately reached raw nested packages still
   carry original-source obligations.
-- Central-only mimetype extra fields, unreviewed leading padding, complete media
-  type-set closure, outer rootfile-to-compressed-package substitution and unknown
+- Unreviewed leading padding, complete media type-set closure, outer
+  rootfile-to-compressed-package substitution and unknown
   role/association interpretations remain explicit incomplete cases when reached.
   Technical nested traversal alone does not settle outer indirection semantics.
 - Full ZIP/JAR/DEFLATE normative closure and external dictionaries remain open
