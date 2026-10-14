@@ -124,12 +124,15 @@ func (s *Session) SourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribu
 	if f.Subject != (NodeRef{s.documentID, n.header.ID}) || n.attributeSeal != nil || len(n.attributes) == 0 || !validQName(f.Attribute) || f.Attribute.Space == "http://www.w3.org/2000/xmlns/" {
 		return s.fail(contract("source DTD ID occurrence", "exact non-namespace open owner required"))
 	}
+	if err = s.account.Check(BudgetScalarBytes, int64(len(f.Value))); err != nil {
+		return s.fail(err)
+	}
+	if err = s.step(ctx, int64(len(f.Value))+1); err != nil {
+		return s.fail(err)
+	}
 	a := n.attributes[len(n.attributes)-1]
 	if a.Name != f.Attribute || a.Presence.State != EvidenceKnown || !a.Presence.Value || a.Scalar.Lexeme.Value != f.Value {
 		return s.fail(contract("source DTD ID occurrence", "exact admitted attribute input required"))
-	}
-	if err = s.account.Check(BudgetScalarBytes, int64(len(f.Value))); err != nil {
-		return s.fail(err)
 	}
 	if len(f.IsID.Reason) > maxIdentityBytes || f.IsID.Cause != nil || f.IsID.State != EvidenceKnown && f.IsID.State != EvidenceUnknown && f.IsID.State != EvidenceUnsupported {
 		return s.fail(contract("source DTD ID classification", "bounded cause-free typing evidence required"))
