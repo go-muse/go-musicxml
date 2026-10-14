@@ -66,6 +66,7 @@ func TestBarlineLocationAdapterMatrix(t *testing.T) {
 		wants             []validation.Outcome
 	}{
 		{"left-after-attributes", barlineDivisions + `<barline location="left"/>`, "", []validation.Outcome{validation.OutcomePass}},
+		{"left-before-invalid-duration", barlineDivisions + `<barline location="left"/><note><rest/><duration>-1</duration></note>`, "", []validation.Outcome{validation.OutcomePass}},
 		{"left-after-note", barlineDivisions + barlineNote("1") + `<barline location="left"/>`, "", []validation.Outcome{validation.OutcomeFail}},
 		{"left-after-backup", barlineDivisions + barlineNote("1") + barlineBackup("1") + `<barline location="left"/>`, "", []validation.Outcome{validation.OutcomePass}},
 		{"default-terminal-note", barlineDivisions + barlineNote("1") + `<barline/>`, "", []validation.Outcome{validation.OutcomePass}},

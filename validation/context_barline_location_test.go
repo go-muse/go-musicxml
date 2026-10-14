@@ -281,3 +281,25 @@ func TestBarlineLocationPlanRequiresExactNodeAndTimelineContract(t *testing.T) {
 		}
 	}
 }
+
+func TestBarlineLocationUnknownMoverBlocksEndButNotKnownLeft(t *testing.T) {
+	s, service, b, content, at := barlineBoundaryFixture(t, Budgets{})
+	defer s.cleanup()
+	cause := &DecisionRef{Rule: RuleKey{"unavailable-mover", 1}, Subject: NodeRef{"d", 50}}
+	content.children[3].header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "unavailable-mover", Cause: cause}
+	left := stateNode(b, timelineRoleBarline, 70, stateAbsent[Atomic]())
+	left.header.Parent = content.header.ID
+	content.children = append([]*factNode{left}, content.children...)
+	service.Facts[70] = timelineEventFact{Origin: stateKnown(statePosition(t, 0, 0, 1))}
+	got, d, err := barlineLocationBoundary(context.Background(), s, service, b, content, at, "right")
+	if err != nil || d.Outcome != "" || got.State != EvidenceInvalid || !reflect.DeepEqual(got.Cause, cause) {
+		t.Fatalf("end lost mover cause: %+v %+v %v", got, d, err)
+	}
+	key := RuleKey{"timeline", 1}
+	s.timeline = map[RuleKey]*timelineService{key: service}
+	service.Playback.Barlines = map[NodeID]barlinePlaybackContext{70: {Location: stateKnown("left")}}
+	decision, pending, err := evaluateBarlineLocation(context.Background(), s, left, &contextPlan{Timeline: key}, true)
+	if err != nil || pending || decision.Outcome != OutcomePass {
+		t.Fatalf("known earlier left poisoned: %+v %v", decision, err)
+	}
+}
