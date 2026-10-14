@@ -91,7 +91,7 @@ func TestDictionaryIPARepresentationMalformedResponseIsConfiguration(t *testing.
 func TestDictionaryIPARepresentationCallbackErrorsRemainUnavailable(t *testing.T) {
 	configuration := &validation.ConfigurationError{Field: "caller configuration", Reason: "transport initialization"}
 	for _, where := range []string{"open", "read", "close"} {
-		for _, cause := range []error{errors.New("transport unavailable"), configuration} {
+		for _, cause := range []error{errors.New("transport unavailable"), configuration, dictionaryImportError("component length does not match the selected pin")} {
 			t.Run(where+"/"+cause.Error(), func(t *testing.T) {
 				a := dictionaryImportAccount(t, validation.Budgets{})
 				body := &resourceTestBody{Reader: bytes.NewReader([]byte("x"))}
@@ -171,5 +171,52 @@ func TestDictionaryIPARepresentationTransportGapKeepsUsableSet(t *testing.T) {
 			}
 			dictionaryImportNoLive(t, a)
 		})
+	}
+}
+
+func TestDictionaryIPARepresentationLengthMismatchIsConfiguration(t *testing.T) {
+	for _, size := range []int{0, 1, 3, 10000} {
+		a := dictionaryImportAccount(t, validation.Budgets{})
+		body := &resourceTestBody{Reader: bytes.NewReader(make([]byte, size))}
+		request := DictionaryComponentRequest{Manifest: dictionaryRepresentationTestID, Component: validation.DictionaryComponentPin{Bytes: 2}}
+		source := dictionaryImportSourceFunc(func(_ context.Context, r DictionaryComponentRequest) (DictionaryComponentResult, error) {
+			return DictionaryComponentResult{Request: r, State: validation.EvidenceKnown, Body: body}, nil
+		})
+		out, err := importDictionaryComponent(context.Background(), a, source, request)
+		if out != nil || !errors.Is(err, validation.ErrInvalidConfiguration) || errors.Is(err, ErrDictionaryUnavailable) || body.closed != 1 {
+			t.Fatalf("size=%d out=%v err=%v closes=%d", size, out, err, body.closed)
+		}
+		if external, _ := a.Usage(validation.BudgetExternalBytes); external != int64(min(size, 3)) {
+			t.Fatalf("size=%d external bytes=%d", size, external)
+		}
+		dictionaryImportNoLive(t, a)
+	}
+}
+
+func TestDictionaryIPARepresentationMalformedImportStopsLaterProviders(t *testing.T) {
+	for _, earlierGap := range []bool{false, true} {
+		a := dictionaryImportAccount(t, validation.Budgets{})
+		selections := []validation.DictionarySelection{dictionaryRepresentationTestSelection(), dictionaryImportSelection(validation.DictionaryManifestSMuFL14Ranges)}
+		if earlierGap {
+			selections = append([]validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestStandardSounds40)}, selections...)
+		}
+		transport := errors.New("earlier component offline")
+		calls := 0
+		source := dictionaryImportSourceFunc(func(_ context.Context, r DictionaryComponentRequest) (DictionaryComponentResult, error) {
+			calls++
+			if r.Manifest == validation.DictionaryManifestStandardSounds40 {
+				return DictionaryComponentResult{}, transport
+			}
+			return DictionaryComponentResult{Request: r, State: validation.EvidenceKnown}, nil
+		})
+		set, err := loadDictionarySet(context.Background(), a, DictionaryOptions{Selections: selections, Source: source})
+		wantCalls := 1
+		if earlierGap {
+			wantCalls++
+		}
+		if set != nil || !errors.Is(err, validation.ErrInvalidConfiguration) || calls != wantCalls || errors.Is(err, ErrDictionaryUnavailable) != earlierGap || errors.Is(err, transport) != earlierGap {
+			t.Fatalf("earlier gap=%v set=%v calls=%d err=%v", earlierGap, set, calls, err)
+		}
+		dictionaryImportNoLive(t, a)
 	}
 }
