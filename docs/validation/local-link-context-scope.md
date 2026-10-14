@@ -44,13 +44,20 @@ absence and never an additional mandatory failure.
 
 A present selector supports unprefixed NCName spellings in the no-namespace
 MusicXML descendant domain only. This does not reinterpret arbitrary NMTOKENs as
-QNames. There is no absent-position default. Global descendant ordinal and XPath
-per-parent ordinal readings must identify the same unique node, or both have no
-target. Other cases retain the interpretation gap. Enumeration and order gaps
-retain their own evidence/cause; current-model order is not original source order.
+QNames. There is no absent-position default. A specified position selects the
+one-based ordinal among all matching descendants of the next content anchor in
+document order. The official beam-only XPath example agrees within the pinned
+MusicXML declaration graph: every eligible beam-containing anchor is one note,
+whose beams share one parent. It does not prescribe a generalized per-parent
+XPath algorithm for other element names. The earlier conservative agreement
+gate was based on that unsupported generalization and is corrected here.
+Enumeration and order gaps retain their own evidence/cause; current-model order
+is not original source order. See the official
+[bookmark definition](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bookmark/)
+and pinned note/music-data declarations for the source interpretation.
 
-The implementation builds document-order indexes by name and by
-(name, per-parent ordinal), once, only if an exact link/bookmark is selected.
+The implementation builds a document-order index by name once, only if an
+exact link/bookmark is selected.
 Link-free documents retain a lightweight local-part index (256 logical bytes
 per node plus one fixed reserve); attachment-bearing documents retain the full
 1408-byte per-node index allowance plus four times the local-name byte count.

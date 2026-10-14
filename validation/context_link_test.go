@@ -85,7 +85,7 @@ func TestResourceAttachmentSiblingAndOrdinalMatrix(t *testing.T) {
 		})
 	}
 }
-func TestResourceAttachmentGlobalAndXPathAgreement(t *testing.T) {
+func TestResourceAttachmentGlobalDescendantOrdinal(t *testing.T) {
 	for _, position := range []string{"1", "2", "3"} {
 		root := resourceTestNode(1, 0, "measure")
 		link := resourceTestNode(2, 1, "link")
@@ -96,12 +96,17 @@ func TestResourceAttachmentGlobalAndXPathAgreement(t *testing.T) {
 		word2 := resourceTestNode(7, 6, "words")
 		r, index := resourceTestReader(t, root, link, anchor, a, word1, b, word2)
 		got := index.attachment(r, link, resourceTestText("words"), resourceTestPosition(position))
-		want := EvidenceUnknown
+		want := EvidenceKnown
+		wantNode := NodeID(5)
+		if position == "2" {
+			wantNode = 7
+		}
 		if position == "3" {
+			wantNode = 0
 			want = EvidenceAbsent
 		}
-		if got.State != want {
-			t.Fatalf("position %s got %+v", position, got)
+		if got.State != want || got.Value.Node != wantNode {
+			t.Fatalf("position %s got %+v, want node %d", position, got, wantNode)
 		}
 	}
 }

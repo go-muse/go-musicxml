@@ -4,14 +4,6 @@ import (
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
-type resourceParentName struct {
-	parent NodeID
-	name   string
-}
-type resourceNameOrdinal struct {
-	name    string
-	ordinal uint64
-}
 type resourcePartReference struct {
 	key  RuleKey
 	plan *referencePlan
@@ -23,14 +15,11 @@ type resourceLinkIndex struct {
 	parts             map[NodeID]Evidence[NodeRef]
 	next, nextContent map[NodeID]Evidence[NodeRef]
 	names             map[string][]NodeID
-	ordinals          map[resourceNameOrdinal][]NodeID
 }
 
-// Two document-order inverted indexes make every attachment query logarithmic:
-// name indexes implement the global ordinal reading; (name,sibling ordinal)
-// indexes implement the per-parent XPath reading. They must select the same
-// unique node (or both no node). Neither numeric position nor node depth drives
-// an allocation, and repeated links do not rescan sibling or descendant trees.
+// A document-order name index selects the ordinal among all matching
+// descendants of the anchor, as specified by MusicXML. Numeric positions and
+// node depth never drive allocation; queries do not rescan descendant trees.
 func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 	i := &resourceLinkIndex{}
 	// Other resource families still need local part ownership, but attachment
@@ -65,7 +54,6 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 	}
 	i.bytes += size
 	i.parts = make(map[NodeID]Evidence[NodeRef])
-	var counts map[resourceParentName]uint64
 	if attachments {
 		i.position = make(map[NodeID]int)
 		i.end = make(map[NodeID]int)
@@ -73,8 +61,6 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 		i.next = make(map[NodeID]Evidence[NodeRef])
 		i.nextContent = make(map[NodeID]Evidence[NodeRef])
 		i.names = make(map[string][]NodeID)
-		i.ordinals = make(map[resourceNameOrdinal][]NodeID)
-		counts = make(map[resourceParentName]uint64)
 	}
 	partReferences := make(map[DeclarationID]resourcePartReference)
 	for _, key := range r.s.catalog.orders[r.s.profile.ID] {
@@ -142,11 +128,7 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 			return i
 		}
 		i.bytes += int64(len(name)) * 4
-		parent := resourceParentName{n.header.Parent, name}
-		counts[parent]++
 		i.names[name] = append(i.names[name], id)
-		ordinal := resourceNameOrdinal{name, counts[parent]}
-		i.ordinals[ordinal] = append(i.ordinals[ordinal], id)
 	}
 	if !attachments {
 		return i
@@ -260,22 +242,20 @@ func (i *resourceLinkIndex) attachment(r *contextReader, n *factNode, element, p
 	start, end := i.position[anchor.Value.Node]+1, i.end[anchor.Value.Node]
 	candidates := i.names[name]
 	low, high := i.lower(r, candidates, start), i.lower(r, candidates, end)
+	if r.err != nil {
+		return stateUnknown[NodeRef]("context-interrupted")
+	}
 	ordinal := position.Value.Integer.value
 	if ordinal.Sign() <= 0 {
 		return Evidence[NodeRef]{State: EvidenceUnsupported, Reason: "resource-position-domain-unavailable"}
 	}
-	// An arbitrarily large positive integer has no target in either reading;
+	// An arbitrarily large positive integer has no matching descendant;
 	// compare magnitude before any host-width conversion or ordinal lookup.
 	if !ordinal.IsUint64() || ordinal.Uint64() > uint64(high-low) {
 		return Evidence[NodeRef]{State: EvidenceAbsent}
 	}
 	k := ordinal.Uint64()
 	global := candidates[low+int(k-1)]
-	localCandidates := i.ordinals[resourceNameOrdinal{name, k}]
-	localLow, localHigh := i.lower(r, localCandidates, start), i.lower(r, localCandidates, end)
-	if localHigh-localLow != 1 || localCandidates[localLow] != global {
-		return stateUnknown[NodeRef]("link-descendant-ordinal-interpretation")
-	}
 	return Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{r.s.documentID, global}}
 }
 

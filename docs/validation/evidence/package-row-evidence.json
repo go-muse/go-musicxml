@@ -6924,70 +6924,70 @@
       "function": "TestLinkContextImagesGroupsAndScopedInstrument",
       "line": 142,
       "end_line_bound": 179,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextIndependentInvalidHintAndUnavailableValue": {
       "file": "link_context_test.go",
       "function": "TestLinkContextIndependentInvalidHintAndUnavailableValue",
       "line": 244,
       "end_line_bound": 265,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextInvalidAndEmptyRemainDistinct": {
       "file": "link_context_test.go",
       "function": "TestLinkContextInvalidAndEmptyRemainDistinct",
       "line": 112,
       "end_line_bound": 141,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextModelCurrentFactsDoNotRecoverSourceHints": {
       "file": "link_context_test.go",
       "function": "TestLinkContextModelCurrentFactsDoNotRecoverSourceHints",
       "line": 217,
       "end_line_bound": 243,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextModelEditsAndOwnedReports": {
       "file": "link_context_test.go",
       "function": "TestLinkContextModelEditsAndOwnedReports",
       "line": 310,
       "end_line_bound": 345,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextNewTemporaryOwnersReleaseOnLimits": {
       "file": "link_context_test.go",
       "function": "TestLinkContextNewTemporaryOwnersReleaseOnLimits",
       "line": 396,
       "end_line_bound": 404,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextOpusFamiliesReuseLocalVersionAndPagination": {
       "file": "link_context_test.go",
       "function": "TestLinkContextOpusFamiliesReuseLocalVersionAndPagination",
       "line": 346,
       "end_line_bound": 395,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextSchemaHintsDiscoveryIsIndependent": {
       "file": "link_context_test.go",
       "function": "TestLinkContextSchemaHintsDiscoveryIsIndependent",
       "line": 180,
       "end_line_bound": 216,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextSourceAttachmentAndDefaults": {
       "file": "link_context_test.go",
       "function": "TestLinkContextSourceAttachmentAndDefaults",
       "line": 59,
       "end_line_bound": 111,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_context_test.go::TestLinkContextTimewiseCreditAndForeignHomonyms": {
       "file": "link_context_test.go",
       "function": "TestLinkContextTimewiseCreditAndForeignHomonyms",
       "line": 266,
       "end_line_bound": 309,
-      "file_sha256": "a93baad864dc55b2f3c3a580e10ae23449fc2993ed50ad643be0a5a0b68dd799"
+      "file_sha256": "b3baae0459f0fa34b143f645fbce3ae3dfec5695e831c9d36b16dd7faf2c8fe2"
     },
     "link_intent_test.go::TestResourceXLinkBehaviorIntentMatrix": {
       "file": "link_intent_test.go",
