@@ -20,6 +20,13 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Remove the invented figure-number numeric lexical requirement from the built-in
+  source/model context profiles. MusicXML deliberately retains unrestricted
+  style-text; nondecimal figures no longer make assessment incomplete, while
+  independent XSD failures remain. Keep the public numeric-subset plan as
+  deprecated legacy compatibility. Record the deliberate context-profile
+  rule/digest/outcome migration without changing historical snapshots.
+
 - Classify dictionary provider, response, transport and verification failures as
   runtime dictionary unavailability, exposing `ErrDictionaryUnavailable` and
   `DictionaryImportError` with preserved original causes. Configuration misuse

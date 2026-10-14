@@ -98,21 +98,30 @@ The [concrete proposal](https://github.com/w3c-cg/musicxml/issues/94#issuecommen
 retains both style-text and the descriptive numeric sentence;
 [PR 202](https://github.com/w3c-cg/musicxml/pull/202) merged this design in 2017.
 
-Disposition: a total numeric lexical grammar is not an omitted implementation
-of an established MusicXML datatype. The accepted nonempty ASCII digit subset
-remains sufficient positive evidence. Other style-text remains semantically
-unassessed by this implementation; unrestricted text does not prove every string
-numeric, and no new sign, fraction, Roman numeral, Unicode digit, whitespace, or
-empty-string rejection is justified by an invented integer grammar.
+Disposition, corrected after the original source review: the built-in mandatory
+numeric-subset predicate was an additional lexical requirement, not an omitted
+MusicXML datatype implementation. It has been removed from `ProfileSourceContext`
+and `ProfileModelContext`. Nondecimal, empty and whitespace-only style-text no
+longer produces numeric incompleteness. This does not assert that every string
+has numeric meaning. XSD declaration/attribute checks and raw text projection
+remain intact.
 
-No runtime policy changes accompany this disposition. Existing
-`TestContextFigureNumberRetainsUnreviewedGrammarGate`,
-`TestContextFigureNumberAbsentDoesNotCreateGrammarObligation`,
-`TestContextFigureNumberRequiresExactDeclaration`, and
-`TestLocalRound1FigureNumberSufficientNumericSubset` preserve the bounded result.
-If the completion contract requires a total semantic answer for arbitrary text,
-that requires an explicit additional notation/profile policy; this document
-does not silently mark that promise implemented.
+The original `CHECK-figure-number-numeric` and
+`MX40-PROSE-figure-number-numeric` records and historical outcomes remain
+preserved. This is a withdrawn overconstraint, not an implemented total grammar.
+The exported `NewFigureNumberNumericPlan` remains deprecated legacy compatibility:
+explicit custom catalogs can retain its previous ASCII-digit/Unsupported
+behavior and mandatory/normative binding. Such selection adds a caller-chosen
+restriction beyond MusicXML conformance.
+
+The previous disposition retained the built-in gate and said no runtime policy
+changed; that conclusion is superseded by this correction. The
+[correction receipt](figure-number-conformance-correction.md) records the exact
+source rationale, regression matrix and deliberate profile migration. The
+historically named `TestContextFigureNumberRetainsUnreviewedGrammarGate` now
+verifies only an explicitly constructed legacy catalog. Built-in behavior is
+covered by `TestFigureNumberUnrestrictedTextConformance` and its independent
+XSD and strict-decode controls. No historical obligation is promoted to complete.
 
 ## M14: lyric language domain and font selectors
 

@@ -164,8 +164,9 @@ Select `ProfileModelContext` or `ProfileSourceContext` for the bounded
 repeat/span, local-default, layout and encoded-performance extension. Owned
 `Report.Context` snapshots retain per-field availability and provenance; a
 completed provider does not mean every optional fact is known. Selected
-contextual predicates retain unresolved numeric, repeat-content and gesture
-requirements explicitly. See the [context scope](docs/validation/context-assessment-scope.md).
+contextual predicates retain unresolved time-only duplicate ordering,
+repeat-content and gesture requirements explicitly. Figure-number text retains
+its deliberately open string domain without an additional numeric grammar gate. See the [context scope](docs/validation/context-assessment-scope.md).
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) do **not** complete either context

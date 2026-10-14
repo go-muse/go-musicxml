@@ -43,10 +43,15 @@ The context profiles select additional narrow predicates:
 - Graphical beat and measure repeats consume only proved musical-content
   correspondence. They do not synthesize missing notes. Unresolved equivalence
   is incomplete rather than a guessed failure or success.
-- Nonempty ASCII-digit `figure-number` content passes a sufficient numeric subset,
-  supported by the source requirement and official example. Other spellings retain
-  an explicit unsupported grammar gate; no full lexical domain or rejection rule
-  is invented. XSD `style-text` validity alone is not numeric proof.
+
+`figure-number` intentionally retains unrestricted `style-text`. The built-in
+profiles no longer select the former numeric-subset predicate, so nondecimal
+text does not create an unsupported conformance obligation. The XSD declaration,
+attributes and raw contextual text remain assessed. This withdraws an invented
+lexical requirement; it does not prove all strings numeric or implement a total
+notation interpreter. The exported `NewFigureNumberNumericPlan` remains a
+deprecated, explicitly selected compatibility overconstraint, with its old binding
+and outcomes. See the [source-backed correction and profile migration](evidence/figure-number-conformance-correction.md).
 
 A missing optional node does not instantiate its node-local predicate.
 Resource exhaustion is incomplete assessment, never a MusicXML defect.

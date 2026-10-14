@@ -2,7 +2,6 @@ package musicxml
 
 import (
 	"cmp"
-	"fmt"
 	"slices"
 	"sync"
 
@@ -36,7 +35,7 @@ func buildContextAssessmentEngine() (*validation.Engine, error) {
 		}
 		p.Required = append([]validation.RuleKey(nil), p.Required...)
 		p.Support = append([]validation.RuleSupport(nil), p.Support...)
-		p.NormativeClosure = "Explicit bounded MusicXML 4.0 source or current-model XSD/local/timeline and contextual assessment. New sealed context families produce independently owned typed scalar/default, span, graphical-repeat, navigation, layout and timing evidence. A completed provider means extraction/projection finished; it does not assert every optional fact or ambiguous correspondence is known. Mandatory consumers compare numerical time-only order, release sign for established bend gestures, and proved graphical-repeat content. Equal-adjacent passes, unresolved musical-content equivalence, and the unreviewed figure-number numeric grammar remain explicitly incomplete. Type-specific identity, presence, applicability, causal unavailability and exact values are preserved without a universal span-balance, meter-fill or rendering requirement. Source/current-model representation and unread external-DTD limits remain active. Unproved author intent, playback realization, application geometry, ambiguous navigation policies and precise unresolved source clauses retain bounded unavailable evidence. Packages, linked resources, external dictionaries and transitive normative closure remain excluded. Opus assessment projects only local score pagination hints, preserves application-dependent absence, and never follows linked scores. Rule and fact counts are not MusicXML coverage denominators."
+		p.NormativeClosure = "Explicit bounded MusicXML 4.0 source or current-model XSD/local/timeline and contextual assessment. New sealed context families produce independently owned typed scalar/default, span, graphical-repeat, navigation, layout and timing evidence. A completed provider means extraction/projection finished; it does not assert every optional fact or ambiguous correspondence is known. Mandatory consumers compare numerical time-only order, release sign for established bend gestures, and proved graphical-repeat content. Equal-adjacent passes and unresolved musical-content equivalence remain explicitly incomplete. Figure-number retains the deliberately unrestricted style-text declaration; no additional numeric lexical requirement is selected. Type-specific identity, presence, applicability, causal unavailability and exact values are preserved without a universal span-balance, meter-fill or rendering requirement. Source/current-model representation and unread external-DTD limits remain active. Unproved author intent, playback realization, application geometry, ambiguous navigation policies and precise unresolved source clauses retain bounded unavailable evidence. Packages, linked resources, external dictionaries and transitive normative closure remain excluded. Opus assessment projects only local score pagination hints, preserves application-dependent absence, and never follows linked scores. Rule and fact counts are not MusicXML coverage denominators."
 	}
 	schema := d.schemas[validation.AssemblyMusicXML]
 	timeline := validation.RuleKey{ID: "MX40-TIMELINE-effective-state", Revision: 1}
@@ -100,25 +99,6 @@ func buildContextAssessmentEngine() (*validation.Engine, error) {
 		d.plans = append(d.plans, validation.PlanBinding{ID: rule.Predicate, Plan: plan})
 	}
 
-	figurePlan, err := validation.NewFigureNumberNumericPlan(schema)
-	if err != nil {
-		return nil, err
-	}
-	figureCount := 0
-	for _, use := range schema.Uses() {
-		if use.Attribute || !use.OwnerTypeKnown || use.OwnerType != *localType("figure").Component || use.Name.Local != "figure-number" || use.Name.Space != "" {
-			continue
-		}
-		figureCount++
-		declaration := use.Declaration
-		key := validation.RuleKey{ID: "MX40-CONTEXT-figure-number-numeric", Revision: 1}
-		rule := validation.RuleDefinition{Key: key, Class: validation.ClassMandatory, Role: validation.RolePredicate, Category: validation.CategoryNormative, Targets: []validation.Target{validation.TargetSource, validation.TargetModel}, Scope: validation.ScopeNode, Selector: validation.Selector{Declaration: &declaration}, Predicate: string(key.ID), Text: validation.RuleText{Title: "Figure-number numeric content", Explanation: "The source requires numeric content. A nonempty ASCII-digit sequence is a sufficient numeric subset; other valid style-text remains explicitly unsupported because the complete lexical grammar is unresolved.", Message: "The figure-number content is outside the established sufficient numeric subset."}, Sources: []validation.SourceRef{{IDs: []string{"MX40-PROSE-figure-number-numeric"}, URL: localSchemaSource(4836), Locator: "figure-number numeric content clause"}}}
-		d.rules = append(d.rules, rule)
-		d.plans = append(d.plans, validation.PlanBinding{ID: rule.Predicate, Plan: figurePlan})
-	}
-	if figureCount != 1 {
-		return nil, fmt.Errorf("context figure-number: expected one exact declaration, got %d", figureCount)
-	}
 	// Type ownership is derived once from the authoritative compiled schema;
 	// each selected exact attribute use is still checked by the sealed plan.
 	owners := map[validation.ComponentID]bool{}

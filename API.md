@@ -506,9 +506,17 @@ A closed `ContextProperty` identifies a scalar evidence value or a typed
 layout-shaped scope/applicability metadata. A provider's completion does not
 claim that each optional field is known. Mandatory consumers separately assess
 exact `time-only` ordering, supported bend-release signs and proved graphical
-repeat content. Nonempty ASCII-digit figure-number content satisfies a sufficient
-numeric subset; other spellings retain an unsupported unreviewed grammar gate.
-This does not define or reject the remaining numeric lexical domain.
+repeat content. Figure-number content retains MusicXML's deliberately unrestricted
+`style-text` domain. The built-in context profiles do not select an additional
+numeric lexical predicate and do not become incomplete merely because the text
+is outside ASCII decimal digits. This does not assert numeric meaning for every
+string; independent XSD declaration and attribute constraints still apply.
+
+Removing the former figure-number overconstraint deliberately changes these two
+context profiles' selected rules, catalog digest and affected report outcomes.
+The six XSD/local/timeline profile contracts remain unchanged. Historical
+snapshots are retained; the [explicit migration receipt](docs/validation/evidence/figure-number-conformance-correction.md)
+describes the correction rather than claiming frozen context-profile equality.
 
 `NavigationContextResult.MarkerActive` records activation of an encoded barline
 marker; `Guard` records pass-selection evidence. Neither field is a realized
@@ -533,8 +541,13 @@ not establish measure capacity or endpoint containment. See the
 Catalog users can bind the same sealed contracts with `NewLocalContextPlan`,
 `NewSpanContextPlan`, `NewRepeatContextPlan`, `NewNavigationContextPlan`,
 `NewLayoutContextPlan`, `NewPerformanceContextPlan`, `NewTimeOnlyOrderPlan`,
-`NewBendReleaseSignPlan`, `NewGraphicalRepeatContentPlan` and
-`NewFigureNumberNumericPlan`. `NewOpusLayoutContextPlan` is separately
+`NewBendReleaseSignPlan` and `NewGraphicalRepeatContentPlan`.
+`NewFigureNumberNumericPlan` is deprecated but retained for explicit legacy
+custom catalogs: it still accepts the nonempty ASCII-digit subset and returns
+Unsupported for other spellings, with its existing mandatory/normative binding
+contract. Selecting it imposes a caller-chosen overconstraint; its result is not
+MusicXML numeric validity. It is not selected by built-in conformance profiles.
+`NewOpusLayoutContextPlan` is separately
 bound to the Opus assembly and projects only local score pagination hints;
 missing new-page remains application-dependent and no linked score is opened. `ContextPlanSpec` binds the exact selected timeline
 provider where needed; `ContextConsumerSpec` binds an exact type-specific

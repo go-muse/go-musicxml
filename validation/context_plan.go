@@ -74,9 +74,14 @@ func NewTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planTimeOnlyOrder, ContextPlanSpec{Schema: schema})
 }
 
-// NewFigureNumberNumericPlan accepts the sufficient nonempty ASCII-digit subset
-// for the exact figure-number declaration. Other spellings retain the unreviewed
-// numeric-grammar gate rather than asserting a complete lexical grammar.
+// NewFigureNumberNumericPlan retains the legacy nonempty ASCII-digit subset
+// check for the exact figure-number declaration. Other spellings return
+// Unsupported. Its mandatory/normative custom-catalog binding is preserved for
+// compatibility; selecting it adds a caller-chosen restriction beyond MusicXML.
+//
+// Deprecated: MusicXML deliberately leaves figure-number as unrestricted
+// style-text. Built-in conformance profiles do not select this legacy plan.
+// Its result is not a MusicXML numeric-validity determination.
 func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planFigureNumberNumeric, ContextPlanSpec{Schema: schema})
 }

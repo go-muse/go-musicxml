@@ -103,18 +103,24 @@
         "TestContextFigureNumberRetainsUnreviewedGrammarGate",
         "TestContextFigureNumberAbsentDoesNotCreateGrammarObligation",
         "TestContextFigureNumberRequiresExactDeclaration",
-        "TestLocalRound1FigureNumberSufficientNumericSubset"
+        "TestLocalRound1FigureNumberSufficientNumericSubset",
+        "TestFigureNumberUnrestrictedTextConformance",
+        "TestFigureNumberUnrestrictedTextPreservesXSDConstraints",
+        "TestFigureNumberUnrestrictedTextPreservesSourceDeclaration",
+        "TestFigureNumberUnrestrictedTextStrictDecode"
       ],
-      "implemented_subclauses": "After exact-declaration XSD prerequisites, nonempty ASCII digits satisfy a sufficient numeric subset under the existing rule. Other valid style-text remains Unsupported because a total numeric notation grammar is deliberately unspecified; an absent optional node creates no obligation. No runtime change in this disposition.",
+      "implemented_subclauses": "No total numeric grammar implemented. Withdrawn built-in overconstraint: unrestricted style-text does not create numeric incompleteness. Independent XSD checks and raw text projection remain. The public legacy constructor retains its previous behavior only in explicitly selected custom catalogs.",
       "remaining_boundaries": [
-        "Upstream explicitly retained unrestricted text after considering integer restrictions. A total semantic assessment for arbitrary notation would need an additional reviewed profile/policy; no guessed decimal/Roman/fraction syntax or universal numeric claim."
+        "Numeric meaning for arbitrary notation is not determined by this correction. The deprecated constructor retains its mandatory/normative custom-catalog contract for compatibility; selecting it is a caller-chosen overconstraint, not a MusicXML conformance requirement."
       ],
-      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved.",
+      "acceptance": "Source-backed conformance correction with explicit context-profile migration; no promotion of historical planning statuses or total-grammar coverage.",
       "source_disposition": "local-source-residual-decisions.md#m02-deliberately-unrestricted-figure-number-text",
       "source_authority": [
         "https://github.com/w3c-cg/musicxml/issues/94#issuecomment-290221733",
         "https://github.com/w3c-cg/musicxml/pull/202"
-      ]
+      ],
+      "historical_implemented_subclauses": "After exact-declaration XSD prerequisites, nonempty ASCII digits satisfy a sufficient numeric subset under the existing rule. Other valid style-text remains Unsupported because a total numeric notation grammar is deliberately unspecified; an absent optional node creates no obligation. No runtime change in this disposition.",
+      "disposition": "withdrawn invented lexical requirement; original obligation and source records preserved"
     },
     {
       "check_id": "CHECK-time-only-ascending",

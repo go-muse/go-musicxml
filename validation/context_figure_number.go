@@ -2,11 +2,12 @@ package validation
 
 import "context"
 
-// The pinned prose requires a number but does not settle a lexical grammar.
-// XSD style-text validity is a prerequisite, not proof of numeric conformance.
-// Nonempty ASCII digits are a sufficient number representation (the official
-// figure-number example uses 6); other forms keep the open grammar gate.
-// https://www.w3.org/2021/06/musicxml40/musicxml-reference/examples/figure-number-element/
+// This legacy plan is retained for explicit caller compatibility only. MusicXML
+// deliberately retained unrestricted figure-number text after considering an
+// integer restriction; built-in conformance profiles do not select this plan.
+// https://github.com/w3c-cg/musicxml/issues/94#issuecomment-290221733
+// Its historical ASCII-digit / Unsupported outcomes do not define MusicXML's
+// lexical domain, and do not make other style-text nonconforming.
 func evaluateFigureNumberNumeric(ctx context.Context, s *Session, n *factNode) (Decision, bool, error) {
 	if !n.closed {
 		return Decision{}, true, nil

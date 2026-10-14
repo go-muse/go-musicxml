@@ -33,6 +33,9 @@ func TestSourceDeclarationCompositionPreservesProfiles(t *testing.T) {
 		ProfileModelContext:             "37a63c9325973e67ae03328df45be262101fd83b216562641770e7ddf6ca93bb",
 	}
 	for id, expected := range want {
+		// Preserve the original baseline map; only the explicitly documented
+		// figure-number correction migrates the two context-profile hashes.
+		expected = migrateFigureNumberProfileHash(t, id, expected)
 		t.Run(string(id), func(t *testing.T) {
 			var engine *validation.Engine
 			var err error
