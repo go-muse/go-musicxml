@@ -110,6 +110,7 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	dictionaries            *dictionaryLease
 	sourceOriginSeen        map[sourceOriginSubject]struct{}
 	sourceOriginExpected    uint64
 	sourceOriginUncertain   bool
@@ -666,6 +667,10 @@ func terminalClassification(err error, malformedSource bool) (DiagnosticCategory
 	return CategoryCapability, "assessment-interrupted"
 }
 func (s *Session) cleanup() {
+	if lease := s.dictionaries; lease != nil {
+		s.dictionaries = nil
+		lease.release()
+	}
 	s.sourceOriginSeen = nil
 	s.sourceOriginSeal = nil
 	s.sourceOriginExpected = 0
