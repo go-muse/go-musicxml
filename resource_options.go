@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"github.com/go-muse/go-musicxml/validation"
 	"net/url"
-	"reflect"
 	"strings"
 	"unicode/utf8"
 )
@@ -121,14 +120,8 @@ func validateLinkedAssessmentOptions(ctx context.Context, o LinkedAssessmentOpti
 		return out, err
 	}
 	out.account, out.identity, out.resolver = account, o.Identity, o.Resolver
-	if out.resolver != nil {
-		v := reflect.ValueOf(out.resolver)
-		switch v.Kind() {
-		case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
-			if v.IsNil() {
-				out.resolver = nil
-			}
-		}
+	if dictionaryNil(out.resolver) {
+		out.resolver = nil
 	}
 	out.selected = make(map[ResourceDependency]bool, len(o.Dependencies))
 	for _, kind := range o.Dependencies {

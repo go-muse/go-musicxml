@@ -35,7 +35,7 @@ func dictionaryAssessmentConfig(ctx context.Context, options DictionaryAssessmen
 	if err != nil {
 		return cfg, err
 	}
-	set, loadErr := loadDictionarySet(ctx, account, options.Dictionaries)
+	set, loadErr := loadValidatedDictionarySet(ctx, account, options.Dictionaries)
 	if dictionaryImportTerminal(loadErr) {
 		if set != nil {
 			loadErr = errors.Join(loadErr, set.Close())

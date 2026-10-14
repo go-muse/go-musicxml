@@ -13,8 +13,19 @@ import (
 // dictionaryLimitedBody preserves the transferred stream's single close while
 // limiting reads to the certified component length plus one overflow byte.
 type dictionaryLimitedBody struct {
-	io.Reader
+	*io.LimitedReader
 	io.Closer
+}
+
+// Read rejects provider-owned reader contract faults before the shared reader
+// can classify them as caller configuration errors. Preserve any returned cause.
+func (b *dictionaryLimitedBody) Read(p []byte) (int, error) {
+	allowed := min(int64(len(p)), b.N)
+	n, err := b.LimitedReader.Read(p)
+	if n < 0 || int64(n) > allowed {
+		return 0, errors.Join(dictionaryImportError("invalid component read count"), err)
+	}
+	return n, err
 }
 
 // A typed-nil provider or stream transfers no usable object. Do not invoke
@@ -58,13 +69,13 @@ func readDictionaryComponentBody(ctx context.Context, a *validation.Account, bod
 		return nil, errors.Join(err, body.Close())
 	}
 	defer a.Release(validation.BudgetBufferedBytes, wrapperBytes)
-	out, err := readAssessmentResourceBody(ctx, a, &dictionaryLimitedBody{Reader: io.LimitReader(body, expected+1), Closer: body})
+	out, err := readAssessmentResourceBody(ctx, a, &dictionaryLimitedBody{LimitedReader: &io.LimitedReader{R: body, N: expected + 1}, Closer: body})
 	if err != nil {
 		return nil, err
 	}
 	if int64(len(out.bytes)) != expected {
 		out.close()
-		return nil, bad("component length does not match the selected pin")
+		return nil, dictionaryImportError("component length does not match the selected pin")
 	}
 	return out, nil
 }

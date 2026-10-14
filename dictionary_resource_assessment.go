@@ -2,7 +2,6 @@ package musicxml
 
 import (
 	"context"
-	"errors"
 	"io"
 
 	"github.com/go-muse/go-musicxml/validation"
@@ -27,14 +26,14 @@ func startDictionaryResourceGraph(ctx context.Context, resources LinkedAssessmen
 	if err != nil {
 		return nil, err
 	}
-	g.dictionaries, err = loadDictionarySet(ctx, cfg.account, dictionaries)
+	g.dictionaries, err = loadValidatedDictionarySet(ctx, cfg.account, dictionaries)
 	if g.dictionaries == nil {
 		if err == nil {
 			err = &validation.ConfigurationError{Field: "dictionary set", Reason: "root import did not return a capability set"}
 		}
 		return g, err
 	}
-	if errors.Is(err, validation.ErrResourceLimit) || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+	if dictionaryImportTerminal(err) {
 		return g, err
 	}
 	// Provider failures describe unavailable capabilities. Keep them out of

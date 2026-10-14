@@ -10,6 +10,51 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
+// ErrDictionaryUnavailable identifies a runtime dictionary provider, transport,
+// integrity or decoding failure. An assessment can return it with a usable
+// report whose affected dictionary facts remain unavailable.
+var ErrDictionaryUnavailable = errors.New("musicxml: dictionary unavailable")
+
+// DictionaryImportError identifies the component whose runtime import failed.
+// Err preserves the original provider, reader or close error. It does not turn
+// cancellation or resource exhaustion into an ordinary dictionary gap.
+type DictionaryImportError struct {
+	Manifest validation.DictionaryManifestID
+	Reason   string
+	Err      error
+}
+
+// Error describes the failed component import and its underlying cause.
+func (e *DictionaryImportError) Error() string {
+	if e == nil {
+		return "musicxml: nil dictionary import error"
+	}
+	message := ErrDictionaryUnavailable.Error()
+	if e.Manifest != "" {
+		message += ": " + string(e.Manifest)
+	}
+	if e.Reason != "" {
+		message += ": " + e.Reason
+	}
+	if e.Err != nil {
+		message += ": " + e.Err.Error()
+	}
+	return message
+}
+
+// Is reports whether target identifies an unavailable runtime dictionary.
+func (e *DictionaryImportError) Is(target error) bool {
+	return e != nil && target == ErrDictionaryUnavailable
+}
+
+// Unwrap preserves the original runtime failure for errors.Is and errors.As.
+func (e *DictionaryImportError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
+	return e.Err
+}
+
 // dictionaryImported owns temporary decoded rows until NewDictionarySet finishes
 // its independently admitted copy. Raw bytes are separately owned and released.
 type dictionaryImported struct {
@@ -27,14 +72,14 @@ func (d *dictionaryImported) close() {
 	}
 }
 func dictionaryImportError(reason string) error {
-	return &validation.ConfigurationError{Field: "dictionary import", Reason: reason}
+	return errors.New("dictionary import: " + reason)
 }
 func dictionaryImportTerminal(err error) bool {
 	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, validation.ErrResourceLimit)
 }
 func dictionaryImportStep(ctx context.Context, a *validation.Account, n int64) error {
 	if ctx == nil {
-		return dictionaryImportError("non-nil context required")
+		return &validation.ConfigurationError{Field: "dictionary import", Reason: "non-nil context required"}
 	}
 	if err := ctx.Err(); err != nil {
 		return err
@@ -49,6 +94,14 @@ func loadDictionarySet(ctx context.Context, a *validation.Account, o DictionaryO
 	if err := validateDictionaryOptions(o); err != nil {
 		return nil, err
 	}
+	return loadValidatedDictionarySet(ctx, a, o)
+}
+
+// loadValidatedDictionarySet requires selection validation before entry. Public
+// wrappers validate all options before constructing their root run, then use
+// this helper without repeating selection validation. The validating helper
+// above remains safe for package-internal callers and direct contract tests.
+func loadValidatedDictionarySet(ctx context.Context, a *validation.Account, o DictionaryOptions) (*validation.DictionarySet, error) {
 	if err := dictionaryImportStep(ctx, a, 1); err != nil {
 		return nil, err
 	}
@@ -100,7 +153,13 @@ func loadDictionarySet(ctx context.Context, a *validation.Account, o DictionaryO
 	return set, errors.Join(ordinary, err)
 }
 
-func importDictionaryComponent(ctx context.Context, a *validation.Account, source DictionarySource, request DictionaryComponentRequest) (*dictionaryImported, error) {
+func importDictionaryComponent(ctx context.Context, a *validation.Account, source DictionarySource, request DictionaryComponentRequest) (_ *dictionaryImported, err error) {
+	phase := "provider open failed"
+	defer func() {
+		if err != nil && !dictionaryImportTerminal(err) {
+			err = &DictionaryImportError{Manifest: request.Manifest, Reason: phase, Err: err}
+		}
+	}()
 	result, err := source.Open(ctx, request)
 	closeResult := func(cause error) error {
 		if !dictionaryNil(result.Body) {
@@ -115,6 +174,7 @@ func importDictionaryComponent(ctx context.Context, a *validation.Account, sourc
 	if err = ctx.Err(); err != nil {
 		return nil, closeResult(err)
 	}
+	phase = "invalid component response"
 	if result.Request != request {
 		return nil, closeResult(dictionaryImportError("component response must echo the exact request"))
 	}
@@ -133,16 +193,26 @@ func importDictionaryComponent(ctx context.Context, a *validation.Account, sourc
 	default:
 		return nil, closeResult(dictionaryImportError("unsupported component evidence state"))
 	}
+	phase = "component body failed"
 	body, err := readDictionaryComponentBody(ctx, a, result.Body, request.Component.Bytes)
 	result.Body = nil
 	if err != nil {
 		return nil, err
 	}
 	defer body.close()
+	phase = "component verification failed"
 	certificate, err := validation.VerifyDictionaryComponent(ctx, a, request.Component.ID, body.bytes)
 	if err != nil {
+		// The importer chose the compiled pin and supplies its own bytes here.
+		// Its integrity mismatch is a runtime provider fault, not a rejected
+		// caller configuration. Do not translate callback/transport errors.
+		if mismatch, ok := err.(*validation.ConfigurationError); ok && mismatch.Field == "dictionary component" &&
+			(mismatch.Reason == "source byte length mismatch" || mismatch.Reason == "source SHA-256 mismatch") {
+			err = dictionaryImportError(mismatch.Reason)
+		}
 		return nil, err
 	}
+	phase = "component decoding failed"
 	parsed, err := decodeDictionaryComponent(ctx, a, request.Manifest, body.bytes)
 	if err != nil {
 		return nil, err

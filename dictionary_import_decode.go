@@ -117,12 +117,12 @@ func (c *dictionaryJSON) str(maximum int) []byte {
 		}
 		if b < 0x20 {
 			c.fail("unescaped JSON control")
-			break
+			return nil
 		}
 		if b == '\\' {
 			if c.at == len(c.raw) {
 				c.fail("truncated JSON escape")
-				break
+				return nil
 			}
 			b = c.raw[c.at]
 			c.at++
@@ -143,26 +143,26 @@ func (c *dictionaryJSON) str(maximum int) []byte {
 				if r >= 0xD800 && r <= 0xDBFF {
 					if c.at+2 > len(c.raw) || c.raw[c.at] != '\\' || c.raw[c.at+1] != 'u' {
 						c.fail("unpaired JSON surrogate")
-						break
+						return nil
 					}
 					c.at += 2
 					tail := c.hex4()
 					if tail < 0xDC00 || tail > 0xDFFF {
 						c.fail("unpaired JSON surrogate")
-						break
+						return nil
 					}
 					r = 0x10000 + (r-0xD800)*0x400 + (tail - 0xDC00)
 				} else if r >= 0xDC00 && r <= 0xDFFF {
 					c.fail("unpaired JSON surrogate")
-					break
+					return nil
 				}
 				if c.err != nil {
-					break
+					return nil
 				}
 				size := utf8.RuneLen(r)
 				if size < 0 || n+size > maximum || n+size > len(c.scratch) {
 					c.fail("excessive corpus string")
-					break
+					return nil
 				}
 				n += utf8.EncodeRune(c.scratch[n:], r)
 				continue
@@ -173,7 +173,7 @@ func (c *dictionaryJSON) str(maximum int) []byte {
 		}
 		if n >= maximum || n == len(c.scratch) {
 			c.fail("excessive corpus string")
-			break
+			return nil
 		}
 		c.scratch[n] = b
 		n++
@@ -264,9 +264,11 @@ func decodeDictionaryComponent(ctx context.Context, a *validation.Account, id va
 			out.close()
 		}
 	}()
-	// Four byte passes cover scanning, UTF-8/escape inspection, copied text and
-	// fixed token comparisons. Extra per-byte slots bound the constant token and
-	// object operations. No general tree, decoder buffers or parser recursion.
+	// This conservative logical envelope reserves six slots per raw byte plus
+	// fixed overhead for scanning, UTF-8/escape inspection, copied text, token
+	// comparisons and row/object operations. It is not a measured pass count;
+	// changing it needs an independently established bound for every decoder.
+	// No general tree, decoder buffers or parser recursion are admitted.
 	if err = dictionaryImportStep(ctx, a, 6*int64(len(raw))+1024); err != nil {
 		return nil, err
 	}

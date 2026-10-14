@@ -32,7 +32,7 @@ func TestDictionaryComponentBodyExactLengthAndProbe(t *testing.T) {
 					t.Fatalf("out=%v err=%v", out, err)
 				}
 				out.close()
-			} else if out != nil || !errors.Is(err, validation.ErrInvalidConfiguration) {
+			} else if out != nil || err == nil || errors.Is(err, validation.ErrInvalidConfiguration) {
 				t.Fatalf("out=%v err=%v", out, err)
 			}
 			wantRead := min(tc.size, tc.expected+1)
