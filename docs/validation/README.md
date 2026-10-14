@@ -2,9 +2,10 @@
 
 Status: **implemented bounded foundation/source, direct-model/local, timeline,
 context, auxiliary-source, internal-DTD and package/link scopes; broader normative
-closure remains unfinished**. Index reviewed: 13 October 2026. Individual
+closure remains unfinished**. Index reviewed: 14 October 2026. Individual
 historical acceptance snapshots remain dated evidence, not current exact-head
-acceptance.
+acceptance. The additive pinned-dictionary implementation is in integration
+review; its partial IPA evidence does not close full normative IPA validation.
 
 This directory contains the proposed validation architecture and package-facing
 guides. MusicXML 4.0 requirements evidence is maintained in the separate
@@ -40,6 +41,8 @@ scopes and their explicit limitations:
 - [Package assessment scope and ownership](package-assessment-scope.md)
 - [Package implementation and acceptance evidence](package-assessment-evidence.md)
 - [Package and resource-graph profiles](package-profile-scope.md)
+- [Pinned dictionary scope, API boundaries and remaining obligations](pinned-dictionaries-scope.md)
+- [Pinned dictionary verification checkpoint](pinned-dictionaries-evidence.md)
 
 The proposal pages below describe the wider architecture. Implemented bounded
 package/link/timeline support does not establish full normative closure; exact-head

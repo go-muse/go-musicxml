@@ -97,6 +97,8 @@ construction and compressed `.mxl` round trips in
 | Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
 | Assess local links without fetching | `ProfileSourceLinks`, `ProfileModelLinks` |
+| Assess explicitly supplied pinned dictionaries | `InspectXMLWithDictionaries`, `AssessModelWithDictionaries`, `DecodeAssessedWithDictionaries` |
+| Assess dictionaries across selected resources or MXL | `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries`, `InspectMXLWithDictionaries`, `AssessMXLPackageWithDictionaries` |
 | Assess original auxiliary XML | `ProfileSourceContainer`, `ProfileSourceSounds` |
 | Assess a selected resource graph | `InspectXMLWithResources`, `AssessModelWithResources`, `ProfileResourceGraph` |
 | Assess original or current MXL packages | `InspectMXL`, `AssessMXLPackage`, `ProfileMXLSource`, `ProfileMXLModel` |
@@ -211,6 +213,39 @@ All assessment profiles share finite resource budgets; input byte size alone
 does not predict their cost. B5-PERF-01 remains an open shared validation
 kernel/session performance obligation, with final reconciliation in batch 9;
 timeline improvements do not close it. See the [API limits](API.md#exact-timeline-and-effective-state-profiles).
+
+### Pinned dictionary evidence
+
+The additive dictionary entry points select their own explicit source, model,
+source-sounds, resource-graph or MXL profiles. Callers select fixed components and
+supply authorized bytes through `DictionarySource`. The runtime embeds no
+dictionary data and never fetches or loads them automatically; caller-selected
+transport is required. Repository dictionary fixtures are test inputs. One verified immutable set and finite account cover the root and
+selected linked/nested-package children. Existing profiles remain unchanged.
+
+The selected scope includes exact SMuFL 1.4 canonical membership with independent
+MusicXML name-family checks, narrow defaults/range advice and recognition of the
+894 MusicXML 4.0 standard sound IDs. Custom sound strings remain allowed. IPA
+2015/Unicode 13 data provide explicitly partial positive evidence only: unknown
+symbols are not rejected, and even attested examples do not establish complete
+sequence validity or intended pronunciation. Internal-DTD composition and general
+glyph/rendering semantics remain outside this scope.
+
+Default budgets can still stop modest inputs. In a specific repeated-note fixture
+with all four dictionary components imported, standalone source/model assessment
+completed at 320 notes and exhausted the unchanged 20,000,000-step limit at 321;
+graph and raw/current MXL completed operational enumeration at 316 and refused
+317. Current-model bundles retained an independent schema-hint unknown even below
+that limit. These are fixture-specific observations, not general capacities or
+B5-PERF-01 closure. See the [measured conditions](docs/validation/pinned-dictionaries-evidence.md#default-budget-observations).
+
+See the [API and migration contract](API.md#opt-in-pinned-dictionaries),
+[exact obligations and retained gates](docs/validation/pinned-dictionaries-scope.md)
+and [dated verification checkpoint](docs/validation/pinned-dictionaries-evidence.md).
+The new optional `ContextResult.Dictionary` field requires external unkeyed
+literals to become keyed literals. Dictionary data retain separate FSA, IPA and
+Unicode terms in [third-party notices](THIRD_PARTY_NOTICES.md); the MIT code license
+does not replace them.
 
 ## Bounded packages and resource graphs
 
