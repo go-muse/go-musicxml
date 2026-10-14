@@ -8,8 +8,22 @@ import (
 	"testing"
 )
 
+// corruptionPlanSource shares one source across a group's cases. Compare it to
+// an independent load after all subtests, including failed cases, so accidental
+// source mutations cannot make subsequent negative tests pass for the wrong reason.
+func corruptionPlanSource(t *testing.T) *plan {
+	t.Helper()
+	source := testPlan(t)
+	t.Cleanup(func() {
+		if !reflect.DeepEqual(source, testPlan(t)) {
+			t.Error("corruption cases mutated the shared source plan")
+		}
+	})
+	return source
+}
+
 // cloneCorruptionPlan is only for tests that mutate an already-loaded plan and
-// exercise validate. Their immutable fixture is loaded once per test group;
+// exercise validate. Their immutable source is shared within each test group;
 // every case still owns fresh maps/slices and runs the real validator.
 //
 // source must be the pristine result of load, not an already-corrupted plan.

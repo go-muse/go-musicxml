@@ -39,7 +39,7 @@ func TestPinnedRegistryIfProvided(t *testing.T) {
 }
 
 func TestCorruptionsRejected(t *testing.T) {
-	source := testPlan(t)
+	source := corruptionPlanSource(t)
 	tests := []struct {
 		name   string
 		mutate func(*plan)

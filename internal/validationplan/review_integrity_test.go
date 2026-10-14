@@ -20,7 +20,7 @@ func overlap(t *testing.T, p *plan, id string) object {
 	return nil
 }
 func TestCopiedOverlapClausesRejected(t *testing.T) {
-	source := testPlan(t)
+	source := corruptionPlanSource(t)
 	pairs := map[string]string{
 		"fermata-upright": "one-note-visual-tie", "empty-fermata-normal": "horizontal-turn-slash",
 		"transpose-additive": "senza-misura", "bend-release-pair": "beam-fan-conditions",
@@ -40,7 +40,7 @@ func TestCopiedOverlapClausesRejected(t *testing.T) {
 	}
 }
 func TestReviewCorruptionsRejected(t *testing.T) {
-	source := testPlan(t)
+	source := corruptionPlanSource(t)
 	cases := []struct {
 		name   string
 		mutate func(*plan)
