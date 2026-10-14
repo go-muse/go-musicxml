@@ -434,7 +434,47 @@ func TestRaceShardingLeavesLocalStagesAndReleaseUnchanged(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if strings.Contains(string(release), "RACE_SHARD") || !strings.Contains(string(release), "          bash scripts/check-all.sh\n") {
+	if !raceReleaseRetainsFullChecks(string(release)) {
 		t.Fatal("release must retain the full unsharded check sequence")
+	}
+}
+
+func raceReleaseRetainsFullChecks(release string) bool {
+	// Git may check YAML out with CRLF on Windows. Only normalize that pair;
+	// keep command changes and other whitespace significant.
+	release = strings.ReplaceAll(release, "\r\n", "\n")
+	return !strings.Contains(release, "RACE_SHARD") && strings.Contains(release, "          bash scripts/check-all.sh\n")
+}
+
+func TestRaceReleaseWorkflowLineEndingGuard(t *testing.T) {
+	raw, err := os.ReadFile(".github/workflows/release.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	lf := strings.ReplaceAll(string(raw), "\r\n", "\n")
+	const command = "          bash scripts/check-all.sh\n"
+	if strings.Count(lf, command) != 1 {
+		t.Fatal("expected exactly one unchanged full-check command in release fixture")
+	}
+	for _, tc := range []struct {
+		name, workflow string
+		want           bool
+	}{
+		{"unchanged", lf, true},
+		{"named stage instead of full sequence", strings.Replace(lf, command, "          bash scripts/check-all.sh race\n", 1), false},
+		{"different command", strings.Replace(lf, command, "          bash scripts/check-fast.sh\n", 1), false},
+		{"missing command", strings.Replace(lf, command, "", 1), false},
+		{"shard enabled", "env:\n  RACE_SHARD: root\n" + lf, false},
+		{"embedded carriage return", strings.Replace(lf, command, "          bash scripts/check-\rall.sh\n", 1), false},
+		{"lone carriage returns", strings.ReplaceAll(lf, "\n", "\r"), false},
+	} {
+		for _, ending := range []struct{ name, newline string }{{"LF", "\n"}, {"CRLF", "\r\n"}} {
+			t.Run(tc.name+"/"+ending.name, func(t *testing.T) {
+				workflow := strings.ReplaceAll(tc.workflow, "\n", ending.newline)
+				if got := raceReleaseRetainsFullChecks(workflow); got != tc.want {
+					t.Fatalf("release full-check guard = %t, want %t", got, tc.want)
+				}
+			})
+		}
 	}
 }
