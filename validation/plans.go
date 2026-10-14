@@ -27,6 +27,13 @@ type AttributeSelector struct {
 	Declaration DeclarationID
 }
 
+type xsdPlanMode uint8
+
+const (
+	xsdLegacy xsdPlanMode = iota
+	xsdSourceDeclarationsV1
+)
+
 type planKind string
 
 const (
@@ -55,6 +62,7 @@ type Plan struct {
 	reference        *referencePlan
 	schema           *CompiledSchema
 	xsdCheck         XSDCheck
+	xsdMode          xsdPlanMode
 	kind             planKind
 	children         []DeclarationID
 	minimum, maximum int64
@@ -168,7 +176,7 @@ func (p Plan) valid() error {
 	case planTypedReference:
 		return p.reference.valid()
 	case planXSD:
-		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) {
+		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) || p.xsdMode > xsdSourceDeclarationsV1 {
 			return contract("XSD plan", "compiled schema and supported operation required")
 		}
 	case planChildren:
@@ -288,7 +296,7 @@ func (p Plan) validateFor(r RuleDefinition) error {
 			return contract("XSD plan", "matching assembly selector and required normative predicate role required")
 		}
 		for _, target := range r.Targets {
-			if target != TargetSource && target != TargetModel {
+			if target != TargetSource && target != TargetModel || p.xsdMode == xsdSourceDeclarationsV1 && target != TargetSource {
 				return contract("XSD plan", "only source or current-model evidence is implemented")
 			}
 		}
@@ -361,6 +369,15 @@ func (p Plan) digestValue() any {
 		return p.local.digest()
 	}
 	if p.kind == planXSD {
+		if p.xsdMode == xsdSourceDeclarationsV1 {
+			return struct {
+				Kind               planKind
+				SchemaDigest       string
+				SchemaAssembly     Assembly
+				Check              XSDCheck
+				SourceDeclarations string
+			}{p.kind, p.schema.Digest(), p.schema.Assembly(), p.xsdCheck, "entity-domain-v1"}
+		}
 		return struct {
 			Kind           planKind
 			SchemaDigest   string

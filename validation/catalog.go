@@ -23,15 +23,16 @@ type PlanBinding struct {
 // A catalog makes only its profiles' explicit claims; no MusicXML profile is
 // implicitly supplied by this package.
 type CompiledCatalog struct {
-	sourceOrigins map[ProfileID]map[Assembly]RuleKey
-	schemas       map[ProfileID]map[Assembly]*CompiledSchema
-	rules         map[RuleKey]RuleDefinition
-	profiles      map[ProfileID]Profile
-	plans         map[string]Plan
-	orders        map[ProfileID][]RuleKey
-	modelOrders   map[ProfileID][]RuleKey
-	phases        map[ProfileID][]catalogPhase
-	supports      map[ProfileID]map[RuleKey]RuleSupport
+	sourceDeclarations map[ProfileID]map[Assembly]xsdPlanMode
+	sourceOrigins      map[ProfileID]map[Assembly]RuleKey
+	schemas            map[ProfileID]map[Assembly]*CompiledSchema
+	rules              map[RuleKey]RuleDefinition
+	profiles           map[ProfileID]Profile
+	plans              map[string]Plan
+	orders             map[ProfileID][]RuleKey
+	modelOrders        map[ProfileID][]RuleKey
+	phases             map[ProfileID][]catalogPhase
+	supports           map[ProfileID]map[RuleKey]RuleSupport
 }
 
 // A declaration's registration phase collects every eligible subject before
@@ -194,6 +195,8 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			}
 		}
 		schemas := make(map[Assembly]*CompiledSchema)
+		modes := make(map[Assembly]xsdPlanMode)
+		availableModes := make(map[Assembly]xsdPlanMode)
 		for key := range closure {
 			rule := c.rules[key]
 			plan, found := c.plans[rule.Predicate]
@@ -209,7 +212,20 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			if previous := schemas[plan.schema.assembly]; previous != nil && previous.Digest() != plan.schema.Digest() {
 				return nil, contract("schema profile", "conflicting schemas in one assembly")
 			}
+			if previous, present := modes[plan.schema.assembly]; present && previous != plan.xsdMode {
+				return nil, contract("schema profile", "conflicting source-declaration modes in one assembly")
+			}
+			modes[plan.schema.assembly] = plan.xsdMode
+			if supports[key].State == ImplementationAvailable && plan.xsdMode == xsdSourceDeclarationsV1 {
+				availableModes[plan.schema.assembly] = plan.xsdMode
+			}
 			schemas[plan.schema.assembly] = plan.schema
+		}
+		if len(availableModes) != 0 {
+			if c.sourceDeclarations == nil {
+				c.sourceDeclarations = make(map[ProfileID]map[Assembly]xsdPlanMode)
+			}
+			c.sourceDeclarations[profile.ID] = availableModes
 		}
 		if err := validateSourceOriginProfile(c, owned, closure, supports, schemas); err != nil {
 			return nil, err

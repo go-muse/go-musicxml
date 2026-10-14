@@ -138,7 +138,15 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		return nil
 	}
 	var err error
-	state.run, err = xsd.NewRun(state.active.kernel, schemaMeter{s})
+	if s.catalog.sourceDeclarations[s.profile.ID][state.active.assembly] == xsdSourceDeclarationsV1 {
+		var domain *xsd.EntityDeclarations
+		if s.sourceEntities != nil {
+			domain = &s.sourceEntities.domain
+		}
+		state.run, err = xsd.NewRunWithSourceDeclarations(state.active.kernel, schemaMeter{s}, domain)
+	} else {
+		state.run, err = xsd.NewRun(state.active.kernel, schemaMeter{s})
+	}
 	if err != nil {
 		return err
 	}

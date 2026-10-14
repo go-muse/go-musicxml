@@ -208,6 +208,8 @@ type Attribute struct {
 }
 
 type Context struct {
+	sourceDeclarations      bool
+	entityDeclarations      *EntityDeclarations
 	currentTrials           int
 	currentFixedUnavailable bool
 	identitySource          identityOrigin

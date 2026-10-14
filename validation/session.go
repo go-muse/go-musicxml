@@ -110,6 +110,7 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	sourceEntities          *sourceEntityDeclarations
 	dictionaries            *dictionaryLease
 	sourceOriginSeen        map[sourceOriginSubject]struct{}
 	sourceOriginExpected    uint64
@@ -680,6 +681,7 @@ func (s *Session) cleanup() {
 		_ = s.schema.run.Close()
 	}
 	s.schema = nil
+	s.sourceEntities = nil
 	s.localDocuments = nil
 	s.timeline = nil
 	s.contextServices = nil
