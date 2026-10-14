@@ -105,11 +105,16 @@
         "TestContextFigureNumberRequiresExactDeclaration",
         "TestLocalRound1FigureNumberSufficientNumericSubset"
       ],
-      "implemented_subclauses": "After exact-declaration XSD prerequisites, nonempty ASCII digits satisfy a sufficient numeric subset under the mandatory rule. Other valid style-text remains Unsupported pending a reviewed general grammar; an absent optional node creates no obligation.",
+      "implemented_subclauses": "After exact-declaration XSD prerequisites, nonempty ASCII digits satisfy a sufficient numeric subset under the existing rule. Other valid style-text remains Unsupported because a total numeric notation grammar is deliberately unspecified; an absent optional node creates no obligation. No runtime change in this disposition.",
       "remaining_boundaries": [
-        "No reviewed general numeric grammar; no guessed decimal/Roman/fraction syntax."
+        "Upstream explicitly retained unrestricted text after considering integer restrictions. A total semantic assessment for arbitrary notation would need an additional reviewed profile/policy; no guessed decimal/Roman/fraction syntax or universal numeric claim."
       ],
-      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved."
+      "acceptance": "Source-supported bounded contribution; exact-head independent review pending. Original planning statuses preserved.",
+      "source_disposition": "local-source-residual-decisions.md#m02-deliberately-unrestricted-figure-number-text",
+      "source_authority": [
+        "https://github.com/w3c-cg/musicxml/issues/94#issuecomment-290221733",
+        "https://github.com/w3c-cg/musicxml/pull/202"
+      ]
     },
     {
       "check_id": "CHECK-time-only-ascending",

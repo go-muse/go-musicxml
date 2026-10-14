@@ -677,7 +677,7 @@
       "workstream": "batch7-local-defaults-context",
       "status": "implemented_source_model_verified",
       "implemented_subclauses": [
-        "kind none recommends empty root-step text; major inactive; numeral typo remains Unsupported interpretation gate",
+        "kind none exposes root-step or numeral-root empty-text advice for its own stacked harmony-chord; other kinds are inactive; guidance never rejects",
         "Recommendation text and independent causal applicability are publicly observable; no mandatory Finding introduced."
       ],
       "symbols": [
@@ -685,19 +685,25 @@
       ],
       "source_tests": [
         "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting",
-        "TestLocalAdvisoryFalseConditionsAndNumericDomains"
+        "TestLocalAdvisoryFalseConditionsAndNumericDomains",
+        "TestLocalHarmonyNoneNumeralAdviceAndChordScope",
+        "TestLocalHarmonyNoneInvalidKindIsIndependentlyCausal"
       ],
       "model_tests": [
         "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting",
-        "TestLocalAdvisoryFalseConditionsAndNumericDomains"
+        "TestLocalAdvisoryFalseConditionsAndNumericDomains",
+        "TestLocalHarmonyNoneNumeralAdviceAndChordScope",
+        "TestLocalHarmonyNoneInvalidKindIsIndependentlyCausal"
       ],
       "axes": {
         "positive": {
           "status": "executed",
           "fixtures": [
-            "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting"
+            "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting",
+            "TestLocalHarmonyNoneNumeralAdviceAndChordScope",
+            "TestLocalHarmonyNoneInvalidKindIsIndependentlyCausal"
           ],
-          "note": "kind none recommends empty root-step text; major inactive; numeral typo remains Unsupported interpretation gate"
+          "note": "kind none exposes root-step or numeral-root empty-text advice for its own stacked harmony-chord; other kinds are inactive; guidance never rejects; source/model × partwise/timewise"
         },
         "negative": {
           "status": "executed",
@@ -709,38 +715,42 @@
         "boundary": {
           "status": "executed",
           "fixtures": [
-            "TestLocalAdvisoryFalseConditionsAndNumericDomains"
+            "TestLocalAdvisoryFalseConditionsAndNumericDomains",
+            "TestLocalHarmonyNoneNumeralAdviceAndChordScope",
+            "TestLocalHarmonyNoneInvalidKindIsIndependentlyCausal"
           ],
-          "note": "kind none recommends empty root-step text; major inactive; numeral typo remains Unsupported interpretation gate"
+          "note": "kind none exposes root-step or numeral-root empty-text advice for its own stacked harmony-chord; other kinds are inactive; guidance never rejects; source/model × partwise/timewise"
         },
         "missing_fact": {
           "status": "executed",
           "fixtures": [
-            "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting"
+            "TestLocalHarmonyNoneUnavailableDeclarationDoesNotReusePriorChord",
+            "TestLocalHarmonyNoneStackedParentCompletenessRemainsPrerequisite",
+            "TestLocalRound1SkippedRootDoesNotReusePriorHarmony",
+            "TestContextRound3HarmonyAdvisoryParentEvidence"
           ],
-          "note": "Guidance text is independent of absent application intent; applicability Unknown is asserted for principal analysis, partwise alignment and conditional midmeasure cancellation. For unconditional guidance, missing external application facts are not prerequisites."
+          "note": "Admitted parent-completeness and child-declaration gaps retain their own causes; unavailable intervening declarations cannot reuse a stale prior branch; later explicit root/numeral evidence is independent."
         },
         "interaction": {
           "status": "executed",
           "fixtures": [
-            "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting"
+            "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting",
+            "TestLocalHarmonyNoneNumeralAdviceAndChordScope",
+            "TestLocalHarmonyNoneInvalidKindIsIndependentlyCausal"
           ],
-          "note": "All recommendation assertions independently run source/model × both hierarchies."
+          "note": "kind none exposes root-step or numeral-root empty-text advice for its own stacked harmony-chord; other kinds are inactive; guidance never rejects; source/model × partwise/timewise"
         }
       },
-      "residuals": [
-        {
-          "dependency": "source numeral-step reference interpretation gate",
-          "owner": "original issue decision",
-          "closure": "Preserve Unsupported for numeral branch until approved source interpretation; root branch implemented."
-        }
-      ],
+      "residuals": [],
       "source_authority": [
-        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1039"
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L1039",
+        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/numeral-root/",
+        "https://github.com/w3c-cg/musicxml/commit/0b9e87ec71189d4a72be38b527861d45dd87e974"
       ],
       "properties": [
         "local.advisory-harmony-none-root"
-      ]
+      ],
+      "source_disposition": "local-source-residual-decisions.md#m12-numeral-suppression-advice"
     },
     {
       "check_id": "CHECK-context-minor-mode-default",
@@ -6971,6 +6981,12 @@
       "decision_required": true,
       "hard_error_basis": false,
       "disposition": "Pinned schema has note@pizzicato and sound@pizzicato, not pizzicato element. Their facts do not close original disputed nonexistent-element issue gate."
+    },
+    "MX40-ISSUE-numeral-step-typo": {
+      "decision_required": false,
+      "hard_error_basis": false,
+      "disposition": "Reviewed schema/history reconciliation identifies numeral-root/@text; observable guidance only, no formal upstream erratum claimed. Original issue ID retained.",
+      "source_disposition": "local-source-residual-decisions.md#m12-numeral-suppression-advice"
     }
   },
   "final_part_projection_commit": "ccc1749",

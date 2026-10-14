@@ -204,7 +204,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -800,7 +800,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -874,7 +874,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -948,7 +948,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -1099,7 +1099,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -1327,7 +1327,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -1683,7 +1683,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -2309,7 +2309,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -2388,7 +2388,7 @@
         "Exact bound use-site defaults, component-wise explicit/inherited resolution, halign/justify separation, normal line height, language clearing and alignment-point rotation sign."
       ],
       "residuals": [
-        "Application fonts/vertical alignment and numeric normal leading are not invented; cross-wrapper inheritance remains component-local uncertainty."
+        "Application fonts/vertical alignment and numeric normal leading are not invented; direction-type wrapper reset is source-resolved in local-source-residual-decisions.md."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -5070,7 +5070,7 @@
         "Exact string conjunction with omitted dimensions unrestricted; closed per-component candidate consensus, competing selector uncertainty, explicit local override, and contributing origins."
       ],
       "residuals": [
-        "No invented specificity/last-wins; genuine XML-language/default conflict retains precedence gate."
+        "No invented specificity/last-wins for conflicting matching lyric publishers. Ancestor xml:lang/default conflict is unreachable in schema-valid MusicXML 4.0; invalid/admitted-context handling remains unchanged."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -5122,7 +5122,8 @@
       "unit_tests": [
         "TestLayoutComponentConsensusFiveAxes",
         "TestLayoutSelectorExactPartialAndUnknown"
-      ]
+      ],
+      "source_disposition": "local-source-residual-decisions.md#m14-lyric-language-domain-and-font-selectors"
     },
     {
       "check_id": "CHECK-context-lyric-language-target",
@@ -5150,7 +5151,7 @@
         "Exact string conjunction with omitted dimensions unrestricted; closed per-component candidate consensus, competing selector uncertainty, explicit local override, and contributing origins."
       ],
       "residuals": [
-        "No invented specificity/last-wins; genuine XML-language/default conflict retains precedence gate."
+        "No invented specificity/last-wins for conflicting matching lyric publishers. Ancestor xml:lang/default conflict is unreachable in schema-valid MusicXML 4.0; invalid/admitted-context handling remains unchanged."
       ],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
       "axes": {
@@ -5202,12 +5203,14 @@
       "unit_tests": [
         "TestLayoutComponentConsensusFiveAxes",
         "TestLayoutSelectorExactPartialAndUnknown"
-      ]
+      ],
+      "source_disposition": "local-source-residual-decisions.md#m14-lyric-language-domain-and-font-selectors"
     },
     {
       "check_id": "CHECK-context-direction-type-format-scope",
       "source_authority": [
-        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/direction-type/"
+        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/direction-type/",
+        "https://github.com/w3c-cg/musicxml/issues/163#issuecomment-276446846"
       ],
       "original_contract_pointer": "docs/validation/plan/context-dispositions.json#/checks/276",
       "original_status_unchanged": "planned",
@@ -5218,14 +5221,20 @@
       ],
       "source_tests": [
         "TestLayoutFormattingFiveAxes",
-        "TestLayoutGeometryPrecedenceFiveAxes"
+        "TestLayoutGeometryPrecedenceFiveAxes",
+        "TestLayoutDirectionWrapperFormattingReset",
+        "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+        "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
       ],
       "model_tests": [
         "TestLayoutFormattingFiveAxes",
-        "TestLayoutGeometryPrecedenceFiveAxes"
+        "TestLayoutGeometryPrecedenceFiveAxes",
+        "TestLayoutDirectionWrapperFormattingReset",
+        "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+        "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
       ],
       "implemented_subclauses": [
-        "Sibling nonpositional inheritance, local positional suggestions, explicit override, cross-wrapper component uncertainty."
+        "Immediate preceding-child nonpositional inheritance within each direction-type, mixed children, per-field explicit override, no coordinate inheritance, wrapper-local reset followed by independent defaults."
       ],
       "residuals": [],
       "status": "bounded projection implemented; concrete five-axis adapter matrix executed",
@@ -5233,7 +5242,10 @@
         "positive": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutFormattingFiveAxes"
+            "TestLayoutFormattingFiveAxes",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "positive",
           "note": "Named concrete adapter matrix asserts this projection and independent evidence; both hierarchies exercised. Related source authority subclauses remain bounded by residual notes."
@@ -5241,7 +5253,10 @@
         "negative": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutFormattingFiveAxes"
+            "TestLayoutFormattingFiveAxes",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "negative",
           "note": "Named concrete adapter matrix asserts this projection and independent evidence; both hierarchies exercised. Related source authority subclauses remain bounded by residual notes."
@@ -5249,7 +5264,10 @@
         "boundary": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutFormattingFiveAxes"
+            "TestLayoutFormattingFiveAxes",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "boundary",
           "note": "Named concrete adapter matrix asserts this projection and independent evidence; both hierarchies exercised. Related source authority subclauses remain bounded by residual notes."
@@ -5257,7 +5275,10 @@
         "missing_fact": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutFormattingFiveAxes"
+            "TestLayoutFormattingFiveAxes",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "missing_fact",
           "note": "Named concrete adapter matrix asserts this projection and independent evidence; both hierarchies exercised. Related source authority subclauses remain bounded by residual notes."
@@ -5265,7 +5286,10 @@
         "interaction": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutFormattingFiveAxes"
+            "TestLayoutFormattingFiveAxes",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "interaction",
           "note": "Named concrete adapter matrix asserts this projection and independent evidence; both hierarchies exercised. Related source authority subclauses remain bounded by residual notes."
@@ -5275,7 +5299,8 @@
         "validation/context_layout_format.go",
         "validation/context_layout_geometry.go"
       ],
-      "unit_tests": []
+      "unit_tests": [],
+      "source_disposition": "local-source-residual-decisions.md#m14-direction-type-formatting-scope"
     },
     {
       "check_id": "CHECK-context-system-number-position-scope",
@@ -5944,7 +5969,9 @@
       "check_id": "CHECK-context-direction-format-inheritance",
       "owner": "shared implementation: original local-defaults owner retains inventory row; layout resolves transferred text semantics",
       "source_authority": [
-        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3464"
+        "https://github.com/w3c-cg/musicxml/blob/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/musicxml.xsd#L3464",
+        "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/direction-type/",
+        "https://github.com/w3c-cg/musicxml/issues/163#issuecomment-276446846"
       ],
       "original_status_unchanged": "decision_required",
       "symbols": [
@@ -5955,19 +5982,28 @@
         "validation/context_layout_format.go"
       ],
       "source_tests": [
-        "TestLayoutMatrixInheritedTextDefaults"
+        "TestLayoutMatrixInheritedTextDefaults",
+        "TestLayoutDirectionWrapperFormattingReset",
+        "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+        "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
       ],
       "model_tests": [
-        "TestLayoutMatrixInheritedTextDefaults"
+        "TestLayoutMatrixInheritedTextDefaults",
+        "TestLayoutDirectionWrapperFormattingReset",
+        "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+        "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
       ],
       "implemented_subclauses": [
-        "Component-local explicit/default/inherited text formatting and invalid prerequisite preservation; no positional inheritance."
+        "Immediate preceding-child nonpositional inheritance within each direction-type, mixed children, per-field explicit override, no coordinate inheritance, wrapper-local reset followed by independent defaults."
       ],
       "axes": {
         "positive": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutMatrixInheritedTextDefaults"
+            "TestLayoutMatrixInheritedTextDefaults",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "positive",
           "targets": [
@@ -5982,7 +6018,10 @@
         "negative": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutMatrixInheritedTextDefaults"
+            "TestLayoutMatrixInheritedTextDefaults",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "negative",
           "targets": [
@@ -5997,7 +6036,10 @@
         "boundary": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutMatrixInheritedTextDefaults"
+            "TestLayoutMatrixInheritedTextDefaults",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "boundary",
           "targets": [
@@ -6012,7 +6054,10 @@
         "missing_fact": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutMatrixInheritedTextDefaults"
+            "TestLayoutMatrixInheritedTextDefaults",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "missing_fact",
           "targets": [
@@ -6027,7 +6072,10 @@
         "interaction": {
           "status": "executed",
           "fixtures": [
-            "TestLayoutMatrixInheritedTextDefaults"
+            "TestLayoutMatrixInheritedTextDefaults",
+            "TestLayoutDirectionWrapperFormattingReset",
+            "TestLayoutDirectionIntraWrapperComponentsStayIndependent",
+            "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride"
           ],
           "case_axis": "interaction",
           "targets": [
@@ -6041,7 +6089,8 @@
         }
       },
       "residuals": [],
-      "unit_tests": []
+      "unit_tests": [],
+      "source_disposition": "local-source-residual-decisions.md#m14-direction-type-formatting-scope"
     },
     {
       "check_id": "CHECK-context-accidental-text-lang-default",
