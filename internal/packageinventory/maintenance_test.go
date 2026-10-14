@@ -986,6 +986,39 @@ func TestMaintenanceAcceptanceMetadataRequiresAllCurrentCIJobs(t *testing.T) {
 	maintenanceEqual(t, result["semantic_resource_execution_acceptance"], "NOT CLAIMED; independent final tree, seven local stages and all exact-head CI jobs still required")
 }
 
+func maintenanceWorkflowJobIDs(body string) []string {
+	var jobs []string
+	for _, match := range regexp.MustCompile(`(?m)^  ([A-Za-z_][A-Za-z0-9_-]*):$`).FindAllStringSubmatch(body, -1) {
+		jobs = append(jobs, match[1])
+	}
+	sort.Strings(jobs)
+	return jobs
+}
+
+func TestMaintenanceWorkflowJobInventoryDetectsAddedValidIDs(t *testing.T) {
+	t.Parallel()
+	repo := maintenanceRepo(t)
+	for _, file := range []string{"ci.yml", "release.yml"} {
+		base := maintenanceWorkflowText(maintenanceRead(t, filepath.Join(repo, ".github/workflows", file)))
+		_, body, ok := strings.Cut(base, "jobs:\n")
+		if !ok {
+			t.Fatal("missing jobs mapping")
+		}
+		baseline := maintenanceWorkflowJobIDs(body)
+		for _, id := range []string{"extra-job", "ExtraJob", "extra2", "extra_job", "_extra"} {
+			for _, newline := range []string{"\n", "\r\n"} {
+				t.Run(file+"/"+id+"/"+fmt.Sprintf("%q", newline), func(t *testing.T) {
+					added := body + "\n  " + id + ":\n    name: Extra check\n    runs-on: ubuntu-latest\n    steps: []\n"
+					got := maintenanceWorkflowJobIDs(maintenanceWorkflowText([]byte(strings.ReplaceAll(added, "\n", newline))))
+					want := append(append([]string{}, baseline...), id)
+					sort.Strings(want)
+					maintenanceEqual(t, got, want)
+				})
+			}
+		}
+	}
+}
+
 func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *testing.T) {
 	t.Parallel()
 	repo := maintenanceRepo(t)
@@ -1000,11 +1033,7 @@ func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *test
 				t.Fatal("missing jobs mapping")
 			}
 			body := parts[1]
-			var jobs []string
-			for _, match := range regexp.MustCompile(`(?m)^  ([a-z-]+):$`).FindAllStringSubmatch(body, -1) {
-				jobs = append(jobs, match[1])
-			}
-			sort.Strings(jobs)
+			jobs := maintenanceWorkflowJobIDs(body)
 			sort.Strings(tc.jobs)
 			maintenanceEqual(t, jobs, tc.jobs)
 			steps := strings.Split(body, "      - name:")

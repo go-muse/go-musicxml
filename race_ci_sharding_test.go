@@ -250,12 +250,17 @@ func raceCIJobs(t *testing.T) map[string]string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	text := strings.ReplaceAll(string(raw), "\r\n", "\n")
+	return raceCIJobsFromText(t, string(raw))
+}
+
+func raceCIJobsFromText(t *testing.T, raw string) map[string]string {
+	t.Helper()
+	text := strings.ReplaceAll(raw, "\r\n", "\n")
 	_, text, ok := strings.Cut(text, "\njobs:\n")
 	if !ok {
 		t.Fatal("missing workflow jobs mapping")
 	}
-	matches := regexp.MustCompile(`(?m)^  ([a-z-]+):\n`).FindAllStringSubmatchIndex(text, -1)
+	matches := regexp.MustCompile(`(?m)^  ([A-Za-z_][A-Za-z0-9_-]*):\n`).FindAllStringSubmatchIndex(text, -1)
 	jobs := make(map[string]string)
 	for i, match := range matches {
 		end := len(text)
@@ -265,6 +270,31 @@ func raceCIJobs(t *testing.T) map[string]string {
 		jobs[text[match[2]:match[3]]] = strings.TrimRight(text[match[1]:end], "\n") + "\n"
 	}
 	return jobs
+}
+
+func TestRaceCIJobInventoryDetectsAddedValidIDs(t *testing.T) {
+	raw, err := os.ReadFile(".github/workflows/ci.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := strings.ReplaceAll(string(raw), "\r\n", "\n")
+	baseline := raceCIJobsFromText(t, base)
+	for _, id := range []string{"extra-job", "ExtraJob", "extra2", "extra_job", "_extra"} {
+		for _, newline := range []string{"\n", "\r\n"} {
+			t.Run(id+"/"+fmt.Sprintf("%q", newline), func(t *testing.T) {
+				added := base + "\n  " + id + ":\n    name: Extra check\n    runs-on: ubuntu-latest\n    steps: []\n"
+				jobs := raceCIJobsFromText(t, strings.ReplaceAll(added, "\n", newline))
+				if _, ok := jobs[id]; !ok || len(jobs) != len(baseline)+1 {
+					t.Fatalf("added valid job %q escaped the exact job inventory: got %d jobs, want %d", id, len(jobs), len(baseline)+1)
+				}
+				for existing, body := range baseline {
+					if jobs[existing] != body {
+						t.Fatalf("added job %q changed parsed boundary of %q", id, existing)
+					}
+				}
+			})
+		}
+	}
 }
 
 func raceCIShardBlock(shard string) string {
@@ -398,7 +428,7 @@ func TestRaceCIAggregateFailsClosedForAllShardResults(t *testing.T) {
 	results := []string{"success", "failure", "cancelled", "skipped", "", "unknown", "SUCCESS", "success\nfailure"}
 	for _, root := range results {
 		for _, packages := range results {
-			cmd := exec.Command("bash", "-euo", "pipefail", "-c", gate.String())
+			cmd := raceHostedBashCommand(t, gate.String())
 			cmd.Env = raceTestEnv(map[string]string{"ROOT_RESULT": root, "PACKAGES_RESULT": packages})
 			output, err := cmd.CombinedOutput()
 			status := raceTestExit(t, err)
@@ -408,15 +438,41 @@ func TestRaceCIAggregateFailsClosedForAllShardResults(t *testing.T) {
 		}
 	}
 	for _, unset := range [][]string{{"ROOT_RESULT"}, {"PACKAGES_RESULT"}, {"ROOT_RESULT", "PACKAGES_RESULT"}} {
-		cmd := exec.Command("bash", "-euo", "pipefail", "-c", gate.String())
+		cmd := raceHostedBashCommand(t, gate.String())
 		values := map[string]string{"ROOT_RESULT": "success", "PACKAGES_RESULT": "success"}
 		for _, key := range unset {
 			delete(values, key)
 		}
 		cmd.Env = raceTestEnv(values, unset...)
-		if err := cmd.Run(); err == nil {
-			t.Fatalf("aggregate accepted missing result(s) %q", unset)
+		output, err := cmd.CombinedOutput()
+		want := fmt.Sprintf("Race shards did not both succeed (root=%s, packages=%s).\n", values["ROOT_RESULT"], values["PACKAGES_RESULT"])
+		if status := raceTestExit(t, err); status != 1 || string(output) != want {
+			t.Fatalf("missing result(s) %q must fail through gate logic: status=%d output=%q, want status=1 output=%q", unset, status, output, want)
 		}
+	}
+}
+
+func raceHostedBashCommand(t *testing.T, script string) *exec.Cmd {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "step.sh")
+	if err := os.WriteFile(path, []byte(script), 0600); err != nil {
+		t.Fatal(err)
+	}
+	// Match GitHub Actions' explicit shell: bash invocation, including its
+	// lack of nounset. Missing dependency results must fail in the gate itself.
+	return exec.Command("bash", "--noprofile", "--norc", "-eo", "pipefail", filepath.ToSlash(path))
+}
+
+func TestRaceCIAggregateUsesHostedBashSemantics(t *testing.T) {
+	cmd := raceHostedBashCommand(t, `printf 'missing=[%s]\n' "$RACE_MISSING_RESULT"`)
+	cmd.Env = raceTestEnv(nil, "RACE_MISSING_RESULT")
+	output, err := cmd.CombinedOutput()
+	if status := raceTestExit(t, err); status != 0 || string(output) != "missing=[]\n" {
+		t.Fatalf("hosted Bash must leave unset-result handling to the gate: status=%d output=%q", status, output)
+	}
+	want := []string{"bash", "--noprofile", "--norc", "-eo", "pipefail"}
+	if len(cmd.Args) != len(want)+1 || !reflect.DeepEqual(cmd.Args[:len(want)], want) {
+		t.Fatalf("shell argv=%q, want %q followed by script path", cmd.Args, want)
 	}
 }
 
