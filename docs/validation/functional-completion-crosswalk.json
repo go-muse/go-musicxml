@@ -1,8 +1,8 @@
 {
   "format": "musicxml4-functional-contribution-crosswalk-v1",
   "checkpoint": "2026-10-14",
-  "implementation_head": "cf2c9188c71e973ac1d112d471b7aef87ed34264",
-  "acceptance": "Integrated ordinary suite passed at this historical checkpoint. IPA implementation and final whole-tree stages/CI remain pending. Test routes identify code, not blanket execution acceptance. Original planning rows are not mutated.",
+  "implementation_head": "4acb7faabfef1aa077629e9ced1daa02aed94382",
+  "acceptance": "All listed functional contributions are integrated at this unpublished local checkpoint. Independent source/data and semantic/resource component reviews passed. Integrated ordinary suite passed at historical cf2c918 before IPA; final whole-tree stages and exact-head CI remain pending. Test routes identify code, not blanket execution acceptance. Original planning rows are not mutated.",
   "original_counts": {
     "original_external_ids": 50,
     "original_attached_test_contracts": 44,
@@ -884,7 +884,7 @@
       "test_contracts": [],
       "classification": "honest_selected_capability_limit",
       "disposition": "The original contract is clause-scoped reviewed capability closure, not complete implementation of every transitive external standard. MIME, local headers, URI bases, DTD origins/IDs and registered Framework/element contributions now have source/code/test mappings.",
-      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation implementation is separately pending; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
+      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation is separately implemented; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
       "code": [
         "validation/resource_fragment.go",
         "validation/resource_media.go",
@@ -902,7 +902,7 @@
           "dtd_package_composition_test.go"
         ]
       },
-      "remaining": "Finish separately identified IPA and final composition/acceptance obligations; do not mark this umbrella universally complete."
+      "remaining": "Final combined-tree acceptance remains pending; IPA affirmative representation is integrated. Do not mark this umbrella as universal transitive standards closure."
     },
     {
       "id": "MX40-ISSUE-mxl-first-media-type-set",
@@ -965,17 +965,118 @@
       "test_contracts": [
         "TEST-DEF-EXTERNAL-IPA"
       ],
-      "classification": "still_missing_required_musicxml4_functionality",
-      "disposition": "The existing pinned positive IPA capability is implemented but partial. A separately identified representation manifest/consumer is in implementation; the design has 295 symbol-encoding rows and 158 genuine canonical-equivalence rows.",
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies295 symbol atoms and158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
       "limit": "The 18 historical lateral/tone alias questions have no demonstrated required-positive MusicXML4 path and are not blockers. Current affirmative letters/signs/productive provisions, whole-representation canonical closure, constructed-letter attachment and paired half ties are real scope. No phonotactics/rendering or preferred-font requirement.",
       "code": [
-        "validation/dictionary_evaluate.go",
+        "validation/dictionary_ipa_representation.go",
+        "validation/dictionary_ipa_representation_policy.go",
         "validation/dictionary_ipa.go",
-        "validation/dictionary_set.go",
-        "dictionary_catalog.go"
+        "dictionary_import_ipa.go",
+        "dictionary_import.go"
       ],
-      "test_routes": {},
-      "remaining": "Implement and independently verify new selected representation parsing/whole-witness matching, pins/import classification, source/model/package propagation and honest complement scope. A positive-only Unknown result is not proof of complete repertoire validation."
+      "test_routes": {
+        "TestIPARepresentationAffirmativeWholeWitness": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationUnknownIsNotNegativeComplement": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationExactPinsMutationAndFifthSelection": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationNormalizationPreservesStableOrderAndRawIntervals": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationConstructorMalformationsReleaseStorage": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationCompiledPolicyMatchesPinnedData": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationFiniteConcatenationOracle": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationRuntimeExactWorkStorageAndCancellation": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestIPARepresentationIndexLeaseSurvivesOwnerClose": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestDictionaryIPARepresentationFiveSelections": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedResponseIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCallbackErrorsRemainUnavailable": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMissingSourceAndExplicitGap": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDecoderLengthIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTransportGapKeepsUsableSet": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedImportStopsLaterProviders": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCertifiedComponent": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDigestMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedCertifiedRecords": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationAllFiveCertifiedImports": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTerminalImportFailures": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchPreservesCloseCancellation": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCloseCancellationStopsDocumentReads": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestIPARepresentationSelectedConsumerWholeInput": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationSelectionAndMissingCapability": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationUnavailableScalarDoesNotFabricateEmptySpan": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationPublicSourceModelAndAssessedReader": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationExactCatalogMigrationAndRuleRevision": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestIPARepresentationLegacyManifestIdentityUntouched": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestSemanticIPARepresentationPublicSourceModelAndAssessedReader": [
+          "semantic_ipa_integration_test.go"
+        ],
+        "TestSemanticIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "semantic_ipa_integration_test.go"
+        ]
+      },
+      "remaining": "Final combined-tree seven-stage and exact-head CI acceptance; no unsupported historical alias is promoted to a mandatory blocker."
     },
     {
       "id": "REQ-DEF-EXTERNAL-RESOLVER",
@@ -1040,7 +1141,7 @@
       ],
       "classification": "honest_selected_capability_limit",
       "disposition": "The original contract is clause-scoped reviewed capability closure, not complete implementation of every transitive external standard. MIME, local headers, URI bases, DTD origins/IDs and registered Framework/element contributions now have source/code/test mappings.",
-      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation implementation is separately pending; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
+      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation is separately implemented; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
       "code": [
         "validation/resource_fragment.go",
         "validation/resource_media.go",
@@ -1058,7 +1159,7 @@
           "dtd_package_composition_test.go"
         ]
       },
-      "remaining": "Finish separately identified IPA and final composition/acceptance obligations; do not mark this umbrella universally complete."
+      "remaining": "Final combined-tree acceptance remains pending; IPA affirmative representation is integrated. Do not mark this umbrella as universal transitive standards closure."
     },
     {
       "id": "REQ-DEF-ISSUE-EXTERNAL-SPEC-CLOSURE",
@@ -1068,7 +1169,7 @@
       ],
       "classification": "honest_selected_capability_limit",
       "disposition": "The original contract is clause-scoped reviewed capability closure, not complete implementation of every transitive external standard. MIME, local headers, URI bases, DTD origins/IDs and registered Framework/element contributions now have source/code/test mappings.",
-      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation implementation is separately pending; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
+      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation is separately implemented; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
       "code": [
         "validation/resource_fragment.go",
         "validation/resource_media.go",
@@ -1086,7 +1187,7 @@
           "dtd_package_composition_test.go"
         ]
       },
-      "remaining": "Finish separately identified IPA and final composition/acceptance obligations; do not mark this umbrella universally complete."
+      "remaining": "Final combined-tree acceptance remains pending; IPA affirmative representation is integrated. Do not mark this umbrella as universal transitive standards closure."
     },
     {
       "id": "REQ-DEF-ISSUE-MXL-FIRST-MEDIA-TYPE-SET",
@@ -2896,7 +2997,7 @@
         "docs/validation/plan/context-dispositions.json#/test_contracts/128"
       ],
       "classification": "honest_selected_capability_limit",
-      "disposition": "analysis intent Unknown; visible stop recommends plain; none inactive; invalid symbol causal Recommendation text and independent causal applicability are publicly observable; no mandatory Finding introduced. {\"dependency\": \"authored analysis-only intent\", \"owner\": \"caller intent\", \"closure\": \"Provide explicit intent; encoded symbol alone does not prove analysis purpose.\"}",
+      "disposition": "Encoded principal-voice symbol and independent plain-stop recommendation remain observable. Whether content is analysis-only is not recoverable from encoded symbol alone; this remains unavailable context, not a mandatory external-intent API or a document conformance failure.",
       "code_or_tests": [
         "validation/context_local_advisory.go"
       ],
@@ -3446,13 +3547,116 @@
         "docs/validation/plan/prose-contracts.json#/checks/15",
         "docs/validation/plan/prose-contracts.json#/test_contracts/15"
       ],
-      "classification": "still_missing_required_musicxml4_functionality",
-      "disposition": "The existing pinned positive IPA capability is implemented but partial. A separately identified representation manifest/consumer is in implementation; the design has 295 symbol-encoding rows and 158 genuine canonical-equivalence rows. The 18 historical lateral/tone alias questions have no demonstrated required-positive MusicXML4 path and are not blockers. Current affirmative letters/signs/productive provisions, whole-representation canonical closure, constructed-letter attachment and paired half ties are real scope. No phonotactics/rendering or preferred-font requirement. Implement and independently verify new selected representation parsing/whole-witness matching, pins/import classification, source/model/package propagation and honest complement scope. A positive-only Unknown result is not proof of complete repertoire validation.",
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies295 symbol atoms and158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
       "code_or_tests": [
+        "validation/dictionary_ipa_representation.go",
+        "validation/dictionary_ipa_representation_policy.go",
         "validation/dictionary_ipa.go",
-        "validation/dictionary_set.go"
+        "dictionary_import_ipa.go",
+        "dictionary_import.go"
       ],
-      "test_routes": {}
+      "test_routes": {
+        "TestIPARepresentationAffirmativeWholeWitness": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationUnknownIsNotNegativeComplement": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationExactPinsMutationAndFifthSelection": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationNormalizationPreservesStableOrderAndRawIntervals": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationConstructorMalformationsReleaseStorage": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationCompiledPolicyMatchesPinnedData": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationFiniteConcatenationOracle": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationRuntimeExactWorkStorageAndCancellation": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestIPARepresentationIndexLeaseSurvivesOwnerClose": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestDictionaryIPARepresentationFiveSelections": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedResponseIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCallbackErrorsRemainUnavailable": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMissingSourceAndExplicitGap": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDecoderLengthIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTransportGapKeepsUsableSet": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedImportStopsLaterProviders": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCertifiedComponent": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDigestMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedCertifiedRecords": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationAllFiveCertifiedImports": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTerminalImportFailures": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchPreservesCloseCancellation": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCloseCancellationStopsDocumentReads": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestIPARepresentationSelectedConsumerWholeInput": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationSelectionAndMissingCapability": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationUnavailableScalarDoesNotFabricateEmptySpan": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationPublicSourceModelAndAssessedReader": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationExactCatalogMigrationAndRuleRevision": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestIPARepresentationLegacyManifestIdentityUntouched": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestSemanticIPARepresentationPublicSourceModelAndAssessedReader": [
+          "semantic_ipa_integration_test.go"
+        ],
+        "TestSemanticIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "semantic_ipa_integration_test.go"
+        ]
+      }
     },
     {
       "id": "CHECK-measure-repeat-content",
@@ -3609,5 +3813,6 @@
       ],
       "test_routes": {}
     }
-  ]
+  ],
+  "test_route_scope": "Named functions in this source tree, including subsequent integration-only tests; implementation_head pins the preceding runtime checkpoint, not self-referential metadata."
 }

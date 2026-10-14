@@ -36,11 +36,12 @@ not add independent requirement counts.
 - Explicit source/current-model/graph/raw-MXL/current-MXL semantic compositions
   through existing entry points and finite shared accounts.
 
-The affirmative IPA representation consumer is still in implementation at this
-checkpoint. Its separate current-symbol/Unicode13 witness must be verified before
-that row can become implemented. Legacy positive IPA data remains explicitly
-partial. Neither lookup absence nor unsupported historical spellings becomes a
-normative negative.
+The separately selected [IPA representation consumer](ipa-representation.md) is
+implemented with independently verified current-symbol/Unicode13 witnesses,
+canonical closure, exact pins and resource/lifecycle controls. Legacy positive
+IPA data remains explicitly partial. Neither lookup absence nor unsupported
+historical spellings becomes a normative negative. Final integrated acceptance
+is still required.
 
 ## Corrected overgeneralizations
 
@@ -83,8 +84,9 @@ Unknown.
 At local commit `cf2c9188c71e973ac1d112d471b7aef87ed34264`, the integrated ordinary
 `go test ./... -count=1` suite passed without package exclusions. Component
 semantic/resource reviews, executable RED/GREEN evidence and focused race checks
-are scoped to their actual component trees. This checkpoint precedes IPA
-integration and does not replace final whole-tree seven-stage acceptance,
+are scoped to their actual component trees. That ordinary checkpoint precedes IPA
+integration. The IPA contribution was integrated afterward with independently
+accepted component evidence; neither replaces final whole-tree seven-stage acceptance,
 counted fuzz targets, actual platform execution or exact-head remote CI.
 Performance/configuration and final overall reconciliation remain separately
 owned within the agreed two-PR plan. Final performance assessment and additional

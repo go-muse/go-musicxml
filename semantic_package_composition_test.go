@@ -3,9 +3,10 @@ package musicxml
 import (
 	"bytes"
 	"context"
-	"github.com/go-muse/go-musicxml/validation"
 	"strings"
 	"testing"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 func TestSemanticPackageCompositionEntryPoints(t *testing.T) {

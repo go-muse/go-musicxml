@@ -53,9 +53,9 @@ performer/exporter intent API is selected.
 ## Limits and acceptance
 
 An unavailable dictionary or source capability remains explicit where a selected
-occurrence needs it. The legacy IPA positive manifest remains partial. New IPA
-representation work has separate witness and policy acceptance; this composition
-alone does not enlarge its accepted repertoire. Independent XSD or encoded semantic
+occurrence needs it. The legacy IPA positive manifest remains partial. The separately selected new IPA
+representation relation has independently reviewed witness and policy evidence;
+this composition does not enlarge its declared affirmative scope. Independent XSD or encoded semantic
 failures survive incomplete package/resource evidence.
 
 These are new profile/catalog identities. Existing published profiles are not
@@ -69,5 +69,5 @@ Current evidence includes public standalone source/model tests, source/defaulted
 attribute controls, all four graph/MXL entry paths, wrong-entry-point no-I/O
 controls, direct `element()` success/absence, and preserved intrinsic barline
 failures. Independent composition review and final whole-functional-tree stages
-are distinct from earlier segment receipts. Final exact-head CI acceptance remains
-pending until publication.
+are distinct from earlier segment receipts. At this prepublication checkpoint, final exact-head CI acceptance remains
+pending; the published PR and its exact-head checks carry the final receipt.
