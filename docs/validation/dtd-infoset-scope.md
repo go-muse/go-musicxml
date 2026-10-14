@@ -19,8 +19,11 @@ assesses; it does not reread input or independently expand entities.
 The profile is deliberately separate from general validating-DTD or XML processor
 conformance. A satisfied report applies only to its selected bounded operations.
 Unsupported required evidence prevents acceptance. Current-model input cannot
-reconstruct declarations or source history. Source-origin resource snapshot
-export is explicitly unsupported and preserves the separately returned report.
+reconstruct declarations or source history. Explicit source-origin resource
+snapshot export now preserves independently owned origin rows and the intrinsic
+report, including unavailable components. This replaces the original unsupported
+export boundary; historical receipts retain their original outcome. Package
+composition still requires an explicitly admitted intrinsic profile/digest.
 
 The approved additive `ContextResult.SourceOrigin` field has `omitempty`; old
 JSON is unchanged. External unkeyed literals need conversion to keyed literals.

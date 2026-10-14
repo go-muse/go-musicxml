@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/go-muse/go-musicxml/validation"
 	"io"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -169,7 +170,7 @@ func TestDTDAuditPublicPartialProvenanceIsNotComplete(t *testing.T) {
 	}
 }
 
-func TestDTDAuditPublicSnapshotRefusesLossAndPreservesReport(t *testing.T) {
+func TestDTDAuditPublicSnapshotExportsOwnedOrigins(t *testing.T) {
 	ctx := context.Background()
 	a := adapterAccount(t, validation.Budgets{})
 	c := adapterSourceConfig(t, a, "audit", "", ProfileSourceInternalDTD, sourceBytesPrimary)
@@ -183,7 +184,7 @@ func TestDTDAuditPublicSnapshotRefusesLossAndPreservesReport(t *testing.T) {
 		t.Fatalf("input=%v %v", cause, err)
 	}
 	report, snapshot, err := run.session.FinishWithResourceSnapshot(ctx, completion)
-	if !errors.Is(err, validation.ErrIncompleteAssessment) || !strings.Contains(err.Error(), "source-origin-resource-snapshot-unsupported") || snapshot != nil || report.AssessmentComplete || report.Satisfied() {
+	if err != nil || snapshot == nil || !report.AssessmentComplete || !report.Satisfied() {
 		t.Fatalf("snapshot=%v err=%v complete=%v", snapshot, err, report.AssessmentComplete)
 	}
 	origins := 0
@@ -192,8 +193,31 @@ func TestDTDAuditPublicSnapshotRefusesLossAndPreservesReport(t *testing.T) {
 			origins++
 		}
 	}
-	if origins != 8 {
-		t.Fatalf("report lost origins: %d want8", origins)
+	if origins != 8 || snapshot.ContextCount() != origins {
+		t.Fatalf("report/snapshot lost origins: report=%d snapshot=%d want8", origins, snapshot.ContextCount())
+	}
+	canonical, err := snapshot.Report(ctx)
+	if err != nil || !reflect.DeepEqual(canonical, report) {
+		t.Fatalf("snapshot changed original report: %v", err)
+	}
+	for i, row := range report.Context {
+		got, ok, err := snapshot.ContextAt(ctx, i)
+		if err != nil || !ok || !reflect.DeepEqual(got, row) {
+			t.Fatalf("snapshot origin %d changed: %+v err=%v", i, got, err)
+		}
+		if got.SourceOrigin.Physical.Value.Position != nil {
+			got.SourceOrigin.Physical.Value.Position.ByteOffset = -1
+		}
+		if got.SourceOrigin.Declaration.Value.Position != nil {
+			got.SourceOrigin.Declaration.Value.Position.ByteOffset = -1
+		}
+		again, _, err := snapshot.ContextAt(ctx, i)
+		if err != nil || !reflect.DeepEqual(again, row) {
+			t.Fatalf("origin %d aliases a returned copy: %v", i, err)
+		}
+	}
+	if err = snapshot.Close(); err != nil {
+		t.Fatal(err)
 	}
 	adapterClean(t, a)
 }
@@ -211,4 +235,65 @@ func TestDTDAuditPublicExactAttributeBudgetStaysAggregate(t *testing.T) {
 		t.Fatalf("reused account reset defaults: %v", err)
 	}
 	adapterClean(t, a)
+}
+
+func TestDTDAuditPublicSnapshotKindsPreserveOriginalReport(t *testing.T) {
+	for _, tc := range []struct {
+		name, source string
+		kind         validation.SourceOriginKind
+		attribute    bool
+	}{
+		{"physical", `<opus/>`, validation.SourceOriginPhysical, false},
+		{"default", `<!DOCTYPE opus [<!ATTLIST opus version CDATA '4.0'>]><opus/>`, validation.SourceOriginDefault, true},
+		{"entity-value-physical-attribute", `<!DOCTYPE opus [<!ENTITY version '4.0'>]><opus version='&version;'/>`, validation.SourceOriginPhysical, true},
+		{"entity-element", `<!DOCTYPE opus [<!ENTITY score "<score xlink:href='a.xml'/>">]><opus xmlns:xlink='http://www.w3.org/1999/xlink'>&score;</opus>`, validation.SourceOriginEntity, false},
+		{"unavailable-parameter-entity", `<!DOCTYPE opus [<!ENTITY % p "<!ATTLIST opus version CDATA '4.0'>">%p;]><opus/>`, validation.SourceOriginDefault, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			baselineAccount := adapterAccount(t, validation.Budgets{})
+			baselineConfig := adapterSourceConfig(t, baselineAccount, "source", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+			want, err := adapterInspect(t, strings.NewReader(tc.source), baselineConfig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			adapterClean(t, baselineAccount)
+			a := adapterAccount(t, validation.Budgets{})
+			config := adapterSourceConfig(t, a, "source", "", ProfileSourceInternalDTD, sourceBytesPrimary)
+			run, err := newSourceAssessmentRunWithConfig(ctx, strings.NewReader(tc.source), DecodeOptions{}, &config, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			cause := run.drain()
+			completion, err := run.finishInput(cause)
+			if cause != nil || err != nil {
+				t.Fatalf("input: %v %v", cause, err)
+			}
+			report, snapshot, err := run.session.FinishWithResourceSnapshot(ctx, completion)
+			if err != nil || snapshot == nil || !reflect.DeepEqual(report, want) {
+				t.Fatalf("export changed original intrinsic report: snapshot=%v err=%v", snapshot, err)
+			}
+			found := false
+			for i := 0; i < snapshot.ContextCount(); i++ {
+				row, ok, err := snapshot.ContextAt(ctx, i)
+				if err != nil || !ok || row.SourceOrigin == nil {
+					t.Fatalf("origin %d: %v", i, err)
+				}
+				origin := row.SourceOrigin
+				if origin.Kind == tc.kind && (origin.Attribute != nil) == tc.attribute {
+					found = true
+				}
+			}
+			if !found {
+				t.Fatalf("missing real %s origin", tc.name)
+			}
+			if used := adapterUsage(t, a, validation.BudgetInputBytes); used != int64(len(tc.source)) {
+				t.Fatalf("snapshot reread original source: got %d want %d", used, len(tc.source))
+			}
+			if err = snapshot.Close(); err != nil {
+				t.Fatal(err)
+			}
+			adapterClean(t, a)
+		})
+	}
 }

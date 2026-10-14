@@ -878,7 +878,8 @@ semantics are unchanged. Additional internal diagnostic fields are accounted
 for at their actual retained size, so a buffered-byte limit set exactly at an
 older diagnostic boundary can now refuse slightly earlier. They do not select
 auxiliary Sounds/Container processing,
-timeline/context rules or package/source-origin snapshot export. See the
+timeline/context rules or automatic package composition. Explicit source-origin
+snapshot export is supported by the owned transport contract below. See the
 [exact scope](docs/validation/source-declarations-scope.md) and
 [verification evidence](docs/validation/source-declarations-evidence.md).
 
@@ -1315,6 +1316,19 @@ A snapshot retains the canonical report, exact root/profile/assembly, selected
 resource projections and schema-determined ID states under the same budget
 account until `Close` or successful transfer to package assessment. It never
 parses, fetches, retains a model, or exposes a post-finalization fact view.
+Selected source-origin contexts are copied into both the canonical report and
+selected snapshot projections. Physical, declaration, use and ancestry locations
+retain their independent evidence states. Package adoption rebases only matching
+typed document identities, preserving original byte/line/column, Entry and Path;
+unrelated external references are unchanged. Repeated adoptions and getter copies
+do not share mutable origin storage. Structural `ScopeComplete` does not establish
+origin-provider completeness. The prior explicit
+`source-origin-resource-snapshot-unsupported` export refusal is replaced by this
+bounded capability; missing origins may still remain unavailable in a snapshot.
+Initial copying is cancellation-aware after overlapping storage admission, and a
+post-admission failure releases that lease while preserving the intrinsic report.
+Exact package intrinsic profile/digest admission remains independently required;
+export support alone does not enable a DTD graph/package profile.
 `ResourceSnapshotHeader.LinkProjectionSelected` records selection of an
 `ImplementationAvailable` sealed local-link plan for the established assembly.
 It does not assert projection or scope completion. Absent or unsupported

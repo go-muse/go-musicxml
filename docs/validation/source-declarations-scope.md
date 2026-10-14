@@ -124,11 +124,13 @@ contracts, complete IPA, remaining contextual/intent predicates and
 `B5-PERF-01` remain separately owned. Integer/decimal and DOCTYPE placement rows
 are not reinterpreted as new declaration-validation duties.
 
-Source-origin resource snapshots remain explicitly unsupported. Package export
-requires separate profile pins, ownership/accounting and rebasing of subject,
-physical, declaration, use and ancestry locations across multiple adoptions.
-That transport contract is retained with external package closure; standalone
-composition does not advertise universal MXL/graph support.
+Explicit source-origin resource snapshots preserve owned report/projection
+copies, independent origin completeness, and exact typed document rebasing across
+multiple adoptions. Physical, declaration, use, ancestry and causal locations
+retain their byte coordinates and independently available components. Shared
+account overlap and cancellation are enforced before and during copying. This
+transport replaces the earlier explicit export refusal; it does not itself elect
+new package profile pins or advertise universal MXL/graph composition.
 
 Execution and independent acceptance are recorded separately in
 [the evidence document](source-declarations-evidence.md). Scope statements alone

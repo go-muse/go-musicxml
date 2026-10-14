@@ -61,7 +61,9 @@ type ResourceSnapshot struct {
 
 // FinishWithResourceSnapshot is an alternate terminal finalizer. It evaluates
 // all intrinsic phases before admitting and copying the selected owned facts,
-// then cleans the session exactly once. Snapshot admission failure preserves
+// then cleans the session exactly once. Selected source-origin contexts retain
+// their component availability and intrinsic provider outcome; export does not
+// establish source-origin completeness. Snapshot admission failure preserves
 // intrinsic findings but marks the returned Report incomplete/terminal; without
 // a known violation its conformance becomes undetermined. A nonnil snapshot must
 // be closed or transferred
@@ -71,9 +73,6 @@ func (s *Session) FinishWithResourceSnapshot(ctx context.Context, end Completion
 }
 
 func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*ResourceSnapshot, error) {
-	if len(s.catalog.sourceOrigins[s.profile.ID]) != 0 {
-		return nil, &IncompleteError{Reason: "source-origin-resource-snapshot-unsupported"}
-	}
 	if err := s.step(ctx, 1); err != nil {
 		return nil, err
 	}
@@ -165,17 +164,44 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if err = s.account.Charge(BudgetBufferedBytes, size); err != nil {
 		return nil, err
 	}
-	out := &ResourceSnapshot{dictionary: s.dictionaryFingerprint(), header: stateClone(h), report: stateClone(report), ids: stateClone(ids), account: s.account, retained: size, contexts: make([]ContextResult, 0, count)}
+	// The single admitted lease covers the canonical report and the separately
+	// owned selected contexts while the session/report input still exists. Keep
+	// it live throughout copying and release it on every interrupted copy.
+	out := &ResourceSnapshot{dictionary: s.dictionaryFingerprint(), account: s.account, retained: size}
+	committed := false
+	defer func() {
+		if !committed {
+			out.release()
+		}
+	}()
+	if err = resourceCopyInto(ctx, reflect.ValueOf(&out.header).Elem(), reflect.ValueOf(h), "", ""); err != nil {
+		return nil, err
+	}
+	if err = resourceCopyInto(ctx, reflect.ValueOf(&out.report).Elem(), reflect.ValueOf(report), "", ""); err != nil {
+		return nil, err
+	}
+	if err = resourceCopyInto(ctx, reflect.ValueOf(&out.ids).Elem(), reflect.ValueOf(ids), "", ""); err != nil {
+		return nil, err
+	}
+	out.contexts = make([]ContextResult, count)
+	at := 0
 	for _, v := range report.Context {
 		if resourceSelectedContext(v.Property) {
-			out.contexts = append(out.contexts, stateClone(v))
+			if err = resourceCopyInto(ctx, reflect.ValueOf(&out.contexts[at]).Elem(), reflect.ValueOf(v), "", ""); err != nil {
+				return nil, err
+			}
+			at++
 		}
 	}
+	if err = ctx.Err(); err != nil {
+		return nil, err
+	}
+	committed = true
 	return out, nil
 }
 
 func resourceSelectedContext(p ContextProperty) bool {
-	if dictionaryPropertyValid(p) {
+	if p == ContextPropertySourceOrigin || dictionaryPropertyValid(p) {
 		return true
 	}
 	switch string(p) {
