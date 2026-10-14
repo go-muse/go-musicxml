@@ -287,8 +287,11 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		run.startupReport = report
 		return run, errors.Join(cause, finishErr)
 	}
-	internalDTD := config != nil && config.Profile == ProfileSourceInternalDTD
-	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner, InternalDTD: internalDTD})
+	var internalDTD, sourceDeclarations, captureAttributeLexical bool
+	if config != nil {
+		internalDTD, sourceDeclarations, captureAttributeLexical = sourceDTDPolicy(config.Profile)
+	}
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical})
 	if err != nil {
 		return fail(err)
 	}
@@ -298,6 +301,8 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		if err != nil {
 			return fail(err)
 		}
+		run.source.observer.sourceDeclarations = sourceDeclarations
+		run.source.observer.captureAttributeLexical = captureAttributeLexical
 		if internalDTD {
 			const originBridgeBytes = 512
 			if err := run.account.Charge(validation.BudgetBufferedBytes, originBridgeBytes); err != nil {

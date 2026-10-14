@@ -34,6 +34,12 @@ func buildLinkAssessmentDefinitions() (*assessmentDefinitions, error) {
 	if err != nil {
 		return nil, err
 	}
+	return appendLinkAssessmentDefinitions(d)
+}
+
+// The caller owns fresh definitions. Keeping construction separate permits
+// explicit source compositions without rebuilding or changing old catalogs.
+func appendLinkAssessmentDefinitions(d *assessmentDefinitions) (*assessmentDefinitions, error) {
 	// Keep only the already selected source/model local profiles. Construction
 	// uses fresh definitions and never mutates any frozen catalog or profile.
 	profiles := d.profiles[:0]

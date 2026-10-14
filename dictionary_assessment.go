@@ -19,7 +19,7 @@ func dictionaryAssessmentConfig(ctx context.Context, options DictionaryAssessmen
 	var engine *validation.Engine
 	var err error
 	switch {
-	case target == validation.TargetSource && (options.Assessment.Profile == ProfileSourceDictionaries || options.Assessment.Profile == ProfileSourceSoundsDictionaries):
+	case target == validation.TargetSource && (options.Assessment.Profile == ProfileSourceDictionaries || options.Assessment.Profile == ProfileSourceSoundsDictionaries || options.Assessment.Profile == ProfileSourceInternalDTDDictionaries):
 		engine, err = sourceAssessmentEngineForProfile(options.Assessment.Profile)
 		cfg.DocumentID = sourceDocumentID
 	case target == validation.TargetModel && options.Assessment.Profile == ProfileModelDictionaries:
@@ -50,8 +50,9 @@ func dictionaryAssessmentConfig(ctx context.Context, options DictionaryAssessmen
 }
 
 // InspectXMLWithDictionaries assesses original bytes with explicitly selected
-// pinned dictionary capabilities. It does not load a dictionary implicitly or
-// enable the separate internal-DTD profile. Source owns its reader; this call
+// pinned dictionary capabilities. It does not load a dictionary implicitly.
+// Only the explicit internal-DTD dictionary profile elects DTD composition.
+// Source owns its reader; this call
 // closes only streams returned by the selected DictionarySource.
 func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options DictionaryAssessmentOptions) (report validation.Report, err error) {
 	if dictionaryNil(reader) {
