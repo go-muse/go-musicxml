@@ -915,17 +915,24 @@ current-model MusicXML/Opus to `ProfileModelDictionaries`, source sounds to
 `ProfileSourceSoundsDictionaries`, and source container to unchanged
 `ProfileSourceContainer`, each with its exact catalog digest. Raw-MXL profiles
 have source intrinsic rows only. Current MXL assesses its primary model directly
-and retains distinct original-source evidence for selected stored children.
+and retains distinct original-source evidence for selected stored children. The
+source-sounds intrinsic catalog row can admit compatible explicitly supplied
+fact-stream snapshots; the root dictionary package catalog constructor is
+private. Public resource-graph and MXL dictionary wrappers do not discover,
+resolve or assess sounds children. Standalone `InspectXMLWithDictionaries`
+accepts `ProfileSourceSoundsDictionaries` for explicit sounds input.
 
 One root imports each selected component at most once and shares its verified
-set and finite account with selected linked XML, auxiliary sounds and nested
-packages. Cache identity includes the actual capability fingerprint, not merely
-a requested edition. Reused canonical content still has independently owned,
-document-qualified adoption views, including nested dictionary causes and spans.
-Existing archive limits, resource selections and indirection limits still apply.
-No child resets or widens budgets. These profiles do not compose
-`ProfileSourceInternalDTD` or export source-origin snapshots; original-source
-limitations, including unread external DTDs, remain active.
+set and finite account with selected linked XML and nested packages. Package
+snapshot identity includes the actual capability fingerprint, not merely a
+requested edition. The per-run graph cache mirrors this identity defensively;
+its dictionary fingerprint is fixed for the entire run. Reused canonical content
+still has independently owned, document-qualified adoption views, including
+nested dictionary causes and spans. Existing archive limits, resource selections
+and indirection limits still apply. No child resets or widens budgets. These
+profiles do not compose `ProfileSourceInternalDTD` or export source-origin
+snapshots; original-source limitations, including unread external DTDs, remain
+active.
 
 ### Caller-supplied transport and sealed data
 
@@ -1018,19 +1025,43 @@ error can accompany a usable report with independent XSD/family failures retaine
 Always check both the returned error and `Report.Satisfied()` or
 `AssessmentBundle.Satisfied()`.
 
+Runtime import faults are identifiable with
+`errors.Is(err, ErrDictionaryUnavailable)`; `errors.As` can match the
+`*DictionaryImportError` wrapper.
+`DictionaryImportError` exposes `Manifest`, a fixed phase `Reason`, and the
+original `Err` through `Unwrap`. Provider, read and close causes remain
+inspectable through `errors.Is`/`errors.As`; response, length and digest faults
+also use this runtime classification. Options, profile and account misuse stay
+`validation.ConfigurationError`. Direct misuse of
+`validation.VerifyDictionaryComponent` keeps that configuration contract;
+only the root importer's own verification mismatch is translated. If a callback
+itself returns a `ConfigurationError`, that original cause remains inspectable.
+Actual cancellation, deadline and resource failures, including joined close
+failures, remain terminal rather than being relabeled unavailable.
+
 ### Default-budget boundary
 
-Selecting dictionaries does not raise the finite defaults. At the documented
-`229e4fd` checkpoint, an independent valid repeated-rest/accidental fixture with
-all four components imported completed standalone source/model assessment at
-320 notes and hit the unchanged 20,000,000-rule-step cap at 321. Graph and
-raw/current MXL completed operational enumeration at 316 and hit that cap at
-317. The current-model graph/MXL cases still had the existing independent
-schema-hint unknown, so enumeration completion was not bundle satisfaction.
-These are fixture-specific boundary observations, not a supported note-count
-capacity or a performance-readiness claim. Inputs, representation and selected
-relations change costs; [the dated evidence](docs/validation/pinned-dictionaries-evidence.md#default-budget-observations)
-records the conditions. Exhaustion is incomplete assessment, not musical invalidity.
+Selecting dictionaries does not raise the finite defaults. In the repeated-rest/
+accidental fixture measured for the Round 1 correction, all four components are
+imported before assessment. Standalone source/model completes at 368 notes and
+refuses at 369; graph and raw/current MXL complete operational enumeration at
+363 and refuse at 364 on the unchanged 20,000,000-rule-step cap. Current-model
+bundles retain their independent schema-hint unknown below that boundary.
+The earlier published `a772914` observations were 320/321 and 316/317;
+[the dated evidence][dictionary-budget-evidence] preserves both measurements.
+These are fixture-specific observations, not supported note-count capacities.
+Exhaustion is incomplete assessment, not musical invalidity or B5-PERF-01 closure.
+
+Import work is deliberately conservative. Selecting every relation of one
+component costs 2,635,787 steps for canonical names/codepoints, 1,735,474 for
+ranges, 435,365 for sounds, or 210,493 for IPA. Selecting all four in one run
+costs 5,016,969 steps; shared setup means that this is not the sum of four
+independent runs. `TestDictionaryImportPinnedWorkCosts` records the
+exact normal-read fixture and selection. Short or empty provider reads add work.
+The decoder's `6*rawBytes+1024` reservation is a logical envelope for scanning,
+escape/UTF-8 checks, copies, token and row operations, not a measured pass count.
+
+[dictionary-budget-evidence]: docs/validation/pinned-dictionaries-evidence.md#default-budget-observations
 
 ### Evidence and compatibility
 

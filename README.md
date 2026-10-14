@@ -216,12 +216,15 @@ timeline improvements do not close it. See the [API limits](API.md#exact-timelin
 
 ### Pinned dictionary evidence
 
-The additive dictionary entry points select their own explicit source, model,
-source-sounds, resource-graph or MXL profiles. Callers select fixed components and
-supply authorized bytes through `DictionarySource`. The runtime embeds no
-dictionary data and never fetches or loads them automatically; caller-selected
-transport is required. Repository dictionary fixtures are test inputs. One verified immutable set and finite account cover the root and
-selected linked/nested-package children. Existing profiles remain unchanged.
+The additive dictionary entry points select explicit source, source-sounds,
+model, resource-graph or MXL profiles. Standalone XML inspection accepts sounds
+input; public graph/MXL wrappers do not discover or assess sounds children.
+Callers select fixed components and supply authorized bytes through
+`DictionarySource`. The runtime embeds no dictionary data and never
+fetches or loads them automatically; caller-selected transport is required.
+Repository dictionary fixtures are test inputs. One verified immutable set and
+finite account cover the root and selected linked/nested-package children.
+Existing profiles remain unchanged.
 
 The selected scope includes exact SMuFL 1.4 canonical membership with independent
 MusicXML name-family checks, narrow defaults/range advice and recognition of the
@@ -233,11 +236,13 @@ glyph/rendering semantics remain outside this scope.
 
 Default budgets can still stop modest inputs. In a specific repeated-note fixture
 with all four dictionary components imported, standalone source/model assessment
-completed at 320 notes and exhausted the unchanged 20,000,000-step limit at 321;
-graph and raw/current MXL completed operational enumeration at 316 and refused
-317. Current-model bundles retained an independent schema-hint unknown even below
+completes at 368 notes and exhausts the unchanged 20,000,000-step limit at 369;
+graph and raw/current MXL complete operational enumeration at 363 and refuse
+364. Current-model bundles retained an independent schema-hint unknown even below
 that limit. These are fixture-specific observations, not general capacities or
-B5-PERF-01 closure. See the [measured conditions](docs/validation/pinned-dictionaries-evidence.md#default-budget-observations).
+B5-PERF-01 closure. See the [measured conditions][dictionary-budget-evidence].
+
+[dictionary-budget-evidence]: docs/validation/pinned-dictionaries-evidence.md#default-budget-observations
 
 See the [API and migration contract](API.md#opt-in-pinned-dictionaries),
 [exact obligations and retained gates](docs/validation/pinned-dictionaries-scope.md)

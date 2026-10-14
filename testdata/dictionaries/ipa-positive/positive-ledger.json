@@ -31,7 +31,13 @@
       "path_in_prior_evidence": "ipa/2015-chart-page.html",
       "url": "https://www.internationalphoneticassociation.org/content/full-ipa-chart/ipa-tones-and-word-accents",
       "bytes": 40629,
-      "sha256": "52be825a3ee04a1b9ca3d6ab721770446c03096ac052fa204ffe6c9761552944"
+      "sha256": "52be825a3ee04a1b9ca3d6ab721770446c03096ac052fa204ffe6c9761552944",
+      "observation_date": "2026-10-13",
+      "hash_scope": "One-time observation of the retained dynamic HTML response, not a reproducible live-page pin. Per-request content can change without a license change.",
+      "license_quote": "made freely available under a Creative Commons Attribution-Sharealike 3.0 Unported License (CC-BY-SA)",
+      "license_quote_verified_date": "2026-10-14",
+      "archive_snapshot": null,
+      "archive_snapshot_status": "No independently verified public archive snapshot is recorded; the quoted license text and original dated byte observation are retained."
     },
     "mapping2026": {
       "path_in_prior_evidence": "ipa/IPA_Doulos_symbol_list-current.pdf",
@@ -78,7 +84,9 @@
     },
     "unicode-license-current": {
       "path_in_prior_evidence": "unicode/license-current.html",
-      "url": "https://www.unicode.org/license.html",
+      "url": "https://www.unicode.org/license.txt",
+      "requested_url": "https://www.unicode.org/license.html",
+      "effective_url_verified_date": "2026-10-14",
       "bytes": 1995,
       "sha256": "e7a93b009565cfce55919a381437ac4db883e9da2126fa28b91d12732bc53d96"
     }

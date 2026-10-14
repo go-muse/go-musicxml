@@ -36,8 +36,10 @@ type graphExpansion struct {
 	depth    int64
 }
 
-// resourceKey uses actual admitted capabilities, including unavailable reasons
-// and verified lineage, rather than only desired manifest or profile identity.
+// resourceKey defensively mirrors the package-session capability identity. The
+// dictionary fingerprint is fixed for this entire run and does not distinguish
+// entries within its private cache; package sessions can adopt snapshots from
+// callers with different actual capabilities, where that identity is significant.
 func (g *resourceGraphRun) resourceKey(pin validation.ResourcePin, profile validation.ProfileID) graphResourceKey {
 	return graphResourceKey{pin: pin, profile: profile, dictionaries: g.dictionaryFingerprint}
 }

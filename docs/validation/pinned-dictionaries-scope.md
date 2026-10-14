@@ -1,13 +1,17 @@
 # Pinned dictionary scope and retained obligations
 
-Status: **implemented additive slice under integration review**, 14 October 2026.
-The canonical pre-change base is `a8e7a10cdf7e34fad979a758c1ba481c74f579fe`
-(tree `c54f0a190e24687f162d1851bf46dd08147de473`). The documented integration
-checkpoint is `548734f80fef2c5de9997914a8ab47d1c3baac65`; later corrections
-and final checks are separate gates. No published-head acceptance, complete IPA
-validator, complete MusicXML conformance or final-program acceptance is claimed.
-See [verification evidence](pinned-dictionaries-evidence.md) for the exact scope
-of completed checks and [API.md](../../API.md#opt-in-pinned-dictionaries) for use.
+Status: **implemented additive slice under integration review**, 14 October
+2026. The canonical pre-change base is
+`a8e7a10cdf7e34fad979a758c1ba481c74f579fe` (tree
+`c54f0a190e24687f162d1851bf46dd08147de473`). The historical integration is
+unpublished local checkpoint
+`548734f80fef2c5de9997914a8ab47d1c3baac65`; later corrections and final checks
+are separate gates. No published-head acceptance, complete IPA validator,
+complete MusicXML conformance or final-program acceptance is claimed. See the
+[published lineage map][published-lineage] for inspectable containing commits;
+historical local checkpoints are not public checkout targets. See [verification
+evidence](pinned-dictionaries-evidence.md) for the exact scope of completed
+checks and [API.md](../../API.md#opt-in-pinned-dictionaries) for use.
 
 ## Preservation and selected closure
 
@@ -21,8 +25,12 @@ retire an original requirement. Original `hard_error_basis=false` issue records
 are not converted into independent normative predicates.
 
 The slice adds fixed, verified, immutable dictionary capabilities; exact
-source/current-model consumers; and propagation through selected resource graphs,
-auxiliary sounds and nested MXL packages. It selects SMuFL 1.4 canonical names
+source/current-model consumers; and propagation through selected resource graphs
+and nested MXL packages. The source-sounds intrinsic row admits compatible
+explicitly supplied fact-stream snapshots; the root dictionary package catalog
+constructor is private. Standalone `InspectXMLWithDictionaries` supports
+`ProfileSourceSoundsDictionaries`, but public graph/MXL wrappers do not discover,
+resolve or assess sounds children. The slice selects SMuFL 1.4 canonical names
 and exact ranges, MusicXML 4.0 standard-sound recognition and explicitly partial
 IPA 2015/Unicode 13 positive evidence. It adds no general downloadable dictionary
 framework, font inspection, expression evaluation or application sound mapping.
@@ -34,8 +42,9 @@ these dictionary operations and narrow defaults/advice. Full timeline, layout,
 repeat and unrelated context families are not prerequisites. New graph/MXL
 profiles bind exact dictionary intrinsic profiles/catalog digests while old
 profiles remain unchanged. Source-only container stays `ProfileSourceContainer`;
-source sounds uses `ProfileSourceSoundsDictionaries`. Raw MXL retains source-only
-intrinsic bindings; current MXL does not reconstruct discarded source evidence.
+the source-sounds catalog row uses `ProfileSourceSoundsDictionaries`. Raw MXL
+retains source-only intrinsic bindings; current MXL does not reconstruct
+discarded source evidence.
 The separate internal-DTD/source-origin pipeline is not composed implicitly.
 
 ## Original-obligation contribution crosswalk
@@ -59,7 +68,7 @@ review gates are separate in the evidence page.
 | `REQ-DEF-ISSUE-SMUFL-VERSION-DICTIONARY` / `MX40-ISSUE-smufl-version-dictionary` | Explicitly choose SMuFL 1.4, exact canonical names and pinned transform/policy; distinguish optional font glyphs, primary/alternate codepoints, classes and family facets. | `TestDictionaryManifestsAreClosedAndOwned`; `TestDictionaryComponentVerifierRejectsZeroWrongLengthAndCanceled` | Historical issue status and `hard_error_basis=false` remain unchanged; future edition changes need new reviewed identities. Owner: the same issue requirement. |
 | `REQ-DEF-EXTERNAL-IPA` / `TEST-DEF-EXTERNAL-IPA` (`implementation-plan.json#/requirements/34`); `CHECK-ipa-2015-unicode13` / `TEST-ipa-2015-unicode13` (`prose-contracts.json#/checks/15`) | Every present exact `play/ipa`, including empty content: retain partial symbol, exact-example and selected canonical-equivalence evidence while keeping the complete predicate unavailable. | `TestDictionaryIPAPositiveNeverClosesSequence`; `TestDictionaryENTITYAndSemanticUseRemainIndependent`; `TestDictionaryIPADerivedBundleDoesNotAcquireOriginalSourceOrNegativeAuthority` | Full repertoire, whitespace/empty policy, general canonical-equivalent encoding closure and sequence interpretation remain open. Owner: `REQ-DEF-EXTERNAL-IPA`; see the four gates below. |
 | `REQ-DEF-ISSUE-IPA-CHARACTER-REPERTOIRE` / `MX40-ISSUE-ipa-character-repertoire` | Select the named partial positive policy without presenting a Unicode block or later mapping aid as the complete 2015 repertoire. | IPA tests above; independently reviewed 197-row data ledger | Keep original issue status and `hard_error_basis=false`; full normative interpretation remains with this issue and `REQ-DEF-EXTERNAL-IPA`. |
-| `CHECK-context-sounds-standard-identifiers` / `TEST-context-sounds-standard-identifiers` (`context-dispositions.json#/checks/242`) | Exact score-instrument and instrument-change `instrument-sound`, plus source-only sounds `sound/@id`: expose standard=true/false from 894 IDs. | `TestDictionarySoundsCustomAllowedAndIPAGate`; `TestDictionaryGraphAdmitsExplicitSourceSoundsProfile` | False means nonstandard, never invalid MusicXML. No `SoundsDocument` or closed extension enum. Owner: standard-sounds dictionary context; general mapping remains `CHECK-context-sounds-application-mapping`. |
+| `CHECK-context-sounds-standard-identifiers` / `TEST-context-sounds-standard-identifiers` (`context-dispositions.json#/checks/242`) | Exact score-instrument and instrument-change `instrument-sound`, plus source-only sounds `sound/@id`: expose standard=true/false from 894 IDs. | `TestDictionarySoundsCustomAllowedAndIPAGate`; `TestDictionaryGraphAdmitsExplicitSourceSoundsProfile` | False means nonstandard, never invalid MusicXML. No `SoundsDocument`, public graph/MXL sounds traversal or closed extension enum. The source-sounds graph test calls the internal helper directly. Public sounds-resource traversal remains with `REQ-DEF-PACKAGE-ADAPTERS` and `REQ-DEF-ADAPT-SOURCE`; standard-sounds dictionary context still owns the selected scalar relation; general mapping remains `CHECK-context-sounds-application-mapping`. |
 | `CHECK-context-stopped-smufl-default` / `TEST-context-stopped-smufl-default` (`#/checks/194`) | Exact technical/stopped: proven absent attribute gives `brassMuteClosed`; explicit present scalar is independently canonical-assessed. | `TestDictionaryDefaultsWithoutDataAndRangeAdvice`; `TestDictionaryAllTwentySevenDeclaredUses` | Default remains known without data; present invalid/unknown does not become absence. No brass rendering proof. Owner: this context obligation. |
 | `CHECK-context-open-smufl-default` / `TEST-context-open-smufl-default` (`#/checks/195`) | Exact technical/open: same presence rules, default `brassMuteOpen`. | Same defaults/direct-use routes | No default on unrelated same-type elements or inferred performance meaning. Owner: this context obligation. |
 | `CHECK-context-half-muted-smufl-default` / `TEST-context-half-muted-smufl-default` (`#/checks/196`) | Exact technical/half-muted: same presence rules, default `brassMuteHalfClosed`. | Same defaults/direct-use routes | Preserve local default independently of dictionary availability. Owner: this context obligation. |
@@ -72,10 +81,11 @@ review gates are separate in the evidence page.
 | `CHECK-context-mordent-long-default` / `TEST-context-mordent-long-default` (`#/checks/181`) | Exact ornaments/mordent and inverted-mordent: default long=no on proven absence; retain distinct MusicXML/SMuFL terminology. | `TestDictionaryDefaultsWithoutDataAndRangeAdvice`; `TestDictionaryInvertedMordentLocalLongDefaultSourceModel` | These two uses share one obligation; no invented glyph mapping. Owner: this context obligation. |
 
 The four explicit symbol/glyph/arrow/inverted-mordent source/model test groups
-were added after the original consumer review in test-only author commit
-`4245de51cb8e84b0fe1a2736bc17dead772aae67`. They passed on their first run; this
-is a coverage addition, not a claimed production bug or RED/green correction.
-Parent static review accepted that supplement; its integration equivalent is
+were added after the original consumer review at test-only author
+unpublished local checkpoint `4245de51cb8e84b0fe1a2736bc17dead772aae67`. They
+passed on their first run; this is a coverage addition, not a claimed production
+bug or RED/green correction. Parent static review accepted that supplement; its
+historical integration was unpublished local checkpoint
 `548734f80fef2c5de9997914a8ab47d1c3baac65`. Final whole-tree acceptance remains
 part of the evidence page's outstanding gates.
 
@@ -292,8 +302,9 @@ reviewed-derived lineage. With a certificate, `ComponentVerified` plus
 `SourceKind` keeps original-component verification distinct from derived-bundle
 verification. Neither proves transport authorization, full IPA validity or XML
 conformance. Hashes cover importer/transform and interpretation revisions;
-actual selection, availability/reasons and lineage participate in capability
-fingerprints used by graph caches.
+actual selection, availability/reasons and lineage participate in package-session
+snapshot capability identities. The graph cache mirrors this key defensively;
+its fingerprint cannot vary within a run.
 
 ### Four retained IPA gates
 
@@ -334,11 +345,12 @@ One root transport/import/index set is shared by all selected graph children,
 with no second external-byte charge at certificate verification and no child
 budget reset. Temporary source, decoded records and final copies are admitted
 for simultaneous live storage. Scalar caps also apply to derived defaults and
-nested input/effective/span/equivalent text before publication. Every transferred usable body closes once even
-on read/metadata/close failure. Wrong request/pin/kind or ordinary provider errors
-become capability gaps and may accompany a partial result; they do not suppress
-independent XSD/family failures. Actual cancellation/resource exhaustion is
-terminal, with original causes and earlier proved violations preserved.
+nested input/effective/span/equivalent text before publication. Every
+transferred usable body closes once even on read/metadata/close failure. Wrong
+request/pin/kind or ordinary provider errors become capability gaps and may
+accompany a partial result; they do not suppress independent XSD/family
+failures. Actual cancellation/resource exhaustion is terminal, with original
+causes and earlier proved violations preserved.
 
 The graph retains dictionary context in selected intrinsic snapshots and remaps
 all occurrence-qualified subjects and nested causes on adoption. Two aliases of
@@ -349,15 +361,21 @@ incomplete children. An unselected dictionary source is never invoked.
 
 ### Observed default-budget limit
 
-The independent integrated `229e4fd` review selected all four exact components
-for a repeated-rest fixture with one canonical accidental attribute per note.
-Standalone source/model assessment completed at 320 notes and reached the
-unchanged 20,000,000-rule-step cap at 321. Graph and raw/current MXL completed
-operational enumeration at 316 and reached that cap at 317. Current-model
-bundles still retained an independent schema-hint unknown even when their
-intrinsic assessment completed. These are fixture-specific observations, not
-universal note-count capacities, bundle acceptance or B5-PERF-01 closure.
-See the [measured conditions](pinned-dictionaries-evidence.md#default-budget-observations).
+The historical review at unpublished local checkpoint `229e4fd`
+selected all four exact components for a repeated-rest fixture with one
+canonical accidental attribute per note. Standalone source/model assessment
+completed at 320 notes and reached the unchanged 20,000,000-rule-step cap at
+321. Graph and raw/current MXL completed operational enumeration at 316 and
+reached that cap at 317. Current-model bundles still retained an independent
+schema-hint unknown even when their intrinsic assessment completed. These are
+fixture-specific observations, not universal note-count capacities, bundle
+acceptance or B5-PERF-01 closure. See the [measured
+conditions](pinned-dictionaries-evidence.md#default-budget-observations).
+
+The Round1 correction recheck observes 368/369 for standalone source/model and
+363/364 for graph/MXL with those same finite limits. See the paired
+[correction measurements](pinned-dictionaries-evidence.md#round1-correction-measurements-2026-10-14)
+for exact work counters, fixture qualifications and unchanged capability gaps.
 
 ## Source licenses and distribution boundary
 
@@ -409,5 +427,7 @@ implemented here.
 [glyphnames]: https://raw.githubusercontent.com/w3c-cg/smufl/753f551ca6f96bf24ba38aa2d8a317e706238c51/metadata/glyphnames.json
 [ranges]: https://raw.githubusercontent.com/w3c-cg/smufl/753f551ca6f96bf24ba38aa2d8a317e706238c51/metadata/ranges.json
 [sounds]: https://raw.githubusercontent.com/w3c-cg/musicxml/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xml
-[smufl-license]: https://w3c.github.io/smufl/releases/1.4/preamble/license.html
+[smufl-license]: https://w3c-cg.github.io/smufl/releases/1.4/preamble/license.html
 [fsa]: https://www.w3.org/community/about/agreements/final/
+
+[published-lineage]: pinned-dictionaries-evidence.md#published-implementation-lineage

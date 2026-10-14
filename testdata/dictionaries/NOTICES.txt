@@ -1,4 +1,4 @@
-PROPOSED THIRD-PARTY DATA NOTICES
+THIRD-PARTY DATA NOTICES
 
 Standard Music Font Layout (SMuFL), version 1.4
 
@@ -11,8 +11,13 @@ Specification, published by the W3C Music Notation Community Group under
 the W3C Community Final Specification Agreement (FSA).
 
 Specification and source license:
-https://w3c.github.io/smufl/releases/1.4/
-https://w3c.github.io/smufl/releases/1.4/preamble/license.html
+https://w3c-cg.github.io/smufl/releases/1.4/
+https://w3c-cg.github.io/smufl/releases/1.4/preamble/license.html
+License statement (verified 14 October 2026):
+"SMuFL is free to use, and is licensed under the terms of the W3C Community
+Final Specification Agreement (FSA)."
+The specification and license URLs above use HTTP redirects to
+http://smufl.formats.music/releases/1.4/ and its preamble/license.html page.
 Agreement: https://www.w3.org/community/about/agreements/final/
 Human-readable summary: https://www.w3.org/community/about/agreements/fsa-deed/
 

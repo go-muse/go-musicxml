@@ -1,10 +1,10 @@
-PROPOSED NOTICE FOR THE PARTIAL IPA POSITIVE-EVIDENCE DATA
+NOTICE FOR THE PARTIAL IPA POSITIVE-EVIDENCE DATA
 
 Scope of this notice
 The IPA-derived positive ledger, its runtime data representation, and their
 generated data equivalents are separately licensed data. The project's MIT
 license for independently authored implementation code does not replace these
-data licenses. This proposal contains no chart artwork, PDF, font, or outline.
+data licenses. These data contain no chart artwork, PDF, font, or outline.
 
 IPA source 1: historical chart
 IPA Chart (revised to 2015), International Phonetic Association.
