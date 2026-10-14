@@ -135,6 +135,11 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 					if ch == n {
 						break
 					}
+					// A kind closes the root/numeral choice of its own
+					// harmony-chord. A following function must not reuse it.
+					if r.matches(ch, localKind) {
+						subject = nil
+					}
 					if r.matches(ch, localAdvisoryRole("root")) || r.matches(ch, localAdvisoryRole("numeral")) {
 						subject = ch
 					}
@@ -145,7 +150,9 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 			} else if subject == nil {
 				app = stateUnknown[bool]("harmony-root-or-numeral-association-unavailable")
 			} else if r.matches(subject, localAdvisoryRole("numeral")) {
-				value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "source-numeral-step-reference-requires-interpretation"}
+				// The source's numeral-step spelling is a documentation
+				// typo: numeral-root owns the numeral's text override.
+				value = localKnownText("set-numeral-root-text-to-empty-to-suppress-numeral")
 			}
 		}
 		if e := publish("harmony-none-root", raw, value, app); e != nil {
