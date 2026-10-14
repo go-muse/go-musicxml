@@ -10,6 +10,9 @@ func (s *Session) evaluateDictionary(ctx context.Context, n *factNode, rule Rule
 		return Decision{}, true, nil
 	}
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	if !dictionaryRelevant(r, n, p.Operation) {
+		return dictionarySubjectSelection(n), false, r.err
+	}
 	var d Decision
 	var err error
 	switch p.Operation {
@@ -30,6 +33,52 @@ func (s *Session) evaluateDictionary(ctx context.Context, n *factNode, rule Rule
 	}
 	return d, false, err
 }
+
+// dictionaryRelevant is a conservative declaration-based filter over the exact
+// compiled role index. Unavailable declarations/types remain on the original
+// causal path. Canonical dispatch also depends on actual types and assessed
+// attribute uses, so it is deliberately never excluded by element roles.
+func dictionaryRelevant(r *contextReader, n *factNode, operation DictionaryOperation) bool {
+	if !r.step(1) {
+		return false
+	}
+	if operation == DictionaryCanonical || n.header.Declaration.State != EvidenceKnown || n.header.Type.State != EvidenceKnown {
+		return true
+	}
+	for _, role := range r.roles(n) {
+		switch operation {
+		case DictionaryStandardSounds:
+			if role == "dictionary.sound" || role == "dictionary.sounds.score-instrument" || role == "dictionary.sounds.instrument-change" {
+				return true
+			}
+		case DictionaryIPA:
+			if role == "dictionary.ipa.play" {
+				return true
+			}
+		case DictionaryRendering:
+			switch role {
+			case "dictionary.stopped", "dictionary.open", "dictionary.half-muted", "dictionary.tremolo", "dictionary.notehead", "dictionary.smufl.direction-type", "dictionary.smufl.appearance", "dictionary.arrow", "dictionary.mordent", "dictionary.inverted-mordent":
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// The candidate check only rejects unrelated assessed type names. A candidate
+// still requires the complete ComponentID equality below, including assembly,
+// namespace, kind, and occurrence; element QNames never select canonical work.
+func dictionarySMuFLTypeCandidate(r *contextReader, typ ComponentID) bool {
+	if !r.step(1 + int64(len(typ.Name.Local))) {
+		return false
+	}
+	switch typ.Name.Local {
+	case "formatted-symbol", "formatted-symbol-id", "glyph", "smufl-accidental-glyph-name", "smufl-coda-glyph-name", "smufl-glyph-name", "smufl-lyrics-glyph-name", "smufl-pictogram-glyph-name", "smufl-segno-glyph-name", "smufl-wavy-line-glyph-name":
+		return true
+	}
+	return false
+}
+
 func dictionaryMergeDecision(a, b Decision) Decision {
 	rank := func(o Outcome) int {
 		switch o {
@@ -75,13 +124,26 @@ func dictionaryPublish(r *contextReader, n *factNode, key RuleKey, property Cont
 	}
 	return r.s.publishContextResult(r.ctx, ContextResult{Provider: key, Subject: NodeRef{r.s.documentID, n.header.ID}, Property: property, Value: Evidence[Atomic]{State: EvidenceAbsent}, Origins: []Location{n.header.Location}, Dictionary: p})
 }
-func dictionaryCanonicalLookup(r *contextReader, input Evidence[Atomic], attribute *AttributeSelector) (out *DictionaryContextResult, decision Decision, err error) {
+
+type dictionaryGlyphSearch struct {
+	entry *dictionaryEntry
+	key   string
+	index int
+	found bool
+}
+
+func dictionaryCanonicalLookup(r *contextReader, input Evidence[Atomic], attribute *AttributeSelector) (*DictionaryContextResult, Decision, error) {
+	return dictionaryCanonicalLookupMode(r, input, attribute, true)
+}
+
+func dictionaryCanonicalLookupMode(r *contextReader, input Evidence[Atomic], attribute *AttributeSelector, primary bool) (out *DictionaryContextResult, decision Decision, err error) {
+	var search dictionaryGlyphSearch
 	out = dictionaryPayload(input, attribute, DictionaryManifestSMuFL14Canonical, DictionaryRelationCanonicalName)
 	// Primary-codepoint selection is independent. Even a complete codepoint
 	// observation cannot replace the mandatory canonical-name relation.
 	defer func() {
-		if err == nil && input.State == EvidenceKnown && input.Value.Kind == AtomicString {
-			err = dictionaryPrimaryCodepoint(r, out)
+		if primary && err == nil && input.State == EvidenceKnown && input.Value.Kind == AtomicString {
+			err = dictionaryPrimaryCodepoint(r, out, search)
 		}
 	}()
 	if input.State != EvidenceKnown {
@@ -101,10 +163,11 @@ func dictionaryCanonicalLookup(r *contextReader, input Evidence[Atomic], attribu
 		return out, evidenceDecision(availability.State, availability.Reason, availability.Cause, false), nil
 	}
 	dictionaryAttachEntry(out, entry)
-	_, found, err := dictionarySearch(r.ctx, r.s.account, len(entry.smufl.Glyphs), input.Value.Text, func(i int) string { return entry.smufl.Glyphs[i].Name })
+	index, found, err := dictionarySearch(r.ctx, r.s.account, len(entry.smufl.Glyphs), input.Value.Text, func(i int) string { return entry.smufl.Glyphs[i].Name })
 	if err != nil {
 		return out, Decision{}, err
 	}
+	search = dictionaryGlyphSearch{entry: entry, key: input.Value.Text, index: index, found: found}
 	out.Result = dictionaryKnown(found)
 	if !found {
 		return out, Decision{Outcome: OutcomeFail, Reason: "smufl-canonical-name-not-listed", Expected: "An exact canonical SMuFL 1.4 glyph name", Actual: input.Value.Text}, nil
@@ -126,7 +189,7 @@ func dictionaryCanonicalNode(r *contextReader, n *factNode, key RuleKey, p *dict
 		}
 		return dictionaryPublish(r, n, key, ContextDictionaryCanonical, result)
 	}
-	if n.header.Declaration.State == EvidenceKnown && n.header.Type.State == EvidenceKnown {
+	if n.header.Declaration.State == EvidenceKnown && n.header.Type.State == EvidenceKnown && dictionarySMuFLTypeCandidate(r, n.header.Type.Value) {
 		if !r.step(contextComponentBytes(n.header.Type.Value)*int64(len(p.Types)) + 1) {
 			return d, r.err
 		}
@@ -199,7 +262,7 @@ func dictionarySoundsNode(r *contextReader, n *factNode, key RuleKey) (Decision,
 
 func dictionaryKnown[T any](v T) Evidence[T] { return Evidence[T]{State: EvidenceKnown, Value: v} }
 
-func dictionaryPrimaryCodepoint(r *contextReader, out *DictionaryContextResult) error {
+func dictionaryPrimaryCodepoint(r *contextReader, out *DictionaryContextResult, previous dictionaryGlyphSearch) error {
 	entry, availability, err := r.s.dictionaryCapability(r.ctx, DictionaryManifestSMuFL14Canonical, DictionaryRelationPrimaryCodepoint)
 	if err != nil {
 		return err
@@ -209,9 +272,21 @@ func dictionaryPrimaryCodepoint(r *contextReader, out *DictionaryContextResult) 
 		return nil
 	}
 	dictionaryAttachEntry(out, entry)
-	index, found, err := dictionarySearch(r.ctx, r.s.account, len(entry.smufl.Glyphs), out.Input.Value.Text, func(i int) string { return entry.smufl.Glyphs[i].Name })
-	if err != nil {
-		return err
+	// Relation authorization is checked above even when membership already
+	// searched this same immutable entry. No cache crosses an input or session.
+	index, found := previous.index, previous.found
+	same := previous.entry == entry
+	if same {
+		if !r.step(1 + int64(len(previous.key)) + int64(len(out.Input.Value.Text))) {
+			return r.err
+		}
+		same = previous.key == out.Input.Value.Text
+	}
+	if !same {
+		index, found, err = dictionarySearch(r.ctx, r.s.account, len(entry.smufl.Glyphs), out.Input.Value.Text, func(i int) string { return entry.smufl.Glyphs[i].Name })
+		if err != nil {
+			return err
+		}
 	}
 	out.Codepoint = Evidence[uint32]{State: EvidenceUnknown, Reason: "smufl-primary-codepoint-unlisted"}
 	if found {

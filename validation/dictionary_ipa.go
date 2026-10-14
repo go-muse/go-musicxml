@@ -52,6 +52,9 @@ func dictionaryIPANode(r *contextReader, n *factNode, key RuleKey) (Decision, er
 }
 
 func dictionaryIPARelation(r *contextReader, out *DictionaryContextResult, entry *dictionaryEntry) error {
+	if !r.step(1) {
+		return r.err
+	}
 	text := out.Input.Value.Text
 	out.Result = stateUnknown[bool]("ipa-positive-table-is-not-complete-repertoire")
 	if out.Relation == DictionaryRelationIPAAttestedExample {
@@ -73,25 +76,17 @@ func dictionaryIPARelation(r *contextReader, out *DictionaryContextResult, entry
 		out.Spans = []DictionarySpan{span}
 		return nil
 	}
+	maxBytes := entry.ipaSymbolMaxBytes
 	count := len(entry.ipa.Symbols)
 	keyAt := func(i int) string { return entry.ipa.Symbols[i].Encoding }
 	if out.Relation == DictionaryRelationIPACanonicalEquivalent {
+		maxBytes = entry.ipaEquivalentMaxBytes
 		count = len(entry.ipa.Equivalences)
 		keyAt = func(i int) string { return entry.ipa.Equivalences[i].Encoding }
 	}
-	maxBytes := 0
-	for i := 0; i < count; i++ {
-		encoding := keyAt(i)
-		if !r.step(1 + int64(len(encoding))) {
-			return r.err
-		}
-		maxBytes = max(maxBytes, len(encoding))
-	}
-	// This is a finite compiled-table bound, not a restriction on user text,
-	// combining marks or IPA sequences. It keeps longest-match probing linear.
-	if maxBytes > 64 {
-		return contract("IPA positive table", "reviewed encoding span exceeds finite lookup bound")
-	}
+	// The immutable constructor computes each table's maximum while copying
+	// its already bounded (at most 16-byte) encodings. This finite probe bound
+	// is not a restriction on user text, combining marks, or IPA sequences.
 	allKnown := len(text) > 0
 	appendSpan := func(span DictionarySpan) error {
 		// Geometric backing and the temporary input graph coexist with publication.

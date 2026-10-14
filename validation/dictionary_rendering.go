@@ -43,7 +43,7 @@ func dictionaryRenderingNode(r *contextReader, n *factNode, key RuleKey) (Decisi
 			return Decision{}, err
 		}
 		if active.State == EvidenceKnown && active.Value {
-			if err := dictionaryPublishRange(r, n, key, "tremolo-range", effective, active, []string{"tremolos"}); err != nil {
+			if err := dictionaryPublishRange(r, n, key, "tremolo-range", raw, effective, active, []string{"tremolos"}); err != nil {
 				return Decision{}, err
 			}
 		}
@@ -57,7 +57,7 @@ func dictionaryRenderingNode(r *contextReader, n *factNode, key RuleKey) (Decisi
 		} else if raw.State == EvidenceAbsent && typ.Value.Text != "other" {
 			active = dictionaryKnown(false)
 		}
-		if err := dictionaryPublishRange(r, n, key, "notehead-text-recommended", raw, active, []string{"noteNameNoteheads", "noteNameNoteheadsSupplement"}); err != nil {
+		if err := dictionaryPublishRange(r, n, key, "notehead-text-recommended", raw, raw, active, []string{"noteNameNoteheads", "noteNameNoteheadsSupplement"}); err != nil {
 			return Decision{}, err
 		}
 		matched = true
@@ -122,9 +122,12 @@ func dictionaryRenderingNode(r *contextReader, n *factNode, key RuleKey) (Decisi
 	}
 	return dictionarySubjectSelection(n), nil
 }
-func dictionaryPublishRange(r *contextReader, n *factNode, key RuleKey, role string, input Evidence[Atomic], active Evidence[bool], ranges []string) error {
+func dictionaryPublishRange(r *contextReader, n *factNode, key RuleKey, role string, input, effective Evidence[Atomic], active Evidence[bool], ranges []string) error {
 	out := dictionaryPayload(input, nil, DictionaryManifestSMuFL14Ranges, DictionaryRelationRangeMembership)
 	out.Role = role
+	if role == "tremolo-range" {
+		out.Effective = effective
+	}
 	attributeRole := contextRole("dictionary.smufl.notehead")
 	if role == "tremolo-range" {
 		attributeRole = "dictionary.smufl.tremolo"
@@ -141,14 +144,14 @@ func dictionaryPublishRange(r *contextReader, n *factNode, key RuleKey, role str
 		out.Result = Evidence[bool]{State: EvidenceAbsent}
 		return dictionaryPublish(r, n, key, ContextDictionaryAdvice, out)
 	}
-	if input.State != EvidenceKnown {
-		out.Result = stateUnavailable[Atomic, bool](input)
-		if input.State == EvidenceAbsent {
+	if effective.State != EvidenceKnown {
+		out.Result = stateUnavailable[Atomic, bool](effective)
+		if effective.State == EvidenceAbsent {
 			out.Result = stateUnknown[bool]("smufl-range-name-unavailable")
 		}
 		return dictionaryPublish(r, n, key, ContextDictionaryAdvice, out)
 	}
-	canonical, _, err := dictionaryCanonicalLookup(r, input, nil)
+	canonical, _, err := dictionaryCanonicalLookupMode(r, effective, nil, false)
 	if err != nil {
 		return err
 	}
@@ -174,7 +177,7 @@ func dictionaryPublishRange(r *contextReader, n *factNode, key RuleKey, role str
 					return contract("dictionary range", "reviewed fixed range absent from verified data")
 				}
 				names := entry.smufl.Ranges[index].Names
-				_, member, err := dictionarySearch(r.ctx, r.s.account, len(names), input.Value.Text, func(i int) string { return names[i] })
+				_, member, err := dictionarySearch(r.ctx, r.s.account, len(names), effective.Value.Text, func(i int) string { return names[i] })
 				if err != nil {
 					return err
 				}
