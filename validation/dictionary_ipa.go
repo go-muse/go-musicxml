@@ -48,7 +48,48 @@ func dictionaryIPANode(r *contextReader, n *factNode, key RuleKey) (Decision, er
 			return decision, err
 		}
 	}
-	return decision, r.err
+	return dictionaryIPARepresentationNode(r, n, key, input, decision)
+}
+
+// The separately selected representation relation is the only whole-input IPA
+// gate. The three legacy projections above keep their exact partial semantics.
+func dictionaryIPARepresentationNode(r *contextReader, n *factNode, key RuleKey, input Evidence[Atomic], legacy Decision) (Decision, error) {
+	entry, availability, err := r.s.dictionaryCapability(r.ctx, DictionaryManifestIPARepresentation2015Unicode13, DictionaryRelationIPARepresentation)
+	if err != nil {
+		return legacy, err
+	}
+	if entry == nil {
+		return legacy, r.err
+	} // No implicit activation/projection.
+	out := dictionaryPayload(input, nil, DictionaryManifestIPARepresentation2015Unicode13, DictionaryRelationIPARepresentation)
+	out.Result = availability
+	if availability.State == EvidenceKnown {
+		dictionaryAttachEntry(out, entry)
+	}
+	if input.State != EvidenceKnown {
+		out.Result = stateUnavailable[Atomic, bool](input)
+	} else if input.Value.Kind != AtomicString {
+		out.Result = stateUnknown[bool]("dictionary-string-value-unavailable")
+	} else if availability.State == EvidenceKnown {
+		ok, err := ipaRepresentationWitness(r.ctx, r.s.account, entry.representation, input.Value.Text)
+		if err != nil {
+			return legacy, err
+		}
+		out.Result = stateUnknown[bool]("ipa-representation-witness-unavailable")
+		if ok {
+			out.Result = dictionaryKnown(true)
+		}
+	}
+	out.WholeSequence = out.Result
+	// Normalized leaves may be discontiguous and share one raw scalar interval.
+	// Publish the one exact raw interval, never fabricated contiguous atom spans.
+	span := DictionarySpan{Start: 0, End: uint64(len(input.Value.Text)), Text: input.Value.Text, Result: out.Result, Category: "whole-representation"}
+	if err := contextRetainProjection(r.ctx, r.s, span); err != nil {
+		return legacy, err
+	}
+	out.Spans = []DictionarySpan{span}
+	decision := evidenceDecision(out.WholeSequence.State, out.WholeSequence.Reason, out.WholeSequence.Cause, false)
+	return decision, dictionaryPublish(r, n, key, ContextDictionaryIPARepresentation, out)
 }
 
 func dictionaryIPARelation(r *contextReader, out *DictionaryContextResult, entry *dictionaryEntry) error {

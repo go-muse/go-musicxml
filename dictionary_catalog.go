@@ -43,7 +43,7 @@ func buildDictionaryAssessmentDefinitions() (*assessmentDefinitions, error) {
 		} else {
 			p.ID = ProfileModelDictionaries
 		}
-		p.NormativeClosure = "Bounded MusicXML 4.0 source or current-model XSD/local links plus exact independently verified SMuFL 1.4 canonical-name membership. The six XSD name-family facets remain independent. Standard sounds are open-string recognition evidence; explicitly partial IPA 2015/Unicode 13 positive tables never close complete repertoire or sequence validity. Missing selected capabilities remain unavailable per occurrence. Narrow mute/symbol/mordent defaults, active unmeasured-tremolo range facts and note-name/glyph/arrow advice do not assert general rendering intent. Local source/current-model/link limitations remain active. No fetching, implicit DTD composition, timeline, graph/package traversal or complete MusicXML conformance claim."
+		p.NormativeClosure = "Bounded MusicXML 4.0 source or current-model XSD/local links plus exact independently verified SMuFL 1.4 canonical-name membership. The six XSD name-family facets remain independent. Standard sounds are open-string recognition evidence; legacy IPA 2015/Unicode 13 positive tables remain partial. A separately selected representation manifest may establish an affirmative whole-input repertoire witness, without phonotactic, rendering or pronunciation claims. Missing selected capabilities remain unavailable per occurrence. Narrow mute/symbol/mordent defaults, active unmeasured-tremolo range facts and note-name/glyph/arrow advice do not assert general rendering intent. Local source/current-model/link limitations remain active. No fetching, implicit DTD composition, timeline, graph/package traversal or complete MusicXML conformance claim."
 	}
 	for _, op := range []validation.DictionaryOperation{validation.DictionaryCanonical, validation.DictionaryStandardSounds, validation.DictionaryIPA, validation.DictionaryRendering} {
 		rule, plan, err := dictionaryRule(d.schemas[validation.AssemblyMusicXML], op, []validation.Target{validation.TargetSource, validation.TargetModel})
@@ -82,8 +82,9 @@ func dictionaryRule(schema *validation.CompiledSchema, op validation.DictionaryO
 		ids = []string{"REQ-DEF-EXTERNAL-SMUFL", "CHECK-smufl-canonical-name", "MX40-ISSUE-smufl-version-dictionary"}
 	case validation.DictionaryIPA:
 		role = validation.RolePredicate
-		title = "Partial IPA positive evidence and complete-sequence gate"
-		explanation = "Reviewed symbols, examples and canonical equivalents provide positive evidence only. Full repertoire, sequence and pronunciation intent remain unavailable even when every atom is attested."
+		key.Revision = 2
+		title = "IPA positive facts and selected whole-input representation witness"
+		explanation = "Legacy symbols, literal examples and canonical equivalents retain partial positive evidence. Only the separately selected fixed representation manifest can establish an affirmative whole-input repertoire witness. Missing or unproved witnesses remain unavailable; phonotactics, rendering and pronunciation intent are not assessed."
 		ids = []string{"REQ-DEF-EXTERNAL-IPA", "CHECK-ipa-2015-unicode13", "MX40-ISSUE-ipa-character-repertoire"}
 	case validation.DictionaryRendering:
 		title = "Narrow dictionary-backed rendering context"

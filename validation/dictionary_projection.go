@@ -8,11 +8,12 @@ import (
 // Dictionary properties identify independently assessed exact relations and
 // narrow rendering facts. They do not imply full MusicXML or IPA conformance.
 const (
-	ContextDictionaryCanonical ContextProperty = "dictionary.canonical-name"
-	ContextDictionarySounds    ContextProperty = "dictionary.standard-sound"
-	ContextDictionaryIPA       ContextProperty = "dictionary.ipa-positive"
-	ContextDictionaryRendering ContextProperty = "dictionary.rendering"
-	ContextDictionaryAdvice    ContextProperty = "dictionary.advice"
+	ContextDictionaryCanonical         ContextProperty = "dictionary.canonical-name"
+	ContextDictionarySounds            ContextProperty = "dictionary.standard-sound"
+	ContextDictionaryIPA               ContextProperty = "dictionary.ipa-positive"
+	ContextDictionaryIPARepresentation ContextProperty = "dictionary.ipa-representation"
+	ContextDictionaryRendering         ContextProperty = "dictionary.rendering"
+	ContextDictionaryAdvice            ContextProperty = "dictionary.advice"
 )
 
 // DictionarySpan retains a byte-indexed part of the exact assessed UTF-8 input.
@@ -31,7 +32,9 @@ type DictionarySpan struct {
 // an original component from a reviewed derived bundle. DataSHA256 and Policy
 // identify the reviewed transform and semantic policy, never caller assertions.
 // Result records membership only. WholeSequence stays unavailable for partial
-// IPA evidence, including attested examples. Rendering facts use Role, Input,
+// IPA evidence, including attested examples. The separately selected IPA
+// representation relation uses it only for an affirmative whole-input witness.
+// Rendering facts use Role, Input,
 // Effective and Applicability without asserting mandatory range or intent rules.
 type DictionaryContextResult struct {
 	Manifest           DictionaryManifestID
@@ -52,7 +55,7 @@ type DictionaryContextResult struct {
 
 func dictionaryPropertyValid(p ContextProperty) bool {
 	switch p {
-	case ContextDictionaryCanonical, ContextDictionarySounds, ContextDictionaryIPA, ContextDictionaryRendering, ContextDictionaryAdvice:
+	case ContextDictionaryCanonical, ContextDictionarySounds, ContextDictionaryIPA, ContextDictionaryIPARepresentation, ContextDictionaryRendering, ContextDictionaryAdvice:
 		return true
 	}
 	return false

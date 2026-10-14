@@ -19,7 +19,8 @@ const ProfileSourceInternalDTDLinks validation.ProfileID = "musicxml-4.0/source-
 
 // ProfileSourceInternalDTDDictionaries adds explicitly supplied dictionary
 // capabilities to the standalone DTD/local/link composition. No data is loaded
-// automatically, and the existing partial IPA limitation remains applicable.
+// automatically. Legacy IPA facts stay partial; only the explicitly selected
+// representation manifest supplies bounded affirmative whole-input witnesses.
 const ProfileSourceInternalDTDDictionaries validation.ProfileID = "musicxml-4.0/source-internal-dtd-links-dictionaries"
 
 var sourceCompositionEngine = sync.OnceValues(buildSourceCompositionEngine)
@@ -89,7 +90,7 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 	baseClosure := "Explicit standalone MusicXML 4.0 score and Opus source assessment after bounded actually-read internal-DTD processing. Effective first general-entity declarations supply document-local ENTITY/ENTITIES membership for the reviewed XSD 1.0 builtins and restriction carriers. Unread declarations, reached unresolved constructed carriers, schema-component validity and unavailable source evidence remain incomplete. Existing local clauses use the effective source infoset; XSD defaults and physical specifiedness remain distinct. Source-origin projections retain independently available occurrence, declaration and use locations. No external DTD retrieval, general validating DTD processor, model-history reconstruction, timeline/context composition, auxiliary Container/Sounds assembly, package adoption or complete MusicXML conformance claim."
 	local.NormativeClosure = baseClosure
 	links.NormativeClosure = baseClosure + " Adds existing local nonfetching link, attachment, schema-hint and Opus projections; original physical lexical evidence is never reconstructed from effective values. Selected resource snapshots retain effective first-bound DTD ID occurrences separately from XSD IDs, with declaration and occurrence closure, and choose the first document-order joined shorthand owner. XSD identity validity is independent; incomplete identity authorities cannot establish a miss. Invalid ID default declarations retain limited typing evidence without DTD validation. No target is retrieved or assessed."
-	dictionaries.NormativeClosure = links.NormativeClosure + " Adds explicitly supplied pinned dictionary capabilities and existing exact consumers. Canonical SMuFL membership remains independent of XSD family checks; sounds remain permitted open strings, and partial IPA evidence does not establish complete repertoire or sequence validity. No dictionary is loaded automatically."
+	dictionaries.NormativeClosure = links.NormativeClosure + " Adds explicitly supplied pinned dictionary capabilities and existing exact consumers. Canonical SMuFL membership remains independent of XSD family checks; sounds remain permitted open strings. Legacy IPA evidence stays partial; only a separately selected bounded representation manifest may establish an affirmative whole-input repertoire witness. Phonotactics, pronunciation intent and universal IPA conformance remain outside this closure. No dictionary is loaded automatically."
 	for _, op := range []validation.DictionaryOperation{validation.DictionaryCanonical, validation.DictionaryStandardSounds, validation.DictionaryIPA, validation.DictionaryRendering} {
 		rule, plan, err := dictionaryRule(d.schemas[validation.AssemblyMusicXML], op, []validation.Target{validation.TargetSource})
 		if err != nil {
