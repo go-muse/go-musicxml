@@ -1053,7 +1053,7 @@ capture, intrinsic snapshots and repeated adoption. Origins are independently
 owned and rebound to each adoption, without upgrading incomplete provenance.
 The current primary model remains directly assessed with no invented source
 origins, original Container or ZIP history; retained source children are separate.
-Existing path, archive, indirection, incomplete-IPA, unsupported-capability and
+Existing path, archive, indirection, unproved-IPA-representation, unsupported-capability and
 unread-external gates remain active. See
 [the composition scope](docs/validation/dtd-package-composition-scope.md).
 
@@ -1093,8 +1093,11 @@ For fact-stream clients, `validation.NewDictionarySet(ctx, account, selections,
 imports)` copies and verifies `DictionaryImport` records. A known import has
 exactly one appropriate `SMuFLDictionaryData`, `StandardSoundsDictionaryData` or
 `IPAPositiveDictionaryData` payload, no reason, and optionally a certificate.
-Missing imports remain unavailable. Unavailable imports contain neither data nor
-certificate. Extra/unselected imports, contradictory states and duplicate records
+Up to five fixed manifests may be selected together. The new
+`DictionaryManifestIPARepresentation2015Unicode13` reuses the existing IPA
+payload with 295 symbols, no examples and 158 genuine canonical relations;
+no public struct layout, provider or options field changes. Missing imports
+remain unavailable. Unavailable imports contain neither data nor certificate. Extra/unselected imports, contradictory states and duplicate records
 are rejected; callers cannot assert their own completeness or authoritative hash.
 
 `VerifyDictionaryComponent(ctx, account, componentID, residentBytes)` returns a
@@ -1143,7 +1146,9 @@ derived defaults, nested `Input`/`Effective` values, IPA span text and canonical
 equivalent text before publication. Cleanup releases owned live leases
 only, never cumulative byte/work charges or someone else's storage. Cancellation
 and resource failures are terminal and preserve their causes. Ordinary missing,
-unsupported or mismatched components remain per-capability gaps; an operation
+unsupported components remain per-capability gaps; legacy component mismatches
+also retain that behavior. Malformed newly selected representation bundles are
+configuration errors, as detailed below. An operation
 error can accompany a usable report with independent XSD/family failures retained.
 Always check both the returned error and `Report.Satisfied()` or
 `AssessmentBundle.Satisfied()`.
@@ -1154,10 +1159,16 @@ Runtime import faults are identifiable with
 `DictionaryImportError` exposes `Manifest`, a fixed phase `Reason`, and the
 original `Err` through `Unwrap`. Provider, read and close causes remain
 inspectable through `errors.Is`/`errors.As`; response, length and digest faults
-also use this runtime classification. Options, profile and account misuse stay
+also use this runtime classification for the four original manifests. For the
+new IPA representation manifest only, importer-owned structural, length, digest
+and decoder faults remain `validation.ConfigurationError` and cannot expose a
+usable set. Caller callback errors keep their original unavailable-import
+behavior, including callbacks returning `ConfigurationError`. Options, profile
+and account misuse stay
 `validation.ConfigurationError`. Direct misuse of
 `validation.VerifyDictionaryComponent` keeps that configuration contract;
-only the root importer's own verification mismatch is translated. If a callback
+the root importer's own verification mismatch is translated only for the
+original manifests. If a callback
 itself returns a `ConfigurationError`, that original cause remains inspectable.
 Actual cancellation, deadline and resource failures, including joined close
 failures, remain terminal rather than being relabeled unavailable.
@@ -1198,17 +1209,32 @@ spans and causes are independently owned through report/snapshot getters and
 occurrence remapping.
 
 The properties `ContextDictionaryCanonical`, `ContextDictionarySounds`,
-`ContextDictionaryIPA`, `ContextDictionaryRendering` and `ContextDictionaryAdvice`
-separate canonical membership, open-string recognition, partial IPA evidence,
-local facts and advice. `Input` retains assessed scalar evidence; `Attribute=nil`
-denotes element content. `Codepoint` is independently gated by the selected
-`primary-codepoint` relation; a known codepoint cannot substitute for the required
-`canonical-name` relation. IPA spans use UTF-8 byte offsets and retain exact empty
-or unknown text, reviewed row IDs and selected canonical equivalents. Known
-positive atoms/examples do not make `WholeSequence` known. Unlisted IPA input
-is unknown, not false; a present `<ipa>` keeps the complete-repertoire/sequence
-predicate unavailable even when every selected atom is attested. No pronunciation
-correctness, general normalization or linguistic plausibility is inferred.
+`ContextDictionaryIPA`, `ContextDictionaryIPARepresentation`,
+`ContextDictionaryRendering` and `ContextDictionaryAdvice` separate exact
+relations. `Input` retains assessed scalar evidence; `Attribute=nil` denotes
+element content. `Codepoint` remains independently gated by `primary-codepoint`;
+it cannot substitute for required `canonical-name` membership.
+
+The original IPA manifest and its three `ContextDictionaryIPA` projections are
+unchanged: positive atoms, examples and canonical equivalents leave
+`WholeSequence` unavailable. The new, explicitly selected
+`DictionaryRelationIPARepresentation` instead publishes one unchanged whole-input
+UTF-8 span for known string input, including empty/unproved text, under the
+separate property. Unavailable/non-string scalar evidence retains its state
+and cause without an invented raw span. Its
+`Category` is `whole-representation`, its `RowID` and `Equivalent` are empty,
+and only an affirmative whole witness makes both `Result` and `WholeSequence`
+known-true. Unproved input stays unknown, never false. No new projection appears
+when this manifest is unselected; a selected missing capability is explicit.
+
+The new policy supports stable Unicode13 canonical decomposition/ordering,
+complete encoding atoms and source-established disjoint adjacent half-tie pairs
+with independent single-base decorations. It leaves unproved repeated,
+shared-middle and overlapping/mixed whole-half ties unavailable. It neither
+rewrites raw input nor uses compatibility normalization or a host Unicode
+version. This is a bounded representation witness, not pronunciation,
+phonotactics, rendering or universal IPA conformance. See the
+[exact additive policy and migration](docs/validation/ipa-representation.md).
 
 SMuFL canonical membership is exact after independent XSD normalization and
 scalar assessment. It does not replace the six MusicXML prefix-family facets,

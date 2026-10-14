@@ -34,8 +34,10 @@ func TestSourceDeclarationCompositionPreservesProfiles(t *testing.T) {
 	}
 	for id, expected := range want {
 		// Preserve the original baseline map; only the explicitly documented
-		// figure-number correction migrates the two context-profile hashes.
+		// figure-number and separately reviewed IPA representation migrations
+		// change exactly their enumerated identities, retaining every old capture.
 		expected = migrateFigureNumberProfileHash(t, id, expected)
+		expected = migrateIPARepresentationProfileHash(t, id, expected)
 		t.Run(string(id), func(t *testing.T) {
 			var engine *validation.Engine
 			var err error

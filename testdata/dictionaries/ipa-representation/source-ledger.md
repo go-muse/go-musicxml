@@ -127,8 +127,9 @@ identity, turn the pairs into canonical decompositions, or establish rendering
 scope for mixed/repeated ties. Whole ties remain independent existing atoms
 outside this boundary.
 
-The public representation result is one unchanged whole-input byte span,
-including empty or unproved input. A successful complete witness alone makes
+For known string scalar input, the public representation result is one unchanged
+whole-input byte span, including empty or unproved text. Unavailable/non-string
+scalar evidence retains its state and cause without an invented raw interval. A successful complete witness alone makes
 Result and WholeSequence known-true; absence remains unavailable, never a
 fabricated negative complement. This is a bounded affirmative representation
 capability, not phonotactics, pronunciation intent or universal IPA conformance.

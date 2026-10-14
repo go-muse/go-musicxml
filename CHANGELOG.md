@@ -16,6 +16,16 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   current-model identity remain distinct; no automatic data fetch or external
   musical-intent authority is added.
 
+- Add an explicitly selected IPA2015/Unicode13 representation manifest with
+  295 complete encoding atoms, 158 genuine canonical relations and a separately
+  pinned minimal policy. Preserve the legacy 197-row manifest and its outputs.
+  Reuse the existing typed payload and adapters, permit five fixed selections,
+  and publish a whole-input raw span under a new context property. Unproved
+  inputs remain unavailable; this is not phonotactics or universal conformance.
+  Deliberately revise the IPA consumer/rule and dictionary-containing catalogs.
+  New-manifest malformed bundles remain configuration errors; legacy and caller
+  callback error classifications are unchanged.
+
 - Add explicit internal-DTD/dictionary graph and raw/current-MXL compositions in
   separate catalogs, preserving existing profiles and digests. Add source
   Container and Sounds compositions with exact auxiliary origin routing,

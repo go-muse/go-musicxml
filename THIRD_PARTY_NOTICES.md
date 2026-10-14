@@ -62,3 +62,17 @@ and the adjacent Unicode license file. The full positive ledger and source
 pins accompany the compact runtime representation. These data are not covered
 by the library code's MIT license. Preserve their notices when distributing
 these data or generated equivalents. No chart artwork or font is bundled.
+
+## Additive IPA representation data
+
+The separate data under `testdata/dictionaries/ipa-representation` reuse the
+legacy symbol lineage, add reviewed singleton/construction identities and
+Unicode13 canonical relations, and retain the adapted-data CC BY-SA 4.0
+attribution and modification notices. The 53-value CCC table in
+`validation/dictionary_ipa_representation_policy.go` is minimal Unicode-derived
+data with the separate Unicode permission notice. See the
+[representation notice](testdata/dictionaries/ipa-representation/NOTICES.txt),
+[source ledger](testdata/dictionaries/ipa-representation/source-ledger.md) and
+adjacent Unicode license snapshot. Implementation code remains separately
+licensed. No full Unicode corpus, historical publication, chart artwork or font
+is included by this addition.

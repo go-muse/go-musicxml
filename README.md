@@ -250,15 +250,20 @@ Callers select fixed components and supply authorized bytes through
 fetches or loads them automatically; caller-selected transport is required.
 Repository dictionary fixtures are test inputs. One verified immutable set and
 finite account cover the root and selected linked/nested-package children.
-Existing profiles remain unchanged.
+Catalogs without the IPA dictionary operation remain unchanged; its additive
+policy deliberately updates dictionary-containing catalog fingerprints.
 
 The selected scope includes exact SMuFL 1.4 canonical membership with independent
 MusicXML name-family checks, narrow defaults/range advice and recognition of the
 894 MusicXML 4.0 standard sound IDs. Custom sound strings remain allowed. IPA
-2015/Unicode 13 data provide explicitly partial positive evidence only: unknown
-symbols are not rejected, and even attested examples do not establish complete
-sequence validity or intended pronunciation. Internal-DTD composition and general
-glyph/rendering semantics remain outside this scope.
+2015/Unicode 13 positive-v1 data remain explicitly partial. A separately selected
+representation-v1 manifest can establish an affirmative whole-input repertoire
+witness with stable canonical ordering and bounded, source-established half
+ties. Unproved input stays unavailable; no phonotactics, pronunciation or
+universal representation conformance is claimed. The old 197-row manifest is
+unchanged. See the [representation policy and migration](docs/validation/ipa-representation.md).
+Internal-DTD composition requires its separate profile; general glyph/rendering
+semantics remain outside this scope.
 
 Default budgets can still stop modest inputs. In a specific repeated-note fixture
 with all four dictionary components imported, standalone source/model assessment

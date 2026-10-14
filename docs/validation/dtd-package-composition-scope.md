@@ -76,7 +76,7 @@ indexes, including origin rows. A current primary model is assessed directly and
 never receives reconstructed source origins, hints, original Container or ZIP
 history. Retained source children are separate evidence.
 
-Package/ZIP/path/media/indirection/association/role gates and partial IPA limits
+Package/ZIP/path/media/indirection/association/role gates and legacy partial IPA limits
 remain unchanged. Technical traversal of nested MXL does not settle unresolved
 outer indirection obligations, and successful source assessment does not imply
 that independent package obligations are satisfied.
@@ -91,3 +91,8 @@ introduced by DTD composition. The compatibility test compares independently
 measured pre-composition identities after that correction; all three existing
 standalone DTD intrinsic profile hashes retain their earlier capture. Historical
 receipts and the original pre-correction hashes remain dated evidence.
+
+The separately selected [IPA representation capability](ipa-representation.md)
+adds bounded affirmative whole-input witnesses through these existing adapters.
+Unproved representations and missing capabilities remain unavailable; no
+phonotactics, pronunciation intent or universal IPA conformance is asserted.
