@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 
@@ -218,5 +219,111 @@ func TestDictionaryIPARepresentationMalformedImportStopsLaterProviders(t *testin
 			t.Fatalf("earlier gap=%v set=%v calls=%d err=%v", earlierGap, set, calls, err)
 		}
 		dictionaryImportNoLive(t, a)
+	}
+}
+
+func dictionaryRepresentationFixture(t *testing.T) []byte {
+	t.Helper()
+	raw, err := os.ReadFile("testdata/dictionaries/ipa-representation/runtime-representation-bundle.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+
+func TestDictionaryIPARepresentationCertifiedComponent(t *testing.T) {
+	raw := dictionaryRepresentationFixture(t)
+	a := dictionaryImportAccount(t, validation.Budgets{})
+	parsed, err := decodeDictionaryComponent(context.Background(), a, dictionaryRepresentationTestID, raw)
+	if err != nil || parsed == nil {
+		t.Fatalf("certified representation decode: parsed=%v err=%v", parsed, err)
+	}
+	if parsed.data.IPA == nil || parsed.data.SMuFL != nil || parsed.data.Sounds != nil || len(parsed.data.IPA.Symbols) != 295 || len(parsed.data.IPA.Examples) != 0 || len(parsed.data.IPA.Equivalences) != 158 {
+		t.Fatalf("unexpected representation branches or counts: %+v", parsed.data)
+	}
+	parsed.close()
+	dictionaryImportNoLive(t, a)
+	calls := 0
+	body := &resourceTestBody{Reader: bytes.NewReader(raw)}
+	source := dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+		calls++
+		manifest, ok := validation.LookupDictionaryManifest(dictionaryRepresentationTestID)
+		if !ok || request.Manifest != dictionaryRepresentationTestID || request.Component != manifest.Component {
+			t.Fatalf("unexpected component request: %+v", request)
+		}
+		return DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: body}, nil
+	})
+	set, err := loadDictionarySet(context.Background(), a, DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: source})
+	if err != nil || set == nil || calls != 1 || body.closed != 1 {
+		t.Fatalf("certified representation import: set=%v calls=%d closes=%d err=%v", set, calls, body.closed, err)
+	}
+	set.Close()
+	dictionaryImportNoLive(t, a)
+	if external, _ := a.Usage(validation.BudgetExternalBytes); external != int64(len(raw)) {
+		t.Fatalf("external bytes=%d want=%d", external, len(raw))
+	}
+}
+
+func TestDictionaryIPARepresentationDigestMismatchIsConfiguration(t *testing.T) {
+	raw := dictionaryRepresentationFixture(t)
+	raw[0] ^= 1
+	a := dictionaryImportAccount(t, validation.Budgets{})
+	body := &resourceTestBody{Reader: bytes.NewReader(raw)}
+	source := dictionaryImportSourceFunc(func(_ context.Context, r DictionaryComponentRequest) (DictionaryComponentResult, error) {
+		return DictionaryComponentResult{Request: r, State: validation.EvidenceKnown, Body: body}, nil
+	})
+	set, err := loadDictionarySet(context.Background(), a, DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: source})
+	if set != nil || !errors.Is(err, validation.ErrInvalidConfiguration) || errors.Is(err, ErrDictionaryUnavailable) || body.closed != 1 {
+		t.Fatalf("set=%v err=%v closes=%d", set, err, body.closed)
+	}
+	dictionaryImportNoLive(t, a)
+}
+
+func TestDictionaryIPARepresentationMalformedCertifiedRecords(t *testing.T) {
+	raw := dictionaryRepresentationFixture(t)
+	opener := []byte(`"records": [`)
+	at := bytes.Index(raw, opener)
+	if at < 0 {
+		t.Fatal("missing records opener")
+	}
+	prefix := raw[:at+len(opener)]
+	for _, tc := range []struct {
+		name, records, reason string
+	}{
+		{"duplicate field", `{"record_type":"symbol","record_type":"symbol","fields":["a","letter","A"]}`, "duplicate corpus field"},
+		{"unknown field", `{"record_type":"symbol","other":1,"fields":["a","letter","A"]}`, "unknown IPA representation record field"},
+		{"unknown record", `{"record_type":"example-sequence","fields":["a","letter","A"]}`, "unsupported IPA representation record kind"},
+		{"missing field", `{"record_type":"symbol"}`, "incomplete IPA representation record"},
+		{"extra string", `{"record_type":"symbol","fields":["a","letter","A","extra"]}`, "unexpected certified corpus token"},
+		{"empty encoding", `{"record_type":"symbol","fields":["","letter","A"]}`, "empty IPA representation encoding"},
+		{"duplicate encoding", `{"record_type":"symbol","fields":["a","letter","A"]},{"record_type":"symbol","fields":["a","letter","B"]}`, "duplicate or out-of-order IPA representation record"},
+		{"out of order", `{"record_type":"symbol","fields":["b","letter","B"]},{"record_type":"symbol","fields":["a","letter","A"]}`, "duplicate or out-of-order IPA representation record"},
+		{"bad escape", `{"record_type":"symbol","fields":["\uD800","letter","A"]}`, "unpaired JSON surrogate"},
+		{"invalid UTF-8", "{\"record_type\":\"symbol\",\"fields\":[\"\xff\",\"letter\",\"A\"]}", "invalid UTF-8 corpus string"},
+		{"missing rows", ``, "incomplete IPA representation record counts"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			mutant := append(append([]byte(nil), prefix...), tc.records...)
+			mutant = append(mutant, ']', '}')
+			if len(mutant) > len(raw) {
+				t.Fatal("test mutation exceeds exact component length")
+			}
+			mutant = append(mutant, bytes.Repeat([]byte(" "), len(raw)-len(mutant))...)
+			a := dictionaryImportAccount(t, validation.Budgets{})
+			if err := a.Charge(validation.BudgetBufferedBytes, 17); err != nil {
+				t.Fatal(err)
+			}
+			parsed, err := decodeDictionaryComponent(context.Background(), a, dictionaryRepresentationTestID, mutant)
+			if parsed != nil || !errors.Is(err, validation.ErrInvalidConfiguration) || errors.Is(err, ErrDictionaryUnavailable) || !strings.Contains(err.Error(), tc.reason) {
+				t.Fatalf("parsed=%v err=%v; want %q", parsed, err, tc.reason)
+			}
+			if live, _ := a.Usage(validation.BudgetBufferedBytes); live != 17 {
+				t.Fatalf("decoder lost caller lease or leaked temporary rows: %d", live)
+			}
+			if err := a.Release(validation.BudgetBufferedBytes, 17); err != nil {
+				t.Fatal(err)
+			}
+			dictionaryImportNoLive(t, a)
+		})
 	}
 }
