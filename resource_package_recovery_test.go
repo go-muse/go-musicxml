@@ -69,21 +69,22 @@ func TestRecoveryPackageCurrentDuplicateRoots(t *testing.T) {
 	}
 }
 
-func TestRecoveryPackageLaterUnknownMediaIsNotParsed(t *testing.T) {
+func TestRecoveryPackageLaterMediaControlsParsing(t *testing.T) {
 	doc, err := Decode(strings.NewReader(`<opus/>`))
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, media := range []string{"application/octet-stream", "text/plain", "application/x-custom", "not a MIME", "application/vnd.recordare.musicxml+xml; version=4"} {
 		t.Run(media, func(t *testing.T) {
+			knownXML := media == "application/vnd.recordare.musicxml+xml; version=4"
 			container := `<container><rootfiles><rootfile full-path="main.opus"/><rootfile full-path="alt.bin" media-type="` + media + `"/></rootfiles></container>`
 			wire := assessmentZIPBytes([]assessmentZIPFixture{{name: mxlContainerPath, body: container}, {name: "main.opus", body: `<opus/>`}, {name: "alt.bin", body: "\x00binary"}}, nil, "")
 			b, err := InspectMXL(context.Background(), bytes.NewReader(wire), packageGraphOptions())
-			if err != nil || b.ResourceCount() != 2 {
+			if (err != nil) != knownXML || b.ResourceCount() != 2 {
 				t.Fatalf("raw error=%v resources=%d", err, b.ResourceCount())
 			}
 			b, err = AssessMXLPackage(context.Background(), &MXLPackage{Document: doc, RootFiles: []MXLRootFile{{FullPath: "main.opus"}, {FullPath: "alt.bin", MediaType: media}}, Resources: []MXLResource{{Path: "alt.bin", Data: []byte("\x00binary")}}}, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModel}})
-			if err != nil || b.ResourceCount() != 1 {
+			if (err != nil) != knownXML || b.ResourceCount() != 1 {
 				t.Fatalf("current error=%v resources=%d", err, b.ResourceCount())
 			}
 		})
