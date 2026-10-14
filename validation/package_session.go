@@ -25,9 +25,12 @@ type packageDecisionKey struct {
 	subject PackageFactID
 }
 type packageResourceKey struct {
-	pin     ResourcePin
-	profile ProfileID
-	digest  string
+	dictionary [32]byte
+	// anyDictionary is a failure-only identity index, never a reusable assessment.
+	anyDictionary bool
+	pin           ResourcePin
+	profile       ProfileID
+	digest        string
 }
 type packageCanonicalKey struct {
 	canonical, revision string
@@ -555,7 +558,7 @@ func (s *PackageSession) AddResource(ctx context.Context, pin ResourcePin, snaps
 	if snapshot == nil || snapshot.closed || snapshot.account != s.account {
 		return "", s.fail(contract("resource transfer", "live core snapshot on identical account required"))
 	}
-	key := packageResourceKey{pin, snapshot.header.Profile, snapshot.header.CatalogDigest}
+	key := packageResourceKey{pin: pin, profile: snapshot.header.Profile, digest: snapshot.header.CatalogDigest, dictionary: snapshot.dictionary}
 	if id, ok := s.resourceKeys[key]; ok {
 		old := s.resources[id]
 		if old.snapshot == snapshot && snapshot.owner == &s.lease {
@@ -593,7 +596,11 @@ func (s *PackageSession) AddResource(ctx context.Context, pin ResourcePin, snaps
 	if s.documents[snapshot.header.DocumentID] {
 		return "", s.fail(contract("resource document", "canonical occurrence already used"))
 	}
-	if err := s.admit(ctx, pin, 1024); err != nil {
+	reserve := int64(1024)
+	if snapshot.dictionary != ([32]byte{}) {
+		reserve += 256
+	}
+	if err := s.admit(ctx, pin, reserve); err != nil {
 		return "", err
 	}
 	id := ResourceAssessmentID("resource-" + strconv.Itoa(len(s.resourceOrder)+1))
@@ -602,6 +609,10 @@ func (s *PackageSession) AddResource(ctx context.Context, pin ResourcePin, snaps
 	s.resourceOrder = append(s.resourceOrder, id)
 	s.output.resources = append(s.output.resources, bundleResource{id: id, report: snapshot.report, required: required})
 	s.resourceKeys[key] = id
+	if snapshot.dictionary != ([32]byte{}) {
+		identity := packageResourceKey{pin: pin, profile: snapshot.header.Profile, digest: snapshot.header.CatalogDigest, anyDictionary: true}
+		s.resourceKeys[identity] = id
+	}
 	s.pins[canonical] = r.pin
 	s.documents[snapshot.header.DocumentID] = true
 	snapshot.owner = &s.lease
@@ -707,7 +718,14 @@ func (s *PackageSession) RecordResourceFailure(ctx context.Context, pin Resource
 	if old, ok := s.pins[canonical]; ok && old != pin {
 		return s.fail(contract("failed resource", "canonical identity conflicts with admitted pin"))
 	}
-	if _, ok := s.resourceKeys[packageResourceKey{pin, report.Profile.ID, report.Profile.CatalogDigest}]; ok {
+	// A failure-only report carries no sealed capability fingerprint. Check the
+	// prepaid identity index across all capabilities, without assigning it the
+	// fingerprint of any successful snapshot or doing unbounded terminal work.
+	ordinary := packageResourceKey{pin: pin, profile: report.Profile.ID, digest: report.Profile.CatalogDigest}
+	_, ordinaryExists := s.resourceKeys[ordinary]
+	ordinary.anyDictionary = true
+	_, dictionaryExists := s.resourceKeys[ordinary]
+	if ordinaryExists || dictionaryExists {
 		return s.fail(contract("failed resource", "assessment already transferred"))
 	}
 	if cause == nil {

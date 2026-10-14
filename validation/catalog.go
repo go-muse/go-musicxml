@@ -214,6 +214,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 		if err := validateSourceOriginProfile(c, owned, closure, supports, schemas); err != nil {
 			return nil, err
 		}
+		if err := validateDictionaryProfile(c, closure, schemas); err != nil {
+			return nil, err
+		}
 		if err := validateContextProfile(c, closure, schemas); err != nil {
 			return nil, err
 		}
@@ -699,6 +702,16 @@ func catalogProfileOrder(c *CompiledCatalog, closure map[RuleKey]bool, budget *c
 			}
 		}
 		if plan, ok := c.plans[rule.Predicate]; ok {
+			if plan.kind == planDictionary {
+				for prerequisite := range closure {
+					provider := c.plans[c.rules[prerequisite].Predicate]
+					if provider.kind == planXSD && provider.schema.assembly == plan.dictionary.Schema.assembly {
+						if err := add(consumer, catalogPhase{rule: prerequisite}); err != nil {
+							return nil, err
+						}
+					}
+				}
+			}
 			if resourceLinkPlan(plan.kind) || resourceHintPlan(plan.kind) {
 				for prerequisite := range closure {
 					provider := c.plans[c.rules[prerequisite].Predicate]
@@ -955,9 +968,16 @@ func catalogCheckBoundsRemaining(rules []RuleDefinition, profiles []Profile, pla
 			}
 		}
 		size := binding.Plan.configSize()
-		if p := binding.Plan.context; p != nil && p.Bindings != nil {
-			if seenContextBindings[p.Bindings] {
-				size -= p.Bindings.size()
+		var table *contextBindings
+		if p := binding.Plan.context; p != nil {
+			table = p.Bindings
+		}
+		if p := binding.Plan.dictionary; p != nil {
+			table = p.Bindings
+		}
+		if table != nil {
+			if seenContextBindings[table] {
+				size -= table.size()
 			} else {
 				if seenContextBindings == nil {
 					b.take(128)
@@ -969,7 +989,7 @@ func catalogCheckBoundsRemaining(rules []RuleDefinition, profiles []Profile, pla
 				if seenContextBindings == nil {
 					seenContextBindings = make(map[*contextBindings]bool)
 				}
-				seenContextBindings[p.Bindings] = true
+				seenContextBindings[table] = true
 			}
 		}
 		b.take(size)

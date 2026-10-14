@@ -50,6 +50,7 @@ type ContextResult struct {
 	Resource     *ResourceContextResult     `json:",omitempty"`
 	Container    *ContainerContextResult    `json:",omitempty"`
 	SourceOrigin *SourceOriginContextResult `json:",omitempty"`
+	Dictionary   *DictionaryContextResult   `json:",omitempty"`
 }
 
 func validContextProperty(p ContextProperty) bool {
@@ -57,7 +58,7 @@ func validContextProperty(p ContextProperty) bool {
 	case ContextPropertySourceOrigin, ContextPropertyContainerMetadata, ContextPropertySoundMapping, ContextPropertySpan, ContextPropertyRepeat, ContextPropertyNavigation, ContextPropertyTiming:
 		return true
 	}
-	return resourcePropertyValid(p) || contextLocalPropertyValid(p) || contextSpanPropertyValid(p) || contextRepeatPropertyValid(p) || contextPerformancePropertyValid(p)
+	return dictionaryPropertyValid(p) || resourcePropertyValid(p) || contextLocalPropertyValid(p) || contextSpanPropertyValid(p) || contextRepeatPropertyValid(p) || contextPerformancePropertyValid(p)
 }
 
 const contextResultReserveBytes int64 = 1536
@@ -81,7 +82,7 @@ func (s *Session) validateContextResult(ctx context.Context, in ContextResult) (
 		return contract("context projection", "exact provider, subject and closed property required")
 	}
 	payloads := 0
-	for _, present := range []bool{in.Span != nil, in.Repeat != nil, in.Navigation != nil, in.Layout != nil, in.Timing != nil, in.SoundMapping != nil, in.Resource != nil, in.Container != nil, in.SourceOrigin != nil} {
+	for _, present := range []bool{in.Span != nil, in.Repeat != nil, in.Navigation != nil, in.Layout != nil, in.Timing != nil, in.SoundMapping != nil, in.Resource != nil, in.Container != nil, in.SourceOrigin != nil, in.Dictionary != nil} {
 		if present {
 			payloads++
 		}
@@ -106,13 +107,15 @@ func (s *Session) validateContextResult(ctx context.Context, in ContextResult) (
 	case ContextPropertyTiming:
 		expected = "timing"
 	default:
-		if resourcePropertyValid(in.Property) {
+		if dictionaryPropertyValid(in.Property) {
+			expected = "dictionary"
+		} else if resourcePropertyValid(in.Property) {
 			expected = "resource"
 		} else if contextLocalPropertyValid(in.Property) {
 			expected = "layout"
 		}
 	}
-	matched := expected == "source-origin" && in.SourceOrigin != nil || expected == "container-metadata" && in.Container != nil || expected == "sound-mapping" && in.SoundMapping != nil || expected == "scalar" && payloads == 0 || expected == "span" && in.Span != nil || expected == "repeat" && in.Repeat != nil || expected == "navigation" && in.Navigation != nil || expected == "timing" && in.Timing != nil || expected == "layout" && in.Layout != nil || expected == "resource" && resourcePayloadValid(in.Property, in.Resource)
+	matched := expected == "dictionary" && in.Dictionary != nil || expected == "source-origin" && in.SourceOrigin != nil || expected == "container-metadata" && in.Container != nil || expected == "sound-mapping" && in.SoundMapping != nil || expected == "scalar" && payloads == 0 || expected == "span" && in.Span != nil || expected == "repeat" && in.Repeat != nil || expected == "navigation" && in.Navigation != nil || expected == "timing" && in.Timing != nil || expected == "layout" && in.Layout != nil || expected == "resource" && resourcePayloadValid(in.Property, in.Resource)
 	if !matched {
 		return contract("context projection", "property and typed payload must match")
 	}
@@ -207,6 +210,9 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 		return err
 	}
 	if out.SourceOrigin, err = cloneSourceOriginContext(ctx, s, in.SourceOrigin); err != nil {
+		return err
+	}
+	if out.Dictionary, err = cloneDictionaryContext(ctx, s, in.Dictionary); err != nil {
 		return err
 	}
 	if err = s.step(ctx, 1); err != nil {
