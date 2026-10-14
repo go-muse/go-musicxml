@@ -256,3 +256,29 @@ func TestBarlineLocationBufferedAdmissionAndFailureRetention(t *testing.T) {
 		}
 	}
 }
+
+func TestBarlineLocationPlanRequiresExactNodeAndTimelineContract(t *testing.T) {
+	schema := localSchema(t)
+	key := RuleKey{"timeline", 1}
+	for _, spec := range []ContextPlanSpec{{}, {Schema: schema}, {TimelineProvider: key}} {
+		if _, err := NewBarlineLocationPlan(spec); !errors.Is(err, ErrInvalidConfiguration) {
+			t.Fatalf("accepted incomplete spec: %+v %v", spec, err)
+		}
+	}
+	plan, err := NewBarlineLocationPlan(ContextPlanSpec{Schema: schema, TimelineProvider: key})
+	if err != nil {
+		t.Fatal(err)
+	}
+	typ := contextNamedType("barline")
+	rule := RuleDefinition{Key: RuleKey{"barline", 1}, Class: ClassMandatory, Role: RolePredicate, Category: CategoryNormative, Targets: []Target{TargetSource, TargetModel}, Scope: ScopeNode, Selector: Selector{Component: &typ}, Requires: []Dependency{{Kind: DependencyRule, Rule: key, Relation: RelationDocument}}}
+	if err := plan.validateContextFor(rule); err != nil {
+		t.Fatal(err)
+	}
+	for _, mutate := range []func(*RuleDefinition){func(r *RuleDefinition) { r.Scope = ScopeDocument }, func(r *RuleDefinition) { r.Role = RoleContextProvider }, func(r *RuleDefinition) { x := contextNamedType("note"); r.Selector.Component = &x }, func(r *RuleDefinition) { r.Requires = nil }} {
+		bad := rule
+		mutate(&bad)
+		if err := plan.validateContextFor(bad); !errors.Is(err, ErrInvalidConfiguration) {
+			t.Fatalf("accepted bad rule: %+v %v", bad, err)
+		}
+	}
+}

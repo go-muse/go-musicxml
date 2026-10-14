@@ -18,7 +18,7 @@ func evaluateBarlineLocation(ctx context.Context, s *Session, n *factNode, p *co
 	if !final {
 		return Decision{}, true, nil
 	}
-	if err := s.step(ctx, 1); err != nil {
+	if err := s.step(ctx, 1+int64(len(p.Timeline.ID))); err != nil {
 		return Decision{}, false, err
 	}
 	service := s.timeline[p.Timeline]
@@ -40,6 +40,9 @@ func evaluateBarlineLocation(ctx context.Context, s *Session, n *factNode, p *co
 		return localGap(fact.Origin), false, nil
 	}
 	pos := fact.Origin.Value
+	if !pos.Offset.Valid() {
+		return Decision{Outcome: OutcomeUnknown, Reason: "barline-position-unavailable"}, false, nil
+	}
 	location := bar.Location.Value
 	if location != "left" && location != "middle" && location != "right" {
 		return Decision{Outcome: OutcomeUnknown, Reason: "barline-location-unavailable"}, false, nil
@@ -82,6 +85,9 @@ func barlineLocationDecision(pass bool) Decision {
 // itself, directly or through a later excursion's containment.
 func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineService, b *timelineBindings, content *factNode, at musicalPosition, location string) (Evidence[Rational], Decision, error) {
 	r := &stateReader{ctx: ctx, s: s, b: b}
+	if !at.Offset.Valid() {
+		return stateUnknown[Rational]("barline-position-unavailable"), Decision{}, nil
+	}
 	gap := timelineHierarchyAvailability(content)
 	if gap.State != EvidenceKnown || !gap.Value {
 		return timelineGapAs[bool, Rational](gap, "barline-measure-enumeration-incomplete"), Decision{}, nil
@@ -157,6 +163,14 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 			continue
 		}
 		origin := f.Origin.Value
+		if !origin.Offset.Valid() {
+			merge(stateUnknown[bool]("barline-event-position-unavailable"))
+			prefix = false
+			continue
+		}
+		if err := s.step(ctx, int64(len(origin.Part.DocumentID)+len(origin.Measure.DocumentID)+len(at.Part.DocumentID)+len(at.Measure.DocumentID))); err != nil {
+			return Evidence[Rational]{}, Decision{}, err
+		}
 		if frameOf(origin) != frameOf(at) {
 			merge(stateUnknown[bool]("barline-event-frame-unavailable"))
 			prefix = false
@@ -215,14 +229,14 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 			}
 			continue
 		}
-		if f.Units.Value.value.Sign() <= 0 {
+		if !f.Units.Value.Valid() || f.Units.Value.value.Sign() <= 0 {
 			merge(stateUnknown[bool]("barline-positive-divisions-unavailable"))
 			if !chord.Value {
 				prefix = false
 			}
 			continue
 		}
-		if f.Duration.Value.value.Sign() <= 0 {
+		if !f.Duration.Value.Valid() || f.Duration.Value.value.Sign() <= 0 {
 			merge(stateUnknown[bool]("barline-positive-duration-unavailable"))
 			if !chord.Value {
 				prefix = false
@@ -232,6 +246,10 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 		if note && chord.Value {
 			if f.PrincipalDuration.State != EvidenceKnown {
 				merge(timelineGapAs[Rational, bool](f.PrincipalDuration, "chord-principal-duration-unavailable"))
+				continue
+			}
+			if !f.PrincipalDuration.Value.Valid() {
+				merge(stateUnknown[bool]("chord-principal-duration-unavailable"))
 				continue
 			}
 			cmp, err := s.rationalCmp(ctx, f.Duration.Value, f.PrincipalDuration.Value)
@@ -255,6 +273,11 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 				continue
 			}
 			end = f.End.Value.Offset
+			if !end.Valid() {
+				merge(stateUnknown[bool]("barline-note-end-unavailable"))
+				prefix = false
+				continue
+			}
 		} else if backup {
 			end, err = s.rationalSub(ctx, origin.Offset, f.Duration.Value)
 		} else {
