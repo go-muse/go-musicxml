@@ -426,7 +426,7 @@ func (s *Session) evaluatePlan(ctx context.Context, n *factNode, r RuleDefinitio
 		return s.evaluateDictionary(ctx, n, r, p.dictionary, final)
 	case planSourceOrigin:
 		return s.evaluateSourceOrigins(ctx)
-	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent, planBarlineLocation:
 		return s.evaluateContextPlan(ctx, n, r.Key, p, final)
 	case planTimeline:
 		return s.evaluateTimeline(ctx, n, r.Key, p.timeline, final)

@@ -145,7 +145,7 @@ func newContextPlan(kind planKind, spec ContextPlanSpec) (Plan, error) {
 }
 func (p Plan) isContext() bool {
 	switch p.kind {
-	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent, planBarlineLocation:
 		return true
 	}
 	return false
@@ -234,6 +234,10 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 		if !catalogKey(p.context.Provider) || !slices.Contains(r.Requires, Dependency{Kind: DependencyRule, Rule: p.context.Provider, Relation: RelationDocument}) {
 			return contract("context consumer dependency", "exact type-specific provider required")
 		}
+	} else if p.kind == planBarlineLocation {
+		if r.Scope != ScopeNode || r.Role != RolePredicate || r.Selector.Component == nil || *r.Selector.Component != contextNamedType("barline") || r.Selector.Assembly != nil || r.Selector.Declaration != nil || !catalogKey(p.context.Timeline) {
+			return contract("barline selector", "exact barline node predicate and timeline required")
+		}
 	} else if p.kind == planFigureNumberNumeric {
 		uses := p.context.Bindings.Roles[contextRoleFigureNumber]
 		if r.Scope != ScopeNode || r.Role != RolePredicate || r.Selector.Assembly != nil || r.Selector.Component != nil || r.Selector.Declaration == nil || len(uses) != 1 || *r.Selector.Declaration != uses[0].Declaration {
@@ -314,7 +318,7 @@ func validateContextProfile(c *CompiledCatalog, closure map[RuleKey]bool, schema
 		if schema == nil || schema.Digest() != p.context.Schema.Digest() {
 			return contract("context schema", "matching selected XSD context assembly schema required")
 		}
-		if p.kind != planTimeOnlyOrder && p.kind != planFigureNumberNumeric && p.kind != planBendReleaseSign && p.kind != planGraphicalRepeatContent {
+		if p.kind != planTimeOnlyOrder && p.kind != planFigureNumberNumeric && p.kind != planBendReleaseSign && p.kind != planGraphicalRepeatContent && p.kind != planBarlineLocation {
 			if seen[p.kind] {
 				return contract("context profile", "only one provider per sealed family is supported")
 			}
