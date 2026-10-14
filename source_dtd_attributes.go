@@ -135,7 +135,11 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 			}
 		}
 		attributes = append(attributes, xml.Attr{Name: name, Value: value})
-		metadata = append(metadata, sourceXMLAttribute{NamespaceDeclaration: name.Space == "xmlns" || name.Space == "" && name.Local == "xmlns", Origin: origin})
+		m := sourceXMLAttribute{NamespaceDeclaration: name.Space == "xmlns" || name.Space == "" && name.Local == "xmlns", Origin: origin}
+		if r.captureAttributeLexical {
+			m.Lexical = validation.Evidence[string]{State: validation.EvidenceAbsent}
+		}
+		metadata = append(metadata, m)
 	}
 	return attributes, metadata, nil
 }

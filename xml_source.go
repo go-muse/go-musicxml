@@ -13,16 +13,20 @@ import (
 )
 
 type sourceXMLConfig struct {
-	Context     context.Context
-	Account     *validation.Account
-	MaxDepth    int
-	ByteOwner   sourceByteOwner
-	InternalDTD bool
+	Context                 context.Context
+	Account                 *validation.Account
+	MaxDepth                int
+	ByteOwner               sourceByteOwner
+	InternalDTD             bool
+	CaptureAttributeLexical bool
 }
 type sourceXMLAttribute struct {
 	NameSpan, ValueSpan  sourceXMLSpan
 	NamespaceDeclaration bool
 	Origin               *sourceXMLOrigin
+	// Lexical borrows the token-owned XML-normalized physical representation
+	// captured before DTD tokenized normalization. Zero means not elected.
+	Lexical validation.Evidence[string]
 }
 type sourceXMLTokenMeta struct {
 	Span                       sourceXMLSpan
@@ -66,6 +70,7 @@ type sourceXMLTokenReader struct {
 	entity                                                     *sourceXMLEntityFrame
 	account                                                    *validation.Account
 	internalDTD                                                bool
+	captureAttributeLexical, attributeGeneralExpanded          bool
 	maxDepth                                                   int64
 	peakDepth                                                  int
 	metadata                                                   sourceXMLTokenMeta
@@ -83,6 +88,9 @@ type sourceXMLTokenReader struct {
 }
 
 func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXMLTokenReader, error) {
+	if config.CaptureAttributeLexical && !config.InternalDTD {
+		return nil, &validation.ConfigurationError{Field: "CaptureAttributeLexical", Reason: "physical lexical capture requires internal DTD mode"}
+	}
 	if config.InternalDTD && config.Account == nil {
 		return nil, &validation.ConfigurationError{Field: "Account", Reason: "internal DTD mode requires the shared account"}
 	}
@@ -106,7 +114,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 	if config.Account != nil && config.Account.Limits().MaxDepth < maximum {
 		maximum = config.Account.Limits().MaxDepth
 	}
-	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, internalDTD: config.InternalDTD, maxDepth: maximum, retained: sourceXMLReaderBytes}, nil
+	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, internalDTD: config.InternalDTD, captureAttributeLexical: config.CaptureAttributeLexical, maxDepth: maximum, retained: sourceXMLReaderBytes}, nil
 }
 func (r *sourceXMLTokenReader) Metadata() sourceXMLTokenMeta { return r.metadata }
 func (r *sourceXMLTokenReader) Summary() sourceXMLSummary {
@@ -795,6 +803,7 @@ func (r *sourceXMLTokenReader) start() (xml.Token, error) {
 		if _, err = r.spaces(); err != nil {
 			return nil, err
 		}
+		r.attributeGeneralExpanded = false
 		value, span, err := r.quoted(true, true)
 		if err != nil {
 			return nil, err
@@ -802,6 +811,18 @@ func (r *sourceXMLTokenReader) start() (xml.Token, error) {
 		m.ValueSpan = span
 		if err = r.captureOrigin(&m.Origin, true); err != nil {
 			return nil, err
+		}
+		if r.captureAttributeLexical {
+			m.Lexical = validation.Evidence[string]{State: validation.EvidenceUnknown, Reason: "source-attribute-lexical-unavailable"}
+			if m.Origin != nil && !m.Origin.Specified {
+				m.Lexical = validation.Evidence[string]{State: validation.EvidenceAbsent}
+			} else if r.attributeGeneralExpanded {
+				m.Lexical.Reason = "source-attribute-lexical-transformed"
+			} else if m.Origin != nil && m.Origin.PhysicalAvailable {
+				// quoted already admitted and owns this immutable string. Keep
+				// it until token advance even when normalization replaces Value.
+				m.Lexical = validation.Evidence[string]{State: validation.EvidenceKnown, Value: value}
+			}
 		}
 		m.NamespaceDeclaration = aName.Space == "xmlns" || aName.Space == "" && aName.Local == "xmlns"
 		if len(attributes) == cap(attributes) {
