@@ -310,3 +310,17 @@ func TestIndependentSingletonRepeatPreservesPriorProofsOnInterruption(t *testing
 		t.Fatalf("prior independent failure erased %+v", got)
 	}
 }
+
+func TestIndependentSingletonRepeatCheckedWorkAmounts(t *testing.T) {
+	s := rationalSession(t, Budgets{MaxRuleSteps: 1})
+	defer s.cleanup()
+	if err := contextRepeatSingletonWork(context.Background(), s, 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := contextRepeatSingletonWork(context.Background(), s, math.MaxInt64, 1); !errors.Is(err, ErrResourceLimit) {
+		t.Fatalf("work overflow not refused: %v", err)
+	}
+	if got := rationalUsage(t, s, BudgetRuleSteps); got != 1 {
+		t.Fatalf("failed overflow charged %d", got)
+	}
+}

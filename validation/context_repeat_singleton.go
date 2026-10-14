@@ -2,6 +2,17 @@ package validation
 
 import "context"
 
+// Accumulate work in the budget width, before any native-int addition.
+// In particular, repeated borrowed document identities need not fit one host
+// allocation even though each individual string does.
+func contextRepeatSingletonWork(ctx context.Context, s *Session, counts ...int64) error {
+	work, err := rationalSum(BudgetRuleSteps, counts...)
+	if err != nil {
+		return err
+	}
+	return s.step(ctx, work)
+}
+
 // This is a necessary singleton-event counterexample, independent of the
 // sufficient representation equality above. Its deliberately closed domain is
 // ordinary explicit note/attributes data throughout one canonical part, one
@@ -404,13 +415,13 @@ func contextRepeatSingletonReadNote(r *contextReader, timeline *timelineService,
 			return out, stateUnknown[bool]("context-repeat-singleton-containment-unresolved"), nil
 		}
 	}
-	if !r.step(1 + int64(len(f.Part.Value.DocumentID)+len(f.Position.Value.Part.DocumentID)+len(f.End.Value.Part.DocumentID))) {
+	if r.err = contextRepeatSingletonWork(r.ctx, r.s, 1, int64(len(f.Part.Value.DocumentID)), int64(len(f.Position.Value.Part.DocumentID)), int64(len(f.End.Value.Part.DocumentID))); r.err != nil {
 		return out, status, r.err
 	}
 	if f.Position.Value.Part != f.Part.Value || f.End.Value.Part != f.Part.Value || f.Position.Value.Measure != f.End.Value.Measure || f.Position.Value.MeasureOrdinal != f.End.Value.MeasureOrdinal {
 		return out, stateUnknown[bool]("context-repeat-singleton-containment-unresolved"), nil
 	}
-	if !r.step(1 + int64(len(instrument.Part.DocumentID)+len(f.Part.Value.DocumentID)+len(instrument.Note.DocumentID)+len(out.source.DocumentID)+len(instrument.References[0].Value.DocumentID)+len(r.s.documentID))) {
+	if r.err = contextRepeatSingletonWork(r.ctx, r.s, 1, int64(len(instrument.Part.DocumentID)), int64(len(f.Part.Value.DocumentID)), int64(len(instrument.Note.DocumentID)), int64(len(out.source.DocumentID)), int64(len(instrument.References[0].Value.DocumentID)), int64(len(r.s.documentID))); r.err != nil {
 		return out, status, r.err
 	}
 	if instrument.Part != f.Part.Value || instrument.Note != out.source || instrument.References[0].Value.DocumentID != r.s.documentID {
@@ -479,7 +490,7 @@ func contextRepeatSingletonRow(ctx context.Context, s *Session, timeline *timeli
 	if p.Value.Value.Double.State != EvidenceAbsent {
 		return stateUnknown[bool]("context-repeat-singleton-transpose-doubling-unresolved"), nil
 	}
-	if err := s.step(ctx, p.Scope.Staff.ByteSize()+row.value.Staff.Value.ByteSize()); err != nil {
+	if err := contextRepeatSingletonWork(ctx, s, p.Scope.Staff.ByteSize(), row.value.Staff.Value.ByteSize()); err != nil {
 		return Evidence[bool]{}, err
 	}
 	cmp, err := p.Scope.Staff.Cmp(row.value.Staff.Value)
@@ -510,7 +521,7 @@ func contextRepeatSingletonRow(ctx context.Context, s *Session, timeline *timeli
 			return stateUnknown[bool]("context-repeat-singleton-containment-unresolved"), nil
 		}
 	}
-	if err = s.step(ctx, 1+int64(len(start.Part.DocumentID)+len(stop.Part.DocumentID)+len(p.Position.Part.DocumentID))); err != nil {
+	if err = contextRepeatSingletonWork(ctx, s, 1, int64(len(start.Part.DocumentID)), int64(len(stop.Part.DocumentID)), int64(len(p.Position.Part.DocumentID))); err != nil {
 		return Evidence[bool]{}, err
 	}
 	if start.Part != stop.Part || start.Part != p.Position.Part {
@@ -624,7 +635,7 @@ func contextRepeatSingletonRow(ctx context.Context, s *Session, timeline *timeli
 // caller. No mismatch of a representation field alone is a negative proof.
 func contextRepeatSingletonUnequal(ctx context.Context, s *Session, a, b contextRepeatSingletonNote, staff Integer) (Evidence[bool], error) {
 	unknown := stateUnknown[bool]("context-repeat-singleton-counterexample-unproved")
-	if err := s.step(ctx, 1+int64(len(a.voice)+len(b.voice)+len(a.instrument.DocumentID)+len(b.instrument.DocumentID))+a.staff.ByteSize()+b.staff.ByteSize()+staff.ByteSize()); err != nil {
+	if err := contextRepeatSingletonWork(ctx, s, 1, int64(len(a.voice)), int64(len(b.voice)), int64(len(a.instrument.DocumentID)), int64(len(b.instrument.DocumentID)), a.staff.ByteSize(), b.staff.ByteSize(), staff.ByteSize()); err != nil {
 		return Evidence[bool]{}, err
 	}
 	if a.rest || a.voice == "" || a.voice != b.voice || a.instrument != b.instrument || a.instrument.Node == 0 {
