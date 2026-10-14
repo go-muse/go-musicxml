@@ -228,7 +228,14 @@ func importDictionaryComponent(ctx context.Context, a *validation.Account, sourc
 		// The body helper's own exact-length error is distinct from errors
 		// returned by provider readers or closers, which it joins separately.
 		if failure, ok := err.(*dictionaryImportFailure); ok && failure.reason == "component length does not match the selected pin" {
-			return nil, bad(failure.reason)
+			failureErr := bad(failure.reason)
+			if configurationFailure {
+				// The transferred Close may cancel while returning nil. This
+				// configuration rejection stops before the loader's next context
+				// check, so preserve both proved causes at this boundary.
+				failureErr = errors.Join(failureErr, ctx.Err())
+			}
+			return nil, failureErr
 		}
 		return nil, err
 	}
