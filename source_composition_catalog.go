@@ -31,7 +31,7 @@ func sourceDTDPolicy(id validation.ProfileID) (internal, declarations, lexical b
 		return true, false, false
 	case ProfileSourceInternalDTDLocal:
 		return true, true, false
-	case ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries, ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries:
+	case ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries, ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries, ProfileSourceSemantics:
 		return true, true, true
 	default:
 		return false, false, false
@@ -100,10 +100,21 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 		dictionaryRequire(&dictionaries, rule.Key)
 	}
 	d.profiles = []validation.Profile{local, links, dictionaries}
+	if err := appendSourceOriginDefinitions(d); err != nil {
+		return nil, err
+	}
+	if err := specializeSourceComposition(d); err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+
+// appendSourceOriginDefinitions extends only caller-owned source definitions.
+func appendSourceOriginDefinitions(d *assessmentDefinitions) error {
 	for _, assembly := range []validation.Assembly{validation.AssemblyMusicXML, validation.AssemblyOpus} {
 		plan, err := validation.NewSourceOriginPlan(assembly)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		key := validation.RuleKey{ID: validation.RuleID("MX40-SOURCE-ORIGIN-" + string(assembly)), Revision: 1}
 		rule := validation.RuleDefinition{Key: key, Selector: validation.Selector{Assembly: &assembly}, Scope: validation.ScopeDocument,
@@ -117,10 +128,7 @@ func buildSourceCompositionDefinitions() (*assessmentDefinitions, error) {
 			dictionaryRequire(&d.profiles[i], key)
 		}
 	}
-	if err := specializeSourceComposition(d); err != nil {
-		return nil, err
-	}
-	return d, nil
+	return nil
 }
 
 func specializeSourceComposition(d *assessmentDefinitions) error {

@@ -43,7 +43,59 @@ func TestSemanticCompositionPublicProfiles(t *testing.T) {
 				if selected["MX40-CONTEXT-figure-number-numeric"] {
 					t.Fatal("invented figure grammar selected")
 				}
+				for _, id := range []validation.RuleID{"MX40-DICTIONARY-musicxml/standard-sounds", "MX40-DICTIONARY-musicxml/rendering"} {
+					if selected[id] {
+						t.Errorf("optional dictionary observation selected: %s", id)
+					}
+				}
 			})
 		}
+	}
+}
+
+func TestSemanticCompositionEffectiveDTDBarline(t *testing.T) {
+	const profile validation.ProfileID = "musicxml-4.0/source-semantics"
+	input := `<!DOCTYPE score-partwise [<!ATTLIST barline location CDATA "left">]>` + barlineLocationScore(false, barlineDivisions+barlineNote("1")+`<barline/>`, "")
+	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: profile})
+	if err != nil || report.Conformance != validation.ConformanceViolated {
+		t.Fatalf("defaulted wrong location not assessed: %v %+v", err, report.Findings)
+	}
+	foundFailure, foundOrigin := false, false
+	for _, finding := range report.Findings {
+		if finding.Rule.ID == "MX40-CONTEXT-barline-location" && finding.Outcome == validation.OutcomeFail {
+			foundFailure = true
+		}
+	}
+	for _, row := range report.Context {
+		if o := row.SourceOrigin; o != nil && o.Attribute != nil && o.Attribute.Local == "location" && o.Specified.State == validation.EvidenceKnown && !o.Specified.Value && o.Physical.State == validation.EvidenceAbsent {
+			foundOrigin = true
+		}
+	}
+	if !foundFailure || !foundOrigin {
+		t.Fatalf("effective value and physical absence not both retained: failure=%v origin=%v", foundFailure, foundOrigin)
+	}
+}
+
+func TestSemanticCompositionRejectsWrongTargetBeforeDictionaryIO(t *testing.T) {
+	calls := 0
+	provider := dictionaryImportSourceFunc(func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error) {
+		calls++
+		return DictionaryComponentResult{}, nil
+	})
+	options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: "musicxml-4.0/model-semantics"}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}, Source: provider}}
+	reader := &assessmentCountingReader{source: strings.NewReader(assessedScore("1", ""))}
+	if _, err := InspectXMLWithDictionaries(context.Background(), reader, options); err == nil {
+		t.Fatal("wrong source profile accepted")
+	}
+	doc, err := Decode(strings.NewReader(assessedScore("1", "")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	options.Assessment.Profile = "musicxml-4.0/source-semantics"
+	if _, err = AssessModelWithDictionaries(context.Background(), doc, options); err == nil {
+		t.Fatal("wrong model profile accepted")
+	}
+	if calls != 0 || reader.bytes != 0 {
+		t.Fatalf("invalid target performed I/O: provider=%d bytes=%d", calls, reader.bytes)
 	}
 }
