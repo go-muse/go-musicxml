@@ -44,8 +44,10 @@ type IPAAttestedExample struct{ Encoding, Category, RowID string }
 // It never authorizes compatibility normalization or arbitrary decomposition.
 type IPACanonicalEquivalent struct{ Encoding, EquivalentToEncoding, RowID string }
 
-// IPAPositiveDictionaryData is an explicitly partial positive-evidence table.
-// Neither absent rows nor full atomic coverage prove sequence validity.
+// IPAPositiveDictionaryData carries manifest-specific positive encodings and
+// genuine canonical relations. The legacy positive manifest remains partial;
+// the representation manifest adds its fixed whole-input witness policy.
+// Absent rows never establish a negative complement.
 type IPAPositiveDictionaryData struct {
 	Symbols      []IPASymbolEncoding
 	Examples     []IPAAttestedExample
@@ -67,14 +69,15 @@ type DictionaryImport struct {
 }
 
 type dictionaryEntry struct {
-	manifest    DictionaryManifest
-	relations   []DictionaryRelation
-	state       EvidenceState
-	reason      Code
-	certificate bool
-	smufl       *SMuFLDictionaryData
-	sounds      *StandardSoundsDictionaryData
-	ipa         *IPAPositiveDictionaryData
+	manifest       DictionaryManifest
+	relations      []DictionaryRelation
+	state          EvidenceState
+	reason         Code
+	certificate    bool
+	smufl          *SMuFLDictionaryData
+	sounds         *StandardSoundsDictionaryData
+	ipa            *IPAPositiveDictionaryData
+	representation *ipaRepresentationData
 	// Immutable byte spans are computed while copying validated encodings.
 	// Both are bounded by copyIPA's 16-byte encoding admission limit.
 	ipaSymbolMaxBytes     int
@@ -139,7 +142,7 @@ func NewDictionarySet(ctx context.Context, a *Account, selections []DictionarySe
 	if err = dictionaryStep(ctx, a, 1); err != nil {
 		return nil, err
 	}
-	if len(selections) > 4 || len(imports) > 4 {
+	if len(selections) > 5 || len(imports) > 5 {
 		return nil, dictionaryConfiguration("too many selections or imports")
 	}
 	retained := dictionarySetFixedBytes + dictionaryEntryFixedBytes*int64(len(selections))
@@ -189,13 +192,13 @@ func NewDictionarySet(ctx context.Context, a *Account, selections []DictionarySe
 		}
 		slices.Sort(entry.relations)
 	}
-	// A four-entry bounded insertion sort needs no dynamic comparison workspace.
+	// A five-entry bounded insertion sort needs no dynamic comparison workspace.
 	for i := 1; i < len(d.entries); i++ {
 		for j := i; j > 0 && d.entries[j].manifest.ID < d.entries[j-1].manifest.ID; j-- {
 			d.entries[j], d.entries[j-1] = d.entries[j-1], d.entries[j]
 		}
 	}
-	var imported [4]bool
+	var imported [5]bool
 	for _, input := range imports {
 		if err = dictionaryStep(ctx, a, 1); err != nil {
 			return nil, err
@@ -286,7 +289,7 @@ func (d *DictionarySet) importEntry(ctx context.Context, entry *dictionaryEntry,
 		if err := d.copySounds(ctx, entry, input.Sounds); err != nil {
 			return err
 		}
-	case DictionaryManifestIPAPositive2015Unicode13:
+	case DictionaryManifestIPAPositive2015Unicode13, DictionaryManifestIPARepresentation2015Unicode13:
 		if input.IPA == nil {
 			return dictionaryConfiguration("wrong IPA payload branch")
 		}
@@ -300,6 +303,11 @@ func (d *DictionarySet) importEntry(ctx context.Context, entry *dictionaryEntry,
 	}
 	if bytes != m.DataBytes || hex.EncodeToString(digest[:]) != m.DataSHA256 {
 		return dictionaryConfiguration("transformed data identity mismatch")
+	}
+	if m.ID == DictionaryManifestIPARepresentation2015Unicode13 {
+		if err := d.buildIPARepresentation(ctx, entry); err != nil {
+			return err
+		}
 	}
 	entry.state = EvidenceKnown
 	entry.reason = ""
@@ -428,7 +436,11 @@ func (d *DictionarySet) copySounds(ctx context.Context, e *dictionaryEntry, in *
 }
 
 func (d *DictionarySet) copyIPA(ctx context.Context, e *dictionaryEntry, in *IPAPositiveDictionaryData) error {
-	if len(in.Symbols) != 170 || len(in.Examples) != 18 || len(in.Equivalences) != 9 {
+	if e.manifest.ID == DictionaryManifestIPARepresentation2015Unicode13 {
+		if len(in.Symbols) != 295 || len(in.Examples) != 0 || len(in.Equivalences) != 158 {
+			return dictionaryConfiguration("incorrect IPA representation record counts")
+		}
+	} else if len(in.Symbols) != 170 || len(in.Examples) != 18 || len(in.Equivalences) != 9 {
 		return dictionaryConfiguration("incorrect IPA positive record counts")
 	}
 	size := int64(256)

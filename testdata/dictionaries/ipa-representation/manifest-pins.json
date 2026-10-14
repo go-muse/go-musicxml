@@ -1,0 +1,12 @@
+{
+  "component_bytes": 58745,
+  "component_sha256": "8ab091cfe63c248ce7351fecce9b670af11c949f76d7a5d0f18c2ed43d44f473",
+  "data_bytes": 22430,
+  "data_sha256": "f3efd17200088616bf170aedc4f2cf618a8db4c73d8852de03b72b86c7dc2737",
+  "policy_bytes": 3359,
+  "policy_sha256": "abf354d8847b1eb4233ac2d7e835d025ebd9d99dee903737aa0e921004a65bd2",
+  "rows": 453,
+  "copied_utf8_bytes": 8007,
+  "prefix_bytes": 797,
+  "max_field_utf8_bytes": 18
+}

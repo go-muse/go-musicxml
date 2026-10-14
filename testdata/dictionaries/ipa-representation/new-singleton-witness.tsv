@@ -1,0 +1,104 @@
+inventory_id	encoding_scalars	identity_summary
+O01	U+026B	Positive: l + velarization/pharyngealization overlay; IPA209 / 155+428. CH15; TIL03 pp.5,8; MAP26 p.5.
+O02	U+025A	Positive: schwa + rhotic hook; IPA327 / 322+419. U13 §7.8 p.323 explicitly permits ligated treatment; RET04 p.5.
+O10	U+025D	Positive: open-mid central vowel + rhotic hook (326+419). RET04 p.5; HB99 p.16. Distinct from retired below-hook vowel.
+O11	U+02B3	Positive: superscript/modifier r; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.
+O12	U+02B5	Positive: superscript/modifier ɻ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.
+O13	U+02C0	Positive: superscript/modifier ʔ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.
+O14	U+1DC6	Positive: mid–low compound accent. HB99 p.14; MAP12 p.10; L2/04-348 pp.3–5.
+O17	U+02B1	Positive: superscript/modifier ɦ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.
+O18	U+02B4	Positive: superscript/modifier ɹ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.
+O19	U+02B6	Positive: superscript/modifier ʁ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.
+O22	U+1DC7	Positive: high–mid compound accent. Same sources.
+O23	U+1DC9	Positive: high–low–high compound accent. HB99 p.14; MAP12 p.10; L2/04-348 pp.3,6.
+P01	U+0067	Positive alternative for IPA110, voiced velar plosive. MAP12 p.2 expressly accepts ASCII g; Unicode13 §7.1 includes a–z.
+P02	U+030D	Positive positional counterpart of syllabic U0329 (IPA431). CH15/HB99 placement provision; ABOVE24 p.2.
+P03	U+0311	Positive positional counterpart of non-syllabic U032F (IPA432). Same sources.
+P04	U+0346	Positive positional counterpart of dental U032A (IPA408). Its separate extIPA dentolabial use does not erase this identity. Same sources.
+P05	U+0351	Positive positional counterpart of less-rounded U031C (IPA412). Same sources.
+P06	U+0357	Positive positional counterpart of more-rounded U0339 (IPA411). Same sources.
+P07	U+1DF5	Positive positional counterpart of raised U031D (IPA429). ABOVE24 p.2, historical attestation fig.4; encoded in 7.0.
+P09	U+1D6C	Positive composite identity: b + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P10	U+1D6D	Positive composite identity: d + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P11	U+1D6E	Positive composite identity: f + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P12	U+1D6F	Positive composite identity: m + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P13	U+1D70	Positive composite identity: n + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P14	U+1D71	Positive composite identity: p + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P15	U+1D72	Positive composite identity: r + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P16	U+1D73	Positive composite identity: ɾ + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P17	U+1D74	Positive composite identity: s + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P18	U+1D75	Positive composite identity: t + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P19	U+1D76	Positive composite identity: z + U+0334 (IPA428). TIL03 pp.4–5,8–9.
+P20	U+AB68	Positive composite identity: ɹ + U+0334 (IPA428). SCOT19 p.1; CH15/HB99 overlay rule.
+S09	U+02B8	Current superscript/modifier of y (U+0079); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S12	U+02E2	Current superscript/modifier of s (U+0073); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S13	U+02E3	Current superscript/modifier of x (U+0078); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S15	U+1D43	Current superscript/modifier of a (U+0061); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S16	U+1D44	Current superscript/modifier of ɐ (U+0250); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S17	U+1D45	Current superscript/modifier of ɑ (U+0251); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S18	U+1D47	Current superscript/modifier of b (U+0062); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S19	U+1D48	Current superscript/modifier of d (U+0064); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S20	U+1D49	Current superscript/modifier of e (U+0065); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S21	U+1D4A	Current superscript/modifier of ə (U+0259); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S22	U+1D4B	Current superscript/modifier of ɛ (U+025B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S23	U+1D4D	Current superscript/modifier of g (U+0067); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S24	U+1D4F	Current superscript/modifier of k (U+006B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S25	U+1D50	Current superscript/modifier of m (U+006D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S26	U+1D51	Current superscript/modifier of ŋ (U+014B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S27	U+1D52	Current superscript/modifier of o (U+006F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S28	U+1D53	Current superscript/modifier of ɔ (U+0254); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S29	U+1D56	Current superscript/modifier of p (U+0070); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S30	U+1D57	Current superscript/modifier of t (U+0074); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S31	U+1D58	Current superscript/modifier of u (U+0075); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S32	U+1D5A	Current superscript/modifier of ɯ (U+026F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S33	U+1D5B	Current superscript/modifier of v (U+0076); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S34	U+1D5D	Current superscript/modifier of β (U+03B2); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S35	U+1D61	Current superscript/modifier of χ (U+03C7); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S36	U+1D9B	Current superscript/modifier of ɒ (U+0252); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S37	U+1D9C	Current superscript/modifier of c (U+0063); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S38	U+1D9D	Current superscript/modifier of ɕ (U+0255); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S39	U+1D9E	Current superscript/modifier of ð (U+00F0); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S40	U+1D9F	Current superscript/modifier of ɜ (U+025C); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S41	U+1DA0	Current superscript/modifier of f (U+0066); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S42	U+1DA1	Current superscript/modifier of ɟ (U+025F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S43	U+1DA2	Current superscript/modifier of ɡ (U+0261); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S44	U+1DA3	Current superscript/modifier of ɥ (U+0265); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S45	U+1DA4	Current superscript/modifier of ɨ (U+0268); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S46	U+1DA6	Current superscript/modifier of ɪ (U+026A); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S47	U+1DA8	Current superscript/modifier of ʝ (U+029D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S48	U+1DA9	Current superscript/modifier of ɭ (U+026D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S49	U+1DAB	Current superscript/modifier of ʟ (U+029F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S50	U+1DAC	Current superscript/modifier of ɱ (U+0271); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S51	U+1DAD	Current superscript/modifier of ɰ (U+0270); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S52	U+1DAE	Current superscript/modifier of ɲ (U+0272); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S53	U+1DAF	Current superscript/modifier of ɳ (U+0273); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S54	U+1DB0	Current superscript/modifier of ɴ (U+0274); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S55	U+1DB1	Current superscript/modifier of ɵ (U+0275); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S56	U+1DB2	Current superscript/modifier of ɸ (U+0278); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S57	U+1DB3	Current superscript/modifier of ʂ (U+0282); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S58	U+1DB4	Current superscript/modifier of ʃ (U+0283); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S59	U+1DB6	Current superscript/modifier of ʉ (U+0289); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S60	U+1DB7	Current superscript/modifier of ʊ (U+028A); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S61	U+1DB9	Current superscript/modifier of ʋ (U+028B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S62	U+1DBA	Current superscript/modifier of ʌ (U+028C); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S63	U+1DBB	Current superscript/modifier of z (U+007A); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S64	U+1DBC	Current superscript/modifier of ʐ (U+0290); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S65	U+1DBD	Current superscript/modifier of ʑ (U+0291); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S66	U+1DBE	Current superscript/modifier of ʒ (U+0292); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S67	U+1DBF	Current superscript/modifier of θ (U+03B8); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S68	U+2071	Current superscript/modifier of i (U+0069); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S70	U+A7F9	Current superscript/modifier of œ (U+0153); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S71	U+AB5E	Current superscript/modifier of ɫ (U+026B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S72	U+AB69	Current superscript/modifier of ʍ (U+028D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.
+S74	U+02C1	Current superscript/modifier of ʕ (U+0295); SUP20 pp.10–12. Direct identity, U13 NamesList and L2/20-113 p.2; separate from preferred named-diacritic U02E4 mapping.
+P21	U+1D91	Current implicit retroflex implosive; SUP20 Council letter pp.10–12 and RET04 p.6 (Handbook identity).
+P22	U+A78E	Current implicit voiceless retroflex lateral fricative; SUP20 Council letter pp.10–12; L2/20-125R p.4.
+D01	U+0020	Positive ordinary word-boundary space: K89 pp.75,77. A string of admitted spaces is not made invalid merely for containing no voiced segment under a repertoire-only predicate.
+D09	U+A712	Positive left-stem counterpart of U+02E5; level 5. K89 pp.75–77; U13 p.324.
+D10	U+A713	Positive left-stem counterpart of U+02E6; level 4. K89 pp.75–77; U13 p.324.
+D11	U+A714	Positive left-stem counterpart of U+02E7; level 3. K89 pp.75–77; U13 p.324.
+D12	U+A715	Positive left-stem counterpart of U+02E8; level 2. K89 pp.75–77; U13 p.324.
+D13	U+A716	Positive left-stem counterpart of U+02E9; level 1. K89 pp.75–77; U13 p.324.
+P23	U+02D4	Recommended positive spacing representation of current raised sign IPA429/U031D. ABOVE24 p.2 current-positional-variants context and unchanged 2005/2015 alphabet; this is an explicit identity inference, not only a claim that linguists use it.
+P24	U+02D5	Recommended positive spacing representation of current lowered sign IPA430/U031E; same evidence and inference.
+EJECTIVE-0315	U+0315	Combining ejective sign; scope-resolution correction; L2/20-253R pp.1–2.
