@@ -43,3 +43,19 @@ The full original-obligation and source boundaries remain those in
 [the scope document](source-declarations-scope.md). Unresolved constructed-type,
 external-declaration, package-transport and broader conformance claims are not
 promoted by these regression checkpoints.
+
+## Independent compatibility and oracle observations
+
+On the independently compared legacy kernel probes against baseline `5295080`,
+new internal diagnostic fields increased retained bytes from 3,406 to 3,414 for
+an integer failure and from 3,786 to 3,794 for unavailable ENTITY. Work counts
+were unchanged (136 and 149). These are fixture-specific retained-account
+observations, not process-memory measurements or a universal eight-byte bound.
+
+xmllint/libxml2 2.9.14 is not a universal ENTITY oracle: the existing element
+ENTITY limitation and its acceptance of empty ENTITIES are retained as explicit
+observational exclusions. Independent attribute-carrier positive, parsed, missing
+and multi-token controls agreed. Schema-document enumeration compilation
+behavior does not remove the separately retained schema-component validity
+obligation. The pinned XSD contract, not broad oracle equivalence, governs these
+claims.

@@ -873,8 +873,11 @@ existing normative consumers for score-partwise, score-timewise and Opus:
 - `ProfileSourceInternalDTDDictionaries`: the links composition plus explicitly
   supplied dictionary capabilities through the existing dictionary entry points.
 
-These profiles use a separate catalog. Existing profile digests and behavior
-are unchanged. They do not select auxiliary Sounds/Container processing,
+These profiles use a separate catalog. Existing profile digests and rule
+semantics are unchanged. Additional internal diagnostic fields are accounted
+for at their actual retained size, so a buffered-byte limit set exactly at an
+older diagnostic boundary can now refuse slightly earlier. They do not select
+auxiliary Sounds/Container processing,
 timeline/context rules or package/source-origin snapshot export. See the
 [exact scope](docs/validation/source-declarations-scope.md) and
 [verification evidence](docs/validation/source-declarations-evidence.md).

@@ -107,6 +107,9 @@ All ingress copying, indexes, temporary overlap and lookup work use the same
 finite account. Cancellation is polled during bounded scans. Constructor/event
 errors, unavailable evidence, normative failures and resource refusal retain
 their distinct outcomes and causes. Existing source reader ownership is unchanged.
+New internal diagnostic fields increase actual retained record sizes, including
+on legacy failure paths. Exact historical buffered-byte admission boundaries
+are therefore not promised; accounting is not reduced to hide the extra storage.
 
 ## Contribution and retained owners
 
