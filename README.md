@@ -96,6 +96,7 @@ construction and compressed `.mxl` round trips in
 | Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
 | Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
+| Compose DTD declarations with standalone local/link/dictionary assessment | `ProfileSourceInternalDTDLocal`, `ProfileSourceInternalDTDLinks`, `ProfileSourceInternalDTDDictionaries` |
 | Assess local links without fetching | `ProfileSourceLinks`, `ProfileModelLinks` |
 | Assess explicitly supplied pinned dictionaries | `InspectXMLWithDictionaries`, `AssessModelWithDictionaries`, `DecodeAssessedWithDictionaries` |
 | Assess dictionaries across selected resources or MXL | `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries`, `InspectMXLWithDictionaries`, `AssessMXLPackageWithDictionaries` |
@@ -191,6 +192,13 @@ The separate developmental `ProfileSourceInternalDTD` processes bounded internal
 declarations, entity replacements and effective attributes with typed occurrence
 origins. External DTDs are not fetched, and existing profiles do not opt into this
 processing. See its [scope and retained obligations](docs/validation/dtd-infoset-scope.md).
+
+The explicit [standalone compositions](docs/validation/source-declarations-scope.md)
+add declaration-dependent ENTITY/ENTITIES checks and reuse local, nonfetching
+link and selected dictionary consumers. DTD defaults and normalized effective
+values remain distinct from physical source occurrences. Dictionary data is
+still supplied explicitly; the library does not load it automatically. These
+profiles do not enable package/source-origin export or general DTD validation.
 
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged

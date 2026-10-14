@@ -861,6 +861,64 @@ Clean input EOF can coexist with incomplete XML well-formedness assessment when
 DTD declaration semantics remain unavailable. Context checks cannot interrupt a
 blocking arbitrary `io.Reader.Read`; use cancellable I/O where needed.
 
+### Declaration-dependent standalone compositions
+
+Three additive source profiles combine the bounded internal-DTD infoset with
+existing normative consumers for score-partwise, score-timewise and Opus:
+
+- `ProfileSourceInternalDTDLocal`: declaration-dependent XSD and existing local
+  clauses/typed references, with source-origin evidence.
+- `ProfileSourceInternalDTDLinks`: the local composition plus nonfetching local
+  links, attachments and schema-hint projections.
+- `ProfileSourceInternalDTDDictionaries`: the links composition plus explicitly
+  supplied dictionary capabilities through the existing dictionary entry points.
+
+These profiles use a separate catalog. Existing profile digests and behavior
+are unchanged. They do not select auxiliary Sounds/Container processing,
+timeline/context rules or package/source-origin snapshot export. See the
+[exact scope](docs/validation/source-declarations-scope.md) and
+[verification evidence](docs/validation/source-declarations-evidence.md).
+
+Reached XSD `ENTITY`/`ENTITIES` builtin and restriction carriers use effective
+first-bound general-entity declarations from the source document. An unparsed
+binding proves membership; a parsed binding disproves it. Missing names are
+negative only with complete relevant declaration enumeration. Missing facts,
+unread declarations and unresolved XSD 1.0 constructed carriers remain
+unavailable. This does not perform general DTD validation or retrieve entity
+payloads. Schema-literal conversion remains independent of instance membership;
+applied effective instance values retain their own membership obligation.
+
+Custom source catalogs can use `NewXSDPlanWithSourceDeclarations`. Every selected
+XSD operation sharing an assembly/run must agree on the mode, and unsupported
+plans cannot enable runtime facts. Submit `SourceEntityDeclarations` containing
+owned-input `SourceEntityDeclaration` rows through
+`Session.SourceEntityDeclarations` immediately after root `Open`, before any
+attribute, child or closing event. Rows contain only effective first general
+bindings, with positive unique document-local sequence IDs and independently
+available original-byte origins. The session copies them under the shared
+account; callers may release their input after return.
+
+`NewSourceAttributeValuePlan` and `NewSourcePresenceImpliesAttributePlan` use
+supplied effective source presence, including DTD defaults and entity markup.
+XSD-only defaults do not establish supplied presence. New declaration-aware
+catalogs reject incompatible legacy physical-presence local plans; existing
+constructors and old catalogs are not reinterpreted.
+
+`NewSourceLocalLinkContextPlan` and `NewSourceSchemaHintContextPlan` preserve
+physical `ResourceAttribute.Presence` and `Raw` separately from effective
+`Value`. Discover the exact selected origin provider through
+`Engine.SourceAttributeLexicalProvider` and submit actually retained
+XML-normalized physical spelling through `Session.SourceAttributeLexical`, after
+the matching attribute and origin events while the owner is open. DTD defaults
+and entity-generated markup have absent physical spelling. Unretained or
+general-entity-transformed original spelling is unavailable rather than
+reconstructed. Effective defaulted hints can still produce discovery pairs;
+neither their presence nor their values authorize external retrieval.
+
+These additions introduce new types/functions/methods without changing existing
+exported option or report struct layouts. Each session retains its existing
+single-goroutine lifecycle; independent sessions own separate declaration facts.
+
 ## Opt-in pinned dictionaries
 
 The dictionary entry points are additive and require their own explicit profile.

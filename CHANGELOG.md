@@ -40,6 +40,15 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add explicit source-only DTD/local, DTD/link and DTD/dictionary compositions
+  with owned document ENTITY/ENTITIES declaration evidence. Separate schema
+  operands from instance membership, and physical attribute provenance from
+  effective DTD values. Add sealed source-mode constructors and bounded fact
+  ingress while preserving existing profile/catalog identities. Unresolved
+  constructed carriers and package/source-origin transport remain explicit
+  limitations. See the [scope](docs/validation/source-declarations-scope.md) and
+  [verification checkpoint](docs/validation/source-declarations-evidence.md).
+
 - Add opt-in pinned dictionary assessment for original XML, current models,
   selected resource graphs and original/current MXL packages. Six explicit new
   profiles share one verified immutable dictionary set and finite root account;
