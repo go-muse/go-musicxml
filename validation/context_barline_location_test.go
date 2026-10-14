@@ -265,10 +265,9 @@ func TestBarlineLocationPlanRequiresExactNodeAndTimelineContract(t *testing.T) {
 			t.Fatalf("accepted incomplete spec: %+v %v", spec, err)
 		}
 	}
-	plan, err := NewBarlineLocationPlan(ContextPlanSpec{Schema: schema, TimelineProvider: key})
-	if err != nil {
-		t.Fatal(err)
-	}
+	// Full-schema constructor success is exercised by both adapter catalogs.
+	// This miniature schema supplies only the sealed contract test roles.
+	plan := Plan{kind: planBarlineLocation, context: &contextPlan{Schema: schema, Timeline: key, Bindings: contextCoreBindings(t), revision: contextSemanticRevision}}
 	typ := contextNamedType("barline")
 	rule := RuleDefinition{Key: RuleKey{"barline", 1}, Class: ClassMandatory, Role: RolePredicate, Category: CategoryNormative, Targets: []Target{TargetSource, TargetModel}, Scope: ScopeNode, Selector: Selector{Component: &typ}, Requires: []Dependency{{Kind: DependencyRule, Rule: key, Relation: RelationDocument}}}
 	if err := plan.validateContextFor(rule); err != nil {
