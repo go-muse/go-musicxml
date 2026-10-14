@@ -13,8 +13,9 @@ type graphCanonicalKey struct {
 	representation validation.ResourceRepresentation
 }
 type graphResourceKey struct {
-	pin     validation.ResourcePin
-	profile validation.ProfileID
+	pin          validation.ResourcePin
+	profile      validation.ProfileID
+	dictionaries [32]byte
 }
 type graphResource struct {
 	pin      validation.ResourcePin
@@ -35,8 +36,14 @@ type graphExpansion struct {
 	depth    int64
 }
 
+// resourceKey uses actual admitted capabilities, including unavailable reasons
+// and verified lineage, rather than only desired manifest or profile identity.
+func (g *resourceGraphRun) resourceKey(pin validation.ResourcePin, profile validation.ProfileID) graphResourceKey {
+	return graphResourceKey{pin: pin, profile: profile, dictionaries: g.dictionaryFingerprint}
+}
+
 func (g *resourceGraphRun) cacheResource(pin validation.ResourcePin, profile validation.ProfileID, id validation.ResourceAssessmentID, xmlDepth int, reusable bool) (*graphResource, error) {
-	key := graphResourceKey{pin, profile}
+	key := g.resourceKey(pin, profile)
 	if old := g.cache[key]; old != nil {
 		return old, nil
 	}
@@ -271,12 +278,12 @@ func (g *resourceGraphRun) walkLink(item graphExpansion, index uint64, v validat
 func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint64, v validation.ContextResult, href string, resolved resolvedResourceURI) (*graphResource, resourceURIBase, validation.PackageID, validation.Evidence[validation.ResourceAdoptionID], bool, error) {
 	indirect := false
 	unknown := unavailableTarget(validation.EvidenceUnknown, "resource-unavailable", nil)
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	engine, err := sourceAssessmentEngineForProfile(g.profiles.source)
 	if err != nil {
 		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
-	profile, _ := engine.Profile(ProfileSourceLinks)
-	request := validation.ResourceRequest{ID: validation.ResourceRequestID(g.next("request")), Document: &validation.ResourceDocumentRequest{Source: item.resource.pin, Subject: v.Subject, Kind: validation.LinkedResourceAuto, RequiredProfile: ProfileSourceLinks, CatalogDigest: profile.CatalogDigest, BaseURI: item.base.RetrievalURI, Href: href, Package: item.pkg}}
+	profile, _ := engine.Profile(g.profiles.source)
+	request := validation.ResourceRequest{ID: validation.ResourceRequestID(g.next("request")), Document: &validation.ResourceDocumentRequest{Source: item.resource.pin, Subject: v.Subject, Kind: validation.LinkedResourceAuto, RequiredProfile: g.profiles.source, CatalogDigest: profile.CatalogDigest, BaseURI: item.base.RetrievalURI, Href: href, Package: item.pkg}}
 	if err = validation.ValidateResourceRequest(request); err != nil {
 		return nil, resourceURIBase{}, item.pkg, unknown, indirect, err
 	}
@@ -365,11 +372,11 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint6
 		resource, childBase, pkg, importErr := g.importRawPackageAtDepth(archive, result.Pin, item.pkg, result.RetrievalURI, false, item.depth+1)
 		return resource, childBase, pkg, unknown, indirect, joinResourceErrors(readErr, importErr)
 	}
-	key := graphResourceKey{result.Pin, ProfileSourceLinks}
+	key := g.resourceKey(result.Pin, g.profiles.source)
 	if cached := g.cache[key]; cached != nil {
 		return cached, base, item.pkg, unknown, indirect, g.checkIntrinsicXMLDepth(cached, item.pkg)
 	}
-	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: g.next("source"), Profile: ProfileSourceLinks, XMLDepth: g.intrinsicXMLDepth(item.pkg), Engine: engine}, ByteOwner: sourceBytesAccounted})
+	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: g.next("source"), Profile: g.profiles.source, XMLDepth: g.intrinsicXMLDepth(item.pkg), Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if intrinsic.Snapshot == nil {
 		return nil, base, item.pkg, unknown, indirect, g.retainUntransferredIntrinsic(intrinsic, result.Pin, nil)
 	}
@@ -377,7 +384,7 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint6
 	if err != nil {
 		return nil, base, item.pkg, unknown, indirect, g.retainUntransferredIntrinsic(intrinsic, result.Pin, err)
 	}
-	resource, err := g.cacheResource(result.Pin, ProfileSourceLinks, id, intrinsic.XMLDepth, intrinsic.Err == nil)
+	resource, err := g.cacheResource(result.Pin, g.profiles.source, id, intrinsic.XMLDepth, intrinsic.Err == nil)
 	return resource, base, item.pkg, unknown, indirect, errors.Join(intrinsic.Err, err)
 }
 func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fragment validation.Evidence[string]) (validation.Evidence[validation.NodeRef], error) {

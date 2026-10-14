@@ -89,7 +89,12 @@ func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOpti
 		return validation.AssessmentBundle{}, err
 	}
 	g.mxlOptions = options.MXL
-	a, readErr := openMXLAssessmentArchive(ctx, reader, options.MXL, g.options.account)
+	return g.inspectRawPackage(reader)
+}
+
+func (g *resourceGraphRun) inspectRawPackage(reader io.Reader) (validation.AssessmentBundle, error) {
+	a, readErr := openMXLAssessmentArchive(g.ctx, reader, g.mxlOptions, g.options.account)
+	var err error
 	if a == nil {
 		return g.finish(readErr)
 	}
@@ -105,7 +110,7 @@ func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOpti
 		}
 	}
 	pin := g.primaryPin(validation.ResourceRawMXL, digest)
-	_, _, _, err = g.importRawPackage(a, pin, "", options.Identity.RetrievalURI, true)
+	_, _, _, err = g.importRawPackage(a, pin, "", g.options.identity.RetrievalURI, true)
 	err = errors.Join(readErr, err)
 	if err == nil {
 		err = g.walkResources()
@@ -237,7 +242,7 @@ func (g *resourceGraphRun) importRawPackageAtEntry(a *mxlAssessmentArchive, pin 
 	if err != nil {
 		return nil, resourceURIBase{}, p.id, err
 	}
-	container, _, err := g.assessPackageSource(p, mxlContainerPath, data, ProfileSourceContainer)
+	container, _, err := g.assessPackageSource(p, mxlContainerPath, data, g.profiles.container)
 	if err != nil || container == nil {
 		return nil, resourceURIBase{}, p.id, err
 	}
@@ -367,7 +372,7 @@ func (g *resourceGraphRun) assessPackageSource(p *graphPackage, path string, dat
 // The pin comes only from hashing these retained immutable entry bytes. Reuse
 // that verification for metadata and intrinsic parsing; never rehash the borrow.
 func (g *resourceGraphRun) assessVerifiedPackageSource(p *graphPackage, path string, data []byte, profile validation.ProfileID, pin validation.ResourcePin) (*graphResource, string, error) {
-	if cached := g.cache[graphResourceKey{pin, profile}]; cached != nil {
+	if cached := g.cache[g.resourceKey(pin, profile)]; cached != nil {
 		return cached, g.packageDocuments[cached.id], g.checkIntrinsicXMLDepth(cached, p.id)
 	}
 	engine, err := sourceAssessmentEngineForProfile(profile)
@@ -375,7 +380,7 @@ func (g *resourceGraphRun) assessVerifiedPackageSource(p *graphPackage, path str
 		return nil, "", err
 	}
 	doc := g.next("source")
-	result := assessResourceSource(g.ctx, bytes.NewReader(data), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: doc, Entry: path, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: profile, Engine: engine}, ByteOwner: sourceBytesAccounted})
+	result := assessResourceSource(g.ctx, bytes.NewReader(data), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: doc, Entry: path, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: profile, Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if result.Snapshot == nil {
 		return nil, doc, g.retainUntransferredIntrinsic(result, pin, nil)
 	}
@@ -534,7 +539,7 @@ func (g *resourceGraphRun) loadRootfile(p *graphPackage, r *validation.PackageRo
 		resource, base, targetPackage, err = g.importNestedPackage(p, path, data, pin, retrieval, isPrimary, p.depth+1)
 	} else {
 		var doc string
-		resource, doc, err = g.assessVerifiedPackageSource(p, path, data, ProfileSourceLinks, pin)
+		resource, doc, err = g.assessVerifiedPackageSource(p, path, data, g.profiles.source, pin)
 		base = resourceURIBase{RetrievalURI: retrieval, Archive: true, Entry: path}
 		if resource != nil && err == nil {
 			err = g.adoptPackageResource(resource, doc, p.id, base, isPrimary)
@@ -650,7 +655,7 @@ func (g *resourceGraphRun) loadArchiveDocument(item graphExpansion, path string)
 		resource, base, pkg, err := g.importNestedPackage(p, path, data, pin, item.base.RetrievalURI, false, item.depth+1)
 		return resource, base, pkg, unavailable, indirect, err
 	}
-	resource, _, err := g.assessVerifiedPackageSource(p, path, data, ProfileSourceLinks, pin)
+	resource, _, err := g.assessVerifiedPackageSource(p, path, data, g.profiles.source, pin)
 	return resource, resourceURIBase{RetrievalURI: item.base.RetrievalURI, Archive: true, Entry: path}, p.id, unavailable, indirect, err
 }
 func (g *resourceGraphRun) sealPackages() error {

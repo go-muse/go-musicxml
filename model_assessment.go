@@ -79,7 +79,7 @@ func newModelAssessmentRun(ctx context.Context, document Document, config assess
 	if _, err := validationSchemaForDocument(document); err != nil {
 		return nil, err
 	}
-	session, err := config.Engine.Begin(ctx, validation.RunOptions{DocumentID: config.DocumentID, Profile: config.Profile, Account: config.Account})
+	session, err := config.begin(ctx)
 	if err != nil {
 		return nil, err
 	}

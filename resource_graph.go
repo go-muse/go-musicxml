@@ -10,28 +10,43 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
+// resourceIntrinsicProfiles fixes the interpretation of each child assembly for
+// one root run. A child never infers its profile from external data or resets the
+// account. The ordinary bundle is kept separate from opt-in dictionary profiles.
+type resourceIntrinsicProfiles struct {
+	source, model, container, sounds validation.ProfileID
+}
+
+func ordinaryResourceIntrinsicProfiles() resourceIntrinsicProfiles {
+	return resourceIntrinsicProfiles{source: ProfileSourceLinks, model: ProfileModelLinks, container: ProfileSourceContainer, sounds: ProfileSourceSounds}
+}
+
 type resourceGraphRun struct {
-	ctx              context.Context
-	options          resourceRunOptions
-	session          *validation.PackageSession
-	namespace        string
-	sequence         uint64
-	retained         int64
-	cache            map[graphResourceKey]*graphResource
-	pins             map[graphCanonicalKey]validation.ResourcePin
-	expanded         map[graphExpansionKey]bool
-	queue            []graphExpansion
-	packageLeases    []func()
-	fileMetadata     map[graphFileMetadataKey]bool
-	packageList      []*graphPackage
-	packages         map[validation.PackageID]*graphPackage
-	packageContexts  map[graphPackageKey]*graphPackage
-	archives         []*mxlAssessmentArchive
-	resourceBodies   []*assessmentResourceBody
-	packageDocuments map[validation.ResourceAssessmentID]string
-	mxlOptions       MXLOptions
-	mxlExpanded      int64
-	linked           map[graphLinkKey]graphLinkedTarget
+	ctx                   context.Context
+	options               resourceRunOptions
+	profiles              resourceIntrinsicProfiles
+	dictionaries          *validation.DictionarySet
+	dictionaryFingerprint [32]byte
+	dictionaryErr         error
+	session               *validation.PackageSession
+	namespace             string
+	sequence              uint64
+	retained              int64
+	cache                 map[graphResourceKey]*graphResource
+	pins                  map[graphCanonicalKey]validation.ResourcePin
+	expanded              map[graphExpansionKey]bool
+	queue                 []graphExpansion
+	packageLeases         []func()
+	fileMetadata          map[graphFileMetadataKey]bool
+	packageList           []*graphPackage
+	packages              map[validation.PackageID]*graphPackage
+	packageContexts       map[graphPackageKey]*graphPackage
+	archives              []*mxlAssessmentArchive
+	resourceBodies        []*assessmentResourceBody
+	packageDocuments      map[validation.ResourceAssessmentID]string
+	mxlOptions            MXLOptions
+	mxlExpanded           int64
+	linked                map[graphLinkKey]graphLinkedTarget
 }
 
 func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
@@ -43,11 +58,15 @@ func startResourceGraph(ctx context.Context, options LinkedAssessmentOptions, pr
 	if err != nil {
 		return nil, err
 	}
+	return startConfiguredResourceGraph(ctx, cfg, profile, catalog, ordinaryResourceIntrinsicProfiles())
+}
+
+func startConfiguredResourceGraph(ctx context.Context, cfg resourceRunOptions, profile validation.ProfileID, catalog *validation.CompiledPackageCatalog, profiles resourceIntrinsicProfiles) (*resourceGraphRun, error) {
 	namespace, err := newResourceRunIdentity()
 	if err != nil {
 		return nil, err
 	}
-	g := &resourceGraphRun{ctx: ctx, options: cfg, namespace: namespace}
+	g := &resourceGraphRun{ctx: ctx, options: cfg, namespace: namespace, profiles: profiles}
 	if err = g.reserve(2048 + 2*int64(len(namespace)+len(cfg.identity.CanonicalID)+len(cfg.identity.Revision)+len(cfg.identity.RetrievalURI))); err != nil {
 		return nil, err
 	}
@@ -79,6 +98,12 @@ func (g *resourceGraphRun) reserve(n int64) error {
 	return nil
 }
 func (g *resourceGraphRun) close() {
+	// Intrinsic sessions have all finalized before root cleanup; only the root
+	// owns this set. Clearing the pointer prevents a second Close on retry.
+	if g.dictionaries != nil {
+		g.dictionaryErr = joinResourceErrors(g.dictionaryErr, g.dictionaries.Close())
+		g.dictionaries = nil
+	}
 	for i := len(g.archives) - 1; i >= 0; i-- {
 		g.archives[i].Close()
 	}
@@ -119,7 +144,7 @@ func (g *resourceGraphRun) primaryPin(representation validation.ResourceRepresen
 func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error) {
 	b, e := g.session.Finish(g.ctx, validation.PackageCompletion{InputComplete: err == nil, Cause: err})
 	g.close()
-	return b, joinResourceErrors(err, e)
+	return b, joinResourceErrors(joinResourceErrors(err, e), g.dictionaryErr)
 }
 
 // InspectXMLWithResources assesses original MusicXML/Opus bytes and explicitly
@@ -134,12 +159,16 @@ func InspectXMLWithResources(ctx context.Context, reader io.Reader, options Link
 	if err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	engine, err := sourceAssessmentEngineForProfile(ProfileSourceLinks)
+	return g.inspectPrimarySource(reader)
+}
+
+func (g *resourceGraphRun) inspectPrimarySource(reader io.Reader) (validation.AssessmentBundle, error) {
+	engine, err := sourceAssessmentEngineForProfile(g.profiles.source)
 	if err != nil {
 		return g.finish(err)
 	}
 	id := g.next("source")
-	result := assessResourceSource(ctx, reader, sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileSourceLinks, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(g.ctx, reader, sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.source, Engine: engine}, ByteOwner: sourceBytesPrimary})
 	digest := ""
 	if result.DigestComplete {
 		digest = hex.EncodeToString(result.Digest[:])
@@ -159,13 +188,17 @@ func AssessModelWithResources(ctx context.Context, document Document, options Li
 	if err != nil {
 		return validation.AssessmentBundle{}, err
 	}
-	engine, err := modelAssessmentEngineForProfile(ProfileModelLinks)
+	return g.assessPrimaryModel(document)
+}
+
+func (g *resourceGraphRun) assessPrimaryModel(document Document) (validation.AssessmentBundle, error) {
+	engine, err := modelAssessmentEngineForProfile(g.profiles.model)
 	if err != nil {
 		return g.finish(err)
 	}
 	id := g.next("model")
 	pin := g.primaryPin(validation.ResourceCurrentModel, "")
-	result := assessResourceModel(ctx, document, assessmentRunConfig{Account: g.options.account, DocumentID: id, Profile: ProfileModelLinks, Engine: engine})
+	result := assessResourceModel(g.ctx, document, assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.model, Engine: engine})
 	return g.finishPrimary(result, pin, id)
 }
 func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin validation.ResourcePin, id string) (validation.AssessmentBundle, error) {
