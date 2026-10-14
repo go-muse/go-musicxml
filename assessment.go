@@ -119,6 +119,13 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 		}
 		return result, err
 	}
+	return decodeAssessedRun(ctx, run, options.Assessment != nil)
+}
+
+// decodeAssessedRun preserves the single source/parser owner for both the
+// original public API and additive capability wrappers.
+func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, assessed bool) (result DecodeResult, err error) {
+	result.Conversion.State = validation.ConversionIncomplete
 	// The mapping decoder only receives namespace-neutral projected elements and
 	// the existing allowlisted expanded attributes. Its namespace table is empty.
 	projected := &namespaceXMLTokenReader{source: run.source, allowQualifiedAttribute: musicXMLQualifiedAttribute}
@@ -182,7 +189,7 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 		result.Conversion.Findings = run.conversionFinding(result.Conversion.State, conversionLocation, conversionNode)
 	}
 	acceptanceErr := error(nil)
-	if options.Assessment != nil {
+	if assessed {
 		acceptanceErr = sourceAcceptanceError(report)
 	}
 	err = errors.Join(conversionErr, sourceErr, finishErr, acceptanceErr)
@@ -270,7 +277,7 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		} else if config.XMLDepth > 0 && config.XMLDepth < maxDepth {
 			maxDepth = config.XMLDepth
 		}
-		run.session, err = config.Engine.Begin(ctx, validation.RunOptions{DocumentID: run.documentID, Profile: config.Profile, Account: run.account})
+		run.session, err = config.assessmentRunConfig.begin(ctx)
 		if err != nil {
 			return nil, err
 		}

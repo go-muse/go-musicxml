@@ -861,6 +861,239 @@ Clean input EOF can coexist with incomplete XML well-formedness assessment when
 DTD declaration semantics remain unavailable. Context checks cannot interrupt a
 blocking arbitrary `io.Reader.Read`; use cancellable I/O where needed.
 
+## Opt-in pinned dictionaries
+
+The dictionary entry points are additive and require their own explicit profile.
+They do not change `Validate`, ordinary decode/assessment, existing option shapes,
+`validation.RunOptions`, or any old profile's selected rules and catalog digest.
+The full [selected scope](docs/validation/pinned-dictionaries-scope.md) separates
+implemented relations from unresolved obligations; the dated
+[verification record](docs/validation/pinned-dictionaries-evidence.md) is not a
+claim of final integrated acceptance.
+
+### Options and profile composition
+
+`DictionaryOptions` has `Selections []validation.DictionarySelection` and
+`Source DictionarySource`. Each selection supplies one fixed `Manifest` and a
+nonempty, duplicate-free subset of its supported `Relations`. At most four
+manifests may be selected. Unknown manifests/relations, duplicate selections,
+and incompatible profiles are configuration errors, rejected before callbacks.
+Selecting ranges does not implicitly select or open the canonical-name component.
+
+| Entry point | Options and required profile | Result |
+| --- | --- | --- |
+| `InspectXMLWithDictionaries` | `DictionaryAssessmentOptions.Assessment.Profile = ProfileSourceDictionaries` or `ProfileSourceSoundsDictionaries` | `validation.Report` |
+| `AssessModelWithDictionaries` | `DictionaryAssessmentOptions.Assessment.Profile = ProfileModelDictionaries` | `validation.Report` |
+| `DecodeAssessedWithDictionaries` | `DecodeDictionaryAssessmentOptions.Assessment` points to source dictionary options | `DecodeResult` |
+| `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries` | `LinkedDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileResourceGraphDictionaries` | `validation.AssessmentBundle` |
+| `InspectMXLWithDictionaries` | `MXLDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileMXLSourceDictionaries` | `validation.AssessmentBundle` |
+| `AssessMXLPackageWithDictionaries` | `MXLDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileMXLModelDictionaries` | `validation.AssessmentBundle` |
+
+All entry points also return an operation error. Standalone options compose an
+unchanged `AssessmentOptions` with `Dictionaries DictionaryOptions`. Linked/MXL
+options compose the corresponding unchanged resource options with `Dictionaries`.
+`DecodeDictionaryAssessmentOptions` contains `Decode DecodeOptions` and
+`Assessment *DictionaryAssessmentOptions`; nil assessment retains unassessed
+conversion. With an assessment, any conversion, source, dictionary-operation or
+strict acceptance error discards the model and preserves the best source report.
+
+The six new profile IDs are:
+
+- `ProfileSourceDictionaries`: `musicxml-4.0/source-links-dictionaries`
+- `ProfileModelDictionaries`: `musicxml-4.0/model-links-dictionaries`
+- `ProfileSourceSoundsDictionaries`: `musicxml-4.0/source-sounds-dictionaries`
+- `ProfileResourceGraphDictionaries`: `musicxml-4.0/resource-graph-dictionaries`
+- `ProfileMXLSourceDictionaries`: `musicxml-4.0/mxl-source-dictionaries`
+- `ProfileMXLModelDictionaries`: `musicxml-4.0/mxl-model-dictionaries`
+
+Source/model intrinsic profiles extend the bounded XSD/local-link closure with
+exact dictionary consumers and narrow local defaults/range advice. They do not
+require full timeline or context profiles. Sounds extends source-only sounds
+XSD, directional mapping and nonfetching discovery; there is no `SoundsDocument`.
+The graph/MXL catalogs pin source MusicXML/Opus to `ProfileSourceDictionaries`,
+current-model MusicXML/Opus to `ProfileModelDictionaries`, source sounds to
+`ProfileSourceSoundsDictionaries`, and source container to unchanged
+`ProfileSourceContainer`, each with its exact catalog digest. Raw-MXL profiles
+have source intrinsic rows only. Current MXL assesses its primary model directly
+and retains distinct original-source evidence for selected stored children. The
+source-sounds intrinsic catalog row can admit compatible explicitly supplied
+fact-stream snapshots; the root dictionary package catalog constructor is
+private. Public resource-graph and MXL dictionary wrappers do not discover,
+resolve or assess sounds children. Standalone `InspectXMLWithDictionaries`
+accepts `ProfileSourceSoundsDictionaries` for explicit sounds input.
+
+One root imports each selected component at most once and shares its verified
+set and finite account with selected linked XML and nested packages. Package
+snapshot identity includes the actual capability fingerprint, not merely a
+requested edition. The per-run graph cache mirrors this identity defensively;
+its dictionary fingerprint is fixed for the entire run. Reused canonical content
+still has independently owned, document-qualified adoption views, including
+nested dictionary causes and spans. Existing archive limits, resource selections
+and indirection limits still apply. No child resets or widens budgets. These
+profiles do not compose `ProfileSourceInternalDTD` or export source-origin
+snapshots; original-source limitations, including unread external DTDs, remain
+active.
+
+### Caller-supplied transport and sealed data
+
+`DictionarySource.Open(context.Context, DictionaryComponentRequest)` returns
+`(DictionaryComponentResult, error)`. The request fixes the manifest and exact
+`DictionaryComponentPin`; the result must echo it exactly. `EvidenceKnown`
+requires a usable `io.ReadCloser` body and no reason. `EvidenceUnknown` or
+`EvidenceUnsupported` requires a bounded nonempty reason and no body. Empty
+selections invoke no source. Nil and typed-nil sources leave selected capabilities
+unavailable. Do not mutate supplied options or input bytes during their use.
+
+Every usable nonnil returned body transfers ownership, including a body returned
+with an error, and is closed exactly once. Caller-owned primary readers stay
+open. A read or close error prevents accepting a component even if a returned
+prefix matches the pin. The importer bounds reads to the exact length plus an
+extra-byte probe, verifies original bytes before private fixed-corpus parsing,
+and independently verifies the transformed typed identity. The pinned
+`sounds.xml` retains its external DOCTYPE; literal-ID extraction is an exact-pin
+transformation, not a full XML/DTD conformance certificate.
+
+The library never fetches a URL, opens a file, follows redirects, reads a font,
+or loads a DTD for dictionaries. Manifest URLs are provenance, not authorization.
+Caller sources own transport authorization and cancellation of blocked I/O;
+byte verification cannot sandbox I/O a source already performed. Dictionary
+transport is separate from `ResourceResolver` and its four dependency classes.
+
+Core consumers use immutable typed data; they never parse JSON/XML or run
+provider-supplied expressions. `LookupDictionaryManifest` returns owned fixed
+metadata, without loading or activating anything. `NewDictionaryPlan` binds a
+closed `DictionaryOperation` to the reviewed compiled MusicXML or sounds schema;
+it does not select data. Canonical-name and IPA operations are mandatory node
+predicates; standard sounds and rendering are context providers.
+
+For fact-stream clients, `validation.NewDictionarySet(ctx, account, selections,
+imports)` copies and verifies `DictionaryImport` records. A known import has
+exactly one appropriate `SMuFLDictionaryData`, `StandardSoundsDictionaryData` or
+`IPAPositiveDictionaryData` payload, no reason, and optionally a certificate.
+Missing imports remain unavailable. Unavailable imports contain neither data nor
+certificate. Extra/unselected imports, contradictory states and duplicate records
+are rejected; callers cannot assert their own completeness or authoritative hash.
+
+`VerifyDictionaryComponent(ctx, account, componentID, residentBytes)` returns a
+sealed, account-bound `DictionaryComponentCertificate` after exact length/hash
+verification and final cancellation checking. Every failure returns the zero
+certificate. It retains no input and needs no `Close`. It proves that component's
+bytes were verified on that account, not permission to obtain them. The set
+independently hashes copied typed records even with a valid certificate. Zero,
+wrong-component and foreign-account certificates cannot establish known data.
+Without a certificate, matching typed records establish only reviewed-derived
+lineage; they do not claim a raw source was read in this run.
+
+`DictionaryContextResult.ComponentVerified` says whether the selected component
+was certified in this run. `SourceKind` distinguishes an `original-component`
+manifest from a `reviewed-derived-bundle`. For IPA, even `ComponentVerified=true`
+means only that the compact derived bundle was verified, never that the original
+IPA PDF or Unicode source files were read in the run. `DataSHA256` and `Policy`
+identify the compiled reviewed transformation and interpretation.
+
+### Account, lifecycle and concurrent use
+
+A set belongs to exactly one initialized `validation.Account`. Use
+`Engine.BeginWithDictionaries(ctx, RunOptions{Account: account, ...}, set)` with
+that identical account and zero `RunOptions.Budgets`. Nil set delegates to
+ordinary `Begin`. The root wrappers create, share and close their account's set;
+advanced callers own that lifecycle explicitly.
+
+`Account` is concurrency-safe; each `Session` remains single-goroutine. Independent
+sessions may borrow one immutable set concurrently. Do not copy `DictionarySet`
+after first use. Borrow admission linearizes with concurrent `Close`: closing
+rejects new borrows immediately but does not wait for or invalidate already
+admitted sessions. `Close` is idempotent for an initialized set; nil/uninitialized
+sets are errors. Storage is released exactly once when the owner is closed and
+the last session finishes. Failed session initialization releases its borrow.
+Finalize each admitted session exactly once with `Finish` or the selected
+`FinishWithResourceSnapshot` path, including after an event failure. Returned reports
+are owned values and retain no dictionary borrow. `Fingerprint` returns a fixed
+`[32]byte` identity and rejects a closed/uninitialized owner.
+
+The root transport boundary charges external bytes once; resident-byte certificate
+verification adds hashing/scratch work, not another transport charge. One account
+covers parsing, copies, sorted indexes, lookup comparisons, contexts, snapshots,
+result retention and overlapping temporary buffers. Admission precedes allocation;
+work and live-buffer costs remain distinct. Per-item scalar caps also apply to
+derived defaults, nested `Input`/`Effective` values, IPA span text and canonical
+equivalent text before publication. Cleanup releases owned live leases
+only, never cumulative byte/work charges or someone else's storage. Cancellation
+and resource failures are terminal and preserve their causes. Ordinary missing,
+unsupported or mismatched components remain per-capability gaps; an operation
+error can accompany a usable report with independent XSD/family failures retained.
+Always check both the returned error and `Report.Satisfied()` or
+`AssessmentBundle.Satisfied()`.
+
+Runtime import faults are identifiable with
+`errors.Is(err, ErrDictionaryUnavailable)`; `errors.As` can match the
+`*DictionaryImportError` wrapper.
+`DictionaryImportError` exposes `Manifest`, a fixed phase `Reason`, and the
+original `Err` through `Unwrap`. Provider, read and close causes remain
+inspectable through `errors.Is`/`errors.As`; response, length and digest faults
+also use this runtime classification. Options, profile and account misuse stay
+`validation.ConfigurationError`. Direct misuse of
+`validation.VerifyDictionaryComponent` keeps that configuration contract;
+only the root importer's own verification mismatch is translated. If a callback
+itself returns a `ConfigurationError`, that original cause remains inspectable.
+Actual cancellation, deadline and resource failures, including joined close
+failures, remain terminal rather than being relabeled unavailable.
+
+### Default-budget boundary
+
+Selecting dictionaries does not raise the finite defaults. In the repeated-rest/
+accidental fixture measured for the Round 1 correction, all four components are
+imported before assessment. Standalone source/model completes at 368 notes and
+refuses at 369; graph and raw/current MXL complete operational enumeration at
+363 and refuse at 364 on the unchanged 20,000,000-rule-step cap. Current-model
+bundles retain their independent schema-hint unknown below that boundary.
+The earlier published `a772914` observations were 320/321 and 316/317;
+[the dated evidence][dictionary-budget-evidence] preserves both measurements.
+These are fixture-specific observations, not supported note-count capacities.
+Exhaustion is incomplete assessment, not musical invalidity or B5-PERF-01 closure.
+
+Import work is deliberately conservative. Selecting every relation of one
+component costs 2,635,787 steps for canonical names/codepoints, 1,735,474 for
+ranges, 435,365 for sounds, or 210,493 for IPA. Selecting all four in one run
+costs 5,016,969 steps; shared setup means that this is not the sum of four
+independent runs. `TestDictionaryImportPinnedWorkCosts` records the
+exact normal-read fixture and selection. Short or empty provider reads add work.
+The decoder's `6*rawBytes+1024` reservation is a logical envelope for scanning,
+escape/UTF-8 checks, copies, token and row operations, not a measured pass count.
+
+[dictionary-budget-evidence]: docs/validation/pinned-dictionaries-evidence.md#default-budget-observations
+
+### Evidence and compatibility
+
+`ContextResult` gains `Dictionary *DictionaryContextResult` with JSON
+`omitempty`. External **unkeyed `ContextResult` literals must migrate to keyed
+literals** because this adds a public struct field; it is not source-compatible
+for positional construction. Existing keyed literals need no new field, and nil
+payloads preserve old report JSON. Existing option structs and `RunOptions` do
+not gain fields. Dictionary projections, nested evidence, attribute selectors,
+spans and causes are independently owned through report/snapshot getters and
+occurrence remapping.
+
+The properties `ContextDictionaryCanonical`, `ContextDictionarySounds`,
+`ContextDictionaryIPA`, `ContextDictionaryRendering` and `ContextDictionaryAdvice`
+separate canonical membership, open-string recognition, partial IPA evidence,
+local facts and advice. `Input` retains assessed scalar evidence; `Attribute=nil`
+denotes element content. `Codepoint` is independently gated by the selected
+`primary-codepoint` relation; a known codepoint cannot substitute for the required
+`canonical-name` relation. IPA spans use UTF-8 byte offsets and retain exact empty
+or unknown text, reviewed row IDs and selected canonical equivalents. Known
+positive atoms/examples do not make `WholeSequence` known. Unlisted IPA input
+is unknown, not false; a present `<ipa>` keeps the complete-repertoire/sequence
+predicate unavailable even when every selected atom is attested. No pronunciation
+correctness, general normalization or linguistic plausibility is inferred.
+
+SMuFL canonical membership is exact after independent XSD normalization and
+scalar assessment. It does not replace the six MusicXML prefix-family facets,
+and missing data cannot suppress their known failures. Present inactive-rendering
+attributes remain assessed. Standard-sound nonmembership means nonstandard, not
+invalid MusicXML; strings remain open. The separate source/data licenses and full
+remaining IPA/semantic gates are documented in the selected scope.
+
 ## MXL packages
 
 `MXLPackage.RootFiles[0]` identifies `Document`. `Resources` contains every

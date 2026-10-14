@@ -29,11 +29,15 @@ func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessm
 		return validation.AssessmentBundle{}, err
 	}
 	g.mxlOptions = options.MXL
-	p, err := g.newPackage(g.primaryPin(validation.ResourceCurrentMXL, ""), "", options.Identity.RetrievalURI, nil)
+	return g.assessCurrentPackage(value)
+}
+
+func (g *resourceGraphRun) assessCurrentPackage(value *MXLPackage) (validation.AssessmentBundle, error) {
+	p, err := g.newPackage(g.primaryPin(validation.ResourceCurrentMXL, ""), "", g.options.identity.RetrievalURI, nil)
 	if err != nil {
 		return g.finish(err)
 	}
-	err = g.importCurrentPackage(p, value, options.Identity.RetrievalURI)
+	err = g.importCurrentPackage(p, value, g.options.identity.RetrievalURI)
 	if err == nil {
 		err = g.walkResources()
 	}
@@ -141,13 +145,13 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 	}
 	p.entriesComplete = packageKnown(true)
 	p.rootsComplete = packageKnown(true)
-	engine, err := modelAssessmentEngineForProfile(ProfileModelLinks)
+	engine, err := modelAssessmentEngineForProfile(g.profiles.model)
 	if err != nil {
 		return err
 	}
 	doc := g.next("model")
 	pin := g.entryPin(p, primaryPath, "", validation.ResourceCurrentModel)
-	intrinsic := assessResourceModel(g.ctx, value.Document, assessmentRunConfig{Account: g.options.account, DocumentID: doc, Entry: primaryPath, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: ProfileModelLinks, Engine: engine})
+	intrinsic := assessResourceModel(g.ctx, value.Document, assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: doc, Entry: primaryPath, XMLDepth: g.intrinsicXMLDepth(p.id), Profile: g.profiles.model, Engine: engine})
 	if intrinsic.Snapshot == nil {
 		return g.retainUntransferredIntrinsic(intrinsic, pin, nil)
 	}
@@ -155,7 +159,7 @@ func (g *resourceGraphRun) importCurrentPackage(p *graphPackage, value *MXLPacka
 	if err != nil {
 		return g.retainUntransferredIntrinsic(intrinsic, pin, err)
 	}
-	primary, err := g.cacheResource(pin, ProfileModelLinks, id, intrinsic.XMLDepth, intrinsic.Err == nil)
+	primary, err := g.cacheResource(pin, g.profiles.model, id, intrinsic.XMLDepth, intrinsic.Err == nil)
 	if err != nil {
 		return errors.Join(intrinsic.Err, err)
 	}

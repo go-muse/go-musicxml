@@ -44,7 +44,7 @@ func (g *resourceGraphRun) observePackageRoles() error {
 			if err := g.packageMetadataStep(); err != nil {
 				return err
 			}
-			if item.pkg == p.id && item.base.Archive && item.base.Entry != "" && (item.resource.profile == ProfileSourceLinks || item.resource.profile == ProfileModelLinks) {
+			if item.pkg == p.id && item.base.Archive && item.base.Entry != "" && (item.resource.profile == g.profiles.source || item.resource.profile == g.profiles.model) {
 				relevant = true
 			}
 		}

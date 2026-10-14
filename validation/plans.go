@@ -47,6 +47,7 @@ const (
 type Plan struct {
 	sourceAssembly   Assembly
 	context          *contextPlan
+	dictionary       *dictionaryPlan
 	timeline         *timelinePlan
 	timelineConsumer *timelineConsumerPlan
 	modelAssembly    Assembly
@@ -146,6 +147,8 @@ func (p Plan) valid() error {
 		return contract("plan", "parameters exceed the finite configuration bound")
 	}
 	switch p.kind {
+	case planDictionary:
+		return p.dictionary.valid()
 	case planSourceOrigin:
 		if !validAssembly(p.sourceAssembly) {
 			return contract("source origin assembly", "exact supported assembly required")
@@ -227,6 +230,7 @@ func validateComparison(c Comparison, a Atomic) error {
 }
 func (p Plan) clone() Plan {
 	p.context = p.context.clone()
+	p.dictionary = p.dictionary.clone()
 	p.timeline = p.timeline.clone()
 	p.timelineConsumer = p.timelineConsumer.clone()
 	p.local = p.local.clone()
@@ -257,6 +261,9 @@ func (p Plan) clone() Plan {
 	return p
 }
 func (p Plan) validateFor(r RuleDefinition) error {
+	if p.kind == planDictionary {
+		return p.dictionary.validateFor(r)
+	}
 	if p.kind == planSourceOrigin {
 		return p.validateSourceOriginFor(r)
 	}
@@ -322,6 +329,9 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	return nil
 }
 func (p Plan) digestValue() any {
+	if p.kind == planDictionary {
+		return p.dictionary.digest()
+	}
 	if p.kind == planSourceOrigin {
 		return struct {
 			Kind     planKind
@@ -383,7 +393,7 @@ func (p Plan) digestValue() any {
 	}{p.kind, p.children, p.minimum, p.maximum, p.attribute, p.required, p.comparison, a, p.key, p.relation}
 }
 func (p Plan) configSize() int64 {
-	n := p.context.size() + p.timeline.size() + p.timelineConsumer.size() + p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
+	n := p.dictionary.size() + p.context.size() + p.timeline.size() + p.timelineConsumer.size() + p.reference.size() + p.local.size() + int64(256+len(p.key)+len(p.attribute.Name.Space)+len(p.attribute.Name.Local)+len(p.attribute.Declaration.OwnerOccurrence)+len(p.attribute.Declaration.Occurrence)+len(p.expected.Text)+len(p.expected.Name.Space)+len(p.expected.Name.Local)) + p.expected.Integer.ByteSize() + p.expected.Decimal.ByteSize()
 	for _, d := range p.children {
 		n += int64(64 + len(d.OwnerOccurrence) + len(d.Occurrence))
 	}

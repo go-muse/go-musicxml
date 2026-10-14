@@ -18,9 +18,20 @@ type assessmentRunConfig struct {
 	Entry      string
 	Profile    validation.ProfileID
 	Engine     *validation.Engine
+	// Dictionaries is one root-owned, same-account capability set. Nil keeps
+	// the historical session path and performs no dictionary work.
+	Dictionaries *validation.DictionarySet
 	// XMLDepth is an independent per-document representation cap. Zero leaves
 	// inspection governed only by the shared account; MXL supplies its default.
 	XMLDepth int
+}
+
+func (c assessmentRunConfig) begin(ctx context.Context) (*validation.Session, error) {
+	opts := validation.RunOptions{DocumentID: c.DocumentID, Profile: c.Profile, Account: c.Account}
+	if c.Dictionaries != nil {
+		return c.Engine.BeginWithDictionaries(ctx, opts, c.Dictionaries)
+	}
+	return c.Engine.Begin(ctx, opts)
 }
 
 func assessmentContext(ctx context.Context, reason validation.Code) error {
@@ -68,6 +79,8 @@ func (c assessmentRunConfig) validate(target validation.Target) error {
 
 func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation.Engine, error) {
 	switch profile {
+	case ProfileSourceDictionaries, ProfileSourceSoundsDictionaries:
+		return newDictionaryAssessmentEngine()
 	case ProfileSourceContainer, ProfileSourceSounds:
 		return newAuxiliarySourceAssessmentEngine()
 	case ProfileSourceXSDPreview:
@@ -89,6 +102,8 @@ func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation
 
 func modelAssessmentEngineForProfile(profile validation.ProfileID) (*validation.Engine, error) {
 	switch profile {
+	case ProfileModelDictionaries:
+		return newDictionaryAssessmentEngine()
 	case ProfileModelXSD, ProfileModelLocal:
 		return newModelAssessmentEngine()
 	case ProfileModelTimeline:

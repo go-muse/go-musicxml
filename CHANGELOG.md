@@ -9,6 +9,15 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Classify dictionary provider, response, transport and verification failures as
+  runtime dictionary unavailability, exposing `ErrDictionaryUnavailable` and
+  `DictionaryImportError` with preserved original causes. Configuration misuse
+  retains its separate contract; cancellation/resource failures remain terminal.
+
+- Pin the reviewed IPA mapping-aid omissions and clarify historical license-page
+  byte observations and effective license URLs without changing runtime data.
+  Distributed dictionary attributions are nonprovisional notices.
+
 - Classify EOF inside unfinished XML markup as a syntax error in the shared
   source reader, preserving the cause through ordinary and assessed decode and
   rejecting truncated processing instructions after an otherwise complete root.
@@ -30,6 +39,32 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   for the established assembly; selection remains separate from scope completion.
 
 ### Added
+
+- Add opt-in pinned dictionary assessment for original XML, current models,
+  selected resource graphs and original/current MXL packages. Six explicit new
+  profiles share one verified immutable dictionary set and finite root account;
+  old profiles, option shapes and default behavior remain unchanged. The
+  source-sounds intrinsic row admits compatible explicitly supplied snapshots;
+  public graph/MXL wrappers do not discover or assess sounds children. Standalone
+  dictionary XML inspection supports explicit sounds input.
+
+- Add exact SMuFL 1.4 canonical-name evidence alongside independent MusicXML
+  family facets, narrow rendering/default advice, open-string MusicXML 4.0
+  standard-sound recognition and explicitly partial IPA 2015/Unicode 13 positive
+  evidence. Full IPA repertoire/sequence validity and general glyph semantics
+  remain unavailable; no dictionary, font or DTD is fetched implicitly.
+
+- Add sealed component certificates, typed `DictionarySet` construction and
+  same-account `Engine.BeginWithDictionaries` leases with concurrent-safe owner
+  close, bounded caller-supplied transport and owned occurrence projections.
+  Raw-source certification remains distinct from reviewed-derived IPA lineage.
+
+- Add `ContextResult.Dictionary` with `omitempty`. External unkeyed literals of
+  `ContextResult` must migrate to keyed literals; old nil-payload report JSON is
+  unchanged. Dictionary data retain their separately documented upstream licenses.
+  See the [scope](docs/validation/pinned-dictionaries-scope.md) and
+  [verification checkpoint](docs/validation/pinned-dictionaries-evidence.md);
+  these additions do not claim final integrated or release acceptance.
 
 - `ErrEntityNestingLimit` identifies the bounded internal-DTD named-entity
   nesting refusal while preserving its typed resource error.

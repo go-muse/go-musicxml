@@ -30,3 +30,35 @@ Files under `testdata/official` come from the
 and the
 [MusicXML 4.0 opus reference](https://www.w3.org/2021/06/musicxml40/opus-reference/examples/).
 Embedded copyright and rights statements are preserved.
+
+## Pinned SMuFL 1.4 and MusicXML 4.0 dictionary data
+
+The original glyph-name and range fixtures under
+`testdata/dictionaries/smufl-1.4` derive from Standard Music Font Layout
+(SMuFL), version 1.4, copyright © 2021 its contributors. The original
+`testdata/dictionaries/musicxml-4.0/sounds.xml` derives from MusicXML,
+version 4.0, copyright © 2004–2021 its contributors. These specifications
+are published by the W3C Music Notation Community Group under the
+[W3C Community Final Specification Agreement](https://www.w3.org/community/about/agreements/final/).
+
+Their source bytes, generated dictionary identities and relation data retain
+these upstream attributions and terms. Exact source commits, source URLs and
+transformation boundaries are in
+[testdata/dictionaries/NOTICES.txt](testdata/dictionaries/NOTICES.txt).
+The library's MIT code license does not replace these data terms. No font
+program or glyph artwork is included.
+
+## Partial IPA positive-evidence data
+
+The data under `testdata/dictionaries/ipa-positive` are separately licensed
+under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+They derive from selected symbols and examples on the International Phonetic
+Association's 2015 chart (originally CC BY-SA 3.0), explicit encoding assistance
+from its 2026 Doulos symbol list (CC BY-SA 4.0), and Unicode 13 data.
+The original source attributions, modification description, license links and
+Unicode permission notice are preserved in
+[testdata/dictionaries/ipa-positive/NOTICES.txt](testdata/dictionaries/ipa-positive/NOTICES.txt)
+and the adjacent Unicode license file. The full positive ledger and source
+pins accompany the compact runtime representation. These data are not covered
+by the library code's MIT license. Preserve their notices when distributing
+these data or generated equivalents. No chart artwork or font is bundled.

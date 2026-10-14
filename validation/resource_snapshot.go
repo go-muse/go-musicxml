@@ -47,14 +47,16 @@ type resourceLeaseOwner struct{ marker byte }
 // and Close. Getters return caller-owned copies, never mutable backing storage.
 // After Close, header/count getters are zero and content getters reject access.
 type ResourceSnapshot struct {
-	header   ResourceSnapshotHeader
-	report   Report
-	contexts []ContextResult
-	ids      []ResourceIDFact
-	account  *Account
-	retained int64
-	closed   bool
-	owner    *resourceLeaseOwner
+	// Private cache identity is bound to the admitted session, not an editable report.
+	dictionary [32]byte
+	header     ResourceSnapshotHeader
+	report     Report
+	contexts   []ContextResult
+	ids        []ResourceIDFact
+	account    *Account
+	retained   int64
+	closed     bool
+	owner      *resourceLeaseOwner
 }
 
 // FinishWithResourceSnapshot is an alternate terminal finalizer. It evaluates
@@ -163,7 +165,7 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if err = s.account.Charge(BudgetBufferedBytes, size); err != nil {
 		return nil, err
 	}
-	out := &ResourceSnapshot{header: stateClone(h), report: stateClone(report), ids: stateClone(ids), account: s.account, retained: size, contexts: make([]ContextResult, 0, count)}
+	out := &ResourceSnapshot{dictionary: s.dictionaryFingerprint(), header: stateClone(h), report: stateClone(report), ids: stateClone(ids), account: s.account, retained: size, contexts: make([]ContextResult, 0, count)}
 	for _, v := range report.Context {
 		if resourceSelectedContext(v.Property) {
 			out.contexts = append(out.contexts, stateClone(v))
@@ -173,6 +175,9 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 }
 
 func resourceSelectedContext(p ContextProperty) bool {
+	if dictionaryPropertyValid(p) {
+		return true
+	}
 	switch string(p) {
 	case "container.metadata", "resource.link", "resource.image", "resource.schema-hints", "resource.group", "resource.instrument", "sounds.mapping", "layout.opus-version", "layout.opus-new-page":
 		return true
