@@ -83,11 +83,15 @@ func dictionaryIPARepresentationNode(r *contextReader, n *factNode, key RuleKey,
 	out.WholeSequence = out.Result
 	// Normalized leaves may be discontiguous and share one raw scalar interval.
 	// Publish the one exact raw interval, never fabricated contiguous atom spans.
-	span := DictionarySpan{Start: 0, End: uint64(len(input.Value.Text)), Text: input.Value.Text, Result: out.Result, Category: "whole-representation"}
-	if err := contextRetainProjection(r.ctx, r.s, span); err != nil {
-		return legacy, err
+	// Missing or non-string scalar evidence has no raw string interval to project.
+	// A known string with missing capability still retains its genuine interval.
+	if input.State == EvidenceKnown && input.Value.Kind == AtomicString {
+		span := DictionarySpan{Start: 0, End: uint64(len(input.Value.Text)), Text: input.Value.Text, Result: out.Result, Category: "whole-representation"}
+		if err := contextRetainProjection(r.ctx, r.s, span); err != nil {
+			return legacy, err
+		}
+		out.Spans = []DictionarySpan{span}
 	}
-	out.Spans = []DictionarySpan{span}
 	decision := evidenceDecision(out.WholeSequence.State, out.WholeSequence.Reason, out.WholeSequence.Cause, false)
 	return decision, dictionaryPublish(r, n, key, ContextDictionaryIPARepresentation, out)
 }
