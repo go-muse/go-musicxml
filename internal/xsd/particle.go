@@ -93,7 +93,7 @@ func (m *ParticleMatcher) Run(p *ParticleSchema, start int) (MatchResult, MatchF
 }
 
 // This structural guard is not a complete XSD schema-validity or UPA checker.
-// In particular wildcard namespace/processContents support remains unchanged.
+// Target-dependent wildcard namespaces and lax/strict lookup remain unavailable.
 func (m *ParticleMatcher) Prepare(p *ParticleSchema, active map[*ParticleSchema]bool) bool {
 	m.Context.step(1)
 	if p == nil || active[p] {
@@ -120,6 +120,9 @@ func (m *ParticleMatcher) Prepare(p *ParticleSchema, active map[*ParticleSchema]
 		}
 	case ParticleAny:
 		if p.Any == nil || p.Element != nil || len(p.Children) != 0 {
+			return false
+		}
+		if m.Context.local != nil && (!wildcardNamespace(p.Any.Namespace, "", m.Context).valid || !wildcardProcessValid(p.Any.ProcessContents)) {
 			return false
 		}
 	case ParticleSequence, ParticleChoice, ParticleAll:
@@ -366,11 +369,12 @@ func (m *ParticleMatcher) Body(p *ParticleSchema, start int) ParticleEndpoints {
 			result.Failure.Expected = []QName{e.Name}
 		}
 	case ParticleAny:
-		// Preserve the legacy wildcard behavior. Namespace and processContents
-		// semantics need their separate support contract; this repair does not
-		// advertise that they have been verified.
 		if start < len(m.Children) {
-			result.Ends = m.Singleton(start + 1)
+			// Unavailable target-dependent tests conservatively retain possible
+			// endpoints. Only a selected witness records that capability gap.
+			if m.Context.local == nil || wildcardNamespace(p.Any.Namespace, m.Children[start].Name.Space, m.Context).allowed {
+				result.Ends = m.Singleton(start + 1)
+			}
 		}
 	case ParticleChoice:
 		var ends ParticlePositionSet
@@ -591,6 +595,7 @@ func (m *ParticleMatcher) BodyWitness(p *ParticleSchema, start, end int, element
 		return end == start+1
 	case ParticleAny:
 		if m.Context.local != nil {
+			m.Context.noteWildcardAdmission(wildcardNamespace(p.Any.Namespace, m.Children[start].Name.Space, m.Context), p.Any.ProcessContents)
 			*elements = appendRetained(m.Context, *elements, ElementMatch{Index: start, Particle: p})
 		}
 		return end == start+1

@@ -116,6 +116,12 @@ func (c *Context) AssessBuiltinValue(name, value, display string) (SimpleAssessm
 		}
 		return SimpleAssessment{}, failure
 	}
+	if name == "QName" && c.local != nil {
+		// Lexical syntax has already been checked. General instance/default/schema
+		// literal namespace contexts are not interchangeable; do not infer a value
+		// from prefix spelling. xsi:type has its separate subject-scope resolver.
+		return SimpleAssessment{}, c.IncompleteFailure("ordinary QName namespace-value assessment is unavailable")
+	}
 	if entityBuiltin(name) && !c.sourceDeclarations {
 		return SimpleAssessment{}, c.IncompleteFailure(format(c, "unparsed entity declarations are unavailable for xs:%s", name))
 	}

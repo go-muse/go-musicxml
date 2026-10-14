@@ -1360,6 +1360,17 @@ func (c *Context) AssessSimpleValue(
 		return SimpleAssessment{}, &SimpleFailure{Constraint: "schema", Message: "simple type cannot be resolved"}
 	}
 	value = semantics.normalize(value, c)
+	// These atomic families have guarded value/context operations. Their
+	// primitive lexical syntax and each restriction's pattern can nevertheless
+	// reject a value independently, including outside an unavailable base bound.
+	lexicalPrecheck := c.local != nil && semantics.List == nil && semantics.Union == nil && guardedAtomicBuiltin(semantics.Builtin)
+	listPrecheck := c.local != nil && semantics.List != nil && c.memberHasGuardedAtomic(semantics.List.Item)
+	unionPrecheck := c.local != nil && schema.Form == SimpleRestriction && semantics.Union != nil && len(schema.Patterns) != 0 && c.unionHasGuardedAtomic(semantics.Union)
+	if listPrecheck {
+		if failure := c.precheckListLexical(semantics.List.Item, value); failure != nil {
+			return SimpleAssessment{}, failure
+		}
+	}
 	// Direct ENTITY/ENTITIES restriction chains first establish lexical/facet
 	// validity. The document-domain prerequisite cannot hide an independent facet
 	// failure, and only the outermost restriction performs its membership check.
@@ -1384,6 +1395,26 @@ func (c *Context) AssessSimpleValue(
 	}
 	switch schema.Form {
 	case SimpleRestriction:
+		if unionPrecheck {
+			if failure := rejectUnionPattern(schema, value, display, c); failure != nil {
+				return SimpleAssessment{}, failure
+			}
+		}
+		if lexicalPrecheck {
+			if failure := validateBuiltinValue(semantics.Builtin, value, display, c); failure != nil {
+				return SimpleAssessment{}, failure
+			}
+		}
+		if lexicalPrecheck || listPrecheck {
+			if failure := validatePatternFacets(schema, value, display, c); failure != nil {
+				return SimpleAssessment{}, failure
+			}
+		}
+		if listPrecheck {
+			if failure := validateLengthFacets(schema, value, true, "", c); failure != nil {
+				return SimpleAssessment{}, failure
+			}
+		}
 		assessment, failure := c.AssessSimpleMemberValue(schema.Base, value, display)
 		if failure != nil {
 			return SimpleAssessment{}, failure
@@ -1405,44 +1436,23 @@ func (c *Context) AssessSimpleValue(
 			}
 		}
 
-		// Patterns in one restriction are alternatives; the base assessment above
-		// preserves intersection across restriction layers. Check every alternative
-		// so an earlier match or miss cannot conceal an invalid generated pattern.
-		patternsMatched := len(schema.Patterns) == 0
-		for _, pattern := range schema.Patterns {
-			c.step(1)
-			matched, err := matchPattern(pattern, normalized, c)
-			if err != nil {
-				return SimpleAssessment{}, &SimpleFailure{
-					Constraint: "schema",
-					Message: format(c,
-						"invalid generated XSD pattern %q: %v",
-						pattern,
-						err,
-					),
-				}
+		if !lexicalPrecheck && !listPrecheck {
+			if failure := validatePatternFacets(schema, normalized, display, c); failure != nil {
+				return SimpleAssessment{}, failure
 			}
-			patternsMatched = patternsMatched || matched
-		}
-		if !patternsMatched {
-			var message string
-			if len(schema.Patterns) == 1 {
-				message = format(c, "value %q does not match XSD pattern %q", display, schema.Patterns[0])
-			} else {
-				message = format(c, "value %q does not match any XSD pattern in %q", display, schema.Patterns)
-			}
-			return SimpleAssessment{}, &SimpleFailure{Constraint: "pattern", Message: message}
 		}
 
 		if failure := validateBoundsValue(schema, normalized, builtin, display, c); failure != nil {
 			return SimpleAssessment{}, failure
 		}
-		if failure := validateLengthFacets(
-			schema,
-			normalized,
-			c.SimpleMemberList(schema.Base),
-			c); failure != nil {
-			return SimpleAssessment{}, failure
+		if !listPrecheck {
+			if failure := validateLengthFacets(
+				schema,
+				normalized,
+				c.SimpleMemberList(schema.Base),
+				builtin, c); failure != nil {
+				return SimpleAssessment{}, failure
+			}
 		}
 		if failure := validateDigitFacets(schema, normalized, builtin, c); failure != nil {
 			return SimpleAssessment{}, failure
@@ -1706,7 +1716,7 @@ func validateBuiltinValue(name, value, display string, c *Context) *SimpleFailur
 			normalized == "NaN" {
 			return nil
 		}
-		if _, err := strconv.ParseFloat(normalized, 64); err == nil {
+		if scalarPatternMatch(floatPattern, normalized, c) {
 			return nil
 		}
 
@@ -1718,7 +1728,7 @@ func validateBuiltinValue(name, value, display string, c *Context) *SimpleFailur
 		}
 
 	case "base64Binary":
-		if scalarPatternMatch(Base64Pattern, normalized, c) {
+		if _, valid := binaryLexicalLength(name, normalized, c); valid {
 			return nil
 		}
 
@@ -1865,6 +1875,50 @@ func IsWhitespace(value rune) bool {
 	return strings.ContainsRune(XMLWhitespace, value)
 }
 
+// These guards are capability boundaries, not a declaration that their
+// lexical spaces or independently rejecting patterns are unavailable.
+func guardedAtomicBuiltin(builtin string) bool {
+	switch builtin {
+	case "QName", "float", "double", "date", "dateTime", "duration", "gDay", "gMonth", "gMonthDay", "gYear", "gYearMonth", "time":
+		return true
+	default:
+		return false
+	}
+}
+
+func validatePatternFacets(schema *SimpleSchema, normalized, display string, c *Context) *SimpleFailure {
+	// Patterns in one restriction are alternatives; the base assessment above
+	// preserves intersection across restriction layers. Check every alternative
+	// so an earlier match or miss cannot conceal an invalid generated pattern.
+	patternsMatched := len(schema.Patterns) == 0
+	for _, pattern := range schema.Patterns {
+		c.step(1)
+		matched, err := matchPattern(pattern, normalized, c)
+		if err != nil {
+			return &SimpleFailure{
+				Constraint: "schema",
+				Message: format(c,
+					"invalid generated XSD pattern %q: %v",
+					pattern,
+					err,
+				),
+			}
+		}
+		patternsMatched = patternsMatched || matched
+	}
+	if !patternsMatched {
+		var message string
+		if len(schema.Patterns) == 1 {
+			message = format(c, "value %q does not match XSD pattern %q", display, schema.Patterns[0])
+		} else {
+			message = format(c, "value %q does not match any XSD pattern in %q", display, schema.Patterns)
+		}
+		return &SimpleFailure{Constraint: "pattern", Message: message}
+	}
+
+	return nil
+}
+
 func ValidateBounds(
 	schema *SimpleSchema,
 	value string,
@@ -1891,6 +1945,18 @@ func validateBoundsValue(schema *SimpleSchema, value, builtin, display string, c
 	}
 	if builtin == "decimal" {
 		return validateDecimalBounds(schema, value, display, c)
+	}
+
+	// Only the exact integer/decimal ordering operations are elected here.
+	// Keep unsupported value-space comparisons technical after lexical checks;
+	// the old compatibility Context has no controlled capability channel.
+	if c != nil && c.local != nil {
+		switch builtin {
+		case "float", "double", "date", "dateTime", "duration", "gDay", "gMonth", "gMonthDay", "gYear", "gYearMonth", "time":
+			return c.IncompleteFailure(format(c, "ordered bounds are unavailable for xs:%s", builtin))
+		default:
+			return &SimpleFailure{Constraint: "schema", Message: format(c, "ordered bounds are not applicable to xs:%s", builtin)}
+		}
 	}
 
 	c.bytes(len(value))
@@ -1957,9 +2023,9 @@ func validateBoundsValue(schema *SimpleSchema, value, builtin, display string, c
 }
 
 func ValidateLengthFacets(schema *SimpleSchema, value string, list bool) *SimpleFailure {
-	return validateLengthFacets(schema, value, list, nil)
+	return validateLengthFacets(schema, value, list, "", nil)
 }
-func validateLengthFacets(schema *SimpleSchema, value string, list bool, c *Context) *SimpleFailure {
+func validateLengthFacets(schema *SimpleSchema, value string, list bool, builtin string, c *Context) *SimpleFailure {
 	c.step(1)
 
 	if !schema.HasLength &&
@@ -1973,6 +2039,12 @@ func validateLengthFacets(schema *SimpleSchema, value string, list bool, c *Cont
 	c.step(0)
 	if list {
 		length = uint64(len(splitList(value, c)))
+	} else if builtin == "hexBinary" || builtin == "base64Binary" {
+		var valid bool
+		length, valid = binaryLexicalLength(builtin, value, c)
+		if !valid {
+			return &SimpleFailure{Constraint: "datatype", Message: "invalid binary lexical value"}
+		}
 	}
 
 	switch {
@@ -2274,6 +2346,12 @@ func anyAttributeAllows(schema *AnyAttributeSchema, name QName, c *Context) bool
 	if schema == nil {
 		return false
 	}
+	if c != nil && c.local != nil {
+		admission := wildcardNamespace(schema.Namespace, name.Space, c)
+		c.noteWildcardAdmission(admission, schema.ProcessContents)
+		// Unknown or invalid schema metadata cannot establish an instance error.
+		return admission.allowed || !admission.known || !admission.valid || !wildcardProcessValid(schema.ProcessContents)
+	}
 	switch schema.Namespace {
 	case "", "##any":
 		return true
@@ -2427,6 +2505,9 @@ var (
 	)
 	DecimalPattern = regexp.MustCompile(
 		`^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)$`,
+	)
+	floatPattern = regexp.MustCompile(
+		`^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$`,
 	)
 	Base64Pattern = regexp.MustCompile(
 		`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`,
