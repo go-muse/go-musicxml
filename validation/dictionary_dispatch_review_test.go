@@ -133,3 +133,45 @@ func TestDictionaryRelevanceObservesCancellationAndQuota(t *testing.T) {
 		}
 	}
 }
+
+// The candidate switch is a fast superset filter for the authoritative plan
+// list. A newly reviewed type must never be silently filtered out before the
+// exact ComponentID check in dictionaryCanonicalNode.
+func TestDictionaryAssessedTypeCandidateCoversPlanNames(t *testing.T) {
+	if len(dictionarySMuFLTypeNames) == 0 {
+		t.Fatal("dictionary plan type list must not be empty")
+	}
+	seen := make(map[string]bool, len(dictionarySMuFLTypeNames))
+	for _, name := range dictionarySMuFLTypeNames {
+		if name == "" || seen[name] {
+			t.Fatalf("empty or duplicate dictionary plan type: %q", name)
+		}
+		seen[name] = true
+		t.Run(name, func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			r := &contextReader{ctx: context.Background(), s: s}
+			candidate := dictionarySMuFLTypeCandidate(r, contextNamedType(name))
+			if r.err != nil {
+				t.Fatal(r.err)
+			}
+			if !candidate {
+				t.Fatalf("reviewed plan type %q is excluded by candidate filter", name)
+			}
+		})
+	}
+	for _, name := range []string{"", "string", "smufl", "Smufl-glyph-name", "smufl-glyph-name-extra"} {
+		t.Run("unrelated/"+name, func(t *testing.T) {
+			s := rationalSession(t, Budgets{})
+			defer s.cleanup()
+			r := &contextReader{ctx: context.Background(), s: s}
+			candidate := dictionarySMuFLTypeCandidate(r, contextNamedType(name))
+			if r.err != nil {
+				t.Fatal(r.err)
+			}
+			if candidate {
+				t.Fatalf("unrelated type %q admitted as candidate", name)
+			}
+		})
+	}
+}
