@@ -48,16 +48,16 @@ type resourceLeaseOwner struct{ marker byte }
 // After Close, header/count getters are zero and content getters reject access.
 type ResourceSnapshot struct {
 	// Private cache identity is bound to the admitted session, not an editable report.
-	dictionary  [32]byte
-	fragments   *resourceFragmentSnapshot
-	header      ResourceSnapshotHeader
-	report      Report
-	contexts    []ContextResult
-	ids         []ResourceIDFact
-	account     *Account
-	retained    int64
-	closed      bool
-	owner       *resourceLeaseOwner
+	dictionary [32]byte
+	fragments  *resourceFragmentSnapshot
+	header     ResourceSnapshotHeader
+	report     Report
+	contexts   []ContextResult
+	ids        []ResourceIDFact
+	account    *Account
+	retained   int64
+	closed     bool
+	owner      *resourceLeaseOwner
 }
 
 // FinishWithResourceSnapshot is an alternate terminal finalizer. It evaluates
@@ -202,7 +202,6 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 		if err = resourceCopyInto(ctx, reflect.ValueOf(&out.fragments).Elem(), reflect.ValueOf(fragments), "", ""); err != nil {
 			return nil, err
 		}
-	}
 	}
 	out.contexts = make([]ContextResult, count)
 	at := 0
