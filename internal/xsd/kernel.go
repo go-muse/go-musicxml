@@ -255,6 +255,8 @@ type EffectiveComplex struct {
 	AnyAttribute *AnyAttributeSchema
 	Simple       *TypeRef
 	Mixed        bool
+	// Effective composition state only; schema DTOs and their digests are unchanged.
+	anyAttributeUnavailable bool
 }
 
 type ElementMatch struct {
@@ -678,10 +680,11 @@ func (c *Context) ValidateComplex(
 	}
 
 	c.setFamily("attributes")
-	attributesValid := c.ValidateAttributes(
+	attributesValid := c.validateAttributes(
 		subject,
 		effective.Attributes,
 		effective.AnyAttribute,
+		effective.anyAttributeUnavailable,
 		path,
 	)
 	c.setFamily("content")
@@ -863,7 +866,8 @@ func (c *Context) EffectiveComplex(
 				result.Attributes,
 				c)
 			if schema.Form == ComplexSimpleContentExtension {
-				result.AnyAttribute = MergeAnyAttribute(base.AnyAttribute, result.AnyAttribute)
+				result.AnyAttribute, result.anyAttributeUnavailable = mergeAnyAttribute(base.AnyAttribute, result.AnyAttribute, c)
+				result.anyAttributeUnavailable = result.anyAttributeUnavailable || base.anyAttributeUnavailable
 			}
 			result.Mixed = result.Mixed || base.Mixed
 		default:
@@ -905,10 +909,12 @@ func (c *Context) EffectiveComplex(
 			base.Attributes,
 			result.Attributes,
 			c)
-		result.AnyAttribute = MergeAnyAttribute(
+		result.AnyAttribute, result.anyAttributeUnavailable = mergeAnyAttribute(
 			base.AnyAttribute,
 			result.AnyAttribute,
+			c,
 		)
+		result.anyAttributeUnavailable = result.anyAttributeUnavailable || base.anyAttributeUnavailable
 		result.Mixed = result.Mixed || base.Mixed
 
 		return result, true
@@ -966,16 +972,6 @@ func mergeAttributes(base, derived []AttributeSchema, c *Context) []AttributeSch
 	}
 
 	return result
-}
-
-func MergeAnyAttribute(
-	base *AnyAttributeSchema,
-	derived *AnyAttributeSchema,
-) *AnyAttributeSchema {
-	if derived != nil {
-		return derived
-	}
-	return base
 }
 
 func Sequence(left, right *ParticleSchema) *ParticleSchema { return sequence(left, right, nil) }
@@ -1048,6 +1044,16 @@ func (c *Context) ValidateAttributes(
 	anyAttribute *AnyAttributeSchema,
 	path string,
 ) bool {
+	return c.validateAttributes(node, schemas, anyAttribute, false, path)
+}
+
+func (c *Context) validateAttributes(
+	node *Node,
+	schemas []AttributeSchema,
+	anyAttribute *AnyAttributeSchema,
+	anyAttributeUnavailable bool,
+	path string,
+) bool {
 	c.step(1)
 
 	valid := true
@@ -1084,6 +1090,11 @@ func (c *Context) ValidateAttributes(
 		name := Name(attribute.Name)
 		schema, found := known[name]
 		if !found {
+			if anyAttributeUnavailable {
+				c.Incomplete("attribute wildcard union cannot be established from available schema metadata")
+				c.IdentityIncomplete = true
+				continue
+			}
 			if anyAttributeAllows(anyAttribute, attribute.Name, c) {
 				if anyAttribute != nil {
 					c.wildcard(anyAttribute.ProcessContents, "attributes")
@@ -2360,15 +2371,11 @@ func anyAttributeAllows(schema *AnyAttributeSchema, name QName, c *Context) bool
 	case "##local":
 		return name.Space == ""
 	default:
-		c.bytes(len(schema.Namespace))
-		c.scratch(c.size(int64(len(schema.Namespace)), 16))
-		for _, namespace := range strings.Fields(schema.Namespace) {
-			c.step(1)
-			if namespace == name.Space {
-				return true
-			}
-		}
-		return false
+		// Share finite-list tokenization with controlled admission. In
+		// particular ##local can be a list member, and XML whitespace alone
+		// separates namespace names (strings.Fields is broader).
+		admission := wildcardNamespace(schema.Namespace, name.Space, c)
+		return admission.valid && admission.known && admission.allowed
 	}
 }
 

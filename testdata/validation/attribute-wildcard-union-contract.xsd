@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- Synthetic XSD 1.0 3.4.2 / 3.10.6 wildcard extension contract. -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:attribute name="known" type="xs:integer"/>
+  <xs:complexType name="base"><xs:anyAttribute namespace="urn:base" processContents="skip"/></xs:complexType>
+  <xs:complexType name="extended"><xs:complexContent><xs:extension base="base"><xs:anyAttribute namespace="urn:derived ##local" processContents="skip"/></xs:extension></xs:complexContent></xs:complexType>
+  <xs:complexType name="inherited"><xs:complexContent><xs:extension base="extended"/></xs:complexContent></xs:complexType>
+  <xs:complexType name="restricted"><xs:complexContent><xs:restriction base="extended"><xs:anyAttribute namespace="urn:derived" processContents="skip"/></xs:restriction></xs:complexContent></xs:complexType>
+  <xs:complexType name="closed"><xs:complexContent><xs:restriction base="extended"/></xs:complexContent></xs:complexType>
+  <xs:complexType name="reextended"><xs:complexContent><xs:extension base="restricted"><xs:anyAttribute namespace="urn:last" processContents="skip"/></xs:extension></xs:complexContent></xs:complexType>
+  <xs:complexType name="simple-base"><xs:simpleContent><xs:extension base="xs:string"><xs:anyAttribute namespace="urn:base" processContents="skip"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="simple-extended"><xs:simpleContent><xs:extension base="simple-base"><xs:anyAttribute namespace="urn:derived ##local" processContents="skip"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="simple-inherited"><xs:simpleContent><xs:extension base="simple-extended"/></xs:simpleContent></xs:complexType>
+  <xs:complexType name="simple-restricted"><xs:simpleContent><xs:restriction base="simple-extended"><xs:anyAttribute namespace="urn:derived" processContents="skip"/></xs:restriction></xs:simpleContent></xs:complexType>
+  <xs:complexType name="simple-closed"><xs:simpleContent><xs:restriction base="simple-extended"/></xs:simpleContent></xs:complexType>
+  <xs:complexType name="simple-reextended"><xs:simpleContent><xs:extension base="simple-restricted"><xs:anyAttribute namespace="urn:last" processContents="skip"/></xs:extension></xs:simpleContent></xs:complexType>
+  <xs:complexType name="any-base"><xs:anyAttribute processContents="skip"/></xs:complexType>
+  <xs:complexType name="any-extended"><xs:complexContent><xs:extension base="any-base"><xs:anyAttribute namespace="urn:derived" processContents="skip"/></xs:extension></xs:complexContent></xs:complexType>
+  <xs:complexType name="strict-base"><xs:anyAttribute namespace="urn:base" processContents="strict"/></xs:complexType>
+  <xs:complexType name="derived-skip"><xs:complexContent><xs:extension base="strict-base"><xs:anyAttribute namespace="urn:derived" processContents="skip"/></xs:extension></xs:complexContent></xs:complexType>
+  <xs:complexType name="derived-lax"><xs:complexContent><xs:extension base="base"><xs:anyAttribute namespace="##local" processContents="lax"/></xs:extension></xs:complexContent></xs:complexType>
+  <xs:complexType name="derived-strict"><xs:complexContent><xs:extension base="base"><xs:anyAttribute namespace="##local" processContents="strict"/></xs:extension></xs:complexContent></xs:complexType>
+  <xs:element name="extended" type="extended"/>
+  <xs:element name="inherited" type="inherited"/>
+  <xs:element name="restricted" type="restricted"/>
+  <xs:element name="closed" type="closed"/>
+  <xs:element name="reextended" type="reextended"/>
+  <xs:element name="simple-extended" type="simple-extended"/>
+  <xs:element name="simple-inherited" type="simple-inherited"/>
+  <xs:element name="simple-restricted" type="simple-restricted"/>
+  <xs:element name="simple-closed" type="simple-closed"/>
+  <xs:element name="simple-reextended" type="simple-reextended"/>
+  <xs:element name="any-extended" type="any-extended"/>
+  <xs:element name="derived-skip" type="derived-skip"/>
+  <xs:element name="derived-lax" type="derived-lax"/>
+  <xs:element name="derived-strict" type="derived-strict"/>
+</xs:schema>
