@@ -1,0 +1,310 @@
+[
+  {
+    "encoding": "ɫ",
+    "codepoints": [
+      "U+026B"
+    ],
+    "mapping_aid_page": 5,
+    "ipa_number": "209",
+    "label": "VELARIZED VOICED DENTAL/ALVEOLAR LATERAL APPROXIMANT",
+    "section": "main-list",
+    "disposition": "Unknown, not rejected",
+    "reason": "The 2015 chart shows a velarized/pharyngealized l example, but this ledger does not resolve a precomposed stroked-l glyph versus l plus overlay encoding. They are not Unicode canonical equivalents."
+  },
+  {
+    "encoding": "ɚ",
+    "codepoints": [
+      "U+025A"
+    ],
+    "mapping_aid_page": 12,
+    "ipa_number": "327",
+    "label": "R-COLOURED MID CENTRAL VOWEL",
+    "section": "main-list",
+    "disposition": "Unknown, not rejected",
+    "reason": "The 2015 chart shows a rhoticity example with schwa, but this ledger does not resolve the precomposed hooked-schwa glyph versus schwa plus rhoticity modifier. They are not Unicode canonical equivalents."
+  },
+  {
+    "encoding": "˧˥",
+    "codepoints": [
+      "U+02E7",
+      "U+02E5"
+    ],
+    "mapping_aid_page": 14,
+    "ipa_number": "531",
+    "label": "HIGH RISING CONTOUR TONE (CHAO LETTER)",
+    "section": "main-list",
+    "disposition": "Unknown, not rejected",
+    "reason": "Unselected Chao contour mapping. Shape/font and numeric height choices require additional historical review; known component tone letters do not prove the exact sequence."
+  },
+  {
+    "encoding": "˩˧",
+    "codepoints": [
+      "U+02E9",
+      "U+02E7"
+    ],
+    "mapping_aid_page": 14,
+    "ipa_number": "532",
+    "label": "LOW RISING CONTOUR TONE (CHAO LETTER)",
+    "section": "main-list",
+    "disposition": "Unknown, not rejected",
+    "reason": "Unselected Chao contour mapping. Shape/font and numeric height choices require additional historical review; known component tone letters do not prove the exact sequence."
+  },
+  {
+    "encoding": "˧˦˨",
+    "codepoints": [
+      "U+02E7",
+      "U+02E6",
+      "U+02E8"
+    ],
+    "mapping_aid_page": 14,
+    "ipa_number": "533",
+    "label": "RISING-FALLING CONTOUR TONE (CHAO LETTER)",
+    "section": "main-list",
+    "disposition": "Unknown, not rejected",
+    "reason": "Unselected Chao contour mapping. Shape/font and numeric height choices require additional historical review; known component tone letters do not prove the exact sequence."
+  },
+  {
+    "encoding": "ʦ",
+    "codepoints": [
+      "U+02A6"
+    ],
+    "mapping_aid_page": 14,
+    "ipa_number": "211",
+    "label": "VOICELESS DENTAL/ALVEOLAR AFFRICATE",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʣ",
+    "codepoints": [
+      "U+02A3"
+    ],
+    "mapping_aid_page": 14,
+    "ipa_number": "212",
+    "label": "VOICED ALVEOLAR AFFRICATE",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʧ",
+    "codepoints": [
+      "U+02A7"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "213",
+    "label": "VOICELESS POSTALVEOLAR AFFRICATE",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʨ",
+    "codepoints": [
+      "U+02A8"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "215",
+    "label": "VOICELESS ALVEOLO-PALATAL AFFRICATE",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ɝ",
+    "codepoints": [
+      "U+025D"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "R-COLOURED OPEN-MID CENTRAL VOWEL",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʳ",
+    "codepoints": [
+      "U+02B3"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "DIACRITIC ALVEOLAR TRILL",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʵ",
+    "codepoints": [
+      "U+02B5"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "DIACRITIC RETROFLEX APPROXIMANT",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ˀ",
+    "codepoints": [
+      "U+02C0"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "DIACRITIC GLOTTAL STOP",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "᷆",
+    "codepoints": [
+      "U+1DC6"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "MID-LOW FALLING CONTOUR TONE (ACCENT MARK)",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʤ",
+    "codepoints": [
+      "U+02A4"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "214",
+    "label": "VOICED POSTALVEOLAR AFFRICATE",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʥ",
+    "codepoints": [
+      "U+02A5"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "216",
+    "label": "VOICED ALVEOLO-PALATAL AFFRICATE",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʱ",
+    "codepoints": [
+      "U+02B1"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "DIACRITIC VOICED GLOTTAL FRICATIVE",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʴ",
+    "codepoints": [
+      "U+02B4"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "DIACRITIC ALVEOLAR APPROXIMANT",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "ʶ",
+    "codepoints": [
+      "U+02B6"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "676",
+    "label": "DIACRITIC UVULAR APPROXIMANT",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "̢",
+    "codepoints": [
+      "U+0322"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "DIACRITIC RETROFLEXION",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "˧˩",
+    "codepoints": [
+      "U+02E7",
+      "U+02E9"
+    ],
+    "mapping_aid_page": 15,
+    "ipa_number": "N/A",
+    "label": "MID-LOW FALLING CONTOUR TONE (CHAO LETTER)",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "᷇",
+    "codepoints": [
+      "U+1DC7"
+    ],
+    "mapping_aid_page": 16,
+    "ipa_number": "N/A",
+    "label": "HIGH-MID FALLING CONTOUR TONE (ACCENT MARK)",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "᷉",
+    "codepoints": [
+      "U+1DC9"
+    ],
+    "mapping_aid_page": 16,
+    "ipa_number": "N/A",
+    "label": "FALLING-RISING CONTOUR TONE (ACCENT MARK)",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "˥˧",
+    "codepoints": [
+      "U+02E5",
+      "U+02E7"
+    ],
+    "mapping_aid_page": 16,
+    "ipa_number": "N/A",
+    "label": "HIGH-MID FALLING CONTOUR TONE (CHAO LETTER)",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  },
+  {
+    "encoding": "˧˨˦",
+    "codepoints": [
+      "U+02E7",
+      "U+02E8",
+      "U+02E6"
+    ],
+    "mapping_aid_page": 16,
+    "ipa_number": "N/A",
+    "label": "FALLING-RISING CONTOUR TONE (CHAO LETTER)",
+    "section": "additional-symbols",
+    "disposition": "Unknown, not rejected",
+    "reason": "Later additional-symbols section is not historical 2015 repertoire authority."
+  }
+]

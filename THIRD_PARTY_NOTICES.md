@@ -47,3 +47,18 @@ transformation boundaries are in
 [testdata/dictionaries/NOTICES.txt](testdata/dictionaries/NOTICES.txt).
 The library's MIT code license does not replace these data terms. No font
 program or glyph artwork is included.
+
+## Partial IPA positive-evidence data
+
+The data under `testdata/dictionaries/ipa-positive` are separately licensed
+under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+They derive from selected symbols and examples on the International Phonetic
+Association's 2015 chart (originally CC BY-SA 3.0), explicit encoding assistance
+from its 2026 Doulos symbol list (CC BY-SA 4.0), and Unicode 13 data.
+The original source attributions, modification description, license links and
+Unicode permission notice are preserved in
+[testdata/dictionaries/ipa-positive/NOTICES.txt](testdata/dictionaries/ipa-positive/NOTICES.txt)
+and the adjacent Unicode license file. The full positive ledger and source
+pins accompany the compact runtime representation. These data are not covered
+by the library code's MIT license. Preserve their notices when distributing
+these data or generated equivalents. No chart artwork or font is bundled.
