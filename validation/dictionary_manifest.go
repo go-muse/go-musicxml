@@ -79,8 +79,12 @@ type DictionaryComponentPin struct {
 }
 
 // DictionaryManifest describes a fixed reviewed transformation. Relations and
-// NegativeRelations are owned slices. NegativeRelations excludes all IPA facts;
-// complete positive-table identity never certifies a complete IPA grammar.
+// NegativeRelations are owned slices. NegativeRelations describes which closed
+// consumers can establish known nonmembership; it is metadata, not a caller-
+// configurable policy or a list of normative failure rules. For example, a
+// nonstandard sound remains a permitted open string. NegativeRelations excludes
+// all IPA facts: complete positive-table identity never certifies a complete IPA
+// grammar. Mutating returned metadata does not change a consumer's fixed policy.
 type DictionaryManifest struct {
 	ID                DictionaryManifestID
 	Kind              DictionaryKind
@@ -168,7 +172,11 @@ func VerifyDictionaryComponent(ctx context.Context, a *Account, id DictionaryCom
 	if err := a.Charge(BudgetBufferedBytes, scratch); err != nil {
 		return zero, err
 	}
-	defer a.Release(BudgetBufferedBytes, scratch)
+	defer func() {
+		// The successful charge above owns this exact amount until this sole
+		// release; no verifier branch transfers or releases the scratch early.
+		_ = a.Release(BudgetBufferedBytes, scratch)
+	}()
 	pin, ok := dictionaryComponent(id)
 	if !ok {
 		return zero, contract("dictionary component", "unsupported component")

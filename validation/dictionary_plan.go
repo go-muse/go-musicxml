@@ -117,8 +117,22 @@ func (p *dictionaryPlan) size() int64 {
 		n += contextComponentBytes(v) + 128
 	}
 	for _, v := range p.Pins {
-		b, _ := json.Marshal(v)
-		n += int64(len(b) + 256)
+		// Fixed manifest/component headers, numeric fields and slice overhead,
+		// plus all retained text and relation entries. Sizing never serializes
+		// pins; the independently typed digest encoding above is unchanged.
+		n += 1024
+		for _, text := range [...]string{string(v.ID), string(v.Kind), v.Edition,
+			string(v.Component.ID), v.Component.SHA256, v.Component.URL,
+			string(v.Component.SourceKind), v.ComponentName, v.TransformRevision,
+			v.PolicyRevision, v.DataSHA256} {
+			n += int64(len(text))
+		}
+		for _, relation := range v.Relations {
+			n += 32 + int64(len(relation))
+		}
+		for _, relation := range v.NegativeRelations {
+			n += 32 + int64(len(relation))
+		}
 	}
 	return n
 }

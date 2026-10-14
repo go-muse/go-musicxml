@@ -153,12 +153,44 @@ func TestDictionaryNilCapabilityPreservesOldBegin(t *testing.T) {
 	ctx := context.Background()
 	e, unused := sessionFixture(t, Budgets{})
 	_, _ = unused.Finish(ctx, Completion{Syntax: SyntaxIncomplete})
-	s, err := e.BeginWithDictionaries(ctx, RunOptions{DocumentID: "none", Profile: "test.source"}, nil)
+	plainAccount, dictionaryAccount := dictionaryCoreAccount(t), dictionaryCoreAccount(t)
+	plain, err := e.Begin(ctx, RunOptions{DocumentID: "none", Profile: "test.source", Account: plainAccount})
 	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := e.BeginWithDictionaries(ctx, RunOptions{DocumentID: "none", Profile: "test.source", Account: dictionaryAccount}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	check := func(stage string) {
+		t.Helper()
+		if s.dictionaries != nil || s.dictionaryFingerprint() != ([32]byte{}) {
+			t.Errorf("%s: nil capability retained a lease or nonzero fingerprint", stage)
+		}
+		for _, budget := range testBudgetKinds {
+			want, err := plainAccount.Usage(budget.kind)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, err := dictionaryAccount.Usage(budget.kind)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != want {
+				t.Errorf("%s: %s usage = %d, plain Begin = %d", stage, budget.kind, got, want)
+			}
+		}
+	}
+	check("admitted")
+	if _, err := plain.Finish(ctx, Completion{Syntax: SyntaxIncomplete}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := s.Finish(ctx, Completion{Syntax: SyntaxIncomplete}); err != nil {
 		t.Fatal(err)
+	}
+	check("finished")
+	if got := dictionaryCoreUsage(t, dictionaryAccount); got != 17 {
+		t.Fatalf("nil capability changed caller-owned retention: %d", got)
 	}
 }
 

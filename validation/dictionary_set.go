@@ -75,6 +75,10 @@ type dictionaryEntry struct {
 	smufl       *SMuFLDictionaryData
 	sounds      *StandardSoundsDictionaryData
 	ipa         *IPAPositiveDictionaryData
+	// Immutable byte spans are computed while copying validated encodings.
+	// Both are bounded by copyIPA's 16-byte encoding admission limit.
+	ipaSymbolMaxBytes     int
+	ipaEquivalentMaxBytes int
 }
 
 // DictionarySet owns immutable verified dictionary records admitted to one
@@ -472,6 +476,7 @@ func (d *DictionarySet) copyIPA(ctx context.Context, e *dictionaryEntry, in *IPA
 			return err
 		}
 		e.ipa.Symbols[i] = IPASymbolEncoding{a, b, c}
+		e.ipaSymbolMaxBytes = max(e.ipaSymbolMaxBytes, len(a))
 	}
 	for i, r := range in.Examples {
 		a, b, c, err := copyFields(r.Encoding, r.Category, r.RowID)
@@ -486,6 +491,7 @@ func (d *DictionarySet) copyIPA(ctx context.Context, e *dictionaryEntry, in *IPA
 			return err
 		}
 		e.ipa.Equivalences[i] = IPACanonicalEquivalent{a, b, c}
+		e.ipaEquivalentMaxBytes = max(e.ipaEquivalentMaxBytes, len(a))
 	}
 	if err := dictionarySort(ctx, d.account, e.ipa.Symbols, func(r IPASymbolEncoding) string { return r.Encoding }); err != nil {
 		return err
@@ -540,7 +546,9 @@ func dictionaryComparisonStep(ctx context.Context, a *Account, left, right int64
 	if err != nil {
 		return err
 	}
-	return dictionaryStep(ctx, a, work)
+	// Context rejection must precede overflow, and checked work must precede
+	// charging. Calling dictionaryStep here would repeat the context check.
+	return a.Charge(BudgetRuleSteps, work)
 }
 
 func dictionarySearch(ctx context.Context, a *Account, count int, key string, keyAt func(int) string) (int, bool, error) {
