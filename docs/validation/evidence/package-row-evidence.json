@@ -40,7 +40,7 @@
       "interpretation": "Terminal outcome appended separately. The earlier 2026-10-13 10:44 UTC in-progress observation remains unchanged; this failed run does not certify later-tree or final acceptance."
     }
   },
-  "interpretation": "Each named test is a verified source location and bounded assertion route. No execution result or five-axis completion is inferred; empty tests and open_evidence_gaps preserve unmet verification obligations.",
+  "interpretation": "Each named test identifies a bounded assertion route by file and function; the verifier checks current function presence and normalized test-file hash. The line and end_line_bound fields are inspection-time navigation hints, not verified current source coordinates, and the narrow hash refresher does not update them. No execution result or five-axis completion is inferred; empty tests and open_evidence_gaps preserve unmet verification obligations.",
   "rows": {
     "CHECK-context-group-link-match": {
       "target_evidence": {

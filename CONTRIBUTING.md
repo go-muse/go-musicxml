@@ -172,6 +172,10 @@ No original record, source-file hash, status, owner, line hint, snapshot,
 `historical_tests`, execution result or acceptance claim is refreshed. This does
 not execute the Go tests or certify their assertions. Rerun affected tests and
 retain new exact-head execution evidence separately before final acceptance.
+The evidence's `line` and `end_line_bound` are inspection-time navigation hints;
+later edits can make them stale. The verifier checks the named function's current
+presence and normalized file hash, not these coordinates. Locate current tests
+by `file::function` rather than treating the hints as current source bounds.
 Result JSON is printed on stdout. Optional `--output PATH` saves an atomic JSON
 report; it cannot alias any input, including symlinks or hard links. If malformed
 inputs prevent a complete alias check, the failure report stays on stdout.
