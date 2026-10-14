@@ -1,0 +1,67 @@
+PROPOSED THIRD-PARTY DATA NOTICES
+
+Standard Music Font Layout (SMuFL), version 1.4
+
+Canonical glyph-name/primary-codepoint and range-membership data, source
+fixtures if distributed, and their generated manifest identities are derived
+from the Standard Music Font Layout Specification, version 1.4.
+
+Copyright © 2021 the Contributors to the Standard Music Font Layout
+Specification, published by the W3C Music Notation Community Group under
+the W3C Community Final Specification Agreement (FSA).
+
+Specification and source license:
+https://w3c.github.io/smufl/releases/1.4/
+https://w3c.github.io/smufl/releases/1.4/preamble/license.html
+Agreement: https://www.w3.org/community/about/agreements/final/
+Human-readable summary: https://www.w3.org/community/about/agreements/fsa-deed/
+
+Pinned source commit: 753f551ca6f96bf24ba38aa2d8a317e706238c51
+Source components:
+https://raw.githubusercontent.com/w3c-cg/smufl/753f551ca6f96bf24ba38aa2d8a317e706238c51/metadata/glyphnames.json
+https://raw.githubusercontent.com/w3c-cg/smufl/753f551ca6f96bf24ba38aa2d8a317e706238c51/metadata/ranges.json
+
+The derived canonical records retain exact names and primary codepoints.
+The derived range records retain exact range identifiers, inclusive bounds,
+and enumerated canonical glyph memberships. Records are sorted for the
+documented deterministic encoding. Descriptions, alternate encodings,
+classes, font metadata, artwork, and font files are not included in these
+derived data. These selected relations are not a replacement specification.
+
+
+MusicXML, version 4.0
+
+Standard sound-identifier data, the sounds.xml source fixture if distributed,
+and their generated manifest identities are derived from the MusicXML
+Specification, version 4.0.
+
+Copyright © 2004-2021 the Contributors to the MusicXML Specification,
+published by the W3C Music Notation Community Group under the W3C Community
+Final Specification Agreement (FSA).
+
+Specification and official source listing:
+https://www.w3.org/2021/06/musicxml40/
+https://www.w3.org/2021/06/musicxml40/listings/sounds.xml/
+Agreement: https://www.w3.org/community/about/agreements/final/
+Human-readable summary: https://www.w3.org/community/about/agreements/fsa-deed/
+
+Pinned source commit: 799e2defb2ece0ae7bafe08dcbcac25b2c631d53
+Source component:
+https://raw.githubusercontent.com/w3c-cg/musicxml/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xml
+
+The derived records are the 894 literal standard IDs from that exact source,
+sorted for deterministic encoding. The transform does not fetch or assess
+the external DTD and does not certify XML/DTD validity. Nonmembership means
+an identifier is not in the MusicXML 4.0 standard list, not that an open
+MusicXML instrument-sound string is invalid.
+
+
+Distribution note
+
+Preserve these upstream specification attributions and notices with the
+source fixtures or derived data to which they apply. The software library's
+own code license does not replace these source-data terms. Source fixtures
+retain their original bytes and embedded notices. Generated manifest
+constants and test vectors identify the source specifications and transformations
+in the accompanying manifest and this notice. No artwork or font is distributed
+by this data selection.
