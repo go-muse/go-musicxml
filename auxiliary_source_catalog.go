@@ -25,6 +25,19 @@ func newAuxiliarySourceAssessmentEngine() (*validation.Engine, error) {
 }
 
 func buildAuxiliarySourceAssessmentEngine() (*validation.Engine, error) {
+	d, err := buildAuxiliarySourceAssessmentDefinitions()
+	if err != nil {
+		return nil, err
+	}
+	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	if err != nil {
+		return nil, err
+	}
+	return validation.NewEngine(catalog)
+}
+
+func buildAuxiliarySourceAssessmentDefinitions() (*assessmentDefinitions, error) {
+	schemas := make(map[validation.Assembly]*validation.CompiledSchema)
 	var rules []validation.RuleDefinition
 	var plans []validation.PlanBinding
 	var profiles []validation.Profile
@@ -47,6 +60,7 @@ func buildAuxiliarySourceAssessmentEngine() (*validation.Engine, error) {
 		if err != nil {
 			return nil, err
 		}
+		schemas[input.assembly] = schema
 		for _, operation := range []struct {
 			check                       validation.XSDCheck
 			title, explanation, locator string
@@ -126,9 +140,5 @@ func buildAuxiliarySourceAssessmentEngine() (*validation.Engine, error) {
 		profile.NormativeClosure += " Source schema-hint discovery retains complete pairs and unmatched trailing URI without changing the datatype or performing retrieval."
 		profiles = append(profiles, profile)
 	}
-	catalog, err := validation.NewCatalog(rules, profiles, plans)
-	if err != nil {
-		return nil, err
-	}
-	return validation.NewEngine(catalog)
+	return &assessmentDefinitions{rules: rules, profiles: profiles, plans: plans, schemas: schemas}, nil
 }

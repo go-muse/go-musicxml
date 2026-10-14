@@ -98,6 +98,19 @@ func NewContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextContainerMetadata, ContextPlanSpec{Schema: schema})
 }
 
+// NewSourceContainerMetadataContextPlan projects effective ordered container
+// metadata separately from original XML-normalized attribute spellings. DTD
+// defaults and entity-generated attributes have no physical Raw spelling. It
+// requires a selected source-origin provider and supports only source input.
+func NewSourceContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := NewContainerMetadataContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = true
+	return checkedPlan(p)
+}
+
 func contextPlanAssembly(kind planKind) Assembly {
 	if kind == planContextContainerMetadata {
 		return AssemblyContainer
@@ -141,8 +154,8 @@ func (p *contextPlan) valid(kind planKind) error {
 	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Schema.assembly != contextPlanAssembly(kind) || p.Bindings == nil || p.revision != contextSemanticRevision {
 		return contract("context plan", "sealed MusicXML schema and exact context revision required")
 	}
-	if p.sourceInfoset && kind != planContextMusicXMLLinks && kind != planContextOpusLinks && kind != planContextMusicXMLHints && kind != planContextOpusHints {
-		return contract("source resource context", "MusicXML or Opus resource family required")
+	if p.sourceInfoset && kind != planContextMusicXMLLinks && kind != planContextOpusLinks && kind != planContextMusicXMLHints && kind != planContextOpusHints && kind != planContextContainerHints && kind != planContextSoundsHints && kind != planContextContainerMetadata {
+		return contract("source resource context", "supported source resource family required")
 	}
 	if p.Timeline != (RuleKey{}) && !catalogKey(p.Timeline) {
 		return contract("context timeline", "invalid provider revision")

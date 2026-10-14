@@ -959,7 +959,7 @@ options compose the corresponding unchanged resource options with `Dictionaries`
 conversion. With an assessment, any conversion, source, dictionary-operation or
 strict acceptance error discards the model and preserves the best source report.
 
-The six new profile IDs are:
+The original dictionary profile IDs are:
 
 - `ProfileSourceDictionaries`: `musicxml-4.0/source-links-dictionaries`
 - `ProfileModelDictionaries`: `musicxml-4.0/model-links-dictionaries`
@@ -995,6 +995,54 @@ and indirection limits still apply. No child resets or widens budgets. These
 profiles do not compose `ProfileSourceInternalDTD` or export source-origin
 snapshots; original-source limitations, including unread external DTDs, remain
 active.
+
+### Explicit internal-DTD and dictionary package composition
+
+The existing dictionary entry points also accept these exact additive profiles:
+
+- `InspectXMLWithResourcesAndDictionaries` and
+  `AssessModelWithResourcesAndDictionaries`:
+  `ProfileResourceGraphInternalDTDDictionaries`
+  (`musicxml-4.0/resource-graph-internal-dtd-dictionaries`).
+- `InspectMXLWithDictionaries`: `ProfileMXLSourceInternalDTDDictionaries`
+  (`musicxml-4.0/mxl-source-internal-dtd-dictionaries`).
+- `AssessMXLPackageWithDictionaries`: `ProfileMXLModelInternalDTDDictionaries`
+  (`musicxml-4.0/mxl-model-internal-dtd-dictionaries`).
+
+Select the profile explicitly in `Resources.Graph.Profile`; empty, unknown and
+cross-entry-point choices fail before reader or provider I/O. The existing
+non-DTD profiles and their catalogs remain unchanged. These new catalogs pin
+source MusicXML/Opus to `ProfileSourceInternalDTDDictionaries`, current models to
+unchanged `ProfileModelDictionaries`, source Container to
+`ProfileSourceInternalDTDContainer` (`musicxml-4.0/source-internal-dtd-container`)
+and source Sounds to `ProfileSourceInternalDTDSoundsDictionaries`
+(`musicxml-4.0/source-internal-dtd-sounds-dictionaries`), each with the exact
+engine-returned catalog digest. Raw MXL accepts source rows only.
+
+`InspectXML` accepts the new Container profile; `InspectXMLWithDictionaries`
+accepts the new Sounds profile. Neither adds a Document model or decode root.
+Sounds remains an explicit standalone input or compatible snapshot admission:
+public graph/MXL traversal still selects musical children and does not discover
+Sounds from filenames or infer auxiliary inputs.
+
+Only actually assessed source XML receives bounded internal-DTD processing and
+actually-read declaration evidence. Container `FullPath` and `MediaType` are
+effective values: a DTD-defaulted path can select an entry with `FullPathRaw`
+Absent. Physical tokenized attributes preserve retained pre-tokenization Raw;
+unretained entity replacement spellings remain Unknown. Effective Sounds ID,
+primary and number fields retain DTD defaults without inventing implicit mapping
+choices. Auxiliary schema hints retain effective pairs separately from physical
+Raw/presence; odd pairing remains a discovery gap, not an XSD datatype violation.
+No external DTD, entity, hinted schema or dictionary is automatically retrieved.
+
+The same root account and verified dictionary set cover lexical/declaration
+capture, intrinsic snapshots and repeated adoption. Origins are independently
+owned and rebound to each adoption, without upgrading incomplete provenance.
+The current primary model remains directly assessed with no invented source
+origins, original Container or ZIP history; retained source children are separate.
+Existing path, archive, indirection, incomplete-IPA, unsupported-capability and
+unread-external gates remain active. See
+[the composition scope](docs/validation/dtd-package-composition-scope.md).
 
 ### Caller-supplied transport and sealed data
 

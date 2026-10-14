@@ -19,7 +19,7 @@ func dictionaryAssessmentConfig(ctx context.Context, options DictionaryAssessmen
 	var engine *validation.Engine
 	var err error
 	switch {
-	case target == validation.TargetSource && (options.Assessment.Profile == ProfileSourceDictionaries || options.Assessment.Profile == ProfileSourceSoundsDictionaries || options.Assessment.Profile == ProfileSourceInternalDTDDictionaries):
+	case target == validation.TargetSource && (options.Assessment.Profile == ProfileSourceDictionaries || options.Assessment.Profile == ProfileSourceSoundsDictionaries || options.Assessment.Profile == ProfileSourceInternalDTDDictionaries || options.Assessment.Profile == ProfileSourceInternalDTDSoundsDictionaries):
 		engine, err = sourceAssessmentEngineForProfile(options.Assessment.Profile)
 		cfg.DocumentID = sourceDocumentID
 	case target == validation.TargetModel && options.Assessment.Profile == ProfileModelDictionaries:

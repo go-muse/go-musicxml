@@ -111,13 +111,10 @@ func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
 	return checkedPlan(p)
 }
 
-// NewSourceSchemaHintContextPlan parses effective MusicXML or Opus source hints
-// independently of their physical Raw spelling. It requires a source-origin
-// provider; hints never select a schema or authorize retrieval.
+// NewSourceSchemaHintContextPlan parses effective MusicXML, Opus, Container or
+// Sounds source hints independently of their physical Raw spelling. It requires
+// a source-origin provider; hints never select a schema or authorize retrieval.
 func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
-	if schema == nil || schema.assembly != AssemblyMusicXML && schema.assembly != AssemblyOpus {
-		return Plan{}, contract("source schema hints", "MusicXML or Opus assembly required")
-	}
 	p, err := NewSchemaHintContextPlan(schema)
 	if err != nil {
 		return Plan{}, err

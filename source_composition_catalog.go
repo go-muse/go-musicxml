@@ -31,7 +31,7 @@ func sourceDTDPolicy(id validation.ProfileID) (internal, declarations, lexical b
 		return true, false, false
 	case ProfileSourceInternalDTDLocal:
 		return true, true, false
-	case ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries:
+	case ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries, ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries:
 		return true, true, true
 	default:
 		return false, false, false

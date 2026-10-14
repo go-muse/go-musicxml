@@ -200,6 +200,14 @@ values remain distinct from physical source occurrences. Dictionary data is
 still supplied explicitly; the library does not load it automatically. These
 profiles do not enable package/source-origin export or general DTD validation.
 
+The additive [DTD/dictionary package compositions](docs/validation/dtd-package-composition-scope.md)
+can be selected explicitly through the existing dictionary graph and MXL APIs.
+They assess retained source children with bounded internal declarations and
+owned source origins, while current primary models keep their existing model
+profile. Effective Container paths stay distinct from physical Raw; explicit
+Sounds input retains effective mapping fields. No auxiliary filename discovery
+or external DTD/schema/dictionary fetching is introduced.
+
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged
 `ProfileSourceXSDPreview` (XSD only). Unread external DOCTYPE subsets still make

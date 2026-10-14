@@ -7,6 +7,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Add explicit internal-DTD/dictionary graph and raw/current-MXL compositions in
+  separate catalogs, preserving existing profiles and digests. Add source
+  Container and Sounds compositions with exact auxiliary origin routing,
+  physical Container Raw versus effective values, effective Sounds mappings,
+  and nonfetching source hints. Current primary models retain model-only
+  evidence; retained source snapshots preserve independently rebound origins.
+  Existing dictionary APIs require the exact compatible profile and retain all
+  package, indirection, unread-external and incomplete-capability gates.
+
 ### Fixed
 
 - Classify dictionary provider, response, transport and verification failures as
