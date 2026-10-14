@@ -78,6 +78,9 @@ func singletonRepeatAssess(t *testing.T, measures []string, want validation.Evid
 					}
 					found = true
 					v := c.Repeat.ContentEquivalent
+					if want == validation.EvidenceInvalid && v.Cause == nil {
+						t.Fatalf("invalid prerequisite lost owned cause: %+v", v)
+					}
 					if v.State != want || want == validation.EvidenceKnown && v.Value {
 						t.Fatalf("content=%+v; want independent singleton counterexample state %v", v, want)
 					}
@@ -219,4 +222,38 @@ func TestSingletonRepeatContainmentControls(t *testing.T) {
 		body = strings.TrimSuffix(body, `<attributes><measure-style number="1"><beat-repeat type="stop"/></measure-style></attributes>`)
 		singletonRepeatAssess(t, []string{body}, validation.EvidenceUnknown)
 	})
+}
+
+func TestSingletonRepeatPreservesSufficientPositiveProof(t *testing.T) {
+	source := strings.Replace(singletonRepeatNote(singletonRepeatPitch("C", "0", "4")), `<duration>1</duration>`, `<duration>2</duration>`, 1)
+	target := `<attributes><divisions>4</divisions></attributes>` + strings.Replace(singletonRepeatNote(singletonRepeatPitch("C", "0", "4")), `<duration>1</duration>`, `<duration>4</duration>`, 1)
+	body := singletonRepeatBeatBody(`<attributes><divisions>2</divisions><staves>1</staves></attributes>`, source, target)
+	repeatAssessHeader(t, body, singletonRepeatHeader, func(t *testing.T, r validation.Report) {
+		found := false
+		for _, row := range r.Context {
+			if row.Repeat != nil && row.Repeat.Type.Value == "start" {
+				found = true
+				if v := row.Repeat.ContentEquivalent; v.State != validation.EvidenceKnown || !v.Value {
+					t.Fatalf("established sufficient positive changed %+v", v)
+				}
+			}
+		}
+		if !found {
+			t.Fatal("missing repeat")
+		}
+	})
+}
+func TestSingletonRepeatInvalidInputsKeepCauses(t *testing.T) {
+	source := singletonRepeatNote(singletonRepeatPitch("C", "0", "4"))
+	target := singletonRepeatNote(singletonRepeatPitch("D", "0", "4"))
+	for _, tc := range []struct{ name, attributes, target string }{
+		{"transpose", strings.Replace(singletonRepeatAttributes, `<chromatic>0</chromatic>`, `<chromatic>NaN</chromatic>`, 1), target},
+		{"pitch", singletonRepeatAttributes, strings.Replace(target, `<step>D</step>`, `<step>Q</step>`, 1)},
+		{"instrument", singletonRepeatAttributes, strings.Replace(target, `id="I1"`, `id="missing"`, 1)},
+		{"staff", singletonRepeatAttributes, strings.Replace(target, `<staff>1</staff>`, `<staff>0</staff>`, 1)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			singletonRepeatAssess(t, []string{singletonRepeatBeatBody(tc.attributes, source, tc.target)}, validation.EvidenceInvalid)
+		})
+	}
 }
