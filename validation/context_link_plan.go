@@ -124,3 +124,17 @@ func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
 	p.context.sourceInfoset = true
 	return checkedPlan(p)
 }
+
+// NewXMLFragmentLinkContextPlan elects the registered XML-media fragment
+// baseline: XPointer Framework, shorthand and element(). Source infoset mode
+// joins effective DTD and XSD identities. The ordinary source/current-model mode
+// uses its present XSD identity and element order, without inventing DTD history.
+func NewXMLFragmentLinkContextPlan(schema *CompiledSchema, sourceInfoset bool) (Plan, error) {
+	p, err := NewLocalLinkContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = sourceInfoset
+	p.context.fragments = fragmentFramework
+	return checkedPlan(p)
+}

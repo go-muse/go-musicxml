@@ -1586,7 +1586,46 @@ Legal explicit `ID #REQUIRED` and `ID #IMPLIED` declarations are supported;
 illegal ID value/fixed defaults retain limited typing evidence and leave the
 selection authority incomplete, without inventing DTD validation findings.
 No external declarations are fetched and current models never manufacture
-historical DTD absence or IDs. Unknown/absent selected targets still charge
+historical DTD absence or IDs.
+
+A catalog may explicitly elect `NewXMLFragmentLinkContextPlan(schema,
+sourceInfoset)` for the registered XML-media fragment baseline. This adds the
+XPointer Framework and mandatory `element()` scheme, and pins that interpretation
+in the catalog digest. `sourceInfoset=true` requires the selected source
+provenance/declaration capabilities and joins DTD and XSD IDs; `false` uses the
+selected ordinary source or current-model XSD domain only. The snapshot owns a
+complete, bounded index of all admitted elements, their actual parents and
+occurrence order, including elements without schema IDs or context rows.
+
+The Framework validates its entire syntax before interpreting parts. It reverses
+only its `^^`, `^(` and `^)` escapes; URI percent decoding has already happened
+once. Parts are attempted left to right. Unsupported schemes are skipped;
+`xmlns()`, prefixed schemes and arbitrary `xpointer()`/XPath are not elected.
+A supported unavailable result cannot be skipped. Malformed `element()` data
+and complete out-of-range paths are empty parts and permit fallback; malformed
+Framework syntax is separately reported. Exhausting supported empty parts fails
+the pointer; an entirely unsupported scheme sequence retains an unsupported
+capability result.
+
+`element(ID)` uses joined first-owner selection. `/1` starts at the document
+root, and subsequent positive, nonzero-prefixed integers select element children
+only; text, comments and processing instructions never affect ordinals. Arbitrary
+width ordinals are validated under the shared budget and safely bounded against
+the finite admitted tree without integer truncation. Missing tree/ID closure
+keeps resolution unknown. `ResourceAdoption.ResolveXMLFragment` exposes an owned,
+adoption-remapped selected result without exposing retained trees or DTD tables;
+`selected=false` preserves the legacy adapter route. All pointer input, temporary
+parser storage, lookup work and copying share the root account. Direct XML target
+evidence remains mandatory: an outer MXL fragment is never applied to its inner
+primary XML.
+
+The selected baseline follows [RFC 7303 sections 5 and 9.6.1](https://www.rfc-editor.org/rfc/rfc7303#section-5),
+[XPointer Framework sections 3–4](https://www.w3.org/TR/2003/REC-xptr-framework-20030325/),
+and [element() section 3](https://www.w3.org/TR/2003/REC-xptr-element-20030325/#language).
+This election adds no document `xml:base` or `xml:id` consumers: the fixed
+MusicXML/Opus/Container/Sounds assemblies do not admit those attributes.
+
+Unknown/absent selected targets still charge
 linked-document admission. Each known edge uses its own nonroot adoption distinct
 from its source. A target may belong to another explicitly admitted package
 boundary; a known empty fragment target must be its exact nonzero adopted root.

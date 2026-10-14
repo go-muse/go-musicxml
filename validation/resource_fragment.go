@@ -2,7 +2,7 @@ package validation
 
 import (
 	"context"
-	"github.com/go-muse/go-musicxml/internal/xsd"
+	"unicode/utf8"
 )
 
 type fragmentMode uint8
@@ -154,12 +154,15 @@ func (s *PackageSession) resolveFragmentID(ctx context.Context, snap *ResourceSn
 	return Evidence[NodeRef]{State: EvidenceAbsent}, nil
 }
 func (s *PackageSession) fragmentSelectionDecision(ctx context.Context, d Decision, e PackageEdgeObservation, target *packageAdoption) Decision {
-	result, err := s.resolveFragmentID(ctx, target.resource.snapshot, e.Fragment.Value)
+	result, err := s.resolveXMLFragment(ctx, target.resource.snapshot, e.Fragment.Value)
 	if err != nil {
 		return d
 	}
 	if result.State == EvidenceAbsent {
 		d.Outcome, d.Reason = OutcomeFail, "fragment-id-absent"
+		if result.Reason != "" {
+			d.Reason = result.Reason
+		}
 		return d
 	}
 	if result.State != EvidenceKnown {
@@ -192,7 +195,16 @@ func (a *ResourceAdoption) ResolveXMLFragment(ctx context.Context, fragment stri
 	if snap.fragments == nil {
 		return result, false, nil
 	}
-	if !validText(fragment, 4096) {
+	if len(fragment) > 4096 {
+		return result, true, contract("XML fragment", "bounded once-decoded text required")
+	}
+	if err = a.owner.account.Check(BudgetScalarBytes, int64(len(fragment))); err != nil {
+		return result, true, err
+	}
+	if err = a.owner.scan(ctx, 1+3*int64(len(fragment))); err != nil {
+		return result, true, err
+	}
+	if !utf8.ValidString(fragment) || snap.fragments.Mode != fragmentFramework && !validText(fragment, 4096) {
 		return result, true, contract("XML fragment", "bounded once-decoded text required")
 	}
 	if fragment == "" {
@@ -201,10 +213,8 @@ func (a *ResourceAdoption) ResolveXMLFragment(ctx context.Context, fragment stri
 		} else {
 			result = fragmentKnown(snap.header.Root)
 		}
-	} else if !xsd.ValidXSDNCName(fragment) {
-		result = Evidence[NodeRef]{State: EvidenceUnsupported, Reason: "fragment-grammar-unimplemented"}
 	} else {
-		result, err = a.owner.resolveFragmentID(ctx, snap, fragment)
+		result, err = a.owner.resolveXMLFragment(ctx, snap, fragment)
 	}
 	if err != nil {
 		return Evidence[NodeRef]{}, true, err
