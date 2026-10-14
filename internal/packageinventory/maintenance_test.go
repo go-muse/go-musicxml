@@ -979,13 +979,20 @@ func TestMaintenanceWorkflowLineEndings(t *testing.T) {
 	}
 }
 
+func TestMaintenanceAcceptanceMetadataRequiresAllCurrentCIJobs(t *testing.T) {
+	t.Parallel()
+	f := newMaintenanceFixture(t)
+	result := f.run(t, "verify", 0, "--strict-evidence")
+	maintenanceEqual(t, result["semantic_resource_execution_acceptance"], "NOT CLAIMED; independent final tree, seven local stages and all exact-head CI jobs still required")
+}
+
 func TestMaintenanceExistingLinuxJobsRequireMaintenanceWithoutNewGoStage(t *testing.T) {
 	t.Parallel()
 	repo := maintenanceRepo(t)
 	for _, tc := range []struct {
 		name string
 		jobs []string
-	}{{"ci.yml", []string{"quality", "test", "race", "xsd-conformance", "fuzz"}}, {"release.yml", []string{"verify", "publish"}}} {
+	}{{"ci.yml", []string{"quality", "test", "race-root", "race-packages", "race", "xsd-conformance", "fuzz"}}, {"release.yml", []string{"verify", "publish"}}} {
 		t.Run(tc.name, func(t *testing.T) {
 			text := maintenanceWorkflowText(maintenanceRead(t, filepath.Join(repo, ".github/workflows", tc.name)))
 			parts := strings.SplitN(text, "jobs:\n", 2)

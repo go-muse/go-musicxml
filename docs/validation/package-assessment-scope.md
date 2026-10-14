@@ -67,6 +67,10 @@ The archived record for private candidate 388dbe06aaedda02b7d1f07a9ebe35ee6a5fd7
 
 ## Acceptance gates pending at the historical observation
 
+The nine-job counts below describe that historical observation and freeze
+procedure. The [current CI layout](../../CONTRIBUTING.md#local-checks) expands
+to eleven checks; a new final tree requires all of its exact-head CI checks.
+
 - seven local stages plus nine exact-head remote jobs: pending final tree; actual 386 and real xmllint required. Owner: lead release/CI verification.
 
 These are batch 8 completion gates. They must not be relabeled as batch 9 residuals. Earlier focused passes, a 386 compile, or old batch 7 workload measurements cannot certify the final tree.

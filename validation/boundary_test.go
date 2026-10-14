@@ -115,7 +115,7 @@ func TestRaceStageRetainsFullCoverageWithFiniteHeadroom(t *testing.T) {
 	}
 	// The full bounded suite approaches Go's implicit ten-minute package limit.
 	// Retain all race checks and one uncached execution, with an explicit finite
-	// deadline below the unchanged twenty-minute CI job cap.
+	// deadline below each unchanged twenty-minute CI execution-job cap.
 	if !strings.Contains(stage, `"$check_go" test -race -count=1 -timeout=15m ./...`) {
 		t.Fatal("race stage must retain full coverage and a finite fifteen-minute package deadline")
 	}
@@ -125,13 +125,19 @@ func TestRaceStageRetainsFullCoverageWithFiniteHeadroom(t *testing.T) {
 	}
 	lf := strings.ReplaceAll(string(workflow), "\r\n", "\n")
 	for _, checkout := range []string{lf, strings.ReplaceAll(lf, "\n", "\r\n")} {
-		_, job, ok := strings.Cut(strings.ReplaceAll(checkout, "\r\n", "\n"), "\n  race:\n")
-		if !ok {
-			t.Fatal("missing CI race job")
-		}
-		job, _, ok = strings.Cut(job, "\n  xsd-conformance:")
-		if !ok || !strings.Contains(job, "timeout-minutes: 20") {
-			t.Fatal("race CI job must retain its finite twenty-minute cap")
+		for _, tc := range []struct{ name, next, cap string }{
+			{"race-root", "race-packages", "20"},
+			{"race-packages", "race", "20"},
+			{"race", "xsd-conformance", "5"},
+		} {
+			_, job, ok := strings.Cut(strings.ReplaceAll(checkout, "\r\n", "\n"), "\n  "+tc.name+":\n")
+			if !ok {
+				t.Fatalf("missing CI %s job", tc.name)
+			}
+			job, _, ok = strings.Cut(job, "\n  "+tc.next+":\n")
+			if !ok || !strings.Contains(job, "    timeout-minutes: "+tc.cap+"\n") {
+				t.Fatalf("%s CI job must retain its finite %s-minute cap", tc.name, tc.cap)
+			}
 		}
 	}
 }

@@ -42,9 +42,19 @@ executions by default (`VALIDATION_FUZZ_TIME` overrides this count). The MXL
 round-trip and raw ZIP assessment-observer targets each run 10,000 executions
 (`MXL_FUZZ_TIME`). The Linux test job also executes
 `GOARCH=386 go test -count=1 ./...` to exercise host-width contracts.
-The full race stage uses an explicit finite 15-minute per-package timeout; its
-CI job retains a 20-minute cap. This allows host-timing headroom for the complete
-uncached race suite without skipping tests or changing assessment budgets.
+The full race stage uses an explicit finite 15-minute per-package timeout.
+Local and release checks retain `go test -race -count=1 -timeout=15m ./...`.
+CI runs two exhaustive, disjoint race shards on standard Linux runners: the
+module root and every other package discovered by `go list -race ./...`.
+Each shard retains a 20-minute job cap and the same detector, test and assessment
+budgets. Only each CI execution step sets `RACE_SHARD=root` or
+`RACE_SHARD=packages`; an unset value runs the full command, and empty or unknown
+values fail. Discovery errors, malformed or duplicate inventories, an absent
+root, and an empty selected shard also fail before tests start.
+The stable `Race detector` check succeeds only when both shards succeed; failed,
+cancelled, skipped, or missing shard results cannot pass its aggregate gate.
+This deliberately changes CI from nine jobs to eleven without changing the
+seven local stages or the release checks.
 
 Package obligation inventories also have standard-library Go checks,
 required in the Linux CI jobs:
@@ -102,12 +112,30 @@ can increase system CPU and peak memory. Both the whitespace and lexical XML
 oracle matrices use the shared parallel helper; Go's `-parallel` limit bounds
 their active cases. Compare wall time, CPU and memory separately on the actual
 runner rather than extrapolating a many-core local speedup.
-The existing Linux race job records its available CPU count and memory, then
-wraps the unchanged race command with `/usr/bin/time -v`. User and system CPU
-can exceed wall time on multiple cores. Its maximum resident-set measurement
-is a maximum child/process observation, not the aggregate peak of simultaneous
-processes or a proof of whole-job memory headroom. The wrapper preserves the
-race command's exit status; no additional measurement-only run is required.
+Each Linux race shard records its available CPU count and memory, then wraps
+its race stage with `/usr/bin/time -v`. User and system CPU can exceed wall time
+on multiple cores. Its maximum resident-set measurement is a maximum
+child/process observation, not the aggregate peak of simultaneous processes or
+a proof of whole-job memory headroom. The wrapper preserves the race command's
+exit status; no additional measurement-only run is required. Sharding uses two
+runners and can increase total CPU and runner-minutes even when wall time falls.
+Compare the elapsed time from workflow creation through completion of the
+`Race detector` aggregate, including queueing and setup, rather than the short
+gate job's own duration. Local shard timings alone do not establish hosted CI
+latency or available concurrency.
+
+A matched local shared-host observation of the pre-sharding tree `5d2264f5`
+used Go 1.27.2 on Linux/amd64, `GOMAXPROCS=4`, `-p=4`, and warmed, identical
+race binaries. The full race run completed in 390.254 seconds on CPUs 0–3.
+Two simultaneous shards, pinned to CPUs 0–3 and 4–7, completed in 309.096 and
+218.091 seconds: about 20.8% less
+critical-path wall time, with roughly 4.9% more summed CPU and 35.1% more summed
+runner occupancy. This used two CPU allocations rather than one; shared-host
+load, queueing, setup, and hosted runner availability limit extrapolation.
+This external pre-sharding experiment did not run the new shard script. Its
+[recorded conditions](docs/validation/evidence/context-race-reliability.md#exhaustive-ci-sharding-observation)
+include the unchanged full-suite flags. Hosted end-to-end acceptance for this
+sharding change remains pending.
 
 ### Updating inspected test hashes
 

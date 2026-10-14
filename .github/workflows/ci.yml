@@ -95,8 +95,8 @@ jobs:
           GOARCH: "386"
         run: go test -count=1 ./...
 
-  race:
-    name: Race detector
+  race-root:
+    name: Race detector (root)
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -112,11 +112,60 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Run tests with race detector
+        shell: bash
+        env:
+          RACE_SHARD: root
         run: |
           printf 'Available CPUs: '
           nproc
           awk '/^MemTotal:/ { print }' /proc/meminfo
           /usr/bin/time -v bash scripts/check-all.sh race
+
+  race-packages:
+    name: Race detector (packages)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Run tests with race detector
+        shell: bash
+        env:
+          RACE_SHARD: packages
+        run: |
+          printf 'Available CPUs: '
+          nproc
+          awk '/^MemTotal:/ { print }' /proc/meminfo
+          /usr/bin/time -v bash scripts/check-all.sh race
+
+  race:
+    name: Race detector
+    needs: [race-root, race-packages]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Require both race shards
+        if: ${{ always() }}
+        shell: bash
+        env:
+          ROOT_RESULT: ${{ needs.race-root.result }}
+          PACKAGES_RESULT: ${{ needs.race-packages.result }}
+        run: |
+          if [[ "$ROOT_RESULT" != success || "$PACKAGES_RESULT" != success ]]; then
+            printf 'Race shards did not both succeed (root=%s, packages=%s).\n' "$ROOT_RESULT" "$PACKAGES_RESULT" >&2
+            exit 1
+          fi
 
   xsd-conformance:
     name: External XSD conformance

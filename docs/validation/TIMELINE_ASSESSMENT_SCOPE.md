@@ -276,7 +276,9 @@ marked executed merely because a related provider test passes.
 
 Both independent reviews accept the named production snapshot. Remaining
 integration gates are distinct from those reviewed code results:
-- All seven local stages after final documentation/tests and all nine exact-head CI jobs still require separately supplied evidence.
+- All seven local stages after final documentation/tests and all exact-head CI jobs still require separately supplied evidence. The
+  [current CI layout](../../CONTRIBUTING.md#local-checks) expands to eleven
+  checks; this does not rewrite earlier nine-job receipts.
 
 - `exact-arithmetic`: Immutable bounded exact source-decimal and current-model binary arithmetic, normalized quarter units.
 - `chronology`: Exact part/measure/event identities, cursor movement, proven divisions regions, no staff/voice or measure-label inventions.

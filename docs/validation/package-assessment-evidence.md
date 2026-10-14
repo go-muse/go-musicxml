@@ -249,7 +249,7 @@ commit; this record does not claim the later commit was itself measured.
 The earlier semantic acceptance and seven-stage/nine-job pending fields describe
 the historical private candidate. They are preserved without turning source
 routes or later focused passes into final acceptance. Current final packaged-tree
-seven-stage results and exact published-head nine-job CI must be recorded
+seven-stage results and exact published-head eleven-job CI must be recorded
 separately with their own commit/tree and execution evidence. A native 386
 cross-build does not count as actual 386 execution; the remote actual-386 job and required real xmllint
 remain separate mandatory gates. Earlier candidate passes are not final-head CI.

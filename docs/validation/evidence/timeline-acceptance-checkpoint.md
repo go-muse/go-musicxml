@@ -155,7 +155,7 @@ projection and canonical-identity regressions have actual implementation and
 executed evidence above. No earlier RED is retroactively relabeled as a pass.
 
 - The exact final documentation/test integration requires all seven local
-  repository stages, followed by all nine exact-head CI jobs when publication
+  repository stages, followed by all exact-head CI jobs when publication
   is authorized. The final head does not exist until that integration completes.
 - Original source-dependent donor/group ambiguities remain precise evidence
   boundaries. A named test or a truthful Unsupported result does not execute a
@@ -173,7 +173,9 @@ The profile snapshot and 243-case named-test binding are reconciled. Independent
 semantic/resource acceptance and the initial seven-stage run above remain pinned
 to their tested production code. All
 seven repository-local stages on the final documentation/test integration and
-all nine exact-head CI jobs remain pending until explicit results are supplied. Cross-compilation is not actual 386 execution;
+all exact-head CI jobs remain pending until explicit results are supplied. The
+[current CI layout](../../../CONTRIBUTING.md#local-checks) expands to eleven
+checks; earlier named-head nine-job receipts remain historical. Cross-compilation is not actual 386 execution;
 the latter remains a CI requirement. Real xmllint evidence concerns XSD controls,
 not musical semantics.
 
