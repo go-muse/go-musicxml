@@ -521,6 +521,9 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 		d.Reason = "xsd-assessment-unavailable"
 		if len(result.Limitations) > 0 {
 			d.Reason = Code(result.Limitations[0].Reason)
+			if result.Limitations[0].Unknown {
+				d.Outcome = OutcomeUnknown
+			}
 		}
 		cause, err := s.schemaResultCause(ctx, n, s.catalog.plans[r.Predicate].xsdCheck)
 		if err != nil {
@@ -582,6 +585,17 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 			}
 			if related := s.nodes[NodeID(relatedID)]; related != nil {
 				detail.Related = append(detail.Related, related.header.Location)
+			}
+		}
+		if issue.EntitySequence != 0 && s.sourceEntities != nil {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			if origin := s.sourceEntities.origins[issue.EntitySequence]; origin.State == EvidenceKnown {
+				if err := s.retain(128); err != nil {
+					return err
+				}
+				detail.Related = append(detail.Related, origin.Value)
 			}
 		}
 		if err := s.accumulator.storeDiagnostic(r, detail, location); err != nil {

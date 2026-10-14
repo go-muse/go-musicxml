@@ -143,11 +143,22 @@ func TestSourceEntityDeclarationsAdmissionPhase(t *testing.T) {
 	ctx := context.Background()
 	schema := entityDeclarationSchema(t, entityBuiltin("ENTITY"))
 	e := entityDeclarationEngine(t, schema, XSDCheckScalar)
-	for _, phase := range []string{"before-root", "duplicate", "after-attribute", "after-attribute-seal", "after-child", "closed", "finished", "legacy", "unsupported-only"} {
+	for _, phase := range []string{"before-root", "duplicate", "after-attribute", "after-attribute-seal", "after-child", "closed", "finished", "legacy", "unsupported-only", "unselected"} {
 		t.Run(phase, func(t *testing.T) {
 			chosen := e
 			if phase == "legacy" {
 				chosen = sourceSchemaEngineFor(t, schema, XSDCheckScalar)
+			}
+			if phase == "unselected" {
+				r, p, b := entityDeclarationDefinitions(t, schema, XSDCheckScalar)
+				b[0].Plan, _ = NewXSDPlan(schema, XSDCheckScalar)
+				extra, _ := NewXSDPlanWithSourceDeclarations(schema, XSDCheckScalar)
+				b = append(b, PlanBinding{ID: "unselected", Plan: extra})
+				c, err := NewCatalog(r, p, b)
+				if err != nil {
+					t.Fatal(err)
+				}
+				chosen, _ = NewEngine(c)
 			}
 			if phase == "unsupported-only" {
 				r, p, b := entityDeclarationDefinitions(t, schema, XSDCheckScalar)

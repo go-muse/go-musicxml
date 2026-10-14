@@ -73,6 +73,10 @@ func canonicalBuiltin(name, lexical string, c *Context) (string, bool) {
 
 func (c *Context) CanonicalSimpleLiteral(semantics *SimpleSemantics, literal string) (string, bool) {
 	c.step(1)
+	if c.sourceDeclarations {
+		c.entityLiteralDepth++
+		defer func() { c.entityLiteralDepth-- }()
+	}
 	if semantics == nil {
 		c.Incomplete("constraint literal type metadata cannot be resolved")
 		return "", false

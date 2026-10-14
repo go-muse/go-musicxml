@@ -210,6 +210,10 @@ type Attribute struct {
 type Context struct {
 	sourceDeclarations      bool
 	entityDeclarations      *EntityDeclarations
+	entityLiteralDepth      int
+	entityDeferred          int
+	entityConstructedDepth  int
+	entityIssueSequence     uint64
 	currentTrials           int
 	currentFixedUnavailable bool
 	identitySource          identityOrigin
@@ -1193,6 +1197,9 @@ func (c *Context) ValidateAttributes(
 		)
 	}
 	c.absentAttributeFacts(schemas, present)
+	if c.sourceDeclarations && c.local != nil && !c.local.results.Attributes.Valid {
+		return false
+	}
 	return valid
 }
 
@@ -1353,6 +1360,28 @@ func (c *Context) AssessSimpleValue(
 		return SimpleAssessment{}, &SimpleFailure{Constraint: "schema", Message: "simple type cannot be resolved"}
 	}
 	value = semantics.normalize(value, c)
+	// Direct ENTITY/ENTITIES restriction chains first establish lexical/facet
+	// validity. The document-domain prerequisite cannot hide an independent facet
+	// failure, and only the outermost restriction performs its membership check.
+	if c.sourceDeclarations && c.entityLiteralDepth == 0 && entityBuiltin(semantics.Builtin) && semantics.List == nil && semantics.Union == nil {
+		c.entityDeferred++
+		defer func() {
+			// An interrupted lexical/facet operation has no result to assess. Restore
+			// scope without converting its zero result into a declaration absence.
+			stop := recover()
+			c.entityDeferred--
+			if stop != nil {
+				panic(stop)
+			}
+			if failure == nil && c.entityDeferred == 0 {
+				failure = c.assessEntityMembership(semantics.Builtin, result.Lexical)
+			}
+		}()
+	}
+	if c.sourceDeclarations && c.entityLiteralDepth == 0 && (schema.Form == SimpleList || schema.Form == SimpleUnion) {
+		c.entityConstructedDepth++
+		defer func() { c.entityConstructedDepth-- }()
+	}
 	switch schema.Form {
 	case SimpleRestriction:
 		assessment, failure := c.AssessSimpleMemberValue(schema.Base, value, display)
@@ -1438,6 +1467,9 @@ func (c *Context) AssessSimpleValue(
 		}
 
 	case SimpleList:
+		if c.sourceDeclarations && c.entityLiteralDepth == 0 && value == "" && c.entityBearingMember(schema.Item) {
+			return SimpleAssessment{}, c.entityConstructionUnavailable()
+		}
 		result := SimpleAssessment{Lexical: value, Value: SimpleValue{Domain: ListDomain}}
 		for index, item := range splitList(value, c) {
 			c.step(1)

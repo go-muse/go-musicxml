@@ -2,7 +2,6 @@ package validation
 
 import (
 	"context"
-	"math"
 	"strings"
 	"unicode/utf8"
 
@@ -28,6 +27,7 @@ type SourceEntityDeclaration struct {
 // replacement-content well-formedness and effective attribute completeness.
 // Known false and unavailable completeness require an explicit reason. Only
 // known true permits an absent name to disprove unparsed-entity membership.
+// An optional known-true reason is explanatory and does not alter completeness.
 // The Session copies facts; the caller may mutate or release them after return.
 type SourceEntityDeclarations struct {
 	DocumentID   string
@@ -59,7 +59,10 @@ func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEnti
 	if facts.DocumentID != s.documentID {
 		return s.fail(contract("source entity declarations", "document mismatch"))
 	}
-	if err = s.step(ctx, 1+int64(len(facts.DocumentID))+evidenceLogicalBytes(facts.Complete)); err != nil {
+	if len(facts.Complete.Reason) > maxIdentityBytes || facts.Complete.Cause != nil {
+		return s.fail(contract("source entity declaration completeness", "bounded cause-free evidence required"))
+	}
+	if err = s.step(ctx, 1+int64(len(facts.DocumentID))+int64(len(facts.Complete.Reason))); err != nil {
 		return s.fail(err)
 	}
 	if err = validateEvidence(facts.Complete, "source entity declaration completeness"); err != nil {
@@ -68,8 +71,9 @@ func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEnti
 	if facts.Complete.State == EvidenceAbsent || facts.Complete.State == EvidenceInvalid || facts.Complete.State == EvidenceKnown && !facts.Complete.Value && !validID(string(facts.Complete.Reason)) {
 		return s.fail(contract("source entity declaration completeness", "explicit enumeration evidence and reason for incompleteness required"))
 	}
-	if int64(len(facts.Declarations)) > math.MaxInt64/512 {
-		return s.fail(contract("source entity declarations", "snapshot size overflow"))
+	mapBytes, sizeErr := sourceEntityMapBytes(len(facts.Declarations), int64(len(facts.Complete.Reason)))
+	if sizeErr != nil {
+		return s.fail(sizeErr)
 	}
 	before := s.retained
 	defer func() {
@@ -85,7 +89,7 @@ func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEnti
 	if err = s.step(ctx, int64(len(facts.Declarations))); err != nil {
 		return err
 	}
-	if err = s.retain(512 + int64(len(facts.Declarations))*512 + evidenceLogicalBytes(facts.Complete)); err != nil {
+	if err = s.retain(mapBytes); err != nil {
 		return err
 	}
 	owned := &sourceEntityDeclarations{domain: xsd.EntityDeclarations{Bindings: make(map[string]xsd.EntityDeclaration, len(facts.Declarations)), Complete: facts.Complete.State == EvidenceKnown && facts.Complete.Value, Reason: strings.Clone(string(facts.Complete.Reason))}, origins: make(map[uint64]Evidence[Location], len(facts.Declarations))}
@@ -93,13 +97,19 @@ func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEnti
 		if err = s.account.Check(BudgetScalarBytes, int64(len(row.Name))); err != nil {
 			return err
 		}
-		if err = s.step(ctx, 1+int64(len(row.Name))*3+evidenceLogicalBytes(row.Origin)+locationLogicalBytes(row.Origin.Value)); err != nil {
+		originBytes, metadataErr := sourceEntityOriginBytes(row.Origin)
+		if metadataErr != nil {
+			return metadataErr
+		}
+		if err = s.step(ctx, 1+originBytes); err != nil {
 			return err
 		}
-		if !sourceEntityNCName(row.Name) {
-			return contract("source entity name", "valid source XML NCName required")
+		if err = s.validateSourceEntityName(ctx, row.Name); err != nil {
+			return err
 		}
-		if err = ctx.Err(); err != nil {
+		// String-key hashing and copying are separately admitted before map lookup
+		// or allocation. The name scan above polls cancellation every 256 bytes.
+		if err = s.step(ctx, int64(len(row.Name))); err != nil {
 			return err
 		}
 		if row.Sequence == 0 {
@@ -125,7 +135,15 @@ func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEnti
 				return contract("source entity declaration origin", "known site requires original-byte coordinates")
 			}
 		}
-		if err = s.retain(int64(len(row.Name)) + evidenceLogicalBytes(row.Origin) + locationLogicalBytes(row.Origin.Value)); err != nil {
+		nameBytes := int64(len(row.Name))
+		hostMax := int64(^uint(0) >> 1)
+		if nameBytes > hostMax-originBytes {
+			return contract("source entity declarations", "snapshot entry exceeds host allocation size")
+		}
+		if err = s.retain(nameBytes + originBytes); err != nil {
+			return err
+		}
+		if err = s.step(ctx, nameBytes); err != nil {
 			return err
 		}
 		name := strings.Clone(row.Name)
@@ -143,19 +161,52 @@ func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEnti
 	return nil
 }
 
+// sourceEntityMapBytes proves both conservative map allowance arithmetic and
+// host allocation width before make, even when callers raise default budgets.
+func sourceEntityMapBytes(count int, extra int64) (int64, error) {
+	hostMax := int64(^uint(0) >> 1)
+	if count < 0 || extra < 0 || extra > hostMax-512 || int64(count) > (hostMax-512-extra)/512 {
+		return 0, contract("source entity declarations", "snapshot size exceeds host allocation size")
+	}
+	return 512 + extra + int64(count)*512, nil
+}
+
+// Bound every metadata string before calling shared logical-size helpers, whose
+// native-int sums are safe only after these fixed ingress contracts hold.
+func sourceEntityOriginBytes(origin Evidence[Location]) (int64, error) {
+	v := origin.Value
+	if origin.Cause != nil || len(origin.Reason) > maxIdentityBytes || len(v.DocumentID) > maxIdentityBytes || len(v.Path) > 16384 || len(v.Entry) > 4096 || v.Position != nil && len(v.Position.CoordinateSpace) > maxIdentityBytes {
+		return 0, contract("source entity declaration origin", "bounded cause-free location evidence required")
+	}
+	return evidenceLogicalBytes(origin) + locationLogicalBytes(v), nil
+}
+
 // Source names use XML 1.0 Fifth Edition, independently of the narrower pinned
-// XSD 1.0 scalar-name repertoire. The caller admits the whole byte scan first.
-func sourceEntityNCName(name string) bool {
-	if name == "" || !utf8.ValidString(name) {
-		return false
+// XSD 1.0 scalar-name repertoire. Decode one rune at a time; invalid UTF-8 cannot
+// masquerade as the legal replacement character. Each bounded chunk is charged
+// and cancellation-checked before its scan.
+func (s *Session) validateSourceEntityName(ctx context.Context, name string) error {
+	if name == "" {
+		return contract("source entity name", "nonempty source XML NCName required")
 	}
 	first := true
-	for _, r := range name {
-		start := r == '_' || r >= 'A' && r <= 'Z' || r >= 'a' && r <= 'z' || r >= 0xc0 && r <= 0xd6 || r >= 0xd8 && r <= 0xf6 || r >= 0xf8 && r <= 0x2ff || r >= 0x370 && r <= 0x37d || r >= 0x37f && r <= 0x1fff || r >= 0x200c && r <= 0x200d || r >= 0x2070 && r <= 0x218f || r >= 0x2c00 && r <= 0x2fef || r >= 0x3001 && r <= 0xd7ff || r >= 0xf900 && r <= 0xfdcf || r >= 0xfdf0 && r <= 0xfffd || r >= 0x10000 && r <= 0xeffff
-		if !start && (first || !(r == '-' || r == '.' || r >= '0' && r <= '9' || r == 0xb7 || r >= 0x300 && r <= 0x36f || r >= 0x203f && r <= 0x2040)) {
-			return false
+	for offset := 0; offset < len(name); {
+		end := offset + min(256, len(name)-offset)
+		if err := s.step(ctx, int64(min(259, len(name)-offset))); err != nil {
+			return err
 		}
-		first = false
+		for offset < end {
+			r, width := utf8.DecodeRuneInString(name[offset:])
+			if r == utf8.RuneError && width == 1 {
+				return contract("source entity name", "valid UTF-8 required")
+			}
+			start := r == '_' || r >= 'A' && r <= 'Z' || r >= 'a' && r <= 'z' || r >= 0xc0 && r <= 0xd6 || r >= 0xd8 && r <= 0xf6 || r >= 0xf8 && r <= 0x2ff || r >= 0x370 && r <= 0x37d || r >= 0x37f && r <= 0x1fff || r >= 0x200c && r <= 0x200d || r >= 0x2070 && r <= 0x218f || r >= 0x2c00 && r <= 0x2fef || r >= 0x3001 && r <= 0xd7ff || r >= 0xf900 && r <= 0xfdcf || r >= 0xfdf0 && r <= 0xfffd || r >= 0x10000 && r <= 0xeffff
+			if !start && (first || !(r == '-' || r == '.' || r >= '0' && r <= '9' || r == 0xb7 || r >= 0x300 && r <= 0x36f || r >= 0x203f && r <= 0x2040)) {
+				return contract("source entity name", "valid source XML NCName required")
+			}
+			offset += width
+			first = false
+		}
 	}
-	return true
+	return s.step(ctx, 0)
 }
