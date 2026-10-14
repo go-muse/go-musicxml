@@ -14,9 +14,9 @@ func TestPackageReviewMediaParametersAndScratch(t *testing.T) {
 	}{
 		{"application/vnd.recordare.musicxml+xml", OutcomePass},
 		{"Application/VND.Recordare.MusicXML+XML; Charset=utf-8", OutcomePass},
-		{"application/vnd.recordare.musicxml+xml; foo=bar", OutcomeUnknown},
-		{"application/vnd.recordare.musicxml; charset=utf-8", OutcomeUnknown},
-		{"application/vnd.recordare.musicxml; foo=bar", OutcomeUnknown},
+		{"application/vnd.recordare.musicxml+xml; foo=bar", OutcomePass},
+		{"application/vnd.recordare.musicxml; charset=utf-8", OutcomePass},
+		{"application/vnd.recordare.musicxml; foo=bar", OutcomePass},
 		{"Application/VND.Recordare.MusicXML", OutcomePass},
 		{"application/pdf", OutcomeFail},
 		{"application/x-unreviewed", OutcomeUnknown},
@@ -73,8 +73,8 @@ func TestPackageReviewFileAdviceSharesMIMEPolicy(t *testing.T) {
 	}{
 		{"score.musicxml", "Application/VND.Recordare.MusicXML+XML", false, OutcomePass},
 		{"score.musicxml", "application/vnd.recordare.musicxml+xml; charset=utf-8", false, OutcomePass},
-		{"score.musicxml", "application/vnd.recordare.musicxml+xml; foo=bar", false, OutcomeUnknown},
-		{"score.mxl", "application/vnd.recordare.musicxml; foo=bar", true, OutcomeUnknown},
+		{"score.musicxml", "application/vnd.recordare.musicxml+xml; foo=bar", false, OutcomePass},
+		{"score.mxl", "application/vnd.recordare.musicxml; foo=bar", true, OutcomePass},
 		{"score.musicxml", "application/x-unreviewed", false, OutcomeUnknown},
 		{"score.musicxml", "application/pdf", false, OutcomeFail},
 		{"score.musicxml", "application/vnd.recordare.musicxml", false, OutcomeFail},

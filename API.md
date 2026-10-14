@@ -1514,11 +1514,19 @@ bounded scoped filename/media-type recommendations; suffixes never prove content
 validity. Binary members are outside this MusicXML filename/media advice scope.
 `validation.ClassifyResourceMediaType(ctx, account, value)` shares bounded declared
 MIME applicability across package checks and adapters. It accepts registered
-MusicXML base types case-insensitively, including the XML type's optional charset;
-unreviewed parameters and types remain Unknown. It never verifies content or a
-resource pin. Callers preserve absent and invalid evidence before invoking it;
+MusicXML base types case-insensitively. Syntactically admitted distinct unknown
+parameters do not change that base identity (RFC 2045 sections 5–5.1); this includes
+charset on the compressed type without selecting a decoder. Repeated parameter
+names are case-insensitively erroneous even with equal values (RFC 6838 section
+4.3), and remain Unknown along with malformed declarations and unreviewed base
+types. RFC 2231 raw names such as `foo`, `foo*`, and `foo*0` remain distinct for
+this duplicate check; no decoded-name equivalence is inferred. The bounded ASCII
+declaration classifier does not elect internationalized header syntax. It never
+verifies content or a resource pin. Callers preserve absent and invalid evidence before invoking it;
 present-empty is unresolved. Scalar/step costs and temporary parse scratch use
-the supplied account; cancellation/quota errors remain errors. Bundle getters also
+the supplied account; cancellation/quota errors remain errors. Parser and raw-name
+index scratch is conservatively reserved together, so exact historical near-limit
+MIME budget outcomes can change without raising defaults. Bundle getters also
 preserve supplied mimetype prefix observations; incomplete retained prefixes cannot
 prove content mismatch.
 

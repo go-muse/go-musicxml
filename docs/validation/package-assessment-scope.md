@@ -112,7 +112,7 @@ These are batch 8 completion gates. They must not be relabeled as batch 9 residu
 | `CHECK-mxl-first-root-musicxml` | First encoded rootfile identifies actual musical primary; XML/child validity separate, nested substitution unresolved. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-mxl-score-before-parts` | Exact authoritative role evidence with complete scope; minimal single-score inventory can prove antecedent false; unclassified roles cannot. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-mxl-rootfile-document-root` | Referenced MusicXML XML root is unqualified score-partwise/timewise/opus; known PDF/audio alternate not parsed as MusicXML. | Five-axis source routes recorded; final exact-head execution pending. |
-| `CHECK-mxl-first-media-type` | Bounded case-insensitive registered direct MIME plus reviewed charset syntax, established non-MusicXML fails, unknown/empty/compressed interpretation unavailable. | Five-axis source routes recorded; final exact-head execution pending. |
+| `CHECK-mxl-first-media-type` | Bounded case-insensitive registered MIME identity; distinct unknown parameters ignored, duplicate/malformed declarations and unknown bases unavailable. Established non-MusicXML fails; nested content interpretation remains separate. | Five-axis source routes recorded; final exact-head execution pending. |
 
 ## All selected engineering requirements
 

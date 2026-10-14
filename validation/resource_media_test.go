@@ -23,7 +23,7 @@ func TestClassifyResourceMediaTypePreservesUnknownAndErrors(t *testing.T) {
 		{"image/png", EvidenceKnown, ResourceBinary, ""},
 		{"audio/ogg", EvidenceKnown, ResourceBinary, ""},
 		{"video/mp4", EvidenceKnown, ResourceBinary, ""},
-		{"application/vnd.recordare.musicxml; charset=utf-8", EvidenceUnknown, "", "musicxml-media-parameter-unresolved"},
+		{"application/vnd.recordare.musicxml; charset=utf-8", EvidenceKnown, ResourceRawMXL, ""},
 		{"application/example", EvidenceUnknown, "", "musicxml-media-type-set-unresolved"},
 		{"", EvidenceUnknown, "", "media-type-syntax-unresolved"},
 		{"application/vnd.recordare.musicxml+xml; broken", EvidenceUnknown, "", "media-type-syntax-unresolved"},
