@@ -45,6 +45,10 @@ func resourceAttribute(r *contextReader, n *factNode, role contextRole) Resource
 			}
 		}
 	}
+	if r.sourceInfoset {
+		out.Presence, out.Raw, r.err = r.s.sourcePhysicalAttribute(r.ctx, n, attribute, presence)
+		return out
+	}
 	out.Presence = presence
 	if attribute != nil {
 		out.Raw = attribute.Scalar.Lexeme
@@ -116,7 +120,7 @@ func evaluateResourceLinks(ctx context.Context, s *Session, _ *factNode, key Rul
 	if !final {
 		return Decision{}, true, nil
 	}
-	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	r := &contextReader{ctx: ctx, s: s, b: p.Bindings, sourceInfoset: p.sourceInfoset}
 	index := newResourceLinkIndex(r)
 	defer index.release(s)
 	if r.err != nil {

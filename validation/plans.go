@@ -284,6 +284,13 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	if (p.kind == planLocal || p.kind == planTypedReference) && (r.Scope != ScopeNode || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate) {
 		return contract("local plan", "required normative node predicate required")
 	}
+	if p.kind == planLocal && p.local.sourceInfoset {
+		for _, target := range r.Targets {
+			if target != TargetSource {
+				return contract("local source presence", "source-only target required")
+			}
+		}
+	}
 	if p.kind == planLocal || p.kind == planTypedReference {
 		for _, target := range r.Targets {
 			if target != TargetSource && target != TargetModel {

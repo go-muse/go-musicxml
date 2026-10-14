@@ -23,16 +23,17 @@ type PlanBinding struct {
 // A catalog makes only its profiles' explicit claims; no MusicXML profile is
 // implicitly supplied by this package.
 type CompiledCatalog struct {
-	sourceDeclarations map[ProfileID]map[Assembly]xsdPlanMode
-	sourceOrigins      map[ProfileID]map[Assembly]RuleKey
-	schemas            map[ProfileID]map[Assembly]*CompiledSchema
-	rules              map[RuleKey]RuleDefinition
-	profiles           map[ProfileID]Profile
-	plans              map[string]Plan
-	orders             map[ProfileID][]RuleKey
-	modelOrders        map[ProfileID][]RuleKey
-	phases             map[ProfileID][]catalogPhase
-	supports           map[ProfileID]map[RuleKey]RuleSupport
+	sourceDeclarations     map[ProfileID]map[Assembly]xsdPlanMode
+	sourceOrigins          map[ProfileID]map[Assembly]RuleKey
+	sourceAttributeLexical map[ProfileID]map[Assembly]RuleKey
+	schemas                map[ProfileID]map[Assembly]*CompiledSchema
+	rules                  map[RuleKey]RuleDefinition
+	profiles               map[ProfileID]Profile
+	plans                  map[string]Plan
+	orders                 map[ProfileID][]RuleKey
+	modelOrders            map[ProfileID][]RuleKey
+	phases                 map[ProfileID][]catalogPhase
+	supports               map[ProfileID]map[RuleKey]RuleSupport
 }
 
 // A declaration's registration phase collects every eligible subject before
@@ -231,6 +232,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			return nil, err
 		}
 		if err := validateDictionaryProfile(c, closure, schemas); err != nil {
+			return nil, err
+		}
+		if err := validateSourceResourceProfile(c, owned, closure, supports); err != nil {
 			return nil, err
 		}
 		if err := validateContextProfile(c, closure, schemas); err != nil {

@@ -71,7 +71,9 @@ type SchemaHintPair struct {
 // datatype violation. Complete is Known(false) for an observed unmatched token
 // and Known(true) for zero or evenly paired tokens. Raw distinguishes absent
 // schemaLocation from an explicitly empty value; NoNamespace retains its own
-// presence. Discarded model xsi attributes are never reconstructed.
+// presence. In provenance-aware source plans, DTD-defaulted and entity-generated
+// hints can have effective pairs despite physically absent Raw. Discarded model
+// xsi attributes are never reconstructed.
 type ResourceSchemaHintsContext struct {
 	Raw         Evidence[string]
 	Pairs       []SchemaHintPair

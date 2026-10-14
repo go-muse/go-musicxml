@@ -7,8 +7,8 @@ import (
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
-func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *int64) (ResourceAttribute, bool) {
-	out := resourceAbsentAttribute()
+func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *int64) (out ResourceAttribute, observed bool) {
+	out = resourceAbsentAttribute()
 	q := QName{Space: xsd.XSINamespace, Local: name}
 	var a *AttributeFact
 	for i := range n.attributes {
@@ -33,6 +33,14 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 	}
 	out.Presence = a.Presence
 	out.Raw = a.Scalar.Lexeme
+	effective := a.Scalar.Lexeme
+	if r.sourceInfoset {
+		defer func() {
+			if r.err == nil {
+				out.Presence, out.Raw, r.err = r.s.sourcePhysicalAttribute(r.ctx, n, a, a.Presence)
+			}
+		}()
+	}
 	if out.Presence.State != EvidenceKnown || !out.Presence.Value {
 		out.Value = stateUnavailable[bool, Atomic](out.Presence)
 		if out.Presence.State == EvidenceKnown {
@@ -40,8 +48,8 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 		}
 		return out, true
 	}
-	if out.Raw.State != EvidenceKnown {
-		out.Value = stateUnavailable[string, Atomic](out.Raw)
+	if effective.State != EvidenceKnown {
+		out.Value = stateUnavailable[string, Atomic](effective)
 		return out, true
 	}
 	// The kernel owns URI datatype validity. Discovery preserves any independent
@@ -71,15 +79,15 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 		out.Value = Evidence[Atomic]{State: EvidenceUnknown, Reason: "schema-hint-datatype-evidence-unavailable"}
 		return out, true
 	}
-	if !r.step(1 + int64(len(out.Raw.Value))*2) {
+	if !r.step(1 + int64(len(effective.Value))*2) {
 		return out, true
 	}
-	if err := r.s.account.Charge(BudgetBufferedBytes, int64(len(out.Raw.Value))+32); err != nil {
+	if err := r.s.account.Charge(BudgetBufferedBytes, int64(len(effective.Value))+32); err != nil {
 		r.err = err
 		return out, true
 	}
-	*scratch += int64(len(out.Raw.Value)) + 32
-	normalized := xsd.CollapseWhitespace(out.Raw.Value)
+	*scratch += int64(len(effective.Value)) + 32
+	normalized := xsd.CollapseWhitespace(effective.Value)
 	out.Value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicString, Text: normalized}}
 	return out, true
 }
@@ -87,7 +95,7 @@ func evaluateResourceHints(ctx context.Context, s *Session, _ *factNode, key Rul
 	if !final {
 		return Decision{}, true, nil
 	}
-	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	r := &contextReader{ctx: ctx, s: s, b: p.Bindings, sourceInfoset: p.sourceInfoset}
 	if s.profile.Target == TargetModel {
 		// The current model has no xsi input history. Do not copy a stale source
 		// snapshot, claim known omission, or serialize it to fabricate hints.
@@ -136,16 +144,29 @@ func projectResourceHintNode(r *contextReader, key RuleKey, n *factNode) error {
 		value.Complete = stateUnavailable[Atomic, bool](hint.Value)
 		value.Trailing = stateUnavailable[Atomic, string](hint.Value)
 	}
-	if hint.Raw.State == EvidenceKnown {
+	lexical := hint.Raw
+	if r.sourceInfoset {
+		lexical = Evidence[string]{State: EvidenceAbsent}
+		for i := range n.attributes {
+			if !r.step(1) {
+				return r.err
+			}
+			if n.attributes[i].Name == (QName{Space: xsd.XSINamespace, Local: "schemaLocation"}) {
+				lexical = n.attributes[i].Scalar.Lexeme
+				break
+			}
+		}
+	}
+	if lexical.State == EvidenceKnown {
 		// Split only XML's four whitespace characters. Pre-admit the worst-case
 		// pair headers before the bounded standard-library traversal/allocation.
-		bytes := int64(len(hint.Raw.Value))
+		bytes := int64(len(lexical.Value))
 		if !r.step(1 + bytes*3) {
 			return r.err
 		}
 		tokens := int64(0)
 		inToken := false
-		for _, ch := range hint.Raw.Value {
+		for _, ch := range lexical.Value {
 			white := ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r'
 			if !white && !inToken {
 				tokens++
@@ -160,7 +181,7 @@ func projectResourceHintNode(r *contextReader, key RuleKey, n *factNode) error {
 			return err
 		}
 		scratch += reserve
-		words := strings.FieldsFunc(hint.Raw.Value, func(r rune) bool { return r == ' ' || r == '\t' || r == '\n' || r == '\r' })
+		words := strings.FieldsFunc(lexical.Value, func(r rune) bool { return r == ' ' || r == '\t' || r == '\n' || r == '\r' })
 		state := Evidence[string]{State: EvidenceKnown}
 		if hint.Value.State != EvidenceKnown {
 			state = stateUnavailable[Atomic, string](hint.Value)

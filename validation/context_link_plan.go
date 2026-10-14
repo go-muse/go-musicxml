@@ -97,3 +97,31 @@ func resourceLinkBindingSpecs(assembly Assembly) []contextBindingSpec {
 	}
 	return out
 }
+
+// NewSourceLocalLinkContextPlan projects MusicXML or Opus effective resources
+// while preserving physical presence and separately admitted lexical evidence.
+// DTD defaults and entity-generated markup have no physical Raw spelling. It
+// requires a selected source-origin provider and does not perform any I/O.
+func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := NewLocalLinkContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = true
+	return checkedPlan(p)
+}
+
+// NewSourceSchemaHintContextPlan parses effective MusicXML or Opus source hints
+// independently of their physical Raw spelling. It requires a source-origin
+// provider; hints never select a schema or authorize retrieval.
+func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
+	if schema == nil || schema.assembly != AssemblyMusicXML && schema.assembly != AssemblyOpus {
+		return Plan{}, contract("source schema hints", "MusicXML or Opus assembly required")
+	}
+	p, err := NewSchemaHintContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = true
+	return checkedPlan(p)
+}

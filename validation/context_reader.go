@@ -10,6 +10,7 @@ import (
 // contextReader borrows admitted schema facts. It owns only its first error;
 // callers propagate err at every provider boundary, never substitute absence.
 type contextReader struct {
+	sourceInfoset   bool
 	ctx             context.Context
 	s               *Session
 	b               *contextBindings

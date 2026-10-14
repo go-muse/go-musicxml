@@ -31,14 +31,15 @@ type ChildValueRequirement struct {
 }
 
 type localPlan struct {
-	Operation    localOperation
-	Children     []DeclarationID
-	Attribute    AttributeSelector
-	Values       []Atomic
-	Triggers     []AttributeSelector
-	Owner        Selector
-	Relation     RelationKind
-	Requirements []ChildValueRequirement
+	sourceInfoset bool
+	Operation     localOperation
+	Children      []DeclarationID
+	Attribute     AttributeSelector
+	Values        []Atomic
+	Triggers      []AttributeSelector
+	Owner         Selector
+	Relation      RelationKind
+	Requirements  []ChildValueRequirement
 }
 
 // NewDistinctChildAttributePlan requires distinct effective attribute values on
@@ -56,6 +57,13 @@ func NewScalarOneOfPlan(values []Atomic) (Plan, error) {
 // proven omission makes this clause not applicable, even when a default exists.
 func NewPresentAttributeValuePlan(attribute AttributeSelector, values []Atomic) (Plan, error) {
 	return newLocalPlan(localPlan{Operation: localAttributeSet, Attribute: attribute, Values: values})
+}
+
+// NewSourceAttributeValuePlan checks an exact attribute supplied by the source
+// infoset, including DTD defaults and entity-generated markup. An XSD-only
+// default does not establish source presence. Only source rules may select it.
+func NewSourceAttributeValuePlan(attribute AttributeSelector, values []Atomic) (Plan, error) {
+	return newLocalPlan(localPlan{Operation: localAttributeSet, Attribute: attribute, Values: values, sourceInfoset: true})
 }
 
 // NewAttributeNumberOrTokensPlan accepts validated string members in tokens or
@@ -76,6 +84,13 @@ func NewAttributeNumberOrTokensPlan(attribute AttributeSelector, tokens []string
 // value whenever any exact trigger attribute is physically present.
 func NewPresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selector, attribute AttributeSelector, expected Atomic) (Plan, error) {
 	return newLocalPlan(localPlan{Operation: localPresenceAttribute, Triggers: triggers, Owner: owner, Attribute: attribute, Values: []Atomic{expected}})
+}
+
+// NewSourcePresenceImpliesAttributePlan requires owner and one validated value
+// when any exact trigger is supplied by the source infoset, including DTD
+// defaults and entity-generated markup. XSD-only defaults are not triggers.
+func NewSourcePresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selector, attribute AttributeSelector, expected Atomic) (Plan, error) {
+	return newLocalPlan(localPlan{Operation: localPresenceAttribute, Triggers: triggers, Owner: owner, Attribute: attribute, Values: []Atomic{expected}, sourceInfoset: true})
 }
 
 // NewAttributeImpliesRelatedChildPlan requires a selected child when an effective
@@ -124,6 +139,9 @@ func (p *localPlan) bounded() bool {
 func (p *localPlan) valid() error {
 	if p == nil || len(p.Values) > 4096 || len(p.Triggers) > 4096 || len(p.Requirements) > 4096 || len(p.Children) > 4096 {
 		return contract("local plan", "invalid finite parameter collection")
+	}
+	if p.sourceInfoset && p.Operation != localAttributeSet && p.Operation != localPresenceAttribute {
+		return contract("local source presence", "source presence mode requires a supported presence operator")
 	}
 	for _, v := range p.Values {
 		if err := validateAtomic(v); err != nil {
@@ -344,6 +362,12 @@ func (p *localPlan) digest() any {
 	}
 	for _, r := range p.Requirements {
 		out.Requirements = append(out.Requirements, requirement{r.Child, value{r.Expected.Kind, localDigestText(r.Expected), r.Expected.Name}, r.AllowAbsent})
+	}
+	if p.sourceInfoset {
+		return struct {
+			Presence string
+			Local    any
+		}{"source-infoset", out}
 	}
 	return out
 }

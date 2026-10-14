@@ -27,11 +27,12 @@ type ContextPlanSpec struct {
 	TimelineProvider RuleKey
 }
 type contextPlan struct {
-	Schema   *CompiledSchema
-	Timeline RuleKey
-	Provider RuleKey
-	Bindings *contextBindings
-	revision uint32
+	sourceInfoset bool
+	Schema        *CompiledSchema
+	Timeline      RuleKey
+	Provider      RuleKey
+	Bindings      *contextBindings
+	revision      uint32
 }
 
 // NewLocalContextPlan constructs the source-supported local default/fact
@@ -140,6 +141,9 @@ func (p *contextPlan) valid(kind planKind) error {
 	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Schema.assembly != contextPlanAssembly(kind) || p.Bindings == nil || p.revision != contextSemanticRevision {
 		return contract("context plan", "sealed MusicXML schema and exact context revision required")
 	}
+	if p.sourceInfoset && kind != planContextMusicXMLLinks && kind != planContextOpusLinks && kind != planContextMusicXMLHints && kind != planContextOpusHints {
+		return contract("source resource context", "MusicXML or Opus resource family required")
+	}
 	if p.Timeline != (RuleKey{}) && !catalogKey(p.Timeline) {
 		return contract("context timeline", "invalid provider revision")
 	}
@@ -165,7 +169,7 @@ func (p *contextPlan) digest(kind planKind) any {
 	if p == nil {
 		return nil
 	}
-	return struct {
+	out := struct {
 		Kind         planKind
 		Revision     uint32
 		SchemaDigest string
@@ -174,6 +178,13 @@ func (p *contextPlan) digest(kind planKind) any {
 		Provider     RuleKey
 		Bindings     string
 	}{kind, p.revision, p.Schema.Digest(), p.Schema.Assembly(), p.Timeline, p.Provider, p.Bindings.digest()}
+	if p.sourceInfoset {
+		return struct {
+			Provenance string
+			Context    any
+		}{"source-infoset", out}
+	}
+	return out
 }
 func (p Plan) validateContextFor(r RuleDefinition) error {
 	if !p.isContext() {
@@ -186,6 +197,9 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 		return contract("context rule", "normative mandatory family contract required")
 	}
 	for _, target := range r.Targets {
+		if p.context.sourceInfoset && target != TargetSource {
+			return contract("source resource target", "source-only target required")
+		}
 		if p.kind == planContextContainerMetadata && target != TargetSource {
 			return contract("container context target", "source-only assembly required")
 		}
