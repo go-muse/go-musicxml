@@ -122,5 +122,8 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 			return nil, err
 		}
 	}
+	if err := electXMLFragmentBaseline(d, target == validation.TargetSource); err != nil {
+		return nil, err
+	}
 	return d, nil
 }

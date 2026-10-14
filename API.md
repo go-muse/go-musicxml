@@ -1927,3 +1927,28 @@ rootfile, file-metadata or role-completeness capabilities. Encoding advice uses
 an ASCII hexadecimal diagnostic label; no legacy decoding or filename
 normalization is inferred. The existing unsafe-path operation error still stops
 selection, while an independently observed encoding recommendation remains visible.
+
+
+## Encoded semantic compositions
+
+`ProfileSourceSemantics` and `ProfileModelSemantics` select the bounded combined
+encoded MusicXML interpretation through existing `InspectXML`, `DecodeAssessed`,
+`AssessModel` and corresponding dictionary entry points. Source selects actually
+read internal declarations and owned origins; model selects current-state facts.
+Dictionary data is supplied through the unchanged `DictionaryOptions` contract.
+Neither profile loads data automatically or selects standard-sound recognition
+and dictionary-backed rendering advice for score nodes.
+
+For resources, use the existing dictionary graph/MXL entry points with the exact
+compatible `ProfileResourceGraphSemantics`, `ProfileMXLSourceSemantics` or
+`ProfileMXLModelSemantics`. Each catalog pins the actual source/model intrinsic
+profile and digest; unknown assemblies/targets are rejected. Source Container
+metadata remains physical/effective-aware. Existing explicit Sounds auxiliary
+support does not introduce public Sounds traversal or filename discovery.
+
+These profiles elect bounded barline/repeat proofs and the registered XML
+Framework, shorthand and `element()` interpretation. They preserve direct-target
+indirection gates, complete-domain requirements, current-model source gaps and
+independent intrinsic failures. They do not imply general XPath, renderer,
+external desired-score authority or universal conformance. See the
+[scope and acceptance boundary](docs/validation/semantic-composition-scope.md).

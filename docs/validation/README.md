@@ -37,6 +37,7 @@ scopes and their explicit limitations:
 - [Internal-DTD verification evidence](dtd-infoset-evidence.md)
 - [Declaration-dependent XSD and standalone source composition](source-declarations-scope.md)
 - [Source declaration and composition verification evidence](source-declarations-evidence.md)
+- [Encoded semantic source/model and package compositions](semantic-composition-scope.md)
 - [Context assessment](context-assessment-scope.md)
 - [Auxiliary container and sounds sources](auxiliary-source-scope.md)
 - [Nonfetching local link context](local-link-context-scope.md)

@@ -25,7 +25,10 @@ func startDictionaryResourceGraph(ctx context.Context, resources LinkedAssessmen
 	}
 	bundle := dictionaryResourceIntrinsicProfiles()
 	var catalog *validation.CompiledPackageCatalog
-	if composed {
+	if isSemanticPackageProfile(profile) {
+		catalog, err = semanticPackageAssessmentCatalog()
+		bundle = semanticResourceIntrinsicProfiles()
+	} else if composed {
 		catalog, err = dtdDictionaryPackageAssessmentCatalog()
 		bundle = dtdDictionaryResourceIntrinsicProfiles()
 	} else {

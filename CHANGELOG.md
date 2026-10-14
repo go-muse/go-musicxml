@@ -9,6 +9,13 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add explicit encoded semantic source/model and graph/raw/current-MXL profiles
+  through existing assessment APIs. They compose exact intrinsic interpretations,
+  bounded barline/repeat evidence, selected dictionary capabilities and the
+  registered XML Framework/shorthand/element fragment baseline. Source DTD and
+  current-model identity remain distinct; no automatic data fetch or external
+  musical-intent authority is added.
+
 - Add explicit internal-DTD/dictionary graph and raw/current-MXL compositions in
   separate catalogs, preserving existing profiles and digests. Add source
   Container and Sounds compositions with exact auxiliary origin routing,

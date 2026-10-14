@@ -90,21 +90,24 @@ func buildDTDDictionaryPackageAssessmentDefinitions() ([]validation.PackageRuleB
 // selectDictionaryPackageProfile is a closed entry-point dispatch. Neither input
 // content nor profile suffixes may grant DTD parsing or auxiliary discovery.
 func selectDictionaryPackageProfile(selected, ordinary validation.ProfileID) (validation.ProfileID, bool, error) {
-	var composed validation.ProfileID
+	var composed, semantic validation.ProfileID
 	switch ordinary {
 	case ProfileResourceGraphDictionaries:
 		composed = ProfileResourceGraphInternalDTDDictionaries
+		semantic = ProfileResourceGraphSemantics
 	case ProfileMXLSourceDictionaries:
 		composed = ProfileMXLSourceInternalDTDDictionaries
+		semantic = ProfileMXLSourceSemantics
 	case ProfileMXLModelDictionaries:
 		composed = ProfileMXLModelInternalDTDDictionaries
+		semantic = ProfileMXLModelSemantics
 	default:
 		return "", false, &validation.ConfigurationError{Field: "graph profile", Reason: "unknown dictionary entry point"}
 	}
 	switch selected {
 	case ordinary:
 		return selected, false, nil
-	case composed:
+	case composed, semantic:
 		return selected, true, nil
 	default:
 		return "", false, &validation.ConfigurationError{Field: "graph profile", Reason: "explicit entry-point compatible dictionary graph profile required"}

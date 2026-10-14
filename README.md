@@ -199,7 +199,8 @@ add declaration-dependent ENTITY/ENTITIES checks and reuse local, nonfetching
 link and selected dictionary consumers. DTD defaults and normalized effective
 values remain distinct from physical source occurrences. Dictionary data is
 still supplied explicitly; the library does not load it automatically. These
-profiles do not enable package/source-origin export or general DTD validation.
+profiles do not themselves assess package obligations or general DTD validity.
+Explicit package compositions transport independently owned source origins.
 
 The additive [DTD/dictionary package compositions](docs/validation/dtd-package-composition-scope.md)
 can be selected explicitly through the existing dictionary graph and MXL APIs.
@@ -208,6 +209,14 @@ owned source origins, while current primary models keep their existing model
 profile. Effective Container paths stay distinct from physical Raw; explicit
 Sounds input retains effective mapping fields. No auxiliary filename discovery
 or external DTD/schema/dictionary fetching is introduced.
+
+The opt-in [encoded semantic compositions](docs/validation/semantic-composition-scope.md)
+join source/current-model XSD, local, timeline and contextual checks with bounded
+barline/repeat proofs and registered XML Framework/shorthand/element fragments.
+Matching graph and raw/current-MXL profiles pin those intrinsic interpretations.
+Caller-selected dictionary data is still explicit; missing evidence and original
+package/indirection limits remain visible. These profiles add no external musical
+intent provider and make no universal-conformance claim.
 
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged
