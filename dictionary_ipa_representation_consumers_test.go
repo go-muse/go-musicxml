@@ -157,3 +157,29 @@ func TestIPARepresentationSelectionAndMissingCapability(t *testing.T) {
 		}
 	}
 }
+
+func TestIPARepresentationUnavailableScalarDoesNotFabricateEmptySpan(t *testing.T) {
+	for _, typ := range []string{"ENTITY", "integer"} {
+		t.Run(typ, func(t *testing.T) {
+			text := contextFixtureXML(`<note><rest/><duration>1</duration><play><ipa xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:`+typ+`">a</ipa></play></note>`, false)
+			report := dictionaryRepresentationDirect(t, text, false, false, true, true)
+			rows := dictionaryResults(report, validation.ContextDictionaryIPARepresentation)
+			if len(rows) != 1 {
+				t.Fatalf("rows=%d", len(rows))
+			}
+			r := rows[0]
+			if r.Input.State == validation.EvidenceKnown && r.Input.Value.Kind == validation.AtomicString {
+				t.Fatalf("test did not produce unavailable scalar: %+v", r.Input)
+			}
+			if len(r.Spans) != 0 {
+				t.Fatalf("fabricated raw span from unavailable scalar: input=%+v spans=%+v", r.Input, r.Spans)
+			}
+			if r.Result.State == validation.EvidenceKnown || r.WholeSequence.State == validation.EvidenceKnown {
+				t.Fatal("unavailable scalar became representation witness")
+			}
+			if r.Input.Cause != nil && (r.Result.Cause == nil || *r.Result.Cause != *r.Input.Cause) {
+				t.Fatalf("scalar cause lost: %+v", r)
+			}
+		})
+	}
+}
