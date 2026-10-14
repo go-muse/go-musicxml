@@ -8,6 +8,7 @@ import (
 )
 
 func TestLayoutRound5WidthConflictProvenance(t *testing.T) {
+	t.Parallel()
 	for _, other := range []string{"no", "maybe"} {
 		for _, initial := range []bool{false, true} {
 			for _, reverse := range []bool{false, true} {

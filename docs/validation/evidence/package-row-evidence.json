@@ -40,7 +40,7 @@
       "interpretation": "Terminal outcome appended separately. The earlier 2026-10-13 10:44 UTC in-progress observation remains unchanged; this failed run does not certify later-tree or final acceptance."
     }
   },
-  "interpretation": "Each named test is a verified source location and bounded assertion route. No execution result or five-axis completion is inferred; empty tests and open_evidence_gaps preserve unmet verification obligations.",
+  "interpretation": "Each named test identifies a bounded assertion route by file and function; the verifier checks current function presence and normalized test-file hash. The line and end_line_bound fields are inspection-time navigation hints, not verified current source coordinates, and the narrow hash refresher does not update them. No execution result or five-axis completion is inferred; empty tests and open_evidence_gaps preserve unmet verification obligations.",
   "rows": {
     "CHECK-context-group-link-match": {
       "target_evidence": {
@@ -7218,7 +7218,7 @@
       "function": "TestPackageVerificationPipeline",
       "line": 12,
       "end_line_bound": 40,
-      "file_sha256": "49a8f96bff8f8c2e06d4d2cce10185d02470f6375a5c12f05661d53fb4ca78a7"
+      "file_sha256": "fd31b94416aa8ea6c22a44d59fd3ea2e11aa1112edfab3e7a978c022ad7236f9"
     },
     "resource_body_test.go::TestResourceBodyEmptyCloseFailureAndNoProgress": {
       "file": "resource_body_test.go",
@@ -8338,28 +8338,28 @@
       "function": "TestSchemaHintDatatypeNamespacesAndOrdinaryErrors",
       "line": 167,
       "end_line_bound": 189,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hint_datatype_test.go::TestSchemaHintDatatypesAcrossElementKinds": {
       "file": "validation_schema_hint_datatype_test.go",
       "function": "TestSchemaHintDatatypesAcrossElementKinds",
       "line": 143,
       "end_line_bound": 166,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hint_datatype_test.go::TestSchemaHintDatatypesAgainstSchema": {
       "file": "validation_schema_hint_datatype_test.go",
       "function": "TestSchemaHintDatatypesAgainstSchema",
       "line": 111,
       "end_line_bound": 142,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hint_datatype_test.go::TestValidateSchemaHintDatatypes": {
       "file": "validation_schema_hint_datatype_test.go",
       "function": "TestValidateSchemaHintDatatypes",
       "line": 96,
       "end_line_bound": 110,
-      "file_sha256": "eebe29ba842eb1ea0ef93d05b9aa92a9a9076fee4e7c0dfdbc8f8525dbf9ca5c"
+      "file_sha256": "7ea3e08bca5b0489dcfbc789979861b168a55380659679b5d3e85c3d180349d6"
     },
     "validation_schema_hints_test.go::TestSchemaLocationHintsDoNotFetch": {
       "file": "validation_schema_hints_test.go",

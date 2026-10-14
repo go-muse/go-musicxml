@@ -94,7 +94,64 @@ stage_vet() {
 
 stage_race() {
     stage "go test -race"
-    "$check_go" test -race -count=1 -timeout=15m ./...
+    # Local and release checks retain the original exhaustive command. CI can
+    # opt into exactly one of two disjoint, dynamically discovered shards.
+    if [[ ! ${RACE_SHARD+x} ]]; then
+        "$check_go" test -race -count=1 -timeout=15m ./...
+        return
+    fi
+    case "$RACE_SHARD" in
+        root|packages) ;;
+        *) echo "invalid RACE_SHARD: expected root or packages" >&2; return 2 ;;
+    esac
+
+    local root inventory status package seen root_count
+    local selected=()
+    # A sentinel preserves trailing newlines so malformed blank records cannot
+    # disappear through command substitution. Capture each go-list status
+    # directly: partial output from a failed discovery must never start tests.
+    if root="$("$check_go" list -race .; status=$?; printf '.'; exit "$status")"; then
+        root="${root%.}"
+        root="${root%$'\n'}"
+    else
+        return "$?"
+    fi
+    if [[ -z "$root" || "$root" == -* || "$root" == *[[:space:][:cntrl:]]* ]]; then
+        echo "race discovery requires one nonempty root import path" >&2
+        return 2
+    fi
+    if inventory="$("$check_go" list -race ./...; status=$?; printf '.'; exit "$status")"; then
+        inventory="${inventory%.}"
+        inventory="${inventory%$'\n'}"
+    else
+        return "$?"
+    fi
+    seen=$'\n'
+    root_count=0
+    while IFS= read -r package; do
+        if [[ -z "$package" || "$package" == -* || "$package" == *[[:space:][:cntrl:]]* ]]; then
+            echo "race discovery returned an empty or malformed import path" >&2
+            return 2
+        fi
+        if [[ "$seen" == *$'\n'"$package"$'\n'* ]]; then
+            echo "race discovery returned a duplicate import path: $package" >&2
+            return 2
+        fi
+        seen+="$package"$'\n'
+        if [[ "$package" == "$root" ]]; then
+            root_count=$((root_count + 1))
+            if [[ "$RACE_SHARD" == root ]]; then
+                selected+=("$package")
+            fi
+        elif [[ "$RACE_SHARD" == packages ]]; then
+            selected+=("$package")
+        fi
+    done <<< "$inventory"
+    if [[ "$root_count" != 1 || "${#selected[@]}" == 0 ]]; then
+        echo "race discovery requires exactly one root and a nonempty selected shard" >&2
+        return 2
+    fi
+    "$check_go" test -race -count=1 -timeout=15m "${selected[@]}"
 }
 
 stage_fuzz() {

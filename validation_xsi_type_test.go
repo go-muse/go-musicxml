@@ -134,6 +134,7 @@ func TestXSITypeAgainstSchema(t *testing.T) {
 	require.NoError(t, err)
 	for _, test := range validationXSICases() {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &validationXSIGenerated, test.source), test.issues)
 			if test.oracleComparable {
 				assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "xsi-type-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
@@ -142,6 +143,7 @@ func TestXSITypeAgainstSchema(t *testing.T) {
 	}
 	for _, test := range validationXSIDefaultCases() {
 		t.Run("defaults/"+test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &validationXSIDefaultsGenerated, test.source), test.issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "xsi-defaults-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})

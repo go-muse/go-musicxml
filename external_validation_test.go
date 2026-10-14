@@ -45,6 +45,7 @@ func TestEncodedCorpusConformsToMusicXMLSchema(t *testing.T) {
 		checked++
 
 		t.Run(entry.Name(), func(t *testing.T) {
+			t.Parallel()
 			input, err := os.ReadFile(filepath.Join(
 				musicXMLTestSuiteDirectory,
 				entry.Name(),

@@ -67,10 +67,12 @@ and statuses. Earlier six profile digests remain frozen. No batch-8 link/package
 work, dictionary closure, or B5-PERF-01 closure is claimed.
 
 Finite assessment defaults remain unchanged. Matched resource measurement,
-independent semantic acceptance, all seven local stages, and all nine exact-head
+independent semantic acceptance, all seven local stages, and all exact-head
 CI jobs are separate release gates. Native 386 binaries can compile here, but
 this executor rejects their execution; actual 386 execution must pass in CI.
-Linux CI must also execute the required real-xmllint checks.
+Linux CI must also execute the required real-xmllint checks. The current
+[CI layout](../../../CONTRIBUTING.md#local-checks) expands to eleven checks;
+older named-head nine-job receipts retain their historical scope.
 
 ## Independent acceptance
 
@@ -90,7 +92,7 @@ is useful additional proved output, with its measured ownership cost retained.
 The public profile still requires explicit finite budgets for those official
 samples and for the 1000-note synthetic fixture.
 
-All seven local stages and all nine published-head CI jobs must be tied to the
+All seven local stages and all published-head CI jobs must be tied to the
 final packaged tree and reported on PR36. This evidence does not substitute
 focused tests for those release gates or close the external source-argument
 review thread unilaterally.

@@ -166,6 +166,7 @@ func TestEmptyComplexContentAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, validationSchemaFor(test.schema), test.source), test.issues)
 			directory, schema := filepath.Join("schema", "musicxml-4.0"), test.schema
 			if schema == "" {

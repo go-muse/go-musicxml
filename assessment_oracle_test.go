@@ -44,6 +44,7 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			report, err := InspectXML(context.Background(), strings.NewReader(tt.input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
 			if err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.Satisfied() != tt.valid {
 				t.Errorf("source assessment=%+v error=%v expected-valid=%t", report, err, tt.valid)
@@ -65,6 +66,7 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 		{"OpusScore.musicxml", "opus.xsd", false},
 	} {
 		t.Run("official/"+fixture.name, func(t *testing.T) {
+			t.Parallel()
 			input, err := os.ReadFile(filepath.Join("testdata", "official", fixture.name))
 			if err != nil {
 				t.Fatal(err)

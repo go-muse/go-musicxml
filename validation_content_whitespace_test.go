@@ -176,6 +176,7 @@ func TestElementOnlyXMLWhitespaceAgainstSchema(t *testing.T) {
 			continue // Covered normatively without freezing an oracle bug.
 		}
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertContentWhitespaceCase(t, test)
 			directory, schema := filepath.Join("schema", "musicxml-4.0"), test.schema
 			if schema == "" {

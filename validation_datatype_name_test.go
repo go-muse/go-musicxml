@@ -185,6 +185,7 @@ func TestDatatypeNamesAgainstSchema(t *testing.T) {
 			continue
 		}
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertDatatypeNameAssessment(t, assessAttributeSource(t, &validationDatatypeNameGenerated, test.source), test)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "datatype-name-contract.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})
@@ -272,6 +273,7 @@ func TestDatatypeNamesProductionAgainstSchema(t *testing.T) {
 	require.NoError(t, err)
 	for _, test := range validationDatatypeNameProductionCases() {
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertValidationIssues(t, validateAttributeSource(t, &scoreValidationSchema, test.source), test.issues)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "musicxml.xsd"), filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)
 		})

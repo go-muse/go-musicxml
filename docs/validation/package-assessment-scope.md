@@ -67,6 +67,10 @@ The archived record for private candidate 388dbe06aaedda02b7d1f07a9ebe35ee6a5fd7
 
 ## Acceptance gates pending at the historical observation
 
+The nine-job counts below describe that historical observation and freeze
+procedure. The [current CI layout](../../CONTRIBUTING.md#local-checks) expands
+to eleven checks; a new final tree requires all of its exact-head CI checks.
+
 - seven local stages plus nine exact-head remote jobs: pending final tree; actual 386 and real xmllint required. Owner: lead release/CI verification.
 
 These are batch 8 completion gates. They must not be relabeled as batch 9 residuals. Earlier focused passes, a 386 compile, or old batch 7 workload measurements cannot certify the final tree.
@@ -203,5 +207,5 @@ All 20 split records are routed to their unchanged batch 7 ownership objects, no
 2. Regenerate this additive route proposal and run the inventory verifier; recheck changed test hashes. Do not rerun or rewrite completed linguistic/original records.
 3. Retain the independent source/model/raw/current/nested semantic and resource acceptance pinned at production 388dbe0. Any later production change needs an affected-scope recheck, with exact command, exit status, head/tree, environment and hashes.
 4. Preserve exact eight-profile equality and refreshed finite-default usability evidence at 388dbe0 independently of B5-PERF-01; the full final suite must still cover unchanged legacy/API behavior.
-5. Execute CONTRIBUTING mod, generate, format, test, vet, race and fuzz stages; require actual real-xmllint oracle and 386 execution plus all nine remote exact-head CI jobs.
+5. Execute CONTRIBUTING mod, generate, format, test, vet, race and fuzz stages; require actual real-xmllint oracle and 386 execution plus all exact-head CI checks.
 6. Only the lead may record final acceptance after all gates settle. Provenance/route verification alone never changes readiness.

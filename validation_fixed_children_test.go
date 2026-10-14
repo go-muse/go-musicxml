@@ -122,6 +122,7 @@ func TestFixedElementChildrenAgainstSchema(t *testing.T) {
 			continue // The independent normative suite covers this oracle gap.
 		}
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 			assertFixedChildCase(t, test)
 			assertXMLLintOutcome(t, xmllint, filepath.Join(directory, "nil-contract.xsd"),
 				filepath.Join(directory, "catalog.xml"), test.source, len(test.issues) == 0)

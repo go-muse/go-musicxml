@@ -6,7 +6,6 @@ Contributions are welcome.
 
 - Go 1.27 or later
 - Git
-- Python 3.9 or later for the standard-library-only package inventory checks
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
 
@@ -43,24 +42,100 @@ executions by default (`VALIDATION_FUZZ_TIME` overrides this count). The MXL
 round-trip and raw ZIP assessment-observer targets each run 10,000 executions
 (`MXL_FUZZ_TIME`). The Linux test job also executes
 `GOARCH=386 go test -count=1 ./...` to exercise host-width contracts.
-The full race stage uses an explicit finite 15-minute per-package timeout; its
-CI job retains a 20-minute cap. This allows host-timing headroom for the complete
-uncached race suite without skipping tests or changing assessment budgets.
+The full race stage uses an explicit finite 15-minute per-package timeout.
+Local and release checks retain `go test -race -count=1 -timeout=15m ./...`.
+CI runs two exhaustive, disjoint race shards on standard Linux runners: the
+module root and every other package discovered by `go list -race ./...`.
+Each shard retains a 20-minute job cap and the same detector, test and assessment
+budgets. Only each CI execution step sets `RACE_SHARD=root` or
+`RACE_SHARD=packages`; an unset value runs the full command, and empty or unknown
+values fail. Discovery errors, malformed or duplicate inventories, an absent
+root, and an empty selected shard also fail before tests start.
+The stable `Race detector` check succeeds only when both shards succeed; failed,
+cancelled, skipped, or missing shard results cannot pass its aggregate gate.
+This deliberately changes CI from nine jobs to eleven without changing the
+seven local stages or the release checks.
 
-Package obligation inventories also have standard-library Python checks,
+Package obligation inventories also have standard-library Go checks,
 required in the Linux CI jobs:
 
 ```bash
-python3 scripts/verify-package-inventory.py --strict-evidence
-python3 scripts/test-package-inventory.py
-python3 scripts/test-package-inventory-maintenance.py
+go run ./cmd/package-inventory verify --strict-evidence
+go run ./cmd/package-inventory test
+go test -count=1 ./internal/packageinventory
 ```
 
 These verify preserved original records, exact test routes, canonical LF/CRLF
 hash equivalence and rejection of real mutations. Existing Linux quality and
 release jobs require them without adding a CI job or changing the seven Go
-stages. Python is not a library runtime dependency. The required-xmllint job
+stages. No Python installation is needed for development or CI inventory checks.
+The required-xmllint job
 explicitly includes the original-byte container/sounds differential test.
+
+The compiled command also works without a Go installation: build it with
+`go build -o package-inventory ./cmd/package-inventory`, then run
+`./package-inventory verify --strict-evidence`. The `verify` and `refresh`
+commands accept `--root`, `--manifest`, `--evidence`, `--archive-dir`, and
+`--output`; `test` accepts the same flags except `--archive-dir`. Historical
+inventory snapshots retain their original command text and observations;
+use the Go commands above for current checkouts.
+
+### Compatibility of maintenance output
+
+The Go tools preserve the checked records, hash conventions and result fields,
+but do not promise byte-identical Python output. Result object keys are sorted;
+failure lists follow deterministic Go key traversal rather than Python document
+order. Compare failure content independent of order, preserving multiplicity.
+The first malformed-field diagnostic can also differ. The migration's
+parsed-output parity evidence covers its enumerated fixtures and mutations,
+not every possible malformed input or ordering of failures.
+
+The strict JSON reader rejects the non-standard `NaN`, `Infinity` and
+`-Infinity` literals accepted by Python's permissive JSON decoder. Floating
+values used in canonical hashes must also have a finite binary64 representation;
+an overflowing token such as `1e400` cannot be canonicalized as infinity. An
+unused unknown-metadata token is not canonicalized merely by parsing: `1e400`
+remains accepted and byte-preserved through a narrow current-hash refresh.
+Integer tokens retain arbitrary precision. These are explicit compatibility
+differences, not a claim of parity with Python's non-finite extensions.
+
+The line-anchored function-route matcher uses Go's RE2 ASCII whitespace class:
+tab, newline, form feed, carriage return and space. Python's additional
+vertical-tab and Unicode whitespace matches are not retained. This deliberately
+narrowed text check is not a Go parser and does not establish source validity;
+the actual Go test run remains a separate requirement.
+
+Parallel test scheduling aims to reduce wall time, not total CPU or memory.
+Independent cases retain their own mutable data and assessment accounts, while
+only immutable engines are reused. More simultaneous cases and xmllint processes
+can increase system CPU and peak memory. Both the whitespace and lexical XML
+oracle matrices use the shared parallel helper; Go's `-parallel` limit bounds
+their active cases. Compare wall time, CPU and memory separately on the actual
+runner rather than extrapolating a many-core local speedup.
+Each Linux race shard records its available CPU count and memory, then wraps
+its race stage with `/usr/bin/time -v`. User and system CPU can exceed wall time
+on multiple cores. Its maximum resident-set measurement is a maximum
+child/process observation, not the aggregate peak of simultaneous processes or
+a proof of whole-job memory headroom. The wrapper preserves the race command's
+exit status; no additional measurement-only run is required. Sharding uses two
+runners and can increase total CPU and runner-minutes even when wall time falls.
+Compare the elapsed time from workflow creation through completion of the
+`Race detector` aggregate, including queueing and setup, rather than the short
+gate job's own duration. Local shard timings alone do not establish hosted CI
+latency or available concurrency.
+
+A matched local shared-host observation of the pre-sharding tree `5d2264f5`
+used Go 1.27.2 on Linux/amd64, `GOMAXPROCS=4`, `-p=4`, and warmed, identical
+race binaries. The full race run completed in 390.254 seconds on CPUs 0–3.
+Two simultaneous shards, pinned to CPUs 0–3 and 4–7, completed in 309.096 and
+218.091 seconds: about 20.8% less
+critical-path wall time, with roughly 4.9% more summed CPU and 35.1% more summed
+runner occupancy. This used two CPU allocations rather than one; shared-host
+load, queueing, setup, and hosted runner availability limit extrapolation.
+This external pre-sharding experiment did not run the new shard script. Its
+[recorded conditions](docs/validation/evidence/context-race-reliability.md#exhaustive-ci-sharding-observation)
+include the unchanged full-suite flags. Hosted end-to-end acceptance for this
+sharding change remains pending.
 
 ### Updating inspected test hashes
 
@@ -69,17 +144,17 @@ test bytes. After a reviewed edit to one of the routed Go test files, preview th
 current test-file hash changes with:
 
 ```bash
-python3 scripts/refresh-package-inventory.py
+go run ./cmd/package-inventory refresh
 ```
 
 The default is a read-only dry run. Inspect `changed_test_files` and
 `changed_test_routes`, then explicitly apply the same narrow update and verify:
 
 ```bash
-python3 scripts/refresh-package-inventory.py --write
-python3 scripts/verify-package-inventory.py --strict-evidence
-python3 scripts/test-package-inventory.py
-python3 scripts/test-package-inventory-maintenance.py
+go run ./cmd/package-inventory refresh --write
+go run ./cmd/package-inventory verify --strict-evidence
+go run ./cmd/package-inventory test
+go test -count=1 ./internal/packageinventory
 git diff -- docs/validation/evidence/package-row-evidence.json
 ```
 
@@ -97,6 +172,10 @@ No original record, source-file hash, status, owner, line hint, snapshot,
 `historical_tests`, execution result or acceptance claim is refreshed. This does
 not execute the Go tests or certify their assertions. Rerun affected tests and
 retain new exact-head execution evidence separately before final acceptance.
+The evidence's `line` and `end_line_bound` are inspection-time navigation hints;
+later edits can make them stale. The verifier checks the named function's current
+presence and normalized file hash, not these coordinates. Locate current tests
+by `file::function` rather than treating the hints as current source bounds.
 Result JSON is printed on stdout. Optional `--output PATH` saves an atomic JSON
 report; it cannot alias any input, including symlinks or hard links. If malformed
 inputs prevent a complete alias check, the failure report stays on stdout.
@@ -116,12 +195,13 @@ an entire source file or all IDs merely to make CI pass.
 After that review, reconcile only those explicit IDs in the additive manifest's
 `preserved_collections` and applicable `selected` routes. Retain the old source
 and execution evidence; do not relabel old observations as new execution.
-Canonical record hashes use UTF-8 JSON with sorted keys, `ensure_ascii=False`
-and separators `(',', ':')`. Source-file SHA-256 and `bytes` cover the full file
+Canonical record hashes use compact UTF-8 JSON with sorted keys, no ASCII or
+HTML escaping, and lossless integer values. Source-file SHA-256 and `bytes` cover
+the full file
 after replacing CRLF with LF only. Review the affected whole-file hash/size
 changes alongside the per-ID diffs. Original denominators remain fixed; a new
 inventory scope needs a separately reviewed format/denominator change. Run the
-strict verifier and both Python control suites after the reviewed reconciliation.
+strict verifier and both Go control suites after the reviewed reconciliation.
 
 ## Generated code
 

@@ -32,11 +32,14 @@ host, not production speed guarantees.
 
 ## Keep bounded full-suite execution
 
-The shared local/CI race command remains a full uncached `./...` run with the race
-detector. It now explicitly uses `-timeout=15m`; the CI job retains its existing
-20-minute cap. A checked-in contract test protects those finite limits and the
-full race command. Its authentic RED occurred before adding the explicit package
-timeout, followed by GREEN after the command change.
+The local and release race command remains a full uncached `./...` run with the
+race detector and `-timeout=15m`. CI now partitions the same package inventory
+into root and non-root execution jobs discovered with `go list -race`; each
+retains the existing 20-minute cap. The stable `Race detector` aggregate passes
+only when both execution jobs succeed. Checked-in contracts protect those finite
+limits, the unchanged local command, exact shard coverage, and fail-closed
+aggregation. The earlier timeout contract's authentic RED occurred before adding
+the explicit package timeout, followed by GREEN after that command change.
 
 No race-only skips, shortened fixtures, removed semantic assertions or reduced
 fuzz execution counts are introduced. The duplicate standalone test execution
@@ -44,3 +47,39 @@ is consolidated into the retained matrix with all cleanup assertions; existing
 cancellation tests are unchanged. Assessment budgets are unchanged. This does not close B5-PERF-01
 or claim that general score assessment has become unrestricted. Exact-head local
 stages and CI are rerun after this test/CI-only correction.
+
+## Exhaustive CI sharding observation
+
+On the exact pre-sharding tree `5d2264f5ebb3c8e4249d72f84e948fb2437a5fb7`
+(local commit `d2a33c69d07ade846aa18426da9d7d449247c6e0`), an unchanged full
+race run took 390.254 seconds with four CPUs. Two simultaneous four-CPU shards
+took 309.096 seconds for the root and 218.091 seconds for all other packages.
+The critical path was about 20.8% shorter, while summed CPU increased roughly
+4.9% and summed runner occupancy increased 35.1%. This trades two allocations
+for one; it does not claim reduced total compute or predict hosted queue time.
+The measured runs used identical seven test-binary hashes, covered all nine
+packages exactly once, and preserved all 96,571 terminal test name/action/count
+records, including the same three existing skips.
+
+The external measurement used Go 1.27.2 on Linux/amd64 with `GOMAXPROCS=4`,
+empty `GOFLAGS`, a warmed build cache, and
+`go test -race -count=1 -timeout=15m -p=4 -json`. The baseline supplied `./...`
+and ran on CPUs 0–3. The simultaneous shard invocations supplied the root import
+path and the other eight discovered import paths respectively, pinned by
+`taskset -c 0-3` and `taskset -c 4-7`. A measurement-only `-exec` wrapper recorded
+each binary's SHA-256, exit status and child-process usage identically on both
+sides. Real xmllint 2.9.14 was available with `MUSICXML_REQUIRE_XMLLINT=1`.
+The seven warmed race binaries were hash-identical between these runs. This
+experiment partitioned the packages outside the repository script before the
+new shard implementation; its timings do not measure that new implementation.
+The two allocations shared host RAM, storage, kernel and Go build cache, unlike
+two independent hosted runners. Current CI still requires real xmllint in its
+separate XSD job; the race jobs do not themselves install it.
+
+This is one matched observation on a shared local host. It excludes hosted
+queueing, setup and the aggregate gate, and is not evidence of reliable hosted
+sub-ten-minute completion. Exact final-tree local seven-stage checks and hosted
+end-to-end acceptance remain pending. Hosted measurement must start at workflow
+creation and end at aggregate completion, including both execution jobs and
+queue/setup delays. The current workflow expands to eleven checks; earlier
+nine-job receipts above remain historical observations for their named heads.

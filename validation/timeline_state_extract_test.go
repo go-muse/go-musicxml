@@ -5,22 +5,35 @@ import (
 	"testing"
 )
 
-func stateBindings() *timelineBindings {
-	b := &timelineBindings{}
+// Only immutable descriptor values are shared. Each fixture still owns its
+// bindings and every mutable Roles slice, including callers' append capacity.
+var stateBindingsFixtureUses = func() [timelineRoleLimit]SchemaUse {
+	var uses [timelineRoleLimit]SchemaUse
 	for role := timelineRoleInvalid + 1; role < timelineRoleLimit; role++ {
-		b.Roles[role] = []SchemaUse{{Declaration: DeclarationID{Occurrence: string(rune(1000 + role))}}}
+		uses[role] = SchemaUse{Declaration: DeclarationID{Occurrence: string(rune(1000 + role))}}
 	}
 	for _, role := range []timelineRole{timelineRoleKeyNumber, timelineRoleTimeNumber, timelineRoleClefNumber, timelineRoleTransposeNumber, timelineRoleForPartNumber, timelineRoleClefAdditional, timelineRoleClefSize, timelineRoleClefAfterBarline, timelineRoleDoubleAbove, timelineRoleKeyOctaveNumber, timelineRoleKeyOctaveCancel, timelineRoleCancelLocation, timelineRoleKeyAccidentalSMuFL, timelineRoleTimeSymbol, timelineRoleTimeSeparator, timelineRoleInterchangeableSymbol, timelineRoleInterchangeableSeparator, timelineRoleInstrumentID, timelineRoleInstrumentChangeID} {
-		b.Roles[role][0].Attribute = true
-		b.Roles[role][0].Name = QName{Local: string(rune(1000 + role))}
+		uses[role].Attribute = true
+		uses[role].Name = QName{Local: string(rune(1000 + role))}
 	}
 	for _, shape := range timelineRoleShapes {
 		if shape.attribute {
-			b.Roles[shape.role][0].Attribute = true
-			b.Roles[shape.role][0].Name = QName{Local: string(rune(1000 + shape.role))}
+			uses[shape.role].Attribute = true
+			uses[shape.role].Name = QName{Local: string(rune(1000 + shape.role))}
 		}
 	}
-	return b
+	return uses
+}()
+
+func stateBindings() *timelineBindings {
+	fixture := &struct {
+		bindings timelineBindings
+		uses     [timelineRoleLimit]SchemaUse
+	}{uses: stateBindingsFixtureUses}
+	for role := timelineRoleInvalid + 1; role < timelineRoleLimit; role++ {
+		fixture.bindings.Roles[role] = fixture.uses[role : role+1 : role+1]
+	}
+	return &fixture.bindings
 }
 func stateNode(b *timelineBindings, role timelineRole, id NodeID, scalar Evidence[Atomic], children ...*factNode) *factNode {
 	n := &factNode{header: NodeHeader{ID: id, Declaration: stateKnown(b.Roles[role][0].Declaration)}, closed: true, children: children, end: NodeEnd{ID: id, Scalar: Scalar{Value: scalar}, ChildrenComplete: stateKnown(true), AttributesComplete: stateKnown(true), Order: stateKnown(OrderSource)}}

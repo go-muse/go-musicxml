@@ -4,14 +4,25 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 )
 
+var cachedLayoutStateTestEngine = sync.OnceValues(buildLayoutStateTestEngine)
+
 func layoutStateTestEngine(t *testing.T) *validation.Engine {
 	t.Helper()
-	d, err := buildModelAssessmentDefinitions()
+	engine, err := cachedLayoutStateTestEngine()
 	if err != nil {
 		t.Fatal(err)
+	}
+	return engine
+}
+
+func buildLayoutStateTestEngine() (*validation.Engine, error) {
+	d, err := buildModelAssessmentDefinitions()
+	if err != nil {
+		return nil, err
 	}
 	schema := d.schemas[validation.AssemblyMusicXML]
 	b := newLocalCatalogBuilder(schema)
@@ -19,19 +30,19 @@ func layoutStateTestEngine(t *testing.T) *validation.Engine {
 	for i, part := range b.namedElementUses("part") {
 		attribute, e := b.typeAttribute(part.DeclaredType, "id")
 		if e != nil {
-			t.Fatal(e)
+			return nil, e
 		}
 		owners = append(owners, validation.ReferenceOwner{Declaration: part.Declaration, Attribute: attribute, Rule: validation.RuleKey{ID: validation.RuleID("MX40-LOCAL-part-id-target/use-" + strconv.Itoa(i+1)), Revision: 1}})
 	}
 	timeline := validation.RuleKey{ID: "test-layout-timeline", Revision: 1}
 	timelinePlan, err := validation.NewTimelinePlan(validation.TimelinePlanSpec{Schema: schema, PartOwners: owners})
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	layout := validation.RuleKey{ID: "test-layout-state", Revision: 1}
 	layoutPlan, err := validation.NewLayoutContextPlan(validation.ContextPlanSpec{Schema: schema, TimelineProvider: timeline})
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	assembly := validation.AssemblyMusicXML
 	for _, v := range []struct {
@@ -53,13 +64,13 @@ func layoutStateTestEngine(t *testing.T) *validation.Engine {
 	}
 	catalog, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
 	engine, err := validation.NewEngine(catalog)
 	if err != nil {
-		t.Fatal(err)
+		return nil, err
 	}
-	return engine
+	return engine, nil
 }
 func layoutStateRows(report validation.Report, property string) []validation.ContextResult {
 	var rows []validation.ContextResult
@@ -89,6 +100,7 @@ func layoutStateKnown(t *testing.T, report validation.Report, property, want str
 	}
 }
 func TestLayoutStateSourceModelConditionalFacts(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	body := `<attributes><divisions>1</divisions><key print-object="no"><fifths>0</fifths></key><staves>2</staves><part-symbol top-staff="1" bottom-staff="1">bracket</part-symbol><clef number="1" additional="yes" size="cue" after-barline="yes"><sign>G</sign><line>2</line></clef><staff-details number="2" print-object="no" print-spacing="yes"><staff-type>alternate</staff-type><staff-lines>5</staff-lines><line-detail line="3" print-object="no"/><staff-size scaling="80">120</staff-size></staff-details></attributes><note><rest measure="yes"/><duration>1</duration><type>whole</type><stem relative-y="-100">up</stem><staff>1</staff></note>`
 	for _, tw := range []bool{false, true} {
@@ -122,6 +134,7 @@ func TestLayoutStateSourceModelConditionalFacts(t *testing.T) {
 	}
 }
 func TestLayoutStatePercussionAndDots(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	body := `<attributes><divisions>1</divisions><clef><sign>percussion</sign></clef></attributes><note><unpitched><display-step>G</display-step><display-octave>4</display-octave></unpitched><duration>1</duration><type>quarter</type><dot placement="above"/></note><note><unpitched><display-step>A</display-step><display-octave>4</display-octave></unpitched><duration>1</duration><type>quarter</type><dot placement="below"/></note>`
 	for _, tw := range []bool{false, true} {
@@ -150,6 +163,7 @@ func TestLayoutStatePercussionAndDots(t *testing.T) {
 }
 
 func TestLayoutStateOmittedDefaultsAndCategories(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	body := `<attributes><divisions>1</divisions><staves>2</staves><clef><sign>G</sign><line>2</line></clef><staff-details number="1"><staff-type>cue</staff-type><staff-lines>1</staff-lines></staff-details><for-part><part-transpose><diatonic>1</diatonic><chromatic>2</chromatic></part-transpose></for-part></attributes><note><grace/><pitch><step>C</step><octave>4</octave></pitch><type>eighth</type><staff>1</staff></note><note><cue/><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type>quarter</type><staff>1</staff><notations><technical><string>1</string></technical></notations></note><note><grace/><cue/><unpitched/><type>eighth</type><staff>1</staff></note>`
 	for _, tw := range []bool{false, true} {
@@ -176,6 +190,7 @@ func TestLayoutStateOmittedDefaultsAndCategories(t *testing.T) {
 	}
 }
 func TestLayoutStateImplicitAndNumberingPolicy(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	for _, tw := range []bool{false, true} {
 		for _, model := range []bool{false, true} {
@@ -221,6 +236,7 @@ func layoutStateManyMeasures(bodies []string, timewise bool) string {
 	return out + `</part></score-partwise>`
 }
 func TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	first := `<attributes><divisions>1</divisions><staves>2</staves><part-symbol>bracket</part-symbol><clef number="1"><sign>G</sign><line>2</line></clef></attributes><print><measure-numbering>measure</measure-numbering></print><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><staff>1</staff></note>`
 	second := `<attributes><key><fifths>1</fifths></key></attributes><note><cue/><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><staff>1</staff></note><attributes><clef number="1" after-barline="yes"><sign>F</sign><line>4</line></clef></attributes><note><rest><display-step>F</display-step><display-octave>3</display-octave></rest><duration>1</duration><staff>1</staff></note>`
@@ -264,6 +280,7 @@ func TestLayoutStateInheritedSymbolNumberingAndMidmeasureClef(t *testing.T) {
 	}
 }
 func TestLayoutStateInvalidComponentsStayCausal(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	body := `<attributes><divisions>1</divisions><clef additional="not-valid"><sign>G</sign><line>2</line></clef><staff-details number="bad" print-object="not-valid"><staff-type>alternate</staff-type></staff-details></attributes><note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><type size="not-valid">quarter</type></note>`
 	// Invalid integer attributes cannot be represented by generated model fields;
@@ -300,6 +317,7 @@ func TestLayoutStateInvalidComponentsStayCausal(t *testing.T) {
 }
 
 func TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	first := `<attributes><divisions>1</divisions><staves>2</staves><part-symbol>bracket</part-symbol></attributes><attributes><key><fifths>0</fifths></key></attributes><print><measure-numbering>measure</measure-numbering></print>`
 	second := `<backup><duration>0</duration></backup><print><measure-numbering>none</measure-numbering></print>`
@@ -324,6 +342,7 @@ func TestLayoutStateFutureTimingGapCannotPoisonPriorNumbering(t *testing.T) {
 }
 
 func TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	first := `<attributes><divisions>1</divisions><staves>2</staves></attributes><note><rest/><duration>1</duration></note>`
 	for _, excursion := range []bool{false, true} {
@@ -355,6 +374,7 @@ func TestLayoutStateUnconfinedLaterSymbolCannotProveInitialDefault(t *testing.T)
 }
 
 func TestLayoutStatePerRecordBoundaryMatrix(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	yes, no := true, false
 	cases := []struct {
@@ -428,6 +448,7 @@ func TestLayoutStatePerRecordBoundaryMatrix(t *testing.T) {
 	}
 }
 func TestLayoutStateUnplacedDivisionsExcursionPreservesGap(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	first := `<attributes><divisions>1</divisions><staves>2</staves></attributes><note><rest/><duration>1</duration></note>`
 	second := `<note><rest/><duration>2</duration></note><attributes><divisions>2</divisions></attributes><backup><duration>8</duration></backup><attributes><part-symbol>bracket</part-symbol></attributes>`
@@ -449,6 +470,7 @@ func TestLayoutStateUnplacedDivisionsExcursionPreservesGap(t *testing.T) {
 }
 
 func TestLayoutStatePercussionRecommendationAxes(t *testing.T) {
+	t.Parallel()
 	engine := layoutStateTestEngine(t)
 	for _, c := range []struct {
 		name, sign, note string

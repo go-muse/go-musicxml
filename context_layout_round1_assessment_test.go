@@ -75,6 +75,7 @@ func layoutRound1Reports(t *testing.T, header string, parts [][]string, widths [
 }
 
 func TestLayoutRound1StaffLifetimeIndependentOfSystemPublisher(t *testing.T) {
+	t.Parallel()
 	layoutRound1Reports(t, `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`, [][]string{{`<print><staff-layout><staff-distance>22</staff-distance></staff-layout></print>`, `<print><system-layout><system-distance>30</system-distance></system-layout></print>`}}, nil, func(t *testing.T, r validation.Report) {
 		layoutMatrixValues(t, r, "staff-distance", lmk("22"), lmu())
 		values := layoutFacts(r, "staff-distance")
@@ -85,6 +86,7 @@ func TestLayoutRound1StaffLifetimeIndependentOfSystemPublisher(t *testing.T) {
 }
 
 func TestLayoutRound1UnknownVisiblePublisherDoesNotChooseDefaults(t *testing.T) {
+	t.Parallel()
 	layoutRound1Reports(t, `<defaults><system-layout><system-margins><left-margin>1</left-margin><right-margin>2</right-margin></system-margins><system-distance>20</system-distance></system-layout></defaults>`, [][]string{{`<attributes><staff-details print-object="invalid"/></attributes>`}, {`<print><system-layout><system-margins><left-margin>8</left-margin><right-margin>9</right-margin></system-margins><system-distance>73</system-distance></system-layout></print>`}}, nil, func(t *testing.T, r validation.Report) {
 		for _, p := range []string{"system-distance", "system-left-margin", "system-right-margin"} {
 			for _, row := range layoutFacts(r, p) {
@@ -97,6 +99,7 @@ func TestLayoutRound1UnknownVisiblePublisherDoesNotChooseDefaults(t *testing.T) 
 }
 
 func TestLayoutRound1MultiplePrintEvidenceNotAbsence(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<print><staff-layout><staff-distance>22</staff-distance></staff-layout><measure-layout><measure-distance>7</measure-distance></measure-layout><part-name-display><display-text>New</display-text></part-name-display></print><print new-system="yes"/>`, `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`, func(t *testing.T, r validation.Report) {
 		layoutMatrixValues(t, r, "measure-distance", lmu())
 		layoutMatrixValues(t, r, "staff-distance", lmu())
@@ -111,6 +114,7 @@ func TestLayoutRound1MultiplePrintEvidenceNotAbsence(t *testing.T) {
 }
 
 func TestLayoutRound1ParallelBreakIsTransactional(t *testing.T) {
+	t.Parallel()
 	margins := `<page-layout><page-margins type="odd"><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins><page-margins type="even"><left-margin>20</left-margin><right-margin>20</right-margin><top-margin>20</top-margin><bottom-margin>20</bottom-margin></page-margins></page-layout>`
 	header := layoutRound1Supports + `<defaults>` + margins + `<system-layout><system-distance>20</system-distance></system-layout><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`
 	layoutRound1Reports(t, header, [][]string{{`<print><system-layout><system-distance>30</system-distance></system-layout><staff-layout><staff-distance>22</staff-distance></staff-layout></print>`, `<print new-page="yes"/>`}, {``, ``}}, nil, func(t *testing.T, r validation.Report) {
@@ -133,6 +137,7 @@ func TestLayoutRound1ParallelBreakIsTransactional(t *testing.T) {
 }
 
 func TestLayoutRound1AttributeLessSupportsIsIrrelevant(t *testing.T) {
+	t.Parallel()
 	header := strings.Replace(layoutRound1Supports, "<encoding>", `<encoding><supports element="print" type="yes"/>`, 1)
 	layoutRound1Reports(t, header, [][]string{{`<print/>`, `<print/>`}}, nil, func(t *testing.T, r validation.Report) {
 		for _, row := range layoutFacts(r, "page-height") {
@@ -144,6 +149,7 @@ func TestLayoutRound1AttributeLessSupportsIsIrrelevant(t *testing.T) {
 }
 
 func TestLayoutRound1StaffSelectorGapIsPartAndSystemLocal(t *testing.T) {
+	t.Parallel()
 	header := layoutRound1Supports + `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`
 	layoutRound1Reports(t, header, [][]string{{`<print><staff-layout number="0"><staff-distance>22</staff-distance></staff-layout></print>`, `<print new-system="yes"/>`}, {``, `<print new-system="yes"/>`}}, nil, func(t *testing.T, r validation.Report) {
 		rows := layoutFacts(r, "staff-distance")
@@ -162,6 +168,7 @@ func TestLayoutRound1StaffSelectorGapIsPartAndSystemLocal(t *testing.T) {
 }
 
 func TestLayoutRound1SparseStaffKeepsSelectorWithoutDefault(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<print><staff-layout number="2"/></print>`, `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout></defaults>`, func(t *testing.T, r validation.Report) {
 		rows := layoutFacts(r, "staff-distance")
 		if len(rows) != 2 {
@@ -174,6 +181,7 @@ func TestLayoutRound1SparseStaffKeepsSelectorWithoutDefault(t *testing.T) {
 }
 
 func TestLayoutRound1PartialSystemWidthCannotBeConsistent(t *testing.T) {
+	t.Parallel()
 	header := layoutRound1Supports + `<defaults><page-layout><page-height>100</page-height><page-width>100</page-width><page-margins><left-margin>10</left-margin><right-margin>10</right-margin><top-margin>10</top-margin><bottom-margin>10</bottom-margin></page-margins></page-layout><system-layout><system-margins><left-margin>0</left-margin><right-margin>0</right-margin></system-margins></system-layout></defaults>`
 	layoutRound1Reports(t, header, [][]string{{``, ``, `<print new-system="yes"/>`, ``}, {``, ``, ``, ``}}, []string{"40", "40", "40", "40"}, func(t *testing.T, r validation.Report) {
 		for _, row := range layoutFacts(r, "width-outcome") {
@@ -185,6 +193,7 @@ func TestLayoutRound1PartialSystemWidthCannotBeConsistent(t *testing.T) {
 }
 
 func TestLayoutRound1ClosedNameHasExplicitAbsentPage(t *testing.T) {
+	t.Parallel()
 	layoutRound1Reports(t, layoutRound1Supports, [][]string{{``, `<print><part-name-display><display-text>Next</display-text></part-name-display></print>`}}, nil, func(t *testing.T, r validation.Report) {
 		rows := layoutFacts(r, "name-display-onset")
 		if len(rows) != 1 {
@@ -197,6 +206,7 @@ func TestLayoutRound1ClosedNameHasExplicitAbsentPage(t *testing.T) {
 }
 
 func TestLayoutRound1WordFontFallbackHasConsumerOrigin(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<direction><direction-type><words>Text</words></direction-type></direction>`, `<defaults><word-font font-family="A"/></defaults>`, func(t *testing.T, r validation.Report) {
 		rows := layoutMatrixRows(r, "font-style")
 		row := rows[len(rows)-1]
@@ -207,12 +217,14 @@ func TestLayoutRound1WordFontFallbackHasConsumerOrigin(t *testing.T) {
 }
 
 func TestLayoutRound1FreshStaffOverrideRepairsItsOwnLifetime(t *testing.T) {
+	t.Parallel()
 	layoutRound1Reports(t, `<defaults><staff-layout><staff-distance>12</staff-distance></staff-layout><staff-layout number="2"><staff-distance>13</staff-distance></staff-layout></defaults>`, [][]string{{`<print><staff-layout><staff-distance>22</staff-distance></staff-layout><staff-layout number="2"><staff-distance>23</staff-distance></staff-layout></print>`, `<print><staff-layout><staff-distance>32</staff-distance></staff-layout></print>`}}, nil, func(t *testing.T, r validation.Report) {
 		layoutMatrixValues(t, r, "staff-distance", lmk("22"), lmk("23"), lmk("32"), lmu())
 	})
 }
 
 func TestLayoutRound1InvalidStaffSelectorWithoutDefaultsStillPublishes(t *testing.T) {
+	t.Parallel()
 	layoutReports(t, `<print><staff-layout number="0"><staff-distance>22</staff-distance></staff-layout></print>`, "", func(t *testing.T, r validation.Report) {
 		rows := layoutFacts(r, "staff-distance")
 		if len(rows) != 1 {
@@ -225,6 +237,7 @@ func TestLayoutRound1InvalidStaffSelectorWithoutDefaultsStillPublishes(t *testin
 }
 
 func TestLayoutRound1PercussionReferenceSourceModel(t *testing.T) {
+	t.Parallel()
 	for _, line := range []string{"", "<line>1</line>", "<line>5</line>"} {
 		t.Run(line, func(t *testing.T) {
 			layoutReports(t, `<attributes><divisions>1</divisions><clef><sign>percussion</sign>`+line+`</clef><staff-details><staff-lines>1</staff-lines></staff-details></attributes><note><unpitched><display-step>G</display-step><display-octave>4</display-octave></unpitched><duration>1</duration></note>`, "", func(t *testing.T, r validation.Report) { layoutMatrixValues(t, r, "display-staff-position", lmk("2")) })
@@ -233,6 +246,7 @@ func TestLayoutRound1PercussionReferenceSourceModel(t *testing.T) {
 }
 
 func TestLayoutRound1ParallelBreakUnavailableAttributeIsOrderIndependent(t *testing.T) {
+	t.Parallel()
 	for _, attribute := range []string{"new-system", "new-page"} {
 		t.Run(attribute, func(t *testing.T) {
 			for _, invalidFirst := range []bool{false, true} {
