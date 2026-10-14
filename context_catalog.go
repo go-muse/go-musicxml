@@ -22,6 +22,18 @@ var contextAssessmentEngine = sync.OnceValues(buildContextAssessmentEngine)
 func newContextAssessmentEngine() (*validation.Engine, error) { return contextAssessmentEngine() }
 
 func buildContextAssessmentEngine() (*validation.Engine, error) {
+	d, err := buildContextAssessmentDefinitions()
+	if err != nil {
+		return nil, err
+	}
+	c, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
+	if err != nil {
+		return nil, err
+	}
+	return validation.NewEngine(c)
+}
+
+func buildContextAssessmentDefinitions() (*assessmentDefinitions, error) {
 	d, err := buildTimelineAssessmentDefinitions()
 	if err != nil {
 		return nil, err
@@ -128,9 +140,5 @@ func buildContextAssessmentEngine() (*validation.Engine, error) {
 			d.profiles[i].Support = append(d.profiles[i].Support, validation.RuleSupport{Rule: r.Key, State: validation.ImplementationAvailable})
 		}
 	}
-	c, err := validation.NewCatalog(d.rules, d.profiles, d.plans)
-	if err != nil {
-		return nil, err
-	}
-	return validation.NewEngine(c)
+	return d, nil
 }
