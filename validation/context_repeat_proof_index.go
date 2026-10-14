@@ -9,6 +9,7 @@ type contextRepeatMeasureKey struct {
 	ordinal uint64
 }
 type contextRepeatProofIndex struct {
+	events        map[NodeRef][]NodeID
 	rows          map[NodeRef]int
 	ends          map[contextRepeatMeasureKey]Evidence[musicalPosition]
 	closures      map[NodeRef]stateClosure
@@ -45,8 +46,10 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 		return nil, nil, err
 	}
 	ok := false
+	freeEvents := func() {}
 	defer func() {
 		if !ok {
+			freeEvents()
 			free()
 		}
 	}()
@@ -160,6 +163,23 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 				checked[ancestorKey{v.part.Value, id}] = true
 			}
 		}
+		// Enumerate every direct music-data child, including an event whose
+		// timeline fact is unavailable. The singleton theorem must not infer
+		// absence from the ordinary positive note roster.
+		if parentLevel == 3 && v.part.State == EvidenceKnown {
+			if !r.step(1 + int64(len(v.part.Value.DocumentID))) {
+				return nil, nil, r.err
+			}
+			if x.events == nil {
+				releaseEvents, allocationErr := contextRepeatScratch(r.ctx, r.s, len(r.s.sequence), 128)
+				if allocationErr != nil {
+					return nil, nil, allocationErr
+				}
+				freeEvents = releaseEvents
+				x.events = make(map[NodeRef][]NodeID)
+			}
+			x.events[v.part.Value] = append(x.events[v.part.Value], id)
+		}
 		fact, isEvent := timeline.Facts[id]
 		if isEvent {
 			if !r.step(1 + 4*int64(len(fact.Part.Value.DocumentID))) {
@@ -268,6 +288,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 		for _, release := range x.releases {
 			release()
 		}
+		freeEvents()
 		free()
 	}, nil
 }
