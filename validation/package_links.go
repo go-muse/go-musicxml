@@ -107,6 +107,16 @@ func (s *PackageSession) adoptedNodeKnown(ctx context.Context, a *packageAdoptio
 	if node != 0 && node == a.resource.snapshot.header.Root.Node {
 		return true
 	}
+	if fragments := a.resource.snapshot.fragments; fragments != nil {
+		for _, element := range fragments.Elements {
+			if err := s.scan(ctx, 1); err != nil {
+				return false
+			}
+			if element.Subject.Node == node {
+				return true
+			}
+		}
+	}
 	for _, id := range a.resource.snapshot.ids {
 		if err := s.scan(ctx, 1); err != nil {
 			return false
@@ -627,6 +637,9 @@ func (s *PackageSession) linkTargetDecision(ctx context.Context, d Decision, e P
 			d.Outcome = OutcomeUnsupported
 			d.Reason = "fragment-grammar-unimplemented"
 			return d
+		}
+		if target.resource.snapshot.fragments != nil {
+			return s.fragmentSelectionDecision(ctx, d, e, target)
 		}
 		matching := false
 		for _, id := range target.resource.snapshot.ids {

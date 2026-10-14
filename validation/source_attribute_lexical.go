@@ -19,6 +19,9 @@ func validateSourceResourceProfile(c *CompiledCatalog, profile Profile, closure 
 			continue
 		}
 		assembly := p.context.Schema.assembly
+		if p.context.fragments != fragmentLegacy && c.sourceDeclarations[profile.ID][assembly] != xsdSourceDeclarationsV1 {
+			return contract("source XML fragments", "matching source declaration capability required")
+		}
 		provider := c.sourceOrigins[profile.ID][assembly]
 		if profile.Target != TargetSource || provider == (RuleKey{}) {
 			return contract("source resource profile", "matching available source-origin provider required")

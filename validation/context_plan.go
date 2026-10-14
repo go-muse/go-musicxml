@@ -28,6 +28,7 @@ type ContextPlanSpec struct {
 }
 type contextPlan struct {
 	sourceInfoset bool
+	fragments     fragmentMode
 	Schema        *CompiledSchema
 	Timeline      RuleKey
 	Provider      RuleKey
@@ -154,6 +155,9 @@ func (p *contextPlan) valid(kind planKind) error {
 	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Schema.assembly != contextPlanAssembly(kind) || p.Bindings == nil || p.revision != contextSemanticRevision {
 		return contract("context plan", "sealed MusicXML schema and exact context revision required")
 	}
+	if p.fragments > fragmentFramework || p.fragments != fragmentLegacy && !resourceLinkPlan(kind) {
+		return contract("XML fragment mode", "selected local-link plan required")
+	}
 	if p.sourceInfoset && kind != planContextMusicXMLLinks && kind != planContextOpusLinks && kind != planContextMusicXMLHints && kind != planContextOpusHints && kind != planContextContainerHints && kind != planContextSoundsHints && kind != planContextContainerMetadata {
 		return contract("source resource context", "supported source resource family required")
 	}
@@ -191,6 +195,13 @@ func (p *contextPlan) digest(kind planKind) any {
 		Provider     RuleKey
 		Bindings     string
 	}{kind, p.revision, p.Schema.Digest(), p.Schema.Assembly(), p.Timeline, p.Provider, p.Bindings.digest()}
+	if p.fragments != fragmentLegacy {
+		return struct {
+			Fragments     fragmentMode
+			SourceInfoset bool
+			Context       any
+		}{p.fragments, p.sourceInfoset, out}
+	}
 	if p.sourceInfoset {
 		return struct {
 			Provenance string

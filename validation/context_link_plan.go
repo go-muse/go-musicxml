@@ -101,13 +101,15 @@ func resourceLinkBindingSpecs(assembly Assembly) []contextBindingSpec {
 // NewSourceLocalLinkContextPlan projects MusicXML or Opus effective resources
 // while preserving physical presence and separately admitted lexical evidence.
 // DTD defaults and entity-generated markup have no physical Raw spelling. It
-// requires a selected source-origin provider and does not perform any I/O.
+// requires selected source-origin and source-declaration providers, retains
+// effective DTD ID occurrences for joined shorthand, and performs no I/O.
 func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
 	p, err := NewLocalLinkContextPlan(schema)
 	if err != nil {
 		return Plan{}, err
 	}
 	p.context.sourceInfoset = true
+	p.context.fragments = fragmentJoinedShorthand
 	return checkedPlan(p)
 }
 

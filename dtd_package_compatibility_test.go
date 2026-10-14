@@ -9,15 +9,15 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// Intrinsic Profile hashes retain the ccc7402 capture. Package hashes are
-// captured independently on ed3774a, before this composition and after the
-// source-reviewed local-header correction intentionally changed package text
-// and catalog identities. The composition itself changes neither baseline.
-func TestDTDPackageCompositionPreservesLegacyProfiles(t *testing.T) {
+// Published ordinary package profiles retain the ed3774a capture. The three
+// unpublished DTD source profiles intentionally migrate together: their shared
+// catalog now elects effective DTD/XSD joined shorthand. These new captures are
+// a documented prepublication correction, not a claim of prior digest stability.
+func TestDTDPackageCompositionPreservesPublishedProfilesAndMigratesDTDShorthand(t *testing.T) {
 	want := map[validation.ProfileID]string{
-		ProfileSourceInternalDTDLocal:        "2d0c9cf4098d84fbcdaaf21ee15257943dff3f09baa5dc163385b9db2637aa1e",
-		ProfileSourceInternalDTDLinks:        "367b8b26ab653cfa933e9ad21950e6f1398c8cbcf3ee8bb9799803cf9fa498f7",
-		ProfileSourceInternalDTDDictionaries: "bd29ca59b911e13a4739504730e048db8c9f1b6a949904e27d2bd242000f3cfc",
+		ProfileSourceInternalDTDLocal:        "66ade1cc00540aebc746f1a9cc6a1cf0f3515c37d8a8c547093bbe686f5f6ff0",
+		ProfileSourceInternalDTDLinks:        "db744ca59d2ea60a0db07ef7e6693fee44ae2148a3481cbf9be80cdfb654bb01",
+		ProfileSourceInternalDTDDictionaries: "7ef8ca4eff9b989c8482b2cf7f98ebe8823ea98e40236461246186f59ec7792a",
 		ProfileResourceGraph:                 "f0eab5da83c93f08e02a90df65fe37db13e5a00966ccb5ff5659628cea6dd291",
 		ProfileMXLSource:                     "a6a6f73f18882b11db2402358f5584f2541d366fcd9b811eeb22b17745fc9b05",
 		ProfileMXLModel:                      "4edd959ead2e80905663ac6f508a7ef8cea7337c7a5f90a214e787580d0027d8",
@@ -33,7 +33,7 @@ func TestDTDPackageCompositionPreservesLegacyProfiles(t *testing.T) {
 		}
 		got := fmt.Sprintf("%x", sha256.Sum256(b))
 		if got != want[id] {
-			t.Errorf("legacy profile %s changed: got %s want %s", id, got, want[id])
+			t.Errorf("profile %s changed: got %s want %s", id, got, want[id])
 		}
 	}
 	for _, id := range []validation.ProfileID{ProfileSourceInternalDTDLocal, ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries} {

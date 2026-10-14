@@ -287,11 +287,12 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 		run.startupReport = report
 		return run, errors.Join(cause, finishErr)
 	}
-	var internalDTD, sourceDeclarations, captureAttributeLexical bool
+	var internalDTD, sourceDeclarations, captureAttributeLexical, sourceDTDIDs bool
 	if config != nil {
 		internalDTD, sourceDeclarations, captureAttributeLexical = sourceDTDPolicy(config.Profile)
+		sourceDTDIDs = config.Engine.SourceDTDIDsSelected(config.Profile)
 	}
-	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical})
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical, CaptureDTDIDs: sourceDTDIDs})
 	if err != nil {
 		return fail(err)
 	}
@@ -302,6 +303,7 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 			return fail(err)
 		}
 		run.source.observer.sourceDeclarations = sourceDeclarations
+		run.source.observer.sourceDTDIDs = sourceDTDIDs
 		run.source.observer.captureAttributeLexical = captureAttributeLexical
 		if internalDTD {
 			const originBridgeBytes = 512
@@ -348,6 +350,9 @@ func (r *sourceAssessmentRun) finishInput(cause error) (validation.Completion, e
 		}
 		if inputComplete && cause == nil {
 			cause = r.source.observer.sealSourceOrigins(r.ctx)
+			if cause == nil {
+				cause = r.source.observer.sealSourceDTDIDs(r.ctx)
+			}
 		}
 		cause = errors.Join(cause, r.source.observer.close(), r.source.lexical.Close())
 	}

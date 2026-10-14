@@ -1544,7 +1544,12 @@ failure metadata cannot replace an existing blocker. Before termination, ordinar
 full retention may still succeed within the shared quotas.
 
 `ObserveEdge` consumes a once URI-decoded fragment component. Empty fragments
-address the whole document; only schema-ID NCName shorthand is implemented.
+address the whole document. Published legacy profiles retain schema-ID NCName
+shorthand and their schema-uniqueness gate. The explicitly DTD-composed source
+profiles instead join effective first-bound DTD ID attributes with schema IDs
+and select the first matching owner element in document order. Intrinsic XSD
+identity failures remain independent. These unpublished profiles intentionally
+migrate their closure and catalog identities; this is not a frozen-digest claim.
 Each observation requires explicit `Indirection` evidence. Known false asserts
 that the adopted XML is the directly selected target; known true records an
 archive-to-primary substitution. Omitted evidence is invalid ingress, not an
@@ -1556,7 +1561,19 @@ adapter does not request an association proof for that substituted target.
 Indirection belongs to the incoming occurrence: direct XML members, inner
 outgoing links and aliases retain their own independently established evidence.
 Complete exact ID absence fails, incomplete ID scopes stay unknown, and other
-fragment grammars stay unsupported. Unknown/absent selected targets still charge
+fragment grammars stay unsupported in these bounded shorthand profiles. DTD
+shorthand requires both declaration-domain and occurrence-enumeration seals,
+plus complete XSD identity and element order; a later known candidate cannot
+exclude an earlier unknown one. Source `SourceDTDIDDomain`,
+`SourceDTDIDAttribute`, and `CompleteSourceDTDIDs` ingress matches each actual
+admitted non-namespace attribute before XSD normalization. Declaration lexical
+names, first-binding identity, actual DTD-normalized value, default kind and
+independently available declaration/use sites stay owned with the snapshot.
+Legal explicit `ID #REQUIRED` and `ID #IMPLIED` declarations are supported;
+illegal ID value/fixed defaults retain limited typing evidence and leave the
+selection authority incomplete, without inventing DTD validation findings.
+No external declarations are fetched and current models never manufacture
+historical DTD absence or IDs. Unknown/absent selected targets still charge
 linked-document admission. Each known edge uses its own nonroot adoption distinct
 from its source. A target may belong to another explicitly admitted package
 boundary; a known empty fragment target must be its exact nonzero adopted root.

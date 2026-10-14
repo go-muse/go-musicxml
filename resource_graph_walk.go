@@ -412,6 +412,9 @@ func (g *resourceGraphRun) resolveFragment(aid validation.ResourceAdoptionID, fr
 		}
 		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceKnown, Value: header.Root}, nil
 	}
+	if resolved, selected, err := a.ResolveXMLFragment(g.ctx, fragment.Value); selected || err != nil {
+		return resolved, err
+	}
 	if !sourceXMLNCName(fragment.Value) {
 		return validation.Evidence[validation.NodeRef]{State: validation.EvidenceUnsupported, Reason: "fragment-scheme-unavailable"}, nil
 	}

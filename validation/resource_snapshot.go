@@ -48,15 +48,16 @@ type resourceLeaseOwner struct{ marker byte }
 // After Close, header/count getters are zero and content getters reject access.
 type ResourceSnapshot struct {
 	// Private cache identity is bound to the admitted session, not an editable report.
-	dictionary [32]byte
-	header     ResourceSnapshotHeader
-	report     Report
-	contexts   []ContextResult
-	ids        []ResourceIDFact
-	account    *Account
-	retained   int64
-	closed     bool
-	owner      *resourceLeaseOwner
+	dictionary  [32]byte
+	fragments   *resourceFragmentSnapshot
+	header      ResourceSnapshotHeader
+	report      Report
+	contexts    []ContextResult
+	ids         []ResourceIDFact
+	account     *Account
+	retained    int64
+	closed      bool
+	owner       *resourceLeaseOwner
 }
 
 // FinishWithResourceSnapshot is an alternate terminal finalizer. It evaluates
@@ -111,6 +112,10 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	if s.schema != nil && s.schema.identityReady && s.schema.identity.Complete {
 		h.IDScopeComplete = Evidence[bool]{State: EvidenceKnown, Value: true}
 	}
+	fragments, err := s.resourceFragments(ctx)
+	if err != nil {
+		return nil, err
+	}
 	ids, err := s.resourceIDs(ctx)
 	if err != nil {
 		return nil, err
@@ -129,6 +134,16 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	}
 	for _, v := range []any{h, ids} {
 		n, e := resourceMeasure(ctx, s.account, reflect.ValueOf(v))
+		if e != nil {
+			return nil, e
+		}
+		size, e = rationalCheckedAdd(BudgetBufferedBytes, size, n)
+		if e != nil {
+			return nil, e
+		}
+	}
+	if fragments != nil {
+		n, e := resourceMeasure(ctx, s.account, reflect.ValueOf(fragments))
 		if e != nil {
 			return nil, e
 		}
@@ -182,6 +197,12 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	}
 	if err = resourceCopyInto(ctx, reflect.ValueOf(&out.ids).Elem(), reflect.ValueOf(ids), "", ""); err != nil {
 		return nil, err
+	}
+	if fragments != nil {
+		if err = resourceCopyInto(ctx, reflect.ValueOf(&out.fragments).Elem(), reflect.ValueOf(fragments), "", ""); err != nil {
+			return nil, err
+		}
+	}
 	}
 	out.contexts = make([]ContextResult, count)
 	at := 0
@@ -514,6 +535,7 @@ func (s *ResourceSnapshot) release() {
 	s.closed = true
 	s.report = Report{}
 	s.contexts = nil
+	s.fragments = nil
 	s.ids = nil
 	s.header = ResourceSnapshotHeader{}
 	s.owner = nil

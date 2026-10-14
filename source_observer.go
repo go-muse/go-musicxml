@@ -66,6 +66,7 @@ type sourceFactObserver struct {
 	origins                 *sourceOriginObserver
 	captureAttributeLexical bool
 	sourceDeclarations      bool
+	sourceDTDIDs            bool
 }
 
 func newSourceFactObserver(ctx context.Context, sink sourceFactSink, account *validation.Account) (*sourceFactObserver, error) {
@@ -294,6 +295,11 @@ func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMet
 			return err
 		}
 	}
+	if parent == 0 {
+		if err := o.publishSourceDTDIDDomain(scanner); err != nil {
+			return err
+		}
+	}
 	if err := o.publishSourceOrigin(frame, nil, name, location, meta.Origin); err != nil {
 		return err
 	}
@@ -332,7 +338,7 @@ func (o *sourceFactObserver) attribute(frame *sourceObserverFrame, attr xml.Attr
 		path = frame.path + "/@" + sourceDisplayName(name)
 	}
 	scalar := sourceLexeme(attr.Value)
-	if o.dtdUnavailable && !meta.NamespaceDeclaration {
+	if o.dtdUnavailable && !meta.NamespaceDeclaration && !(o.sourceDTDIDs && meta.DTDID != nil) {
 		scalar.Lexeme = validation.Evidence[string]{State: validation.EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
 	}
 	location := o.location(path, meta.NameSpan.Start)
@@ -343,6 +349,9 @@ func (o *sourceFactObserver) attribute(frame *sourceObserverFrame, attr xml.Attr
 		return err
 	}
 	if err := o.publishSourceOrigin(frame, &name, validation.QName{}, location, meta.Origin); err != nil {
+		return err
+	}
+	if err := o.publishSourceDTDIDAttribute(frame, name, scalar.Lexeme.Value, location, meta); err != nil {
 		return err
 	}
 	return o.publishSourceAttributeLexical(frame, name, meta)

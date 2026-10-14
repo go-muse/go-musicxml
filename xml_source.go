@@ -19,6 +19,7 @@ type sourceXMLConfig struct {
 	ByteOwner               sourceByteOwner
 	InternalDTD             bool
 	CaptureAttributeLexical bool
+	CaptureDTDIDs           bool
 }
 type sourceXMLAttribute struct {
 	NameSpan, ValueSpan  sourceXMLSpan
@@ -27,6 +28,10 @@ type sourceXMLAttribute struct {
 	// Lexical borrows the token-owned XML-normalized physical representation
 	// captured before DTD tokenized normalization. Zero means not elected.
 	Lexical validation.Evidence[string]
+	// DTDID borrows the effective first declaration until token advance. It is
+	// bound using lexical qualified names before namespace expansion.
+	DTDID               *sourceDTDDeclaration
+	DTDIDDomainComplete bool
 }
 type sourceXMLTokenMeta struct {
 	Span                       sourceXMLSpan
@@ -71,6 +76,7 @@ type sourceXMLTokenReader struct {
 	account                                                    *validation.Account
 	internalDTD                                                bool
 	captureAttributeLexical, attributeGeneralExpanded          bool
+	captureDTDIDs                                              bool
 	maxDepth                                                   int64
 	peakDepth                                                  int
 	metadata                                                   sourceXMLTokenMeta
@@ -88,6 +94,9 @@ type sourceXMLTokenReader struct {
 }
 
 func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXMLTokenReader, error) {
+	if config.CaptureDTDIDs && !config.InternalDTD {
+		return nil, &validation.ConfigurationError{Field: "CaptureDTDIDs", Reason: "DTD ID capture requires internal DTD mode"}
+	}
 	if config.CaptureAttributeLexical && !config.InternalDTD {
 		return nil, &validation.ConfigurationError{Field: "CaptureAttributeLexical", Reason: "physical lexical capture requires internal DTD mode"}
 	}
@@ -114,7 +123,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 	if config.Account != nil && config.Account.Limits().MaxDepth < maximum {
 		maximum = config.Account.Limits().MaxDepth
 	}
-	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, internalDTD: config.InternalDTD, captureAttributeLexical: config.CaptureAttributeLexical, maxDepth: maximum, retained: sourceXMLReaderBytes}, nil
+	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, internalDTD: config.InternalDTD, captureAttributeLexical: config.CaptureAttributeLexical, captureDTDIDs: config.CaptureDTDIDs, maxDepth: maximum, retained: sourceXMLReaderBytes}, nil
 }
 func (r *sourceXMLTokenReader) Metadata() sourceXMLTokenMeta { return r.metadata }
 func (r *sourceXMLTokenReader) Summary() sourceXMLSummary {

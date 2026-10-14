@@ -23,6 +23,8 @@ type PlanBinding struct {
 // A catalog makes only its profiles' explicit claims; no MusicXML profile is
 // implicitly supplied by this package.
 type CompiledCatalog struct {
+	fragmentModes          map[ProfileID]map[Assembly]fragmentMode
+	fragmentDTDs           map[ProfileID]map[Assembly]bool
 	sourceDeclarations     map[ProfileID]map[Assembly]xsdPlanMode
 	sourceOrigins          map[ProfileID]map[Assembly]RuleKey
 	sourceAttributeLexical map[ProfileID]map[Assembly]RuleKey
@@ -238,6 +240,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			return nil, err
 		}
 		if err := validateSourceResourceProfile(c, owned, closure, supports); err != nil {
+			return nil, err
+		}
+		if err := validateFragmentProfile(c, owned, closure, supports); err != nil {
 			return nil, err
 		}
 		if err := validateContextProfile(c, closure, schemas); err != nil {
