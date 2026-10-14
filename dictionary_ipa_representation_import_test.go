@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -399,6 +400,112 @@ func TestDictionaryIPARepresentationTerminalImportFailures(t *testing.T) {
 				}
 				dictionaryImportNoLive(t, a)
 			})
+		}
+	}
+}
+
+type dictionaryRepresentationCancelOnCloseBody struct {
+	*bytes.Reader
+	cancel   context.CancelFunc
+	closed   int
+	closeErr error
+}
+
+func (b *dictionaryRepresentationCancelOnCloseBody) Close() error {
+	b.closed++
+	b.cancel()
+	return b.closeErr
+}
+
+func TestDictionaryIPARepresentationLengthMismatchPreservesCloseCancellation(t *testing.T) {
+	for _, id := range []validation.DictionaryManifestID{validation.DictionaryManifestIPAPositive2015Unicode13, dictionaryRepresentationTestID} {
+		for _, length := range []string{"short", "long"} {
+			t.Run(string(id)+"/"+length, func(t *testing.T) {
+				var raw []byte
+				if id == dictionaryRepresentationTestID {
+					raw = dictionaryRepresentationFixture(t)
+				} else {
+					raw = dictionaryImportFixture(t, id)
+				}
+				if length == "short" {
+					raw = raw[:len(raw)-1]
+				} else {
+					raw = append(raw, 'x')
+				}
+				a := dictionaryImportAccount(t, validation.Budgets{})
+				if err := a.Charge(validation.BudgetBufferedBytes, 17); err != nil {
+					t.Fatal(err)
+				}
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				body := &dictionaryRepresentationCancelOnCloseBody{Reader: bytes.NewReader(raw), cancel: cancel}
+				calls := 0
+				source := dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+					calls++
+					return DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: body}, nil
+				})
+				set, err := loadDictionarySet(ctx, a, DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(id), dictionaryImportSelection(validation.DictionaryManifestStandardSounds40)}, Source: source})
+				if set != nil || !errors.Is(err, context.Canceled) || body.closed != 1 || calls != 1 {
+					t.Fatalf("close cancellation lost: set=%v err=%v closes=%d calls=%d", set, err, body.closed, calls)
+				}
+				if id == dictionaryRepresentationTestID && (!errors.Is(err, validation.ErrInvalidConfiguration) || errors.Is(err, ErrDictionaryUnavailable)) {
+					t.Fatalf("malformed representation classification changed: %v", err)
+				}
+				if live, _ := a.Usage(validation.BudgetBufferedBytes); live != 17 {
+					t.Fatalf("lost caller lease or leaked failed import: %d", live)
+				}
+				if err := a.Release(validation.BudgetBufferedBytes, 17); err != nil {
+					t.Fatal(err)
+				}
+				dictionaryImportNoLive(t, a)
+			})
+		}
+	}
+}
+
+func TestDictionaryIPARepresentationCloseCancellationStopsDocumentReads(t *testing.T) {
+	for _, length := range []string{"exact", "short", "long"} {
+		for _, closeFailure := range []bool{false, true} {
+			for _, earlierGap := range []bool{false, true} {
+				name := fmt.Sprintf("%s/close-error=%v/earlier-gap=%v", length, closeFailure, earlierGap)
+				t.Run(name, func(t *testing.T) {
+					raw := dictionaryRepresentationFixture(t)
+					if length == "short" {
+						raw = raw[:len(raw)-1]
+					} else if length == "long" {
+						raw = append(raw, 'x')
+					}
+					ctx, cancel := context.WithCancel(context.Background())
+					defer cancel()
+					closing := errors.New("caller close failure")
+					ordinary := errors.New("earlier component unavailable")
+					body := &dictionaryRepresentationCancelOnCloseBody{Reader: bytes.NewReader(raw), cancel: cancel}
+					if closeFailure {
+						body.closeErr = closing
+					}
+					selections := []validation.DictionarySelection{dictionaryRepresentationTestSelection()}
+					if earlierGap {
+						selections = append([]validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical)}, selections...)
+					}
+					calls := 0
+					source := dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+						calls++
+						if request.Manifest == validation.DictionaryManifestSMuFL14Canonical {
+							return DictionaryComponentResult{}, ordinary
+						}
+						return DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: body}, nil
+					})
+					report, err := InspectXMLWithDictionaries(ctx, &dictionaryUnexpectedRead{t}, DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: DictionaryOptions{Selections: selections, Source: source}})
+					wantCalls := 1
+					if earlierGap {
+						wantCalls++
+					}
+					wantConfiguration := length != "exact" && !closeFailure
+					if !errors.Is(err, context.Canceled) || errors.Is(err, validation.ErrInvalidConfiguration) != wantConfiguration || errors.Is(err, ordinary) != earlierGap || errors.Is(err, closing) != closeFailure || body.closed != 1 || calls != wantCalls || report.InputComplete {
+						t.Fatalf("cancellation or prior cause lost: err=%v closes=%d calls=%d complete=%v", err, body.closed, calls, report.InputComplete)
+					}
+				})
+			}
 		}
 	}
 }
