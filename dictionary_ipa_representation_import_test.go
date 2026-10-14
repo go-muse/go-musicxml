@@ -327,3 +327,78 @@ func TestDictionaryIPARepresentationMalformedCertifiedRecords(t *testing.T) {
 		})
 	}
 }
+
+func TestDictionaryIPARepresentationAllFiveCertifiedImports(t *testing.T) {
+	ids := []validation.DictionaryManifestID{validation.DictionaryManifestSMuFL14Canonical, validation.DictionaryManifestSMuFL14Ranges, validation.DictionaryManifestStandardSounds40, validation.DictionaryManifestIPAPositive2015Unicode13, dictionaryRepresentationTestID}
+	selections := make([]validation.DictionarySelection, 0, len(ids))
+	for _, id := range ids {
+		if id == dictionaryRepresentationTestID {
+			selections = append(selections, dictionaryRepresentationTestSelection())
+		} else {
+			selections = append(selections, dictionaryImportSelection(id))
+		}
+	}
+	calls := make(map[validation.DictionaryManifestID]int)
+	var wantBytes int64
+	source := dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+		calls[request.Manifest]++
+		var raw []byte
+		if request.Manifest == dictionaryRepresentationTestID {
+			raw = dictionaryRepresentationFixture(t)
+		} else {
+			raw = dictionaryImportFixture(t, request.Manifest)
+		}
+		wantBytes += int64(len(raw))
+		return DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: &resourceTestBody{Reader: bytes.NewReader(raw)}}, nil
+	})
+	a := dictionaryImportAccount(t, validation.Budgets{})
+	set, err := loadDictionarySet(context.Background(), a, DictionaryOptions{Selections: selections, Source: source})
+	if set == nil || err != nil {
+		t.Fatalf("all-five import: set=%v err=%v", set, err)
+	}
+	for _, id := range ids {
+		if calls[id] != 1 {
+			t.Fatalf("manifest %s opened %d times", id, calls[id])
+		}
+	}
+	if external, _ := a.Usage(validation.BudgetExternalBytes); external != wantBytes {
+		t.Fatalf("external bytes=%d want=%d", external, wantBytes)
+	}
+	set.Close()
+	dictionaryImportNoLive(t, a)
+}
+
+func TestDictionaryIPARepresentationTerminalImportFailures(t *testing.T) {
+	raw := dictionaryRepresentationFixture(t)
+	for _, terminal := range []error{context.Canceled, context.DeadlineExceeded, &validation.ResourceError{Kind: validation.BudgetRuleSteps, Limit: 1, Used: 1, Requested: 1}} {
+		for _, where := range []string{"open", "read", "close", "invalid response close"} {
+			t.Run(where+"/"+terminal.Error(), func(t *testing.T) {
+				a := dictionaryImportAccount(t, validation.Budgets{})
+				closing := errors.New("independent cleanup cause")
+				body := &resourceTestBody{Reader: bytes.NewReader(raw)}
+				source := dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+					out := DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: body}
+					switch where {
+					case "open":
+						body.closeErr = closing
+						return out, terminal
+					case "read":
+						body.Reader = &resourceReadError{[]byte("x"), terminal}
+						body.closeErr = closing
+					case "close":
+						body.closeErr = errors.Join(terminal, closing)
+					case "invalid response close":
+						out.State = validation.EvidenceInvalid
+						body.closeErr = errors.Join(terminal, closing)
+					}
+					return out, nil
+				})
+				set, err := loadDictionarySet(context.Background(), a, DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: source})
+				if set != nil || !errors.Is(err, terminal) || !errors.Is(err, closing) || errors.Is(err, ErrDictionaryUnavailable) || body.closed != 1 {
+					t.Fatalf("set=%v err=%v closes=%d", set, err, body.closed)
+				}
+				dictionaryImportNoLive(t, a)
+			})
+		}
+	}
+}

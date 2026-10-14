@@ -86,3 +86,86 @@ func decodeDictionaryIPA(c *dictionaryJSON) (*validation.IPAPositiveDictionaryDa
 	}
 	return out, c.err
 }
+
+func decodeDictionaryIPARepresentation(c *dictionaryJSON) (*validation.IPAPositiveDictionaryData, error) {
+	// Schema 2 is a separately hash-certified derived component. The 797-byte
+	// metadata prefix includes its fixed identity, policy witness and attribution;
+	// it neither supplies executable grammar nor permits source fetching.
+	const prefixBytes = 797
+	if len(c.raw) < prefixBytes || !bytes.HasPrefix(c.raw, []byte("{\n  \"schema_version\": 2,\n")) || !bytes.HasSuffix(c.raw[:prefixBytes], []byte("\"records\": [")) {
+		c.fail("unexpected certified IPA representation bundle prefix")
+		return nil, c.err
+	}
+	c.at = prefixBytes
+	out := &validation.IPAPositiveDictionaryData{Symbols: make([]validation.IPASymbolEncoding, 0, 295), Equivalences: make([]validation.IPACanonicalEquivalent, 0, 158)}
+	first := true
+	previousKind, previousEncoding := 0, ""
+	for c.next(']', &first) {
+		c.want('{')
+		object := true
+		mask := uint32(0)
+		kind := 0
+		var fields [3]string
+		for c.next('}', &object) {
+			switch string(c.str(11)) {
+			case "record_type":
+				c.field(&mask, 1)
+				switch string(c.str(21)) {
+				case "canonical-equivalence":
+					kind = 1
+				case "symbol":
+					kind = 2
+				default:
+					c.fail("unsupported IPA representation record kind")
+				}
+			case "fields":
+				c.field(&mask, 2)
+				c.want('[')
+				for i := range fields {
+					if i > 0 {
+						c.want(',')
+					}
+					fields[i] = c.owned(18)
+				}
+				c.want(']')
+			default:
+				c.fail("unknown IPA representation record field")
+			}
+		}
+		if mask != 3 {
+			c.fail("incomplete IPA representation record")
+		}
+		if c.err != nil {
+			break
+		}
+		if fields[0] == "" {
+			c.fail("empty IPA representation encoding")
+			break
+		}
+		if kind < previousKind || kind == previousKind && fields[0] <= previousEncoding {
+			c.fail("duplicate or out-of-order IPA representation record")
+			break
+		}
+		previousKind, previousEncoding = kind, fields[0]
+		switch kind {
+		case 1:
+			if len(out.Equivalences) == cap(out.Equivalences) {
+				c.fail("excessive IPA representation equivalences")
+				break
+			}
+			out.Equivalences = append(out.Equivalences, validation.IPACanonicalEquivalent{Encoding: fields[0], EquivalentToEncoding: fields[1], RowID: fields[2]})
+		case 2:
+			if len(out.Symbols) == cap(out.Symbols) {
+				c.fail("excessive IPA representation symbols")
+				break
+			}
+			out.Symbols = append(out.Symbols, validation.IPASymbolEncoding{Encoding: fields[0], Category: fields[1], RowID: fields[2]})
+		}
+	}
+	c.want('}')
+	c.eof()
+	if len(out.Symbols) != 295 || len(out.Examples) != 0 || len(out.Equivalences) != 158 || c.copied != 8007 {
+		c.fail("incomplete IPA representation record counts")
+	}
+	return out, c.err
+}
