@@ -62,6 +62,8 @@ func NewPresentAttributeValuePlan(attribute AttributeSelector, values []Atomic) 
 // NewSourceAttributeValuePlan checks an exact attribute supplied by the source
 // infoset, including DTD defaults and entity-generated markup. An XSD-only
 // default does not establish source presence. Only source rules may select it.
+// Declaration-aware source catalogs require this instead of the legacy physical-
+// presence constructor NewPresentAttributeValuePlan.
 func NewSourceAttributeValuePlan(attribute AttributeSelector, values []Atomic) (Plan, error) {
 	return newLocalPlan(localPlan{Operation: localAttributeSet, Attribute: attribute, Values: values, sourceInfoset: true})
 }
@@ -89,6 +91,8 @@ func NewPresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selecto
 // NewSourcePresenceImpliesAttributePlan requires owner and one validated value
 // when any exact trigger is supplied by the source infoset, including DTD
 // defaults and entity-generated markup. XSD-only defaults are not triggers.
+// Declaration-aware source catalogs require this instead of the legacy physical-
+// presence constructor NewPresenceImpliesAttributePlan.
 func NewSourcePresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selector, attribute AttributeSelector, expected Atomic) (Plan, error) {
 	return newLocalPlan(localPlan{Operation: localPresenceAttribute, Triggers: triggers, Owner: owner, Attribute: attribute, Values: []Atomic{expected}, sourceInfoset: true})
 }

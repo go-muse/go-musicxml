@@ -228,6 +228,9 @@ func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding)
 			}
 			c.sourceDeclarations[profile.ID] = availableModes
 		}
+		if err := validateSourceLocalPresenceProfile(c, owned, closure, supports); err != nil {
+			return nil, err
+		}
 		if err := validateSourceOriginProfile(c, owned, closure, supports, schemas); err != nil {
 			return nil, err
 		}

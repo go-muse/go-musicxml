@@ -63,8 +63,9 @@ func (s *Session) sourceAttributeLexicalKey() RuleKey {
 // replaced general-entity spelling that was not retained is Unknown. Defaults
 // and entity-generated attributes require Absent. Missing input never permits
 // reconstructing Raw from the effective AttributeFact lexeme. This adds no
-// public context row and does not change the effective attribute value.
-func (s *Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, subject NodeRef, attribute QName, raw Evidence[string]) error {
+// public context row and does not change the effective attribute value. Every
+// rejection is terminal; Finish still releases all owned live gauges.
+func (s *Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, subject NodeRef, attribute QName, raw Evidence[string]) (err error) {
 	if err := s.event(ctx, "SourceAttributeLexical"); err != nil {
 		return err
 	}
@@ -74,9 +75,8 @@ func (s *Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, 
 	if len(s.stack) == 0 || s.sourceOriginSeal != nil || subject != (NodeRef{s.documentID, s.stack[len(s.stack)-1].header.ID}) {
 		return s.fail(&SessionError{Operation: "SourceAttributeLexical", Reason: "currently open exact subject required"})
 	}
-	if err := s.step(ctx, 1+int64(len(attribute.Space))+int64(len(attribute.Local))+int64(len(raw.Value))+evidenceLogicalBytes(raw)); err != nil {
-		return s.fail(err)
-	}
+	// Validate bounded metadata before calling shared logical-byte helpers: those
+	// helpers may sum native ints and assume admitted identity-sized fields.
 	if !validQName(attribute) {
 		return s.fail(contract("source attribute lexical", "exact expanded attribute name required"))
 	}
@@ -86,8 +86,21 @@ func (s *Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, 
 	if err := s.account.Check(BudgetScalarBytes, int64(len(raw.Value))); err != nil {
 		return s.fail(err)
 	}
-	if raw.State == EvidenceKnown && !utf8.ValidString(raw.Value) {
-		return s.fail(contract("source attribute lexical", "invalid UTF-8"))
+	work, err := rationalCheckedMul(BudgetRuleSteps, int64(len(raw.Value)), 2)
+	if err != nil {
+		return s.fail(err)
+	}
+	work, err = rationalSum(BudgetRuleSteps, 1, int64(len(attribute.Space)), int64(len(attribute.Local)), work, evidenceLogicalBytes(raw))
+	if err != nil {
+		return s.fail(err)
+	}
+	if err := s.step(ctx, work); err != nil {
+		return s.fail(err)
+	}
+	if raw.State == EvidenceKnown {
+		if err := sourceAttributeLexicalUTF8(ctx, s, raw.Value); err != nil {
+			return s.fail(err)
+		}
 	}
 	slot := sourceOriginSubject{Node: subject.Node, Attribute: attribute}
 	origin := s.sourceOriginSeen[slot]
@@ -104,15 +117,41 @@ func (s *Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, 
 	}
 	// Both map growth and the detached evidence/string are admitted before any
 	// allocation. Keys borrow only the separately owned origin projection.
-	cost := sourceAttributeLexicalEntryBytes + int64(len(raw.Value)) + evidenceLogicalBytes(raw)
-	if s.sourceAttributeLexical == nil {
-		cost += sourceAttributeLexicalHeaderBytes
-	}
-	if err := s.retain(cost); err != nil {
+	copyBytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(raw.Value)), 2)
+	if err != nil {
 		return s.fail(err)
 	}
+	cost, err := rationalSum(BudgetBufferedBytes, sourceAttributeLexicalEntryBytes, copyBytes, 16, evidenceLogicalBytes(raw))
+	if err != nil {
+		return s.fail(err)
+	}
+	if s.sourceAttributeLexical == nil {
+		cost, err = rationalCheckedAdd(BudgetBufferedBytes, cost, sourceAttributeLexicalHeaderBytes)
+		if err != nil {
+			return s.fail(err)
+		}
+	}
+	before := s.retained
+	defer func() {
+		if err != nil {
+			if delta := s.retained - before; delta > 0 {
+				_ = s.account.Release(BudgetBufferedBytes, delta)
+				s.retained = before
+			}
+			s.fail(err)
+		}
+	}()
+	if err = s.retain(cost); err != nil {
+		return err
+	}
 	owned := cloneEvidence(raw)
-	owned.Value = strings.Clone(raw.Value)
+	owned.Value, err = resourceCopyString(ctx, raw.Value)
+	if err != nil {
+		return err
+	}
+	if err = s.step(ctx, 0); err != nil {
+		return err
+	}
 	slot.Attribute = *origin.Attribute
 	if s.sourceAttributeLexical == nil {
 		s.sourceAttributeLexical = make(map[sourceOriginSubject]Evidence[string])
@@ -152,4 +191,25 @@ func (s *Session) sourcePhysicalAttribute(ctx context.Context, n *factNode, attr
 		return Evidence[bool]{State: EvidenceKnown, Value: true}, raw, nil
 	}
 	return Evidence[bool]{State: EvidenceKnown, Value: true}, stateUnknown[string]("source-attribute-lexical-unavailable"), nil
+}
+
+// Check UTF-8 in bounded blocks without splitting valid encodings. The maximum
+// scalar limit is caller-configurable; admission alone is not cancellation.
+func sourceAttributeLexicalUTF8(ctx context.Context, s *Session, value string) error {
+	for start := 0; start < len(value); {
+		if err := s.step(ctx, 0); err != nil {
+			return err
+		}
+		end := start + min(resourceCopyChunk, len(value)-start)
+		if end < len(value) {
+			for i := 0; i < utf8.UTFMax-1 && !utf8.RuneStart(value[end]); i++ {
+				end--
+			}
+		}
+		if !utf8.ValidString(value[start:end]) {
+			return contract("source attribute lexical", "invalid UTF-8")
+		}
+		start = end
+	}
+	return nil
 }

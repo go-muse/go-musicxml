@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"unicode/utf8"
 	"unsafe"
 )
 
@@ -545,5 +546,84 @@ func TestSourceResourceInstrumentReferenceRetainsExactRuleIdentity(t *testing.T)
 	got := resourceInstrumentTarget(r, n)
 	if got.State != EvidenceInvalid || got.Reason != "original-target-failure" || got.Cause == nil || got.Cause.Rule != original {
 		t.Fatalf("instrument target identity changed: %+v", got)
+	}
+}
+
+func TestSourceAttributeLexicalRaisedLimitMidScanCancellation(t *testing.T) {
+	raw := stateKnown(strings.Repeat("aé中🪕", 4096))
+	_, s, key := sourceResourceFixture(t, Budgets{MaxScalarBytes: 1 << 28})
+	name := QName{Local: "id"}
+	o := sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
+	before := s.retained
+	ctx := &rationalCancelContext{Context: context.Background(), at: 4}
+	err := s.SourceAttributeLexical(ctx, key, o.Subject, name, raw)
+	if !errors.Is(err, context.Canceled) || s.retained != before || s.sourceAttributeLexical != nil {
+		t.Fatalf("raw scan ignored cancellation: %v retained=%d/%d", err, s.retained, before)
+	}
+}
+
+func TestSourceAttributeLexicalChunkBoundariesAndCopyCancellation(t *testing.T) {
+	for _, raw := range []string{strings.Repeat("a", resourceCopyChunk-1) + "é", strings.Repeat("a", resourceCopyChunk-2) + "🪕", strings.Repeat("a", resourceCopyChunk) + string([]byte{0x80}), strings.Repeat("a", resourceCopyChunk) + string([]byte{0xf0, 0x9f})} {
+		_, s, key := sourceResourceFixture(t, Budgets{MaxScalarBytes: 1 << 28})
+		name := QName{Local: "id"}
+		o := sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
+		before := s.retained
+		err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, stateKnown(raw))
+		if utf8.ValidString(raw) {
+			if err != nil || s.sourceAttributeLexical[sourceOriginSubject{Node: 1, Attribute: name}].Value != raw {
+				t.Fatalf("valid chunk boundary rejected: %v", err)
+			}
+		} else if !errors.Is(err, ErrInvalidConfiguration) || s.sourceAttributeLexical != nil || s.retained != before {
+			t.Fatalf("invalid UTF-8 chunk boundary accepted: %v", err)
+		}
+	}
+	raw := strings.Repeat("aé中🪕", 4096)
+	_, probe, key := sourceResourceFixture(t, Budgets{MaxScalarBytes: 1 << 28})
+	name := QName{Local: "id"}
+	o := sourceResourceAdmit(t, probe, key, SourceOriginPhysical, name, "effective", true)
+	counter := &rationalCancelContext{Context: context.Background(), at: 1 << 30}
+	if err := probe.SourceAttributeLexical(counter, key, o.Subject, name, stateKnown(raw)); err != nil {
+		t.Fatal(err)
+	}
+	if counter.calls < 20 {
+		t.Fatalf("too few bounded scan/copy polls: %d", counter.calls)
+	}
+	for at := 1; at <= counter.calls; at++ {
+		_, s, key := sourceResourceFixture(t, Budgets{MaxScalarBytes: 1 << 28})
+		sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
+		before := s.retained
+		err := s.SourceAttributeLexical(&rationalCancelContext{Context: context.Background(), at: at}, key, o.Subject, name, stateKnown(raw))
+		if !errors.Is(err, context.Canceled) || s.sourceAttributeLexical != nil || s.retained != before {
+			t.Fatalf("scan/copy cancellation %d/%d: %v retained=%d/%d", at, counter.calls, err, s.retained, before)
+		}
+	}
+}
+
+func TestSourceAttributeLexicalBoundsMetadataBeforeSizing(t *testing.T) {
+	for _, field := range []string{"namespace", "local-name", "reason", "cause-rule", "cause-document"} {
+		t.Run(field, func(t *testing.T) {
+			_, s, key := sourceResourceFixture(t, Budgets{})
+			name := QName{Local: "id"}
+			o := sourceResourceAdmit(t, s, key, SourceOriginPhysical, name, "effective", true)
+			raw := stateKnown("original")
+			oversized := strings.Repeat("x", 1<<20)
+			switch field {
+			case "namespace":
+				name.Space = oversized
+			case "local-name":
+				name.Local = oversized
+			case "reason":
+				raw.Reason = Code(oversized)
+			case "cause-rule":
+				raw = Evidence[string]{State: EvidenceInvalid, Reason: "invalid-raw", Cause: &DecisionRef{Rule: RuleKey{RuleID(oversized), 1}, Subject: o.Subject}}
+			case "cause-document":
+				raw = Evidence[string]{State: EvidenceInvalid, Reason: "invalid-raw", Cause: &DecisionRef{Rule: RuleKey{"raw-cause", 1}, Subject: NodeRef{oversized, 1}}}
+			}
+			before := s.retained
+			err := s.SourceAttributeLexical(context.Background(), key, o.Subject, name, raw)
+			if !errors.Is(err, ErrInvalidConfiguration) || s.sourceAttributeLexical != nil || s.retained != before {
+				t.Fatalf("unbounded metadata admission: %v", err)
+			}
+		})
 	}
 }
