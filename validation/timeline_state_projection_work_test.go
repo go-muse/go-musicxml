@@ -305,33 +305,55 @@ func TestTimelineProjectionWorkReferenceEquivalence(t *testing.T) {
 func TestTimelineProjectionRefusalStopsQueryImmediately(t *testing.T) {
 	for _, partial := range []bool{false, true} {
 		for _, failCall := range []int{1, 2} {
-			s, h, history, at := projectionWorkFixture(t, Budgets{}, 64, 2, "selected")
-			at.UnprovedFrame = partial
-			calls := 0
-			var stoppedWork, stoppedRetained int64
-			// Deliberately leave ample account capacity. A rejected operation
-			// does not poison Account; immediate error propagation is required.
-			refusal := &ResourceError{Kind: BudgetRuleSteps, Limit: 1, Used: 0, Requested: 2}
-			project := func(v projectionWorkRecord) (Evidence[string], error) {
-				calls++
-				if calls == failCall {
-					stoppedWork = rationalUsage(t, s, BudgetRuleSteps)
-					stoppedRetained = s.retained
-					return Evidence[string]{}, refusal
+			t.Run(fmt.Sprintf("partial=%v/failCall=%d", partial, failCall), func(t *testing.T) {
+				const candidates = 3 // A later candidate must remain unprojected after either refusal.
+				s, h, history, at := projectionWorkFixture(t, Budgets{}, 64, 0, "selected")
+				publicationAt := at
+				publicationAt.UnprovedFrame = partial
+				for i := range candidates {
+					v := projectionWorkRecord{Selected: stateKnown("selected"), Other: []string{strings.Repeat("unread", 64)}}
+					statePublish(t, s, history, publicationAt, stateScope{AllStaves: true}, stateKnown(v), NodeID(100+i))
 				}
-				return v.Selected, nil
-			}
-			_, err := queryStateAtScopeWithProject(context.Background(), s, h, history, at, stateKnown(stateOne()), project, true, true, false, nil)
-			if err != refusal || calls != failCall || rationalUsage(t, s, BudgetRuleSteps) != stoppedWork || s.retained != stoppedRetained {
-				t.Fatalf("partial%v failCall%d: calls%d work%d/%d retained%d/%d err%v", partial, failCall, calls, rationalUsage(t, s, BudgetRuleSteps), stoppedWork, s.retained, stoppedRetained, err)
-			}
-			if rationalUsage(t, s, BudgetBufferedBytes) != s.retained {
-				t.Fatal("projection refusal leaked partial-query scratch")
-			}
-			s.cleanup()
-			if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
-				t.Fatal("cleanup leaked")
-			}
+				// Partiality comes from the publications, not a flag on the query.
+				isPartial, err := statePartialQuery(context.Background(), s, h, history, at, stateOne())
+				if err != nil || isPartial != partial {
+					t.Fatalf("partial route=%v, want %v: %v", isPartial, partial, err)
+				}
+				var scratch int64
+				if partial {
+					// Three 64-byte candidate slots plus the 256-byte scratch header.
+					scratch = 448
+				}
+				calls := 0
+				var stoppedWork, stoppedRetained, stoppedBuffered int64
+				// Deliberately leave ample account capacity. A rejected operation
+				// does not poison Account; immediate error propagation is required.
+				refusal := &ResourceError{Kind: BudgetRuleSteps, Limit: 1, Used: 0, Requested: 2}
+				project := func(v projectionWorkRecord) (Evidence[string], error) {
+					calls++
+					if got := rationalUsage(t, s, BudgetBufferedBytes) - s.retained; got != scratch {
+						t.Fatalf("projection scratch=%d, want %d for partial=%v", got, scratch, partial)
+					}
+					if calls == failCall {
+						stoppedWork = rationalUsage(t, s, BudgetRuleSteps)
+						stoppedRetained = s.retained
+						stoppedBuffered = rationalUsage(t, s, BudgetBufferedBytes)
+						return Evidence[string]{}, refusal
+					}
+					return v.Selected, nil
+				}
+				_, err = queryStateAtScopeWithProject(context.Background(), s, h, history, at, stateKnown(stateOne()), project, true, true, false, nil)
+				if err != refusal || calls != failCall || rationalUsage(t, s, BudgetRuleSteps) != stoppedWork || s.retained != stoppedRetained {
+					t.Fatalf("calls=%d/%d work=%d/%d retained=%d/%d err=%v; want original refusal", calls, failCall, rationalUsage(t, s, BudgetRuleSteps), stoppedWork, s.retained, stoppedRetained, err)
+				}
+				if got := rationalUsage(t, s, BudgetBufferedBytes); got != stoppedBuffered-scratch || got != s.retained {
+					t.Fatalf("projection refusal leaked scratch: buffered=%d, stopped=%d, scratch=%d, retained=%d", got, stoppedBuffered, scratch, s.retained)
+				}
+				s.cleanup()
+				if rationalUsage(t, s, BudgetBufferedBytes) != 0 {
+					t.Fatal("cleanup leaked")
+				}
+			})
 		}
 	}
 }
