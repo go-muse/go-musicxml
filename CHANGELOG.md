@@ -58,6 +58,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   even for the same input (reviewer XSD/local controls observed +0.6–1.1%).
   Compiled type/use identities each add one compile record and 64 logical
   bytes, so custom schemas near fixed compile/catalog limits can also refuse.
+  The temporary schema attribute index now admits its header/first group
+  and conservative entry storage before allocating, rather than undercounting
+  small maps; near-limit explicit buffer allowances may refuse sooner.
   Callers with tuned explicit limits should revalidate them and allow headroom.
   Resource/cancellation checkpoints can change as more required work is reached;
   large-model default assessments still have explicit resource ceilings. See

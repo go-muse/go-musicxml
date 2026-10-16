@@ -324,6 +324,13 @@ Callers using tuned explicit step limits must revalidate them and allow headroom
 The reviewer measured approximately 0.6–1.1% more steps for its XSD/local
 controls; this is a bounded observation, not a universal percentage.
 
+The temporary schema attribute-name index now reserves a modeled fixed
+512-byte header/first-group allowance plus 128 bytes per entry, releasing it
+when publication returns. This corrects the former 96-byte-per-entry lease
+that could under-admit small Go maps. An explicit buffer limit tuned to the old
+transient peak can therefore refuse sooner by 512 + 32 × attribute-count
+logical bytes; this does not add permanent retained storage.
+
 Compiled type/use identities also each admit one additional compile record and
 64 logical bytes. The fixed compile limits remain 65,536 records and 64 MiB;
 near-limit custom schemas or catalog configurations may therefore be refused

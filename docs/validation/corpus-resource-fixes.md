@@ -69,7 +69,13 @@ these controls complete under the unchanged default work allowance. The
 reviewer's XSD/local controls observed about 0.6–1.1% added steps. Tuned limits
 need revalidation and headroom. Separately, each compiled type/use identity adds
 one compile record and 64 logical bytes; unchanged fixed compile/catalog
-ceilings can consequently reject near-limit custom schemas.
+ceilings can consequently reject near-limit custom schemas. The temporary
+attribute-name map now leases a modeled 512 + 128 × entry-count bytes,
+including zero-entry calls, and releases the lease at function return. This
+corrects under-admission by the earlier 96 × entry-count envelope; a tuned
+transient buffer limit may now refuse sooner, without increasing permanently
+retained storage. Escaping-map allocation controls independently check the
+envelope on the supported test toolchain; it is not an exact allocator promise.
 
 The changed retained-storage and container-growth paths admit their modeled
 logical storage before allocation; the envelopes are not exact Go allocator or
