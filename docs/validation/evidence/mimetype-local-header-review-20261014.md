@@ -98,3 +98,13 @@ fix and failed on central-only Unknown (and the core's irrelevant central-length
 gate). The separate framing tests failed before that capability guard was added.
 The repository's current acceptance still requires applicable checks on the
 final integration head; these local regression routes do not replace full gates.
+
+## Public profile identity migration
+
+The [published package baseline ledger](../ipa-representation.md#published-package-baseline)
+records all six ordinary and dictionary package profiles from public main
+`5295080`. The local-header rule/closure correction deliberately changes the
+ordinary package catalog digest; dictionary package identity also incorporates
+its intrinsic dictionary migration. These are catalog digests, not complete
+Profile JSON hashes. `TestPackageProfilesPublishedBaselineMigration` checks the
+complete captured public baseline and each exact before/after catalog value.

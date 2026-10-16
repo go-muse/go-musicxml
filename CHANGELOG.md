@@ -45,7 +45,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   framing now stops package/graph enumeration and child assessment with a
   transport-capability error, while preserving an already-established local
   Pass/Fail. No Container or primary-resource check is promised after that
-  refusal. See the [package scope](docs/validation/package-profile-scope.md).
+  refusal. See the [package scope](docs/validation/package-profile-scope.md) and
+  [six-profile public catalog migration](docs/validation/ipa-representation.md#published-package-baseline).
 
 - Correct MIME classification in those package/graph profiles. Distinct valid
   unknown parameters, such as `application/vnd.recordare.musicxml+xml; foo=bar`,
