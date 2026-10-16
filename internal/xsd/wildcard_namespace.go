@@ -8,52 +8,30 @@ package xsd
 type wildcardAdmission struct{ allowed, known, valid bool }
 
 func wildcardNamespace(namespace, name string, c *Context) wildcardAdmission {
-	c.step(1)
-	if namespace == "" {
+	tokens, special, valid := wildcardNamespaceTokens(namespace, c)
+	if !valid {
+		return wildcardAdmission{}
+	}
+	if special == "any" {
 		return wildcardAdmission{true, true, true}
 	}
-	count := 0
-	special := ""
+	if special == "other" {
+		if name == "" {
+			return wildcardAdmission{false, true, true}
+		}
+		return wildcardAdmission{true, false, true}
+	}
 	allowed, dependent := false, false
-	for start := 0; start < len(namespace); {
+	for _, token := range tokens {
 		c.step(1)
-		if IsWhitespace(rune(namespace[start])) {
-			start++
-			continue
-		}
-		end := start
-		for end < len(namespace) && !IsWhitespace(rune(namespace[end])) {
-			c.step(1)
-			end++
-		}
-		token := namespace[start:end]
-		start = end
-		count++
 		switch token {
-		case "##any", "##other":
-			special = token
 		case "##local":
 			allowed = allowed || name == ""
 		case "##targetNamespace":
 			dependent = true
 		default:
-			if !validXSDAnyURI(token, c) {
-				return wildcardAdmission{}
-			}
 			allowed = allowed || compareText(token, name, c) == 0
 		}
-	}
-	if special != "" {
-		if count != 1 {
-			return wildcardAdmission{}
-		}
-		if special == "##any" {
-			return wildcardAdmission{true, true, true}
-		}
-		if name == "" {
-			return wildcardAdmission{false, true, true}
-		}
-		return wildcardAdmission{true, false, true}
 	}
 	// A nonempty explicit lexical list can normalize to the empty set.
 	return wildcardAdmission{allowed || dependent, allowed || !dependent, true}
@@ -67,4 +45,48 @@ func (c *Context) noteWildcardAdmission(admission wildcardAdmission, mode string
 	} else if !admission.known {
 		c.Incomplete("wildcard defining target namespace is unavailable")
 	}
+}
+
+// Lexical list members retain their borrowed spelling; target-dependent list
+// members remain unresolved and cannot establish negative namespace admission.
+func wildcardNamespaceTokens(namespace string, c *Context) ([]string, string, bool) {
+	c.step(1)
+	if namespace == "" {
+		return nil, "any", true
+	}
+	var tokens []string
+	special := ""
+	for start := 0; start < len(namespace); {
+		c.step(1)
+		if IsWhitespace(rune(namespace[start])) {
+			start++
+			continue
+		}
+		end := start
+		for end < len(namespace) && !IsWhitespace(rune(namespace[end])) {
+			c.step(1)
+			end++
+		}
+		token := namespace[start:end]
+		start = end
+		switch token {
+		case "##any":
+			special = "any"
+		case "##other":
+			special = "other"
+		case "##local", "##targetNamespace":
+		default:
+			if !validXSDAnyURI(token, c) {
+				return nil, "", false
+			}
+		}
+		tokens = appendScratch(c, tokens, token)
+	}
+	if special != "" {
+		if len(tokens) != 1 {
+			return nil, "", false
+		}
+		return nil, special, true
+	}
+	return tokens, "", true
 }

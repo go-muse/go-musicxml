@@ -41,6 +41,17 @@ preserved content witness.
   failures remain assessable, and extension propagates unavailable state.
   Restriction may replace that wildcard with its own local constraint.
 
+Accepted pre-existing limitation: the generator's string-valued namespace field
+cannot distinguish an omitted namespace attribute from an explicit
+`namespace=""`. Both become the legacy default `##any`, although XSD 1.0 defines
+the explicit empty list as the empty namespace set. A nonempty whitespace spelling
+(`namespace=" "`) retains that empty set in direct admission and unions. The
+characterization tests `TestAnyAttributeEmptyNamespacePresenceLimitation` and
+`TestAttributeWildcardEmptyNamespaceMetadataLimitation` pin this distinction;
+they do not claim generic XSD closure. MusicXML 4.0 has no `anyAttribute`, so this
+limitation affects no built-in profile. Preserving explicit-empty presence in the
+generator remains outside this bounded union correction.
+
 No schema DTO field, public alias, generated metadata layout, compiled snapshot
 format or digest encoder changes. The new state belongs only to
 `EffectiveComplex`. The existing record allowance also covers its boolean in

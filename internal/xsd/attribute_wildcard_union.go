@@ -78,45 +78,12 @@ func mergeAnyAttribute(base, derived *AnyAttributeSchema, c *Context) (*AnyAttri
 	return &AnyAttributeSchema{Namespace: union.String(), ProcessContents: derived.ProcessContents}, false
 }
 
-// Lexical list members retain their borrowed spelling; target-dependent list
-// members remain unresolved and cannot establish negative namespace admission.
 func wildcardUnionTokens(namespace string, c *Context) ([]string, string) {
-	c.step(1)
-	if namespace == "" {
-		return nil, "any"
-	}
-	var tokens []string
-	special := ""
-	for start := 0; start < len(namespace); {
-		c.step(1)
-		if IsWhitespace(rune(namespace[start])) {
-			start++
-			continue
-		}
-		end := start
-		for end < len(namespace) && !IsWhitespace(rune(namespace[end])) {
-			c.step(1)
-			end++
-		}
-		token := namespace[start:end]
-		start = end
-		switch token {
-		case "##any":
-			special = "any"
-		case "##other":
-			special = "other"
-		case "##local", "##targetNamespace":
-		default:
-			if !validXSDAnyURI(token, c) {
-				return nil, "invalid"
-			}
-		}
-		tokens = appendScratch(c, tokens, token)
+	tokens, special, valid := wildcardNamespaceTokens(namespace, c)
+	if !valid {
+		return nil, "invalid"
 	}
 	if special != "" {
-		if len(tokens) != 1 {
-			return nil, "invalid"
-		}
 		return nil, special
 	}
 	return tokens, "set"

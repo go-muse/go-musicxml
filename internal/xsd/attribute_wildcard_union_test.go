@@ -290,3 +290,34 @@ func TestAttributeWildcardUnionExplicitNamesStayExact(t *testing.T) {
 		}
 	}
 }
+
+// Accepted pre-existing limitation: empty metadata means the absent/default
+// namespace attribute. The generator cannot distinguish an explicit empty XML
+// attribute from omission. A nonempty whitespace spelling represents the empty
+// namespace set; these are characterization tests, not generic-XSD closure.
+func TestAttributeWildcardEmptyNamespaceMetadataLimitation(t *testing.T) {
+	for _, namespace := range []string{"", " "} {
+		for _, attributeSpace := range []string{"", "urn:other"} {
+			want := namespace == ""
+			for _, typ := range []*ComplexSchema{
+				{Form: ComplexDirect, AnyAttribute: unionWildcard(namespace, "skip")},
+				wildcardUnionType(false, unionWildcard(namespace, "skip"), unionWildcard(namespace, "skip"), false),
+			} {
+				got := wildcardUnionResult(t, typ, attributeSpace)
+				if got.Valid != want || !got.Complete {
+					t.Fatalf("namespace metadata %q, attribute space %q: %+v", namespace, attributeSpace, got)
+				}
+			}
+		}
+	}
+}
+
+func TestAttributeWildcardNamespaceTokenAdmissionConsistency(t *testing.T) {
+	for _, namespace := range []string{"", " ", "##any", "##other", "##local urn:one", "##targetNamespace", "##any ##local", "urn:one ##other", "urn:%"} {
+		_, kind := wildcardUnionTokens(namespace, nil)
+		admission := wildcardNamespace(namespace, "urn:one", nil)
+		if admission.valid != (kind != "invalid") {
+			t.Fatalf("namespace %q union kind %q disagrees with admission %+v", namespace, kind, admission)
+		}
+	}
+}
