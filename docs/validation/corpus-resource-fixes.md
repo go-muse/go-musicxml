@@ -43,7 +43,9 @@ a new automatic source-plus-model assessment gate.
    reserving a frame for every document node. Old/new capacity overlap is charged.
 3. Reuse immutable element-role classification during final provider evaluation.
    The final cache is session-owned and keyed by the exact compiled table and
-   run-local binding. Different tables and sessions cannot alias. The initial
+   session-canonical immutable declaration evidence. Different tables and
+   sessions cannot alias. Repeated nodes of the same exact declaration reuse
+   one entry; unknown or causal declarations are not canonicalized. The initial
    reader-local implementation was corrected after matched-progress diagnostics
    exposed repeated maps whose accounting lasted until session cleanup.
 4. Charge projected state for the values actually compared, explicitly meter
@@ -97,7 +99,11 @@ The following focused observations supported that initial acceptance:
 - Correcting role-cache lifetime removed another 5,601,536 logical bytes at the
   same later checkpoint relative to the initial candidate. That initial checkpoint cache kept
   6,370 exact binding/table pairs for two distinct tables, reusing repeated
-  readers without merging the tables. Full report parity was preserved.
+  readers without merging the tables. Full report parity was preserved. A later
+  review correction changes the key from per-node run bindings to canonical
+  declaration evidence: the generated 33-node/two-table regression retains
+  four entries (1,280 logical bytes), instead of 66 entries (17,152 bytes).
+  The earlier 6,370-pair population is historical, not the current key shape.
 - Exact/one-short storage, cancellation, prior-failure preservation, independent
   sessions, snapshot lifetime and focused race tests cover the changed ownership
   paths. Local 386 cross-compilation succeeds; this executor cannot execute 386
