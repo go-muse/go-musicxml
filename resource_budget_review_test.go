@@ -60,13 +60,23 @@ func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
 		t.Run(string(profile), func(t *testing.T) {
 			r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: profile})
 			if profile == ProfileSourceSemantics && err != nil {
-				// The existing timeline/context work limit is independent of the buffer
-				// claim. Do not hide it by raising the default work budget in this witness.
+				// Historically this input reached the 20M work limit before layout
+				// publication. Reduced repeated work now reaches a later buffer
+				// refusal after the same complete input. Matched-phase diagnostics
+				// show lower live storage and identical complete reports; neither
+				// default-budget refusal is a completed or satisfied assessment.
 				var limit *validation.ResourceError
-				if !errors.As(err, &limit) || limit.Kind != validation.BudgetRuleSteps || !r.InputComplete {
+				if !errors.As(err, &limit) || (limit.Kind != validation.BudgetRuleSteps && limit.Kind != validation.BudgetBufferedBytes) || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
 					t.Fatalf("unexpected default-budget failure: %v", err)
 				}
-				t.Logf("stripped UTF-16 sample reaches existing rule-step limit: %v", err)
+				wantLimit := validation.DefaultBudgets().MaxRuleSteps
+				if limit.Kind == validation.BudgetBufferedBytes {
+					wantLimit = validation.DefaultBudgets().MaxBufferedBytes
+				}
+				if limit.Limit != wantLimit {
+					t.Fatalf("resource refusal did not use the default limit: %v", err)
+				}
+				t.Logf("stripped UTF-16 sample preserves complete-input/incomplete-assessment resource refusal: %v", err)
 				return
 			}
 			if err != nil || !r.AssessmentComplete || !r.InputComplete {
@@ -165,8 +175,13 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		measures, bytes int
 		refuses         bool
 	}{
+		// Historical d336f089 boundary: 531 completed; 532 refused at
+		// used44,066,863/requested23,115,219. Both now complete after
+		// compact facts and session-wide context-role reuse.
 		{531, 71197, false},
-		{532, 71331, true},
+		{532, 71331, false},
+		{568, 76155, false},
+		{569, 76289, true},
 	} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
 			source := reviewBudgetScore(tc.measures)
@@ -175,9 +190,9 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 			}
 			bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 			if tc.refuses {
-				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 44066863, 23115219)
-			} else if err != nil || !bundle.EnumerationComplete() || !bundle.Satisfied() {
-				t.Fatalf("documented default-budget fixture failed: %v", err)
+				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42495274, 24717911)
+			} else {
+				reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
 			}
 			t.Logf("source bytes=%d measures=%d err=%v", len(source), tc.measures, err)
 		})
@@ -193,15 +208,68 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 		t.Fatalf("fixture bytes=%d, want 86052", len(source))
 	}
 	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0))
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 57607574, 34741160)
+	// Historical used57,607,574/requested34,741,160 remains the earlier
+	// receipt; compact facts and role reuse lower the live side only.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54998870, 34741160)
 	t.Logf("source bytes=%d err=%v", len(source), err)
+}
+
+func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
+	if runtime.GOARCH != "amd64" {
+		t.Skip("documented amd64 capacity witness")
+	}
+	// The same 569-measure fixture refuses its final snapshot overlap at
+	// 42,495,274 live bytes plus 24,717,911 newly requested bytes. These
+	// exact/one-short controls isolate admission; they are not defaults.
+	const exact = int64(42495274 + 24717911)
+	for _, short := range []int64{0, 1} {
+		t.Run(fmt.Sprintf("short-%d", short), func(t *testing.T) {
+			source := reviewBudgetScore(569)
+			if len(source) != 76289 {
+				t.Fatalf("fixture bytes=%d, want 76289", len(source))
+			}
+			limit := exact - short
+			options := LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}}
+			bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
+			if short == 0 {
+				reviewBudgetAssertCompleteOrigins(t, bundle, err, 4560)
+			} else {
+				reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, limit, 42495274, 24717911)
+			}
+		})
+	}
+}
+
+func reviewBudgetAssertCompleteOrigins(t *testing.T, bundle validation.AssessmentBundle, err error, wantOrigins int) {
+	t.Helper()
+	if err != nil || !bundle.EnumerationComplete() || !bundle.Satisfied() {
+		t.Fatalf("documented capacity fixture failed: %v", err)
+	}
+	_, report, ok := bundle.ResourceReport(0)
+	if !ok {
+		t.Fatal("missing primary report")
+	}
+	origins := 0
+	for _, row := range report.Context {
+		if row.SourceOrigin != nil {
+			origins++
+		}
+	}
+	if origins != wantOrigins {
+		t.Fatalf("source-origin rows=%d, want every one of %d occurrences", origins, wantOrigins)
+	}
 }
 
 func reviewBudgetAssertGraphBufferRefusal(t *testing.T, bundle validation.AssessmentBundle, err error, wantUsed, wantRequested int64) {
 	t.Helper()
+	reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, validation.DefaultBudgets().MaxBufferedBytes, wantUsed, wantRequested)
+}
+
+func reviewBudgetAssertGraphBufferRefusalAtLimit(t *testing.T, bundle validation.AssessmentBundle, err error, wantLimit, wantUsed, wantRequested int64) {
+	t.Helper()
 	var limit *validation.ResourceError
-	if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || limit.Limit != validation.DefaultBudgets().MaxBufferedBytes {
-		t.Fatalf("want default buffered-byte refusal, got %v", err)
+	if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || limit.Limit != wantLimit {
+		t.Fatalf("want specified buffered-byte refusal, got %v", err)
 	}
 	if limit.Used != wantUsed || limit.Requested != wantRequested {
 		t.Fatalf("documented admission changed: used=%d requested=%d, want %d/%d", limit.Used, limit.Requested, wantUsed, wantRequested)
