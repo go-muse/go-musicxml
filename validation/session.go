@@ -321,6 +321,9 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 	}
 	s.depth++
 	if err := s.validateRetainedHeader(node); err != nil {
+		if errors.Is(err, ErrResourceLimit) {
+			return s.fail(err)
+		}
 		return s.fail(&SessionError{Operation: "Open", Reason: "invalid node header", Cause: err})
 	}
 	if _, exists := s.nodes[node.ID]; exists {
