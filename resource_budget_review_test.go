@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -103,7 +104,7 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 	}
 }
 
-func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
+func reviewBudgetFragmentScore() string {
 	var source strings.Builder
 	source.WriteString(`<score-partwise version="4.0" xmlns:xlink="http://www.w3.org/1999/xlink"><part-list><score-part id="P1"><part-name>Part</part-name></score-part></part-list><part id="P1">`)
 	for i := 1; i <= 2000; i++ {
@@ -116,12 +117,22 @@ func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
 		source.WriteString(`</measure>`)
 	}
 	source.WriteString(`</part></score-partwise>`)
-	options := LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{
-		Graph:        AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: 512 << 20}},
+	return source.String()
+}
+
+func reviewBudgetFragmentOptions(buffer int64) LinkedDictionaryAssessmentOptions {
+	return LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{
+		Graph:        AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: buffer}},
 		Identity:     ResourceIdentity{RetrievalURI: "https://budget.test/score.musicxml"},
 		Dependencies: []ResourceDependency{ResourceDocuments},
 	}}
-	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source.String()), options)
+}
+
+func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
+	source := reviewBudgetFragmentScore()
+	// This deliberately isolates work; it is not an all-default capacity claim.
+	options := reviewBudgetFragmentOptions(512 << 20)
+	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
 	if err != nil || !bundle.EnumerationComplete() || !bundle.Satisfied() {
 		t.Fatalf("three shorthand links failed at default work budget: %v %+v", err, bundle.PackageReport())
 	}
@@ -141,7 +152,67 @@ func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
 	if links != 3 || bundle.AdoptionCount() != 4 || bundle.PackageReport().Counts.Pass != 3 {
 		t.Fatalf("links=%d adoptions=%d package counts=%+v", links, bundle.AdoptionCount(), bundle.PackageReport().Counts)
 	}
-	t.Logf("source bytes=%d links=%d adoptions=%d package counts=%+v", source.Len(), links, bundle.AdoptionCount(), bundle.PackageReport().Counts)
+	t.Logf("source bytes=%d links=%d adoptions=%d package counts=%+v", len(source), links, bundle.AdoptionCount(), bundle.PackageReport().Counts)
+}
+
+// These are fixture-specific amd64 admission witnesses, not portable source-byte
+// guarantees. Concrete owned-record sizes can change with the host architecture.
+func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
+	if runtime.GOARCH != "amd64" {
+		t.Skip("documented amd64 capacity witness")
+	}
+	for _, tc := range []struct {
+		measures, bytes int
+		refuses         bool
+	}{
+		{531, 71197, false},
+		{532, 71331, true},
+	} {
+		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
+			source := reviewBudgetScore(tc.measures)
+			if len(source) != tc.bytes {
+				t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
+			}
+			bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
+			if tc.refuses {
+				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 44066863, 23115219)
+			} else if err != nil || !bundle.EnumerationComplete() || !bundle.Satisfied() {
+				t.Fatalf("documented default-budget fixture failed: %v", err)
+			}
+			t.Logf("source bytes=%d measures=%d err=%v", len(source), tc.measures, err)
+		})
+	}
+}
+
+func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
+	if runtime.GOARCH != "amd64" {
+		t.Skip("documented amd64 capacity witness")
+	}
+	source := reviewBudgetFragmentScore()
+	if len(source) != 86052 {
+		t.Fatalf("fixture bytes=%d, want 86052", len(source))
+	}
+	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0))
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 57607574, 34741160)
+	t.Logf("source bytes=%d err=%v", len(source), err)
+}
+
+func reviewBudgetAssertGraphBufferRefusal(t *testing.T, bundle validation.AssessmentBundle, err error, wantUsed, wantRequested int64) {
+	t.Helper()
+	var limit *validation.ResourceError
+	if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || limit.Limit != validation.DefaultBudgets().MaxBufferedBytes {
+		t.Fatalf("want default buffered-byte refusal, got %v", err)
+	}
+	if limit.Used != wantUsed || limit.Requested != wantRequested {
+		t.Fatalf("documented admission changed: used=%d requested=%d, want %d/%d", limit.Used, limit.Requested, wantUsed, wantRequested)
+	}
+	if bundle.EnumerationComplete() || bundle.Satisfied() || bundle.AdoptionCount() != 0 {
+		t.Fatalf("snapshot refusal exposed complete/adopted graph: adoptions=%d report=%+v", bundle.AdoptionCount(), bundle.PackageReport())
+	}
+	report, ok := bundle.FailureReport()
+	if !ok || !report.InputComplete || report.AssessmentComplete || report.Satisfied() {
+		t.Fatalf("snapshot refusal lost complete-input/incomplete-assessment report: present=%v report=%+v", ok, report)
+	}
 }
 
 // The official sample is UTF-16BE. Remove the encoded declaration without
