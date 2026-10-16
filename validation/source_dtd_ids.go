@@ -255,15 +255,19 @@ func sourceDTDIDLocation(e Evidence[Location], doc string) error {
 	return nil
 }
 func (s *Session) sourceDTDIDLexical(ctx context.Context, lexical string, want QName, bindings []Binding, element bool) error {
+	field := "source DTD ID declaration attribute"
+	if element {
+		field = "source DTD ID declaration element"
+	}
 	prefix, local, qualified := strings.Cut(lexical, ":")
 	if !qualified {
 		local, prefix = prefix, ""
 	}
-	if err := s.validateSourceEntityName(ctx, local); err != nil {
+	if err := s.validateSourceNCName(ctx, local, field); err != nil {
 		return err
 	}
 	if qualified {
-		if err := s.validateSourceEntityName(ctx, prefix); err != nil {
+		if err := s.validateSourceNCName(ctx, prefix, field); err != nil {
 			return err
 		}
 	}
