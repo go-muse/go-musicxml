@@ -11,9 +11,14 @@ import (
 // reader the same immutable facts that final context providers consume.
 func contextRoleReuseFixture(t *testing.T) (*Session, *contextBindings, *factNode) {
 	t.Helper()
+	return contextRoleRepeatedFixture(t, 1)
+}
+
+func contextRoleRepeatedFixture(t *testing.T, count int) (*Session, *contextBindings, *factNode) {
+	t.Helper()
 	owner := strings.Repeat("long-owner-", 80)
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{
-		Types:    map[SchemaName]*SchemaType{{Local: owner}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: 1, Max: 1}, Element: &SchemaElement{Name: SchemaName{Local: "item"}, Type: localBuiltin("string")}}}}},
+		Types:    map[SchemaName]*SchemaType{{Local: owner}: {Complex: &SchemaComplex{Form: SchemaComplexDirect, Particle: &SchemaParticle{Kind: SchemaParticleElement, Occurrence: SchemaOccurrence{Min: uint64(count), Max: uint64(count)}, Element: &SchemaElement{Name: SchemaName{Local: "item"}, Type: localBuiltin("string")}}}}},
 		Elements: map[SchemaName]*SchemaElement{{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: localType(owner)}},
 	})
 	if err != nil {
@@ -33,15 +38,17 @@ func contextRoleReuseFixture(t *testing.T) (*Session, *contextBindings, *factNod
 	if err = s.Open(context.Background(), schemaPendingHeader()); err != nil {
 		t.Fatal(err)
 	}
-	h := schemaPendingHeader()
-	h.ID, h.Parent, h.Name.Local = 2, 1, "item"
-	if err = s.Open(context.Background(), h); err != nil {
-		t.Fatal(err)
-	}
-	end := schemaLexemeEnd("value")
-	end.ID = 2
-	if err = s.Close(context.Background(), end); err != nil {
-		t.Fatal(err)
+	for id := NodeID(2); id < NodeID(count)+2; id++ {
+		h := schemaPendingHeader()
+		h.ID, h.Parent, h.Name.Local = id, 1, "item"
+		if err = s.Open(context.Background(), h); err != nil {
+			t.Fatal(err)
+		}
+		end := schemaLexemeEnd("value")
+		end.ID = id
+		if err = s.Close(context.Background(), end); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err = s.Close(context.Background(), schemaLexemeEnd("")); err != nil {
 		t.Fatal(err)
