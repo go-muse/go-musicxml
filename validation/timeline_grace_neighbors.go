@@ -274,7 +274,7 @@ func (service *timelineService) resolveGraceNeighbors(ctx context.Context, s *Se
 					// Potential notes were not counted as exact note allocations.
 					// Their common canonical measure is one scoped dependency;
 					// retain its strongest cause without growing per-event scratch.
-					blockGap = graceStronger(blockGap, timelineGapAs[DeclarationID, NodeRef](event.header.Declaration, "grace-note-declaration-unavailable"))
+					blockGap = graceStronger(blockGap, timelineGapAs[DeclarationID, NodeRef](*event.header.Declaration, "grace-note-declaration-unavailable"))
 				}
 				continue
 			}

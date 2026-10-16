@@ -102,14 +102,14 @@ func TestContextRoleReuseScopeAndEvidence(t *testing.T) {
 	if !r.matches(n, "item-role") {
 		t.Fatal("fixture role missing")
 	}
-	known := n.header.Declaration
+	known := *n.header.Declaration
 	for _, state := range []EvidenceState{EvidenceUnknown, EvidenceInvalid, EvidenceAbsent, EvidenceUnsupported} {
 		n.header.Declaration.State = state
 		if r.matches(n, "item-role") || r.err != nil {
 			t.Fatalf("cache bypassed evidence guard %v: %v", state, r.err)
 		}
 	}
-	n.header.Declaration = known
+	n.header.Declaration = testEvidence(known)
 	if !r.matches(n, "item-role") {
 		t.Fatal("known evidence did not restore exact membership")
 	}
@@ -130,16 +130,16 @@ func TestContextRoleReuseScopeAndEvidence(t *testing.T) {
 	// retain exact lookup behavior even when the same reader already ran.
 	s.finished = false
 	for _, declaration := range []DeclarationID{s.root.header.Declaration.Value, known.Value} {
-		n.header.Declaration = stateKnown(declaration)
+		n.header.Declaration = testEvidence(stateKnown(declaration))
 		if got := r.matches(n, "item-role"); got != (declaration == known.Value) {
 			t.Fatal("nonfinal known declaration transition used cached classification")
 		}
 	}
-	n.header.Declaration = stateUnknown[DeclarationID]("pending")
+	n.header.Declaration = testEvidence(stateUnknown[DeclarationID]("pending"))
 	if r.matches(n, "item-role") {
 		t.Fatal("pending declaration selected a role")
 	}
-	n.header.Declaration = known
+	n.header.Declaration = testEvidence(known)
 	if !r.matches(n, "item-role") || r.err != nil {
 		t.Fatal("published known declaration retained a negative result")
 	}
@@ -220,17 +220,17 @@ func TestContextRoleReuseMutableAndManualFallback(t *testing.T) {
 			func(d *DeclarationID) { d.OwnerOccurrence += "-other" },
 			func(d *DeclarationID) { d.Occurrence += "-other" },
 		} {
-			n.header.Declaration = stateKnown(known)
+			n.header.Declaration = testEvidence(stateKnown(known))
 			change(&n.header.Declaration.Value)
 			if r.matches(n, "role-a") || r.err != nil {
 				t.Fatalf("%s mutable exact identity reused stale result: %v", mode, r.err)
 			}
 		}
-		n.header.Declaration = stateUnknown[DeclarationID]("pending")
+		n.header.Declaration = testEvidence(stateUnknown[DeclarationID]("pending"))
 		if r.matches(n, "role-a") {
 			t.Fatal("manual pending identity invented a role")
 		}
-		n.header.Declaration = stateKnown(known)
+		n.header.Declaration = testEvidence(stateKnown(known))
 		if !r.matches(n, "role-a") || r.err != nil || s.retained != 0 {
 			t.Fatalf("%s changed manual fallback behavior: %v", mode, r.err)
 		}

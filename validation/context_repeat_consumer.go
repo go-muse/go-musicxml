@@ -8,7 +8,7 @@ func evaluateGraphicalRepeatContent(ctx context.Context, s *Session, n *factNode
 	}
 	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
 	if n.header.Declaration.State != EvidenceKnown {
-		return localGap(n.header.Declaration), false, nil
+		return localGap(*n.header.Declaration), false, nil
 	}
 	role := contextRole("")
 	switch {

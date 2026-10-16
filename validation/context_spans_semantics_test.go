@@ -35,7 +35,7 @@ func spanUnitNode(r *contextReader, role contextRole, parent *factNode) *factNod
 	u := r.b.Roles[role][0]
 	n := localNode(id, pid, string(role))
 	n.header.Declaration.Value = u.Declaration
-	n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: u.DeclaredType}
+	n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: u.DeclaredType})
 	n.header.Location.DocumentID = r.s.documentID
 	n.header.Location.Target = TargetSource
 	r.s.nodes[id] = n
@@ -101,7 +101,7 @@ func TestContextSpanDefaultFieldsFiveAxes(t *testing.T) {
 						want = tc.override
 						spanUnitAttribute(r, n, tc.attribute, want)
 					case "missing-fact":
-						n.end.AttributesComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "test-attributes-gap"}
+						n.end.AttributesComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "test-attributes-gap"})
 						want = stateUnknown[Atomic]("test-attributes-gap")
 					case "interaction":
 						other := spanUnitReader(t)
@@ -138,31 +138,31 @@ func TestContextSpanTupletFallbackIndependentFields(t *testing.T) {
 			r := spanUnitReader(t)
 			note := spanUnitNode(r, spanRole_note, nil)
 			typ := spanUnitNode(r, spanRole_noteType, note)
-			typ.end.Scalar.Value = spanString("eighth")
+			typ.end.Scalar.Value = testEvidence(spanString("eighth"))
 			spanUnitNode(r, spanRole_noteDot, note)
 			var mod *factNode
 			if axis != "missing-modification" {
 				mod = spanUnitNode(r, spanRole_noteModification, note)
 				a := spanUnitNode(r, spanRole_actualNotes, mod)
-				a.end.Scalar.Value = spanInteger(3)
+				a.end.Scalar.Value = testEvidence(spanInteger(3))
 				b := spanUnitNode(r, spanRole_normalNotes, mod)
-				b.end.Scalar.Value = spanInteger(2)
+				b.end.Scalar.Value = testEvidence(spanInteger(2))
 				if axis != "missing-normal-type" {
 					nt := spanUnitNode(r, spanRole_normalType, mod)
-					nt.end.Scalar.Value = spanString("quarter")
+					nt.end.Scalar.Value = testEvidence(spanString("quarter"))
 				}
 				if axis == "normal-dot-separate" {
 					spanUnitNode(r, spanRole_normalDot, mod)
 				}
 				if axis == "invalid-actual" {
-					a.end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-actual", Cause: &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: NodeRef{r.s.documentID, a.header.ID}}}
+					a.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-actual", Cause: &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: NodeRef{r.s.documentID, a.header.ID}}})
 				}
 			}
 			n := spanUnitNode(r, spanRole_tuplet, note)
 			if axis == "override-number-only" {
 				portion := spanUnitNode(r, spanRole_tupletActual, n)
 				num := spanUnitNode(r, spanRole_tupletNumber, portion)
-				num.end.Scalar.Value = spanInteger(5)
+				num.end.Scalar.Value = testEvidence(spanInteger(5))
 			}
 			spanTupletFacts(r, RuleKey{"spans", 1}, n, note)
 			a := spanUnitValue(t, r, ContextPropertySpanTupletActualNumber)
@@ -274,7 +274,7 @@ func TestContextSpanEndpointAvailabilityByFamily(t *testing.T) {
 					if binding.role != "" {
 						spanUnitAttribute(r, n, binding.role, roleValue)
 					} else if binding.family == SpanBeam {
-						n.end.Scalar.Value = roleValue
+						n.end.Scalar.Value = testEvidence(roleValue)
 					}
 					if binding.number != "" && (axis == "explicit-number" || axis == "invalid-number") {
 						v := spanInteger(2)
@@ -502,21 +502,21 @@ func TestContextSpanHammerTextAndGroupSymbolFiveAxes(t *testing.T) {
 					if family == SpanPartGroup {
 						if axis == "boundary" || axis == "negative" {
 							ch := spanUnitNode(r, spanRole_groupSymbol, n)
-							ch.end.Scalar.Value = want
+							ch.end.Scalar.Value = testEvidence(want)
 						}
 						if axis == "missing-fact" {
-							n.end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "test-scalar-unavailable"}
+							n.end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "test-scalar-unavailable"})
 						}
 					} else {
-						n.end.Scalar.Value = want
+						n.end.Scalar.Value = testEvidence(want)
 						if axis == "boundary" {
-							n.end.Scalar.Value = spanString("")
+							n.end.Scalar.Value = testEvidence(spanString(""))
 						}
 					}
 					if axis == "interaction" {
 						other := spanUnitReader(t)
 						on := spanUnitNode(other, nr, nil)
-						on.end.Scalar.Value = spanString("different")
+						on.end.Scalar.Value = testEvidence(spanString("different"))
 						oe := spanTestEndpoint(t, on.header.ID, family, "stop", 1)
 						spanLocalFacts(other, RuleKey{"spans", 1}, on, nil, oe)
 					}
@@ -608,21 +608,21 @@ func TestContextSpanUnmeasuredMarksScalarAxes(t *testing.T) {
 			r := spanUnitReader(t)
 			n := spanUnitNode(r, spanRole_tremolo, nil)
 			e := spanTestEndpoint(t, n.header.ID, SpanTremolo, "unmeasured", 1)
-			n.end.Scalar.Value = spanInteger(0)
+			n.end.Scalar.Value = testEvidence(spanInteger(0))
 			want := spanBool(true)
 			switch axis {
 			case "nonzero":
-				n.end.Scalar.Value = spanInteger(8)
+				n.end.Scalar.Value = testEvidence(spanInteger(8))
 				want = spanBool(false)
 			case "invalid":
 				want = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-marks", Cause: &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: e.ref}}
-				n.end.Scalar.Value = want
+				n.end.Scalar.Value = testEvidence(want)
 			case "missing":
 				want = stateUnknown[Atomic]("missing-marks")
-				n.end.Scalar.Value = want
+				n.end.Scalar.Value = testEvidence(want)
 			case "separate-note":
 				other := spanUnitNode(r, spanRole_tremolo, nil)
-				other.end.Scalar.Value = spanInteger(8)
+				other.end.Scalar.Value = testEvidence(spanInteger(8))
 			}
 			spanLocalFacts(r, RuleKey{"spans", 1}, n, nil, e)
 			got := spanUnitValue(t, r, ContextPropertySpanTremoloMarksRecommended)
@@ -642,14 +642,14 @@ func TestContextSpanDoubleTremoloRatioDurationAxes(t *testing.T) {
 			r := spanUnitReader(t)
 			note := spanUnitNode(r, spanRole_note, nil)
 			typ := spanUnitNode(r, spanRole_noteType, note)
-			typ.end.Scalar.Value = spanString("quarter")
+			typ.end.Scalar.Value = testEvidence(spanString("quarter"))
 			var actual *factNode
 			if axis != "missing-modification" {
 				mod := spanUnitNode(r, spanRole_noteModification, note)
 				actual = spanUnitNode(r, spanRole_actualNotes, mod)
-				actual.end.Scalar.Value = spanInteger(2)
+				actual.end.Scalar.Value = testEvidence(spanInteger(2))
 				normal := spanUnitNode(r, spanRole_normalNotes, mod)
-				normal.end.Scalar.Value = spanInteger(1)
+				normal.end.Scalar.Value = testEvidence(spanInteger(1))
 			}
 			n := spanUnitNode(r, spanRole_tremolo, note)
 			e := spanTestEndpoint(t, n.header.ID, SpanTremolo, "start", 1)
@@ -658,17 +658,17 @@ func TestContextSpanDoubleTremoloRatioDurationAxes(t *testing.T) {
 			cause := &DecisionRef{Rule: RuleKey{"scalar", 1}, Subject: e.ref}
 			switch axis {
 			case "invalid-ratio":
-				actual.end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-ratio", Cause: cause}
+				actual.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-ratio", Cause: cause})
 			case "invalid-type":
-				typ.end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-type", Cause: cause}
+				typ.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-type", Cause: cause})
 			case "nested-ratio":
-				actual.end.Scalar.Value = spanInteger(3)
+				actual.end.Scalar.Value = testEvidence(spanInteger(3))
 			case "missing-timing":
 				ts = nil
 			case "separate-note":
 				other := spanUnitNode(r, spanRole_note, nil)
 				ot := spanUnitNode(r, spanRole_noteType, other)
-				ot.end.Scalar.Value = spanString("half")
+				ot.end.Scalar.Value = testEvidence(spanString("half"))
 			}
 			spanTremoloFacts(r, RuleKey{"spans", 1}, n, e, ts)
 			ratio := spanUnitValue(t, r, ContextPropertySpanTremoloRatioRecommended)

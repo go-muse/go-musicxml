@@ -269,9 +269,9 @@ func TestGracePotentialDeclarationGapsAggregateWithinCanonicalBlock(t *testing.T
 			cause := &DecisionRef{Rule: RuleKey{"declaration", 1}, Subject: NodeRef{"d", 9000}}
 			for i := 0; i < 512; i++ {
 				node := stateNode(b, timelineRoleNote, NodeID(10000+i), stateAbsent[Atomic]())
-				node.header.Declaration = stateUnknown[DeclarationID]("unavailable-note-declaration")
+				node.header.Declaration = testEvidence(stateUnknown[DeclarationID]("unavailable-note-declaration"))
 				if i == 511 {
-					node.header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-note-declaration", Cause: cause}
+					node.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-note-declaration", Cause: cause})
 				}
 				block.content.children = append(block.content.children, node)
 			}

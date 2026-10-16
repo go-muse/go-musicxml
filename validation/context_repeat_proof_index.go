@@ -158,7 +158,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 				}
 				merge(v.part, r.enumerated(n))
 				if n.header.Declaration.State != EvidenceKnown {
-					merge(v.part, stateUnavailable[DeclarationID, bool](n.header.Declaration))
+					merge(v.part, stateUnavailable[DeclarationID, bool](*n.header.Declaration))
 				}
 				checked[ancestorKey{v.part.Value, id}] = true
 			}
@@ -223,7 +223,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 				}
 			}
 			if n.header.Declaration.State != EvidenceKnown {
-				merge(v.part, stateUnavailable[DeclarationID, bool](n.header.Declaration))
+				merge(v.part, stateUnavailable[DeclarationID, bool](*n.header.Declaration))
 			}
 			// A displaced display/effect position cannot extend encoded music.
 			// Closure uses the unshifted cursor and its actual movement only.
@@ -261,7 +261,7 @@ func contextRepeatBuildProofIndex(r *contextReader, timeline *timelineService, r
 		if v.note {
 			merge(v.part, r.complete(n))
 			if n.header.Declaration.State != EvidenceKnown {
-				merge(v.part, stateUnavailable[DeclarationID, bool](n.header.Declaration))
+				merge(v.part, stateUnavailable[DeclarationID, bool](*n.header.Declaration))
 			}
 		}
 		if r.err != nil {

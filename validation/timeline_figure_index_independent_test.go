@@ -29,7 +29,7 @@ func TestIndependentTimelineFigureIndexMatchesCausalScan(t *testing.T) {
 				f.Position = stateUnknown[musicalPosition]("unplaced")
 				v.Facts[104] = f
 			case "unknown-kind":
-				blocks[0].content.children[5].end.ChildrenComplete = stateUnknown[bool]("incomplete")
+				blocks[0].content.children[5].end.ChildrenComplete = testEvidence(stateUnknown[bool]("incomplete"))
 			case "unknown-owner":
 				blocks[0].part = stateUnknown[NodeRef]("owner")
 			case "duplicate-domain":

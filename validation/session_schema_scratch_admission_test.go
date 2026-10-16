@@ -92,7 +92,7 @@ func TestSchemaBindingScratchCompletionAdmissionAndPop(t *testing.T) {
 	for _, short := range []int64{0, 1} {
 		a, _ := NewBudgetAccount(Budgets{MaxBufferedBytes: schemaBindFrameBytes + 3*schemaBindCompletionBytes - short})
 		w := schemaBindScratch{account: a}
-		if err := w.push(context.Background(), schemaBindFrame{node: &factNode{}}); err != nil {
+		if err := w.push(context.Background(), schemaBindFrame{node: &factNode{header: testRetainedHeader(NodeHeader{}), end: testRetainedEnd(NodeEnd{})}}); err != nil {
 			t.Fatal(err)
 		}
 		err := w.reserve(3, schemaBindCompletionBytes)
@@ -349,7 +349,7 @@ func TestSchemaBindingScratchSkippedWitnessUsesCompletionCapacity(t *testing.T) 
 	}
 	// Map for three nodes, subject projections for root+declared child,
 	// root's two child views, and the declared child's retained scalar.
-	want := before + 128 + 3*128 + 2*256 + 2*64 + 129
+	want := before + 128 + 3*128 + 2*256 + 2*64 + 129 + testSchemaScratchRetainedFacts(1)
 	if s.retained != want {
 		t.Fatalf("completion capacity retained after skip: got %d want %d", s.retained, want)
 	}

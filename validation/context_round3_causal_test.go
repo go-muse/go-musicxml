@@ -62,15 +62,15 @@ func TestContextRound3HarmonyAdvisoryParentEvidence(t *testing.T) {
 		want   Evidence[bool]
 	}{
 		{"missing", nil, stateUnknown[bool]("harmony-parent-unavailable")},
-		{"open", &factNode{}, stateUnknown[bool]("timeline-node-open")},
-		{"unknown", &factNode{closed: true, end: NodeEnd{ChildrenComplete: Evidence[bool]{State: EvidenceUnknown, Reason: "parent-content-unknown", Cause: cause}}}, Evidence[bool]{State: EvidenceUnknown, Reason: "parent-content-unknown", Cause: cause}},
-		{"invalid", &factNode{closed: true, end: NodeEnd{ChildrenComplete: Evidence[bool]{State: EvidenceInvalid, Reason: "parent-content-invalid", Cause: cause}}}, Evidence[bool]{State: EvidenceInvalid, Reason: "parent-content-invalid", Cause: cause}},
-		{"unsupported", &factNode{closed: true, end: NodeEnd{ChildrenComplete: Evidence[bool]{State: EvidenceUnsupported, Reason: "parent-content-unsupported", Cause: cause}}}, Evidence[bool]{State: EvidenceUnsupported, Reason: "parent-content-unsupported", Cause: cause}},
+		{"open", &factNode{header: testRetainedHeader(NodeHeader{}), end: testRetainedEnd(NodeEnd{})}, stateUnknown[bool]("timeline-node-open")},
+		{"unknown", &factNode{closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: Evidence[bool]{State: EvidenceUnknown, Reason: "parent-content-unknown", Cause: cause}}), header: testRetainedHeader(NodeHeader{})}, Evidence[bool]{State: EvidenceUnknown, Reason: "parent-content-unknown", Cause: cause}},
+		{"invalid", &factNode{closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: Evidence[bool]{State: EvidenceInvalid, Reason: "parent-content-invalid", Cause: cause}}), header: testRetainedHeader(NodeHeader{})}, Evidence[bool]{State: EvidenceInvalid, Reason: "parent-content-invalid", Cause: cause}},
+		{"unsupported", &factNode{closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: Evidence[bool]{State: EvidenceUnsupported, Reason: "parent-content-unsupported", Cause: cause}}), header: testRetainedHeader(NodeHeader{})}, Evidence[bool]{State: EvidenceUnsupported, Reason: "parent-content-unsupported", Cause: cause}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s, n, r := localEvidenceFixture(t, EvidenceKnown, localKind)
 			defer s.cleanup()
-			n.end.Scalar.Value = localKnownText("none")
+			n.end.Scalar.Value = testEvidence(localKnownText("none"))
 			if tc.parent != nil {
 				s.nodes[n.header.Parent] = tc.parent
 			}

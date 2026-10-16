@@ -10,8 +10,8 @@ func localEvidenceFixture(t *testing.T, state EvidenceState, role contextRole) (
 	s := rationalSession(t, Budgets{})
 	s.documentID = "doc"
 	n := localNode(2, 1, "subject")
-	n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("typed-text")}
-	n.end.Scalar.Value = Evidence[Atomic]{State: state, Reason: "component-unavailable", Cause: &DecisionRef{Rule: RuleKey{"source-prerequisite", 1}, Subject: NodeRef{"doc", 2}}}
+	n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("typed-text")})
+	n.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: state, Reason: "component-unavailable", Cause: &DecisionRef{Rule: RuleKey{"source-prerequisite", 1}, Subject: NodeRef{"doc", 2}}})
 	s.nodes = map[NodeID]*factNode{2: n}
 	r := &contextReader{ctx: context.Background(), s: s, b: &contextBindings{Roles: map[contextRole][]SchemaUse{role: {{Declaration: n.header.Declaration.Value}}}, Attributes: map[contextRole]map[ComponentID]AttributeSelector{}}}
 	return s, n, r
@@ -70,7 +70,7 @@ func TestLocalStructuralUnavailableAttributeMatrix(t *testing.T) {
 				a := localAttr(c.name)
 				r.b.Attributes[c.attribute] = map[ComponentID]AttributeSelector{n.header.Type.Value: a}
 				localSetAttr(n, c.name, localString("unused"))
-				n.attributes[0].Scalar.Value = n.end.Scalar.Value
+				n.attributes[0].Scalar.Value = *n.end.Scalar.Value
 				if err := localStructuralNode(r.ctx, s, RuleKey{"local-test", 1}, n, r); err != nil {
 					t.Fatal(err)
 				}

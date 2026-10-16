@@ -185,7 +185,7 @@ func TestLocalDistinctCancellationReleasesScratch(t *testing.T) {
 func TestLocalDistinctMixedFamiliesAndEncounterOrder(t *testing.T) {
 	for _, duplicate := range []bool{false, true} {
 		s, n, plan := distinctScratchFixture(t, 5, Budgets{})
-		n.children[1].header.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "selection-unavailable"}
+		n.children[1].header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "selection-unavailable"})
 		n.children[2].attributes[0].Scalar.Value.Value = localString("0")
 		if duplicate {
 			n.children[4].attributes[0].Scalar.Value.Value = localInteger(t, 0)

@@ -259,7 +259,7 @@ func TestTimelineKnownPositionHiddenInstrumentPublisherStartsAtPoint(t *testing.
 	at := statePosition(t, 0, 2, 1)
 	id := NodeRef{"d", 71}
 	sound := stateNode(b, timelineRoleSound, 90, stateAbsent[Atomic]())
-	sound.end.ChildrenComplete = stateUnknown[bool]("hidden-publisher")
+	sound.end.ChildrenComplete = testEvidence(stateUnknown[bool]("hidden-publisher"))
 	if err := h.readInstrumentChanges(ctx, s, b, sound, at); err != nil {
 		t.Fatal(err)
 	}

@@ -68,7 +68,7 @@ func resourceShell(s *Session, n *factNode, part Evidence[NodeRef]) *ResourceCon
 	if owner == 0 {
 		owner = n.header.ID
 	}
-	return &ResourceContextResult{SubjectDeclaration: n.header.Declaration, Owner: NodeRef{s.documentID, owner}, Part: part}
+	return &ResourceContextResult{SubjectDeclaration: *n.header.Declaration, Owner: NodeRef{s.documentID, owner}, Part: part}
 }
 func resourceString(e Evidence[Atomic]) Evidence[string] {
 	if e.State != EvidenceKnown {

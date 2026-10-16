@@ -68,7 +68,14 @@ func TestReviewDocumentPrerequisiteLinearWork(t *testing.T) {
 			qaClose(t, s, factEnd(1))
 			report, err := s.Finish(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
 			work, _ := account.Usage(BudgetRuleSteps)
-			t.Logf("children=%d steps=%d", count, work)
+			// The original bound covers scheduler work; retained-container
+			// growth has an independently derived exact copy-work ledger.
+			storage := testFlatFactStorageWork(count)
+			if work < storage {
+				t.Fatalf("total work=%d below predicted storage work=%d", work, storage)
+			}
+			work -= storage
+			t.Logf("children=%d scheduler-steps=%d storage-steps=%d", count, work, storage)
 			if err != nil {
 				t.Fatalf("same-selector document prerequisite exhausted default work: %v", err)
 			}
@@ -101,7 +108,7 @@ func TestReviewSuccessfulDecisionRetentionIsCompact(t *testing.T) {
 		if i%2 != 0 {
 			outcome = OutcomeNotApplicable
 		}
-		n := &factNode{header: factHeader(NodeID(i+1), 0, "test.root", "root")}
+		n := &factNode{header: testRetainedHeader(factHeader(NodeID(i+1), 0, "test.root", "root")), end: testRetainedEnd(NodeEnd{})}
 		if err := s.record(rule, n, Decision{Outcome: outcome}); err != nil {
 			t.Fatalf("compact result %d: %v", i, err)
 		}
@@ -210,13 +217,13 @@ func TestReviewDocumentPrerequisiteIndependentOracle(t *testing.T) {
 								d.Cause = &DecisionRef{Rule: RuleKey{ID: "upstream", Revision: 2}, Subject: NodeRef{"other-document", NodeID(99 - i)}}
 							}
 							decisions[i] = d
-							n := &factNode{header: factHeader(node, 0, "test.child", "child")}
+							n := &factNode{header: testRetainedHeader(factHeader(node, 0, "test.child", "child")), end: testRetainedEnd(NodeEnd{})}
 							if err := s.record(rule, n, d); err != nil {
 								t.Fatal(err)
 							}
 						}
 						want := reviewPrerequisiteOracle(decisions, complete, enumerationComplete)
-						n := &factNode{header: factHeader(99, 0, "test.child", "child")}
+						n := &factNode{header: testRetainedHeader(factHeader(99, 0, "test.child", "child")), end: testRetainedEnd(NodeEnd{})}
 						got, pending, err := s.dependency(context.Background(), n, dependency, true)
 						if err != nil || pending || !reflect.DeepEqual(got, want) {
 							t.Fatalf("states=%v complete=%v/%v got=%+v pending=%v err=%v want=%+v", []Outcome{first, second, third}, complete, enumerationComplete, got, pending, err, want)
@@ -241,12 +248,14 @@ func TestReviewUnusedDocumentPrerequisiteDoesNotScan(t *testing.T) {
 	const count = 2000
 	// Each child performs two selector checks. The root's selected prerequisite
 	// also counts children (two steps each), plus three initialization steps.
-	// No document aggregate is demanded.
+	// No document aggregate is demanded. Separately reserve the exact growth
+	// work predicted from this flat tree's node count, without runtime readings.
+	storage := testFlatFactStorageWork(count)
 	e := reviewDocumentEngine(t, func(rules *[]RuleDefinition) {
 		(*rules)[0].Selector.Declaration.Occurrence = "test.root"
 		(*rules)[1].Selector.Declaration.Occurrence = "never-selected"
 	})
-	s, err := e.Begin(context.Background(), RunOptions{DocumentID: "doc", Profile: "test.source", Budgets: Budgets{MaxRuleSteps: 4*count + 5}})
+	s, err := e.Begin(context.Background(), RunOptions{DocumentID: "doc", Profile: "test.source", Budgets: Budgets{MaxRuleSteps: 4*count + 5 + storage}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,6 +274,7 @@ func TestReviewUnusedDocumentPrerequisiteDoesNotScan(t *testing.T) {
 	if err != nil || !report.Satisfied() {
 		t.Fatalf("excluded consumers triggered document scan: work=%d report=%+v err=%v", work, report, err)
 	}
+	work -= storage
 	if work != 4*count+5 {
 		t.Fatalf("unexpected work: %d", work)
 	}
@@ -280,14 +290,14 @@ func TestReviewDocumentPrerequisiteFinalizationAndScope(t *testing.T) {
 			rule := s.catalog.rules[key]
 			rule.Scope = scope
 			s.catalog.rules[key] = rule
-			root := &factNode{header: factHeader(17, 0, "test.root", "root")}
+			root := &factNode{header: testRetainedHeader(factHeader(17, 0, "test.root", "root")), end: testRetainedEnd(NodeEnd{})}
 			s.root = root
 			s.sequence = []NodeID{17, 2}
 			s.inputComplete = true
 			if err := s.record(rule, root, Decision{Outcome: OutcomePass}); err != nil {
 				t.Fatal(err)
 			}
-			child := &factNode{header: factHeader(2, 17, "test.child", "child")}
+			child := &factNode{header: testRetainedHeader(factHeader(2, 17, "test.child", "child")), end: testRetainedEnd(NodeEnd{})}
 			if err := s.record(rule, child, Decision{Outcome: OutcomeFail, Reason: "child-failure"}); err != nil {
 				t.Fatal(err)
 			}
@@ -323,7 +333,7 @@ func TestReviewCompactCachePreservesMissingAndIdempotence(t *testing.T) {
 	rule := s.catalog.rules[key]
 	dependency := Dependency{Kind: DependencyRule, Rule: key, Relation: RelationSameNode}
 	for i, outcome := range []Outcome{OutcomePass, OutcomeNotApplicable, ""} {
-		node := &factNode{header: factHeader(NodeID(i+1), 0, "test.root", "root")}
+		node := &factNode{header: testRetainedHeader(factHeader(NodeID(i+1), 0, "test.root", "root")), end: testRetainedEnd(NodeEnd{})}
 		if outcome != "" {
 			if err := s.record(rule, node, Decision{Outcome: outcome}); err != nil {
 				t.Fatal(err)
@@ -359,7 +369,7 @@ func TestReviewDocumentCacheCancellationAndWorkExhaustion(t *testing.T) {
 			s := reviewDocumentSession(t, Budgets{})
 			s.inputComplete = true
 			s.documentPrerequisites[key].finalized = true
-			n := &factNode{header: factHeader(1, 0, "test.child", "child")}
+			n := &factNode{header: testRetainedHeader(factHeader(1, 0, "test.child", "child")), end: testRetainedEnd(NodeEnd{})}
 			s.sequence = []NodeID{1}
 			if err := s.record(s.catalog.rules[key], n, Decision{Outcome: OutcomePass}); err != nil {
 				t.Fatal(err)
@@ -455,7 +465,7 @@ func TestReviewCompactCacheReservesBeforeAllocation(t *testing.T) {
 			_, s := sessionFixture(t, Budgets{})
 			key := s.catalog.orders[s.profile.ID][0]
 			rule := s.catalog.rules[key]
-			n := &factNode{header: factHeader(1, 0, "test.root", "root")}
+			n := &factNode{header: testRetainedHeader(factHeader(1, 0, "test.root", "root")), end: testRetainedEnd(NodeEnd{})}
 			if existing {
 				if err := s.record(rule, n, Decision{Outcome: OutcomeNotApplicable}); err != nil {
 					t.Fatal(err)
@@ -533,7 +543,7 @@ func TestReviewDocumentAggregateInterruptionDuringScan(t *testing.T) {
 		dep := Dependency{Kind: DependencyRule, Rule: key, Relation: RelationDocument}
 		s.inputComplete = true
 		s.documentPrerequisites[key].finalized = true
-		n := &factNode{header: factHeader(1, 0, "test.child", "child")}
+		n := &factNode{header: testRetainedHeader(factHeader(1, 0, "test.child", "child")), end: testRetainedEnd(NodeEnd{})}
 		for id := NodeID(1); id <= 4; id++ {
 			n.header.ID = id
 			s.sequence = append(s.sequence, id)

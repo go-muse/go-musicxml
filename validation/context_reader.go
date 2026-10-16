@@ -635,7 +635,7 @@ func (r *contextReader) attribute(n *factNode, role contextRole) Evidence[Atomic
 	}
 	if !ok {
 		if n.header.Type.State != EvidenceKnown {
-			return stateUnavailable[ComponentID, Atomic](n.header.Type)
+			return stateUnavailable[ComponentID, Atomic](*n.header.Type)
 		}
 		return Evidence[Atomic]{State: EvidenceUnsupported, Reason: "context-attribute-binding-unavailable"}
 	}
@@ -747,7 +747,7 @@ func (r *contextReader) child(n *factNode, role contextRole) (*factNode, Evidenc
 			return nil, stateUnknown[bool]("context-interrupted")
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
-			return nil, stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+			return nil, stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 		}
 		if r.matches(ch, role) {
 			if found != nil {
@@ -780,7 +780,7 @@ func (r *contextReader) presence(n *factNode, role contextRole) Evidence[bool] {
 	}
 	if !ok {
 		if n.header.Type.State != EvidenceKnown {
-			return stateUnavailable[ComponentID, bool](n.header.Type)
+			return stateUnavailable[ComponentID, bool](*n.header.Type)
 		}
 		return Evidence[bool]{State: EvidenceUnsupported, Reason: "context-attribute-binding-unavailable"}
 	}

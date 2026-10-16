@@ -312,7 +312,7 @@ func spanLyricFacts(r *contextReader, key RuleKey, n *factNode) {
 			return
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
-			spanLyricUnavailable(r, key, n, stateUnavailable[DeclarationID, bool](ch.header.Declaration))
+			spanLyricUnavailable(r, key, n, stateUnavailable[DeclarationID, bool](*ch.header.Declaration))
 			return
 		}
 		if r.matches(ch, spanRole_lyricElision) {

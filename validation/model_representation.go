@@ -271,7 +271,11 @@ func (s *Session) invalidateModelRepresentation(ctx context.Context, n *factNode
 		invalid := Evidence[Atomic]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
 		switch p.Axis {
 		case ModelAxisScalar:
-			n.end.Scalar.Value = invalid
+			owned, err := s.retainInternalAtomic(invalid)
+			if err != nil {
+				return err
+			}
+			n.end.Scalar.Value = owned
 		case ModelAxisAttribute:
 			for i := range n.attributes {
 				if err := s.step(ctx, 1); err != nil {
@@ -283,8 +287,13 @@ func (s *Session) invalidateModelRepresentation(ctx context.Context, n *factNode
 				}
 			}
 		case ModelAxisChildren:
-			n.end.ChildrenComplete = Evidence[bool]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
-			n.end.Order = Evidence[OrderKind]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
+			// Reserve both immutable replacement records before publishing either.
+			if err := s.retain(retainedBoolBytes + retainedOrderBytes); err != nil {
+				return err
+			}
+			children := Evidence[bool]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
+			order := Evidence[OrderKind]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
+			n.end.ChildrenComplete, n.end.Order = &children, &order
 		}
 	}
 	return nil

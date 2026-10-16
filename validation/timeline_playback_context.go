@@ -83,7 +83,7 @@ type timelinePlaybackContext struct {
 }
 
 func playbackOriginAt(s *Session, n *factNode, block timelineMeasureBlock, fact timelineEventFact) playbackOrigin {
-	return playbackOrigin{Placement: fact.Placement, Source: NodeRef{s.documentID, n.header.ID}, Measure: NodeRef{s.documentID, block.measure.header.ID}, Part: fact.Part, MeasureOrdinal: block.ordinal, Position: fact.Position, Staff: fact.Staff, Voice: fact.Voice, Order: n.end.Order, MeasureComplete: block.complete}
+	return playbackOrigin{Placement: fact.Placement, Source: NodeRef{s.documentID, n.header.ID}, Measure: NodeRef{s.documentID, block.measure.header.ID}, Part: fact.Part, MeasureOrdinal: block.ordinal, Position: fact.Position, Staff: fact.Staff, Voice: fact.Voice, Order: *n.end.Order, MeasureComplete: block.complete}
 }
 
 // Only these freshly assembled record types may transfer their owned slices to

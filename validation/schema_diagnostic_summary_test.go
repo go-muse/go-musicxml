@@ -22,7 +22,7 @@ func schemaDiagnosticSession(t *testing.T, budgets Budgets) (*Session, RuleDefin
 }
 
 func schemaDiagnosticNode(s *Session, id NodeID) *factNode {
-	n := &factNode{header: NodeHeader{ID: id, Location: Location{Target: TargetSource, DocumentID: "source", Path: "/occurrence"}}, closed: true}
+	n := &factNode{header: testRetainedHeader(NodeHeader{ID: id, Location: Location{Target: TargetSource, DocumentID: "source", Path: "/occurrence"}}), closed: true, end: testRetainedEnd(NodeEnd{})}
 	s.nodes[id] = n
 	if s.root == nil {
 		s.root = n

@@ -227,7 +227,7 @@ func TestContextNavigationLocalSoundWithoutTimeline(t *testing.T) {
 			b.Attributes[spec.Role] = map[ComponentID]AttributeSelector{typ: {Declaration: d, Name: QName{Local: spec.Name}}}
 		}
 	}
-	n := &factNode{header: NodeHeader{ID: 1, Declaration: stateKnown(b.Roles[contextNavRawSound][0].Declaration), Type: stateKnown(typ)}, closed: true, end: NodeEnd{AttributesComplete: stateKnown(true), ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+	n := &factNode{header: testRetainedHeader(NodeHeader{ID: 1, Declaration: stateKnown(b.Roles[contextNavRawSound][0].Declaration), Type: stateKnown(typ)}), closed: true, end: testRetainedEnd(NodeEnd{AttributesComplete: stateKnown(true), ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 	a := b.Attributes[contextNavRawDaCapo][typ]
 	n.attributes = []AttributeFact{{Owner: 1, Name: a.Name, Declaration: stateKnown(a.Declaration), Presence: stateKnown(true), Scalar: Scalar{Value: stateAtomicText("yes")}}}
 	s.nodes = map[NodeID]*factNode{1: n}

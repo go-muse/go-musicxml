@@ -46,9 +46,9 @@ func consumerLocalKey(t *testing.T, s *Session, n *factNode) *factNode {
 	t.Helper()
 	key := consumerNode(s, 30, n, "numeral-key")
 	fifths := consumerNode(s, 31, key, "numeral-fifths")
-	fifths.end.Scalar.Value = stateKnown(localInteger(t, 0))
+	fifths.end.Scalar.Value = testEvidence(stateKnown(localInteger(t, 0)))
 	mode := consumerNode(s, 32, key, "numeral-mode")
-	mode.end.Scalar.Value = stateKnown(localString("major"))
+	mode.end.Scalar.Value = testEvidence(stateKnown(localString("major")))
 	return key
 }
 func TestTimelineConsumerChordBoundUsesPrincipal(t *testing.T) {
@@ -126,14 +126,18 @@ func TestTimelineConsumerLocalNumeralKeyAlternative(t *testing.T) {
 	}{
 		{"valid-without-service", nil, OutcomePass, true},
 		{"malformed-mode", func(s *Session, _ *factNode) {
-			s.nodes[32].end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-mode", Cause: cause}
+			s.nodes[32].end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-mode", Cause: cause})
 		}, OutcomeBlocked, true},
 		{"missing-mode", func(_ *Session, k *factNode) { k.children = k.children[:1] }, OutcomeUnknown, true},
-		{"incomplete-key", func(_ *Session, k *factNode) { k.end.ChildrenComplete = stateUnknown[bool]("incomplete-key") }, OutcomeUnknown, true},
-		{"incomplete-numeral", func(s *Session, _ *factNode) {
-			s.nodes[2].end.ChildrenComplete = stateUnknown[bool]("incomplete-numeral")
+		{"incomplete-key", func(_ *Session, k *factNode) {
+			k.end.ChildrenComplete = testEvidence(stateUnknown[bool]("incomplete-key"))
 		}, OutcomeUnknown, true},
-		{"wrong-exact-use", func(_ *Session, k *factNode) { k.header.Declaration = stateKnown(localDecl("foreign-key")) }, "", false},
+		{"incomplete-numeral", func(s *Session, _ *factNode) {
+			s.nodes[2].end.ChildrenComplete = testEvidence(stateUnknown[bool]("incomplete-numeral"))
+		}, OutcomeUnknown, true},
+		{"wrong-exact-use", func(_ *Session, k *factNode) {
+			k.header.Declaration = testEvidence(stateKnown(localDecl("foreign-key")))
+		}, "", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s, p := consumerFixture(t)
@@ -427,7 +431,7 @@ func TestTimelineConsumerFailureSurvivesRelatedRetentionStop(t *testing.T) {
 				s.timeline[p.Provider].Facts[1] = timelineEventFact{Duration: stateKnown(mustRational(t, 2, 1)), PrincipalDuration: stateKnown(mustRational(t, 1, 1)), Principal: stateKnown(NodeRef{"d", principal.header.ID})}
 				d = consumerEvaluate(t, s, n, p, kind)
 			} else {
-				n.header.Declaration = stateKnown(localDecl("numeral"))
+				n.header.Declaration = testEvidence(stateKnown(localDecl("numeral")))
 				h := consumerNode(s, 2, nil, "harmony")
 				n.header.Parent = 2
 				s.timeline[p.Provider].Facts[h.header.ID] = timelineEventFact{Origin: stateKnown(statePosition(t, 0, 0, 1)), Staff: stateKnown(stateInt(t, 1))}
@@ -486,9 +490,9 @@ func TestTimelineConsumerLocalKeyInvalidComponentSurvivesEarlierGap(t *testing.T
 	h := consumerNode(s, 1, nil, "harmony")
 	n := consumerNode(s, 2, h, "numeral")
 	consumerLocalKey(t, s, n)
-	s.nodes[31].end.Scalar.Value = stateUnknown[Atomic]("fifths-unavailable")
+	s.nodes[31].end.Scalar.Value = testEvidence(stateUnknown[Atomic]("fifths-unavailable"))
 	cause := &DecisionRef{Rule: RuleKey{"xsd.scalar", 1}, Subject: NodeRef{"d", 32}}
-	s.nodes[32].end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-mode", Cause: cause}
+	s.nodes[32].end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "invalid-mode", Cause: cause})
 	d, yes, e := s.localNumeralKeyProof(context.Background(), n, p)
 	if e != nil || !yes || d.Outcome != OutcomeBlocked || d.Cause == nil || *d.Cause != *cause {
 		t.Fatalf("known scalar violation hidden by earlier gap %+v %v %v", d, yes, e)

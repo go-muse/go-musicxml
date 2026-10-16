@@ -123,8 +123,8 @@ func TestDictionaryKnownNonmembershipSurvivesProjectionRefusal(t *testing.T) {
 		rule := reportTestRule()
 		s.accumulator = newReportAccumulator(reportTestProfile(), s.account)
 		n := localNode(1, 0, "glyph")
-		n.header.Type = stateKnown(contextNamedType("smufl-glyph-name"))
-		n.end.Scalar.Value = stateKnown(Atomic{Kind: AtomicString, Text: value})
+		n.header.Type = testEvidence(stateKnown(contextNamedType("smufl-glyph-name")))
+		n.end.Scalar.Value = testEvidence(stateKnown(Atomic{Kind: AtomicString, Text: value}))
 		p := &dictionaryPlan{Operation: DictionaryCanonical, Types: []ComponentID{contextNamedType("smufl-glyph-name")}, Bindings: &contextBindings{assembly: AssemblyMusicXML}}
 		used, _ := s.account.Usage(BudgetBufferedBytes)
 		hold := s.account.Limits().MaxBufferedBytes - used

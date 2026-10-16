@@ -15,7 +15,7 @@ func directionOriginFixture(t *testing.T, order OrderKind, budget Budgets) (*Ses
 	direction := stateNode(b, timelineRoleDirection, 10, stateAbsent[Atomic]())
 	// Deliberately disagree with musical order: note 30 is later than note 40.
 	block := runtimeBlock(b, 0, direction, runtimeNote(t, b, 30, 1, false), runtimeNote(t, b, 20, 1, false), runtimeNote(t, b, 40, 1, false))
-	block.content.end.Order = stateKnown(order)
+	block.content.end.Order = testEvidence(stateKnown(order))
 	block.coverage = stateKnown(true)
 	service := &timelineService{Facts: map[NodeID]timelineEventFact{}}
 	for id, offset := range map[NodeID]int64{10: 1, 20: 0, 30: 3, 40: 2} {
@@ -196,7 +196,7 @@ func TestDirectionOriginsCrossMeasureAndProvenAbsence(t *testing.T) {
 			service.Facts[10] = f
 			next := runtimeBlock(b, 1, runtimeNote(t, b, 70, 1, false))
 			next.coverage = stateKnown(true)
-			next.content.end.Order = stateKnown(order)
+			next.content.end.Order = testEvidence(stateKnown(order))
 			service.Facts[70] = timelineEventFact{Position: timelineAt(next, stateKnown(mustRational(t, 0, 1))), Part: next.part, Staff: stateAbsent[Integer](), Voice: stateAbsent[string]()}
 			blocks = append(blocks, next)
 			stateClose(t, s, &service.State, 1)

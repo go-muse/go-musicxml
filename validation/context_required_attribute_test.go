@@ -88,7 +88,7 @@ func TestContextRequiredAttributeConservativeBoundaries(t *testing.T) {
 		{name: "derived-optional", actual: "optional", complete: true, proof: true},
 		{name: "derived-prohibited", actual: "prohibited", complete: true, proof: true},
 		{name: "forged-derived-owner", actual: "inherited", complete: true, proof: true, change: func(s *Session, b *contextBindings) {
-			s.nodes[1].header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("A")}
+			s.nodes[1].header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("A")})
 		}},
 
 		{name: "different-schema-graph", actual: "A", complete: true, proof: true, change: func(s *Session, b *contextBindings) {

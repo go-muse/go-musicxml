@@ -228,7 +228,7 @@ func (service *timelineService) directionAnchor(r *stateReader, origin timelineE
 				}
 				if !r.matches(candidate, timelineRoleNote) {
 					if candidate.header.Declaration.State != EvidenceKnown && r.potential(candidate, timelineRoleNote) {
-						q.add(r, timelineGapAs[DeclarationID, NodeRef](candidate.header.Declaration, "direction-candidate-binding-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
+						q.add(r, timelineGapAs[DeclarationID, NodeRef](*candidate.header.Declaration, "direction-candidate-binding-unavailable"), Evidence[musicalPosition]{State: EvidenceUnknown}, block.ordinal)
 					}
 					continue
 				}

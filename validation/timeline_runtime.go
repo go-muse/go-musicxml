@@ -138,11 +138,11 @@ func (service *timelineService) readMeasure(ctx context.Context, s *Session, b *
 		fact := timelineEventFact{Placement: cursorPlacement, Part: block.part, Staff: Evidence[Integer]{State: EvidenceAbsent}, Voice: Evidence[string]{State: EvidenceAbsent}, Duration: Evidence[Rational]{State: EvidenceAbsent}, Principal: stateUnknown[NodeRef]("timeline-principal-unavailable"), PrincipalDuration: stateUnknown[Rational]("timeline-principal-unavailable")}
 		if event.header.Declaration.State != EvidenceKnown {
 			prefix = false
-			gap := stateUnavailable[DeclarationID, bool](event.header.Declaration)
+			gap := stateUnavailable[DeclarationID, bool](*event.header.Declaration)
 			if _, err := cursor.advance(ctx, s, timelineMovement{Kind: timelineMovementGap, Unavailability: gap}); err != nil {
 				return err
 			}
-			fact.Position = stateUnavailable[DeclarationID, musicalPosition](event.header.Declaration)
+			fact.Position = stateUnavailable[DeclarationID, musicalPosition](*event.header.Declaration)
 			fact.Origin = fact.Position
 			if block.part.State == EvidenceKnown && r.potential(event, timelineRoleAttributes) {
 				if err := service.State.gapAttributeFamilies(ctx, s, block.part.Value, block.ordinal, fact.Position, fact.Placement); err != nil {

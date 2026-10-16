@@ -10,7 +10,7 @@ import (
 
 func contextRound3CompatFixture(mode string) (*contextBindings, *factNode) {
 	n := localNode(1, 0, strings.Repeat("d", 600))
-	n.header.Type = stateKnown(contextNamedType("compat-owner"))
+	n.header.Type = testEvidence(stateKnown(contextNamedType("compat-owner")))
 	b := &contextBindings{}
 	for _, role := range []contextRole{"role-a", "role-b"} {
 		switch mode {

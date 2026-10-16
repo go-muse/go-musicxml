@@ -65,7 +65,7 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 		out.ChildrenComplete = n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value && out.ChildrenOrderKnown
 		out.Text, out.TextKnown = "", false
 		var err error
-		out.Current, err = s.schemaCurrent(ctx, n.end.Scalar.Value)
+		out.Current, err = s.schemaCurrent(ctx, *n.end.Scalar.Value)
 		if err != nil {
 			return out, err
 		}
@@ -354,14 +354,21 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 			ancestor = s.nodes[ancestor.header.Parent]
 		}
 		state.nodes[id] = item
-		n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: item.reason}
-		n.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: item.reason}
+		typ := Evidence[ComponentID]{State: EvidenceUnsupported, Reason: item.reason}
+		decl := Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: item.reason}
 		if item.cause != nil {
-			n.header.Type.State = EvidenceInvalid
-			n.header.Type.Cause = item.cause
-			n.header.Declaration.State = EvidenceInvalid
-			n.header.Declaration.Cause = item.cause
+			typ.State, typ.Cause = EvidenceInvalid, item.cause
+			decl.State, decl.Cause = EvidenceInvalid, item.cause
 		}
+		ownedType, err := s.retainType(typ)
+		if err != nil {
+			return err
+		}
+		ownedDeclaration, err := s.retainDeclaration(decl)
+		if err != nil {
+			return err
+		}
+		n.header.Type, n.header.Declaration = ownedType, ownedDeclaration
 	}
 	identity, identityErr := state.run.IdentityPreview(ctx)
 	state.identity = identity
@@ -374,26 +381,40 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.Use, binding xsd.Binding) error {
 	state := s.schema
 	declaration := state.active.declaration(use)
-	n.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "declaration-identity-unavailable"}
+	decl := Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "declaration-identity-unavailable"}
 	if validDeclaration(declaration) {
-		n.header.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: declaration}
+		decl = Evidence[DeclarationID]{State: EvidenceKnown, Value: declaration}
 	}
+	typ := Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "actual-type-unavailable"}
+	var typeKey xsd.CacheIdentity
 	if kind, known := state.run.ActualType(binding); known {
 		component := state.active.component(kind)
 		if validComponent(component) {
-			n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: component}
+			typ = Evidence[ComponentID]{State: EvidenceKnown, Value: component}
+			typeKey = kind.CacheIdentity()
 		} else {
-			n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "type-identity-unavailable"}
+			typ = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "type-identity-unavailable"}
 		}
-	} else {
-		n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "actual-type-unavailable"}
 	}
+	ownedDeclaration, err := s.retainSchemaDeclaration(ctx, use.CacheIdentity(), decl)
+	if err != nil {
+		return err
+	}
+	ownedType, err := s.retainSchemaType(ctx, typeKey, typ)
+	if err != nil {
+		return err
+	}
+	n.header.Declaration, n.header.Type = ownedDeclaration, ownedType
 	if s.profile.Target != TargetModel {
 		scalar, err := s.schemaAtomic(ctx, state.run.Scalar(binding))
 		if err != nil {
 			return err
 		}
-		n.end.Scalar.Value = scalar
+		owned, err := s.retainSchemaAtomic(scalar)
+		if err != nil {
+			return err
+		}
+		n.end.Scalar.Value = owned
 	}
 	indexBytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(n.attributes)), 96)
 	if err != nil {
@@ -938,7 +959,7 @@ func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attrib
 	}
 	if attribute == (QName{}) {
 		if n.end.Scalar.Value.State == EvidenceInvalid {
-			return n.end.Scalar.Value, nil
+			return *n.end.Scalar.Value, nil
 		}
 		result := s.schema.run.Results(bound.binding)
 		if !result.Scalar.Valid {

@@ -19,7 +19,7 @@ func TestRound1NavigationKnownTargetsLinearWork(t *testing.T) {
 				rows[i].Player = stateKnown("player")
 			}
 		}
-		node := &factNode{closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+		node := &factNode{closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}), header: testRetainedHeader(NodeHeader{})}
 		r := &contextReader{ctx: context.Background(), s: s}
 		got := navigationListeningDistinct(r, node, rows)
 		if r.err != nil || got.State != EvidenceKnown || !got.Value {

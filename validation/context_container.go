@@ -96,7 +96,7 @@ func containerContent(r *contextReader, n *factNode, childRole contextRole) Evid
 			if ch.header.Declaration.State == EvidenceAbsent {
 				return stateUnknown[bool]("container-child-binding-unavailable")
 			}
-			return stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+			return stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 		}
 		if ch.header.Parent != n.header.ID || childRole == "" || !r.matches(ch, childRole) {
 			return stateUnknown[bool]("container-child-role-unavailable")
@@ -109,7 +109,7 @@ func containerRawAttribute(r *contextReader, n *factNode, role contextRole) Evid
 	a, ok := r.attributeSelector(n, role)
 	if !ok {
 		if n.header.Type.State != EvidenceKnown {
-			return stateUnavailable[ComponentID, string](n.header.Type)
+			return stateUnavailable[ComponentID, string](*n.header.Type)
 		}
 		return Evidence[string]{State: EvidenceUnsupported, Reason: "context-attribute-binding-unavailable"}
 	}

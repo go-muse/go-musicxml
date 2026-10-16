@@ -56,7 +56,7 @@ func spanCountChildren(r *contextReader, n *factNode, role contextRole) Evidence
 			return stateUnknown[Atomic]("context-interrupted")
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
-			return stateUnavailable[DeclarationID, Atomic](ch.header.Declaration)
+			return stateUnavailable[DeclarationID, Atomic](*ch.header.Declaration)
 		}
 		if r.matches(ch, role) {
 			if count == ^uint64(0) {

@@ -33,7 +33,7 @@ func performanceRound1SwingFixture(t *testing.T) (*contextReader, *timelineServi
 	node(22, 21, "straight")
 	note := node(30, 0, "note")
 	typ := node(31, 30, "type")
-	typ.end.Scalar.Value = stateKnown(localString("eighth"))
+	typ.end.Scalar.Value = testEvidence(stateKnown(localString("eighth")))
 	service := &timelineService{Final: true}
 	service.Playback.Sounds = map[NodeID]soundPlaybackContext{
 		10: {Origin: playbackOrigin{Part: stateKnown(NodeRef{"d", 1}), MeasureOrdinal: 3, Position: stateUnknown[musicalPosition]("unplaced-sound")}, TimeOnly: stateAbsent[string]()},

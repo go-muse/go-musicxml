@@ -35,10 +35,10 @@ func (r *stateReader) enumerated(n *factNode) Evidence[bool] {
 		if e.State == EvidenceKnown || e.State == EvidenceAbsent {
 			return stateUnknown[bool]("timeline-children-incomplete")
 		}
-		return e
+		return *e
 	}
 	if n.end.Order.State != EvidenceKnown {
-		return stateUnavailable[OrderKind, bool](n.end.Order)
+		return stateUnavailable[OrderKind, bool](*n.end.Order)
 	}
 	if n.end.Order.Value != OrderSource && n.end.Order.Value != OrderModelContent && n.end.Order.Value != OrderModelFields {
 		return stateUnknown[bool]("timeline-content-order-unavailable")
@@ -93,7 +93,7 @@ func (r *stateReader) children(n *factNode, role timelineRole) ([]*factNode, Evi
 	out := make([]*factNode, 0, len(n.children))
 	for _, ch := range n.children {
 		if ch.header.Declaration.State != EvidenceKnown {
-			return nil, stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+			return nil, stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 		}
 		if r.matches(ch, role) {
 			out = append(out, ch)
@@ -112,7 +112,7 @@ func (r *stateReader) child(n *factNode, role timelineRole) (*factNode, Evidence
 			return nil, stateUnknown[bool]("timeline-interrupted")
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
-			return nil, stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+			return nil, stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 		}
 		if r.matches(ch, role) {
 			if found != nil {
@@ -244,7 +244,7 @@ func (r *stateReader) key(n *factNode) Evidence[keyState] {
 	}
 	for _, ch := range n.children {
 		if ch.header.Declaration.State != EvidenceKnown {
-			return stateUnavailable[DeclarationID, keyState](ch.header.Declaration)
+			return stateUnavailable[DeclarationID, keyState](*ch.header.Declaration)
 		}
 		switch {
 		case r.matches(ch, timelineRoleKeyStep):
@@ -376,7 +376,7 @@ func (h *timelineState) readAttributes(ctx context.Context, s *Session, b *timel
 	all := Evidence[stateScope]{State: EvidenceKnown, Value: stateScope{AllStaves: true}}
 	for _, ch := range n.children {
 		if ch.header.Declaration.State != EvidenceKnown {
-			h.attributePotentialGap(r, ch, pos, stateUnavailable[DeclarationID, bool](ch.header.Declaration))
+			h.attributePotentialGap(r, ch, pos, stateUnavailable[DeclarationID, bool](*ch.header.Declaration))
 			continue
 		}
 		switch {
@@ -555,7 +555,7 @@ func (h *timelineState) gapAttributes(ctx context.Context, s *Session, b *timeli
 				}
 			}
 			if ch.header.Declaration.State != EvidenceKnown {
-				g.Availability = stateMergeGap(g.Availability, stateUnavailable[DeclarationID, bool](ch.header.Declaration))
+				g.Availability = stateMergeGap(g.Availability, stateUnavailable[DeclarationID, bool](*ch.header.Declaration))
 			}
 			publish(ch, role, g)
 			if r.err != nil {

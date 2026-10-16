@@ -11,7 +11,7 @@ func TestPerformanceRound1UnrelatedStaticOwnerCost(t *testing.T) {
 	defer s.cleanup()
 	r := &contextReader{ctx: context.Background(), s: s, b: &contextBindings{Attributes: map[contextRole]map[ComponentID]AttributeSelector{}}}
 	n := localNode(1, 0, "step")
-	n.header.Type = stateKnown(contextNamedType("step"))
+	n.header.Type = testEvidence(stateKnown(contextNamedType("step")))
 	for i := 0; i < 100; i++ {
 		performanceStatic(r, RuleKey{"performance", 1}, n)
 	}
@@ -41,9 +41,9 @@ func performanceRound1ScalarProviderFixture(t *testing.T, budgets Budgets) (*Ses
 	s := rationalSession(t, budgets)
 	s.documentID = "d"
 	n := localNode(1, 0, "relation")
-	n.header.Declaration = stateKnown(bindings.Roles["perf-prefix"][0].Declaration)
-	n.header.Type = stateKnown(contextNamedType("string"))
-	n.end.Scalar.Value = stateKnown(localString("6"))
+	n.header.Declaration = testEvidence(stateKnown(bindings.Roles["perf-prefix"][0].Declaration))
+	n.header.Type = testEvidence(stateKnown(contextNamedType("string")))
+	n.end.Scalar.Value = testEvidence(stateKnown(localString("6")))
 	s.nodes = map[NodeID]*factNode{1: n}
 	s.sequence = []NodeID{1}
 	return s, &contextPlan{Schema: schema, Bindings: bindings}

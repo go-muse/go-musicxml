@@ -26,7 +26,7 @@ func TestLocalHarmonyNoneUnavailableDeclarationDoesNotReusePriorChord(t *testing
 			t.Run(string(state)+"/"+tc.name, func(t *testing.T) {
 				s, n, r := localEvidenceFixture(t, EvidenceKnown, localKind)
 				defer s.cleanup()
-				n.end.Scalar.Value = localKnownText("none")
+				n.end.Scalar.Value = testEvidence(localKnownText("none"))
 				parent := localNode(1, 0, "harmony")
 				prior := localNode(3, 1, "root")
 				gap := localNode(4, 1, "kind")
@@ -34,7 +34,7 @@ func TestLocalHarmonyNoneUnavailableDeclarationDoesNotReusePriorChord(t *testing
 				if state == EvidenceAbsent {
 					cause = nil
 				}
-				gap.header.Declaration = Evidence[DeclarationID]{State: state, Value: localDecl("kind"), Reason: "child-declaration-gap", Cause: cause}
+				gap.header.Declaration = testEvidence(Evidence[DeclarationID]{State: state, Value: localDecl("kind"), Reason: "child-declaration-gap", Cause: cause})
 				parent.children = []*factNode{prior}
 				if tc.priorKind {
 					parent.children = append(parent.children, localNode(5, 1, "kind"))
@@ -82,11 +82,11 @@ func TestLocalHarmonyNoneStackedParentCompletenessRemainsPrerequisite(t *testing
 		t.Run(string(state), func(t *testing.T) {
 			s, n, r := localEvidenceFixture(t, EvidenceKnown, localKind)
 			defer s.cleanup()
-			n.end.Scalar.Value = localKnownText("none")
+			n.end.Scalar.Value = testEvidence(localKnownText("none"))
 			parent := localNode(1, 0, "harmony")
 			cause := &DecisionRef{Rule: RuleKey{"parent-content", 1}, Subject: NodeRef{"doc", 1}}
 			want := Evidence[bool]{State: state, Reason: "parent-content-gap", Cause: cause}
-			parent.end.ChildrenComplete = want
+			parent.end.ChildrenComplete = testEvidence(want)
 			parent.children = []*factNode{localNode(3, 1, "root"), localNode(4, 1, "kind"), localNode(5, 1, "numeral"), n}
 			s.nodes[1] = parent
 			r.b.Roles[localKind] = append(r.b.Roles[localKind], SchemaUse{Declaration: localDecl("kind")})

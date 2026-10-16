@@ -35,9 +35,9 @@ func TestLayoutRound1UnavailableDividerSelectionIsNotDefault(t *testing.T) {
 			right := localNode(7, 5, "right-divider")
 			def.children = []*factNode{dist, div}
 			div.children = []*factNode{left, right}
-			dist.end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "30")}}
+			dist.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "30")}})
 			cause := &DecisionRef{Rule: RuleKey{"fixture", 1}, Subject: NodeRef{"score", 2}}
-			sys.end.ChildrenComplete = Evidence[bool]{State: state, Reason: "divider-parent-unavailable", Cause: cause}
+			sys.end.ChildrenComplete = testEvidence(Evidence[bool]{State: state, Reason: "divider-parent-unavailable", Cause: cause})
 			r := layoutRound1Reader(t, root, sys, def, dist, div, left, right)
 			l := layoutScopes{r: r, key: RuleKey{"layout", 1}}
 			frame := layoutFrame{systemLayout: sys, systemCertain: true, first: Evidence[bool]{State: EvidenceKnown, Value: false}, page: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"score", 1}}, system: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"score", 1}}}
@@ -84,7 +84,7 @@ func TestLayoutRound1UnavailableStaffSizeRangeRemainsObservable(t *testing.T) {
 		t.Run(string(state), func(t *testing.T) {
 			n := localNode(1, 0, "staff-details")
 			cause := &DecisionRef{Rule: RuleKey{"fixture", 1}, Subject: NodeRef{"score", 1}}
-			n.end.ChildrenComplete = Evidence[bool]{State: state, Reason: "staff-children-unavailable", Cause: cause}
+			n.end.ChildrenComplete = testEvidence(Evidence[bool]{State: state, Reason: "staff-children-unavailable", Cause: cause})
 			r := layoutRound1Reader(t, n)
 			if err := layoutStateNode(r.ctx, r.s, RuleKey{"layout", 1}, n, r, &contextPlan{}); err != nil {
 				t.Fatal(err)
@@ -171,7 +171,7 @@ func layoutRound1CachedScope(t *testing.T) (*contextReader, RuleKey, *contextPla
 	print := localNode(2, 1, "print")
 	measure.children = []*factNode{print}
 	localSetAttr(print, "new-system", localString("yes"))
-	print.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("print")}
+	print.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("print")})
 	r := layoutRound1Reader(t, measure, print)
 	r.b.Attributes = map[contextRole]map[ComponentID]AttributeSelector{layoutRole("@new-system"): {print.header.Type.Value: localAttr("new-system")}}
 	key := RuleKey{"layout", 1}

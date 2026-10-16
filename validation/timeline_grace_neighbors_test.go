@@ -24,7 +24,7 @@ func graceNeighborFixture(t *testing.T, order OrderKind, voice Evidence[string])
 	}
 	nodes = append(nodes, f)
 	block := runtimeBlock(b, 0, nodes...)
-	block.content.end.Order = stateKnown(order)
+	block.content.end.Order = testEvidence(stateKnown(order))
 	service := &timelineService{Facts: map[NodeID]timelineEventFact{}}
 	for _, n := range nodes {
 		onset, end, duration := int64(1), int64(1), int64(0)

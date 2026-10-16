@@ -131,7 +131,7 @@ func TestCloseUsesCompiledRepresentationSchedule(t *testing.T) {
 						}
 					}
 					if target == TargetModel {
-						v := s.nodes[id].end.Scalar.Value
+						v := *s.nodes[id].end.Scalar.Value
 						if v.State != EvidenceInvalid || v.Cause == nil || v.Cause.Rule != represented[len(represented)-1] {
 							t.Fatalf("ordered causal preparation lost: %+v", v)
 						}

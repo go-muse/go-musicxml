@@ -78,7 +78,7 @@ func TestPlaybackNotePlayIsCurrentChordToneOnly(t *testing.T) {
 		t.Run(string(order), func(t *testing.T) {
 			s, p, b, block, fact := playbackFixture(t)
 			n := stateNode(b, timelineRoleNote, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleNoteChord, 21, stateAbsent[Atomic]()), stateNode(b, timelineRoleNotePlay, 22, stateAbsent[Atomic](), stateNode(b, timelineRolePlayMute, 23, stateAtomicText("on"))))
-			n.end.Order = stateKnown(order)
+			n.end.Order = testEvidence(stateKnown(order))
 			fact.Principal = stateKnown(NodeRef{DocumentID: "d", Node: 10})
 			stateAttribute(b, n, timelineRoleNotePizzicato, Atomic{Kind: AtomicString, Text: "no"})
 			if err := p.readNote(context.Background(), s, b, n, block, fact); err != nil {
@@ -297,7 +297,7 @@ func TestPlaybackSamePositionConflictAndExplicitZero(t *testing.T) {
 func TestPlaybackUnknownLocationAndExactBinding(t *testing.T) {
 	s, p, b, block, fact := playbackFixture(t)
 	bar := stateNode(b, timelineRoleBarline, 50, stateAbsent[Atomic]())
-	bar.end.AttributesComplete = stateUnknown[bool]("attributes-not-observed")
+	bar.end.AttributesComplete = testEvidence(stateUnknown[bool]("attributes-not-observed"))
 	if err := p.readBarline(context.Background(), s, b, bar, block, fact); err != nil {
 		t.Fatal(err)
 	}

@@ -47,7 +47,7 @@ func TestLocalProvedFailureSurvivesOptionalStorageStop(t *testing.T) {
 			marker := localNode(4, 1, "marker")
 			root.children = []*factNode{owner}
 			owner.children = []*factNode{value}
-			value.end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, 1)}
+			value.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, 1)})
 			nodes := []*factNode{owner, value}
 			if tc.marker {
 				root.children = append(root.children, marker)

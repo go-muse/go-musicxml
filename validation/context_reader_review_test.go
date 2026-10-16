@@ -76,7 +76,7 @@ func TestContextReviewCatalogSharedBindingsCountedOnce(t *testing.T) {
 func TestContextReviewRoleDispatchExactAndInterrupted(t *testing.T) {
 	b := contextCoreBindings(t)
 	n := localNode(1, 0, "beam")
-	n.header.Declaration = stateKnown(b.Roles["core-beam"][0].Declaration)
+	n.header.Declaration = testEvidence(stateKnown(b.Roles["core-beam"][0].Declaration))
 	want := []contextRole{"core-all-beam", "core-beam"}
 	cost := int64(1) + contextDeclarationBytes(n.header.Declaration.Value)
 	for _, role := range want {
@@ -104,7 +104,7 @@ func TestContextReviewRoleDispatchExactAndInterrupted(t *testing.T) {
 	s := rationalSession(t, Budgets{})
 	defer s.cleanup()
 	for _, state := range []EvidenceState{EvidenceUnknown, EvidenceInvalid, EvidenceAbsent} {
-		node := *n
+		node := testCopyFactNode(n)
 		node.header.Declaration.State = state
 		r := &contextReader{ctx: context.Background(), s: s, b: b}
 		if len(r.roles(&node)) != 0 || r.err != nil {
@@ -112,7 +112,7 @@ func TestContextReviewRoleDispatchExactAndInterrupted(t *testing.T) {
 		}
 	}
 	for _, change := range []func(*DeclarationID){func(d *DeclarationID) { d.Assembly = AssemblyOpus }, func(d *DeclarationID) { d.OwnerOccurrence += "-different" }, func(d *DeclarationID) { d.Occurrence += "-different" }} {
-		node := *n
+		node := testCopyFactNode(n)
 		change(&node.header.Declaration.Value)
 		r := &contextReader{ctx: context.Background(), s: s, b: b}
 		if len(r.roles(&node)) != 0 || r.err != nil {

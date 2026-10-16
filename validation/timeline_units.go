@@ -155,7 +155,7 @@ func timelineAttributeUnits(r *stateReader, n *factNode) Evidence[Decimal] {
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
 			if r.potential(ch, timelineRoleAttributesDivisions) {
-				gap := timelineGapAs[DeclarationID, Decimal](ch.header.Declaration, "timeline-divisions-declaration-unavailable")
+				gap := timelineGapAs[DeclarationID, Decimal](*ch.header.Declaration, "timeline-divisions-declaration-unavailable")
 				value = timelineUnitWorst(value, gap)
 			}
 			continue

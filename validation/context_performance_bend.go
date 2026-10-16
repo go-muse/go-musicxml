@@ -46,7 +46,7 @@ func performanceBendRelation(r *contextReader, n *factNode, present Evidence[boo
 			return out
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
-			out.Applicable = stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+			out.Applicable = stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 			return out
 		}
 		if r.matches(ch, "perf-bend") {
@@ -125,7 +125,7 @@ func evaluateBendReleaseSign(ctx context.Context, s *Session, n *factNode, p *co
 		return Decision{Outcome: OutcomeUnknown, Reason: "bend-declaration-unavailable"}, false, nil
 	}
 	if n.header.Declaration.State != EvidenceKnown {
-		return localGap(stateUnavailable[DeclarationID, bool](n.header.Declaration)), false, nil
+		return localGap(stateUnavailable[DeclarationID, bool](*n.header.Declaration)), false, nil
 	}
 	if service.Performance == nil {
 		return Decision{Outcome: OutcomeUnknown, Reason: "bend-gesture-unestablished"}, false, nil

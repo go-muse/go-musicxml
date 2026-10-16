@@ -140,7 +140,7 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 						// An unclassified child may close or replace the
 						// preceding chord's choice. It proves no exclusion.
 						subject = nil
-						association = timelineGapAs[DeclarationID, bool](ch.header.Declaration, "harmony-child-declaration-unavailable")
+						association = timelineGapAs[DeclarationID, bool](*ch.header.Declaration, "harmony-child-declaration-unavailable")
 						continue
 					}
 					// A kind closes the root/numeral choice of its own
@@ -241,7 +241,7 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 					return r.err
 				}
 				if ch.header.Declaration.State != EvidenceKnown {
-					app = stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+					app = stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 					break
 				}
 				if r.matches(ch, localEncoder) {

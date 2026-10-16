@@ -46,7 +46,7 @@ func TestLocalDispatchMatchesExhaustiveRoleReference(t *testing.T) {
 				run := func(fast bool) []ContextResult {
 					s, n, r := localEvidenceFixture(t, EvidenceKnown, role)
 					defer s.cleanup()
-					n.end.Scalar.Value = localKnownText("1")
+					n.end.Scalar.Value = testEvidence(localKnownText("1"))
 					s.sequence = []NodeID{n.header.ID}
 					if attribute {
 						r.b.Roles = map[contextRole][]SchemaUse{}

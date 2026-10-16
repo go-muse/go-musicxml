@@ -144,7 +144,7 @@ func TestModelRepresentationOwnsProblemsAndPublishesRealCause(t *testing.T) {
 	if err := s.Close(context.Background(), end); err != nil {
 		t.Fatal(err)
 	}
-	scalar := s.nodes[1].end.Scalar.Value
+	scalar := *s.nodes[1].end.Scalar.Value
 	if scalar.State != EvidenceInvalid || scalar.Cause == nil {
 		t.Fatalf("missing causal invalidation: %+v", scalar)
 	}

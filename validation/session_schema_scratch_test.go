@@ -27,8 +27,11 @@ func schemaScratchFixture(t *testing.T, children int, scalar string, budgets Bud
 	if err != nil {
 		t.Fatal(err)
 	}
+	if err := s.ensureFactPool(); err != nil {
+		t.Fatal(err)
+	}
 	s.schema.active = schema
-	s.root = &factNode{header: schemaPendingHeader(), end: schemaLexemeEnd(""), closed: true}
+	s.root = &factNode{header: testRetainedHeader(schemaPendingHeader()), end: testRetainedEnd(schemaLexemeEnd("")), closed: true}
 	s.nodes[1] = s.root
 	s.sequence = append(s.sequence, 1)
 	for i := 0; i < children; i++ {
@@ -39,13 +42,27 @@ func schemaScratchFixture(t *testing.T, children int, scalar string, budgets Bud
 		h.Location.Path = fmt.Sprintf("/root/child[%d]", i+1)
 		end := schemaLexemeEnd("x")
 		end.ID = id
-		child := &factNode{header: h, end: end, closed: true}
+		child := &factNode{header: testRetainedHeader(h), end: testRetainedEnd(end), closed: true}
 		s.nodes[id] = child
 		s.sequence = append(s.sequence, id)
 		s.root.children = append(s.root.children, child)
 	}
 	t.Cleanup(s.cleanup)
 	return s
+}
+
+// Schema publication now owns compact evidence records and two per-session
+// identity caches in addition to the traversal leases asserted below. Known
+// scalar payload bodies remain in the original scalar charge; only their new
+// evidence wrapper is added here. The root's unavailable scalar needs its full
+// record. This generated schema has two distinct types and declarations.
+func testSchemaScratchRetainedFacts(declaredChildren int) int64 {
+	const cacheHeaders = 2 * 256
+	const typeSlotsAndRecords = 8*64 + 2*128
+	const declarationSlotsAndRecords = 8*64 + 2*96
+	const unavailableRootScalar = 192
+	const knownScalarEvidence = 64
+	return cacheHeaders + typeSlotsAndRecords + declarationSlotsAndRecords + unavailableRootScalar + int64(declaredChildren)*knownScalarEvidence
 }
 
 func TestSchemaBindingScratchCanceledBeforeTraversal(t *testing.T) {
@@ -87,7 +104,7 @@ func TestSchemaBindingScratchReleasesCompletedTraversal(t *testing.T) {
 			// Persistent map + subject projections + owned scalar strings.
 			// Borrowed witnesses remain charged by Run; consumed completion
 			// arrays and the depth-bounded DFS stack must not outlive traversal.
-			want := before + 128 + int64(children+1)*(128+256) + int64(children)*(64+129)
+			want := before + 128 + int64(children+1)*(128+256) + int64(children)*(64+129) + testSchemaScratchRetainedFacts(children)
 			if s.retained != want {
 				t.Errorf("completed traversal retained scratch: got %d, want %d", s.retained, want)
 			}

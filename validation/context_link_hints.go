@@ -22,7 +22,7 @@ func resourceHintAttribute(r *contextReader, n *factNode, name string, scratch *
 	}
 	if a == nil {
 		if n.end.AttributesComplete.State != EvidenceKnown || !n.end.AttributesComplete.Value {
-			out.Presence = stateUnavailable[bool, bool](n.end.AttributesComplete)
+			out.Presence = stateUnavailable[bool, bool](*n.end.AttributesComplete)
 			if out.Presence.State == EvidenceKnown || out.Presence.State == EvidenceAbsent {
 				out.Presence = stateUnknown[bool]("schema-hint-attributes-incomplete")
 			}

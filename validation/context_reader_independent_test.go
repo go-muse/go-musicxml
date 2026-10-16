@@ -53,7 +53,7 @@ func independentContextFallbackFixture(t *testing.T) (*Session, *contextBindings
 	// Force the authoritative fallback instead of its static owner fast path.
 	// Equal public type evidence must not merge two distinct exact use bindings.
 	for _, id := range []NodeID{2, 3} {
-		s.nodes[id].header.Type = Evidence[ComponentID]{State: EvidenceUnknown, Reason: "independent-fallback-probe"}
+		s.nodes[id].header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceUnknown, Reason: "independent-fallback-probe"})
 	}
 	return s, bindings
 }

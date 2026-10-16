@@ -276,7 +276,7 @@ func TestSourceResourceAttributeSeparatesEffectiveAndPhysicalEvidence(t *testing
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			n := localNode(1, 0, "image")
-			n.header.Type = stateKnown(ComponentID{Assembly: AssemblyMusicXML, Kind: ComponentType, Name: QName{Local: "image"}})
+			n.header.Type = testEvidence(stateKnown(ComponentID{Assembly: AssemblyMusicXML, Kind: ComponentType, Name: QName{Local: "image"}}))
 			localSetAttr(n, "source", localString("effective.png"))
 			n.attributes[0].Scalar.Lexeme = stateKnown("effective.png")
 			s := rationalSession(t, Budgets{})

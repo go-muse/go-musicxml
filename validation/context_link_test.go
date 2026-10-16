@@ -10,7 +10,7 @@ import (
 
 func resourceTestNode(id, parent NodeID, name string) *factNode {
 	d := DeclarationID{Assembly: AssemblyMusicXML, OwnerOccurrence: "owner", Occurrence: name}
-	return &factNode{header: NodeHeader{ID: id, Parent: parent, Name: QName{Local: name}, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: d}, Location: Location{DocumentID: "d", Target: TargetSource}}, closed: true, end: NodeEnd{ID: id, ChildrenComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, AttributesComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, Order: Evidence[OrderKind]{State: EvidenceKnown, Value: OrderSource}}}
+	return &factNode{header: testRetainedHeader(NodeHeader{ID: id, Parent: parent, Name: QName{Local: name}, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: d}, Location: Location{DocumentID: "d", Target: TargetSource}}), closed: true, end: testRetainedEnd(NodeEnd{ID: id, ChildrenComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, AttributesComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, Order: Evidence[OrderKind]{State: EvidenceKnown, Value: OrderSource}})}
 }
 func resourceTestReader(t *testing.T, nodes ...*factNode) (*contextReader, *resourceLinkIndex) {
 	t.Helper()
@@ -116,7 +116,7 @@ func TestResourceAttachmentIncompleteAndInvalidAxes(t *testing.T) {
 	anchor := resourceTestNode(3, 1, "note")
 	beam := resourceTestNode(4, 3, "beam")
 	cause := &DecisionRef{Rule: RuleKey{"missing-subtree", 1}, Subject: NodeRef{"d", 3}}
-	anchor.end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "omitted-child", Cause: cause}
+	anchor.end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "omitted-child", Cause: cause})
 	r, index := resourceTestReader(t, root, link, anchor, beam)
 	got := index.attachment(r, link, resourceTestText("beam"), resourceTestPosition("1"))
 	if got.State != EvidenceUnknown || got.Cause != cause {

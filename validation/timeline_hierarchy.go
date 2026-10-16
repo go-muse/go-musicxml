@@ -13,7 +13,7 @@ func timelineEnumeration(n *factNode) Evidence[bool] {
 		if v.State == EvidenceKnown || v.State == EvidenceAbsent {
 			return stateUnknown[bool]("timeline-enumeration-incomplete")
 		}
-		return v
+		return *v
 	}
 	return Evidence[bool]{State: EvidenceKnown, Value: true}
 }
@@ -33,7 +33,7 @@ func (s *Session) timelinePart(ctx context.Context, n *factNode, p *timelinePlan
 			return Evidence[NodeRef]{}, err
 		}
 		if n.header.Declaration.State != EvidenceKnown {
-			return stateUnavailable[DeclarationID, NodeRef](n.header.Declaration), nil
+			return stateUnavailable[DeclarationID, NodeRef](*n.header.Declaration), nil
 		}
 		if n.header.Declaration.Value != owner.Declaration {
 			continue
@@ -84,7 +84,7 @@ func (s *Session) timelineBlocks(ctx context.Context, p *timelinePlan) ([]timeli
 		}
 		complete := timelineEnumeration(content)
 		if content.end.Order.State != EvidenceKnown {
-			complete = stateUnavailable[OrderKind, bool](content.end.Order)
+			complete = stateUnavailable[OrderKind, bool](*content.end.Order)
 		} else if content.end.Order.Value != OrderSource && content.end.Order.Value != OrderModelContent {
 			complete = stateUnknown[bool]("timeline-event-order-unavailable")
 		}
@@ -104,7 +104,7 @@ func (s *Session) timelineBlocks(ctx context.Context, p *timelinePlan) ([]timeli
 				role = timelineRoleMeasure
 			}
 			if r.potential(outer, role) {
-				if err := add(outer, outer, stateUnavailable[DeclarationID, NodeRef](outer.header.Declaration), ordinal, rootCoverage); err != nil {
+				if err := add(outer, outer, stateUnavailable[DeclarationID, NodeRef](*outer.header.Declaration), ordinal, rootCoverage); err != nil {
 					return nil, err
 				}
 				if hierarchy == 1 {
@@ -132,7 +132,7 @@ func (s *Session) timelineBlocks(ctx context.Context, p *timelinePlan) ([]timeli
 						if err = add(measure, measure, part, ordinal, coverage); err != nil {
 							return nil, err
 						}
-						blocks[len(blocks)-1].complete = stateUnavailable[DeclarationID, bool](measure.header.Declaration)
+						blocks[len(blocks)-1].complete = stateUnavailable[DeclarationID, bool](*measure.header.Declaration)
 						ordinal++
 					}
 					continue
@@ -155,7 +155,7 @@ func (s *Session) timelineBlocks(ctx context.Context, p *timelinePlan) ([]timeli
 				}
 				if partNode.header.Declaration.State != EvidenceKnown {
 					if r.potential(partNode, timelineRolePart) {
-						if err := add(partNode, outer, stateUnavailable[DeclarationID, NodeRef](partNode.header.Declaration), ordinal, rootCoverage); err != nil {
+						if err := add(partNode, outer, stateUnavailable[DeclarationID, NodeRef](*partNode.header.Declaration), ordinal, rootCoverage); err != nil {
 							return nil, err
 						}
 					}
@@ -208,7 +208,7 @@ func timelineHierarchyAvailability(n *factNode) Evidence[bool] {
 		return v
 	}
 	if n.end.Order.State != EvidenceKnown {
-		return timelineGapAs[OrderKind, bool](n.end.Order, "timeline-hierarchy-order-unavailable")
+		return timelineGapAs[OrderKind, bool](*n.end.Order, "timeline-hierarchy-order-unavailable")
 	}
 	if n.end.Order.Value != OrderSource && n.end.Order.Value != OrderModelFields && n.end.Order.Value != OrderModelContent {
 		return stateUnknown[bool]("timeline-hierarchy-order-unavailable")

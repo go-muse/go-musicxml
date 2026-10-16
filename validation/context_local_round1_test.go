@@ -8,7 +8,7 @@ import (
 func TestLocalRound1MalformedKnownFretIsUnavailable(t *testing.T) {
 	s, n, r := localEvidenceFixture(t, EvidenceKnown, localFret)
 	defer s.cleanup()
-	n.end.Scalar.Value = localKnownText("not-an-integer")
+	n.end.Scalar.Value = testEvidence(localKnownText("not-an-integer"))
 	if err := localStructuralNode(r.ctx, s, RuleKey{"local-test", 1}, n, r); err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestLocalRound1AdvisoryPropertyValidationDoesNotAllocate(t *testing.T) {
 func TestLocalRound1FigureNumberSufficientNumericSubset(t *testing.T) {
 	for _, text := range []string{"6", "10", "0006", "99999999999999999999999999999999999999999999999999999999999999999"} {
 		s, n, _ := localEvidenceFixture(t, EvidenceKnown, localFigureNumber)
-		n.end.Scalar.Value = localKnownText(text)
+		n.end.Scalar.Value = testEvidence(localKnownText(text))
 		got, _, err := evaluateFigureNumberNumeric(context.Background(), s, n)
 		if err != nil || got.Outcome != OutcomePass {
 			t.Errorf("%q: %+v %v", text, got, err)
@@ -93,13 +93,13 @@ func TestLocalRound1FigureNumberSufficientNumericSubset(t *testing.T) {
 func TestLocalRound1SkippedRootDoesNotReusePriorHarmony(t *testing.T) {
 	s, n, r := localEvidenceFixture(t, EvidenceKnown, localKind)
 	defer s.cleanup()
-	n.end.Scalar.Value = localKnownText("none")
+	n.end.Scalar.Value = testEvidence(localKnownText("none"))
 	parent := localNode(1, 0, "harmony")
 	prior := localNode(3, 1, "prior-root")
 	skipped := localNode(4, 1, "skipped-root")
-	skipped.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "skipped-declaration"}
+	skipped.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "skipped-declaration"})
 	parent.children = []*factNode{prior, skipped, n}
-	parent.end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "skipped-child", Cause: &DecisionRef{Rule: RuleKey{"input-gap", 1}, Subject: NodeRef{"doc", 4}}}
+	parent.end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "skipped-child", Cause: &DecisionRef{Rule: RuleKey{"input-gap", 1}, Subject: NodeRef{"doc", 4}}})
 	s.nodes[1] = parent
 	s.nodes[3] = prior
 	s.nodes[4] = skipped
@@ -123,7 +123,7 @@ func TestLocalRound1SkippedRootDoesNotReusePriorHarmony(t *testing.T) {
 func TestLocalRound1WrongKnownDivisionsIsUnavailable(t *testing.T) {
 	s, n, r := localEvidenceFixture(t, EvidenceKnown, localAdvisoryRole("duration"))
 	defer s.cleanup()
-	n.end.Scalar.Value = localKnownText("not-decimal")
+	n.end.Scalar.Value = testEvidence(localKnownText("not-decimal"))
 	if err := localAdvisoryNode(r.ctx, s, RuleKey{"local-test", 1}, n, r); err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ func TestLocalRound1StaffLineContractsRemainDistinct(t *testing.T) {
 	for _, attribute := range []bool{false, true} {
 		s, n, r := localEvidenceFixture(t, EvidenceKnown, localLine)
 		defer s.cleanup()
-		n.end.Scalar.Value = Evidence[Atomic]{State: EvidenceUnknown, Reason: "must-not-read-attribute-owner-scalar"}
+		n.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceUnknown, Reason: "must-not-read-attribute-owner-scalar"})
 		want := "one-is-bottom-line-unbounded-by-line-count"
 		if attribute {
 			r.b.Roles = map[contextRole][]SchemaUse{}
@@ -251,7 +251,7 @@ func TestLocalRound1StaffLineContractsRemainDistinct(t *testing.T) {
 			localSetAttr(n, "line", Atomic{Kind: AtomicInteger, Integer: localOne})
 			want = "one-is-bottom-line"
 		} else {
-			n.end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: localOne}}
+			n.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicInteger, Integer: localOne}})
 		}
 		if err := localStructuralNode(r.ctx, s, RuleKey{"local-test", 1}, n, r); err != nil {
 			t.Fatal(err)

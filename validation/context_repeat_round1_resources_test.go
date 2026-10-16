@@ -11,7 +11,7 @@ func TestRound1RepeatNonstickyQuota(t *testing.T) {
 	s := rationalSession(t, Budgets{MaxRuleSteps: 7})
 	defer s.cleanup()
 	d := DeclarationID{Occurrence: "repeat"}
-	n := &factNode{header: NodeHeader{ID: 1, Declaration: stateKnown(d)}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+	n := &factNode{header: testRetainedHeader(NodeHeader{ID: 1, Declaration: stateKnown(d)}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 	s.nodes = map[NodeID]*factNode{1: n}
 	s.sequence = []NodeID{1}
 	p := &contextPlan{Bindings: &contextBindings{Elements: map[contextRole]map[DeclarationID]struct{}{contextMeasureRepeat: {d: {}}}}}
@@ -55,14 +55,14 @@ func round1RepeatIndexedFixture(t *testing.T, count int) (*Session, *contextRead
 	timeline := &timelineService{Facts: map[NodeID]timelineEventFact{}}
 	notes := make([]contextRepeatNote, 2*count)
 	rows := make([]contextRepeatRecord, 0, 2*count)
-	s.nodes[1] = &factNode{header: NodeHeader{ID: 1, Declaration: stateKnown(DeclarationID{Occurrence: "part"})}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+	s.nodes[1] = &factNode{header: testRetainedHeader(NodeHeader{ID: 1, Declaration: stateKnown(DeclarationID{Occurrence: "part"})}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 	s.sequence = append(s.sequence, 1)
 	for i := range notes {
 		pos := statePosition(t, uint64(i), 0, 1)
 		pos.Part = part
 		notes[i] = contextRepeatNote{source: NodeRef{"d", NodeID(10000 + i)}, part: stateKnown(part), pos: pos, duration: mustRational(t, 1, 1), available: stateKnown(true), rest: true, staff: stateAbsent[Integer](), voice: stateAbsent[string](), step: stateAbsent[string](), alter: stateAbsent[Decimal](), octave: stateAbsent[Integer](), instrument: stateAbsent[string]()}
 		id := notes[i].source.Node
-		s.nodes[id] = &factNode{header: NodeHeader{ID: id, Parent: 1, Declaration: stateKnown(DeclarationID{Occurrence: "note"})}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+		s.nodes[id] = &factNode{header: testRetainedHeader(NodeHeader{ID: id, Parent: 1, Declaration: stateKnown(DeclarationID{Occurrence: "note"})}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 		s.sequence = append(s.sequence, id)
 		timeline.Facts[id] = timelineEventFact{Part: stateKnown(part), Position: stateKnown(pos), Origin: stateKnown(pos), Duration: stateKnown(notes[i].duration)}
 	}
@@ -171,7 +171,7 @@ func TestRound1RepeatProofCoveragePartIsolationAndUnknownMembership(t *testing.T
 		s := rationalSession(t, Budgets{})
 		defer s.cleanup()
 		cause := &DecisionRef{Rule: RuleKey{"structural-content", 1}, Subject: NodeRef{"d", 9}}
-		n := &factNode{header: NodeHeader{ID: 9, Declaration: Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "bad-note-declaration", Cause: cause}}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+		n := &factNode{header: testRetainedHeader(NodeHeader{ID: 9, Declaration: Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "bad-note-declaration", Cause: cause}}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 		s.nodes = map[NodeID]*factNode{9: n}
 		s.sequence = []NodeID{9}
 		part := stateKnown(NodeRef{"d", 2})
@@ -261,7 +261,7 @@ func TestRound1RepeatCoverageCausalOrderAcrossScopes(t *testing.T) {
 			s.sequence = []NodeID{11, 10}
 		}
 		for id, cause := range map[NodeID]*DecisionRef{10: a, 11: b} {
-			s.nodes[id] = &factNode{header: NodeHeader{ID: id, Declaration: Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "declaration-gap", Cause: cause}}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+			s.nodes[id] = &factNode{header: testRetainedHeader(NodeHeader{ID: id, Declaration: Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "declaration-gap", Cause: cause}}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 		}
 		timeline := &timelineService{Facts: map[NodeID]timelineEventFact{10: {Part: stateKnown(part)}, 11: {Part: stateUnknown[NodeRef]("unplaced")}}}
 		r := &contextReader{ctx: context.Background(), s: s, b: &contextBindings{}}

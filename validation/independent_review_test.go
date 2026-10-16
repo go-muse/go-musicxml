@@ -60,7 +60,14 @@ func TestIndependentReview5000DocumentDependenciesLinear(t *testing.T) {
 			a := s.account
 			r, err := s.Finish(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
 			steps, _ := a.Usage(BudgetRuleSteps)
-			t.Logf("children=%d steps=%d counts=%+v terminal=%v error=%v", count, steps, r.Counts, r.Terminal, err)
+			// Keep the scheduler oracle independent of the separately bounded
+			// retained-tree allocation/copy work.
+			storage := testFlatFactStorageWork(count)
+			if steps < storage {
+				t.Fatalf("total steps=%d below predicted storage work=%d", steps, storage)
+			}
+			steps -= storage
+			t.Logf("children=%d scheduler-steps=%d storage-steps=%d counts=%+v terminal=%v error=%v", count, steps, storage, r.Counts, r.Terminal, err)
 			if err != nil || !r.Satisfied() {
 				t.Errorf("ordinary document prerequisite stopped at default quota: %v; %+v", err, r.Counts)
 			}
