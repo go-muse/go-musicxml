@@ -112,10 +112,6 @@ func TestIPARepresentationExactPinsMutationAndFifthSelection(t *testing.T) {
 		t.Fatalf("caller mutation: %v %v", ok, err)
 	}
 	d.Close()
-	for _, id := range []DictionaryManifestID{DictionaryManifestSMuFL14Canonical, DictionaryManifestSMuFL14Ranges, DictionaryManifestStandardSounds40, DictionaryManifestIPAPositive2015Unicode13} {
-		mm, _ := LookupDictionaryManifest(id)
-		_ = mm
-	}
 	selections := []DictionarySelection{selection}
 	for _, id := range []DictionaryManifestID{DictionaryManifestSMuFL14Canonical, DictionaryManifestSMuFL14Ranges, DictionaryManifestStandardSounds40, DictionaryManifestIPAPositive2015Unicode13} {
 		mm, _ := LookupDictionaryManifest(id)
@@ -171,25 +167,26 @@ func TestIPARepresentationNormalizationPreservesStableOrderAndRawIntervals(t *te
 }
 func TestIPARepresentationConstructorMalformationsReleaseStorage(t *testing.T) {
 	for _, tc := range []struct {
-		name   string
-		mutate func(*DictionaryImport)
+		name, reason string
+		mutate       func(*DictionaryImport)
 	}{
-		{"wrong-count", func(i *DictionaryImport) { i.IPA.Symbols = i.IPA.Symbols[1:] }},
-		{"example-branch", func(i *DictionaryImport) { i.IPA.Examples = []IPAAttestedExample{{"a", "example", "X"}} }},
-		{"wrong-category", func(i *DictionaryImport) { i.IPA.Symbols[0].Category = "unreviewed-role" }},
-		{"bad-nfd", func(i *DictionaryImport) { i.IPA.Equivalences[0].EquivalentToEncoding = "q" }},
-		{"cyclic-nfd", func(i *DictionaryImport) { i.IPA.Equivalences[0].EquivalentToEncoding = i.IPA.Equivalences[0].Encoding }},
-		{"duplicate", func(i *DictionaryImport) { i.IPA.Symbols[0] = i.IPA.Symbols[1] }},
-		{"utf8", func(i *DictionaryImport) { i.IPA.Symbols[0].Encoding = "\xff" }},
-		{"wrong-branch", func(i *DictionaryImport) { i.IPA = nil; i.Sounds = &StandardSoundsDictionaryData{} }},
+		{"wrong-count", "incorrect IPA representation record counts", func(i *DictionaryImport) { i.IPA.Symbols = i.IPA.Symbols[1:] }},
+		{"example-branch", "incorrect IPA representation record counts", func(i *DictionaryImport) { i.IPA.Examples = []IPAAttestedExample{{"a", "example", "X"}} }},
+		{"wrong-category", "transformed data identity mismatch", func(i *DictionaryImport) { i.IPA.Symbols[0].Category = "unreviewed-role" }},
+		{"bad-nfd", "transformed data identity mismatch", func(i *DictionaryImport) { i.IPA.Equivalences[0].EquivalentToEncoding = "q" }},
+		{"cyclic-nfd", "transformed data identity mismatch", func(i *DictionaryImport) { i.IPA.Equivalences[0].EquivalentToEncoding = i.IPA.Equivalences[0].Encoding }},
+		{"duplicate", "duplicate record key", func(i *DictionaryImport) { i.IPA.Symbols[0] = i.IPA.Symbols[1] }},
+		{"utf8", "invalid record string", func(i *DictionaryImport) { i.IPA.Symbols[0].Encoding = "\xff" }},
+		{"wrong-branch", "wrong IPA payload branch", func(i *DictionaryImport) { i.IPA = nil; i.Sounds = &StandardSoundsDictionaryData{} }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			selection, input, _ := ipaRepresentationFixture(t)
 			tc.mutate(&input)
 			a := dictionaryCoreAccount(t)
 			d, err := NewDictionarySet(context.Background(), a, []DictionarySelection{selection}, []DictionaryImport{input})
-			if d != nil || !errors.Is(err, ErrInvalidConfiguration) {
-				t.Fatalf("malformation=%v %v", d, err)
+			var config *ConfigurationError
+			if d != nil || !errors.As(err, &config) || config.Reason != tc.reason {
+				t.Fatalf("malformation=%v %v, want reason %q", d, err, tc.reason)
 			}
 			if dictionaryCoreUsage(t, a) != 17 {
 				t.Fatal("failed constructor retained storage")
