@@ -1,0 +1,1239 @@
+{
+  "commit": "5295080b2030be6d616c714e7c8bcad47185c742",
+  "profiles": [
+    {
+      "ID": "musicxml-4.0/source-links-dictionaries",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "source",
+      "Required": [
+        {
+          "ID": "MX40-XSD-musicxml-binding",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-declaration",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-attributes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-scalar",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-content",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-identity",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-accordion-at-least-one",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-beam-number-distinct",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-bezier-second-control/slur",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-bezier-second-control/tied",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-for-part-requires-concert",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-key-octave-cancel-exists",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-metronome-relation-value",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-dacapo-yes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-forward-repeat-yes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-pedal-range/damper-pedal",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-pedal-range/soft-pedal",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-pedal-range/sostenuto-pedal",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-concert-score-transpose",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-part-id-target/use-1",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-part-id-target/use-2",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-midi-device-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-midi-instrument-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-instrument-change-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-instrument-note-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-play-instrument-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-assess-player-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-instrument-link-target/local",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-binding",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-declaration",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-attributes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-scalar",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-content",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-identity",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-local-links/musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-schema-hints/musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-local-links/opus",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-schema-hints/opus",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-CONTEXT-opus-pagination",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/canonical-name",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/standard-sounds",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/ipa-positive",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/rendering",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-binding",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-declaration",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-attributes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-scalar",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-content",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-identity",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-accordion-at-least-one",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-beam-number-distinct",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-bezier-second-control/slur",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-bezier-second-control/tied",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-for-part-requires-concert",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-key-octave-cancel-exists",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-metronome-relation-value",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-dacapo-yes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-forward-repeat-yes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-pedal-range/damper-pedal",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-pedal-range/soft-pedal",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-pedal-range/sostenuto-pedal",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-concert-score-transpose",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-part-id-target/use-1",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-part-id-target/use-2",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-midi-device-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-midi-instrument-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-instrument-change-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-instrument-note-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-play-instrument-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-assess-player-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-instrument-link-target/local",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-binding",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-declaration",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-attributes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-scalar",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-content",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-identity",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-local-links/musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-schema-hints/musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-local-links/opus",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-schema-hints/opus",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-CONTEXT-opus-pagination",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/canonical-name",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/standard-sounds",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/ipa-positive",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/rendering",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": [
+        {
+          "Space": "",
+          "Local": "score-partwise"
+        },
+        {
+          "Space": "",
+          "Local": "score-timewise"
+        },
+        {
+          "Space": "",
+          "Local": "opus"
+        }
+      ],
+      "NormativeClosure": "Bounded MusicXML 4.0 source or current-model XSD/local links plus exact independently verified SMuFL 1.4 canonical-name membership. The six XSD name-family facets remain independent. Standard sounds are open-string recognition evidence; explicitly partial IPA 2015/Unicode 13 positive tables never close complete repertoire or sequence validity. Missing selected capabilities remain unavailable per occurrence. Narrow mute/symbol/mordent defaults, active unmeasured-tremolo range facts and note-name/glyph/arrow advice do not assert general rendering intent. Local source/current-model/link limitations remain active. No fetching, implicit DTD composition, timeline, graph/package traversal or complete MusicXML conformance claim."
+    },
+    {
+      "ID": "musicxml-4.0/model-links-dictionaries",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "model",
+      "Required": [
+        {
+          "ID": "MX40-XSD-musicxml-binding",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-declaration",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-attributes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-scalar",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-content",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-musicxml-identity",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-MODEL-REPRESENTATION-musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-accordion-at-least-one",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-beam-number-distinct",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-bezier-second-control/slur",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-bezier-second-control/tied",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-for-part-requires-concert",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-key-octave-cancel-exists",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-metronome-relation-value",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-dacapo-yes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-forward-repeat-yes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-pedal-range/damper-pedal",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-pedal-range/soft-pedal",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-sound-pedal-range/sostenuto-pedal",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-concert-score-transpose",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-part-id-target/use-1",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-part-id-target/use-2",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-midi-device-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-midi-instrument-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-instrument-change-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-instrument-note-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-play-instrument-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-assess-player-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-LOCAL-instrument-link-target/local",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-binding",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-declaration",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-attributes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-scalar",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-content",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-XSD-opus-identity",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-MODEL-REPRESENTATION-opus",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-local-links/musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-schema-hints/musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-local-links/opus",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-schema-hints/opus",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-CONTEXT-opus-pagination",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/canonical-name",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/standard-sounds",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/ipa-positive",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-musicxml/rendering",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-binding",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-declaration",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-attributes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-scalar",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-content",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-musicxml-identity",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-MODEL-REPRESENTATION-musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-accordion-at-least-one",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-beam-number-distinct",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-bezier-second-control/slur",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-bezier-second-control/tied",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-for-part-requires-concert",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-key-octave-cancel-exists",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-metronome-relation-value",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-dacapo-yes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-forward-repeat-yes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-pedal-range/damper-pedal",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-pedal-range/soft-pedal",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-sound-pedal-range/sostenuto-pedal",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-concert-score-transpose",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-part-id-target/use-1",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-part-id-target/use-2",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-midi-device-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-midi-instrument-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-instrument-change-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-instrument-note-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-play-instrument-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-assess-player-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-LOCAL-instrument-link-target/local",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-binding",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-declaration",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-attributes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-scalar",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-content",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-XSD-opus-identity",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-MODEL-REPRESENTATION-opus",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-local-links/musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-schema-hints/musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-local-links/opus",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-schema-hints/opus",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-CONTEXT-opus-pagination",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/canonical-name",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/standard-sounds",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/ipa-positive",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-musicxml/rendering",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": [
+        {
+          "Space": "",
+          "Local": "score-partwise"
+        },
+        {
+          "Space": "",
+          "Local": "score-timewise"
+        },
+        {
+          "Space": "",
+          "Local": "opus"
+        }
+      ],
+      "NormativeClosure": "Bounded MusicXML 4.0 source or current-model XSD/local links plus exact independently verified SMuFL 1.4 canonical-name membership. The six XSD name-family facets remain independent. Standard sounds are open-string recognition evidence; explicitly partial IPA 2015/Unicode 13 positive tables never close complete repertoire or sequence validity. Missing selected capabilities remain unavailable per occurrence. Narrow mute/symbol/mordent defaults, active unmeasured-tremolo range facts and note-name/glyph/arrow advice do not assert general rendering intent. Local source/current-model/link limitations remain active. No fetching, implicit DTD composition, timeline, graph/package traversal or complete MusicXML conformance claim."
+    },
+    {
+      "ID": "musicxml-4.0/source-sounds-dictionaries",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "source",
+      "Required": [
+        {
+          "ID": "MX40-SOURCE-XSD-sounds-binding",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-SOURCE-XSD-sounds-declaration",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-SOURCE-XSD-sounds-attributes",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-SOURCE-XSD-sounds-scalar",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-SOURCE-XSD-sounds-content",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-SOURCE-XSD-sounds-identity",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-CONTEXT-sounds-mapping",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-RESOURCE-schema-hints/sounds",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-DICTIONARY-sounds/standard-sounds",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-SOURCE-XSD-sounds-binding",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-SOURCE-XSD-sounds-declaration",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-SOURCE-XSD-sounds-attributes",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-SOURCE-XSD-sounds-scalar",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-SOURCE-XSD-sounds-content",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-SOURCE-XSD-sounds-identity",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-CONTEXT-sounds-mapping",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-RESOURCE-schema-hints/sounds",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-DICTIONARY-sounds/standard-sounds",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": [
+        {
+          "Space": "",
+          "Local": "sounds"
+        }
+      ],
+      "NormativeClosure": "Source-only pinned sounds XSD, exact directional mapping and nonfetching schema-hint discovery, with verified MusicXML 4.0 standard-ID recognition. Known nonstandard identifiers remain allowed open-string evidence. Missing dictionary evidence does not become a normative violation. Original source syntax and unread external-DTD limitations remain active. No SoundsDocument model, application mapping choice, package traversal or playback claim."
+    }
+  ]
+}

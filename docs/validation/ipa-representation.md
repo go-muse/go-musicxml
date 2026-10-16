@@ -140,6 +140,21 @@ The fixture includes its source commit and preserves the old closure/rule data;
 its byte hash, profile count, unique IDs, target and before/after catalog values
 are asserted independently of the current implementation.
 
+### Published source/model dictionary baseline
+
+The same public main commit `5295080` supplies the baseline for
+`ProfileSourceDictionaries`, `ProfileModelDictionaries` and
+`ProfileSourceSoundsDictionaries`. Their shared `CatalogDigest` migration is:
+
+| Published catalog group | Main `5295080` | Corrected catalog |
+|---|---|---|
+| Source/model/sounds dictionaries | `21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21` | `d8199be864c2baa081aca5887ca0ac188052ba22f6a690ea9bb3b436dc054c57` |
+
+`TestDictionaryProfilesPublishedBaselineMigration` checks all three identities
+against an immutable complete-profile capture executed from that public commit.
+Its pinned bytes, source commit, unique profile IDs, targets and exact old/current
+catalog values distinguish this public migration from the local history below.
+
 ### Supplemental unpublished checkpoints
 
 The following comparisons retain engineering history from unpublished local
@@ -149,7 +164,6 @@ be substituted for the public dictionary package baseline above.
 
 | Intermediate catalog group | Before IPA integration | After IPA integration |
 |---|---|---|
-| Source/model/sounds dictionaries | `21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21` | `d8199be864c2baa081aca5887ca0ac188052ba22f6a690ea9bb3b436dc054c57` |
 | Source internal-DTD local/links/dictionaries | `9f9d4a3ef31008332be016a7fe5b86cc10b2a764cf13426735683455ec07e5d0` | `b2c6ad587726a0b64f7315f0d053a867e0d1d85b81f87217267d967fe5f9092c` |
 | Dictionary graph/raw-MXL/current-MXL | `147d3418013fcd8f41dd5335ea0e7b068cb43da421b0febac895ce7536fb1a9b` | `f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44` |
 | DTD/dictionary graph/raw-MXL/current-MXL | `4ecfcba585d635aa3a67ae6748985bb63c2b0482e6257cff7ccf39220acad319` | `9d55aa68bf6b7fa45a27417ab9800d4e1f7b9744af810004de53cabf7b7be3b2` |

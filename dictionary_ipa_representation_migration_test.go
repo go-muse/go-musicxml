@@ -39,8 +39,9 @@ func migrateIPARepresentationProfileHash(t *testing.T, id validation.ProfileID, 
 
 // Before values below retain historical pre-IPA checkpoints, including
 // unpublished DTD compositions; they are not all public release baselines. The
-// public package baseline is independently captured and asserted by
-// TestPackageProfilesPublishedBaselineMigration; these checks pin final identity.
+// public baselines are independently captured and asserted by
+// TestPackageProfilesPublishedBaselineMigration and
+// TestDictionaryProfilesPublishedBaselineMigration; these checks pin final identity.
 func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 	for _, tc := range []struct {
 		ids           []validation.ProfileID
