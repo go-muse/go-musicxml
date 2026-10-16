@@ -1435,6 +1435,27 @@ Initial copying is cancellation-aware after overlapping storage admission, and a
 post-admission failure releases that lease while preserving the intrinsic report.
 Exact package intrinsic profile/digest admission remains independently required;
 export support alone does not enable a DTD graph/package profile.
+
+Default-buffer capacity is limited for source-origin graph compositions: every
+selected origin row has two independently owned snapshot copies while session
+storage still overlaps. On Go 1.27.2 linux/amd64, the single-note-per-measure
+`reviewBudgetScore` fixture with `ProfileResourceGraphInternalDTDDictionaries`
+admits 531 measures (71,197 source bytes) with defaults; 532 measures (71,331
+bytes) refuse the 64 MiB live-buffer allowance. The review reported the
+500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
+previous boundary of 494 measures (about 66 KB), and comparison boundaries of
+about 114 KB for standalone `ProfileSourceInternalDTDDictionaries` and 168 KB
+for the legacy `ProfileResourceGraph`. These are fixture/profile-specific
+observations, not a general document-byte guarantee or heap/RSS limit.
+
+The separate 2,000-empty-measure, three-`#m1` fixture is only 86,052 source bytes
+but still refuses snapshot admission at default budgets: 57,607,574 live bytes
+plus a 34,741,160-byte request exceed 67,108,864 bytes. Its regression that uses
+512 MiB of buffer isolates the unchanged 20,000,000-step limit; it does not prove
+all-default capacity, nor is 512 MiB a measured minimum or recommendation.
+Choose explicit finite limits for the actual profile and input. See the
+[fixture definitions, provenance and boundary checks](docs/validation/resource-fragment-budget-evidence.md#default-buffer-capacity-is-fixture-specific).
+
 `ResourceSnapshotHeader.LinkProjectionSelected` records selection of an
 `ImplementationAvailable` sealed local-link plan for the established assembly.
 It does not assert projection or scope completion. Absent or unsupported

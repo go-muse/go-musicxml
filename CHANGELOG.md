@@ -38,6 +38,18 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Tighten source-origin snapshot accounting without raising defaults. Capacity
+  remains limited by two owned origin copies and overlapping session storage:
+  the amd64 single-note DTD/dictionary graph fixture admits 531 measures
+  (71,197 bytes), then refuses 532 (71,331 bytes); the earlier reported boundary
+  was 494 measures (about 66 KB). The review reported the 500-measure case at
+  about 62.9 of 67.1 MB, with comparisons of about 114 KB for standalone DTD/dictionary
+  assessment and 168 KB for the legacy graph. These are fixture-specific
+  observations, not general document-size guarantees. The 86,052-byte,
+  2,000-empty-measure fragment fixture still refuses the default buffer;
+  its 512 MiB test isolates the default rule-step limit only. See the
+  [capacity receipt](docs/validation/resource-fragment-budget-evidence.md#default-buffer-capacity-is-fixture-specific).
+
 - Correct `MX40-PACKAGE-mimetype-no-extra` for `ProfileResourceGraph`,
   `ProfileMXLSource`, `ProfileMXLModel` and their dictionary variants: a proved
   zero local extra now passes with a framed central-only extra, instead of

@@ -1,6 +1,7 @@
 # Fragment lookup and source-origin transport budgets
 
-This receipt covers PR 41 review items 4291055418, 4291055432 and 4291055313.
+This receipt covers PR 41 review items 4291055418, 4291055432 and 4291055313,
+including the reopened capacity observation in comment 4293498146.
 It records bounded resource-accounting corrections and the measured distinction
 between original and DOCTYPE-free official sample bytes. Default budgets,
 public fact layouts, catalog identities and semantic interpretations are unchanged.
@@ -111,6 +112,69 @@ requests 27,141,969 additional bytes while 41,103,183 are already live, exceedin
 the 67,108,864-byte default. The corrected path retains every row and admits the
 same fixture with default budgets.
 
+## Default-buffer capacity is fixture-specific
+
+The source-origin sizing correction is bounded accounting, not a memory-layout
+redesign. Every selected origin remains in the canonical snapshot report and in
+the selected projection as independent deep copies. The copies overlap live
+session storage at admission. This real retained storage still sharply limits
+the DTD source graph compositions under the unchanged 64 MiB (67,108,864-byte)
+logical live-buffer default; it is independent of the primary-input byte limit.
+
+The following adjacent cases were reproduced on Go 1.27.2 linux/amd64 from local
+`35b3865`, whose tree is identical to published
+`2b2e3d196402ad5dff75f55ad154d679efdca2d0`. All budget fields are zero/default.
+`reviewBudgetScore(n)` is the exact generator in `resource_budget_review_test.go`:
+one part `P1` named `Part`, sequential decimal measure numbers 1 through n, and
+one C4 quarter note with duration 1 per measure, with no inserted whitespace or
+DOCTYPE. The entry point is `InspectXMLWithResourcesAndDictionaries`, selecting
+`ProfileResourceGraphInternalDTDDictionaries`, with no dictionary overrides,
+resource dependencies, resolver or identity override.
+
+| Measures | Exact source bytes | Default-budget result |
+| --- | --- | --- |
+| 500 | 67,043 | Complete, satisfied; all 4,008 source-origin rows retained |
+| 531 | 71,197 | Complete, satisfied |
+| 532 | 71,331 | Buffered-byte refusal: used 44,066,863, requested 23,115,219; incomplete, unsatisfied |
+
+`TestReviewOriginGraphDefaultBufferBoundary` pins the adjacent 531/532 cases on
+amd64, alongside the unchanged public 500-measure regression. Concrete record
+sizes are architecture-dependent; these exact capacity checks skip other
+architectures. They characterize this generated family and revision, not all
+MusicXML documents of the same byte size, number of measures or number of nodes.
+
+The [reviewer's comparison](https://github.com/go-muse/go-musicxml/pull/41#discussion_r4293498146)
+reported an earlier boundary of 494 measures (about 66 KB), the corrected
+500-measure case at 62.9 MB of the 67.1 MB allowance, and comparison capacities of
+about 114 KB for standalone `ProfileSourceInternalDTDDictionaries` and 168 KB
+for legacy `ProfileResourceGraph`. The review did not supply its probe source;
+those comparison capacities are reviewer-reported, not independently established
+boundaries for the generator above. They must not be substituted for a general
+source-byte guarantee. MB/KB in those rounded figures are decimal units; the
+actual default remains 64 MiB.
+
+The exact `reviewBudgetFragmentScore()` generator is different: 2,000 empty
+measures with ascending `number` and descending IDs `m2000` through `m1`, then
+three `#m1` links in the final measure, with an XLink namespace on the root.
+It contains 86,052 bytes. `reviewBudgetFragmentOptions(0)` selects the same DTD
+graph profile, retrieval URI `https://budget.test/score.musicxml` and
+`ResourceDocuments`. At all defaults, snapshot admission refuses with
+57,607,574 live bytes and a 34,741,160-byte request against 67,108,864 bytes.
+`TestReviewFragmentGraphMediumScoreDefaultBufferRefusal` preserves the typed
+buffer refusal, zero adoptions, incomplete enumeration, unsatisfied bundle and
+retained failed-child report. The companion
+`TestReviewFragmentGraphMediumScoreDefaultRuleBudget` uses precisely the same
+source and options except `MaxBufferedBytes: 512 << 20`; its pass isolates the
+20,000,000-rule-step ceiling. That allowance is neither a measured minimum nor a
+production recommendation. A work-budget pass with lifted buffer is not an
+all-default admission pass. Refusal is incomplete processing, not XML invalidity.
+
+For these source-origin graph profiles, choose explicit finite budgets based on
+the actual input and selected capabilities. Source bytes, origin count, record
+contents, selected projections, independently owned copies, overlapping storage
+and other limits all affect admission. No default is raised, no origin row is
+removed, and no sharing or performance redesign is claimed here.
+
 ## Official UTF-16BE sample and standalone composition
 
 The original `testdata/official/MozaChloSample.musicxml` is 223,068 bytes, with
@@ -154,6 +218,18 @@ byte counts and distinct typed resource limits.
 finite allowance without turning unread-DTD evidence into a validation pass.
 
 ## Focused verification
+
+The round-two capacity characterization changes only tests and documentation.
+Reproduce its public-entry-point cases with:
+
+```sh
+GOMAXPROCS=1 GOGC=20 go test -count=1 -v \
+  -run 'TestReview(DefaultBudgetOriginGraph|OriginGraphDefaultBufferBoundary|FragmentGraphMediumScoreDefault(BufferRefusal|RuleBudget))$' .
+```
+
+This command checks the original 500-measure pass, both adjacent 531/532
+admissions, and both budget configurations of the 2,000-measure fragment source.
+It neither searches a broad capacity curve nor runs a performance benchmark.
 
 Native focused validation and public-entry-point regressions pass with official
 Go 1.27.2. The closed-record and index layout assertions also compile for
