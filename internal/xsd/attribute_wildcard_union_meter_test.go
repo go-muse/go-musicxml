@@ -133,3 +133,77 @@ func TestAttributeWildcardUnionLongScansAreMetered(t *testing.T) {
 		scalarAbort(t, cause, func() { scan(scalarTestContext(&scalarMeter{limit: m.steps - 1, cause: cause}, context.Background())) })
 	}
 }
+
+func TestAttributeWildcardDirectAdmissionBudgetsAndCleanup(t *testing.T) {
+	for _, wildcard := range []*AnyAttributeSchema{nil, unionWildcard("", "skip"), unionWildcard(" ", "skip"), unionWildcard("urn:one ##local urn:two", "skip")} {
+		for _, extra := range []bool{false, true} {
+			typ := &ComplexSchema{Form: ComplexDirect, AnyAttribute: wildcard}
+			c, err := Compile(SchemaData{Elements: map[QName]*ElementSchema{{Local: "n"}: {Name: QName{Local: "n"}, Type: TypeRef{InlineComplex: typ}}}}, CompileLimits{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			u, _ := c.Root(QName{Local: "n"})
+			subject := Subject{ID: 1, Name: QName{Local: "n"}, TextKnown: true, AttributesComplete: true, ChildrenComplete: true}
+			if extra {
+				subject.Attributes = []Attribute{{Attr: Attr{Name: QName{Space: "urn:two", Local: "a"}, Value: "x"}, ValueKnown: true}}
+			}
+			want := !extra || wildcard != nil && wildcard.Namespace != " "
+			assess := func(m *boundaryMeter, stop bool) {
+				t.Helper()
+				r, err := NewRun(c, m)
+				if err != nil {
+					t.Fatal(err)
+				}
+				b, err := r.Bind(context.Background(), u, subject)
+				if stop && !errors.Is(err, errMeterStop) || !stop && err != nil {
+					t.Fatalf("stop=%t: %v", stop, err)
+				}
+				if !stop {
+					if got := r.Results(b).Attributes; got.Valid != want || !got.Complete {
+						t.Fatalf("wildcard=%+v extra=%t: %+v", wildcard, extra, got)
+					}
+				}
+				if r.scratchRetained != 0 || r.context.local != nil {
+					t.Fatal("direct admission leaked tokenizer scratch")
+				}
+				if err := r.Close(); err != nil {
+					t.Fatal(err)
+				}
+				if m.buffer != 0 {
+					t.Fatalf("Close retained %d", m.buffer)
+				}
+			}
+			baseline := &boundaryMeter{}
+			assess(baseline, false)
+			assess(&boundaryMeter{workLimit: baseline.work, bufferLimit: baseline.peak}, false)
+			assess(&boundaryMeter{workLimit: baseline.work - 1}, true)
+			assess(&boundaryMeter{bufferLimit: baseline.peak - 1}, true)
+			cancelAssess := func(stop int64) int64 {
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				m := &scalarMeter{cancel: cancel, cancelAt: stop}
+				r, err := NewRun(c, m)
+				if err != nil {
+					t.Fatal(err)
+				}
+				_, err = r.Bind(ctx, u, subject)
+				if stop == 0 && err != nil || stop != 0 && !errors.Is(err, context.Canceled) {
+					t.Fatalf("checkpoint %d: %v", stop, err)
+				}
+				if r.scratchRetained != 0 || r.context.local != nil {
+					t.Fatalf("checkpoint %d leaked direct tokenizer scratch", stop)
+				}
+				if err := r.Close(); err != nil {
+					t.Fatal(err)
+				}
+				if m.retained != 0 {
+					t.Fatalf("checkpoint %d retained %d", stop, m.retained)
+				}
+				return m.calls
+			}
+			for stop, total := int64(1), cancelAssess(0); stop <= total; stop++ {
+				cancelAssess(stop)
+			}
+		}
+	}
+}

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Accepted pre-existing limitation, not a claim of full namespace-list support:
+// Documented pre-existing limitation, not a claim of full namespace-list support:
 // the string DTO loses presence for an explicit empty namespace attribute.
 func TestAnyAttributeEmptyNamespacePresenceLimitation(t *testing.T) {
 	for _, tc := range []struct{ attribute, want string }{

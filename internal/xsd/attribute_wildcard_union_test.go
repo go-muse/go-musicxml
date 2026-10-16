@@ -291,7 +291,7 @@ func TestAttributeWildcardUnionExplicitNamesStayExact(t *testing.T) {
 	}
 }
 
-// Accepted pre-existing limitation: empty metadata means the absent/default
+// Documented pre-existing limitation: empty metadata means the absent/default
 // namespace attribute. The generator cannot distinguish an explicit empty XML
 // attribute from omission. A nonempty whitespace spelling represents the empty
 // namespace set; these are characterization tests, not generic-XSD closure.

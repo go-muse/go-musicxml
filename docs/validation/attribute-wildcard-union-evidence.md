@@ -41,7 +41,7 @@ preserved content witness.
   failures remain assessable, and extension propagates unavailable state.
   Restriction may replace that wildcard with its own local constraint.
 
-Accepted pre-existing limitation: the generator's string-valued namespace field
+Documented pre-existing limitation: the generator's string-valued namespace field
 cannot distinguish an omitted namespace attribute from an explicit
 `namespace=""`. Both become the legacy default `##any`, although XSD 1.0 defines
 the explicit empty list as the empty namespace set. A nonempty whitespace spelling
