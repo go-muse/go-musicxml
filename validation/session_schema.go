@@ -115,6 +115,94 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 	return out, nil
 }
 
+// schemaBindFrame borrows witnesses from Run until Run.Close. Only children
+// owns additional backing storage; Run.Complete consumes it synchronously and
+// keeps a by-value Completion, never the caller's slice.
+type schemaBindFrame struct {
+	node      *factNode
+	use       xsd.Use
+	binding   xsd.Binding
+	witnesses []xsd.Witness
+	next      int
+	children  []xsd.Completion
+	entered   bool
+}
+
+// Fixed conservative slot envelopes cover both amd64 and 386 (size-guarded in
+// tests). Charge allocated capacity, not the number of all document nodes.
+const schemaBindFrameBytes int64 = 256
+const schemaBindCompletionBytes int64 = 64
+
+type schemaBindScratch struct {
+	account *Account
+	frames  []schemaBindFrame
+	bytes   int64
+}
+
+func (w *schemaBindScratch) reserve(count, slot int64) error {
+	n, err := rationalCheckedMul(BudgetBufferedBytes, count, slot)
+	if err != nil {
+		return err
+	}
+	if _, err := AllocationSize(n); err != nil {
+		return err
+	}
+	if err := w.account.Charge(BudgetBufferedBytes, n); err != nil {
+		return err
+	}
+	w.bytes += n
+	return nil
+}
+
+func (w *schemaBindScratch) releaseBytes(n int64) {
+	_ = w.account.Release(BudgetBufferedBytes, n)
+	w.bytes -= n
+}
+
+func (w *schemaBindScratch) push(ctx context.Context, frame schemaBindFrame) error {
+	if ctx == nil {
+		return contract("context", "must not be nil")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if len(w.frames) == cap(w.frames) {
+		// The byte-size check also bounds capacity and its host-int conversion.
+		capacity, err := rationalCheckedMul(BudgetBufferedBytes, int64(cap(w.frames)), 2)
+		if err != nil {
+			return err
+		}
+		capacity = max(1, capacity)
+		if err := w.reserve(capacity, schemaBindFrameBytes); err != nil {
+			return err
+		}
+		grown := make([]schemaBindFrame, len(w.frames), int(capacity))
+		copy(grown, w.frames)
+		oldBytes := int64(cap(w.frames)) * schemaBindFrameBytes
+		clear(w.frames)
+		w.frames = grown
+		// Reserve the complete new allocation before dropping the old one:
+		// old and new backing arrays coexist while copying.
+		w.releaseBytes(oldBytes)
+	}
+	w.frames = append(w.frames, frame)
+	return nil
+}
+
+func (w *schemaBindScratch) pop() {
+	last := len(w.frames) - 1
+	n := int64(cap(w.frames[last].children)) * schemaBindCompletionBytes
+	w.frames[last] = schemaBindFrame{}
+	w.frames = w.frames[:last]
+	w.releaseBytes(n)
+}
+
+func (w *schemaBindScratch) release() {
+	clear(w.frames)
+	w.frames = nil
+	w.releaseBytes(w.bytes)
+}
+
 // bindSourceSchema owns the pending source-fact transition. Exact child uses
 // come only from the shared grammar witness; a path or QName never guesses one.
 func (s *Session) bindSourceSchema(ctx context.Context) error {
@@ -154,24 +242,16 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 	if !ok {
 		return contract("source schema root", "no compiled root use")
 	}
-	type frame struct {
-		node      *factNode
-		use       xsd.Use
-		binding   xsd.Binding
-		witnesses []xsd.Witness
-		next      int
-		children  []xsd.Completion
-		entered   bool
-	}
-	if err := s.retain(256 * int64(len(s.nodes))); err != nil {
+	scratch := schemaBindScratch{account: s.account}
+	defer scratch.release()
+	if err := scratch.push(ctx, schemaBindFrame{node: s.root, use: rootUse}); err != nil {
 		return err
 	}
-	stack := []frame{{node: s.root, use: rootUse}}
-	for len(stack) > 0 {
+	for len(scratch.frames) > 0 {
 		if err := s.step(ctx, 1); err != nil {
 			return err
 		}
-		f := &stack[len(stack)-1]
+		f := &scratch.frames[len(scratch.frames)-1]
 		if !f.entered {
 			subject, subjectErr := s.schemaSubject(ctx, f.node)
 			if subjectErr != nil {
@@ -193,7 +273,7 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 				return err
 			}
 			f.witnesses = state.run.Witnesses(binding)
-			if err := s.retain(int64(len(f.witnesses)) * 64); err != nil {
+			if err := scratch.reserve(int64(len(f.witnesses)), schemaBindCompletionBytes); err != nil {
 				return err
 			}
 			f.children = make([]xsd.Completion, 0, len(f.witnesses))
@@ -213,7 +293,11 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 			if child == nil {
 				return contract("schema witness", "unknown child occurrence")
 			}
-			stack = append(stack, frame{node: child, use: witness.Use})
+			// No pointer into the old backing array survives a possible resize.
+			f = nil
+			if err := scratch.push(ctx, schemaBindFrame{node: child, use: witness.Use}); err != nil {
+				return err
+			}
 			continue
 		}
 		completion, completeErr := state.run.Complete(ctx, f.binding, f.children)
@@ -223,12 +307,15 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		if completeErr != nil {
 			return completeErr
 		}
-		stack = stack[:len(stack)-1]
-		if len(stack) > 0 {
-			parent := &stack[len(stack)-1]
+		f = nil
+		scratch.pop()
+		if len(scratch.frames) > 0 {
+			parent := &scratch.frames[len(scratch.frames)-1]
 			parent.children = append(parent.children, completion)
 		}
 	}
+	// The remaining causal/identity work does not need traversal storage.
+	scratch.release()
 	// An unmatched subtree remains unavailable. Preserve its exact containing
 	// content failure as the causal identity when that rule was selected.
 	for _, id := range s.sequence {
