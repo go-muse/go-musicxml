@@ -7561,7 +7561,7 @@
           "case_ids": [
             "TestAssessedDecodeSkippedSubtreeXMLContracts"
           ],
-          "assessment_basis": "PR 42-added skipped-subtree fixtures reject duplicate attributes, nested DOCTYPE and mismatched closing names in unknown/foreign content under ordinary and strict decode.",
+          "assessment_basis": "PR 42-added skipped-subtree fixtures reject duplicate attributes, nested DOCTYPE, undeclared prefixes and mismatched closing names in unknown/foreign content under ordinary Decode and permissive/strict DecodeAssessed; diagnostic checks distinguish the specific duplicate, DOCTYPE and undeclared-prefix causes.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -19775,8 +19775,8 @@
       "file": "assessed_skipped_xml_contract_test.go",
       "function": "TestAssessedDecodeSkippedSubtreeXMLContracts",
       "evidence_layer": "pr42-added",
-      "input": "Unknown and foreign skipped subtrees with spaced lexical/expanded-name duplicates, nested DOCTYPE and mismatched closing tags, through ordinary and both assessed decode modes.",
-      "expected": "Each mode preserves XML syntax error, rejects the document and checks duplicate-specific diagnostics instead of accepting attribute-whitespace failure.",
+      "input": "Unknown and foreign skipped subtrees with spaced lexical/expanded-name duplicates, nested DOCTYPE, undeclared prefixes and mismatched closing tags, through ordinary and both assessed decode modes.",
+      "expected": "Each mode preserves XML syntax error, rejects the document and checks duplicate, DOCTYPE and undeclared-prefix diagnostics instead of accepting an unrelated syntax failure.",
       "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
       "anchors": [
         {
@@ -26261,6 +26261,12 @@
       "missing-evidence": 6,
       "decision-only": 140,
       "not-elected": 10
+    },
+    "requirement_classifications": {
+      "implemented-awaiting-current-verification": 78,
+      "explicit-bounded-limitation": 13,
+      "unresolved-decision": 2,
+      "optional-not-elected": 2
     }
   }
 }

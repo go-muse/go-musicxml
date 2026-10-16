@@ -401,6 +401,9 @@ func validateLedger(root string, ledger map[string]any) error {
 	if err := checkReviewedPolicy("case", cases, reviewedCasePolicySHA256); err != nil {
 		return err
 	}
+	if err := validateEvidenceSummary(ledger); err != nil {
+		return err
+	}
 	return nil
 }
 

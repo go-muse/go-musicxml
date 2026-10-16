@@ -30,6 +30,33 @@ func (r *ledgerReferences) validateCase(root, id string, c map[string]any) error
 	if function == nil || function.Body == nil {
 		return fmt.Errorf("%s missing test function %s in %s", id, name, file)
 	}
+	// Only direct top-level calls disable the routed test unconditionally.
+	// Conditional environment/tool skips remain valid inspection routes.
+	for _, statement := range function.Body.List {
+		expression, ok := statement.(*ast.ExprStmt)
+		if !ok {
+			continue
+		}
+		call, ok := expression.X.(*ast.CallExpr)
+		if !ok {
+			continue
+		}
+		method, ok := call.Fun.(*ast.SelectorExpr)
+		if !ok || (method.Sel.Name != "Skip" && method.Sel.Name != "Skipf" && method.Sel.Name != "SkipNow") {
+			continue
+		}
+		receiver, ok := method.X.(*ast.Ident)
+		if !ok {
+			continue
+		}
+		for _, parameter := range function.Type.Params.List {
+			for _, name := range parameter.Names {
+				if name.Name == receiver.Name {
+					return fmt.Errorf("%s has an unconditional top-level test skip: %s", id, method.Sel.Name)
+				}
+			}
+		}
+	}
 	if stringField(c, "input") == "" || stringField(c, "expected") == "" || stringField(c, "scope") == "" {
 		return fmt.Errorf("%s lacks substantive input/outcome/scope", id)
 	}
