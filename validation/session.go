@@ -75,7 +75,7 @@ func (e *UnsupportedRootError) Error() string {
 func (e *UnsupportedRootError) Unwrap() error { return ErrIncompleteAssessment }
 
 type factNode struct {
-	modelRepresentation *ModelRepresentationFact
+	modelRepresentation *modelRepresentationRecord
 	header              NodeHeader
 	end                 NodeEnd
 	closed              bool
@@ -110,6 +110,8 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	commonModelSeal         *modelRepresentationRecord
+	commonAttributeSeal     *Evidence[bool]
 	dtdIDs                  *sourceDTDIDs
 	sourceEntities          *sourceEntityDeclarations
 	dictionaries            *dictionaryLease
@@ -433,11 +435,18 @@ func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Ev
 	if err := validateEvidence(complete, "attribute completeness"); err != nil {
 		return s.fail(err)
 	}
+	if canonicalComplete(complete) && s.commonAttributeSeal != nil {
+		n.attributeSeal = s.commonAttributeSeal
+		return nil
+	}
 	if err := s.retain(64 + evidenceLogicalBytes(complete)); err != nil {
 		return s.fail(err)
 	}
 	owned := cloneEvidence(complete)
 	n.attributeSeal = &owned
+	if canonicalComplete(complete) {
+		s.commonAttributeSeal = n.attributeSeal
+	}
 	return nil
 }
 
@@ -702,6 +711,8 @@ func (s *Session) cleanup() {
 	s.sequence = nil
 	s.stack = nil
 	s.root = nil
+	s.commonModelSeal = nil
+	s.commonAttributeSeal = nil
 	s.rejectedRootName = QName{}
 	s.decisions = nil
 	s.successful = nil
