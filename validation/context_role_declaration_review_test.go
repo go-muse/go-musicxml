@@ -106,3 +106,35 @@ func TestContextRoleSessionReuseDeclarationEvidenceIsolation(t *testing.T) {
 		}
 	}
 }
+
+func TestContextRoleSessionReuseSharedSchemaIsolation(t *testing.T) {
+	first, b, node := contextRoleRepeatedFixture(t, 2)
+	defer first.cleanup()
+	second := contextRoleSchemaSession(t, first.schema.active, 2)
+	defer second.cleanup()
+	other := second.nodes[node.header.ID]
+	if first.schema.active != second.schema.active || node.header.Declaration == other.header.Declaration || *node.header.Declaration != *other.header.Declaration {
+		t.Fatal("shared compiled schema did not produce equal, independently owned declarations")
+	}
+	for _, s := range []*Session{first, second} {
+		before := s.retained
+		r := &contextReader{ctx: context.Background(), s: s, b: b}
+		for _, id := range []NodeID{2, 3} {
+			if !r.matches(s.nodes[id], "item-role") || r.err != nil {
+				t.Fatal(r.err)
+			}
+		}
+		if s.retained-before != 512 || len(s.contextElementRoles) != 1 {
+			t.Fatal("shared schema/table did not retain one independently charged declaration entry")
+		}
+	}
+	before := rationalUsage(t, second, BudgetBufferedBytes)
+	first.cleanup()
+	if first.contextElementRoles != nil || rationalUsage(t, first, BudgetBufferedBytes) != 0 {
+		t.Fatal("first session retained shared schema-role storage after cleanup")
+	}
+	r := &contextReader{ctx: context.Background(), s: second, b: b}
+	if !r.matches(other, "item-role") || !r.matches(other, "item-alias") || r.matches(other, "absent-role") || r.err != nil || rationalUsage(t, second, BudgetBufferedBytes) != before {
+		t.Fatal("first session cleanup changed second session roles or accounted storage")
+	}
+}

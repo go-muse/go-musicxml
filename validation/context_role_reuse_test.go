@@ -31,6 +31,12 @@ func contextRoleRepeatedFixture(t *testing.T, count int) (*Session, *contextBind
 	if err != nil {
 		t.Fatal(err)
 	}
+	s := contextRoleSchemaSession(t, schema, count)
+	return s, b, s.nodes[2]
+}
+
+func contextRoleSchemaSession(t *testing.T, schema *CompiledSchema, count int) *Session {
+	t.Helper()
 	s, err := sourceSchemaEngineFor(t, schema, XSDCheckContent).Begin(context.Background(), RunOptions{DocumentID: "source", Profile: "source-schema-test"})
 	if err != nil {
 		t.Fatal(err)
@@ -59,7 +65,7 @@ func contextRoleRepeatedFixture(t *testing.T, count int) (*Session, *contextBind
 	if err = s.finalizeSourceSchema(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	return s, b, s.nodes[2]
+	return s
 }
 
 func TestContextRoleReuseCompiledColdAndWarm(t *testing.T) {
