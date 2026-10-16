@@ -11,12 +11,13 @@ func TestSchemaAttributeScratchExactMapAdmission(t *testing.T) {
 		s, n, u, b := schemaAttributeScratchFixture(t)
 		before := s.retained
 		used, _ := s.account.Usage(BudgetBufferedBytes)
-		occupancy := s.account.Limits().MaxBufferedBytes - used - int64(len(n.attributes))*96 + short
+		occupancy := s.account.Limits().MaxBufferedBytes - used - schemaAttributeScratchRootRecordBytes - int64(len(n.attributes))*96 + short
 		if err := s.account.Charge(BudgetBufferedBytes, occupancy); err != nil {
 			t.Fatal(err)
 		}
-		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
+		rootBefore := n.end.Scalar.Value
+		// Two exact header-cache lookups precede the original map phase.
+		ctx := &schemaScratchCancelContext{Context: context.Background(), at: 3}
 		err := s.publishSchemaFacts(ctx, n, u, b)
 		want := error(context.Canceled)
 		if short != 0 {
@@ -25,14 +26,18 @@ func TestSchemaAttributeScratchExactMapAdmission(t *testing.T) {
 		if !errors.Is(err, want) {
 			t.Fatalf("short=%d: %v", short, err)
 		}
-		if s.retained != before {
-			t.Fatal("temporary index became session-owned")
+		wantPolls := 3 - int(short)
+		if ctx.calls != wantPolls || schemaAttributeScratchRootReplacement(t, n, rootBefore) != schemaAttributeScratchRootRecordBytes {
+			t.Fatalf("short=%d: did not reach exact map admission after root evidence (polls %d, want %d)", short, ctx.calls, wantPolls)
+		}
+		if s.retained != before+schemaAttributeScratchRootRecordBytes {
+			t.Fatal("temporary index became session-owned beyond the real root evidence")
 		}
 		if err := s.account.Release(BudgetBufferedBytes, occupancy); err != nil {
 			t.Fatal(err)
 		}
-		if got, _ := s.account.Usage(BudgetBufferedBytes); got != used {
-			t.Fatalf("refused/canceled map still charged: %d, want %d", got, used)
+		if got, _ := s.account.Usage(BudgetBufferedBytes); got != used+schemaAttributeScratchRootRecordBytes {
+			t.Fatalf("refused/canceled map still charged: %d, want root-only delta %d", got, used+schemaAttributeScratchRootRecordBytes)
 		}
 		schemaScratchAssertReleased(t, s)
 	}
@@ -49,26 +54,27 @@ func TestSchemaAttributeScratchEveryCancellationKeepsPublishedEvidence(t *testin
 		s, n, u, b := schemaAttributeScratchFixture(t)
 		before := s.retained
 		used, _ := s.account.Usage(BudgetBufferedBytes)
+		rootBefore := n.end.Scalar.Value
 		stop := &schemaScratchCancelContext{Context: context.Background(), at: at}
 		err := s.publishSchemaFacts(stop, n, u, b)
 		if !errors.Is(err, context.Canceled) {
 			t.Fatalf("poll %d/%d: %v", at, ctx.calls, err)
 		}
-		var published int64
+		published := schemaAttributeScratchRootReplacement(t, n, rootBefore)
 		for _, a := range n.attributes {
 			if a.Scalar.Value.State == EvidenceKnown {
 				published += 128 + int64(len(a.Scalar.Value.Value.Text))
 			}
 		}
 		if s.retained-before != published {
-			t.Fatalf("poll %d changed real evidence accounting: %d want %d", at, s.retained-before, published)
+			t.Fatalf("poll %d changed root/attribute evidence accounting: %d want %d", at, s.retained-before, published)
 		}
 		if got, _ := s.account.Usage(BudgetBufferedBytes); got != used+published {
 			t.Fatalf("poll %d retained local index: %d want %d", at, got, used+published)
 		}
 		schemaScratchAssertReleased(t, s)
 	}
-	t.Logf("all %d index/publication polls release the map and retain only published scalars", ctx.calls)
+	t.Logf("all %d index/publication polls release the map and retain only published root/attribute evidence", ctx.calls)
 }
 
 func TestSchemaAttributeScratchWorkBoundary(t *testing.T) {
@@ -105,7 +111,7 @@ func TestSchemaAttributeScratchRefusalPreservesPriorFailure(t *testing.T) {
 		t.Fatal("fixture did not prove invalid attribute")
 	}
 	used, _ := s.account.Usage(BudgetBufferedBytes)
-	occupancy := s.account.Limits().MaxBufferedBytes - used - int64(len(n.attributes))*96 + 1
+	occupancy := s.account.Limits().MaxBufferedBytes - used - schemaAttributeScratchRootRecordBytes - int64(len(n.attributes))*96 + 1
 	if err := s.account.Charge(BudgetBufferedBytes, occupancy); err != nil {
 		t.Fatal(err)
 	}
