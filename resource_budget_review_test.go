@@ -1,8 +1,12 @@
 package musicxml
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -18,7 +22,6 @@ func reviewBudgetScore(measures int) string {
 	b.WriteString(`</part></score-partwise>`)
 	return b.String()
 }
-
 func TestReviewDefaultBudgetOriginGraph(t *testing.T) {
 	input := reviewBudgetScore(500)
 	b, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
@@ -42,6 +45,62 @@ func TestReviewDefaultBudgetOriginGraph(t *testing.T) {
 		t.Fatalf("source-origin rows=%d, want every one of 4008 occurrences", origins)
 	}
 	t.Logf("source bytes=%d source-origin rows=%d", len(input), origins)
+}
+func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
+	original, err := os.ReadFile("testdata/official/MozaChloSample.musicxml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw := reviewBudgetRemoveDOCTYPE(t, original)
+	if len(original) != 223068 || len(raw) != 222824 || !bytes.HasPrefix(raw, []byte{0xfe, 0xff}) || bytes.Contains(raw, encodeUTF16("<!DOCTYPE", binary.BigEndian)[2:]) {
+		t.Fatalf("fixture transformation changed: original=%d stripped=%d", len(original), len(raw))
+	}
+	for _, profile := range []validation.ProfileID{ProfileSourceInternalDTDDictionaries, ProfileSourceSemantics} {
+		t.Run(string(profile), func(t *testing.T) {
+			r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: profile})
+			if profile == ProfileSourceSemantics && err != nil {
+				// The existing timeline/context work limit is independent of the buffer
+				// claim. Do not hide it by raising the default work budget in this witness.
+				var limit *validation.ResourceError
+				if !errors.As(err, &limit) || limit.Kind != validation.BudgetRuleSteps || !r.InputComplete {
+					t.Fatalf("unexpected default-budget failure: %v", err)
+				}
+				t.Logf("stripped UTF-16 sample reaches existing rule-step limit: %v", err)
+				return
+			}
+			if err != nil || !r.AssessmentComplete || !r.InputComplete {
+				t.Fatalf("profile=%s err=%v complete=%v", profile, err, r.AssessmentComplete)
+			}
+		})
+	}
+}
+
+func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
+	raw, err := os.ReadFile("testdata/official/MozaChloSample.musicxml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics})
+	if err != nil {
+		var limit *validation.ResourceError
+		if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes {
+			t.Fatalf("unexpected original-byte limit: %v", err)
+		}
+		t.Logf("original UTF-16 sample default buffer: %v", err)
+	}
+	r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: validation.Budgets{MaxBufferedBytes: 96 << 20}})
+	if err != nil || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
+		t.Fatalf("unread external DTD evidence changed: complete=%v err=%v", r.AssessmentComplete, err)
+	}
+	found := false
+	for _, finding := range r.Findings {
+		if finding.Reason == "dtd-infoset-unavailable" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("lost external-DOCTYPE limitation")
+	}
 }
 
 func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
@@ -83,4 +142,25 @@ func TestReviewFragmentGraphMediumScoreDefaultRuleBudget(t *testing.T) {
 		t.Fatalf("links=%d adoptions=%d package counts=%+v", links, bundle.AdoptionCount(), bundle.PackageReport().Counts)
 	}
 	t.Logf("source bytes=%d links=%d adoptions=%d package counts=%+v", source.Len(), links, bundle.AdoptionCount(), bundle.PackageReport().Counts)
+}
+
+// The official sample is UTF-16BE. Remove the encoded declaration without
+// transcoding or silently leaving the external-DOCTYPE profile boundary active.
+func reviewBudgetRemoveDOCTYPE(t *testing.T, raw []byte) []byte {
+	t.Helper()
+	open, close := []byte("<!DOCTYPE"), []byte(">")
+	if bytes.HasPrefix(raw, []byte{0xfe, 0xff}) {
+		open = encodeUTF16("<!DOCTYPE", binary.BigEndian)[2:]
+		close = encodeUTF16(">", binary.BigEndian)[2:]
+	}
+	start := bytes.Index(raw, open)
+	if start < 0 {
+		t.Fatal("official fixture DOCTYPE not found")
+	}
+	end := bytes.Index(raw[start:], close)
+	if end < 0 {
+		t.Fatal("official fixture DOCTYPE not closed")
+	}
+	out := append([]byte(nil), raw[:start]...)
+	return append(out, raw[start+end+len(close):]...)
 }

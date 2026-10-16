@@ -755,6 +755,21 @@ overrides in `AssessmentOptions.Budgets`; all other limits still apply. Earlier
 source-scope measurements remain historical evidence for their stated revision,
 before the shared absent-attribute optimization.
 
+Composition costs differ from that XSD-only table. For the original 223,068-byte
+UTF-16BE `MozaChloSample.musicxml`, `ProfileSourceSemantics` exhausts the default
+64 MiB buffer. With only `MaxBufferedBytes: 96 << 20` changed, this particular
+fixture completes input processing, but assessment remains incomplete because its
+external DTD is unread. This is a measured finite allowance for that exact input
+and profile, not a new default or a minimum/general capacity guarantee.
+Removing the encoded DOCTYPE produces a different 222,824-byte control.
+`ProfileSourceInternalDTDDictionaries` assesses that control within defaults
+(observed live-account peak 44,036,266 bytes). `ProfileSourceSemantics` instead
+reaches the existing 20,000,000 rule-step limit, with an observed buffer peak of
+67,011,966 bytes before that refusal. These peaks are sampled logical account
+usage, not exact minimum budgets or heap measurements. The
+[composition and snapshot budget receipt](docs/validation/resource-fragment-budget-evidence.md)
+records the byte transformation, limits, ownership accounting and regressions.
+
 `ConversionConverted` means mapping succeeded under the existing Go model
 contract, including its `float64` precision and field representation. It is not
 an exact lexical or numeric round-trip guarantee. `ConversionUnrepresentable`
