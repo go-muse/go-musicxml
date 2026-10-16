@@ -437,6 +437,21 @@ func (r *Run) Attributes(b Binding) iter.Seq[AttributeResult] {
 }
 func (r *Run) buildWitnesses(s *boundState) {
 	owner, _ := r.typeID(s.actual)
+	// Resolve eligibility without publishing capability effects. The immutable
+	// match/use inventory permits an exact allocation, avoiding geometric old
+	// arrays and copies. Both passes remain metered and cancellable; an aborted
+	// count pass promises no witness prefix, but Bind preserves prior issues.
+	count := 0
+	for _, m := range s.matches {
+		r.step(1)
+		if m.Particle != nil && m.Particle.Kind == ParticleAny || r.witnessUse(owner, m.Particle).schema != nil {
+			count++
+		}
+	}
+	if count != 0 {
+		r.reserve(r.context.size(int64(count), int64(unsafe.Sizeof(Witness{}))))
+		s.witnesses = make([]Witness, 0, count)
+	}
 	for _, m := range s.matches {
 		r.step(1)
 		if m.Particle != nil && m.Particle.Kind == ParticleAny {
@@ -447,20 +462,10 @@ func (r *Run) buildWitnesses(s *boundState) {
 				mode = WitnessLax
 			}
 			r.context.wildcard(m.Particle.Any.ProcessContents, "content")
-			s.witnesses = appendRetained(&r.context, s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Mode: mode})
+			s.witnesses = append(s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Mode: mode})
 			continue
 		}
-		uses := r.schema.particleUses[particleUseKey{owner, m.Particle}]
-		var use Use
-		if len(uses) == 1 {
-			use = uses[0]
-		} else if len(uses) == 0 {
-			// Effective extension particles retain their base owner's exact use.
-			// The immutable index also remembers ambiguity without scanning or
-			// allocating a candidate list at every source node.
-			r.step(1)
-			use = r.schema.inheritedParticleUses[m.Particle]
-		}
+		use := r.witnessUse(owner, m.Particle)
 		if use.schema == nil {
 			s.limit("content", "exact-declaration-use-unavailable", nil)
 			r.context.IdentityIncomplete = true
@@ -472,9 +477,26 @@ func (r *Run) buildWitnesses(s *boundState) {
 				resolved = target
 			}
 		}
-		s.witnesses = appendRetained(&r.context, s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: use, ResolvedDeclaration: resolved, Mode: WitnessDeclared})
+		s.witnesses = append(s.witnesses, Witness{Index: m.Index, Child: s.subject.Children[m.Index].ID, Use: use, ResolvedDeclaration: resolved, Mode: WitnessDeclared})
 	}
 }
+
+// witnessUse performs only immutable exact-use lookup. A missing or ambiguous
+// use remains unavailable; neither pass guesses by QName or display path.
+func (r *Run) witnessUse(owner TypeID, particle *ParticleSchema) Use {
+	uses := r.schema.particleUses[particleUseKey{owner, particle}]
+	if len(uses) == 1 {
+		return uses[0]
+	}
+	if len(uses) == 0 {
+		// Effective extension particles retain their base owner's exact use.
+		// The index remembers ambiguity without a per-occurrence candidate scan.
+		r.step(1)
+		return r.schema.inheritedParticleUses[particle]
+	}
+	return Use{}
+}
+
 func (r *Run) Complete(ctx context.Context, b Binding, children []Completion) (out Completion, err error) {
 	if err = r.check(ctx); err != nil {
 		return
