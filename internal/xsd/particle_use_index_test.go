@@ -160,7 +160,7 @@ func TestInheritedParticleLookupRetainsAmbiguity(t *testing.T) {
 func TestCompileInheritedParticleIndexAdmission(t *testing.T) {
 	particle := &ParticleSchema{}
 	c := &Compiled{}
-	u := Use{schema: c, ownerPath: "/owner", path: "/owner/particle"}
+	u := Use{schema: c, identity: &compiledIdentity{owner: c, ordinal: 1, ownerPath: "/owner", path: "/owner/particle"}}
 	b, err := newCompileBudget(CompileLimits{MaxBytes: 351})
 	if err != nil {
 		t.Fatal(err)
@@ -179,7 +179,7 @@ func TestCompileInheritedParticleIndexAdmission(t *testing.T) {
 		t.Fatalf("new index entry escaped exhausted budget: err=%v entries=%d", err, len(c.inheritedParticleUses))
 	}
 	for _, path := range []string{"/owner/other-slot", "/other-owner/particle"} {
-		other := Use{schema: c, ownerPath: "/other-owner", path: path}
+		other := Use{schema: c, identity: &compiledIdentity{owner: c, ordinal: 2, ownerPath: "/other-owner", path: path}}
 		if err := c.indexInheritedParticleUse(b, particle, other); err != nil || c.inheritedParticleUses[particle] != (Use{}) || b.bytes != 352 {
 			t.Fatalf("ambiguity grew storage or selected a use: err=%v budget=%+v index=%+v", err, b, c.inheritedParticleUses)
 		}

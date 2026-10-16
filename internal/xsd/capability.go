@@ -156,7 +156,7 @@ func (r *Run) attributeUse(actual *TypeRef, name QName) Use {
 		r.context.bytes(len(id.name.Space))
 		r.context.bytes(len(id.name.Local))
 		r.context.bytes(len(id.builtin))
-		r.context.bytes(len(id.path))
+		r.context.bytes(len(id.Occurrence()))
 		if seen[id] {
 			break
 		}
@@ -201,7 +201,7 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		s.scalarAssessed = false
 		s.scalarAssessment = SimpleAssessment{}
 		if schema.Constraint == nil {
-			c.absentAttributeResult(effective, actual.path, schemas, i)
+			c.absentAttributeResult(effective, actual.Occurrence(), schemas, i)
 			continue
 		}
 		value := schema.Constraint.Value
