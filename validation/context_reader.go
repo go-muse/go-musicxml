@@ -20,15 +20,15 @@ type contextReader struct {
 	attributeCache  map[xsd.Binding]*contextAttributeTable
 	attributeIntern map[contextAttributeInternKey]*contextAttributeTable
 	elementCache    map[DeclarationID][]contextRole
-	boundElements   map[xsd.Binding]contextBoundElementRoles
 	ownerCache      map[ComponentID]*contextAttributeTable
 }
 
-// A schema binding is compact, run-local immutable identity. The role slice is
-// borrowed from the exact compiled bindings, never copied or inferred from type.
-type contextBoundElementRoles struct {
+// A schema binding is compact, run-local immutable identity. Pair it with the
+// exact compiled table, not its digest, so distinct plans cannot share roles.
+// The session owns this cache; final readers borrow its immutable role slices.
+type contextBoundElementKey struct {
 	bindings *contextBindings
-	roles    []contextRole
+	binding  xsd.Binding
 }
 
 func (r *contextReader) step(n int64) bool {
@@ -101,40 +101,41 @@ func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
 		return nil, false
 	}
 	bound, ok := r.s.schema.nodes[n.header.ID]
-	if !ok || !bound.available {
+	if !ok || !bound.available || bound.binding == (xsd.Binding{}) {
 		return nil, false
 	}
 	if !r.step(1) {
 		return nil, false
 	}
-	entry, ready := r.boundElements[bound.binding]
-	if ready && entry.bindings == r.b {
-		return entry.roles, true
+	key := contextBoundElementKey{bindings: r.b, binding: bound.binding}
+	roles, ready := r.s.contextElementRoles[key]
+	if ready {
+		return roles, true
 	}
 	if !r.step(contextDeclarationBytes(n.header.Declaration.Value)) {
 		return nil, false
 	}
-	roles := r.b.ElementRoles[n.header.Declaration.Value]
+	roles = r.b.ElementRoles[n.header.Declaration.Value]
 	if !r.step(1) {
 		return nil, false
 	}
-	if !ready {
-		// One compact entry per binding, independent of the number of queried
-		// roles. This covers map buckets, geometric growth and allocator rounding;
-		// the immutable role slice remains owned by the compiled configuration.
-		retained := int64(256)
-		if r.boundElements == nil {
-			// The first map group reserves room for multiple key/value slots.
-			retained += 256
-		}
-		if r.err = r.s.retain(retained); r.err != nil {
-			return nil, false
-		}
+	// One compact entry per exact binding/table pair across all final readers.
+	// This eliminates duplicate provider-local maps while keeping their admitted
+	// storage owned by the session until cleanup. The allowance covers map
+	// buckets, geometric growth and allocator rounding; compiled bindings still
+	// own the borrowed immutable role slice.
+	retained := int64(256)
+	if r.s.contextElementRoles == nil {
+		// The first map group reserves room for multiple key/value slots.
+		retained += 256
 	}
-	if r.boundElements == nil {
-		r.boundElements = make(map[xsd.Binding]contextBoundElementRoles)
+	if r.err = r.s.retain(retained); r.err != nil {
+		return nil, false
 	}
-	r.boundElements[bound.binding] = contextBoundElementRoles{bindings: r.b, roles: roles}
+	if r.s.contextElementRoles == nil {
+		r.s.contextElementRoles = make(map[contextBoundElementKey][]contextRole)
+	}
+	r.s.contextElementRoles[key] = roles
 	return roles, true
 }
 

@@ -124,6 +124,7 @@ type Session struct {
 	sourceOriginUnavailable bool
 	sourceOriginSeal        *Evidence[bool]
 	contextServices         map[RuleKey]*contextService
+	contextElementRoles     map[contextBoundElementKey][]contextRole
 	contextResults          []ContextResult
 	timeline                map[RuleKey]*timelineService
 	localDocuments          map[*localPlan]localDocumentResult
@@ -715,6 +716,9 @@ func (s *Session) cleanup() {
 	s.sourceOriginExpected = 0
 	s.sourceOriginUncertain = false
 	s.sourceOriginUnavailable = false
+	// Drop borrowed schema bindings before closing their run and releasing the
+	// session-owned cache allowance below.
+	s.contextElementRoles = nil
 	if s.schema != nil && s.schema.run != nil {
 		_ = s.schema.run.Close()
 	}
