@@ -78,8 +78,9 @@ changed that charge to a transient 96 × entry-count lease. Only relative to
 that intermediate checkpoint, the corrected lease adds 512 + 32 × entry-count
 logical bytes and can refuse a tuned transient limit sooner. Against the
 published baseline, the tradeoff instead depends on its accumulated retention;
-the current lease does not add permanent storage. Escaping-map controls compare sampled mean cumulative allocation with the
-envelope and log individual maxima separately. Process-wide `TotalAlloc` can
+the current lease does not add permanent storage. Escaping-map controls
+compare sampled mean cumulative allocation with the envelope and log individual
+maxima separately. Process-wide `TotalAlloc` can
 include unrelated allocation and dead replaced hash tables, so neither mean
 nor maximum is an exact per-map live peak. Fixed/group and slot-size guards
 complement those regressions; this is not a universal physical-memory proof.

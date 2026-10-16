@@ -302,8 +302,10 @@ local/timeline-profile measurements:
 | Source MozartTrio, DOCTYPE-free measurement control | 2,516 | 18,209,624 | 2,893,122 |
 
 Those recorded current-model fixtures cost about 6.4–6.5 KB and
-1,094–1,108 rule steps per node; the source control is about 7.2 KB and 1,150 steps per node.
-The historical estimates imply roughly 10,000 model nodes or 9,000 source nodes in this family, before other limits; the step allowance alone
+1,094–1,108 rule steps per node; the source control is about 7.2 KB and
+1,150 steps per node. The historical estimates imply roughly 10,000 model
+nodes or 9,000 source nodes in this family, before other limits; the step
+allowance alone
 would admit roughly 18,000 or 17,000 respectively. These are historical
 calculations, not current-head capacities. Real scores can exceed these
 defaults. These estimates are neither guaranteed capacities nor heap/total
