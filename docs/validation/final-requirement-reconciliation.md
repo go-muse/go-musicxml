@@ -1,10 +1,11 @@
-# Final requirement reconciliation: pre-acceptance snapshot
+# Final requirement reconciliation: baseline and PR 42 evidence
 
 Date: 16 October 2026. This is an author-produced development reconciliation,
-not independent design/QA acceptance and not an execution certificate for the
-final integrated PR. The baseline is merged commit
+not independent design/QA acceptance or an integrated-tree execution certificate.
+Requirement classifications retain merged baseline commit
 `0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9`, tree
-`1e78190afb839ba0cd5b91bc5fb8bff6a102638d`.
+`1e78190afb839ba0cd5b91bc5fb8bff6a102638d`. Regression routes added by PR 42 are
+explicitly labeled `pr42-added`; they are not attributed to that baseline.
 
 The additive [machine-readable ledger](final-requirement-reconciliation.json)
 retains every original requirement and attached test contract: exactly 95 and
@@ -16,102 +17,125 @@ a successful corpus run or an Unknown result is not proof of closure.
 ## What the rows establish
 
 Each requirement has its original pointer and unmodified record, applicability,
-targets, current implementation, current code paths, interpretation/decision
-sources, individual prior ownership pointers, any directly matching functional
-crosswalk rows, execution disposition, residual and closure criterion.
+targets, implementation, code paths, interpretation/decision sources, individual
+prior ownership pointers, directly matching functional crosswalk rows, execution
+disposition, residual and closure criterion.
 
 Each test contract retains positive, negative, boundary, missing-fact and
-interaction axes separately. The 122 concrete regression routes carry actual
-input/outcome descriptions plus source fixture/setup and assertion anchors.
-These are inspected routes, not a claim that those runtime tests were executed
-by this author or that all their original examples are interchangeable.
+interaction axes separately. All 127 concrete regression routes are used by at
+least one axis. They carry input/outcome descriptions and unique source anchors
+bound to the named test or its directly referenced fixtures. There are 123
+baseline routes and four PR 42 additions:
 
-At this snapshot there are 78 implemented-awaiting-current-verification rows,
-13 explicit bounded limitations, two unresolved evidence/execution decisions and
-two optional-not-elected rows. No row claims final-tree verified completion or a
+- `TestAssessedDecodeSkippedSubtreeXMLContracts` and
+  `TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed` in
+  `assessed_skipped_xml_contract_test.go` distinguish lexical/expanded-name
+  duplicates from whitespace errors, with ordinary and strict decode controls.
+- `TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix` in
+  `internal/finalreconciliation/review_mutations_test.go` checks missing source
+  graph edges even when the ledger and source fingerprints change consistently.
+- `TestFinalReconciliationRejectsHistoricalExecutionPromotion` in
+  `internal/finalreconciliation/ledger_test.go` guards this ledger's historical
+  execution boundary. It does not prove general profile readiness.
+
+There are 78 implemented-awaiting-current-verification rows, 13 explicit bounded
+limitations, two unresolved evidence/execution decisions and two
+optional-not-elected rows. No row claims final-tree verified completion or a
 newly established missing runtime algorithm.
 
-The five axes have 94 mapped, 225 partial, 140 decision-only, ten not-elected
+The five axes have 91 mapped, 228 partial, 140 decision-only, ten not-elected
 and six missing-evidence dispositions. These are evidence classifications,
 not runtime pass/fail totals. In particular:
 
-- A partial mapping identifies the concrete related cases and retains the exact
-  original illustrative text that is not exhaustively corroborated. It does not
-  assert an absent implementation or absent current regression.
+- A partial mapping retains the exact original illustrative text and identifies
+  the clauses that its related assertions do not prove. It does not assert an
+  absent implementation or absent current regression.
+- RESULT-AXES/negative retains a baseline gap: Unknown-only report behavior and
+  strict unavailable-witness rejection are asserted separately, without jointly
+  excluding normative failure. The PR-added
+  `TestFinalConfigurationSelectedNilDictionaryPublicReports` supplies a later
+  combined public contract, documented in
+  [the configuration matrix](final-configuration-contracts.md).
+- XML-SKIP/interaction retains the unasserted observer-delivery ordering clause;
+  malformed skipped-XML detection alone does not prove unfiltered fact delivery.
+- VERIFY-PROFILE/missing_fact is partial because its PR-added promotion guard
+  protects this ledger, rather than implementing general coverage accounting.
 - The 28 original issue requirements concern interpretation decisions. Their
-  140 axes retain issue-specific examples and the current scoped interpretation;
-  a generic schema regression is not called independent proof of each example.
-- Missing review/process evidence for equivalence, matrix integrity, an API
-  naming decision or exact-tree verification is distinct from a missing API
-  algorithm. Any demonstrated missing executable case needs the smallest
-  targeted regression; it must not be dismissed as historical paperwork.
-- The IPA negative axis is specifically limited by authority: the selected
-  positive witness corpus supplies no complete normative negative complement.
-  Returning Unknown does not certify the broader historical axis.
+  140 axes retain issue-specific examples and the scoped interpretation; a
+  generic schema regression is not independent proof of each example.
+- The IPA negative axis is limited by authority: the selected positive witness
+  corpus supplies no complete normative negative complement. Returning Unknown
+  does not certify the broader historical axis.
 
 ## Original inventories and changed interpretations
 
 All 28 original issue IDs and their original records are retained individually.
-The new current dispositions separate formal XSD authority, bounded source-backed
+Their dispositions separate formal XSD authority, bounded source-backed
 interpretation and genuine uncertainty. They do not turn the original
 `hard_error_basis=false` gate into independent rejection authority.
 
-All 29 candidate IDs retain their historical disposition pointer plus the
-current local, timeline, context or functional crosswalk disposition. This keeps
-later barline, chord, numeral, repeat, figure-number and intent corrections from
-being overwritten by older batch labels. Linked context/prose/XSD checks,
-contracts, overlaps, 2,218 XSD instances, 42 expanded source contracts and both
-functional crosswalk inventories are retained by their actual IDs. They overlap
-and are not added to the 95-requirement denominator.
+All 29 candidate IDs retain their historical disposition pointer and local,
+timeline, context or functional crosswalk disposition. This keeps later barline,
+chord, numeral, repeat, figure-number and intent corrections from being
+replaced by older batch labels. Linked context/prose/XSD checks, contracts,
+overlaps, 2,218 XSD instances, 42 expanded source contracts and both functional
+crosswalk inventories are retained by their actual IDs. They overlap and are
+not added to the 95-requirement denominator.
 
 ## Open obligations and exclusions
 
 The 291 translation identities are individually partitioned into 177 committed
 reviewed triplets and 114 missing-portable-evidence records. The latter are the
-exact complement of the committed record IDs, not an invented reconstructed
-artifact. Their historical fingerprint does not provide portable reviewed
-triplet bytes. This is not waived by final-PR approval. Recovery and retranslation
-remain canceled/not authorized; resolving this residual requires a separate
-approved evidence disposition.
+exact complement of committed record IDs. Their historical fingerprint does not
+provide portable reviewed triplet bytes. `TRANSLATION-114-PORTABILITY` remains
+open with no waiver or recovery authorization. Recovery and retranslation remain
+canceled; resolving this residual requires a separately approved disposition.
 
-B5-PERF-01 remains open for later separately authorized matched measurement and
-a reviewed improvement or explicit reviewed residual-cost disposition. Logical
+B5-PERF-01 remains open for separately authorized matched measurement and a
+reviewed improvement or explicit reviewed residual-cost disposition. Logical
 budget controls, old benchmarks and CI duration do not close it. This work
 performs no benchmark or performance tuning.
 
-The sibling final-PR changes own approved bundled generation/embedding and the
-public-API configuration scenario matrix. This baseline snapshot references
-existing pinned-data consumption and does not invent execution evidence for
-those later changes. Final exact-tree acceptance must be recorded separately,
-including changed code and the unchanged seven local stages, required inventory
-and real XSD-oracle checks, actual 386 execution and hosted checks. The integrity
-test deliberately prevents retroactively relabeling this historical snapshot
-as final-tree verified. A later acceptance receipt supplements this snapshot;
-it does not mean final gates can never complete.
-
+Bundled dictionary generation and explicit selection were added outside the
+baseline by published PR 42 commits `8e9e081`, `5beff1b` and `1a62c10`; see
+[bundled data](../../internal/dictionarydata/README.md). The public-API
+configuration matrix is a separate PR 42 artifact. Neither addition
+retroactively verifies the baseline requirements. Integrated-tree acceptance
+receipts are recorded in [PR 42](https://github.com/go-muse/go-musicxml/pull/42).
 Independent design/QA, mass real-corpus acceptance and performance assessment
-remain separate post-development activities, outside this receipt.
+remain outside this ledger.
 
 ## Integrity controls and author verification
 
-The narrow test-only package `internal/finalreconciliation` checks original
-record identity and content, all five axes, exact linked inventory ID sets,
-JSON pointers, existing Go test functions, fixture/assertion anchors, preserved
-source fingerprints and unsupported closure claims. Mutation controls remove
-or duplicate requirements/tests, damage routes/anchors, lose an axis or linked
-ID, attempt unsupported completion, retire missing translation evidence or
-close B5-PERF-01. These are inventory guards, not semantic or linguistic review.
+The narrow test-only package `internal/finalreconciliation` checks:
 
-The new controls were introduced before the ledger. The initial invocation
-failed because the additive ledger did not exist. Existing runtime behavior was
-not given an artificial RED result. Focused verification uses the repository's
-Go toolchain/environment and the shared build lock:
+- Exact original records, five axes and linked inventory identity sets
+- Nonempty mandatory requirement/test edges and reciprocal links in the source
+  graph itself, independently of ledger/source equality
+- All eight preserved source paths and fingerprints, both retained obligation
+  IDs and their open states, and required implementation/decision/history links
+- Unique same-file anchors inside the named test or directly referenced
+  fixtures, at least one anchor in the test body, and no unused routes
+- Pinned per-row classification/residual/closure policy, per-axis assessment,
+  basis/gap/routes, and case descriptions, anchors and evidence layers
+
+These pins detect unreviewed policy drift. They do not interpret arbitrary
+prose or establish runtime conformance. The Unknown-only closure mutation now
+changes only the closure criterion and is rejected by its reviewed policy pin;
+it does not rely on the separate ban on `implemented-and-verified`.
+
+The round-one mutations first reproduced accepted residual retirement, axis
+promotion, missing sources/links/obligations, consistently unlinked source
+records, unrelated anchors and removal of a named test body. Narrow repairs
+then rejected those same mutations. Focused author verification uses the
+repository Go 1.27.2 environment and the shared build lock:
 
 ```sh
 go test -count=1 ./internal/finalreconciliation
 ```
 
-The focused integrity and mutation suite passed with Go 1.27.2 on linux/amd64
-(exit 0). The final author handoff identifies its exact commit and external log. No root
-suite, full local checks, external oracle, race, fuzz, hosted CI or 386 run is
-claimed by this receipt. Those belong to the lead's final integrated-tree check.
+The integrity/mutation suite passed on linux/amd64. Focused runtime checks cover
+only the corrected budget, result, nil and skipped-XML routes; the allocation
+test's 32-bit branch remains a mapped assertion, not a 386 execution receipt.
+No full root suite, seven-stage local acceptance, external oracle, race, fuzz,
+hosted CI or 386 run is claimed by this reconciliation.
