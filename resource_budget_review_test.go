@@ -177,8 +177,13 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		// compact facts and session-wide context-role reuse.
 		{531, 71197, false},
 		{532, 71331, false},
+		// The first compact-fact checkpoint completed 568 and refused 569 at
+		// used42,495,274/requested24,717,911. Declaration-canonical role reuse
+		// now admits both and moves the adjacent default boundary to 576/577.
 		{568, 76155, false},
-		{569, 76289, true},
+		{569, 76289, false},
+		{576, 77227, false},
+		{577, 77361, true},
 	} {
 		t.Run(fmt.Sprint(tc.measures), func(t *testing.T) {
 			source := reviewBudgetScore(tc.measures)
@@ -187,7 +192,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 			}
 			bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 			if tc.refuses {
-				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42495274, 24717911)
+				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42053858, 25064439)
 			} else {
 				reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
 			}
@@ -205,9 +210,10 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 		t.Fatalf("fixture bytes=%d, want 86052", len(source))
 	}
 	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0))
-	// Historical used57,607,574/requested34,741,160 remains the earlier
-	// receipt; compact facts and role reuse lower the live side only.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54998870, 34741160)
+	// Historical live-byte witnesses were 57,607,574 and then 54,998,870;
+	// declaration-canonical role reuse lowers only the live side again.
+	// The final snapshot still requests the same 34,741,160 bytes.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54486614, 34741160)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -215,25 +221,33 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 	if runtime.GOARCH != "amd64" {
 		t.Skip("documented amd64 capacity witness")
 	}
-	// The same 569-measure fixture refuses its final snapshot overlap at
-	// 42,495,274 live bytes plus 24,717,911 newly requested bytes. These
-	// exact/one-short controls isolate admission; they are not defaults.
-	const exact = int64(42495274 + 24717911)
-	for _, short := range []int64{0, 1} {
-		t.Run(fmt.Sprintf("short-%d", short), func(t *testing.T) {
-			source := reviewBudgetScore(569)
-			if len(source) != 76289 {
-				t.Fatalf("fixture bytes=%d, want 76289", len(source))
-			}
-			limit := exact - short
-			options := LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}}
-			bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
-			if short == 0 {
-				reviewBudgetAssertCompleteOrigins(t, bundle, err, 4560)
-			} else {
-				reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, limit, 42495274, 24717911)
-			}
-		})
+	// Retain the historical 569-measure fixture and the current 577-measure
+	// default refusal. Their measured final-snapshot overlaps establish exact
+	// and one-short admission controls, without changing production defaults.
+	for _, tc := range []struct {
+		measures, bytes int
+		used, requested int64
+	}{
+		{569, 76289, 41477418, 24717911},
+		{577, 77361, 42053858, 25064439},
+	} {
+		for _, short := range []int64{0, 1} {
+			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {
+				source := reviewBudgetScore(tc.measures)
+				if len(source) != tc.bytes {
+					t.Fatalf("fixture bytes=%d, want %d", len(source), tc.bytes)
+				}
+				limit := tc.used + tc.requested - short
+				options := LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries, Budgets: validation.Budgets{MaxBufferedBytes: limit}}}}
+				bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), options)
+				if short == 0 {
+					reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
+				} else {
+					reviewBudgetAssertGraphBufferRefusalAtLimit(t, bundle, err, limit, tc.used, tc.requested)
+				}
+				t.Logf("source bytes=%d measures=%d limit=%d err=%v", len(source), tc.measures, limit, err)
+			})
+		}
 	}
 }
 
