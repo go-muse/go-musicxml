@@ -39,19 +39,19 @@ func ClassifyResourceMediaType(ctx context.Context, account *Account, value stri
 		return Evidence[ResourceRepresentation]{}, err
 	}
 	defer func() { _ = account.Release(BudgetBufferedBytes, scratch) }()
-	typ, _, err := mime.ParseMediaType(value)
-	if err := ctx.Err(); err != nil {
-		return Evidence[ResourceRepresentation]{}, err
-	}
-	if err != nil {
-		return unknown("media-type-syntax-unresolved"), nil
-	}
 	parameterReason, err := resourceMediaParameterStatus(ctx, account, value)
 	if err != nil {
 		return Evidence[ResourceRepresentation]{}, err
 	}
 	if parameterReason != "" {
 		return unknown(parameterReason), nil
+	}
+	typ, _, err := mime.ParseMediaType(value)
+	if err := ctx.Err(); err != nil {
+		return Evidence[ResourceRepresentation]{}, err
+	}
+	if err != nil {
+		return unknown("media-type-syntax-unresolved"), nil
 	}
 	typ = strings.ToLower(typ)
 	// RFC 2045 sections 5 and 5.1: parameters do not change the base content
@@ -70,8 +70,10 @@ func ClassifyResourceMediaType(ctx context.Context, account *Account, value stri
 	return unknown("musicxml-media-type-set-unresolved"), nil
 }
 
-// The standard parser validates syntax first, but collapses repeated names with
-// equal values. RFC 6838 section 4.3 prohibits repetitions regardless of value.
+// The standard parser collapses repeated names with equal values and rejects
+// conflicting values. Scan first so RFC 6838 section 4.3 repetitions have the
+// same reason regardless of their values; the standard parser validates the
+// remaining syntax afterward.
 // Scan raw parameter names so that quoted semicolons/escapes cannot hide a
 // duplicate. All maps/strings are transient under the caller's scratch lease.
 func resourceMediaParameterStatus(ctx context.Context, account *Account, value string) (Code, error) {
