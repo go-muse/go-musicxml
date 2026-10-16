@@ -82,6 +82,15 @@ overall archive is incomplete, and a proved local-extra violation still fails.
 If a separate structural failure prevents association, missing association is
 still a legitimate reason why local-zero success cannot be established.
 
+This is a package-readiness limitation, not an entry-local diagnostic: it stops
+archive enumeration and child-resource assessment. Compared with main
+`5295080`, affected archives lose child reports/adoptions and entry metadata
+that main could retain while reporting an Unknown no-extra predicate. Only
+independently available root metadata can remain. The bundle is incomplete
+even when the local-header predicate has already passed or failed.
+`TestMimetypeUnframedCentralExtraStopsChildEvidence` pins the public source
+behavior; the existing framing/association tests retain both local-proof axes.
+
 ## Regression evidence
 
 New core tests exercise neither/local-only/central-only/both, unobserved local or
