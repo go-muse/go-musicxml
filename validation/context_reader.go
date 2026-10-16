@@ -124,7 +124,8 @@ func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
 		// the immutable role slice remains owned by the compiled configuration.
 		retained := int64(256)
 		if r.boundElements == nil {
-			retained += 128
+			// The first map group reserves room for multiple key/value slots.
+			retained += 256
 		}
 		if r.err = r.s.retain(retained); r.err != nil {
 			return nil, false
