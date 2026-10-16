@@ -16,13 +16,18 @@ func witnessAllocationBuild(r *Run, s *boundState) (err error) {
 
 func TestWitnessAllocationExactBufferAndWorkBoundaries(t *testing.T) {
 	const count = 9
+	// All nine matches have an exact owner use: nine count-pass steps and
+	// nine fill-pass steps, with no inherited lookup in either pass.
+	const steps int64 = 18
 	width := int64(unsafe.Sizeof(Witness{}))
 	m := &boundaryMeter{}
 	r, s := witnessAllocationFixture(t, count, m)
 	if err := witnessAllocationBuild(r, s); err != nil {
 		t.Fatal(err)
 	}
-	steps := m.work
+	if m.work != steps {
+		t.Fatalf("witness work=%d, want 9 count + 9 fill = %d", m.work, steps)
+	}
 	_ = r.Close()
 	for _, kind := range []string{"buffer", "work"} {
 		for _, short := range []int64{0, 1} {
@@ -49,14 +54,70 @@ func TestWitnessAllocationExactBufferAndWorkBoundaries(t *testing.T) {
 	t.Logf("%d witnesses: exact %d bytes and %d steps", count, count*width, steps)
 }
 
-func TestWitnessAllocationEveryCancellationCleansOwnership(t *testing.T) {
-	probe := &scalarMeter{}
-	r, s := witnessAllocationFixture(t, 9, probe)
-	if err := witnessAllocationBuild(r, s); err != nil {
+func TestWitnessAllocationInheritedPassWorkBoundaries(t *testing.T) {
+	c, err := Compile(inheritedUseFixture(0), CompileLimits{})
+	if err != nil {
 		t.Fatal(err)
 	}
-	calls := probe.calls
-	_ = r.Close()
+	owner := c.namedTypes[QName{Local: "DerivedA"}]
+	base := c.namedTypes[QName{Local: "Base"}]
+	inherited := base.complex.Particle
+	exact := owner.complex.Particle
+	if len(c.particleUses[particleUseKey{owner, inherited}]) != 0 || c.inheritedParticleUses[inherited].schema == nil || len(c.particleUses[particleUseKey{owner, exact}]) != 1 {
+		t.Fatal("fixture must mix inherited misses with exact owner uses")
+	}
+	// Nine matches per pass, six inherited lookups per pass: 30 steps.
+	// The count pass ends at 15. The first fill needs steps 16 and 17;
+	// the final inherited lookup is step 30.
+	for _, tc := range []struct {
+		limit     int64
+		witnesses int
+		capacity  int
+	}{
+		{14, 0, 0},
+		{15, 0, 9},
+		{16, 0, 9},
+		{17, 1, 9},
+		{29, 8, 9},
+		{30, 9, 9},
+	} {
+		m := &boundaryMeter{workLimit: tc.limit}
+		r, err := NewRun(c, m)
+		if err != nil {
+			t.Fatal(err)
+		}
+		r.current = context.Background()
+		s := &boundState{run: r, actual: &TypeRef{Name: QName{Local: "DerivedA"}}, results: freshResults(), family: "content"}
+		for i := 0; i < 9; i++ {
+			particle := inherited
+			if i%3 == 1 {
+				particle = exact
+			}
+			s.subject.Children = append(s.subject.Children, Child{ID: SubjectID(i + 2)})
+			s.matches = append(s.matches, ElementMatch{Particle: particle, Index: i})
+		}
+		r.context.local = s
+		before := m.buffer
+		err = witnessAllocationBuild(r, s)
+		wantErr := error(errMeterStop)
+		if tc.limit == 30 {
+			wantErr = nil
+		}
+		if err != wantErr || m.work != tc.limit || len(s.witnesses) != tc.witnesses || cap(s.witnesses) != tc.capacity {
+			t.Errorf("limit=%d: err=%v work=%d witnesses=%d/%d; want err=%v work=%d witnesses=%d/%d", tc.limit, err, m.work, len(s.witnesses), cap(s.witnesses), wantErr, tc.limit, tc.witnesses, tc.capacity)
+		}
+		if want := before + int64(tc.capacity)*int64(unsafe.Sizeof(Witness{})); m.buffer != want {
+			t.Errorf("limit=%d: buffered=%d, want %d", tc.limit, m.buffer, want)
+		}
+		if err := r.Close(); err != nil || m.buffer != 0 {
+			t.Fatalf("limit=%d: Close=%v buffered=%d", tc.limit, err, m.buffer)
+		}
+	}
+}
+
+func TestWitnessAllocationEveryCancellationCleansOwnership(t *testing.T) {
+	// One cancellable step per exact match in each of the two passes.
+	const calls int64 = 18
 	for at := int64(1); at <= calls; at++ {
 		ctx, cancel := context.WithCancel(context.Background())
 		m := &scalarMeter{cancel: cancel, cancelAt: at}
