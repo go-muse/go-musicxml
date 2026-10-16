@@ -117,14 +117,37 @@ Only this operation adds the fifth pin. Non-IPA dictionary operations retain
 revision 1 and their four-pin plan identities. Dictionary-containing catalog
 fingerprints deliberately change with the new policy and precise closure text.
 Profiles sharing such a catalog also change their `CatalogDigest`, even when
-their selected rules do not include IPA. Catalogs without this operation retain
-their established identities.
+their selected rules do not include IPA. This IPA change does not itself alter
+catalogs without this operation. Other functional corrections in this PR,
+including local-header mimetype scope, have separate identity changes.
 
-The exact catalog migration on unpublished local integration checkpoint
-`47cd65c` is recorded below. This is engineering comparison evidence, not an
-assumed public checkout target; final publication supplies its canonical mapping:
+### Published package baseline
 
-| Catalog group | Before | After |
+The public baseline is [main at `5295080`](https://github.com/go-muse/go-musicxml/commit/5295080b2030be6d616c714e7c8bcad47185c742).
+These are `CatalogDigest` values, not hashes of complete Profile JSON. Each row
+covers all three graph/raw-MXL/current-MXL profiles. The ordinary package change
+comes from the local-header mimetype correction; the dictionary package change
+also incorporates the selected intrinsic dictionary migration.
+
+| Published catalog group | Main `5295080` | Corrected catalog |
+|---|---|---|
+| Ordinary graph/raw-MXL/current-MXL | `083b1b94f8b581825b23b81e3c7e39c238741f04f897ba71f7aa9354ea789d97` | `554a97e25d6494c2e0550519fd4f6d2a439ca2f31e01a82baa7e28a00ddd2088` |
+| Dictionary graph/raw-MXL/current-MXL | `14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333` | `f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44` |
+
+`TestPackageProfilesPublishedBaselineMigration` verifies all six mappings against
+an immutable capture of complete profiles executed from that public commit.
+The fixture includes its source commit and preserves the old closure/rule data;
+its byte hash, profile count, unique IDs, target and before/after catalog values
+are asserted independently of the current implementation.
+
+### Supplemental unpublished checkpoints
+
+The following comparisons retain engineering history from unpublished local
+integration checkpoint `47cd65c`; they are not public release baselines. In
+particular `147d3418…` already included earlier functional changes and must not
+be substituted for the public dictionary package baseline above.
+
+| Intermediate catalog group | Before IPA integration | After IPA integration |
 |---|---|---|
 | Source/model/sounds dictionaries | `21c731b5d19ebf918bff42fb3a15cac2fae6053b5b8006faf3f32b6108a8db21` | `d8199be864c2baa081aca5887ca0ac188052ba22f6a690ea9bb3b436dc054c57` |
 | Source internal-DTD local/links/dictionaries | `9f9d4a3ef31008332be016a7fe5b86cc10b2a764cf13426735683455ec07e5d0` | `b2c6ad587726a0b64f7315f0d053a867e0d1d85b81f87217267d967fe5f9092c` |
