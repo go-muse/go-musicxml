@@ -74,8 +74,11 @@ attribute-name map now leases a modeled 512 + 128 × entry-count bytes,
 including zero-entry calls, and releases the lease at function return. This
 corrects under-admission by the earlier 96 × entry-count envelope; a tuned
 transient buffer limit may now refuse sooner, without increasing permanently
-retained storage. Escaping-map allocation controls independently check the
-envelope on the supported test toolchain; it is not an exact allocator promise.
+retained storage. Escaping-map controls compare sampled mean cumulative allocation with the
+envelope and log individual maxima separately. Process-wide `TotalAlloc` can
+include unrelated allocation and dead replaced hash tables, so neither mean
+nor maximum is an exact per-map live peak. Fixed/group and slot-size guards
+complement those regressions; this is not a universal physical-memory proof.
 
 The changed retained-storage and container-growth paths admit their modeled
 logical storage before allocation; the envelopes are not exact Go allocator or
