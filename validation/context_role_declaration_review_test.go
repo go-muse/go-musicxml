@@ -110,7 +110,11 @@ func TestContextRoleSessionReuseDeclarationEvidenceIsolation(t *testing.T) {
 func TestContextRoleSessionReuseSharedSchemaIsolation(t *testing.T) {
 	first, b, node := contextRoleRepeatedFixture(t, 2)
 	defer first.cleanup()
-	second := contextRoleSchemaSession(t, first.schema.active, 2)
+	engine, err := NewEngine(first.catalog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second := contextRoleEngineSession(t, engine, 2)
 	defer second.cleanup()
 	other := second.nodes[node.header.ID]
 	if first.schema.active != second.schema.active || node.header.Declaration == other.header.Declaration || *node.header.Declaration != *other.header.Declaration {
