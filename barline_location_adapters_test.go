@@ -1,6 +1,8 @@
 package musicxml
 
 import (
+	"context"
+	"strings"
 	"sync"
 	"testing"
 
@@ -68,10 +70,10 @@ func TestBarlineLocationAdapterMatrix(t *testing.T) {
 		{"left-after-attributes", barlineDivisions + `<barline location="left"/>`, "", []validation.Outcome{validation.OutcomePass}},
 		{"left-before-invalid-duration", barlineDivisions + `<barline location="left"/><note><rest/><duration>-1</duration></note>`, "", []validation.Outcome{validation.OutcomePass}},
 		{"left-after-note", barlineDivisions + barlineNote("1") + `<barline location="left"/>`, "", []validation.Outcome{validation.OutcomeFail}},
-		{"left-after-backup", barlineDivisions + barlineNote("1") + barlineBackup("1") + `<barline location="left"/>`, "", []validation.Outcome{validation.OutcomePass}},
+		{"left-after-backup", barlineDivisions + barlineNote("1") + barlineBackup("1") + `<barline location="left"/>`, "", []validation.Outcome{validation.OutcomeUnknown}},
 		{"default-terminal-note", barlineDivisions + barlineNote("1") + `<barline/>`, "", []validation.Outcome{validation.OutcomePass}},
 		{"right-before-second-voice", barlineDivisions + barlineNote("4") + `<barline/>` + barlineBackup("4") + barlineNote("4") + `<barline/>`, "", []validation.Outcome{validation.OutcomePass, validation.OutcomePass}},
-		{"short-final-voice", barlineDivisions + barlineNote("4") + `<barline/>` + barlineBackup("4") + barlineNote("2") + `<barline/>`, "", []validation.Outcome{validation.OutcomeUnknown, validation.OutcomeFail}},
+		{"short-final-voice", barlineDivisions + barlineNote("4") + `<barline/>` + barlineBackup("4") + barlineNote("2") + `<barline/>`, "", []validation.Outcome{validation.OutcomeUnknown, validation.OutcomeUnknown}},
 		{"restoring-forward", barlineDivisions + barlineNote("4") + barlineBackup("4") + barlineNote("1") + barlineForward("3") + `<barline/>`, "", []validation.Outcome{validation.OutcomePass}},
 		{"new-maximum-forward", barlineDivisions + barlineNote("1") + barlineForward("3") + `<barline/>`, "", []validation.Outcome{validation.OutcomeUnknown}},
 		{"forward-only", barlineDivisions + barlineForward("4") + `<barline/>`, "", []validation.Outcome{validation.OutcomeUnknown}},
@@ -85,7 +87,7 @@ func TestBarlineLocationAdapterMatrix(t *testing.T) {
 		{"pickup-yes", `<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>` + barlineNote("1") + `<barline/>`, `implicit="yes"`, []validation.Outcome{validation.OutcomePass}},
 		{"pickup-no", `<attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>` + barlineNote("1") + `<barline/>`, `implicit="no"`, []validation.Outcome{validation.OutcomePass}},
 		{"unknown-divisions", barlineNote("1") + `<barline/>`, "", []validation.Outcome{validation.OutcomeUnknown}},
-		{"no-special-measure-rest", barlineDivisions + `<note><rest measure="yes"/><duration>4</duration></note>` + barlineBackup("4") + barlineNote("2") + `<barline/>`, "", []validation.Outcome{validation.OutcomeFail}},
+		{"no-special-measure-rest", barlineDivisions + `<note><rest measure="yes"/><duration>4</duration></note>` + barlineBackup("4") + barlineNote("2") + `<barline/>`, "", []validation.Outcome{validation.OutcomeUnknown}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, timewise := range []bool{false, true} {
@@ -227,6 +229,69 @@ func TestBarlineLocationUnrelatedInvalidFieldsAndRelevantGaps(t *testing.T) {
 						}
 					})
 				})
+			}
+		})
+	}
+}
+
+// Exercise the actual published semantic compositions, not just the isolated
+// barline test catalog. XML order cannot be reconstructed from cursor time.
+func TestBarlineLocationSemanticProfilesOrderedPlacement(t *testing.T) {
+	quarter := func(voice string) string {
+		return `<note><rest/><duration>1</duration><voice>` + voice + `</voice></note>`
+	}
+	firstVoice := strings.Repeat(quarter("1"), 4)
+	shorterVoice := barlineBackup("4") + strings.Repeat(quarter("2"), 2)
+	for _, tc := range []struct {
+		name, body, reason string
+		outcome            validation.Outcome
+	}{
+		{"right-xml-last-shorter-final-voice", firstVoice + shorterVoice + `<barline location="right"/>`, "barline-measure-end-unequal-voices", validation.OutcomeUnknown},
+		{"default-xml-last-shorter-final-voice", firstVoice + shorterVoice + `<barline/>`, "barline-measure-end-unequal-voices", validation.OutcomeUnknown},
+		{"right-before-trailing-metadata", firstVoice + shorterVoice + `<barline/><print/>`, "barline-measure-end-unequal-voices", validation.OutcomeUnknown},
+		{"left-xml-last-after-backup", firstVoice + barlineBackup("4") + `<barline location="left"/>`, "barline-left-placement-unestablished", validation.OutcomeUnknown},
+		{"left-after-forward-backup", barlineForward("4") + barlineBackup("4") + `<barline location="left"/>`, "barline-left-placement-unestablished", validation.OutcomeUnknown},
+		{"left-after-attributes", `<barline location="left"/>` + firstVoice, "", validation.OutcomePass},
+		{"right-restored-final-voice", firstVoice + shorterVoice + barlineForward("2") + `<barline/>`, "", validation.OutcomePass},
+		{"right-forward-only", barlineForward("4") + `<barline/>`, "barline-measure-end-unestablished", validation.OutcomeUnknown},
+		{"right-empty", `<barline/>`, "barline-measure-end-unestablished", validation.OutcomeUnknown},
+		{"right-interior-before-later-note", quarter("1") + `<barline/>` + strings.Repeat(quarter("1"), 3), "barline-location-mismatch", validation.OutcomeFail},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, timewise := range []bool{false, true} {
+				for _, target := range []validation.Target{validation.TargetSource, validation.TargetModel} {
+					name := string(target) + map[bool]string{false: "/partwise", true: "/timewise"}[timewise]
+					t.Run(name, func(t *testing.T) {
+						input := barlineLocationScore(timewise, barlineDivisions+tc.body, "")
+						var report validation.Report
+						var err error
+						if target == validation.TargetSource {
+							report, err = InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceSemantics})
+						} else {
+							doc, e := Decode(strings.NewReader(input))
+							if e != nil {
+								t.Fatal(e)
+							}
+							report, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelSemantics})
+						}
+						if err != nil {
+							t.Fatal(err)
+						}
+						var findings []validation.Finding
+						for _, f := range report.Findings {
+							if f.Rule.ID == "MX40-CONTEXT-barline-location" {
+								findings = append(findings, f)
+							}
+						}
+						if tc.outcome == validation.OutcomePass {
+							if !report.Satisfied() || len(findings) != 0 {
+								t.Fatalf("expected satisfied placement: %+v", report.Findings)
+							}
+						} else if len(findings) != 1 || findings[0].Outcome != tc.outcome || string(findings[0].Reason) != tc.reason {
+							t.Fatalf("barline findings=%+v want %s/%s", findings, tc.outcome, tc.reason)
+						}
+					})
+				}
 			}
 		})
 	}
