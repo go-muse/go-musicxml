@@ -281,6 +281,8 @@ func TestBarlineLocationSemanticProfilesOrderedPlacement(t *testing.T) {
 						for _, f := range report.Findings {
 							if f.Rule.ID == "MX40-CONTEXT-barline-location" {
 								findings = append(findings, f)
+							} else if f.Outcome == validation.OutcomeFail {
+								t.Fatalf("fixture has an unrelated violation: %+v", f)
 							}
 						}
 						if tc.outcome == validation.OutcomePass {
@@ -295,4 +297,34 @@ func TestBarlineLocationSemanticProfilesOrderedPlacement(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBarlineLocationCatalogUsesDirectBarlineAuthority(t *testing.T) {
+	d, err := buildTimelineAssessmentDefinitions()
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := addBarlineLocationAssessment(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, rule := range d.rules {
+		if rule.Key != key {
+			continue
+		}
+		found := false
+		for _, source := range rule.Sources {
+			if source.URL == "https://github.com/w3c-cg/musicxml/issues/28" {
+				t.Fatal("direction-offset issue is not barline-location authority")
+			}
+			if source.URL == "https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/barline/" {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatal("direct MusicXML 4.0 barline authority missing")
+		}
+		return
+	}
+	t.Fatal("barline rule missing")
 }
