@@ -127,16 +127,23 @@ already established issues and explicit incompleteness must remain preserved.
 ## Current graph capacity witnesses
 
 On Go 1.27.2 linux/amd64, the unchanged single-note-per-measure source-origin
-fixture completes at 568 measures (76,155 source bytes) and refuses snapshot
-admission at 569 measures (76,289 bytes): 42,495,274 live bytes plus a
-24,717,911-byte request. The old 531/532 controls remain and now both complete.
-An explicit 67,213,185-byte limit admits the same snapshot; one byte less refuses.
-This is an exact overlap-admission test, not a changed default or general limit
-recommendation. Successful controls check every expected source-origin row.
+fixture now completes at 576 measures (77,227 source bytes) and refuses snapshot
+admission at 577 measures (77,361 bytes): 42,053,858 live bytes plus a
+25,064,439-byte request. Historical 531/532 and initial PR 43 568/569 controls
+remain and now all complete. The initial PR 43 checkpoint `c0d73972` refused
+569 at 42,495,274 live bytes plus 24,717,911 requested bytes; declaration-key
+role reuse reduces that fixture's live charge to 41,477,418 bytes.
+
+Explicit exact/one-short controls pin both the 569-measure snapshot at
+66,195,329 bytes and the 577-measure snapshot at 67,118,297 bytes. These are
+fixture-specific overlap-admission tests, not changed defaults or general limit
+recommendations. Successful controls check every expected source-origin row.
 
 The separate 86,052-byte fragment fixture still refuses its 34,741,160-byte
-snapshot request; live storage is now 54,998,870 bytes rather than the historical
-57,607,574. These fixture-specific logical charges are not heap or RSS measures.
+snapshot request; live storage is now 54,486,614 bytes rather than the initial
+PR 43 54,998,870 or historical PR 41 57,607,574 bytes. These logical charges
+are not heap or RSS measurements. The changed boundaries reflect less retained
+role-cache duplication, not relaxed checks or a raised default budget.
 
 ## Residual limits and interpretation
 

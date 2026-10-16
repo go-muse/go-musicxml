@@ -72,7 +72,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   532 (71,331 bytes) refused was superseded by compact retained facts. The
   initial PR 43 checkpoint `c0d73972` admits 568 measures (76,155 bytes),
   then refuses 569 (76,289 bytes): 42,495,274 live bytes plus a 24,717,911-byte
-  request. The earlier reported boundary was 494 measures (about 66 KB). The review reported the 500-measure case at
+  request. Review corrections further reduce repeated role-cache storage: the
+  same fixture now completes at 576 measures (77,227 bytes) and refuses 577
+  (77,361 bytes), at 42,053,858 live bytes plus a 25,064,439-byte request.
+  The earlier reported boundary was 494 measures (about 66 KB).
+  The review reported the 500-measure case at
   about 62.9 of 67.1 MB, with comparisons of about 114 KB for standalone DTD/dictionary
   assessment and 168 KB for the legacy graph. These are fixture-specific
   observations, not general document-size guarantees. The 86,052-byte,

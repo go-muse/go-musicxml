@@ -4,7 +4,10 @@ Historical PR 41 receipt at published baseline `d336f089`. The recorded
 measurements below are preserved; the named test implementations have changed.
 At the initial PR 43 checkpoint `c0d73972`, those tests assert 532 completion,
 the adjacent 568/569 boundary, 54,998,870 live bytes for the medium fragment,
-and a later buffered-byte refusal for the official source witness. The old
+and a later buffered-byte refusal for the official source witness. PR 43 review
+corrections subsequently move the synthetic adjacent boundary to 576/577 and
+reduce medium-fragment live bytes to 54,486,614; see the linked current scope
+for exact/one-short controls. The old
 rule-step refusal is historical. Commands below reproduce the historical
 claims only when run against their recorded baseline, not against current tests. See
 [the current correction scope](corpus-resource-fixes.md) and the current
