@@ -196,6 +196,29 @@ func TestContextRoleSessionReuseOwnershipAndEnvelope(t *testing.T) {
 	}
 }
 
+// The compiled table is safe to share; admitted cache state remains per session.
+func TestContextRoleSessionReuseConcurrentSessions(t *testing.T) {
+	seed, shared, _ := contextRoleReuseFixture(t)
+	seed.cleanup()
+	for i := 0; i < 4; i++ {
+		t.Run("session", func(t *testing.T) {
+			t.Parallel()
+			s, _, n := contextRoleReuseFixture(t)
+			defer s.cleanup()
+			before := s.retained
+			for j := 0; j < 20; j++ {
+				r := &contextReader{ctx: context.Background(), s: s, b: shared}
+				if !r.matches(n, "item-role") || !r.matches(n, "item-alias") || r.matches(n, "absent-role") || r.err != nil {
+					t.Fatalf("shared table reader%d changed exact membership: %v", j, r.err)
+				}
+			}
+			if s.retained-before != 512 {
+				t.Fatalf("independent session did not own exactly one entry: %d", s.retained-before)
+			}
+		})
+	}
+}
+
 func TestContextRoleSessionReuseMissingBindings(t *testing.T) {
 	for _, mode := range []string{"missing", "unavailable", "zero"} {
 		s, b, n := contextRoleReuseFixture(t)
