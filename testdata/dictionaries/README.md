@@ -1,7 +1,7 @@
 # Pinned dictionary source fixtures
 
-These original source bytes are test inputs, not automatically loaded runtime
-resources. They retain their upstream terms; see [NOTICES.txt](NOTICES.txt) and
+These exact source bytes are test fixtures and pinned inputs for explicit
+offline generation of the bundled dictionary assets. They retain their upstream terms; see [NOTICES.txt](NOTICES.txt) and
 [the project notices](../../THIRD_PARTY_NOTICES.md).
 
 - SMuFL 1.4 glyphnames and ranges: upstream commit
@@ -17,7 +17,7 @@ classes, optional font glyphs, font programs and artwork are not selected.
 
 The `ipa-positive` and `ipa-representation` directories contain separately
 licensed project-authored derived ledgers, not original publications. The
-representation bundle is an explicit test input with 453 records and a separately
-pinned minimal policy. Its source and license witnesses are in
-[the source ledger](ipa-representation/source-ledger.md); no runtime auto-load or
-source fetch is introduced.
+representation bundle is a pinned test and generation input with 453 records and
+a separately pinned minimal policy. Its source and license witnesses are in
+[the source ledger](ipa-representation/source-ledger.md); the explicit bundled source supplies the exact local bytes without fetching
+original publications or automatically selecting capabilities.

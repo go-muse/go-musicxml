@@ -9,6 +9,12 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add `BundledDictionarySource()` for the existing pinned SMuFL, MusicXML 4.0
+  standard-sounds and IPA-derived components. Explicit offline generation
+  prepares committed local assets embedded at build time; callers need no data
+  files or runtime fetch. Existing selections, profiles, nil-source behavior,
+  importer accounting and bounded evidence semantics remain unchanged.
+
 - Add explicit encoded semantic source/model and graph/raw/current-MXL profiles
   through existing assessment APIs. They compose exact intrinsic interpretations,
   bounded barline/repeat evidence, selected dictionary capabilities and the

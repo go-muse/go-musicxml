@@ -270,9 +270,11 @@ reconciliation remain separately owned in the
 ## Fixed data, transformations and lineage
 
 The authoritative compiled metadata lives in
-[`dictionary_manifest.go`](../../validation/dictionary_manifest.go). Source
-fixtures are explicit test inputs, never automatically loaded runtime data.
-All raw and transformed identities are independently checked; a correct source
+[`dictionary_manifest.go`](../../validation/dictionary_manifest.go). The committed
+source fixtures also serve as pinned offline generation inputs for the embedded assets.
+`BundledDictionarySource()` explicitly supplies those exact bytes through the
+existing importer; neither component selection nor profile activation becomes
+automatic. All raw and transformed identities are independently checked; a correct source
 certificate does not authorize altered typed rows.
 
 | Manifest | Raw component bytes / SHA-256 | Typed bytes / SHA-256 | Exact selected relation |

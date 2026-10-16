@@ -9,6 +9,21 @@ Contributions are welcome.
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
 
+## Pinned dictionary generation
+
+The bundled dictionary source uses committed assets prepared by explicit
+`go generate ./...`. Normal generation is offline: it verifies the existing
+SMuFL, MusicXML standard-sounds and IPA-derived input pins before reproducing
+byte-identical embedded data. Ordinary builds use `go:embed` and do not invoke
+this command or download data. Run the existing generation check before a PR.
+
+Upstream refresh is separate from normal generation. Deliberately choose a
+snapshot, preserve its licensing and provenance, update the reviewed raw and
+transformed pins, and supply compatibility/migration tests before regenerating.
+Do not add a moving-latest download to generation or CI. A newly embedded IPA
+bundle must retain its declared affirmative coverage and source lineage; more
+bytes do not establish a complete negative oracle.
+
 ## Local checks
 
 Run the standard checks before opening a pull request:

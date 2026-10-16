@@ -1072,6 +1072,32 @@ Existing path, archive, indirection, unproved-IPA-representation, unsupported-ca
 unread-external gates remain active. See
 [the composition scope](docs/validation/dtd-package-composition-scope.md).
 
+### Bundled pinned dictionary data
+
+Set `DictionaryOptions.Source` to `BundledDictionarySource()` to use the five
+bundled components: SMuFL 1.4 canonical glyph names and ranges, MusicXML 4.0
+standard sounds, and the separate IPA 2015/Unicode 13 positive and representation
+bundles. Keep `Selections` explicit. The same source is usable by standalone,
+linked-document and MXL dictionary entry points; no caller data files are needed.
+
+The existing bounded importer verifies raw and transformed identities and owns
+its parsed data. Embedding changes delivery only: profiles, catalog identities,
+relations, finite budgets and source/current-model authority are unchanged.
+Nil sources still leave selected capabilities unavailable. Empty selections do
+not open the bundled source. Caller-provided sources remain supported.
+
+Ordinary compilation embeds committed local files with `go:embed`; it neither
+runs generation nor fetches dictionary data. Explicit `go generate ./...`
+reproduces those files offline from committed exact-pin inputs. Updating an
+upstream snapshot is a separate maintenance action requiring deliberate pin,
+provenance and compatibility changes. SMuFL 1.4 is the supported catalog snapshot,
+not an exclusive version requirement imposed by MusicXML 4.0.
+
+Bundled standard-sound recognition does not reject legal custom sound names.
+Bundled IPA data retains its bounded affirmative-witness semantics: unavailable
+representations do not become normative negatives, and derived bundle lineage
+is distinct from reading the original publications during an assessment.
+
 ### Caller-supplied transport and sealed data
 
 `DictionarySource.Open(context.Context, DictionaryComponentRequest)` returns
