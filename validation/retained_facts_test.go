@@ -603,7 +603,11 @@ func TestRetainedFactAtomicKindsAndHeaderOwnership(t *testing.T) {
 	in.Type.Cause = cause
 	in.Location.Position = &SourcePosition{Line: 23, Column: 17, CoordinateSpace: "caller-position"}
 	in.Bindings = []Binding{{Prefix: "p", URI: "caller-namespace"}}
-	want := cloneHeader(in)
+	want := in
+	wantCause, wantPosition := *cause, *in.Location.Position
+	want.Type.Cause = &wantCause
+	want.Location.Position = &wantPosition
+	want.Bindings = []Binding{{Prefix: "p", URI: "caller-namespace"}}
 	out, err := s.retainFactHeader(context.Background(), in)
 	if err != nil {
 		t.Fatal(err)
@@ -803,4 +807,18 @@ func TestRetainedFactDeclarationCacheCancellationAndCausalEvidence(t *testing.T)
 			}
 		})
 	}
+}
+
+// Measure only the evidence retained before Close evaluates and caches a
+// verdict. This keeps cache-exhaustion tests independent of removed inline
+// end envelopes and of future changes to canonical evidence sharing.
+func measuredRetainedEndBytes(t *testing.T, end NodeEnd) int64 {
+	t.Helper()
+	probe := retainedStorageSession(t)
+	defer probe.cleanup()
+	before := probe.retained
+	if _, err := probe.retainFactEnd(end); err != nil {
+		t.Fatal(err)
+	}
+	return probe.retained - before
 }

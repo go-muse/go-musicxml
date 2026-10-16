@@ -498,12 +498,17 @@ func TestModelRepresentationVerdictSurvivesCacheFailure(t *testing.T) {
 	end := representationEnd(1)
 	end.Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "model-nonfinite"}
 	used, _ := s.account.Usage(BudgetBufferedBytes)
-	external := s.account.Limits().MaxBufferedBytes - used - endLogicalBytes(end)
+	external := s.account.Limits().MaxBufferedBytes - used - measuredRetainedEndBytes(t, end)
 	if err := s.account.Charge(BudgetBufferedBytes, external); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(context.Background(), end); !errors.Is(err, ErrResourceLimit) {
-		t.Fatalf("expected cache exhaustion: %v", err)
+	closeErr := s.Close(context.Background(), end)
+	var refused *ResourceError
+	if !errors.As(closeErr, &refused) || !s.nodes[1].closed {
+		t.Fatalf("expected decision-cache resource failure after end retention: %v", closeErr)
+	}
+	if left := refused.Limit - refused.Used; left != 0 {
+		t.Fatalf("decision-cache refusal has %d bytes left, want exactly 0", left)
 	}
 	r, err := s.Finish(context.Background(), Completion{Syntax: SyntaxNotAssessed})
 	if !errors.Is(err, ErrResourceLimit) || r.BlockingProblems < 2 || r.AssessmentComplete || r.Satisfied() {

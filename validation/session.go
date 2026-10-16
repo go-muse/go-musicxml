@@ -783,18 +783,8 @@ func locationLogicalBytes(v Location) int64 {
 func scalarLogicalBytes(v Scalar) int64 {
 	return 192 + int64(len(v.Lexeme.Value)) + atomicLogicalBytes(v.Value.Value) + evidenceLogicalBytes(v.Lexeme) + evidenceLogicalBytes(v.Value)
 }
-func headerLogicalBytes(v NodeHeader) int64 {
-	n := int64(512+len(v.Name.Space)+len(v.Name.Local)+len(v.Type.Value.Name.Space)+len(v.Type.Value.Name.Local)+len(v.Type.Value.Occurrence)+len(v.Declaration.Value.OwnerOccurrence)+len(v.Declaration.Value.Occurrence)) + locationLogicalBytes(v.Location) + evidenceLogicalBytes(v.Type) + evidenceLogicalBytes(v.Declaration)
-	for _, b := range v.Bindings {
-		n += int64(64 + len(b.Prefix) + len(b.URI))
-	}
-	return n
-}
 func attributeLogicalBytes(v AttributeFact) int64 {
 	return 256 + int64(len(v.Name.Space)+len(v.Name.Local)+len(v.Declaration.Value.OwnerOccurrence)+len(v.Declaration.Value.Occurrence)) + locationLogicalBytes(v.Location) + scalarLogicalBytes(v.Scalar) + evidenceLogicalBytes(v.Declaration) + evidenceLogicalBytes(v.Presence)
-}
-func endLogicalBytes(v NodeEnd) int64 {
-	return 192 + scalarLogicalBytes(v.Scalar) + evidenceLogicalBytes(v.ChildrenComplete) + evidenceLogicalBytes(v.AttributesComplete) + evidenceLogicalBytes(v.Order)
 }
 func profileLogicalBytes(v Profile) int64 {
 	n := int64(512 + len(v.ID) + len(v.MusicXMLVersion) + len(v.CatalogDigest) + len(v.RegistryCommit) + len(v.NormativeClosure))

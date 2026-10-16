@@ -2,6 +2,7 @@ package validation
 
 import (
 	"context"
+	"errors"
 	"testing"
 )
 
@@ -181,12 +182,17 @@ func TestQAComputedViolationSurvivesDecisionCacheExhaustion(t *testing.T) {
 	a := s.account
 	used, _ := a.Usage(BudgetBufferedBytes)
 	end := factEnd(1)
-	reservation := a.Limits().MaxBufferedBytes - used - endLogicalBytes(end) - 1
+	reservation := a.Limits().MaxBufferedBytes - used - measuredRetainedEndBytes(t, end) - 1
 	if err := a.Charge(BudgetBufferedBytes, reservation); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.Close(context.Background(), end); err == nil {
-		t.Fatal("expected cache resource failure")
+	err := s.Close(context.Background(), end)
+	var refused *ResourceError
+	if !errors.As(err, &refused) || !s.nodes[1].closed {
+		t.Fatalf("expected decision-cache resource failure after end retention: %v", err)
+	}
+	if left := refused.Limit - refused.Used; left != 1 {
+		t.Fatalf("decision-cache refusal has %d bytes left, want exactly 1", left)
 	}
 	r, _ := s.Finish(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
 	_ = a.Release(BudgetBufferedBytes, reservation)

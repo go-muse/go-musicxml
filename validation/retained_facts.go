@@ -55,8 +55,6 @@ const (
 // No process-global mutable canonical records: each pool has one live account.
 // Canonical eligibility compares state, value, reason AND cause exactly.
 type retainedFactPool struct {
-	zeroType                              Evidence[ComponentID]
-	zeroDeclaration                       Evidence[DeclarationID]
 	zeroLexeme                            Evidence[string]
 	zeroAtomic                            Evidence[Atomic]
 	zeroBool                              Evidence[bool]
