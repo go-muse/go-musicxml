@@ -378,6 +378,24 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 	return identityErr
 }
 
+// The local QName-to-slot map needs a header and an entire first group even
+// for one attribute. Larger Go maps round hints up for load factor and table
+// capacity: reserve three key/value/control slots per entry, plus fixed
+// header/first-group space. Payload-size guards and independent measured heap
+// tests cover allocator rounding and table/directory overhead as well.
+const (
+	schemaAttributeIndexHeaderBytes int64 = 512
+	schemaAttributeIndexSlotBytes   int64 = 128
+)
+
+func schemaAttributeIndexBytes(count int64) (int64, error) {
+	slots, err := rationalCheckedMul(BudgetBufferedBytes, count, schemaAttributeIndexSlotBytes)
+	if err != nil {
+		return 0, err
+	}
+	return retainedFactSize(schemaAttributeIndexHeaderBytes, slots)
+}
+
 func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.Use, binding xsd.Binding) error {
 	state := s.schema
 	declaration := state.active.declaration(use)
@@ -416,11 +434,8 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 		}
 		n.end.Scalar.Value = owned
 	}
-	indexBytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(n.attributes)), 96)
+	indexBytes, err := schemaAttributeIndexBytes(int64(len(n.attributes)))
 	if err != nil {
-		return err
-	}
-	if _, err := AllocationSize(indexBytes); err != nil {
 		return err
 	}
 	if err := s.account.Charge(BudgetBufferedBytes, indexBytes); err != nil {

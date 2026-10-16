@@ -11,7 +11,7 @@ func TestSchemaAttributeScratchExactMapAdmission(t *testing.T) {
 		s, n, u, b := schemaAttributeScratchFixture(t)
 		before := s.retained
 		used, _ := s.account.Usage(BudgetBufferedBytes)
-		occupancy := s.account.Limits().MaxBufferedBytes - used - schemaAttributeScratchRootRecordBytes - int64(len(n.attributes))*96 + short
+		occupancy := s.account.Limits().MaxBufferedBytes - used - schemaAttributeScratchRootRecordBytes - (512 + int64(len(n.attributes))*128) + short
 		if err := s.account.Charge(BudgetBufferedBytes, occupancy); err != nil {
 			t.Fatal(err)
 		}
@@ -111,7 +111,7 @@ func TestSchemaAttributeScratchRefusalPreservesPriorFailure(t *testing.T) {
 		t.Fatal("fixture did not prove invalid attribute")
 	}
 	used, _ := s.account.Usage(BudgetBufferedBytes)
-	occupancy := s.account.Limits().MaxBufferedBytes - used - schemaAttributeScratchRootRecordBytes - int64(len(n.attributes))*96 + 1
+	occupancy := s.account.Limits().MaxBufferedBytes - used - schemaAttributeScratchRootRecordBytes - (512 + int64(len(n.attributes))*128) + 1
 	if err := s.account.Charge(BudgetBufferedBytes, occupancy); err != nil {
 		t.Fatal(err)
 	}
