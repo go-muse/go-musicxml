@@ -280,6 +280,9 @@ func resourceMeasureAs(ctx context.Context, a *Account, v reflect.Value, to stri
 	if !v.IsValid() {
 		return 0, nil
 	}
+	if v.Type() == reflect.TypeFor[SourceOriginContextResult]() {
+		return resourceRecordMeasureAs(ctx, a, v, to, true)
+	}
 	if field, ok := resourceNumericFields[v.Type()]; ok {
 		return v.Field(field).Int() + 64, nil
 	}
