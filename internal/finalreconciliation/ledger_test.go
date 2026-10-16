@@ -47,6 +47,10 @@ func TestFinalReconciliationRejectsUnsupportedClaims(t *testing.T) {
 		{"broken original pointer", "reference", func(m map[string]any) {
 			first(m, "requirements")["original_ref"] = "docs/validation/plan/implementation-plan.json#/requirements/99999"
 		}},
+		{"wrong inherited requirement", "inherited reference", func(m map[string]any) {
+			first(m, "requirements")["inherited_refs"].([]any)[0] = "docs/validation/source-assessment-ownership.json#/requirements/1"
+		}},
+		{"missing linked collection", "linked inventory", func(m map[string]any) { m["linked_inventories"] = m["linked_inventories"].([]any)[1:] }},
 		{"broken route", "test function", func(m map[string]any) { first(m, "cases")["function"] = "TestNonexistentFinalLedgerCase" }},
 		{"broken case anchor", "anchor", func(m map[string]any) {
 			first(m, "cases")["anchors"].([]any)[0].(map[string]any)["text"] = "MISSING_CONCRETE_FIXTURE_6260"
@@ -89,3 +93,31 @@ func TestFinalReconciliationRejectsUnsupportedClaims(t *testing.T) {
 }
 
 func first(m map[string]any, key string) map[string]any { return m[key].([]any)[0].(map[string]any) }
+
+func TestFinalReconciliationRejectsUnlinkedContracts(t *testing.T) {
+	for _, test := range []struct{ name, collection, key, want string }{
+		{"requirement without test", "requirements", "test_contract_ids", "lost test contract links"},
+		{"test without requirement", "test_contracts", "requirement_ids", "changed requirement links"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root, ledger := loadLedger(t)
+			first(ledger, test.collection)[test.key] = []any{}
+			err := validateLedger(root, ledger)
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("unlinked contract accepted or wrong rejection: %v", err)
+			}
+		})
+	}
+}
+
+func TestFinalReconciliationRejectsHistoricalExecutionPromotion(t *testing.T) {
+	root, ledger := loadLedger(t)
+	row := first(ledger, "requirements")
+	row["classification"] = "implemented-and-verified"
+	// Existing named cases and historic receipt links are still present. They
+	// cannot promote an unexecuted final-tree obligation into verified coverage.
+	err := validateLedger(root, ledger)
+	if err == nil || !strings.Contains(err.Error(), "unsupported closure") {
+		t.Fatalf("historical evidence promoted into final verification: %v", err)
+	}
+}

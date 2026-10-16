@@ -19,6 +19,9 @@ import (
 var axes = []string{"positive", "negative", "boundary", "missing_fact", "interaction"}
 
 func validateLedger(root string, ledger map[string]any) error {
+	references := &ledgerReferences{files: make(map[string][]byte), documents: make(map[string]any)}
+	readJSON, readLocal := references.readJSON, references.readLocal
+	refs, refEquals, resolveRef := references.refs, references.refEquals, references.resolveRef
 	if ledger["format"] != "musicxml-final-requirement-reconciliation-1" {
 		return fmt.Errorf("unexpected format")
 	}
@@ -118,6 +121,20 @@ func validateLedger(root string, ledger map[string]any) error {
 		for _, key := range []string{"implementation_refs", "decision_refs", "inherited_refs", "crosswalk_refs"} {
 			if err := refs(root, row[key]); err != nil {
 				return fmt.Errorf("%s %s: %w", id, key, err)
+			}
+		}
+		inherited, err := stringList(row["inherited_refs"])
+		if err != nil || len(inherited) != 4 {
+			return fmt.Errorf("%s missing inherited ownership references", id)
+		}
+		for _, ref := range inherited {
+			value, err := resolveRef(root, ref)
+			if err != nil {
+				return err
+			}
+			record, ok := value.(map[string]any)
+			if !ok || record["id"] != id {
+				return fmt.Errorf("%s inherited reference names another requirement", id)
 			}
 		}
 		execution, ok := row["execution"].(map[string]any)
@@ -305,11 +322,29 @@ func validateLedger(root string, ledger map[string]any) error {
 	if !ok || len(inventories) < 8 {
 		return fmt.Errorf("missing linked inventory identity sets")
 	}
+	// These inventories overlap, but none can disappear from the reconciliation.
+	wantInventories := map[string]bool{}
+	for _, ref := range []string{
+		"plan/context-dispositions.json#/checks", "plan/context-dispositions.json#/test_contracts", "plan/context-dispositions.json#/overlap_reviews",
+		"plan/prose-contracts.json#/checks", "plan/prose-contracts.json#/test_contracts", "plan/prose-contracts.json#/overlap_reviews",
+		"plan/xsd-contracts.json#/checks", "plan/xsd-contracts.json#/instances", "plan/xsd-test-contracts.json#/test_contracts",
+		"source-assessment-ownership.json#/source_contracts", "functional-completion-crosswalk.json#/external_rows", "functional-completion-crosswalk.json#/musical_rows",
+	} {
+		wantInventories["docs/validation/"+ref] = true
+	}
+	if len(inventories) != len(wantInventories) {
+		return fmt.Errorf("missing linked inventory collection")
+	}
 	for _, v := range inventories {
 		row, ok := v.(map[string]any)
 		if !ok {
 			return fmt.Errorf("malformed linked inventory")
 		}
+		ref := stringField(row, "ref")
+		if !wantInventories[ref] {
+			return fmt.Errorf("unknown or duplicate linked inventory %s", ref)
+		}
+		delete(wantInventories, ref)
 		source, e := resolveRef(root, stringField(row, "ref"))
 		if e != nil {
 			return e
@@ -355,25 +390,39 @@ func validateLedger(root string, ledger map[string]any) error {
 
 func stringField(m map[string]any, key string) string { s, _ := m[key].(string); return s }
 func normalize(b []byte) string                       { return strings.ReplaceAll(string(b), "\r\n", "\n") }
-func readLocal(root, path string) ([]byte, error) {
+
+type ledgerReferences struct {
+	files     map[string][]byte
+	documents map[string]any
+}
+
+func (r *ledgerReferences) readLocal(root, path string) ([]byte, error) {
 	if path == "" || filepath.IsAbs(path) || strings.Contains(path, "\\") || strings.HasPrefix(filepath.Clean(path), "..") {
 		return nil, fmt.Errorf("invalid local reference %q", path)
 	}
-	data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(path)))
+	key := filepath.Join(root, filepath.FromSlash(path))
+	if data, ok := r.files[key]; ok {
+		return data, nil
+	}
+	data, err := os.ReadFile(key)
 	if err != nil {
 		return nil, fmt.Errorf("reference %s: %w", path, err)
 	}
+	r.files[key] = data
 	return data, nil
 }
-func readJSON(root, path string) (map[string]any, error) {
-	b, e := readLocal(root, path)
-	if e != nil {
-		return nil, e
+func (r *ledgerReferences) readJSON(root, path string) (map[string]any, error) {
+	value, err := r.resolveRef(root, path+"#")
+	if err != nil {
+		return nil, err
 	}
-	var m map[string]any
-	e = json.Unmarshal(b, &m)
-	return m, e
+	object, ok := value.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("reference %s is not a JSON object", path)
+	}
+	return object, nil
 }
+
 func indexed(value any, key string) (map[string]map[string]any, error) {
 	rows, ok := value.([]any)
 	if !ok {
@@ -419,20 +468,20 @@ func stringList(v any) ([]string, error) {
 	}
 	return r, nil
 }
-func refs(root string, value any) error {
+func (r *ledgerReferences) refs(root string, value any) error {
 	list, e := stringList(value)
 	if e != nil {
 		return e
 	}
 	for _, ref := range list {
-		if _, err := resolveRef(root, ref); err != nil {
+		if _, err := r.resolveRef(root, ref); err != nil {
 			return err
 		}
 	}
 	return nil
 }
-func refEquals(root, ref string, want any) error {
-	got, e := resolveRef(root, ref)
+func (r *ledgerReferences) refEquals(root, ref string, want any) error {
+	got, e := r.resolveRef(root, ref)
 	if e != nil {
 		return e
 	}
@@ -441,18 +490,22 @@ func refEquals(root, ref string, want any) error {
 	}
 	return nil
 }
-func resolveRef(root, ref string) (any, error) {
+func (r *ledgerReferences) resolveRef(root, ref string) (any, error) {
 	path, pointer, has := strings.Cut(ref, "#")
-	data, e := readLocal(root, path)
+	data, e := r.readLocal(root, path)
 	if e != nil {
 		return nil, e
 	}
 	if !has {
 		return string(data), nil
 	}
-	var value any
-	if e = json.Unmarshal(data, &value); e != nil {
-		return nil, fmt.Errorf("reference %s: %w", ref, e)
+	key := filepath.Join(root, filepath.FromSlash(path))
+	value, cached := r.documents[key]
+	if !cached {
+		if e = json.Unmarshal(data, &value); e != nil {
+			return nil, fmt.Errorf("reference %s: %w", ref, e)
+		}
+		r.documents[key] = value
 	}
 	if pointer == "" {
 		return value, nil
