@@ -965,10 +965,11 @@ claim of final integrated acceptance.
 
 `DictionaryOptions` has `Selections []validation.DictionarySelection` and
 `Source DictionarySource`. Each selection supplies one fixed `Manifest` and a
-nonempty, duplicate-free subset of its supported `Relations`. At most four
-manifests may be selected. Unknown manifests/relations, duplicate selections,
-and incompatible profiles are configuration errors, rejected before callbacks.
-Selecting ranges does not implicitly select or open the canonical-name component.
+nonempty, duplicate-free subset of its supported `Relations`. At most five
+manifests may be selected, one per fixed component. Unknown
+manifests/relations, duplicate selections and incompatible profiles are
+configuration errors, rejected before callbacks. Selecting ranges does not
+implicitly select or open the canonical-name component.
 
 | Entry point | Options and required profile | Result |
 | --- | --- | --- |
@@ -1085,6 +1086,18 @@ its parsed data. Embedding changes delivery only: profiles, catalog identities,
 relations, finite budgets and source/current-model authority are unchanged.
 Nil sources still leave selected capabilities unavailable. Empty selections do
 not open the bundled source. Caller-provided sources remain supported.
+
+Using `BundledDictionarySource` makes all five embedded component assets
+reachable, including the CC BY-SA 4.0 IPA bundles, regardless of `Selections`.
+Selections control which components are imported and assessed; they do not
+prune the bundled implementation's references to the other assets. The data
+retain their W3C FSA, CC BY-SA 4.0 and Unicode License v3 terms, separately from
+the MIT code license. Distribute binaries containing these data with all five
+notice/license files listed in
+[the bundled-data distribution instructions][bundled-data-notices].
+Those instructions also link the detailed IPA modification and provenance
+records. No particular linker behavior or binary-size saving is guaranteed for
+programs that do not use the bundled source.
 
 Ordinary compilation embeds committed local files with `go:embed`; it neither
 runs generation nor fetches dictionary data. Explicit `go generate ./...`
@@ -2052,3 +2065,5 @@ indirection gates, complete-domain requirements, current-model source gaps and
 independent intrinsic failures. They do not imply general XPath, renderer,
 external desired-score authority or universal conformance. See the
 [scope and acceptance boundary](docs/validation/semantic-composition-scope.md).
+
+[bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data

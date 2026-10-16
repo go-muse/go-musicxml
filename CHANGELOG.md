@@ -13,7 +13,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   standard-sounds and IPA-derived components. Explicit offline generation
   prepares committed local assets embedded at build time; callers need no data
   files or runtime fetch. Existing selections, profiles, nil-source behavior,
-  importer accounting and bounded evidence semantics remain unchanged.
+  importer accounting and bounded evidence semantics remain unchanged. Using
+  the bundled source makes all five components reachable regardless of selected
+  relations, including the separately licensed IPA data. Binary distributions
+  containing those data must include the five notice/license files listed in
+  [the distribution instructions][bundled-data-notices].
 
 - Add explicit encoded semantic source/model and graph/raw/current-MXL profiles
   through existing assessment APIs. They compose exact intrinsic interpretations,
@@ -684,3 +688,5 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 [Unreleased]: https://github.com/go-muse/go-musicxml/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/go-muse/go-musicxml/releases/tag/v0.1.0
+
+[bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data

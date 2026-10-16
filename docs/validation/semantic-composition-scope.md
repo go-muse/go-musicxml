@@ -28,10 +28,12 @@ introduce Sounds discovery. Standard-sound recognition and dictionary-backed
 rendering advice are not added to the score profiles.
 
 All entry points reject incompatible profile/target combinations before caller
-I/O. One root imports only selected dictionary components, owns the set, and shares
-its account and actual capability identity across intrinsic assessments and cache
-reuse. Data is caller supplied; there is no automatic dictionary, schema or DTD
-fetch. Existing resolver authority and resource ownership contracts still apply.
+I/O. One root imports only selected dictionary components, owns the set, and
+shares its account and actual capability identity across intrinsic assessments
+and cache reuse. Dictionary sources and selections are caller chosen,
+including the embedded `BundledDictionarySource`; there is no automatic
+dictionary selection, schema or DTD fetch. Existing resolver authority and
+resource ownership contracts still apply.
 
 ## XML fragments and musical proofs
 

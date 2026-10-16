@@ -406,6 +406,11 @@ in this README.
 
 ## License
 
-The library code is licensed under the [MIT License](LICENSE). Bundled schemas
-and test fixtures retain their upstream terms; see
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+The library code is licensed under the [MIT License](LICENSE). Bundled schemas,
+test fixtures and runtime dictionary data retain their own terms. Programs that
+use `BundledDictionarySource` make all five components reachable regardless of
+selections, including W3C FSA, CC BY-SA 4.0 and Unicode License v3 data.
+Distribute binaries containing those data with the five notice/license files
+listed in [`THIRD_PARTY_NOTICES.md`][bundled-data-notices].
+
+[bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
