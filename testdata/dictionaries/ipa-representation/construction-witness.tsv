@@ -1,0 +1,23 @@
+inventory_id	encoding_scalars	identity_summary
+R01	U+0064 U+0322	Exact alternative for ɖ; DNE L404. Target exists in Unicode13.
+R02	U+006C U+0322	Exact alternative for ɭ; DNE L407. Target exists in Unicode13.
+R03	U+006E U+0322	Exact alternative for ɳ; DNE L408. Target exists in Unicode13.
+R04	U+0072 U+0322	Exact alternative for ɽ; DNE L410. Target exists in Unicode13.
+R05	U+0279 U+0322	Compositional identity for ɻ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.
+R06	U+0073 U+0322	Compositional identity for ʂ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.
+R07	U+0074 U+0322	Exact alternative for ʈ; DNE L411. Target exists in Unicode13.
+R08	U+007A U+0322	Exact alternative for ʐ; DNE L413. Target exists in Unicode13.
+R09	U+0257 U+0322	Exact alternative for ᶑ; DNE L418. Target exists in Unicode13.
+R10	U+026C U+0322	Exact alternative for ꞎ; DNE L423. Target exists in Unicode13.
+R11	U+027A U+0322	Exact alternative for retroflex lateral flap (later U1DF08); DNE L425. The target scalar is post-13; only the left-hand Unicode13 string is under review.
+R12	U+01C3 U+0322	Exact alternative for retroflex click (later U1DF0A); DNE L415. The target scalar is post-13; only the left-hand Unicode13 string is under review.
+R13	U+026E U+0322	Exact alternative for voiced retroflex lateral fricative (later U1DF05); DNE L424. The target scalar is post-13; only the left-hand Unicode13 string is under review.
+R14	U+02B4 U+0322	Compositional identity for ʵ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.
+R15	U+02E1 U+0322	Exact alternative for ᶩ; DNE L433. Target exists in Unicode13.
+R16	U+207F U+0322	Exact alternative for ᶯ; DNE L437. Target exists in Unicode13.
+R17	U+02E2 U+0322	Compositional identity for ᶳ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.
+R18	U+1DBB U+0322	Exact alternative for ᶼ; DNE L436. Target exists in Unicode13.
+R19	U+1D48 U+0322	Exact alternative for superscript ɖ (later U1078B); DNE L434. The target scalar is post-13; only the left-hand Unicode13 string is under review.
+R20	U+1D57 U+0322	Exact alternative for superscript ʈ (later U107AF); DNE L435. The target scalar is post-13; only the left-hand Unicode13 string is under review.
+R21	U+02B3 U+0322	Exact alternative for superscript ɽ (later U107A8); DNE L432. The target scalar is post-13; only the left-hand Unicode13 string is under review.
+R22	U+1D9C U+0327	Superscript ç: SUP20 p.1 reproduces the 1900 IPA-chart example with superscript c+cedilla. Current base ç and the historical superscript provision establish the symbol; U1D9C+U0327 is the Unicode13 composite spelling. This does not make U0327 a standalone diacritic.

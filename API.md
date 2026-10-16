@@ -506,9 +506,17 @@ A closed `ContextProperty` identifies a scalar evidence value or a typed
 layout-shaped scope/applicability metadata. A provider's completion does not
 claim that each optional field is known. Mandatory consumers separately assess
 exact `time-only` ordering, supported bend-release signs and proved graphical
-repeat content. Nonempty ASCII-digit figure-number content satisfies a sufficient
-numeric subset; other spellings retain an unsupported unreviewed grammar gate.
-This does not define or reject the remaining numeric lexical domain.
+repeat content. Figure-number content retains MusicXML's deliberately unrestricted
+`style-text` domain. The built-in context profiles do not select an additional
+numeric lexical predicate and do not become incomplete merely because the text
+is outside ASCII decimal digits. This does not assert numeric meaning for every
+string; independent XSD declaration and attribute constraints still apply.
+
+Removing the former figure-number overconstraint deliberately changes these two
+context profiles' selected rules, catalog digest and affected report outcomes.
+The six XSD/local/timeline profile contracts remain unchanged. Historical
+snapshots are retained; the [explicit migration receipt](docs/validation/evidence/figure-number-conformance-correction.md)
+describes the correction rather than claiming frozen context-profile equality.
 
 `NavigationContextResult.MarkerActive` records activation of an encoded barline
 marker; `Guard` records pass-selection evidence. Neither field is a realized
@@ -533,8 +541,13 @@ not establish measure capacity or endpoint containment. See the
 Catalog users can bind the same sealed contracts with `NewLocalContextPlan`,
 `NewSpanContextPlan`, `NewRepeatContextPlan`, `NewNavigationContextPlan`,
 `NewLayoutContextPlan`, `NewPerformanceContextPlan`, `NewTimeOnlyOrderPlan`,
-`NewBendReleaseSignPlan`, `NewGraphicalRepeatContentPlan` and
-`NewFigureNumberNumericPlan`. `NewOpusLayoutContextPlan` is separately
+`NewBendReleaseSignPlan` and `NewGraphicalRepeatContentPlan`.
+`NewFigureNumberNumericPlan` is deprecated but retained for explicit legacy
+custom catalogs: it still accepts the nonempty ASCII-digit subset and returns
+Unsupported for other spellings, with its existing mandatory/normative binding
+contract. Selecting it imposes a caller-chosen overconstraint; its result is not
+MusicXML numeric validity. It is not selected by built-in conformance profiles.
+`NewOpusLayoutContextPlan` is separately
 bound to the Opus assembly and projects only local score pagination hints;
 missing new-page remains application-dependent and no linked score is opened. `ContextPlanSpec` binds the exact selected timeline
 provider where needed; `ContextConsumerSpec` binds an exact type-specific
@@ -742,6 +755,21 @@ overrides in `AssessmentOptions.Budgets`; all other limits still apply. Earlier
 source-scope measurements remain historical evidence for their stated revision,
 before the shared absent-attribute optimization.
 
+Composition costs differ from that XSD-only table. For the original 223,068-byte
+UTF-16BE `MozaChloSample.musicxml`, `ProfileSourceSemantics` exhausts the default
+64 MiB buffer. With only `MaxBufferedBytes: 96 << 20` changed, this particular
+fixture completes input processing, but assessment remains incomplete because its
+external DTD is unread. This is a measured finite allowance for that exact input
+and profile, not a new default or a minimum/general capacity guarantee.
+Removing the encoded DOCTYPE produces a different 222,824-byte control.
+`ProfileSourceInternalDTDDictionaries` assesses that control within defaults
+(observed live-account peak 44,036,266 bytes). `ProfileSourceSemantics` instead
+reaches the existing 20,000,000 rule-step limit, with an observed buffer peak of
+67,011,966 bytes before that refusal. These peaks are sampled logical account
+usage, not exact minimum budgets or heap measurements. The
+[composition and snapshot budget receipt](docs/validation/resource-fragment-budget-evidence.md)
+records the byte transformation, limits, ownership accounting and regressions.
+
 `ConversionConverted` means mapping succeeded under the existing Go model
 contract, including its `float64` precision and field representation. It is not
 an exact lexical or numeric round-trip guarantee. `ConversionUnrepresentable`
@@ -861,6 +889,68 @@ Clean input EOF can coexist with incomplete XML well-formedness assessment when
 DTD declaration semantics remain unavailable. Context checks cannot interrupt a
 blocking arbitrary `io.Reader.Read`; use cancellable I/O where needed.
 
+### Declaration-dependent standalone compositions
+
+Three additive source profiles combine the bounded internal-DTD infoset with
+existing normative consumers for score-partwise, score-timewise and Opus:
+
+- `ProfileSourceInternalDTDLocal`: declaration-dependent XSD and existing local
+  clauses/typed references, with source-origin evidence.
+- `ProfileSourceInternalDTDLinks`: the local composition plus nonfetching local
+  links, attachments and schema-hint projections.
+- `ProfileSourceInternalDTDDictionaries`: the links composition plus explicitly
+  supplied dictionary capabilities through the existing dictionary entry points.
+
+These profiles use a separate catalog. Existing profile digests and rule
+semantics are unchanged. Additional internal diagnostic fields are accounted
+for at their actual retained size, so a buffered-byte limit set exactly at an
+older diagnostic boundary can now refuse slightly earlier. They do not select
+auxiliary Sounds/Container processing,
+timeline/context rules or automatic package composition. Explicit source-origin
+snapshot export is supported by the owned transport contract below. See the
+[exact scope](docs/validation/source-declarations-scope.md) and
+[verification evidence](docs/validation/source-declarations-evidence.md).
+
+Reached XSD `ENTITY`/`ENTITIES` builtin and restriction carriers use effective
+first-bound general-entity declarations from the source document. An unparsed
+binding proves membership; a parsed binding disproves it. Missing names are
+negative only with complete relevant declaration enumeration. Missing facts,
+unread declarations and unresolved XSD 1.0 constructed carriers remain
+unavailable. This does not perform general DTD validation or retrieve entity
+payloads. Schema-literal conversion remains independent of instance membership;
+applied effective instance values retain their own membership obligation.
+
+Custom source catalogs can use `NewXSDPlanWithSourceDeclarations`. Every selected
+XSD operation sharing an assembly/run must agree on the mode, and unsupported
+plans cannot enable runtime facts. Submit `SourceEntityDeclarations` containing
+owned-input `SourceEntityDeclaration` rows through
+`Session.SourceEntityDeclarations` immediately after root `Open`, before any
+attribute, child or closing event. Rows contain only effective first general
+bindings, with positive unique document-local sequence IDs and independently
+available original-byte origins. The session copies them under the shared
+account; callers may release their input after return.
+
+`NewSourceAttributeValuePlan` and `NewSourcePresenceImpliesAttributePlan` use
+supplied effective source presence, including DTD defaults and entity markup.
+XSD-only defaults do not establish supplied presence. New declaration-aware
+catalogs reject incompatible legacy physical-presence local plans; existing
+constructors and old catalogs are not reinterpreted.
+
+`NewSourceLocalLinkContextPlan` and `NewSourceSchemaHintContextPlan` preserve
+physical `ResourceAttribute.Presence` and `Raw` separately from effective
+`Value`. Discover the exact selected origin provider through
+`Engine.SourceAttributeLexicalProvider` and submit actually retained
+XML-normalized physical spelling through `Session.SourceAttributeLexical`, after
+the matching attribute and origin events while the owner is open. DTD defaults
+and entity-generated markup have absent physical spelling. Unretained or
+general-entity-transformed original spelling is unavailable rather than
+reconstructed. Effective defaulted hints can still produce discovery pairs;
+neither their presence nor their values authorize external retrieval.
+
+These additions introduce new types/functions/methods without changing existing
+exported option or report struct layouts. Each session retains its existing
+single-goroutine lifecycle; independent sessions own separate declaration facts.
+
 ## Opt-in pinned dictionaries
 
 The dictionary entry points are additive and require their own explicit profile.
@@ -897,7 +987,7 @@ options compose the corresponding unchanged resource options with `Dictionaries`
 conversion. With an assessment, any conversion, source, dictionary-operation or
 strict acceptance error discards the model and preserves the best source report.
 
-The six new profile IDs are:
+The original dictionary profile IDs are:
 
 - `ProfileSourceDictionaries`: `musicxml-4.0/source-links-dictionaries`
 - `ProfileModelDictionaries`: `musicxml-4.0/model-links-dictionaries`
@@ -933,6 +1023,54 @@ and indirection limits still apply. No child resets or widens budgets. These
 profiles do not compose `ProfileSourceInternalDTD` or export source-origin
 snapshots; original-source limitations, including unread external DTDs, remain
 active.
+
+### Explicit internal-DTD and dictionary package composition
+
+The existing dictionary entry points also accept these exact additive profiles:
+
+- `InspectXMLWithResourcesAndDictionaries` and
+  `AssessModelWithResourcesAndDictionaries`:
+  `ProfileResourceGraphInternalDTDDictionaries`
+  (`musicxml-4.0/resource-graph-internal-dtd-dictionaries`).
+- `InspectMXLWithDictionaries`: `ProfileMXLSourceInternalDTDDictionaries`
+  (`musicxml-4.0/mxl-source-internal-dtd-dictionaries`).
+- `AssessMXLPackageWithDictionaries`: `ProfileMXLModelInternalDTDDictionaries`
+  (`musicxml-4.0/mxl-model-internal-dtd-dictionaries`).
+
+Select the profile explicitly in `Resources.Graph.Profile`; empty, unknown and
+cross-entry-point choices fail before reader or provider I/O. The existing
+non-DTD profiles and their catalogs remain unchanged. These new catalogs pin
+source MusicXML/Opus to `ProfileSourceInternalDTDDictionaries`, current models to
+unchanged `ProfileModelDictionaries`, source Container to
+`ProfileSourceInternalDTDContainer` (`musicxml-4.0/source-internal-dtd-container`)
+and source Sounds to `ProfileSourceInternalDTDSoundsDictionaries`
+(`musicxml-4.0/source-internal-dtd-sounds-dictionaries`), each with the exact
+engine-returned catalog digest. Raw MXL accepts source rows only.
+
+`InspectXML` accepts the new Container profile; `InspectXMLWithDictionaries`
+accepts the new Sounds profile. Neither adds a Document model or decode root.
+Sounds remains an explicit standalone input or compatible snapshot admission:
+public graph/MXL traversal still selects musical children and does not discover
+Sounds from filenames or infer auxiliary inputs.
+
+Only actually assessed source XML receives bounded internal-DTD processing and
+actually-read declaration evidence. Container `FullPath` and `MediaType` are
+effective values: a DTD-defaulted path can select an entry with `FullPathRaw`
+Absent. Physical tokenized attributes preserve retained pre-tokenization Raw;
+unretained entity replacement spellings remain Unknown. Effective Sounds ID,
+primary and number fields retain DTD defaults without inventing implicit mapping
+choices. Auxiliary schema hints retain effective pairs separately from physical
+Raw/presence; odd pairing remains a discovery gap, not an XSD datatype violation.
+No external DTD, entity, hinted schema or dictionary is automatically retrieved.
+
+The same root account and verified dictionary set cover lexical/declaration
+capture, intrinsic snapshots and repeated adoption. Origins are independently
+owned and rebound to each adoption, without upgrading incomplete provenance.
+The current primary model remains directly assessed with no invented source
+origins, original Container or ZIP history; retained source children are separate.
+Existing path, archive, indirection, unproved-IPA-representation, unsupported-capability and
+unread-external gates remain active. See
+[the composition scope](docs/validation/dtd-package-composition-scope.md).
 
 ### Caller-supplied transport and sealed data
 
@@ -970,9 +1108,13 @@ For fact-stream clients, `validation.NewDictionarySet(ctx, account, selections,
 imports)` copies and verifies `DictionaryImport` records. A known import has
 exactly one appropriate `SMuFLDictionaryData`, `StandardSoundsDictionaryData` or
 `IPAPositiveDictionaryData` payload, no reason, and optionally a certificate.
-Missing imports remain unavailable. Unavailable imports contain neither data nor
-certificate. Extra/unselected imports, contradictory states and duplicate records
-are rejected; callers cannot assert their own completeness or authoritative hash.
+Up to five fixed manifests may be selected together. The new
+`DictionaryManifestIPARepresentation2015Unicode13` reuses the existing IPA
+payload with 295 symbols, no examples and 158 genuine canonical relations;
+no public struct layout, provider or options field changes. Missing imports
+remain unavailable. Unavailable imports contain neither data nor certificate.
+Extra/unselected imports, contradictory states and duplicate records are rejected;
+callers cannot assert their own completeness or authoritative hash.
 
 `VerifyDictionaryComponent(ctx, account, componentID, residentBytes)` returns a
 sealed, account-bound `DictionaryComponentCertificate` after exact length/hash
@@ -1020,7 +1162,9 @@ derived defaults, nested `Input`/`Effective` values, IPA span text and canonical
 equivalent text before publication. Cleanup releases owned live leases
 only, never cumulative byte/work charges or someone else's storage. Cancellation
 and resource failures are terminal and preserve their causes. Ordinary missing,
-unsupported or mismatched components remain per-capability gaps; an operation
+unsupported components remain per-capability gaps; legacy component mismatches
+also retain that behavior. Malformed newly selected representation bundles are
+configuration errors, as detailed below. An operation
 error can accompany a usable report with independent XSD/family failures retained.
 Always check both the returned error and `Report.Satisfied()` or
 `AssessmentBundle.Satisfied()`.
@@ -1031,10 +1175,16 @@ Runtime import faults are identifiable with
 `DictionaryImportError` exposes `Manifest`, a fixed phase `Reason`, and the
 original `Err` through `Unwrap`. Provider, read and close causes remain
 inspectable through `errors.Is`/`errors.As`; response, length and digest faults
-also use this runtime classification. Options, profile and account misuse stay
+also use this runtime classification for the four original manifests. For the
+new IPA representation manifest only, importer-owned structural, length, digest
+and decoder faults remain `validation.ConfigurationError` and cannot expose a
+usable set. Caller callback errors keep their original unavailable-import
+behavior, including callbacks returning `ConfigurationError`. Options, profile
+and account misuse stay
 `validation.ConfigurationError`. Direct misuse of
 `validation.VerifyDictionaryComponent` keeps that configuration contract;
-only the root importer's own verification mismatch is translated. If a callback
+the root importer's own verification mismatch is translated only for the
+original manifests. If a callback
 itself returns a `ConfigurationError`, that original cause remains inspectable.
 Actual cancellation, deadline and resource failures, including joined close
 failures, remain terminal rather than being relabeled unavailable.
@@ -1075,17 +1225,35 @@ spans and causes are independently owned through report/snapshot getters and
 occurrence remapping.
 
 The properties `ContextDictionaryCanonical`, `ContextDictionarySounds`,
-`ContextDictionaryIPA`, `ContextDictionaryRendering` and `ContextDictionaryAdvice`
-separate canonical membership, open-string recognition, partial IPA evidence,
-local facts and advice. `Input` retains assessed scalar evidence; `Attribute=nil`
-denotes element content. `Codepoint` is independently gated by the selected
-`primary-codepoint` relation; a known codepoint cannot substitute for the required
-`canonical-name` relation. IPA spans use UTF-8 byte offsets and retain exact empty
-or unknown text, reviewed row IDs and selected canonical equivalents. Known
-positive atoms/examples do not make `WholeSequence` known. Unlisted IPA input
-is unknown, not false; a present `<ipa>` keeps the complete-repertoire/sequence
-predicate unavailable even when every selected atom is attested. No pronunciation
-correctness, general normalization or linguistic plausibility is inferred.
+`ContextDictionaryIPA`, `ContextDictionaryIPARepresentation`,
+`ContextDictionaryRendering` and `ContextDictionaryAdvice` separate exact
+relations. `Input` retains assessed scalar evidence; `Attribute=nil` denotes
+element content. `Codepoint` remains independently gated by `primary-codepoint`;
+it cannot substitute for required `canonical-name` membership.
+
+The original IPA manifest and its three `ContextDictionaryIPA` projections are
+unchanged: positive atoms, examples and canonical equivalents leave
+`WholeSequence` unavailable. The new, explicitly selected
+`DictionaryRelationIPARepresentation` instead publishes one unchanged whole-input
+UTF-8 span for known string input, including empty/unproved text, under the
+separate property. Unavailable/non-string scalar evidence retains its state
+and cause without an invented raw span. Its
+`Category` is `whole-representation`, its `RowID` and `Equivalent` are empty,
+and only an affirmative whole witness makes both `Result` and `WholeSequence`
+known-true. Unproved input stays unknown, never false. No new projection appears
+when this manifest is unselected; a selected missing capability is explicit.
+
+The new policy supports stable Unicode13 canonical decomposition/ordering,
+complete encoding atoms and source-established disjoint adjacent half-tie pairs
+with independent single-base decorations. Repetition, orientation, endpoint and
+shared-middle restrictions apply to presentation-form half ties. U+035C/U+0361
+remain independent complete mark atoms in the pinned concatenation language:
+isolated, repeated and sign-adjacent whole marks have representation witnesses,
+without certifying tie endpoints or rendering. Mixed whole/half overlap remains
+unavailable. The policy neither rewrites raw input nor uses compatibility
+normalization or a host Unicode version. This is a bounded witness, not pronunciation,
+phonotactics, rendering or universal IPA conformance. See the
+[exact additive policy and migration](docs/validation/ipa-representation.md).
 
 SMuFL canonical membership is exact after independent XSD normalization and
 scalar assessment. It does not replace the six MusicXML prefix-family facets,
@@ -1254,6 +1422,40 @@ A snapshot retains the canonical report, exact root/profile/assembly, selected
 resource projections and schema-determined ID states under the same budget
 account until `Close` or successful transfer to package assessment. It never
 parses, fetches, retains a model, or exposes a post-finalization fact view.
+Selected source-origin contexts are copied into both the canonical report and
+selected snapshot projections. Physical, declaration, use and ancestry locations
+retain their independent evidence states. Package adoption rebases only matching
+typed document identities, preserving original byte/line/column, Entry and Path;
+unrelated external references are unchanged. Repeated adoptions and getter copies
+do not share mutable origin storage. Structural `ScopeComplete` does not establish
+origin-provider completeness. The prior explicit
+`source-origin-resource-snapshot-unsupported` export refusal is replaced by this
+bounded capability; missing origins may still remain unavailable in a snapshot.
+Initial copying is cancellation-aware after overlapping storage admission, and a
+post-admission failure releases that lease while preserving the intrinsic report.
+Exact package intrinsic profile/digest admission remains independently required;
+export support alone does not enable a DTD graph/package profile.
+
+Default-buffer capacity is limited for source-origin graph compositions: every
+selected origin row has two independently owned snapshot copies while session
+storage still overlaps. On Go 1.27.2 linux/amd64, the single-note-per-measure
+`reviewBudgetScore` fixture with `ProfileResourceGraphInternalDTDDictionaries`
+admits 531 measures (71,197 source bytes) with defaults; 532 measures (71,331
+bytes) refuse the 64 MiB live-buffer allowance. The review reported the
+500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
+previous boundary of 494 measures (about 66 KB), and comparison boundaries of
+about 114 KB for standalone `ProfileSourceInternalDTDDictionaries` and 168 KB
+for its "legacy graph" comparator. These are fixture/profile-specific
+observations, not a general document-byte guarantee or heap/RSS limit.
+
+The separate 2,000-empty-measure, three-`#m1` fixture is only 86,052 source bytes
+but still refuses snapshot admission at default budgets: 57,607,574 live bytes
+plus a 34,741,160-byte request exceed 67,108,864 bytes. Its regression that uses
+512 MiB of buffer isolates the unchanged 20,000,000-step limit; it does not prove
+all-default capacity, nor is 512 MiB a measured minimum or recommendation.
+Choose explicit finite limits for the actual profile and input. See the
+[fixture definitions, provenance and boundary checks](docs/validation/resource-fragment-budget-evidence.md#default-buffer-capacity-is-fixture-specific).
+
 `ResourceSnapshotHeader.LinkProjectionSelected` records selection of an
 `ImplementationAvailable` sealed local-link plan for the established assembly.
 It does not assert projection or scope completion. Absent or unsupported
@@ -1421,7 +1623,12 @@ failure metadata cannot replace an existing blocker. Before termination, ordinar
 full retention may still succeed within the shared quotas.
 
 `ObserveEdge` consumes a once URI-decoded fragment component. Empty fragments
-address the whole document; only schema-ID NCName shorthand is implemented.
+address the whole document. Published legacy profiles retain schema-ID NCName
+shorthand and their schema-uniqueness gate. The explicitly DTD-composed source
+profiles instead join effective first-bound DTD ID attributes with schema IDs
+and select the first matching owner element in document order. Intrinsic XSD
+identity failures remain independent. These new profiles intentionally
+migrate their closure and catalog identities; this is not a frozen-digest claim.
 Each observation requires explicit `Indirection` evidence. Known false asserts
 that the adopted XML is the directly selected target; known true records an
 archive-to-primary substitution. Omitted evidence is invalid ingress, not an
@@ -1433,7 +1640,66 @@ adapter does not request an association proof for that substituted target.
 Indirection belongs to the incoming occurrence: direct XML members, inner
 outgoing links and aliases retain their own independently established evidence.
 Complete exact ID absence fails, incomplete ID scopes stay unknown, and other
-fragment grammars stay unsupported. Unknown/absent selected targets still charge
+fragment grammars stay unsupported in these bounded shorthand profiles. DTD
+shorthand requires both declaration-domain and occurrence-enumeration seals,
+plus complete XSD identity and element order; a later known candidate cannot
+exclude an earlier unknown one. Source `SourceDTDIDDomain`,
+`SourceDTDIDAttribute`, and `CompleteSourceDTDIDs` ingress matches each actual
+admitted non-namespace attribute before XSD normalization. Declaration lexical
+names, first-binding identity, actual DTD-normalized value, default kind and
+independently available declaration/use sites stay owned with the snapshot.
+Legal explicit `ID #REQUIRED` and `ID #IMPLIED` declarations are supported;
+illegal ID value/fixed defaults retain limited typing evidence and leave the
+selection authority incomplete, without inventing DTD validation findings.
+No external declarations are fetched and current models never manufacture
+historical DTD absence or IDs.
+
+`Engine.SourceDTDIDsSelected(profile)` is a profile-wide selection query used
+before parsing the root to decide whether the scanner should capture DTD ID
+facts. `Session.SourceDTDIDsSelected()` is the narrower, admitted-root assembly
+query: it returns false before an admitted root, for a current-model target, or
+when that assembly has no selected DTD ID consumer. A true result reports
+selection only; it is no certificate of completed enumeration, valid declarations
+or available DTD identity evidence.
+
+A catalog may explicitly elect `NewXMLFragmentLinkContextPlan(schema,
+sourceInfoset)` for the registered XML-media fragment baseline. This adds the
+XPointer Framework and mandatory `element()` scheme, and pins that interpretation
+in the catalog digest. `sourceInfoset=true` requires the selected source
+provenance/declaration capabilities and joins DTD and XSD IDs; `false` uses the
+selected ordinary source or current-model XSD domain only. The snapshot owns a
+complete, bounded index of all admitted elements, their actual parents and
+occurrence order, including elements without schema IDs or context rows.
+
+The Framework validates its entire syntax before interpreting parts. It reverses
+only its `^^`, `^(` and `^)` escapes; URI percent decoding has already happened
+once. Parts are attempted left to right. Unsupported schemes are skipped;
+`xmlns()`, prefixed schemes and arbitrary `xpointer()`/XPath are not elected.
+A supported unavailable result cannot be skipped. Malformed `element()` data
+and complete out-of-range paths are empty parts and permit fallback; malformed
+Framework syntax is separately reported. Exhausting supported empty parts fails
+the pointer; an entirely unsupported scheme sequence retains an unsupported
+capability result.
+
+`element(ID)` uses joined first-owner selection. `/1` starts at the document
+root, and subsequent positive, nonzero-prefixed integers select element children
+only; text, comments and processing instructions never affect ordinals. Arbitrary
+width ordinals are validated under the shared budget and safely bounded against
+the finite admitted tree without integer truncation. Missing tree/ID closure
+keeps resolution unknown. `ResourceAdoption.ResolveXMLFragment` exposes an owned,
+adoption-remapped selected result without exposing retained trees or DTD tables;
+`selected=false` preserves the legacy adapter route. All pointer input, temporary
+parser storage, lookup work and copying share the root account. Direct XML target
+evidence remains mandatory: an outer MXL fragment is never applied to its inner
+primary XML.
+
+The selected baseline follows [RFC 7303 sections 5 and 9.6.1](https://www.rfc-editor.org/rfc/rfc7303#section-5),
+[XPointer Framework sections 3–4](https://www.w3.org/TR/2003/REC-xptr-framework-20030325/),
+and [element() section 3](https://www.w3.org/TR/2003/REC-xptr-element-20030325/#language).
+This election adds no document `xml:base` or `xml:id` consumers: the fixed
+MusicXML/Opus/Container/Sounds assemblies do not admit those attributes.
+
+Unknown/absent selected targets still charge
 linked-document admission. Each known edge uses its own nonroot adoption distinct
 from its source. A target may belong to another explicitly admitted package
 boundary; a known empty fragment target must be its exact nonzero adopted root.
@@ -1453,11 +1719,19 @@ bounded scoped filename/media-type recommendations; suffixes never prove content
 validity. Binary members are outside this MusicXML filename/media advice scope.
 `validation.ClassifyResourceMediaType(ctx, account, value)` shares bounded declared
 MIME applicability across package checks and adapters. It accepts registered
-MusicXML base types case-insensitively, including the XML type's optional charset;
-unreviewed parameters and types remain Unknown. It never verifies content or a
-resource pin. Callers preserve absent and invalid evidence before invoking it;
+MusicXML base types case-insensitively. Syntactically admitted distinct unknown
+parameters do not change that base identity (RFC 2045 sections 5–5.1); this includes
+charset on the compressed type without selecting a decoder. Repeated parameter
+names are case-insensitively erroneous even with equal values (RFC 6838 section
+4.3), and remain Unknown along with malformed declarations and unreviewed base
+types. RFC 2231 raw names such as `foo`, `foo*`, and `foo*0` remain distinct for
+this duplicate check; no decoded-name equivalence is inferred. The bounded ASCII
+declaration classifier does not elect internationalized header syntax. It never
+verifies content or a resource pin. Callers preserve absent and invalid evidence before invoking it;
 present-empty is unresolved. Scalar/step costs and temporary parse scratch use
-the supplied account; cancellation/quota errors remain errors. Bundle getters also
+the supplied account; cancellation/quota errors remain errors. Parser and raw-name
+index scratch is conservatively reserved together, so exact historical near-limit
+MIME budget outcomes can change without raising defaults. Bundle getters also
 preserve supplied mimetype prefix observations; incomplete retained prefixes cannot
 prove content mismatch.
 
@@ -1727,3 +2001,28 @@ rootfile, file-metadata or role-completeness capabilities. Encoding advice uses
 an ASCII hexadecimal diagnostic label; no legacy decoding or filename
 normalization is inferred. The existing unsafe-path operation error still stops
 selection, while an independently observed encoding recommendation remains visible.
+
+
+## Encoded semantic compositions
+
+`ProfileSourceSemantics` and `ProfileModelSemantics` select the bounded combined
+encoded MusicXML interpretation through existing `InspectXML`, `DecodeAssessed`,
+`AssessModel` and corresponding dictionary entry points. Source selects actually
+read internal declarations and owned origins; model selects current-state facts.
+Dictionary data is supplied through the unchanged `DictionaryOptions` contract.
+Neither profile loads data automatically or selects standard-sound recognition
+and dictionary-backed rendering advice for score nodes.
+
+For resources, use the existing dictionary graph/MXL entry points with the exact
+compatible `ProfileResourceGraphSemantics`, `ProfileMXLSourceSemantics` or
+`ProfileMXLModelSemantics`. Each catalog pins the actual source/model intrinsic
+profile and digest; unknown assemblies/targets are rejected. Source Container
+metadata remains physical/effective-aware. Existing explicit Sounds auxiliary
+support does not introduce public Sounds traversal or filename discovery.
+
+These profiles elect bounded barline/repeat proofs and the registered XML
+Framework, shorthand and `element()` interpretation. They preserve direct-target
+indirection gates, complete-domain requirements, current-model source gaps and
+independent intrinsic failures. They do not imply general XPath, renderer,
+external desired-score authority or universal conformance. See the
+[scope and acceptance boundary](docs/validation/semantic-composition-scope.md).

@@ -331,7 +331,8 @@ func TestFinalQARootKindsAndFirstMediaPublic(t *testing.T) {
 		{"absent", "", "", false, false}, {"empty", ` media-type=""`, "media-type-syntax-unresolved", false, true},
 		{"case", ` media-type="APPLICATION/VND.RECORDARE.MUSICXML+XML"`, "", false, false},
 		{"charset", ` media-type="application/vnd.recordare.musicxml+xml; charset=UTF-8"`, "", false, false},
-		{"unknown-parameter", ` media-type="application/vnd.recordare.musicxml+xml; extension=1"`, "musicxml-media-parameter-unresolved", false, true},
+		{"unknown-parameter", ` media-type="application/vnd.recordare.musicxml+xml; extension=1"`, "", false, false},
+		{"equal-duplicate", ` media-type="application/vnd.recordare.musicxml+xml; charset=utf-8; CHARSET=utf-8"`, "media-type-duplicate-parameter", false, true},
 		{"pdf", ` media-type="application/pdf"`, "established-nonmusicxml-media-type", true, false},
 		{"unknown", ` media-type="application/x-unknown"`, "musicxml-media-type-set-unresolved", false, true},
 	} {

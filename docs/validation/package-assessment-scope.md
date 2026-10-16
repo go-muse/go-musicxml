@@ -1,5 +1,12 @@
 # Batch 8 package and linked-resource scope/evidence
 
+Current clarification, 14 October 2026: the historical central-only mimetype
+residual recorded below has been superseded by the
+[local-header source review](evidence/mimetype-local-header-review-20261014.md)
+and [current profile scope](package-profile-scope.md#mimetype-header-scope-reviewed-14-october-2026).
+The historical rows and original planning records remain unchanged; their old
+execution and interpretation status is not a current acceptance claim.
+
 Historical packaging snapshot, clarified on 13 October 2026. The observed private
 integration head was `388dbe06aaedda02b7d1f07a9ebe35ee6a5fd75f` (tree
 `6703aad89730a6f681065253ac32d1e3a5e8babd`). It was an unpublished development
@@ -112,7 +119,7 @@ These are batch 8 completion gates. They must not be relabeled as batch 9 residu
 | `CHECK-mxl-first-root-musicxml` | First encoded rootfile identifies actual musical primary; XML/child validity separate, nested substitution unresolved. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-mxl-score-before-parts` | Exact authoritative role evidence with complete scope; minimal single-score inventory can prove antecedent false; unclassified roles cannot. | Five-axis source routes recorded; final exact-head execution pending. |
 | `CHECK-mxl-rootfile-document-root` | Referenced MusicXML XML root is unqualified score-partwise/timewise/opus; known PDF/audio alternate not parsed as MusicXML. | Five-axis source routes recorded; final exact-head execution pending. |
-| `CHECK-mxl-first-media-type` | Bounded case-insensitive registered direct MIME plus reviewed charset syntax, established non-MusicXML fails, unknown/empty/compressed interpretation unavailable. | Five-axis source routes recorded; final exact-head execution pending. |
+| `CHECK-mxl-first-media-type` | Bounded case-insensitive registered MIME identity; distinct unknown parameters ignored, duplicate/malformed declarations and unknown bases unavailable. Established non-MusicXML fails; nested content interpretation remains separate. | Five-axis source routes recorded; final exact-head execution pending. |
 
 ## All selected engineering requirements
 

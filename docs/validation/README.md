@@ -2,10 +2,11 @@
 
 Status: **implemented bounded foundation/source, direct-model/local, timeline,
 context, auxiliary-source, internal-DTD and package/link scopes; broader normative
-closure remains unfinished**. Index reviewed: 14 October 2026. Individual
+closure remains unfinished**. Index reviewed: 16 October 2026. Individual
 historical acceptance snapshots remain dated evidence, not current exact-head
-acceptance. The additive pinned-dictionary implementation is in integration
-review; its partial IPA evidence does not close full normative IPA validation.
+acceptance. The additive pinned-dictionary implementation has a
+[dated integrated receipt](source-declarations-evidence.md#dated-integrated-receipt);
+its partial IPA evidence does not close full normative IPA validation.
 
 This directory contains the proposed validation architecture and package-facing
 guides. MusicXML 4.0 requirements evidence is maintained in the separate
@@ -33,16 +34,24 @@ for the unchanged developmental source preview, and the [foundation scope](found
 for generic fact/catalog/report contracts. Continue with the implemented bounded
 scopes and their explicit limitations:
 
+- [XSD prerequisite scope and owner ledger](xsd-prerequisite-scope.md)
+- [Attribute-wildcard union and required oracle evidence](attribute-wildcard-union-evidence.md)
 - [Bounded internal-DTD source infoset](dtd-infoset-scope.md)
 - [Internal-DTD verification evidence](dtd-infoset-evidence.md)
+- [Declaration-dependent XSD and standalone source composition](source-declarations-scope.md)
+- [Source declaration and composition verification evidence](source-declarations-evidence.md)
+- [Combined functional contributions and original-ID crosswalk](functional-completion-scope.md)
+- [Encoded semantic source/model and package compositions](semantic-composition-scope.md)
 - [Context assessment](context-assessment-scope.md)
 - [Auxiliary container and sounds sources](auxiliary-source-scope.md)
 - [Nonfetching local link context](local-link-context-scope.md)
 - [Package assessment scope and ownership](package-assessment-scope.md)
 - [Package implementation and acceptance evidence](package-assessment-evidence.md)
 - [Package and resource-graph profiles](package-profile-scope.md)
+- [Explicit DTD and dictionary package composition](dtd-package-composition-scope.md)
 - [Pinned dictionary scope, API boundaries and remaining obligations](pinned-dictionaries-scope.md)
 - [Pinned dictionary verification checkpoint](pinned-dictionaries-evidence.md)
+- [Bounded IPA representation and identity migration](ipa-representation.md)
 
 The proposal pages below describe the wider architecture. Implemented bounded
 package/link/timeline support does not establish full normative closure; exact-head

@@ -39,10 +39,12 @@ type Detail struct {
 	Subject         SubjectID
 	Attribute       QName
 	RelatedSubjects []SubjectID
+	EntitySequence  uint64
 }
 type Limitation struct {
-	Reason string
-	Cause  error
+	Unknown bool
+	Reason  string
+	Cause   error
 }
 type Result struct {
 	Applicable, Valid, Complete bool
@@ -246,7 +248,7 @@ func (s *boundState) limit(family, reason string, cause error) {
 	v := s.result()
 	v.Complete = false
 
-	v.Limitations = appendRetained(&s.run.context, v.Limitations, Limitation{reason, cause})
+	v.Limitations = appendRetained(&s.run.context, v.Limitations, Limitation{Reason: reason, Cause: cause})
 	s.family = old
 }
 func (s *boundState) detail(path, constraint, message string) {
@@ -266,6 +268,9 @@ func (s *boundState) detail(path, constraint, message string) {
 				break
 			}
 		}
+	}
+	if constraint == "entity-declaration" {
+		d.EntitySequence = s.run.context.entityIssueSequence
 	}
 	if s.issueSubject != 0 {
 		d.Subject = s.issueSubject

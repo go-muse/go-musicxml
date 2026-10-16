@@ -110,8 +110,11 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	dtdIDs                  *sourceDTDIDs
+	sourceEntities          *sourceEntityDeclarations
 	dictionaries            *dictionaryLease
-	sourceOriginSeen        map[sourceOriginSubject]struct{}
+	sourceOriginSeen        map[sourceOriginSubject]*SourceOriginContextResult
+	sourceAttributeLexical  map[sourceOriginSubject]Evidence[string]
 	sourceOriginExpected    uint64
 	sourceOriginUncertain   bool
 	sourceOriginUnavailable bool
@@ -672,6 +675,7 @@ func (s *Session) cleanup() {
 		lease.release()
 	}
 	s.sourceOriginSeen = nil
+	s.sourceAttributeLexical = nil
 	s.sourceOriginSeal = nil
 	s.sourceOriginExpected = 0
 	s.sourceOriginUncertain = false
@@ -680,6 +684,8 @@ func (s *Session) cleanup() {
 		_ = s.schema.run.Close()
 	}
 	s.schema = nil
+	s.sourceEntities = nil
+	s.dtdIDs = nil
 	s.localDocuments = nil
 	s.timeline = nil
 	s.contextServices = nil

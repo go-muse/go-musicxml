@@ -51,6 +51,11 @@ type SourceOriginContextResult struct {
 	AncestryComplete Evidence[bool]
 }
 
+// The index borrows only owned projections. Entry admission includes overlapping
+// map growth; payload storage is separately charged by context publication.
+const sourceOriginIndexEntryBytes int64 = 128
+const sourceOriginIndexHeaderBytes int64 = 512
+
 type sourceOriginSubject struct {
 	Node      NodeID
 	Attribute QName
@@ -233,9 +238,9 @@ func (s *Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 			s.fail(err)
 		}
 	}()
-	cost := int64(128)
+	cost := sourceOriginIndexEntryBytes
 	if s.sourceOriginSeen == nil {
-		cost += 512
+		cost += sourceOriginIndexHeaderBytes
 	}
 	if err = s.retain(cost); err != nil {
 		return err
@@ -244,14 +249,14 @@ func (s *Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 		return err
 	}
 	if s.sourceOriginSeen == nil {
-		s.sourceOriginSeen = make(map[sourceOriginSubject]struct{})
+		s.sourceOriginSeen = make(map[sourceOriginSubject]*SourceOriginContextResult)
 	}
 	// Borrow only from the newly owned projection, never from the adapter.
 	owned := s.contextResults[len(s.contextResults)-1].SourceOrigin
 	if owned.Attribute != nil {
 		slot.Attribute = *owned.Attribute
 	}
-	s.sourceOriginSeen[slot] = struct{}{}
+	s.sourceOriginSeen[slot] = owned
 	if !sourceOriginComponentsComplete(owned) {
 		s.sourceOriginUnavailable = true
 	}

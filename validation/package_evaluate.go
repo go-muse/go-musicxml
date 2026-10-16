@@ -242,16 +242,11 @@ func packageExtraDecision(d Decision, e PackageEntryObservation) Decision {
 	if e.Local.ExtraLength.State != EvidenceKnown {
 		return packageRequiredEvidenceDecision(d, e.Local.ExtraLength)
 	}
-	if e.Central.ExtraLength.State != EvidenceKnown {
-		return packageRequiredEvidenceDecision(d, e.Central.ExtraLength)
-	}
-	if e.Central.ExtraLength.Value > 0 {
-		d.Outcome = OutcomeUnknown
-		d.Reason = "mimetype-central-extra-scope-unresolved"
-	} else {
-		d.Outcome = OutcomePass
-		d.Reason = "mimetype-no-header-extras"
-	}
+	// MusicXML adopts the early-byte identification mechanism: only local
+	// extras move the mimetype payload. Central framing and association remain
+	// prerequisites above; central extras have separate ZIP transport duties.
+	d.Outcome = OutcomePass
+	d.Reason = "mimetype-no-local-header-extra"
 	return d
 }
 func packagePrefixDecision(d Decision, m PackageMimetypeObservation) Decision {

@@ -138,7 +138,15 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		return nil
 	}
 	var err error
-	state.run, err = xsd.NewRun(state.active.kernel, schemaMeter{s})
+	if s.catalog.sourceDeclarations[s.profile.ID][state.active.assembly] == xsdSourceDeclarationsV1 {
+		var domain *xsd.EntityDeclarations
+		if s.sourceEntities != nil {
+			domain = &s.sourceEntities.domain
+		}
+		state.run, err = xsd.NewRunWithSourceDeclarations(state.active.kernel, schemaMeter{s}, domain)
+	} else {
+		state.run, err = xsd.NewRun(state.active.kernel, schemaMeter{s})
+	}
 	if err != nil {
 		return err
 	}
@@ -514,6 +522,20 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 		if len(result.Limitations) > 0 {
 			d.Reason = Code(result.Limitations[0].Reason)
 		}
+		// Missing document evidence remains Unknown even when an earlier
+		// attribute contributed an unrelated unsupported operation. Select the
+		// first Unknown limitation without weakening normative failure or cause
+		// precedence, and meter the scan before publishing its outcome.
+		for _, limitation := range result.Limitations {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			if limitation.Unknown {
+				d.Outcome = OutcomeUnknown
+				d.Reason = Code(limitation.Reason)
+				break
+			}
+		}
 		cause, err := s.schemaResultCause(ctx, n, s.catalog.plans[r.Predicate].xsdCheck)
 		if err != nil {
 			return err
@@ -574,6 +596,17 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 			}
 			if related := s.nodes[NodeID(relatedID)]; related != nil {
 				detail.Related = append(detail.Related, related.header.Location)
+			}
+		}
+		if issue.EntitySequence != 0 && s.sourceEntities != nil {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			if origin := s.sourceEntities.origins[issue.EntitySequence]; origin.State == EvidenceKnown {
+				if err := s.retain(128); err != nil {
+					return err
+				}
+				detail.Related = append(detail.Related, origin.Value)
 			}
 		}
 		if err := s.accumulator.storeDiagnostic(r, detail, location); err != nil {

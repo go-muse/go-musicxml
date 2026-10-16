@@ -3,6 +3,7 @@ package musicxml
 import (
 	"context"
 	"encoding/hex"
+	"encoding/xml"
 	"errors"
 	"io"
 	"strconv"
@@ -202,7 +203,7 @@ func (g *resourceGraphRun) assessPrimaryModel(document Document) (validation.Ass
 	return g.finishPrimary(result, pin, id)
 }
 func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin validation.ResourcePin, id string) (validation.AssessmentBundle, error) {
-	if result.Snapshot == nil || pin.Representation == validation.ResourceSourceXML && !result.DigestComplete {
+	if result.Snapshot == nil || shouldRetainMalformedIntrinsicWithoutAssembly(result) || pin.Representation == validation.ResourceSourceXML && !result.DigestComplete {
 		return g.finish(g.retainUntransferredIntrinsic(result, pin, nil))
 	}
 	if err := g.session.OpenPackage(g.ctx, validation.PackageIdentity{ID: "root", Representation: pin.Representation, Pin: pin, BaseURI: g.options.identity.RetrievalURI}); err != nil {
@@ -255,6 +256,15 @@ func (g *resourceGraphRun) retainUntransferredIntrinsic(result resourceIntrinsic
 		err = joinResourceErrors(err, g.session.RecordResourceFailure(g.ctx, pin, result.Report, err))
 	}
 	return err
+}
+
+// A malformed parse can export an owned report before any root assembly exists.
+// Retain that syntax failure without manufacturing an extra transfer error.
+// Other unadmitted-root contracts (including unsupported roots and empty input)
+// keep their existing transfer behavior.
+func shouldRetainMalformedIntrinsicWithoutAssembly(result resourceIntrinsicResult) bool {
+	var syntax *xml.SyntaxError
+	return result.Snapshot != nil && result.Report.Syntax == validation.SyntaxMalformed && errors.As(result.Err, &syntax) && result.Snapshot.Header().Assembly.State != validation.EvidenceKnown
 }
 
 // joinResourceErrors preserves unrelated causes without repeating a cause that

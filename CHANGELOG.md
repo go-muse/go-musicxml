@@ -7,7 +7,103 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- Add explicit encoded semantic source/model and graph/raw/current-MXL profiles
+  through existing assessment APIs. They compose exact intrinsic interpretations,
+  bounded barline/repeat evidence, selected dictionary capabilities and the
+  registered XML Framework/shorthand/element fragment baseline. Source DTD and
+  current-model identity remain distinct; no automatic data fetch or external
+  musical-intent authority is added.
+
+- Add an explicitly selected IPA2015/Unicode13 representation manifest with
+  295 complete encoding atoms, 158 genuine canonical relations and a separately
+  pinned minimal policy. Preserve the legacy 197-row manifest and its outputs.
+  Reuse the existing typed payload and adapters, permit five fixed selections,
+  and publish a whole-input raw span under a new context property. Unproved
+  inputs remain unavailable; this is not phonotactics or universal conformance.
+  Deliberately revise the IPA consumer/rule and dictionary-containing catalogs.
+  New-manifest malformed bundles remain configuration errors; legacy and caller
+  callback error classifications are unchanged.
+
+- Add explicit internal-DTD/dictionary graph and raw/current-MXL compositions in
+  separate catalogs. Identity preservation excludes the separately documented
+  figure-number, IPA and mimetype local-header migrations. Add source
+  Container and Sounds compositions with exact auxiliary origin routing,
+  physical Container Raw versus effective values, effective Sounds mappings,
+  and nonfetching source hints. Current primary models retain model-only
+  evidence; retained source snapshots preserve independently rebound origins.
+  Existing dictionary APIs require the exact compatible profile and retain all
+  package, indirection, unread-external and incomplete-capability gates.
+
 ### Fixed
+
+- Tighten source-origin snapshot accounting without raising defaults. Capacity
+  remains limited by two owned origin copies and overlapping session storage:
+  the amd64 single-note DTD/dictionary graph fixture admits 531 measures
+  (71,197 bytes), then refuses 532 (71,331 bytes); the earlier reported boundary
+  was 494 measures (about 66 KB). The review reported the 500-measure case at
+  about 62.9 of 67.1 MB, with comparisons of about 114 KB for standalone DTD/dictionary
+  assessment and 168 KB for the legacy graph. These are fixture-specific
+  observations, not general document-size guarantees. The 86,052-byte,
+  2,000-empty-measure fragment fixture still refuses the default buffer;
+  its 512 MiB test isolates the default rule-step limit only. See the
+  [capacity receipt](docs/validation/resource-fragment-budget-evidence.md#default-buffer-capacity-is-fixture-specific).
+
+- Correct `MX40-PACKAGE-mimetype-no-extra` for `ProfileResourceGraph`,
+  `ProfileMXLSource`, `ProfileMXLModel` and their dictionary variants: a proved
+  zero local extra now passes with a framed central-only extra, instead of
+  remaining Unknown. Nonzero local extra still fails. Malformed central extra
+  framing now stops package/graph enumeration and child assessment with a
+  transport-capability error, while preserving an already-established local
+  Pass/Fail. No Container or primary-resource check is promised after that
+  refusal. See the [package scope](docs/validation/package-profile-scope.md) and
+  [six-profile public catalog migration](docs/validation/ipa-representation.md#published-package-baseline).
+
+- Correct MIME classification in those package/graph profiles. Distinct valid
+  unknown parameters, such as `application/vnd.recordare.musicxml+xml; foo=bar`,
+  now preserve the recognized base type: first-media-type and file-metadata
+  checks can pass instead of reporting `musicxml-media-parameter-unresolved`.
+  Equal repeated parameters and trailing semicolons now remain Unknown with
+  `media-type-duplicate-parameter` and `media-type-syntax-unresolved`, respectively,
+  so formerly satisfied packages can become undetermined. Conflicting repeated
+  parameters also use the duplicate reason. For compressed rootfiles with a
+  charset parameter, metadata advice now reports `nonstandard-file-media-type`
+  instead of `nonstandard-file-suffix`. The parser remains authoritative for
+  affirmative classification; media declarations do not certify file contents.
+
+- Resolve `ProfileSourceLinks` / `ProfileModelLinks` link and bookmark ordinals
+  across matching descendants with different parents. These cases now have
+  Known attachment instead of Unknown `link-descendant-ordinal-interpretation`.
+  The local-link rule revision and CatalogDigest are unchanged; pin the library
+  revision when reproducing historical output. See the
+  [behavior correction note](docs/validation/local-link-context-scope.md).
+
+- Stop formatting carry between `direction-type` wrappers in
+  `ProfileSourceContext` / `ProfileModelContext`. Each wrapper now uses its own
+  values and defaults, including `application-format-choice` where appropriate,
+  instead of inherited wrapper values or `direction-cross-wrapper-format-precedence`.
+  The affected rule revisions are unchanged; the context digest migration below
+  identifies the separate figure-number removal.
+
+- Return Known numeral-root suppression advice for a harmony chord's own
+  `kind=none` in `ProfileSourceContext` / `ProfileModelContext`, instead of
+  Unsupported advice. Stacked chord branches retain separate associations.
+  This correction likewise does not revise the affected context rule key.
+
+- Preserve original malformed-XML failures for `ProfileResourceGraph`,
+  `ProfileMXLSource` and `ProfileMXLModel` when a primary, nested rootfile or
+  external child fails before its assembly is known. The error retains the
+  XML syntax cause and `SyntaxMalformed` failure report without adding the
+  former `invalid configuration: resource transfer: established intrinsic
+  assembly required` error. The bundle remains unsatisfied.
+
+- Remove the invented figure-number numeric lexical requirement from the built-in
+  source/model context profiles. MusicXML deliberately retains unrestricted
+  style-text; nondecimal figures no longer make assessment incomplete, while
+  independent XSD failures remain. Keep the public numeric-subset plan as
+  deprecated legacy compatibility. Record the deliberate context-profile
+  rule/digest/outcome migration without changing historical snapshots.
 
 - Classify dictionary provider, response, transport and verification failures as
   runtime dictionary unavailability, exposing `ErrDictionaryUnavailable` and
@@ -39,6 +135,15 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   for the established assembly; selection remains separate from scope completion.
 
 ### Added
+
+- Add explicit source-only DTD/local, DTD/link and DTD/dictionary compositions
+  with owned document ENTITY/ENTITIES declaration evidence. Separate schema
+  operands from instance membership, and physical attribute provenance from
+  effective DTD values. Add sealed source-mode constructors and bounded fact
+  ingress while preserving existing profile/catalog identities. Unresolved
+  constructed carriers and package/source-origin transport remain explicit
+  limitations. See the [scope](docs/validation/source-declarations-scope.md) and
+  [verification checkpoint](docs/validation/source-declarations-evidence.md).
 
 - Add opt-in pinned dictionary assessment for original XML, current models,
   selected resource graphs and original/current MXL packages. Six explicit new

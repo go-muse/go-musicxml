@@ -29,7 +29,8 @@ const (
 // document identity validity remains an independent XSD report obligation.
 // LibraryID preserves xs:string whitespace and is absent on the sound itself.
 // Primary preserves known yes/no, absence and causal invalid/unavailable evidence;
-// omission has no default. Number is xs:NMTOKEN and only applies to ensemble.
+// omission has no XSD or prose default. Explicitly selected DTD defaults remain
+// effective supplied values. Number is xs:NMTOKEN and only applies to ensemble.
 // Content describes the owning sound's grammar and child enumeration, independent
 // of its fields. Alternatives remain separate results in original source order.
 // No dictionary membership, cross-file association or application choice is inferred.

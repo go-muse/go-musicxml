@@ -6,7 +6,7 @@ func TestResourceReviewLinkFreeIndexRetainsOnlyPartOwnership(t *testing.T) {
 	root := resourceTestNode(1, 0, "score-part")
 	child := resourceTestNode(2, 1, "group")
 	r, index := resourceTestReader(t, root, child)
-	if len(index.position) != 0 || len(index.names) != 0 || len(index.ordinals) != 0 || len(index.complete) != 0 {
+	if len(index.position) != 0 || len(index.names) != 0 || len(index.complete) != 0 {
 		t.Error("link-free document built attachment indexes")
 	}
 	if index.parts[2].State != EvidenceKnown || index.parts[2].Value.Node != 1 {

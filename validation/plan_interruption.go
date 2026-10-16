@@ -40,7 +40,7 @@ func (s *Session) recordProvedPlanInterruption(r RuleDefinition, n *factNode, p 
 	switch p.kind {
 	case planDictionary:
 		matched = proof.kind == planDictionary && proof.dictionary == p.dictionary && proof.local == nil && proof.reference == nil && proof.context == nil && proof.timeline == nil
-	case planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent, planBarlineLocation:
 		matched = proof.kind == p.kind && proof.local == nil && proof.reference == nil && proof.timeline == nil && ((proof.context != nil && proof.context == p.context) || (proof.context == nil && proof.contextBindings != nil && p.context != nil && proof.contextBindings == p.context.Bindings))
 	case planLocal:
 		matched = proof.local == p.local && proof.reference == nil && proof.timeline == nil && proof.kind == "" && proof.context == nil && proof.contextBindings == nil

@@ -97,3 +97,44 @@ func resourceLinkBindingSpecs(assembly Assembly) []contextBindingSpec {
 	}
 	return out
 }
+
+// NewSourceLocalLinkContextPlan projects MusicXML or Opus effective resources
+// while preserving physical presence and separately admitted lexical evidence.
+// DTD defaults and entity-generated markup have no physical Raw spelling. It
+// requires selected source-origin and source-declaration providers, retains
+// effective DTD ID occurrences for joined shorthand, and performs no I/O.
+func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := NewLocalLinkContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = true
+	p.context.fragments = fragmentJoinedShorthand
+	return checkedPlan(p)
+}
+
+// NewSourceSchemaHintContextPlan parses effective MusicXML, Opus, Container or
+// Sounds source hints independently of their physical Raw spelling. It requires
+// a source-origin provider; hints never select a schema or authorize retrieval.
+func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := NewSchemaHintContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = true
+	return checkedPlan(p)
+}
+
+// NewXMLFragmentLinkContextPlan elects the registered XML-media fragment
+// baseline: XPointer Framework, shorthand and element(). Source infoset mode
+// joins effective DTD and XSD identities. The ordinary source/current-model mode
+// uses its present XSD identity and element order, without inventing DTD history.
+func NewXMLFragmentLinkContextPlan(schema *CompiledSchema, sourceInfoset bool) (Plan, error) {
+	p, err := NewLocalLinkContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = sourceInfoset
+	p.context.fragments = fragmentFramework
+	return checkedPlan(p)
+}

@@ -1,0 +1,877 @@
+[
+  {
+    "row_id": "O01",
+    "encoding_witness": "`U+026B` ɫ",
+    "identity_and_sources": "Positive: l + velarization/pharyngealization overlay; IPA209 / 155+428. CH15; TIL03 pp.5,8; MAP26 p.5.",
+    "unicode13_evidence": "U+026B: UCD L620, age 1.1 (Age L64)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O02",
+    "encoding_witness": "`U+025A` ɚ",
+    "identity_and_sources": "Positive: schwa + rhotic hook; IPA327 / 322+419. U13 §7.8 p.323 explicitly permits ligated treatment; RET04 p.5.",
+    "unicode13_evidence": "U+025A: UCD L603, age 1.1 (Age L64)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O10",
+    "encoding_witness": "`U+025D` ɝ",
+    "identity_and_sources": "Positive: open-mid central vowel + rhotic hook (326+419). RET04 p.5; HB99 p.16. Distinct from retired below-hook vowel.",
+    "unicode13_evidence": "U+025D: UCD L606, age 1.1 (Age L64)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O11",
+    "encoding_witness": "`U+02B3` ʳ",
+    "identity_and_sources": "Positive: superscript/modifier r; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.",
+    "unicode13_evidence": "U+02B3: UCD L692, age 1.1 (Age L65)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O12",
+    "encoding_witness": "`U+02B5` ʵ",
+    "identity_and_sources": "Positive: superscript/modifier ɻ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.",
+    "unicode13_evidence": "U+02B5: UCD L694, age 1.1 (Age L65)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O13",
+    "encoding_witness": "`U+02C0` ˀ",
+    "identity_and_sources": "Positive: superscript/modifier ʔ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.",
+    "unicode13_evidence": "U+02C0: UCD L705, age 1.1 (Age L65)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O14",
+    "encoding_witness": "`U+1DC6` ᷆",
+    "identity_and_sources": "Positive: mid–low compound accent. HB99 p.14; MAP12 p.10; L2/04-348 pp.3–5.",
+    "unicode13_evidence": "U+1DC6: UCD L6729, age 5.0 (Age L862)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O17",
+    "encoding_witness": "`U+02B1` ʱ",
+    "identity_and_sources": "Positive: superscript/modifier ɦ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.",
+    "unicode13_evidence": "U+02B1: UCD L690, age 1.1 (Age L65)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O18",
+    "encoding_witness": "`U+02B4` ʴ",
+    "identity_and_sources": "Positive: superscript/modifier ɹ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.",
+    "unicode13_evidence": "U+02B4: UCD L693, age 1.1 (Age L65)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O19",
+    "encoding_witness": "`U+02B6` ʶ",
+    "identity_and_sources": "Positive: superscript/modifier ʁ; SUP20 pp.10–12, K89 pp.71,74, MAP12 pp.9–10. No phonetic-function inference needed.",
+    "unicode13_evidence": "U+02B6: UCD L695, age 1.1 (Age L65)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O22",
+    "encoding_witness": "`U+1DC7` ᷇",
+    "identity_and_sources": "Positive: high–mid compound accent. Same sources.",
+    "unicode13_evidence": "U+1DC7: UCD L6730, age 5.0 (Age L862)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "O23",
+    "encoding_witness": "`U+1DC9` ᷉",
+    "identity_and_sources": "Positive: high–low–high compound accent. HB99 p.14; MAP12 p.10; L2/04-348 pp.3,6.",
+    "unicode13_evidence": "U+1DC9: UCD L6732, age 5.0 (Age L862)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P01",
+    "encoding_witness": "`U+0067` g",
+    "identity_and_sources": "Positive alternative for IPA110, voiced velar plosive. MAP12 p.2 expressly accepts ASCII g; Unicode13 §7.1 includes a–z.",
+    "unicode13_evidence": "U+0067: UCD L104, age 1.1 (Age L58)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P02",
+    "encoding_witness": "`U+030D` ̍",
+    "identity_and_sources": "Positive positional counterpart of syllabic U0329 (IPA431). CH15/HB99 placement provision; ABOVE24 p.2.",
+    "unicode13_evidence": "U+030D: UCD L782, age 1.1 (Age L67)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P03",
+    "encoding_witness": "`U+0311` ̑",
+    "identity_and_sources": "Positive positional counterpart of non-syllabic U032F (IPA432). Same sources.",
+    "unicode13_evidence": "U+0311: UCD L786, age 1.1 (Age L67)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P04",
+    "encoding_witness": "`U+0346` ͆",
+    "identity_and_sources": "Positive positional counterpart of dental U032A (IPA408). Its separate extIPA dentolabial use does not erase this identity. Same sources.",
+    "unicode13_evidence": "U+0346: UCD L839, age 3.0 (Age L426)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P05",
+    "encoding_witness": "`U+0351` ͑",
+    "identity_and_sources": "Positive positional counterpart of less-rounded U031C (IPA412). Same sources.",
+    "unicode13_evidence": "U+0351: UCD L850, age 4.0 (Age L672)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P06",
+    "encoding_witness": "`U+0357` ͗",
+    "identity_and_sources": "Positive positional counterpart of more-rounded U0339 (IPA411). Same sources.",
+    "unicode13_evidence": "U+0357: UCD L856, age 4.0 (Age L672)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P07",
+    "encoding_witness": "`U+1DF5` ᷵",
+    "identity_and_sources": "Positive positional counterpart of raised U031D (IPA429). ABOVE24 p.2, historical attestation fig.4; encoded in 7.0.",
+    "unicode13_evidence": "U+1DF5: UCD L6776, age 7.0 (Age L1344)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P09",
+    "encoding_witness": "`U+1D6C` ᵬ",
+    "identity_and_sources": "Positive composite identity: b + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D6C: UCD L6639, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P10",
+    "encoding_witness": "`U+1D6D` ᵭ",
+    "identity_and_sources": "Positive composite identity: d + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D6D: UCD L6640, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P11",
+    "encoding_witness": "`U+1D6E` ᵮ",
+    "identity_and_sources": "Positive composite identity: f + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D6E: UCD L6641, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P12",
+    "encoding_witness": "`U+1D6F` ᵯ",
+    "identity_and_sources": "Positive composite identity: m + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D6F: UCD L6642, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P13",
+    "encoding_witness": "`U+1D70` ᵰ",
+    "identity_and_sources": "Positive composite identity: n + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D70: UCD L6643, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P14",
+    "encoding_witness": "`U+1D71` ᵱ",
+    "identity_and_sources": "Positive composite identity: p + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D71: UCD L6644, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P15",
+    "encoding_witness": "`U+1D72` ᵲ",
+    "identity_and_sources": "Positive composite identity: r + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D72: UCD L6645, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P16",
+    "encoding_witness": "`U+1D73` ᵳ",
+    "identity_and_sources": "Positive composite identity: ɾ + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D73: UCD L6646, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P17",
+    "encoding_witness": "`U+1D74` ᵴ",
+    "identity_and_sources": "Positive composite identity: s + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D74: UCD L6647, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P18",
+    "encoding_witness": "`U+1D75` ᵵ",
+    "identity_and_sources": "Positive composite identity: t + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D75: UCD L6648, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P19",
+    "encoding_witness": "`U+1D76` ᵶ",
+    "identity_and_sources": "Positive composite identity: z + U+0334 (IPA428). TIL03 pp.4–5,8–9.",
+    "unicode13_evidence": "U+1D76: UCD L6649, age 4.1 (Age L788)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "P20",
+    "encoding_witness": "`U+AB68` ꭨ",
+    "identity_and_sources": "Positive composite identity: ɹ + U+0334 (IPA428). SCOT19 p.1; CH15/HB99 overlay rule.",
+    "unicode13_evidence": "U+AB68: UCD L14931, age 13.0 (Age L1816)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "S09",
+    "encoding_witness": "`U+02B8` ʸ",
+    "identity_and_sources": "Current superscript/modifier of y (U+0079); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+02B8: UCD L697, age 1.1 (Age L65)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S12",
+    "encoding_witness": "`U+02E2` ˢ",
+    "identity_and_sources": "Current superscript/modifier of s (U+0073); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+02E2: UCD L739, age 1.1 (Age L66)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S13",
+    "encoding_witness": "`U+02E3` ˣ",
+    "identity_and_sources": "Current superscript/modifier of x (U+0078); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+02E3: UCD L740, age 1.1 (Age L66)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S15",
+    "encoding_witness": "`U+1D43` ᵃ",
+    "identity_and_sources": "Current superscript/modifier of a (U+0061); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D43: UCD L6598, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S16",
+    "encoding_witness": "`U+1D44` ᵄ",
+    "identity_and_sources": "Current superscript/modifier of ɐ (U+0250); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D44: UCD L6599, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S17",
+    "encoding_witness": "`U+1D45` ᵅ",
+    "identity_and_sources": "Current superscript/modifier of ɑ (U+0251); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D45: UCD L6600, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S18",
+    "encoding_witness": "`U+1D47` ᵇ",
+    "identity_and_sources": "Current superscript/modifier of b (U+0062); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D47: UCD L6602, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S19",
+    "encoding_witness": "`U+1D48` ᵈ",
+    "identity_and_sources": "Current superscript/modifier of d (U+0064); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D48: UCD L6603, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S20",
+    "encoding_witness": "`U+1D49` ᵉ",
+    "identity_and_sources": "Current superscript/modifier of e (U+0065); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D49: UCD L6604, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S21",
+    "encoding_witness": "`U+1D4A` ᵊ",
+    "identity_and_sources": "Current superscript/modifier of ə (U+0259); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D4A: UCD L6605, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S22",
+    "encoding_witness": "`U+1D4B` ᵋ",
+    "identity_and_sources": "Current superscript/modifier of ɛ (U+025B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D4B: UCD L6606, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S23",
+    "encoding_witness": "`U+1D4D` ᵍ",
+    "identity_and_sources": "Current superscript/modifier of g (U+0067); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D4D: UCD L6608, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S24",
+    "encoding_witness": "`U+1D4F` ᵏ",
+    "identity_and_sources": "Current superscript/modifier of k (U+006B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D4F: UCD L6610, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S25",
+    "encoding_witness": "`U+1D50` ᵐ",
+    "identity_and_sources": "Current superscript/modifier of m (U+006D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D50: UCD L6611, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S26",
+    "encoding_witness": "`U+1D51` ᵑ",
+    "identity_and_sources": "Current superscript/modifier of ŋ (U+014B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D51: UCD L6612, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S27",
+    "encoding_witness": "`U+1D52` ᵒ",
+    "identity_and_sources": "Current superscript/modifier of o (U+006F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D52: UCD L6613, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S28",
+    "encoding_witness": "`U+1D53` ᵓ",
+    "identity_and_sources": "Current superscript/modifier of ɔ (U+0254); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D53: UCD L6614, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S29",
+    "encoding_witness": "`U+1D56` ᵖ",
+    "identity_and_sources": "Current superscript/modifier of p (U+0070); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D56: UCD L6617, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S30",
+    "encoding_witness": "`U+1D57` ᵗ",
+    "identity_and_sources": "Current superscript/modifier of t (U+0074); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D57: UCD L6618, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S31",
+    "encoding_witness": "`U+1D58` ᵘ",
+    "identity_and_sources": "Current superscript/modifier of u (U+0075); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D58: UCD L6619, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S32",
+    "encoding_witness": "`U+1D5A` ᵚ",
+    "identity_and_sources": "Current superscript/modifier of ɯ (U+026F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D5A: UCD L6621, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S33",
+    "encoding_witness": "`U+1D5B` ᵛ",
+    "identity_and_sources": "Current superscript/modifier of v (U+0076); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D5B: UCD L6622, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S34",
+    "encoding_witness": "`U+1D5D` ᵝ",
+    "identity_and_sources": "Current superscript/modifier of β (U+03B2); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D5D: UCD L6624, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S35",
+    "encoding_witness": "`U+1D61` ᵡ",
+    "identity_and_sources": "Current superscript/modifier of χ (U+03C7); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D61: UCD L6628, age 4.0 (Age L702)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S36",
+    "encoding_witness": "`U+1D9B` ᶛ",
+    "identity_and_sources": "Current superscript/modifier of ɒ (U+0252); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D9B: UCD L6686, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S37",
+    "encoding_witness": "`U+1D9C` ᶜ",
+    "identity_and_sources": "Current superscript/modifier of c (U+0063); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D9C: UCD L6687, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S38",
+    "encoding_witness": "`U+1D9D` ᶝ",
+    "identity_and_sources": "Current superscript/modifier of ɕ (U+0255); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D9D: UCD L6688, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S39",
+    "encoding_witness": "`U+1D9E` ᶞ",
+    "identity_and_sources": "Current superscript/modifier of ð (U+00F0); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D9E: UCD L6689, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S40",
+    "encoding_witness": "`U+1D9F` ᶟ",
+    "identity_and_sources": "Current superscript/modifier of ɜ (U+025C); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1D9F: UCD L6690, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S41",
+    "encoding_witness": "`U+1DA0` ᶠ",
+    "identity_and_sources": "Current superscript/modifier of f (U+0066); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA0: UCD L6691, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S42",
+    "encoding_witness": "`U+1DA1` ᶡ",
+    "identity_and_sources": "Current superscript/modifier of ɟ (U+025F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA1: UCD L6692, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S43",
+    "encoding_witness": "`U+1DA2` ᶢ",
+    "identity_and_sources": "Current superscript/modifier of ɡ (U+0261); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA2: UCD L6693, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S44",
+    "encoding_witness": "`U+1DA3` ᶣ",
+    "identity_and_sources": "Current superscript/modifier of ɥ (U+0265); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA3: UCD L6694, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S45",
+    "encoding_witness": "`U+1DA4` ᶤ",
+    "identity_and_sources": "Current superscript/modifier of ɨ (U+0268); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA4: UCD L6695, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S46",
+    "encoding_witness": "`U+1DA6` ᶦ",
+    "identity_and_sources": "Current superscript/modifier of ɪ (U+026A); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA6: UCD L6697, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S47",
+    "encoding_witness": "`U+1DA8` ᶨ",
+    "identity_and_sources": "Current superscript/modifier of ʝ (U+029D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA8: UCD L6699, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S48",
+    "encoding_witness": "`U+1DA9` ᶩ",
+    "identity_and_sources": "Current superscript/modifier of ɭ (U+026D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DA9: UCD L6700, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S49",
+    "encoding_witness": "`U+1DAB` ᶫ",
+    "identity_and_sources": "Current superscript/modifier of ʟ (U+029F); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DAB: UCD L6702, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S50",
+    "encoding_witness": "`U+1DAC` ᶬ",
+    "identity_and_sources": "Current superscript/modifier of ɱ (U+0271); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DAC: UCD L6703, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S51",
+    "encoding_witness": "`U+1DAD` ᶭ",
+    "identity_and_sources": "Current superscript/modifier of ɰ (U+0270); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DAD: UCD L6704, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S52",
+    "encoding_witness": "`U+1DAE` ᶮ",
+    "identity_and_sources": "Current superscript/modifier of ɲ (U+0272); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DAE: UCD L6705, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S53",
+    "encoding_witness": "`U+1DAF` ᶯ",
+    "identity_and_sources": "Current superscript/modifier of ɳ (U+0273); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DAF: UCD L6706, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S54",
+    "encoding_witness": "`U+1DB0` ᶰ",
+    "identity_and_sources": "Current superscript/modifier of ɴ (U+0274); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB0: UCD L6707, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S55",
+    "encoding_witness": "`U+1DB1` ᶱ",
+    "identity_and_sources": "Current superscript/modifier of ɵ (U+0275); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB1: UCD L6708, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S56",
+    "encoding_witness": "`U+1DB2` ᶲ",
+    "identity_and_sources": "Current superscript/modifier of ɸ (U+0278); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB2: UCD L6709, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S57",
+    "encoding_witness": "`U+1DB3` ᶳ",
+    "identity_and_sources": "Current superscript/modifier of ʂ (U+0282); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB3: UCD L6710, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S58",
+    "encoding_witness": "`U+1DB4` ᶴ",
+    "identity_and_sources": "Current superscript/modifier of ʃ (U+0283); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB4: UCD L6711, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S59",
+    "encoding_witness": "`U+1DB6` ᶶ",
+    "identity_and_sources": "Current superscript/modifier of ʉ (U+0289); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB6: UCD L6713, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S60",
+    "encoding_witness": "`U+1DB7` ᶷ",
+    "identity_and_sources": "Current superscript/modifier of ʊ (U+028A); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB7: UCD L6714, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S61",
+    "encoding_witness": "`U+1DB9` ᶹ",
+    "identity_and_sources": "Current superscript/modifier of ʋ (U+028B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DB9: UCD L6716, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S62",
+    "encoding_witness": "`U+1DBA` ᶺ",
+    "identity_and_sources": "Current superscript/modifier of ʌ (U+028C); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DBA: UCD L6717, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S63",
+    "encoding_witness": "`U+1DBB` ᶻ",
+    "identity_and_sources": "Current superscript/modifier of z (U+007A); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DBB: UCD L6718, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S64",
+    "encoding_witness": "`U+1DBC` ᶼ",
+    "identity_and_sources": "Current superscript/modifier of ʐ (U+0290); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DBC: UCD L6719, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S65",
+    "encoding_witness": "`U+1DBD` ᶽ",
+    "identity_and_sources": "Current superscript/modifier of ʑ (U+0291); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DBD: UCD L6720, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S66",
+    "encoding_witness": "`U+1DBE` ᶾ",
+    "identity_and_sources": "Current superscript/modifier of ʒ (U+0292); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DBE: UCD L6721, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S67",
+    "encoding_witness": "`U+1DBF` ᶿ",
+    "identity_and_sources": "Current superscript/modifier of θ (U+03B8); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+1DBF: UCD L6722, age 4.1 (Age L788)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S68",
+    "encoding_witness": "`U+2071` ⁱ",
+    "identity_and_sources": "Current superscript/modifier of i (U+0069); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+2071: UCD L7387, age 3.2 (Age L624)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S70",
+    "encoding_witness": "`U+A7F9` ꟹ",
+    "identity_and_sources": "Current superscript/modifier of œ (U+0153); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+A7F9: UCD L14165, age 6.1 (Age L1233)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S71",
+    "encoding_witness": "`U+AB5E` ꭞ",
+    "identity_and_sources": "Current superscript/modifier of ɫ (U+026B); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+AB5E: UCD L14921, age 7.0 (Age L1362)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S72",
+    "encoding_witness": "`U+AB69` ꭩ",
+    "identity_and_sources": "Current superscript/modifier of ʍ (U+028D); SUP20 pp.10–12. U13 decomposition establishes encoded identity, not normalization permission.",
+    "unicode13_evidence": "U+AB69: UCD L14932, age 13.0 (Age L1816)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "S74",
+    "encoding_witness": "`U+02C1` ˁ",
+    "identity_and_sources": "Current superscript/modifier of ʕ (U+0295); SUP20 pp.10–12. Direct identity, U13 NamesList and L2/20-113 p.2; separate from preferred named-diacritic U02E4 mapping.",
+    "unicode13_evidence": "U+02C1: UCD L706, age 1.1 (Age L65)",
+    "evidence_basis": "H: K89 provision + CH15 parent; U13 identity; SUP20 retrospective confirmation"
+  },
+  {
+    "row_id": "P21",
+    "encoding_witness": "`U+1D91` ᶑ",
+    "identity_and_sources": "Current implicit retroflex implosive; SUP20 Council letter pp.10–12 and RET04 p.6 (Handbook identity).",
+    "unicode13_evidence": "U+1D91: UCD L6676, age 4.1 (Age L788)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P22",
+    "encoding_witness": "`U+A78E` ꞎ",
+    "identity_and_sources": "Current implicit voiceless retroflex lateral fricative; SUP20 Council letter pp.10–12; L2/20-125R p.4.",
+    "unicode13_evidence": "U+A78E: UCD L14102, age 6.0 (Age L1132)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "R01",
+    "encoding_witness": "`U+0064 U+0322` d̢",
+    "identity_and_sources": "Exact alternative for ɖ; DNE L404. Target exists in Unicode13.",
+    "unicode13_evidence": "U+0064: UCD L101, age 1.1 (Age L58); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R02",
+    "encoding_witness": "`U+006C U+0322` l̢",
+    "identity_and_sources": "Exact alternative for ɭ; DNE L407. Target exists in Unicode13.",
+    "unicode13_evidence": "U+006C: UCD L109, age 1.1 (Age L58); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R03",
+    "encoding_witness": "`U+006E U+0322` n̢",
+    "identity_and_sources": "Exact alternative for ɳ; DNE L408. Target exists in Unicode13.",
+    "unicode13_evidence": "U+006E: UCD L111, age 1.1 (Age L58); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R04",
+    "encoding_witness": "`U+0072 U+0322` r̢",
+    "identity_and_sources": "Exact alternative for ɽ; DNE L410. Target exists in Unicode13.",
+    "unicode13_evidence": "U+0072: UCD L115, age 1.1 (Age L58); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R05",
+    "encoding_witness": "`U+0279 U+0322` ɹ̢",
+    "identity_and_sources": "Compositional identity for ɻ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.",
+    "unicode13_evidence": "U+0279: UCD L634, age 1.1 (Age L64); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R06",
+    "encoding_witness": "`U+0073 U+0322` s̢",
+    "identity_and_sources": "Compositional identity for ʂ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.",
+    "unicode13_evidence": "U+0073: UCD L116, age 1.1 (Age L58); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R07",
+    "encoding_witness": "`U+0074 U+0322` t̢",
+    "identity_and_sources": "Exact alternative for ʈ; DNE L411. Target exists in Unicode13.",
+    "unicode13_evidence": "U+0074: UCD L117, age 1.1 (Age L58); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R08",
+    "encoding_witness": "`U+007A U+0322` z̢",
+    "identity_and_sources": "Exact alternative for ʐ; DNE L413. Target exists in Unicode13.",
+    "unicode13_evidence": "U+007A: UCD L123, age 1.1 (Age L58); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R09",
+    "encoding_witness": "`U+0257 U+0322` ɗ̢",
+    "identity_and_sources": "Exact alternative for ᶑ; DNE L418. Target exists in Unicode13.",
+    "unicode13_evidence": "U+0257: UCD L600, age 1.1 (Age L64); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R10",
+    "encoding_witness": "`U+026C U+0322` ɬ̢",
+    "identity_and_sources": "Exact alternative for ꞎ; DNE L423. Target exists in Unicode13.",
+    "unicode13_evidence": "U+026C: UCD L621, age 1.1 (Age L64); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R11",
+    "encoding_witness": "`U+027A U+0322` ɺ̢",
+    "identity_and_sources": "Exact alternative for retroflex lateral flap (later U1DF08); DNE L425. The target scalar is post-13; only the left-hand Unicode13 string is under review.",
+    "unicode13_evidence": "U+027A: UCD L635, age 1.1 (Age L64); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R12",
+    "encoding_witness": "`U+01C3 U+0322` ǃ̢",
+    "identity_and_sources": "Exact alternative for retroflex click (later U1DF0A); DNE L415. The target scalar is post-13; only the left-hand Unicode13 string is under review.",
+    "unicode13_evidence": "U+01C3: UCD L452, age 1.1 (Age L62); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R13",
+    "encoding_witness": "`U+026E U+0322` ɮ̢",
+    "identity_and_sources": "Exact alternative for voiced retroflex lateral fricative (later U1DF05); DNE L424. The target scalar is post-13; only the left-hand Unicode13 string is under review.",
+    "unicode13_evidence": "U+026E: UCD L623, age 1.1 (Age L64); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R14",
+    "encoding_witness": "`U+02B4 U+0322` ʴ̢",
+    "identity_and_sources": "Compositional identity for ʵ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.",
+    "unicode13_evidence": "U+02B4: UCD L693, age 1.1 (Age L65); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R15",
+    "encoding_witness": "`U+02E1 U+0322` ˡ̢",
+    "identity_and_sources": "Exact alternative for ᶩ; DNE L433. Target exists in Unicode13.",
+    "unicode13_evidence": "U+02E1: UCD L738, age 1.1 (Age L66); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R16",
+    "encoding_witness": "`U+207F U+0322` ⁿ̢",
+    "identity_and_sources": "Exact alternative for ᶯ; DNE L437. Target exists in Unicode13.",
+    "unicode13_evidence": "U+207F: UCD L7399, age 1.1 (Age L279); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R17",
+    "encoding_witness": "`U+02E2 U+0322` ˢ̢",
+    "identity_and_sources": "Compositional identity for ᶳ; U13 NamesList identities, modifier decomposition and §7.9 shape-building role. Not a canonical decomposition or DNE relation. Target exists in Unicode13.",
+    "unicode13_evidence": "U+02E2: UCD L739, age 1.1 (Age L66); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R18",
+    "encoding_witness": "`U+1DBB U+0322` ᶻ̢",
+    "identity_and_sources": "Exact alternative for ᶼ; DNE L436. Target exists in Unicode13.",
+    "unicode13_evidence": "U+1DBB: UCD L6718, age 4.1 (Age L788); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R19",
+    "encoding_witness": "`U+1D48 U+0322` ᵈ̢",
+    "identity_and_sources": "Exact alternative for superscript ɖ (later U1078B); DNE L434. The target scalar is post-13; only the left-hand Unicode13 string is under review.",
+    "unicode13_evidence": "U+1D48: UCD L6603, age 4.0 (Age L702); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R20",
+    "encoding_witness": "`U+1D57 U+0322` ᵗ̢",
+    "identity_and_sources": "Exact alternative for superscript ʈ (later U107AF); DNE L435. The target scalar is post-13; only the left-hand Unicode13 string is under review.",
+    "unicode13_evidence": "U+1D57: UCD L6618, age 4.0 (Age L702); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R21",
+    "encoding_witness": "`U+02B3 U+0322` ʳ̢",
+    "identity_and_sources": "Exact alternative for superscript ɽ (later U107A8); DNE L432. The target scalar is post-13; only the left-hand Unicode13 string is under review.",
+    "unicode13_evidence": "U+02B3: UCD L692, age 1.1 (Age L65); U+0322: UCD L803, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "R22",
+    "encoding_witness": "`U+1D9C U+0327` ᶜ̧",
+    "identity_and_sources": "Superscript ç: SUP20 p.1 reproduces the 1900 IPA-chart example with superscript c+cedilla. Current base ç and the historical superscript provision establish the symbol; U1D9C+U0327 is the Unicode13 composite spelling. This does not make U0327 a standalone diacritic.",
+    "unicode13_evidence": "U+1D9C: UCD L6687, age 4.1 (Age L788); U+0327: UCD L808, age 1.1 (Age L67)",
+    "evidence_basis": "M: preexisting IPA identity; exact composite inferred or later corroborated, not canonical"
+  },
+  {
+    "row_id": "D01",
+    "encoding_witness": "`U+0020` SP",
+    "identity_and_sources": "Positive ordinary word-boundary space: K89 pp.75,77. A string of admitted spaces is not made invalid merely for containing no voiced segment under a repertoire-only predicate.",
+    "unicode13_evidence": "U+0020: UCD L33, age 1.1 (Age L58)",
+    "evidence_basis": "H: explicit pre2015 identity and U13 encoding"
+  },
+  {
+    "row_id": "D09",
+    "encoding_witness": "`U+A712` ꜒",
+    "identity_and_sources": "Positive left-stem counterpart of U+02E5; level 5. K89 pp.75–77; U13 p.324.",
+    "unicode13_evidence": "U+A712: UCD L13978, age 4.1 (Age L823)",
+    "evidence_basis": "H notation identity; unresolved application projection where stated"
+  },
+  {
+    "row_id": "D10",
+    "encoding_witness": "`U+A713` ꜓",
+    "identity_and_sources": "Positive left-stem counterpart of U+02E6; level 4. K89 pp.75–77; U13 p.324.",
+    "unicode13_evidence": "U+A713: UCD L13979, age 4.1 (Age L823)",
+    "evidence_basis": "H notation identity; unresolved application projection where stated"
+  },
+  {
+    "row_id": "D11",
+    "encoding_witness": "`U+A714` ꜔",
+    "identity_and_sources": "Positive left-stem counterpart of U+02E7; level 3. K89 pp.75–77; U13 p.324.",
+    "unicode13_evidence": "U+A714: UCD L13980, age 4.1 (Age L823)",
+    "evidence_basis": "H notation identity; unresolved application projection where stated"
+  },
+  {
+    "row_id": "D12",
+    "encoding_witness": "`U+A715` ꜕",
+    "identity_and_sources": "Positive left-stem counterpart of U+02E8; level 2. K89 pp.75–77; U13 p.324.",
+    "unicode13_evidence": "U+A715: UCD L13981, age 4.1 (Age L823)",
+    "evidence_basis": "H notation identity; unresolved application projection where stated"
+  },
+  {
+    "row_id": "D13",
+    "encoding_witness": "`U+A716` ꜖",
+    "identity_and_sources": "Positive left-stem counterpart of U+02E9; level 1. K89 pp.75–77; U13 p.324.",
+    "unicode13_evidence": "U+A716: UCD L13982, age 4.1 (Age L823)",
+    "evidence_basis": "H notation identity; unresolved application projection where stated"
+  },
+  {
+    "row_id": "P23",
+    "encoding_witness": "`U+02D4` ˔",
+    "identity_and_sources": "Recommended positive spacing representation of current raised sign IPA429/U031D. ABOVE24 p.2 current-positional-variants context and unchanged 2005/2015 alphabet; this is an explicit identity inference, not only a claim that linguists use it.",
+    "unicode13_evidence": "U+02D4: UCD L725, age 1.1 (Age L65)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "P24",
+    "encoding_witness": "`U+02D5` ˕",
+    "identity_and_sources": "Recommended positive spacing representation of current lowered sign IPA430/U031E; same evidence and inference.",
+    "unicode13_evidence": "U+02D5: UCD L726, age 1.1 (Age L65)",
+    "evidence_basis": "M: historical IPA provision + later explicit encoding identity"
+  },
+  {
+    "row_id": "EJECTIVE-0315",
+    "encoding_witness": "U+0315",
+    "identity_and_sources": "Independently represented combining ejective sign. L2/20-253R pp.1–2 identifies sign and scope; no surrounding-string grammar is implied.",
+    "unicode13_evidence": "UnicodeData13 U+0315 and DerivedAge13 assigned-input-witness.tsv.",
+    "evidence_basis": "Direct sign identity; later source corroborates existing use, not a Unicode-version update."
+  }
+]

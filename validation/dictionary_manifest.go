@@ -12,9 +12,10 @@ type DictionaryKind string
 
 // Reviewed dictionary kinds do not imply a complete normative grammar.
 const (
-	DictionaryKindSMuFL          DictionaryKind = "smufl"
-	DictionaryKindStandardSounds DictionaryKind = "standard-sounds"
-	DictionaryKindIPAPositive    DictionaryKind = "ipa-positive"
+	DictionaryKindSMuFL             DictionaryKind = "smufl"
+	DictionaryKindStandardSounds    DictionaryKind = "standard-sounds"
+	DictionaryKindIPAPositive       DictionaryKind = "ipa-positive"
+	DictionaryKindIPARepresentation DictionaryKind = "ipa-representation"
 )
 
 // DictionaryManifestID selects one immutable reviewed transformation and policy.
@@ -22,10 +23,11 @@ type DictionaryManifestID string
 
 // Supported dictionary manifests pin independent certifiable components.
 const (
-	DictionaryManifestSMuFL14Canonical         DictionaryManifestID = "smufl-1.4-canonical-v1"
-	DictionaryManifestSMuFL14Ranges            DictionaryManifestID = "smufl-1.4-ranges-v1"
-	DictionaryManifestStandardSounds40         DictionaryManifestID = "musicxml-4.0-standard-sounds-v1"
-	DictionaryManifestIPAPositive2015Unicode13 DictionaryManifestID = "ipa-2015-unicode13-positive-v1"
+	DictionaryManifestSMuFL14Canonical               DictionaryManifestID = "smufl-1.4-canonical-v1"
+	DictionaryManifestSMuFL14Ranges                  DictionaryManifestID = "smufl-1.4-ranges-v1"
+	DictionaryManifestStandardSounds40               DictionaryManifestID = "musicxml-4.0-standard-sounds-v1"
+	DictionaryManifestIPAPositive2015Unicode13       DictionaryManifestID = "ipa-2015-unicode13-positive-v1"
+	DictionaryManifestIPARepresentation2015Unicode13 DictionaryManifestID = "ipa-2015-unicode13-representation-v1"
 )
 
 // DictionaryRelation selects an exact relation within a reviewed manifest.
@@ -40,6 +42,7 @@ const (
 	DictionaryRelationIPASymbol              DictionaryRelation = "ipa-symbol"
 	DictionaryRelationIPAAttestedExample     DictionaryRelation = "ipa-attested-example"
 	DictionaryRelationIPACanonicalEquivalent DictionaryRelation = "ipa-canonical-equivalent"
+	DictionaryRelationIPARepresentation      DictionaryRelation = "ipa-symbol-representation"
 )
 
 // DictionarySelection explicitly selects nonempty relations from one manifest.
@@ -54,10 +57,11 @@ type DictionaryComponentID string
 
 // Supported components are fixed sources; no arbitrary URI can be verified.
 const (
-	DictionaryComponentSMuFL14Glyphnames        DictionaryComponentID = "smufl-1.4-glyphnames-json"
-	DictionaryComponentSMuFL14Ranges            DictionaryComponentID = "smufl-1.4-ranges-json"
-	DictionaryComponentStandardSounds40         DictionaryComponentID = "musicxml-4.0-sounds-xml"
-	DictionaryComponentIPAPositive2015Unicode13 DictionaryComponentID = "ipa-2015-unicode13-positive-bundle-json"
+	DictionaryComponentSMuFL14Glyphnames              DictionaryComponentID = "smufl-1.4-glyphnames-json"
+	DictionaryComponentSMuFL14Ranges                  DictionaryComponentID = "smufl-1.4-ranges-json"
+	DictionaryComponentStandardSounds40               DictionaryComponentID = "musicxml-4.0-sounds-xml"
+	DictionaryComponentIPAPositive2015Unicode13       DictionaryComponentID = "ipa-2015-unicode13-positive-bundle-json"
+	DictionaryComponentIPARepresentation2015Unicode13 DictionaryComponentID = "ipa-2015-unicode13-representation-bundle-json"
 )
 
 // DictionarySourceKind distinguishes original source bytes from reviewed derived data.
@@ -110,6 +114,8 @@ func dictionaryManifest(id DictionaryManifestID) (DictionaryManifest, bool) {
 		return DictionaryManifest{ID: id, Kind: DictionaryKindStandardSounds, Edition: "4.0", Component: DictionaryComponentPin{DictionaryComponentStandardSounds40, 33703, "a73d52b7215ea567dd54c5f2ea3e9d4f7ea167a40d5770a8fe0e3cb458858b35", "https://raw.githubusercontent.com/w3c-cg/musicxml/799e2defb2ece0ae7bafe08dcbcac25b2c631d53/schema/sounds.xml", DictionarySourceOriginalComponent}, ComponentName: "standard-ids", TransformRevision: "musicxml40-pinned-literal-ids-v1", PolicyRevision: "musicxml40-exact-standard-id-v1", DataSHA256: "b6d3d12d9e33c47bb793fe7769190476bc8def765469b699a477aa51771edfaf", DataBytes: 30909, Rows: 894, Relations: []DictionaryRelation{DictionaryRelationStandardSound}, NegativeRelations: []DictionaryRelation{DictionaryRelationStandardSound}}, true
 	case DictionaryManifestIPAPositive2015Unicode13:
 		return DictionaryManifest{ID: id, Kind: DictionaryKindIPAPositive, Edition: "IPA2015/Unicode13.0.0", Component: DictionaryComponentPin{DictionaryComponentIPAPositive2015Unicode13, 26435, "ee4d39dbf8e999d12ae4e0680fc1b55a9704b81a4f049a110bcf5a21c1da2901", "", DictionarySourceReviewedDerivedBundle}, ComponentName: "reviewed-positive-ledger", TransformRevision: "ipa-chart-positive-v1", PolicyRevision: "ipa2015-unicode13-partial-positive-v1", DataSHA256: "47b0a8812835e56e0f8b6527cca13b6d55bb4b3ee231186868e8ec8590804ec6", DataBytes: 9836, Rows: 197, Relations: []DictionaryRelation{DictionaryRelationIPASymbol, DictionaryRelationIPAAttestedExample, DictionaryRelationIPACanonicalEquivalent}}, true
+	case DictionaryManifestIPARepresentation2015Unicode13:
+		return DictionaryManifest{ID: id, Kind: DictionaryKindIPARepresentation, Edition: "IPA2015/Unicode13.0.0", Component: DictionaryComponentPin{DictionaryComponentIPARepresentation2015Unicode13, 58745, "8ab091cfe63c248ce7351fecce9b670af11c949f76d7a5d0f18c2ed43d44f473", "", DictionarySourceReviewedDerivedBundle}, ComponentName: "reviewed-symbol-representation-ledger", TransformRevision: "ipa2015-unicode13-representation-v1", PolicyRevision: "ipa2015-unicode13-canonical-representation-v1", DataSHA256: "f3efd17200088616bf170aedc4f2cf618a8db4c73d8852de03b72b86c7dc2737", DataBytes: 22430, Rows: 453, Relations: []DictionaryRelation{DictionaryRelationIPARepresentation}}, true
 	}
 	return DictionaryManifest{}, false
 }
@@ -131,6 +137,8 @@ func dictionaryComponent(id DictionaryComponentID) (DictionaryComponentPin, bool
 		manifest = DictionaryManifestStandardSounds40
 	case DictionaryComponentIPAPositive2015Unicode13:
 		manifest = DictionaryManifestIPAPositive2015Unicode13
+	case DictionaryComponentIPARepresentation2015Unicode13:
+		manifest = DictionaryManifestIPARepresentation2015Unicode13
 	default:
 		return DictionaryComponentPin{}, false
 	}

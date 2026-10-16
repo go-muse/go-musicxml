@@ -208,7 +208,14 @@ func (c *Context) absentAttributeFacts(schemas []AttributeSchema, present map[QN
 		c.scalar(int64(len(value)))
 		failure := c.ValidateSimpleType(&schema.Type, value)
 		if failure != nil {
-			c.Incomplete(format(c, "effective attribute value constraint cannot be assessed: %s", failure.Message))
+			if c.sourceDeclarations && failure.Constraint == "entity-declaration" {
+				// The schema operand was applied as an effective instance value. Its
+				// document-membership negative is a normative attribute failure, distinct
+				// from unavailable/invalid schema-literal metadata.
+				c.AddIssue(attributePath(s.subject.Path, schema.Name, c), failure.Constraint, failure.Message)
+			} else {
+				c.Incomplete(format(c, "effective attribute value constraint cannot be assessed: %s", failure.Message))
+			}
 		}
 		identityFact := c.IdentityBuiltin(&schema.Type) != "" || c.constructedIdentity(&schema.Type)
 		if identityFact {

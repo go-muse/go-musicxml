@@ -131,24 +131,15 @@ func TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode(t *testing.T) {
 	}
 }
 
+// The historical gate survives only in an explicitly constructed legacy
+// catalog. It is no longer selected by the built-in conformance profiles.
 func TestContextFigureNumberRetainsUnreviewedGrammarGate(t *testing.T) {
+	engine := legacyFigureNumberTestEngine(t)
 	for _, timewise := range []bool{false, true} {
 		for _, value := range []string{"6", "10", "Ⅵ", "6½", "not-a-number"} {
 			xml := contextFixtureXML(`<figured-bass><figure><figure-number>`+value+`</figure-number></figure></figured-bass>`, timewise)
-			doc, err := Decode(strings.NewReader(xml))
-			if err != nil {
-				t.Fatal(err)
-			}
 			for _, model := range []bool{false, true} {
-				var r validation.Report
-				if model {
-					r, err = AssessModel(context.Background(), doc, AssessmentOptions{Profile: ProfileModelContext})
-				} else {
-					r, err = InspectXML(context.Background(), strings.NewReader(xml), AssessmentOptions{Profile: ProfileSourceContext})
-				}
-				if err != nil {
-					t.Fatal(err)
-				}
+				r := localContextAssess(t, engine, xml, model)
 				found := false
 				for _, f := range r.Findings {
 					if f.Rule.ID == "MX40-CONTEXT-figure-number-numeric" {

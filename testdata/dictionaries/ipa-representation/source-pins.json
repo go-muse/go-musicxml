@@ -1,0 +1,92 @@
+[
+  {
+    "source": "CH15-Doulos",
+    "url": "https://www.internationalphoneticassociation.org/sites/default/files/IPA_Doulos_2015.pdf",
+    "bytes": 1051097,
+    "sha256": "23a75363526a80ea3c2e2f35329ef5379138b7fc5f0a36f15e07c790062a3b65"
+  },
+  {
+    "source": "CH15-Kiel",
+    "url": "https://www.internationalphoneticassociation.org/sites/default/files/IPA_Kiel_2015.pdf",
+    "bytes": 1055545,
+    "sha256": "57938fa4b0ff8041ba5e383431b9900cb16070ab0bfa3e4b7d8e27cbfa59e0c6"
+  },
+  {
+    "source": "UnicodeData13",
+    "url": "https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt",
+    "bytes": 1851767,
+    "sha256": "bdbffbbfc8ad4d3a6d01b5891510458f3d36f7170422af4ea2bed3211a73e8bb"
+  },
+  {
+    "source": "DerivedAge13",
+    "url": "https://www.unicode.org/Public/13.0.0/ucd/DerivedAge.txt",
+    "bytes": 122399,
+    "sha256": "e779a443d3aa2a3166a15becaa2b737c922480e32c0453d5956093633555078f"
+  },
+  {
+    "source": "ReadMe13",
+    "url": "https://www.unicode.org/Public/13.0.0/ucd/ReadMe.txt",
+    "bytes": 655,
+    "sha256": "953c06b1383b4d33453cd235dc1127d9109f7eca3996dfd847f261819b4d6c3d"
+  },
+  {
+    "source": "UAX15-rev50",
+    "url": "https://www.unicode.org/reports/tr15/tr15-50.html",
+    "bytes": 135700,
+    "sha256": "34f7659d00b4f65f0e34c65e3fbdb69de9d6ae967bda3ae97735bc4d718dfae7"
+  },
+  {
+    "source": "Unicode13-ch7",
+    "url": "https://www.unicode.org/versions/Unicode13.0.0/ch07.pdf",
+    "bytes": 998607,
+    "sha256": "9e274deea23b1f4d3b3e565388092e634fc1c62bedbe710002158a5da0d1f6c2"
+  },
+  {
+    "source": "NamesList13",
+    "url": "https://www.unicode.org/Public/13.0.0/ucd/NamesList.txt",
+    "bytes": 1598953,
+    "sha256": "b7549aa242c64602b5acf37158fb02715dd25676f3e34773701004333b1443ed"
+  },
+  {
+    "source": "K89",
+    "url": "https://www.cambridge.org/core/services/aop-cambridge-core/content/view/C10DB13CAB1BAC6187438C74F3FF01EC/S0025100300003868a.pdf/report-on-the-1989-kiel-convention-international-phonetic-association1.pdf",
+    "bytes": 787792,
+    "sha256": "d0a314453220bc245592165a0e1ea718f3a8e441d71540c75daa21aae9ab2ade"
+  },
+  {
+    "source": "MAP12",
+    "url": "https://www.internationalphoneticassociation.org/IPAcharts/common_files/pdfs/pdfs_IPA_charts_archive/IPA_2012_symbollist.pdf",
+    "bytes": 332722,
+    "sha256": "7b57c5b5a9326e9b151bd951717dbf49adc18eadcffeee6d216f9dd04f5cbf1d"
+  },
+  {
+    "source": "HB99-extract",
+    "url": "https://commons.princeton.edu/eng266-s25/wp-content/uploads/sites/433/2025/02/IPA-Introduction-Handbook.pdf",
+    "bytes": 4386888,
+    "sha256": "d0295dee267d9496e07dd695bf5736cef6ebb373fc573ccc44d13afe76c9e6ed"
+  },
+  {
+    "source": "SUP20",
+    "url": "https://www.unicode.org/L2/L2020/20252r-mod-ipa-a.pdf",
+    "bytes": 2865708,
+    "sha256": "7cab89169469dc8cffd24c9c35fc67ab9ad552186cc467759e8bd73b11b8ff04"
+  },
+  {
+    "source": "ABOVE24",
+    "url": "https://www.unicode.org/L2/L2024/24080-ipa-diacritics-above.pdf",
+    "bytes": 1103297,
+    "sha256": "b019e60c557b56a4be451959f34000de5b22bb24f4b13f732d1848895b3d2ac4"
+  },
+  {
+    "source": "L2-20-125R",
+    "url": "https://www.unicode.org/L2/L2020/20125r-ipa-retroflex.pdf",
+    "bytes": 1574260,
+    "sha256": "f1af28c08d70c2a826906fcc4a5f339d6e11112f070f6102529de66392eb4622"
+  },
+  {
+    "source": "DoNotEmit17",
+    "url": "https://www.unicode.org/Public/17.0.0/ucd/DoNotEmit.txt",
+    "bytes": 47421,
+    "sha256": "d6da8009b918509e4529ae9245ffd0948027d84a3ee929ff0387e5e9ba61cfff"
+  }
+]

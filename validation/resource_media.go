@@ -32,12 +32,21 @@ func ClassifyResourceMediaType(ctx context.Context, account *Account, value stri
 	if err := account.Charge(BudgetRuleSteps, int64(len(value))+1); err != nil {
 		return Evidence[ResourceRepresentation]{}, err
 	}
-	scratch := int64(len(value))*4 + 1024
+	// Bound both the standard parser map and the raw-name duplicate index,
+	// including short parameter names, decoded strings and overlapping storage.
+	scratch := int64(len(value))*128 + 4096
 	if err := account.Charge(BudgetBufferedBytes, scratch); err != nil {
 		return Evidence[ResourceRepresentation]{}, err
 	}
 	defer func() { _ = account.Release(BudgetBufferedBytes, scratch) }()
-	typ, parameters, err := mime.ParseMediaType(value)
+	parameterReason, err := resourceMediaParameterStatus(ctx, account, value)
+	if err != nil {
+		return Evidence[ResourceRepresentation]{}, err
+	}
+	if parameterReason != "" {
+		return unknown(parameterReason), nil
+	}
+	typ, _, err := mime.ParseMediaType(value)
 	if err := ctx.Err(); err != nil {
 		return Evidence[ResourceRepresentation]{}, err
 	}
@@ -45,22 +54,10 @@ func ClassifyResourceMediaType(ctx context.Context, account *Account, value stri
 		return unknown("media-type-syntax-unresolved"), nil
 	}
 	typ = strings.ToLower(typ)
-	// IANA registers charset only for the +xml type; the compressed type has
-	// no optional parameters. Unreviewed extensions remain unresolved here.
-	// https://www.iana.org/assignments/media-types/application/vnd.recordare.musicxml+xml
-	// https://www.iana.org/assignments/media-types/application/vnd.recordare.musicxml
+	// RFC 2045 sections 5 and 5.1: parameters do not change the base content
+	// nature, and unrecognized parameter names are ignored. This classifies
+	// declaration identity only; it neither selects decoding nor grants I/O.
 	if typ == "application/vnd.recordare.musicxml+xml" || typ == "application/vnd.recordare.musicxml" {
-		for key := range parameters {
-			if err := ctx.Err(); err != nil {
-				return Evidence[ResourceRepresentation]{}, err
-			}
-			if err := account.Charge(BudgetRuleSteps, 1); err != nil {
-				return Evidence[ResourceRepresentation]{}, err
-			}
-			if typ != "application/vnd.recordare.musicxml+xml" || key != "charset" {
-				return unknown("musicxml-media-parameter-unresolved"), nil
-			}
-		}
 		representation := ResourceSourceXML
 		if typ == "application/vnd.recordare.musicxml" {
 			representation = ResourceRawMXL
@@ -71,4 +68,71 @@ func ClassifyResourceMediaType(ctx context.Context, account *Account, value stri
 		return Evidence[ResourceRepresentation]{State: EvidenceKnown, Value: ResourceBinary}, nil
 	}
 	return unknown("musicxml-media-type-set-unresolved"), nil
+}
+
+// The standard parser collapses repeated names with equal values and rejects
+// conflicting values. Scan first so RFC 6838 section 4.3 repetitions have the
+// same reason regardless of their values; the standard parser validates the
+// remaining syntax afterward.
+// Scan raw parameter names so that quoted semicolons/escapes cannot hide a
+// duplicate. All maps/strings are transient under the caller's scratch lease.
+func resourceMediaParameterStatus(ctx context.Context, account *Account, value string) (Code, error) {
+	// Prepay bounded scans, case folding, name hashing and map operations.
+	if err := account.Charge(BudgetRuleSteps, int64(len(value))*8+1); err != nil {
+		return "", err
+	}
+	// This bounded declaration classifier does not accept internationalized
+	// header syntax or raw control bytes through the permissive Go parser.
+	for i := range len(value) {
+		if i%64 == 0 {
+			if err := ctx.Err(); err != nil {
+				return "", err
+			}
+		}
+		if value[i] >= 127 || value[i] < 32 && value[i] != '\t' {
+			return "media-type-syntax-unresolved", nil
+		}
+	}
+	seen := make(map[string]struct{})
+	quoted := false
+	for i := 0; i < len(value); i++ {
+		if i%64 == 0 {
+			if err := ctx.Err(); err != nil {
+				return "", err
+			}
+		}
+		if quoted && value[i] == '\\' {
+			i++
+			continue
+		}
+		if value[i] == '"' {
+			quoted = !quoted
+			continue
+		}
+		if value[i] != ';' || quoted {
+			continue
+		}
+		start, end := i+1, i+1
+		for end < len(value) && value[end] != '=' {
+			if end%64 == 0 {
+				if err := ctx.Err(); err != nil {
+					return "", err
+				}
+			}
+			end++
+		}
+		if end == len(value) {
+			return "media-type-syntax-unresolved", nil
+		}
+		name := strings.ToLower(strings.TrimSpace(value[start:end]))
+		if _, exists := seen[name]; exists {
+			return "media-type-duplicate-parameter", nil
+		}
+		seen[name] = struct{}{}
+		i = end
+	}
+	if err := ctx.Err(); err != nil {
+		return "", err
+	}
+	return "", nil
 }

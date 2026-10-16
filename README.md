@@ -96,6 +96,7 @@ construction and compressed `.mxl` round trips in
 | Assess current model with explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
 | Assess original source or strictly decode it | `InspectXML`, `DecodeAssessed`, `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
+| Compose DTD declarations with standalone local/link/dictionary assessment | `ProfileSourceInternalDTDLocal`, `ProfileSourceInternalDTDLinks`, `ProfileSourceInternalDTDDictionaries` |
 | Assess local links without fetching | `ProfileSourceLinks`, `ProfileModelLinks` |
 | Assess explicitly supplied pinned dictionaries | `InspectXMLWithDictionaries`, `AssessModelWithDictionaries`, `DecodeAssessedWithDictionaries` |
 | Assess dictionaries across selected resources or MXL | `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries`, `InspectMXLWithDictionaries`, `AssessMXLPackageWithDictionaries` |
@@ -163,8 +164,9 @@ Select `ProfileModelContext` or `ProfileSourceContext` for the bounded
 repeat/span, local-default, layout and encoded-performance extension. Owned
 `Report.Context` snapshots retain per-field availability and provenance; a
 completed provider does not mean every optional fact is known. Selected
-contextual predicates retain unresolved numeric, repeat-content and gesture
-requirements explicitly. See the [context scope](docs/validation/context-assessment-scope.md).
+contextual predicates retain unresolved time-only duplicate ordering,
+repeat-content and gesture requirements explicitly. Figure-number text retains
+its deliberately open string domain without an additional numeric grammar gate. See the [context scope](docs/validation/context-assessment-scope.md).
 
 The repository's official MusicXML 4.0 samples `MozartTrio.musicxml` (262 notes)
 and `MozaChloSample.musicxml` (278 notes) do **not** complete either context
@@ -191,6 +193,30 @@ The separate developmental `ProfileSourceInternalDTD` processes bounded internal
 declarations, entity replacements and effective attributes with typed occurrence
 origins. External DTDs are not fetched, and existing profiles do not opt into this
 processing. See its [scope and retained obligations](docs/validation/dtd-infoset-scope.md).
+
+The explicit [standalone compositions](docs/validation/source-declarations-scope.md)
+add declaration-dependent ENTITY/ENTITIES checks and reuse local, nonfetching
+link and selected dictionary consumers. DTD defaults and normalized effective
+values remain distinct from physical source occurrences. Dictionary data is
+still supplied explicitly; the library does not load it automatically. These
+profiles do not themselves assess package obligations or general DTD validity.
+Explicit package compositions transport independently owned source origins.
+
+The additive [DTD/dictionary package compositions](docs/validation/dtd-package-composition-scope.md)
+can be selected explicitly through the existing dictionary graph and MXL APIs.
+They assess retained source children with bounded internal declarations and
+owned source origins, while current primary models keep their existing model
+profile. Effective Container paths stay distinct from physical Raw; explicit
+Sounds input retains effective mapping fields. No auxiliary filename discovery
+or external DTD/schema/dictionary fetching is introduced.
+
+The opt-in [encoded semantic compositions](docs/validation/semantic-composition-scope.md)
+join source/current-model XSD, local, timeline and contextual checks with bounded
+barline/repeat proofs and registered XML Framework/shorthand/element fragments.
+Matching graph and raw/current-MXL profiles pin those intrinsic interpretations.
+Caller-selected dictionary data is still explicit; missing evidence and original
+package/indirection limits remain visible. These profiles add no external musical
+intent provider and make no universal-conformance claim.
 
 For original input, use `InspectXML` or strict `DecodeAssessed` with explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the same local clauses), or the unchanged
@@ -224,15 +250,20 @@ Callers select fixed components and supply authorized bytes through
 fetches or loads them automatically; caller-selected transport is required.
 Repository dictionary fixtures are test inputs. One verified immutable set and
 finite account cover the root and selected linked/nested-package children.
-Existing profiles remain unchanged.
+Catalogs without the IPA dictionary operation remain unchanged; its additive
+policy deliberately updates dictionary-containing catalog fingerprints.
 
 The selected scope includes exact SMuFL 1.4 canonical membership with independent
 MusicXML name-family checks, narrow defaults/range advice and recognition of the
 894 MusicXML 4.0 standard sound IDs. Custom sound strings remain allowed. IPA
-2015/Unicode 13 data provide explicitly partial positive evidence only: unknown
-symbols are not rejected, and even attested examples do not establish complete
-sequence validity or intended pronunciation. Internal-DTD composition and general
-glyph/rendering semantics remain outside this scope.
+2015/Unicode 13 positive-v1 data remain explicitly partial. A separately selected
+representation-v1 manifest can establish an affirmative whole-input repertoire
+witness with stable canonical ordering and bounded, source-established half
+ties. Unproved input stays unavailable; no phonotactics, pronunciation or
+universal representation conformance is claimed. The old 197-row manifest is
+unchanged. See the [representation policy and migration](docs/validation/ipa-representation.md).
+Internal-DTD composition requires its separate profile; general glyph/rendering
+semantics remain outside this scope.
 
 Default budgets can still stop modest inputs. In a specific repeated-note fixture
 with all four dictionary components imported, standalone source/model assessment

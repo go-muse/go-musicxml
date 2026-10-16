@@ -123,6 +123,7 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 		if app.State == EvidenceKnown && app.Value {
 			parent := s.nodes[n.header.Parent]
 			var subject *factNode
+			association := Evidence[bool]{State: EvidenceKnown, Value: true}
 			complete := stateUnknown[bool]("harmony-parent-unavailable")
 			if parent != nil {
 				complete = r.complete(parent)
@@ -135,17 +136,35 @@ func localAdvisoryNode(ctx context.Context, s *Session, key RuleKey, n *factNode
 					if ch == n {
 						break
 					}
+					if ch.header.Declaration.State != EvidenceKnown {
+						// An unclassified child may close or replace the
+						// preceding chord's choice. It proves no exclusion.
+						subject = nil
+						association = timelineGapAs[DeclarationID, bool](ch.header.Declaration, "harmony-child-declaration-unavailable")
+						continue
+					}
+					// A kind closes the root/numeral choice of its own
+					// harmony-chord. A following function must not reuse it.
+					if r.matches(ch, localKind) {
+						subject = nil
+						association = Evidence[bool]{State: EvidenceKnown, Value: true}
+					}
 					if r.matches(ch, localAdvisoryRole("root")) || r.matches(ch, localAdvisoryRole("numeral")) {
 						subject = ch
+						association = Evidence[bool]{State: EvidenceKnown, Value: true}
 					}
 				}
 			}
 			if complete.State != EvidenceKnown {
 				app = complete
+			} else if association.State != EvidenceKnown {
+				app = association
 			} else if subject == nil {
 				app = stateUnknown[bool]("harmony-root-or-numeral-association-unavailable")
 			} else if r.matches(subject, localAdvisoryRole("numeral")) {
-				value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "source-numeral-step-reference-requires-interpretation"}
+				// The source's numeral-step spelling is a documentation
+				// typo: numeral-root owns the numeral's text override.
+				value = localKnownText("set-numeral-root-text-to-empty-to-suppress-numeral")
 			}
 		}
 		if e := publish("harmony-none-root", raw, value, app); e != nil {

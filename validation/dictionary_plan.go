@@ -9,6 +9,7 @@ import (
 
 const planDictionary planKind = "pinned-dictionary"
 const dictionaryConsumerRevision uint32 = 1
+const dictionaryIPARepresentationRevision uint32 = 2
 
 // DictionaryOperation is a closed consumer policy, not an expression language.
 type DictionaryOperation string
@@ -60,6 +61,9 @@ func NewDictionaryPlan(schema *CompiledSchema, operation DictionaryOperation) (P
 		return Plan{}, err
 	}
 	d := &dictionaryPlan{Schema: schema, Bindings: b, Operation: operation, Revision: dictionaryConsumerRevision}
+	if operation == DictionaryIPA {
+		d.Revision = dictionaryIPARepresentationRevision
+	}
 	if schema.assembly == AssemblyMusicXML {
 		for _, name := range dictionarySMuFLTypeNames {
 			d.Types = append(d.Types, contextNamedType(name))
@@ -70,6 +74,10 @@ func NewDictionaryPlan(schema *CompiledSchema, operation DictionaryOperation) (P
 		if !ok {
 			return Plan{}, contract("dictionary pins", "reviewed compiled manifest unavailable")
 		}
+		d.Pins = append(d.Pins, m)
+	}
+	if operation == DictionaryIPA {
+		m, _ := dictionaryManifest(DictionaryManifestIPARepresentation2015Unicode13)
 		d.Pins = append(d.Pins, m)
 	}
 	encoded, err := json.Marshal(struct {
@@ -86,8 +94,15 @@ func NewDictionaryPlan(schema *CompiledSchema, operation DictionaryOperation) (P
 	return checkedPlan(Plan{kind: planDictionary, dictionary: d})
 }
 func (p *dictionaryPlan) valid() error {
-	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Bindings == nil || p.Revision != dictionaryConsumerRevision || len(p.Digest) != 64 {
+	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Bindings == nil || len(p.Digest) != 64 {
 		return contract("dictionary plan", "sealed exact schema and policy required")
+	}
+	revision := dictionaryConsumerRevision
+	if p.Operation == DictionaryIPA {
+		revision = dictionaryIPARepresentationRevision
+	}
+	if p.Revision != revision {
+		return contract("dictionary plan", "sealed exact policy revision required")
 	}
 	switch p.Operation {
 	case DictionaryCanonical, DictionaryStandardSounds, DictionaryIPA, DictionaryRendering:

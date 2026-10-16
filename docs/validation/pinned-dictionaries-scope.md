@@ -13,6 +13,15 @@ historical local checkpoints are not public checkout targets. See [verification
 evidence](pinned-dictionaries-evidence.md) for the exact scope of completed
 checks and [API.md](../../API.md#opt-in-pinned-dictionaries) for use.
 
+## Additive representation update
+
+The legacy positive-v1 behavior described below remains unchanged. The separately
+selected [IPA representation manifest](ipa-representation.md) now adds bounded
+affirmative whole-input witnesses, without a negative complement, phonotactics
+or universal IPA conformance. It reuses the existing typed IPA payload and
+adapters. Its exact policy/rule and dictionary-containing catalog migrations are
+recorded separately; no original planning record or historical result is changed.
+
 ## Preservation and selected closure
 
 This page is an additive contribution crosswalk. It does not change the original
@@ -31,17 +40,20 @@ explicitly supplied fact-stream snapshots; the root dictionary package catalog
 constructor is private. Standalone `InspectXMLWithDictionaries` supports
 `ProfileSourceSoundsDictionaries`, but public graph/MXL wrappers do not discover,
 resolve or assess sounds children. The slice selects SMuFL 1.4 canonical names
-and exact ranges, MusicXML 4.0 standard-sound recognition and explicitly partial
-IPA 2015/Unicode 13 positive evidence. It adds no general downloadable dictionary
-framework, font inspection, expression evaluation or application sound mapping.
+and exact ranges, MusicXML 4.0 standard-sound recognition, unchanged partial
+IPA positive-v1 facts and a separately selected bounded representation witness.
+It adds no general downloadable dictionary framework, font inspection, expression
+evaluation or application sound mapping.
 The proposed generic `ExternalDictionary`/`ExternalProvider` interfaces in
 [go-contracts.md](go-contracts.md) remain proposals, not the shipped API.
 
 The minimal source/model profile closure is XSD/local-link prerequisites plus
 these dictionary operations and narrow defaults/advice. Full timeline, layout,
 repeat and unrelated context families are not prerequisites. New graph/MXL
-profiles bind exact dictionary intrinsic profiles/catalog digests while old
-profiles remain unchanged. Source-only container stays `ProfileSourceContainer`;
+profiles bind exact dictionary intrinsic profiles/catalog digests. The IPA
+representation addition deliberately migrates dictionary-containing catalogs;
+its exact migration is separate from the earlier preserved-profile capture.
+Source-only container stays `ProfileSourceContainer`;
 the source-sounds catalog row uses `ProfileSourceSoundsDictionaries`. Raw MXL
 retains source-only intrinsic bindings; current MXL does not reconstruct
 discarded source evidence.
@@ -66,8 +78,8 @@ review gates are separate in the evidence page.
 | `CHECK-smufl-segno-family` / `TEST-smufl-segno-family` (`#/checks/6`) | Present segno-family scalar retains independent XSD and canonical results. | Same family/type routes above | No notation/playback agreement is inferred. Owner: `REQ-DEF-EXTERNAL-SMUFL`. |
 | `CHECK-smufl-wavy-family` / `TEST-smufl-wavy-family` (`#/checks/7`) | Present wavy-line scalar retains `wiggle…` or `guitar…VibratoStroke` family semantics and beam exclusion, independently of the canonical set. | `TestDictionarySixFamilyFailuresAndBadNominationStayCausal`; `TestDictionaryAllTenAssessedSMuFLTypes` | No broader ornament semantic classifier. Owner: `REQ-DEF-EXTERNAL-SMUFL`. |
 | `REQ-DEF-ISSUE-SMUFL-VERSION-DICTIONARY` / `MX40-ISSUE-smufl-version-dictionary` | Explicitly choose SMuFL 1.4, exact canonical names and pinned transform/policy; distinguish optional font glyphs, primary/alternate codepoints, classes and family facets. | `TestDictionaryManifestsAreClosedAndOwned`; `TestDictionaryComponentVerifierRejectsZeroWrongLengthAndCanceled` | Historical issue status and `hard_error_basis=false` remain unchanged; future edition changes need new reviewed identities. Owner: the same issue requirement. |
-| `REQ-DEF-EXTERNAL-IPA` / `TEST-DEF-EXTERNAL-IPA` (`implementation-plan.json#/requirements/34`); `CHECK-ipa-2015-unicode13` / `TEST-ipa-2015-unicode13` (`prose-contracts.json#/checks/15`) | Every present exact `play/ipa`, including empty content: retain partial symbol, exact-example and selected canonical-equivalence evidence while keeping the complete predicate unavailable. | `TestDictionaryIPAPositiveNeverClosesSequence`; `TestDictionaryENTITYAndSemanticUseRemainIndependent`; `TestDictionaryIPADerivedBundleDoesNotAcquireOriginalSourceOrNegativeAuthority` | Full repertoire, whitespace/empty policy, general canonical-equivalent encoding closure and sequence interpretation remain open. Owner: `REQ-DEF-EXTERNAL-IPA`; see the four gates below. |
-| `REQ-DEF-ISSUE-IPA-CHARACTER-REPERTOIRE` / `MX40-ISSUE-ipa-character-repertoire` | Select the named partial positive policy without presenting a Unicode block or later mapping aid as the complete 2015 repertoire. | IPA tests above; independently reviewed 197-row data ledger | Keep original issue status and `hard_error_basis=false`; full normative interpretation remains with this issue and `REQ-DEF-EXTERNAL-IPA`. |
+| `REQ-DEF-EXTERNAL-IPA` / `TEST-DEF-EXTERNAL-IPA` (`implementation-plan.json#/requirements/34`); `CHECK-ipa-2015-unicode13` / `TEST-ipa-2015-unicode13` (`prose-contracts.json#/checks/15`) | Every present exact `play/ipa`: legacy positive-v1 retains partial symbol/example/canonical facts. Separately selected representation-v1 may establish a bounded affirmative whole-input witness, including known empty strings. | `TestDictionaryIPAPositiveNeverClosesSequence`; `TestDictionaryENTITYAndSemanticUseRemainIndependent`; `TestDictionaryIPADerivedBundleDoesNotAcquireOriginalSourceOrNegativeAuthority`; `TestIPARepresentationSelectedConsumerWholeInput`; `TestIPARepresentationLegacyManifestIdentityUntouched` | Unproved representations remain unavailable; no negative complement, phonotactics or universal conformance claim. Owner: `REQ-DEF-EXTERNAL-IPA`; see the legacy limits and additive policy below. |
+| `REQ-DEF-ISSUE-IPA-CHARACTER-REPERTOIRE` / `MX40-ISSUE-ipa-character-repertoire` | Select the named partial-positive or bounded affirmative-representation policy without presenting a Unicode block or later mapping aid as a complete repertoire. | IPA tests above; unchanged 197-row legacy ledger and separately reviewed 453-row representation ledger | Keep original issue status and `hard_error_basis=false`; full normative interpretation remains with this issue and `REQ-DEF-EXTERNAL-IPA`. |
 | `CHECK-context-sounds-standard-identifiers` / `TEST-context-sounds-standard-identifiers` (`context-dispositions.json#/checks/242`) | Exact score-instrument and instrument-change `instrument-sound`, plus source-only sounds `sound/@id`: expose standard=true/false from 894 IDs. | `TestDictionarySoundsCustomAllowedAndIPAGate`; `TestDictionaryGraphAdmitsExplicitSourceSoundsProfile` | False means nonstandard, never invalid MusicXML. No `SoundsDocument`, public graph/MXL sounds traversal or closed extension enum. The source-sounds graph test calls the internal helper directly. Public sounds-resource traversal remains with `REQ-DEF-PACKAGE-ADAPTERS` and `REQ-DEF-ADAPT-SOURCE`; standard-sounds dictionary context still owns the selected scalar relation; general mapping remains `CHECK-context-sounds-application-mapping`. |
 | `CHECK-context-stopped-smufl-default` / `TEST-context-stopped-smufl-default` (`#/checks/194`) | Exact technical/stopped: proven absent attribute gives `brassMuteClosed`; explicit present scalar is independently canonical-assessed. | `TestDictionaryDefaultsWithoutDataAndRangeAdvice`; `TestDictionaryAllTwentySevenDeclaredUses` | Default remains known without data; present invalid/unknown does not become absence. No brass rendering proof. Owner: this context obligation. |
 | `CHECK-context-open-smufl-default` / `TEST-context-open-smufl-default` (`#/checks/195`) | Exact technical/open: same presence rules, default `brassMuteOpen`. | Same defaults/direct-use routes | No default on unrelated same-type elements or inferred performance meaning. Owner: this context obligation. |
@@ -306,10 +318,14 @@ actual selection, availability/reasons and lineage participate in package-sessio
 snapshot capability identities. The graph cache mirrors this key defensively;
 its fingerprint cannot vary within a run.
 
-### Four retained IPA gates
+### Legacy positive-v1 limits and the additive witness
 
-`REQ-DEF-EXTERNAL-IPA`, `CHECK-ipa-2015-unicode13` and
-`REQ-DEF-ISSUE-IPA-CHARACTER-REPERTOIRE` retain all of these closure requirements:
+The unchanged 197-row positive-v1 policy retains these four limitations. The
+separate [453-row representation policy](ipa-representation.md) establishes
+explicit empty/SP/leading-mark witnesses, finite Unicode13 canonical closure
+and source-established constructions for its affirmative language. It does not
+turn these historical limitations into negatives, revise original issue status,
+or claim phonotactics or universal repertoire conformance:
 
 1. Complete, exact 2015 repertoire mapping versus historical, additional and
    extIPA symbols. The 2026 Doulos list is an encoding aid, not a 2015 normative
@@ -347,10 +363,12 @@ budget reset. Temporary source, decoded records and final copies are admitted
 for simultaneous live storage. Scalar caps also apply to derived defaults and
 nested input/effective/span/equivalent text before publication. Every
 transferred usable body closes once even on read/metadata/close failure. Wrong
-request/pin/kind or ordinary provider errors become capability gaps and may
-accompany a partial result; they do not suppress independent XSD/family
-failures. Actual cancellation/resource exhaustion is terminal, with original
-causes and earlier proved violations preserved.
+request/pin/kind errors on the four legacy components and ordinary provider
+errors become capability gaps and may accompany a partial result. For the new
+representation manifest only, importer-owned malformed structure/length/hash
+errors preserve ConfigurationError and cannot return a usable set; they do not
+suppress independent XSD/family failures. Actual cancellation/resource exhaustion
+is terminal, with original causes and earlier proved violations preserved.
 
 The graph retains dictionary context in selected intrinsic snapshots and remaps
 all occurrence-qualified subjects and nested causes on adoption. Two aliases of
@@ -393,7 +411,8 @@ for exact work counters, fixture qualifications and unchanged capability gaps.
   snapshot; the historical UCD copyright statements are also retained.
 - The [project notices](../../THIRD_PARTY_NOTICES.md),
   [music-data notices](../../testdata/dictionaries/NOTICES.txt) and
-  [IPA notices](../../testdata/dictionaries/ipa-positive/NOTICES.txt) accompany
+  [legacy IPA notices](../../testdata/dictionaries/ipa-positive/NOTICES.txt) and
+  [representation notices](../../testdata/dictionaries/ipa-representation/NOTICES.txt) accompany
   the data and must be preserved with generated equivalents. No chart artwork,
   PDF, font, outline or Unicode specification text is bundled. Actual release
   packaging and notice inclusion remain acceptance checks.

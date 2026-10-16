@@ -11,6 +11,11 @@ import (
 // creates the sole root account and imports its immutable capability set once.
 // A nonnil graph owns all cleanup even when startup returns an operation error.
 func startDictionaryResourceGraph(ctx context.Context, resources LinkedAssessmentOptions, dictionaries DictionaryOptions, profile validation.ProfileID) (*resourceGraphRun, error) {
+	selected, composed, err := selectDictionaryPackageProfile(resources.Graph.Profile, profile)
+	if err != nil {
+		return nil, err
+	}
+	profile = selected
 	if err := validateDictionaryOptions(dictionaries); err != nil {
 		return nil, err
 	}
@@ -18,11 +23,21 @@ func startDictionaryResourceGraph(ctx context.Context, resources LinkedAssessmen
 	if err != nil {
 		return nil, err
 	}
-	catalog, err := newDictionaryPackageAssessmentCatalog()
+	bundle := dictionaryResourceIntrinsicProfiles()
+	var catalog *validation.CompiledPackageCatalog
+	if isSemanticPackageProfile(profile) {
+		catalog, err = semanticPackageAssessmentCatalog()
+		bundle = semanticResourceIntrinsicProfiles()
+	} else if composed {
+		catalog, err = dtdDictionaryPackageAssessmentCatalog()
+		bundle = dtdDictionaryResourceIntrinsicProfiles()
+	} else {
+		catalog, err = newDictionaryPackageAssessmentCatalog()
+	}
 	if err != nil {
 		return nil, err
 	}
-	g, err := startConfiguredResourceGraph(ctx, cfg, profile, catalog, dictionaryResourceIntrinsicProfiles())
+	g, err := startConfiguredResourceGraph(ctx, cfg, profile, catalog, bundle)
 	if err != nil {
 		return nil, err
 	}

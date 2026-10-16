@@ -79,8 +79,6 @@ const validationAttributeRequired = xsd.AttributeRequired
 type validationAttributeSchema = xsd.AttributeSchema
 type validationAttributeUse = xsd.AttributeUse
 
-var validationBase64Pattern = xsd.Base64Pattern
-
 const validationBooleanDomain = xsd.BooleanDomain
 
 var validationBuiltinBase = xsd.BuiltinBase

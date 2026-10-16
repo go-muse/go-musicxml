@@ -253,6 +253,9 @@ func (s *Session) newContextService(ctx context.Context, key RuleKey) (*contextS
 	return service, nil
 }
 func (s *Session) evaluateContextPlan(ctx context.Context, n *factNode, key RuleKey, p Plan, final bool) (Decision, bool, error) {
+	if p.kind == planBarlineLocation {
+		return evaluateBarlineLocation(ctx, s, n, p.context, final)
+	}
 	if p.kind == planGraphicalRepeatContent {
 		return evaluateGraphicalRepeatContent(ctx, s, n, p.context, final)
 	}

@@ -74,8 +74,8 @@ func validateDictionaryOptions(o DictionaryOptions) error {
 	bad := func(reason string) error {
 		return &validation.ConfigurationError{Field: "dictionary selections", Reason: reason}
 	}
-	if len(o.Selections) > 4 {
-		return bad("at most four fixed components may be selected")
+	if len(o.Selections) > 5 {
+		return bad("at most five fixed components may be selected")
 	}
 	for i, s := range o.Selections {
 		m, ok := validation.LookupDictionaryManifest(s.Manifest)

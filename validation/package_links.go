@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-muse/go-musicxml/internal/xsd"
 	"strconv"
+	"unicode/utf8"
 )
 
 // ObserveEdge binds one finalized local link template to exact adopted target
@@ -49,8 +50,36 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 	if err := validateEvidence(e.FragmentTarget, "edge fragment target"); err != nil {
 		return s.fail(err)
 	}
-	if e.Fragment.State == EvidenceKnown && !validText(e.Fragment.Value, 4096) {
-		return s.fail(contract("edge fragment", "bounded exact text required"))
+	if e.Fragment.State == EvidenceKnown {
+		// Election by the source also controls lexical admission when the
+		// target is unavailable. Valid Framework Unicode data must not replace
+		// the target's Unknown/Absent evidence with an ingress-contract error.
+		selected := source.resource.snapshot.fragments != nil
+		framework := selected && source.resource.snapshot.fragments.Mode == fragmentFramework
+		if target := s.adoptions[e.Target.Value]; e.Target.State == EvidenceKnown && target != nil && target.resource.snapshot.fragments != nil {
+			selected = true
+			framework = framework || target.resource.snapshot.fragments.Mode == fragmentFramework
+		}
+		if selected {
+			if len(e.Fragment.Value) > 4096 {
+				return s.fail(contract("edge fragment", "bounded exact text required"))
+			}
+			if err := s.account.Check(BudgetScalarBytes, int64(len(e.Fragment.Value))); err != nil {
+				return s.fail(err)
+			}
+			if err := s.scan(ctx, 1+3*int64(len(e.Fragment.Value))); err != nil {
+				return err
+			}
+		}
+		valid := false
+		if framework {
+			valid = len(e.Fragment.Value) <= 4096 && utf8.ValidString(e.Fragment.Value)
+		} else {
+			valid = validText(e.Fragment.Value, 4096)
+		}
+		if !valid {
+			return s.fail(contract("edge fragment", "bounded exact text required"))
+		}
 	}
 	if e.Target.State == EvidenceKnown {
 		target := s.adoptions[e.Target.Value]
@@ -106,6 +135,16 @@ func (s *PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservati
 func (s *PackageSession) adoptedNodeKnown(ctx context.Context, a *packageAdoption, node NodeID) bool {
 	if node != 0 && node == a.resource.snapshot.header.Root.Node {
 		return true
+	}
+	if fragments := a.resource.snapshot.fragments; fragments != nil {
+		for _, element := range fragments.Elements {
+			if err := s.scan(ctx, 1); err != nil {
+				return false
+			}
+			if element.Subject.Node == node {
+				return true
+			}
+		}
 	}
 	for _, id := range a.resource.snapshot.ids {
 		if err := s.scan(ctx, 1); err != nil {
@@ -623,6 +662,9 @@ func (s *PackageSession) linkTargetDecision(ctx context.Context, d Decision, e P
 		return d
 	}
 	if e.Fragment.State == EvidenceKnown && e.Fragment.Value != "" {
+		if target.resource.snapshot.fragments != nil {
+			return s.fragmentSelectionDecision(ctx, d, e, target)
+		}
 		if !xsd.ValidXSDNCName(e.Fragment.Value) {
 			d.Outcome = OutcomeUnsupported
 			d.Reason = "fragment-grammar-unimplemented"

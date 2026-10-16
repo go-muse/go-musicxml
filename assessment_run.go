@@ -79,6 +79,12 @@ func (c assessmentRunConfig) validate(target validation.Target) error {
 
 func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation.Engine, error) {
 	switch profile {
+	case ProfileSourceSemantics:
+		return sourceSemanticEngine()
+	case ProfileSourceInternalDTDContainer, ProfileSourceInternalDTDSoundsDictionaries:
+		return sourceAuxiliaryCompositionEngine()
+	case ProfileSourceInternalDTDLocal, ProfileSourceInternalDTDLinks, ProfileSourceInternalDTDDictionaries:
+		return sourceCompositionEngine()
 	case ProfileSourceDictionaries, ProfileSourceSoundsDictionaries:
 		return newDictionaryAssessmentEngine()
 	case ProfileSourceContainer, ProfileSourceSounds:
@@ -102,6 +108,8 @@ func sourceAssessmentEngineForProfile(profile validation.ProfileID) (*validation
 
 func modelAssessmentEngineForProfile(profile validation.ProfileID) (*validation.Engine, error) {
 	switch profile {
+	case ProfileModelSemantics:
+		return modelSemanticEngine()
 	case ProfileModelDictionaries:
 		return newDictionaryAssessmentEngine()
 	case ProfileModelXSD, ProfileModelLocal:

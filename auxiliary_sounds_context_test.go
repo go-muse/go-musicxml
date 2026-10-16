@@ -314,8 +314,11 @@ func TestAuxiliaryFrozenEightProfiles(t *testing.T) {
 		if err = json.Unmarshal(rawRows[i]["report"], &expectedValue); err != nil {
 			t.Fatal(err)
 		}
+		// Keep the original snapshot unchanged. Only the documented withdrawal
+		// of the figure-number overconstraint may migrate context reports.
+		migrateFrozenFigureNumberReport(t, row.Profile.ID, expectedValue)
 		if !reflect.DeepEqual(actualValue, expectedValue) {
-			t.Errorf("old profile report changed: %s\n got %s\nwant %s", row.Profile.ID, actual, rawRows[i]["report"])
+			t.Errorf("profile report changed beyond its documented migration: %s\n got %s\nhistorical %s", row.Profile.ID, actual, rawRows[i]["report"])
 		}
 	}
 }

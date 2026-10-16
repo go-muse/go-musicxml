@@ -9,7 +9,15 @@ import (
 // applyDTDAttributes runs before namespace expansion. Declaration keys and
 // suppression use lexical qualified names, not their eventual expanded names.
 func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []xml.Attr, metadata []sourceXMLAttribute) ([]xml.Attr, []sourceXMLAttribute, error) {
-	if !r.internalDTD || r.dtdStore == nil {
+	if !r.internalDTD {
+		return attributes, metadata, nil
+	}
+	if r.dtdStore == nil {
+		if r.captureDTDIDs && !r.doctype {
+			for i := range metadata {
+				metadata[i].DTDIDDomainComplete = true
+			}
+		}
 		return attributes, metadata, nil
 	}
 	if len(attributes) != len(metadata) {
@@ -17,6 +25,11 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 	}
 	declared := r.dtdStore.Attributes(element)
 	declarationsComplete := r.dtdStore.State().AttributeDeclarationsComplete
+	if r.captureDTDIDs {
+		for i := range metadata {
+			metadata[i].DTDIDDomainComplete = declarationsComplete
+		}
+	}
 	if len(declared) == 0 && declarationsComplete {
 		return attributes, metadata, nil
 	}
@@ -54,6 +67,9 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 				metadata[i].Origin.DeclarationUnavailableReason = "dtd-infoset-unavailable"
 			}
 			continue
+		}
+		if r.captureDTDIDs && declaration.AttributeType == "ID" && declaration.ActuallyRead && declaration.Binding {
+			metadata[i].DTDID = declaration
 		}
 		if metadata[i].Origin != nil {
 			metadata[i].Origin.DeclarationExpected = true
@@ -135,7 +151,17 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 			}
 		}
 		attributes = append(attributes, xml.Attr{Name: name, Value: value})
-		metadata = append(metadata, sourceXMLAttribute{NamespaceDeclaration: name.Space == "xmlns" || name.Space == "" && name.Local == "xmlns", Origin: origin})
+		m := sourceXMLAttribute{NamespaceDeclaration: name.Space == "xmlns" || name.Space == "" && name.Local == "xmlns", Origin: origin}
+		if r.captureDTDIDs {
+			m.DTDIDDomainComplete = declarationsComplete
+			if declaration.AttributeType == "ID" && declaration.ActuallyRead && declaration.Binding {
+				m.DTDID = declaration
+			}
+		}
+		if r.captureAttributeLexical {
+			m.Lexical = validation.Evidence[string]{State: validation.EvidenceAbsent}
+		}
+		metadata = append(metadata, m)
 	}
 	return attributes, metadata, nil
 }

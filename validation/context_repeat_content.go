@@ -337,6 +337,9 @@ func contextRepeatProveContent(ctx context.Context, s *Session, p *contextPlan, 
 			return err
 		}
 	}
+	if r.err == nil {
+		r.err = contextRepeatProveSingletons(r, timeline, rows, index, hierarchyPlan)
+	}
 	return r.err
 }
 

@@ -27,11 +27,13 @@ type ContextPlanSpec struct {
 	TimelineProvider RuleKey
 }
 type contextPlan struct {
-	Schema   *CompiledSchema
-	Timeline RuleKey
-	Provider RuleKey
-	Bindings *contextBindings
-	revision uint32
+	sourceInfoset bool
+	fragments     fragmentMode
+	Schema        *CompiledSchema
+	Timeline      RuleKey
+	Provider      RuleKey
+	Bindings      *contextBindings
+	revision      uint32
 }
 
 // NewLocalContextPlan constructs the source-supported local default/fact
@@ -72,9 +74,14 @@ func NewTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planTimeOnlyOrder, ContextPlanSpec{Schema: schema})
 }
 
-// NewFigureNumberNumericPlan accepts the sufficient nonempty ASCII-digit subset
-// for the exact figure-number declaration. Other spellings retain the unreviewed
-// numeric-grammar gate rather than asserting a complete lexical grammar.
+// NewFigureNumberNumericPlan retains the legacy nonempty ASCII-digit subset
+// check for the exact figure-number declaration. Other spellings return
+// Unsupported. Its mandatory/normative custom-catalog binding is preserved for
+// compatibility; selecting it adds a caller-chosen restriction beyond MusicXML.
+//
+// Deprecated: MusicXML deliberately leaves figure-number as unrestricted
+// style-text. Built-in conformance profiles do not select this legacy plan.
+// Its result is not a MusicXML numeric-validity determination.
 func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planFigureNumberNumeric, ContextPlanSpec{Schema: schema})
 }
@@ -95,6 +102,19 @@ func NewSoundsMappingContextPlan(schema *CompiledSchema) (Plan, error) {
 // Only the exact container assembly and source target are supported.
 func NewContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
 	return newContextPlan(planContextContainerMetadata, ContextPlanSpec{Schema: schema})
+}
+
+// NewSourceContainerMetadataContextPlan projects effective ordered container
+// metadata separately from original XML-normalized attribute spellings. DTD
+// defaults and entity-generated attributes have no physical Raw spelling. It
+// requires a selected source-origin provider and supports only source input.
+func NewSourceContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error) {
+	p, err := NewContainerMetadataContextPlan(schema)
+	if err != nil {
+		return Plan{}, err
+	}
+	p.context.sourceInfoset = true
+	return checkedPlan(p)
 }
 
 func contextPlanAssembly(kind planKind) Assembly {
@@ -131,7 +151,7 @@ func newContextPlan(kind planKind, spec ContextPlanSpec) (Plan, error) {
 }
 func (p Plan) isContext() bool {
 	switch p.kind {
-	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent, planBarlineLocation:
 		return true
 	}
 	return false
@@ -139,6 +159,12 @@ func (p Plan) isContext() bool {
 func (p *contextPlan) valid(kind planKind) error {
 	if p == nil || p.Schema == nil || p.Schema.kernel == nil || p.Schema.assembly != contextPlanAssembly(kind) || p.Bindings == nil || p.revision != contextSemanticRevision {
 		return contract("context plan", "sealed MusicXML schema and exact context revision required")
+	}
+	if p.fragments > fragmentFramework || p.fragments != fragmentLegacy && !resourceLinkPlan(kind) {
+		return contract("XML fragment mode", "selected local-link plan required")
+	}
+	if p.sourceInfoset && kind != planContextMusicXMLLinks && kind != planContextOpusLinks && kind != planContextMusicXMLHints && kind != planContextOpusHints && kind != planContextContainerHints && kind != planContextSoundsHints && kind != planContextContainerMetadata {
+		return contract("source resource context", "supported source resource family required")
 	}
 	if p.Timeline != (RuleKey{}) && !catalogKey(p.Timeline) {
 		return contract("context timeline", "invalid provider revision")
@@ -165,7 +191,7 @@ func (p *contextPlan) digest(kind planKind) any {
 	if p == nil {
 		return nil
 	}
-	return struct {
+	out := struct {
 		Kind         planKind
 		Revision     uint32
 		SchemaDigest string
@@ -174,6 +200,20 @@ func (p *contextPlan) digest(kind planKind) any {
 		Provider     RuleKey
 		Bindings     string
 	}{kind, p.revision, p.Schema.Digest(), p.Schema.Assembly(), p.Timeline, p.Provider, p.Bindings.digest()}
+	if p.fragments != fragmentLegacy {
+		return struct {
+			Fragments     fragmentMode
+			SourceInfoset bool
+			Context       any
+		}{p.fragments, p.sourceInfoset, out}
+	}
+	if p.sourceInfoset {
+		return struct {
+			Provenance string
+			Context    any
+		}{"source-infoset", out}
+	}
+	return out
 }
 func (p Plan) validateContextFor(r RuleDefinition) error {
 	if !p.isContext() {
@@ -186,6 +226,9 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 		return contract("context rule", "normative mandatory family contract required")
 	}
 	for _, target := range r.Targets {
+		if p.context.sourceInfoset && target != TargetSource {
+			return contract("source resource target", "source-only target required")
+		}
 		if p.kind == planContextContainerMetadata && target != TargetSource {
 			return contract("container context target", "source-only assembly required")
 		}
@@ -206,6 +249,10 @@ func (p Plan) validateContextFor(r RuleDefinition) error {
 		}
 		if !catalogKey(p.context.Provider) || !slices.Contains(r.Requires, Dependency{Kind: DependencyRule, Rule: p.context.Provider, Relation: RelationDocument}) {
 			return contract("context consumer dependency", "exact type-specific provider required")
+		}
+	} else if p.kind == planBarlineLocation {
+		if r.Scope != ScopeNode || r.Role != RolePredicate || r.Selector.Component == nil || *r.Selector.Component != contextNamedType("barline") || r.Selector.Assembly != nil || r.Selector.Declaration != nil || !catalogKey(p.context.Timeline) {
+			return contract("barline selector", "exact barline node predicate and timeline required")
 		}
 	} else if p.kind == planFigureNumberNumeric {
 		uses := p.context.Bindings.Roles[contextRoleFigureNumber]
@@ -287,7 +334,7 @@ func validateContextProfile(c *CompiledCatalog, closure map[RuleKey]bool, schema
 		if schema == nil || schema.Digest() != p.context.Schema.Digest() {
 			return contract("context schema", "matching selected XSD context assembly schema required")
 		}
-		if p.kind != planTimeOnlyOrder && p.kind != planFigureNumberNumeric && p.kind != planBendReleaseSign && p.kind != planGraphicalRepeatContent {
+		if p.kind != planTimeOnlyOrder && p.kind != planFigureNumberNumeric && p.kind != planBendReleaseSign && p.kind != planGraphicalRepeatContent && p.kind != planBarlineLocation {
 			if seen[p.kind] {
 				return contract("context profile", "only one provider per sealed family is supported")
 			}

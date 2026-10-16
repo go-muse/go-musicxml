@@ -116,7 +116,13 @@ func (c *Context) AssessBuiltinValue(name, value, display string) (SimpleAssessm
 		}
 		return SimpleAssessment{}, failure
 	}
-	if name == "ENTITY" || name == "ENTITIES" {
+	if name == "QName" && c.local != nil {
+		// Lexical syntax has already been checked. General instance/default/schema
+		// literal namespace contexts are not interchangeable; do not infer a value
+		// from prefix spelling. xsi:type has its separate subject-scope resolver.
+		return SimpleAssessment{}, c.IncompleteFailure("ordinary QName namespace-value assessment is unavailable")
+	}
+	if entityBuiltin(name) && !c.sourceDeclarations {
 		return SimpleAssessment{}, c.IncompleteFailure(format(c, "unparsed entity declarations are unavailable for xs:%s", name))
 	}
 	semantics := builtinSemantics(name, c)
@@ -132,6 +138,11 @@ func (c *Context) AssessBuiltinValue(name, value, display string) (SimpleAssessm
 	} else {
 		result.Value = atomicValue(semantics, lexical, c)
 	}
+	if c.sourceDeclarations && c.entityLiteralDepth == 0 && c.entityDeferred == 0 && entityBuiltin(name) {
+		if failure := c.assessEntityMembership(name, lexical); failure != nil {
+			return SimpleAssessment{}, failure
+		}
+	}
 	return result, nil
 }
 
@@ -144,6 +155,12 @@ func (c *Context) AssessBuiltinValue(name, value, display string) (SimpleAssessm
 // failure, so an equal value rejected by a pattern does not invent a fixed issue.
 func (c *Context) SimpleLiteralValue(semantics *SimpleSemantics, literal string) (SimpleAssessment, bool) {
 	c.step(1)
+	// Schema literals describe the schema value space. They never consult the
+	// current instance's DTD, including through nested union/list conversion.
+	if c.sourceDeclarations {
+		c.entityLiteralDepth++
+		defer func() { c.entityLiteralDepth-- }()
+	}
 	if semantics == nil {
 		c.Incomplete("literal type metadata cannot be resolved")
 		return SimpleAssessment{}, false

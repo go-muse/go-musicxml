@@ -27,6 +27,13 @@ type AttributeSelector struct {
 	Declaration DeclarationID
 }
 
+type xsdPlanMode uint8
+
+const (
+	xsdLegacy xsdPlanMode = iota
+	xsdSourceDeclarationsV1
+)
+
 type planKind string
 
 const (
@@ -55,6 +62,7 @@ type Plan struct {
 	reference        *referencePlan
 	schema           *CompiledSchema
 	xsdCheck         XSDCheck
+	xsdMode          xsdPlanMode
 	kind             planKind
 	children         []DeclarationID
 	minimum, maximum int64
@@ -153,7 +161,7 @@ func (p Plan) valid() error {
 		if !validAssembly(p.sourceAssembly) {
 			return contract("source origin assembly", "exact supported assembly required")
 		}
-	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent:
+	case planContextContainerMetadata, planContextSoundsMapping, planContextMusicXMLLinks, planContextOpusLinks, planContextMusicXMLHints, planContextOpusHints, planContextContainerHints, planContextSoundsHints, planContextOpusLayout, planContextLocal, planContextSpans, planContextRepeats, planContextNavigation, planContextLayout, planContextPerformance, planTimeOnlyOrder, planFigureNumberNumeric, planBendReleaseSign, planGraphicalRepeatContent, planBarlineLocation:
 		return p.context.valid(p.kind)
 	case planTimeline:
 		return p.timeline.valid()
@@ -168,7 +176,7 @@ func (p Plan) valid() error {
 	case planTypedReference:
 		return p.reference.valid()
 	case planXSD:
-		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) {
+		if p.schema == nil || p.schema.kernel == nil || !validAssembly(p.schema.assembly) || !validXSDCheck(p.xsdCheck) || p.xsdMode > xsdSourceDeclarationsV1 {
 			return contract("XSD plan", "compiled schema and supported operation required")
 		}
 	case planChildren:
@@ -276,6 +284,13 @@ func (p Plan) validateFor(r RuleDefinition) error {
 	if (p.kind == planLocal || p.kind == planTypedReference) && (r.Scope != ScopeNode || r.Category != CategoryNormative || r.Class != ClassMandatory || r.Role != RolePredicate) {
 		return contract("local plan", "required normative node predicate required")
 	}
+	if p.kind == planLocal && p.local.sourceInfoset {
+		for _, target := range r.Targets {
+			if target != TargetSource {
+				return contract("local source presence", "source-only target required")
+			}
+		}
+	}
 	if p.kind == planLocal || p.kind == planTypedReference {
 		for _, target := range r.Targets {
 			if target != TargetSource && target != TargetModel {
@@ -288,7 +303,7 @@ func (p Plan) validateFor(r RuleDefinition) error {
 			return contract("XSD plan", "matching assembly selector and required normative predicate role required")
 		}
 		for _, target := range r.Targets {
-			if target != TargetSource && target != TargetModel {
+			if target != TargetSource && target != TargetModel || p.xsdMode == xsdSourceDeclarationsV1 && target != TargetSource {
 				return contract("XSD plan", "only source or current-model evidence is implemented")
 			}
 		}
@@ -361,6 +376,15 @@ func (p Plan) digestValue() any {
 		return p.local.digest()
 	}
 	if p.kind == planXSD {
+		if p.xsdMode == xsdSourceDeclarationsV1 {
+			return struct {
+				Kind               planKind
+				SchemaDigest       string
+				SchemaAssembly     Assembly
+				Check              XSDCheck
+				SourceDeclarations string
+			}{p.kind, p.schema.Digest(), p.schema.Assembly(), p.xsdCheck, "entity-domain-v1"}
+		}
 		return struct {
 			Kind           planKind
 			SchemaDigest   string

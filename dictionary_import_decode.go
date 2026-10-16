@@ -19,11 +19,12 @@ type dictionaryJSON struct {
 	scratch   [512]byte
 	copied    int
 	copyLimit int
+	manifest  validation.DictionaryManifestID
 }
 
 func (c *dictionaryJSON) fail(reason string) {
 	if c.err == nil {
-		c.err = dictionaryImportError(reason)
+		c.err = dictionaryImportComponentError(c.manifest, reason)
 	}
 }
 func (c *dictionaryJSON) space() {
@@ -233,7 +234,7 @@ func decodeDictionaryComponent(ctx context.Context, a *validation.Account, id va
 	}
 	manifest, known := validation.LookupDictionaryManifest(id)
 	if !known || int64(len(raw)) != manifest.Component.Bytes {
-		return nil, dictionaryImportError("decoder requires the exact bounded component length")
+		return nil, dictionaryImportComponentError(id, "decoder requires the exact bounded component length")
 	}
 	var retained int64
 	// Logical bounds include fixed cursor/control/slice headers (2048), generous
@@ -249,6 +250,8 @@ func decodeDictionaryComponent(ctx context.Context, a *validation.Account, id va
 		retained = 2048 + 894*32 + 15567 + 894*16
 	case validation.DictionaryManifestIPAPositive2015Unicode13:
 		retained = 2048 + 197*64 + 4233 + 197*3*16
+	case validation.DictionaryManifestIPARepresentation2015Unicode13:
+		retained = 2048 + 453*64 + 8007 + 453*3*16
 	default:
 		return nil, dictionaryImportError("unsupported corpus decoder")
 	}
@@ -272,7 +275,7 @@ func decodeDictionaryComponent(ctx context.Context, a *validation.Account, id va
 	if err = dictionaryImportStep(ctx, a, 6*int64(len(raw))+1024); err != nil {
 		return nil, err
 	}
-	c := dictionaryJSON{ctx: ctx, raw: raw}
+	c := dictionaryJSON{ctx: ctx, raw: raw, manifest: id}
 	switch id {
 	case validation.DictionaryManifestSMuFL14Canonical:
 		c.copyLimit = 58476
@@ -285,6 +288,9 @@ func decodeDictionaryComponent(ctx context.Context, a *validation.Account, id va
 	case validation.DictionaryManifestIPAPositive2015Unicode13:
 		c.copyLimit = 4233
 		out.data.IPA, err = decodeDictionaryIPA(&c)
+	case validation.DictionaryManifestIPARepresentation2015Unicode13:
+		c.copyLimit = 8007
+		out.data.IPA, err = decodeDictionaryIPARepresentation(&c)
 	}
 	if err != nil {
 		return nil, err

@@ -52,18 +52,21 @@ func (b *sourceScalarBuffer) String() string { return string(b.data) }
 // owns the retained document facts and all node, attribute and depth charges.
 // Neither schema defaults nor model-derived values are source evidence.
 type sourceFactObserver struct {
-	ctx               context.Context
-	sink              sourceFactSink
-	account           *validation.Account
-	documentID, entry string
-	stack             []*sourceObserverFrame
-	bindings          map[string]string
-	next              validation.NodeID
-	retained          int64
-	dtdUnavailable    bool
-	last              validation.Location
-	lastRetained      int64
-	origins           *sourceOriginObserver
+	ctx                     context.Context
+	sink                    sourceFactSink
+	account                 *validation.Account
+	documentID, entry       string
+	stack                   []*sourceObserverFrame
+	bindings                map[string]string
+	next                    validation.NodeID
+	retained                int64
+	dtdUnavailable          bool
+	last                    validation.Location
+	lastRetained            int64
+	origins                 *sourceOriginObserver
+	captureAttributeLexical bool
+	sourceDeclarations      bool
+	sourceDTDIDs            bool
 }
 
 func newSourceFactObserver(ctx context.Context, sink sourceFactSink, account *validation.Account) (*sourceFactObserver, error) {
@@ -79,12 +82,17 @@ func newSourceFactObserverWithIdentity(ctx context.Context, sink sourceFactSink,
 }
 
 func (o *sourceFactObserver) observe(token xml.Token, meta sourceXMLTokenMeta) error {
+	return o.observeSource(token, meta, nil)
+}
+
+// The scanner is borrowed only for this call, never retained in observer state.
+func (o *sourceFactObserver) observeSource(token xml.Token, meta sourceXMLTokenMeta, scanner *sourceXMLTokenReader) error {
 	if err := o.ctx.Err(); err != nil {
 		return err
 	}
 	switch value := token.(type) {
 	case xml.StartElement:
-		return o.open(value, meta)
+		return o.open(value, meta, scanner)
 	case xml.CharData:
 		if len(o.stack) == 0 {
 			return nil
@@ -139,7 +147,7 @@ func (o *sourceFactObserver) observe(token xml.Token, meta sourceXMLTokenMeta) e
 	return nil
 }
 
-func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMeta) error {
+func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMeta, scanner *sourceXMLTokenReader) error {
 	if len(meta.Attributes) != len(value.Attr) {
 		return &validation.SessionError{Operation: "source metadata", Reason: "attribute metadata does not match source token"}
 	}
@@ -282,6 +290,16 @@ func (o *sourceFactObserver) open(value xml.StartElement, meta sourceXMLTokenMet
 	if err := o.sink.Open(o.ctx, validation.NodeHeader{ID: frame.id, Parent: parent, Name: name, Type: validation.Evidence[validation.ComponentID]{State: state, Reason: reason}, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Location: location, Bindings: bindings}); err != nil {
 		return err
 	}
+	if parent == 0 && o.sourceDeclarations {
+		if err := o.publishSourceEntityDeclarations(scanner); err != nil {
+			return err
+		}
+	}
+	if parent == 0 {
+		if err := o.publishSourceDTDIDDomain(scanner); err != nil {
+			return err
+		}
+	}
 	if err := o.publishSourceOrigin(frame, nil, name, location, meta.Origin); err != nil {
 		return err
 	}
@@ -320,7 +338,7 @@ func (o *sourceFactObserver) attribute(frame *sourceObserverFrame, attr xml.Attr
 		path = frame.path + "/@" + sourceDisplayName(name)
 	}
 	scalar := sourceLexeme(attr.Value)
-	if o.dtdUnavailable && !meta.NamespaceDeclaration {
+	if o.dtdUnavailable && !meta.NamespaceDeclaration && !(o.sourceDTDIDs && meta.DTDID != nil) {
 		scalar.Lexeme = validation.Evidence[string]{State: validation.EvidenceUnsupported, Reason: "dtd-infoset-unavailable"}
 	}
 	location := o.location(path, meta.NameSpan.Start)
@@ -330,7 +348,13 @@ func (o *sourceFactObserver) attribute(frame *sourceObserverFrame, attr xml.Attr
 	if err := o.sink.Attribute(o.ctx, validation.AttributeFact{Owner: frame.id, Name: name, Declaration: validation.Evidence[validation.DeclarationID]{State: state, Reason: reason}, Presence: validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}, Scalar: scalar, Location: location}); err != nil {
 		return err
 	}
-	return o.publishSourceOrigin(frame, &name, validation.QName{}, location, meta.Origin)
+	if err := o.publishSourceOrigin(frame, &name, validation.QName{}, location, meta.Origin); err != nil {
+		return err
+	}
+	if err := o.publishSourceDTDIDAttribute(frame, name, scalar.Lexeme.Value, location, meta); err != nil {
+		return err
+	}
+	return o.publishSourceAttributeLexical(frame, name, meta)
 }
 func sourceDisplayName(name validation.QName) string {
 	if name.Space == "" {
@@ -469,7 +493,7 @@ func (s *observingXMLSource) Token() (xml.Token, error) {
 		}
 	}
 	if s.observer != nil {
-		if err = s.observer.observe(token, s.lexical.Metadata()); err != nil {
+		if err = s.observer.observeSource(token, s.lexical.Metadata(), s.lexical); err != nil {
 			var unsupported *validation.UnsupportedRootError
 			if errors.As(err, &unsupported) {
 				err = errors.Join(err, &UnsupportedRootError{Name: xml.Name{Space: unsupported.Name.Space, Local: unsupported.Name.Local}})

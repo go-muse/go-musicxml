@@ -1015,7 +1015,8 @@ func TestLayoutMatrixInheritedTextDefaults(t *testing.T) {
 		{"positive", "", "", false, lmk("ltr"), lmk("normal")},
 		{"negative", `dir="invalid" letter-spacing="bad"`, "", false, lmi(), lmi()},
 		{"boundary", `dir="rtl" letter-spacing="0"`, "", false, lmk("rtl"), lmk("0")},
-		{"missing_fact", `dir="rtl" letter-spacing="2"`, "", true, lmu(), lmu()},
+		// Missing local fields in a fresh wrapper use their own documented defaults.
+		{"missing_fact", `dir="rtl" letter-spacing="2"`, "", true, lmk("ltr"), lmk("normal")},
 		{"interaction", `dir="invalid" letter-spacing="bad"`, `dir="ltr" letter-spacing="normal"`, false, lmk("ltr"), lmk("normal")},
 	} {
 		t.Run(tc.axis, func(t *testing.T) {

@@ -21,9 +21,20 @@ func (o *sourceFactObserver) publishSourceOrigin(frame *sourceObserverFrame, att
 		return nil
 	}
 	if o.origins.key == (validation.RuleKey{}) {
-		assembly := validation.AssemblyMusicXML
-		if name.Local == "opus" {
+		// The root has already passed normal admission. Route only exact
+		// no-namespace roots, never a foreign same-local-name occurrence.
+		var assembly validation.Assembly
+		switch name {
+		case validation.QName{Local: "score-partwise"}, validation.QName{Local: "score-timewise"}:
+			assembly = validation.AssemblyMusicXML
+		case validation.QName{Local: "opus"}:
 			assembly = validation.AssemblyOpus
+		case validation.QName{Local: "container"}:
+			assembly = validation.AssemblyContainer
+		case validation.QName{Local: "sounds"}:
+			assembly = validation.AssemblySounds
+		default:
+			return &validation.ConfigurationError{Field: "source origin", Reason: "exact supported source root required"}
 		}
 		key, ok := o.origins.engine.SourceOriginProvider(o.origins.profile, assembly)
 		if !ok {

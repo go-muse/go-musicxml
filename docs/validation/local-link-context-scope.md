@@ -2,7 +2,9 @@
 
 The additive `ProfileSourceLinks` and `ProfileModelLinks` compose the existing
 XSD/local predicates with nonfetching resource projections. Existing eight
-profiles, catalog digests, options, defaults and legacy MXL APIs are unchanged.
+profiles, catalog digests, options, defaults and legacy MXL APIs were unchanged
+by the initial composition. Later predicate corrections are documented under
+[legacy behavior corrections](#legacy-behavior-corrections).
 These intrinsic profiles perform no package traversal or resolver invocation.
 The additive graph/package entry points compose them separately; see
 [package profile scope](package-profile-scope.md). Their finalized
@@ -44,19 +46,55 @@ absence and never an additional mandatory failure.
 
 A present selector supports unprefixed NCName spellings in the no-namespace
 MusicXML descendant domain only. This does not reinterpret arbitrary NMTOKENs as
-QNames. There is no absent-position default. Global descendant ordinal and XPath
-per-parent ordinal readings must identify the same unique node, or both have no
-target. Other cases retain the interpretation gap. Enumeration and order gaps
-retain their own evidence/cause; current-model order is not original source order.
+QNames. There is no absent-position default. A specified position selects the
+one-based ordinal among all matching descendants of the next content anchor in
+document order. The official beam-only XPath example agrees within the pinned
+MusicXML declaration graph: every eligible beam-containing anchor is one note,
+whose beams share one parent. It does not prescribe a generalized per-parent
+XPath algorithm for other element names. The earlier conservative agreement
+gate was based on that unsupported generalization and is corrected here.
+Enumeration and order gaps retain their own evidence/cause; current-model order
+is not original source order. See the official
+[bookmark definition](https://www.w3.org/2021/06/musicxml40/musicxml-reference/elements/bookmark/)
+and pinned note/music-data declarations for the source interpretation.
 
-The implementation builds document-order indexes by name and by
-(name, per-parent ordinal), once, only if an exact link/bookmark is selected.
+The implementation builds a document-order index by name once, only if an
+exact link/bookmark is selected.
 Link-free documents retain a lightweight local-part index (256 logical bytes
 per node plus one fixed reserve); attachment-bearing documents retain the full
 1408-byte per-node index allowance plus four times the local-name byte count.
 Each selection uses bounded binary searches, not a new sibling/descendant scan.
 The exact integer is magnitude-checked before host-width conversion. Huge positions
 do not allocate sparse arrays.
+
+## Legacy behavior corrections
+
+Relative to merged PR40 `5295080`, the matching-descendant correction changes
+`ProfileSourceLinks` and `ProfileModelLinks` attachment outputs without revising
+their local-link rule keys or CatalogDigest
+`5fb200a688a054add8a551d288486d2724ff7d1530b42a3e0fbed40f3df46cb3`.
+A selector whose matching descendants span different parents can now produce
+Known attachment instead of Unknown `link-descendant-ordinal-interpretation`.
+This applies to both links and bookmarks; the rule revision remains 1.
+
+Two corrections also change `ProfileSourceContext` and `ProfileModelContext`
+outputs without revising the affected context rule keys:
+
+- Formatting carry ends at each `direction-type` wrapper. A later wrapper uses
+  its own supplied values and defaults, including Unknown
+  `application-format-choice` where appropriate, instead of carrying earlier
+  wrapper values or returning `direction-cross-wrapper-format-precedence`.
+- A numeral in a stacked harmony chord with its own `kind=none` has Known
+  `set-numeral-root-text-to-empty-to-suppress-numeral` advice instead of
+  Unsupported advice. Adjacent root/numeral/function branches retain their
+  separate association evidence.
+
+The context catalog identity changes for the separately documented
+[figure-number removal](evidence/figure-number-conformance-correction.md), not
+for these rule-revision-1 corrections. A matching CatalogDigest or rule revision
+therefore does not alone identify these historical output differences. Consumers
+that pin report behavior must also pin the library revision and review the
+[Unreleased changelog](../../CHANGELOG.md#unreleased).
 
 ## Other local branches
 

@@ -91,6 +91,9 @@ func (r *sourceXMLTokenReader) attributeValue(quote rune, owner *sourceXMLEntity
 				return "", sourceXMLPosition{}, err
 			}
 			if c == sourceXMLExpandedRune {
+				if r.captureAttributeLexical {
+					r.attributeGeneralExpanded = true
+				}
 				continue
 			}
 		} else if normalize && sourceXMLSpace(c) {

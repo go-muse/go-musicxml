@@ -14,3 +14,10 @@ including original line endings. Git preserves this directory without text
 conversion. Sounds retains its external DOCTYPE and copyright comment; the
 fixed dictionary transformation does not fetch or validate that DTD. SMuFL
 classes, optional font glyphs, font programs and artwork are not selected.
+
+The `ipa-positive` and `ipa-representation` directories contain separately
+licensed project-authored derived ledgers, not original publications. The
+representation bundle is an explicit test input with 453 records and a separately
+pinned minimal policy. Its source and license witnesses are in
+[the source ledger](ipa-representation/source-ledger.md); no runtime auto-load or
+source fetch is introduced.

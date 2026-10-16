@@ -118,7 +118,7 @@ func TestSourceOriginOldJSONUnchanged(t *testing.T) {
 		t.Fatalf("old shape changed: %s", data)
 	}
 }
-func TestSourceOriginSnapshotExplicitlyRejected(t *testing.T) {
+func TestSourceOriginSnapshotExplicitlyExportsOwnedOrigins(t *testing.T) {
 	_, s, key := sourceOriginFixture(t, Budgets{})
 	ctx := context.Background()
 	h := schemaPendingHeader()
@@ -136,8 +136,13 @@ func TestSourceOriginSnapshotExplicitlyRejected(t *testing.T) {
 		t.Fatal(err)
 	}
 	r, snapshot, err := s.FinishWithResourceSnapshot(ctx, Completion{InputComplete: true, Syntax: SyntaxWellFormed})
-	if !errors.Is(err, ErrIncompleteAssessment) || snapshot != nil || len(r.Context) != 1 || r.Context[0].SourceOrigin == nil {
-		t.Fatalf("silent loss: %+v %v %v", r, snapshot, err)
+	if err != nil || snapshot == nil || !r.Satisfied() || len(r.Context) != 1 || r.Context[0].SourceOrigin == nil {
+		t.Fatalf("source-origin export: %+v %v %v", r, snapshot, err)
+	}
+	defer snapshot.Close()
+	origin, ok, err := snapshot.ContextAt(ctx, 0)
+	if err != nil || !ok || origin.SourceOrigin == nil || snapshot.ContextCount() != 1 {
+		t.Fatalf("missing selected origin: %+v %v", origin, err)
 	}
 }
 

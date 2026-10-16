@@ -69,8 +69,12 @@ These verify preserved original records, exact test routes, canonical LF/CRLF
 hash equivalence and rejection of real mutations. Existing Linux quality and
 release jobs require them without adding a CI job or changing the seven Go
 stages. No Python installation is needed for development or CI inventory checks.
-The required-xmllint job
-explicitly includes the original-byte container/sounds differential test.
+The required-xmllint job explicitly includes the original-byte container/sounds
+differential test and the wildcard oracle tests
+`TestAttributeWildcardUnionAgainstXMLLint` and
+`TestAttributeWildcardUnexpressibleUnionXMLLintSchemaError`. Their selector is
+pinned by `TestAttributeWildcardRequiredCIGate`; see the
+[wildcard union evidence](docs/validation/attribute-wildcard-union-evidence.md).
 
 The compiled command also works without a Go installation: build it with
 `go build -o package-inventory ./cmd/package-inventory`, then run

@@ -68,7 +68,7 @@ func TestLinkContextSourceAttachmentAndDefaults(t *testing.T) {
 		{"last-marker", "", "", validation.EvidenceAbsent, ""},
 		{"huge", `element="beam" position="99999999999999999999999999999"`, `<note><rest/><duration>1</duration><beam>begin</beam></note>`, validation.EvidenceAbsent, ""},
 		{"colon", `element="q:beam" position="1"`, `<note><rest/><duration>1</duration><beam>begin</beam></note>`, validation.EvidenceUnsupported, ""},
-		{"two-parents", `element="words" position="1"`, `<direction><direction-type><words>A</words></direction-type><direction-type><words>B</words></direction-type></direction>`, validation.EvidenceUnknown, ""},
+		{"two-parents", `element="words" position="1"`, `<direction><direction-type><words>A</words></direction-type><direction-type><words>B</words></direction-type></direction>`, validation.EvidenceKnown, "words"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

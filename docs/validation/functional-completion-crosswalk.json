@@ -1,0 +1,3825 @@
+{
+  "format": "musicxml4-functional-contribution-crosswalk-v1",
+  "checkpoint": "2026-10-14",
+  "commit_id_scope": "implementation_head and abbreviated commit IDs in dispositions identify unpublished local development history, not necessarily objects in a published checkout. They are preserved historical references, not public verification instructions. Published baseline/candidate identities and dated execution receipts are identified separately; historical commit messages remain unchanged.",
+  "implementation_head": "4acb7faabfef1aa077629e9ced1daa02aed94382",
+  "acceptance": "Historical integration checkpoint: all listed contributions were integrated at implementation_head, an unpublished local commit. Component semantic/resource reviews and the ordinary suite at unpublished local cf2c918 preceded IPA integration. On 2026-10-14 the complete tree fa90c0b32ac027f45bbadcdabcd9a4b1c80fd8af passed all seven local stages and eleven fuzz targets; the same tree was published as PR41 head 159dd6e and passed all eleven hosted CI checks in run 38594018729. See docs/validation/source-declarations-evidence.md#dated-integrated-receipt. This receipt does not accept later review corrections. Test routes identify code, not blanket execution acceptance; original planning rows are unchanged.",
+  "original_counts": {
+    "original_external_ids": 50,
+    "original_attached_test_contracts": 44,
+    "original_engineering_requirements": 95,
+    "original_engineering_test_contracts": 95,
+    "context_checks": 307,
+    "context_dispositions": 291,
+    "prose_checks": 51,
+    "original_issues": 28,
+    "original_plan_stages": 20
+  },
+  "external_rows": [
+    {
+      "id": "CHECK-context-compressed-relative-links",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/157",
+      "test_contracts": [
+        "TEST-context-compressed-relative-links"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Caller retrieval/adoption bases and exact archive-root versus containing-document resolution are implemented; URI resolution itself performs no retrieval.",
+      "limit": "No automatic external-entity base engine. xml:base attributes are inadmissible in all four fixed instance assemblies; generic inherited XML Base was an overgeneralization.",
+      "code": [
+        "resource_uri.go",
+        "validation/package_links.go",
+        "resource_options.go"
+      ],
+      "test_routes": {
+        "TestResourceGraphReturnedRetrievalFragmentPublic": [
+          "resource_graph_returned_fragment_public_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-group-link-match",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/216",
+      "test_contracts": [
+        "TEST-context-group-link-match"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Selected linked target group is compared as the exact string, independently of fragment resolution and local schema-IDREF typing.",
+      "limit": "Unavailable target/group remains unavailable; no case folding, cross-file ID equality or invented association.",
+      "code": [
+        "validation/package_links.go",
+        "validation/package_links.go"
+      ],
+      "test_routes": {
+        "TestResourceGraphGroupMatchExactStringsRemainOptional": [
+          "resource_graph_group_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-link-element-position",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/61",
+      "test_contracts": [
+        "TEST-context-link-element-position"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "55fb45b implements global document-order matching descendant ordinal. The official .//beam[2] example has one reachable sibling beam parent and does not contradict the prose.",
+      "limit": "Missing position and non-NCName/general selectors retain exact limits. This local attachment algorithm is separate from URI Framework fragments.",
+      "code": [
+        "validation/context_link_runtime.go",
+        "validation/context_link_attachment.go"
+      ],
+      "test_routes": {
+        "TestResourceAttachmentGlobalDescendantOrdinal": [
+          "validation/context_link_test.go"
+        ],
+        "TestResourceAttachmentOrdinalInterruptedSearch": [
+          "validation/context_link_ordinal_interruption_test.go"
+        ],
+        "TestResourceAttachmentSiblingAndOrdinalMatrix": [
+          "validation/context_link_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-mxl-deflate",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/234",
+      "test_contracts": [
+        "TEST-context-mxl-deflate"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "The reviewed ordinary nonencrypted single-volume STORE/DEFLATE envelope, independent framing/CRC and selected payload transport are implemented. Compression remains context; only mimetype has a mandatory STORE predicate.",
+      "limit": "This does not certify every legacy ZIP method, JAR application feature, ZIP64/encryption/multivolume/version field or dormant payload. Ordinary STORE force is a named compatibility interpretation, not a new hard error. The exact original CHECK contract explicitly asks for a reviewed subset.",
+      "code": [
+        "mxl_assessment_zip.go",
+        "validation/package_evaluate.go",
+        "validation/package_catalog.go"
+      ],
+      "test_routes": {
+        "TestMXLAssessmentZIPHeaderMatrix": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPEnvelopeAndPolicy": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPCRCAndDecompressionAreTechnical": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPDescriptorCorruptionAndPlaceholders": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPUnsignedDescriptorSignatureCollision": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-mxl-entry-name-utf8",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/233",
+      "test_contracts": [
+        "TEST-context-mxl-entry-name-utf8"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Raw entry-name bytes are checked as UTF-8 independently of the EFS flag and retained as package context.",
+      "limit": "Policy rejection, raw-byte evidence and current-model inability to reconstruct bytes remain distinct.",
+      "code": [
+        "mxl_assessment_zip.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestMXLAssessmentZIPHeaderMatrix": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-mxl-media-location-open",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/252",
+      "test_contracts": [
+        "TEST-context-mxl-media-location-open"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Arbitrary allowed media subfolders and score/part resource names remain valid; no compulsory parts/images folder layout is introduced.",
+      "limit": "Transport absence is not a normative absence or a reason to fetch automatically.",
+      "code": [
+        "resource_uri.go",
+        "resource_package.go",
+        "validation/package_advice.go"
+      ],
+      "test_routes": {
+        "TestMXLAssessmentZIPLiteralNamesAndDirectory": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestResourceURIReferenceContexts": [
+          "resource_uri_test.go"
+        ],
+        "TestFinalQAImageSemanticTargets": [
+          "resource_graph_independent_row_test.go"
+        ],
+        "TestFinalQACompressedLinkFamilyBases": [
+          "resource_graph_independent_row_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-mxl-media-type-default",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/238",
+      "test_contracts": [
+        "TEST-context-mxl-media-type-default"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Known absent media-type retains the MusicXML default; explicit empty/malformed values stay separate. Actual document-root validation remains independent.",
+      "limit": "A default is not payload decoding, transport permission or a root-kind proof.",
+      "code": [
+        "validation/resource_media.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageReviewMediaParametersAndScratch": [
+          "validation/package_review_media_test.go"
+        ],
+        "TestClassifyResourceMediaTypePreservesUnknownAndErrors": [
+          "validation/resource_media_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-mxl-mimetype-first",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/235",
+      "test_contracts": [
+        "TEST-context-mxl-mimetype-first"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Mimetype presence/first physical placement/exact ASCII body remain implemented advice, not new normative requirements.",
+      "limit": "Central-directory order is not physical order; absent mimetype alone is not a mandatory failure.",
+      "code": [
+        "validation/package_evaluate.go",
+        "mxl_assessment_zip.go"
+      ],
+      "test_routes": {
+        "TestFinalQAMimetypeAdvisoryAndLegacyOmission": [
+          "resource_graph_independent_row_test.go"
+        ],
+        "TestPackageMimetypeAdviceRequiresKnownOrderForPass": [
+          "validation/package_interruption_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-mxl-rootfile-relative-path",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/237",
+      "test_contracts": [
+        "TEST-context-mxl-rootfile-relative-path"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Caller retrieval/adoption bases and exact archive-root versus containing-document resolution are implemented; URI resolution itself performs no retrieval.",
+      "limit": "No automatic external-entity base engine. xml:base attributes are inadmissible in all four fixed instance assemblies; generic inherited XML Base was an overgeneralization.",
+      "code": [
+        "resource_uri.go",
+        "validation/package_links.go",
+        "resource_options.go"
+      ],
+      "test_routes": {
+        "TestResourceGraphReturnedRetrievalFragmentPublic": [
+          "resource_graph_returned_fragment_public_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-opus-nesting-linking",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/239",
+      "test_contracts": [
+        "TEST-context-opus-nesting-linking"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Direct target/root-kind obligations and exact primary-first ordering are implemented. Nested XML Opus and technical nested-MXL traversal are distinct supported operations.",
+      "limit": "No reviewed clause proves universal archive-to-primary target substitution. Each compressed incoming use retains nested-rootfile-indirection-unresolved or nested-link-indirection-unresolved; XML fragment support does not remove this gate.",
+      "code": [
+        "validation/package_links.go",
+        "resource_graph.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageEdgeIndirectionPrecedesInnerFragmentAndRootEvidence": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestPackageEdgeIndirectionGatesAssociationMembership": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestResourceGraphIndirectionContextFragmentsKeepDirectSemantics": [
+          "resource_graph_indirection_context_test.go"
+        ],
+        "TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated": [
+          "xml_fragment_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-opus-new-page-default",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/241",
+      "test_contracts": [
+        "TEST-context-opus-new-page-default"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Each local Opus version defaults to 1.0 on known absence; explicit pagination hints are projected and missing new-page remains application-dependent.",
+      "limit": "No target retrieval or compulsory page break follows from a hint. Nested identities stay distinct.",
+      "code": [
+        "validation/context_layout_opus.go",
+        "context_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextOpusFamiliesReuseLocalVersionAndPagination": [
+          "link_context_test.go"
+        ],
+        "TestContextOpusLocalPaginationAcrossTargets": [
+          "context_opus_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-opus-version-default",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/240",
+      "test_contracts": [
+        "TEST-context-opus-version-default"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Each local Opus version defaults to 1.0 on known absence; explicit pagination hints are projected and missing new-page remains application-dependent.",
+      "limit": "No target retrieval or compulsory page break follows from a hint. Nested identities stay distinct.",
+      "code": [
+        "validation/context_layout_opus.go",
+        "context_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextOpusFamiliesReuseLocalVersionAndPagination": [
+          "link_context_test.go"
+        ],
+        "TestContextOpusLocalPaginationAcrossTargets": [
+          "context_opus_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-part-link-archive-root",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/215",
+      "test_contracts": [
+        "TEST-context-part-link-archive-root"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Caller retrieval/adoption bases and exact archive-root versus containing-document resolution are implemented; URI resolution itself performs no retrieval.",
+      "limit": "No automatic external-entity base engine. xml:base attributes are inadmissible in all four fixed instance assemblies; generic inherited XML Base was an overgeneralization.",
+      "code": [
+        "resource_uri.go",
+        "validation/package_links.go",
+        "resource_options.go"
+      ],
+      "test_routes": {
+        "TestResourceGraphReturnedRetrievalFragmentPublic": [
+          "resource_graph_returned_fragment_public_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-sounds-standard-identifiers",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/242",
+      "test_contracts": [
+        "TEST-context-sounds-standard-identifiers"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Explicit pinned standard-sound recognition is implemented as an advisory/context capability over an open string domain. Unknown custom sound IDs are not made invalid.",
+      "limit": "No automatic dictionary load or new auxiliary Sounds public graph-discovery route is invented.",
+      "code": [
+        "validation/dictionary_evaluate.go",
+        "dictionary_catalog.go",
+        "dtd_dictionary_package_catalog.go"
+      ],
+      "test_routes": {
+        "TestDictionaryGraphAdmitsExplicitSourceSoundsProfile": [
+          "dictionary_graph_ownership_test.go"
+        ],
+        "TestDTDPackageCompositionExplicitSoundsAdoption": [
+          "dtd_package_ownership_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-xlink-actuate-behavior",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/255",
+      "test_contracts": [
+        "TEST-context-xlink-actuate-behavior"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact XLink namespace/use ownership, show=replace omission default and encoded show/actuate guidance are implemented.",
+      "limit": "other/none are application-dependent; onLoad/embed is not network authority, XInclude permission or a renderer.",
+      "code": [
+        "validation/context_link_runtime.go",
+        "link_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextSourceAttachmentAndDefaults": [
+          "link_context_test.go"
+        ],
+        "TestLinkContextInvalidAndEmptyRemainDistinct": [
+          "link_context_test.go"
+        ],
+        "TestResourceAttachmentForeignAndWrongAssemblyNamesDoNotBind": [
+          "validation/context_link_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-xlink-show-behavior",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/256",
+      "test_contracts": [
+        "TEST-context-xlink-show-behavior"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact XLink namespace/use ownership, show=replace omission default and encoded show/actuate guidance are implemented.",
+      "limit": "other/none are application-dependent; onLoad/embed is not network authority, XInclude permission or a renderer.",
+      "code": [
+        "validation/context_link_runtime.go",
+        "link_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextSourceAttachmentAndDefaults": [
+          "link_context_test.go"
+        ],
+        "TestLinkContextInvalidAndEmptyRemainDistinct": [
+          "link_context_test.go"
+        ],
+        "TestResourceAttachmentForeignAndWrongAssemblyNamesDoNotBind": [
+          "validation/context_link_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-xlink-show-default",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/293",
+      "test_contracts": [
+        "TEST-context-xlink-show-default"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact XLink namespace/use ownership, show=replace omission default and encoded show/actuate guidance are implemented.",
+      "limit": "other/none are application-dependent; onLoad/embed is not network authority, XInclude permission or a renderer.",
+      "code": [
+        "validation/context_link_runtime.go",
+        "link_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextSourceAttachmentAndDefaults": [
+          "link_context_test.go"
+        ],
+        "TestLinkContextInvalidAndEmptyRemainDistinct": [
+          "link_context_test.go"
+        ],
+        "TestResourceAttachmentForeignAndWrongAssemblyNamesDoNotBind": [
+          "validation/context_link_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-context-xml-reserved-semantics",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/247",
+      "test_contracts": [
+        "TEST-context-xml-reserved-semantics"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Admitted xml:lang/xml:space and reserved-namespace semantics remain assessed. New selected source shorthand joins effective DTD and XSD IDs; Framework plus element() is implemented at 47cd65c.",
+      "limit": "All six schemas have no instance wildcard/anyType escape and no admitted xml:base/xml:id owner. Arbitrary XML Base, xml:id, xmlns() scheme and XPath were overgeneralized obligations; caller retrieval base remains required. Legacy profiles retain their narrower elections.",
+      "code": [
+        "validation/resource_fragment.go",
+        "validation/resource_fragment_framework.go",
+        "validation/source_dtd_ids.go",
+        "validation/resource_snapshot.go",
+        "source_dtd_attributes.go",
+        "xml_fragment_catalog.go",
+        "xml_source.go",
+        "validation/context_layout_format.go"
+      ],
+      "test_routes": {
+        "TestDTDIDJoinedShorthandSourceCases": [
+          "source_dtd_id_graph_test.go"
+        ],
+        "TestDTDIDFirstOwnerBeforeDistinctSchemaOwner": [
+          "source_dtd_id_graph_test.go"
+        ],
+        "TestXMLFragmentFrameworkAndElement": [
+          "validation/resource_fragment_framework_test.go"
+        ],
+        "TestXMLFragmentCompositionSourceAndModelIdentityDomains": [
+          "xml_fragment_composition_test.go"
+        ],
+        "TestXMLFragmentCompositionURIIsDecodedOnce": [
+          "xml_fragment_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-instrument-link-target",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/34",
+      "test_contracts": [
+        "TEST-instrument-link-target"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Local typed/scoped score-instrument references and caller-authorized cross-document membership have separate implemented consumers.",
+      "limit": "Missing/partial association authority is a legitimate instance boundary. Equal spelling or names cannot replace membership, and different IDs can be associated.",
+      "code": [
+        "validation/package_links.go",
+        "validation/package_links.go"
+      ],
+      "test_routes": {
+        "TestPackageAssociationUsesMembershipWithoutCrossFileIDEquality": [
+          "validation/package_association_test.go"
+        ],
+        "TestPackageAssociationPartialMissIsUnknown": [
+          "validation/package_association_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-container-path",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/39",
+      "test_contracts": [
+        "TEST-mxl-container-path"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact case-sensitive META-INF/container.xml presence and independently selected Container XSD assessment are implemented; DTD Container composition now exists.",
+      "limit": "No host filesystem fallback or sounds-root substitution. Missing raw metadata in current MXL cannot be reconstructed.",
+      "code": [
+        "resource_package.go",
+        "validation/package_evaluate.go",
+        "dtd_dictionary_package_catalog.go"
+      ],
+      "test_routes": {
+        "TestDTDPackageCompositionEffectiveContainerAndRetainedChildren": [
+          "dtd_package_integration_test.go"
+        ],
+        "TestDTDPackageCompositionAuxiliaryProfiles": [
+          "dtd_package_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-first-media-type",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/46",
+      "test_contracts": [
+        "TEST-mxl-first-media-type"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "ce10a32 separates registered MusicXML base identity from unknown distinct MIME parameters; case-insensitive duplicate parameter names remain malformed even when values agree.",
+      "limit": "Generic XML/ZIP labels, malformed values and unestablished/abandoned aliases do not establish either a MusicXML or a non-MusicXML type. Compressed base identity does not settle nested target substitution.",
+      "code": [
+        "validation/resource_media.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestResourceMediaParametersAdmissionAndCancellation": [
+          "validation/resource_media_parameter_closure_test.go"
+        ],
+        "TestPackageReviewMediaParametersAndScratch": [
+          "validation/package_review_media_test.go"
+        ],
+        "TestClassifyResourceMediaTypePreservesUnknownAndErrors": [
+          "validation/resource_media_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-first-root-musicxml",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/43",
+      "test_contracts": [
+        "TEST-mxl-first-root-musicxml"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Direct target/root-kind obligations and exact primary-first ordering are implemented. Nested XML Opus and technical nested-MXL traversal are distinct supported operations.",
+      "limit": "No reviewed clause proves universal archive-to-primary target substitution. Each compressed incoming use retains nested-rootfile-indirection-unresolved or nested-link-indirection-unresolved; XML fragment support does not remove this gate.",
+      "code": [
+        "validation/package_links.go",
+        "resource_graph.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageEdgeIndirectionPrecedesInnerFragmentAndRootEvidence": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestPackageEdgeIndirectionGatesAssociationMembership": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestResourceGraphIndirectionContextFragmentsKeepDirectSemantics": [
+          "resource_graph_indirection_context_test.go"
+        ],
+        "TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated": [
+          "xml_fragment_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-mimetype-no-extra",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/41",
+      "test_contracts": [
+        "TEST-mxl-mimetype-no-extra"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "8687ed6 implements the source-context-supported local-header no-extra rule. Zero local extra passes independently of central metadata; established local extra fails independently of later unavailable transport.",
+      "limit": "Central TLV framing, header association and stored duty remain independent. Earlier central-only ambiguity is superseded.",
+      "code": [
+        "validation/package_evaluate.go",
+        "mxl_assessment_zip.go"
+      ],
+      "test_routes": {
+        "TestPackageMimetypeLocalHeaderExtraScope": [
+          "validation/package_mimetype_header_scope_test.go"
+        ],
+        "TestPackageMimetypeLocalExtraFailureSurvivesUnavailableCentralAndCancellation": [
+          "validation/package_mimetype_header_scope_test.go"
+        ],
+        "TestPackageGraphMimetypeCentralExtraFramingIsIndependent": [
+          "resource_package_mimetype_header_scope_test.go"
+        ],
+        "TestPackageGraphMimetypeCentralExtraPreservesStoredDuty": [
+          "resource_package_mimetype_header_scope_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-mimetype-no-prefix",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/42",
+      "test_contracts": [
+        "TEST-mxl-mimetype-no-prefix"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Exact bytes prove six ASCII whitespace prefixes, NUL padding and five UTF BOM families; exact expected leading bytes and complete empty body prove no leading prefix.",
+      "limit": "Unclassified non-ASCII prefixes and incomplete signatures retain unavailable evidence unless an independently complete prohibited prefix already exists. No source selects universal Unicode trimming or every conceivable padding/signature family. Trailing bytes belong to separate advice.",
+      "code": [
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageReviewMimetypePartialPrefixIsUnknown": [
+          "validation/package_review_media_test.go"
+        ],
+        "TestFinalQAMimetypePrefixSemanticClassifiers": [
+          "resource_graph_independent_row_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-mimetype-stored",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/40",
+      "test_contracts": [
+        "TEST-mxl-mimetype-stored"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "An existing mimetype entry must be unencrypted method 0; a method-8 stored DEFLATE block still fails this specific mandatory rule.",
+      "limit": "Mimetype presence itself is advice. Known header failure survives independent transport or central-extra limitations.",
+      "code": [
+        "validation/package_evaluate.go",
+        "mxl_assessment_zip.go"
+      ],
+      "test_routes": {
+        "TestMXLAssessmentZIPHeaderMatrix": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestPackageGraphMimetypeCentralExtraPreservesStoredDuty": [
+          "resource_package_mimetype_header_scope_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-rootfile-document-root",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/45",
+      "test_contracts": [
+        "TEST-mxl-rootfile-document-root"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Direct target/root-kind obligations and exact primary-first ordering are implemented. Nested XML Opus and technical nested-MXL traversal are distinct supported operations.",
+      "limit": "No reviewed clause proves universal archive-to-primary target substitution. Each compressed incoming use retains nested-rootfile-indirection-unresolved or nested-link-indirection-unresolved; XML fragment support does not remove this gate.",
+      "code": [
+        "validation/package_links.go",
+        "resource_graph.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageEdgeIndirectionPrecedesInnerFragmentAndRootEvidence": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestPackageEdgeIndirectionGatesAssociationMembership": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestResourceGraphIndirectionContextFragmentsKeepDirectSemantics": [
+          "resource_graph_indirection_context_test.go"
+        ],
+        "TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated": [
+          "xml_fragment_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-score-before-parts",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/44",
+      "test_contracts": [
+        "TEST-mxl-score-before-parts"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact caller-supplied full-score/separate-part roles and member ordering are implemented with complete/partial evidence distinctions.",
+      "limit": "Equal IDs, single-part files and filenames do not prove a role. Missing authority is not a missing comparison algorithm.",
+      "code": [
+        "validation/package_links.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageRolesPreserveDistinctMembersWithSamePin": [
+          "validation/package_roles_test.go"
+        ],
+        "TestPackageCompleteRoleRequestCannotOmitAdmittedMembers": [
+          "validation/package_roles_test.go"
+        ],
+        "TestDictionaryGraphPreservesPackageRoleSelection": [
+          "dictionary_graph_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-mxl-zip-format",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/38",
+      "test_contracts": [
+        "TEST-mxl-zip-format"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "The reviewed ordinary nonencrypted single-volume STORE/DEFLATE envelope, independent framing/CRC and selected payload transport are implemented. Compression remains context; only mimetype has a mandatory STORE predicate.",
+      "limit": "This does not certify every legacy ZIP method, JAR application feature, ZIP64/encryption/multivolume/version field or dormant payload. Ordinary STORE force is a named compatibility interpretation, not a new hard error. The exact original CHECK contract explicitly asks for a reviewed subset.",
+      "code": [
+        "mxl_assessment_zip.go",
+        "validation/package_evaluate.go",
+        "validation/package_catalog.go"
+      ],
+      "test_routes": {
+        "TestMXLAssessmentZIPHeaderMatrix": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPEnvelopeAndPolicy": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPCRCAndDecompressionAreTechnical": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPDescriptorCorruptionAndPlaceholders": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPUnsignedDescriptorSignatureCollision": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-opus-link-target",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/284",
+      "test_contracts": [
+        "TEST-opus-link-target"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Direct target/root-kind obligations and exact primary-first ordering are implemented. Nested XML Opus and technical nested-MXL traversal are distinct supported operations.",
+      "limit": "No reviewed clause proves universal archive-to-primary target substitution. Each compressed incoming use retains nested-rootfile-indirection-unresolved or nested-link-indirection-unresolved; XML fragment support does not remove this gate.",
+      "code": [
+        "validation/package_links.go",
+        "resource_graph.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageEdgeIndirectionPrecedesInnerFragmentAndRootEvidence": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestPackageEdgeIndirectionGatesAssociationMembership": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestResourceGraphIndirectionContextFragmentsKeepDirectSemantics": [
+          "resource_graph_indirection_context_test.go"
+        ],
+        "TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated": [
+          "xml_fragment_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-opus-score-target",
+      "original": "docs/validation/plan/context-dispositions.json#/checks/285",
+      "test_contracts": [
+        "TEST-opus-score-target"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Direct target/root-kind obligations and exact primary-first ordering are implemented. Nested XML Opus and technical nested-MXL traversal are distinct supported operations.",
+      "limit": "No reviewed clause proves universal archive-to-primary target substitution. Each compressed incoming use retains nested-rootfile-indirection-unresolved or nested-link-indirection-unresolved; XML fragment support does not remove this gate.",
+      "code": [
+        "validation/package_links.go",
+        "resource_graph.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestPackageEdgeIndirectionPrecedesInnerFragmentAndRootEvidence": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestPackageEdgeIndirectionGatesAssociationMembership": [
+          "validation/package_edge_indirection_test.go"
+        ],
+        "TestResourceGraphIndirectionContextFragmentsKeepDirectSemantics": [
+          "resource_graph_indirection_context_test.go"
+        ],
+        "TestXMLFragmentCompositionOldProfilesAndIndirectionStayGated": [
+          "xml_fragment_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "CHECK-xlink-namespace",
+      "original": "docs/validation/plan/prose-contracts.json#/checks/47",
+      "test_contracts": [
+        "TEST-xlink-namespace"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact XLink namespace/use ownership, show=replace omission default and encoded show/actuate guidance are implemented.",
+      "limit": "other/none are application-dependent; onLoad/embed is not network authority, XInclude permission or a renderer.",
+      "code": [
+        "validation/context_link_runtime.go",
+        "link_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextSourceAttachmentAndDefaults": [
+          "link_context_test.go"
+        ],
+        "TestLinkContextInvalidAndEmptyRemainDistinct": [
+          "link_context_test.go"
+        ],
+        "TestResourceAttachmentForeignAndWrongAssemblyNamesDoNotBind": [
+          "validation/context_link_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "MX40-ISSUE-container-schema-exists",
+      "original": "docs/validation/plan/open-questions.json#/open_questions/2",
+      "test_contracts": [],
+      "classification": "source_proven_out_of_scope_mistaken_overgeneralization",
+      "disposition": "The released pinned container.xsd exists and owns the container root. Obsolete tutorial text and copied sounds wording/URI do not override that formal assembly.",
+      "limit": "Original issue objects and historical decision_required statuses are preserved; none alone creates a document error. The implemented Container assembly supplies the actual checks.",
+      "code": [
+        "schema/musicxml-4.0/container.xsd",
+        "auxiliary_source_catalog.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestDTDPackageCompositionAuxiliaryProfiles": [
+          "dtd_package_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "MX40-ISSUE-container-schema-uri",
+      "original": "docs/validation/plan/open-questions.json#/open_questions/4",
+      "test_contracts": [],
+      "classification": "source_proven_out_of_scope_mistaken_overgeneralization",
+      "disposition": "The released pinned container.xsd exists and owns the container root. Obsolete tutorial text and copied sounds wording/URI do not override that formal assembly.",
+      "limit": "Original issue objects and historical decision_required statuses are preserved; none alone creates a document error. The implemented Container assembly supplies the actual checks.",
+      "code": [
+        "schema/musicxml-4.0/container.xsd",
+        "auxiliary_source_catalog.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestDTDPackageCompositionAuxiliaryProfiles": [
+          "dtd_package_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "MX40-ISSUE-container-sounds-wording",
+      "original": "docs/validation/plan/open-questions.json#/open_questions/3",
+      "test_contracts": [],
+      "classification": "source_proven_out_of_scope_mistaken_overgeneralization",
+      "disposition": "The released pinned container.xsd exists and owns the container root. Obsolete tutorial text and copied sounds wording/URI do not override that formal assembly.",
+      "limit": "Original issue objects and historical decision_required statuses are preserved; none alone creates a document error. The implemented Container assembly supplies the actual checks.",
+      "code": [
+        "schema/musicxml-4.0/container.xsd",
+        "auxiliary_source_catalog.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestDTDPackageCompositionAuxiliaryProfiles": [
+          "dtd_package_composition_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "MX40-ISSUE-external-spec-closure",
+      "original": "docs/validation/plan/open-questions.json#/open_questions/22",
+      "test_contracts": [],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "The original contract is clause-scoped reviewed capability closure, not complete implementation of every transitive external standard. MIME, local headers, URI bases, DTD origins/IDs and registered Framework/element contributions now have source/code/test mappings.",
+      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation is separately implemented; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
+      "code": [
+        "validation/resource_fragment.go",
+        "validation/resource_media.go",
+        "validation/package_evaluate.go",
+        "semantic_composition_catalog.go"
+      ],
+      "test_routes": {
+        "TestXMLFragmentFrameworkAndElement": [
+          "validation/resource_fragment_framework_test.go"
+        ],
+        "TestResourceMediaParametersAdmissionAndCancellation": [
+          "validation/resource_media_parameter_closure_test.go"
+        ],
+        "TestDTDPackageCompositionEntryPoints": [
+          "dtd_package_composition_test.go"
+        ]
+      },
+      "remaining": "IPA affirmative representation is integrated; the top-level acceptance field records the dated combined-tree receipt. Do not mark this umbrella as universal transitive standards closure."
+    },
+    {
+      "id": "MX40-ISSUE-mxl-first-media-type-set",
+      "original": "docs/validation/plan/open-questions.json#/open_questions/14",
+      "test_contracts": [],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "ce10a32 separates registered MusicXML base identity from unknown distinct MIME parameters; case-insensitive duplicate parameter names remain malformed even when values agree.",
+      "limit": "Generic XML/ZIP labels, malformed values and unestablished/abandoned aliases do not establish either a MusicXML or a non-MusicXML type. Compressed base identity does not settle nested target substitution.",
+      "code": [
+        "validation/resource_media.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestResourceMediaParametersAdmissionAndCancellation": [
+          "validation/resource_media_parameter_closure_test.go"
+        ],
+        "TestPackageReviewMediaParametersAndScratch": [
+          "validation/package_review_media_test.go"
+        ],
+        "TestClassifyResourceMediaTypePreservesUnknownAndErrors": [
+          "validation/resource_media_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "MX40-ISSUE-mxl-methods-compatibility",
+      "original": "docs/validation/plan/open-questions.json#/open_questions/13",
+      "test_contracts": [],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "The reviewed ordinary nonencrypted single-volume STORE/DEFLATE envelope, independent framing/CRC and selected payload transport are implemented. Compression remains context; only mimetype has a mandatory STORE predicate.",
+      "limit": "This does not certify every legacy ZIP method, JAR application feature, ZIP64/encryption/multivolume/version field or dormant payload. Ordinary STORE force is a named compatibility interpretation, not a new hard error. The exact original CHECK contract explicitly asks for a reviewed subset.",
+      "code": [
+        "mxl_assessment_zip.go",
+        "validation/package_evaluate.go",
+        "validation/package_catalog.go"
+      ],
+      "test_routes": {
+        "TestMXLAssessmentZIPHeaderMatrix": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPEnvelopeAndPolicy": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPCRCAndDecompressionAreTechnical": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPDescriptorCorruptionAndPlaceholders": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPUnsignedDescriptorSignatureCollision": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-EXTERNAL-IPA",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/34",
+      "test_contracts": [
+        "TEST-DEF-EXTERNAL-IPA"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies 295 symbol atoms and 158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy 197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
+      "limit": "The 18 historical lateral/tone alias questions have no demonstrated required-positive MusicXML4 path and are not blockers. Current affirmative letters/signs/productive provisions, whole-representation canonical closure, constructed-letter attachment and paired half ties are real scope. No phonotactics/rendering or preferred-font requirement.",
+      "code": [
+        "validation/dictionary_ipa_representation.go",
+        "validation/dictionary_ipa_representation_policy.go",
+        "validation/dictionary_ipa.go",
+        "dictionary_import_ipa.go",
+        "dictionary_import.go"
+      ],
+      "test_routes": {
+        "TestIPARepresentationAffirmativeWholeWitness": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationUnknownIsNotNegativeComplement": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationExactPinsMutationAndFifthSelection": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationNormalizationPreservesStableOrderAndRawIntervals": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationConstructorMalformationsReleaseStorage": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationCompiledPolicyMatchesPinnedData": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationFiniteConcatenationOracle": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationRuntimeExactWorkStorageAndCancellation": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestIPARepresentationIndexLeaseSurvivesOwnerClose": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestDictionaryIPARepresentationFiveSelections": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedResponseIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCallbackErrorsRemainUnavailable": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMissingSourceAndExplicitGap": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDecoderLengthIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTransportGapKeepsUsableSet": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedImportStopsLaterProviders": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCertifiedComponent": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDigestMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedCertifiedRecords": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationAllFiveCertifiedImports": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTerminalImportFailures": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchPreservesCloseCancellation": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCloseCancellationStopsDocumentReads": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestIPARepresentationSelectedConsumerWholeInput": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationSelectionAndMissingCapability": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationUnavailableScalarDoesNotFabricateEmptySpan": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationPublicSourceModelAndAssessedReader": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationExactCatalogMigrationAndRuleRevision": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestIPARepresentationLegacyManifestIdentityUntouched": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestSemanticIPARepresentationPublicSourceModelAndAssessedReader": [
+          "semantic_ipa_integration_test.go"
+        ],
+        "TestSemanticIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "semantic_ipa_integration_test.go"
+        ]
+      },
+      "remaining": "No unsupported historical alias is promoted to a mandatory blocker. Initial combined-tree acceptance is recorded in the dated top-level acceptance receipt; subsequent review-correction acceptance is tracked separately in PR41."
+    },
+    {
+      "id": "REQ-DEF-EXTERNAL-RESOLVER",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/32",
+      "test_contracts": [
+        "TEST-DEF-EXTERNAL-RESOLVER"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Explicit selected dependencies alone reach the bounded caller resolver after local prerequisites; exact kind/identity/revision/profile, ownership and shared accounts are checked.",
+      "limit": "No ambient fetch or automatic dictionaries. Source-origin copies/adoption and DTD/XSD joined identity are now transported; a caller still supplies unavailable instance authority.",
+      "code": [
+        "resource_graph.go",
+        "resource_options.go",
+        "validation/resource_snapshot.go",
+        "validation/package_report.go"
+      ],
+      "test_routes": {
+        "TestDictionaryGraphConfigurationBeforeAnyIO": [
+          "dictionary_graph_test.go"
+        ],
+        "TestDTDPackageCompositionPreflightBeforeIO": [
+          "dtd_package_integration_test.go"
+        ],
+        "TestSourceOriginSnapshotTransportRejectedTransferKeepsOwner": [
+          "validation/source_origin_transport_test.go"
+        ],
+        "TestSourceOriginTransportExactTypedRemapping": [
+          "validation/source_origin_transport_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-EXTERNAL-SMUFL",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/33",
+      "test_contracts": [
+        "TEST-DEF-EXTERNAL-SMUFL"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Pinned canonical-name SMuFL membership is implemented with actual identity/version/content verification and explicit caller selection, not prefix matching.",
+      "limit": "Rendering/appearance heuristics and installed-font availability are separate optional facts. No automatic load or new embedded corpus is introduced.",
+      "code": [
+        "validation/dictionary_evaluate.go",
+        "validation/dictionary_set.go",
+        "dictionary_catalog.go"
+      ],
+      "test_routes": {
+        "TestDictionaryGraphOneImportAcrossVerifiedAliases": [
+          "dictionary_graph_propagation_test.go"
+        ],
+        "TestDictionaryGraphCacheUsesActualCapabilityFingerprint": [
+          "dictionary_graph_propagation_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-EXTERNAL-SPECS",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/35",
+      "test_contracts": [
+        "TEST-DEF-EXTERNAL-SPECS"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "The original contract is clause-scoped reviewed capability closure, not complete implementation of every transitive external standard. MIME, local headers, URI bases, DTD origins/IDs and registered Framework/element contributions now have source/code/test mappings.",
+      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation is separately implemented; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
+      "code": [
+        "validation/resource_fragment.go",
+        "validation/resource_media.go",
+        "validation/package_evaluate.go",
+        "semantic_composition_catalog.go"
+      ],
+      "test_routes": {
+        "TestXMLFragmentFrameworkAndElement": [
+          "validation/resource_fragment_framework_test.go"
+        ],
+        "TestResourceMediaParametersAdmissionAndCancellation": [
+          "validation/resource_media_parameter_closure_test.go"
+        ],
+        "TestDTDPackageCompositionEntryPoints": [
+          "dtd_package_composition_test.go"
+        ]
+      },
+      "remaining": "IPA affirmative representation is integrated; the top-level acceptance field records the dated combined-tree receipt. Do not mark this umbrella as universal transitive standards closure."
+    },
+    {
+      "id": "REQ-DEF-ISSUE-EXTERNAL-SPEC-CLOSURE",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/90",
+      "test_contracts": [
+        "TEST-DEF-ISSUE-EXTERNAL-SPEC-CLOSURE"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "The original contract is clause-scoped reviewed capability closure, not complete implementation of every transitive external standard. MIME, local headers, URI bases, DTD origins/IDs and registered Framework/element contributions now have source/code/test mappings.",
+      "limit": "Full transitive normative closure remains unclaimed. IPA affirmative representation is separately implemented; selected ZIP/prefix/indirection limits remain explicit. No arbitrary standards expansion is justified.",
+      "code": [
+        "validation/resource_fragment.go",
+        "validation/resource_media.go",
+        "validation/package_evaluate.go",
+        "semantic_composition_catalog.go"
+      ],
+      "test_routes": {
+        "TestXMLFragmentFrameworkAndElement": [
+          "validation/resource_fragment_framework_test.go"
+        ],
+        "TestResourceMediaParametersAdmissionAndCancellation": [
+          "validation/resource_media_parameter_closure_test.go"
+        ],
+        "TestDTDPackageCompositionEntryPoints": [
+          "dtd_package_composition_test.go"
+        ]
+      },
+      "remaining": "IPA affirmative representation is integrated; the top-level acceptance field records the dated combined-tree receipt. Do not mark this umbrella as universal transitive standards closure."
+    },
+    {
+      "id": "REQ-DEF-ISSUE-MXL-FIRST-MEDIA-TYPE-SET",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/87",
+      "test_contracts": [
+        "TEST-DEF-ISSUE-MXL-FIRST-MEDIA-TYPE-SET"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "ce10a32 separates registered MusicXML base identity from unknown distinct MIME parameters; case-insensitive duplicate parameter names remain malformed even when values agree.",
+      "limit": "Generic XML/ZIP labels, malformed values and unestablished/abandoned aliases do not establish either a MusicXML or a non-MusicXML type. Compressed base identity does not settle nested target substitution.",
+      "code": [
+        "validation/resource_media.go",
+        "validation/package_evaluate.go"
+      ],
+      "test_routes": {
+        "TestResourceMediaParametersAdmissionAndCancellation": [
+          "validation/resource_media_parameter_closure_test.go"
+        ],
+        "TestPackageReviewMediaParametersAndScratch": [
+          "validation/package_review_media_test.go"
+        ],
+        "TestClassifyResourceMediaTypePreservesUnknownAndErrors": [
+          "validation/resource_media_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-ISSUE-MXL-METHODS-COMPATIBILITY",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/86",
+      "test_contracts": [
+        "TEST-DEF-ISSUE-MXL-METHODS-COMPATIBILITY"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "The reviewed ordinary nonencrypted single-volume STORE/DEFLATE envelope, independent framing/CRC and selected payload transport are implemented. Compression remains context; only mimetype has a mandatory STORE predicate.",
+      "limit": "This does not certify every legacy ZIP method, JAR application feature, ZIP64/encryption/multivolume/version field or dormant payload. Ordinary STORE force is a named compatibility interpretation, not a new hard error. The exact original CHECK contract explicitly asks for a reviewed subset.",
+      "code": [
+        "mxl_assessment_zip.go",
+        "validation/package_evaluate.go",
+        "validation/package_catalog.go"
+      ],
+      "test_routes": {
+        "TestMXLAssessmentZIPHeaderMatrix": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPEnvelopeAndPolicy": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPCRCAndDecompressionAreTechnical": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPDescriptorCorruptionAndPlaceholders": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ],
+        "TestMXLAssessmentZIPUnsignedDescriptorSignatureCollision": [
+          "mxl_assessment_zip_adversarial_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-OPS-SCALARS",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/18",
+      "test_contracts": [
+        "TEST-DEF-OPS-SCALARS"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Selected exact integer/decimal/date/whitespace/pattern/ordered-union/default contracts remain implemented; direct ENTITY/ENTITIES declaration membership is composed. Truthfulness guards retain independent known failures.",
+      "limit": "General QName/NOTATION/temporal/floating equality or ordering, constructed identity/ENTITY and defaulted references are not newly required by fixed MusicXML reachability. Six-schema default audit found zero relevant absent ENTITY/ENTITIES/IDREF(S) constraints; a064ee4 was reverted by 8187b6c. Generic custom-schema capability boundaries remain documented, not called implemented.",
+      "code": [
+        "internal/xsd/value.go",
+        "internal/xsd/kernel.go",
+        "internal/xsd/identity.go",
+        "internal/xsd/entity_declarations.go",
+        "source_entity_declaration_observer.go"
+      ],
+      "test_routes": {
+        "TestRunAbsentDefaultIdentityBlocksClosure": [
+          "internal/xsd/capability_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-PACKAGE-ADAPTERS",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/31",
+      "test_contracts": [
+        "TEST-DEF-PACKAGE-ADAPTERS"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Separate raw/current MXL, Opus and graph adapters already exist. c35c624 composes DTD/dictionary auxiliary and linked sources; 7c01f17 adds selected source/model semantic profiles. de93533 integrates matching semantic resource-graph/raw-MXL/current-MXL profiles with exact intrinsic pins.",
+      "limit": "Old profile behavior remains explicit. The top-level acceptance field records dated graph/MXL integration verification; no whole-ZIP or source-history reconstruction claim follows.",
+      "code": [
+        "resource_package.go",
+        "resource_graph.go",
+        "dtd_dictionary_package_catalog.go",
+        "semantic_package_catalog.go",
+        "semantic_composition_catalog.go"
+      ],
+      "test_routes": {
+        "TestDTDPackageCompositionEntryPoints": [
+          "dtd_package_composition_test.go"
+        ],
+        "TestDTDPackageCompositionModelPrimaryAndRetainedSourceHonesty": [
+          "dtd_package_integration_test.go"
+        ],
+        "TestSemanticPackageCompositionFragments": [
+          "semantic_package_composition_test.go"
+        ],
+        "TestSemanticPackageCompositionFragmentAbsence": [
+          "semantic_package_composition_test.go"
+        ]
+      },
+      "remaining": "The package composition is integrated at de93533. Independently reviewed segment evidence and final exact-tree acceptance remain separate."
+    },
+    {
+      "id": "REQ-DEF-SEC-NOFETCH",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/41",
+      "test_contracts": [
+        "TEST-DEF-SEC-NOFETCH"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "No automatic schema/DTD/external-entity/XInclude/dictionary loading is preserved; actually read internal declarations are explicitly selected and source limits remain visible.",
+      "limit": "External subsets/entities stay unread; complete internal declaration/occurrence facts do not fabricate external completeness. XLink hints are data.",
+      "code": [
+        "xml_source_dtd.go",
+        "assessment.go",
+        "source_dtd_attributes.go",
+        "resource_graph.go"
+      ],
+      "test_routes": {
+        "TestXMLDoctypeDoesNotFetchExternalDTD": [
+          "xml_wellformedness_test.go"
+        ],
+        "TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete": [
+          "source_dtd_no_fetch_review_test.go"
+        ],
+        "TestDTDPackageCompositionGraphDefaultLinksAndNoFetch": [
+          "dtd_package_integration_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-XML-DOCTYPE",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/1",
+      "test_contracts": [
+        "TEST-DEF-XML-DOCTYPE"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Mandatory XML layer permits one legal prolog DOCTYPE without automatic fetch and rejects nested, repeated and post-root declarations. XML declaration remains optional.",
+      "limit": "An unelected DTD assessment capability can remain incomplete independently of document-level XML placement.",
+      "code": [
+        "xml_source.go",
+        "xml_decoder.go",
+        "xml_source_dtd.go"
+      ],
+      "test_routes": {
+        "TestXMLWellFormednessDecodePaths": [
+          "xml_wellformedness_test.go"
+        ],
+        "TestXMLWellFormednessContainer": [
+          "xml_wellformedness_test.go"
+        ],
+        "TestXMLWellFormednessValidationParser": [
+          "xml_wellformedness_test.go"
+        ],
+        "TestXMLWellFormednessLinkedResources": [
+          "xml_wellformedness_test.go"
+        ],
+        "TestXMLDoctypeDoesNotFetchExternalDTD": [
+          "xml_wellformedness_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-XSI-NONAMESPACE",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/8",
+      "test_contracts": [
+        "TEST-DEF-XSI-NONAMESPACE"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact xsi names and anyURI/list datatype semantics are implemented without fetching. Odd list lengths remain valid datatype values; schema-discovery pair shape is separately assessed. Effective DTD-supplied hints survive physical lexical absence.",
+      "limit": "Current model cannot reconstruct discarded xsi/source history. Pair-shape failure is capability/discovery incompleteness, not an invented fixed-schema datatype violation.",
+      "code": [
+        "validation/context_link_hints.go",
+        "validation/source_attribute_lexical.go",
+        "source_composition_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextSchemaHintsDiscoveryIsIndependent": [
+          "link_context_test.go"
+        ],
+        "TestSourceDeclarationCompositionDefaultedSchemaHints": [
+          "source_composition_links_test.go"
+        ],
+        "TestLinkContextModelCurrentFactsDoNotRecoverSourceHints": [
+          "link_context_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    },
+    {
+      "id": "REQ-DEF-XSI-SCHEMALOC",
+      "original": "docs/validation/plan/implementation-plan.json#/requirements/7",
+      "test_contracts": [
+        "TEST-DEF-XSI-SCHEMALOC"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Exact xsi names and anyURI/list datatype semantics are implemented without fetching. Odd list lengths remain valid datatype values; schema-discovery pair shape is separately assessed. Effective DTD-supplied hints survive physical lexical absence.",
+      "limit": "Current model cannot reconstruct discarded xsi/source history. Pair-shape failure is capability/discovery incompleteness, not an invented fixed-schema datatype violation.",
+      "code": [
+        "validation/context_link_hints.go",
+        "validation/source_attribute_lexical.go",
+        "source_composition_catalog.go"
+      ],
+      "test_routes": {
+        "TestLinkContextSchemaHintsDiscoveryIsIndependent": [
+          "link_context_test.go"
+        ],
+        "TestSourceDeclarationCompositionDefaultedSchemaHints": [
+          "source_composition_links_test.go"
+        ],
+        "TestLinkContextModelCurrentFactsDoNotRecoverSourceHints": [
+          "link_context_test.go"
+        ]
+      },
+      "remaining": "No new missing algorithm established for this selected contract."
+    }
+  ],
+  "musical_rows": [
+    {
+      "id": "CHECK-barline-location",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/21",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/21"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Bounded source-backed mandatory predicate is implemented and selected in the new semantic profiles: exact left=0, right/end and strict-positive middle with independent lower-bound proofs. Empty/grace-only/forward-only/new-maximum-forward or genuinely unavailable endpoint cases remain explicitly unproved; no first/last-child or meter-fill restriction.",
+      "code_or_tests": [
+        "barline_location_catalog.go",
+        "semantic_composition_catalog.go"
+      ],
+      "test_routes": {
+        "TestBarlineLocationAdapterMatrix": [
+          "barline_location_adapters_test.go"
+        ],
+        "TestBarlineLocationMetadataAndChordMatrix": [
+          "barline_location_adapters_test.go"
+        ],
+        "TestBarlineLocationUnrelatedInvalidFieldsAndRelevantGaps": [
+          "barline_location_adapters_test.go"
+        ],
+        "TestBarlineLocationCertificateDoesNotStrengthenTimeline": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationBoundaryBudgetsAndCancellation": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationIndependentLowerSurvivesUnknownSuffix": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationRelevantGapsKeepCause": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationBarlinesCannotSupplyEndpointWitness": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationKnownFailureRetainedWhenDiagnosticsExhausted": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationOmittedMetadataAndInvalidSuffix": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationMalformedKnownRationalIsUnavailable": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationBufferedAdmissionAndFailureRetention": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationPlanRequiresExactNodeAndTimelineContract": [
+          "validation/context_barline_location_test.go"
+        ],
+        "TestBarlineLocationUnknownMoverBlocksEndButNotKnownLeft": [
+          "validation/context_barline_location_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-beat-repeat-content",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/18",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/18"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "cfdc5f6/0643a41/cf2c918 integrate the independently proved ordinary singleton pitch/rest counterexample. It does not negate the sufficient equality proof. Source/model × both organizations, equality/enharmonic/empty-content controls, causal prerequisites and resource boundaries were reviewed. General ties/grace/carry/multiple-simultaneous/effective-transformation equivalence remains a named selected limit, not completed by Unknown. The current whole-part domain excludes key/time/clef, direction/print/barline and all note attributes, and requires one explicit staff-qualified transpose.",
+      "code_or_tests": [
+        "validation/context_repeat_consumer.go",
+        "validation/context_repeat_content.go",
+        "validation/context_repeat_ordered.go",
+        "validation/context_repeat_singleton.go",
+        "validation/context_repeat_window_index.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestContextRepeatOrderedProofBoundary": [
+          "validation/context_repeat_ordered_test.go"
+        ],
+        "TestContextRepeatOrderedProofFallback": [
+          "validation/context_repeat_ordered_test.go"
+        ],
+        "TestContextRepeatWindowIndexFallbackPreservesEvidence": [
+          "validation/context_repeat_window_index_test.go"
+        ],
+        "TestContextRepeatWindowIndexMatchesConservativeWindows": [
+          "validation/context_repeat_window_index_test.go"
+        ],
+        "TestIndependentContextRepeatExceptVoiceContent": [
+          "context_independent_repeat_voice_test.go"
+        ],
+        "TestIndependentContextRepeatNaturalAlterEquivalence": [
+          "context_independent_repeat_content_test.go"
+        ],
+        "TestIndependentContextRepeatRosterPreservesCoverageCause": [
+          "validation/context_repeat_roster_coverage_independent_test.go"
+        ],
+        "TestIndependentSingletonRepeatCheckedWorkAmounts": [
+          "validation/context_repeat_singleton_resources_test.go"
+        ],
+        "TestIndependentSingletonRepeatResourceBoundary": [
+          "validation/context_repeat_singleton_resources_test.go"
+        ],
+        "TestRepeatAdaptersBeatContentExactAndMismatch": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatOrderedAdaptersPreserveFallback": [
+          "validation/context_repeat_ordered_adapters_test.go"
+        ],
+        "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls": [
+          "validation/context_repeat_window_adapters_test.go"
+        ]
+      },
+      "evidence": [
+        "docs/validation/evidence/graphical-repeat-singleton-counterexample.md"
+      ]
+    },
+    {
+      "id": "CHECK-bend-release-negative",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/30",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/30"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "accepted narrow sign predicate; original gesture gate retained No universal exactly-two, arbitrary nearest-release association, pre-bend=ordinary, or cross-note equivalence. Complete note-local two-container association is a finite review candidate, not an accepted mandatory expansion. Reversed sequence requires independent gesture intent.",
+      "code_or_tests": [
+        "validation/context_performance_bend.go"
+      ],
+      "test_routes": {}
+    },
+    {
+      "id": "CHECK-bend-release-pair",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/279",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/279"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "accepted narrow sign predicate; original gesture gate retained No universal exactly-two, arbitrary nearest-release association, pre-bend=ordinary, or cross-note equivalence. Complete note-local two-container association is a finite review candidate, not an accepted mandatory expansion. Reversed sequence requires independent gesture intent.",
+      "code_or_tests": [
+        "validation/context_performance_bend.go"
+      ],
+      "test_routes": {
+        "TestPerformanceBendConditionalNegativePredicate": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceBendInvalidChoiceIsCausal": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceDirectionAssociationAndOriginalBendOrigin": [
+          "context_performance_integration_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-arrow-glyph-consistency",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/161",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/161"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Expose exact linear/circular direction, style and arrowhead-only evidence; preserve unavailable glyph-description matching. General SMuFL appearance/structural compatibility remains batch9.",
+      "code_or_tests": [
+        "validation/context_glyph_local.go"
+      ],
+      "test_routes": {
+        "TestContextLocalGlyphSemanticsAcrossTargets": [
+          "context_glyph_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-assess-default",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/162",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/162"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact recommendation/override projection satisfied No new forced assessment or physical score-following algorithm.",
+      "code_or_tests": [
+        "validation/context_navigation_note_listen.go"
+      ],
+      "test_routes": {
+        "TestRepeatAdaptersListeningDistinctAndAssessment": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPlayerReferenceScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-assess-target-scope",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/291",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/291"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact local scope contract satisfied Actual enumeration/pass realization not required to express symbolic all. Invalid or unresolved explicit references remain causal; no fabricated all-player fallback.",
+      "code_or_tests": [
+        "validation/context_navigation_note_listen.go",
+        "validation/context_navigation_players.go"
+      ],
+      "test_routes": {
+        "TestRepeatAdaptersPlayerReferenceScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-backup-no-boundary-cross",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/164",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/164"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "no new hard rejection Do not transform advice into a conformance failure, meter-fill rule, or universal unsupported movement policy. Depends only on independently established actual boundaries if advice emitted.",
+      "code_or_tests": [
+        "validation/context_performance_advisory.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestIndependentTimelineRuntimeExactModelTenth": [
+          "validation/timeline_resource_independent_test.go"
+        ],
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMovementsAndSwingRatioAdvice": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceStaffScopesOrderAndOpenLabels": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestRationalSessionExactOperations": [
+          "validation/rational_test.go"
+        ],
+        "TestTimelineCursorExactNormalizedMovement": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelineExcursionGatePreservesDescendantUnitUnavailability": [
+          "validation/timeline_excursion_units_test.go"
+        ],
+        "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair": [
+          "validation/timeline_excursion_units_test.go"
+        ],
+        "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineNormalizationExactAndCausal": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelinePracticalExactTrajectories": [
+          "timeline_cost_test.go"
+        ],
+        "TestTimelineRuntimeBoundaryGapPreservesProvenPrefix": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineRuntimeExactMeasureAndInheritance": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineSemanticQAHierarchyParityAndPartIsolation": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARegionLocalChangedDivisionsRewind": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice": [
+          "validation/timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue": [
+          "validation/timeline_divisions_consensus_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-beat-repeat-state",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/288",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/288"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact local contracts satisfied; content comparison is separate predicate Do not attach universal tied/grace/transposed musical equivalence as a completion dependency of these local state IDs. Those questions belong to two separate content predicates.",
+      "code_or_tests": [
+        "validation/context_repeat_content.go",
+        "validation/context_repeat_ordered.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestIndependentContextRepeatExceptVoiceContent": [
+          "context_independent_repeat_voice_test.go"
+        ],
+        "TestIndependentContextRepeatNaturalAlterEquivalence": [
+          "context_independent_repeat_content_test.go"
+        ],
+        "TestRepeatAdaptersBeatContentExactAndMismatch": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatOrderedAdaptersPreserveFallback": [
+          "validation/context_repeat_ordered_adapters_test.go"
+        ],
+        "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls": [
+          "validation/context_repeat_window_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-beat-repeat-stop",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/82",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/82"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "half-open ranges and complete part-end continuation accepted No required endpoint balancing. Incomplete closure and ambiguous overlaps remain local evidence, not additional hard failures.",
+      "code_or_tests": [
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestContextRepeatHalfOpenRanges": [
+          "validation/context_repeat_test.go"
+        ],
+        "TestRepeatAdaptersBeatContentExactAndMismatch": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-coda-sound",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/65",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/65"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "same-direction labelled association implemented; no cross-direction proximity algorithm required No encoded arbitrary cross-direction graphic-to-sound identity; lack of sound is not a universal mandatory document defect. Issue 322 rejects making sound mandatory for compatibility.",
+      "code_or_tests": [
+        "validation/context_navigation.go",
+        "validation/context_navigation_graphic.go"
+      ],
+      "test_routes": {
+        "TestContextNavigationNamedTargetAndSectionDomain": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestRepeatAdaptersGraphicPlaybackAdvice": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-direction-format-inheritance",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/106",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/106"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "77c9b4c/6b6d035 carry nonpositional formatting only within its direction-type wrapper, reset at each wrapper, then use independent defaults. Mixed children and field-specific causal overrides are preserved.",
+      "code_or_tests": [
+        "internal/xsdgen/catalog.go",
+        "internal/xsdgen/index.go",
+        "internal/xsdgen/load.go",
+        "validation/context_layout_format.go"
+      ],
+      "test_routes": {
+        "TestLayoutDirectionIntraWrapperComponentsStayIndependent": [
+          "context_layout_direction_scope_test.go"
+        ],
+        "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride": [
+          "context_layout_direction_scope_test.go"
+        ],
+        "TestLayoutDirectionWrapperFormattingReset": [
+          "context_layout_direction_scope_test.go"
+        ],
+        "TestLayoutMatrixInheritedTextDefaults": [
+          "context_layout_matrix_assessment_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-direction-type-format-scope",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/276",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/276"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "The same wrapper-local formatting correction is implemented; the full author clarification supersedes the earlier cross-wrapper inheritance reading. Coordinates do not inherit.",
+      "code_or_tests": [
+        "internal/xsdgen/catalog.go",
+        "internal/xsdgen/index.go",
+        "internal/xsdgen/load.go",
+        "validation/context_layout_format.go",
+        "validation/context_layout_geometry.go"
+      ],
+      "test_routes": {
+        "TestLayoutDirectionIntraWrapperComponentsStayIndependent": [
+          "context_layout_direction_scope_test.go"
+        ],
+        "TestLayoutDirectionIntraWrapperInvalidCauseAndOverride": [
+          "context_layout_direction_scope_test.go"
+        ],
+        "TestLayoutDirectionWrapperFormattingReset": [
+          "context_layout_direction_scope_test.go"
+        ],
+        "TestLayoutFormattingFiveAxes": [
+          "context_layout_assessment_test.go"
+        ],
+        "TestLayoutGeometryPrecedenceFiveAxes": [
+          "context_layout_assessment_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-divisions-tuplet-units",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/78",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/78"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "accepted exact region arithmetic; narrow B6-DIVISIONS-REWIND remains open Only unproved boundary/departure/crossing/late changed publisher cases remain; no new current-MusicXML4 departure or piecewise convention found. Preserve independent prefixes and all already accepted contained-region proofs.",
+      "code_or_tests": [
+        "validation/context_performance_math.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestIndependentTimelineRuntimeExactModelTenth": [
+          "validation/timeline_resource_independent_test.go"
+        ],
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceSourceModelDefaultsTiming": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceStaffScopesOrderAndOpenLabels": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceSwingAndCueAcrossTargets": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestRationalSessionExactOperations": [
+          "validation/rational_test.go"
+        ],
+        "TestTimelineCursorExactNormalizedMovement": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelineExcursionGatePreservesDescendantUnitUnavailability": [
+          "validation/timeline_excursion_units_test.go"
+        ],
+        "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair": [
+          "validation/timeline_excursion_units_test.go"
+        ],
+        "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineNormalizationExactAndCausal": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelinePracticalExactTrajectories": [
+          "timeline_cost_test.go"
+        ],
+        "TestTimelineRuntimeBoundaryGapPreservesProvenPrefix": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineRuntimeExactMeasureAndInheritance": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineSemanticQAHierarchyParityAndPartIsolation": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARegionLocalChangedDivisionsRewind": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice": [
+          "validation/timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue": [
+          "validation/timeline_divisions_consensus_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-double-transpose-default",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/85",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/85"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Bounded existing implementation and exact original audit owner remain; no new whole-domain acceptance is claimed by this reconciliation.",
+      "code_or_tests": [
+        "validation/context_performance_advisory.go",
+        "validation/context_performance_local_state.go",
+        "validation/context_performance_pitch.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceInvalidLocalContextMatrix": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceLocalStateDefaultsWithoutTimelineUnits": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceSourceModelDefaultsTiming": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceStaffScopesOrderAndOpenLabels": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestTimelineSemanticQANumeralMusicalOrderAndScopes": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineStateClosureAbsenceAndCountDefaults": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateDocumentedDefaultsRequireKnownAbsence": [
+          "validation/timeline_staff_test.go"
+        ],
+        "TestTimelineStateExtractTypedAttributesAtKnownPosition": [
+          "validation/timeline_state_extract_test.go"
+        ],
+        "TestTimelineStateInvalidMaskGapAndRecovery": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateSamePositionMergeConflictAndProjection": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateScoreOrderAndOverlappingScopes": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateTransposeContributions": [
+          "validation/timeline_state_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-duration-cursor",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/225",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/225"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "accepted exact region arithmetic; narrow B6-DIVISIONS-REWIND remains open Only unproved boundary/departure/crossing/late changed publisher cases remain; no new current-MusicXML4 departure or piecewise convention found. Preserve independent prefixes and all already accepted contained-region proofs.",
+      "code_or_tests": [
+        "validation/context_performance_advisory.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestIndependentTimelineRuntimeExactModelTenth": [
+          "validation/timeline_resource_independent_test.go"
+        ],
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMovementsAndSwingRatioAdvice": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceStaffScopesOrderAndOpenLabels": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestRationalSessionExactOperations": [
+          "validation/rational_test.go"
+        ],
+        "TestTimelineCursorExactNormalizedMovement": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelineExcursionGatePreservesDescendantUnitUnavailability": [
+          "validation/timeline_excursion_units_test.go"
+        ],
+        "TestTimelineExcursionIndependentPriorBoundProvesUnitRepair": [
+          "validation/timeline_excursion_units_test.go"
+        ],
+        "TestTimelineFinalReviewBackupPlacementIgnoresExcludedFutureInvalidUnits": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewBoundaryExcursionCannotChooseChangedDivisionUnits": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExactContainedReturnRestoresPrefixProof": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionCannotProveItsOwnFrameBound": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionUnitsUseDirectionalEvidence": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewExcursionsNeedCrossFrameUnitProof": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewLaterDisplacedDivisionsCannotLeaveEarlierNormalizedNotes": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewLocalUnitGapKeepsDisplacementBounds": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewNewFrameUnitsNeedActualEffectiveRepair": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewSafeExcursionRestoresIndependentLaterNormalization": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineNormalizationExactAndCausal": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelinePracticalExactTrajectories": [
+          "timeline_cost_test.go"
+        ],
+        "TestTimelineRuntimeBoundaryGapPreservesProvenPrefix": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineRuntimeExactMeasureAndInheritance": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineSemanticQAHierarchyParityAndPartIsolation": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARegionLocalChangedDivisionsRewind": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice": [
+          "validation/timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue": [
+          "validation/timeline_divisions_consensus_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-except-voice",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/223",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/223"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact symbolic scope and known voice exclusions implemented Unencoded identity or ambiguous overlapping transition not a new scope default. No other-part leakage or part-wide cancellation.",
+      "code_or_tests": [
+        "validation/context_repeat_content.go",
+        "validation/context_repeat_scope.go",
+        "validation/context_repeat_voice_filter.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestIndependentContextRepeatExceptVoiceContent": [
+          "context_independent_repeat_voice_test.go"
+        ],
+        "TestIndependentContextRepeatVoiceExclusionLinearWork": [
+          "validation/context_repeat_voice_scale_independent_test.go"
+        ],
+        "TestIndependentContextVoiceFilterAdmission": [
+          "validation/context_repeat_voice_admission_independent_test.go"
+        ],
+        "TestIndependentContextVoiceFilterPreservesLoopEvidence": [
+          "validation/context_repeat_voice_filter_independent_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersSlashVoiceAndStopScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-figured-bass-anchor",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/170",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/170"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "accepted anchor and duration provider; no new mandatory rejection Interleaved/nonconsecutive cumulative chain remains a bounded reconstruction gate, not a new sum-duration defect or cross-measure prohibition. Known unrelated metadata-only separators may be a small future provider extension; no universal chain algorithm settled.",
+      "code_or_tests": [
+        "validation/context_performance_static.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestFiguredBassChainAmbiguityAndAbsentDurationAreIndependent": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassChainGapUsesExactScoreLowerBound": [
+          "validation/timeline_origin_locality_test.go"
+        ],
+        "TestFiguredBassChainKeepsAnchorBasedDurationsAcrossLaterDivisions": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassConsecutiveChainKeepsIndependentAnchorAndDuration": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassDurationUsesFinalizedAnchorUnits": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassFinalDivisionsOverrideEventRegister": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassFollowingNoteCanCrossCompleteMeasures": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassLaterAnchorGapPreservesEarlierChain": [
+          "validation/timeline_origin_locality_test.go"
+        ],
+        "TestFiguredBassOriginAmbiguityAndMissingFactsStayUnknown": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassOriginLaterUnknownMarkersDoNotMaskEarlierAnchor": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassOriginUsesExactScoreOrderBothRepresentations": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassThousandDistinctOriginsDefaultBudget": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestFiguredBassUnavailableAnchorCauseAndRawAbsence": [
+          "validation/timeline_figured_bass_test.go"
+        ],
+        "TestPerformanceAllStaticFamiliesAndOrigins": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceGraceDonorAndFigures": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestTimelineAssociationFrameCandidatesAndFastPath": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineFigureChainDisplacedGapKeepsActualCause": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineFinalReviewLaterFigureGapKeepsEarlierChain": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalizersCrossMeasureOrigins": [
+          "validation/timeline_finalizers_test.go"
+        ],
+        "TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineGraceFrameCompetitorAndSideLocality": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineUnavailableDisplacedAssociationKeepsPlacement": [
+          "validation/timeline_association_frame_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-font-family-order",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/230",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/230"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "comma preference order preserved; generic music/text categories distinct from literal font names {\"dependency\": \"installed-font availability and glyph dictionary\", \"owner\": \"application/font dictionary\", \"closure\": \"Supply exact installed font/SMuFL data; family classification does not assert availability.\"}",
+      "code_or_tests": [
+        "validation/context_local_structural.go"
+      ],
+      "test_routes": {
+        "TestLocalContextRecordSpecificStructuralMatrix": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalContextSemanticRelationsAndOpenDomainsBothTargets": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalFontGenericCategoriesPreservePreferenceOrder": [
+          "validation/context_local_font_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-forward-no-boundary-cross",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/172",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/172"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "no new hard rejection Do not transform advice into a conformance failure, meter-fill rule, or universal unsupported movement policy. Depends only on independently established actual boundaries if advice emitted.",
+      "code_or_tests": [
+        "validation/context_performance_advisory.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestIndependentTimelineRuntimeExactModelTenth": [
+          "validation/timeline_resource_independent_test.go"
+        ],
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMovementsAndSwingRatioAdvice": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceStaffScopesOrderAndOpenLabels": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestRationalSessionExactOperations": [
+          "validation/rational_test.go"
+        ],
+        "TestTimelineCursorExactNormalizedMovement": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelineNormalizationExactAndCausal": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelinePracticalExactTrajectories": [
+          "timeline_cost_test.go"
+        ],
+        "TestTimelineRuntimeBoundaryGapPreservesProvenPrefix": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineRuntimeExactMeasureAndInheritance": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineSemanticQAHierarchyParityAndPartIsolation": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARegionLocalChangedDivisionsRewind": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice": [
+          "validation/timeline_semantic_qa_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-glyph-match-type",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/145",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/145"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Source-listed sufficient compatible examples yield known advisory agreement; unmatched pairs remain unresolved, never invented closed-dictionary rejection. General semantic matching remains dictionary-dependent batch9.",
+      "code_or_tests": [
+        "validation/context_glyph_local.go"
+      ],
+      "test_routes": {
+        "TestContextLocalGlyphSemanticsAcrossTargets": [
+          "context_glyph_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-grace-time-semantics",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/174",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/174"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "selected donor/amount context satisfied; no continuous renderer required Chord/overlap/mixed-voice donor ambiguity remains evidence-specific. Redistribution/ordering/sum limits not selected by the bounded API or prescribed generally. No numeric duration synthesized for absent grace attributes.",
+      "code_or_tests": [
+        "validation/context_timing_projection.go",
+        "validation/context_timing_types.go"
+      ],
+      "test_routes": {
+        "TestGraceBoundedDonorsUseScoreOrderDespiteEarlierSerialization": [
+          "validation/timeline_origin_locality_test.go"
+        ],
+        "TestGraceDuplicateCanonicalMeasureDomainIsCausalNotContract": [
+          "validation/timeline_origin_locality_test.go"
+        ],
+        "TestGraceLaterUnavailableEvidencePreservesBoundedDonors": [
+          "validation/timeline_origin_locality_test.go"
+        ],
+        "TestGraceNeighborIdentityDoesNotClaimContinuousTime": [
+          "validation/timeline_grace_neighbors_test.go"
+        ],
+        "TestGraceNeighborsAmbiguityRetainsCausalEvidence": [
+          "validation/timeline_grace_neighbors_test.go"
+        ],
+        "TestGraceNeighborsCrossMeasureProvenPrevious": [
+          "validation/timeline_grace_neighbors_test.go"
+        ],
+        "TestGraceNeighborsGroupsExactAndNoStaffFilter": [
+          "validation/timeline_grace_neighbors_test.go"
+        ],
+        "TestGraceNeighborsLongGroupDefaultBudgetsAndAtomicFailure": [
+          "validation/timeline_grace_neighbors_test.go"
+        ],
+        "TestGraceNeighborsScratchReleasedAndOrdinaryFastPath": [
+          "validation/timeline_grace_neighbors_test.go"
+        ],
+        "TestGraceNeighborsSeparateExplicitVoicesAndCrossMeasureFollowing": [
+          "validation/timeline_grace_neighbors_test.go"
+        ],
+        "TestGracePotentialDeclarationGapsAggregateWithinCanonicalBlock": [
+          "validation/timeline_origin_locality_test.go"
+        ],
+        "TestGraceUnplacedMixedVoiceGapKeepsCanonicalMeasureScope": [
+          "validation/timeline_origin_locality_test.go"
+        ],
+        "TestIndependentTimelineGraceUsesLateSameOriginUnits": [
+          "validation/timeline_grace_units_independent_test.go"
+        ],
+        "TestNoteOriginsAbsentZeroInvalidAndUnitsRemainDistinct": [
+          "validation/timeline_note_origins_test.go"
+        ],
+        "TestNoteOriginsBendReleaseKeepsOriginalPercentBase": [
+          "validation/timeline_note_origins_test.go"
+        ],
+        "TestNoteOriginsExactIndependentAdjustmentsBothOrders": [
+          "validation/timeline_note_origins_test.go"
+        ],
+        "TestNoteOriginsGraceRetainsRawTimingWithoutInventedDuration": [
+          "validation/timeline_note_origins_test.go"
+        ],
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceGraceDonorAndFigures": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestTimelineAssociationFrameCandidatesAndFastPath": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineFigureChainDisplacedGapKeepsActualCause": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineFinalReviewLaterVoiceGapKeepsEarlierGraceDonors": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalReviewUnprovedCursorCannotCertifyCrossFrameFollowingNote": [
+          "validation/timeline_final_semantics_review_test.go"
+        ],
+        "TestTimelineFinalizersPublishGraceDonorsAfterCompleteMeasures": [
+          "validation/timeline_finalizers_audit_test.go"
+        ],
+        "TestTimelineGraceFloatingFallbackRetainsChordDonorBarrier": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineGraceFrameCompetitorAndSideLocality": [
+          "validation/timeline_association_frame_test.go"
+        ],
+        "TestTimelineRuntimePublishesNoteAndFiguredBassOrigins": [
+          "validation/timeline_sound_runtime_test.go"
+        ],
+        "TestTimelineUnavailableDisplacedAssociationKeepsPlacement": [
+          "validation/timeline_association_frame_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-harmony-none",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/25",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/25"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "kind none yields inactive; major/other active",
+      "code_or_tests": [
+        "validation/context_local_structural.go"
+      ],
+      "test_routes": {
+        "TestLocalContextRecordSpecificStructuralMatrix": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalContextSemanticRelationsAndOpenDomainsBothTargets": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalStructuralUnavailableScalarMatrix": [
+          "validation/context_local_evidence_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-harmony-none-hide-root",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/26",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/26"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "2765b2d/cbaa46f implement source-resolved numeral-root empty-text advice within each stacked harmony chord, retain function-branch association limits and independent causal evidence; advice never rejects the document.",
+      "code_or_tests": [
+        "validation/context_local_advisory.go"
+      ],
+      "test_routes": {
+        "TestContextRound3HarmonyAdvisoryParentEvidence": [
+          "validation/context_round3_causal_test.go"
+        ],
+        "TestLocalAdvisoryFalseConditionsAndNumericDomains": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalHarmonyNoneInvalidKindIsIndependentlyCausal": [
+          "context_local_harmony_none_scope_test.go"
+        ],
+        "TestLocalHarmonyNoneNumeralAdviceAndChordScope": [
+          "context_local_harmony_none_scope_test.go"
+        ],
+        "TestLocalHarmonyNoneStackedParentCompletenessRemainsPrerequisite": [
+          "validation/context_local_harmony_scope_test.go"
+        ],
+        "TestLocalHarmonyNoneUnavailableDeclarationDoesNotReusePriorChord": [
+          "validation/context_local_harmony_scope_test.go"
+        ],
+        "TestLocalRound1SkippedRootDoesNotReusePriorHarmony": [
+          "validation/context_local_round1_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-listen-distinct-targets",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/179",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/179"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact duplicate advice implemented; application choices remain separate Exact duplicate or overlap advice is not a mandatory distinctness failure. Broad nonidentical set-overlap policy and simultaneous application precedence are not specified.",
+      "code_or_tests": [
+        "validation/context_navigation_note_listen.go"
+      ],
+      "test_routes": {
+        "TestRepeatAdaptersListeningDistinctAndAssessment": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPlayerReferenceScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-listening-distinct-targets",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/117",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/117"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact duplicate advice implemented; application choices remain separate Exact duplicate or overlap advice is not a mandatory distinctness failure. Broad nonidentical set-overlap policy and simultaneous application precedence are not specified.",
+      "code_or_tests": [
+        "validation/context_navigation_listening.go"
+      ],
+      "test_routes": {
+        "TestContextNavigationSimultaneousListeningNoLastWins": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestRepeatAdaptersListeningDistinctAndAssessment": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersListeningOffsetAndPassState": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPlayerReferenceScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-lyric-font-target",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/273",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/273"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Exact selector conjunction and component-wise publisher consensus are implemented. No source establishes specificity or document-order priority for conflicting publishers. Installed font/rendered geometry is not a mandatory additional validator.",
+      "code_or_tests": [
+        "internal/xsdgen/catalog.go",
+        "internal/xsdgen/index.go",
+        "internal/xsdgen/load.go",
+        "validation/context_layout_format.go",
+        "validation/context_layout_semantics.go",
+        "validation/context_layout_state.go"
+      ],
+      "test_routes": {
+        "TestLayoutComponentConsensusFiveAxes": [
+          "validation/context_layout_semantics_test.go"
+        ],
+        "TestLayoutLyricPublishersFiveAxes": [
+          "context_layout_assessment_test.go"
+        ],
+        "TestLayoutMatrixLyricSelectorComponents": [
+          "context_layout_matrix_assessment_test.go"
+        ],
+        "TestLayoutSelectorExactPartialAndUnknown": [
+          "validation/context_layout_semantics_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-lyric-language-target",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/274",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/274"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Exact name/number selectors, wildcard omitted dimensions, per-component consensus and local text xml:lang (including empty clearing) are implemented. No valid lyric ancestor can carry xml:lang in the six fixed schemas; the earlier valid-tree ancestor/default conflict was unreachable. Conflicting matching publisher precedence remains a genuine unsupplied source policy.",
+      "code_or_tests": [
+        "internal/xsdgen/catalog.go",
+        "internal/xsdgen/index.go",
+        "internal/xsdgen/load.go",
+        "validation/context_layout_format.go",
+        "validation/context_layout_semantics.go",
+        "validation/context_layout_state.go"
+      ],
+      "test_routes": {
+        "TestLayoutComponentConsensusFiveAxes": [
+          "validation/context_layout_semantics_test.go"
+        ],
+        "TestLayoutLyricPublishersFiveAxes": [
+          "context_layout_assessment_test.go"
+        ],
+        "TestLayoutMatrixEmptyLanguageClears": [
+          "context_layout_matrix_assessment_test.go"
+        ],
+        "TestLayoutMatrixLyricSelectorComponents": [
+          "context_layout_matrix_assessment_test.go"
+        ],
+        "TestLayoutSelectorExactPartialAndUnknown": [
+          "validation/context_layout_semantics_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-lyric-literal-hyphen",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/197",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/197"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "literal hyphen recommends true hyphenated words only; unhyphenated text inactive; word correctness remains external dictionary/intent Recommendation text and independent causal applicability are publicly observable; no mandatory Finding introduced. {\"dependency\": \"word-language lexicon/authored hyphenation intent\", \"owner\": \"external dictionary/author\", \"closure\": \"Provide bounded language dictionary or authored intent; literal-string observation remains implemented.\"}",
+      "code_or_tests": [
+        "validation/context_local_advisory.go"
+      ],
+      "test_routes": {
+        "TestLocalAdviceUnavailableFactStream": [
+          "validation/context_local_evidence_test.go"
+        ],
+        "TestLocalAdvisoryFalseConditionsAndNumericDomains": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting": [
+          "context_local_assessment_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-measure-identity",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/62",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/62"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "equal labels recommended only for aligned partwise measures; alignment Unknown locally, timewise shared measure inactive; repeated/nonnumeric labels permitted Recommendation text and independent causal applicability are publicly observable; no mandatory Finding introduced. {\"dependency\": \"proof that partwise measures align musically\", \"owner\": \"accepted timeline/consumer\", \"closure\": \"Local guidance retains applicability Unknown; do not equate ordinal with aligned musical position.\"}",
+      "code_or_tests": [
+        "validation/context_local_advisory.go"
+      ],
+      "test_routes": {
+        "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting": [
+          "context_local_assessment_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-measure-repeat-state",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/289",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/289"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact local contracts satisfied; content comparison is separate predicate Do not attach universal tied/grace/transposed musical equivalence as a completion dependency of these local state IDs. Those questions belong to two separate content predicates.",
+      "code_or_tests": [
+        "validation/context_repeat_content.go",
+        "validation/context_repeat_ordered.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestIndependentContextRepeatNumberedStaffContent": [
+          "context_independent_repeat_content_test.go"
+        ],
+        "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersMeasureContentAndStopBoundary": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatOrderedAdaptersPreserveFallback": [
+          "validation/context_repeat_ordered_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-measure-repeat-stop",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/89",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/89"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "half-open ranges and complete part-end continuation accepted No required endpoint balancing. Incomplete closure and ambiguous overlaps remain local evidence, not additional hard failures.",
+      "code_or_tests": [
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersMeasureContentAndStopBoundary": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-measure-style-all-staves",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/265",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/265"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact symbolic scope and known voice exclusions implemented Unencoded identity or ambiguous overlapping transition not a new scope default. No other-part leakage or part-wide cancellation.",
+      "code_or_tests": [
+        "validation/context_repeat_content.go",
+        "validation/context_repeat_content_roster.go",
+        "validation/context_repeat_scope.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestIndependentContextRepeatContentScopeCauseOrder": [
+          "validation/context_repeat_content_order_independent_test.go"
+        ],
+        "TestIndependentContextRepeatNumberedStaffContent": [
+          "context_independent_repeat_content_test.go"
+        ],
+        "TestIndependentContextRepeatRosterPreservesCoverageCause": [
+          "validation/context_repeat_roster_coverage_independent_test.go"
+        ],
+        "TestRepeatAdaptersDefaultsWithoutNavigation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersSlashVoiceAndStopScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-normal-dots-reference",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/232",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/232"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Explicit normal-type plus zero/many normal-dot has exact known count. Omitted whole normal group on a dotted current note has an unresolved effective-dot fallback; raw zero encoded normal-dot count does not choose semantic inheritance or zero.",
+      "code_or_tests": [
+        "validation/context_spans_bindings.go",
+        "validation/context_spans_local.go",
+        "validation/context_spans_runtime.go"
+      ],
+      "test_routes": {
+        "TestContextSpanEndpointAvailabilityByFamily": [
+          "validation/context_spans_semantics_test.go"
+        ],
+        "TestContextSpanNestedTupletOverrideAndNonLIFOClose": [
+          "context_spans_integration_test.go"
+        ],
+        "TestContextSpanTupletFallbackIndependentFields": [
+          "validation/context_spans_semantics_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-notehead-fill-default",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/188",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/188"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "CHECK-context-notehead-fill-default {\"dependency\": \"custom-shape-enclosed-geometry\", \"owner\": \"batch7/9 glyph interpretation\", \"closure\": \"Approve geometry for custom/shape-note families; common enclosed/open subset and explicit filled remain available.\"}",
+      "code_or_tests": [
+        "context_local_assessment_test.go",
+        "validation/context_local_semantics_test.go"
+      ],
+      "test_routes": {
+        "TestLocalContextPrintingAcrossTargetsAndHierarchies": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalContextUnknownDoesNotBecomeDefault": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalDefaultsPreserveCausalEvidence": [
+          "validation/context_local_semantics_test.go"
+        ],
+        "TestLocalLyricPrintOverride": [
+          "validation/context_local_semantics_test.go"
+        ],
+        "TestLocalNoteTypeSizeMatrix": [
+          "validation/context_local_semantics_test.go"
+        ],
+        "TestLocalPrintingDefaultsAndOverrides": [
+          "validation/context_local_semantics_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-octave-change-interval",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/224",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/224"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Bounded existing implementation and exact original audit owner remain; no new whole-domain acceptance is claimed by this reconciliation.",
+      "code_or_tests": [
+        "validation/context_performance_advisory.go",
+        "validation/context_performance_local_state.go",
+        "validation/context_performance_pitch.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceInvalidLocalContextMatrix": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceLocalStateDefaultsWithoutTimelineUnits": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceSourceModelDefaultsTiming": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceStaffScopesOrderAndOpenLabels": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestTimelineSemanticQANumeralMusicalOrderAndScopes": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineStateClosureAbsenceAndCountDefaults": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateDocumentedDefaultsRequireKnownAbsence": [
+          "validation/timeline_staff_test.go"
+        ],
+        "TestTimelineStateExtractTypedAttributesAtKnownPosition": [
+          "validation/timeline_state_extract_test.go"
+        ],
+        "TestTimelineStateInvalidMaskGapAndRecovery": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateSamePositionMergeConflictAndProjection": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateScoreOrderAndOverlappingScopes": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateTransposeContributions": [
+          "validation/timeline_state_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-principal-voice-symbol",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/128",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/128"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Encoded principal-voice symbol and independent plain-stop recommendation remain observable. Whether content is analysis-only is not recoverable from encoded symbol alone; this remains unavailable context, not a mandatory external-intent API or a document conformance failure.",
+      "code_or_tests": [
+        "validation/context_local_advisory.go"
+      ],
+      "test_routes": {
+        "TestLocalAdvisoryFalseConditionsAndNumericDomains": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalAdvisoryInvalidInputsRemainCausal": [
+          "context_local_assessment_test.go"
+        ],
+        "TestLocalAdvisoryRecommendationsAreObservableAndNonrejecting": [
+          "context_local_assessment_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-repeat-backward-attributes",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/99",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/99"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact applicability projection implemented; bounded traversal distinct Absent times/after-jump defaults are not supplied; zero-times realization and ending-associated traversal remain unavailable. They do not justify schema prohibition of inactive attributes.",
+      "code_or_tests": [
+        "validation/context_navigation.go"
+      ],
+      "test_routes": {
+        "TestContextNavigationBackwardApplicabilityIndependent": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationExplicitRepeatAndNestedFrames": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestRepeatAdaptersExplicitTraversal": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersUnknownCountAndForwardApplicability": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-segno-sound",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/75",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/75"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "same-direction labelled association implemented; no cross-direction proximity algorithm required No encoded arbitrary cross-direction graphic-to-sound identity; lack of sound is not a universal mandatory document defect. Issue 322 rejects making sound mandatory for compatibility.",
+      "code_or_tests": [
+        "validation/context_navigation.go",
+        "validation/context_navigation_graphic.go"
+      ],
+      "test_routes": {
+        "TestContextNavigationNamedTargetAndSectionDomain": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestRepeatAdaptersGraphicPlaybackAdvice": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-slash-beat-default",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/222",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/222"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "explicit/simple uniform beats accepted; irregular grouping is absent-authority boundary Issue 321 discussed 6/8 pulse but deferred generalized grouping out of 4.0; issue 545 confirms irregular grouping gap. No automatic universal compound/additive/alternating table, quarter default, or cross-staff common beat.",
+      "code_or_tests": [
+        "assessment.go",
+        "dictionary_import.go",
+        "model_walker.go",
+        "resource_body.go",
+        "resource_graph.go",
+        "source_observer.go",
+        "validation/context_repeats.go",
+        "xml_source_cursor.go",
+        "xml_source_dtd_store.go"
+      ],
+      "test_routes": {
+        "TestContextRepeatMeterRosterOrderIdentityAndReuse": [
+          "validation/context_repeat_meter_roster_test.go"
+        ],
+        "TestContextRepeatUniformMeterChronologyAndMissingClass": [
+          "validation/context_repeat_meter_test.go"
+        ],
+        "TestContextRepeatUniformMeterCollectsLaterCausalGap": [
+          "validation/context_repeat_meter_test.go"
+        ],
+        "TestContextRepeatUniformMeterFieldLocalCauses": [
+          "validation/context_repeat_meter_test.go"
+        ],
+        "TestContextRepeatUniformMeterSparseHugeDomain": [
+          "validation/context_repeat_meter_test.go"
+        ],
+        "TestContextRepeatUniformMeterUnknownSelectorRepair": [
+          "validation/context_repeat_meter_test.go"
+        ],
+        "TestContextRepeatUniformMeterZeroStaffDomain": [
+          "validation/context_repeat_meter_test.go"
+        ],
+        "TestIndependentContextRepeatUniformNumberedMeter": [
+          "context_independent_repeat_meter_test.go"
+        ],
+        "TestRepeatAdaptersDefaultsWithoutNavigation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersMeterLateInvalidSelector": [
+          "validation/context_repeat_meter_adapters_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersSlashBeatDefaultAndMissingMeter": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-slash-start-stop",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/268",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/268"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "half-open ranges and complete part-end continuation accepted No required endpoint balancing. Incomplete closure and ambiguous overlaps remain local evidence, not additional hard failures.",
+      "code_or_tests": [
+        "validation/context_repeat_scope.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestContextRepeatHalfOpenRanges": [
+          "validation/context_repeat_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersSlashVoiceAndStopScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-slash-stop-boundary",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/292",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/292"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact unambiguous boundary implemented Equal-time overlapping all-staff/numbered precedence lacks universal winner. No arbitrary stack/LIFO or specificity ordering.",
+      "code_or_tests": [
+        "validation/context_repeat_scope.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestContextRepeatHalfOpenRanges": [
+          "validation/context_repeat_test.go"
+        ],
+        "TestRepeatAdaptersNumberedStaffScopeAndMissingStaff": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersSlashVoiceAndStopScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-slash-use-dots",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/92",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/92"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact local contract satisfied No missing algorithm identified for this local ID; inactive dots are not illegal.",
+      "code_or_tests": [
+        "validation/context_repeat_types.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestContextRepeatDefaultsAndInactiveDots": [
+          "validation/context_repeat_test.go"
+        ],
+        "TestRepeatAdaptersDefaultsWithoutNavigation": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-sound-fine-duration",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/133",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/133"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "yes/raw projection implemented; genuine local context gate retained Numeric unit/endpoint association and termination guard are not fully specified by reviewed 4.0 text. Retain local gate; no guessed divisions, universal post-jump-only activation, cross-part equality, or invalid-token predicate.",
+      "code_or_tests": [
+        "validation/context_navigation.go",
+        "validation/context_navigation_machine.go"
+      ],
+      "test_routes": {
+        "TestRepeatAdaptersEmptyEndingAndFine": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-sound-jump-passes",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/132",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/132"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "local guards/targets implemented; broader traversal not exact-ID obligation Nested/jump/ending pass domains, simultaneous transfer order and state reentry remain bounded. Issue 322 gives particular ending-after-jump examples, not a total state machine. Missing/duplicate targets retain unresolved evidence, not a guessed nearest target.",
+      "code_or_tests": [
+        "validation/context_navigation.go",
+        "validation/context_navigation_machine.go",
+        "validation/context_navigation_prefix.go",
+        "validation/context_navigation_raw.go"
+      ],
+      "test_routes": {
+        "TestContextNavigationBackwardReentryStateIsNotInferred": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationExplicitRepeatAndNestedFrames": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationHugeRepeatBudgetAndCancellation": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationJumpPassDefaults": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationLocalSoundWithoutTimeline": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationNamedTargetAndSectionDomain": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationUnknownCountKeepsPrefix": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestRepeatAdaptersLaterAmbiguityPreservesPrefix": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersMultipleSoundDirectivesRetainRaw": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersNamedJumpTargetsAndDefaults": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-swing-applicability",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/139",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/139"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "selected eligibility projection satisfied; realization is distinct scope No complete timing/player API selected. Actual ratio transform requires independently established pair/phase/pass and cannot be claimed by eligibility. Full realized intervals are not a newly implied validator predicate.",
+      "code_or_tests": [
+        "validation/context_performance_math.go",
+        "validation/context_performance_swing.go"
+      ],
+      "test_routes": {
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceMissingCapoAndUnknownUnits": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceSwingAndCueAcrossTargets": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceSwingFalseAntecedentDominatesUnknown": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSwingNominalEligibility": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestTimelineCursorExactNormalizedMovement": [
+          "validation/timeline_cursor_test.go"
+        ],
+        "TestTimelineRuntimeBoundaryGapPreservesProvenPrefix": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineRuntimeExactMeasureAndInheritance": [
+          "validation/timeline_runtime_test.go"
+        ],
+        "TestTimelineSemanticQAHierarchyParityAndPartIsolation": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARegionLocalChangedDivisionsRewind": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice": [
+          "validation/timeline_semantic_qa_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-symbol-semantic-markup",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/109",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/109"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Retain raw canonical-name subject and unavailable specialized-markup advice; choosing generic symbol does not become invalid. Canonical naming and specialized-symbol lookup require shared external dictionary in9.",
+      "code_or_tests": [
+        "validation/context_glyph_local.go"
+      ],
+      "test_routes": {
+        "TestContextLocalGlyphSemanticsAcrossTargets": [
+          "context_glyph_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-sync-default",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/140",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/140"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact absence/raw/continuing context implemented No invented initial sync or simultaneous last-wins. Reentry state needs separately established traversal.",
+      "code_or_tests": [
+        "validation/context_navigation_listening.go"
+      ],
+      "test_routes": {
+        "TestContextNavigationFalseGuardDoesNotApplyInvalidUpdate": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestContextNavigationSimultaneousListeningNoLastWins": [
+          "validation/context_navigation_test.go"
+        ],
+        "TestRepeatAdaptersListeningOffsetAndPassState": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPlayerReferenceScope": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-transposition-additive",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/306",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/306"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "Bounded existing implementation and exact original audit owner remain; no new whole-domain acceptance is claimed by this reconciliation.",
+      "code_or_tests": [
+        "validation/context_performance_advisory.go",
+        "validation/context_performance_local_state.go",
+        "validation/context_performance_pitch.go",
+        "validation/context_timing_projection.go"
+      ],
+      "test_routes": {
+        "TestPerformanceEveryDefaultEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceInvalidLocalContextMatrix": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceLocalStateDefaultsWithoutTimelineUnits": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceMissingUnitsPreserveLocalDefaults": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformancePayloadOwnershipAndBudget": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceSoundInvalidAndNoInitialState": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceSourceModelDefaultsTiming": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceStaffScopesOrderAndOpenLabels": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceTimelineProjectionEvidenceAxes": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestPerformanceTwoPartIsolationAndSparseStaff": [
+          "context_performance_integration_test.go"
+        ],
+        "TestPerformanceUnknownRemainsCausal": [
+          "validation/context_performance_math_test.go"
+        ],
+        "TestTimelineSemanticQANumeralMusicalOrderAndScopes": [
+          "timeline_semantic_qa_test.go"
+        ],
+        "TestTimelineStateClosureAbsenceAndCountDefaults": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateDocumentedDefaultsRequireKnownAbsence": [
+          "validation/timeline_staff_test.go"
+        ],
+        "TestTimelineStateExtractTypedAttributesAtKnownPosition": [
+          "validation/timeline_state_extract_test.go"
+        ],
+        "TestTimelineStateInvalidMaskGapAndRecovery": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateSamePositionMergeConflictAndProjection": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateScoreOrderAndOverlappingScopes": [
+          "validation/timeline_state_test.go"
+        ],
+        "TestTimelineStateTransposeContributions": [
+          "validation/timeline_state_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-tuplet-normal-fallback",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/207",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/207"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Each explicit display-normal field and independent fallback is implemented; ratio/display values are not independent intended normal-type authority. Omitted whole group on a dotted current note retains only the exact unresolved effective-dot question.",
+      "code_or_tests": [
+        "validation/context_spans_bindings.go",
+        "validation/context_spans_local.go",
+        "validation/context_spans_runtime.go"
+      ],
+      "test_routes": {
+        "TestContextSpanEndpointAvailabilityByFamily": [
+          "validation/context_spans_semantics_test.go"
+        ],
+        "TestContextSpanNestedTupletOverrideAndNonLIFOClose": [
+          "context_spans_integration_test.go"
+        ],
+        "TestContextSpanTupletFallbackIndependentFields": [
+          "validation/context_spans_semantics_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-context-unknown-ending-number",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/23",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/23"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "exact local contract satisfied Executable ending-pass selection belongs to a separate navigation extension, not a dependency of this exact local ID. Do not infer number from printed text or count from maximum ending.",
+      "code_or_tests": [
+        "validation/context_navigation.go"
+      ],
+      "test_routes": {
+        "TestRepeatAdaptersEmptyEndingAndFine": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersInactiveAttributesAndInvalidDefaults": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersPartIsolation": [
+          "validation/context_repeat_adapters_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-figure-number-numeric",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/280",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/280"
+      ],
+      "classification": "source_proven_out_of_scope_mistaken_overgeneralization",
+      "disposition": "4696526 removes the invented built-in numeric-subset conformance restriction. Released style-text is deliberately unrestricted; no total numeric notation grammar is missing. The original ID/tests remain, and the public constructor survives deprecated for explicit custom catalogs only.",
+      "code_or_tests": [
+        "context_catalog.go",
+        "validation/context_figure_number.go",
+        "validation/context_plan.go"
+      ],
+      "test_routes": {
+        "TestContextFigureNumberAbsentDoesNotCreateGrammarObligation": [
+          "context_assessment_test.go"
+        ],
+        "TestContextFigureNumberRequiresExactDeclaration": [
+          "validation/context_core_test.go"
+        ],
+        "TestContextFigureNumberRetainsUnreviewedGrammarGate": [
+          "context_assessment_test.go"
+        ],
+        "TestFigureNumberUnrestrictedTextConformance": [
+          "figure_number_conformance_test.go"
+        ],
+        "TestFigureNumberUnrestrictedTextPreservesSourceDeclaration": [
+          "figure_number_conformance_test.go"
+        ],
+        "TestFigureNumberUnrestrictedTextPreservesXSDConstraints": [
+          "figure_number_conformance_test.go"
+        ],
+        "TestFigureNumberUnrestrictedTextStrictDecode": [
+          "figure_number_conformance_test.go"
+        ],
+        "TestLocalRound1FigureNumberSufficientNumericSubset": [
+          "validation/context_local_round1_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-ipa-2015-unicode13",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/15",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/15"
+      ],
+      "classification": "implemented_tested_selected_contract",
+      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies 295 symbol atoms and 158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy 197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
+      "code_or_tests": [
+        "validation/dictionary_ipa_representation.go",
+        "validation/dictionary_ipa_representation_policy.go",
+        "validation/dictionary_ipa.go",
+        "dictionary_import_ipa.go",
+        "dictionary_import.go"
+      ],
+      "test_routes": {
+        "TestIPARepresentationAffirmativeWholeWitness": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationUnknownIsNotNegativeComplement": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationExactPinsMutationAndFifthSelection": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationNormalizationPreservesStableOrderAndRawIntervals": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationConstructorMalformationsReleaseStorage": [
+          "validation/dictionary_ipa_representation_test.go"
+        ],
+        "TestIPARepresentationCompiledPolicyMatchesPinnedData": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationFiniteConcatenationOracle": [
+          "validation/dictionary_ipa_representation_policy_test.go"
+        ],
+        "TestIPARepresentationRuntimeExactWorkStorageAndCancellation": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestIPARepresentationIndexLeaseSurvivesOwnerClose": [
+          "validation/dictionary_ipa_representation_resource_test.go"
+        ],
+        "TestDictionaryIPARepresentationFiveSelections": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedResponseIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCallbackErrorsRemainUnavailable": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMissingSourceAndExplicitGap": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDecoderLengthIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTransportGapKeepsUsableSet": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedImportStopsLaterProviders": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCertifiedComponent": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationDigestMismatchIsConfiguration": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationMalformedCertifiedRecords": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationAllFiveCertifiedImports": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationTerminalImportFailures": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationLengthMismatchPreservesCloseCancellation": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestDictionaryIPARepresentationCloseCancellationStopsDocumentReads": [
+          "dictionary_ipa_representation_import_test.go"
+        ],
+        "TestIPARepresentationSelectedConsumerWholeInput": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationSelectionAndMissingCapability": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationUnavailableScalarDoesNotFabricateEmptySpan": [
+          "dictionary_ipa_representation_consumers_test.go"
+        ],
+        "TestIPARepresentationPublicSourceModelAndAssessedReader": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "dictionary_ipa_representation_pipeline_test.go"
+        ],
+        "TestIPARepresentationExactCatalogMigrationAndRuleRevision": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestIPARepresentationLegacyManifestIdentityUntouched": [
+          "dictionary_ipa_representation_migration_test.go"
+        ],
+        "TestSemanticIPARepresentationPublicSourceModelAndAssessedReader": [
+          "semantic_ipa_integration_test.go"
+        ],
+        "TestSemanticIPARepresentationGraphAliasesAndMXLUseSameWitness": [
+          "semantic_ipa_integration_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-measure-repeat-content",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/20",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/20"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "cfdc5f6/0643a41/cf2c918 integrate the same independent singleton counterexample for measure repeats. Earlier normalized equality, multiset fallback and narrow empty-target negatives remain. The exact explicit scope/transformation prerequisites cannot be replaced with name heuristics or natural-transpose defaults. General musical equivalence is still not claimed. The current whole-part domain excludes key/time/clef, direction/print/barline and all note attributes, and requires one explicit staff-qualified transpose.",
+      "code_or_tests": [
+        "validation/context_repeat_consumer.go",
+        "validation/context_repeat_content.go",
+        "validation/context_repeat_measure_roster.go",
+        "validation/context_repeat_onsets.go",
+        "validation/context_repeat_ordered.go",
+        "validation/context_repeat_singleton.go",
+        "validation/context_repeats.go"
+      ],
+      "test_routes": {
+        "TestContextRepeatEmptyTargetOnsetProof": [
+          "context_repeat_empty_onset_test.go"
+        ],
+        "TestContextRepeatEmptyTargetOnsetProofBoundaries": [
+          "context_repeat_empty_onset_test.go"
+        ],
+        "TestContextRepeatEmptyTargetOnsetProofPatternAndStop": [
+          "context_repeat_empty_onset_test.go"
+        ],
+        "TestContextRepeatOrderedProofBoundary": [
+          "validation/context_repeat_ordered_test.go"
+        ],
+        "TestContextRepeatOrderedProofFallback": [
+          "validation/context_repeat_ordered_test.go"
+        ],
+        "TestIndependentContextRepeatContentScopeCauseOrder": [
+          "validation/context_repeat_content_order_independent_test.go"
+        ],
+        "TestIndependentContextRepeatNumberedStaffContent": [
+          "context_independent_repeat_content_test.go"
+        ],
+        "TestIndependentContextRepeatRosterPreservesCoverageCause": [
+          "validation/context_repeat_roster_coverage_independent_test.go"
+        ],
+        "TestIndependentSingletonRepeatResourceBoundary": [
+          "validation/context_repeat_singleton_resources_test.go"
+        ],
+        "TestRepeatAdaptersEmptyTargetRequiresSoundCoverage": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatAdaptersMeasureContentAndStopBoundary": [
+          "validation/context_repeat_adapters_test.go"
+        ],
+        "TestRepeatOrderedAdaptersPreserveFallback": [
+          "validation/context_repeat_ordered_adapters_test.go"
+        ]
+      },
+      "evidence": [
+        "docs/validation/evidence/graphical-repeat-singleton-counterexample.md"
+      ]
+    },
+    {
+      "id": "CHECK-normal-type-when-different",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/282",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/282"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "An omitted normal-type does not prove an independently intended difference. Exact encoded/default/display facts remain implemented without an external intent service; dotted omitted-group effective dots retain the separately documented ambiguity.",
+      "code_or_tests": [
+        "validation/context_spans_local.go",
+        "validation/context_spans_relations.go"
+      ],
+      "test_routes": {
+        "TestContextSpanNestedTupletOverrideAndNonLIFOClose": [
+          "context_spans_integration_test.go"
+        ],
+        "TestContextSpanTupletFallbackIndependentFields": [
+          "validation/context_spans_semantics_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-part-group-boundaries",
+      "original": [
+        "docs/validation/plan/context-dispositions.json#/checks/283",
+        "docs/validation/plan/context-dispositions.json#/test_contracts/283"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "accepted interval provider; no new general validator rule Independent intended membership absent; no encoded second membership list. Missing/conflicting endpoints stay unavailable; empty group rejection and balance are not established by the exact source. No automatic new intent API.",
+      "code_or_tests": [
+        "validation/context_spans_bindings.go",
+        "validation/context_spans_relations.go",
+        "validation/context_spans_runtime.go"
+      ],
+      "test_routes": {
+        "TestContextPartGroupOverlapsWithoutTimeline": [
+          "context_spans_integration_test.go"
+        ],
+        "TestContextSpanEndpointAvailabilityByFamily": [
+          "validation/context_spans_semantics_test.go"
+        ],
+        "TestContextSpanMissingEnumerationBothAdapters": [
+          "context_spans_integration_test.go"
+        ],
+        "TestContextSpanPartGroupEmptyReuseAndMissingBoundary": [
+          "context_spans_integration_test.go"
+        ],
+        "TestContextSpanPartGroupReverseIsUnresolved": [
+          "context_spans_integration_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-pitch-alter-explicit",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/48",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/48"
+      ],
+      "classification": "source_proven_out_of_scope_mistaken_overgeneralization",
+      "disposition": "The desired-score/author-intent comparison is outside document-only completion. ba3ccaa explicitly reverted the experimental provider; 38ddfc1 records the scope. Encoded pitch, optional natural alteration and exact current values remain validated; no missing mandatory external-intent API is inferred.",
+      "code_or_tests": [
+        "validation/context_performance_pitch.go"
+      ],
+      "test_routes": {}
+    },
+    {
+      "id": "CHECK-time-only-ascending",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/8",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/8"
+      ],
+      "classification": "honest_selected_capability_limit",
+      "disposition": "Exact arbitrary-width descent fails and strictly increasing/singleton sequences pass independently of playback. Equal adjacent values remain the specifically unresolved strict-versus-nondecreasing clause. The complete primary/history/example pass did not establish uniqueness; no fabricated hard error or repeated-playback grammar follows.",
+      "code_or_tests": [
+        "validation/context_plan.go",
+        "validation/context_time_only.go"
+      ],
+      "test_routes": {
+        "TestContextProfilesTimeOnlyAcrossTargetsAndHierarchies": [
+          "context_assessment_test.go"
+        ],
+        "TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode": [
+          "context_assessment_test.go"
+        ]
+      }
+    },
+    {
+      "id": "CHECK-written-transposition",
+      "original": [
+        "docs/validation/plan/prose-contracts.json#/checks/16",
+        "docs/validation/plan/prose-contracts.json#/test_contracts/16"
+      ],
+      "classification": "source_proven_out_of_scope_mistaken_overgeneralization",
+      "disposition": "The independently desired written/concert-pitch comparison is outside document-only completion. Encoded transpose structure, exact intervals, staff scope and effective state remain implemented. Names, keys and graphical accidentals are not authority for missing intended intervals.",
+      "code_or_tests": [
+        "validation/context_performance_pitch.go"
+      ],
+      "test_routes": {}
+    }
+  ],
+  "test_route_scope": "Named functions in this source tree, including subsequent integration-only tests; implementation_head pins the preceding runtime checkpoint, not self-referential metadata."
+}

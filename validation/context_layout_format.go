@@ -198,17 +198,10 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 	ref := NodeRef{r.s.documentID, n.header.ID}
 	previous := (*factNode)(nil)
 	if isDirection || isCredit {
+		// The direction carry rule applies to successive children of one
+		// direction-type. Visual sequencing of wrappers does not broaden
+		// their individual print-suggestion scope.
 		previous = f.previous[parent.header.ID]
-	}
-	crossWrapper := false
-	if isDirection && previous == nil {
-		direction := r.s.nodes[parent.header.Parent]
-		if direction != nil && r.matches(direction, layoutRole("direction")) {
-			if old := f.previous[direction.header.ID]; old != nil && old.header.Parent != parent.header.ID {
-				crossWrapper = true
-				previous = old
-			}
-		}
 	}
 	lyric := (*factNode)(nil)
 	for a := parent; a != nil; a = r.s.nodes[a.header.Parent] {
@@ -250,9 +243,6 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 				inherited := (*prior)[i]
 				if inherited.Value.State != EvidenceAbsent {
 					value = inherited
-					if crossWrapper {
-						value.Value = stateUnknown[Atomic]("direction-cross-wrapper-format-precedence")
-					}
 				}
 			}
 		}
@@ -392,9 +382,6 @@ func (f *layoutFormatting) resolve(n *factNode) error {
 	f.formats[n.header.ID] = style
 	if isDirection || isCredit {
 		f.previous[parent.header.ID] = n
-	}
-	if isDirection {
-		f.previous[parent.header.Parent] = n
 	}
 	return r.err
 }

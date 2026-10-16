@@ -23,6 +23,10 @@ const (
 // rootfiles inventory is complete. Non-rootfile attributes and Ordinal are absent.
 // FullPathRaw and MediaTypeRaw retain original XML-normalized lexemes. FullPath
 // and MediaType are assessed xs:token values, including whitespace collapse.
+// With NewSourceContainerMetadataContextPlan, Raw is physical source evidence:
+// DTD-defaulted and entity-generated attributes are absent, and unretained
+// general-entity replacement spellings are unknown. The effective token fields
+// still include admitted DTD-supplied values.
 // Omitted optional media-type is absent, distinct from known empty; no MIME
 // default or classification is applied. Omitted required full-path is invalid
 // effective evidence, with its XSD prerequisite cause, while its raw is absent.
@@ -111,6 +115,14 @@ func containerRawAttribute(r *contextReader, n *factNode, role contextRole) Evid
 	}
 	presence, fact, err := r.s.attributeEvidence(r.ctx, n, a)
 	r.err = err
+	if r.err != nil {
+		return Evidence[string]{}
+	}
+	if r.sourceInfoset {
+		_, raw, err := r.s.sourcePhysicalAttribute(r.ctx, n, fact, presence)
+		r.err = err
+		return raw
+	}
 	if presence.State == EvidenceAbsent || presence.State == EvidenceKnown && !presence.Value {
 		return Evidence[string]{State: EvidenceAbsent}
 	}
@@ -127,7 +139,7 @@ func evaluateContextContainerMetadata(ctx context.Context, s *Session, _ *factNo
 	if !final {
 		return Decision{}, true, nil
 	}
-	r := &contextReader{ctx: ctx, s: s, b: p.Bindings}
+	r := &contextReader{ctx: ctx, s: s, b: p.Bindings, sourceInfoset: p.sourceInfoset}
 	root := s.root
 	if !r.matches(root, containerRoot) {
 		return Decision{Outcome: OutcomePass}, false, r.err

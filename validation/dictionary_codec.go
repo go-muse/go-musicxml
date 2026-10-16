@@ -70,6 +70,11 @@ func dictionaryDataDigest(ctx context.Context, a *Account, e *dictionaryEntry) (
 	for _, s := range []string{string(m.Kind), m.Edition, m.ComponentName, m.TransformRevision, m.PolicyRevision} {
 		w.text(s)
 	}
+	// The additive representation format seals its minimal compiled policy with
+	// its typed rows. Every earlier manifest retains its original encoding.
+	if m.ID == DictionaryManifestIPARepresentation2015Unicode13 {
+		w.text(ipaRepresentationPolicySHA256)
+	}
 	w.count(uint32(m.Rows))
 	switch m.ID {
 	case DictionaryManifestSMuFL14Canonical:
@@ -104,7 +109,7 @@ func dictionaryDataDigest(ctx context.Context, a *Account, e *dictionaryEntry) (
 				break
 			}
 		}
-	case DictionaryManifestIPAPositive2015Unicode13:
+	case DictionaryManifestIPAPositive2015Unicode13, DictionaryManifestIPARepresentation2015Unicode13:
 		for _, r := range e.ipa.Equivalences {
 			w.row("canonical-equivalence", r.Encoding, r.EquivalentToEncoding, r.RowID)
 			if w.err != nil {
