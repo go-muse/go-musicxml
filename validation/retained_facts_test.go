@@ -753,15 +753,54 @@ func TestRetainedFactSchemaCacheRejectsForeignAndZeroIdentity(t *testing.T) {
 }
 
 func TestRetainedFactSchemaCacheGrowthRefusesOverflow(t *testing.T) {
-	// Exercise the same checked capacity-byte arithmetic used before map hints.
-	// On64-bit hosts multiplication refuses; on386 the native allocation guard
-	// refuses the representable int64 product before conversion to int.
-	maxInt := int(^uint(0) >> 1)
-	bytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(maxInt), retainedSchemaTypeSlotBytes)
-	if err == nil {
-		_, err = retainedFactSize(retainedSchemaCacheHeaderBytes, bytes)
+	maxInt := int64(^uint(0) >> 1)
+	for _, tc := range []struct {
+		name                string
+		capacity, slotBytes int64
+	}{
+		{"multiplication", 1<<63 - 1, retainedSchemaTypeSlotBytes},
+		{"header-addition", (1<<63 - 1) - retainedSchemaCacheHeaderBytes + 1, 1},
+		{"native-allocation-width", maxInt/retainedSchemaTypeSlotBytes + 1, retainedSchemaTypeSlotBytes},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := retainedSchemaCacheBytes(tc.capacity, tc.slotBytes); !errors.Is(err, ErrResourceLimit) {
+				t.Fatalf("production cache capacity guard did not refuse overflow: %v", err)
+			}
+		})
 	}
-	if !errors.Is(err, ErrResourceLimit) {
-		t.Fatalf("native-width cache capacity overflow not refused: %v", err)
+}
+
+func TestRetainedFactDeclarationCacheCancellationAndCausalEvidence(t *testing.T) {
+	s := retainedStorageSession(t)
+	_, keys := retainedTestSchema(t, s, 1)
+	v := Evidence[DeclarationID]{State: EvidenceKnown, Value: DeclarationID{Assembly: AssemblyMusicXML, OwnerOccurrence: "owner", Occurrence: "one"}}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if out, err := s.retainSchemaDeclaration(ctx, keys[0], v); !errors.Is(err, context.Canceled) || out != nil || len(s.facts.declarations) != 0 {
+		t.Fatalf("canceled declaration operation: %+v, %v", out, err)
+	}
+	for _, variant := range []string{"cause", "reason"} {
+		t.Run(variant, func(t *testing.T) {
+			in := v
+			if variant == "cause" {
+				in.Cause = &DecisionRef{Rule: RuleKey{ID: "reason", Revision: 1}, Subject: NodeRef{DocumentID: "doc", Node: 1}}
+			} else {
+				in.Reason = "known-with-reason"
+			}
+			a, err := s.retainSchemaDeclaration(context.Background(), keys[0], in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, err := s.retainSchemaDeclaration(context.Background(), keys[0], in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if a == b || len(s.facts.declarations) != 0 || !reflect.DeepEqual(*a, in) || !reflect.DeepEqual(*b, in) {
+				t.Fatal("noncanonical declaration evidence was shared, cached or changed")
+			}
+			if in.Cause != nil && (a.Cause == in.Cause || b.Cause == in.Cause || a.Cause == b.Cause) {
+				t.Fatal("causal declaration evidence retained caller/shared cause")
+			}
+		})
 	}
 }

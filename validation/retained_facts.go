@@ -299,6 +299,17 @@ func (s *Session) retainFactEnd(v NodeEnd) (retainedEnd, error) {
 // zero/foreign tokens never take this cache path.
 type retainedSchemaIdentity interface{ ComponentID | DeclarationID }
 
+// retainedSchemaCacheBytes is the preallocation guard for the complete new
+// hinted map. Keep multiplication, header addition and host-width admission on
+// the same production path, before converting capacity to an allocation hint.
+func retainedSchemaCacheBytes(capacity, slotBytes int64) (int64, error) {
+	bytes, err := rationalCheckedMul(BudgetBufferedBytes, capacity, slotBytes)
+	if err != nil {
+		return 0, err
+	}
+	return retainedFactSize(retainedSchemaCacheHeaderBytes, bytes)
+}
+
 func growRetainedSchemaCache[K retainedSchemaIdentity](ctx context.Context, s *Session, old map[xsd.CacheIdentity]*Evidence[K], capacity int, slotBytes int64) (map[xsd.CacheIdentity]*Evidence[K], int, error) {
 	if len(old) < capacity {
 		return old, capacity, nil
@@ -308,11 +319,7 @@ func growRetainedSchemaCache[K retainedSchemaIdentity](ctx context.Context, s *S
 		return old, capacity, err
 	}
 	next = max(8, next)
-	bytes, err := rationalCheckedMul(BudgetBufferedBytes, next, slotBytes)
-	if err != nil {
-		return old, capacity, err
-	}
-	bytes, err = retainedFactSize(retainedSchemaCacheHeaderBytes, bytes)
+	bytes, err := retainedSchemaCacheBytes(next, slotBytes)
 	if err != nil {
 		return old, capacity, err
 	}
