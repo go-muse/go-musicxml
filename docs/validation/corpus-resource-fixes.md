@@ -80,6 +80,20 @@ pass may stop before producing an incremental witness prefix that the old
 builder produced. The API does not guarantee a minimum interrupted prefix;
 already established issues and explicit incompleteness must remain preserved.
 
+## Current graph capacity witnesses
+
+On Go 1.27.2 linux/amd64, the unchanged single-note-per-measure source-origin
+fixture completes at 568 measures (76,155 source bytes) and refuses snapshot
+admission at 569 measures (76,289 bytes): 42,495,274 live bytes plus a
+24,717,911-byte request. The old 531/532 controls remain and now both complete.
+An explicit 67,213,185-byte limit admits the same snapshot; one byte less refuses.
+This is an exact overlap-admission test, not a changed default or general limit
+recommendation. Successful controls check every expected source-origin row.
+
+The separate 86,052-byte fragment fixture still refuses its 34,741,160-byte
+snapshot request; live storage is now 54,998,870 bytes rather than the historical
+57,607,574. These fixture-specific logical charges are not heap or RSS measures.
+
 ## Residual limits and interpretation
 
 The unchanged-default large-model controls do not establish a usable validated

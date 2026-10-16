@@ -1,5 +1,13 @@
 # Fragment lookup and source-origin transport budgets
 
+Historical PR 41 receipt. The measurements and tested identities below remain
+unchanged. Subsequent corpus-derived resource corrections move the graph
+capacity boundary; the current tests retain the old successful cases and add
+new adjacent and exact-admission controls. See
+[the current correction scope](corpus-resource-fixes.md) and the current
+`resource_budget_review_test.go`; the old numbers below are not current-head
+capacity claims.
+
 This receipt covers PR 41 review items 4291055418, 4291055432 and 4291055313,
 including the reopened capacity observation in comment 4293498146.
 It records bounded resource-accounting corrections and the measured distinction
