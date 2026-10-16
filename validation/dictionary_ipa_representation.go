@@ -12,7 +12,7 @@ type ipaRepresentationScalar struct {
 	scalar rune
 	leaves [3]rune
 	count  uint8
-	ccc    uint8
+	ccc    uint8 // Set only on identity leaves; decomposition keys have no leaf CCC.
 	mark   bool
 }
 type ipaRepresentationAtom struct {
@@ -89,9 +89,11 @@ func (d *DictionarySet) buildIPARepresentation(ctx context.Context, e *dictionar
 			}
 		}
 	}
-	for _, cp := range [...]rune{0xfe20, 0xfe21, 0xfe27, 0xfe28} {
-		if err := add(cp, [3]rune{cp}, 1); err != nil {
-			return err
+	for _, pair := range ipaRepresentationHalfPairs {
+		for _, cp := range [...]rune{pair.left, pair.right} {
+			if err := add(cp, [3]rune{cp}, 1); err != nil {
+				return err
+			}
 		}
 	}
 	if p.scalarCount != len(p.scalars) {
@@ -116,11 +118,15 @@ func (d *DictionarySet) buildIPARepresentation(ctx context.Context, e *dictionar
 	}
 	for i := range p.scalars {
 		row := &p.scalars[i]
-		ccc, err := ipaRepresentationCCC(ctx, d.account, row.scalar)
-		if err != nil {
-			return err
+		// The finite CCC policy describes normalized leaves, not raw keys such
+		// as U+0340/U+0341/U+0344. A key's own Unicode CCC is never consumed.
+		if row.count == 1 && row.leaves[0] == row.scalar {
+			ccc, err := ipaRepresentationCCC(ctx, d.account, row.scalar)
+			if err != nil {
+				return err
+			}
+			row.ccc = ccc
 		}
-		row.ccc = ccc
 		for j := uint8(0); j < row.count; j++ {
 			leaf, err := p.lookup(ctx, d.account, row.leaves[j])
 			if err != nil {
@@ -152,8 +158,9 @@ func (d *DictionarySet) buildIPARepresentation(ctx context.Context, e *dictionar
 				atom.count++
 			}
 		}
-		// Reviewed atoms have at most three normalized leaves; insertion sorting
-		// here has an independently finite comparison bound and charged moves.
+		// Reviewed atoms have at most two normalized leaves (one mark). The
+		// three-leaf structural bound also admits a synthetic multi-mark control;
+		// insertion sorting has a finite comparison bound and charged moves.
 		for i := 1; i < int(atom.count); i++ {
 			for j := i; j > 0; j-- {
 				left, err := p.lookup(ctx, d.account, atom.leaves[j-1])
@@ -247,9 +254,12 @@ func (p *ipaRepresentationData) lookup(ctx context.Context, a *Account, cp rune)
 }
 
 type ipaRepresentationLeaf struct {
-	scalar     rune
-	ccc        uint8
-	mark       bool
+	scalar rune
+	ccc    uint8
+	mark   bool
+	// Internal, test-observable provenance through decomposition and sorting.
+	// Public projection uses only the unchanged whole-input span, not these
+	// intervals, which can be discontiguous for a normalized atom.
 	start, end uint64
 }
 type ipaRepresentationNormalization struct {
@@ -462,7 +472,7 @@ func ipaRepresentationWitness(ctx context.Context, a *Account, p *ipaRepresentat
 				return false, err
 			}
 			cp := n.leaves[i].scalar
-			if cp == 0x035c || cp == 0x0361 {
+			if ipaRepresentationWholeTie(cp) {
 				wholeTie = true
 			}
 			if ipaRepresentationHalf(cp) {
@@ -520,20 +530,17 @@ func ipaRepresentationWitness(ctx context.Context, a *Account, p *ipaRepresentat
 				return false, nil
 			}
 			pending = 0
-		} else {
-			switch half {
-			case 0:
-			case 0xfe20:
-				if !base || wholeTie || previousWholeTie {
-					return false, nil
+		} else if half != 0 {
+			if !base || wholeTie || previousWholeTie {
+				return false, nil
+			}
+			for _, pair := range ipaRepresentationHalfPairs {
+				if half == pair.left {
+					pending = pair.right
+					break
 				}
-				pending = 0xfe21
-			case 0xfe27:
-				if !base || wholeTie || previousWholeTie {
-					return false, nil
-				}
-				pending = 0xfe28
-			default:
+			}
+			if pending == 0 {
 				return false, nil
 			}
 		}
@@ -543,7 +550,20 @@ func ipaRepresentationWitness(ctx context.Context, a *Account, p *ipaRepresentat
 	return pending == 0, nil
 }
 func ipaRepresentationHalf(cp rune) bool {
-	return cp == 0xfe20 || cp == 0xfe21 || cp == 0xfe27 || cp == 0xfe28
+	for _, pair := range ipaRepresentationHalfPairs {
+		if cp == pair.left || cp == pair.right {
+			return true
+		}
+	}
+	return false
+}
+func ipaRepresentationWholeTie(cp rune) bool {
+	for _, pair := range ipaRepresentationHalfPairs {
+		if cp == pair.whole {
+			return true
+		}
+	}
+	return false
 }
 func ipaRepresentationCandidate(ctx context.Context, a *Account, p *ipaRepresentationData, atom ipaRepresentationAtom, marks []ipaRepresentationLeaf) (bool, error) {
 	required := uint8(1)

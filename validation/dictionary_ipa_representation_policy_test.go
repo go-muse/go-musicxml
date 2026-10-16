@@ -32,7 +32,7 @@ func TestIPARepresentationCompiledPolicyMatchesPinnedData(t *testing.T) {
 		t.Fatal(err)
 	}
 	manifest, _ := LookupDictionaryManifest(DictionaryManifestIPARepresentation2015Unicode13)
-	if policy.Revision != manifest.PolicyRevision || len(policy.CCC) != 53 || len(ipaRepresentationCCCValues) != 53 || len(policy.Pairs) != 2 || policy.Mark != "mark" || !slices.Equal(policy.Roles, []string{"letter", "modifier-letter", "constructed-letter"}) {
+	if policy.Revision != manifest.PolicyRevision || len(policy.CCC) != 53 || len(ipaRepresentationCCCValues) != 53 || len(policy.Pairs) != len(ipaRepresentationHalfPairs) || len(ipaRepresentationHalfPairs) != 2 || policy.Mark != "mark" || !slices.Equal(policy.Roles, []string{"letter", "modifier-letter", "constructed-letter"}) {
 		t.Fatal("sealed policy schema changed")
 	}
 	cp := func(s string) rune {
@@ -57,8 +57,12 @@ func TestIPARepresentationCompiledPolicyMatchesPinnedData(t *testing.T) {
 	}
 	d, a := ipaRepresentationSet(t)
 	p := d.entries[0].representation
-	for _, pair := range policy.Pairs {
+	for i, pair := range policy.Pairs {
 		left, right, whole := cp(pair[0]), cp(pair[1]), cp(pair[2])
+		compiled := ipaRepresentationHalfPairs[i]
+		if compiled.left != left || compiled.right != right || compiled.whole != whole {
+			t.Fatalf("compiled half pair differs from bound policy row%d", i)
+		}
 		if !ipaRepresentationHalf(left) || !ipaRepresentationHalf(right) || ipaRepresentationHalf(whole) {
 			t.Fatal("half production identity differs from pinned policy")
 		}
@@ -72,6 +76,23 @@ func TestIPARepresentationCompiledPolicyMatchesPinnedData(t *testing.T) {
 				t.Fatalf("unproved pair %q: %v %v", text, ok, err)
 			}
 		}
+	}
+	decomposable := 0
+	for _, row := range p.scalars {
+		if row.count != 1 || row.leaves[0] != row.scalar {
+			decomposable++
+			if row.ccc != 0 {
+				t.Fatalf("raw decomposition key U+%04X incorrectly stores a leaf CCC", row.scalar)
+			}
+			continue
+		}
+		want, err := ipaRepresentationCCC(context.Background(), a, row.scalar)
+		if err != nil || row.ccc != want {
+			t.Fatalf("leaf U+%04X class=%d want%d: %v", row.scalar, row.ccc, want, err)
+		}
+	}
+	if decomposable != 158 {
+		t.Fatalf("decomposition support=%d", decomposable)
 	}
 	marks, bases, signs := 0, 0, 0
 	for _, row := range d.entries[0].ipa.Symbols {
@@ -88,6 +109,11 @@ func TestIPARepresentationCompiledPolicyMatchesPinnedData(t *testing.T) {
 	}
 	if marks != 47 || bases != 221 || signs != 27 || p.scalarCount != 436 || p.atomCount != 248 {
 		t.Fatalf("roles/index=%d %d %d/%d %d", marks, bases, signs, p.scalarCount, p.atomCount)
+	}
+	for _, atom := range p.atoms {
+		if atom.count > 2 {
+			t.Fatalf("reviewed atom exceeds one normalized mark: %+v", atom)
+		}
 	}
 	maxCandidates, starters := 0, 0
 	for i := 0; i < len(p.atoms); {

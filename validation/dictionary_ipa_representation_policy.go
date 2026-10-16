@@ -8,6 +8,17 @@ import "context"
 
 const ipaRepresentationPolicySHA256 = "abf354d8847b1eb4233ac2d7e835d025ebd9d99dee903737aa0e921004a65bd2"
 
+// The paired presentation-form encodings and corresponding independent whole
+// marks come from the pinned policy's half_pairs rows.
+var ipaRepresentationHalfPairs = [...]struct {
+	left, right, whole rune
+}{
+	{0xfe20, 0xfe21, 0x0361},
+	{0xfe27, 0xfe28, 0x035c},
+}
+
+// Nonzero canonical combining classes of normalized leaves only. Raw canonical
+// decomposition keys are expanded before any class is consulted.
 var ipaRepresentationCCCValues = [...]struct {
 	scalar rune
 	ccc    uint8
