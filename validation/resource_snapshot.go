@@ -48,16 +48,17 @@ type resourceLeaseOwner struct{ marker byte }
 // After Close, header/count getters are zero and content getters reject access.
 type ResourceSnapshot struct {
 	// Private cache identity is bound to the admitted session, not an editable report.
-	dictionary [32]byte
-	fragments  *resourceFragmentSnapshot
-	header     ResourceSnapshotHeader
-	report     Report
-	contexts   []ContextResult
-	ids        []ResourceIDFact
-	account    *Account
-	retained   int64
-	closed     bool
-	owner      *resourceLeaseOwner
+	dictionary    [32]byte
+	fragments     *resourceFragmentSnapshot
+	fragmentOrder map[NodeRef]uint64
+	header        ResourceSnapshotHeader
+	report        Report
+	contexts      []ContextResult
+	ids           []ResourceIDFact
+	account       *Account
+	retained      int64
+	closed        bool
+	owner         *resourceLeaseOwner
 }
 
 // FinishWithResourceSnapshot is an alternate terminal finalizer. It evaluates
@@ -151,6 +152,18 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 		if e != nil {
 			return nil, e
 		}
+		indexBytes, e := rationalCheckedMul(BudgetBufferedBytes, int64(len(fragments.Elements)), resourceFragmentOrderEntryBytes)
+		if e != nil {
+			return nil, e
+		}
+		indexBytes, e = rationalCheckedAdd(BudgetBufferedBytes, indexBytes, resourceFragmentOrderHeaderBytes)
+		if e != nil {
+			return nil, e
+		}
+		size, e = rationalCheckedAdd(BudgetBufferedBytes, size, indexBytes)
+		if e != nil {
+			return nil, e
+		}
 	}
 	n, e := rationalCheckedMul(BudgetBufferedBytes, int64(count), 256)
 	if e != nil {
@@ -200,6 +213,9 @@ func (s *Session) makeResourceSnapshot(ctx context.Context, report Report) (*Res
 	}
 	if fragments != nil {
 		if err = resourceCopyInto(ctx, reflect.ValueOf(&out.fragments).Elem(), reflect.ValueOf(fragments), "", ""); err != nil {
+			return nil, err
+		}
+		if err = out.indexFragmentOrder(ctx); err != nil {
 			return nil, err
 		}
 	}
@@ -535,6 +551,7 @@ func (s *ResourceSnapshot) release() {
 	s.report = Report{}
 	s.contexts = nil
 	s.fragments = nil
+	s.fragmentOrder = nil
 	s.ids = nil
 	s.header = ResourceSnapshotHeader{}
 	s.owner = nil

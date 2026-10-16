@@ -16,7 +16,11 @@ func frameworkFixture(t *testing.T) (*PackageSession, *ResourceSnapshot) {
 		{Subject: NodeRef{"doc", 99}, Parent: NodeRef{"doc", 3}, Order: 3},
 		{Subject: NodeRef{"doc", 8}, Parent: NodeRef{"doc", 70}, Order: 4},
 	}}
-	return p, &ResourceSnapshot{header: ResourceSnapshotHeader{DocumentID: "doc", Root: NodeRef{"doc", 70}, IDScopeComplete: stateKnown(true)}, fragments: f, ids: []ResourceIDFact{{Value: "anchor", Subject: NodeRef{"doc", 3}}}}
+	snap := &ResourceSnapshot{account: p.account, header: ResourceSnapshotHeader{DocumentID: "doc", Root: NodeRef{"doc", 70}, IDScopeComplete: stateKnown(true)}, fragments: f, ids: []ResourceIDFact{{Value: "anchor", Subject: NodeRef{"doc", 3}}}}
+	if err := snap.indexFragmentOrder(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	return p, snap
 }
 func TestXMLFragmentFrameworkAndElement(t *testing.T) {
 	for _, tc := range []struct {

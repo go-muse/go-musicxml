@@ -151,6 +151,10 @@ func TestJoinedIDFirstOwnerAndIncompleteAuthorities(t *testing.T) {
 	p := beginPackageFixture(t, PackageCheckLinkTarget)
 	defer p.cleanup()
 	snap := &ResourceSnapshot{header: ResourceSnapshotHeader{IDScopeComplete: stateKnown(true)}, ids: []ResourceIDFact{{Value: "ID", Subject: NodeRef{"doc", 2}, Unique: Evidence[bool]{State: EvidenceInvalid, Reason: "duplicate", Cause: &DecisionRef{Rule: RuleKey{"schema", 1}, Subject: NodeRef{"doc", 1}}}}}, fragments: &resourceFragmentSnapshot{Mode: fragmentJoinedShorthand, DTDRequired: true, DTDIdentityComplete: stateKnown(true), Complete: stateKnown(true), Elements: []resourceFragmentElement{{Subject: NodeRef{"doc", 99}, Order: 1}, {Subject: NodeRef{"doc", 2}, Order: 2}}, DTDIDs: []SourceDTDIDAttribute{{Subject: NodeRef{"doc", 99}, Value: "ID"}}}}
+	snap.account = p.account
+	if err := snap.indexFragmentOrder(context.Background()); err != nil {
+		t.Fatal(err)
+	}
 	got, e := p.resolveFragmentID(context.Background(), snap, "ID")
 	if e != nil || got.State != EvidenceKnown || got.Value.Node != 99 {
 		t.Fatalf("not document-first: %+v %v", got, e)

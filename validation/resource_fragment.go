@@ -128,28 +128,45 @@ func (s *PackageSession) resolveFragmentID(ctx context.Context, snap *ResourceSn
 	if !knownComplete(f.Complete) {
 		return stateUnknown[NodeRef]("fragment-element-order-incomplete"), nil
 	}
-	// Iterating admitted order avoids trusting numeric NodeID magnitude. Each
-	// owner appears once; matching authorities on that owner are naturally joined.
-	for _, owner := range f.Elements {
-		if err := s.scan(ctx, 1); err != nil {
+	// The snapshot index is built once from admitted document order. Scan each
+	// authority once, then compare only matching owners' orders; neither NodeID
+	// magnitude nor schema uniqueness determines which occurrence is first.
+	if err := s.scan(ctx, 1); err != nil {
+		return Evidence[NodeRef]{}, err
+	}
+	var first NodeRef
+	var firstOrder uint64
+	consider := func(subject NodeRef) error {
+		if err := s.scan(ctx, 1+int64(len(subject.DocumentID))); err != nil {
+			return err
+		}
+		if order := snap.fragmentOrder[subject]; order != 0 && (firstOrder == 0 || order < firstOrder) {
+			first, firstOrder = subject, order
+		}
+		return nil
+	}
+	for _, id := range snap.ids {
+		if err := s.scan(ctx, 1+int64(len(value))); err != nil {
 			return Evidence[NodeRef]{}, err
 		}
-		for _, id := range snap.ids {
-			if err := s.scan(ctx, 1+int64(len(value))); err != nil {
+		if id.Value == value {
+			if err := consider(id.Subject); err != nil {
 				return Evidence[NodeRef]{}, err
 			}
-			if id.Subject == owner.Subject && id.Value == value {
-				return fragmentKnown(owner.Subject), nil
-			}
 		}
-		for _, id := range f.DTDIDs {
-			if err := s.scan(ctx, 1+int64(len(value))); err != nil {
+	}
+	for _, id := range f.DTDIDs {
+		if err := s.scan(ctx, 1+int64(len(value))); err != nil {
+			return Evidence[NodeRef]{}, err
+		}
+		if id.Value == value {
+			if err := consider(id.Subject); err != nil {
 				return Evidence[NodeRef]{}, err
 			}
-			if id.Subject == owner.Subject && id.Value == value {
-				return fragmentKnown(owner.Subject), nil
-			}
 		}
+	}
+	if firstOrder != 0 {
+		return fragmentKnown(first), nil
 	}
 	return Evidence[NodeRef]{State: EvidenceAbsent}, nil
 }
@@ -221,4 +238,33 @@ func (a *ResourceAdoption) ResolveXMLFragment(ctx context.Context, fragment stri
 	}
 	result, err = resourceLiveCopy(ctx, a.owner.account, result, snap.header.DocumentID, a.value.documentID)
 	return result, true, err
+}
+
+// The immutable order index borrows document strings from the owned Elements.
+// The allowance includes map control storage, spare capacity and overlapping
+// growth; keys and values are fixed records. It is never exported or remapped.
+const resourceFragmentOrderHeaderBytes int64 = 512
+const resourceFragmentOrderEntryBytes int64 = 128
+
+func (s *ResourceSnapshot) indexFragmentOrder(ctx context.Context) error {
+	if ctx == nil {
+		return contract("context", "must not be nil")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if s.fragments == nil {
+		return nil
+	}
+	s.fragmentOrder = make(map[NodeRef]uint64, len(s.fragments.Elements))
+	for _, element := range s.fragments.Elements {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := s.account.Charge(BudgetRuleSteps, 1+int64(len(element.Subject.DocumentID))); err != nil {
+			return err
+		}
+		s.fragmentOrder[element.Subject] = element.Order
+	}
+	return ctx.Err()
 }
