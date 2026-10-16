@@ -147,9 +147,8 @@ The [reviewer's comparison](https://github.com/go-muse/go-musicxml/pull/41#discu
 reported an earlier boundary of 494 measures (about 66 KB), the corrected
 500-measure case at 62.9 MB of the 67.1 MB allowance, and comparison capacities of
 about 114 KB for standalone `ProfileSourceInternalDTDDictionaries` and 168 KB
-for its "legacy graph" comparator. The review did not supply its probe source
-or the exact legacy-graph profile; those comparison capacities are
-reviewer-reported, not independently established
+for its "legacy graph" comparator. The review did not supply its probe source;
+those comparison capacities are reviewer-reported, not independently established
 boundaries for the generator above. They must not be substituted for a general
 source-byte guarantee. MB/KB in those rounded figures are decimal units; the
 actual default remains 64 MiB.

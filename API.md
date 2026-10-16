@@ -1445,8 +1445,7 @@ bytes) refuse the 64 MiB live-buffer allowance. The review reported the
 500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
 previous boundary of 494 measures (about 66 KB), and comparison boundaries of
 about 114 KB for standalone `ProfileSourceInternalDTDDictionaries` and 168 KB
-for its "legacy graph" comparator, whose exact profile was not supplied. These
-are fixture/profile-specific
+for its "legacy graph" comparator. These are fixture/profile-specific
 observations, not a general document-byte guarantee or heap/RSS limit.
 
 The separate 2,000-empty-measure, three-`#m1` fixture is only 86,052 source bytes
