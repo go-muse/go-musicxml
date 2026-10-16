@@ -47,9 +47,9 @@ func (h *timelineState) queryKeyPresence(ctx context.Context, s *Session, pos mu
 }
 
 func (h *timelineState) queryKeyPresenceScope(ctx context.Context, s *Session, pos musicalPosition, staff Evidence[Integer], allStavesOnly bool) (stateResult[bool], error) {
-	project := func(v keyState) Evidence[bool] { return v.encodingEvidence() }
+	project := func(v keyState) (Evidence[bool], error) { return v.encodingEvidenceMetered(ctx, s) }
 	query := func(history *stateHistory[keyState]) (stateResult[bool], error) {
-		return queryStateAtScope(ctx, s, h, history, pos, staff, project, true, true, allStavesOnly, nil)
+		return queryStateAtScopeWithProject(ctx, s, h, history, pos, staff, project, true, true, allStavesOnly, nil)
 	}
 	original, err := query(&h.Keys)
 	if err != nil || len(h.keyPresenceGaps) == 0 || !allStavesOnly && staff.State != EvidenceKnown || original.Value.State == EvidenceKnown && original.Value.Value {

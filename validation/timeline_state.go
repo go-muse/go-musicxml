@@ -543,7 +543,9 @@ func stateApplies(ctx context.Context, s *Session, scope stateScope, staff Evide
 // queryState chooses the latest applicable musical position, then compares all
 // overlapping publications there. Neither lexical order nor specificity breaks
 // a tie. Projection happens before comparison, so an independent known component
-// can survive a conflict elsewhere in the compound state.
+// can survive a conflict elsewhere in the compound state. Projectors are closed
+// fixed-field selectors, or must meter their own variable traversal before doing
+// it; only the projected value is traversed for comparison and owned copying.
 func queryState[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V]) (stateResult[V], error) {
 	return queryStateAt(ctx, s, h, history, pos, staff, project, true)
 }
@@ -565,6 +567,14 @@ func queryStateAtFull[T, V any](ctx context.Context, s *Session, h *timelineStat
 // consensus, never a resolved staff identity. Ordinary state queries retain the
 // unresolved-staff guard, including queries for a concrete key value.
 func queryStateAtScope[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive, ownedResult, allStavesOnly bool, initial func() (stateResult[V], error), extra ...[]stateGap) (stateResult[V], error) {
+	return queryStateAtScopeWithProject(ctx, s, h, history, pos, staff, func(value T) (Evidence[V], error) {
+		return project(value), nil
+	}, inclusive, ownedResult, allStavesOnly, initial, extra...)
+}
+
+// Error-returning projectors propagate an admission/cancellation failure
+// immediately: no comparison, output retention or provenance work follows it.
+func queryStateAtScopeWithProject[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) (Evidence[V], error), inclusive, ownedResult, allStavesOnly bool, initial func() (stateResult[V], error), extra ...[]stateGap) (stateResult[V], error) {
 	if allStavesOnly && (staff.State != EvidenceAbsent || staff.Value.Valid()) {
 		return stateResult[V]{}, contract("timeline query", "all-staves baseline must not name a staff")
 	}
@@ -627,7 +637,7 @@ func queryStateAtScope[T, V any](ctx context.Context, s *Session, h *timelineSta
 		}
 	}
 	if partial {
-		return queryPartialState(ctx, s, h, history, pos, staff, project, inclusive, ownedResult, initial, extra...)
+		return queryPartialStateWithProject(ctx, s, h, history, pos, staff, project, inclusive, ownedResult, initial, extra...)
 	}
 	selection, e := selectState(ctx, s, history, pos, staff.Value, inclusive)
 	if e != nil {
@@ -691,28 +701,34 @@ func queryStateAtScope[T, V any](ctx context.Context, s *Session, h *timelineSta
 		return out, nil
 	}
 	selected := history.Publications[best]
-	projectValue := func(p statePublication[T]) Evidence[V] {
+	projectValue := func(p statePublication[T]) (Evidence[V], error) {
 		value := stateUnavailable[T, V](p.Value)
 		if p.Value.State == EvidenceKnown {
-			value = project(p.Value.Value)
+			var err error
+			value, err = project(p.Value.Value)
+			if err != nil {
+				return Evidence[V]{}, err
+			}
 		}
-		return stateConditionalValue(value, p.TimeOnly)
-	}
-	out.Value = projectValue(selected)
-	selectedCost := selected.bytes
-	if !ownedResult {
-		selectedCost, e = stateMeasure(ctx, s, reflect.ValueOf(out.Value))
-		if e != nil {
-			return stateResult[V]{}, e
-		}
-	}
-	if e = s.step(ctx, selectedCost); e != nil {
-		return stateResult[V]{}, e
+		return stateConditionalValue(value, p.TimeOnly), nil
 	}
 	if e = s.step(ctx, 1); e != nil {
 		return stateResult[V]{}, e
 	}
+	out.Value, e = projectValue(selected)
+	if e != nil {
+		return stateResult[V]{}, e
+	}
 	initialValue := out.Value
+	// A single publication is never compared with itself. Measure the selected
+	// projection lazily only if a distinct tied publication must be compared.
+	// stateMeasure admits its own traversal; its closed-graph size then bounds
+	// DeepEqual's fields, string bytes and immutable numeric magnitudes. The
+	// publication's position, unrelated components and provenance are not part
+	// of that comparison. Their actual selection/provenance work is metered at
+	// the respective operations below and above.
+	var selectedCost int64
+	selectedMeasured := false
 	conflict := false
 	for _, group := range selection.Groups {
 		for _, publicationIndex := range group {
@@ -742,13 +758,23 @@ func queryStateAtScope[T, V any](ctx context.Context, s *Session, h *timelineSta
 			// and provenance below, even after distinct candidates changed out.Value.
 			candidate := initialValue
 			if publicationIndex != best {
-				candidate = projectValue(p)
-				candidateCost := p.bytes
-				if !ownedResult {
-					candidateCost, e = stateMeasure(ctx, s, reflect.ValueOf(candidate))
+				if e = s.step(ctx, 1); e != nil {
+					return stateResult[V]{}, e
+				}
+				candidate, e = projectValue(p)
+				if e != nil {
+					return stateResult[V]{}, e
+				}
+				if !selectedMeasured {
+					selectedCost, e = stateMeasure(ctx, s, reflect.ValueOf(initialValue))
 					if e != nil {
 						return stateResult[V]{}, e
 					}
+					selectedMeasured = true
+				}
+				candidateCost, e := stateMeasure(ctx, s, reflect.ValueOf(candidate))
+				if e != nil {
+					return stateResult[V]{}, e
 				}
 				compareCost, x := rationalCheckedAdd(BudgetRuleSteps, candidateCost, selectedCost)
 				if x != nil {
@@ -979,8 +1005,6 @@ func stateEncodingComponent[T any](v Evidence[T], required bool) Evidence[bool] 
 	return stateUnavailable[T, bool](v)
 }
 
-// encodingEvidence is a projection over already budgeted state. queryState
-// charges the entire typed payload before invoking it and polls again afterward.
 func stateAvailabilityRank(state EvidenceState) int {
 	switch state {
 	case EvidenceInvalid:
@@ -997,29 +1021,68 @@ func stateAvailabilityRank(state EvidenceState) int {
 		return 2
 	}
 }
+
+// encodingEvidence is used when the caller has already admitted traversal of
+// the complete key record, such as extraction. Queries use the metered variant:
+// encoding inspects component availability, never their string/numeric payloads.
 func (v keyState) encodingEvidence() Evidence[bool] {
-	result := Evidence[bool]{State: EvidenceKnown, Value: true}
-	merge := func(e Evidence[bool]) {
-		if stateAvailabilityRank(e.State) > stateAvailabilityRank(result.State) {
-			result = e
+	result, _ := v.encodingEvidenceMetered(nil, nil)
+	return result
+}
+
+func stateMergeEncodingComponent[T any](ctx context.Context, s *Session, result *Evidence[bool], component Evidence[T], required bool) error {
+	if s != nil {
+		if err := s.step(ctx, 1); err != nil {
+			return err
 		}
 	}
-	merge(stateEncodingComponent(v.Fifths, v.Traditional))
-	merge(stateEncodingComponent(v.Mode, false))
-	merge(stateEncodingComponent(v.Cancel, false))
-	merge(stateEncodingComponent(v.CancelLocation, false))
+	value := stateEncodingComponent(component, required)
+	if stateAvailabilityRank(value.State) > stateAvailabilityRank(result.State) {
+		*result = value
+	}
+	return nil
+}
+
+func (v keyState) encodingEvidenceMetered(ctx context.Context, s *Session) (Evidence[bool], error) {
+	result := Evidence[bool]{State: EvidenceKnown, Value: true}
+	if err := stateMergeEncodingComponent(ctx, s, &result, v.Fifths, v.Traditional); err != nil {
+		return Evidence[bool]{}, err
+	}
+	if err := stateMergeEncodingComponent(ctx, s, &result, v.Mode, false); err != nil {
+		return Evidence[bool]{}, err
+	}
+	if err := stateMergeEncodingComponent(ctx, s, &result, v.Cancel, false); err != nil {
+		return Evidence[bool]{}, err
+	}
+	if err := stateMergeEncodingComponent(ctx, s, &result, v.CancelLocation, false); err != nil {
+		return Evidence[bool]{}, err
+	}
 	for _, a := range v.Alterations {
-		merge(stateEncodingComponent(a.Step, true))
-		merge(stateEncodingComponent(a.Alter, true))
-		merge(stateEncodingComponent(a.Accidental, false))
-		merge(stateEncodingComponent(a.SMuFL, false))
+		if err := stateMergeEncodingComponent(ctx, s, &result, a.Step, true); err != nil {
+			return Evidence[bool]{}, err
+		}
+		if err := stateMergeEncodingComponent(ctx, s, &result, a.Alter, true); err != nil {
+			return Evidence[bool]{}, err
+		}
+		if err := stateMergeEncodingComponent(ctx, s, &result, a.Accidental, false); err != nil {
+			return Evidence[bool]{}, err
+		}
+		if err := stateMergeEncodingComponent(ctx, s, &result, a.SMuFL, false); err != nil {
+			return Evidence[bool]{}, err
+		}
 	}
 	for _, o := range v.Octaves {
-		merge(stateEncodingComponent(o.Number, true))
-		merge(stateEncodingComponent(o.Octave, true))
-		merge(stateEncodingComponent(o.Cancel, false))
+		if err := stateMergeEncodingComponent(ctx, s, &result, o.Number, true); err != nil {
+			return Evidence[bool]{}, err
+		}
+		if err := stateMergeEncodingComponent(ctx, s, &result, o.Octave, true); err != nil {
+			return Evidence[bool]{}, err
+		}
+		if err := stateMergeEncodingComponent(ctx, s, &result, o.Cancel, false); err != nil {
+			return Evidence[bool]{}, err
+		}
 	}
-	return result
+	return result, nil
 }
 func (h *timelineState) effectiveKeyPresence(ctx context.Context, s *Session, pos musicalPosition, staff Evidence[Integer]) (stateResult[bool], error) {
 	staff, e := h.resolveStaff(ctx, s, pos, staff)
