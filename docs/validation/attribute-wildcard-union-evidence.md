@@ -14,7 +14,8 @@ lookup and value validation.
 
 The previous `MergeAnyAttribute` simply selected the derived wildcard, producing
 a definitive forbidden-attribute issue for an attribute in the base namespace.
-The test-first commit `c48afd1` reproduces that failure against integrated base
+The unpublished local test-first commit `c48afd1` reproduces that failure
+against unpublished local integrated base
 `ed3774adf265ecf6cb912c414333c518bf68a989`. Its failing cases include simple and
 complex content, inheritance, base `##any`, process modes, and an independently
 preserved content witness.
@@ -136,5 +137,8 @@ omission detection, and fail-versus-skip behavior with xmllint absent. Job count
 timeouts and race settings are unchanged. All-package tests passed on the local
 implementation head before this narrow CI selector amendment.
 
-The combined functional batch still owns final all-stage,
-architecture and exact-head acceptance.
+The [dated integrated receipt](source-declarations-evidence.md#dated-integrated-receipt)
+records the initial combined-tree local and hosted acceptance. Subsequent
+review corrections have their own exact-head receipts in
+[PR 41](https://github.com/go-muse/go-musicxml/pull/41); the initial receipt
+does not certify later trees.

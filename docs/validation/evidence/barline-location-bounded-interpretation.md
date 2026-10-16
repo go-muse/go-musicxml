@@ -165,8 +165,10 @@ The catalog now cites the direct MusicXML 4.0 barline reference in place of
 issue 28 and describes the ordered-placement guard explicitly. That corrected
 source metadata intentionally changes the two new semantic catalog identities
 and their three package-composition identities. Legacy timeline/context profile
-metadata and rule revisions are unchanged; final consolidated identity pins are
-owned by the integrated semantic-composition receipt.
+metadata and rule revisions are unchanged.
+[`TestSemanticProfilesExactFinalIdentity`](../../../semantic_profile_identity_test.go)
+pins all five final catalog and complete Profile JSON identities independently
+of the earlier integrated acceptance receipt.
 
 After the citation correction, the following focused command also passed on
 2026-10-16 with Go 1.27.2 (root package 2.770 seconds, validation 0.042 seconds):

@@ -78,3 +78,8 @@ failures. The
 records seven local stages, eleven fuzz targets and eleven hosted CI checks for
 tree `fa90c0b32ac027f45bbadcdabcd9a4b1c80fd8af`. It remains separate from
 earlier segment receipts and from verification of subsequent review corrections.
+
+[`TestSemanticProfilesExactFinalIdentity`](../../semantic_profile_identity_test.go)
+pins the two standalone and three package profiles after the barline citation
+correction, including exact CatalogDigest and complete Profile JSON hashes.
+These identity assertions are separate from the dated execution receipt above.

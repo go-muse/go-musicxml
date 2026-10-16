@@ -1077,7 +1077,7 @@
           "semantic_ipa_integration_test.go"
         ]
       },
-      "remaining": "Final combined-tree seven-stage and exact-head CI acceptance; no unsupported historical alias is promoted to a mandatory blocker."
+      "remaining": "No unsupported historical alias is promoted to a mandatory blocker. Initial combined-tree acceptance is recorded in the dated top-level acceptance receipt; subsequent review-correction acceptance is tracked separately in PR41."
     },
     {
       "id": "REQ-DEF-EXTERNAL-RESOLVER",
