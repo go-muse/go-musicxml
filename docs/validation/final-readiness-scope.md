@@ -37,9 +37,9 @@ The [individual reconciliation](final-requirement-reconciliation.md) and its
 [machine-readable ledger](final-requirement-reconciliation.json) account for all
 95 original engineering requirements and their 95 attached test contracts.
 Original context, prose, XSD, issue and candidate inventories remain distinct
-overlapping evidence sets, not
-additional independent requirement totals. A test route identifies inspectable
-code; it is not itself proof that every original case axis was exercised.
+overlapping evidence sets, not additional independent requirement totals. A test
+route identifies inspectable code; it is not itself proof that every original
+case axis was exercised.
 
 The [configuration matrix](final-configuration-contracts.md) identifies targeted
 public-entry-point checks for supported explicit configurations and their error,
@@ -61,6 +61,12 @@ close that obligation. Independent design/QA acceptance and a mass real-corpus
 campaign are separate later activities. Their completion is not implied by
 developer readiness or by a successful CI run.
 
-Current candidate execution receipts and subsequent review dispositions belong
-to the final PR's dated acceptance record. These scope boundaries remain valid
-independently of whether a particular verification run has completed.
+The [PR 42 development acceptance receipt][pr42-initial-receipt], dated
+2026-10-16, records local and hosted correctness checks for the initial
+published head `195c5ebc82acc22bddcdde46c9394fc060659c2a`, tree
+`f6a72fcce5506260fc63b8bff5fbbef7e09fc93d`. It certifies only that recorded
+tree; it is not an acceptance receipt for subsequent review corrections. Each
+later candidate requires its own exact-tree checks. These scope boundaries do
+not change with a successful verification run.
+
+[pr42-initial-receipt]: https://github.com/go-muse/go-musicxml/pull/42#issuecomment-6216656081

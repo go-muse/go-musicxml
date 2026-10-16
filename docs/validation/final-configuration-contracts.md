@@ -118,19 +118,25 @@ selected representation witness. `TestDictionarySoundsCustomAllowedAndIPAGate`
 retains the open-string sounds and partial IPA boundaries. These are reused,
 not duplicated with a second corpus or synthetic substitute.
 
-The additive bundled source is integrated separately with runnable
-`ExampleBundledDictionarySource` in `bundled_dictionary_example_test.go`.
+The runnable `ExampleBundledDictionarySource` in
+`bundled_dictionary_example_test.go` demonstrates the additive bundled source.
 `TestBundledDictionaryPublicAssessmentPreservesSelection` in
 `bundled_dictionary_test.go` is its source/model/assessed-decode ×
-explicit/unselected/nil-source integration route. The same file checks all five
-pinned components without filesystem access
+explicit/unselected/nil-source integration route. The same file checks all
+five pinned components without filesystem access
 (`TestBundledDictionarySourcePinnedBytesWithoutFiles`), exact requests,
-independent body ownership, and retained importer/accounting behavior. Those
-implementation and offline-generation receipts are outside this record's
-unchanged-production test tree. Selecting that source must not change the
-nil-source or explicit-selection contracts checked here. These integration
-routes are identified for the final combined tree; they were not present or
-executed in this record's focused tree and are not counted in its receipt.
+independent body ownership, and retained importer/accounting behavior.
+`TestBundledDictionaryGraphAndMXLParity` in `bundled_dictionary_graph_test.go`
+adds post-review graph source/model and raw/current-MXL comparisons against a
+caller-provided source, including all five components and explicit, unselected,
+nil-source and external-byte-limit cases.
+
+These bundled-source routes were not present or executed in the focused test
+tree identified below and are not counted in its receipt. The separate initial
+PR 42 acceptance receipt certifies only the routes present at head `195c5eb`;
+it does not cover the post-review parity addition. Selecting the bundled
+source must preserve the nil-source and explicit-selection contracts checked
+here.
 
 ## Existing coverage reused and exact missing cases added
 
@@ -181,12 +187,13 @@ resource failure, not proof that the music is invalid.
 Execution date: 2026-10-16. Production base: the merged commit above. The
 focused test-only tree is `aaa6a79884ec84fd304b12ddd7cf73b7faa9556b`, retained
 by unpublished local commit `6c573307030c13f9b18081613fabd16203518792`.
-These identify unpublished local focused-test provenance, not a published
-checkout target or canonical publication receipt. The canonical publication
-mapping will be recorded after integration and publication. The new test file's
-SHA-256 is `5df6edf9b4be328d706d81542debff425f47957674f7f63e6a615ad34077d2e7`.
-This documentation was added afterward and is not misrepresented as part of
-that measured tree.
+That identical tree was published on the PR 42 branch as
+[`daec7bcf517aed450c50ea90c28fff0886373063`][published-configuration-tests]
+on 2026-10-16. Use that published commit as the portable checkout target; the
+local commit identifies the original focused-test provenance. The new test
+file's SHA-256 is
+`5df6edf9b4be328d706d81542debff425f47957674f7f63e6a615ad34077d2e7`.
+This documentation was added afterward and is not part of that measured tree.
 
 Environment: official project recovery toolchain, Go `1.27.2`, Linux/amd64,
 `GOMAXPROCS=2`, `GOFLAGS=-p=1`, `GOTOOLCHAIN=local`. Go execution was serialized
@@ -215,7 +222,14 @@ go test ./validation -run '^(TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeR
 All coverage rows above were exercised in these selections except the two
 explicitly marked auxiliary inventory references and the separately integrated
 bundled-source routes. A test name alone is not execution evidence for another
-configuration or a later tree. Final integration must rerun affected routes and
-the unchanged required repository/hosted checks. No actual 386 run, complete
-external-oracle run, corpus acceptance, performance acceptance, independent
-review or full-program completion is claimed by this receipt.
+configuration or a later tree. Each published candidate requires affected
+routes and the unchanged repository/hosted checks on its exact tree. No actual
+386 run, complete external-oracle run, corpus acceptance, performance
+acceptance, independent review or full-program completion is claimed by this
+focused receipt. The separate [PR 42 receipt][pr42-initial-receipt], dated
+2026-10-16, records broader development checks for initial head
+`195c5ebc82acc22bddcdde46c9394fc060659c2a` only; it does not certify subsequent
+review corrections.
+
+[published-configuration-tests]: https://github.com/go-muse/go-musicxml/commit/daec7bcf517aed450c50ea90c28fff0886373063
+[pr42-initial-receipt]: https://github.com/go-muse/go-musicxml/pull/42#issuecomment-6216656081
