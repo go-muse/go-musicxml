@@ -118,16 +118,18 @@ bundle, see the full [source ledger][ipa-representation-ledger] at
 `testdata/dictionaries/ipa-representation/source-ledger.md`, its
 [source pins][ipa-source-pins], [row ledger][ipa-row-ledger] and
 [manifest pins][ipa-manifest-pins]. These links pin the provenance records for
-the bundled bytes at published commit
-`195c5ebc82acc22bddcdde46c9394fc060659c2a`. Future data refreshes must retain
-separately reviewed exact-pin provenance.
+the bundled bytes to merged main commit
+`0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9`. All five files have the same blob
+identities as the bundled-source implementation's initial PR 42 head. This
+main-history pin keeps the provenance independent of later PR-branch changes.
+Future data refreshes must retain separately reviewed exact-pin provenance.
 
 Generation changes neither source bytes nor authority: the two IPA components
 remain reviewed derived bundles, not the original publications or a complete
 grammar.
 
-[ipa-positive-ledger]: https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-positive/positive-ledger.json
-[ipa-representation-ledger]: https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-representation/source-ledger.md
-[ipa-source-pins]: https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-representation/source-pins.json
-[ipa-row-ledger]: https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-representation/source-row-ledger.json
-[ipa-manifest-pins]: https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-representation/manifest-pins.json
+[ipa-positive-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-positive/positive-ledger.json
+[ipa-representation-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/source-ledger.md
+[ipa-source-pins]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/source-pins.json
+[ipa-row-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/source-row-ledger.json
+[ipa-manifest-pins]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/manifest-pins.json

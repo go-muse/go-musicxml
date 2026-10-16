@@ -55,7 +55,16 @@ notices are accessible from a compiled binary. See `THIRD_PARTY_NOTICES.md` at t
 repository root for distribution guidance.
 
 The copied notices are byte-identical source records. Their references to an
-accompanying full positive ledger concern the original source distribution, not
-this reduced runtime directory. The full reviewed provenance is available at the
-pinned [positive ledger](https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-positive/positive-ledger.json)
-and [representation source ledger](https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-representation/source-ledger.md).
+accompanying full positive ledger concern the original source distribution,
+not this reduced runtime directory. The full reviewed provenance is available
+in the pinned [positive ledger][ipa-positive-ledger] and
+[representation source ledger][ipa-representation-ledger] at merged main commit
+`0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9`. These records are byte-identical to
+those cited by the bundled-source implementation's initial PR 42 head; the
+main-history pin keeps them independent of later PR-branch changes. The
+[project distribution guidance][bundled-notices] also links the representation
+source pins, row ledger and manifest pins at the same merged-main commit.
+
+[ipa-positive-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-positive/positive-ledger.json
+[ipa-representation-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/source-ledger.md
+[bundled-notices]: ../../THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
