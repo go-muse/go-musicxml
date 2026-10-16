@@ -198,3 +198,80 @@ func TestBundledDictionaryPublicAssessmentPreservesSelection(t *testing.T) {
 		}
 	}
 }
+
+func TestBundledDictionaryPublicEvidenceBoundaries(t *testing.T) {
+	t.Run("custom standard sound remains allowed", func(t *testing.T) {
+		m, _ := validation.LookupDictionaryManifest(validation.DictionaryManifestStandardSounds40)
+		report, err := musicxml.InspectXMLWithDictionaries(context.Background(), strings.NewReader(`<sounds><sound id="keyboard.piano"><any/></sound><sound id="custom.allowed"><solo/></sound></sounds>`), musicxml.DictionaryAssessmentOptions{
+			Assessment:   musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceSoundsDictionaries},
+			Dictionaries: musicxml.DictionaryOptions{Source: musicxml.BundledDictionarySource(), Selections: []validation.DictionarySelection{{Manifest: m.ID, Relations: m.Relations}}},
+		})
+		if err != nil || report.Conformance == validation.ConformanceViolated {
+			t.Fatalf("report=%+v err=%v", report, err)
+		}
+		found := 0
+		for _, c := range report.Context {
+			if c.Property != validation.ContextDictionarySounds || c.Dictionary == nil {
+				continue
+			}
+			found++
+			d := c.Dictionary
+			if !d.ComponentVerified || d.Result.State != validation.EvidenceKnown || d.Result.Value != (d.Input.Value.Text == "keyboard.piano") {
+				t.Fatalf("sound evidence=%+v", d)
+			}
+		}
+		if found != 2 {
+			t.Fatalf("sound evidence count=%d", found)
+		}
+	})
+	for _, tc := range []struct {
+		name, value string
+		manifest    validation.DictionaryManifestID
+		property    validation.ContextProperty
+		known       bool
+	}{
+		{"legacy positive witness", "a", validation.DictionaryManifestIPAPositive2015Unicode13, validation.ContextDictionaryIPA, true},
+		{"legacy partial gap", "?", validation.DictionaryManifestIPAPositive2015Unicode13, validation.ContextDictionaryIPA, false},
+		{"representation witness", "ḉ\u0334", validation.DictionaryManifestIPARepresentation2015Unicode13, validation.ContextDictionaryIPARepresentation, true},
+		{"representation partial gap", "a\u0327", validation.DictionaryManifestIPARepresentation2015Unicode13, validation.ContextDictionaryIPARepresentation, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m, _ := validation.LookupDictionaryManifest(tc.manifest)
+			relations := m.Relations
+			if tc.manifest == validation.DictionaryManifestIPAPositive2015Unicode13 {
+				relations = []validation.DictionaryRelation{validation.DictionaryRelationIPASymbol}
+			}
+			score := `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Piano</part-name></score-part></part-list><part id="P1"><measure number="1"><note><rest/><duration>1</duration><play><ipa>` + tc.value + `</ipa></play></note></measure></part></score-partwise>`
+			report, err := musicxml.InspectXMLWithDictionaries(context.Background(), strings.NewReader(score), musicxml.DictionaryAssessmentOptions{
+				Assessment:   musicxml.AssessmentOptions{Profile: musicxml.ProfileSourceDictionaries},
+				Dictionaries: musicxml.DictionaryOptions{Source: musicxml.BundledDictionarySource(), Selections: []validation.DictionarySelection{{Manifest: m.ID, Relations: relations}}},
+			})
+			if err != nil || report.Conformance == validation.ConformanceViolated {
+				t.Fatalf("report=%+v err=%v", report, err)
+			}
+			found := 0
+			for _, c := range report.Context {
+				if c.Property != tc.property || c.Dictionary == nil {
+					continue
+				}
+				d := c.Dictionary
+				if d.Manifest != tc.manifest || (tc.manifest == validation.DictionaryManifestIPAPositive2015Unicode13 && d.Relation != validation.DictionaryRelationIPASymbol) {
+					continue
+				}
+				found++
+				if !d.ComponentVerified || (d.Result.State == validation.EvidenceKnown) != tc.known || (tc.known && !d.Result.Value) || d.Input.Value.Text != tc.value {
+					t.Fatalf("IPA evidence=%+v", d)
+				}
+				if !tc.known && d.Result.State != validation.EvidenceUnknown {
+					t.Fatalf("partial gap became negative evidence: %+v", d)
+				}
+				if tc.manifest == validation.DictionaryManifestIPAPositive2015Unicode13 && (d.WholeSequence.State != validation.EvidenceUnsupported || report.Conformance != validation.ConformanceUndetermined) {
+					t.Fatalf("legacy positive witness became grammar evidence: %+v", d)
+				}
+			}
+			if found != 1 {
+				t.Fatalf("IPA evidence count=%d", found)
+			}
+		})
+	}
+}

@@ -76,3 +76,14 @@ data with the separate Unicode permission notice. See the
 adjacent Unicode license snapshot. Implementation code remains separately
 licensed. No full Unicode corpus, historical publication, chart artwork or font
 is included by this addition.
+
+## Embedded copies of the pinned dictionary data
+
+`internal/dictionarydata/data` contains byte-identical generated copies of the
+five selected components described above, together with copies of their notices
+and Unicode permission text. `BundledDictionarySource` makes those local data
+available through explicit dictionary selections; their upstream and adapted-data
+licenses continue to apply when the data are embedded in a binary. Preserve the
+applicable notices and license links when distributing those data. The generation
+step changes neither source bytes nor authority: the two IPA components remain
+reviewed derived bundles, not the original publications or a complete grammar.

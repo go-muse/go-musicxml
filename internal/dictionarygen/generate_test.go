@@ -155,3 +155,39 @@ func TestGenerateMissingNoticeLeavesOutputAbsent(t *testing.T) {
 		t.Fatalf("created outputs on rejected input: %v", err)
 	}
 }
+
+func TestGenerateRejectsOversizedNoticeBeforeOutput(t *testing.T) {
+	root := inputRoot(t)
+	writeTestFile(t, filepath.Join(root, "testdata", "dictionaries", "ipa-positive", "NOTICES.txt"), make([]byte, 65537))
+	if err := Generate(root); err == nil {
+		t.Fatal("accepted an unbounded notice")
+	}
+	if _, err := os.Stat(filepath.Join(root, "internal")); !os.IsNotExist(err) {
+		t.Fatalf("created outputs on rejected input: %v", err)
+	}
+}
+
+func TestGenerateEmptyNoticeLeavesOutputsUntouched(t *testing.T) {
+	for _, text := range []string{"", " \r\n\t"} {
+		root := inputRoot(t)
+		if err := Generate(root); err != nil {
+			t.Fatal(err)
+		}
+		output := filepath.Join(root, "internal", "dictionarydata", "data")
+		writeTestFile(t, filepath.Join(output, filepath.FromSlash(componentPaths[0])), []byte("keep unchanged on failure"))
+		before := snapshot(t, output)
+		writeTestFile(t, filepath.Join(root, "testdata", "dictionaries", "ipa-representation", "NOTICES.txt"), []byte(text))
+		if err := Generate(root); err == nil {
+			t.Fatal("generated data without a nonempty attribution notice")
+		}
+		after := snapshot(t, output)
+		if len(after) != len(before) {
+			t.Fatal("failure changed output count")
+		}
+		for path, raw := range before {
+			if after[path] != raw {
+				t.Fatalf("empty notice mutated %s", path)
+			}
+		}
+	}
+}

@@ -1,0 +1,3638 @@
+{
+  "schema_version": 2,
+  "manifest": "ipa-2015-unicode13-representation-v1",
+  "edition": "IPA2015/Unicode13.0.0",
+  "transform_revision": "ipa2015-unicode13-representation-v1",
+  "policy_revision": "ipa2015-unicode13-canonical-representation-v1",
+  "policy_sha256": "abf354d8847b1eb4233ac2d7e835d025ebd9d99dee903737aa0e921004a65bd2",
+  "source_witness_revision": "reviewed-representation-witness-2026-10-14",
+  "data_license": "CC-BY-SA-4.0; Unicode-derived fields retain separate Unicode notice",
+  "attribution": "IPA2015 chart and separately identified later mapping aids; Unicode Character Database13.0.0; see NOTICES.txt and source-ledger.md",
+  "scope": "Affirmative whole-input representation witnesses only; no phonotactics, rendering or universal IPA conformance claim",
+  "records": [
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "à",
+        "à",
+        "NFD-00E0"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "á",
+        "á",
+        "NFD-00E1"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "â",
+        "â",
+        "NFD-00E2"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ã",
+        "ã",
+        "NFD-00E3"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ä",
+        "ä",
+        "NFD-00E4"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "å",
+        "å",
+        "NFD-00E5"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ç",
+        "ç",
+        "NFD-00E7"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "è",
+        "è",
+        "NFD-00E8"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "é",
+        "é",
+        "NFD-00E9"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ê",
+        "ê",
+        "NFD-00EA"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ë",
+        "ë",
+        "NFD-00EB"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ì",
+        "ì",
+        "NFD-00EC"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "í",
+        "í",
+        "NFD-00ED"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "î",
+        "î",
+        "NFD-00EE"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ï",
+        "ï",
+        "NFD-00EF"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ñ",
+        "ñ",
+        "NFD-00F1"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ò",
+        "ò",
+        "NFD-00F2"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ó",
+        "ó",
+        "NFD-00F3"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ô",
+        "ô",
+        "NFD-00F4"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "õ",
+        "õ",
+        "NFD-00F5"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ö",
+        "ö",
+        "NFD-00F6"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ù",
+        "ù",
+        "NFD-00F9"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ú",
+        "ú",
+        "NFD-00FA"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "û",
+        "û",
+        "NFD-00FB"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ü",
+        "ü",
+        "NFD-00FC"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ý",
+        "ý",
+        "NFD-00FD"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ÿ",
+        "ÿ",
+        "NFD-00FF"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ā",
+        "ā",
+        "NFD-0101"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ă",
+        "ă",
+        "NFD-0103"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ć",
+        "ć",
+        "NFD-0107"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĉ",
+        "ĉ",
+        "NFD-0109"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "č",
+        "č",
+        "NFD-010D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ď",
+        "ď",
+        "NFD-010F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ē",
+        "ē",
+        "NFD-0113"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĕ",
+        "ĕ",
+        "NFD-0115"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ě",
+        "ě",
+        "NFD-011B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĝ",
+        "ĝ",
+        "NFD-011D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ğ",
+        "ğ",
+        "NFD-011F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ģ",
+        "ģ",
+        "NFD-0123"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĥ",
+        "ĥ",
+        "NFD-0125"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĩ",
+        "ĩ",
+        "NFD-0129"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ī",
+        "ī",
+        "NFD-012B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĭ",
+        "ĭ",
+        "NFD-012D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĵ",
+        "ĵ",
+        "NFD-0135"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ķ",
+        "ķ",
+        "NFD-0137"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ĺ",
+        "ĺ",
+        "NFD-013A"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ļ",
+        "ļ",
+        "NFD-013C"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ľ",
+        "ľ",
+        "NFD-013E"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ń",
+        "ń",
+        "NFD-0144"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ņ",
+        "ņ",
+        "NFD-0146"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ň",
+        "ň",
+        "NFD-0148"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ō",
+        "ō",
+        "NFD-014D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ŏ",
+        "ŏ",
+        "NFD-014F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ő",
+        "ő",
+        "NFD-0151"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ŕ",
+        "ŕ",
+        "NFD-0155"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ŗ",
+        "ŗ",
+        "NFD-0157"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ř",
+        "ř",
+        "NFD-0159"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ś",
+        "ś",
+        "NFD-015B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ŝ",
+        "ŝ",
+        "NFD-015D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ş",
+        "ş",
+        "NFD-015F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "š",
+        "š",
+        "NFD-0161"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ţ",
+        "ţ",
+        "NFD-0163"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ť",
+        "ť",
+        "NFD-0165"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ũ",
+        "ũ",
+        "NFD-0169"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ū",
+        "ū",
+        "NFD-016B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ŭ",
+        "ŭ",
+        "NFD-016D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ů",
+        "ů",
+        "NFD-016F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ű",
+        "ű",
+        "NFD-0171"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ŵ",
+        "ŵ",
+        "NFD-0175"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ŷ",
+        "ŷ",
+        "NFD-0177"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ź",
+        "ź",
+        "NFD-017A"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ž",
+        "ž",
+        "NFD-017E"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǎ",
+        "ǎ",
+        "NFD-01CE"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǐ",
+        "ǐ",
+        "NFD-01D0"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǒ",
+        "ǒ",
+        "NFD-01D2"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǔ",
+        "ǔ",
+        "NFD-01D4"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǖ",
+        "ǖ",
+        "NFD-01D6"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǘ",
+        "ǘ",
+        "NFD-01D8"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǚ",
+        "ǚ",
+        "NFD-01DA"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǜ",
+        "ǜ",
+        "NFD-01DC"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǟ",
+        "ǟ",
+        "NFD-01DF"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǣ",
+        "ǣ",
+        "NFD-01E3"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǧ",
+        "ǧ",
+        "NFD-01E7"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǩ",
+        "ǩ",
+        "NFD-01E9"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǯ",
+        "ǯ",
+        "NFD-01EF"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǰ",
+        "ǰ",
+        "NFD-01F0"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǵ",
+        "ǵ",
+        "NFD-01F5"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǹ",
+        "ǹ",
+        "NFD-01F9"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǻ",
+        "ǻ",
+        "NFD-01FB"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǽ",
+        "ǽ",
+        "NFD-01FD"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ǿ",
+        "ǿ",
+        "NFD-01FF"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȁ",
+        "ȁ",
+        "NFD-0201"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȃ",
+        "ȃ",
+        "NFD-0203"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȅ",
+        "ȅ",
+        "NFD-0205"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȇ",
+        "ȇ",
+        "NFD-0207"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȉ",
+        "ȉ",
+        "NFD-0209"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȋ",
+        "ȋ",
+        "NFD-020B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȍ",
+        "ȍ",
+        "NFD-020D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȏ",
+        "ȏ",
+        "NFD-020F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȑ",
+        "ȑ",
+        "NFD-0211"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȓ",
+        "ȓ",
+        "NFD-0213"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȕ",
+        "ȕ",
+        "NFD-0215"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȗ",
+        "ȗ",
+        "NFD-0217"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȟ",
+        "ȟ",
+        "NFD-021F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȩ",
+        "ȩ",
+        "NFD-0229"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȫ",
+        "ȫ",
+        "NFD-022B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȭ",
+        "ȭ",
+        "NFD-022D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȳ",
+        "ȳ",
+        "NFD-0233"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "̀",
+        "̀",
+        "NFD-0340"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "́",
+        "́",
+        "NFD-0341"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "̈́",
+        "̈́",
+        "NFD-0344"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḁ",
+        "ḁ",
+        "NFD-1E01"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḉ",
+        "ḉ",
+        "NFD-1E09"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḑ",
+        "ḑ",
+        "NFD-1E11"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḕ",
+        "ḕ",
+        "NFD-1E15"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḗ",
+        "ḗ",
+        "NFD-1E17"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḛ",
+        "ḛ",
+        "NFD-1E1B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḝ",
+        "ḝ",
+        "NFD-1E1D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḡ",
+        "ḡ",
+        "NFD-1E21"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḧ",
+        "ḧ",
+        "NFD-1E27"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḩ",
+        "ḩ",
+        "NFD-1E29"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḭ",
+        "ḭ",
+        "NFD-1E2D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḯ",
+        "ḯ",
+        "NFD-1E2F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḱ",
+        "ḱ",
+        "NFD-1E31"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ḿ",
+        "ḿ",
+        "NFD-1E3F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṍ",
+        "ṍ",
+        "NFD-1E4D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṏ",
+        "ṏ",
+        "NFD-1E4F"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṑ",
+        "ṑ",
+        "NFD-1E51"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṓ",
+        "ṓ",
+        "NFD-1E53"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṕ",
+        "ṕ",
+        "NFD-1E55"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṳ",
+        "ṳ",
+        "NFD-1E73"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṵ",
+        "ṵ",
+        "NFD-1E75"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṹ",
+        "ṹ",
+        "NFD-1E79"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṻ",
+        "ṻ",
+        "NFD-1E7B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ṽ",
+        "ṽ",
+        "NFD-1E7D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẁ",
+        "ẁ",
+        "NFD-1E81"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẃ",
+        "ẃ",
+        "NFD-1E83"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẅ",
+        "ẅ",
+        "NFD-1E85"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẍ",
+        "ẍ",
+        "NFD-1E8D"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẑ",
+        "ẑ",
+        "NFD-1E91"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẗ",
+        "ẗ",
+        "NFD-1E97"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẘ",
+        "ẘ",
+        "NFD-1E98"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẙ",
+        "ẙ",
+        "NFD-1E99"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ấ",
+        "ấ",
+        "NFD-1EA5"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ầ",
+        "ầ",
+        "NFD-1EA7"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẫ",
+        "ẫ",
+        "NFD-1EAB"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ắ",
+        "ắ",
+        "NFD-1EAF"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ằ",
+        "ằ",
+        "NFD-1EB1"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẵ",
+        "ẵ",
+        "NFD-1EB5"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ẽ",
+        "ẽ",
+        "NFD-1EBD"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ế",
+        "ế",
+        "NFD-1EBF"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ề",
+        "ề",
+        "NFD-1EC1"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ễ",
+        "ễ",
+        "NFD-1EC5"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ố",
+        "ố",
+        "NFD-1ED1"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ồ",
+        "ồ",
+        "NFD-1ED3"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ỗ",
+        "ỗ",
+        "NFD-1ED7"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ỳ",
+        "ỳ",
+        "NFD-1EF3"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ỹ",
+        "ỹ",
+        "NFD-1EF9"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        " ",
+        "sign",
+        "D01"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        ".",
+        "sign",
+        "legacy:S-002E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "a",
+        "letter",
+        "legacy:S-0061"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "b",
+        "letter",
+        "legacy:S-0062"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "c",
+        "letter",
+        "legacy:S-0063"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "d",
+        "letter",
+        "legacy:S-0064"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "d̢",
+        "constructed-letter",
+        "R01"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "e",
+        "letter",
+        "legacy:S-0065"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "f",
+        "letter",
+        "legacy:S-0066"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "g",
+        "letter",
+        "P01"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "h",
+        "letter",
+        "legacy:S-0068"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "i",
+        "letter",
+        "legacy:S-0069"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "j",
+        "letter",
+        "legacy:S-006A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "k",
+        "letter",
+        "legacy:S-006B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "l",
+        "letter",
+        "legacy:S-006C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "l̢",
+        "constructed-letter",
+        "R02"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "m",
+        "letter",
+        "legacy:S-006D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "n",
+        "letter",
+        "legacy:S-006E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "n̢",
+        "constructed-letter",
+        "R03"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "o",
+        "letter",
+        "legacy:S-006F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "p",
+        "letter",
+        "legacy:S-0070"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "q",
+        "letter",
+        "legacy:S-0071"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "r",
+        "letter",
+        "legacy:S-0072"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "r̢",
+        "constructed-letter",
+        "R04"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "s",
+        "letter",
+        "legacy:S-0073"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "s̢",
+        "constructed-letter",
+        "R06"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "t",
+        "letter",
+        "legacy:S-0074"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "t̢",
+        "constructed-letter",
+        "R07"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "u",
+        "letter",
+        "legacy:S-0075"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "v",
+        "letter",
+        "legacy:S-0076"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "w",
+        "letter",
+        "legacy:S-0077"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "x",
+        "letter",
+        "legacy:S-0078"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "y",
+        "letter",
+        "legacy:S-0079"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "z",
+        "letter",
+        "legacy:S-007A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "z̢",
+        "constructed-letter",
+        "R08"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "|",
+        "sign",
+        "legacy:S-007C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "æ",
+        "letter",
+        "legacy:S-00E6"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ç",
+        "letter",
+        "legacy:S-00E7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ð",
+        "letter",
+        "legacy:S-00F0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ø",
+        "letter",
+        "legacy:S-00F8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ħ",
+        "letter",
+        "legacy:S-0127"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ŋ",
+        "letter",
+        "legacy:S-014B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "œ",
+        "letter",
+        "legacy:S-0153"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǀ",
+        "letter",
+        "legacy:S-01C0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǁ",
+        "letter",
+        "legacy:S-01C1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǂ",
+        "letter",
+        "legacy:S-01C2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǃ",
+        "letter",
+        "legacy:S-01C3"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǃ̢",
+        "constructed-letter",
+        "R12"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɐ",
+        "letter",
+        "legacy:S-0250"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɑ",
+        "letter",
+        "legacy:S-0251"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɒ",
+        "letter",
+        "legacy:S-0252"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɓ",
+        "letter",
+        "legacy:S-0253"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɔ",
+        "letter",
+        "legacy:S-0254"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɕ",
+        "letter",
+        "legacy:S-0255"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɖ",
+        "letter",
+        "legacy:S-0256"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɗ",
+        "letter",
+        "legacy:S-0257"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɗ̢",
+        "constructed-letter",
+        "R09"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɘ",
+        "letter",
+        "legacy:S-0258"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ə",
+        "letter",
+        "legacy:S-0259"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɚ",
+        "letter",
+        "O02"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɛ",
+        "letter",
+        "legacy:S-025B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɜ",
+        "letter",
+        "legacy:S-025C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɝ",
+        "letter",
+        "O10"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɞ",
+        "letter",
+        "legacy:S-025E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɟ",
+        "letter",
+        "legacy:S-025F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɠ",
+        "letter",
+        "legacy:S-0260"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɡ",
+        "letter",
+        "legacy:S-0261"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɢ",
+        "letter",
+        "legacy:S-0262"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɣ",
+        "letter",
+        "legacy:S-0263"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɤ",
+        "letter",
+        "legacy:S-0264"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɥ",
+        "letter",
+        "legacy:S-0265"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɦ",
+        "letter",
+        "legacy:S-0266"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɧ",
+        "letter",
+        "legacy:S-0267"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɨ",
+        "letter",
+        "legacy:S-0268"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɪ",
+        "letter",
+        "legacy:S-026A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɫ",
+        "letter",
+        "O01"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɬ",
+        "letter",
+        "legacy:S-026C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɬ̢",
+        "constructed-letter",
+        "R10"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɭ",
+        "letter",
+        "legacy:S-026D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɮ",
+        "letter",
+        "legacy:S-026E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɮ̢",
+        "constructed-letter",
+        "R13"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɯ",
+        "letter",
+        "legacy:S-026F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɰ",
+        "letter",
+        "legacy:S-0270"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɱ",
+        "letter",
+        "legacy:S-0271"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɲ",
+        "letter",
+        "legacy:S-0272"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɳ",
+        "letter",
+        "legacy:S-0273"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɴ",
+        "letter",
+        "legacy:S-0274"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɵ",
+        "letter",
+        "legacy:S-0275"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɶ",
+        "letter",
+        "legacy:S-0276"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɸ",
+        "letter",
+        "legacy:S-0278"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɹ",
+        "letter",
+        "legacy:S-0279"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɹ̢",
+        "constructed-letter",
+        "R05"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɺ",
+        "letter",
+        "legacy:S-027A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɺ̢",
+        "constructed-letter",
+        "R11"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɻ",
+        "letter",
+        "legacy:S-027B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɽ",
+        "letter",
+        "legacy:S-027D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɾ",
+        "letter",
+        "legacy:S-027E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʀ",
+        "letter",
+        "legacy:S-0280"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʁ",
+        "letter",
+        "legacy:S-0281"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʂ",
+        "letter",
+        "legacy:S-0282"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʃ",
+        "letter",
+        "legacy:S-0283"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʄ",
+        "letter",
+        "legacy:S-0284"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʈ",
+        "letter",
+        "legacy:S-0288"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʉ",
+        "letter",
+        "legacy:S-0289"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʊ",
+        "letter",
+        "legacy:S-028A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʋ",
+        "letter",
+        "legacy:S-028B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʌ",
+        "letter",
+        "legacy:S-028C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʍ",
+        "letter",
+        "legacy:S-028D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʎ",
+        "letter",
+        "legacy:S-028E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʏ",
+        "letter",
+        "legacy:S-028F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʐ",
+        "letter",
+        "legacy:S-0290"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʑ",
+        "letter",
+        "legacy:S-0291"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʒ",
+        "letter",
+        "legacy:S-0292"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʔ",
+        "letter",
+        "legacy:S-0294"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʕ",
+        "letter",
+        "legacy:S-0295"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʘ",
+        "letter",
+        "legacy:S-0298"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʙ",
+        "letter",
+        "legacy:S-0299"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʛ",
+        "letter",
+        "legacy:S-029B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʜ",
+        "letter",
+        "legacy:S-029C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʝ",
+        "letter",
+        "legacy:S-029D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʟ",
+        "letter",
+        "legacy:S-029F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʡ",
+        "letter",
+        "legacy:S-02A1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʢ",
+        "letter",
+        "legacy:S-02A2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʰ",
+        "modifier-letter",
+        "legacy:S-02B0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʱ",
+        "modifier-letter",
+        "O17"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʲ",
+        "modifier-letter",
+        "legacy:S-02B2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʳ",
+        "modifier-letter",
+        "O11"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʳ̢",
+        "constructed-letter",
+        "R21"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʴ",
+        "modifier-letter",
+        "O18"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʴ̢",
+        "constructed-letter",
+        "R14"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʵ",
+        "modifier-letter",
+        "O12"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʶ",
+        "modifier-letter",
+        "O19"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʷ",
+        "modifier-letter",
+        "legacy:S-02B7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʸ",
+        "modifier-letter",
+        "S09"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʼ",
+        "sign",
+        "legacy:S-02BC"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˀ",
+        "modifier-letter",
+        "O13"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˁ",
+        "modifier-letter",
+        "S74"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˈ",
+        "sign",
+        "legacy:S-02C8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˌ",
+        "sign",
+        "legacy:S-02CC"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ː",
+        "sign",
+        "legacy:S-02D0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˑ",
+        "sign",
+        "legacy:S-02D1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˔",
+        "sign",
+        "P23"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˕",
+        "sign",
+        "P24"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˞",
+        "sign",
+        "legacy:S-02DE"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˠ",
+        "modifier-letter",
+        "legacy:S-02E0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˡ",
+        "modifier-letter",
+        "legacy:S-02E1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˡ̢",
+        "constructed-letter",
+        "R15"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˢ",
+        "modifier-letter",
+        "S12"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˢ̢",
+        "constructed-letter",
+        "R17"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˣ",
+        "modifier-letter",
+        "S13"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˤ",
+        "modifier-letter",
+        "legacy:S-02E4"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˥",
+        "sign",
+        "legacy:S-02E5"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˦",
+        "sign",
+        "legacy:S-02E6"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˧",
+        "sign",
+        "legacy:S-02E7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˨",
+        "sign",
+        "legacy:S-02E8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˩",
+        "sign",
+        "legacy:S-02E9"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̀",
+        "mark",
+        "legacy:S-0300"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "́",
+        "mark",
+        "legacy:S-0301"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̂",
+        "mark",
+        "legacy:S-0302"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̃",
+        "mark",
+        "legacy:S-0303"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̄",
+        "mark",
+        "legacy:S-0304"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̆",
+        "mark",
+        "legacy:S-0306"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̈",
+        "mark",
+        "legacy:S-0308"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̊",
+        "mark",
+        "legacy:S-030A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̋",
+        "mark",
+        "legacy:S-030B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̌",
+        "mark",
+        "legacy:S-030C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̍",
+        "mark",
+        "P02"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̏",
+        "mark",
+        "legacy:S-030F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̑",
+        "mark",
+        "P03"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̕",
+        "mark",
+        "EJECTIVE-0315"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̘",
+        "mark",
+        "legacy:S-0318"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̙",
+        "mark",
+        "legacy:S-0319"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̚",
+        "mark",
+        "legacy:S-031A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̜",
+        "mark",
+        "legacy:S-031C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̝",
+        "mark",
+        "legacy:S-031D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̞",
+        "mark",
+        "legacy:S-031E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̟",
+        "mark",
+        "legacy:S-031F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̠",
+        "mark",
+        "legacy:S-0320"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̤",
+        "mark",
+        "legacy:S-0324"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̥",
+        "mark",
+        "legacy:S-0325"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̩",
+        "mark",
+        "legacy:S-0329"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̪",
+        "mark",
+        "legacy:S-032A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̬",
+        "mark",
+        "legacy:S-032C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̯",
+        "mark",
+        "legacy:S-032F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̰",
+        "mark",
+        "legacy:S-0330"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̴",
+        "mark",
+        "legacy:S-0334"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̹",
+        "mark",
+        "legacy:S-0339"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̺",
+        "mark",
+        "legacy:S-033A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̻",
+        "mark",
+        "legacy:S-033B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̼",
+        "mark",
+        "legacy:S-033C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̽",
+        "mark",
+        "legacy:S-033D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "͆",
+        "mark",
+        "P04"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "͑",
+        "mark",
+        "P05"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "͗",
+        "mark",
+        "P06"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "͜",
+        "mark",
+        "legacy:S-035C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "͡",
+        "mark",
+        "legacy:S-0361"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "β",
+        "letter",
+        "legacy:S-03B2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "θ",
+        "letter",
+        "legacy:S-03B8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "χ",
+        "letter",
+        "legacy:S-03C7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵃ",
+        "modifier-letter",
+        "S15"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵄ",
+        "modifier-letter",
+        "S16"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵅ",
+        "modifier-letter",
+        "S17"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵇ",
+        "modifier-letter",
+        "S18"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵈ",
+        "modifier-letter",
+        "S19"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵈ̢",
+        "constructed-letter",
+        "R19"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵉ",
+        "modifier-letter",
+        "S20"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵊ",
+        "modifier-letter",
+        "S21"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵋ",
+        "modifier-letter",
+        "S22"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵍ",
+        "modifier-letter",
+        "S23"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵏ",
+        "modifier-letter",
+        "S24"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵐ",
+        "modifier-letter",
+        "S25"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵑ",
+        "modifier-letter",
+        "S26"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵒ",
+        "modifier-letter",
+        "S27"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵓ",
+        "modifier-letter",
+        "S28"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵖ",
+        "modifier-letter",
+        "S29"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵗ",
+        "modifier-letter",
+        "S30"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵗ̢",
+        "constructed-letter",
+        "R20"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵘ",
+        "modifier-letter",
+        "S31"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵚ",
+        "modifier-letter",
+        "S32"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵛ",
+        "modifier-letter",
+        "S33"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵝ",
+        "modifier-letter",
+        "S34"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵡ",
+        "modifier-letter",
+        "S35"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵬ",
+        "letter",
+        "P09"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵭ",
+        "letter",
+        "P10"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵮ",
+        "letter",
+        "P11"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵯ",
+        "letter",
+        "P12"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵰ",
+        "letter",
+        "P13"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵱ",
+        "letter",
+        "P14"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵲ",
+        "letter",
+        "P15"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵳ",
+        "letter",
+        "P16"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵴ",
+        "letter",
+        "P17"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵵ",
+        "letter",
+        "P18"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᵶ",
+        "letter",
+        "P19"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶑ",
+        "letter",
+        "P21"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶛ",
+        "modifier-letter",
+        "S36"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶜ",
+        "modifier-letter",
+        "S37"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶜ̧",
+        "constructed-letter",
+        "R22"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶝ",
+        "modifier-letter",
+        "S38"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶞ",
+        "modifier-letter",
+        "S39"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶟ",
+        "modifier-letter",
+        "S40"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶠ",
+        "modifier-letter",
+        "S41"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶡ",
+        "modifier-letter",
+        "S42"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶢ",
+        "modifier-letter",
+        "S43"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶣ",
+        "modifier-letter",
+        "S44"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶤ",
+        "modifier-letter",
+        "S45"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶦ",
+        "modifier-letter",
+        "S46"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶨ",
+        "modifier-letter",
+        "S47"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶩ",
+        "modifier-letter",
+        "S48"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶫ",
+        "modifier-letter",
+        "S49"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶬ",
+        "modifier-letter",
+        "S50"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶭ",
+        "modifier-letter",
+        "S51"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶮ",
+        "modifier-letter",
+        "S52"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶯ",
+        "modifier-letter",
+        "S53"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶰ",
+        "modifier-letter",
+        "S54"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶱ",
+        "modifier-letter",
+        "S55"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶲ",
+        "modifier-letter",
+        "S56"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶳ",
+        "modifier-letter",
+        "S57"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶴ",
+        "modifier-letter",
+        "S58"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶶ",
+        "modifier-letter",
+        "S59"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶷ",
+        "modifier-letter",
+        "S60"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶹ",
+        "modifier-letter",
+        "S61"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶺ",
+        "modifier-letter",
+        "S62"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶻ",
+        "modifier-letter",
+        "S63"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶻ̢",
+        "constructed-letter",
+        "R18"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶼ",
+        "modifier-letter",
+        "S64"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶽ",
+        "modifier-letter",
+        "S65"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶾ",
+        "modifier-letter",
+        "S66"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ᶿ",
+        "modifier-letter",
+        "S67"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷄",
+        "mark",
+        "legacy:S-1DC4"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷅",
+        "mark",
+        "legacy:S-1DC5"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷆",
+        "mark",
+        "O14"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷇",
+        "mark",
+        "O22"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷈",
+        "mark",
+        "legacy:S-1DC8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷉",
+        "mark",
+        "O23"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷵",
+        "mark",
+        "P07"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "‖",
+        "sign",
+        "legacy:S-2016"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "‿",
+        "sign",
+        "legacy:S-203F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ⁱ",
+        "modifier-letter",
+        "S68"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ⁿ",
+        "modifier-letter",
+        "legacy:S-207F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ⁿ̢",
+        "constructed-letter",
+        "R16"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "↗",
+        "sign",
+        "legacy:S-2197"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "↘",
+        "sign",
+        "legacy:S-2198"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ⱱ",
+        "letter",
+        "legacy:S-2C71"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "꜒",
+        "sign",
+        "D09"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "꜓",
+        "sign",
+        "D10"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "꜔",
+        "sign",
+        "D11"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "꜕",
+        "sign",
+        "D12"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "꜖",
+        "sign",
+        "D13"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꜛ",
+        "sign",
+        "legacy:S-A71B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꜜ",
+        "sign",
+        "legacy:S-A71C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꞎ",
+        "letter",
+        "P22"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꟹ",
+        "modifier-letter",
+        "S70"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꭞ",
+        "modifier-letter",
+        "S71"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꭨ",
+        "letter",
+        "P20"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꭩ",
+        "modifier-letter",
+        "S72"
+      ]
+    }
+  ]
+}
