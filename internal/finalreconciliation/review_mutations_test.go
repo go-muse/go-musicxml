@@ -140,49 +140,112 @@ func TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix(t *testing.T) {
 
 func TestFinalReconciliationRejectsUnboundAnchors(t *testing.T) {
 	for _, tc := range []struct {
-		name   string
-		mutate func(map[string]any)
+		name, want string
+		mutate     func(map[string]any)
 	}{
-		{"unrelated file", func(m map[string]any) {
+		{"unrelated file", "anchor must name its test file", func(m map[string]any) {
 			first(m, "cases")["anchors"] = []any{map[string]any{"file": "README.md", "text": "MusicXML"}, map[string]any{"file": "README.md", "text": "Go"}}
 		}},
-		{"generic repeated substrings", func(m map[string]any) {
+		{"generic repeated substrings", "anchor must occur exactly once", func(m map[string]any) {
 			c := first(m, "cases")
 			c["anchors"] = []any{map[string]any{"file": c["file"], "text": "t"}, map[string]any{"file": c["file"], "text": "func"}}
 		}},
-		{"another test in same file", func(m map[string]any) {
+		{"another test in same file", "anchor is outside its test and directly referenced fixtures", func(m map[string]any) {
 			c := first(m, "cases")
 			c["anchors"] = []any{map[string]any{"file": c["file"], "text": "func TestXMLAttributeCheckDoesNotInventNamespaceBindings(t *testing.T) {"}, map[string]any{"file": c["file"], "text": "assert.NotContains(t, err.Error(), \"duplicate XML attribute\")"}}
 		}},
+		{"helper anchors only", "needs an anchor in the named test body", func(m map[string]any) {
+			c := rowWith(m, "cases", "id", "TestValidateXSIType")
+			c["anchors"].([]any)[1] = map[string]any{"file": c["file"], "text": `add("unknown named type", "text", ` + "`" + ` i:type="t:Missing"` + "`" + `, "ok", xsi)`}
+		}},
+		{"repeated anchor entry", "duplicate fixture/assertion anchor", func(m map[string]any) {
+			c := rowWith(m, "cases", "id", "TestValidateXSIType")
+			assertion := c["anchors"].([]any)[1]
+			c["anchors"] = []any{assertion, assertion}
+		}},
 	} {
-		t.Run(tc.name, func(t *testing.T) { root, m := loadLedger(t); tc.mutate(m); rejectLedger(t, root, m, "anchor") })
+		t.Run(tc.name, func(t *testing.T) { root, m := loadLedger(t); tc.mutate(m); rejectLedger(t, root, m, tc.want) })
 	}
-	for _, tc := range []struct{ name, body string }{
-		{"test body replaced by skip", `{ t.Skip("removed assertions") }`},
-		{"package fixture no longer referenced", `{ assertValidationIssues(t, validateAttributeSource(t, &validationXSIGenerated, test.source), test.issues) }`},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
+	t.Run("package fixture no longer referenced", func(t *testing.T) {
+		root, m := loadLedger(t)
+		const path = "validation_xsi_type_test.go"
+		raw := mutateTestBody(t, root, path, "TestValidateXSIType", func(body string) string {
+			// Keep the assertion anchor byte-for-byte intact. Only remove the
+			// reference that binds the package-level fixture-building helper.
+			return strings.Replace(body, "validationXSICases()", "[]validationSourceCase{}", 1)
+		})
+		c := rowWith(m, "cases", "id", "TestValidateXSIType")
+		for _, a := range c["anchors"].([]any) {
+			if !strings.Contains(string(raw), strings.TrimSpace(a.(map[string]any)["text"].(string))) {
+				t.Fatal("fixture-reference mutation damaged an anchor")
+			}
+		}
+		rejectLedger(t, overlayRoot(t, root, map[string][]byte{path: raw}), m, "anchor is outside its test and directly referenced fixtures")
+	})
+	t.Run("package variable no longer referenced", func(t *testing.T) {
+		root, m := loadLedger(t)
+		const path = "xml_wellformedness_test.go"
+		c := rowWith(m, "cases", "id", "TestXMLWellFormednessDecodePaths")
+		raw := mutateTestBody(t, root, path, c["function"].(string), func(body string) string {
+			return strings.Replace(body, "xmlWellFormednessCases", "nil", 1)
+		})
+		c["anchors"].([]any)[1].(map[string]any)["text"] = "runXMLReadingDecodePaths(t, nil, xmlReadingEncodingVariants, assertXMLReadingError)"
+		// Exercise the structural guard directly, so the deliberately changed
+		// anchor text cannot fall through to the independent case-policy pin.
+		references := &ledgerReferences{files: make(map[string][]byte), documents: make(map[string]any)}
+		err := references.validateCase(overlayRoot(t, root, map[string][]byte{path: raw}), c["id"].(string), c)
+		if err == nil || !strings.Contains(err.Error(), "anchor is outside its test and directly referenced fixtures") {
+			t.Fatalf("unreferenced package variable accepted or wrong rejection: %v", err)
+		}
+	})
+}
+
+func TestFinalReconciliationRejectsUnconditionalSkip(t *testing.T) {
+	for _, skip := range []string{`t.Skip("disabled")`, `t.Skipf("disabled: %s", "fixture")`, `t.SkipNow()`} {
+		t.Run(skip, func(t *testing.T) {
 			root, m := loadLedger(t)
 			const path = "validation_xsi_type_test.go"
-			raw, err := os.ReadFile(filepath.Join(root, path))
-			if err != nil {
-				t.Fatal(err)
-			}
-			fs := token.NewFileSet()
-			f, err := parser.ParseFile(fs, path, raw, 0)
-			if err != nil {
-				t.Fatal(err)
-			}
-			for _, d := range f.Decls {
-				if fn, ok := d.(*ast.FuncDecl); ok && fn.Name.Name == "TestValidateXSIType" {
-					start, end := fs.Position(fn.Body.Pos()).Offset, fs.Position(fn.Body.End()).Offset
-					raw = append(append(append([]byte{}, raw[:start]...), []byte(tc.body)...), raw[end:]...)
-					break
-				}
-			}
-			rejectLedger(t, overlayRoot(t, root, map[string][]byte{path: raw}), m, "anchor")
+			raw := mutateTestBody(t, root, path, "TestValidateXSIType", func(body string) string {
+				return "{\n\t" + skip + body[1:]
+			})
+			rejectLedger(t, overlayRoot(t, root, map[string][]byte{path: raw}), m, "unconditional top-level test skip")
 		})
 	}
+	t.Run("conditional skips remain permitted", func(t *testing.T) {
+		root, m := loadLedger(t)
+		const path = "validation_xsi_type_test.go"
+		raw := mutateTestBody(t, root, path, "TestValidateXSIType", func(body string) string {
+			return "{\n\tif false { t.Skip(\"optional tool unavailable\") }" + body[1:]
+		})
+		if err := validateLedger(overlayRoot(t, root, map[string][]byte{path: raw}), m); err != nil {
+			t.Fatalf("conditional skip rejected: %v", err)
+		}
+	})
+}
+
+func mutateTestBody(t *testing.T, root, path, name string, mutate func(string) string) []byte {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(root, path))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fs := token.NewFileSet()
+	file, err := parser.ParseFile(fs, path, raw, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, declaration := range file.Decls {
+		if fn, ok := declaration.(*ast.FuncDecl); ok && fn.Name.Name == name {
+			start, end := fs.Position(fn.Body.Pos()).Offset, fs.Position(fn.Body.End()).Offset
+			changed := mutate(string(raw[start:end]))
+			if changed == string(raw[start:end]) {
+				t.Fatal("test body mutation made no change")
+			}
+			return append(append(append([]byte{}, raw[:start]...), []byte(changed)...), raw[end:]...)
+		}
+	}
+	t.Fatalf("missing mutation target %s", name)
+	return nil
 }
 
 // Only replacement paths are copied. Other files remain read-only symlinks to
