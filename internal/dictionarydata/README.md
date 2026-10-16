@@ -24,9 +24,11 @@ an independent context-aware reader over immutable shared strings; the normal
 accounted importer still verifies and parses the component. The source does not
 activate any selection, replace a nil source, or supply files for the caller.
 
-Upstream refresh is separate reviewed maintenance: obtain the intended inputs
-explicitly, review provenance and licensing, and update the affected fixed pins,
-transform/policy identities and migration evidence as needed before regenerating.
+Upstream refresh is separate reviewed maintenance. Preserve existing edition
+inputs, manifest/component identities and fixed pins; add a new edition identity
+or a new `-vN` revision instead of rewriting a published pin in place. Follow the
+[refresh checklist](../../CONTRIBUTING.md#pinned-dictionary-generation) for input
+provenance, licensing, generator/embed registration and migration verification.
 There is no download or "latest" mode in the generator.
 
 The original SMuFL and MusicXML source components and the two reviewed derived
