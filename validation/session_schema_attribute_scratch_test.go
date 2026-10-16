@@ -8,11 +8,15 @@ import (
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
-func schemaAttributeScratchFixture(t *testing.T) (*Session, *factNode, xsd.Use, xsd.Binding) {
+func schemaAttributeScratchFixture(t *testing.T, invalid ...bool) (*Session, *factNode, xsd.Use, xsd.Binding) {
 	t.Helper()
+	firstType := "string"
+	if len(invalid) != 0 && invalid[0] {
+		firstType = "integer"
+	}
 	schema, err := CompileSchema(AssemblyMusicXML, SchemaData{Elements: map[SchemaName]*SchemaElement{
 		{Local: "root"}: {Name: SchemaName{Local: "root"}, Type: SchemaTypeRef{InlineComplex: &SchemaComplex{Form: SchemaComplexDirect, Attributes: []SchemaAttribute{
-			{Name: SchemaName{Local: "a"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "string"}}},
+			{Name: SchemaName{Local: "a"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: firstType}}},
 			{Name: SchemaName{Local: "b"}, Type: SchemaTypeRef{Name: SchemaName{Space: xsd.XSDNamespace, Local: "string"}}},
 		}}}},
 	}})

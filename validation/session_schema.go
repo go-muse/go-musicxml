@@ -395,10 +395,24 @@ func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.U
 		}
 		n.end.Scalar.Value = scalar
 	}
-	if err := s.retain(int64(len(n.attributes)) * 96); err != nil {
+	indexBytes, err := rationalCheckedMul(BudgetBufferedBytes, int64(len(n.attributes)), 96)
+	if err != nil {
 		return err
 	}
-	attributes := make(map[QName]int, len(n.attributes))
+	if _, err := AllocationSize(indexBytes); err != nil {
+		return err
+	}
+	if err := s.account.Charge(BudgetBufferedBytes, indexBytes); err != nil {
+		return err
+	}
+	// The name-to-slot index is local to publication. Only the independently
+	// retained declaration/scalar facts escape; drop the map on every exit.
+	var attributes map[QName]int
+	defer func() {
+		attributes = nil
+		_ = s.account.Release(BudgetBufferedBytes, indexBytes)
+	}()
+	attributes = make(map[QName]int, len(n.attributes))
 	for i := range n.attributes {
 		if n.attributes[i].Presence.State == EvidenceAbsent {
 			continue
