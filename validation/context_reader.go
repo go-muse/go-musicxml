@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
+	"strings"
+
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
@@ -18,7 +20,15 @@ type contextReader struct {
 	attributeCache  map[xsd.Binding]*contextAttributeTable
 	attributeIntern map[contextAttributeInternKey]*contextAttributeTable
 	elementCache    map[DeclarationID][]contextRole
+	boundElements   map[xsd.Binding]contextBoundElementRoles
 	ownerCache      map[ComponentID]*contextAttributeTable
+}
+
+// A schema binding is compact, run-local immutable identity. The role slice is
+// borrowed from the exact compiled bindings, never copied or inferred from type.
+type contextBoundElementRoles struct {
+	bindings *contextBindings
+	roles    []contextRole
 }
 
 func (r *contextReader) step(n int64) bool {
@@ -37,6 +47,32 @@ func (r *contextReader) matches(n *factNode, role contextRole) bool {
 	if n == nil || r.b == nil || !r.step(1) || n.header.Declaration.State != EvidenceKnown {
 		return false
 	}
+	if r.b.bindingDigest != "" && r.b.ElementRoles != nil && r.s.finished && n.closed && r.s.schema != nil && r.s.schema.bound && r.s.schema.identityReady && r.s.schema.run != nil {
+		if roles, ready := r.boundElementRoles(n); ready {
+			// The compiled set is sorted. A bounded binary search avoids both
+			// hashing the declaration again and a full role-vocabulary scan.
+			for lo, hi := 0, len(roles); lo < hi; {
+				mid := lo + (hi-lo)/2
+				candidate := roles[mid]
+				if !r.step(1 + int64(min(len(candidate), len(role)))) {
+					return false
+				}
+				comparison := strings.Compare(string(candidate), string(role))
+				if comparison == 0 {
+					return true
+				}
+				if comparison < 0 {
+					lo = mid + 1
+				} else {
+					hi = mid
+				}
+			}
+			return false
+		}
+		if r.err != nil {
+			return false
+		}
+	}
 	if r.b.Elements != nil {
 		if !r.step(int64(len(role)) + contextDeclarationBytes(n.header.Declaration.Value)) {
 			return false
@@ -50,6 +86,55 @@ func (r *contextReader) matches(n *factNode, role contextRole) bool {
 		}
 	}
 	return false
+}
+
+// boundElementRoles is used only during final provider evaluation: Finish has
+// sealed the public event API, bindSourceSchema has published every declaration,
+// and finalizeSourceSchema has completed. No declaration can change in this
+// phase. Earlier readers and private mutable/manual bindings use matches' exact
+// lookup instead, so late publication never installs a stale classification.
+// EvidenceKnown is still checked on every call, outside this cache. A cached
+// empty role set is only a classification of a known declaration, not evidence
+// that a declaration or any musical fact is absent.
+func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
+	if !r.step(1) {
+		return nil, false
+	}
+	bound, ok := r.s.schema.nodes[n.header.ID]
+	if !ok || !bound.available {
+		return nil, false
+	}
+	if !r.step(1) {
+		return nil, false
+	}
+	entry, ready := r.boundElements[bound.binding]
+	if ready && entry.bindings == r.b {
+		return entry.roles, true
+	}
+	if !r.step(contextDeclarationBytes(n.header.Declaration.Value)) {
+		return nil, false
+	}
+	roles := r.b.ElementRoles[n.header.Declaration.Value]
+	if !r.step(1) {
+		return nil, false
+	}
+	if !ready {
+		// One compact entry per binding, independent of the number of queried
+		// roles. This covers map buckets, geometric growth and allocator rounding;
+		// the immutable role slice remains owned by the compiled configuration.
+		retained := int64(256)
+		if r.boundElements == nil {
+			retained += 128
+		}
+		if r.err = r.s.retain(retained); r.err != nil {
+			return nil, false
+		}
+	}
+	if r.boundElements == nil {
+		r.boundElements = make(map[xsd.Binding]contextBoundElementRoles)
+	}
+	r.boundElements[bound.binding] = contextBoundElementRoles{bindings: r.b, roles: roles}
+	return roles, true
 }
 
 // roles returns a borrowed immutable set of exact element roles. The lookup
