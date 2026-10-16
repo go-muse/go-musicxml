@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"testing"
 
@@ -92,7 +93,7 @@ func TestBundledDictionaryImporterStillVerifiesAndCloses(t *testing.T) {
 		if set == nil || (corrupt != errors.Is(err, ErrDictionaryUnavailable)) || (!corrupt && err != nil) {
 			t.Fatalf("corrupt=%v set=%v err=%v", corrupt, set, err)
 		}
-		if _, err := body.Read(make([]byte, 1)); !errors.Is(err, io.ErrClosedPipe) {
+		if _, err := body.Read(make([]byte, 1)); !errors.Is(err, fs.ErrClosed) {
 			t.Fatalf("importer did not close body: %v", err)
 		}
 		set.Close()

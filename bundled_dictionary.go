@@ -2,7 +2,7 @@ package musicxml
 
 import (
 	"context"
-	"io"
+	"io/fs"
 	"strings"
 
 	"github.com/go-muse/go-musicxml/internal/dictionarydata"
@@ -56,7 +56,7 @@ type bundledDictionaryBody struct {
 
 func (b *bundledDictionaryBody) Read(p []byte) (int, error) {
 	if b.closed {
-		return 0, io.ErrClosedPipe
+		return 0, fs.ErrClosed
 	}
 	if err := b.ctx.Err(); err != nil {
 		return 0, err
