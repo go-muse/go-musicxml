@@ -39,6 +39,10 @@ func TestFinalReconciliationRejectsReviewedPolicyDrift(t *testing.T) {
 		{"mapped basis replaced by Unknown", "reviewed axis policy", func(m map[string]any) {
 			first(m, "test_contracts")["axes"].(map[string]any)["positive"].(map[string]any)["assessment_basis"] = "Returns Unknown"
 		}},
+		{"route outcome changed", "reviewed case policy", func(m map[string]any) { first(m, "cases")["expected"] = "Returns Unknown" }},
+		{"PR guard relabeled baseline", "reviewed case policy", func(m map[string]any) {
+			rowWith(m, "cases", "id", "TestFinalReconciliationRejectsHistoricalExecutionPromotion")["evidence_layer"] = "baseline"
+		}},
 		{"five source fingerprints removed", "preserved source set", func(m map[string]any) { m["preserved_sources"] = m["preserved_sources"].([]any)[:3] }},
 		{"duplicate preserved source", "preserved source set", func(m map[string]any) { rows := m["preserved_sources"].([]any); rows[7] = rows[0] }},
 		{"implementation references erased", "nonempty implementation_refs", func(m map[string]any) { first(m, "requirements")["implementation_refs"] = []any{} }},

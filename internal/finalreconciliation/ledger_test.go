@@ -61,11 +61,6 @@ func TestFinalReconciliationRejectsUnsupportedClaims(t *testing.T) {
 		{"missing axis", "five case axes", func(m map[string]any) { delete(first(m, "test_contracts")["axes"].(map[string]any), "interaction") }},
 		{"unsupported closure", "unsupported closure", func(m map[string]any) { first(m, "requirements")["classification"] = "implemented-and-verified" }},
 		{"blanket completion", "classification", func(m map[string]any) { first(m, "requirements")["classification"] = "complete" }},
-		{"unknown is not closure", "unsupported closure", func(m map[string]any) {
-			r := first(m, "requirements")
-			r["classification"] = "implemented-and-verified"
-			r["closure_criterion"] = "Returns Unknown"
-		}},
 		{"missing issue", "issue identity set", func(m map[string]any) { m["issues"] = m["issues"].([]any)[1:] }},
 		{"duplicate candidate", "duplicate", func(m map[string]any) { rows := m["candidates"].([]any); rows[1] = rows[0] }},
 		{"translation silently retired", "translation disposition", func(m map[string]any) {

@@ -5,9 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -59,46 +56,16 @@ func validateLedger(root string, ledger map[string]any) error {
 		return fmt.Errorf("missing substantive cases")
 	}
 	for id, c := range cases {
-		file, name := stringField(c, "file"), stringField(c, "function")
-		data, err := readLocal(root, file)
-		if err != nil {
+		if err := references.validateCase(root, id, c); err != nil {
 			return err
-		}
-		parsed, err := parser.ParseFile(token.NewFileSet(), file, data, 0)
-		if err != nil {
-			return err
-		}
-		found := false
-		for _, d := range parsed.Decls {
-			if f, ok := d.(*ast.FuncDecl); ok && f.Name.Name == name && f.Recv == nil && strings.HasPrefix(name, "Test") {
-				found = true
-			}
-		}
-		if !found {
-			return fmt.Errorf("%s missing test function %s in %s", id, name, file)
-		}
-		if stringField(c, "input") == "" || stringField(c, "expected") == "" || stringField(c, "scope") == "" {
-			return fmt.Errorf("%s lacks substantive input/outcome/scope", id)
-		}
-		anchors, ok := c["anchors"].([]any)
-		if !ok || len(anchors) < 2 {
-			return fmt.Errorf("%s needs fixture and assertion anchors", id)
-		}
-		for _, v := range anchors {
-			a, ok := v.(map[string]any)
-			if !ok {
-				return fmt.Errorf("%s malformed anchor", id)
-			}
-			b, e := readLocal(root, stringField(a, "file"))
-			if e != nil {
-				return e
-			}
-			s := stringField(a, "text")
-			if s == "" || !strings.Contains(normalize(b), s) {
-				return fmt.Errorf("%s broken anchor in %s: %q", id, a["file"], s)
-			}
 		}
 	}
+	if err := validateMatrixEdges(originals, originalTests); err != nil {
+		return err
+	}
+	requirementPolicy := map[string]any{}
+	axisPolicy := map[string]any{}
+	usedCases := map[string]bool{}
 	for id, row := range requirements {
 		if !reflect.DeepEqual(row["original"], originals[id]) {
 			return fmt.Errorf("original requirement changed: %s", id)
@@ -117,6 +84,11 @@ func validateLedger(root string, ledger map[string]any) error {
 		}
 		if stringField(row, "implementation") == "" || stringField(row, "residual_scope") == "" || stringField(row, "closure_criterion") == "" {
 			return fmt.Errorf("%s lacks implementation/residual/closure", id)
+		}
+		for _, key := range []string{"implementation_refs", "decision_refs"} {
+			if list, err := stringList(row[key]); err != nil || len(list) == 0 {
+				return fmt.Errorf("%s needs nonempty %s", id, key)
+			}
 		}
 		for _, key := range []string{"implementation_refs", "decision_refs", "inherited_refs", "crosswalk_refs"} {
 			if err := refs(root, row[key]); err != nil {
@@ -144,6 +116,9 @@ func validateLedger(root string, ledger map[string]any) error {
 		if stringField(execution, "state") != "not-executed-on-final-tree" {
 			return fmt.Errorf("%s unsupported execution state; a separate exact-tree receipt is required", id)
 		}
+		if list, err := stringList(execution["historical_refs"]); err != nil || len(list) == 0 {
+			return fmt.Errorf("%s needs nonempty historical_refs", id)
+		}
 		if err := refs(root, execution["historical_refs"]); err != nil {
 			return err
 		}
@@ -154,6 +129,10 @@ func validateLedger(root string, ledger map[string]any) error {
 		}
 		if class == "optional-not-elected" && originals[id]["status"] != "optional" {
 			return fmt.Errorf("%s mandatory requirement labeled optional", id)
+		}
+		requirementPolicy[id] = map[string]any{
+			"classification": class, "residual_scope": row["residual_scope"],
+			"closure_criterion": row["closure_criterion"], "crosswalk_refs": row["crosswalk_refs"],
 		}
 	}
 	for id, row := range tests {
@@ -192,6 +171,7 @@ func validateLedger(root string, ledger map[string]any) error {
 					return fmt.Errorf("%s/%s duplicate case", id, axis)
 				}
 				seen[s] = true
+				usedCases[s] = true
 			}
 			status := stringField(a, "assessment")
 			switch status {
@@ -208,6 +188,15 @@ func validateLedger(root string, ledger map[string]any) error {
 			if stringField(a, "assessment_basis") == "" {
 				return fmt.Errorf("%s/%s missing substantive assessment", id, axis)
 			}
+			axisPolicy[id+"/"+axis] = map[string]any{
+				"assessment": status, "case_ids": ids, "assessment_basis": a["assessment_basis"],
+				"gap": a["gap"], "gap_kind": a["gap_kind"],
+			}
+		}
+	}
+	for id := range cases {
+		if !usedCases[id] {
+			return fmt.Errorf("unreferenced case %s", id)
 		}
 	}
 	questionDoc, err := readJSON(root, "docs/validation/plan/open-questions.json")
@@ -235,6 +224,9 @@ func validateLedger(root string, ledger map[string]any) error {
 		if stringField(row, "current_disposition") == "" || stringField(row, "residual_scope") == "" {
 			return fmt.Errorf("%s missing issue disposition", id)
 		}
+		if list, err := stringList(row["decision_refs"]); err != nil || len(list) == 0 {
+			return fmt.Errorf("%s needs nonempty decision_refs", id)
+		}
 		if err := refs(root, row["decision_refs"]); err != nil {
 			return err
 		}
@@ -260,6 +252,9 @@ func validateLedger(root string, ledger map[string]any) error {
 		}
 		if stringField(row, "current_disposition") == "" || stringField(row, "residual_scope") == "" {
 			return fmt.Errorf("%s missing candidate disposition", id)
+		}
+		if list, err := stringList(row["decision_refs"]); err != nil || len(list) == 0 {
+			return fmt.Errorf("%s needs nonempty decision_refs", id)
 		}
 		if err := refs(root, row["decision_refs"]); err != nil {
 			return err
@@ -314,9 +309,21 @@ func validateLedger(root string, ledger map[string]any) error {
 	if err != nil {
 		return err
 	}
-	perf := obligations["B5-PERF-01"]
-	if perf == nil || perf["state"] != "open-later-separate-authorization" || stringField(perf, "closure_criterion") == "" {
-		return fmt.Errorf("B5-PERF-01 must remain open with a closure criterion")
+	wantObligations := map[string]string{
+		"B5-PERF-01":                  "open-later-separate-authorization",
+		"TRANSLATION-114-PORTABILITY": "open-no-waiver-no-recovery",
+	}
+	if len(obligations) != len(wantObligations) {
+		return fmt.Errorf("retained obligation set must contain exactly B5-PERF-01 and TRANSLATION-114-PORTABILITY")
+	}
+	for id, state := range wantObligations {
+		row := obligations[id]
+		if row == nil || row["state"] != state || stringField(row, "closure_criterion") == "" {
+			return fmt.Errorf("%s must remain open with a closure criterion", id)
+		}
+		if _, err := resolveRef(root, stringField(row, "source")); err != nil {
+			return err
+		}
 	}
 	inventories, ok := ledger["linked_inventories"].([]any)
 	if !ok || len(inventories) < 8 {
@@ -367,23 +374,32 @@ func validateLedger(root string, ledger map[string]any) error {
 			return fmt.Errorf("linked inventory identity set changed: %s", row["ref"])
 		}
 	}
-	frozen, ok := ledger["preserved_sources"].([]any)
-	if !ok || len(frozen) < 3 {
-		return fmt.Errorf("missing original source fingerprints")
+	frozen, err := indexed(ledger["preserved_sources"], "path")
+	if err != nil || len(frozen) != len(preservedSourcePins) {
+		return fmt.Errorf("preserved source set must retain the exact eight paths")
 	}
-	for _, v := range frozen {
-		r, ok := v.(map[string]any)
-		if !ok {
-			return fmt.Errorf("bad source fingerprint")
+	for path, want := range preservedSourcePins {
+		r := frozen[path]
+		if r == nil || r["sha256_lf"] != want {
+			return fmt.Errorf("preserved source set or fingerprint changed: %s", path)
 		}
-		data, e := readLocal(root, stringField(r, "path"))
+		data, e := readLocal(root, path)
 		if e != nil {
 			return e
 		}
 		sum := sha256.Sum256([]byte(normalize(data)))
-		if hex.EncodeToString(sum[:]) != r["sha256_lf"] {
-			return fmt.Errorf("preserved source changed: %s", r["path"])
+		if hex.EncodeToString(sum[:]) != want {
+			return fmt.Errorf("preserved source changed: %s", path)
 		}
+	}
+	if err := checkReviewedPolicy("requirement", requirementPolicy, reviewedRequirementPolicySHA256); err != nil {
+		return err
+	}
+	if err := checkReviewedPolicy("axis", axisPolicy, reviewedAxisPolicySHA256); err != nil {
+		return err
+	}
+	if err := checkReviewedPolicy("case", cases, reviewedCasePolicySHA256); err != nil {
+		return err
 	}
 	return nil
 }

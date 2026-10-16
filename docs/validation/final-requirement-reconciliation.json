@@ -1,15 +1,15 @@
 {
   "format": "musicxml-final-requirement-reconciliation-1",
-  "title": "2026-10-16 pre-acceptance requirement reconciliation snapshot",
+  "title": "2026-10-16 baseline requirement reconciliation with labeled PR 42 evidence",
   "baseline": {
     "commit": "0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9",
     "tree": "1e78190afb839ba0cd5b91bc5fb8bff6a102638d"
   },
   "authority": {
     "approved_plan_sha256": "d0685e4462c50a85f60eff58ac5419ce394e01e0ee9d71804a6df9d7b6cdc483",
-    "scope": "Author reconciliation only. Final exact-tree acceptance is a later separate receipt. Independent design/QA, mass corpus acceptance and performance assessment are outside this development receipt."
+    "scope": "Author reconciliation only. Baseline runtime evidence and PR 42-added tests/ledger guards are labeled separately. Exact-tree acceptance is a separate receipt; independent design/QA, mass corpus acceptance and performance assessment are outside this ledger."
   },
-  "classification_policy": "Original statuses remain immutable; classification describes current bounded implementation at the frozen pre-acceptance baseline. No row claims final-tree execution. A later acceptance receipt supplements rather than retroactively edits this snapshot. Related test names, returned Unknown and fixture quantity never establish closure.",
+  "classification_policy": "Original statuses remain immutable; requirement classifications describe the frozen pre-acceptance baseline. Axis routes distinguish baseline from PR 42-added evidence. No row claims final-tree execution. Related test names, returned Unknown and fixture quantity never establish closure; reviewed classifications, residuals, closure criteria and axis mappings are pinned against drift.",
   "preserved_sources": [
     {
       "path": "docs/validation/plan/implementation-plan.json",
@@ -2598,7 +2598,7 @@
         ],
         "scope": "Historical implementation/acceptance observations only. The final integrated tree requires its own named commands, toolchain, platform, exit status and actual receipts."
       },
-      "residual_scope": "Bundled generation/embed delivery is the separately approved final-PR integration; this base receipt only maps existing caller-supplied pinned consumption.",
+      "residual_scope": "The 0b5a2f2 baseline has caller-supplied pinned dictionary consumption. Bundled generation and explicit selection were added by published PR 42 commits 8e9e081, 5beff1b and 1a62c10; see bundled_dictionary.go and internal/dictionarydata/README.md. Neither addition establishes broader normative dictionary completeness or final-tree execution in this ledger.",
       "closure_criterion": "Reconcile each original acceptance clause and each five-axis case against concrete fixtures or an explicit scoped decision; resolve the named residual without weakening the contract, then retain passing applicable exact-tree development/CI receipts. Original planning statuses stay unchanged."
     },
     {
@@ -4383,8 +4383,8 @@
         ],
         "scope": "Historical implementation/acceptance observations only. The final integrated tree requires its own named commands, toolchain, platform, exit status and actual receipts."
       },
-      "residual_scope": "No final integration tree has been executed by this ledger author. Historical PR41 receipts cannot certify future final-PR changes; lead owns exact-tree local/hosted verification.",
-      "closure_criterion": "Lead records exact integrated tree, unchanged seven local stages, required inventories/oracles, actual 386 and hosted three-OS/quality checks with commands, versions, exits and receipts. Unavailable checks remain visible."
+      "residual_scope": "This ledger is not an execution receipt for an integrated tree. Historical PR 41 receipts do not certify PR 42 additions. Exact-tree local/hosted acceptance evidence is recorded separately in the PR description.",
+      "closure_criterion": "An exact integrated-tree receipt records unchanged seven local stages, required inventories/oracles, actual 386 and hosted three-OS/quality checks with commands, versions, exits and receipts. Unavailable checks remain visible."
     },
     {
       "id": "REQ-DEF-VERIFY-DIFFERENTIAL",
@@ -4675,7 +4675,7 @@
         ],
         "scope": "Historical implementation/acceptance observations only. The final integrated tree requires its own named commands, toolchain, platform, exit status and actual receipts."
       },
-      "residual_scope": "Bundled local dictionary generation/embed is approved separately in the same final PR; this baseline ledger does not yet claim its implementation or execution.",
+      "residual_scope": "The 0b5a2f2 baseline has caller-supplied pinned dictionary consumption. Bundled generation and explicit selection were added by published PR 42 commits 8e9e081, 5beff1b and 1a62c10; see bundled_dictionary.go and internal/dictionarydata/README.md. Neither addition establishes broader normative dictionary completeness or final-tree execution in this ledger.",
       "closure_criterion": "Reconcile each original acceptance clause and each five-axis case against concrete fixtures or an explicit scoped decision; resolve the named residual without weakening the contract, then retain passing applicable exact-tree development/CI receipts. Original planning statuses stay unchanged."
     },
     {
@@ -7377,9 +7377,10 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestSourceAssessmentSyntaxUnderSkippedContent"
+            "TestAssessedDecodeSkippedSubtreeXMLContracts",
+            "TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed"
           ],
-          "assessment_basis": "unknown undeclared-prefix subtree, malformed foreign attribute, truncated CDATA under permissive and strict options => Both modes preserve xml.SyntaxError and withhold a document.",
+          "assessment_basis": "PR 42-added cases assert spaced lexical and expanded-name duplicates inside unknown/foreign skipped subtrees through ordinary Decode and permissive/strict DecodeAssessed, with distinct-name controls and duplicate-specific errors.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -7558,9 +7559,9 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestSourceAssessmentSyntaxUnderSkippedContent"
+            "TestAssessedDecodeSkippedSubtreeXMLContracts"
           ],
-          "assessment_basis": "unknown undeclared-prefix subtree, malformed foreign attribute, truncated CDATA under permissive and strict options => Both modes preserve xml.SyntaxError and withhold a document.",
+          "assessment_basis": "PR 42-added skipped-subtree fixtures reject duplicate attributes, nested DOCTYPE and mismatched closing names in unknown/foreign content under ordinary and strict decode.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -7592,13 +7593,15 @@
           "original_cases": [
             "Strict observer receives unfiltered skipped-tree facts; permissive model mapping remains permissive for otherwise well-formed unknown elements."
           ],
-          "assessment": "mapped",
+          "assessment": "partial",
           "case_ids": [
-            "TestSourceAssessmentSyntaxUnderSkippedContent"
+            "TestSourceAssessmentSyntaxUnderSkippedContent",
+            "TestAssessedDecodeSkippedSubtreeXMLContracts",
+            "TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed"
           ],
-          "assessment_basis": "unknown undeclared-prefix subtree, malformed foreign attribute, truncated CDATA under permissive and strict options => Both modes preserve xml.SyntaxError and withhold a document.",
-          "gap": "",
-          "gap_kind": "none"
+          "assessment_basis": "Syntax regressions prove ordinary and assessed decode inspect malformed skipped XML, including duplicate-specific strict cases.",
+          "gap": "These syntax failures do not directly assert that the strict observer receives all unfiltered skipped-tree facts or that typed-tree filtering occurs only after observer delivery.",
+          "gap_kind": "specific-unasserted-contract"
         }
       }
     },
@@ -8018,9 +8021,11 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestValidateNilIdentityTracking"
+            "TestValidateNilContracts",
+            "TestValidateNilIdentityTracking",
+            "TestValidateXSIType"
           ],
-          "assessment_basis": "Nilled declarations with ID/IDREF attributes => Identity checks remain active on nilled complex elements.",
+          "assessment_basis": "Nilled complex/simple-content/mixed fixtures keep required/prohibited/fixed/datatype checks; ID/IDREF/IDREFS survive nil. Dynamic-type nil fixtures assert inherited/derived required attributes, derived identity, scalar suppression and nonnillable declaration rejection.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -9042,9 +9047,9 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestFinalReconciliationRejectsUnlinkedContracts"
+            "TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix"
           ],
-          "assessment_basis": "Mutation removes a mandatory requirement test link or a test requirement link while all original records remain unchanged => Integrity validation rejects lost test-contract links and changed requirement links, respectively.",
+          "assessment_basis": "PR 42-added integrity regression removes a mandatory requirement edge or test edge from both original source graph and ledger, updates the source fingerprint, and requires matrix-edge rejection. This guard is not part of the baseline runtime tree.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -11173,13 +11178,14 @@
           "original_cases": [
             "Unknown-only strict assessment is incomplete and rejects decode even without normative violation."
           ],
-          "assessment": "mapped",
+          "assessment": "partial",
           "case_ids": [
-            "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate"
+            "TestReportAccumulatorIndependentAxesAndTruncation",
+            "TestIPARepresentationPublicSourceModelAndAssessedReader"
           ],
-          "assessment_basis": "Empty score with nil assessment versus explicit source profile => Permissive conversion returns model and unrequested source; explicit strict report records violation and withholds model.",
-          "gap": "",
-          "gap_kind": "none"
+          "assessment_basis": "Baseline report accumulator asserts Unknown-only incompleteness; IPA assessed-reader separately asserts incomplete rejection and no document. The combined PR-added contract is TestFinalConfigurationSelectedNilDictionaryPublicReports in final_configuration_contract_test.go.",
+          "gap": "The baseline does not jointly assert Unknown-only strict decode rejection with zero normative failures and no ErrInvalidDocument; related separate assertions are not treated as that combined proof.",
+          "gap_kind": "specific-unasserted-contract"
         },
         "boundary": {
           "original_cases": [
@@ -11212,9 +11218,10 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestReportAccumulatorIndependentAxesAndTruncation"
+            "TestReportAccumulatorNonNormativeClassesAndProviders",
+            "TestAssessModelFiniteResourcesAndIndependentAxes"
           ],
-          "assessment_basis": "Known failure plus incomplete decisions under count/byte truncation => Untruncated counts and incompleteness survive bounded detail storage.",
+          "assessment_basis": "Required model/policy failures retain independent blockers with normative counts unchanged; tiny diagnostic quotas and NaN model input prove blockers survive zero stored findings and block satisfaction.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -11802,9 +11809,10 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeRejected"
+            "TestResourceGraphAggregateSourceIDBoundary",
+            "TestResourceGraphAggregateModelAttributeBoundary"
           ],
-          "assessment_basis": "Every budget field normalized from zero and independently set to -1 or custom 7 => Finite copied defaults, rejection of each negative field and preservation of custom limit 7.",
+          "assessment_basis": "Actual primary and two linked resources consume the same measured cumulative ID/attribute counters; exact caps pass and final buffer/depth gauges are zero.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -11814,9 +11822,11 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestBudgetOverflowFailsWithoutMutation"
+            "TestBudgetInvalidCallsNeverMutate",
+            "TestBudgetOverflowFailsWithoutMutation",
+            "TestEveryBudgetKindExactLimitModeAndFailureAtomicity"
           ],
-          "assessment_basis": "Account charging beyond int64 accounting arithmetic => Overflow fails without quota mutation.",
+          "assessment_basis": "Negative charges, unknown kinds, overflow, wrong operation modes and gauge underrelease reject without mutating prior usage.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -11826,10 +11836,12 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestEveryBudgetKindExactLimitModeAndFailureAtomicity",
-            "TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeRejected"
+            "TestAllocationSizeChecksHostIntWithoutNarrowingLimits",
+            "TestBudgetOverflowFailsWithoutMutation",
+            "TestResourceGraphAggregateSourceIDBoundary",
+            "TestResourceGraphAggregateModelAttributeBoundary"
           ],
-          "assessment_basis": "Each of 14 budget kinds: limit 3, charge/check 2+1 or item=3, then first over-limit request => Exact limit succeeds; first excess is ErrResourceLimit/ErrIncompleteAssessment, failure is atomic and release mode is enforced.; Every budget field normalized from zero and independently set to -1 or custom 7 => Finite copied defaults, rejection of each negative field and preservation of custom limit 7.",
+          "assessment_basis": "Host-int conversion (including its explicit 32-bit branch) is separated from int64 quota; linked exact/one-under cases preserve prior counters and enforce the original shared cap. This mapping does not certify a 386 execution.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -11851,9 +11863,10 @@
           ],
           "assessment": "mapped",
           "case_ids": [
-            "TestSharedBudgetAccountConcurrentAggregateQuota"
+            "TestDecodeAssessedUsesTighterDepthLimit",
+            "TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeRejected"
           ],
-          "assessment_basis": "Concurrent consumers charging one shared account => Aggregate quota is enforced atomically across consumers.",
+          "assessment_basis": "Public assessed decode checks both tighter-cap directions after option resolution with exact limit and legacy error identity; the separate budget-default test checks finite copied zero defaults. Zero/default combinations are not claimed as the two explicit-cap fixture inputs.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -13695,13 +13708,13 @@
           "original_cases": [
             "Unexecuted planned contracts do not count as coverage or conformance evidence."
           ],
-          "assessment": "mapped",
+          "assessment": "partial",
           "case_ids": [
             "TestFinalReconciliationRejectsHistoricalExecutionPromotion"
           ],
-          "assessment_basis": "Mutation marks a baseline requirement implemented-and-verified while keeping only historical receipts and named tests => Unsupported closure is rejected; named/unexecuted planned cases cannot become final verified coverage.",
-          "gap": "",
-          "gap_kind": "none"
+          "assessment_basis": "PR 42-added promotion guard keeps this ledger from presenting historical receipts and unexecuted routes as final-tree verified coverage.",
+          "gap": "The guard protects this ledger only; it does not establish a general profile-readiness coverage calculation or execute the original planned contracts.",
+          "gap_kind": "specific-unasserted-contract"
         },
         "interaction": {
           "original_cases": [
@@ -17398,7 +17411,8 @@
           "file": "xml_wellformedness_test.go",
           "text": "func TestXMLWellFormednessDecodePaths(t *testing.T) {\n\trunXMLReadingDecodePaths(t, xmlWellFormednessCases, xmlReadingEncodingVariants, assertXMLReadingError)\n}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestXMLAttributeCheckDoesNotInventNamespaceBindings",
@@ -17410,13 +17424,14 @@
       "anchors": [
         {
           "file": "xml_wellformedness_test.go",
-          "text": "assert.NotContains(t, err.Error(), \"duplicate XML attribute\")"
+          "text": "_, err := Decode(strings.NewReader(`<opus xmlns:q=\"p\" p:a=\"1\" q:a=\"2\"/>`))"
         },
         {
           "file": "xml_wellformedness_test.go",
           "text": "assert.NotContains(t, err.Error(), \"duplicate XML attribute\")"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestXMLWellFormednessDepthBoundary",
@@ -17428,13 +17443,14 @@
       "anchors": [
         {
           "file": "xml_wellformedness_test.go",
-          "text": "assert.ErrorIs(t, err, ErrXMLTooDeep)"
+          "text": "_, err = DecodeWithOptions(bytes.NewReader(data), DecodeOptions{MaxXMLDepth: 2})"
         },
         {
           "file": "xml_wellformedness_test.go",
           "text": "assert.ErrorIs(t, err, ErrXMLTooDeep)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSourceAssessmentSyntaxUnderSkippedContent",
@@ -17452,7 +17468,8 @@
           "file": "assessment_test.go",
           "text": "t.Errorf(\"skipped source escaped XML checks: strict=%t %+v %v\", strict, result, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestXMLDoctypeDoesNotFetchExternalDTD",
@@ -17464,13 +17481,14 @@
       "anchors": [
         {
           "file": "xml_wellformedness_test.go",
-          "text": "assert.Zero(t, requests.Load())"
+          "text": "server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {\n\t\trequests.Add(1)\n\t\thttp.Error(w, \"DTD must not be fetched\", http.StatusInternalServerError)\n\t}))"
         },
         {
           "file": "xml_wellformedness_test.go",
           "text": "assert.Zero(t, requests.Load())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSourceTruncatedMarkupPublic",
@@ -17488,7 +17506,8 @@
           "file": "xml_source_eof_test.go",
           "text": "t.Errorf(\"truncated markup lost its syntax cause: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateElementAttributeContracts",
@@ -17506,7 +17525,8 @@
           "file": "validation_attributes_test.go",
           "text": "assert.Equal(t, test.path, context.Issues[0].Path)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateUnknownElementTypeIsIncomplete",
@@ -17524,7 +17544,8 @@
           "file": "validation_attributes_test.go",
           "text": "assert.NotErrorIs(t, context.result(), ErrInvalidDocument)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestRunUnknownAttributesCannotProveRequiredMissing",
@@ -17542,7 +17563,8 @@
           "file": "internal/xsd/run_test.go",
           "text": "t.Fatalf(\"unknown attributes became absence: %+v\", v)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestModelSchemaEffectiveValuesRemainDistinctFromInput",
@@ -17560,7 +17582,8 @@
           "file": "validation/model_schema_test.go",
           "text": "t.Fatalf(\"%s effective=%+v\", pair.name, got)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateXSIType",
@@ -17576,9 +17599,10 @@
         },
         {
           "file": "validation_xsi_type_test.go",
-          "text": "assertValidationIssues(t, validateAttributeSource(t, &validationXSIGenerated, test.source), test.issues)"
+          "text": "{\n\t\t\tassertValidationIssues(t, validateAttributeSource(t, &validationXSIGenerated, test.source), test.issues)\n\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestXSITypeSelectedAssembly",
@@ -17596,7 +17620,8 @@
           "file": "validation_xsi_metadata_test.go",
           "text": "assert.Equal(t, \"xsi:type\", c.Issues[0].Constraint)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestXSITypeIncompleteAssessment",
@@ -17614,7 +17639,8 @@
           "file": "validation_assessment_test.go",
           "text": "assert.False(t, errors.As(c.result(), &invalid))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateNilContracts",
@@ -17630,9 +17656,10 @@
         },
         {
           "file": "validation_nil_test.go",
-          "text": "assertValidationNilCase(t, &validationNilGenerated, test)"
+          "text": "{\n\t\t\tt.Parallel()\n\t\t\tassertValidationNilCase(t, &validationNilGenerated, test)\n\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateNilIdentityTracking",
@@ -17650,7 +17677,8 @@
           "file": "validation_nil_test.go",
           "text": "assert.Equal(t, \"later\", reference.Value)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateNilUnresolvedTypes",
@@ -17668,7 +17696,8 @@
           "file": "validation_nil_test.go",
           "text": "assert.NotErrorIs(t, context.result(), ErrInvalidDocument)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateSchemaHintDatatypes",
@@ -17680,13 +17709,14 @@
       "anchors": [
         {
           "file": "validation_schema_hint_datatype_test.go",
-          "text": "validationSchemaHintValueCase{\"three items\", \"urn:example schema.xsd orphan.xsd\", true, true}"
+          "text": "for _, test := range validationSchemaHintDatatypeCases(false) {\n\t\tt.Run(test.name, func(t *testing.T) {\n\t\t\tt.Parallel()\n\t\t\tassertValidationIssues(t, validateAttributeSource(t, &validationSchemaHintGenerated, test.source), test.issues)\n\t\t})\n\t}"
         },
         {
           "file": "validation_schema_hint_datatype_test.go",
-          "text": "assertValidationIssues(t, validateAttributeSource(t, &validationSchemaHintGenerated, test.source), test.issues)"
+          "text": "{\n\t\t\tt.Parallel()\n\t\t\tassertValidationIssues(t, validateAttributeSource(t, &validationSchemaHintGenerated, test.source), test.issues)\n\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSchemaLocationHintsDoNotFetch",
@@ -17704,7 +17734,8 @@
           "file": "validation_schema_hints_test.go",
           "text": "assertValidationIssues(t, context, issues)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestLinkContextSchemaHintsDiscoveryIsIndependent",
@@ -17722,7 +17753,8 @@
           "file": "link_context_test.go",
           "text": "t.Fatalf(\"hints=%+v findings=%+v\", hints, report.Findings)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSchemaHintDatatypeNamespacesAndOrdinaryErrors",
@@ -17740,7 +17772,8 @@
           "file": "validation_schema_hint_datatype_test.go",
           "text": "assertValidationIssues(t, validateAttributeSource(t, &opusValidationSchema, source), []string{"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateIntegerValueSpaces",
@@ -17756,9 +17789,10 @@
         },
         {
           "file": "validation_integer_test.go",
-          "text": "assertValidationIssues(t, validateAttributeSource(t, &validationIntegerGenerated, test.source), test.issues)"
+          "text": "{\n\t\t\tassertValidationIssues(t, validateAttributeSource(t, &validationIntegerGenerated, test.source), test.issues)\n\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateIntegerArbitraryWidthFacets",
@@ -17776,7 +17810,8 @@
           "file": "validation_integer_test.go",
           "text": "assert.Nil(t, context.ValidateSimple(decimal, \"1.\"))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestIntegerCopiesAndComparesExactValues",
@@ -17794,7 +17829,8 @@
           "file": "validation/values_test.go",
           "text": "t.Fatalf(\"source alias or bad exact value: %s\", number)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestFiniteDecimalCanonicalAndCopied",
@@ -17812,7 +17848,8 @@
           "file": "validation/values_test.go",
           "text": "t.Errorf(\"%d/%d = %s want %s\", tc.numerator, tc.denominator, number.String(), tc.want)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedSourceAndConversionDomains",
@@ -17830,7 +17867,8 @@
           "file": "assessed_decode_test.go",
           "text": "t.Fatalf(\"inspection=%+v err=%v\", inspection, inspectErr)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedDrainsAfterOverflowAndPreservesTailCauses",
@@ -17848,7 +17886,8 @@
           "file": "assessed_decode_test.go",
           "text": "t.Fatalf(\"conversion lost: %+v %v\", result, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedRetainsOverflowDuringInterruptedDrain",
@@ -17866,7 +17905,8 @@
           "file": "assessed_decode_test.go",
           "text": "t.Errorf(\"interrupted drain: %+v error=%v\", result, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestExactConstructorsRejectOversizeBeforeCopyOrExpansion",
@@ -17884,7 +17924,8 @@
           "file": "validation/values_test.go",
           "text": "t.Errorf(\"oversize integer = %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDirectModelScalarExactCurrentValues",
@@ -17902,7 +17943,8 @@
           "file": "model_scalar_test.go",
           "text": "t.Errorf(\"got %q, want %q\", actual, tt.want)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCatalogRejectsMalformedMetadata",
@@ -17918,9 +17960,10 @@
         },
         {
           "file": "validation/catalog_compilation_test.go",
-          "text": "t.Fatalf(\"error=%v, want configuration rejection\", err)"
+          "text": "{\n\t\t\tr, p, b := catalogFixture(t)\n\t\t\tedit(&r, &p, &b)\n\t\t\t_, err := NewCatalog(r, p, b)\n\t\t\tif !errors.Is(err, ErrInvalidConfiguration) {\n\t\t\t\tt.Fatalf(\"error=%v, want configuration rejection\", err)\n\t\t\t}\n\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSessionRunsRealExactDeclarationPlan",
@@ -17938,7 +17981,8 @@
           "file": "validation/session_test.go",
           "text": "t.Fatalf(\"missing child report=%+v\", r)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCatalogOwnsEveryMetadataCollection",
@@ -17956,7 +18000,8 @@
           "file": "validation/catalog_compilation_test.go",
           "text": "t.Fatal(\"returned collection mutation changed catalog\")"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCatalogDependencyClosureUsesFullRevision",
@@ -17974,7 +18019,8 @@
           "file": "validation/catalog_compilation_test.go",
           "text": "t.Fatalf(\"dependency order = %v, want %v\", c.orders[profiles[0].ID], want)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCatalogRejectsFactAndMixedSchedulingCycles",
@@ -17992,7 +18038,8 @@
           "file": "validation/catalog_schedule_test.go",
           "text": "t.Fatalf(\"fact cycle accepted: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCatalogPreservesUnavailableCapabilityObligations",
@@ -18010,7 +18057,8 @@
           "file": "validation/catalog_compilation_test.go",
           "text": "t.Fatal(\"unavailable capability erased\")"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestReportAccumulatorNonNormativeClassesAndProviders",
@@ -18028,7 +18076,8 @@
           "file": "validation/report_accumulator_test.go",
           "text": "t.Fatalf(\"non-normative axes = %+v\", r)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCatalogContextPrerequisitePrecedesIdentityRegistration",
@@ -18046,7 +18095,8 @@
           "file": "validation/catalog_phase_test.go",
           "text": "t.Fatalf(\"mixed context/identity phase cycle accepted: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestTypedReferenceAuthoritativeResolutionBothTargets",
@@ -18064,7 +18114,8 @@
           "file": "validation/reference_plan_test.go",
           "text": "t.Fatalf(\"unexpected reference finding %+v report %+v\", d, r)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestQAControlConcurrentSessionIsolation",
@@ -18082,7 +18133,8 @@
           "file": "validation/session_controls_test.go",
           "text": "t.Errorf(\"cross-run state: %+v %v\", r, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestBoundedLocalProductionClausesBothTargets",
@@ -18100,7 +18152,8 @@
           "file": "local_assessment_test.go",
           "text": "func TestBoundedLocalProductionClausesBothTargets(t *testing.T) {\n\ttype test struct {\n\t\tname, rule string\n\t\tfixture    localFixture\n\t\tfail       bool\n\t}\n\tvar tests []test\n\tadd := func(name, rule, body string, fail bool) {\n\t\ttests = append(tests, test{name, rule, localFixture{body: body}, fail})\n\t}\n\tadd(\"accordion-present\", \"accordion-at-least-one\", localDirection(`<accordion-registration><accordion-high/></accordion-registration>`), false)\n\tadd(\"accordion-empty\", \"accordion-at-least-one\", localDirection(`<accordion-registration/>`), true)\n\tadd(\"accordion-middle-present\", \"accordion-at-least-one\", localDirection(`<accordion-registration><accordion-middle>1</accordion-middle></accordion-registration>`), false)\n\tadd(\"accordion-low-present\", \"accordion-at-least-one\", localDirection(`<accordion-registration><accordion-low/></accordion-registration>`), false)\n\tadd(\"accordion-all-three\", \"accordion-at-least-one\", localDirection(`<accordion-registration><accordion-high/><accordion-middle>3</accordion-middle><accordion-low/></accordion-registration>`), false)\n\tadd(\"accordion-omitted\", \"accordion-at-least-one\", \"\", false)\n\tadd(\"beam-default-distinct\", \"beam-number-distinct\", localNote(`<beam>begin</beam><beam number=\"2\">begin</beam>`), false)\n\tadd(\"beam-default-duplicate\", \"beam-number-distinct\", localNote(`<beam>begin</beam><beam number=\"1\">end</beam>`), true)\n\tadd(\"beam-level-eight\", \"beam-number-distinct\", localNote(`<beam number=\"8\">begin</beam>`), false)\n\tadd(\"beam-equivalent-lexical-values\", \"beam-number-distinct\", localNote(`<beam number=\"01\">begin</beam><beam number=\"1\">end</beam>`), true)\n\tadd(\"bezier-no-second-controls\", \"bezier-second-control\", localNote(`<notations><slur type=\"start\"/><tied type=\"continue\"/></notations>`), false)\n\tfor _, attr := range []string{\"bezier-x2\", \"bezier-y2\", \"bezier-offset2\"} {\n\t\tadd(\"slur-continue-\"+attr, \"bezier-second-control\", localNote(`<notations><slur type=\"continue\" `+attr+`=\"0\"/></notations>`), false)\n\t\tadd(\"slur-start-\"+attr, \"bezier-second-control\", localNote(`<notations><slur type=\"start\" `+attr+`=\"0\"/></notations>`), true)\n\t\tadd(\"tied-continue-\"+attr, \"bezier-second-control\", localNote(`<notations><tied type=\"continue\" `+attr+`=\"0\"/></notations>`), true)\n\t}\n\tforPart := `<attributes><for-part><part-transpose><chromatic>2</chromatic></part-transpose></for-part></attributes>`\n\ttests = append(tests, test{\"for-part-with-marker\", \"for-part-requires-concert\", localFixture{header: localConcert(), body: forPart}, false}, test{\"for-part-without-marker\", \"for-part-requires-concert\", localFixture{body: forPart}, true})\n\tadd(\"key-cancel-present\", \"key-octave-cancel-exists\", `<attributes><key><cancel>2</cancel><fifths>0</fifths><key-octave number=\"1\" cancel=\"yes\">4</key-octave></key></attributes>`, false)\n\tadd(\"key-cancel-missing\", \"key-octave-cancel-exists\", `<attributes><key><fifths>0</fifths><key-octave number=\"1\" cancel=\"yes\">4</key-octave></key></attributes>`, true)\n\tadd(\"key-cancel-no\", \"key-octave-cancel-exists\", `<attributes><key><fifths>0</fifths><key-octave number=\"1\" cancel=\"no\">4</key-octave></key></attributes>`, false)\n\tfor _, value := range []string{\"\", \"equals\", \" equals\", \"Equals\", \"approximately\"} {\n\t\tbody := localDirection(`<metronome><metronome-note><metronome-type>quarter</metronome-type></metronome-note><metronome-relation>` + value + `</metronome-relation><metronome-note><metronome-type>half</metronome-type></metronome-note></metronome>`)\n\t\tadd(\"metronome-\"+value, \"metronome-relation-value\", body, value != \"\" && value != \"equals\")\n\t}\n\tfor _, attr := range []string{\"dacapo\", \"forward-repeat\"} {\n\t\tfor _, value := range []string{\"yes\", \"no\"} {\n\t\t\tadd(attr+\"-\"+value, \"sound-\"+attr+\"-yes\", `<sound `+attr+`=\"`+value+`\"/>`, value == \"no\")\n\t\t}\n\t}\n\tadd(\"sound-omitted-flags\", \"sound-dacapo-yes\", `<sound/>`, false)\n\tfor _, attr := range []string{\"damper-pedal\", \"soft-pedal\", \"sostenuto-pedal\"} {\n\t\tfor _, value := range []string{\"yes\", \"no\", \"0\", \"100\", \"0.125\", \"100.001\", \"-0.001\"} {\n\t\t\tadd(attr+\"-\"+value, \"sound-pedal-range\", `<sound `+attr+`=\"`+value+`\"/>`, value == \"100.001\" || value == \"-0.001\")\n\t\t}\n\t}\n\tfor _, child := range []string{`<chromatic>0</chromatic>`, `<diatonic>0</diatonic><chromatic>0</chromatic><octave-change>1</octave-change><double/>`, `<chromatic>1</chromatic>`, `<diatonic>1</diatonic><chromatic>0</chromatic>`} {\n\t\tfail := strings.Contains(child, `<chromatic>1`) || strings.Contains(child, `<diatonic>1`)\n\t\ttests = append(tests, test{\"concert-\" + child, \"concert-score-transpose\", localFixture{header: localConcert(), body: `<attributes><transpose>` + child + `</transpose></attributes>`}, fail})\n\t}\n\tadd(\"written-transpose-outside-marker\", \"concert-score-transpose\", `<attributes><transpose><chromatic>2</chromatic></transpose></attributes>`, false)\n\tfor _, tt := range tests {\n\t\tt.Run(tt.name, func(t *testing.T) { assessLocalFixture(t, tt.fixture, tt.rule, tt.fail) })\n\t}\n}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestBoundedDateReusesScalarConsequenceBothTargets",
@@ -18118,7 +18171,8 @@
           "file": "model_assessment_contract_test.go",
           "text": "t.Fatalf(\"%s %s: %v %s\", target, date, err, localFindings(report))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestBoundedCatalogExactProfilesAndSharedRules",
@@ -18136,7 +18190,8 @@
           "file": "model_catalog_test.go",
           "text": "t.Fatalf(\"unexpected frozen obligation list: xsd%d model%d source%d\", len(xsd.Required), len(model.Required), len(source.Required))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestGrammarExhaustiveShortLanguages",
@@ -18154,7 +18209,8 @@
           "file": "validation_grammar_work_test.go",
           "text": "assert.Equal(t, nodes[index].Name.Local, match.Schema.Name.Local)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestGrammarMatchingWorkBound",
@@ -18172,7 +18228,8 @@
           "file": "validation_grammar_work_test.go",
           "text": "assert.LessOrEqual(t, large, 8*small, \"endpoint DP must not enumerate parse histories\")"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestGrammarMetadataFailures",
@@ -18188,9 +18245,10 @@
         },
         {
           "file": "validation_grammar_work_test.go",
-          "text": "assert.NotEmpty(t, failure.Schema)"
+          "text": "{\n\t\t_, failure, ok := newTestValidationContext(&validationSchemaSet{}).MatchParticle(grammarTestLeaf(\"a\", 1, 1), nil, position)\n\t\tassert.False(t, ok)\n\t\tassert.NotEmpty(t, failure.Schema)\n\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCurrentRestrictionChainsAndUnionSelection",
@@ -18208,7 +18266,8 @@
           "file": "internal/xsd/current_test.go",
           "text": "t.Fatalf(\"lost outer bound: %+v\", got)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestTruthfulnessUnknownUnionMemberCannotFallThrough",
@@ -18226,7 +18285,8 @@
           "file": "internal/xsd/truthfulness_test.go",
           "text": "t.Fatalf(\"union reverse=%v fabricated member choice: %+v\", reverse, got)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCurrentAttributesKeepSlotResultsAndDefaults",
@@ -18244,7 +18304,8 @@
           "file": "internal/xsd/current_test.go",
           "text": "t.Errorf(\"incomplete slot marked complete: %+v\", a)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestRunResolveIdentityIncompleteDoesNotProveAbsenceOrUniqueness",
@@ -18262,7 +18323,8 @@
           "file": "internal/xsd/identity_resolve_test.go",
           "text": "t.Errorf(\"%s: %+v\", value, got)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestRunResolveIdentityUsesActualContainingOwner",
@@ -18280,7 +18342,8 @@
           "file": "internal/xsd/identity_resolve_test.go",
           "text": "t.Fatalf(\"actual owner lost: %+v, %v\", got, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSourceAssessmentPreflightDoesNotRead",
@@ -18298,7 +18361,8 @@
           "file": "assessment_test.go",
           "text": "t.Errorf(\"error=%v; want %v\", err, tt.want)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate",
@@ -18316,7 +18380,8 @@
           "file": "assessment_test.go",
           "text": "t.Fatalf(\"permissive result=%+v error=%v\", result, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestBoundedLocalStrictAccordionIntegration",
@@ -18334,7 +18399,8 @@
           "file": "model_assessment_contract_test.go",
           "text": "t.Fatalf(\"permissive transport: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedObservesFilteredSource",
@@ -18352,7 +18418,8 @@
           "file": "assessed_decode_test.go",
           "text": "t.Fatalf(\"permissive foreign extension: %+v %v\", permissive, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSourceObserverRetainsUnprojectedFactsAndScopes",
@@ -18370,7 +18437,8 @@
           "file": "source_observer_test.go",
           "text": "t.Fatalf(\"facts: headers=%d attributes=%d ends=%d\", len(facts.headers), len(facts.attributes), len(facts.ends))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDirectModelWalkerNoTransportOrDynamicCallbacks",
@@ -18388,7 +18456,8 @@
           "file": "model_walker_test.go",
           "text": "t.Errorf(\"%s calls forbidden %s\", path, name)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDirectModelWalkerPresenceOrderAndExactValues",
@@ -18406,7 +18475,8 @@
           "file": "model_walker_test.go",
           "text": "t.Fatal(s.named(\"step\")[0].Location.Path)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestAssessModelReportsCurrentEditsWithoutMutation",
@@ -18424,7 +18494,8 @@
           "file": "model_assessment_test.go",
           "text": "t.Fatalf(\"current invalid edit was not assessed: %+v %v\", report, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDirectModelWalkerHolesCyclesAndSharedPointers",
@@ -18442,7 +18513,8 @@
           "file": "model_walker_test.go",
           "text": "t.Fatal(\"two-node cycle\", status)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDirectModelWalkerRootsNilAndTransportName",
@@ -18460,25 +18532,8 @@
           "file": "model_walker_test.go",
           "text": "t.Errorf(\"got %v\", err)"
         }
-      ]
-    },
-    {
-      "id": "TestModelMetadataCoversEveryReachableField",
-      "file": "model_metadata_test.go",
-      "function": "TestModelMetadataCoversEveryReachableField",
-      "input": "Every generated reachable field and choice descriptor",
-      "expected": "All fields have explicit representation metadata, including deliberate ignored transport fields.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
-      "anchors": [
-        {
-          "file": "model_metadata_test.go",
-          "text": "\tseen := map[string]bool{}\n\tvar visit func(reflect.Type, string)\n\tvisit = func(typ reflect.Type, name string) {\n\t\tif seen[name] {\n\t\t\treturn\n\t\t}\n\t\tseen[name] = true\n\t\td := modelDescriptors[name]\n\t\tif d == nil {\n\t\t\tt.Fatalf(\"missing %s\", name)\n\t\t}"
-        },
-        {
-          "file": "model_metadata_test.go",
-          "text": "t.Fatalf(\"missing %s\", name)"
-        }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestModelAssessmentOwnershipPreservesProgram",
@@ -18496,7 +18551,8 @@
           "file": "model_ownership_test.go",
           "text": "t.Fatalf(\"original contract changed: %s\", id)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceGraphIndirectionContextLinkFamilies",
@@ -18514,7 +18570,8 @@
           "file": "resource_graph_indirection_context_test.go",
           "text": "t.Errorf(\"independent archive reports/adoptions lost: resources=%d adoptions=%d\", b.ResourceCount(), b.AdoptionCount())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceGraphInstrumentAssociationRequiresExactProvider",
@@ -18532,7 +18589,8 @@
           "file": "resource_graph_metadata_test.go",
           "text": "t.Fatalf(\"selected%v calls%d err%v report%+v\", selected, associationCalls, err, b.PackageReport())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestPackageAssociationPartialMissIsUnknown",
@@ -18550,7 +18608,8 @@
           "file": "validation/package_association_test.go",
           "text": "t.Fatalf(\"partial relation=%v %+v\", err, b.PackageReport())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceGraphSelectedMissingResolverReason",
@@ -18568,7 +18627,8 @@
           "file": "resource_graph_review_contract_test.go",
           "text": "t.Fatalf(\"missing reason: %+v\", b.PackageReport())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestTimelineSemanticQANumeralMusicalOrderAndScopes",
@@ -18584,9 +18644,10 @@
         },
         {
           "file": "timeline_semantic_qa_test.go",
-          "text": "t.Fatalf(\"positive case rejected: %s\", localFindings(r))"
+          "text": "{\n\t\t\t\tsemanticQAExpect(t, r, \"MX40-TIMELINE-numeral-requires-key\", tc.want, tc.count)\n\t\t\t\tif tc.count == 0 && !r.Satisfied() {\n\t\t\t\t\tt.Fatalf(\"positive case rejected: %s\", localFindings(r))\n\t\t\t\t}\n\t\t\t\tif tc.want == validation.OutcomeUnknown && r.AssessmentComplete {\n\t\t\t\t\tt.Fatalf(\"unknown staff was called complete\")\n\t\t\t\t}\n\t\t\t\tfor _, f := range r.Findings {\n\t\t\t\t\tif strings.HasPrefix(string(f.Rule.ID), \"MX40-XSD-\") && f.Outcome == validation.OutcomeFail {\n\t\t\t\t\t\tt.Errorf(\"fixture schema failure: %+v\", f)\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestTimelineSemanticQARegionLocalChangedDivisionsRewind",
@@ -18598,13 +18659,14 @@
       "anchors": [
         {
           "file": "timeline_semantic_qa_test.go",
-          "text": "\t// 0 -> 4 at D1; D2 -> 6; backup 2/D2 -> 5, wholly inside\n\t// the established D2 region. No boundary-crossing interpretation is chosen.\n\tbody := semanticQADivisions + timelineNote(\"4\", \"\", \"\") + `<attributes><divisions>2</divisions></attributes>` + timelineNote(\"4\", \"\", \"\") + `<backup><duration>2</duration></backup>` + timelineNote(\"2\", \"\", \"\") + timelineNote(\"1\", `<chord/>`, \"\")\n\tassessTimelineBoth(t, (localFixture{body: body}).xml(), func(t *testing.T, r validation.Report) {\n\t\tif !r.Satisfied() {\n\t\t\tt.Fatalf(\"region-local rewind overblocked: %s\", localFindings(r))\n\t\t}\n\t})\n}\n\n// semanticQAObserve uses the actual source observer or current-model walker,"
+          "text": "body := semanticQADivisions + timelineNote(\"4\", \"\", \"\") + `<attributes><divisions>2</divisions></attributes>` + timelineNote(\"4\", \"\", \"\") + `<backup><duration>2</duration></backup>` + timelineNote(\"2\", \"\", \"\") + timelineNote(\"1\", `<chord/>`, \"\")"
         },
         {
           "file": "timeline_semantic_qa_test.go",
           "text": "t.Fatalf(\"region-local rewind overblocked: %s\", localFindings(r))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestTimelineStateClosureAbsenceAndCountDefaults",
@@ -18622,7 +18684,8 @@
           "file": "validation/timeline_state_test.go",
           "text": "t.Fatalf(\"unclosed count=%+v,%v\", r, e)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestTimelineSemanticQARuntimeExactThirdsPrincipalAndAbsentVoice",
@@ -18640,7 +18703,8 @@
           "file": "validation/timeline_semantic_qa_test.go",
           "text": "t.Errorf(\"node%d=%+v want onset%s duration%s\", tc.id, f, tc.onset, tc.duration)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestContextSpanContinuationAssociationAxesBothAdapters",
@@ -18658,7 +18722,8 @@
           "file": "context_spans_integration_test.go",
           "text": "t.Fatal(\"number overlap merged\")"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestContextTimelineDependencyIsFieldLocal",
@@ -18676,7 +18741,8 @@
           "file": "validation/context_core_test.go",
           "text": "t.Fatalf(\"local dependency blocked: %+v,%v,%v\", d, pending, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestReportAcceptanceSeparatesAxes",
@@ -18694,7 +18760,8 @@
           "file": "validation/report_test.go",
           "text": "t.Fatal(\"storage truncation alone changed acceptance\")"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestReportAccumulatorIndependentAxesAndTruncation",
@@ -18712,7 +18779,8 @@
           "file": "validation/report_accumulator_test.go",
           "text": "t.Fatalf(\"report axes = %+v\", r)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSemanticCompositionPublicProfiles",
@@ -18730,7 +18798,8 @@
           "file": "semantic_composition_profiles_test.go",
           "text": "t.Fatalf(\"profile=%s err=%v satisfied=%v findings=%+v\", profile, err, report.Satisfied(), report.Findings)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestPackageProfilesRejectWrongEntryPointProfiles",
@@ -18748,7 +18817,8 @@
           "file": "package_catalog_test.go",
           "text": "t.Errorf(\"nonpackage profile accepted: %s\", id)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestPackageProfilesDoNotMutateFrozenEight",
@@ -18764,9 +18834,10 @@
         },
         {
           "file": "package_catalog_test.go",
-          "text": "t.Fatal(err)"
+          "text": "TestAuxiliaryFrozenEightProfiles(t)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceGraphPrimaryReports",
@@ -18784,7 +18855,8 @@
           "file": "resource_graph_test.go",
           "text": "t.Fatalf(\"err=%v package=%+v resources=%d adoptions=%d\", err, b.PackageReport(), b.ResourceCount(), b.AdoptionCount())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestReviewGraphBoundaryArchiveInventoryPublic",
@@ -18802,7 +18874,8 @@
           "file": "resource_graph_boundary_inventory_test.go",
           "text": "t.Fatalf(\"resolver calls=%d\", calls)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestPackageGraphMimetypeLocalHeaderExtraScope",
@@ -18820,7 +18893,8 @@
           "file": "resource_package_mimetype_header_scope_test.go",
           "text": "t.Fatalf(\"wrong header scope: %+v\", r)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDictionaryImportSelectionBeforeCallbacks",
@@ -18836,9 +18910,10 @@
         },
         {
           "file": "dictionary_import_test.go",
-          "text": "t.Fatalf(\"set=%v err=%v calls=%d\", set, err, calls)"
+          "text": "if set != nil || !errors.Is(err, validation.ErrInvalidConfiguration) || calls != 0 {\n\t\t\t\tt.Fatalf(\"set=%v err=%v calls=%d\", set, err, calls)\n\t\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceGraphReturnedURIAdmissionBeforeRead",
@@ -18856,7 +18931,8 @@
           "file": "resource_graph_review_contract_test.go",
           "text": "t.Fatalf(\"err=%v reads=%d closed=%d\", err, reader.reads, body.closed)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceOptionsEmptyAndTypedNilResolver",
@@ -18874,7 +18950,8 @@
           "file": "resource_options_test.go",
           "text": "t.Fatal(first, second, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceGraphIndirectionResourceCleanup",
@@ -18890,9 +18967,10 @@
         },
         {
           "file": "resource_graph_indirection_review_test.go",
-          "text": "t.Fatalf(\"root fixture: %v\", result.Err)"
+          "text": "{\n\t\t\t\tt.Fatalf(\"root fixture: %v\", result.Err)\n\t\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDictionaryAllTenAssessedSMuFLTypes",
@@ -18910,7 +18988,8 @@
           "file": "dictionary_dynamic_consumers_test.go",
           "text": "t.Fatalf(\"actual domain lost: %+v; %s\", rows, localFindings(report))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDictionaryImportIntegrityAndReadFaults",
@@ -18926,9 +19005,10 @@
         },
         {
           "file": "dictionary_import_test.go",
-          "text": "t.Fatalf(\"set=%v err=%v closes=%d\", set, err, body.closed)"
+          "text": "{\n\t\t\t\tt.Fatalf(\"set=%v err=%v closes=%d\", set, err, body.closed)\n\t\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestIPARepresentationSelectedConsumerWholeInput",
@@ -18946,7 +19026,8 @@
           "file": "dictionary_ipa_representation_consumers_test.go",
           "text": "t.Fatalf(\"model=%v legacy=%v value=%q representation rows=%d\", model, legacy, value, len(rows))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestIPARepresentationSelectionAndMissingCapability",
@@ -18964,7 +19045,8 @@
           "file": "dictionary_ipa_representation_consumers_test.go",
           "text": "t.Fatalf(\"missing capability lost empty raw span: %+v\", rows)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestReportFormatsOfflineExplanationAndSource",
@@ -18982,7 +19064,8 @@
           "file": "validation/report_test.go",
           "text": "t.Errorf(\"missing %q from %q\", want, output.String())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestReportFormatterLocalizedTextCannotReplaceMetadata",
@@ -19000,7 +19083,8 @@
           "file": "validation/report_bounds_test.go",
           "text": "t.Errorf(\"missing %q in %q\", want, out.String())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestReportFormatterBoundsFabricatedInputAndEscapesLocations",
@@ -19018,7 +19102,8 @@
           "file": "validation/report_bounds_test.go",
           "text": "t.Fatalf(\"one finding rendered unbounded fields: %d bytes\", out.Len())"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedTruncatedSummaryPreservesJoinedCauses",
@@ -19036,7 +19121,8 @@
           "file": "assessment_error_summary_test.go",
           "text": "t.Fatalf(\"truncation summary lost joined causes: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestIncompleteErrorPreservesIdentityAndCause",
@@ -19054,23 +19140,25 @@
           "file": "validation/errors_test.go",
           "text": "t.Errorf(\"%v lacks incomplete identity\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestEveryBudgetKindExactLimitModeAndFailureAtomicity",
       "file": "validation/budgets_test.go",
       "function": "TestEveryBudgetKindExactLimitModeAndFailureAtomicity",
-      "input": "Each of 14 budget kinds: limit 3, charge/check 2+1 or item=3, then first over-limit request",
-      "expected": "Exact limit succeeds; first excess is ErrResourceLimit/ErrIncompleteAssessment, failure is atomic and release mode is enforced.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
+      "evidence_layer": "baseline",
+      "input": "All budget kinds at exact and one-over limits; wrong Check/Charge/Release mode and gauge underrelease.",
+      "expected": "Failure leaves quota unchanged, gauges release to zero, cumulative budgets cannot release.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
       "anchors": [
         {
           "file": "validation/budgets_test.go",
-          "text": "{BudgetInputBytes, \"MaxInputBytes\", \"cumulative\"}"
+          "text": "if err := account.Release(tc.kind, 4); !errors.Is(err, ErrInvalidConfiguration)"
         },
         {
           "file": "validation/budgets_test.go",
-          "text": "t.Errorf(\"oversize item = %v\", err)"
+          "text": "t.Errorf(\"underrelease mutation: %d\", got)"
         }
       ]
     },
@@ -19090,7 +19178,8 @@
           "file": "validation/budgets_test.go",
           "text": "t.Fatalf(\"normalized limits = %+v want %+v\", got, defaults)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestBudgetOverflowFailsWithoutMutation",
@@ -19108,7 +19197,8 @@
           "file": "validation/budgets_test.go",
           "text": "t.Errorf(\"overflow %s = %v\", kind, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestBudgetUninitializedAccountsFailClosed",
@@ -19126,25 +19216,8 @@
           "file": "validation/budgets_test.go",
           "text": "t.Errorf(\"uninitialized account = %v\", err)"
         }
-      ]
-    },
-    {
-      "id": "TestSharedBudgetAccountConcurrentAggregateQuota",
-      "file": "validation/budgets_test.go",
-      "function": "TestSharedBudgetAccountConcurrentAggregateQuota",
-      "input": "Concurrent consumers charging one shared account",
-      "expected": "Aggregate quota is enforced atomically across consumers.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
-      "anchors": [
-        {
-          "file": "validation/budgets_test.go",
-          "text": "\taccount, _ := NewBudgetAccount(Budgets{MaxNodes: 101})\n\tvar passed atomic.Int64\n\tvar invalid atomic.Int64\n\tvar wg sync.WaitGroup\n\tfor child := 0; child < 20; child++ {\n\t\twg.Add(1)\n\t\tgo func() {\n\t\t\tdefer wg.Done()\n\t\t\tfor i := 0; i < 10; i++ {\n\t\t\t\terr := account.Charge(BudgetNodes, 1)\n\t\t\t\tif err == nil {"
-        },
-        {
-          "file": "validation/budgets_test.go",
-          "text": "t.Errorf(\"shared quota: usage=%d successes=%d invalid=%d\", got, passed.Load(), invalid.Load())"
-        }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSourceAssessmentCumulativeBudgetBoundaries",
@@ -19162,7 +19235,8 @@
           "file": "assessed_decode_test.go",
           "text": "t.Fatalf(\"baseline %+v %v\", report, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSourceAssessmentBufferedBoundaryAndCleanup",
@@ -19180,7 +19254,8 @@
           "file": "assessed_decode_test.go",
           "text": "t.Fatalf(\"upper bound not sufficient: %+v %v\", r, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSourceAssessmentDepthAndScalarBoundaries",
@@ -19198,25 +19273,27 @@
           "file": "assessed_decode_test.go",
           "text": "t.Errorf(\"below boundary: %+v %v\", report, err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestResourceGraphAggregateSourceIDBoundary",
       "file": "resource_graph_aggregate_budget_test.go",
       "function": "TestResourceGraphAggregateSourceIDBoundary",
-      "input": "Shared graph account across multiple source documents with ID costs",
-      "expected": "Primary and child ID quotas are cumulative; local reset cannot bypass aggregate limit.",
+      "input": "Primary source plus two independently valid linked scores; exact and one-under shared ID budgets.",
+      "expected": "Root and both children share cumulative quota; child limits cannot reset counters; resource bodies close and buffer/depth gauges release.",
       "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
       "anchors": [
         {
           "file": "resource_graph_aggregate_budget_test.go",
-          "text": "\ttestAggregateBudgetBoundary(t, false, validation.BudgetIDs)\n}"
+          "text": "testAggregateBudgetBoundary(t, false, validation.BudgetIDs)"
         },
         {
           "file": "resource_graph_aggregate_budget_test.go",
-          "text": "func TestResourceGraphAggregateSourceIDBoundary(t *testing.T) {\n\ttestAggregateBudgetBoundary(t, false, validation.BudgetIDs)\n}"
+          "text": "t.Fatalf(\"counter is not cumulative across both children: before=%v total=%d\", baseline.beforeChild, total)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDirectModelWalkerBudgetsCancellationAndDepth",
@@ -19234,7 +19311,8 @@
           "file": "model_walker_test.go",
           "text": "t.Fatalf(\"%d: %v %+v\", depth, err, status)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDirectModelWalkerWideHolesRemainBounded",
@@ -19250,9 +19328,10 @@
         },
         {
           "file": "model_walker_test.go",
-          "text": "assertWalkerReleased(t, a)"
+          "text": "if !status.HasProblems || len(s.representations[1].Problems) != 1 {\n\t\tt.Fatal(\"unbounded repeated problem storage\")\n\t}\n\tassertWalkerReleased(t, a)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestIndependentContextDefaultResourceMatrix",
@@ -19270,7 +19349,8 @@
           "file": "context_resource_independent_test.go",
           "text": "t.Fatalf(\"unexpected assessment infrastructure error: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestFinalQAMXLXMLDepthDoesNotBoundGraphHops",
@@ -19288,7 +19368,8 @@
           "file": "resource_graph_independent_xml_depth_test.go",
           "text": "t.Fatalf(\"XML cap incorrectly shortened graph: %v\", e)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestQAControlCancellationJoiningAndCleanup",
@@ -19306,25 +19387,8 @@
           "file": "validation/session_controls_test.go",
           "text": "t.Fatalf(\"joined partial lost: report=%+v err=%v\", r, err)"
         }
-      ]
-    },
-    {
-      "id": "TestRaceShardsAreAnExhaustiveDisjointPartition",
-      "file": "race_ci_sharding_test.go",
-      "function": "TestRaceShardsAreAnExhaustiveDisjointPartition",
-      "input": "Discovered module root and all other packages divided into two CI race shards",
-      "expected": "The shards are exhaustive and disjoint; no test package disappears.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
-      "anchors": [
-        {
-          "file": "race_ci_sharding_test.go",
-          "text": "\tconst root = \"example.org/musicxml\"\n\t// Inventories can grow command, internal, nested, test-only, and race-only\n\t// packages. No package-name allowlist may silently exclude future entries.\n\tpackages := []string{root + \"/cmd/new-command\", root + \"/internal/nested/new\", root,\n\t\troot + \"/testonly\", root + \"/raceonly\", root + \"/música\"}\n\tf := newRaceShardFixture(t)\n\tselected := make(map[string]string)\n\tfor _, newline := range []string{\"\\n\", \"\"} {\n\t\tfor _, shard := range []string{\"root\", \"packages\"} {\n\t\t\tstatus, calls, output := f.run(t, &shard, root+newline, strings.Join(packages, \"\\n\")+newline, 0, 0, 0)\n\t\t\twantPackages := []string{root}"
-        },
-        {
-          "file": "race_ci_sharding_test.go",
-          "text": "t.Fatalf(\"%s: status=%d calls=%q output=%s; want %q\", shard, status, calls, output, want)"
-        }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestRaceCIAggregateFailsClosedForAllShardResults",
@@ -19342,7 +19406,8 @@
           "file": "race_ci_sharding_test.go",
           "text": "t.Fatalf(\"aggregate identity, exact dependencies, always guards, finite cap or result bindings changed:\\n%s\", job)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestRaceShardingLeavesLocalStagesAndReleaseUnchanged",
@@ -19360,7 +19425,8 @@
           "file": "race_ci_sharding_test.go",
           "text": "t.Fatalf(\"local contract omits %q\", required)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestIntegerValueSpacesAgainstSchema",
@@ -19376,9 +19442,10 @@
         },
         {
           "file": "validation_integer_test.go",
-          "text": "assertValidationIssues(t, validateAttributeSource(t, &validationIntegerGenerated, test.source), test.issues)"
+          "text": "{\n\t\t\tt.Parallel()\n\t\t\tassertValidationIssues(t, validateAttributeSource(t, &validationIntegerGenerated, test.source), test.issues)\n\t\t\tassertXMLLintOutcome(t, xmllint, filepath.Join(directory, \"integer-contract.xsd\"), filepath.Join(directory, \"catalog.xml\"), test.source, len(test.issues) == 0)\n\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestSchemaHintDatatypesAgainstSchema",
@@ -19394,9 +19461,10 @@
         },
         {
           "file": "validation_schema_hint_datatype_test.go",
-          "text": "assertValidationIssues(t, validateAttributeSource(t, &validationSchemaHintGenerated, test.source), test.issues)"
+          "text": "{\n\t\t\t\tt.Parallel()\n\t\t\t\tassertValidationIssues(t, validateAttributeSource(t, &validationSchemaHintGenerated, test.source), test.issues)\n\t\t\t\tif !test.oracleComparable {\n\t\t\t\t\tt.Log(\"internal normative URI grammar case; bounded libxml2 URI-parser discrepancy\")\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t\tif !carrier && len(test.issues) > 0 {\n\t\t\t\t\tt.Log(\"negative standard-hint oracle excluded: fixed-schema libxml2 path omits hint datatype assessment; corresponding carrier is checked\")\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t\tassertXMLLintOutcome(t, xmllint, filepath.Join(directory, \"schema-hint-contract.xsd\"), filepath.Join(directory, \"catalog.xml\"), test.source, len(test.issues) == 0)\n\t\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestValidateDirectCallGraphNoTransport",
@@ -19414,7 +19482,8 @@
           "file": "validation_direct_model_test.go",
           "text": "t.Errorf(\"Validate still calls transport or an unmetered prewalk: %s\", name.Name)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestPublicDeclarationsHaveDocumentation",
@@ -19432,7 +19501,8 @@
           "file": "api_documentation_test.go",
           "text": "t.Fatalf(\"parse package source: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestCatalogDigestCanonicalAndIncludesTypedPlan",
@@ -19450,7 +19520,8 @@
           "file": "validation/catalog_compilation_test.go",
           "text": "t.Fatalf(\"equivalent order rejected: %v\", err)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestBarlineLocationMetadataAndChordMatrix",
@@ -19468,7 +19539,8 @@
           "file": "barline_location_adapters_test.go",
           "text": "t.Fatalf(\"metadata/chord changed endpoint: %+v\", *got)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestTimelineSemanticQAChordPrincipalRelations",
@@ -19484,9 +19556,10 @@
         },
         {
           "file": "timeline_semantic_qa_test.go",
-          "text": "t.Fatalf(\"positive case rejected: %s\", localFindings(r))"
+          "text": "{\n\t\t\t\tsemanticQAExpect(t, r, \"MX40-TIMELINE-chord-duration-bound\", tc.want, tc.count)\n\t\t\t\tif tc.count == 0 && !r.Satisfied() {\n\t\t\t\t\tt.Fatalf(\"positive case rejected: %s\", localFindings(r))\n\t\t\t\t}\n\t\t\t\tif tc.want == validation.OutcomeUnknown && (r.AssessmentComplete || r.Conformance == validation.ConformanceViolated) {\n\t\t\t\t\tt.Errorf(\"unavailable principal fabricated a violation: %+v\", r)\n\t\t\t\t}\n\t\t\t\tfor _, f := range r.Findings {\n\t\t\t\t\tif strings.HasPrefix(string(f.Rule.ID), \"MX40-XSD-\") && f.Outcome == validation.OutcomeFail {\n\t\t\t\t\t\tt.Errorf(\"fixture schema failure: %+v\", f)\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestAuxiliarySourceAssemblies",
@@ -19504,7 +19577,8 @@
           "file": "auxiliary_source_assessment_test.go",
           "text": "t.Fatalf(\"root profile admission: %v %+v\", err, report)"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestContextTranslationsPreserveFidelityBoundary",
@@ -19522,7 +19596,8 @@
           "file": "context_ownership_test.go",
           "text": "t.Fatalf(\"reviewed triplets=%d\", len(records))"
         }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestDTDAuditPublicSnapshotExportsOwnedOrigins",
@@ -19540,25 +19615,8 @@
           "file": "source_dtd_audit_integration_test.go",
           "text": "t.Fatalf(\"input=%v %v\", cause, err)"
         }
-      ]
-    },
-    {
-      "id": "TestFinalReconciliationRejectsUnlinkedContracts",
-      "file": "internal/finalreconciliation/ledger_test.go",
-      "function": "TestFinalReconciliationRejectsUnlinkedContracts",
-      "input": "Mutation removes a mandatory requirement test link or a test requirement link while all original records remain unchanged",
-      "expected": "Integrity validation rejects lost test-contract links and changed requirement links, respectively.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
-      "anchors": [
-        {
-          "file": "internal/finalreconciliation/ledger_test.go",
-          "text": "\tfor _, test := range []struct{ name, collection, key, want string }{\n\t\t{\"requirement without test\", \"requirements\", \"test_contract_ids\", \"lost test contract links\"},\n\t\t{\"test without requirement\", \"test_contracts\", \"requirement_ids\", \"changed requirement links\"},\n\t} {\n\t\tt.Run(test.name, func(t *testing.T) {\n\t\t\troot, ledger := loadLedger(t)\n\t\t\tfirst(ledger, test.collection)[test.key] = []any{}\n\t\t\terr := validateLedger(root, ledger)\n\t\t\tif err == nil || !strings.Contains(err.Error(), test.want) {\n\t\t\t\tt.Fatalf(\"unlinked contract accepted or wrong rejection: %v\", err)\n\t\t\t}"
-        },
-        {
-          "file": "internal/finalreconciliation/ledger_test.go",
-          "text": "t.Fatalf(\"unlinked contract accepted or wrong rejection: %v\", err)"
-        }
-      ]
+      ],
+      "evidence_layer": "baseline"
     },
     {
       "id": "TestFinalReconciliationRejectsHistoricalExecutionPromotion",
@@ -19575,6 +19633,178 @@
         {
           "file": "internal/finalreconciliation/ledger_test.go",
           "text": "t.Fatalf(\"historical evidence promoted into final verification: %v\", err)"
+        }
+      ],
+      "evidence_layer": "pr42-added"
+    },
+    {
+      "id": "TestResourceGraphAggregateModelAttributeBoundary",
+      "file": "resource_graph_aggregate_budget_test.go",
+      "function": "TestResourceGraphAggregateModelAttributeBoundary",
+      "evidence_layer": "baseline",
+      "input": "Primary model plus two independently valid linked scores; exact and one-under shared attribute budgets.",
+      "expected": "Root and both children share cumulative quota; child limits cannot reset counters; resource bodies close and buffer/depth gauges release.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "resource_graph_aggregate_budget_test.go",
+          "text": "testAggregateBudgetBoundary(t, true, validation.BudgetAttributes)"
+        },
+        {
+          "file": "resource_graph_aggregate_budget_test.go",
+          "text": "t.Fatalf(\"prior resources were reset or changed: before=%v want=%v\", out.beforeChild, baseline.beforeChild)"
+        }
+      ]
+    },
+    {
+      "id": "TestBudgetInvalidCallsNeverMutate",
+      "file": "validation/budgets_test.go",
+      "function": "TestBudgetInvalidCallsNeverMutate",
+      "evidence_layer": "baseline",
+      "input": "Negative Charge/Release/Check and unknown kinds on an account with a precharged depth gauge.",
+      "expected": "Every invalid operation rejects configuration and preserves all counter values.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "validation/budgets_test.go",
+          "text": "for _, kind := range []BudgetKind{\"\", \"unknown\", \"Nodes\"}"
+        },
+        {
+          "file": "validation/budgets_test.go",
+          "text": "t.Errorf(\"%s usage changed: %d want %d\", tc.kind, got, want)"
+        }
+      ]
+    },
+    {
+      "id": "TestAllocationSizeChecksHostIntWithoutNarrowingLimits",
+      "file": "validation/budgets_test.go",
+      "function": "TestAllocationSizeChecksHostIntWithoutNarrowingLimits",
+      "evidence_layer": "baseline",
+      "input": "Allocation sizes 0, 1, host-int max and negative; 32-bit-only max+1 branch; int64 account limit.",
+      "expected": "Host conversion overflow rejects without narrowing cumulative int64 limits; the 32-bit branch is a route, not proof of a 386 execution.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "validation/budgets_test.go",
+          "text": "if strconv.IntSize == 32 {"
+        },
+        {
+          "file": "validation/budgets_test.go",
+          "text": "t.Errorf(\"cumulative int64 narrowed: %v\", err)"
+        }
+      ]
+    },
+    {
+      "id": "TestDecodeAssessedUsesTighterDepthLimit",
+      "file": "assessed_decode_test.go",
+      "function": "TestDecodeAssessedUsesTighterDepthLimit",
+      "evidence_layer": "baseline",
+      "input": "Explicit Decode depth 2 / assessment depth 3 and reversed caps, plus nil-assessment legacy control.",
+      "expected": "The smaller resolved depth cap wins with exact resource limit 2, correct legacy sentinel, no normative violation and no model.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "assessed_decode_test.go",
+          "text": "{\"decode-is-tighter\", 2, 3, true}, {\"assessment-is-tighter\", 3, 2, false}"
+        },
+        {
+          "file": "assessed_decode_test.go",
+          "text": "t.Errorf(\"tighter depth result=%+v resource=%+v error=%v\", result, resource, err)"
+        }
+      ]
+    },
+    {
+      "id": "TestAssessModelFiniteResourcesAndIndependentAxes",
+      "file": "model_assessment_contract_test.go",
+      "function": "TestAssessModelFiniteResourcesAndIndependentAxes",
+      "evidence_layer": "baseline",
+      "input": "NaN model duration with diagnostic count/byte caps 1/1, plus finite budget and cycle cases.",
+      "expected": "Truncated model failure keeps blocking count and unsatisfied status even with zero stored findings.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "model_assessment_contract_test.go",
+          "text": "doc.Part[0].Measure[0].Content[0].Note.Duration = Ptr(PositiveDivisions(math.NaN()))"
+        },
+        {
+          "file": "model_assessment_contract_test.go",
+          "text": "t.Fatalf(\"truncated model problem erased: %+v %v\", report, err)"
+        }
+      ]
+    },
+    {
+      "id": "TestIPARepresentationPublicSourceModelAndAssessedReader",
+      "file": "dictionary_ipa_representation_pipeline_test.go",
+      "function": "TestIPARepresentationPublicSourceModelAndAssessedReader",
+      "evidence_layer": "baseline",
+      "input": "Selected positive IPA dictionary with unavailable representation witness in source/model/assessed-reader paths.",
+      "expected": "Assessed-reader unavailable witness returns incomplete assessment and no document; this route alone does not assert zero normative failures.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "dictionary_ipa_representation_pipeline_test.go",
+          "text": "for _, value := range []string{\"ḉ\\u0334\", \"a\\u0327\"}"
+        },
+        {
+          "file": "dictionary_ipa_representation_pipeline_test.go",
+          "text": "t.Fatalf(\"unproved witness acceptance: %v %v\", result.Document, err)"
+        }
+      ]
+    },
+    {
+      "id": "TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix",
+      "file": "internal/finalreconciliation/review_mutations_test.go",
+      "function": "TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix",
+      "evidence_layer": "pr42-added",
+      "input": "Mandatory source requirement or test edge removed consistently from plan, ledger copy and updated fingerprint.",
+      "expected": "Matrix-edge validation rejects the source graph itself, independently of source/ledger equality.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "internal/finalreconciliation/review_mutations_test.go",
+          "text": "{\"mandatory requirement without test\", \"requirements\", \"test_contracts\", \"test_contract_ids\"}"
+        },
+        {
+          "file": "internal/finalreconciliation/review_mutations_test.go",
+          "text": "rejectLedger(t, overlayRoot(t, root, map[string][]byte{path: raw}), m, \"matrix edge\")"
+        }
+      ]
+    },
+    {
+      "id": "TestAssessedDecodeSkippedSubtreeXMLContracts",
+      "file": "assessed_skipped_xml_contract_test.go",
+      "function": "TestAssessedDecodeSkippedSubtreeXMLContracts",
+      "evidence_layer": "pr42-added",
+      "input": "Unknown and foreign skipped subtrees with spaced lexical/expanded-name duplicates, nested DOCTYPE and mismatched closing tags, through ordinary and both assessed decode modes.",
+      "expected": "Each mode preserves XML syntax error, rejects the document and checks duplicate-specific diagnostics instead of accepting attribute-whitespace failure.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "assessed_skipped_xml_contract_test.go",
+          "text": "{\"unknown expanded duplicate\", `<unknown xmlns:p=\"urn:x\" xmlns:q=\"urn:x\"><child p:a=\"1\" q:a=\"2\"/></unknown>`, \"duplicate XML attribute {urn:x}a\"}"
+        },
+        {
+          "file": "assessed_skipped_xml_contract_test.go",
+          "text": "t.Fatalf(\"wrong XML failure: got %q, want %q\", syntax.Msg, tc.diagnostic)"
+        }
+      ]
+    },
+    {
+      "id": "TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed",
+      "file": "assessed_skipped_xml_contract_test.go",
+      "function": "TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed",
+      "evidence_layer": "pr42-added",
+      "input": "Distinct ordinary and expanded attribute names in unknown/foreign skipped subtrees.",
+      "expected": "Ordinary Decode succeeds; strict assessment keeps independent XSD rejection without inventing XML syntax error.",
+      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "anchors": [
+        {
+          "file": "assessed_skipped_xml_contract_test.go",
+          "text": "`<v:unknown xmlns:v=\"urn:vendor\" xmlns:p=\"urn:x\" xmlns:q=\"urn:y\"><child a=\"0\" p:a=\"1\" q:a=\"2\"/></v:unknown>`"
+        },
+        {
+          "file": "assessed_skipped_xml_contract_test.go",
+          "text": "t.Fatalf(\"strict assessment manufactured malformed XML: %v\", err)"
         }
       ]
     }
@@ -26019,6 +26249,18 @@
     "committed_reviewed_triplets": 177,
     "missing_portable_triplets": 114,
     "individually_executed_final_requirements": 0,
-    "execution_note": "Only ledger integrity controls are executed by this author. Referenced runtime cases were inspected, not rerun here."
+    "execution_note": "This ledger records inspected regression routes and author-run integrity controls. Runtime route execution and integrated-tree acceptance must be read from their separate receipts; classifications do not supply execution evidence.",
+    "anchored_routes": 127,
+    "routes_by_evidence_layer": {
+      "baseline": 123,
+      "pr42-added": 4
+    },
+    "axis_dispositions": {
+      "mapped": 91,
+      "partial": 228,
+      "missing-evidence": 6,
+      "decision-only": 140,
+      "not-elected": 10
+    }
   }
 }
