@@ -37,6 +37,10 @@ func migrateIPARepresentationProfileHash(t *testing.T, id validation.ProfileID, 
 	return pair[1]
 }
 
+// Before values below retain historical pre-IPA checkpoints, including
+// unpublished DTD compositions; they are not all public release baselines. The
+// public package baseline is independently captured and asserted by
+// TestPackageProfilesPublishedBaselineMigration; these checks pin final identity.
 func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 	for _, tc := range []struct {
 		ids           []validation.ProfileID
@@ -73,7 +77,7 @@ func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 		ids           []validation.ProfileID
 		before, after string
 	}{
-		{newDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphDictionaries, ProfileMXLSourceDictionaries, ProfileMXLModelDictionaries}, "147d3418013fcd8f41dd5335ea0e7b068cb43da421b0febac895ce7536fb1a9b", "f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44"},
+		{newDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphDictionaries, ProfileMXLSourceDictionaries, ProfileMXLModelDictionaries}, "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333", "f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44"},
 		{dtdDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphInternalDTDDictionaries, ProfileMXLSourceInternalDTDDictionaries, ProfileMXLModelInternalDTDDictionaries}, "4ecfcba585d635aa3a67ae6748985bb63c2b0482e6257cff7ccf39220acad319", "9d55aa68bf6b7fa45a27417ab9800d4e1f7b9744af810004de53cabf7b7be3b2"},
 	} {
 		c, err := tc.factory()

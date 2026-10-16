@@ -1,0 +1,1309 @@
+{
+  "repository": "go-muse/go-musicxml",
+  "commit": "5295080b2030be6d616c714e7c8bcad47185c742",
+  "capture": "json.Marshal of each public package Profile returned by newPackageAssessmentCatalog and newDictionaryPackageAssessmentCatalog at the published main baseline",
+  "profiles": [
+    {
+      "ID": "musicxml-4.0/resource-graph",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "083b1b94f8b581825b23b81e3c7e39c238741f04f897ba71f7aa9354ea789d97",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "package",
+      "Required": [
+        {
+          "ID": "MX40-PACKAGE-container-path",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-stored",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-extra",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-prefix",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-root-musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-rootfile-root",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-media-type",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-score-before-parts",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-link-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-instrument-association",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-group-match",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-entry-name-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-compression-observation",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-schema-hint-pairs",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-image-scaling",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-file-metadata-advice",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-container-path",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-stored",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-extra",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-prefix",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-root-musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-rootfile-root",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-media-type",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-score-before-parts",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-link-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-instrument-association",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-group-match",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-entry-name-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-compression-observation",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-schema-hint-pairs",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-image-scaling",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-file-metadata-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": null,
+      "NormativeClosure": "Finite resource graph rooted in original XML or a direct current MusicXML/Opus model. The graph report has package target; plain XML/model boundaries do not assert ZIP/container obligations. Authorized nested raw MXL boundaries receive the selected applicable package checks. Source and current-model intrinsic interpretations are fixed separately. The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion; current models cannot reconstruct discarded xsi attributes and may remain incomplete even with no encoded outgoing links. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras and other padding families remain explicit incomplete interpretation gates. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, dictionary, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active."
+    },
+    {
+      "ID": "musicxml-4.0/mxl-source",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "083b1b94f8b581825b23b81e3c7e39c238741f04f897ba71f7aa9354ea789d97",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "package",
+      "Required": [
+        {
+          "ID": "MX40-PACKAGE-container-path",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-stored",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-extra",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-prefix",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-root-musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-rootfile-root",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-media-type",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-score-before-parts",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-link-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-instrument-association",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-group-match",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-entry-name-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-compression-observation",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-schema-hint-pairs",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-image-scaling",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-file-metadata-advice",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-container-path",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-stored",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-extra",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-prefix",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-root-musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-rootfile-root",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-media-type",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-score-before-parts",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-link-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-instrument-association",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-group-match",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-entry-name-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-compression-observation",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-schema-hint-pairs",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-image-scaling",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-file-metadata-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": null,
+      "NormativeClosure": "Bounded original raw-MXL package and selected resource graph. Original local/central headers, mimetype prefixes, physical order and independently assessed original container XML remain source evidence. Only source intrinsic interpretations are accepted; a decoded current model cannot replace original XML proof. Each authorized nested raw MXL is a separate encapsulation boundary. The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion; current models cannot reconstruct discarded xsi attributes and may remain incomplete even with no encoded outgoing links. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras and other padding families remain explicit incomplete interpretation gates. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, dictionary, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active."
+    },
+    {
+      "ID": "musicxml-4.0/mxl-model",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "083b1b94f8b581825b23b81e3c7e39c238741f04f897ba71f7aa9354ea789d97",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "package",
+      "Required": [
+        {
+          "ID": "MX40-PACKAGE-container-path",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-stored",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-extra",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-prefix",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-root-musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-rootfile-root",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-media-type",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-score-before-parts",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-link-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-instrument-association",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-group-match",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-entry-name-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-compression-observation",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-schema-hint-pairs",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-image-scaling",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-file-metadata-advice",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-container-path",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-stored",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-extra",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-prefix",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-root-musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-rootfile-root",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-media-type",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-score-before-parts",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-link-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-instrument-association",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-group-match",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-entry-name-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-compression-observation",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-schema-hint-pairs",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-image-scaling",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-file-metadata-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": null,
+      "NormativeClosure": "Bounded current MXLPackage and selected resource graph. Assess the current primary Document directly and separately selected retained XML bytes as source. Do not encode/reparse to recover original source. Current package fields do not prove original compression, encryption, header extras, physical order, original mimetype bytes or container lexical presence. Those original-byte checks are outside the current-boundary claim; they remain selected for separately reached authorized raw-MXL boundaries. The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion; current models cannot reconstruct discarded xsi attributes and may remain incomplete even with no encoded outgoing links. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras and other padding families remain explicit incomplete interpretation gates. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, dictionary, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active."
+    },
+    {
+      "ID": "musicxml-4.0/resource-graph-dictionaries",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "package",
+      "Required": [
+        {
+          "ID": "MX40-PACKAGE-container-path",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-stored",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-extra",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-prefix",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-root-musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-rootfile-root",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-media-type",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-score-before-parts",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-link-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-instrument-association",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-group-match",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-entry-name-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-compression-observation",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-schema-hint-pairs",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-image-scaling",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-file-metadata-advice",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-container-path",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-stored",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-extra",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-prefix",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-root-musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-rootfile-root",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-media-type",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-score-before-parts",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-link-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-instrument-association",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-group-match",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-entry-name-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-compression-observation",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-schema-hint-pairs",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-image-scaling",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-file-metadata-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": null,
+      "NormativeClosure": "Finite resource graph rooted in original XML or a direct current MusicXML/Opus model. The graph report has package target; plain XML/model boundaries do not assert ZIP/container obligations. Authorized nested raw MXL boundaries receive the selected applicable package checks. Source and current-model intrinsic interpretations are fixed separately. The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion; current models cannot reconstruct discarded xsi attributes and may remain incomplete even with no encoded outgoing links. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras and other padding families remain explicit incomplete interpretation gates. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active. Selected dictionary intrinsic profiles add exact pinned SMuFL membership, independently retained MusicXML family constraints, local defaults and bounded range advice, open-string standard-sound recognition and explicitly partial IPA positive evidence. Missing capabilities remain unavailable without suppressing independent failures. Full IPA sequence, font rendering, internal-DTD and source-origin composition are outside this closure. A root imports only explicitly selected components once, sharing the verified set and finite account with every intrinsic child."
+    },
+    {
+      "ID": "musicxml-4.0/mxl-source-dictionaries",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "package",
+      "Required": [
+        {
+          "ID": "MX40-PACKAGE-container-path",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-stored",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-extra",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-prefix",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-root-musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-rootfile-root",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-media-type",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-score-before-parts",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-link-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-instrument-association",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-group-match",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-entry-name-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-compression-observation",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-schema-hint-pairs",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-image-scaling",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-file-metadata-advice",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-container-path",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-stored",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-extra",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-prefix",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-root-musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-rootfile-root",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-media-type",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-score-before-parts",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-link-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-instrument-association",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-group-match",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-entry-name-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-compression-observation",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-schema-hint-pairs",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-image-scaling",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-file-metadata-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": null,
+      "NormativeClosure": "Bounded original raw-MXL package and selected resource graph. Original local/central headers, mimetype prefixes, physical order and independently assessed original container XML remain source evidence. Only source intrinsic interpretations are accepted; a decoded current model cannot replace original XML proof. Each authorized nested raw MXL is a separate encapsulation boundary. The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion; current models cannot reconstruct discarded xsi attributes and may remain incomplete even with no encoded outgoing links. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras and other padding families remain explicit incomplete interpretation gates. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active. Selected dictionary intrinsic profiles add exact pinned SMuFL membership, independently retained MusicXML family constraints, local defaults and bounded range advice, open-string standard-sound recognition and explicitly partial IPA positive evidence. Missing capabilities remain unavailable without suppressing independent failures. Full IPA sequence, font rendering, internal-DTD and source-origin composition are outside this closure. A root imports only explicitly selected components once, sharing the verified set and finite account with every intrinsic child."
+    },
+    {
+      "ID": "musicxml-4.0/mxl-model-dictionaries",
+      "MusicXMLVersion": "4.0",
+      "CatalogDigest": "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333",
+      "RegistryCommit": "3e33e4c80aa2a46ec323a5c2ea2c473e9f47905c",
+      "Target": "package",
+      "Required": [
+        {
+          "ID": "MX40-PACKAGE-container-path",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-stored",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-extra",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-no-prefix",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-root-musicxml",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-rootfile-root",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-first-media-type",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-score-before-parts",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-link-target",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-instrument-association",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-group-match",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-mimetype-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-entry-name-advice",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-compression-observation",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-schema-hint-pairs",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-image-scaling",
+          "Revision": 1
+        },
+        {
+          "ID": "MX40-PACKAGE-file-metadata-advice",
+          "Revision": 1
+        }
+      ],
+      "Support": [
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-container-path",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-stored",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-extra",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-no-prefix",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-root-musicxml",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-rootfile-root",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-first-media-type",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-score-before-parts",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-link-target",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-instrument-association",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-group-match",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-mimetype-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-entry-name-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-compression-observation",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-schema-hint-pairs",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-image-scaling",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        },
+        {
+          "Rule": {
+            "ID": "MX40-PACKAGE-file-metadata-advice",
+            "Revision": 1
+          },
+          "State": "available",
+          "Reason": ""
+        }
+      ],
+      "SupportedRoots": null,
+      "NormativeClosure": "Bounded current MXLPackage and selected resource graph. Assess the current primary Document directly and separately selected retained XML bytes as source. Do not encode/reparse to recover original source. Current package fields do not prove original compression, encryption, header extras, physical order, original mimetype bytes or container lexical presence. Those original-byte checks are outside the current-boundary claim; they remain selected for separately reached authorized raw-MXL boundaries. The selected sealed checks preserve exact container path, ordered rootfile and no-namespace musical-root evidence, reviewed first media-type cases, conditional score-before-parts and exact authorized instrument-part-file association. Local XSD/reference facts are prerequisites, not duplicated package datatype rules. Independent intrinsic source/model reports keep their own profiles, digests, targets and counts; successful target-kind evidence never certifies child conformance. Selected schema-hint namespace/location pairing is a capability policy separate from the accepted list(anyURI) datatype. Unmatched hints or missing discovery evidence prevent selected discovery completion; current models cannot reconstruct discarded xsi attributes and may remain incomplete even with no encoded outgoing links. No hinted schema is loaded or selected. Group, image scaling, mimetype presence/first placement/exact content, UTF-8 entry names and file/MIME conventions remain optional advice. Observed compression is capability context, not an invented DEFLATE-only rejection rule. Raw mimetype checks distinguish mandatory stored/unencrypted, local-header no-extra and reviewed leading padding/five standard Unicode BOM cases from optional exact content; central-only extras and other padding families remain explicit incomplete interpretation gates. Complete ZIP/JAR/DEFLATE normative closure, the complete MusicXML media-type set, outer compressed-rootfile and linked-target indirection and unproved association or role interpretations remain unresolved when reached. Bounded technical nested traversal does not resolve outer indirection wording. Missing authority, unavailable target/root/fragment evidence and incomplete graph enumeration cannot certify success. The fixed intrinsic table includes source Container/Sounds for selected auxiliary resources without adding Document model roots. MusicXML 4.0 identifies the pinned schema interpretation, not a blanket version=4.0 instance restriction. No filename-based role inference, cross-file ID equality, universal XPointer, renderer, automatic network/filesystem access or full MusicXML conformance claim. Existing intrinsic syntax, unread-DTD, representation and resource limits remain active. Selected dictionary intrinsic profiles add exact pinned SMuFL membership, independently retained MusicXML family constraints, local defaults and bounded range advice, open-string standard-sound recognition and explicitly partial IPA positive evidence. Missing capabilities remain unavailable without suppressing independent failures. Full IPA sequence, font rendering, internal-DTD and source-origin composition are outside this closure. A root imports only explicitly selected components once, sharing the verified set and finite account with every intrinsic child."
+    }
+  ]
+}
