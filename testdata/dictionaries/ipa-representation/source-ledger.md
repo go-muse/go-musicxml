@@ -45,14 +45,18 @@ normalized starter values and at most two candidates each.
   Its identities are matched to the selected historical alphabet; it does not
   upgrade membership or Unicode version. Its pin/notice is in the legacy ledger.
 - K89: International Phonetic Association, Report on the 1989 Kiel Convention,
-  JIPA 19(2),67–80, DOI10.1017/S0025100300003868.
+  JIPA 19(2), 67–80, DOI 10.1017/S0025100300003868.
   [Primary publication](https://www.cambridge.org/core/services/aop-cambridge-core/content/view/C10DB13CAB1BAC6187438C74F3FF01EC/S0025100300003868a.pdf/report-on-the-1989-kiel-convention-international-phonetic-association1.pdf).
-  Pages71, 74 establish the retained superscript provision; pp.75–77 establish
+  Pages 71, 74 establish the retained superscript provision; pp.75–77 establish
   ordinary word space and either-side Chao stems/extended contours.
-- HB99: Handbook of the International Phonetic Association, 1999, pp.14–17,
-  [primary-text extract](https://commons.princeton.edu/eng266-s25/wp-content/uploads/sites/433/2025/02/IPA-Introduction-Handbook.pdf).
-  The pinned extract covers pp.3–17, not the whole book. It establishes tone,
-  positional-diacritic, rhotic and overlay identities.
+- HB99: Handbook of the International Phonetic Association, Cambridge University
+  Press, 1999, ISBN 978-0-521-63751-0, pp. 14–17. The publisher edition is the
+  primary bibliographic source for tone, positional-diacritic, rhotic and overlay
+  identities. The
+  [Princeton-hosted extract](https://commons.princeton.edu/eng266-s25/wp-content/uploads/sites/433/2025/02/IPA-Introduction-Handbook.pdf)
+  is the resident convenience copy whose digest is recorded; it covers pp. 3–17,
+  not the whole book. Only factual identities are recorded here; no book text
+  is copied or redistributed by this fixture.
 - SUP20: [L2/20-252R](https://www.unicode.org/L2/L2020/20252r-mod-ipa-a.pdf),
   2020-11-08; IPA Council letter pp.10–12. Later confirmation of the earlier
   superscript provision, including implicit current consonants. It does not
@@ -73,13 +77,15 @@ normalized starter values and at most two candidates each.
 - Compound tone accents: [L2/04-348](https://www.unicode.org/L2/L2004/04348-phonetic.pdf),
   pp.3–6; HB99 p.14 and MAP12 p.10 independently establish the three additions.
 - [L2/20-125R](https://www.unicode.org/L2/L2020/20125r-ipa-retroflex.pdf):
-  pp.4 and13, context for current identities and construction encodings.
+  pp. 4 and 13, context for current identities and construction encodings.
   P22 has its strongest direct witness in SUP20 Council p.11 and NamesList13
-  A78E. The resident source digest is recorded.
+  A78E. The official URL identifies the verified 1,574,260-byte source with
+  SHA-256 `f1af28c08d70c2a826906fcc4a5f339d6e11112f070f6102529de66392eb4622`;
+  source-pins.json records the same URL, length and digest.
 - DoNotEmit17: [Unicode 17 DoNotEmit.txt](https://www.unicode.org/Public/17.0.0/ucd/DoNotEmit.txt).
   This later encoding guidance corroborates 17 exact hook spellings, not
   Unicode 13 normalization and not admission of newer target scalars.
-- U13: [Unicode 13 chapter7](https://www.unicode.org/versions/Unicode13.0.0/ch07.pdf),
+- U13: [Unicode 13 chapter 7](https://www.unicode.org/versions/Unicode13.0.0/ch07.pdf),
   §§7.8–7.9; [UnicodeData13](https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt),
   [DerivedAge13](https://www.unicode.org/Public/13.0.0/ucd/DerivedAge.txt),
   [NamesList13](https://www.unicode.org/Public/13.0.0/ucd/NamesList.txt), and final
@@ -98,7 +104,7 @@ exact turned-r/s retroflex-hook spellings and their modifier counterparts:
 NamesList13 supplies the current letter identities, U13 §7.9 supplies the
 shape-building U+0322 role, and the established superscript provision supplies
 modifier identity. They are not claimed as exact DoNotEmit mappings and are
-never recorded as canonical equivalences. Only the22 complete named atoms are
+never recorded as canonical equivalences. Only the 22 complete named atoms are
 admitted; free U+0322/U+0327 and arbitrary base-plus-hook/cedilla remain unproved.
 R22 is the separately evidenced superscript-cedilla construction.
 
@@ -124,13 +130,18 @@ A half-pair endpoint may not contain a whole tie (035C/0361), and the segment
 immediately preceding the left endpoint may not contain one. This conservative
 mixed-tie boundary avoids unproved overlap. It does not change canonical
 identity, turn the pairs into canonical decompositions, or establish rendering
-scope for mixed/repeated ties. Whole ties remain independent existing atoms
-outside this boundary.
+scope for mixed/repeated ties. U+035C/U+0361 remain independent complete mark
+atoms in the pinned concatenation language. Isolated, repeated and sign-adjacent
+whole marks therefore have representation witnesses, without certifying their
+tie endpoints, rendering or phonotactics. The orientation, repetition and endpoint
+restrictions above concern presentation-form half ties; mixed whole/half overlap
+remains unavailable.
 
 For known string scalar input, the public representation result is one unchanged
 whole-input byte span, including empty or unproved text. Unavailable/non-string
-scalar evidence retains its state and cause without an invented raw interval. A successful complete witness alone makes
-Result and WholeSequence known-true; absence remains unavailable, never a
+scalar evidence retains its state and cause without an invented raw interval.
+A successful complete witness alone makes Result and WholeSequence known-true;
+absence remains unavailable, never a
 fabricated negative complement. This is a bounded affirmative representation
 capability, not phonotactics, pronunciation intent or universal IPA conformance.
 

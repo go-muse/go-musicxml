@@ -46,12 +46,22 @@ The licensed material is offered without warranties as described in the linked
 licenses. This dataset is PARTIAL and is not a complete IPA repertoire,
 transcription grammar, or pronunciation-correctness validator.
 
+Additional factual source
+Handbook of the International Phonetic Association, Cambridge University Press,
+1999, ISBN 978-0-521-63751-0, pp. 14–17. The source ledger cites the publisher
+edition and records the digest of a Princeton-hosted resident convenience copy.
+The witness rows record factual identities; no text from the book is copied or
+redistributed. This citation grants no license to the book or its PDF.
+
 Unicode data
-Unicode Character Database 13.0.0, Unicode, Inc.
-ReadMe copyright: © 2020 Unicode, Inc.
+Unicode Character Database 13.0.0 and DoNotEmit.txt 17.0.0, Unicode, Inc.
+ReadMe and NamesList copyright: © 2020 Unicode, Inc.
 DerivedAge copyright: © 2019 Unicode, Inc.
+DoNotEmit copyright: © 2025 Unicode, Inc.
 https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
 https://www.unicode.org/Public/13.0.0/ucd/DerivedAge.txt
+https://www.unicode.org/Public/13.0.0/ucd/NamesList.txt
+https://www.unicode.org/Public/17.0.0/ucd/DoNotEmit.txt
 Unicode-derived fields retain the separate Unicode copyright and permission
 notice in LICENSE-UNICODE-V3.txt. That notice is the preserved current
 1991–2026 license snapshot, not a claim about a historical 2020 license text.

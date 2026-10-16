@@ -47,6 +47,11 @@ positives or known-negative conclusions.
   multiple halves in one segment, reversed/mismatched or unmatched halves and
   endpoints on signs remain unavailable. A whole tie on either endpoint or the
   immediately preceding segment also leaves mixed overlap unavailable.
+- Keep U+035C/U+0361 as independent complete mark atoms in the pinned
+  concatenation language. Isolated, repeated and sign-adjacent whole marks have
+  representation witnesses; these do not certify tie endpoints, rendering or
+  phonotactics. The endpoint, repetition and orientation restrictions above
+  concern presentation-form half ties; mixed whole/half overlap remains unavailable.
 - Publish one `DictionarySpan` over the entire known string, preserving raw
   bytes, including a genuinely empty string and known text without a witness or
   capability. Unavailable/non-string scalar evidence has no invented raw span;
