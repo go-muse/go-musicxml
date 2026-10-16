@@ -22,12 +22,14 @@ type contextReader struct {
 	ownerCache      map[ComponentID]*contextAttributeTable
 }
 
-// A schema binding is compact, run-local immutable identity. Pair it with the
-// exact compiled table, not its digest, so distinct plans cannot share roles.
+// A retained declaration is immutable, session-owned evidence. Schema
+// publication canonicalizes cause-free Known declarations by exact compiled use,
+// so different node bindings can share this identity. Pair it with the exact
+// compiled table, not its digest, so distinct plans cannot share roles.
 // The session owns this cache; final readers borrow its immutable role slices.
 type contextBoundElementKey struct {
-	bindings *contextBindings
-	binding  xsd.Binding
+	bindings    *contextBindings
+	declaration *Evidence[DeclarationID]
 }
 
 func (r *contextReader) step(n int64) bool {
@@ -89,7 +91,9 @@ func (r *contextReader) matches(n *factNode, role contextRole) bool {
 // boundElementRoles is used only during final provider evaluation: Finish has
 // sealed the public event API, bindSourceSchema has published every declaration,
 // and finalizeSourceSchema has completed. No declaration can change in this
-// phase. Earlier readers and private mutable/manual bindings use matches' exact
+// phase. Open copied caller evidence, and schema publication replaced it through
+// retainSchemaDeclaration; roots and child uses therefore borrow owned records.
+// Earlier readers and private mutable/manual bindings use matches' exact
 // lookup instead, so late publication never installs a stale classification.
 // EvidenceKnown is still checked on every call, outside this cache. A cached
 // empty role set is only a classification of a known declaration, not evidence
@@ -105,7 +109,7 @@ func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
 	if !r.step(1) {
 		return nil, false
 	}
-	key := contextBoundElementKey{bindings: r.b, binding: bound.binding}
+	key := contextBoundElementKey{bindings: r.b, declaration: n.header.Declaration}
 	roles, ready := r.s.contextElementRoles[key]
 	if ready {
 		return roles, true
@@ -117,7 +121,7 @@ func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
 	if !r.step(1) {
 		return nil, false
 	}
-	// One compact entry per exact binding/table pair across all final readers.
+	// One compact entry per exact declaration/table pair across all final readers.
 	// This eliminates duplicate provider-local maps while keeping their admitted
 	// storage owned by the session until cleanup. The allowance covers map
 	// buckets, geometric growth and allocator rounding; compiled bindings still
