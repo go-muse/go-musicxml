@@ -180,7 +180,10 @@ resource failure, not proof that the music is invalid.
 
 Execution date: 2026-10-16. Production base: the merged commit above. The
 focused test-only tree is `aaa6a79884ec84fd304b12ddd7cf73b7faa9556b`, retained
-by commit `6c573307030c13f9b18081613fabd16203518792`. The new test file's
+by unpublished local commit `6c573307030c13f9b18081613fabd16203518792`.
+These identify unpublished local focused-test provenance, not a published
+checkout target or canonical publication receipt. The canonical publication
+mapping will be recorded after integration and publication. The new test file's
 SHA-256 is `5df6edf9b4be328d706d81542debff425f47957674f7f63e6a615ad34077d2e7`.
 This documentation was added afterward and is not misrepresented as part of
 that measured tree.
