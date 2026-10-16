@@ -1,6 +1,6 @@
 // Minimal Unicode13-derived representation policy.
 // Unicode copyright and permission: ../testdata/dictionaries/ipa-representation/
-// LICENSE-UNICODE-V3.txt (preserved1991–2026 snapshot, not a2020 license text).
+// LICENSE-UNICODE-V3.txt (preserved 1991–2026 snapshot, not a 2020 license text).
 // See NOTICES.txt and source-ledger.md there for separate adapted-data notices.
 package validation
 
