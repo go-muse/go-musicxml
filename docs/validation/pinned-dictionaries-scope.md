@@ -41,8 +41,9 @@ constructor is private. Standalone `InspectXMLWithDictionaries` supports
 `ProfileSourceSoundsDictionaries`, but public graph/MXL wrappers do not discover,
 resolve or assess sounds children. The slice selects SMuFL 1.4 canonical names
 and exact ranges, MusicXML 4.0 standard-sound recognition, unchanged partial
-IPA positive-v1 facts and a separately selected bounded representation witness. It adds no general downloadable dictionary
-framework, font inspection, expression evaluation or application sound mapping.
+IPA positive-v1 facts and a separately selected bounded representation witness.
+It adds no general downloadable dictionary framework, font inspection, expression
+evaluation or application sound mapping.
 The proposed generic `ExternalDictionary`/`ExternalProvider` interfaces in
 [go-contracts.md](go-contracts.md) remain proposals, not the shipped API.
 
@@ -51,7 +52,8 @@ these dictionary operations and narrow defaults/advice. Full timeline, layout,
 repeat and unrelated context families are not prerequisites. New graph/MXL
 profiles bind exact dictionary intrinsic profiles/catalog digests. The IPA
 representation addition deliberately migrates dictionary-containing catalogs;
-its exact migration is separate from the earlier preserved-profile capture. Source-only container stays `ProfileSourceContainer`;
+its exact migration is separate from the earlier preserved-profile capture.
+Source-only container stays `ProfileSourceContainer`;
 the source-sounds catalog row uses `ProfileSourceSoundsDictionaries`. Raw MXL
 retains source-only intrinsic bindings; current MXL does not reconstruct
 discarded source evidence.
@@ -364,9 +366,9 @@ transferred usable body closes once even on read/metadata/close failure. Wrong
 request/pin/kind errors on the four legacy components and ordinary provider
 errors become capability gaps and may accompany a partial result. For the new
 representation manifest only, importer-owned malformed structure/length/hash
-errors preserve ConfigurationError and cannot return a usable set; they do not suppress independent XSD/family
-failures. Actual cancellation/resource exhaustion is terminal, with original
-causes and earlier proved violations preserved.
+errors preserve ConfigurationError and cannot return a usable set; they do not
+suppress independent XSD/family failures. Actual cancellation/resource exhaustion
+is terminal, with original causes and earlier proved violations preserved.
 
 The graph retains dictionary context in selected intrinsic snapshots and remaps
 all occurrence-qualified subjects and nested causes on adoption. Two aliases of

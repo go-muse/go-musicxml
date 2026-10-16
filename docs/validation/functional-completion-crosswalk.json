@@ -1,8 +1,9 @@
 {
   "format": "musicxml4-functional-contribution-crosswalk-v1",
   "checkpoint": "2026-10-14",
+  "commit_id_scope": "implementation_head and abbreviated commit IDs in dispositions identify unpublished local development history, not necessarily objects in a published checkout. They are preserved historical references, not public verification instructions. Published baseline/candidate identities and dated execution receipts are identified separately; historical commit messages remain unchanged.",
   "implementation_head": "4acb7faabfef1aa077629e9ced1daa02aed94382",
-  "acceptance": "All listed functional contributions are integrated at this unpublished local checkpoint. Independent source/data and semantic/resource component reviews passed. Integrated ordinary suite passed at historical cf2c918 before IPA; final whole-tree stages and exact-head CI remain pending. Test routes identify code, not blanket execution acceptance. Original planning rows are not mutated.",
+  "acceptance": "Historical integration checkpoint: all listed contributions were integrated at implementation_head, an unpublished local commit. Component semantic/resource reviews and the ordinary suite at unpublished local cf2c918 preceded IPA integration. On 2026-10-14 the complete tree fa90c0b32ac027f45bbadcdabcd9a4b1c80fd8af passed all seven local stages and eleven fuzz targets; the same tree was published as PR41 head 159dd6e and passed all eleven hosted CI checks in run 38594018729. See docs/validation/source-declarations-evidence.md#dated-integrated-receipt. This receipt does not accept later review corrections. Test routes identify code, not blanket execution acceptance; original planning rows are unchanged.",
   "original_counts": {
     "original_external_ids": 50,
     "original_attached_test_contracts": 44,
@@ -902,7 +903,7 @@
           "dtd_package_composition_test.go"
         ]
       },
-      "remaining": "Final combined-tree acceptance remains pending; IPA affirmative representation is integrated. Do not mark this umbrella as universal transitive standards closure."
+      "remaining": "IPA affirmative representation is integrated; the top-level acceptance field records the dated combined-tree receipt. Do not mark this umbrella as universal transitive standards closure."
     },
     {
       "id": "MX40-ISSUE-mxl-first-media-type-set",
@@ -966,7 +967,7 @@
         "TEST-DEF-EXTERNAL-IPA"
       ],
       "classification": "implemented_tested_selected_contract",
-      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies295 symbol atoms and158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
+      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies 295 symbol atoms and 158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy 197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
       "limit": "The 18 historical lateral/tone alias questions have no demonstrated required-positive MusicXML4 path and are not blockers. Current affirmative letters/signs/productive provisions, whole-representation canonical closure, constructed-letter attachment and paired half ties are real scope. No phonotactics/rendering or preferred-font requirement.",
       "code": [
         "validation/dictionary_ipa_representation.go",
@@ -1159,7 +1160,7 @@
           "dtd_package_composition_test.go"
         ]
       },
-      "remaining": "Final combined-tree acceptance remains pending; IPA affirmative representation is integrated. Do not mark this umbrella as universal transitive standards closure."
+      "remaining": "IPA affirmative representation is integrated; the top-level acceptance field records the dated combined-tree receipt. Do not mark this umbrella as universal transitive standards closure."
     },
     {
       "id": "REQ-DEF-ISSUE-EXTERNAL-SPEC-CLOSURE",
@@ -1187,7 +1188,7 @@
           "dtd_package_composition_test.go"
         ]
       },
-      "remaining": "Final combined-tree acceptance remains pending; IPA affirmative representation is integrated. Do not mark this umbrella as universal transitive standards closure."
+      "remaining": "IPA affirmative representation is integrated; the top-level acceptance field records the dated combined-tree receipt. Do not mark this umbrella as universal transitive standards closure."
     },
     {
       "id": "REQ-DEF-ISSUE-MXL-FIRST-MEDIA-TYPE-SET",
@@ -1279,7 +1280,7 @@
       ],
       "classification": "implemented_tested_selected_contract",
       "disposition": "Separate raw/current MXL, Opus and graph adapters already exist. c35c624 composes DTD/dictionary auxiliary and linked sources; 7c01f17 adds selected source/model semantic profiles. de93533 integrates matching semantic resource-graph/raw-MXL/current-MXL profiles with exact intrinsic pins.",
-      "limit": "Old profile behavior remains explicit. New graph/MXL composition still requires final integrated acceptance; no whole-ZIP or source-history reconstruction claim follows.",
+      "limit": "Old profile behavior remains explicit. The top-level acceptance field records dated graph/MXL integration verification; no whole-ZIP or source-history reconstruction claim follows.",
       "code": [
         "resource_package.go",
         "resource_graph.go",
@@ -1484,7 +1485,7 @@
         "docs/validation/plan/prose-contracts.json#/test_contracts/18"
       ],
       "classification": "honest_selected_capability_limit",
-      "disposition": "cfdc5f6/0643a41/cf2c918 integrate the independently proved ordinary singleton pitch/rest counterexample. It does not negate the sufficient equality proof. Source/model × both organizations, equality/enharmonic/empty-content controls, causal prerequisites and resource boundaries were reviewed. General ties/grace/carry/multiple-simultaneous/effective-transformation equivalence remains a named selected limit, not completed by Unknown.",
+      "disposition": "cfdc5f6/0643a41/cf2c918 integrate the independently proved ordinary singleton pitch/rest counterexample. It does not negate the sufficient equality proof. Source/model × both organizations, equality/enharmonic/empty-content controls, causal prerequisites and resource boundaries were reviewed. General ties/grace/carry/multiple-simultaneous/effective-transformation equivalence remains a named selected limit, not completed by Unknown. The current whole-part domain excludes key/time/clef, direction/print/barline and all note attributes, and requires one explicit staff-qualified transpose.",
       "code_or_tests": [
         "validation/context_repeat_consumer.go",
         "validation/context_repeat_content.go",
@@ -1530,7 +1531,10 @@
         "TestRepeatWindowAdaptersSequentialBeatsAndConservativeControls": [
           "validation/context_repeat_window_adapters_test.go"
         ]
-      }
+      },
+      "evidence": [
+        "docs/validation/evidence/graphical-repeat-singleton-counterexample.md"
+      ]
     },
     {
       "id": "CHECK-bend-release-negative",
@@ -3548,7 +3552,7 @@
         "docs/validation/plan/prose-contracts.json#/test_contracts/15"
       ],
       "classification": "implemented_tested_selected_contract",
-      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies295 symbol atoms and158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
+      "disposition": "A separately selected sealed IPA2015/Unicode13 representation manifest now supplies 295 symbol atoms and 158 genuine canonical relations, stable canonical ordering, exact whole-input witnesses and narrow disjoint adjacent half ties. Independent source/data review verifies current-family witnesses, closure and pins; independent resource review verifies budgets, cancellation, error classification, owned projections and adapters. Legacy 197 bytes and partial projections remain unchanged. Unproved representations remain unavailable, never a manufactured negative complement; no phonotactics, rendering or desired-pronunciation authority is claimed.",
       "code_or_tests": [
         "validation/dictionary_ipa_representation.go",
         "validation/dictionary_ipa_representation_policy.go",
@@ -3665,7 +3669,7 @@
         "docs/validation/plan/prose-contracts.json#/test_contracts/20"
       ],
       "classification": "honest_selected_capability_limit",
-      "disposition": "cfdc5f6/0643a41/cf2c918 integrate the same independent singleton counterexample for measure repeats. Earlier normalized equality, multiset fallback and narrow empty-target negatives remain. The exact explicit scope/transformation prerequisites cannot be replaced with name heuristics or natural-transpose defaults. General musical equivalence is still not claimed.",
+      "disposition": "cfdc5f6/0643a41/cf2c918 integrate the same independent singleton counterexample for measure repeats. Earlier normalized equality, multiset fallback and narrow empty-target negatives remain. The exact explicit scope/transformation prerequisites cannot be replaced with name heuristics or natural-transpose defaults. General musical equivalence is still not claimed. The current whole-part domain excludes key/time/clef, direction/print/barline and all note attributes, and requires one explicit staff-qualified transpose.",
       "code_or_tests": [
         "validation/context_repeat_consumer.go",
         "validation/context_repeat_content.go",
@@ -3712,7 +3716,10 @@
         "TestRepeatOrderedAdaptersPreserveFallback": [
           "validation/context_repeat_ordered_adapters_test.go"
         ]
-      }
+      },
+      "evidence": [
+        "docs/validation/evidence/graphical-repeat-singleton-counterexample.md"
+      ]
     },
     {
       "id": "CHECK-normal-type-when-different",

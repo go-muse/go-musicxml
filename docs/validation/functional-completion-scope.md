@@ -40,8 +40,9 @@ The separately selected [IPA representation consumer](ipa-representation.md) is
 implemented with independently verified current-symbol/Unicode13 witnesses,
 canonical closure, exact pins and resource/lifecycle controls. Legacy positive
 IPA data remains explicitly partial. Neither lookup absence nor unsupported
-historical spellings becomes a normative negative. Final integrated acceptance
-is still required.
+historical spellings becomes a normative negative. The
+[dated integrated receipt](source-declarations-evidence.md#dated-integrated-receipt)
+records the published candidate separately from subsequent review corrections.
 
 ## Corrected overgeneralizations
 
@@ -81,13 +82,18 @@ Unknown.
 
 ## Acceptance checkpoint
 
-At local commit `cf2c9188c71e973ac1d112d471b7aef87ed34264`, the integrated ordinary
+At unpublished local commit `cf2c9188c71e973ac1d112d471b7aef87ed34264`, the
+integrated ordinary
 `go test ./... -count=1` suite passed without package exclusions. Component
 semantic/resource reviews, executable RED/GREEN evidence and focused race checks
 are scoped to their actual component trees. That ordinary checkpoint precedes IPA
 integration. The IPA contribution was integrated afterward with independently
-accepted component evidence; neither replaces final whole-tree seven-stage acceptance,
-counted fuzz targets, actual platform execution or exact-head remote CI.
+accepted component evidence. The later
+[14 October 2026 integrated receipt](source-declarations-evidence.md#dated-integrated-receipt)
+records all seven local stages, eleven fuzz targets and eleven hosted CI checks
+on tree `fa90c0b32ac027f45bbadcdabcd9a4b1c80fd8af`, published as `159dd6e`.
+These remain separate historical observations; review corrections need their own
+exact-tree verification.
 Performance/configuration and final overall reconciliation remain separately
 owned within the agreed two-PR plan. Final performance assessment and additional
 optimization remain deferred under the current instructions; this receipt does

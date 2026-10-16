@@ -10,7 +10,9 @@ introduced. No profile is selected implicitly.
 - `ProfileSourceSemantics` selects source XSD, local, exact timeline and contextual
   checks, actually read internal declarations, owned source origins, canonical
   SMuFL membership and supported IPA evidence. Physical attributes and effective
-  defaulted/normalized values remain distinct.
+  defaulted/normalized values remain distinct. The
+  [external-DOCTYPE source limit](../../API.md#opt-in-original-source-assessment)
+  applies: an unread external subset leaves selected source checks unavailable.
 - `ProfileModelSemantics` selects current encoded model facts. It does not invent
   discarded DTD, lexical, namespace, original-byte or source-hint information.
 - `ProfileResourceGraphSemantics`, `ProfileMXLSourceSemantics` and
@@ -46,17 +48,20 @@ primary substitution. Existing indirection uncertainty remains independent.
 Barline checks use independently established cursor/end evidence. Empty measures,
 unknown movers and unsupported endpoint shapes remain unavailable rather than
 being filled from meter. Graphical-repeat checks preserve their bounded positive
-and negative proof domains; they do not render playback. Unrestricted figure-number
+and negative proof domains, including the
+[closed singleton-repeat theorem](evidence/graphical-repeat-singleton-counterexample.md);
+they do not render playback. Unrestricted figure-number
 text is not subjected to the removed invented numeric grammar. No external
 performer/exporter intent API is selected.
 
 ## Limits and acceptance
 
 An unavailable dictionary or source capability remains explicit where a selected
-occurrence needs it. The legacy IPA positive manifest remains partial. The separately selected new IPA
-representation relation has independently reviewed witness and policy evidence;
-this composition does not enlarge its declared affirmative scope. Independent XSD or encoded semantic
-failures survive incomplete package/resource evidence.
+occurrence needs it. The legacy IPA positive manifest remains partial. The
+separately selected new IPA representation relation has independently reviewed
+witness and policy evidence; this composition does not enlarge its declared
+affirmative scope. Independent XSD or encoded semantic failures survive incomplete
+package/resource evidence.
 
 These are new profile/catalog identities. Existing published profiles are not
 silently elected or widened by selecting a similarly spelled ID. Separate reviewed
@@ -68,6 +73,8 @@ near-limit outcomes.
 Current evidence includes public standalone source/model tests, source/defaulted
 attribute controls, all four graph/MXL entry paths, wrong-entry-point no-I/O
 controls, direct `element()` success/absence, and preserved intrinsic barline
-failures. Independent composition review and final whole-functional-tree stages
-are distinct from earlier segment receipts. At this prepublication checkpoint, final exact-head CI acceptance remains
-pending; the published PR and its exact-head checks carry the final receipt.
+failures. The
+[14 October 2026 receipt](source-declarations-evidence.md#dated-integrated-receipt)
+records seven local stages, eleven fuzz targets and eleven hosted CI checks for
+tree `fa90c0b32ac027f45bbadcdabcd9a4b1c80fd8af`. It remains separate from
+earlier segment receipts and from verification of subsequent review corrections.

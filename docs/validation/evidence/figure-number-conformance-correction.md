@@ -83,7 +83,7 @@ or whole-MusicXML completion.
 
 ## Test-first evidence
 
-Base: `1535ec1`. RED commit: `23f0027`.
+Unpublished local base: `1535ec1`. Unpublished local RED commit: `23f0027`.
 The new `TestFigureNumberUnrestrictedText*` tests failed on that base with the
 retired Unsupported finding, selected/support rule entries and strict-decoding
 incompleteness. The correction changes only catalog selection and its description;

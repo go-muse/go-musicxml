@@ -8,9 +8,23 @@ Canonical baseline is merged PR40 commit
 [Its main CI](https://github.com/go-muse/go-musicxml/actions/runs/38519205492)
 passed all eleven checks. This is baseline evidence, not acceptance of this change.
 
-Current implementation is undergoing independent semantic/resource review.
-Final seven-stage local verification and exact-head hosted CI remain pending.
-No whole-batch acceptance is claimed by the focused results below.
+## Dated integrated receipt
+
+On 14 October 2026, all seven local stages (`mod`, `generate`, `format`, `test`,
+`vet`, `race`, `fuzz`) passed for tree
+`fa90c0b32ac027f45bbadcdabcd9a4b1c80fd8af`, including all eleven fuzz targets.
+The local receipt was recorded at 11:45:49 UTC against unpublished local head
+`9f49784b62334a70b9ed41f4aaa963ff9c559476`. The first five stages passed in
+the original invocation; its interrupted race run was not accepted. Race and
+fuzz were rerun successfully through the unchanged stage interface on the same
+clean tree.
+
+The published PR41 head `159dd6e` has that same tree. Its
+[hosted CI run](https://github.com/go-muse/go-musicxml/actions/runs/38594018729)
+passed all eleven checks, including actual platform execution. This dated
+receipt covers the published candidate, not later review corrections. It does
+not rewrite the earlier component observations below or claim broader normative
+closure or performance acceptance.
 
 ## Authentic regression checkpoints
 
@@ -31,13 +45,16 @@ No whole-batch acceptance is claimed by the focused results below.
   own executable acceptance-versus-refusal regression.
 
 `TestSourceDeclarationCompositionPreservesProfiles` pins the complete serialized
-metadata of sixteen existing source/model profiles, captured before changes.
-This includes required keys, support, closure text and catalog identity; it is
-not merely a comparison of profile names.
+metadata of sixteen existing source/model profiles captured at merged PR40.
+The historical baseline remains intact; explicit helpers apply only the separately
+documented figure-number and IPA representation migrations. The comparison
+includes required keys, support, closure text and catalog identity; it is not
+merely a comparison of profile names or a claim of unchanged predicate outcomes.
 
 Author-focused race tests passed. Local 386 cross-compilation succeeded, but this
-host cannot execute the resulting binaries. Actual 386 execution remains a
-required hosted CI gate; cross-compilation is not reported as execution.
+host cannot execute the resulting binaries. That component cross-compilation
+is not execution evidence; the later hosted receipt above includes the required
+actual 386 execution gate.
 
 The full original-obligation and source boundaries remain those in
 [the scope document](source-declarations-scope.md). Unresolved constructed-type,

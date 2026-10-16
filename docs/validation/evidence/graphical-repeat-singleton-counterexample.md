@@ -41,7 +41,12 @@ independently checks complete child and attribute axes and exact declaration
 bindings. The allowed part domain consists of ordinary notes and attributes
 containing divisions, staves, one staff-qualified transpose, or supported
 measure-style declarations. A small set of nonperformance note spelling fields
-is accepted. Unsupported data causes unavailability, never exclusion by omission.
+is accepted. This is a deliberately closed whole-part gate: any `key`, `time`
+or `clef` child, any `direction`, `print` or `barline` event, or any note
+attribute (including `default-x` or `color`) withholds this counterexample.
+Thus ordinary untransposed scores or scores with those common fields usually
+remain outside its domain. Unsupported data causes unavailability, never
+exclusion by omission.
 
 Every note in the canonical part needs an explicit resolved instrument, voice,
 and staff; a positive exact duration; and an independently contained onset and

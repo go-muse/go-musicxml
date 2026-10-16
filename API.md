@@ -1097,8 +1097,9 @@ Up to five fixed manifests may be selected together. The new
 `DictionaryManifestIPARepresentation2015Unicode13` reuses the existing IPA
 payload with 295 symbols, no examples and 158 genuine canonical relations;
 no public struct layout, provider or options field changes. Missing imports
-remain unavailable. Unavailable imports contain neither data nor certificate. Extra/unselected imports, contradictory states and duplicate records
-are rejected; callers cannot assert their own completeness or authoritative hash.
+remain unavailable. Unavailable imports contain neither data nor certificate.
+Extra/unselected imports, contradictory states and duplicate records are rejected;
+callers cannot assert their own completeness or authoritative hash.
 
 `VerifyDictionaryComponent(ctx, account, componentID, residentBytes)` returns a
 sealed, account-bound `DictionaryComponentCertificate` after exact length/hash
@@ -1229,10 +1230,13 @@ when this manifest is unselected; a selected missing capability is explicit.
 
 The new policy supports stable Unicode13 canonical decomposition/ordering,
 complete encoding atoms and source-established disjoint adjacent half-tie pairs
-with independent single-base decorations. It leaves unproved repeated,
-shared-middle and overlapping/mixed whole-half ties unavailable. It neither
-rewrites raw input nor uses compatibility normalization or a host Unicode
-version. This is a bounded representation witness, not pronunciation,
+with independent single-base decorations. Repetition, orientation, endpoint and
+shared-middle restrictions apply to presentation-form half ties. U+035C/U+0361
+remain independent complete mark atoms in the pinned concatenation language:
+isolated, repeated and sign-adjacent whole marks have representation witnesses,
+without certifying tie endpoints or rendering. Mixed whole/half overlap remains
+unavailable. The policy neither rewrites raw input nor uses compatibility
+normalization or a host Unicode version. This is a bounded witness, not pronunciation,
 phonotactics, rendering or universal IPA conformance. See the
 [exact additive policy and migration](docs/validation/ipa-representation.md).
 
@@ -1587,7 +1591,7 @@ address the whole document. Published legacy profiles retain schema-ID NCName
 shorthand and their schema-uniqueness gate. The explicitly DTD-composed source
 profiles instead join effective first-bound DTD ID attributes with schema IDs
 and select the first matching owner element in document order. Intrinsic XSD
-identity failures remain independent. These unpublished profiles intentionally
+identity failures remain independent. These new profiles intentionally
 migrate their closure and catalog identities; this is not a frozen-digest claim.
 Each observation requires explicit `Indirection` evidence. Known false asserts
 that the adopted XML is the directly selected target; known true records an
@@ -1613,6 +1617,14 @@ illegal ID value/fixed defaults retain limited typing evidence and leave the
 selection authority incomplete, without inventing DTD validation findings.
 No external declarations are fetched and current models never manufacture
 historical DTD absence or IDs.
+
+`Engine.SourceDTDIDsSelected(profile)` is a profile-wide selection query used
+before parsing the root to decide whether the scanner should capture DTD ID
+facts. `Session.SourceDTDIDsSelected()` is the narrower, admitted-root assembly
+query: it returns false before an admitted root, for a current-model target, or
+when that assembly has no selected DTD ID consumer. A true result reports
+selection only; it is no certificate of completed enumeration, valid declarations
+or available DTD identity evidence.
 
 A catalog may explicitly elect `NewXMLFragmentLinkContextPlan(schema,
 sourceInfoset)` for the registered XML-media fragment baseline. This adds the
