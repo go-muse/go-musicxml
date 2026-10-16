@@ -37,7 +37,7 @@ func schemaAttributeScratchFixture(t *testing.T, invalid ...bool) (*Session, *fa
 		}
 	}
 	n := s.root
-	n.closed, n.end = true, schemaLexemeEnd("")
+	n.closed, n.end = true, testRetainedEnd(schemaLexemeEnd(""))
 	run, err := xsd.NewRun(s.schema.active.kernel, schemaMeter{s})
 	if err != nil {
 		t.Fatal(err)
