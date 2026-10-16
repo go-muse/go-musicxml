@@ -6,6 +6,7 @@ import (
 )
 
 type sourceDTDIDSink interface {
+	SourceDTDIDsSelected() bool
 	SourceDTDIDDomain(context.Context, validation.SourceDTDIDDomain) error
 	SourceDTDIDAttribute(context.Context, validation.SourceDTDIDAttribute) error
 	CompleteSourceDTDIDs(context.Context, string) error
@@ -16,6 +17,12 @@ func (o *sourceFactObserver) publishSourceDTDIDDomain(r *sourceXMLTokenReader) e
 		return nil
 	}
 	sink, ok := o.sink.(sourceDTDIDSink)
+	if ok && !sink.SourceDTDIDsSelected() {
+		// Scanner capture is profile-wide until Open admits the root. Keep
+		// publication and sealing confined to the exact selected assembly.
+		o.sourceDTDIDs = false
+		return nil
+	}
 	if !ok || r == nil || !r.internalDTD || !r.captureDTDIDs || !r.seenRoot || r.account != o.account {
 		return &validation.ConfigurationError{Field: "source DTD IDs", Reason: "selected scanner and synchronous same-account ingress required"}
 	}

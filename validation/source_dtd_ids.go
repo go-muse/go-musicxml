@@ -50,7 +50,15 @@ type sourceDTDIDs struct {
 }
 
 func (s *Session) sourceDTDIDsSelected() bool {
-	return s.profile.Target == TargetSource && s.fragmentMode() != fragmentLegacy && s.schema != nil && s.schema.active != nil && s.catalog.fragmentDTDs[s.profile.ID][s.schema.active.assembly] && s.catalog.sourceDeclarations[s.profile.ID][s.schema.active.assembly] == xsdSourceDeclarationsV1
+	return s != nil && s.catalog != nil && s.root != nil && s.profile.Target == TargetSource && s.fragmentMode() != fragmentLegacy && s.schema != nil && s.schema.active != nil && s.catalog.fragmentDTDs[s.profile.ID][s.schema.active.assembly] && s.catalog.sourceDeclarations[s.profile.ID][s.schema.active.assembly] == xsdSourceDeclarationsV1
+}
+
+// SourceDTDIDsSelected reports whether this session's admitted root assembly
+// elects effective DTD ID occurrence input. It is false before root admission,
+// for current-model sessions, and for an unselected active assembly. This is a
+// read-only capability query; it neither admits input nor asserts completion.
+func (s *Session) SourceDTDIDsSelected() bool {
+	return s.sourceDTDIDsSelected()
 }
 
 // SourceDTDIDsSelected reports whether the immutable selected source profile
