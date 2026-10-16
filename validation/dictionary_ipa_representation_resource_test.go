@@ -18,7 +18,7 @@ func TestIPARepresentationRuntimeExactWorkStorageAndCancellation(t *testing.T) {
 	if unsafe.Sizeof(ipaRepresentationLeaf{}) > 32 {
 		t.Fatal("normalization leaf reservation too small")
 	}
-	for _, text := range []string{"", "ḉ\u0334", "d\u0334\u0322\u0301", "t\u0301\ufe20s\u0300\ufe21", "a" + strings.Repeat("\u0301\u0334", 256)} {
+	for _, text := range []string{"", "ḉ\u0334", "d\u0334\u0322\u0301", "\u0301\u0334a", "a" + strings.Repeat("\u0301\u0334", 4), "a\u0315" + strings.Repeat("\u0301\u0334", 4), "t\u0301\ufe20s\u0300\ufe21", "a" + strings.Repeat("\u0301\u0334", 256)} {
 		t.Run(text, func(t *testing.T) {
 			probe := dictionaryCoreAccount(t)
 			ctx := &dictionaryCancelContext{Context: context.Background(), cancelAt: math.MaxInt64}
@@ -127,5 +127,21 @@ func TestIPARepresentationIndexLeaseSurvivesOwnerClose(t *testing.T) {
 	lease.release()
 	if dictionaryCoreUsage(t, a) != 17 {
 		t.Fatal("last borrower retained index")
+	}
+}
+
+func TestIPARepresentationShortMarkRunsHaveProportionalWork(t *testing.T) {
+	d, _ := ipaRepresentationSet(t)
+	a := dictionaryCoreAccount(t)
+	ok, err := ipaRepresentationWitness(context.Background(), a, d.entries[0].representation, strings.Repeat("a\u0301", 1000))
+	if err != nil || !ok {
+		t.Fatalf("short mark runs=%v %v", ok, err)
+	}
+	work, err := a.Usage(BudgetRuleSteps)
+	if err != nil || work > 100000 {
+		t.Fatalf("1000 one-mark segments consumed %d steps, want <=100000: %v", work, err)
+	}
+	if dictionaryCoreUsage(t, a) != 17 {
+		t.Fatal("short mark runs retained scratch")
 	}
 }

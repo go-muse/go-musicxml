@@ -126,3 +126,18 @@ func TestIPARepresentationGraphAliasesAndMXLUseSameWitness(t *testing.T) {
 		})
 	}
 }
+
+func TestIPARepresentationManyShortMarkSegmentsFitDefaultBudget(t *testing.T) {
+	value := strings.Repeat("a\u0301", 31438)
+	text := contextFixtureXML(`<note><rest/><duration>1</duration><play><ipa>`+value+`</ipa></play></note>`, false)
+	calls := 0
+	options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
+	report, err := InspectXMLWithDictionaries(context.Background(), strings.NewReader(text), options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requireRepresentationReport(t, report, value, true)
+	if calls != 1 || !report.Satisfied() {
+		t.Fatalf("short mark runs: loads=%d satisfied=%v findings=%s", calls, report.Satisfied(), localFindings(report))
+	}
+}

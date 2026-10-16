@@ -197,3 +197,33 @@ func TestIPARepresentationConstructorMalformationsReleaseStorage(t *testing.T) {
 		})
 	}
 }
+
+func TestIPARepresentationNormalizationShortLongBoundaryStableMultiplicity(t *testing.T) {
+	d, a := ipaRepresentationSet(t)
+	classes := map[rune]uint8{}
+	for _, row := range ipaRepresentationCCCValues {
+		classes[row.scalar] = row.ccc
+	}
+	for _, prefix := range []string{"", "a"} {
+		for _, count := range []int{0, 1, 7, 8, 9, 256} {
+			text := prefix
+			marks := []rune{'\u0315', '\u031a', '\u0301', '\u0334'}
+			for i := 0; i < count; i++ {
+				text += string(marks[i%len(marks)])
+			}
+			var want []ipaRepresentationLeaf
+			for start, cp := range text {
+				want = append(want, ipaRepresentationLeaf{scalar: cp, ccc: classes[cp], mark: cp != 'a', start: uint64(start), end: uint64(start + len(string(cp)))})
+			}
+			slices.SortStableFunc(want[len(prefix):], func(a, b ipaRepresentationLeaf) int { return int(a.ccc) - int(b.ccc) })
+			n, known, err := ipaRepresentationNormalize(context.Background(), a, d.entries[0].representation, text)
+			if err != nil || !known {
+				t.Fatalf("prefix=%q count=%d: %v %v", prefix, count, known, err)
+			}
+			if !slices.Equal(n.leaves, want) {
+				t.Errorf("prefix=%q count=%d: lost stable order, multiplicity or raw intervals: got%+v want%+v", prefix, count, n.leaves, want)
+			}
+			n.close()
+		}
+	}
+}

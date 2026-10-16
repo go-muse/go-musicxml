@@ -370,8 +370,32 @@ func ipaRepresentationNormalize(ctx context.Context, a *Account, p *ipaRepresent
 			}
 			end++
 		}
-		if marks < end {
-			// Clearing and prefix summation are charged even for a short segment.
+		if end-marks <= 8 {
+			// Short runs use stable insertion sorting, avoiding the fixed 256-bucket
+			// cost for ordinary single-mark atoms. Copies, comparisons and moves
+			// are charged; the fixed eight-mark bound keeps this branch linear in
+			// the number of segments. Equal-CCC marks never exchange places.
+			for i := marks; i < end; i++ {
+				if err = dictionaryStep(ctx, a, 1); err != nil {
+					return nil, false, err
+				}
+				n.spare[i] = n.leaves[i]
+				for j := i; j > marks; j-- {
+					if err = dictionaryStep(ctx, a, 1); err != nil {
+						return nil, false, err
+					}
+					if n.spare[j-1].ccc <= n.spare[j].ccc {
+						break
+					}
+					if err = dictionaryStep(ctx, a, 1); err != nil {
+						return nil, false, err
+					}
+					n.spare[j-1], n.spare[j] = n.spare[j], n.spare[j-1]
+				}
+			}
+		} else {
+			// Long runs retain a linear counting sort with charged clearing and
+			// prefix summation, independent of the input's original order.
 			if err = dictionaryStep(ctx, a, 256); err != nil {
 				return nil, false, err
 			}
