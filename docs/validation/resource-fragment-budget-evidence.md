@@ -43,8 +43,10 @@ The 86,052-byte control uses empty measures and raises only the buffer allowance
 512 MiB, isolating the unchanged default 20,000,000 rule-step ceiling. It asserts
 three retained link contexts, four distinct adoptions and exactly three package
 Pass outcomes, with complete enumeration and a satisfied bundle. The same control
-on baseline `9f49784` refuses rule steps with 19,999,999 used and 3 requested
-against the 20,000,000 limit. Adding pitched notes to every measure is a larger intrinsic assessment: that separate variant
+on unpublished local baseline `9f49784` (tree-equivalent to published
+`159dd6e`) refuses rule steps with 19,999,999 used and 3 requested against the
+20,000,000 limit. Adding pitched notes to every measure is a larger intrinsic
+assessment: that separate variant
 still reaches the shared work limit during intrinsic snapshot finalization,
 before package decisions. This correction does not promise that every
 2,000-measure composition fits the default work budget.
@@ -120,8 +122,9 @@ it preserves all other bytes, the BOM and encoding declaration. That produces
 `ac6257b749d2ab2e7dc36bc9e8ede76eb83f83d3b4453624b1edb30d05868cbf`.
 
 The following observations use official Go 1.27.2 on linux/amd64. The DOCTYPE-free
-rows were independently reproduced on the exact first-review baseline
-`9f49784b62334a70b9ed41f4aaa963ff9c559476`. The original-byte refusal and
+rows were independently reproduced on unpublished local baseline
+`9f49784b62334a70b9ed41f4aaa963ff9c559476`, whose tree is identical to published
+first-review head `159dd6e400dd8ba39733288e4dc590713a8154bc`. The original-byte refusal and
 96 MiB allowance were verified with the narrowed corrections, which do not
 change standalone source assessment:
 
