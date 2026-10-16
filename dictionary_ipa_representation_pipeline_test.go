@@ -141,3 +141,62 @@ func TestIPARepresentationManyShortMarkSegmentsFitDefaultBudget(t *testing.T) {
 		t.Fatalf("short mark runs: loads=%d satisfied=%v findings=%s", calls, report.Satisfied(), localFindings(report))
 	}
 }
+
+func TestIPARepresentationWholeMarksAndHalfPairScope(t *testing.T) {
+	// The pinned language concatenates complete encoding atoms. Whole ties are
+	// independent mark atoms; their membership does not assert endpoint scope,
+	// rendering, or phonotactics. Half ties have a separate adjacent-pair rule.
+	for _, tc := range []struct {
+		name, value string
+		known       bool
+	}{
+		{"whole-dangling", "t\u0361", true},
+		{"whole-leading", "\u0361", true},
+		{"whole-repeated", "t\u0361\u0361s", true},
+		{"whole-mixed", "t\u0361\u035cs", true},
+		{"whole-on-sign", "\u02c8\u0361s", true},
+		{"whole-before-sign", "t\u0361\u02c8", true},
+		{"whole-shared-middle", "t\u0361s\u0361a", true},
+		{"half-pair", "t\ufe20s\ufe21", true},
+		{"half-dangling", "t\ufe20", false},
+		{"half-repeated", "t\ufe20\ufe20s\ufe21\ufe21", false},
+		{"half-on-sign", "\u02c8\ufe20s\ufe21", false},
+		{"half-shared-middle", "t\ufe20s\ufe21\ufe20a\ufe21", false},
+		{"whole-half-overlap", "t\u0361\ufe20s\ufe21", false},
+	} {
+		for _, mode := range []string{"source", "model"} {
+			t.Run(tc.name+"/"+mode, func(t *testing.T) {
+				text := contextFixtureXML(`<note><rest/><duration>1</duration><play><ipa>`+tc.value+`</ipa></play></note>`, false)
+				calls := 0
+				options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryRepresentationTestSelection()}, Source: dictionaryRepresentationSource(t, &calls)}}
+				var report validation.Report
+				var err error
+				if mode == "source" {
+					report, err = InspectXMLWithDictionaries(context.Background(), strings.NewReader(text), options)
+				} else {
+					doc, e := Decode(strings.NewReader(text))
+					if e != nil {
+						t.Fatal(e)
+					}
+					options.Assessment.Profile = ProfileModelDictionaries
+					report, err = AssessModelWithDictionaries(context.Background(), doc, options)
+				}
+				if err != nil {
+					t.Fatal(err)
+				}
+				requireRepresentationReport(t, report, tc.value, tc.known)
+				if calls != 1 || report.Satisfied() != tc.known {
+					t.Fatalf("loads=%d satisfied=%v want%v: %s", calls, report.Satisfied(), tc.known, localFindings(report))
+				}
+				row := dictionaryResults(report, validation.ContextDictionaryIPARepresentation)[0]
+				if tc.known {
+					if !row.Result.Value || !row.WholeSequence.Value {
+						t.Fatal("established witness is not affirmative")
+					}
+				} else if row.Result.State != validation.EvidenceUnknown || row.WholeSequence.State != validation.EvidenceUnknown {
+					t.Fatal("unproved half shape became a negative or absent result")
+				}
+			})
+		}
+	}
+}
