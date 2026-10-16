@@ -20,6 +20,8 @@ func TestAssessedDecodeSkippedSubtreeXMLContracts(t *testing.T) {
 		{"foreign expanded duplicate", `<v:unknown xmlns:v="urn:vendor" xmlns:p="urn:x" xmlns:q="urn:x"><child p:a="1" q:a="2"/></v:unknown>`, "duplicate XML attribute {urn:x}a"},
 		{"unknown nested doctype", `<unknown><child><!DOCTYPE child></child></unknown>`, "DOCTYPE"},
 		{"foreign nested doctype", `<v:unknown xmlns:v="urn:vendor"><child><!DOCTYPE child></child></v:unknown>`, "DOCTYPE"},
+		{"unknown undeclared prefix", `<unknown><p:child/></unknown>`, "undeclared XML namespace prefix p"},
+		{"foreign undeclared prefix", `<v:unknown xmlns:v="urn:vendor"><p:child/></v:unknown>`, "undeclared XML namespace prefix p"},
 		{"unknown mismatched close", `<unknown><child></different></unknown>`, ""},
 		{"foreign mismatched close", `<v:unknown xmlns:v="urn:vendor"><child></different></v:unknown>`, ""},
 	}
