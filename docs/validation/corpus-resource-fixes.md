@@ -72,9 +72,13 @@ one compile record and 64 logical bytes; unchanged fixed compile/catalog
 ceilings can consequently reject near-limit custom schemas. The temporary
 attribute-name map now leases a modeled 512 + 128 × entry-count bytes,
 including zero-entry calls, and releases the lease at function return. This
-corrects under-admission by the earlier 96 × entry-count envelope; a tuned
-transient buffer limit may now refuse sooner, without increasing permanently
-retained storage. Escaping-map controls compare sampled mean cumulative allocation with the
+replaces published `d336f089`'s cumulative 96-byte-per-attribute retention
+until session cleanup. The initial PR 43 checkpoint `c0d73972` had already
+changed that charge to a transient 96 × entry-count lease. Only relative to
+that intermediate checkpoint, the corrected lease adds 512 + 32 × entry-count
+logical bytes and can refuse a tuned transient limit sooner. Against the
+published baseline, the tradeoff instead depends on its accumulated retention;
+the current lease does not add permanent storage. Escaping-map controls compare sampled mean cumulative allocation with the
 envelope and log individual maxima separately. Process-wide `TotalAlloc` can
 include unrelated allocation and dead replaced hash tables, so neither mean
 nor maximum is an exact per-map live peak. Fixed/group and slot-size guards

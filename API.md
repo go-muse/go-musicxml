@@ -326,10 +326,17 @@ controls; this is a bounded observation, not a universal percentage.
 
 The temporary schema attribute-name index now reserves a modeled fixed
 512-byte header/first-group allowance plus 128 bytes per entry, releasing it
-when publication returns. This corrects the former 96-byte-per-entry lease
-that could under-admit small Go maps. An explicit buffer limit tuned to the old
-transient peak can therefore refuse sooner by 512 + 32 × attribute-count
-logical bytes; this does not add permanent retained storage.
+when publication returns. Published baseline `d336f089` instead retained
+96 bytes per attribute cumulatively until session cleanup. The current lease
+replaces that cumulative retention; it can be larger for early elements before
+the baseline's accumulated retention exceeds it.
+
+The initial PR 43 checkpoint `c0d73972` had already made the 96-byte-per-entry
+charge transient, but that lease could under-admit small Go maps. Relative to
+that intermediate checkpoint only, the corrected lease is larger by
+512 + 32 × attribute-count logical bytes. A limit tuned to that transient peak
+can refuse sooner. This delta does not describe the full change from the
+published baseline and does not add permanent retained storage.
 
 Compiled type/use identities also each admit one additional compile record and
 64 logical bytes. The fixed compile limits remain 65,536 records and 64 MiB;
