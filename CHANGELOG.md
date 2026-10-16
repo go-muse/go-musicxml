@@ -48,6 +48,15 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reduce bounded-assessment storage amplification and repeated work: compact
+  private node facts, share exact session-owned evidence and final role caches,
+  admit DFS scratch by live capacity, build exact-size XSD witness vectors,
+  release temporary attribute indexes, and meter actual state projections.
+  Public loading behavior, selected checks and default limits are unchanged.
+  Resource/cancellation checkpoints can change as more required work is reached;
+  large-model default assessments still have explicit resource ceilings. See
+  [the corpus correction scope and handoff](docs/validation/corpus-resource-fixes.md).
+
 - Tighten source-origin snapshot accounting without raising defaults. Capacity
   remains limited by two owned origin copies and overlapping session storage:
   the amd64 single-note DTD/dictionary graph fixture admits 531 measures
