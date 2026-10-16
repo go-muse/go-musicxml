@@ -42,7 +42,7 @@ scopes and their explicit limitations:
 - [Source declaration and composition verification evidence](source-declarations-evidence.md)
 - [Combined functional contributions and original-ID crosswalk](functional-completion-scope.md)
 - [Final configuration and readiness reconciliation](final-readiness-scope.md)
-- [Corpus-derived resource corrections and handoff](corpus-resource-fixes.md)
+- [Corpus-derived resource corrections and residual limitations](corpus-resource-fixes.md)
 - [Individual engineering requirements and test-contract reconciliation](final-requirement-reconciliation.md)
 - [Retained public configuration contract matrix](final-configuration-contracts.md)
 - [Encoded semantic source/model and package compositions](semantic-composition-scope.md)

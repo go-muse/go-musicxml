@@ -1,9 +1,12 @@
 # Fragment lookup and source-origin transport budgets
 
-Historical PR 41 receipt. The measurements and tested identities below remain
-unchanged. Subsequent corpus-derived resource corrections move the graph
-capacity boundary; the current tests retain the old successful cases and add
-new adjacent and exact-admission controls. See
+Historical PR 41 receipt at published baseline `d336f089`. The recorded
+measurements below are preserved; the named test implementations have changed.
+At the initial PR 43 checkpoint `c0d73972`, those tests assert 532 completion,
+the adjacent 568/569 boundary, 54,998,870 live bytes for the medium fragment,
+and a later buffered-byte refusal for the official source witness. The old
+rule-step refusal is historical. Commands below reproduce the historical
+claims only when run against their recorded baseline, not against current tests. See
 [the current correction scope](corpus-resource-fixes.md) and the current
 `resource_budget_review_test.go`; the old numbers below are not current-head
 capacity claims.

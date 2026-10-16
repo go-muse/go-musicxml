@@ -1,10 +1,20 @@
 # Corpus-derived assessment resource corrections
 
-Status: implementation checkpoint, 2026-10-16. Ordinary whole-PR acceptance is pending
-at this checkpoint. The user explicitly canceled the corrected full-corpus rerun
-and additional memory campaigns; neither is an acceptance claim for this PR.
-The PR's final receipt must identify the tested tree and distinguish local from
-hosted checks.
+## Dated acceptance receipt
+
+The initial PR 43 tree `cf17ec116c264d0b2c19d1c040d8ade0a8f3b756`, published
+at `c0d73972ffb3ba729f7628e85e7ce3dc80dab7ce`, passed all seven local stages
+on 2026-10-16, 19:23:49–19:50:48 UTC: module consistency, generation,
+formatting, uncached tests, vet, full uncached race tests, and all 11 fuzz
+targets at the repository's default execution-count budgets. The toolchain was
+Go 1.27.2 linux/amd64 with required real xmllint 2.9.14. The exact-head
+[hosted CI run](https://github.com/go-muse/go-musicxml/actions/runs/38958016526)
+completed at 19:57:51 UTC with all 11 checks successful, including actual
+386 source/validation test execution. These are dated results for that tree;
+subsequent review corrections require their own exact-head acceptance receipt.
+
+The corrected full-corpus rerun and additional memory campaign were not run.
+Neither contributes acceptance evidence to this PR.
 
 ## Scope and baseline
 
@@ -13,6 +23,11 @@ The completed baseline campaign covered 3,291 distinct MusicXML 4.0 XML inputs
 and 1,782 physical MXL packages. Every ordinary two-cycle decode/encode roundtrip
 completed. The 247 normalized-tree differences were classified as formatting or
 invalid-input effects; no valid-input serialization loss was established.
+
+The corpus counts and large-score observations are unpublished external
+observations, not a portable corpus benchmark supplied by this repository.
+No corpus-licensed file is added by this PR; retained regression fixtures are
+generated examples. Exact population-wide reproducibility is not claimed.
 
 The confirmed engineering problem was resource amplification during bounded
 assessment. This change removes repeated work and unnecessary retained storage;
@@ -42,13 +57,27 @@ a new automatic source-plus-model assessment gate.
    unchanged. Exact compiled owner/ordinal tokens avoid repeated path hashing;
    they are assembly-local identities, not cross-schema semantic equality.
 
-Every allocation remains admitted before it occurs. Vector/map growth accounts
+Container growth introduces a caller-visible accounting change: map/vector
+copying now consumes one step per copied entry plus one growth step. Previously
+this real storage-management work was not charged to `MaxRuleSteps`. Thus a
+previously just-sufficient explicit limit can fail on the same input, even when
+no additional downstream assessment is reached. The public regression pins two
+such baseline limits (953,719 model-XSD steps and 556,569 source-XSD steps);
+these controls complete under the unchanged default work allowance. The
+reviewer's XSD/local controls observed about 0.6–1.1% added steps. Tuned limits
+need revalidation and headroom. Separately, each compiled type/use identity adds
+one compile record and 64 logical bytes; unchanged fixed compile/catalog
+ceilings can consequently reject near-limit custom schemas.
+
+The changed retained-storage and container-growth paths admit their modeled
+logical storage before allocation; the envelopes are not exact Go allocator or
+RSS measurements. Vector/map growth accounts
 for simultaneous old and new storage, copying work, cancellation and cleanup.
 Unknown, invalid, causal and noncanonical evidence is not promoted or collapsed.
 
 ## Established focused evidence
 
-These results precede final whole-tree acceptance:
+The following focused observations supported that initial acceptance:
 
 - Twenty-two full source/model report controls, including dictionary contexts,
   invalid inputs, partial input and source positions, were byte-identical before
@@ -66,13 +95,13 @@ These results precede final whole-tree acceptance:
   logical bytes. The old default run exhausted 20M steps before layout
   publication; the candidate advanced farther and then exhausted buffered bytes.
 - Correcting role-cache lifetime removed another 5,601,536 logical bytes at the
-  same later checkpoint relative to the initial candidate. The final cache kept
+  same later checkpoint relative to the initial candidate. That initial checkpoint cache kept
   6,370 exact binding/table pairs for two distinct tables, reusing repeated
   readers without merging the tables. Full report parity was preserved.
 - Exact/one-short storage, cancellation, prior-failure preservation, independent
   sessions, snapshot lifetime and focused race tests cover the changed ownership
   paths. Local 386 cross-compilation succeeds; this executor cannot execute 386
-  binaries. Actual 386 execution remains a hosted-CI requirement.
+  binaries. Actual 386 execution subsequently passed in the dated hosted receipt above.
 
 The ordinary report comparison concerns successful completed scope. Interruption
 checkpoints can change as real work changes. In particular, the witness count
@@ -111,8 +140,8 @@ prefixes as a complete-assessment saving.
 The official source witness also remains explicitly incomplete at unchanged
 defaults: complete input does not imply complete assessment. Its later buffered
 refusal replaces an earlier work refusal because more required work is reached.
-The witness must assert the typed refusal and incomplete outcome, rather than
-require one historical refusal mechanism forever.
+The current witness pins buffered-byte refusal and its incomplete outcome,
+so a return to the earlier repeated-work limit is detected.
 
 A compact-attribute follow-on was evaluated but is not implemented here. Its
 measured estimate would remove about 4.48 MB of native attribute structures for
@@ -121,6 +150,11 @@ Even the proposed Litaniet full-input fact accounting was at least 65,725,054
 bytes before success maps and XSD state; the schema-node map alone would add
 11,224,832 bytes. This is not a reason to claim universal capacity or to change
 limits silently. The current PR stops at the demonstrated corrections above.
+
+Cause-free unavailable evidence outside the explicitly canonicalized states
+still has independent records (including `dtd-infoset-unavailable` and
+`typed-scalar-unavailable`). General state/reason interning is not implemented;
+this remaining duplication is not claimed eliminated.
 
 Dictionary import decoding, hashing, sorting and indexing remain account-owned
 work. No process-wide cache or cross-account certificate is introduced. Full
@@ -134,9 +168,9 @@ comparisons above, not inferred from the mass baseline. Truncated findings also
 cannot prove the absence of a later finding. A newly reached finding after an
 old resource stop is newly observed evidence, not automatically a regression.
 
-## Handoff boundaries
+## Residual limitations and open decisions
 
-The next developer must distinguish:
+Interpret future capacity and equivalence evidence by distinguishing:
 
 - default-budget completed assessments from incomplete resource-limited cases;
 - fully compared reports from improved prefixes and truncated baseline evidence;
@@ -149,7 +183,7 @@ policy remain a separate decision. Remaining retained output/fact duplication
 and the evaluated attribute design are explicit follow-on evidence, not hidden
 completion claims.
 
-The user's expected mandatory loading chain also remains a separate handoff:
+An automatic mandatory loading chain remains an unresolved public-contract gap:
 XML well-formedness, checks of source facts lost during conversion, then complete
 current-model MusicXML validation before successful return. Current default
 loaders do not provide that chain. Implementing it requires a specific
