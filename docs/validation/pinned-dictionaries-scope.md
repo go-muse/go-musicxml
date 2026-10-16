@@ -270,9 +270,11 @@ reconciliation remain separately owned in the
 ## Fixed data, transformations and lineage
 
 The authoritative compiled metadata lives in
-[`dictionary_manifest.go`](../../validation/dictionary_manifest.go). Source
-fixtures are explicit test inputs, never automatically loaded runtime data.
-All raw and transformed identities are independently checked; a correct source
+[`dictionary_manifest.go`](../../validation/dictionary_manifest.go). The committed
+source fixtures also serve as pinned offline generation inputs for the embedded assets.
+`BundledDictionarySource()` explicitly supplies those exact bytes through the
+existing importer; neither component selection nor profile activation becomes
+automatic. All raw and transformed identities are independently checked; a correct source
 certificate does not authorize altered typed rows.
 
 | Manifest | Raw component bytes / SHA-256 | Typed bytes / SHA-256 | Exact selected relation |
@@ -410,12 +412,31 @@ for exact work counters, fixture qualifications and unchanged capability gaps.
   is the preserved current 1991–2026 snapshot, not a claimed original 2020 license
   snapshot; the historical UCD copyright statements are also retained.
 - The [project notices](../../THIRD_PARTY_NOTICES.md),
-  [music-data notices](../../testdata/dictionaries/NOTICES.txt) and
+  [music-data notices](../../testdata/dictionaries/NOTICES.txt),
   [legacy IPA notices](../../testdata/dictionaries/ipa-positive/NOTICES.txt) and
-  [representation notices](../../testdata/dictionaries/ipa-representation/NOTICES.txt) accompany
-  the data and must be preserved with generated equivalents. No chart artwork,
-  PDF, font, outline or Unicode specification text is bundled. Actual release
-  packaging and notice inclusion remain acceptance checks.
+  [representation notices][representation-notices] accompany the source data
+  and must be preserved with generated equivalents. No chart artwork, PDF, font,
+  outline or Unicode specification text is bundled.
+
+Using `BundledDictionarySource` makes all five embedded component assets
+reachable regardless of `Selections`, including both CC BY-SA 4.0 IPA bundles.
+Selection limits import and assessment, not the bundled implementation's asset
+references. Binary distributions containing these data must include all five
+files from `internal/dictionarydata/data`:
+
+- `NOTICES.txt`
+- `ipa-positive/NOTICES.txt`
+- `ipa-positive/LICENSE-UNICODE-V3.txt`
+- `ipa-representation/NOTICES.txt`
+- `ipa-representation/LICENSE-UNICODE-V3.txt`
+
+Their embed patterns preserve the notices in `go mod vendor` output; a binary
+distributor must still ship them in the distribution or associated
+documentation. The [bundled-data distribution instructions][bundled-notices]
+give the complete paths and commit-pinned links to the full IPA
+modification/provenance records, which remain in `testdata/dictionaries`
+rather than the runtime asset directory. Actual release packaging and notice
+inclusion remain acceptance checks.
 
 Independent positive-data review accepted the scoped provenance/notice
 classification with these caveats. It did not grant publication permission,
@@ -450,3 +471,6 @@ implemented here.
 [fsa]: https://www.w3.org/community/about/agreements/final/
 
 [published-lineage]: pinned-dictionaries-evidence.md#published-implementation-lineage
+
+[representation-notices]: ../../testdata/dictionaries/ipa-representation/NOTICES.txt
+[bundled-notices]: ../../THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data

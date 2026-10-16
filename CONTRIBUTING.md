@@ -9,6 +9,45 @@ Contributions are welcome.
 - Make for the convenience targets, or the equivalent Go commands
 - Optional: `xmllint` for running the external XSD conformance test locally
 
+## Pinned dictionary generation
+
+The bundled dictionary source uses committed assets prepared by explicit
+`go generate ./...`. Normal generation is offline: it verifies the existing
+SMuFL, MusicXML standard-sounds and IPA-derived input pins before reproducing
+byte-identical embedded data. Ordinary builds use `go:embed` and do not invoke
+this command or download data. Run the existing generation check before a PR.
+
+Upstream refresh is separate reviewed maintenance. Use this checklist:
+
+1. Choose an exact upstream snapshot and place new inputs under a distinct path
+   in `testdata/dictionaries`, retaining existing edition-specific inputs. Keep
+   source pins, transformations, provenance and upstream notices with the new
+   inputs; do not add a moving-latest download to generation or CI.
+2. Add new edition-specific manifest/component IDs in
+   `validation/dictionary_manifest.go`, or a new `-vN` identity for a revised
+   transformation or policy. Preserve existing IDs and their edition, raw and
+   transformed pins. Rewriting an old ID's pins would silently change existing
+   catalog meaning. Supply compatibility tests and document any deliberate
+   profile/catalog migration separately.
+3. Extend the explicit `inputs` list in `internal/dictionarygen/generate.go` and
+   the `go:embed` paths and closed `Component` switch in
+   `internal/dictionarydata/data.go`. They currently enumerate five fixed
+   components; review importer admission, the selection limit and related tests
+   if changing that supported set.
+4. Update the corresponding checks in `dictionary_fixture_pins_test.go` and any
+   edition-specific policy/ledger pin tests. Update
+   `testdata/dictionaries/NOTICES.txt`, the affected IPA notices and ledgers,
+   and `THIRD_PARTY_NOTICES.md` with the new provenance and distribution
+   instructions. Preserve historical notices alongside the retained old inputs.
+5. Run `go generate ./...`, inspect the generated component and notice copies,
+   and run `bash scripts/check-all.sh generate` to verify reproducibility.
+   Commit reviewed inputs, generator/manifest changes, generated output and
+   focused compatibility tests together.
+
+See [the runtime asset maintenance guide](internal/dictionarydata/README.md).
+A newly embedded IPA bundle must retain its declared affirmative coverage and
+source lineage; more bytes do not establish a complete negative oracle.
+
 ## Local checks
 
 Run the standard checks before opening a pull request:
@@ -208,6 +247,26 @@ inventory scope needs a separately reviewed format/denominator change. Run the
 strict verifier and both Go control suites after the reviewed reconciliation.
 
 ## Generated code
+
+The following files under `internal/dictionarydata/data` are also generated
+outputs, including the notice copies. Never hand-edit them:
+
+- `smufl-1.4/glyphnames.json`
+- `smufl-1.4/ranges.json`
+- `musicxml-4.0/sounds.xml`
+- `ipa-positive/runtime-positive-bundle.json`
+- `ipa-representation/runtime-representation-bundle.json`
+- `NOTICES.txt`
+- `ipa-positive/NOTICES.txt`
+- `ipa-positive/LICENSE-UNICODE-V3.txt`
+- `ipa-representation/NOTICES.txt`
+- `ipa-representation/LICENSE-UNICODE-V3.txt`
+
+The directive in `bundled_dictionary_generate.go` runs
+`internal/dictionarygen/cmd/dictionarygen` against the committed inputs under
+`testdata/dictionaries`. Follow the pinned-dictionary checklist above for
+input or identity changes, then regenerate; preserve original notice bytes and
+line endings in the output.
 
 Most files named `zz_generated_*.go` are generated from XSD inputs. The exception
 is `validation/zz_generated_inventory.go`, an inspection-only provenance artifact

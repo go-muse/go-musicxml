@@ -197,9 +197,10 @@ processing. See its [scope and retained obligations](docs/validation/dtd-infoset
 The explicit [standalone compositions](docs/validation/source-declarations-scope.md)
 add declaration-dependent ENTITY/ENTITIES checks and reuse local, nonfetching
 link and selected dictionary consumers. DTD defaults and normalized effective
-values remain distinct from physical source occurrences. Dictionary data is
-still supplied explicitly; the library does not load it automatically. These
-profiles do not themselves assess package obligations or general DTD validity.
+values remain distinct from physical source occurrences. Dictionary components
+remain explicitly selected; callers can use the bundled pinned source without
+handling data files. These profiles do not themselves assess package obligations
+or general DTD validity.
 Explicit package compositions transport independently owned source origins.
 
 The additive [DTD/dictionary package compositions](docs/validation/dtd-package-composition-scope.md)
@@ -245,11 +246,14 @@ timeline improvements do not close it. See the [API limits](API.md#exact-timelin
 The additive dictionary entry points select explicit source, source-sounds,
 model, resource-graph or MXL profiles. Standalone XML inspection accepts sounds
 input; public graph/MXL wrappers do not discover or assess sounds children.
-Callers select fixed components and supply authorized bytes through
-`DictionarySource`. The runtime embeds no dictionary data and never
-fetches or loads them automatically; caller-selected transport is required.
-Repository dictionary fixtures are test inputs. One verified immutable set and
-finite account cover the root and selected linked/nested-package children.
+Callers select fixed components and use
+[`BundledDictionarySource()`](bundled_dictionary_example_test.go) for the embedded
+pinned data, or supply their own `DictionarySource`. No data files or
+network access are needed for the bundled source. Explicit offline `go generate`
+prepares committed assets; ordinary builds embed those local assets without
+running generation. Selection and the existing bounded importer remain explicit.
+One verified immutable set and finite account cover the root and selected
+linked/nested-package children.
 Catalogs without the IPA dictionary operation remain unchanged; its additive
 policy deliberately updates dictionary-containing catalog fingerprints.
 
@@ -402,6 +406,11 @@ in this README.
 
 ## License
 
-The library code is licensed under the [MIT License](LICENSE). Bundled schemas
-and test fixtures retain their upstream terms; see
-[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+The library code is licensed under the [MIT License](LICENSE). Bundled schemas,
+test fixtures and runtime dictionary data retain their own terms. Programs that
+use `BundledDictionarySource` make all five components reachable regardless of
+selections, including W3C FSA, CC BY-SA 4.0 and Unicode License v3 data.
+Distribute binaries containing those data with the five notice/license files
+listed in [`THIRD_PARTY_NOTICES.md`][bundled-data-notices].
+
+[bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data

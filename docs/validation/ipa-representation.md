@@ -12,8 +12,10 @@ Select `DictionaryManifestIPARepresentation2015Unicode13` with
 points, or provide its exact existing `DictionaryImport.IPA` typed payload.
 The component is `DictionaryComponentIPARepresentation2015Unicode13`, its kind
 is `DictionaryKindIPARepresentation`, and all five fixed components may coexist.
-An absent source remains an explicit unavailable capability. The runtime does
-not embed/load the fixture or fetch its cited sources.
+An absent source remains an explicit unavailable capability.
+`BundledDictionarySource()` supplies the pinned derived bundle from embedded
+local data through the same bounded importer. It does not fetch cited sources
+or upgrade derived lineage to newly verified original-publication provenance.
 
 The manifest has 295 complete symbol encoding atoms (273 singletons and 22 exact
 noncanonical constructions), no literal example rows, and 158 genuine recursive

@@ -1,0 +1,1600 @@
+{
+  "schema_version": 1,
+  "identity": {
+    "kind": "ipa-positive",
+    "edition": "IPA2015/Unicode13.0.0",
+    "component": "reviewed-positive-ledger",
+    "transform_revision": "ipa-chart-positive-v1",
+    "policy_revision": "ipa2015-unicode13-partial-positive-v1"
+  },
+  "scope": {
+    "completeness": "PARTIAL positive evidence only",
+    "negative_membership_allowed": false,
+    "full_repertoire_complete": false,
+    "full_sequence_policy_complete": false,
+    "pronunciation_correctness_claimed": false,
+    "lookup_absence": "Unknown, never false/invalid",
+    "all_known_atoms": "Only exact atomic coverage is known. Full sequence validity remains Unknown, including for attested examples.",
+    "unlisted_sequence": "Exact sequence-attestation lookup is Unknown, even when every scalar has positive evidence.",
+    "normalization": "Retain original bytes. Only the nine explicit canonical-equivalence inputs are recognized as equivalent; no NFKC/NFKD or blanket NFC/NFD repertoire closure.",
+    "import_route": "Verify this pre-certified derived-data bundle. Approved source lineage is attested; source PDF/UCD bytes are not read or verified in a runtime import."
+  },
+  "records": [
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ç",
+        "ç",
+        "C-0063-0327"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "è",
+        "è",
+        "C-00E8"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "é",
+        "é",
+        "C-00E9"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ê",
+        "ê",
+        "C-00EA"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ē",
+        "ē",
+        "C-0113"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ě",
+        "ě",
+        "C-011B"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "ȅ",
+        "ȅ",
+        "C-0205"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "̀",
+        "̀",
+        "C-0340"
+      ]
+    },
+    {
+      "record_type": "canonical-equivalence",
+      "fields": [
+        "́",
+        "́",
+        "C-0341"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "è",
+        "tone-accent-example",
+        "E-0065-0300"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "é",
+        "tone-accent-example",
+        "E-0065-0301"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "ê",
+        "tone-accent-example",
+        "E-0065-0302"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "ē",
+        "tone-accent-example",
+        "E-0065-0304"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "e̋",
+        "tone-accent-example",
+        "E-0065-030B"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "ě",
+        "tone-accent-example",
+        "E-0065-030C"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "ȅ",
+        "tone-accent-example",
+        "E-0065-030F"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "e᷄",
+        "tone-accent-example",
+        "E-0065-1DC4"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "e᷅",
+        "tone-accent-example",
+        "E-0065-1DC5"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "e᷈",
+        "tone-accent-example",
+        "E-0065-1DC8"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "kʼ",
+        "ejective-example",
+        "E-006B-02BC"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "k͡p",
+        "tie-example",
+        "E-006B-0361-0070"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "pʼ",
+        "ejective-example",
+        "E-0070-02BC"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "sʼ",
+        "ejective-example",
+        "E-0073-02BC"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "tʼ",
+        "ejective-example",
+        "E-0074-02BC"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "t͜s",
+        "tie-example",
+        "E-0074-035C-0073"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "˥˩",
+        "tone-contour-example",
+        "E-02E5-02E9"
+      ]
+    },
+    {
+      "record_type": "example-sequence",
+      "fields": [
+        "˩˥",
+        "tone-contour-example",
+        "E-02E9-02E5"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        ".",
+        "suprasegmental",
+        "S-002E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "a",
+        "vowel",
+        "S-0061"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "b",
+        "consonant-pulmonic",
+        "S-0062"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "c",
+        "consonant-pulmonic",
+        "S-0063"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "d",
+        "consonant-pulmonic",
+        "S-0064"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "e",
+        "vowel",
+        "S-0065"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "f",
+        "consonant-pulmonic",
+        "S-0066"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "h",
+        "consonant-pulmonic",
+        "S-0068"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "i",
+        "vowel",
+        "S-0069"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "j",
+        "consonant-pulmonic",
+        "S-006A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "k",
+        "consonant-pulmonic",
+        "S-006B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "l",
+        "consonant-pulmonic",
+        "S-006C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "m",
+        "consonant-pulmonic",
+        "S-006D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "n",
+        "consonant-pulmonic",
+        "S-006E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "o",
+        "vowel",
+        "S-006F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "p",
+        "consonant-pulmonic",
+        "S-0070"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "q",
+        "consonant-pulmonic",
+        "S-0071"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "r",
+        "consonant-pulmonic",
+        "S-0072"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "s",
+        "consonant-pulmonic",
+        "S-0073"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "t",
+        "consonant-pulmonic",
+        "S-0074"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "u",
+        "vowel",
+        "S-0075"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "v",
+        "consonant-pulmonic",
+        "S-0076"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "w",
+        "consonant-other",
+        "S-0077"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "x",
+        "consonant-pulmonic",
+        "S-0078"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "y",
+        "vowel",
+        "S-0079"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "z",
+        "consonant-pulmonic",
+        "S-007A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "|",
+        "suprasegmental",
+        "S-007C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "æ",
+        "vowel",
+        "S-00E6"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ç",
+        "consonant-pulmonic",
+        "S-00E7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ð",
+        "consonant-pulmonic",
+        "S-00F0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ø",
+        "vowel",
+        "S-00F8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ħ",
+        "consonant-pulmonic",
+        "S-0127"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ŋ",
+        "consonant-pulmonic",
+        "S-014B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "œ",
+        "vowel",
+        "S-0153"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǀ",
+        "consonant-click",
+        "S-01C0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǁ",
+        "consonant-click",
+        "S-01C1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǂ",
+        "consonant-click",
+        "S-01C2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ǃ",
+        "consonant-click",
+        "S-01C3"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɐ",
+        "vowel",
+        "S-0250"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɑ",
+        "vowel",
+        "S-0251"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɒ",
+        "vowel",
+        "S-0252"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɓ",
+        "consonant-implosive",
+        "S-0253"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɔ",
+        "vowel",
+        "S-0254"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɕ",
+        "consonant-other",
+        "S-0255"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɖ",
+        "consonant-pulmonic",
+        "S-0256"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɗ",
+        "consonant-implosive",
+        "S-0257"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɘ",
+        "vowel",
+        "S-0258"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ə",
+        "vowel",
+        "S-0259"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɛ",
+        "vowel",
+        "S-025B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɜ",
+        "vowel",
+        "S-025C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɞ",
+        "vowel",
+        "S-025E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɟ",
+        "consonant-pulmonic",
+        "S-025F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɠ",
+        "consonant-implosive",
+        "S-0260"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɡ",
+        "consonant-pulmonic",
+        "S-0261"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɢ",
+        "consonant-pulmonic",
+        "S-0262"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɣ",
+        "consonant-pulmonic",
+        "S-0263"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɤ",
+        "vowel",
+        "S-0264"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɥ",
+        "consonant-other",
+        "S-0265"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɦ",
+        "consonant-pulmonic",
+        "S-0266"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɧ",
+        "consonant-other",
+        "S-0267"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɨ",
+        "vowel",
+        "S-0268"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɪ",
+        "vowel",
+        "S-026A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɬ",
+        "consonant-pulmonic",
+        "S-026C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɭ",
+        "consonant-pulmonic",
+        "S-026D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɮ",
+        "consonant-pulmonic",
+        "S-026E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɯ",
+        "vowel",
+        "S-026F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɰ",
+        "consonant-pulmonic",
+        "S-0270"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɱ",
+        "consonant-pulmonic",
+        "S-0271"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɲ",
+        "consonant-pulmonic",
+        "S-0272"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɳ",
+        "consonant-pulmonic",
+        "S-0273"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɴ",
+        "consonant-pulmonic",
+        "S-0274"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɵ",
+        "vowel",
+        "S-0275"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɶ",
+        "vowel",
+        "S-0276"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɸ",
+        "consonant-pulmonic",
+        "S-0278"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɹ",
+        "consonant-pulmonic",
+        "S-0279"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɺ",
+        "consonant-other",
+        "S-027A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɻ",
+        "consonant-pulmonic",
+        "S-027B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɽ",
+        "consonant-pulmonic",
+        "S-027D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ɾ",
+        "consonant-pulmonic",
+        "S-027E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʀ",
+        "consonant-pulmonic",
+        "S-0280"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʁ",
+        "consonant-pulmonic",
+        "S-0281"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʂ",
+        "consonant-pulmonic",
+        "S-0282"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʃ",
+        "consonant-pulmonic",
+        "S-0283"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʄ",
+        "consonant-implosive",
+        "S-0284"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʈ",
+        "consonant-pulmonic",
+        "S-0288"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʉ",
+        "vowel",
+        "S-0289"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʊ",
+        "vowel",
+        "S-028A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʋ",
+        "consonant-pulmonic",
+        "S-028B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʌ",
+        "vowel",
+        "S-028C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʍ",
+        "consonant-other",
+        "S-028D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʎ",
+        "consonant-pulmonic",
+        "S-028E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʏ",
+        "vowel",
+        "S-028F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʐ",
+        "consonant-pulmonic",
+        "S-0290"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʑ",
+        "consonant-other",
+        "S-0291"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʒ",
+        "consonant-pulmonic",
+        "S-0292"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʔ",
+        "consonant-pulmonic",
+        "S-0294"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʕ",
+        "consonant-pulmonic",
+        "S-0295"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʘ",
+        "consonant-click",
+        "S-0298"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʙ",
+        "consonant-pulmonic",
+        "S-0299"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʛ",
+        "consonant-implosive",
+        "S-029B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʜ",
+        "consonant-other",
+        "S-029C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʝ",
+        "consonant-pulmonic",
+        "S-029D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʟ",
+        "consonant-pulmonic",
+        "S-029F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʡ",
+        "consonant-other",
+        "S-02A1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʢ",
+        "consonant-other",
+        "S-02A2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʰ",
+        "modifier",
+        "S-02B0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʲ",
+        "modifier",
+        "S-02B2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʷ",
+        "modifier",
+        "S-02B7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ʼ",
+        "ejective-mark",
+        "S-02BC"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˈ",
+        "suprasegmental",
+        "S-02C8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˌ",
+        "suprasegmental",
+        "S-02CC"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ː",
+        "suprasegmental",
+        "S-02D0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˑ",
+        "suprasegmental",
+        "S-02D1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˞",
+        "modifier",
+        "S-02DE"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˠ",
+        "modifier",
+        "S-02E0"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˡ",
+        "modifier",
+        "S-02E1"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ˤ",
+        "modifier",
+        "S-02E4"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˥",
+        "tone-letter",
+        "S-02E5"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˦",
+        "tone-letter",
+        "S-02E6"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˧",
+        "tone-letter",
+        "S-02E7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˨",
+        "tone-letter",
+        "S-02E8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "˩",
+        "tone-letter",
+        "S-02E9"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̀",
+        "tone-diacritic",
+        "S-0300"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "́",
+        "tone-diacritic",
+        "S-0301"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̂",
+        "tone-diacritic",
+        "S-0302"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̃",
+        "diacritic",
+        "S-0303"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̄",
+        "tone-diacritic",
+        "S-0304"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̆",
+        "suprasegmental-diacritic",
+        "S-0306"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̈",
+        "diacritic",
+        "S-0308"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̊",
+        "diacritic",
+        "S-030A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̋",
+        "tone-diacritic",
+        "S-030B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̌",
+        "tone-diacritic",
+        "S-030C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̏",
+        "tone-diacritic",
+        "S-030F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̘",
+        "diacritic",
+        "S-0318"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̙",
+        "diacritic",
+        "S-0319"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̚",
+        "diacritic",
+        "S-031A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̜",
+        "diacritic",
+        "S-031C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̝",
+        "diacritic",
+        "S-031D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̞",
+        "diacritic",
+        "S-031E"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̟",
+        "diacritic",
+        "S-031F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̠",
+        "diacritic",
+        "S-0320"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̤",
+        "diacritic",
+        "S-0324"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̥",
+        "diacritic",
+        "S-0325"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̩",
+        "diacritic",
+        "S-0329"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̪",
+        "diacritic",
+        "S-032A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̬",
+        "diacritic",
+        "S-032C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̯",
+        "diacritic",
+        "S-032F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̰",
+        "diacritic",
+        "S-0330"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̴",
+        "diacritic",
+        "S-0334"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̹",
+        "diacritic",
+        "S-0339"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̺",
+        "diacritic",
+        "S-033A"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̻",
+        "diacritic",
+        "S-033B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̼",
+        "diacritic",
+        "S-033C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "̽",
+        "diacritic",
+        "S-033D"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "͜",
+        "tie-mark",
+        "S-035C"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "͡",
+        "tie-mark",
+        "S-0361"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "β",
+        "consonant-pulmonic",
+        "S-03B2"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "θ",
+        "consonant-pulmonic",
+        "S-03B8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "χ",
+        "consonant-pulmonic",
+        "S-03C7"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷄",
+        "tone-diacritic",
+        "S-1DC4"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷅",
+        "tone-diacritic",
+        "S-1DC5"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "᷈",
+        "tone-diacritic",
+        "S-1DC8"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "‖",
+        "suprasegmental",
+        "S-2016"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "‿",
+        "suprasegmental",
+        "S-203F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ⁿ",
+        "modifier",
+        "S-207F"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "↗",
+        "tone-global",
+        "S-2197"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "↘",
+        "tone-global",
+        "S-2198"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ⱱ",
+        "consonant-pulmonic",
+        "S-2C71"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꜛ",
+        "tone-step",
+        "S-A71B"
+      ]
+    },
+    {
+      "record_type": "symbol",
+      "fields": [
+        "ꜜ",
+        "tone-step",
+        "S-A71C"
+      ]
+    }
+  ]
+}

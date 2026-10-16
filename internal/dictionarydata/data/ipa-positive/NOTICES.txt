@@ -1,0 +1,61 @@
+NOTICE FOR THE PARTIAL IPA POSITIVE-EVIDENCE DATA
+
+Scope of this notice
+The IPA-derived positive ledger, its runtime data representation, and their
+generated data equivalents are separately licensed data. The project's MIT
+license for independently authored implementation code does not replace these
+data licenses. These data contain no chart artwork, PDF, font, or outline.
+
+IPA source 1: historical chart
+IPA Chart (revised to 2015), International Phonetic Association.
+Copyright © 2015 International Phonetic Association.
+Original source: https://www.internationalphoneticassociation.org/content/ipa-chart
+Historical license evidence:
+https://www.internationalphoneticassociation.org/content/full-ipa-chart/ipa-tones-and-word-accents
+Specific chart:
+https://www.internationalphoneticassociation.org/sites/default/files/IPA_Doulos_2015.pdf
+Original license: Creative Commons Attribution-ShareAlike 3.0 Unported
+https://creativecommons.org/licenses/by-sa/3.0/
+https://creativecommons.org/licenses/by-sa/3.0/legalcode
+
+IPA source 2: later encoding aid, not the selected normative edition
+Symbol list of the International Phonetic Alphabet in Doulos SIL,
+International Phonetic Association, 2026 edition as preserved on 2026-10-13.
+Copyright © 2026 International Phonetic Association.
+https://www.internationalphoneticassociation.org/IPAcharts/common_files/pdfs/pdfs_IPA_charts_E/IPA_Doulos_sl.pdf
+Official attribution and license page:
+https://www.internationalphoneticassociation.org/IPAcharts/IPA_charts_E/IPA_charts_E.html
+License: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+Changes and adapted-data license
+This project selected an explicitly partial set of symbols and literal examples
+from the visually reviewed 2015 chart, cross-referenced selected encodings using
+the 2026 mapping aid, added Unicode 13 identities and explicit canonical
+equivalence records, and expressed the results in an auditable data ledger.
+The chart layout, typography, artwork, and fonts are not reproduced in this data.
+The resulting IPA-derived adapted data is offered under CC-BY-SA-4.0, preserving
+the original source notices above. ShareAlike applies to covered adaptations of
+the data. Nothing here restricts uses that applicable law already permits.
+There is no endorsement by the International Phonetic Association, Unicode,
+SIL International, or any font creator. Preserve required attribution, change
+indications, license links, and warranty disclaimers when redistributing.
+The licensed material is offered without warranties as described in the linked
+licenses. This dataset is PARTIAL and is not a complete IPA repertoire,
+transcription grammar, or pronunciation-correctness validator.
+
+Unicode data
+Unicode Character Database 13.0.0, Unicode, Inc.
+ReadMe copyright: © 2020 Unicode, Inc.
+DerivedAge copyright: © 2019 Unicode, Inc.
+https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
+https://www.unicode.org/Public/13.0.0/ucd/DerivedAge.txt
+Unicode-derived fields retain the separate Unicode copyright and permission
+notice in LICENSE-UNICODE-V3.txt. That notice is the preserved current
+1991–2026 license snapshot, not a claim about a historical 2020 license text.
+https://www.unicode.org/license.txt
+
+Detailed source pins, row provenance, limitations, and modifications accompany
+the data in the positive ledger and manifest. The original text being assessed
+is never rewritten by these records; no compatibility normalization is applied.

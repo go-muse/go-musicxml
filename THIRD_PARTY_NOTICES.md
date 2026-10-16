@@ -76,3 +76,60 @@ data with the separate Unicode permission notice. See the
 adjacent Unicode license snapshot. Implementation code remains separately
 licensed. No full Unicode corpus, historical publication, chart artwork or font
 is included by this addition.
+
+## Embedded copies of the pinned dictionary data
+
+`internal/dictionarydata/data` contains byte-identical generated copies of the
+five supported components described above, together with copies of their
+notices and Unicode permission text. Using `BundledDictionarySource` makes all
+five component assets reachable, including both CC BY-SA 4.0 IPA bundles,
+regardless of `Selections`. Selections control import and assessment, not
+which assets the bundled implementation references. These data retain their
+upstream and adapted-data terms; the library code's MIT license does not
+replace them.
+
+Distribute binaries containing the bundled data with all five of these files,
+including their attribution, change descriptions, disclaimers and license
+links:
+
+- `internal/dictionarydata/data/NOTICES.txt`
+- `internal/dictionarydata/data/ipa-positive/NOTICES.txt`
+- `internal/dictionarydata/data/ipa-positive/LICENSE-UNICODE-V3.txt`
+- `internal/dictionarydata/data/ipa-representation/NOTICES.txt`
+- `internal/dictionarydata/data/ipa-representation/LICENSE-UNICODE-V3.txt`
+
+The first notice covers SMuFL 1.4 and MusicXML 4.0 under the W3C FSA. The two
+IPA notices preserve the adapted-data CC BY-SA 4.0 attribution and change
+notes; the two Unicode files preserve the Unicode License v3 permission text.
+These files are included in the embed patterns so `go mod vendor` retains them
+with the data. That source-distribution safeguard does not arrange notice
+delivery alongside a compiled binary: its distributor must include the files
+in the distribution or associated documentation. Programs using only
+caller-provided or nil sources do not need the bundled source for assessment;
+no particular linker behavior or binary-size saving is guaranteed.
+
+The copied notices remain byte-identical to the source fixtures. Their
+references to accompanying ledgers describe the full source distribution. The
+compact runtime asset directory does not contain those detailed modification
+and provenance records. For the embedded IPA positive bundle, see the
+[full positive ledger][ipa-positive-ledger] at
+`testdata/dictionaries/ipa-positive/positive-ledger.json`. For the representation
+bundle, see the full [source ledger][ipa-representation-ledger] at
+`testdata/dictionaries/ipa-representation/source-ledger.md`, its
+[source pins][ipa-source-pins], [row ledger][ipa-row-ledger] and
+[manifest pins][ipa-manifest-pins]. These links pin the provenance records for
+the bundled bytes to merged main commit
+`0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9`. All five files have the same blob
+identities as the bundled-source implementation's initial PR 42 head. This
+main-history pin keeps the provenance independent of later PR-branch changes.
+Future data refreshes must retain separately reviewed exact-pin provenance.
+
+Generation changes neither source bytes nor authority: the two IPA components
+remain reviewed derived bundles, not the original publications or a complete
+grammar.
+
+[ipa-positive-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-positive/positive-ledger.json
+[ipa-representation-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/source-ledger.md
+[ipa-source-pins]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/source-pins.json
+[ipa-row-ledger]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/source-row-ledger.json
+[ipa-manifest-pins]: https://github.com/go-muse/go-musicxml/blob/0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9/testdata/dictionaries/ipa-representation/manifest-pins.json
