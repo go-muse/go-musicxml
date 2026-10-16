@@ -521,8 +521,19 @@ func (s *Session) recordXSDResult(ctx context.Context, n *factNode, r RuleDefini
 		d.Reason = "xsd-assessment-unavailable"
 		if len(result.Limitations) > 0 {
 			d.Reason = Code(result.Limitations[0].Reason)
-			if result.Limitations[0].Unknown {
+		}
+		// Missing document evidence remains Unknown even when an earlier
+		// attribute contributed an unrelated unsupported operation. Select the
+		// first Unknown limitation without weakening normative failure or cause
+		// precedence, and meter the scan before publishing its outcome.
+		for _, limitation := range result.Limitations {
+			if err := s.step(ctx, 1); err != nil {
+				return err
+			}
+			if limitation.Unknown {
 				d.Outcome = OutcomeUnknown
+				d.Reason = Code(limitation.Reason)
+				break
 			}
 		}
 		cause, err := s.schemaResultCause(ctx, n, s.catalog.plans[r.Predicate].xsdCheck)
