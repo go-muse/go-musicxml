@@ -43,7 +43,7 @@ func TestReviewRetainedGrowthTunedBudgetCompatibility(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			r, err := tc.assess(validation.Budgets{MaxRuleSteps: tc.steps, MaxBufferedBytes: 1 << 30})
 			var limit *validation.ResourceError
-			if !errors.As(err, &limit) || limit.Kind != validation.BudgetRuleSteps || limit.Limit != tc.steps || limit.Used < 0 || limit.Used > tc.steps || limit.Requested <= tc.steps-limit.Used || r.AssessmentComplete || r.Satisfied() {
+			if !errors.As(err, &limit) || limit.Kind != validation.BudgetRuleSteps || limit.Limit != tc.steps || limit.Used != tc.steps || limit.Requested != 1 || r.AssessmentComplete || r.Satisfied() {
 				t.Fatalf("historical tuned budget: report=%+v error=%v", r, err)
 			}
 			var after bytes.Buffer

@@ -66,13 +66,10 @@ func TestReviewDefaultBudgetOfficialSourceComposition(t *testing.T) {
 				// show lower live storage and identical complete reports; neither
 				// default-budget refusal is a completed or satisfied assessment.
 				var limit *validation.ResourceError
-				if !errors.As(err, &limit) || (limit.Kind != validation.BudgetRuleSteps && limit.Kind != validation.BudgetBufferedBytes) || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
+				if !errors.As(err, &limit) || limit.Kind != validation.BudgetBufferedBytes || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
 					t.Fatalf("unexpected default-budget failure: %v", err)
 				}
-				wantLimit := validation.DefaultBudgets().MaxRuleSteps
-				if limit.Kind == validation.BudgetBufferedBytes {
-					wantLimit = validation.DefaultBudgets().MaxBufferedBytes
-				}
+				wantLimit := validation.DefaultBudgets().MaxBufferedBytes
 				if limit.Limit != wantLimit {
 					t.Fatalf("resource refusal did not use the default limit: %v", err)
 				}
