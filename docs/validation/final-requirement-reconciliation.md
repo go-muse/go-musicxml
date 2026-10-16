@@ -116,26 +116,34 @@ The narrow test-only package `internal/finalreconciliation` checks:
   IDs and their open states, and required implementation/decision/history links
 - Unique same-file anchors inside the named test or directly referenced
   fixtures, at least one anchor in the test body, and no unused routes
+- No direct, unconditional top-level `Skip`, `Skipf` or `SkipNow` call on the
+  routed test parameter; conditional tool/environment skips remain permitted
 - Pinned per-row classification/residual/closure policy, per-axis assessment,
   basis/gap/routes, and case descriptions, anchors and evidence layers
+- Summary totals derived from requirement, contract, issue, candidate,
+  translation and case rows, including classifications, route layers, axis
+  dispositions and explicit final-tree execution records
 
 These pins detect unreviewed policy drift. They do not interpret arbitrary
-prose or establish runtime conformance. The Unknown-only closure mutation now
-changes only the closure criterion and is rejected by its reviewed policy pin;
-it does not rely on the separate ban on `implemented-and-verified`.
+prose or establish runtime conformance. A `closure_criterion`-only change,
+including `Returns Unknown`, is rejected by the reviewed requirement policy
+pin, independently of the ban on `implemented-and-verified`.
 
-The round-one mutations first reproduced accepted residual retirement, axis
-promotion, missing sources/links/obligations, consistently unlinked source
-records, unrelated anchors and removal of a named test body. Narrow repairs
-then rejected those same mutations. Focused author verification uses the
-repository Go 1.27.2 environment and the shared build lock:
+Anchor controls require the specific file, uniqueness, fixture-binding,
+body-anchor or duplicate-entry rejection for each mutation. Removing a fixture
+reference preserves its source anchors, so a missing-text error cannot stand in
+for a binding check. Summary arithmetic is tested independently of policy pins:
+changed rows must invalidate stale counts, while matching counts pass the
+arithmetic check without changing those pins.
+
+The focused integrity command is:
 
 ```sh
 go test -count=1 ./internal/finalreconciliation
 ```
 
-The integrity/mutation suite passed on linux/amd64. Focused runtime checks cover
-only the corrected budget, result, nil and skipped-XML routes; the allocation
-test's 32-bit branch remains a mapped assertion, not a 386 execution receipt.
-No full root suite, seven-stage local acceptance, external oracle, race, fuzz,
-hosted CI or 386 run is claimed by this reconciliation.
+Execution receipts require an identified commit or tree, command, toolchain,
+platform and result. This document makes no standalone pass claim. The
+allocation test's 32-bit branch is a mapped assertion, not a 386 execution
+receipt. Full-suite, seven-stage local acceptance, external oracle, race, fuzz,
+hosted CI and 386 results must be read from their exact-tree receipts.
