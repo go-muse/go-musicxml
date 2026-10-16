@@ -6,7 +6,7 @@
 package dictionarydata
 
 import (
-	_ "embed"
+	"embed"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -28,6 +28,14 @@ var ipaPositive string
 
 //go:embed data/ipa-representation/runtime-representation-bundle.json
 var ipaRepresentation string
+
+// Explicitly embed the unchanged distribution notices as well as the components,
+// so go mod vendor retains the attribution and permission files beside the data.
+// Distributors must still ship the applicable notices with compiled binaries;
+// this unused filesystem need not survive linking.
+//
+//go:embed data/NOTICES.txt data/ipa-positive/NOTICES.txt data/ipa-positive/LICENSE-UNICODE-V3.txt data/ipa-representation/NOTICES.txt data/ipa-representation/LICENSE-UNICODE-V3.txt
+var notices embed.FS
 
 // Component returns shared immutable bytes for an existing closed component ID.
 // Returning bytes is not a verification certificate or a capability selection.

@@ -35,7 +35,25 @@ evidence, not a complete grammar or pronunciation validator. Standard Sounds
 nonmembership does not invalidate custom open-string identifiers.
 
 The generated `data` directory retains the source notices and Unicode permission
-text. These data have separate upstream/adapted-data terms, including CC BY-SA 4.0
-for the IPA-derived data; the implementation code license does not replace them.
-See `THIRD_PARTY_NOTICES.md` at the repository root. Preserve applicable notices
-and license links when distributing the data, including in compiled binaries.
+text. They are explicitly embedded so `go mod vendor` preserves these exact files:
+
+- `data/NOTICES.txt`
+- `data/ipa-positive/NOTICES.txt`
+- `data/ipa-positive/LICENSE-UNICODE-V3.txt`
+- `data/ipa-representation/NOTICES.txt`
+- `data/ipa-representation/LICENSE-UNICODE-V3.txt`
+
+These data have separate upstream/adapted-data terms, including CC BY-SA 4.0 for
+the IPA-derived data; the implementation code license does not replace them.
+Reaching `BundledDictionarySource` makes all five components reachable, regardless
+of `Selections`. Binary distributors must ship the five files above alongside the
+binary, retaining their attribution and license links. The private notice
+filesystem can be removed by the linker; embedding it does not guarantee that
+notices are accessible from a compiled binary. See `THIRD_PARTY_NOTICES.md` at the
+repository root for distribution guidance.
+
+The copied notices are byte-identical source records. Their references to an
+accompanying full positive ledger concern the original source distribution, not
+this reduced runtime directory. The full reviewed provenance is available at the
+pinned [positive ledger](https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-positive/positive-ledger.json)
+and [representation source ledger](https://github.com/go-muse/go-musicxml/blob/195c5ebc82acc22bddcdde46c9394fc060659c2a/testdata/dictionaries/ipa-representation/source-ledger.md).
