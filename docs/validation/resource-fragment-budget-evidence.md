@@ -121,8 +121,8 @@ session storage at admission. This real retained storage still sharply limits
 the DTD source graph compositions under the unchanged 64 MiB (67,108,864-byte)
 logical live-buffer default; it is independent of the primary-input byte limit.
 
-The following adjacent cases were reproduced on Go 1.27.2 linux/amd64 from local
-`35b3865`, whose tree is identical to published
+The following adjacent cases were reproduced on Go 1.27.2 linux/amd64 from
+unpublished local `35b3865`, whose tree is identical to published
 `2b2e3d196402ad5dff75f55ad154d679efdca2d0`. All budget fields are zero/default.
 `reviewBudgetScore(n)` is the exact generator in `resource_budget_review_test.go`:
 one part `P1` named `Part`, sequential decimal measure numbers 1 through n, and
@@ -147,8 +147,9 @@ The [reviewer's comparison](https://github.com/go-muse/go-musicxml/pull/41#discu
 reported an earlier boundary of 494 measures (about 66 KB), the corrected
 500-measure case at 62.9 MB of the 67.1 MB allowance, and comparison capacities of
 about 114 KB for standalone `ProfileSourceInternalDTDDictionaries` and 168 KB
-for legacy `ProfileResourceGraph`. The review did not supply its probe source;
-those comparison capacities are reviewer-reported, not independently established
+for its "legacy graph" comparator. The review did not supply its probe source
+or the exact legacy-graph profile; those comparison capacities are
+reviewer-reported, not independently established
 boundaries for the generator above. They must not be substituted for a general
 source-byte guarantee. MB/KB in those rounded figures are decimal units; the
 actual default remains 64 MiB.
