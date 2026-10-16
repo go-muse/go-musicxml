@@ -4,9 +4,10 @@ import "context"
 
 const planBarlineLocation planKind = "musicxml-barline-location"
 
-// NewBarlineLocationPlan checks musical position against a structural origin
-// and a bounded, independently supported measure-end certificate. It does not
-// enforce the first/last XML-child recommendation or nominal meter capacity.
+// NewBarlineLocationPlan checks musical position and ordered musical-data
+// placement against a structural origin and a bounded measure-end certificate.
+// First/last XML-child recommendations do not themselves establish violations,
+// and nominal meter capacity does not supply a measure-end certificate.
 func NewBarlineLocationPlan(spec ContextPlanSpec) (Plan, error) {
 	if !catalogKey(spec.TimelineProvider) {
 		return Plan{}, contract("barline timeline", "exact provider revision required")
@@ -48,8 +49,8 @@ func evaluateBarlineLocation(ctx context.Context, s *Session, n *factNode, p *co
 		return Decision{Outcome: OutcomeUnknown, Reason: "barline-location-unavailable"}, false, nil
 	}
 	sign := pos.Offset.value.Sign()
-	if location == "left" {
-		return barlineLocationDecision(sign == 0), false, nil
+	if location == "left" && sign != 0 {
+		return barlineLocationDecision(false), false, nil
 	}
 	if location == "middle" && sign <= 0 || location == "right" && sign < 0 {
 		return barlineLocationDecision(false), false, nil
@@ -58,7 +59,21 @@ func evaluateBarlineLocation(ctx context.Context, s *Session, n *factNode, p *co
 	if provider == nil {
 		return Decision{}, false, contract("barline timeline", "selected timeline plan required")
 	}
-	boundary, decisive, err := barlineLocationBoundary(ctx, s, service, provider.Bindings, s.nodes[n.header.Parent], pos, location)
+	content := s.nodes[n.header.Parent]
+	if location == "left" {
+		earlier, err := barlineMovementSide(ctx, s, provider.Bindings, content, n.header.ID, true)
+		if err != nil {
+			return Decision{}, false, err
+		}
+		if earlier.State != EvidenceKnown {
+			return localGap(earlier), false, nil
+		}
+		if earlier.Value {
+			return Decision{Outcome: OutcomeUnknown, Reason: "barline-left-placement-unestablished"}, false, nil
+		}
+		return barlineLocationDecision(true), false, nil
+	}
+	boundary, decisive, err := barlineLocationBoundary(ctx, s, service, provider.Bindings, content, n.header.ID, pos, location)
 	if err != nil || decisive.Outcome != "" {
 		return decisive, false, err
 	}
@@ -79,11 +94,71 @@ func barlineLocationDecision(pass bool) Decision {
 	return Decision{Outcome: OutcomeFail, Reason: "barline-location-mismatch"}
 }
 
+// barlineMovementSide checks note/backup/forward placement without treating
+// metadata as movement or inspecting unrelated scalar values. The exact subject
+// must occur in the ordered stream; unknown declarations are never zero-time
+// assumptions. A left-side proof stops at the subject, so an unrelated suffix
+// cannot erase the independently known beginning. No retained storage is needed.
+func barlineMovementSide(ctx context.Context, s *Session, b *timelineBindings, content *factNode, subject NodeID, before bool) (Evidence[bool], error) {
+	if err := s.step(ctx, 1); err != nil {
+		return Evidence[bool]{}, err
+	}
+	gap := timelineHierarchyAvailability(content)
+	if gap.State != EvidenceKnown || !gap.Value {
+		return gap, nil
+	}
+	if content.end.Order.Value != OrderSource && content.end.Order.Value != OrderModelContent {
+		return stateUnknown[bool]("barline-measure-order-unavailable"), nil
+	}
+	r := &stateReader{ctx: ctx, s: s, b: b}
+	found, movement := false, false
+	result := func() Evidence[bool] {
+		if movement {
+			return Evidence[bool]{State: EvidenceKnown, Value: true}
+		}
+		if gap.State != EvidenceKnown || !gap.Value {
+			return gap
+		}
+		return Evidence[bool]{State: EvidenceKnown, Value: false}
+	}
+	for _, event := range content.children {
+		if err := s.step(ctx, 1); err != nil {
+			return Evidence[bool]{}, err
+		}
+		if event.header.ID == subject {
+			found = true
+			if before {
+				return result(), nil
+			}
+			continue
+		}
+		if before == found {
+			continue
+		}
+		if event.header.Declaration.State != EvidenceKnown {
+			gap = timelineMergeAvailability(gap, timelineGapAs[DeclarationID, bool](event.header.Declaration, "barline-event-declaration-unavailable"))
+			continue
+		}
+		moving := r.matches(event, timelineRoleNote) || r.matches(event, timelineRoleBackup) || r.matches(event, timelineRoleForward)
+		if r.err != nil {
+			return Evidence[bool]{}, r.err
+		}
+		movement = movement || moving
+		if !before && movement {
+			return Evidence[bool]{State: EvidenceKnown, Value: true}, nil
+		}
+	}
+	if !found {
+		return stateUnknown[bool]("barline-placement-unavailable"), nil
+	}
+	return result(), nil
+}
+
 // Only this predicate consumes these certificates. Nothing is written into
 // frameBounds, UnprovedFrame, cross-measure ordering or repeat partEnd.
 // lower is rebuilt without barlines, so the queried boundary cannot witness
 // itself, directly or through a later excursion's containment.
-func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineService, b *timelineBindings, content *factNode, at musicalPosition, location string) (Evidence[Rational], Decision, error) {
+func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineService, b *timelineBindings, content *factNode, subject NodeID, at musicalPosition, location string) (Evidence[Rational], Decision, error) {
 	r := &stateReader{ctx: ctx, s: s, b: b}
 	if !at.Offset.Valid() {
 		return stateUnknown[Rational]("barline-position-unavailable"), Decision{}, nil
@@ -94,6 +169,20 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 	}
 	if content.end.Order.Value != OrderSource && content.end.Order.Value != OrderModelContent {
 		return stateUnknown[Rational]("barline-measure-order-unavailable"), Decision{}, nil
+	}
+	// Earlier voices can extend beyond a final voice's cursor. A later lower
+	// bound only disproves right when a known movement follows this barline.
+	// Otherwise finish the bounded end proof, retaining unequal-voice Unknown.
+	rightInterior := false
+	if location == "right" {
+		later, err := barlineMovementSide(ctx, s, b, content, subject, false)
+		if err != nil {
+			return Evidence[Rational]{}, Decision{}, err
+		}
+		if later.State != EvidenceKnown {
+			return timelineGapAs[bool, Rational](later, "barline-placement-unavailable"), Decision{}, nil
+		}
+		rightInterior = later.Value
 	}
 	lower, maximum, noteMaximum, excursionMaximum := timelineZero, timelineZero, timelineZero, timelineZero
 	candidate := stateUnknown[Rational]("barline-measure-end-unestablished")
@@ -200,7 +289,7 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 				if err != nil {
 					return Evidence[Rational]{}, Decision{}, err
 				}
-				if cmp < 0 {
+				if cmp < 0 && (location == "middle" || rightInterior) {
 					return Evidence[Rational]{}, barlineLocationDecision(location == "middle"), nil
 				}
 			}
@@ -341,6 +430,15 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 	}
 	if cmp > 0 {
 		return stateUnknown[Rational]("barline-measure-end-unequal-voices"), Decision{}, nil
+	}
+	if location == "right" && !rightInterior {
+		cmp, err = s.rationalCmp(ctx, at.Offset, candidate.Value)
+		if err != nil {
+			return Evidence[Rational]{}, Decision{}, err
+		}
+		if cmp < 0 {
+			return stateUnknown[Rational]("barline-measure-end-unequal-voices"), Decision{}, nil
+		}
 	}
 	if last == timelineMovementNote {
 		return candidate, Decision{}, nil
