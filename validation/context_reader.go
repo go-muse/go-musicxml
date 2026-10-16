@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
-	"strings"
 
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
@@ -57,11 +56,10 @@ func (r *contextReader) matches(n *factNode, role contextRole) bool {
 				if !r.step(1 + int64(min(len(candidate), len(role)))) {
 					return false
 				}
-				comparison := strings.Compare(string(candidate), string(role))
-				if comparison == 0 {
+				if candidate == role {
 					return true
 				}
-				if comparison < 0 {
+				if candidate < role {
 					lo = mid + 1
 				} else {
 					hi = mid
