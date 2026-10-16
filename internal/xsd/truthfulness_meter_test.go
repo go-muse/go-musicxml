@@ -225,3 +225,55 @@ func TestTruthfulnessUnionProofEveryCancellationCleansUp(t *testing.T) {
 		}
 	}
 }
+
+func TestTruthfulnessBinaryFacetPrechecksEveryCancellationCleansUp(t *testing.T) {
+	for _, builtin := range []string{"hexBinary", "base64Binary"} {
+		t.Run(builtin, func(t *testing.T) {
+			value := "AA"
+			if builtin == "base64Binary" {
+				value = "YQ=="
+			}
+			base := truthfulnessRestriction(builtin)
+			base.Enumerations = []string{value}
+			outer := &SimpleSchema{Form: SimpleRestriction, Base: &SimpleMember{Inline: base}, Patterns: []string{value}, HasLength: true, Length: 3}
+			compiled, err := Compile(SchemaData{Elements: map[QName]*ElementSchema{{Local: "n"}: {Name: QName{Local: "n"}, Type: TypeRef{InlineSimple: outer}}}}, CompileLimits{})
+			if err != nil {
+				t.Fatal(err)
+			}
+			u, _ := compiled.Root(QName{Local: "n"})
+			assess := func(cancelAt int64) int64 {
+				ctx, cancel := context.WithCancel(context.Background())
+				defer cancel()
+				meter := &scalarMeter{cancel: cancel, cancelAt: cancelAt}
+				r, err := NewRun(compiled, meter)
+				if err != nil {
+					t.Fatal(err)
+				}
+				b, err := r.Bind(ctx, u, Subject{ID: 1, Name: QName{Local: "n"}, Text: value, TextKnown: true, AttributesComplete: true, ChildrenComplete: true})
+				if cancelAt == 0 {
+					if err != nil {
+						t.Fatal(err)
+					}
+					if got := r.Results(b).Scalar; got.Valid || !got.Complete || len(got.Issues) != 1 || got.Issues[0].Constraint != "length" {
+						t.Fatalf("independent length failure lost: %+v", got)
+					}
+				} else if !errors.Is(err, context.Canceled) {
+					t.Fatalf("checkpoint %d: %v", cancelAt, err)
+				}
+				if r.context.local != nil {
+					t.Fatalf("checkpoint %d leaked local binding scope", cancelAt)
+				}
+				if err := r.Close(); err != nil {
+					t.Fatal(err)
+				}
+				if meter.retained != 0 {
+					t.Fatalf("checkpoint %d retained %d after Close", cancelAt, meter.retained)
+				}
+				return meter.calls
+			}
+			for checkpoint, total := int64(1), assess(0); checkpoint <= total; checkpoint++ {
+				assess(checkpoint)
+			}
+		})
+	}
+}

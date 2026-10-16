@@ -1375,6 +1375,7 @@ func (c *Context) AssessSimpleValue(
 	// primitive lexical syntax and each restriction's pattern can nevertheless
 	// reject a value independently, including outside an unavailable base bound.
 	lexicalPrecheck := c.local != nil && semantics.List == nil && semantics.Union == nil && guardedAtomicBuiltin(semantics.Builtin)
+	binaryPrecheck := lexicalPrecheck && (semantics.Builtin == "hexBinary" || semantics.Builtin == "base64Binary")
 	listPrecheck := c.local != nil && semantics.List != nil && c.memberHasGuardedAtomic(semantics.List.Item)
 	unionPrecheck := c.local != nil && schema.Form == SimpleRestriction && semantics.Union != nil && len(schema.Patterns) != 0 && c.unionHasGuardedAtomic(semantics.Union)
 	if listPrecheck {
@@ -1421,8 +1422,8 @@ func (c *Context) AssessSimpleValue(
 				return SimpleAssessment{}, failure
 			}
 		}
-		if listPrecheck {
-			if failure := validateLengthFacets(schema, value, true, "", c); failure != nil {
+		if listPrecheck || binaryPrecheck {
+			if failure := validateLengthFacets(schema, value, listPrecheck, semantics.Builtin, c); failure != nil {
 				return SimpleAssessment{}, failure
 			}
 		}
@@ -1456,7 +1457,7 @@ func (c *Context) AssessSimpleValue(
 		if failure := validateBoundsValue(schema, normalized, builtin, display, c); failure != nil {
 			return SimpleAssessment{}, failure
 		}
-		if !listPrecheck {
+		if !listPrecheck && !binaryPrecheck {
 			if failure := validateLengthFacets(
 				schema,
 				normalized,
@@ -1890,7 +1891,7 @@ func IsWhitespace(value rune) bool {
 // lexical spaces or independently rejecting patterns are unavailable.
 func guardedAtomicBuiltin(builtin string) bool {
 	switch builtin {
-	case "QName", "float", "double", "date", "dateTime", "duration", "gDay", "gMonth", "gMonthDay", "gYear", "gYearMonth", "time":
+	case "hexBinary", "base64Binary", "QName", "float", "double", "date", "dateTime", "duration", "gDay", "gMonth", "gMonthDay", "gYear", "gYearMonth", "time":
 		return true
 	default:
 		return false
@@ -2515,9 +2516,6 @@ var (
 	)
 	floatPattern = regexp.MustCompile(
 		`^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?$`,
-	)
-	Base64Pattern = regexp.MustCompile(
-		`^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$`,
 	)
 	HexPattern = regexp.MustCompile(`^[0-9A-Fa-f]*$`)
 )

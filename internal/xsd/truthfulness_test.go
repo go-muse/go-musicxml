@@ -103,8 +103,8 @@ func TestTruthfulnessFloatBoundsRemainExplicitlyUnavailable(t *testing.T) {
 }
 func TestTruthfulnessQNameUnboundCannotPass(t *testing.T) {
 	got := truthfulnessScalar(t, TypeRef{Name: QName{Space: XSDNamespace, Local: "QName"}}, "p:name", map[string]string{"xml": "http://www.w3.org/XML/1998/namespace"})
-	if got.Valid && got.Complete {
-		t.Fatalf("unbound prefix received a complete pass: %+v", got)
+	if !got.Valid || got.Complete || len(got.Issues) != 0 || len(got.Limitations) != 1 || got.Limitations[0].Reason != "xsd-assessment-incomplete" || got.Limitations[0].Cause == nil || got.Limitations[0].Cause.Error() != "validation: incomplete assessment: incomplete XSD assessment: ordinary QName namespace-value assessment is unavailable" {
+		t.Fatalf("unbound prefix must retain the exact unavailable QName assessment: %+v", got)
 	}
 }
 func TestTruthfulnessWildcardNamespaceAdmission(t *testing.T) {
@@ -583,5 +583,50 @@ func TestTruthfulnessUnionPatternProofPreservesOrderAndIsolation(t *testing.T) {
 				t.Fatalf("hypothetical later member polluted the real first candidate: %+v", got)
 			}
 		})
+	}
+}
+
+func TestTruthfulnessBinaryEnumerationCannotHideFacetFailure(t *testing.T) {
+	for _, tc := range []struct{ builtin, text, enumeration, pattern string }{
+		{"hexBinary", "CC", "AA", "BB"},
+		{"base64Binary", "YQ==", "Yg==", "Yg=="},
+	} {
+		for _, facet := range []string{"pattern", "length", "minLength", "maxLength"} {
+			for _, shape := range []string{"same-restriction", "outer-restriction", "list-item"} {
+				t.Run(tc.builtin+"/"+facet+"/"+shape, func(t *testing.T) {
+					base := truthfulnessRestriction(tc.builtin)
+					base.Enumerations = []string{tc.enumeration}
+					s := base
+					if shape == "outer-restriction" {
+						s = &SimpleSchema{Form: SimpleRestriction, Base: &SimpleMember{Inline: base}}
+					}
+					switch facet {
+					case "pattern":
+						s.Patterns = []string{tc.pattern}
+					case "length":
+						s.HasLength, s.Length = true, 3
+					case "minLength":
+						s.HasMinLength, s.MinLength = true, 3
+					case "maxLength":
+						s.HasMaxLength, s.MaxLength = true, 0
+					}
+					if shape == "list-item" {
+						s = &SimpleSchema{Form: SimpleList, Item: &SimpleMember{Inline: s}}
+					}
+					got := truthfulnessScalar(t, TypeRef{InlineSimple: s}, tc.text, nil)
+					if got.Valid || !got.Complete || len(got.Limitations) != 0 || len(got.Issues) != 1 || got.Issues[0].Constraint != facet {
+						t.Fatalf("independent %s rejection hidden by binary equality: %+v", facet, got)
+					}
+				})
+			}
+		}
+		// Passing independently checkable facets cannot establish equality.
+		s := truthfulnessRestriction(tc.builtin)
+		s.Enumerations, s.Patterns = []string{tc.text}, []string{tc.text}
+		s.HasLength, s.Length = true, 1
+		got := truthfulnessScalar(t, TypeRef{InlineSimple: s}, tc.text, nil)
+		if !got.Valid || got.Complete || len(got.Issues) != 0 || len(got.Limitations) == 0 {
+			t.Fatalf("binary equality must remain unavailable: %+v", got)
+		}
 	}
 }
