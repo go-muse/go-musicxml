@@ -27,7 +27,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   callback error classifications are unchanged.
 
 - Add explicit internal-DTD/dictionary graph and raw/current-MXL compositions in
-  separate catalogs, preserving existing profiles and digests. Add source
+  separate catalogs. Identity preservation excludes the separately documented
+  figure-number, IPA and mimetype local-header migrations. Add source
   Container and Sounds compositions with exact auxiliary origin routing,
   physical Container Raw versus effective values, effective Sounds mappings,
   and nonfetching source hints. Current primary models retain model-only
@@ -36,6 +37,53 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   package, indirection, unread-external and incomplete-capability gates.
 
 ### Fixed
+
+- Correct `MX40-PACKAGE-mimetype-no-extra` for `ProfileResourceGraph`,
+  `ProfileMXLSource`, `ProfileMXLModel` and their dictionary variants: a proved
+  zero local extra now passes with a framed central-only extra, instead of
+  remaining Unknown. Nonzero local extra still fails. Malformed central extra
+  framing now stops package/graph enumeration and child assessment with a
+  transport-capability error, while preserving an already-established local
+  Pass/Fail. No Container or primary-resource check is promised after that
+  refusal. See the [package scope](docs/validation/package-profile-scope.md).
+
+- Correct MIME classification in those package/graph profiles. Distinct valid
+  unknown parameters, such as `application/vnd.recordare.musicxml+xml; foo=bar`,
+  now preserve the recognized base type: first-media-type and file-metadata
+  checks can pass instead of reporting `musicxml-media-parameter-unresolved`.
+  Equal repeated parameters and trailing semicolons now remain Unknown with
+  `media-type-duplicate-parameter` and `media-type-syntax-unresolved`, respectively,
+  so formerly satisfied packages can become undetermined. Conflicting repeated
+  parameters also use the duplicate reason. For compressed rootfiles with a
+  charset parameter, metadata advice now reports `nonstandard-file-media-type`
+  instead of `nonstandard-file-suffix`. The parser remains authoritative for
+  affirmative classification; media declarations do not certify file contents.
+
+- Resolve `ProfileSourceLinks` / `ProfileModelLinks` link and bookmark ordinals
+  across matching descendants with different parents. These cases now have
+  Known attachment instead of Unknown `link-descendant-ordinal-interpretation`.
+  The local-link rule revision and CatalogDigest are unchanged; pin the library
+  revision when reproducing historical output. See the
+  [behavior correction note](docs/validation/local-link-context-scope.md).
+
+- Stop formatting carry between `direction-type` wrappers in
+  `ProfileSourceContext` / `ProfileModelContext`. Each wrapper now uses its own
+  values and defaults, including `application-format-choice` where appropriate,
+  instead of inherited wrapper values or `direction-cross-wrapper-format-precedence`.
+  The affected rule revisions are unchanged; the context digest migration below
+  identifies the separate figure-number removal.
+
+- Return Known numeral-root suppression advice for a harmony chord's own
+  `kind=none` in `ProfileSourceContext` / `ProfileModelContext`, instead of
+  Unsupported advice. Stacked chord branches retain separate associations.
+  This correction likewise does not revise the affected context rule key.
+
+- Preserve original malformed-XML failures for `ProfileResourceGraph`,
+  `ProfileMXLSource` and `ProfileMXLModel` when a primary, nested rootfile or
+  external child fails before its assembly is known. The error retains the
+  XML syntax cause and `SyntaxMalformed` failure report without adding the
+  former `invalid configuration: resource transfer: established intrinsic
+  assembly required` error. The bundle remains unsatisfied.
 
 - Remove the invented figure-number numeric lexical requirement from the built-in
   source/model context profiles. MusicXML deliberately retains unrestricted

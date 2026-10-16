@@ -90,9 +90,15 @@ predicate regardless of central extra length. Unavailable local or association
 evidence remains unavailable. Separate raw ZIP checks still govern central
 record bounds, identity, flags/methods, entry layout, CRC and supported features.
 An incompletely framed mimetype central extra block produces a bounded transport
-capability error after identity checks; it does not reverse the local predicate
-or allow overall satisfaction. This narrow framing guard does not interpret
-unknown extra kinds, change unrelated-entry admission, or expand ZIP support.
+capability error after identity checks. It stops package/graph enumeration and
+child assessment even when the low-level entry inventory is retained: no
+Container or primary-resource assessment is promised after that
+refusal. Already-established local-header no-extra Pass/Fail remains independent,
+and the package cannot be satisfied. This behavior is covered by
+`TestPackageGraphMimetypeCentralExtraFramingIsIndependent` and
+`TestMXLAssessmentMimetypeCentralExtraFramingPreservesAssociation`. The narrow
+framing guard does not interpret unknown extra kinds, change unrelated-entry
+admission, or expand ZIP support.
 
 ## Boundaries that affect readiness
 
