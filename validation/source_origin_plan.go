@@ -44,6 +44,9 @@ func validateSourceOriginProfile(c *CompiledCatalog, profile Profile, closure ma
 // SourceOriginProvider returns the exact available sealed provider selected for
 // this source profile and assembly. Like Profile, false includes unknown IDs.
 // Catalog selection is independent of the caller's editable profile snapshots.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (e *Engine) SourceOriginProvider(profile ProfileID, assembly Assembly) (RuleKey, bool) {
 	if e == nil || e.catalog == nil {
 		return RuleKey{}, false

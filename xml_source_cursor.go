@@ -59,6 +59,12 @@ func (e *sourceXMLUnsupportedError) Error() string {
 }
 func (e *sourceXMLUnsupportedError) Unwrap() error { return validation.ErrIncompleteAssessment }
 
+// Is exposes the public unsupported-feature identity. A read after the source
+// was closed is an internal lifecycle failure, not an XML feature.
+func (e *sourceXMLUnsupportedError) Is(target error) bool {
+	return target == ErrUnsupportedXMLFeature && e.Reason != "source-closed"
+}
+
 // sourceByteOwner is a closed private mode, not an arbitrary BudgetKind.
 // Zero preserves ordinary primary-input behavior. Accounted buffers belong to
 // the root loader, which has already charged their immutable original bytes;

@@ -21,6 +21,9 @@ const (
 
 // ContextPosition is an established encoded-score coordinate, not a playback
 // time. UnprovedFrame preserves the timeline's bounded frame uncertainty.
+//
+// ContextPosition compiles with == but compares Offset by internal pointer;
+// compare Offset with Rational.Equal or Rational.Cmp.
 type ContextPosition struct {
 	Part, Measure  NodeRef
 	MeasureOrdinal uint64

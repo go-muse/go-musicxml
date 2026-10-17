@@ -46,6 +46,9 @@ type sourceEntityDeclarations struct {
 // available NewXSDPlanWithSourceDeclarations operation. Omitting this event
 // leaves declaration membership unavailable only when its datatype is reached.
 // Every rejection is terminal; Finish still releases all owned live gauges.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEntityDeclarations) (err error) {
 	if err = s.event(ctx, "SourceEntityDeclarations"); err != nil {
 		return err

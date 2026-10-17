@@ -13,6 +13,13 @@ var (
 	// XSD violation. It shares its identity with validation.ErrIncompleteAssessment.
 	ErrIncompleteAssessment = validation.ErrIncompleteAssessment
 
+	// ErrUnsupportedXMLFeature reports well-formed XML that relies on a feature
+	// the decoder deliberately does not implement, such as DTD entity
+	// expansion, external entity replacement or a character encoding without a
+	// decoder. The error message names the feature. For compatibility, errors
+	// matching ErrUnsupportedXMLFeature also match ErrIncompleteAssessment.
+	ErrUnsupportedXMLFeature = errors.New("musicxml: unsupported XML feature")
+
 	// ErrNilReader reports a nil input reader.
 	ErrNilReader = errors.New("musicxml: nil reader")
 
@@ -83,6 +90,9 @@ var (
 	// ErrInvalidDecodeOptions reports invalid uncompressed decode limits.
 	ErrInvalidDecodeOptions = errors.New("musicxml: invalid decode options")
 
+	// ErrInvalidEncodeOptions reports invalid EncodeWithOptions settings.
+	ErrInvalidEncodeOptions = errors.New("musicxml: invalid encode options")
+
 	// ErrInvalidMXLOptions reports invalid compressed decode limits.
 	ErrInvalidMXLOptions = errors.New("musicxml: invalid MXL options")
 
@@ -140,12 +150,18 @@ var (
 )
 
 // UnsupportedRootError identifies an unsupported XML root element.
+//
+// It is unrelated to validation.UnsupportedRootError, which reports a root
+// declaration that a selected validation profile does not accept.
 type UnsupportedRootError struct {
 	Name xml.Name
 }
 
 // Error returns the unsupported root description.
 func (e *UnsupportedRootError) Error() string {
+	if e == nil {
+		return "musicxml: nil unsupported root error"
+	}
 	return fmt.Sprintf(
 		"%s: {%s}%s",
 		ErrUnsupportedRoot,
@@ -156,6 +172,9 @@ func (e *UnsupportedRootError) Error() string {
 
 // Unwrap makes UnsupportedRootError match ErrUnsupportedRoot.
 func (e *UnsupportedRootError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
 	return ErrUnsupportedRoot
 }
 
@@ -170,6 +189,9 @@ type MXLLinkError struct {
 
 // Error returns the link-resolution description.
 func (e *MXLLinkError) Error() string {
+	if e == nil {
+		return "musicxml: nil MXL link error"
+	}
 	target := ""
 	if e.TargetPath != "" {
 		target = fmt.Sprintf(" to %q", e.TargetPath)
@@ -186,5 +208,8 @@ func (e *MXLLinkError) Error() string {
 
 // Unwrap returns the link-resolution cause.
 func (e *MXLLinkError) Unwrap() error {
+	if e == nil {
+		return nil
+	}
 	return e.Err
 }

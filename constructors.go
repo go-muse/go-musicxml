@@ -13,6 +13,10 @@ type PartDefinition struct {
 //
 // Each definition is added both to PartList and as an empty part body. Measures
 // can then be appended to the corresponding Part entry.
+//
+// The result leaves XMLName empty, while Decode fills it from the input, so
+// clear XMLName before comparing a constructed and a decoded document with
+// reflect.DeepEqual. Encode ignores XMLName.
 func NewScorePartwise(parts ...PartDefinition) *ScorePartwise {
 	result := &ScorePartwise{
 		Version: Ptr(MusicXMLVersion),
@@ -30,6 +34,9 @@ func NewScorePartwise(parts ...PartDefinition) *ScorePartwise {
 }
 
 // AddPart declares a part and appends its empty partwise body.
+//
+// The new body is value.Part[len(value.Part)-1]; add measures to it through
+// that element, not through a copy.
 func (value *ScorePartwise) AddPart(part PartDefinition) {
 	value.PartList.AddScorePart(newScorePart(part))
 	value.Part = append(value.Part, ScorePartwisePart{ID: part.ID})
@@ -39,6 +46,10 @@ func (value *ScorePartwise) AddPart(part PartDefinition) {
 //
 // Each definition is added to PartList. Use NewScoreTimewiseMeasure to create
 // measure-local part bodies in the same order.
+//
+// The result leaves XMLName empty, while Decode fills it from the input, so
+// clear XMLName before comparing a constructed and a decoded document with
+// reflect.DeepEqual. Encode ignores XMLName.
 func NewScoreTimewise(parts ...PartDefinition) *ScoreTimewise {
 	result := &ScoreTimewise{
 		Version: Ptr(MusicXMLVersion),
@@ -62,6 +73,10 @@ func (value *ScoreTimewise) AddPart(part PartDefinition) {
 }
 
 // NewOpusDocument creates an empty MusicXML 4.0 opus.
+//
+// The result leaves XMLName empty, while Decode fills it from the input, so
+// clear XMLName before comparing a constructed and a decoded document with
+// reflect.DeepEqual. Encode ignores XMLName.
 func NewOpusDocument() *OpusDocument {
 	return &OpusDocument{Version: Ptr(MusicXMLVersion)}
 }
@@ -73,7 +88,15 @@ func NewScorePartwiseMeasure(
 	return ScorePartwisePartMeasure{Number: number}
 }
 
-// AddMeasure appends a measure to a partwise part.
+// AddMeasure appends a shallow copy of measure to a partwise part.
+//
+// Assigning a field of the argument after the call, including replacing or
+// appending to its Content slice, does not change the stored measure. The copy
+// shares the existing Content backing array and every pointer, so assigning
+// Content[i] or changing a note reached through either value changes both.
+// Populate measure before the call or edit value.Measure[len(value.Measure)-1].
+// Generated ordered-content Add methods such as AddNote store the pointer they
+// receive.
 func (value *ScorePartwisePart) AddMeasure(
 	measure ScorePartwisePartMeasure,
 ) {
@@ -103,7 +126,13 @@ func (value *ScoreTimewiseMeasure) AddPart(id string) {
 	value.Part = append(value.Part, ScoreTimewiseMeasurePart{ID: id})
 }
 
-// AddMeasure appends a measure to a timewise score.
+// AddMeasure appends a shallow copy of measure to a timewise score.
+//
+// Assigning a field of the argument after the call, including replacing or
+// appending to its Part slice, does not change the stored measure, but the
+// copy shares the existing Part backing array and the data reached through
+// it. Populate measure before the call or edit
+// value.Measure[len(value.Measure)-1].
 func (value *ScoreTimewise) AddMeasure(
 	measure ScoreTimewiseMeasure,
 ) {
@@ -135,7 +164,8 @@ func NewRestNote(duration PositiveDivisions) *Note {
 
 // Ptr returns a pointer to an independent copy of value.
 //
-// It is useful for optional fields in generated MusicXML types.
+// It is useful for optional fields in generated MusicXML types. Since Go 1.26
+// the built-in new(value) is equivalent; Ptr remains for existing callers.
 func Ptr[T any](value T) *T {
 	return &value
 }

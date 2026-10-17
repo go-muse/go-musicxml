@@ -27,16 +27,27 @@ func DefaultDecodeOptions() DecodeOptions {
 // package assessment.
 //
 // Zero values select the package defaults. Negative values and XML depths
-// above the documented maximum are invalid.
+// above the documented maximum are invalid. Package assessment applies the
+// archive and per-entry limits to the corresponding archive entries, with the
+// additional accounting described in API.md.
 type MXLOptions struct {
-	MaxArchiveBytes  int64
+	// MaxArchiveBytes caps the compressed archive bytes read from the input.
+	// Zero selects 64 MiB.
+	MaxArchiveBytes int64
+	// MaxMetadataBytes caps each uncompressed metadata entry, mimetype and
+	// META-INF/container.xml. Zero selects 1 MiB.
 	MaxMetadataBytes int64
+	// MaxDocumentBytes caps the uncompressed primary MusicXML document.
+	// Zero selects 256 MiB.
 	MaxDocumentBytes int64
+	// MaxResourceBytes caps each uncompressed non-primary entry on its own,
+	// while MaxResourcesBytes caps their total. Zero selects 256 MiB.
 	MaxResourceBytes int64
 	// MaxResourcesBytes caps additional resource bytes in DecodeMXLPackage,
 	// excluding mimetype, container and primary entries. Package assessment
 	// instead counts all selected expanded entries (including those three),
 	// current resource copies and bounded external bodies in package scope.
+	// Zero selects 512 MiB.
 	MaxResourcesBytes int64
 	// MaxXMLDepth has the same zero default and 4096 maximum as DecodeOptions.
 	MaxXMLDepth int

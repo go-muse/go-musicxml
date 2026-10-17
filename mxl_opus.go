@@ -58,9 +58,25 @@ type MXLResolvedScore struct {
 //
 // Opus-link cycles between archive documents are supported, but a cyclic or
 // excessively deep in-memory opus model is rejected before traversal.
+//
+// Linked documents are decoded with the default DecodeOptions. Use
+// ResolveOpusWithOptions to apply the caller's XML depth limit.
 func (value *MXLPackage) ResolveOpus() (*MXLResolvedOpus, error) {
+	return value.ResolveOpusWithOptions(DecodeOptions{})
+}
+
+// ResolveOpusWithOptions resolves the package's opus graph like ResolveOpus,
+// decoding every linked archive document with options. Zero option fields use
+// the package defaults, so ResolveOpusWithOptions(DecodeOptions{}) is
+// equivalent to ResolveOpus. Invalid options match ErrInvalidDecodeOptions.
+func (value *MXLPackage) ResolveOpusWithOptions(
+	options DecodeOptions,
+) (*MXLResolvedOpus, error) {
 	if value == nil {
 		return nil, ErrNilMXLPackage
+	}
+	if _, err := options.xmlDepth(); err != nil {
+		return nil, err
 	}
 
 	document, ok := value.Document.(*OpusDocument)
@@ -98,7 +114,8 @@ func (value *MXLPackage) ResolveOpus() (*MXLResolvedOpus, error) {
 		documents: map[string]Document{
 			rootPath: document,
 		},
-		opuses: make(map[string]*MXLResolvedOpus),
+		opuses:        make(map[string]*MXLResolvedOpus),
+		decodeOptions: options,
 	}
 
 	resolved, err := resolver.resolveOpus(rootPath, document)
@@ -122,9 +139,10 @@ func (value *MXLPackage) ResolveOpus() (*MXLResolvedOpus, error) {
 }
 
 type mxlOpusResolver struct {
-	resources map[string][]byte
-	documents map[string]Document
-	opuses    map[string]*MXLResolvedOpus
+	resources     map[string][]byte
+	documents     map[string]Document
+	opuses        map[string]*MXLResolvedOpus
+	decodeOptions DecodeOptions
 }
 
 func (r *mxlOpusResolver) resolveOpus(
@@ -345,7 +363,10 @@ func (r *mxlOpusResolver) loadDocument(
 		return nil, ErrMXLLinkedDocumentNotFound
 	}
 
-	document, err := Decode(bytes.NewReader(data))
+	document, err := DecodeWithOptions(
+		bytes.NewReader(data),
+		r.decodeOptions,
+	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"%w: %w",

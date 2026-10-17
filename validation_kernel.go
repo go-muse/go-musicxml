@@ -14,10 +14,24 @@ import (
 )
 
 // ValidationIssue describes one XSD validation failure.
+//
+// The field contents depend on the operation that reports the issue:
+//
+//   - Validate: Constraint is the failure reason code, such as "datatype", or
+//     "representation" for a model value that cannot be written as XML, and
+//     Message describes the offending value.
+//   - DecodeAssessed and DecodeAssessedWithDictionaries: Constraint is the
+//     violated rule ID and Message is the failure reason code.
+//
+// Use the validation.Report returned by the assessment functions for a
+// uniform, structured view.
 type ValidationIssue struct {
-	Path       string
+	// Path locates the failing element or attribute.
+	Path string
+	// Constraint identifies the violated constraint; see the type comment.
 	Constraint string
-	Message    string
+	// Message describes the failure; see the type comment.
+	Message string
 }
 
 // String returns the issue path and message.

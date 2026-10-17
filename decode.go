@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -22,7 +23,27 @@ func DecodeWithOptions(
 	reader io.Reader,
 	options DecodeOptions,
 ) (Document, error) {
-	decoder, start, err := newDocumentDecoder(reader, options)
+	return DecodeContext(context.Background(), reader, options)
+}
+
+// DecodeContext reads one uncompressed MusicXML root document like
+// DecodeWithOptions and stops reading when ctx is canceled or its deadline
+// passes.
+//
+// Cancellation is cooperative. DecodeContext checks ctx before each read from
+// reader and while it parses input that is already buffered, and stops at the
+// next such check after ctx is done; the returned error then matches ctx.Err()
+// with errors.Is. It cannot interrupt a Read call that blocks. When reader can
+// block, give it its own deadline, use context-aware I/O, or close it to make
+// the pending Read return. A nil ctx is rejected with a
+// *validation.ConfigurationError. Use AsScorePartwise, AsScoreTimewise or
+// AsOpusDocument to narrow the result. DecodeContext does not call Validate.
+func DecodeContext(
+	ctx context.Context,
+	reader io.Reader,
+	options DecodeOptions,
+) (Document, error) {
+	decoder, start, err := newDocumentDecoder(ctx, reader, options)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +154,11 @@ func decodeExpectedDocument(
 	document Document,
 	options DecodeOptions,
 ) error {
-	decoder, start, err := newDocumentDecoder(reader, options)
+	decoder, start, err := newDocumentDecoder(
+		context.Background(),
+		reader,
+		options,
+	)
 	if err != nil {
 		return err
 	}
@@ -145,6 +170,7 @@ func decodeExpectedDocument(
 }
 
 func newDocumentDecoder(
+	ctx context.Context,
 	reader io.Reader,
 	options DecodeOptions,
 ) (*xml.Decoder, xml.StartElement, error) {
@@ -156,7 +182,7 @@ func newDocumentDecoder(
 		return nil, xml.StartElement{}, err
 	}
 
-	decoder, err := newDepthLimitedXMLDecoder(reader, maxDepth)
+	decoder, err := newDepthLimitedXMLDecoder(ctx, reader, maxDepth)
 	if err != nil {
 		return nil, xml.StartElement{}, fmt.Errorf(
 			"musicxml: initialize XML decoder: %w",

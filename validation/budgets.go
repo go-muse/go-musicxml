@@ -253,6 +253,9 @@ func (a *Account) Usage(kind BudgetKind) (int64, error) {
 // AllocationSize converts a nonnegative byte allocation to the host int size
 // only after checking its range. It does not allocate or charge an account;
 // callers must first apply the appropriate scalar and retained-buffer limits.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func AllocationSize(bytes int64) (int, error) {
 	if bytes < 0 {
 		return 0, &ConfigurationError{Field: "allocation", Reason: "must not be negative"}

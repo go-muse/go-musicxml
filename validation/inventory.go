@@ -22,6 +22,11 @@ import (
 // they are not runtime enums. Narrative predicate/test recipes remain in those
 // inputs and the pinned registry, rather than becoming a second rule language.
 // Do not infer support from a shared helper or a completed prerequisite repair.
+//
+// The Inventory* types mirror the research and planning data format, not a
+// runtime contract. Their shape changes whenever that format changes, so the
+// module's compatibility guarantees do not cover these types or their JSON
+// layout. Treat a snapshot as inspection data.
 type Inventory struct {
 	Overlaps               []InventoryOverlap               `json:"overlaps"`
 	AdvisoryReviews        []InventoryAdvisoryReview        `json:"advisory_reviews"`

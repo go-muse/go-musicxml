@@ -1,0 +1,2225 @@
+const AssemblyContainer Assembly = "container"
+const AssemblyMusicXML Assembly = "musicxml"
+const AssemblyOpus Assembly = "opus"
+const AssemblySounds Assembly = "sounds"
+const AssociationInstrumentPartFile AssociationKind = "instrument-part-file"
+const AtomicBoolean AtomicKind = "boolean"
+const AtomicDecimal AtomicKind = "decimal"
+const AtomicInteger AtomicKind = "integer"
+const AtomicQName AtomicKind = "qname"
+const AtomicString AtomicKind = "string"
+const BudgetAttributes BudgetKind = "attributes"
+const BudgetBufferedBytes BudgetKind = "buffered-bytes"
+const BudgetContextFacts BudgetKind = "context-facts"
+const BudgetDepth BudgetKind = "depth"
+const BudgetDiagnosticBytes BudgetKind = "diagnostic-bytes"
+const BudgetDiagnostics BudgetKind = "diagnostics"
+const BudgetEvents BudgetKind = "events"
+const BudgetExternalBytes BudgetKind = "external-bytes"
+const BudgetIDs BudgetKind = "ids"
+const BudgetInputBytes BudgetKind = "input-bytes"
+const BudgetLinkedDocuments BudgetKind = "linked-documents"
+const BudgetNodes BudgetKind = "nodes"
+const BudgetRuleSteps BudgetKind = "rule-steps"
+const BudgetScalarBytes BudgetKind = "scalar-bytes"
+const CategoryAdvisory DiagnosticCategory = "advisory"
+const CategoryCapability DiagnosticCategory = "capability"
+const CategoryModel DiagnosticCategory = "model"
+const CategoryNormative DiagnosticCategory = "normative"
+const CategoryPolicy DiagnosticCategory = "policy"
+const CategoryResource DiagnosticCategory = "resource"
+const CategorySyntax DiagnosticCategory = "syntax"
+const ClassDefault RuleClass = "default"
+const ClassInterpretation RuleClass = "interpretation"
+const ClassMandatory RuleClass = "mandatory"
+const ClassPolicy RuleClass = "policy"
+const ClassRecommendation RuleClass = "recommendation"
+const ComparisonEqual Comparison = "equal"
+const ComparisonGreater Comparison = "greater"
+const ComparisonGreaterEqual Comparison = "greater-equal"
+const ComparisonLess Comparison = "less"
+const ComparisonLessEqual Comparison = "less-equal"
+const ComparisonNotEqual Comparison = "not-equal"
+const ComponentAttribute ComponentKind = "attribute"
+const ComponentElement ComponentKind = "element"
+const ComponentGroup ComponentKind = "group"
+const ComponentType ComponentKind = "type"
+const ConformanceConformant ConformanceState = "conformant"
+const ConformanceUndetermined ConformanceState = "undetermined"
+const ConformanceViolated ConformanceState = "violated"
+const ContainerRoot ContainerContextRole = "container"
+const ContainerRootfile ContainerContextRole = "rootfile"
+const ContainerRootfiles ContainerContextRole = "rootfiles"
+const ContextAlterSemitones ContextProperty = "local.alter-semitones"
+const ContextApplicationChoice ContextProvenance = "application-choice"
+const ContextArrowDirection ContextProperty = "local.arrow-direction"
+const ContextArrowGlyphMatch ContextProperty = "local.arrow-glyph-match"
+const ContextArrowHeadOnly ContextProperty = "local.arrow-head-only"
+const ContextArrowStyle ContextProperty = "local.arrow-style"
+const ContextCircularArrow ContextProperty = "local.circular-arrow"
+const ContextColorAlpha ContextProperty = "local.color-alpha"
+const ContextColorRGB ContextProperty = "local.color-rgb"
+const ContextDashLength ContextProperty = "local.dash-length"
+const ContextDegreeReference ContextProperty = "local.degree-reference"
+const ContextDegreeTextComposition ContextProperty = "local.degree-text-composition"
+const ContextDeprecatedNotation ContextProperty = "local.deprecated-notation"
+const ContextDictionaryAdvice ContextProperty = "dictionary.advice"
+const ContextDictionaryCanonical ContextProperty = "dictionary.canonical-name"
+const ContextDictionaryIPA ContextProperty = "dictionary.ipa-positive"
+const ContextDictionaryIPARepresentation ContextProperty = "dictionary.ipa-representation"
+const ContextDictionaryRendering ContextProperty = "dictionary.rendering"
+const ContextDictionarySounds ContextProperty = "dictionary.standard-sound"
+const ContextDistanceType ContextProperty = "local.distance-type"
+const ContextDocumentedDefault ContextProvenance = "documented-default"
+const ContextEnsembleSize ContextProperty = "local.ensemble-size"
+const ContextExplicit ContextProvenance = "explicit"
+const ContextFigureNumber ContextProperty = "local.figure-number-text"
+const ContextFontFamilyCategories ContextProperty = "local.font-family-categories"
+const ContextFontFamilyOrder ContextProperty = "local.font-family-order"
+const ContextFrameMissingString ContextProperty = "local.frame-unlisted-string"
+const ContextFrameString ContextProperty = "local.frame-present-string"
+const ContextGlyphName ContextProperty = "local.glyph-name"
+const ContextGlyphSemanticTarget ContextProperty = "local.glyph-semantic-target"
+const ContextGlyphType ContextProperty = "local.glyph-type"
+const ContextGlyphTypeMatch ContextProperty = "local.glyph-type-match"
+const ContextHarmonyActive ContextProperty = "local.harmony-active"
+const ContextHarmonyDescription ContextProperty = "local.harmony-description"
+const ContextInherited ContextProvenance = "inherited"
+const ContextLineWidthType ContextProperty = "local.line-width-type"
+const ContextLocalAccidentalCautionary ContextProperty = "local.accidental-cautionary"
+const ContextLocalAccidentalEditorial ContextProperty = "local.accidental-editorial"
+const ContextLocalBassAlterLocation ContextProperty = "local.bass-alter-location"
+const ContextLocalDegreePlusMinus ContextProperty = "local.degree-plus-minus"
+const ContextLocalEmptyCaesura ContextProperty = "local.empty-caesura"
+const ContextLocalFermataOrientation ContextProperty = "local.fermata-orientation"
+const ContextLocalFermataShape ContextProperty = "local.fermata-shape"
+const ContextLocalFirstFret ContextProperty = "local.first-fret"
+const ContextLocalHalfMutedSMuFL ContextProperty = "local.half-muted-smufl"
+const ContextLocalHeelSubstitution ContextProperty = "local.heel-substitution"
+const ContextLocalHoleShape ContextProperty = "local.hole-shape"
+const ContextLocalHorizontalTurnSlash ContextProperty = "local.horizontal-turn-slash"
+const ContextLocalMetronomeParentheses ContextProperty = "local.metronome-parentheses"
+const ContextLocalMultipleRestUseSymbols ContextProperty = "local.multiple-rest-use-symbols"
+const ContextLocalNonControlling ContextProperty = "local.non-controlling"
+const ContextLocalNoteheadParentheses ContextProperty = "local.notehead-parentheses"
+const ContextLocalNumeralAlterLocation ContextProperty = "local.numeral-alter-location"
+const ContextLocalOpenSMuFL ContextProperty = "local.open-smufl"
+const ContextLocalScoreVersion ContextProperty = "local.score-version"
+const ContextLocalShowFrets ContextProperty = "local.show-frets"
+const ContextLocalStoppedSMuFL ContextProperty = "local.stopped-smufl"
+const ContextLocalStrongAccentType ContextProperty = "local.strong-accent-type"
+const ContextLocalToeSubstitution ContextProperty = "local.toe-substitution"
+const ContextLocalWinged ContextProperty = "local.winged"
+const ContextLyricLiteralText ContextProperty = "local.lyric-literal-text"
+const ContextMetadataRole ContextProperty = "local.metadata-role"
+const ContextMinorMode ContextProperty = "local.minor-mode"
+const ContextMinorRaisedSeventh ContextProperty = "local.minor-raised-seventh"
+const ContextMinorRaisedSixth ContextProperty = "local.minor-raised-sixth"
+const ContextNoteTypeSize ContextProperty = "local.note-type-size"
+const ContextNoteheadFilled ContextProperty = "local.notehead-filled"
+const ContextNoteheadTextRecommended ContextProperty = "local.notehead-text-recommended"
+const ContextOctaveBasis ContextProperty = "local.octave-basis"
+const ContextOpenString ContextProperty = "local.fret-open-string"
+const ContextPartAbbreviationDisplay ContextProperty = "local.part-abbreviation-display-priority"
+const ContextPartNameDisplay ContextProperty = "local.part-name-display-priority"
+const ContextPrintDot ContextProperty = "local.print-dot"
+const ContextPrintLeger ContextProperty = "local.print-leger"
+const ContextPrintLyric ContextProperty = "local.print-lyric"
+const ContextPrintObject ContextProperty = "local.print-object"
+const ContextPrintSpacing ContextProperty = "local.print-spacing"
+const ContextPropertyContainerMetadata ContextProperty = "container.metadata"
+const ContextPropertyNavigation ContextProperty = "navigation"
+const ContextPropertyNavigationTraversal ContextProperty = "navigation-traversal"
+const ContextPropertyRepeat ContextProperty = "graphical-repeat"
+const ContextPropertySoundMapping ContextProperty = "sounds.mapping"
+const ContextPropertySourceOrigin ContextProperty = "source.origin"
+const ContextPropertySpan ContextProperty = "span"
+const ContextPropertySpanArpeggioDirection ContextProperty = "span.arpeggio-direction"
+const ContextPropertySpanBarlineContinueRecommended ContextProperty = "span.barline-continue-recommended"
+const ContextPropertySpanBeamCue ContextProperty = "span.beam-cue"
+const ContextPropertySpanBeamGrace ContextProperty = "span.beam-grace"
+const ContextPropertySpanCurrentDots ContextProperty = "span.current-dots"
+const ContextPropertySpanCurrentType ContextProperty = "span.current-type"
+const ContextPropertySpanDisplayOctaves ContextProperty = "span.display-octaves"
+const ContextPropertySpanEndLength ContextProperty = "span.end-length"
+const ContextPropertySpanEndLengthApplicable ContextProperty = "span.end-length-applicable"
+const ContextPropertySpanEndpointMeaning ContextProperty = "span.endpoint-meaning"
+const ContextPropertySpanFan ContextProperty = "span.fan"
+const ContextPropertySpanFanApplicable ContextProperty = "span.fan-applicable"
+const ContextPropertySpanGroupStopContentActive ContextProperty = "span.group-stop-content-active"
+const ContextPropertySpanGroupSymbol ContextProperty = "span.group-symbol"
+const ContextPropertySpanHammerMarking ContextProperty = "span.hammer-marking"
+const ContextPropertySpanLineShape ContextProperty = "span.line-shape"
+const ContextPropertySpanLineType ContextProperty = "span.line-type"
+const ContextPropertySpanLyricSyllable ContextProperty = "span.lyric-syllable"
+const ContextPropertySpanNormalDots ContextProperty = "span.normal-dots"
+const ContextPropertySpanNormalType ContextProperty = "span.normal-type"
+const ContextPropertySpanPedalAbbreviated ContextProperty = "span.pedal-abbreviated"
+const ContextPropertySpanPedalAbbreviatedActive ContextProperty = "span.pedal-abbreviated-active"
+const ContextPropertySpanPedalAlignmentActive ContextProperty = "span.pedal-alignment-active"
+const ContextPropertySpanPedalLine ContextProperty = "span.pedal-line"
+const ContextPropertySpanPedalLineRoleActive ContextProperty = "span.pedal-line-role-active"
+const ContextPropertySpanPedalSign ContextProperty = "span.pedal-sign"
+const ContextPropertySpanPitchEquivalentRecommended ContextProperty = "span.pitch-equivalent-recommended"
+const ContextPropertySpanPlaybackEffect ContextProperty = "span.playback-effect"
+const ContextPropertySpanRepeater ContextProperty = "span.repeater"
+const ContextPropertySpanSameNoteOrderRecommended ContextProperty = "span.same-note-order-recommended"
+const ContextPropertySpanSize ContextProperty = "span.size"
+const ContextPropertySpanTieAttackRecommended ContextProperty = "span.tie-attack-recommended"
+const ContextPropertySpanTieReleaseRecommended ContextProperty = "span.tie-release-recommended"
+const ContextPropertySpanTimeModificationActual ContextProperty = "span.time-modification-actual"
+const ContextPropertySpanTimeModificationMeaning ContextProperty = "span.time-modification-meaning"
+const ContextPropertySpanTimeModificationNormal ContextProperty = "span.time-modification-normal"
+const ContextPropertySpanTimeOnly ContextProperty = "span.time-only"
+const ContextPropertySpanTremoloDurationRecommended ContextProperty = "span.tremolo-duration-recommended"
+const ContextPropertySpanTremoloMarksRecommended ContextProperty = "span.tremolo-marks-recommended"
+const ContextPropertySpanTremoloRatioRecommended ContextProperty = "span.tremolo-ratio-recommended"
+const ContextPropertySpanTremoloSMuFL ContextProperty = "span.tremolo-smufl"
+const ContextPropertySpanTremoloSMuFLActive ContextProperty = "span.tremolo-smufl-active"
+const ContextPropertySpanTupletActualDots ContextProperty = "span.tuplet-actual-dots"
+const ContextPropertySpanTupletActualNumber ContextProperty = "span.tuplet-actual-number"
+const ContextPropertySpanTupletActualType ContextProperty = "span.tuplet-actual-type"
+const ContextPropertySpanTupletBracket ContextProperty = "span.tuplet-bracket"
+const ContextPropertySpanTupletNormalDots ContextProperty = "span.tuplet-normal-dots"
+const ContextPropertySpanTupletNormalNumber ContextProperty = "span.tuplet-normal-number"
+const ContextPropertySpanTupletNormalType ContextProperty = "span.tuplet-normal-type"
+const ContextPropertySpanTupletShowNumber ContextProperty = "span.tuplet-show-number"
+const ContextPropertySpanTupletShowType ContextProperty = "span.tuplet-show-type"
+const ContextPropertySpanWedgeNiente ContextProperty = "span.wedge-niente"
+const ContextPropertySpanWedgeNienteActive ContextProperty = "span.wedge-niente-active"
+const ContextPropertySpanWedgeSpreadActive ContextProperty = "span.wedge-spread-active"
+const ContextPropertyTiming ContextProperty = "timing"
+const ContextResourceGroup ContextProperty = "resource.group"
+const ContextResourceImage ContextProperty = "resource.image"
+const ContextResourceInstrument ContextProperty = "resource.instrument"
+const ContextResourceLink ContextProperty = "resource.link"
+const ContextResourceSchemaHints ContextProperty = "resource.schema-hints"
+const ContextSpaceLength ContextProperty = "local.space-length"
+const ContextStaffLineBasis ContextProperty = "local.staff-line-basis"
+const ContextSupportUnreported ContextProperty = "local.unreported-encoding-support"
+const ContextSupportsAttribute ContextProperty = "local.supports-attribute"
+const ContextSupportsElement ContextProperty = "local.supports-element"
+const ContextSupportsType ContextProperty = "local.supports-type"
+const ContextSupportsValue ContextProperty = "local.supports-value"
+const ContextSymbolGlyphName ContextProperty = "local.symbol-glyph-name"
+const ContextSymbolSpecializedMarkup ContextProperty = "local.symbol-specialized-markup"
+const ContextUnitDivisions ContextUnit = "divisions"
+const ContextUnitEm ContextUnit = "em"
+const ContextUnitMillimeters ContextUnit = "millimeters"
+const ContextUnitNone ContextUnit = ""
+const ContextUnitPercent ContextUnit = "percent"
+const ContextUnitPoints ContextUnit = "points"
+const ContextUnitTenths ContextUnit = "global-tenths"
+const ConversionConverted ConversionState = "converted"
+const ConversionFailed ConversionState = "failed"
+const ConversionIncomplete ConversionState = "incomplete"
+const ConversionNotRequested ConversionState = "not-requested"
+const ConversionUnrepresentable ConversionState = "unrepresentable"
+const DependencyExternal DependencyKind = "external"
+const DependencyFact DependencyKind = "fact"
+const DependencyRule DependencyKind = "rule"
+const DictionaryCanonical DictionaryOperation = "canonical-name"
+const DictionaryComponentIPAPositive2015Unicode13 DictionaryComponentID = "ipa-2015-unicode13-positive-bundle-json"
+const DictionaryComponentIPARepresentation2015Unicode13 DictionaryComponentID = "ipa-2015-unicode13-representation-bundle-json"
+const DictionaryComponentSMuFL14Glyphnames DictionaryComponentID = "smufl-1.4-glyphnames-json"
+const DictionaryComponentSMuFL14Ranges DictionaryComponentID = "smufl-1.4-ranges-json"
+const DictionaryComponentStandardSounds40 DictionaryComponentID = "musicxml-4.0-sounds-xml"
+const DictionaryIPA DictionaryOperation = "ipa-positive"
+const DictionaryKindIPAPositive DictionaryKind = "ipa-positive"
+const DictionaryKindIPARepresentation DictionaryKind = "ipa-representation"
+const DictionaryKindSMuFL DictionaryKind = "smufl"
+const DictionaryKindStandardSounds DictionaryKind = "standard-sounds"
+const DictionaryManifestIPAPositive2015Unicode13 DictionaryManifestID = "ipa-2015-unicode13-positive-v1"
+const DictionaryManifestIPARepresentation2015Unicode13 DictionaryManifestID = "ipa-2015-unicode13-representation-v1"
+const DictionaryManifestSMuFL14Canonical DictionaryManifestID = "smufl-1.4-canonical-v1"
+const DictionaryManifestSMuFL14Ranges DictionaryManifestID = "smufl-1.4-ranges-v1"
+const DictionaryManifestStandardSounds40 DictionaryManifestID = "musicxml-4.0-standard-sounds-v1"
+const DictionaryRelationCanonicalName DictionaryRelation = "canonical-name"
+const DictionaryRelationIPAAttestedExample DictionaryRelation = "ipa-attested-example"
+const DictionaryRelationIPACanonicalEquivalent DictionaryRelation = "ipa-canonical-equivalent"
+const DictionaryRelationIPARepresentation DictionaryRelation = "ipa-symbol-representation"
+const DictionaryRelationIPASymbol DictionaryRelation = "ipa-symbol"
+const DictionaryRelationPrimaryCodepoint DictionaryRelation = "primary-codepoint"
+const DictionaryRelationRangeMembership DictionaryRelation = "range-membership"
+const DictionaryRelationStandardSound DictionaryRelation = "standard-sound"
+const DictionaryRendering DictionaryOperation = "rendering"
+const DictionarySourceOriginalComponent DictionarySourceKind = "original-component"
+const DictionarySourceReviewedDerivedBundle DictionarySourceKind = "reviewed-derived-bundle"
+const DictionaryStandardSounds DictionaryOperation = "standard-sounds"
+const EvidenceAbsent EvidenceState = "absent"
+const EvidenceInvalid EvidenceState = "invalid"
+const EvidenceKnown EvidenceState = "known"
+const EvidenceUnknown EvidenceState = "unknown"
+const EvidenceUnsupported EvidenceState = "unsupported"
+const ImageUnitMillimeter ImageDimensionUnit = "millimeter"
+const ImageUnitPixel ImageDimensionUnit = "pixel"
+const ImageUnitPoint ImageDimensionUnit = "point"
+const ImplementationAvailable ImplementationState = "available"
+const ImplementationUnsupported ImplementationState = "unsupported"
+const LinkedResourceAuto LinkedResourceKind = "xml-or-mxl"
+const LinkedResourceMXL LinkedResourceKind = "mxl"
+const LinkedResourceXML LinkedResourceKind = "xml"
+const MaxExactValueBytes untyped int = 1048576
+const ModelAxisAttribute ModelAxis = "attribute"
+const ModelAxisChildren ModelAxis = "children"
+const ModelAxisNode ModelAxis = "node"
+const ModelAxisScalar ModelAxis = "scalar"
+const NavigationAssess NavigationNoteListenKind = "assess"
+const NavigationBackward NavigationKind = "backward-repeat"
+const NavigationCoda NavigationKind = "coda"
+const NavigationDaCapo NavigationKind = "dacapo"
+const NavigationDalSegno NavigationKind = "dalsegno"
+const NavigationEnding NavigationKind = "ending"
+const NavigationFine NavigationKind = "fine"
+const NavigationForward NavigationKind = "forward-repeat"
+const NavigationGraphicCoda NavigationKind = "graphic-coda"
+const NavigationGraphicSegno NavigationKind = "graphic-segno"
+const NavigationListening NavigationKind = "listening"
+const NavigationListeningOther NavigationListeningKind = "other-listening"
+const NavigationListeningSync NavigationListeningKind = "sync"
+const NavigationNote NavigationKind = "note"
+const NavigationOtherListen NavigationNoteListenKind = "other-listen"
+const NavigationSegno NavigationKind = "segno"
+const NavigationSound NavigationKind = "sound"
+const NavigationToCoda NavigationKind = "tocoda"
+const NavigationTraversal NavigationKind = "traversal"
+const NavigationWait NavigationNoteListenKind = "wait"
+const OrderModelContent OrderKind = "model-content"
+const OrderModelFields OrderKind = "model-field-order"
+const OrderSource OrderKind = "source-order"
+const OutcomeBlocked Outcome = "blocked"
+const OutcomeFail Outcome = "fail"
+const OutcomeNotApplicable Outcome = "not-applicable"
+const OutcomePass Outcome = "pass"
+const OutcomeUnknown Outcome = "unknown"
+const OutcomeUnsupported Outcome = "unsupported"
+const PackageCheckCompressionObservation PackageCheck = "compression-observation"
+const PackageCheckContainerPath PackageCheck = "container-path"
+const PackageCheckEntryNameAdvice PackageCheck = "entry-name-advice"
+const PackageCheckFileMetadataAdvice PackageCheck = "file-metadata-advice"
+const PackageCheckFirstMediaType PackageCheck = "first-media-type"
+const PackageCheckFirstRootMusicXML PackageCheck = "first-root-musicxml"
+const PackageCheckGroupMatch PackageCheck = "group-match"
+const PackageCheckImageScaling PackageCheck = "image-scaling"
+const PackageCheckInstrumentAssociation PackageCheck = "instrument-association"
+const PackageCheckLinkTarget PackageCheck = "link-target"
+const PackageCheckMimetypeAdvice PackageCheck = "mimetype-advice"
+const PackageCheckMimetypeNoExtra PackageCheck = "mimetype-no-extra"
+const PackageCheckMimetypeNoPrefix PackageCheck = "mimetype-no-prefix"
+const PackageCheckMimetypeStored PackageCheck = "mimetype-stored"
+const PackageCheckRootfileRoot PackageCheck = "rootfile-root"
+const PackageCheckSchemaHintPairs PackageCheck = "schema-hint-pairs"
+const PackageCheckScoreBeforeParts PackageCheck = "score-before-parts"
+const PackageSubjectAssociation PackageSubjectKind = "association"
+const PackageSubjectEdge PackageSubjectKind = "edge"
+const PackageSubjectEntry PackageSubjectKind = "entry"
+const PackageSubjectImage PackageSubjectKind = "image"
+const PackageSubjectMetadata PackageSubjectKind = "metadata"
+const PackageSubjectPackage PackageSubjectKind = "package"
+const PackageSubjectResource PackageSubjectKind = "resource"
+const PackageSubjectRootfile PackageSubjectKind = "rootfile"
+const RelationDocument RelationKind = "document"
+const RelationMusicalPosition RelationKind = "musical-position"
+const RelationParent RelationKind = "parent"
+const RelationPart RelationKind = "part"
+const RelationSameNode RelationKind = "same-node"
+const RepeatStyleBeat RepeatStyleKind = "beat-repeat"
+const RepeatStyleMeasure RepeatStyleKind = "measure-repeat"
+const RepeatStyleSlash RepeatStyleKind = "slash"
+const ResourceBinary ResourceRepresentation = "binary"
+const ResourceBookmark ResourceLinkKind = "bookmark"
+const ResourceCurrentMXL ResourceRepresentation = "current-mxl"
+const ResourceCurrentModel ResourceRepresentation = "current-model"
+const ResourceOpusLink ResourceLinkKind = "opus-link"
+const ResourceOpusScore ResourceLinkKind = "opus-score"
+const ResourcePartLink ResourceLinkKind = "part-link"
+const ResourceRawMXL ResourceRepresentation = "raw-mxl"
+const ResourceRoleIndividualPart ResourceRole = "individual-part"
+const ResourceRoleOther ResourceRole = "other"
+const ResourceRoleScore ResourceRole = "score"
+const ResourceScoreLink ResourceLinkKind = "score-link"
+const ResourceScoreWorkOpus ResourceLinkKind = "score-work-opus"
+const ResourceSourceXML ResourceRepresentation = "source-xml"
+const RoleAdvisory RuleRole = "advisory"
+const RoleContextProvider RuleRole = "context-provider"
+const RolePredicate RuleRole = "predicate"
+const SchemaAttributeOptional SchemaAttributeUse = "optional"
+const SchemaAttributeProhibited SchemaAttributeUse = "prohibited"
+const SchemaAttributeRequired SchemaAttributeUse = "required"
+const SchemaComplexDirect SchemaComplexForm = "direct"
+const SchemaComplexExtension SchemaComplexForm = "complex content extension"
+const SchemaComplexRestriction SchemaComplexForm = "complex content restriction"
+const SchemaComplexSimpleExtension SchemaComplexForm = "simple content extension"
+const SchemaComplexSimpleRestriction SchemaComplexForm = "simple content restriction"
+const SchemaConstraintDefault untyped string = "default"
+const SchemaConstraintFixed untyped string = "fixed"
+const SchemaDerivationExtension SchemaDerivation = 1
+const SchemaDerivationList SchemaDerivation = 4
+const SchemaDerivationRestriction SchemaDerivation = 2
+const SchemaDerivationSubstitution SchemaDerivation = 16
+const SchemaDerivationUnion SchemaDerivation = 8
+const SchemaParticleAll SchemaParticleKind = "all"
+const SchemaParticleAny SchemaParticleKind = "any"
+const SchemaParticleChoice SchemaParticleKind = "choice"
+const SchemaParticleElement SchemaParticleKind = "element"
+const SchemaParticleSequence SchemaParticleKind = "sequence"
+const SchemaProcessLax untyped string = "lax"
+const SchemaProcessSkip untyped string = "skip"
+const SchemaProcessStrict untyped string = "strict"
+const SchemaSimpleList SchemaSimpleForm = "list"
+const SchemaSimpleRestriction SchemaSimpleForm = "restriction"
+const SchemaSimpleUnion SchemaSimpleForm = "union"
+const SchemaXSDNamespace untyped string = "http://www.w3.org/2001/XMLSchema"
+const ScopeDocument ScopeKind = "document"
+const ScopeMeasure ScopeKind = "measure"
+const ScopeNode ScopeKind = "node"
+const ScopePackage ScopeKind = "package"
+const ScopePart ScopeKind = "part"
+const ScopeSiblings ScopeKind = "siblings"
+const SoundMappingAny SoundMappingRole = "any"
+const SoundMappingEnsemble SoundMappingRole = "ensemble"
+const SoundMappingFromMusicXML SoundMappingDirection = "musicxml-to-library"
+const SoundMappingSolo SoundMappingRole = "solo"
+const SoundMappingSound SoundMappingRole = "sound"
+const SoundMappingToMusicXML SoundMappingDirection = "library-to-musicxml"
+const SourceOriginAncestryLimit untyped int = 64
+const SourceOriginDefault SourceOriginKind = "default"
+const SourceOriginEntity SourceOriginKind = "entity"
+const SourceOriginPhysical SourceOriginKind = "physical"
+const SourceOriginUnavailable SourceOriginKind = "unavailable"
+const SpanArpeggiate SpanFamily = "arpeggiate"
+const SpanBarre SpanFamily = "barre"
+const SpanBeam SpanFamily = "beam"
+const SpanBracket SpanFamily = "bracket"
+const SpanDashes SpanFamily = "dashes"
+const SpanFigureExtend SpanFamily = "figure-extend"
+const SpanGlissando SpanFamily = "glissando"
+const SpanGrouping SpanFamily = "grouping"
+const SpanHammerOn SpanFamily = "hammer-on"
+const SpanIdentityBeamLevel SpanIdentityKind = "beam-level"
+const SpanIdentityGrouping SpanIdentityKind = "grouping-token"
+const SpanIdentityImpliedTie SpanIdentityKind = "implied-tie"
+const SpanIdentityLyric SpanIdentityKind = "lyric-line"
+const SpanIdentityNumber SpanIdentityKind = "number-level"
+const SpanIdentityPartGroup SpanIdentityKind = "part-group-token"
+const SpanIdentityUnnumbered SpanIdentityKind = "unnumbered"
+const SpanLyricExtend SpanFamily = "lyric-extend"
+const SpanLyricSyllable SpanFamily = "lyric-syllable"
+const SpanMetronomeTied SpanFamily = "metronome-tied"
+const SpanNonArpeggiate SpanFamily = "non-arpeggiate"
+const SpanOctaveShift SpanFamily = "octave-shift"
+const SpanOtherNotation SpanFamily = "other-notation"
+const SpanPartGroup SpanFamily = "part-group"
+const SpanPedal SpanFamily = "pedal"
+const SpanPrincipalVoice SpanFamily = "principal-voice"
+const SpanPullOff SpanFamily = "pull-off"
+const SpanSlide SpanFamily = "slide"
+const SpanSlur SpanFamily = "slur"
+const SpanTie SpanFamily = "tie"
+const SpanTied SpanFamily = "tied"
+const SpanTremolo SpanFamily = "tremolo"
+const SpanTuplet SpanFamily = "tuplet"
+const SpanWavyLine SpanFamily = "wavy-line"
+const SpanWedge SpanFamily = "wedge"
+const SyntaxIncomplete SyntaxState = "incomplete"
+const SyntaxMalformed SyntaxState = "malformed"
+const SyntaxNotAssessed SyntaxState = "not-assessed"
+const SyntaxWellFormed SyntaxState = "well-formed"
+const TargetModel Target = "model"
+const TargetPackage Target = "package"
+const TargetSource Target = "source"
+const TimingPlayCurrentNote TimingPlayScope = "current-note"
+const TimingPlayFollowingNotes TimingPlayScope = "following-notes"
+const XSDCheckAttributes XSDCheck = "attributes"
+const XSDCheckBinding XSDCheck = "binding"
+const XSDCheckContent XSDCheck = "content"
+const XSDCheckDeclaration XSDCheck = "declaration"
+const XSDCheckIdentity XSDCheck = "identity"
+const XSDCheckScalar XSDCheck = "scalar"
+func AllocationSize(bytes int64) (int, error)
+func ClassifyResourceMediaType(ctx context.Context, account *Account, value string) (Evidence[ResourceRepresentation], error)
+func CompileSchema(assembly Assembly, data SchemaData) (*CompiledSchema, error)
+func DefaultBudgets() Budgets
+func LookupDictionaryManifest(id DictionaryManifestID) (DictionaryManifest, bool)
+func MusicXML40Inventory() Inventory
+func NewAtomicComparisonPlan(comparison Comparison, expected Atomic) (Plan, error)
+func NewAttributeImpliesRelatedChildPlan(attribute AttributeSelector, expected Atomic, relation RelationKind, children []DeclarationID) (Plan, error)
+func NewAttributeNumberOrTokensPlan(attribute AttributeSelector, tokens []string, minimum Decimal, maximum Decimal) (Plan, error)
+func NewAttributePresencePlan(attribute AttributeSelector, required bool) (Plan, error)
+func NewBarlineLocationPlan(spec ContextPlanSpec) (Plan, error)
+func NewBendReleaseSignPlan(spec ContextConsumerSpec) (Plan, error)
+func NewBudgetAccount(limits Budgets) (*Account, error)
+func NewCatalog(rules []RuleDefinition, profiles []Profile, plans []PlanBinding) (*CompiledCatalog, error)
+func NewChildCountPlan(children []DeclarationID, minimum int64, maximum int64) (Plan, error)
+func NewChordDurationPlan(spec TimelineConsumerSpec) (Plan, error)
+func NewContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error)
+func NewContextComparisonPlan(key string, relation RelationKind, comparison Comparison, expected Atomic) (Plan, error)
+func NewContextDefaultPlan(key string, relation RelationKind, attribute AttributeSelector, fallback Atomic) (Plan, error)
+func NewContextValuePlan(key string, relation RelationKind, value Atomic) (Plan, error)
+func NewDecimal(value *big.Rat) (Decimal, error)
+func NewDictionaryPlan(schema *CompiledSchema, operation DictionaryOperation) (Plan, error)
+func NewDictionarySet(ctx context.Context, a *Account, selections []DictionarySelection, imports []DictionaryImport) (_ *DictionarySet, err error)
+func NewDistinctChildAttributePlan(children []DeclarationID, attribute AttributeSelector) (Plan, error)
+func NewDocumentChildPresencePlan(markers []DeclarationID) (Plan, error)
+func NewDocumentMarkerValuesPlan(markers []DeclarationID, requirements []ChildValueRequirement) (Plan, error)
+func NewEngine(catalog *CompiledCatalog) (*Engine, error)
+func NewFigureNumberNumericPlan(schema *CompiledSchema) (Plan, error)
+func NewGraphicalRepeatContentPlan(spec ContextConsumerSpec) (Plan, error)
+func NewIdentityDeclarationPlan(index string, attribute AttributeSelector) (Plan, error)
+func NewIdentityReferencePlan(index string, attribute AttributeSelector) (Plan, error)
+func NewInteger(value *big.Int) (Integer, error)
+func NewLayoutContextPlan(spec ContextPlanSpec) (Plan, error)
+func NewLocalContextPlan(schema *CompiledSchema) (Plan, error)
+func NewLocalLinkContextPlan(schema *CompiledSchema) (Plan, error)
+func NewModelRepresentationPlan(assembly Assembly) (Plan, error)
+func NewNavigationContextPlan(spec ContextPlanSpec) (Plan, error)
+func NewNumeralKeyPlan(spec TimelineConsumerSpec) (Plan, error)
+func NewOpusLayoutContextPlan(schema *CompiledSchema) (Plan, error)
+func NewPackageCatalog(rules []PackageRuleBinding, profiles []PackageProfileBinding) (*CompiledPackageCatalog, error)
+func NewPackagePlan(check PackageCheck) (PackagePlan, error)
+func NewPerformanceContextPlan(spec ContextPlanSpec) (Plan, error)
+func NewPresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selector, attribute AttributeSelector, expected Atomic) (Plan, error)
+func NewPresentAttributeValuePlan(attribute AttributeSelector, values []Atomic) (Plan, error)
+func NewRational(value *big.Rat) (Rational, error)
+func NewRepeatContextPlan(spec ContextPlanSpec) (Plan, error)
+func NewScalarOneOfPlan(values []Atomic) (Plan, error)
+func NewSchemaHintContextPlan(schema *CompiledSchema) (Plan, error)
+func NewSoundsMappingContextPlan(schema *CompiledSchema) (Plan, error)
+func NewSourceAttributeValuePlan(attribute AttributeSelector, values []Atomic) (Plan, error)
+func NewSourceContainerMetadataContextPlan(schema *CompiledSchema) (Plan, error)
+func NewSourceLocalLinkContextPlan(schema *CompiledSchema) (Plan, error)
+func NewSourceOriginPlan(assembly Assembly) (Plan, error)
+func NewSourcePresenceImpliesAttributePlan(triggers []AttributeSelector, owner Selector, attribute AttributeSelector, expected Atomic) (Plan, error)
+func NewSourceSchemaHintContextPlan(schema *CompiledSchema) (Plan, error)
+func NewSpanContextPlan(spec ContextPlanSpec) (Plan, error)
+func NewTimeOnlyOrderPlan(schema *CompiledSchema) (Plan, error)
+func NewTimelinePlan(spec TimelinePlanSpec) (Plan, error)
+func NewTypedReferencePlan(spec ReferencePlanSpec) (Plan, error)
+func NewXMLFragmentLinkContextPlan(schema *CompiledSchema, sourceInfoset bool) (Plan, error)
+func NewXSDPlan(schema *CompiledSchema, check XSDCheck) (Plan, error)
+func NewXSDPlanWithSourceDeclarations(schema *CompiledSchema, check XSDCheck) (Plan, error)
+func ValidateResourceRequest(q ResourceRequest) error
+func ValidateResourceResult(q ResourceRequest, r ResourceResult) error
+func VerifyDictionaryComponent(ctx context.Context, a *Account, id DictionaryComponentID, raw []byte) (DictionaryComponentCertificate, error)
+type Account struct, comparable
+type Account, method (*Account) Charge(kind BudgetKind, amount int64) error
+type Account, method (*Account) Check(kind BudgetKind, amount int64) error
+type Account, method (*Account) Limits() Budgets
+type Account, method (*Account) Release(kind BudgetKind, amount int64) error
+type Account, method (*Account) Usage(kind BudgetKind) (int64, error)
+type Assembly string
+type AssessmentBundle struct, comparable
+type AssessmentBundle, method (AssessmentBundle) Adoption(i int) (ResourceAssessmentID, string, bool)
+type AssessmentBundle, method (AssessmentBundle) AdoptionContext(i int) (ResourceAdoptionContext, bool)
+type AssessmentBundle, method (AssessmentBundle) AdoptionCount() int
+type AssessmentBundle, method (AssessmentBundle) EnumerationComplete() bool
+type AssessmentBundle, method (AssessmentBundle) Failure() (ResourceFailureSummary, bool)
+type AssessmentBundle, method (AssessmentBundle) FailureReport() (Report, bool)
+type AssessmentBundle, method (AssessmentBundle) FileMetadataAt(i int) (PackageFileMetadataObservation, bool)
+type AssessmentBundle, method (AssessmentBundle) FileMetadataCount() int
+type AssessmentBundle, method (AssessmentBundle) ImageAdviceAt(i int) (PackageImageAdvice, bool)
+type AssessmentBundle, method (AssessmentBundle) ImageAdviceCount() int
+type AssessmentBundle, method (AssessmentBundle) MimetypeAt(i int) (PackageMimetypeObservation, bool)
+type AssessmentBundle, method (AssessmentBundle) MimetypeCount() int
+type AssessmentBundle, method (AssessmentBundle) OmittedPackageDiagnostics() (PackageDiagnosticSummary, bool)
+type AssessmentBundle, method (AssessmentBundle) PackageReport() Report
+type AssessmentBundle, method (AssessmentBundle) ResourceCount() int
+type AssessmentBundle, method (AssessmentBundle) ResourceReport(i int) (ResourceAssessmentID, Report, bool)
+type AssessmentBundle, method (AssessmentBundle) Satisfied() bool
+type AssociationKind string
+type AssociationRequest struct, comparable
+type AssociationRequest struct, field ID ResourceRequestID
+type AssociationRequest struct, field InstrumentID string
+type AssociationRequest struct, field InstrumentLink NodeRef
+type AssociationRequest struct, field Kind AssociationKind
+type AssociationRequest struct, field PartID string
+type AssociationRequest struct, field PartLink NodeRef
+type AssociationRequest struct, field Source ResourcePin
+type AssociationRequest struct, field SourceInstrument NodeRef
+type AssociationRequest struct, field SourcePart NodeRef
+type AssociationRequest struct, field Target ResourcePin
+type AssociationRequest struct, field order ID Kind Source Target SourcePart SourceInstrument PartID InstrumentID PartLink InstrumentLink
+type AssociationResult struct, field Authority EvidenceAuthority
+type AssociationResult struct, field Membership Evidence[bool]
+type AssociationResult struct, field Request AssociationRequest
+type AssociationResult struct, field TargetInstrumentID Evidence[string]
+type AssociationResult struct, field TargetPartID Evidence[string]
+type AssociationResult struct, field order Request Membership Authority TargetPartID TargetInstrumentID
+type AssociationResult struct, not comparable
+type Atomic struct, comparable
+type Atomic struct, field Decimal Decimal
+type Atomic struct, field Integer Integer
+type Atomic struct, field Kind AtomicKind
+type Atomic struct, field Name QName
+type Atomic struct, field Text string
+type Atomic struct, field order Kind Text Integer Decimal Name
+type AtomicKind string
+type AttributeFact struct, comparable
+type AttributeFact struct, field Declaration Evidence[DeclarationID]
+type AttributeFact struct, field Location Location
+type AttributeFact struct, field Name QName
+type AttributeFact struct, field Owner NodeID
+type AttributeFact struct, field Presence Evidence[bool]
+type AttributeFact struct, field Scalar Scalar
+type AttributeFact struct, field order Owner Name Declaration Presence Scalar Location
+type AttributeSelector struct, comparable
+type AttributeSelector struct, field Declaration DeclarationID
+type AttributeSelector struct, field Name QName
+type AttributeSelector struct, field order Name Declaration
+type Binding struct, comparable
+type Binding struct, field Prefix string
+type Binding struct, field URI string
+type Binding struct, field order Prefix URI
+type BudgetKind string
+type Budgets struct, comparable
+type Budgets struct, field MaxAttributes int64
+type Budgets struct, field MaxBufferedBytes int64
+type Budgets struct, field MaxContextFacts int64
+type Budgets struct, field MaxDepth int64
+type Budgets struct, field MaxDiagnosticBytes int64
+type Budgets struct, field MaxDiagnostics int64
+type Budgets struct, field MaxEvents int64
+type Budgets struct, field MaxExternalBytes int64
+type Budgets struct, field MaxIDs int64
+type Budgets struct, field MaxInputBytes int64
+type Budgets struct, field MaxLinkedDocuments int64
+type Budgets struct, field MaxNodes int64
+type Budgets struct, field MaxRuleSteps int64
+type Budgets struct, field MaxScalarBytes int64
+type Budgets struct, field order MaxInputBytes MaxExternalBytes MaxBufferedBytes MaxDepth MaxNodes MaxAttributes MaxEvents MaxScalarBytes MaxIDs MaxRuleSteps MaxContextFacts MaxLinkedDocuments MaxDiagnostics MaxDiagnosticBytes
+type ChildValueRequirement struct, comparable
+type ChildValueRequirement struct, field AllowAbsent bool
+type ChildValueRequirement struct, field Child DeclarationID
+type ChildValueRequirement struct, field Expected Atomic
+type ChildValueRequirement struct, field order Child Expected AllowAbsent
+type Code string
+type Comparison string
+type CompiledCatalog struct, not comparable
+type CompiledCatalog, method (*CompiledCatalog) Profile(id ProfileID) (Profile, bool)
+type CompiledCatalog, method (*CompiledCatalog) Rule(key RuleKey) (RuleDefinition, bool)
+type CompiledCatalog, method (*CompiledCatalog) Schedule(id ProfileID) ([]RuleKey, bool)
+type CompiledPackageCatalog struct, not comparable
+type CompiledPackageCatalog, method (*CompiledPackageCatalog) Begin(ctx context.Context, opts RunOptions) (*PackageSession, error)
+type CompiledPackageCatalog, method (*CompiledPackageCatalog) Profile(id ProfileID) (Profile, bool)
+type CompiledPackageCatalog, method (*CompiledPackageCatalog) Rule(key RuleKey) (PackageRuleBinding, bool)
+type CompiledSchema struct, comparable
+type CompiledSchema, method (*CompiledSchema) Assembly() Assembly
+type CompiledSchema, method (*CompiledSchema) Components() []ComponentID
+type CompiledSchema, method (*CompiledSchema) Declarations() []DeclarationID
+type CompiledSchema, method (*CompiledSchema) Digest() string
+type CompiledSchema, method (*CompiledSchema) Root(name QName) (DeclarationID, bool)
+type CompiledSchema, method (*CompiledSchema) Uses() []SchemaUse
+type Completion struct, comparable
+type Completion struct, field Cause error
+type Completion struct, field InputComplete bool
+type Completion struct, field Syntax SyntaxState
+type Completion struct, field order InputComplete Syntax Cause
+type ComponentID struct, comparable
+type ComponentID struct, field Assembly Assembly
+type ComponentID struct, field Kind ComponentKind
+type ComponentID struct, field Name QName
+type ComponentID struct, field Occurrence string
+type ComponentID struct, field order Assembly Name Kind Occurrence
+type ComponentKind string
+type ConfigurationError struct, comparable
+type ConfigurationError struct, field Field string
+type ConfigurationError struct, field Reason string
+type ConfigurationError struct, field order Field Reason
+type ConfigurationError, method (*ConfigurationError) Error() string
+type ConfigurationError, method (*ConfigurationError) Unwrap() error
+type ConformanceState string
+type ContainerContextResult struct, comparable
+type ContainerContextResult struct, field Container NodeRef
+type ContainerContextResult struct, field Content Evidence[bool]
+type ContainerContextResult struct, field FullPath Evidence[Atomic]
+type ContainerContextResult struct, field FullPathRaw Evidence[string]
+type ContainerContextResult struct, field MediaType Evidence[Atomic]
+type ContainerContextResult struct, field MediaTypeRaw Evidence[string]
+type ContainerContextResult struct, field Ordinal Evidence[uint64]
+type ContainerContextResult struct, field Parent NodeRef
+type ContainerContextResult struct, field Role ContainerContextRole
+type ContainerContextResult struct, field order Role Container Parent Ordinal FullPath MediaType FullPathRaw MediaTypeRaw Content
+type ContainerContextRole string
+type ContextConsumerSpec struct, comparable
+type ContextConsumerSpec struct, field Provider RuleKey
+type ContextConsumerSpec struct, field Schema *CompiledSchema
+type ContextConsumerSpec struct, field order Schema Provider
+type ContextFact struct, field Origins []Location
+type ContextFact struct, field Providers []RuleKey
+type ContextFact struct, field Value Evidence[Atomic]
+type ContextFact struct, field order Value Origins Providers
+type ContextFact struct, not comparable
+type ContextKey struct, comparable
+type ContextKey struct, field At NodeRef
+type ContextKey struct, field Name string
+type ContextKey struct, field order Name At
+type ContextPlanSpec struct, comparable
+type ContextPlanSpec struct, field Schema *CompiledSchema
+type ContextPlanSpec struct, field TimelineProvider RuleKey
+type ContextPlanSpec struct, field order Schema TimelineProvider
+type ContextPosition struct, comparable
+type ContextPosition struct, field Measure NodeRef
+type ContextPosition struct, field MeasureOrdinal uint64
+type ContextPosition struct, field Offset Rational
+type ContextPosition struct, field Part NodeRef
+type ContextPosition struct, field UnprovedFrame bool
+type ContextPosition struct, field order Part Measure MeasureOrdinal Offset UnprovedFrame
+type ContextProperty string
+type ContextProvenance string
+type ContextResult struct, field Container *ContainerContextResult `json:",omitempty"`
+type ContextResult struct, field Dictionary *DictionaryContextResult `json:",omitempty"`
+type ContextResult struct, field Layout *LayoutContextResult
+type ContextResult struct, field Navigation *NavigationContextResult
+type ContextResult struct, field Origins []Location
+type ContextResult struct, field Property ContextProperty
+type ContextResult struct, field Provider RuleKey
+type ContextResult struct, field Repeat *RepeatContextResult
+type ContextResult struct, field Resource *ResourceContextResult `json:",omitempty"`
+type ContextResult struct, field SoundMapping *SoundMappingContextResult `json:",omitempty"`
+type ContextResult struct, field SourceOrigin *SourceOriginContextResult `json:",omitempty"`
+type ContextResult struct, field Span *SpanContextResult
+type ContextResult struct, field Subject NodeRef
+type ContextResult struct, field Timing *TimingContextResult
+type ContextResult struct, field Value Evidence[Atomic]
+type ContextResult struct, field order Provider Subject Property Value Origins Span Repeat Navigation Layout Timing SoundMapping Resource Container SourceOrigin Dictionary
+type ContextResult struct, not comparable
+type ContextUnit string
+type ContextUpdate struct, field Fact ContextFact
+type ContextUpdate struct, field Key ContextKey
+type ContextUpdate struct, field order Key Fact
+type ContextUpdate struct, not comparable
+type ConversionResult struct, field Findings []Finding
+type ConversionResult struct, field State ConversionState
+type ConversionResult struct, field order State Findings
+type ConversionResult struct, not comparable
+type ConversionState string
+type Counts struct, comparable
+type Counts struct, field Blocked uint64
+type Counts struct, field Fail uint64
+type Counts struct, field NotApplicable uint64
+type Counts struct, field Pass uint64
+type Counts struct, field Unknown uint64
+type Counts struct, field Unsupported uint64
+type Counts struct, field order Pass Fail NotApplicable Unknown Unsupported Blocked
+type Decimal struct, comparable
+type Decimal, method (Decimal) ByteSize() int64
+type Decimal, method (Decimal) Cmp(other Decimal) (int, error)
+type Decimal, method (Decimal) Equal(other Decimal) bool
+type Decimal, method (Decimal) String() string
+type Decimal, method (Decimal) Valid() bool
+type Decimal, method (Decimal) Value() *big.Rat
+type Decision struct, field Actual string
+type Decision struct, field Cause *DecisionRef
+type Decision struct, field Expected string
+type Decision struct, field Outcome Outcome
+type Decision struct, field Reason Code
+type Decision struct, field Related []Location
+type Decision struct, field Rule RuleKey
+type Decision struct, field Subject NodeRef
+type Decision struct, field order Rule Subject Outcome Cause Reason Expected Actual Related
+type Decision struct, not comparable
+type DecisionRef struct, comparable
+type DecisionRef struct, field Rule RuleKey
+type DecisionRef struct, field Subject NodeRef
+type DecisionRef struct, field order Rule Subject
+type DeclarationID struct, comparable
+type DeclarationID struct, field Assembly Assembly
+type DeclarationID struct, field Occurrence string
+type DeclarationID struct, field OwnerOccurrence string
+type DeclarationID struct, field order Assembly OwnerOccurrence Occurrence
+type Dependency struct, comparable
+type Dependency struct, field Key string
+type Dependency struct, field Kind DependencyKind
+type Dependency struct, field Relation RelationKind
+type Dependency struct, field Rule RuleKey
+type Dependency struct, field order Kind Rule Key Relation
+type DependencyKind string
+type DiagnosticCategory string
+type DictionaryComponentCertificate struct, comparable
+type DictionaryComponentID string
+type DictionaryComponentPin struct, comparable
+type DictionaryComponentPin struct, field Bytes int64
+type DictionaryComponentPin struct, field ID DictionaryComponentID
+type DictionaryComponentPin struct, field SHA256 string
+type DictionaryComponentPin struct, field SourceKind DictionarySourceKind
+type DictionaryComponentPin struct, field URL string
+type DictionaryComponentPin struct, field order ID Bytes SHA256 URL SourceKind
+type DictionaryContextResult struct, field Applicability Evidence[bool]
+type DictionaryContextResult struct, field Attribute *AttributeSelector
+type DictionaryContextResult struct, field Codepoint Evidence[uint32]
+type DictionaryContextResult struct, field ComponentVerified bool
+type DictionaryContextResult struct, field DataSHA256 string
+type DictionaryContextResult struct, field Effective Evidence[Atomic]
+type DictionaryContextResult struct, field Input Evidence[Atomic]
+type DictionaryContextResult struct, field Manifest DictionaryManifestID
+type DictionaryContextResult struct, field Policy string
+type DictionaryContextResult struct, field Relation DictionaryRelation
+type DictionaryContextResult struct, field Result Evidence[bool]
+type DictionaryContextResult struct, field Role string
+type DictionaryContextResult struct, field SourceKind DictionarySourceKind
+type DictionaryContextResult struct, field Spans []DictionarySpan
+type DictionaryContextResult struct, field WholeSequence Evidence[bool]
+type DictionaryContextResult struct, field order Manifest Relation Attribute Input Result Codepoint WholeSequence Spans ComponentVerified SourceKind DataSHA256 Policy Role Effective Applicability
+type DictionaryContextResult struct, not comparable
+type DictionaryImport struct, comparable
+type DictionaryImport struct, field Certificate *DictionaryComponentCertificate
+type DictionaryImport struct, field IPA *IPAPositiveDictionaryData
+type DictionaryImport struct, field Manifest DictionaryManifestID
+type DictionaryImport struct, field Reason Code
+type DictionaryImport struct, field SMuFL *SMuFLDictionaryData
+type DictionaryImport struct, field Sounds *StandardSoundsDictionaryData
+type DictionaryImport struct, field State EvidenceState
+type DictionaryImport struct, field order Manifest State Reason Certificate SMuFL Sounds IPA
+type DictionaryKind string
+type DictionaryManifest struct, field Component DictionaryComponentPin
+type DictionaryManifest struct, field ComponentName string
+type DictionaryManifest struct, field DataBytes int64
+type DictionaryManifest struct, field DataSHA256 string
+type DictionaryManifest struct, field Edition string
+type DictionaryManifest struct, field ID DictionaryManifestID
+type DictionaryManifest struct, field Kind DictionaryKind
+type DictionaryManifest struct, field NegativeRelations []DictionaryRelation
+type DictionaryManifest struct, field PolicyRevision string
+type DictionaryManifest struct, field Relations []DictionaryRelation
+type DictionaryManifest struct, field Rows int64
+type DictionaryManifest struct, field TransformRevision string
+type DictionaryManifest struct, field order ID Kind Edition Component ComponentName TransformRevision PolicyRevision DataSHA256 DataBytes Rows Relations NegativeRelations
+type DictionaryManifest struct, not comparable
+type DictionaryManifestID string
+type DictionaryOperation string
+type DictionaryRelation string
+type DictionarySelection struct, field Manifest DictionaryManifestID
+type DictionarySelection struct, field Relations []DictionaryRelation
+type DictionarySelection struct, field order Manifest Relations
+type DictionarySelection struct, not comparable
+type DictionarySet struct, not comparable
+type DictionarySet, method (*DictionarySet) Close() error
+type DictionarySet, method (*DictionarySet) Fingerprint() ([32]byte, error)
+type DictionarySourceKind string
+type DictionarySpan struct, comparable
+type DictionarySpan struct, field Category string
+type DictionarySpan struct, field End uint64
+type DictionarySpan struct, field Equivalent string
+type DictionarySpan struct, field Result Evidence[bool]
+type DictionarySpan struct, field RowID string
+type DictionarySpan struct, field Start uint64
+type DictionarySpan struct, field Text string
+type DictionarySpan struct, field order Start End Text Result RowID Category Equivalent
+type Engine struct, comparable
+type Engine, method (*Engine) Begin(ctx context.Context, opts RunOptions) (*Session, error)
+type Engine, method (*Engine) BeginWithDictionaries(ctx context.Context, opts RunOptions, set *DictionarySet) (*Session, error)
+type Engine, method (*Engine) Profile(id ProfileID) (Profile, bool)
+type Engine, method (*Engine) SourceAttributeLexicalProvider(profile ProfileID, assembly Assembly) (RuleKey, bool)
+type Engine, method (*Engine) SourceDTDIDsSelected(profile ProfileID) bool
+type Engine, method (*Engine) SourceOriginProvider(profile ProfileID, assembly Assembly) (RuleKey, bool)
+type Evidence struct, field Cause *DecisionRef
+type Evidence struct, field Reason Code
+type Evidence struct, field State EvidenceState
+type Evidence struct, field Value T
+type Evidence struct, field order State Value Reason Cause
+type EvidenceAuthority struct, field ExactRelationComplete bool
+type EvidenceAuthority struct, field ID string
+type EvidenceAuthority struct, field Provenance []SourceRef
+type EvidenceAuthority struct, field Revision string
+type EvidenceAuthority struct, field order ID Revision Provenance ExactRelationComplete
+type EvidenceAuthority struct, not comparable
+type EvidenceState string
+type Evidence[T any] struct, not comparable
+type Finding struct, embedded Decision Decision
+type Finding struct, field Category DiagnosticCategory
+type Finding struct, field Location Location
+type Finding struct, field order Decision Category Location
+type Finding struct, not comparable
+type IPAAttestedExample struct, comparable
+type IPAAttestedExample struct, field Category string
+type IPAAttestedExample struct, field Encoding string
+type IPAAttestedExample struct, field RowID string
+type IPAAttestedExample struct, field order Encoding Category RowID
+type IPACanonicalEquivalent struct, comparable
+type IPACanonicalEquivalent struct, field Encoding string
+type IPACanonicalEquivalent struct, field EquivalentToEncoding string
+type IPACanonicalEquivalent struct, field RowID string
+type IPACanonicalEquivalent struct, field order Encoding EquivalentToEncoding RowID
+type IPAPositiveDictionaryData struct, field Equivalences []IPACanonicalEquivalent
+type IPAPositiveDictionaryData struct, field Examples []IPAAttestedExample
+type IPAPositiveDictionaryData struct, field Symbols []IPASymbolEncoding
+type IPAPositiveDictionaryData struct, field order Symbols Examples Equivalences
+type IPAPositiveDictionaryData struct, not comparable
+type IPASymbolEncoding struct, comparable
+type IPASymbolEncoding struct, field Category string
+type IPASymbolEncoding struct, field Encoding string
+type IPASymbolEncoding struct, field RowID string
+type IPASymbolEncoding struct, field order Encoding Category RowID
+type ImageDimensionUnit string
+type ImageMetadataRequest struct, comparable
+type ImageMetadataRequest struct, field ArchiveEntry string
+type ImageMetadataRequest struct, field BaseURI string
+type ImageMetadataRequest struct, field Href string
+type ImageMetadataRequest struct, field ID ResourceRequestID
+type ImageMetadataRequest struct, field MediaType string
+type ImageMetadataRequest struct, field Package PackageID
+type ImageMetadataRequest struct, field Source ResourcePin
+type ImageMetadataRequest struct, field Subject NodeRef
+type ImageMetadataRequest struct, field order BaseURI ArchiveEntry Package ID Source Subject Href MediaType
+type ImageMetadataResult struct, field Authority EvidenceAuthority
+type ImageMetadataResult struct, field Height Evidence[Decimal]
+type ImageMetadataResult struct, field PixelAspectRatio Evidence[Decimal]
+type ImageMetadataResult struct, field Request ImageMetadataRequest
+type ImageMetadataResult struct, field Resource ResourcePin
+type ImageMetadataResult struct, field Unit ImageDimensionUnit
+type ImageMetadataResult struct, field Width Evidence[Decimal]
+type ImageMetadataResult struct, field order Request Resource Width Height Unit PixelAspectRatio Authority
+type ImageMetadataResult struct, not comparable
+type ImplementationState string
+type IncompleteError struct, comparable
+type IncompleteError struct, field Cause error
+type IncompleteError struct, field Reason string
+type IncompleteError struct, field order Reason Cause
+type IncompleteError, method (*IncompleteError) Error() string
+type IncompleteError, method (*IncompleteError) Unwrap() []error
+type Integer struct, comparable
+type Integer, method (Integer) ByteSize() int64
+type Integer, method (Integer) Cmp(other Integer) (int, error)
+type Integer, method (Integer) Equal(other Integer) bool
+type Integer, method (Integer) String() string
+type Integer, method (Integer) Valid() bool
+type Integer, method (Integer) Value() *big.Int
+type IntrinsicProfileBinding struct, comparable
+type IntrinsicProfileBinding struct, field Assembly Assembly
+type IntrinsicProfileBinding struct, field CatalogDigest string
+type IntrinsicProfileBinding struct, field Profile ProfileID
+type IntrinsicProfileBinding struct, field Target Target
+type IntrinsicProfileBinding struct, field order Assembly Target Profile CatalogDigest
+type Inventory struct, field AdvisoryReviews []InventoryAdvisoryReview `json:"advisory_reviews"`
+type Inventory struct, field Capabilities []InventoryCapability `json:"capabilities"`
+type Inventory struct, field Checks []InventoryCheck `json:"checks"`
+type Inventory struct, field Contexts []InventoryContextDisposition `json:"contexts"`
+type Inventory struct, field DependencySemantics map[string]string `json:"dependency_semantics"`
+type Inventory struct, field ExternalFiles []InventoryFile `json:"external_files"`
+type Inventory struct, field Instances []InventoryInstance `json:"instances"`
+type Inventory struct, field Overlaps []InventoryOverlap `json:"overlaps"`
+type Inventory struct, field Questions []InventoryQuestion `json:"questions"`
+type Inventory struct, field Records []InventoryRecord `json:"records"`
+type Inventory struct, field RegistryCommit string `json:"registry_commit"`
+type Inventory struct, field RegistryRepository string `json:"registry_repository"`
+type Inventory struct, field Requirements []InventoryRequirement `json:"requirements"`
+type Inventory struct, field SHA256 string `json:"sha256,omitempty"`
+type Inventory struct, field SourceFiles []InventoryFile `json:"source_files"`
+type Inventory struct, field SourceSHA256 string `json:"source_sha256"`
+type Inventory struct, field Stages []InventoryStage `json:"stages"`
+type Inventory struct, field TargetPolicies map[string]InventoryTargetPolicy `json:"target_policies"`
+type Inventory struct, field Tests []InventoryTestContract `json:"tests"`
+type Inventory struct, field UpstreamMusicXMLCommit string `json:"upstream_musicxml_commit"`
+type Inventory struct, field Version string `json:"version"`
+type Inventory struct, field order Overlaps AdvisoryReviews Stages Questions Version SHA256 SourceSHA256 RegistryRepository RegistryCommit UpstreamMusicXMLCommit ExternalFiles SourceFiles Records Instances Checks Capabilities Requirements Tests Contexts TargetPolicies DependencySemantics
+type Inventory struct, not comparable
+type InventoryAdvisoryReview struct, field Decision string `json:"decision"`
+type InventoryAdvisoryReview struct, field NormativeProvenance []string `json:"normative_provenance"`
+type InventoryAdvisoryReview struct, field PrimaryCheckIDs []string `json:"primary_check_ids"`
+type InventoryAdvisoryReview struct, field Rationale string `json:"rationale"`
+type InventoryAdvisoryReview struct, field RelatedResearchIDs []string `json:"related_research_ids"`
+type InventoryAdvisoryReview struct, field RelatedXSDResearchIDs []string `json:"related_xsd_research_ids"`
+type InventoryAdvisoryReview struct, field ResearchID string `json:"research_id"`
+type InventoryAdvisoryReview struct, field ReuseCheckIDs []string `json:"reuse_check_ids"`
+type InventoryAdvisoryReview struct, field ReuseScope string `json:"reuse_scope"`
+type InventoryAdvisoryReview struct, field order ResearchID Decision RelatedResearchIDs RelatedXSDResearchIDs Rationale NormativeProvenance ReuseCheckIDs PrimaryCheckIDs ReuseScope
+type InventoryAdvisoryReview struct, not comparable
+type InventoryCapability struct, field CheckIDs []string `json:"check_ids"`
+type InventoryCapability struct, field Closure string `json:"closure"`
+type InventoryCapability struct, field ID string `json:"id"`
+type InventoryCapability struct, field Kind string `json:"kind"`
+type InventoryCapability struct, field Label string `json:"label"`
+type InventoryCapability struct, field MissingOutcome string `json:"missing_outcome"`
+type InventoryCapability struct, field ProviderRequirementIDs []string `json:"provider_requirement_ids"`
+type InventoryCapability struct, field ProviderStatus string `json:"provider_status"`
+type InventoryCapability struct, field Targets []string `json:"targets"`
+type InventoryCapability struct, field order ID Label Kind ProviderStatus ProviderRequirementIDs CheckIDs Targets Closure MissingOutcome
+type InventoryCapability struct, not comparable
+type InventoryCheck struct, field Capabilities []string `json:"capabilities"`
+type InventoryCheck struct, field CapabilityIDs []string `json:"capability_ids"`
+type InventoryCheck struct, field Closure string `json:"closure,omitempty"`
+type InventoryCheck struct, field Dependencies []string `json:"dependencies"`
+type InventoryCheck struct, field DependencyModes map[string]InventoryDependencyMode `json:"dependency_modes,omitempty"`
+type InventoryCheck struct, field ExpectedOutcomes *InventoryExpectedOutcomes `json:"expected_outcomes,omitempty"`
+type InventoryCheck struct, field ID string `json:"id"`
+type InventoryCheck struct, field ImplementationBinding string `json:"implementation_binding"`
+type InventoryCheck struct, field Inputs []string `json:"inputs"`
+type InventoryCheck struct, field ModelEvidence *InventoryModelEvidence `json:"model_evidence,omitempty"`
+type InventoryCheck struct, field ModelLimit string `json:"model_limit,omitempty"`
+type InventoryCheck struct, field NormativeProvenance []string `json:"normative_provenance"`
+type InventoryCheck struct, field ReadinessGate string `json:"readiness_gate,omitempty"`
+type InventoryCheck struct, field ResearchClauses map[string]string `json:"research_clauses,omitempty"`
+type InventoryCheck struct, field ResearchIDs []string `json:"research_ids,omitempty"`
+type InventoryCheck struct, field Revision int `json:"revision"`
+type InventoryCheck struct, field Role string `json:"role"`
+type InventoryCheck struct, field RuntimeSupport string `json:"runtime_support"`
+type InventoryCheck struct, field Selector string `json:"selector"`
+type InventoryCheck struct, field SemanticStatus string `json:"semantic_status"`
+type InventoryCheck struct, field Stage string `json:"stage"`
+type InventoryCheck struct, field Status string `json:"status"`
+type InventoryCheck struct, field Targets []string `json:"targets"`
+type InventoryCheck struct, field TestContracts []string `json:"test_contracts"`
+type InventoryCheck struct, field order ExpectedOutcomes ResearchClauses ID ResearchIDs Revision Role Inputs Selector Targets Capabilities Dependencies DependencyModes NormativeProvenance TestContracts Stage Status Closure ReadinessGate CapabilityIDs SemanticStatus ImplementationBinding ModelLimit ModelEvidence RuntimeSupport
+type InventoryCheck struct, not comparable
+type InventoryContextDisposition struct, field Closure string `json:"closure"`
+type InventoryContextDisposition struct, field Dependencies []string `json:"dependencies"`
+type InventoryContextDisposition struct, field Disposition string `json:"disposition"`
+type InventoryContextDisposition struct, field Produces *string `json:"produces"`
+type InventoryContextDisposition struct, field Rationale string `json:"rationale"`
+type InventoryContextDisposition struct, field ResearchID string `json:"research_id"`
+type InventoryContextDisposition struct, field Role string `json:"role"`
+type InventoryContextDisposition struct, field Translation string `json:"translation"`
+type InventoryContextDisposition struct, field order ResearchID Role Disposition Rationale Produces Dependencies Closure Translation
+type InventoryContextDisposition struct, not comparable
+type InventoryDependencyMode struct, comparable
+type InventoryDependencyMode struct, field Model string `json:"model"`
+type InventoryDependencyMode struct, field NotAGlobalGate string `json:"not_a_global_gate"`
+type InventoryDependencyMode struct, field Source string `json:"source"`
+type InventoryDependencyMode struct, field order Source Model NotAGlobalGate
+type InventoryExpectedOutcomes struct, field Description string
+type InventoryExpectedOutcomes struct, field Outcomes map[string]string
+type InventoryExpectedOutcomes struct, field order Description Outcomes
+type InventoryExpectedOutcomes struct, not comparable
+type InventoryExpectedOutcomes, method (*InventoryExpectedOutcomes) UnmarshalJSON(data []byte) error
+type InventoryExpectedOutcomes, method (InventoryExpectedOutcomes) MarshalJSON() ([]byte, error)
+type InventoryFile struct, comparable
+type InventoryFile struct, field Bytes int64 `json:"bytes"`
+type InventoryFile struct, field GitBlobSHA1 string `json:"git_blob_sha1,omitempty"`
+type InventoryFile struct, field Path string `json:"path"`
+type InventoryFile struct, field SHA256 string `json:"sha256"`
+type InventoryFile struct, field order Path Bytes SHA256 GitBlobSHA1
+type InventoryInstance struct, field Composition string `json:"composition"`
+type InventoryInstance struct, field DiagnosticPolicy string `json:"diagnostic_policy"`
+type InventoryInstance struct, field ID string `json:"id"`
+type InventoryInstance struct, field PlanDependencies InventoryPlanDependencies `json:"plan_dependencies"`
+type InventoryInstance struct, field RegistryPointer string `json:"registry_pointer"`
+type InventoryInstance struct, field RegistryURL string `json:"registry_url"`
+type InventoryInstance struct, field ResearchID string `json:"research_id"`
+type InventoryInstance struct, field ReuseInstances []string `json:"reuse_instances"`
+type InventoryInstance struct, field Revision int `json:"revision"`
+type InventoryInstance struct, field Role string `json:"role"`
+type InventoryInstance struct, field RuntimeSupport string `json:"runtime_support"`
+type InventoryInstance struct, field Stage string `json:"stage"`
+type InventoryInstance struct, field Status string `json:"status"`
+type InventoryInstance struct, field TargetPolicy string `json:"target_policy"`
+type InventoryInstance struct, field TemplateID string `json:"template_id"`
+type InventoryInstance struct, field order ID Revision ResearchID TemplateID Role RegistryPointer RegistryURL Composition Status Stage ReuseInstances DiagnosticPolicy PlanDependencies TargetPolicy RuntimeSupport
+type InventoryInstance struct, not comparable
+type InventoryModelEvidence struct, comparable
+type InventoryModelEvidence struct, field NamespaceClauses string `json:"namespace_clauses"`
+type InventoryModelEvidence struct, field ReadinessGate string `json:"readiness_gate"`
+type InventoryModelEvidence struct, field SourceLexicalClauses string `json:"source_lexical_clauses"`
+type InventoryModelEvidence struct, field StructureClauses string `json:"structure_clauses"`
+type InventoryModelEvidence struct, field ValueSpaceClauses string `json:"value_space_clauses"`
+type InventoryModelEvidence struct, field order SourceLexicalClauses ValueSpaceClauses StructureClauses NamespaceClauses ReadinessGate
+type InventoryOverlap struct, field AdditionalCondition string `json:"additional_condition"`
+type InventoryOverlap struct, field AdditionalConditionCheckIDs []string `json:"additional_condition_check_ids"`
+type InventoryOverlap struct, field AdditionalConditionSource string `json:"additional_condition_source"`
+type InventoryOverlap struct, field Disposition string `json:"disposition"`
+type InventoryOverlap struct, field ID string `json:"id"`
+type InventoryOverlap struct, field Justification string `json:"justification"`
+type InventoryOverlap struct, field Kind string `json:"kind"`
+type InventoryOverlap struct, field ResearchID string `json:"research_id"`
+type InventoryOverlap struct, field SharedCondition string `json:"shared_condition"`
+type InventoryOverlap struct, field XSDResearchIDs []string `json:"xsd_research_ids"`
+type InventoryOverlap struct, field order ID ResearchID Kind SharedCondition AdditionalCondition XSDResearchIDs Disposition Justification AdditionalConditionCheckIDs AdditionalConditionSource
+type InventoryOverlap struct, not comparable
+type InventoryPlanDependencies struct, field LanguageSemantics []string `json:"language_semantics"`
+type InventoryPlanDependencies struct, field SchemaComponent []string `json:"schema_component"`
+type InventoryPlanDependencies struct, field order SchemaComponent LanguageSemantics
+type InventoryPlanDependencies struct, not comparable
+type InventoryQuestion struct, field Closure string `json:"closure"`
+type InventoryQuestion struct, field ContextualResearchIDs []string `json:"contextual_research_ids"`
+type InventoryQuestion struct, field Description string `json:"description"`
+type InventoryQuestion struct, field Disposition string `json:"disposition"`
+type InventoryQuestion struct, field HardErrorBasis bool `json:"hard_error_basis"`
+type InventoryQuestion struct, field ID string `json:"id"`
+type InventoryQuestion struct, field ProposedInterpretation string `json:"proposed_interpretation"`
+type InventoryQuestion struct, field RegistryPointer string `json:"registry_pointer"`
+type InventoryQuestion struct, field RegistryURL string `json:"registry_url"`
+type InventoryQuestion struct, field Requirements []string `json:"requirements"`
+type InventoryQuestion struct, field order ID RegistryPointer RegistryURL Description Disposition ProposedInterpretation HardErrorBasis Requirements ContextualResearchIDs Closure
+type InventoryQuestion struct, not comparable
+type InventoryRecord struct, field CheckIDs []string `json:"check_ids"`
+type InventoryRecord struct, field Disposition string `json:"disposition"`
+type InventoryRecord struct, field Origin string `json:"origin"`
+type InventoryRecord struct, field RegistryPointer string `json:"registry_pointer"`
+type InventoryRecord struct, field RegistryURL string `json:"registry_url"`
+type InventoryRecord struct, field ResearchID string `json:"research_id"`
+type InventoryRecord struct, field Role string `json:"role"`
+type InventoryRecord struct, field order ResearchID Origin Role Disposition CheckIDs RegistryPointer RegistryURL
+type InventoryRecord struct, not comparable
+type InventoryRequirement struct, field Acceptance []string `json:"acceptance"`
+type InventoryRequirement struct, field Applicability string `json:"applicability"`
+type InventoryRequirement struct, field Dependencies []string `json:"dependencies"`
+type InventoryRequirement struct, field ID string `json:"id"`
+type InventoryRequirement struct, field Inputs []string `json:"inputs"`
+type InventoryRequirement struct, field NormativeProvenance []string `json:"normative_provenance"`
+type InventoryRequirement struct, field ResearchIDs []string `json:"research_ids,omitempty"`
+type InventoryRequirement struct, field Role string `json:"role"`
+type InventoryRequirement struct, field SourceBullets []string `json:"source_bullets"`
+type InventoryRequirement struct, field SourceInventory string `json:"source_inventory"`
+type InventoryRequirement struct, field Stage string `json:"stage"`
+type InventoryRequirement struct, field Status string `json:"status"`
+type InventoryRequirement struct, field Targets []string `json:"targets"`
+type InventoryRequirement struct, field TestContracts []string `json:"test_contracts"`
+type InventoryRequirement struct, field Title string `json:"title"`
+type InventoryRequirement struct, field order ID Title Role Inputs Applicability Targets Dependencies NormativeProvenance TestContracts Stage Status Acceptance SourceBullets SourceInventory ResearchIDs
+type InventoryRequirement struct, not comparable
+type InventoryStage struct, field Acceptance []string `json:"acceptance"`
+type InventoryStage struct, field DependencyInterpretation string `json:"dependency_interpretation,omitempty"`
+type InventoryStage struct, field DependsOn []string `json:"depends_on"`
+type InventoryStage struct, field ID string `json:"id"`
+type InventoryStage struct, field ScopeNote string `json:"scope_note,omitempty"`
+type InventoryStage struct, field Title string `json:"title"`
+type InventoryStage struct, field order ID Title DependsOn Acceptance DependencyInterpretation ScopeNote
+type InventoryStage struct, not comparable
+type InventoryTargetPolicy struct, comparable
+type InventoryTargetPolicy struct, field Model string `json:"model"`
+type InventoryTargetPolicy struct, field Source string `json:"source"`
+type InventoryTargetPolicy struct, field order Source Model
+type InventoryTestContract struct, field AxisStatus map[string]string `json:"axis_status"`
+type InventoryTestContract struct, field CaseInstantiationGate string `json:"case_instantiation_gate,omitempty"`
+type InventoryTestContract struct, field CheckIDs []string `json:"check_ids,omitempty"`
+type InventoryTestContract struct, field ID string `json:"id"`
+type InventoryTestContract struct, field RequirementIDs []string `json:"requirement_ids,omitempty"`
+type InventoryTestContract struct, field Status string `json:"status"`
+type InventoryTestContract struct, field Targets []string `json:"targets"`
+type InventoryTestContract struct, field order ID CheckIDs RequirementIDs Targets Status AxisStatus CaseInstantiationGate
+type InventoryTestContract struct, not comparable
+type LayoutContextResult struct, comparable
+type LayoutContextResult struct, field Applicability Evidence[bool]
+type LayoutContextResult struct, field Basis string
+type LayoutContextResult struct, field Conversion Evidence[Rational]
+type LayoutContextResult struct, field Origin NodeRef
+type LayoutContextResult struct, field Page Evidence[NodeRef]
+type LayoutContextResult struct, field Part Evidence[NodeRef]
+type LayoutContextResult struct, field Provenance ContextProvenance
+type LayoutContextResult struct, field Raw Evidence[Atomic]
+type LayoutContextResult struct, field Scope NodeRef
+type LayoutContextResult struct, field Staff Evidence[Integer]
+type LayoutContextResult struct, field System Evidence[NodeRef]
+type LayoutContextResult struct, field Unit ContextUnit
+type LayoutContextResult struct, field order Scope Origin Part Page System Staff Conversion Basis Raw Applicability Unit Provenance
+type LinkedResourceKind string
+type Location struct, comparable
+type Location struct, field DocumentID string
+type Location struct, field Entry string
+type Location struct, field Path string
+type Location struct, field Position *SourcePosition
+type Location struct, field Target Target
+type Location struct, field order Target DocumentID Entry Path Position
+type ModelAxis string
+type ModelProblem struct, comparable
+type ModelProblem struct, field Actual string
+type ModelProblem struct, field Attribute QName
+type ModelProblem struct, field Axis ModelAxis
+type ModelProblem struct, field Code Code
+type ModelProblem struct, field Expected string
+type ModelProblem struct, field Location Location
+type ModelProblem struct, field order Code Axis Attribute Location Expected Actual
+type ModelRepresentationFact struct, field Complete Evidence[bool]
+type ModelRepresentationFact struct, field Owner NodeID
+type ModelRepresentationFact struct, field Problems []ModelProblem
+type ModelRepresentationFact struct, field order Owner Complete Problems
+type ModelRepresentationFact struct, not comparable
+type NavigationContextResult struct, field AfterJump Evidence[bool]
+type NavigationContextResult struct, field AttributesActive Evidence[bool]
+type NavigationContextResult struct, field Complete Evidence[bool]
+type NavigationContextResult struct, field Defaulted bool
+type NavigationContextResult struct, field Direction Evidence[string]
+type NavigationContextResult struct, field Directives []NavigationDirective
+type NavigationContextResult struct, field DurationUnchanged Evidence[bool]
+type NavigationContextResult struct, field EndingNumber Evidence[string]
+type NavigationContextResult struct, field FineDuration Evidence[Decimal]
+type NavigationContextResult struct, field Guard Evidence[bool]
+type NavigationContextResult struct, field InitialSyncMode Evidence[string]
+type NavigationContextResult struct, field Kind NavigationKind
+type NavigationContextResult struct, field Label Evidence[string]
+type NavigationContextResult struct, field Listening []NavigationListeningStatement
+type NavigationContextResult struct, field LocalPlaybackSound Evidence[NodeRef]
+type NavigationContextResult struct, field MarkerActive Evidence[bool]
+type NavigationContextResult struct, field NoteListening []NavigationNoteListening
+type NavigationContextResult struct, field Part Evidence[NodeRef]
+type NavigationContextResult struct, field Play []TimingPlayInstruction
+type NavigationContextResult struct, field PlaybackSoundNeeded Evidence[bool]
+type NavigationContextResult struct, field Position Evidence[ContextPosition]
+type NavigationContextResult struct, field RecommendedAssess Evidence[bool]
+type NavigationContextResult struct, field Target Evidence[NodeRef]
+type NavigationContextResult struct, field TargetsDistinct Evidence[bool]
+type NavigationContextResult struct, field TimeOnly Evidence[string]
+type NavigationContextResult struct, field Times Evidence[Integer]
+type NavigationContextResult struct, field Traversal []NavigationOccurrence
+type NavigationContextResult struct, field order Directives PlaybackSoundNeeded LocalPlaybackSound NoteListening RecommendedAssess TargetsDistinct InitialSyncMode Play Listening Position Kind Part Direction Times AfterJump AttributesActive Label Target TimeOnly MarkerActive Guard Defaulted EndingNumber DurationUnchanged FineDuration Traversal Complete
+type NavigationContextResult struct, not comparable
+type NavigationDirective struct, comparable
+type NavigationDirective struct, field Defaulted bool
+type NavigationDirective struct, field Enabled Evidence[bool]
+type NavigationDirective struct, field Kind NavigationKind
+type NavigationDirective struct, field Label Evidence[string]
+type NavigationDirective struct, field TimeOnly Evidence[string]
+type NavigationDirective struct, field order Kind Label Enabled TimeOnly Defaulted
+type NavigationInstrumentState struct, comparable
+type NavigationInstrumentState struct, field Bank NavigationStateValue[Integer]
+type NavigationInstrumentState struct, field Channel NavigationStateValue[Integer]
+type NavigationInstrumentState struct, field DeviceName NavigationStateValue[string]
+type NavigationInstrumentState struct, field DevicePort NavigationStateValue[Integer]
+type NavigationInstrumentState struct, field Elevation NavigationStateValue[Decimal]
+type NavigationInstrumentState struct, field Instrument Evidence[NodeRef]
+type NavigationInstrumentState struct, field Name NavigationStateValue[string]
+type NavigationInstrumentState struct, field Pan NavigationStateValue[Decimal]
+type NavigationInstrumentState struct, field Performance NavigationStateValue[NavigationPerformance]
+type NavigationInstrumentState struct, field Program NavigationStateValue[Integer]
+type NavigationInstrumentState struct, field Sound NavigationStateValue[string]
+type NavigationInstrumentState struct, field Unpitched NavigationStateValue[Integer]
+type NavigationInstrumentState struct, field Virtual NavigationStateValue[NavigationVirtualInstrument]
+type NavigationInstrumentState struct, field Volume NavigationStateValue[Decimal]
+type NavigationInstrumentState struct, field order Instrument Sound Performance Virtual Channel Bank Program Unpitched Name DeviceName DevicePort Volume Pan Elevation
+type NavigationKind string
+type NavigationListeningKind string
+type NavigationListeningStatement struct, comparable
+type NavigationListeningStatement struct, field Active Evidence[bool]
+type NavigationListeningStatement struct, field Kind NavigationListeningKind
+type NavigationListeningStatement struct, field Latency Evidence[Decimal]
+type NavigationListeningStatement struct, field Player Evidence[string]
+type NavigationListeningStatement struct, field PlayerTarget Evidence[NodeRef]
+type NavigationListeningStatement struct, field Source NodeRef
+type NavigationListeningStatement struct, field TimeOnly Evidence[string]
+type NavigationListeningStatement struct, field Type Evidence[string]
+type NavigationListeningStatement struct, field Value Evidence[string]
+type NavigationListeningStatement struct, field order PlayerTarget Source Kind Player Type Latency Value TimeOnly Active
+type NavigationNoteListenKind string
+type NavigationNoteListening struct, comparable
+type NavigationNoteListening struct, field Active Evidence[bool]
+type NavigationNoteListening struct, field AllPasses Evidence[bool]
+type NavigationNoteListening struct, field AllPlayers Evidence[bool]
+type NavigationNoteListening struct, field Kind NavigationNoteListenKind
+type NavigationNoteListening struct, field OtherType Evidence[string]
+type NavigationNoteListening struct, field Override Evidence[bool]
+type NavigationNoteListening struct, field Player Evidence[string]
+type NavigationNoteListening struct, field PlayerTarget Evidence[NodeRef]
+type NavigationNoteListening struct, field RecommendedAssess Evidence[bool]
+type NavigationNoteListening struct, field Source NodeRef
+type NavigationNoteListening struct, field TimeOnly Evidence[string]
+type NavigationNoteListening struct, field Value Evidence[string]
+type NavigationNoteListening struct, field order PlayerTarget Source Kind Player TimeOnly AllPlayers AllPasses Override RecommendedAssess Active OtherType Value
+type NavigationOccurrence struct, field Dynamics Evidence[Decimal]
+type NavigationOccurrence struct, field EndDynamics Evidence[Decimal]
+type NavigationOccurrence struct, field Epoch uint64
+type NavigationOccurrence struct, field Frames []NavigationPassFrame
+type NavigationOccurrence struct, field Instruments []NavigationInstrumentState
+type NavigationOccurrence struct, field Listening []NavigationListeningStatement
+type NavigationOccurrence struct, field NoteListening []NavigationNoteListening
+type NavigationOccurrence struct, field Pass Evidence[Integer]
+type NavigationOccurrence struct, field Pizzicato Evidence[bool]
+type NavigationOccurrence struct, field Play []NavigationPlayInstruction
+type NavigationOccurrence struct, field Played Evidence[bool]
+type NavigationOccurrence struct, field Source NodeRef
+type NavigationOccurrence struct, field Tempo Evidence[Decimal]
+type NavigationOccurrence struct, field order NoteListening Play Instruments EndDynamics Listening Source Pass Epoch Frames Played Tempo Dynamics Pizzicato
+type NavigationOccurrence struct, not comparable
+type NavigationPassFrame struct, comparable
+type NavigationPassFrame struct, field Pass Integer
+type NavigationPassFrame struct, field Region NodeRef
+type NavigationPassFrame struct, field order Region Pass
+type NavigationPerformance struct, comparable
+type NavigationPerformance struct, field Ensemble Integer
+type NavigationPerformance struct, field EnsembleEmpty bool
+type NavigationPerformance struct, field Solo bool
+type NavigationPerformance struct, field order Solo EnsembleEmpty Ensemble
+type NavigationPlayInstruction struct, field Active Evidence[bool]
+type NavigationPlayInstruction struct, field Instruction TimingPlayInstruction
+type NavigationPlayInstruction struct, field order Instruction Active
+type NavigationPlayInstruction struct, not comparable
+type NavigationStateValue struct, field Source NodeRef
+type NavigationStateValue struct, field Value Evidence[T]
+type NavigationStateValue struct, field order Value Source
+type NavigationStateValue[T any] struct, not comparable
+type NavigationVirtualInstrument struct, comparable
+type NavigationVirtualInstrument struct, field Library Evidence[string]
+type NavigationVirtualInstrument struct, field Name Evidence[string]
+type NavigationVirtualInstrument struct, field order Library Name
+type NodeEnd struct, comparable
+type NodeEnd struct, field AttributesComplete Evidence[bool]
+type NodeEnd struct, field ChildrenComplete Evidence[bool]
+type NodeEnd struct, field ID NodeID
+type NodeEnd struct, field Order Evidence[OrderKind]
+type NodeEnd struct, field Scalar Scalar
+type NodeEnd struct, field order ID Scalar ChildrenComplete AttributesComplete Order
+type NodeHeader struct, field Bindings []Binding
+type NodeHeader struct, field Declaration Evidence[DeclarationID]
+type NodeHeader struct, field ID NodeID
+type NodeHeader struct, field Location Location
+type NodeHeader struct, field Name QName
+type NodeHeader struct, field Parent NodeID
+type NodeHeader struct, field Type Evidence[ComponentID]
+type NodeHeader struct, field order ID Parent Name Type Declaration Location Bindings
+type NodeHeader struct, not comparable
+type NodeID uint64
+type NodeRef struct, comparable
+type NodeRef struct, field DocumentID string
+type NodeRef struct, field Node NodeID
+type NodeRef struct, field order DocumentID Node
+type OrderKind string
+type Outcome string
+type PackageCheck string
+type PackageCompletion struct, comparable
+type PackageCompletion struct, field Cause error
+type PackageCompletion struct, field InputComplete bool
+type PackageCompletion struct, field order InputComplete Cause
+type PackageDiagnosticSummary struct, comparable
+type PackageDiagnosticSummary struct, field Category DiagnosticCategory
+type PackageDiagnosticSummary struct, field Omitted uint64
+type PackageDiagnosticSummary struct, field Outcome Outcome
+type PackageDiagnosticSummary struct, field Package PackageID
+type PackageDiagnosticSummary struct, field Reason Code
+type PackageDiagnosticSummary struct, field Rule RuleKey
+type PackageDiagnosticSummary struct, field Subject NodeRef
+type PackageDiagnosticSummary struct, field order Omitted Rule Subject Package Category Outcome Reason
+type PackageEdgeObservation struct, comparable
+type PackageEdgeObservation struct, field Fragment Evidence[string]
+type PackageEdgeObservation struct, field FragmentTarget Evidence[NodeRef]
+type PackageEdgeObservation struct, field ID PackageFactID
+type PackageEdgeObservation struct, field Indirection Evidence[bool]
+type PackageEdgeObservation struct, field Source ResourceAdoptionID
+type PackageEdgeObservation struct, field Target Evidence[ResourceAdoptionID]
+type PackageEdgeObservation struct, field Template uint64
+type PackageEdgeObservation struct, field order ID Source Template Target Indirection Fragment FragmentTarget
+type PackageEntryObservation struct, field Central ZIPHeaderObservation
+type PackageEntryObservation struct, field HeaderAssociation Evidence[bool]
+type PackageEntryObservation struct, field ID PackageFactID
+type PackageEntryObservation struct, field Local ZIPHeaderObservation
+type PackageEntryObservation struct, field Location Location
+type PackageEntryObservation struct, field Name string
+type PackageEntryObservation struct, field Package PackageID
+type PackageEntryObservation struct, field PhysicalOrder Evidence[uint64]
+type PackageEntryObservation struct, field RawName []byte
+type PackageEntryObservation struct, field UTF8Name Evidence[bool]
+type PackageEntryObservation struct, field order ID Package Name RawName Location Local Central HeaderAssociation UTF8Name PhysicalOrder
+type PackageEntryObservation struct, not comparable
+type PackageEnumeration struct, comparable
+type PackageEnumeration struct, field Edges Evidence[bool]
+type PackageEnumeration struct, field Entries Evidence[bool]
+type PackageEnumeration struct, field Package PackageID
+type PackageEnumeration struct, field Roles Evidence[bool]
+type PackageEnumeration struct, field Rootfiles Evidence[bool]
+type PackageEnumeration struct, field order Package Entries Rootfiles Edges Roles
+type PackageFactID uint64
+type PackageFileMetadataObservation struct, comparable
+type PackageFileMetadataObservation struct, field ArchiveEntry string
+type PackageFileMetadataObservation struct, field BaseURI string
+type PackageFileMetadataObservation struct, field Entry PackageFactID
+type PackageFileMetadataObservation struct, field Href string
+type PackageFileMetadataObservation struct, field ID PackageFactID
+type PackageFileMetadataObservation struct, field Location Location
+type PackageFileMetadataObservation struct, field MediaType Evidence[string]
+type PackageFileMetadataObservation struct, field Name Evidence[string]
+type PackageFileMetadataObservation struct, field Package PackageID
+type PackageFileMetadataObservation struct, field Pin ResourcePin
+type PackageFileMetadataObservation struct, field Source ResourceAdoptionID
+type PackageFileMetadataObservation struct, field Template uint64
+type PackageFileMetadataObservation struct, field order ID Package Pin Name MediaType Location BaseURI ArchiveEntry Entry Source Template Href
+type PackageID string
+type PackageIdentity struct, comparable
+type PackageIdentity struct, field ArchiveEntry string
+type PackageIdentity struct, field BaseURI string
+type PackageIdentity struct, field ID PackageID
+type PackageIdentity struct, field Parent PackageID
+type PackageIdentity struct, field Pin ResourcePin
+type PackageIdentity struct, field PinUnavailable bool
+type PackageIdentity struct, field Representation ResourceRepresentation
+type PackageIdentity struct, field order ID Parent Representation Pin BaseURI ArchiveEntry PinUnavailable
+type PackageImageAdvice struct, comparable
+type PackageImageAdvice struct, field Availability Evidence[bool]
+type PackageImageAdvice struct, field IntrinsicAspectRatio Evidence[Rational]
+type PackageImageAdvice struct, field Metadata *ImageMetadataResult
+type PackageImageAdvice struct, field PreservesAspectRatio Evidence[bool]
+type PackageImageAdvice struct, field Request ImageMetadataRequest
+type PackageImageAdvice struct, field Source ResourceAdoptionID
+type PackageImageAdvice struct, field SpecifiedAspectRatio Evidence[Rational]
+type PackageImageAdvice struct, field Template uint64
+type PackageImageAdvice struct, field order Source Template Request Availability Metadata IntrinsicAspectRatio SpecifiedAspectRatio PreservesAspectRatio
+type PackageMimetypeObservation struct, field ByteLength Evidence[uint64]
+type PackageMimetypeObservation struct, field ContentComplete Evidence[bool]
+type PackageMimetypeObservation struct, field Entry PackageFactID
+type PackageMimetypeObservation struct, field Prefix []byte
+type PackageMimetypeObservation struct, field order Entry Prefix ByteLength ContentComplete
+type PackageMimetypeObservation struct, not comparable
+type PackagePlan struct, comparable
+type PackagePlan, method (PackagePlan) Check() PackageCheck
+type PackageProfileBinding struct, field Intrinsic []IntrinsicProfileBinding
+type PackageProfileBinding struct, field Profile Profile
+type PackageProfileBinding struct, field order Profile Intrinsic
+type PackageProfileBinding struct, not comparable
+type PackageRootfileObservation struct, comparable
+type PackageRootfileObservation struct, field Entry Evidence[PackageFactID]
+type PackageRootfileObservation struct, field FullPath Evidence[string]
+type PackageRootfileObservation struct, field ID PackageFactID
+type PackageRootfileObservation struct, field Indirection Evidence[bool]
+type PackageRootfileObservation struct, field Location Location
+type PackageRootfileObservation struct, field MediaType Evidence[string]
+type PackageRootfileObservation struct, field Ordinal uint64
+type PackageRootfileObservation struct, field Package PackageID
+type PackageRootfileObservation struct, field Resource Evidence[ResourceAssessmentID]
+type PackageRootfileObservation struct, field Source NodeRef
+type PackageRootfileObservation struct, field order ID Package Source Location Ordinal FullPath MediaType Entry Resource Indirection
+type PackageRuleBinding struct, field Plan PackagePlan
+type PackageRuleBinding struct, field Rule RuleDefinition
+type PackageRuleBinding struct, field Selector PackageSelector
+type PackageRuleBinding struct, field order Rule Selector Plan
+type PackageRuleBinding struct, not comparable
+type PackageSelector struct, comparable
+type PackageSelector struct, field Kind PackageSubjectKind
+type PackageSession struct, not comparable
+type PackageSession, method (*PackageSession) AddResource(ctx context.Context, pin ResourcePin, snapshot *ResourceSnapshot, required bool) (ResourceAssessmentID, error)
+type PackageSession, method (*PackageSession) AdoptResource(ctx context.Context, id ResourceAssessmentID, opts ResourceAdoptionOptions) (ResourceAdoptionID, error)
+type PackageSession, method (*PackageSession) Adoption(ctx context.Context, id ResourceAdoptionID) (*ResourceAdoption, error)
+type PackageSession, method (*PackageSession) ExpansionOwner(ctx context.Context, id ResourceAdoptionID) (ResourceAdoptionID, error)
+type PackageSession, method (*PackageSession) Finish(ctx context.Context, end PackageCompletion) (AssessmentBundle, error)
+type PackageSession, method (*PackageSession) ObserveAssociation(ctx context.Context, q AssociationRequest, r AssociationResult) error
+type PackageSession, method (*PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservation) error
+type PackageSession, method (*PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObservation) error
+type PackageSession, method (*PackageSession) ObserveFileMetadata(ctx context.Context, v PackageFileMetadataObservation) error
+type PackageSession, method (*PackageSession) ObserveImageMetadata(ctx context.Context, source ResourceAdoptionID, template uint64, q ImageMetadataRequest, result ResourceResult) error
+type PackageSession, method (*PackageSession) ObserveMimetype(ctx context.Context, m PackageMimetypeObservation) error
+type PackageSession, method (*PackageSession) ObserveRoles(ctx context.Context, r ResourceRoleResult) error
+type PackageSession, method (*PackageSession) ObserveRootfile(ctx context.Context, r PackageRootfileObservation) error
+type PackageSession, method (*PackageSession) OpenPackage(ctx context.Context, p PackageIdentity) error
+type PackageSession, method (*PackageSession) RecordResourceFailure(ctx context.Context, pin ResourcePin, report Report, cause error) error
+type PackageSession, method (*PackageSession) SealEnumeration(ctx context.Context, e PackageEnumeration) error
+type PackageSession, method (*PackageSession) SealResourceExpansion(ctx context.Context, id ResourceAdoptionID, complete Evidence[bool]) error
+type PackageSession, method (*PackageSession) SealResourceMembers(ctx context.Context, pkg PackageID, complete Evidence[bool]) error
+type PackageSession, method (*PackageSession) TerminalCause() error
+type PackageSubjectKind string
+type Plan struct, not comparable
+type PlanBinding struct, field ID string
+type PlanBinding struct, field Plan Plan
+type PlanBinding struct, field order ID Plan
+type PlanBinding struct, not comparable
+type Profile struct, field CatalogDigest string
+type Profile struct, field ID ProfileID
+type Profile struct, field MusicXMLVersion string
+type Profile struct, field NormativeClosure string
+type Profile struct, field RegistryCommit string
+type Profile struct, field Required []RuleKey
+type Profile struct, field Support []RuleSupport
+type Profile struct, field SupportedRoots []QName
+type Profile struct, field Target Target
+type Profile struct, field order ID MusicXMLVersion CatalogDigest RegistryCommit Target Required Support SupportedRoots NormativeClosure
+type Profile struct, not comparable
+type ProfileID string
+type QName struct, comparable
+type QName struct, field Local string
+type QName struct, field Space string
+type QName struct, field order Space Local
+type Rational struct, comparable
+type Rational, method (Rational) ByteSize() int64
+type Rational, method (Rational) Cmp(other Rational) (int, error)
+type Rational, method (Rational) Equal(other Rational) bool
+type Rational, method (Rational) String() string
+type Rational, method (Rational) Valid() bool
+type Rational, method (Rational) Value() *big.Rat
+type ReferenceOwner struct, comparable
+type ReferenceOwner struct, field Attribute AttributeSelector
+type ReferenceOwner struct, field Declaration DeclarationID
+type ReferenceOwner struct, field Rule RuleKey
+type ReferenceOwner struct, field order Declaration Attribute Rule
+type ReferencePlanSpec struct, field Attribute AttributeSelector
+type ReferencePlanSpec struct, field OwnerReferences []ReferenceOwner
+type ReferencePlanSpec struct, field Owners []DeclarationID
+type ReferencePlanSpec struct, field TargetAncestors []DeclarationID
+type ReferencePlanSpec struct, field Targets []DeclarationID
+type ReferencePlanSpec struct, field TriggerChildren []DeclarationID
+type ReferencePlanSpec struct, field order Attribute Targets TargetAncestors Owners OwnerReferences TriggerChildren
+type ReferencePlanSpec struct, not comparable
+type RelationKind string
+type RepeatContextResult struct, field Active Evidence[bool]
+type RepeatContextResult struct, field AllStaves Evidence[bool]
+type RepeatContextResult struct, field Beat Evidence[Rational]
+type RepeatContextResult struct, field Complete Evidence[bool]
+type RepeatContextResult struct, field ContentEquivalent Evidence[bool]
+type RepeatContextResult struct, field ExceptVoices []Evidence[string]
+type RepeatContextResult struct, field Kind RepeatStyleKind
+type RepeatContextResult struct, field NoteScopesComplete Evidence[bool]
+type RepeatContextResult struct, field Notes []RepeatNoteScope
+type RepeatContextResult struct, field Part Evidence[NodeRef]
+type RepeatContextResult struct, field PatternMeasures Evidence[Integer]
+type RepeatContextResult struct, field RawUseDots Evidence[bool]
+type RepeatContextResult struct, field RawUseStems Evidence[bool]
+type RepeatContextResult struct, field Slashes Evidence[Integer]
+type RepeatContextResult struct, field Staff Evidence[Integer]
+type RepeatContextResult struct, field Start Evidence[NodeRef]
+type RepeatContextResult struct, field Stop Evidence[NodeRef]
+type RepeatContextResult struct, field Type Evidence[string]
+type RepeatContextResult struct, field UseDots Evidence[bool]
+type RepeatContextResult struct, field UseStems Evidence[bool]
+type RepeatContextResult struct, field order NoteScopesComplete RawUseDots RawUseStems Notes Kind Part AllStaves Staff Type Slashes UseDots UseStems Active PatternMeasures Beat Start Stop ExceptVoices ContentEquivalent Complete
+type RepeatContextResult struct, not comparable
+type RepeatNoteScope struct, comparable
+type RepeatNoteScope struct, field Applies Evidence[bool]
+type RepeatNoteScope struct, field InRange Evidence[bool]
+type RepeatNoteScope struct, field Source NodeRef
+type RepeatNoteScope struct, field order Source InRange Applies
+type RepeatStyleKind string
+type Report struct, field AssessmentComplete bool
+type Report struct, field BlockingProblems uint64
+type Report struct, field Conformance ConformanceState
+type Report struct, field Context []ContextResult
+type Report struct, field Counts Counts
+type Report struct, field DiagnosticsTruncated bool
+type Report struct, field Findings []Finding
+type Report struct, field InputComplete bool
+type Report struct, field Profile Profile
+type Report struct, field Requested bool
+type Report struct, field Rules []RuleDefinition
+type Report struct, field Syntax SyntaxState
+type Report struct, field Target Target
+type Report struct, field Terminal *TerminalSummary
+type Report struct, field order Context Requested Profile Target Syntax Conformance AssessmentComplete Counts BlockingProblems Findings Rules DiagnosticsTruncated InputComplete Terminal
+type Report struct, not comparable
+type Report, method (Report) Format(w io.Writer) error
+type Report, method (Report) FormatLocalized(w io.Writer, translations map[RuleKey]RuleText) error
+type Report, method (Report) Satisfied() bool
+type ReportLease struct, comparable
+type ReportLease, method (*ReportLease) Close() error
+type ResourceAdoption struct, comparable
+type ResourceAdoption, method (*ResourceAdoption) ContextAt(ctx context.Context, i int) (ContextResult, bool, error)
+type ResourceAdoption, method (*ResourceAdoption) ContextCount() int
+type ResourceAdoption, method (*ResourceAdoption) Header() ResourceSnapshotHeader
+type ResourceAdoption, method (*ResourceAdoption) IDAt(ctx context.Context, i int) (ResourceIDFact, bool, error)
+type ResourceAdoption, method (*ResourceAdoption) IDCount() int
+type ResourceAdoption, method (*ResourceAdoption) Report(ctx context.Context) (Report, error)
+type ResourceAdoption, method (*ResourceAdoption) ResolveXMLFragment(ctx context.Context, fragment string) (result Evidence[NodeRef], selected bool, err error)
+type ResourceAdoptionContext struct, comparable
+type ResourceAdoptionContext struct, field Adoption ResourceAdoptionID
+type ResourceAdoptionContext struct, field ArchiveEntry string
+type ResourceAdoptionContext struct, field Assessment ResourceAssessmentID
+type ResourceAdoptionContext struct, field BaseURI string
+type ResourceAdoptionContext struct, field DocumentID string
+type ResourceAdoptionContext struct, field ExpansionComplete Evidence[bool]
+type ResourceAdoptionContext struct, field ExpansionOwner ResourceAdoptionID
+type ResourceAdoptionContext struct, field Package PackageID
+type ResourceAdoptionContext struct, field order Adoption Assessment DocumentID Package BaseURI ArchiveEntry ExpansionOwner ExpansionComplete
+type ResourceAdoptionID string
+type ResourceAdoptionOptions struct, comparable
+type ResourceAdoptionOptions struct, field ArchiveEntry string
+type ResourceAdoptionOptions struct, field BaseURI string
+type ResourceAdoptionOptions struct, field DocumentID string
+type ResourceAdoptionOptions struct, field Package PackageID
+type ResourceAdoptionOptions struct, field Root bool
+type ResourceAdoptionOptions struct, field order BaseURI ArchiveEntry Package DocumentID Root
+type ResourceAssessmentID string
+type ResourceAttribute struct, comparable
+type ResourceAttribute struct, field Presence Evidence[bool]
+type ResourceAttribute struct, field Raw Evidence[string]
+type ResourceAttribute struct, field Value Evidence[Atomic]
+type ResourceAttribute struct, field order Presence Raw Value
+type ResourceContextResult struct, comparable
+type ResourceContextResult struct, field Group *ResourceGroupContext
+type ResourceContextResult struct, field Image *ResourceImageContext
+type ResourceContextResult struct, field Instrument *ResourceInstrumentContext
+type ResourceContextResult struct, field Link *ResourceLinkContext
+type ResourceContextResult struct, field Owner NodeRef
+type ResourceContextResult struct, field Part Evidence[NodeRef]
+type ResourceContextResult struct, field SchemaHints *ResourceSchemaHintsContext
+type ResourceContextResult struct, field SubjectDeclaration Evidence[DeclarationID]
+type ResourceContextResult struct, field order SubjectDeclaration Owner Part Link Image SchemaHints Group Instrument
+type ResourceDocumentRequest struct, comparable
+type ResourceDocumentRequest struct, field BaseURI string
+type ResourceDocumentRequest struct, field CatalogDigest string
+type ResourceDocumentRequest struct, field Href string
+type ResourceDocumentRequest struct, field Kind LinkedResourceKind
+type ResourceDocumentRequest struct, field Package PackageID
+type ResourceDocumentRequest struct, field RequestedRevision string
+type ResourceDocumentRequest struct, field RequiredProfile ProfileID
+type ResourceDocumentRequest struct, field Source ResourcePin
+type ResourceDocumentRequest struct, field Subject NodeRef
+type ResourceDocumentRequest struct, field order Source Subject Kind RequiredProfile CatalogDigest BaseURI Href RequestedRevision Package
+type ResourceError struct, comparable
+type ResourceError struct, field Kind BudgetKind
+type ResourceError struct, field Limit int64
+type ResourceError struct, field Requested int64
+type ResourceError struct, field Used int64
+type ResourceError struct, field order Kind Limit Used Requested
+type ResourceError, method (*ResourceError) Error() string
+type ResourceError, method (*ResourceError) Unwrap() []error
+type ResourceFailureSummary struct, comparable
+type ResourceFailureSummary struct, field CatalogDigest string
+type ResourceFailureSummary struct, field Conformance ConformanceState
+type ResourceFailureSummary struct, field Counts Counts
+type ResourceFailureSummary struct, field DiagnosticsTruncated bool
+type ResourceFailureSummary struct, field MetadataTruncated bool
+type ResourceFailureSummary struct, field Pin ResourcePin
+type ResourceFailureSummary struct, field PinComplete Evidence[bool]
+type ResourceFailureSummary struct, field Profile ProfileID
+type ResourceFailureSummary struct, field Target Target
+type ResourceFailureSummary struct, field Terminal TerminalSummary
+type ResourceFailureSummary struct, field order Pin PinComplete Target Profile CatalogDigest Counts Conformance Terminal DiagnosticsTruncated MetadataTruncated
+type ResourceGroupContext struct, comparable
+type ResourceGroupContext struct, field Linked bool
+type ResourceGroupContext struct, field Value Evidence[string]
+type ResourceGroupContext struct, field order Linked Value
+type ResourceIDFact struct, comparable
+type ResourceIDFact struct, field Declaration DeclarationID
+type ResourceIDFact struct, field Kind Evidence[QName]
+type ResourceIDFact struct, field Location Location
+type ResourceIDFact struct, field Part Evidence[NodeRef]
+type ResourceIDFact struct, field Source NodeRef
+type ResourceIDFact struct, field Subject NodeRef
+type ResourceIDFact struct, field Unique Evidence[bool]
+type ResourceIDFact struct, field Value string
+type ResourceIDFact struct, field order Value Declaration Subject Source Part Kind Unique Location
+type ResourceImageContext struct, comparable
+type ResourceImageContext struct, field Credit bool
+type ResourceImageContext struct, field Height ResourceAttribute
+type ResourceImageContext struct, field MediaType ResourceAttribute
+type ResourceImageContext struct, field Scaling Evidence[string]
+type ResourceImageContext struct, field Source ResourceAttribute
+type ResourceImageContext struct, field Width ResourceAttribute
+type ResourceImageContext struct, field order Credit Source MediaType Width Height Scaling
+type ResourceInstrumentContext struct, comparable
+type ResourceInstrumentContext struct, field ID ResourceAttribute
+type ResourceInstrumentContext struct, field Target Evidence[NodeRef]
+type ResourceInstrumentContext struct, field order ID Target
+type ResourceLinkContext struct, comparable
+type ResourceLinkContext struct, field Actuate ResourceAttribute
+type ResourceLinkContext struct, field ActuationIntent Evidence[string]
+type ResourceLinkContext struct, field Attachment Evidence[NodeRef]
+type ResourceLinkContext struct, field Element ResourceAttribute
+type ResourceLinkContext struct, field Fragment Evidence[string]
+type ResourceLinkContext struct, field Href ResourceAttribute
+type ResourceLinkContext struct, field Kind ResourceLinkKind
+type ResourceLinkContext struct, field Position ResourceAttribute
+type ResourceLinkContext struct, field PresentationIntent Evidence[string]
+type ResourceLinkContext struct, field Show ResourceAttribute
+type ResourceLinkContext struct, field order PresentationIntent ActuationIntent Kind Href Show Actuate Element Position Attachment Fragment
+type ResourceLinkKind string
+type ResourcePin struct, comparable
+type ResourcePin struct, field CanonicalID string
+type ResourcePin struct, field Digest string
+type ResourcePin struct, field Representation ResourceRepresentation
+type ResourcePin struct, field Revision string
+type ResourcePin struct, field SnapshotID string
+type ResourcePin struct, field order CanonicalID Revision Digest SnapshotID Representation
+type ResourceRepresentation string
+type ResourceRequest struct, comparable
+type ResourceRequest struct, field Association *AssociationRequest
+type ResourceRequest struct, field Document *ResourceDocumentRequest
+type ResourceRequest struct, field ID ResourceRequestID
+type ResourceRequest struct, field Image *ImageMetadataRequest
+type ResourceRequest struct, field Roles *ResourceRoleRequest
+type ResourceRequest struct, field order ID Document Image Association Roles
+type ResourceRequestID string
+type ResourceResolver interface
+type ResourceResolver interface, method Resolve(context.Context, ResourceRequest) (ResourceResult, error)
+type ResourceResult struct, field Association *AssociationResult
+type ResourceResult struct, field Authority EvidenceAuthority
+type ResourceResult struct, field Body io.ReadCloser
+type ResourceResult struct, field Image *ImageMetadataResult
+type ResourceResult struct, field MediaType string
+type ResourceResult struct, field Pin ResourcePin
+type ResourceResult struct, field Reason Code
+type ResourceResult struct, field RequestID ResourceRequestID
+type ResourceResult struct, field RetrievalURI string
+type ResourceResult struct, field Roles *ResourceRoleResult
+type ResourceResult struct, field State EvidenceState
+type ResourceResult struct, field order RequestID State Reason Pin RetrievalURI MediaType Body Image Association Roles Authority
+type ResourceResult struct, not comparable
+type ResourceRole string
+type ResourceRoleFact struct, comparable
+type ResourceRoleFact struct, field Member *ResourceRoleMember
+type ResourceRoleFact struct, field Membership Evidence[bool]
+type ResourceRoleFact struct, field Resource ResourcePin
+type ResourceRoleFact struct, field Role ResourceRole
+type ResourceRoleFact struct, field order Resource Member Role Membership
+type ResourceRoleMember struct, comparable
+type ResourceRoleMember struct, field ArchiveEntry string
+type ResourceRoleMember struct, field BaseURI Evidence[string]
+type ResourceRoleMember struct, field Resource ResourcePin
+type ResourceRoleMember struct, field order Resource ArchiveEntry BaseURI
+type ResourceRoleRequest struct, field ID ResourceRequestID
+type ResourceRoleRequest struct, field Members []ResourceRoleMember
+type ResourceRoleRequest struct, field Package PackageID
+type ResourceRoleRequest struct, field Resources []ResourcePin
+type ResourceRoleRequest struct, field ScopeComplete Evidence[bool]
+type ResourceRoleRequest struct, field order ID Package Resources Members ScopeComplete
+type ResourceRoleRequest struct, not comparable
+type ResourceRoleResult struct, field Authority EvidenceAuthority
+type ResourceRoleResult struct, field Request ResourceRoleRequest
+type ResourceRoleResult struct, field Resources []ResourceRoleFact
+type ResourceRoleResult struct, field ScopeComplete Evidence[bool]
+type ResourceRoleResult struct, field order Request Resources ScopeComplete Authority
+type ResourceRoleResult struct, not comparable
+type ResourceSchemaHintsContext struct, field Complete Evidence[bool]
+type ResourceSchemaHintsContext struct, field NoNamespace ResourceAttribute
+type ResourceSchemaHintsContext struct, field Pairs []SchemaHintPair
+type ResourceSchemaHintsContext struct, field Raw Evidence[string]
+type ResourceSchemaHintsContext struct, field Trailing Evidence[string]
+type ResourceSchemaHintsContext struct, field order Raw Pairs Trailing Complete NoNamespace
+type ResourceSchemaHintsContext struct, not comparable
+type ResourceSnapshot struct, not comparable
+type ResourceSnapshot, method (*ResourceSnapshot) Close() error
+type ResourceSnapshot, method (*ResourceSnapshot) ContextAt(ctx context.Context, i int) (ContextResult, bool, error)
+type ResourceSnapshot, method (*ResourceSnapshot) ContextCount() int
+type ResourceSnapshot, method (*ResourceSnapshot) Header() ResourceSnapshotHeader
+type ResourceSnapshot, method (*ResourceSnapshot) IDAt(ctx context.Context, i int) (ResourceIDFact, bool, error)
+type ResourceSnapshot, method (*ResourceSnapshot) IDCount() int
+type ResourceSnapshot, method (*ResourceSnapshot) Report(ctx context.Context) (Report, error)
+type ResourceSnapshotHeader struct, comparable
+type ResourceSnapshotHeader struct, field Assembly Evidence[Assembly]
+type ResourceSnapshotHeader struct, field CatalogDigest string
+type ResourceSnapshotHeader struct, field DocumentID string
+type ResourceSnapshotHeader struct, field IDScopeComplete Evidence[bool]
+type ResourceSnapshotHeader struct, field InputComplete bool
+type ResourceSnapshotHeader struct, field LinkProjectionSelected bool
+type ResourceSnapshotHeader struct, field Name Evidence[QName]
+type ResourceSnapshotHeader struct, field Profile ProfileID
+type ResourceSnapshotHeader struct, field Root NodeRef
+type ResourceSnapshotHeader struct, field ScopeComplete Evidence[bool]
+type ResourceSnapshotHeader struct, field Syntax SyntaxState
+type ResourceSnapshotHeader struct, field Target Target
+type ResourceSnapshotHeader struct, field order LinkProjectionSelected DocumentID Root Name Assembly Profile CatalogDigest Target InputComplete Syntax ScopeComplete IDScopeComplete
+type RuleClass string
+type RuleDefinition struct, field Category DiagnosticCategory
+type RuleDefinition struct, field Class RuleClass
+type RuleDefinition struct, field Key RuleKey
+type RuleDefinition struct, field Predicate string
+type RuleDefinition struct, field Requires []Dependency
+type RuleDefinition struct, field Role RuleRole
+type RuleDefinition struct, field Scope ScopeKind
+type RuleDefinition struct, field Selector Selector
+type RuleDefinition struct, field Sources []SourceRef
+type RuleDefinition struct, field Targets []Target
+type RuleDefinition struct, field Text RuleText
+type RuleDefinition struct, field order Key Class Role Category Targets Scope Selector Predicate Requires Sources Text
+type RuleDefinition struct, not comparable
+type RuleID string
+type RuleKey struct, comparable
+type RuleKey struct, field ID RuleID
+type RuleKey struct, field Revision uint32
+type RuleKey struct, field order ID Revision
+type RuleRole string
+type RuleSupport struct, comparable
+type RuleSupport struct, field Reason Code
+type RuleSupport struct, field Rule RuleKey
+type RuleSupport struct, field State ImplementationState
+type RuleSupport struct, field order Rule State Reason
+type RuleText struct, comparable
+type RuleText struct, field Explanation string
+type RuleText struct, field Message string
+type RuleText struct, field Title string
+type RuleText struct, field order Title Explanation Message
+type RunOptions struct, comparable
+type RunOptions struct, field Account *Account
+type RunOptions struct, field Budgets Budgets
+type RunOptions struct, field DocumentID string
+type RunOptions struct, field Profile ProfileID
+type RunOptions struct, field order DocumentID Profile Budgets Account
+type SMuFLDictionaryData struct, field Glyphs []SMuFLGlyph
+type SMuFLDictionaryData struct, field Ranges []SMuFLRange
+type SMuFLDictionaryData struct, field order Glyphs Ranges
+type SMuFLDictionaryData struct, not comparable
+type SMuFLGlyph struct, comparable
+type SMuFLGlyph struct, field Codepoint uint32
+type SMuFLGlyph struct, field Name string
+type SMuFLGlyph struct, field order Name Codepoint
+type SMuFLRange struct, field End uint32
+type SMuFLRange struct, field ID string
+type SMuFLRange struct, field Names []string
+type SMuFLRange struct, field Start uint32
+type SMuFLRange struct, field order ID Start End Names
+type SMuFLRange struct, not comparable
+type Scalar struct, comparable
+type Scalar struct, field Lexeme Evidence[string]
+type Scalar struct, field Value Evidence[Atomic]
+type Scalar struct, field order Lexeme Value
+type SchemaAny = xsd.AnySchema
+type SchemaAny struct, comparable
+type SchemaAny struct, field Namespace string
+type SchemaAny struct, field ProcessContents string
+type SchemaAny struct, field order Namespace ProcessContents
+type SchemaAnyAttribute = xsd.AnyAttributeSchema
+type SchemaAnyAttribute struct, comparable
+type SchemaAnyAttribute struct, field Namespace string
+type SchemaAnyAttribute struct, field ProcessContents string
+type SchemaAnyAttribute struct, field order Namespace ProcessContents
+type SchemaAttribute = xsd.AttributeSchema
+type SchemaAttribute struct, comparable
+type SchemaAttribute struct, field Constraint *xsd.ValueConstraint
+type SchemaAttribute struct, field Name xsd.QName
+type SchemaAttribute struct, field Type xsd.TypeRef
+type SchemaAttribute struct, field Use xsd.AttributeUse
+type SchemaAttribute struct, field order Name Type Use Constraint
+type SchemaAttributeUse = xsd.AttributeUse
+type SchemaAttributeUse string
+type SchemaComplex = xsd.ComplexSchema
+type SchemaComplex struct, field Abstract bool
+type SchemaComplex struct, field AnyAttribute *xsd.AnyAttributeSchema
+type SchemaComplex struct, field Attributes []xsd.AttributeSchema
+type SchemaComplex struct, field Base *xsd.TypeRef
+type SchemaComplex struct, field Block xsd.Derivation
+type SchemaComplex struct, field Final xsd.Derivation
+type SchemaComplex struct, field Form xsd.ComplexForm
+type SchemaComplex struct, field Mixed bool
+type SchemaComplex struct, field Particle *xsd.ParticleSchema
+type SchemaComplex struct, field SimpleContent *xsd.SimpleSchema
+type SchemaComplex struct, field order Block Final Abstract SimpleContent Form Base Particle Attributes AnyAttribute Mixed
+type SchemaComplex struct, not comparable
+type SchemaComplexForm = xsd.ComplexForm
+type SchemaComplexForm string
+type SchemaData = xsd.SchemaData
+type SchemaData struct, field Elements map[xsd.QName]*xsd.ElementSchema
+type SchemaData struct, field Types map[xsd.QName]*xsd.TypeSchema
+type SchemaData struct, field order Types Elements
+type SchemaData struct, not comparable
+type SchemaDerivation = xsd.Derivation
+type SchemaDerivation uint8
+type SchemaElement = xsd.ElementSchema
+type SchemaElement struct, comparable
+type SchemaElement struct, field Abstract bool
+type SchemaElement struct, field Block xsd.Derivation
+type SchemaElement struct, field Default *string
+type SchemaElement struct, field Final xsd.Derivation
+type SchemaElement struct, field Fixed *string
+type SchemaElement struct, field Name xsd.QName
+type SchemaElement struct, field Nillable bool
+type SchemaElement struct, field Reference xsd.QName
+type SchemaElement struct, field Type xsd.TypeRef
+type SchemaElement struct, field order Block Final Name Reference Type Default Fixed Nillable Abstract
+type SchemaHintPair struct, comparable
+type SchemaHintPair struct, field Location Evidence[string]
+type SchemaHintPair struct, field Namespace Evidence[string]
+type SchemaHintPair struct, field Origin Location
+type SchemaHintPair struct, field order Namespace Location Origin
+type SchemaName = xsd.QName
+type SchemaName struct, comparable
+type SchemaName struct, field Local string
+type SchemaName struct, field Space string
+type SchemaName struct, field order Space Local
+type SchemaOccurrence = xsd.Occurrence
+type SchemaOccurrence struct, comparable
+type SchemaOccurrence struct, field Max uint64
+type SchemaOccurrence struct, field Min uint64
+type SchemaOccurrence struct, field Unbounded bool
+type SchemaOccurrence struct, field order Min Max Unbounded
+type SchemaParticle = xsd.ParticleSchema
+type SchemaParticle struct, field Any *xsd.AnySchema
+type SchemaParticle struct, field Children []*xsd.ParticleSchema
+type SchemaParticle struct, field Element *xsd.ElementSchema
+type SchemaParticle struct, field Kind xsd.ParticleKind
+type SchemaParticle struct, field Occurrence xsd.Occurrence
+type SchemaParticle struct, field order Kind Occurrence Element Children Any
+type SchemaParticle struct, not comparable
+type SchemaParticleKind = xsd.ParticleKind
+type SchemaParticleKind string
+type SchemaSimple = xsd.SimpleSchema
+type SchemaSimple struct, field Base *xsd.SimpleMember
+type SchemaSimple struct, field Enumerations []string
+type SchemaSimple struct, field Final xsd.Derivation
+type SchemaSimple struct, field Form xsd.SimpleForm
+type SchemaSimple struct, field FractionDigits uint64
+type SchemaSimple struct, field HasFractionDigits bool
+type SchemaSimple struct, field HasLength bool
+type SchemaSimple struct, field HasMaxExclusive bool
+type SchemaSimple struct, field HasMaxInclusive bool
+type SchemaSimple struct, field HasMaxLength bool
+type SchemaSimple struct, field HasMinExclusive bool
+type SchemaSimple struct, field HasMinInclusive bool
+type SchemaSimple struct, field HasMinLength bool
+type SchemaSimple struct, field HasTotalDigits bool
+type SchemaSimple struct, field Item *xsd.SimpleMember
+type SchemaSimple struct, field Length uint64
+type SchemaSimple struct, field MaxExclusive string
+type SchemaSimple struct, field MaxInclusive string
+type SchemaSimple struct, field MaxLength uint64
+type SchemaSimple struct, field Members []*xsd.SimpleMember
+type SchemaSimple struct, field MinExclusive string
+type SchemaSimple struct, field MinInclusive string
+type SchemaSimple struct, field MinLength uint64
+type SchemaSimple struct, field Patterns []string
+type SchemaSimple struct, field TotalDigits uint64
+type SchemaSimple struct, field WhiteSpace string
+type SchemaSimple struct, field order Final Form Base Enumerations Members Item Patterns MinInclusive MaxInclusive MinExclusive MaxExclusive Length MinLength MaxLength TotalDigits FractionDigits WhiteSpace HasMinInclusive HasMaxInclusive HasMinExclusive HasMaxExclusive HasLength HasMinLength HasMaxLength HasTotalDigits HasFractionDigits
+type SchemaSimple struct, not comparable
+type SchemaSimpleForm = xsd.SimpleForm
+type SchemaSimpleForm string
+type SchemaSimpleMember = xsd.SimpleMember
+type SchemaSimpleMember struct, comparable
+type SchemaSimpleMember struct, field Inline *xsd.SimpleSchema
+type SchemaSimpleMember struct, field Name xsd.QName
+type SchemaSimpleMember struct, field order Name Inline
+type SchemaType = xsd.TypeSchema
+type SchemaType struct, comparable
+type SchemaType struct, field Complex *xsd.ComplexSchema
+type SchemaType struct, field Simple *xsd.SimpleSchema
+type SchemaType struct, field order Simple Complex
+type SchemaTypeRef = xsd.TypeRef
+type SchemaTypeRef struct, comparable
+type SchemaTypeRef struct, field InlineComplex *xsd.ComplexSchema
+type SchemaTypeRef struct, field InlineSimple *xsd.SimpleSchema
+type SchemaTypeRef struct, field Name xsd.QName
+type SchemaTypeRef struct, field order Name InlineSimple InlineComplex
+type SchemaUse struct, comparable
+type SchemaUse struct, field Attribute bool
+type SchemaUse struct, field Declaration DeclarationID
+type SchemaUse struct, field DeclaredType ComponentID
+type SchemaUse struct, field DeclaredTypeKnown bool
+type SchemaUse struct, field Name QName
+type SchemaUse struct, field OwnerType ComponentID
+type SchemaUse struct, field OwnerTypeKnown bool
+type SchemaUse struct, field order Declaration Name Attribute OwnerType OwnerTypeKnown DeclaredType DeclaredTypeKnown
+type SchemaValueConstraint = xsd.ValueConstraint
+type SchemaValueConstraint struct, comparable
+type SchemaValueConstraint struct, field Kind string
+type SchemaValueConstraint struct, field Value string
+type SchemaValueConstraint struct, field order Kind Value
+type ScopeKind string
+type Selector struct, comparable
+type Selector struct, field Assembly *Assembly
+type Selector struct, field Component *ComponentID
+type Selector struct, field Declaration *DeclarationID
+type Selector struct, field order Assembly Component Declaration
+type Session struct, not comparable
+type Session, method (*Session) Attribute(ctx context.Context, attribute AttributeFact) error
+type Session, method (*Session) Close(ctx context.Context, end NodeEnd) error
+type Session, method (*Session) CompleteAttributes(ctx context.Context, id NodeID, complete Evidence[bool]) error
+type Session, method (*Session) CompleteSourceDTDIDs(ctx context.Context, doc string) error
+type Session, method (*Session) CompleteSourceOrigins(ctx context.Context, provider RuleKey, complete Evidence[bool]) error
+type Session, method (*Session) Finish(ctx context.Context, end Completion) (Report, error)
+type Session, method (*Session) FinishWithResourceSnapshot(ctx context.Context, end Completion) (Report, *ResourceSnapshot, error)
+type Session, method (*Session) FinishWithRetainedReport(ctx context.Context, end Completion) (report Report, lease *ReportLease, err error)
+type Session, method (*Session) ModelRepresentation(ctx context.Context, fact ModelRepresentationFact) error
+type Session, method (*Session) Open(ctx context.Context, node NodeHeader) error
+type Session, method (*Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, subject NodeRef, attribute QName, raw Evidence[string]) (err error)
+type Session, method (*Session) SourceDTDIDAttribute(ctx context.Context, f SourceDTDIDAttribute) (err error)
+type Session, method (*Session) SourceDTDIDDomain(ctx context.Context, f SourceDTDIDDomain) (err error)
+type Session, method (*Session) SourceDTDIDsSelected() bool
+type Session, method (*Session) SourceEntityDeclarations(ctx context.Context, facts SourceEntityDeclarations) (err error)
+type Session, method (*Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceOriginContextResult) (err error)
+type SessionError struct, comparable
+type SessionError struct, field Cause error
+type SessionError struct, field Operation string
+type SessionError struct, field Reason string
+type SessionError struct, field order Operation Reason Cause
+type SessionError, method (*SessionError) Error() string
+type SessionError, method (*SessionError) Unwrap() []error
+type SoundMappingContextResult struct, comparable
+type SoundMappingContextResult struct, field Content Evidence[bool]
+type SoundMappingContextResult struct, field Direction SoundMappingDirection
+type SoundMappingContextResult struct, field LibraryID Evidence[Atomic]
+type SoundMappingContextResult struct, field Number Evidence[Atomic]
+type SoundMappingContextResult struct, field Primary Evidence[Atomic]
+type SoundMappingContextResult struct, field Role SoundMappingRole
+type SoundMappingContextResult struct, field Sound NodeRef
+type SoundMappingContextResult struct, field SoundID Evidence[Atomic]
+type SoundMappingContextResult struct, field order Role Direction Sound SoundID LibraryID Primary Number Content
+type SoundMappingDirection string
+type SoundMappingRole string
+type SourceDTDIDAttribute struct, comparable
+type SourceDTDIDAttribute struct, field Attribute QName
+type SourceDTDIDAttribute struct, field Declaration *SourceDTDIDDeclaration
+type SourceDTDIDAttribute struct, field IsID Evidence[bool]
+type SourceDTDIDAttribute struct, field Specified Evidence[bool]
+type SourceDTDIDAttribute struct, field Subject NodeRef
+type SourceDTDIDAttribute struct, field Use Evidence[Location]
+type SourceDTDIDAttribute struct, field Value string
+type SourceDTDIDAttribute struct, field order Subject Attribute Value IsID Declaration Specified Use
+type SourceDTDIDDeclaration struct, comparable
+type SourceDTDIDDeclaration struct, field Attribute string
+type SourceDTDIDDeclaration struct, field DefaultKind string
+type SourceDTDIDDeclaration struct, field Element string
+type SourceDTDIDDeclaration struct, field Origin Evidence[Location]
+type SourceDTDIDDeclaration struct, field Sequence uint64
+type SourceDTDIDDeclaration struct, field order Sequence Element Attribute DefaultKind Origin
+type SourceDTDIDDomain struct, comparable
+type SourceDTDIDDomain struct, field Complete Evidence[bool]
+type SourceDTDIDDomain struct, field DocumentID string
+type SourceDTDIDDomain struct, field order DocumentID Complete
+type SourceEntityDeclaration struct, comparable
+type SourceEntityDeclaration struct, field Name string
+type SourceEntityDeclaration struct, field Origin Evidence[Location]
+type SourceEntityDeclaration struct, field Sequence uint64
+type SourceEntityDeclaration struct, field Unparsed bool
+type SourceEntityDeclaration struct, field order Name Unparsed Sequence Origin
+type SourceEntityDeclarations struct, field Complete Evidence[bool]
+type SourceEntityDeclarations struct, field Declarations []SourceEntityDeclaration
+type SourceEntityDeclarations struct, field DocumentID string
+type SourceEntityDeclarations struct, field order DocumentID Declarations Complete
+type SourceEntityDeclarations struct, not comparable
+type SourceOriginContextResult struct, field Ancestry []SourceOriginStep
+type SourceOriginContextResult struct, field AncestryComplete Evidence[bool]
+type SourceOriginContextResult struct, field Attribute *QName `json:",omitempty"`
+type SourceOriginContextResult struct, field Declaration Evidence[Location]
+type SourceOriginContextResult struct, field Kind SourceOriginKind
+type SourceOriginContextResult struct, field Physical Evidence[Location]
+type SourceOriginContextResult struct, field Specified Evidence[bool]
+type SourceOriginContextResult struct, field Subject NodeRef
+type SourceOriginContextResult struct, field Use Evidence[Location]
+type SourceOriginContextResult struct, field order Subject Attribute Kind Specified Physical Declaration Use Ancestry AncestryComplete
+type SourceOriginContextResult struct, not comparable
+type SourceOriginKind string
+type SourceOriginStep struct, comparable
+type SourceOriginStep struct, field Declaration Evidence[Location]
+type SourceOriginStep struct, field Entity string
+type SourceOriginStep struct, field Use Evidence[Location]
+type SourceOriginStep struct, field order Entity Declaration Use
+type SourcePosition struct, comparable
+type SourcePosition struct, field ByteOffset int64
+type SourcePosition struct, field Column int
+type SourcePosition struct, field CoordinateSpace string
+type SourcePosition struct, field Line int
+type SourcePosition struct, field order ByteOffset Line Column CoordinateSpace
+type SourceRef struct, field IDs []string
+type SourceRef struct, field Locator string
+type SourceRef struct, field URL string
+type SourceRef struct, field order IDs URL Locator
+type SourceRef struct, not comparable
+type SpanContextResult struct, field Anchor Evidence[NodeRef]
+type SpanContextResult struct, field Association Evidence[bool]
+type SpanContextResult struct, field Domain Evidence[NodeRef]
+type SpanContextResult struct, field Family SpanFamily
+type SpanContextResult struct, field Identity SpanIdentityKind
+type SpanContextResult struct, field Included []NodeRef
+type SpanContextResult struct, field Members []NodeRef
+type SpanContextResult struct, field Number Evidence[Atomic]
+type SpanContextResult struct, field NumberExplicit Evidence[bool]
+type SpanContextResult struct, field Position Evidence[SpanPosition]
+type SpanContextResult struct, field Role Evidence[string]
+type SpanContextResult struct, field Staff Evidence[Integer]
+type SpanContextResult struct, field Voice Evidence[string]
+type SpanContextResult struct, field order Family Role Domain Anchor Number NumberExplicit Identity Staff Voice Position Association Members Included
+type SpanContextResult struct, not comparable
+type SpanFamily string
+type SpanIdentityKind string
+type SpanPosition = ContextPosition
+type StandardSoundsDictionaryData struct, field IDs []string
+type StandardSoundsDictionaryData struct, not comparable
+type SyntaxState string
+type Target string
+type TerminalSummary struct, comparable
+type TerminalSummary struct, field Category DiagnosticCategory
+type TerminalSummary struct, field Reason Code
+type TerminalSummary struct, field order Category Reason
+type TimelineConsumerSpec struct, comparable
+type TimelineConsumerSpec struct, field Provider RuleKey
+type TimelineConsumerSpec struct, field Schema *CompiledSchema
+type TimelineConsumerSpec struct, field order Schema Provider
+type TimelinePlanSpec struct, field PartOwners []ReferenceOwner
+type TimelinePlanSpec struct, field Schema *CompiledSchema
+type TimelinePlanSpec struct, field order Schema PartOwners
+type TimelinePlanSpec struct, not comparable
+type TimingAdjustment struct, comparable
+type TimingAdjustment struct, field Delta Evidence[Rational]
+type TimingAdjustment struct, field Origin Evidence[ContextPosition]
+type TimingAdjustment struct, field Position Evidence[ContextPosition]
+type TimingAdjustment struct, field Raw Evidence[Decimal]
+type TimingAdjustment struct, field Units Evidence[Decimal]
+type TimingAdjustment struct, field order Raw Units Delta Origin Position
+type TimingAdvisory struct, comparable
+type TimingAdvisory struct, field Clause Code
+type TimingAdvisory struct, field Satisfied Evidence[bool]
+type TimingAdvisory struct, field order Clause Satisfied
+type TimingBend struct, comparable
+type TimingBend struct, field Accelerate Evidence[bool]
+type TimingBend struct, field Beats Evidence[Decimal]
+type TimingBend struct, field Bend NodeRef
+type TimingBend struct, field FirstBeat TimingPercent
+type TimingBend struct, field LastBeat TimingPercent
+type TimingBend struct, field OriginalNote Evidence[ContextPosition]
+type TimingBend struct, field RawAccelerate Evidence[bool]
+type TimingBend struct, field RawBeats Evidence[Decimal]
+type TimingBend struct, field Release TimingAdjustment
+type TimingBend struct, field ReleasePresent Evidence[bool]
+type TimingBend struct, field order Bend Release FirstBeat LastBeat OriginalNote ReleasePresent RawBeats Beats RawAccelerate Accelerate
+type TimingContextResult struct, field Advisories []TimingAdvisory
+type TimingContextResult struct, field AllStaves Evidence[bool]
+type TimingContextResult struct, field Anchor Evidence[NodeRef]
+type TimingContextResult struct, field AnchorPosition Evidence[ContextPosition]
+type TimingContextResult struct, field AnchorStaff Evidence[Integer]
+type TimingContextResult struct, field AnchorUnits Evidence[Decimal]
+type TimingContextResult struct, field AnchorVoice Evidence[string]
+type TimingContextResult struct, field Attack TimingAdjustment
+type TimingContextResult struct, field BendAlter Evidence[Decimal]
+type TimingContextResult struct, field BendNegativeApplicable Evidence[bool]
+type TimingContextResult struct, field BendNegativeSatisfied Evidence[bool]
+type TimingContextResult struct, field BendRelease Evidence[bool]
+type TimingContextResult struct, field Bends []TimingBend
+type TimingContextResult struct, field BendsComplete Evidence[bool]
+type TimingContextResult struct, field CancelLocation Evidence[string]
+type TimingContextResult struct, field Capo Evidence[Integer]
+type TimingContextResult struct, field ChainEnd Evidence[ContextPosition]
+type TimingContextResult struct, field ChainInterpretation Code
+type TimingContextResult struct, field ChainPosition Evidence[ContextPosition]
+type TimingContextResult struct, field Chord Evidence[bool]
+type TimingContextResult struct, field ChromaticDisplacement Evidence[Rational]
+type TimingContextResult struct, field ClefLine Evidence[Integer]
+type TimingContextResult struct, field ClefOctave Evidence[Integer]
+type TimingContextResult struct, field ClefSign Evidence[string]
+type TimingContextResult struct, field Cue Evidence[bool]
+type TimingContextResult struct, field CursorAfter Evidence[ContextPosition]
+type TimingContextResult struct, field DiatonicDisplacement Evidence[Rational]
+type TimingContextResult struct, field DoublingAbove Evidence[bool]
+type TimingContextResult struct, field Duration Evidence[Rational]
+type TimingContextResult struct, field DurationRaw Evidence[Decimal]
+type TimingContextResult struct, field DurationUnits Evidence[Decimal]
+type TimingContextResult struct, field Dynamics Evidence[Decimal]
+type TimingContextResult struct, field EditorialPlaybackSuppressed Evidence[bool]
+type TimingContextResult struct, field EffectiveDynamics Evidence[Decimal]
+type TimingContextResult struct, field EffectivePizzicato Evidence[bool]
+type TimingContextResult struct, field EffectiveTempo Evidence[Decimal]
+type TimingContextResult struct, field EffectiveVelocity Evidence[Rational]
+type TimingContextResult struct, field Elevation Evidence[Decimal]
+type TimingContextResult struct, field End Evidence[ContextPosition]
+type TimingContextResult struct, field EndDynamics Evidence[Decimal]
+type TimingContextResult struct, field EndReferenceVelocity Evidence[Rational]
+type TimingContextResult struct, field Figures []NodeRef
+type TimingContextResult struct, field FiguresComplete Evidence[bool]
+type TimingContextResult struct, field Following TimingDonor
+type TimingContextResult struct, field FretNumber Evidence[Integer]
+type TimingContextResult struct, field FretOpenString Evidence[bool]
+type TimingContextResult struct, field Grace Evidence[bool]
+type TimingContextResult struct, field GraceNode Evidence[NodeRef]
+type TimingContextResult struct, field GroupStart Evidence[NodeRef]
+type TimingContextResult struct, field Instruments Evidence[Integer]
+type TimingContextResult struct, field KeyCancel Evidence[Integer]
+type TimingContextResult struct, field KeyFifths Evidence[Integer]
+type TimingContextResult struct, field KeyMode Evidence[string]
+type TimingContextResult struct, field Kind Code
+type TimingContextResult struct, field LayoutOrigin Evidence[NodeRef]
+type TimingContextResult struct, field MIDINote Evidence[Rational]
+type TimingContextResult struct, field MIDIUnpitched Evidence[Integer]
+type TimingContextResult struct, field MakeTime TimingAdjustment
+type TimingContextResult struct, field MeasureLabel Evidence[string]
+type TimingContextResult struct, field Meter []TimingMeterPair
+type TimingContextResult struct, field Origin Evidence[ContextPosition]
+type TimingContextResult struct, field Pan Evidence[Decimal]
+type TimingContextResult struct, field Part Evidence[NodeRef]
+type TimingContextResult struct, field PartOrder Evidence[Integer]
+type TimingContextResult struct, field PitchIntent Evidence[Rational]
+type TimingContextResult struct, field Pizzicato Evidence[bool]
+type TimingContextResult struct, field Play []TimingPlayInstruction
+type TimingContextResult struct, field PlayComplete Evidence[bool]
+type TimingContextResult struct, field Position Evidence[ContextPosition]
+type TimingContextResult struct, field PreBend Evidence[bool]
+type TimingContextResult struct, field Previous TimingDonor
+type TimingContextResult struct, field Principal Evidence[NodeRef]
+type TimingContextResult struct, field PrincipalDuration Evidence[Rational]
+type TimingContextResult struct, field ReferenceVelocity Evidence[Rational]
+type TimingContextResult struct, field Release TimingAdjustment
+type TimingContextResult struct, field RootAlterPrintObject Evidence[bool]
+type TimingContextResult struct, field ScopeStaff Evidence[Integer]
+type TimingContextResult struct, field ScoreEnd Evidence[ContextPosition]
+type TimingContextResult struct, field ScoreOnset Evidence[ContextPosition]
+type TimingContextResult struct, field SenzaMisura Evidence[string]
+type TimingContextResult struct, field SoundingPitch Evidence[Rational]
+type TimingContextResult struct, field Spatial []TimingSpatial
+type TimingContextResult struct, field Staff Evidence[Integer]
+type TimingContextResult struct, field StaffExists Evidence[bool]
+type TimingContextResult struct, field StaffTopDown Evidence[bool]
+type TimingContextResult struct, field StaffType Evidence[string]
+type TimingContextResult struct, field StateOrigins []TimingStateOrigin
+type TimingContextResult struct, field Staves Evidence[Integer]
+type TimingContextResult struct, field StealFollowing Evidence[Decimal]
+type TimingContextResult struct, field StealPrevious Evidence[Decimal]
+type TimingContextResult struct, field Straight Evidence[bool]
+type TimingContextResult struct, field SwingEligible Evidence[bool]
+type TimingContextResult struct, field SwingFirst Evidence[Integer]
+type TimingContextResult struct, field SwingRatio Evidence[Rational]
+type TimingContextResult struct, field SwingRealized Evidence[bool]
+type TimingContextResult struct, field SwingSecond Evidence[Integer]
+type TimingContextResult struct, field SwingType Evidence[string]
+type TimingContextResult struct, field SwungEnd Evidence[ContextPosition]
+type TimingContextResult struct, field SwungOnset Evidence[ContextPosition]
+type TimingContextResult struct, field Tempo Evidence[Decimal]
+type TimingContextResult struct, field TimeOnly Evidence[string]
+type TimingContextResult struct, field TimePrintObject Evidence[bool]
+type TimingContextResult struct, field TimeSeparator Evidence[string]
+type TimingContextResult struct, field TimeSymbol Evidence[string]
+type TimingContextResult struct, field TranspositionChromatic Evidence[Decimal]
+type TimingContextResult struct, field TranspositionDiatonic Evidence[Integer]
+type TimingContextResult struct, field TranspositionOctave Evidence[Integer]
+type TimingContextResult struct, field TrillExcludesClosingTurn Evidence[bool]
+type TimingContextResult struct, field TrillIncludesInitialSound Evidence[bool]
+type TimingContextResult struct, field TuningBottomUp Evidence[bool]
+type TimingContextResult struct, field Tunings []TimingTuning
+type TimingContextResult struct, field Units Evidence[Decimal]
+type TimingContextResult struct, field Voice Evidence[string]
+type TimingContextResult struct, field WrittenAlter Evidence[Decimal]
+type TimingContextResult struct, field WrittenOctave Evidence[Integer]
+type TimingContextResult struct, field WrittenPitch Evidence[Rational]
+type TimingContextResult struct, field WrittenStep Evidence[string]
+type TimingContextResult struct, field order AllStaves ScopeStaff PartOrder MeasureLabel Advisories CursorAfter SwingRatio StateOrigins Spatial Meter FretNumber FretOpenString EditorialPlaybackSuppressed TrillIncludesInitialSound TrillExcludesClosingTurn LayoutOrigin TuningBottomUp StaffTopDown RootAlterPrintObject EffectiveTempo EffectiveDynamics EffectivePizzicato EffectiveVelocity PitchIntent Kind Play PlayComplete Attack Release MakeTime Previous Following Bends Figures Tunings ChainInterpretation Origin Position End Duration PrincipalDuration Principal Units Staff Voice Part ScoreOnset ScoreEnd Chord Grace Cue BendsComplete GraceNode StealPrevious StealFollowing Anchor AnchorPosition AnchorStaff AnchorVoice ChainPosition ChainEnd GroupStart FiguresComplete DurationRaw AnchorUnits DurationUnits Tempo Dynamics ReferenceVelocity EndDynamics EndReferenceVelocity Pizzicato TimeOnly Pan Elevation MIDIUnpitched MIDINote SwingType SwingFirst SwingSecond Straight SwingEligible SwingRealized SwungOnset SwungEnd BendAlter PreBend BendRelease BendNegativeApplicable BendNegativeSatisfied Staves Instruments StaffExists TranspositionChromatic TranspositionDiatonic TranspositionOctave ChromaticDisplacement DiatonicDisplacement DoublingAbove WrittenStep WrittenAlter WrittenOctave WrittenPitch SoundingPitch StaffType Capo KeyFifths KeyMode KeyCancel CancelLocation TimeSymbol TimeSeparator SenzaMisura TimePrintObject ClefSign ClefLine ClefOctave
+type TimingContextResult struct, not comparable
+type TimingDonor struct, comparable
+type TimingDonor struct, field DonorDuration Evidence[Rational]
+type TimingDonor struct, field Fraction Evidence[Rational]
+type TimingDonor struct, field Note Evidence[NodeRef]
+type TimingDonor struct, field Raw Evidence[Decimal]
+type TimingDonor struct, field StolenDuration Evidence[Rational]
+type TimingDonor struct, field order Note Raw DonorDuration Fraction StolenDuration
+type TimingMeterPair struct, comparable
+type TimingMeterPair struct, field BeatType Evidence[string]
+type TimingMeterPair struct, field Beats Evidence[string]
+type TimingMeterPair struct, field order Beats BeatType
+type TimingPercent struct, comparable
+type TimingPercent struct, field Origin Evidence[ContextPosition]
+type TimingPercent struct, field Percent Evidence[Decimal]
+type TimingPercent struct, field Position Evidence[ContextPosition]
+type TimingPercent struct, field Raw Evidence[Decimal]
+type TimingPercent struct, field order Raw Percent Origin Position
+type TimingPlayInstruction struct, field Instrument Evidence[NodeRef]
+type TimingPlayInstruction struct, field Scope TimingPlayScope
+type TimingPlayInstruction struct, field Source NodeRef
+type TimingPlayInstruction struct, field Value Evidence[[]TimingPlayTechnique]
+type TimingPlayInstruction struct, field order Source Instrument Scope Value
+type TimingPlayInstruction struct, not comparable
+type TimingPlayScope string
+type TimingPlayTechnique struct, comparable
+type TimingPlayTechnique struct, field Kind Code
+type TimingPlayTechnique struct, field Type Evidence[string]
+type TimingPlayTechnique struct, field Value Evidence[string]
+type TimingPlayTechnique struct, field order Kind Value Type
+type TimingSpatial struct, field Elevation Evidence[Decimal]
+type TimingSpatial struct, field ElevationSource []TimingStateSource
+type TimingSpatial struct, field Instrument Evidence[NodeRef]
+type TimingSpatial struct, field Pan Evidence[Decimal]
+type TimingSpatial struct, field PanSource []TimingStateSource
+type TimingSpatial struct, field order Instrument Pan Elevation PanSource ElevationSource
+type TimingSpatial struct, not comparable
+type TimingStateOrigin struct, field InheritanceUnproved bool
+type TimingStateOrigin struct, field Inherited bool
+type TimingStateOrigin struct, field Property Code
+type TimingStateOrigin struct, field Sources []TimingStateSource
+type TimingStateOrigin struct, field order Property Sources Inherited InheritanceUnproved
+type TimingStateOrigin struct, not comparable
+type TimingStateSource struct, comparable
+type TimingStateSource struct, field Kind Code
+type TimingStateSource struct, field Source NodeRef
+type TimingStateSource struct, field order Source Kind
+type TimingTuning struct, comparable
+type TimingTuning struct, field AdjustedPitch Evidence[Rational]
+type TimingTuning struct, field Alter Evidence[Decimal]
+type TimingTuning struct, field Capo Evidence[Integer]
+type TimingTuning struct, field Line Evidence[Integer]
+type TimingTuning struct, field Octave Evidence[Integer]
+type TimingTuning struct, field OpenPitch Evidence[Rational]
+type TimingTuning struct, field Step Evidence[string]
+type TimingTuning struct, field order Line Octave Step Alter Capo OpenPitch AdjustedPitch
+type UnsupportedRootError struct, comparable
+type UnsupportedRootError struct, field Name QName
+type UnsupportedRootError struct, field Profile ProfileID
+type UnsupportedRootError struct, field order Name Profile
+type UnsupportedRootError, method (*UnsupportedRootError) Error() string
+type UnsupportedRootError, method (*UnsupportedRootError) Unwrap() error
+type XSDCheck string
+type ZIPHeaderObservation struct, comparable
+type ZIPHeaderObservation struct, field ExtraLength Evidence[uint64]
+type ZIPHeaderObservation struct, field Flags Evidence[uint16]
+type ZIPHeaderObservation struct, field Method Evidence[uint16]
+type ZIPHeaderObservation struct, field Present Evidence[bool]
+type ZIPHeaderObservation struct, field order Present Method Flags ExtraLength
+var ErrIncompleteAssessment error
+var ErrInvalidConfiguration error
+var ErrInvalidSession error
+var ErrProcessingPolicy error
+var ErrResourceLimit error

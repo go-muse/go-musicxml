@@ -40,6 +40,9 @@ func validateSourceResourceProfile(c *CompiledCatalog, profile Profile, closure 
 // SourceAttributeLexicalProvider identifies the exact selected source-origin
 // provider authorized to admit original attribute lexical evidence for a source
 // resource composition. Legacy source-origin profiles do not enable this input.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (e *Engine) SourceAttributeLexicalProvider(profile ProfileID, assembly Assembly) (RuleKey, bool) {
 	if e == nil || e.catalog == nil {
 		return RuleKey{}, false
@@ -68,6 +71,9 @@ func (s *Session) sourceAttributeLexicalKey() RuleKey {
 // reconstructing Raw from the effective AttributeFact lexeme. This adds no
 // public context row and does not change the effective attribute value. Every
 // rejection is terminal; Finish still releases all owned live gauges.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (s *Session) SourceAttributeLexical(ctx context.Context, provider RuleKey, subject NodeRef, attribute QName, raw Evidence[string]) (err error) {
 	if err := s.event(ctx, "SourceAttributeLexical"); err != nil {
 		return err

@@ -382,3 +382,34 @@ meaningless; otherwise prefer `assert` so one run can report more failures.
 Document every exported declaration. Explain compatibility consequences in the
 pull request and update `API.md` and `CHANGELOG.md` when the public contract
 changes.
+
+`TestPublicAPISnapshot` compares the exported API of the root and
+`validation` packages, plus the `internal/xsd` types re-exported by
+`validation.Schema*`, with the golden files in `testdata/api/`. After an
+intentional change, regenerate them and review the diff as part of the change:
+
+```bash
+go test -run TestPublicAPISnapshot -update-api .
+```
+
+A removed or changed line is a breaking change unless the pull request
+explains why it is not. Regenerating the MusicXML model can change these
+files too, because generated names, field shapes and XML tags follow the
+schema and the `go:generate` flags in `generate.go`. The `-ordered-type`,
+`-type-name`, `-element-go-name` and `-external-type` flags change public
+types, so treat edits to them as API changes.
+
+Conventions for new API:
+
+- Add a variant of an existing operation as a field of its options struct
+  rather than as another top-level function, unless no options struct
+  exists.
+- Keep fields added to comparable structs comparable (scalars or pointers),
+  so callers' `==` keeps compiling.
+- Never add a method to an interface that callers implement, such as
+  `DictionarySource` or `validation.ResourceResolver`. Offer the capability as
+  a separate optional interface and detect it with a type assertion.
+- Accept `context.Context` as the first parameter of any operation that
+  reads caller input or may run long, and return `error` last.
+- Give error types nil-safe `Error` and `Unwrap` methods and document the
+  sentinel they match.

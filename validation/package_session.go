@@ -61,6 +61,10 @@ type packageAssociation struct {
 // PackageSession is a separate single-goroutine typed coordinator. It has no
 // parser, resolver invocation, XML Open method, arbitrary facts or callbacks.
 // Every ingress error is terminal; Finish must run once even after cancellation.
+//
+// Adapter API: the root musicxml package drives package sessions through
+// InspectMXL, AssessMXLPackage and the resource-graph functions; application
+// code is not expected to call PackageSession methods directly.
 type PackageSession struct {
 	catalog         *CompiledPackageCatalog
 	profile         Profile

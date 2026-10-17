@@ -10,6 +10,10 @@ import (
 // Rational is an immutable exact fraction, distinct from the terminating
 // Decimal and the XSD Atomic value space. Its zero value is uninitialized.
 // Initialized values may be copied and shared across goroutines.
+//
+// Compare values with Cmp or Equal. The == operator compiles but compares
+// internal pointers, so numerically equal values are generally not ==, and
+// Rational is not suitable as a map key.
 type Rational struct {
 	value *big.Rat
 	text  string
@@ -60,6 +64,25 @@ func (r Rational) Value() *big.Rat {
 		return nil
 	}
 	return new(big.Rat).Set(r.value)
+}
+
+// Cmp compares initialized exact fractions and returns -1, 0, or 1. An
+// uninitialized operand is a configuration error, never an implicit zero.
+func (r Rational) Cmp(other Rational) (int, error) {
+	if !r.Valid() || !other.Valid() {
+		return 0, &ConfigurationError{Field: "Rational.Cmp", Reason: "uninitialized operand"}
+	}
+	return r.value.Cmp(other.value), nil
+}
+
+// Equal reports whether r and other hold the same exact fraction. Two
+// uninitialized values are equal; an uninitialized value never equals an
+// initialized one.
+func (r Rational) Equal(other Rational) bool {
+	if !r.Valid() || !other.Valid() {
+		return r.Valid() == other.Valid()
+	}
+	return r.value.Cmp(other.value) == 0
 }
 
 // String returns a bounded reduced fraction with a positive denominator, an
