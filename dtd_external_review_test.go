@@ -465,3 +465,54 @@ func TestExternalDTDReplacementMapsAreBounded(t *testing.T) {
 	_, err = DecodeWithOptions(strings.NewReader(doc), DecodeOptions{DTD: &DTDOptions{Source: mapDTDSource{"big.dtd": dtd}}})
 	assert.NoError(t, err)
 }
+
+func TestExternalDTDTextIsBuffered(t *testing.T) {
+	t.Parallel()
+
+	// The library's normalized copy of a caller entity is live storage while
+	// the entity is read, whichever path reads it.
+	comment := `<!--` + strings.Repeat("x", 1_000_000) + `-->`
+	inspect := func(source mapDTDSource, internal string, limit int64) error {
+		_, err := InspectXML(context.Background(), strings.NewReader(houseDTDInput(internal, "&x;")),
+			AssessmentOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxBufferedBytes: limit}, DTD: &DTDOptions{Source: source}})
+		return err
+	}
+	small := mapDTDSource{"house.dtd": `<!ENTITY x "X">`}
+	require.NoError(t, inspect(small, "", 256<<10), "the document itself fits in 256 KiB")
+	for name, c := range map[string]struct {
+		source   mapDTDSource
+		internal string
+	}{
+		"root":                      {mapDTDSource{"house.dtd": comment + `<!ENTITY x "X">`}, ""},
+		"root with an internal PE":  {mapDTDSource{"house.dtd": comment + `<!ENTITY x "X">`}, `<!ENTITY % local "x">`},
+		"external parameter entity": {mapDTDSource{"house.dtd": `<!ENTITY % big SYSTEM "big.ent"> %big; <!ENTITY x "X">`, "big.ent": comment}, ""},
+		"eight megabytes":           {mapDTDSource{"house.dtd": `<!--` + strings.Repeat("x", 8_000_000) + `--><!ENTITY x "X">`}, ""},
+	} {
+		requireResourceKind(t, inspect(c.source, c.internal, 256<<10), validation.BudgetBufferedBytes, name)
+		assert.NoError(t, inspect(c.source, c.internal, 32<<20), name)
+	}
+
+	// The text is released when it is no longer read: after a parse only the
+	// store's own declarations remain, and nothing remains after Close on any
+	// failure.
+	files := mapDTDSource{"big.ent": comment + `<!ENTITY y "Y">`, "lit.ent": strings.Repeat("z", 1000)}
+	for _, limit := range []int64{0, 600_000, 1_100_000, 1_500_000, 2_200_000} {
+		account, err := validation.NewBudgetAccount(validation.Budgets{MaxBufferedBytes: limit})
+		require.NoError(t, err)
+		store, err := newSourceDTDStore(context.Background(), account, sourceDTDStandaloneAbsent)
+		require.NoError(t, err)
+		store.parsed = true
+		root, _, charged, err := sourceDTDExternalText(account, []byte(comment+`<!ENTITY % big SYSTEM "big.ent"> %big; <!ENTITY x "X">`+
+			`<!ENTITY % lit SYSTEM "lit.ent"><!ENTITY z "%lit;">`))
+		if err == nil {
+			_, _, err = parseExternalSubset(context.Background(), store, newSourceDTDResolver(&DTDOptions{Source: files}), sourceDTDEntity{name: "m.dtd", systemID: "m.dtd", text: root, charged: charged}, false, 64)
+		}
+		used, _ := account.Usage(validation.BudgetBufferedBytes)
+		if err == nil {
+			assert.Equal(t, store.owned, used, "limit %d: only the store remains", limit)
+		}
+		require.NoError(t, store.Close())
+		used, _ = account.Usage(validation.BudgetBufferedBytes)
+		assert.Zero(t, used, "limit %d: err=%v", limit, err)
+	}
+}

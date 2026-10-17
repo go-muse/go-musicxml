@@ -155,8 +155,8 @@ const (
 	CoordinateSpaceOriginalBytes = "original-bytes"
 	// CoordinateSpaceExternalDTD locates a DTD declaration read from an
 	// external DTD entity, whose system identifier is Location.Entry. Offsets,
-	// lines and columns count that entity's text after end-of-line
-	// normalization and text-declaration removal.
+	// lines and columns count that entity's text after a byte order mark is
+	// removed and line ends are normalized; a text declaration is counted.
 	CoordinateSpaceExternalDTD = "external-dtd-text"
 )
 

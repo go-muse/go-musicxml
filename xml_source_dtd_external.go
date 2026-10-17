@@ -72,6 +72,9 @@ type sourceDTDExternalFrame struct {
 	// where it is written; cursor caches the last lookup.
 	segments []sourceDTDTextSegment
 	cursor   sourceDTDSegmentCursor
+	// charged is the buffered bytes admitted for an external entity's text,
+	// released when the frame is left.
+	charged int64
 }
 
 func (f *sourceDTDExternalFrame) pad() int {
@@ -155,7 +158,7 @@ type sourceDTDExternalInput struct {
 const sourceDTDExternalFrameBytes = int64(unsafe.Sizeof(sourceDTDExternalFrame{}))
 
 func newSourceDTDExternalInput(ctx context.Context, account *validation.Account, root sourceDTDEntity, maxDepth int64) *sourceDTDExternalInput {
-	return &sourceDTDExternalInput{ctx: ctx, account: account, maxDepth: maxDepth, frames: []sourceDTDExternalFrame{{kind: sourceDTDExternalRoot, name: root.name, systemID: root.systemID, text: root.text, position: sourceDTDEntityStart(root.start)}}}
+	return &sourceDTDExternalInput{ctx: ctx, account: account, maxDepth: maxDepth, frames: []sourceDTDExternalFrame{{kind: sourceDTDExternalRoot, name: root.name, systemID: root.systemID, text: root.text, position: sourceDTDEntityStart(root.start), charged: root.charged}}}
 }
 
 // sourceDTDEntityStart defaults a zero start to the beginning of an entity.
@@ -194,7 +197,7 @@ func (in *sourceDTDExternalInput) unit() (rune, int, error) {
 func (in *sourceDTDExternalInput) pop() error {
 	top := in.frames[len(in.frames)-1]
 	in.frames = in.frames[:len(in.frames)-1]
-	_ = in.account.Release(validation.BudgetBufferedBytes, sourceDTDExternalFrameBytes)
+	_ = in.account.Release(validation.BudgetBufferedBytes, sourceDTDExternalFrameBytes+top.charged)
 	if top.declaration != nil && in.done != nil {
 		return in.done(top.declaration)
 	}
@@ -298,7 +301,14 @@ func (in *sourceDTDExternalInput) DTDPosition() sourceXMLPosition {
 // push enters replacement text. A padded frame reads one leading and one
 // following space, as XML 4.4.8 requires for a parameter entity included in
 // the DTD; a frame included in an entity value is not padded (XML 4.4.5).
-func (in *sourceDTDExternalInput) push(frame sourceDTDExternalFrame, padded bool) error {
+//
+// push owns frame.charged: it releases it if it fails.
+func (in *sourceDTDExternalInput) push(frame sourceDTDExternalFrame, padded bool) (err error) {
+	defer func() {
+		if err != nil {
+			_ = in.account.Release(validation.BudgetBufferedBytes, frame.charged)
+		}
+	}()
 	entities := 0
 	for _, f := range in.frames {
 		if f.declaration != nil && f.declaration == frame.declaration {
@@ -344,7 +354,7 @@ func (in *sourceDTDExternalInput) FinishDTDParameter() error {
 		return in.SyntaxError("unbalanced parameter entity boundary")
 	}
 	in.frames = in.frames[:len(in.frames)-1]
-	return in.account.Release(validation.BudgetBufferedBytes, sourceDTDExternalFrameBytes)
+	return in.account.Release(validation.BudgetBufferedBytes, sourceDTDExternalFrameBytes+top.charged)
 }
 
 func (in *sourceDTDExternalInput) DTDInParameter() bool { return true }
@@ -382,29 +392,58 @@ func (in *sourceDTDExternalInput) CheckDTDDepth(depth int64) error {
 // accepted. It returns the text after any text declaration and where that
 // text starts in the entity after its byte order mark is removed and its line
 // ends are normalized, the coordinate space of declaration sites.
-func sourceDTDExternalText(data []byte) (string, sourceXMLPosition, error) {
-	start := sourceXMLPosition{Line: 1, Column: 1}
+//
+// With a non-nil account the normalized copy, the library's only one, is
+// admitted as buffered bytes before it is made; charged is what stays
+// admitted, and the caller releases it when the text is no longer read.
+func sourceDTDExternalText(account *validation.Account, data []byte) (text string, start sourceXMLPosition, charged int64, err error) {
+	start = sourceXMLPosition{Line: 1, Column: 1}
 	if len(data) > sourceDTDExternalTextBytes {
-		return "", start, &validation.ResourceError{Kind: validation.BudgetExternalBytes, Limit: sourceDTDExternalTextBytes, Requested: int64(len(data))}
+		return "", start, 0, &validation.ResourceError{Kind: validation.BudgetExternalBytes, Limit: sourceDTDExternalTextBytes, Requested: int64(len(data))}
 	}
 	data = bytes.TrimPrefix(data, []byte("\xef\xbb\xbf"))
 	if !utf8.Valid(data) {
-		return "", start, errors.New("external DTD is not valid UTF-8")
+		return "", start, 0, errors.New("external DTD is not valid UTF-8")
 	}
-	text := strings.ReplaceAll(string(data), "\r\n", "\n")
-	text = strings.ReplaceAll(text, "\r", "\n")
+	if account != nil {
+		if err := account.Charge(validation.BudgetBufferedBytes, int64(len(data))); err != nil {
+			return "", start, 0, err
+		}
+		charged = int64(len(data))
+	}
+	var normalized strings.Builder
+	normalized.Grow(len(data))
+	for i := 0; i < len(data); i++ {
+		if data[i] != '\r' {
+			normalized.WriteByte(data[i])
+			continue
+		}
+		normalized.WriteByte('\n')
+		if i+1 < len(data) && data[i+1] == '\n' {
+			i++
+		}
+	}
+	text = normalized.String()
+	if account != nil && charged > int64(len(text)) {
+		_ = account.Release(validation.BudgetBufferedBytes, charged-int64(len(text)))
+		charged = int64(len(text))
+	}
 	if rest, found := strings.CutPrefix(text, "<?xml"); found && rest != "" && sourceXMLSpace(rune(rest[0])) {
 		body, err := sourceDTDTextDeclaration(rest)
 		if err != nil {
-			return "", start, err
+			if account != nil {
+				_ = account.Release(validation.BudgetBufferedBytes, charged)
+			}
+			return "", start, 0, err
 		}
 		for _, r := range text[:len(text)-len(body)] {
 			start.ByteOffset += int64(utf8.RuneLen(r))
 			start.advanceCoordinates(r)
 		}
+		// The body shares the normalized copy, which stays admitted.
 		text = body
 	}
-	return text, start, nil
+	return text, start, charged, nil
 }
 
 // sourceDTDTextDeclaration consumes the remainder of a text declaration:
@@ -535,6 +574,9 @@ type sourceDTDEntity struct {
 	// start is where text begins in the normalized entity, after any text
 	// declaration; the zero value is its beginning.
 	start sourceXMLPosition
+	// charged is the buffered bytes admitted for text, which its reader
+	// releases.
+	charged int64
 }
 
 var bundledDTDPrepared sync.Map // file name -> *bundledDTDPreparation
@@ -547,7 +589,8 @@ type bundledDTDPreparation struct {
 
 // root resolves the DOCTYPE external subset: the caller source first, then
 // the bundled DTDs. found is false when neither provides it.
-func (r *sourceDTDResolver) root(ctx context.Context, publicID, systemID string) (sourceDTDEntity, bool, error) {
+// With a non-nil account a caller entity's text is admitted to it.
+func (r *sourceDTDResolver) root(ctx context.Context, account *validation.Account, publicID, systemID string) (sourceDTDEntity, bool, error) {
 	if r == nil || publicID == "" && systemID == "" {
 		return sourceDTDEntity{}, false, nil
 	}
@@ -555,11 +598,15 @@ func (r *sourceDTDResolver) root(ctx context.Context, publicID, systemID string)
 		data, err := r.source.OpenDTD(ctx, DTDRequest{PublicID: publicID, SystemID: systemID})
 		switch {
 		case err == nil:
-			text, start, textErr := sourceDTDExternalText(data)
+			text, start, charged, textErr := sourceDTDExternalText(account, data)
 			if textErr != nil {
+				var resource *validation.ResourceError
+				if account != nil && errors.As(textErr, &resource) && resource.Kind == validation.BudgetBufferedBytes {
+					return sourceDTDEntity{}, false, textErr
+				}
 				return sourceDTDEntity{}, false, &DTDError{PublicID: publicID, SystemID: systemID, Err: textErr}
 			}
-			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data)), start: start}, true, nil
+			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data)), start: start, charged: charged}, true, nil
 		case errors.Is(err, ErrDTDNotFound):
 		case ctx.Err() != nil:
 			return sourceDTDEntity{}, false, ctx.Err()
@@ -578,7 +625,7 @@ func (r *sourceDTDResolver) root(ctx context.Context, publicID, systemID string)
 // when no source or bundled DTD provides it. A bundled closure is prepared
 // once per process; a caller-supplied one for every call.
 func (r *sourceDTDResolver) prepare(ctx context.Context, publicID, systemID string) (*sourceDTDPrepared, error) {
-	entity, found, err := r.root(ctx, publicID, systemID)
+	entity, found, err := r.root(ctx, nil, publicID, systemID)
 	if err != nil || !found {
 		return nil, err
 	}
@@ -617,17 +664,21 @@ func (r *sourceDTDResolver) prepareEntity(ctx context.Context, entity sourceDTDE
 // system identifier of the entity containing its declaration (XML 4.2.2).
 // Entities of a caller-supplied subset ask the caller first; bundled
 // closures never do.
-func (r *sourceDTDResolver) parameter(ctx context.Context, d *sourceDTDDeclaration, base string, bundledOnly bool) (sourceDTDEntity, bool, error) {
+func (r *sourceDTDResolver) parameter(ctx context.Context, account *validation.Account, d *sourceDTDDeclaration, base string, bundledOnly bool) (sourceDTDEntity, bool, error) {
 	if !bundledOnly && r.source != nil {
 		data, err := r.source.OpenDTD(ctx, DTDRequest{PublicID: d.PublicID, SystemID: d.SystemID, BaseSystemID: base})
 		switch {
 		case err == nil:
-			text, start, textErr := sourceDTDExternalText(data)
+			text, start, charged, textErr := sourceDTDExternalText(account, data)
 			if textErr != nil {
+				var resource *validation.ResourceError
+				if errors.As(textErr, &resource) && resource.Kind == validation.BudgetBufferedBytes {
+					return sourceDTDEntity{}, false, textErr
+				}
 				return sourceDTDEntity{}, false, &DTDError{PublicID: d.PublicID, SystemID: d.SystemID, Err: textErr}
 			}
 			systemID := sourceDTDJoinSystemID(base, d.SystemID)
-			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data)), start: start}, true, nil
+			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data)), start: start, charged: charged}, true, nil
 		case errors.Is(err, ErrDTDNotFound):
 		case ctx.Err() != nil:
 			return sourceDTDEntity{}, false, ctx.Err()
@@ -688,8 +739,13 @@ func parseExternalSubset(ctx context.Context, store *sourceDTDStore, resolver *s
 	input := newSourceDTDExternalInput(ctx, store.account, root, maxDepth)
 	input.segments = store.replacementSegments
 	input.done = store.parameterRead
+	// Frames left by a failure, and the root's text, are released here.
 	defer func() {
-		_ = store.account.Release(validation.BudgetBufferedBytes, int64(len(input.frames)-1)*sourceDTDExternalFrameBytes)
+		released := int64(len(input.frames)-1) * sourceDTDExternalFrameBytes
+		for _, f := range input.frames {
+			released += f.charged
+		}
+		_ = store.account.Release(validation.BudgetBufferedBytes, released)
 	}()
 	p := sourceDTDParser{input: input, store: store, external: true}
 	p.resolveParameter = func(d *sourceDTDDeclaration) (sourceDTDEntity, bool, error) {
@@ -697,9 +753,10 @@ func parseExternalSubset(ctx context.Context, store *sourceDTDStore, resolver *s
 		if !recorded {
 			base = d.Origin.Entity
 		}
-		entity, found, err := resolver.parameter(ctx, d, base, bundledOnly)
+		entity, found, err := resolver.parameter(ctx, store.account, d, base, bundledOnly)
 		if err == nil && found {
 			if err = store.account.Charge(validation.BudgetExternalBytes, entity.size); err != nil {
+				_ = store.account.Release(validation.BudgetBufferedBytes, entity.charged)
 				return sourceDTDEntity{}, false, err
 			}
 			size += entity.size
@@ -1087,7 +1144,7 @@ func (p *sourceDTDParser) declarationReference(input *sourceDTDExternalInput) {
 		p.fail("undeclared or unavailable parameter entity in external DTD declaration")
 		return
 	}
-	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d, position: entity.start}, true)
+	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d, position: entity.start, charged: entity.charged}, true)
 }
 
 // literalParameter includes a parameter entity's replacement text in an entity
@@ -1104,7 +1161,7 @@ func (p *sourceDTDParser) literalParameter(input *sourceDTDExternalInput) {
 	if !ok {
 		return
 	}
-	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d, position: entity.start}, false)
+	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d, position: entity.start, charged: entity.charged}, false)
 }
 
 // externalSystemID is the frame identity for an external parameter entity's
@@ -1143,11 +1200,12 @@ func (p *sourceDTDParser) pushExternalParameter(d *sourceDTDDeclaration) bool {
 	}
 	next, err := p.store.growPointers(p.parameters)
 	if err != nil {
+		_ = p.store.account.Release(validation.BudgetBufferedBytes, entity.charged)
 		p.err = err
 		return true
 	}
 	p.parameters = next
-	if p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + d.Name + ";", systemID: entity.systemID, text: entity.text, declaration: d, position: entity.start}, true); p.err != nil {
+	if p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + d.Name + ";", systemID: entity.systemID, text: entity.text, declaration: d, position: entity.start, charged: entity.charged}, true); p.err != nil {
 		return true
 	}
 	p.parameters = append(p.parameters, d)
@@ -1163,7 +1221,7 @@ func (r *sourceXMLTokenReader) importExternalDTD() error {
 	if r.dtdResolver == nil || !state.ExternalSubsetUnread {
 		return nil
 	}
-	root, found, err := r.dtdResolver.root(r.cursor.ctx, state.PublicID, state.SystemID)
+	root, found, err := r.dtdResolver.root(r.cursor.ctx, r.account, state.PublicID, state.SystemID)
 	if err != nil || !found {
 		return err
 	}
@@ -1205,6 +1263,7 @@ func (r *sourceXMLTokenReader) parseExternalDTD(root sourceDTDEntity, state sour
 		root.text, root.size, root.start = text, int64(len(text)), start
 	}
 	if err := r.account.Charge(validation.BudgetExternalBytes, root.size); err != nil {
+		_ = r.account.Release(validation.BudgetBufferedBytes, root.charged)
 		return err
 	}
 	if _, _, err := parseExternalSubset(r.cursor.ctx, r.dtdStore, r.dtdResolver, root, root.bundled, r.maxDepth); err != nil {

@@ -301,7 +301,9 @@ select its conditional sections or replace its parameter entities. An external
 subset that the source supplies, or that internal parameter entities can
 customize, is parsed into the document's declarations under the assessment's
 budgets, including `MaxScalarBytes` for every literal and name and `MaxDepth`
-for conditional-section and content-model nesting. The bundled closure is
+for conditional-section and content-model nesting; `MaxBufferedBytes` holds the
+normalized text of each caller entity while it is read, as well as the
+declarations, frames and replacement maps. The bundled closure is
 prepared once; importing it charges the document's buffered bytes and checks
 its longest string against `MaxScalarBytes` and its deepest nesting against
 `MaxDepth`.

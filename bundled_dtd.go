@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"sync"
 )
 
 // bundledDTDFiles holds the official MusicXML 4.0 DTD modules from
@@ -133,13 +134,29 @@ func bundledDTDEntityText(file string) (string, error) {
 }
 
 // bundledDTDEntity also returns where the text starts after any text
-// declaration.
+// declaration. The normalized text of each file is made once per process and
+// shared, like the prepared closures, so documents do not own a copy.
 func bundledDTDEntity(file string) (string, sourceXMLPosition, error) {
-	data, err := bundledDTDFiles.ReadFile(bundledDTDDirectory + "/" + file)
-	if err != nil {
-		return "", sourceXMLPosition{}, fmt.Errorf("bundled DTD %s is missing: %w", file, err)
-	}
-	return sourceDTDExternalText(data)
+	value, _ := bundledDTDTexts.LoadOrStore(file, &bundledDTDText{})
+	entry := value.(*bundledDTDText)
+	entry.once.Do(func() {
+		data, err := bundledDTDFiles.ReadFile(bundledDTDDirectory + "/" + file)
+		if err != nil {
+			entry.err = fmt.Errorf("bundled DTD %s is missing: %w", file, err)
+			return
+		}
+		entry.text, entry.start, _, entry.err = sourceDTDExternalText(nil, data)
+	})
+	return entry.text, entry.start, entry.err
+}
+
+var bundledDTDTexts sync.Map // file name -> *bundledDTDText
+
+type bundledDTDText struct {
+	once  sync.Once
+	text  string
+	start sourceXMLPosition
+	err   error
 }
 
 // sourceDTDNormalizePublicID applies the XML 4.2.2 public identifier match
