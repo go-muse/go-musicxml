@@ -272,10 +272,13 @@ reconciliation remain separately owned in the
 The authoritative compiled metadata lives in
 [`dictionary_manifest.go`](../../validation/dictionary_manifest.go). The committed
 source fixtures also serve as pinned offline generation inputs for the embedded assets.
-`BundledDictionarySource()` explicitly supplies those exact bytes through the
-existing importer; neither component selection nor profile activation becomes
-automatic. All raw and transformed identities are independently checked; a correct source
-certificate does not authorize altered typed rows.
+`BundledDictionarySource()` supplies those exact bytes through the existing
+importer. Inspection and standalone model/package assessment keep explicit
+component/profile selection; the assessed loaders fix their semantic profiles
+and default to required canonical SMuFL and IPA representation evidence. See the
+[assessed-loading migration](assessed-loading-pipeline.md). All raw and transformed
+identities are independently checked; a correct source certificate does not
+authorize altered typed rows.
 
 | Manifest | Raw component bytes / SHA-256 | Typed bytes / SHA-256 | Exact selected relation |
 | --- | --- | --- | --- |
@@ -420,11 +423,12 @@ for exact work counters, fixture qualifications and unchanged capability gaps.
   and must be preserved with generated equivalents. No chart artwork, PDF, font,
   outline or Unicode specification text is bundled.
 
-Using `BundledDictionarySource` makes all five embedded component assets
-reachable regardless of `Selections`, including both CC BY-SA 4.0 IPA bundles.
-Selection limits import and assessment, not the bundled implementation's asset
-references. Binary distributions containing these data must include all five
-files from `internal/dictionarydata/data`:
+Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds
+all five component assets, including both CC BY-SA 4.0 IPA bundles, even with
+custom-source options. Direct use of `BundledDictionarySource` also retains all
+five. Selection limits runtime import and assessment, not the binary's asset
+references. Distribute these binaries with all five files from
+`internal/dictionarydata/data`:
 
 - `NOTICES.txt`
 - `ipa-positive/NOTICES.txt`

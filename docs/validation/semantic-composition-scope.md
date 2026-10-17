@@ -1,7 +1,8 @@
 # Encoded semantic composition
 
-This opt-in composition joins the implemented MusicXML 4.0 checks without claiming
-universal conformance or reconstructing a desired score. It uses the existing
+This composition is explicitly selectable for inspection/assessment and fixed in
+the assessed loaders. It joins the implemented MusicXML 4.0 checks without
+claiming universal conformance or reconstructing a desired score. It uses the existing
 assessment and dictionary entry points; no new provider or options structure is
 introduced. Inspection and standalone model/package assessment require explicit
 selection. The later [assessed-loading migration](assessed-loading-pipeline.md)
@@ -15,7 +16,7 @@ normative scope.
   checks, actually read internal declarations, owned source origins, canonical
   SMuFL membership and supported IPA evidence. Physical attributes and effective
   defaulted/normalized values remain distinct. The
-  [external-DOCTYPE source limit](../../API.md#opt-in-original-source-assessment)
+  [external-DOCTYPE source limit](../../API.md#original-source-inspection-and-assessed-loading)
   applies: an unread external subset leaves selected source checks unavailable.
 - `ProfileModelSemantics` selects current encoded model facts. It does not invent
   discarded DTD, lexical, namespace, original-byte or source-hint information.

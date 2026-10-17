@@ -22,7 +22,10 @@ Ordinary `go build` and runtime use consume committed embedded assets and invoke
 neither generation nor downloading. `BundledDictionarySource` gives each caller
 an independent context-aware reader over immutable shared strings; the normal
 accounted importer still verifies and parses the component. The source does not
-activate any selection, replace a nil source, or supply files for the caller.
+activate any selection or supply files for the caller by itself. The assessed
+loaders select canonical SMuFL and IPA representation evidence when dictionary
+options have a nil source and no selections; inspection/assessment APIs retain
+explicit selection.
 
 Upstream refresh is separate reviewed maintenance. Preserve existing edition
 inputs, manifest/component identities and fixed pins; add a new edition identity
@@ -47,9 +50,11 @@ text. They are explicitly embedded so `go mod vendor` preserves these exact file
 
 These data have separate upstream/adapted-data terms, including CC BY-SA 4.0 for
 the IPA-derived data; the implementation code license does not replace them.
-Reaching `BundledDictionarySource` makes all five components reachable, regardless
-of `Selections`. Binary distributors must ship the five files above alongside the
-binary, retaining their attribution and license links. The private notice
+Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds
+all five components, even when calls pass custom sources or selections. Direct
+use of `BundledDictionarySource` also retains all five. Binary distributors must
+ship the five files above alongside the binary, retaining their attribution and
+license links. The private notice
 filesystem can be removed by the linker; embedding it does not guarantee that
 notices are accessible from a compiled binary. See `THIRD_PARTY_NOTICES.md` at the
 repository root for distribution guidance.

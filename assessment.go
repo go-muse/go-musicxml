@@ -41,8 +41,10 @@ type DecodeAssessmentOptions struct {
 
 // DecodeResult preserves original-source and current-model reports separately.
 // Document is nonnil only after conversion, source EOF, and both required
-// assessments succeed. Model is unrequested if an earlier stage failed. Converted means successful mapping under the
-// existing Go model contract, not exact numeric or lexical round-trip equality.
+// assessments succeed. Model may be unrequested after an earlier failure or
+// model-session startup failure; it does not distinguish those cases. Converted
+// means successful mapping under the existing Go model contract, not exact
+// numeric or lexical round-trip equality.
 // Conversion.Findings is optional bounded detail; State and the returned typed
 // error remain authoritative if the diagnostic quota omits that detail.
 type DecodeResult struct {
@@ -115,7 +117,13 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // returns a document; nil operation error alone is not acceptance. The profiles
 // retain their bounded coverage: unsupported cases remain incomplete. No DTD,
 // schema, dictionary or linked resource is fetched. The input is never closed.
+// Inputs with unread external DOCTYPE subsets cannot satisfy this loader;
+// ordinary Decode provides conversion only, not validation.
 // InspectXML documents source coordinates and cancellation limits.
+//
+// Any binary referencing DecodeAssessed or DecodeAssessedWithDictionaries embeds
+// all five bundled dictionary components, even with custom dictionary options.
+// Distribute their notice/license files; see THIRD_PARTY_NOTICES.md.
 //
 // ValidationError contains stored normative/model failure details, possibly
 // empty when diagnostic quotas omit them. Source and Model preserve authoritative

@@ -766,16 +766,19 @@ charged while the direct-model stage runs, then close the lease when transferrin
 the result to the caller. It adds no loading option. Ordinary `Finish` and
 `FinishWithResourceSnapshot` retain their existing contracts.
 
-## Opt-in original-source assessment
+## Original-source inspection and assessed loading
 
 **Current source input limit:** an unread external DOCTYPE subset prevents
 source acceptance, including in the mandatory assessed-loading pipeline. The
 committed official score samples `Chant.musicxml`, `MozartTrio.musicxml` and
 UTF-16 `MozaChloSample.musicxml` therefore produce
 unsupported/incomplete source reports. `DecodeAssessed` returns no `Document`
-for them. Mandatory default loading of the 223,068-byte MozaChlo source reaches
-the 64 MiB buffered-byte ceiling before source EOF, leaving conversion incomplete
-and the model stage unrequested; see the [capacity migration control](docs/validation/assessed-loading-pipeline.md#official-score-capacity-control). The DOCTYPE-free
+for them. On the asserted linux/amd64 control, default loading of the 223,068-byte
+MozaChlo source reaches the 64 MiB buffer ceiling before source EOF; conversion is
+incomplete and the model stage is unrequested. The reviewer also reported a
+default buffer refusal for 94,916-byte MozartTrio after EOF and conversion. These
+are architecture-dependent receipts, not portable input-size limits; 386 does not
+assert them. See the [capacity controls][loading-capacity] for provenance. The DOCTYPE-free
 `OpusLink.musicxml` and `OpusScore.musicxml` fixtures are within the currently
 assessable source scope. The source-XSD preview remains developmental and
 DTD-independent; the semantic source profile processes bounded internal
@@ -783,7 +786,10 @@ declarations but still cannot accept an unread external subset. Neither provides
 source acceptance for the usual external-DOCTYPE MusicXML score exports.
 A familiar public identifier is not treated as proof that an unread DTD is
 infoset-neutral. Removing a DOCTYPE changes the input and is not equivalent
-assessment of the original file. DTD closure remains later work.
+assessment of the original file. DTD closure remains later work. Callers relying
+on the earlier nil-assessment loading of such files can use `Decode` or
+`DecodeWithOptions` for transport/conversion only; those APIs do not validate the
+source or replace successful assessed loading.
 
 `InspectXML(ctx, reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})`
 assesses original XML without creating a Go document. Use `ProfileSourceLocal`
@@ -799,7 +805,8 @@ with the best partial report.
 
 `DecodeAssessed(ctx, reader, DecodeAssessmentOptions{...})` returns a
 `DecodeResult` with independent `Source`, `Conversion`, `Model` and `Document`
-fields. This is an intentional breaking change from optional source assessment.
+fields. This intentionally breaks the earlier unreleased optional-assessment
+contract; these APIs were not present in v0.1.0.
 Both assessed loaders always require the existing `ProfileSourceSemantics` and,
 after source acceptance and successful conversion, `ProfileModelSemantics`.
 Nil `Assessment`, empty options and an empty `Assessment.Profile` select these
@@ -810,11 +817,12 @@ IDs, is a configuration error before source reads or dictionary callbacks.
 limits are preserved. `InspectXML` and `AssessModel` keep their explicit-profile
 contracts. Ordinary `Decode` remains transport-only.
 
-The result includes `Model validation.Report`. Any earlier operation failure,
-unsatisfied or incomplete source report, or conversion failure prevents the model
-stage, leaving
-`Model.Requested == false`. Once reached, model assessment walks the actual Go
-object directly and preserves its own report, including on failure. `Document` is
+The result includes `Model validation.Report`. An earlier operation failure,
+unsatisfied/incomplete source report or conversion failure leaves it unrequested.
+Model-session startup failure, including cancellation after source acceptance,
+can also leave `Model.Requested == false`; that field cannot distinguish the two
+cases. Once initialized, model assessment walks the actual Go object directly and
+preserves its available report, including on failure. `Document` is
 returned only when both reports are satisfied, conversion succeeds and there is
 no operation or close error. All other outcomes retain the available reports and
 return no document. See the [migration guide](docs/validation/assessed-loading-pipeline.md)
@@ -831,6 +839,18 @@ import, source assessment and direct model assessment, with the source report's
 retained context accounted for while the model stage runs. One imported dictionary
 set is shared across both stages. The caller retains ownership of the reader.
 
+The set is fresh per invocation: the default path reopens, verifies and parses
+both required bundled components before reading input, without a cross-call
+verified-set cache. At reviewed head `7e7126e9405e0731e6cefa713e801515b4874703`,
+the reviewer reported about 3.08 ms, 1.55 MB allocated and 8,641 allocations for
+import alone. The reported logical import cost was 3,279,308 rule steps (16.4% of
+the default 20 million) and 360,428 `MaxExternalBytes`, even though the data is
+embedded and no network/file fetch occurs. Previously sufficient budgets may
+therefore refuse before source reads, leaving `Source.Requested == false`. These
+are reviewer-reported, head-specific observations, not independently reproduced
+benchmarks or portable minima. See the [per-call cost and budget receipt][loading-cost]
+for the original review links, one-note comparison and scope limits.
+
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
 64 MiB file or one million nodes can be assessed. The historical `d336f089`
 budget-sizing
@@ -844,8 +864,9 @@ overrides in `AssessmentOptions.Budgets`; all other limits still apply. Earlier
 source-scope measurements remain historical evidence for their stated revision,
 before the shared absent-attribute optimization.
 
-Composition costs differ from that XSD-only table. For the original 223,068-byte
-UTF-16BE `MozaChloSample.musicxml`, `ProfileSourceSemantics` exhausts the default
+Composition costs differ from that XSD-only table. In the historical
+linux/amd64 receipt below, the original 223,068-byte UTF-16BE
+`MozaChloSample.musicxml` with `ProfileSourceSemantics` exhausts the default
 64 MiB buffer. With only `MaxBufferedBytes: 96 << 20` changed, this particular
 fixture completes input processing, but assessment remains incomplete because its
 external DTD is unread. This is a measured finite allowance for that exact input
@@ -1201,18 +1222,18 @@ unavailable and empty selections do not implicitly open the bundled source. The
 assessed-loader defaults are the specific exception above; a custom source with
 empty selections is rejected there. Caller-provided sources remain supported.
 
-Using `BundledDictionarySource`, including through the assessed-loader defaults,
-makes all five embedded component assets reachable, including the CC BY-SA 4.0
-IPA bundles, regardless of `Selections`.
-Selections control which components are imported and assessed; they do not
-prune the bundled implementation's references to the other assets. The data
+Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds
+all five component assets, including both CC BY-SA 4.0 IPA bundles, regardless of
+options or custom/nil dictionary sources. Direct use of `BundledDictionarySource`
+also retains all five. Selections control runtime import and assessment; they do
+not prune the binary's asset references. The data
 retain their W3C FSA, CC BY-SA 4.0 and Unicode License v3 terms, separately from
 the MIT code license. Distribute binaries containing these data with all five
 notice/license files listed in
 [the bundled-data distribution instructions][bundled-data-notices].
 Those instructions also link the detailed IPA modification and provenance
 records. No particular linker behavior or binary-size saving is guaranteed for
-programs that do not use the bundled source.
+programs that reference neither assessed loader nor the bundled source.
 
 Ordinary compilation embeds committed local files with `go:embed`; it neither
 runs generation nor fetches dictionary data. Explicit `go generate ./...`
@@ -2196,3 +2217,6 @@ external desired-score authority or universal conformance. See the
 [scope and acceptance boundary](docs/validation/semantic-composition-scope.md).
 
 [bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
+
+[loading-capacity]: docs/validation/assessed-loading-pipeline.md#official-score-capacity-control
+[loading-cost]: docs/validation/assessed-loading-pipeline.md#per-call-import-cost-and-pre-input-budget-floor

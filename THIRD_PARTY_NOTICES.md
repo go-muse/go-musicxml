@@ -81,10 +81,11 @@ is included by this addition.
 
 `internal/dictionarydata/data` contains byte-identical generated copies of the
 five supported components described above, together with copies of their
-notices and Unicode permission text. Using `BundledDictionarySource` makes all
-five component assets reachable, including both CC BY-SA 4.0 IPA bundles,
-regardless of `Selections`. Selections control import and assessment, not
-which assets the bundled implementation references. These data retain their
+notices and Unicode permission text. Any binary referencing `DecodeAssessed` or
+`DecodeAssessedWithDictionaries` embeds all five component assets, including both
+CC BY-SA 4.0 IPA bundles, regardless of options or caller-provided/nil dictionary
+sources. Direct use of `BundledDictionarySource` also retains all five. Selections
+control runtime import and assessment, not which assets the binary contains. These data retain their
 upstream and adapted-data terms; the library code's MIT license does not
 replace them.
 
@@ -104,8 +105,9 @@ notes; the two Unicode files preserve the Unicode License v3 permission text.
 These files are included in the embed patterns so `go mod vendor` retains them
 with the data. That source-distribution safeguard does not arrange notice
 delivery alongside a compiled binary: its distributor must include the files
-in the distribution or associated documentation. Programs using only
-caller-provided or nil sources do not need the bundled source for assessment;
+in the distribution or associated documentation. A custom or nil source passed
+to an assessed loader does not exempt its binary from these notice requirements.
+For programs referencing neither assessed loader nor `BundledDictionarySource`,
 no particular linker behavior or binary-size saving is guaranteed.
 
 The copied notices remain byte-identical to the source fixtures. Their

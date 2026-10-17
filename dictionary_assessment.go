@@ -99,7 +99,13 @@ func AssessModelWithDictionaries(ctx context.Context, document Document, options
 // Explicit dictionary options must include canonical SMuFL and IPA representation
 // relations. Their Source is honored without fallback, including unavailable or
 // failed inputs; selections cannot disable required checks. One set is imported
-// and shared by both stages. Any operation or acceptance failure discards Document.
+// and shared by both stages of each call, without cross-call verified-set reuse.
+// Any operation or acceptance failure discards Document.
+//
+// Referencing this loader embeds all five bundled components regardless of
+// options, including custom sources. Distribute the notice/license files listed
+// in THIRD_PARTY_NOTICES.md. Inputs with unread external DOCTYPE subsets cannot
+// satisfy this loader; ordinary Decode provides conversion only, not validation.
 func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error) {
 	return decodeValidated(ctx, reader, options.Decode, options.Assessment)
 }

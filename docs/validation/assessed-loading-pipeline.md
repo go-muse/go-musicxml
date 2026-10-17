@@ -2,8 +2,9 @@
 
 `DecodeAssessed` and `DecodeAssessedWithDictionaries` now always require the
 existing `ProfileSourceSemantics` followed by direct `ProfileModelSemantics`.
-This is a breaking wrapper-contract change. It does not widen either profile,
-change its catalog digest, or establish complete MusicXML conformance.
+This breaks the earlier unreleased development API; these entry points did not
+exist in v0.1.0. It does not widen either profile, change its catalog digest, or
+establish complete MusicXML conformance.
 
 Ordinary `Decode`, typed decode helpers and `DecodeWithOptions` remain transport
 operations. `InspectXML`, `AssessModel`, their dictionary variants and the
@@ -38,10 +39,11 @@ The acceptance sequence is:
   interruption when available.
 - `Conversion`: mapping state and bounded findings. `ConversionConverted` is not
   an exact lexical or numeric round-trip guarantee.
-- `Model`: the independent current-model report. `Model.Requested` is false when
-  an earlier operation failed or source/conversion acceptance was not reached;
-  this is not a pass.
-  Once attempted, the report is retained even if model assessment fails.
+- `Model`: the independent current-model report, when initialized.
+  `Model.Requested` can be false after an earlier failure or a failure to start
+  the model session, including cancellation after satisfied source assessment and
+  successful conversion. It cannot distinguish those cases and is never a pass.
+  Once a model report exists, it is retained even if model assessment fails.
 - `Document`: nonnil only on complete successful loading. It is nil for source or
   model violation, incomplete required assessment, conversion failure, operation
   failure or close failure.
@@ -68,7 +70,22 @@ for the model stage; it is not caller-replaceable. Any other profile, including
 `ProfileSourceContext`, narrower internal-DTD/dictionary profiles, model/package
 profiles and unknown IDs, fails configuration before I/O.
 
-For mandatory assessed loading, the zero-value options are sufficient:
+**External-DOCTYPE migration:** neither assessed loader can accept input with
+an unread external DOCTYPE subset, including with nil or empty assessment
+options. External DTD closure is not implemented and no subset is fetched or
+trusted. Raising budgets does not remove this authority limit. This affects
+common MusicXML exports as well as the committed official score fixtures.
+
+In the [PR 46 corpus review][review-corpus] of head `7e7126e9405e0731e6cefa713e801515b4874703`,
+the reviewer reported that default loading changed from 153 of 157 repository
+fixtures on the prior main branch to only the two DOCTYPE-free official opus
+fixtures. The 148 test-suite XML files and `Chant.musicxml` were incomplete for
+unread external-DTD evidence; the two larger official scores also reached a
+resource limit. This is a reviewer-reported compatibility observation, not an
+independent corpus run or a universal-conformance result.
+
+Zero-value options configure the required pipeline; they do not guarantee that
+a particular input is within its evidence or resource limits:
 
 ```go
 result, err := musicxml.DecodeAssessed(ctx, reader, musicxml.DecodeAssessmentOptions{})
@@ -79,18 +96,25 @@ if err != nil {
 document := result.Document
 ```
 
-The previous nil-assessment request for permissive conversion becomes ordinary
-`Decode(reader)`, or `DecodeWithOptions` when preserving explicit transport limits:
+Callers who relied on nil assessment to load external-DOCTYPE files must use
+ordinary `Decode(reader)` or `DecodeWithOptions` if they want the previous
+transport/conversion behavior. These APIs do not validate the source and are not
+a substitute for successful assessed loading. They retain XML/security checks,
+but provide no source-and-model conformance guarantee:
 
 ```go
 document, err := musicxml.DecodeWithOptions(reader, decodeOptions)
 ```
 
 To retain a narrower source-only assessment, use `InspectXML` with its explicit
-profile and inspect `report.Satisfied()`. Its ordinary normative violations still
-return a report without an operation error. A separate conversion needs its own
-reader; do not reuse a consumed reader. Narrow inspection plus conversion does
-not provide the mandatory loader's source-and-model acceptance guarantee.
+profile and inspect `report.Satisfied()`. For dictionary-dependent profiles, use
+`InspectXMLWithDictionaries` with explicit `Dictionaries.Source` and `Selections`;
+plain `InspectXML` does not supply dictionary evidence. This includes the source
+dictionary, internal-DTD dictionary and source-sounds dictionary profiles.
+Ordinary normative violations still return a report without an operation error.
+A separate conversion needs its own reader; do not reuse a consumed reader.
+Narrow inspection plus conversion does not provide the mandatory loader's
+source-and-model acceptance guarantee or close unread external-DTD evidence.
 
 Finite overrides remain available without selecting a different profile:
 
@@ -120,8 +144,11 @@ selections (the constants are in `validation`):
 | `DictionaryManifestIPARepresentation2015Unicode13` (`ipa-2015-unicode13-representation-v1`) | `DictionaryRelationIPARepresentation` (`ipa-symbol-representation`) |
 
 The IPA selection is the current representation manifest, not the legacy partial
-positive manifest. Bundling supplies pinned evidence; it does not turn an
-unproved IPA input into a negative judgment or establish universal IPA coverage.
+positive manifest. A previous positive-IPA-only override must add the required
+representation manifest/relation, along with canonical SMuFL; positive evidence
+does not satisfy the representation selection requirement. Bundling supplies
+pinned evidence; it does not turn an unproved IPA input into a negative judgment
+or establish universal IPA coverage.
 Standard-sound recognition and dictionary-backed rendering advice are not added
 to the score semantic profiles.
 
@@ -169,12 +196,15 @@ input reader is never closed. Every usable dictionary body transferred to the
 importer is closed under the existing ownership contract.
 
 Bundled data uses committed local assets and the existing bounded verifier and
-importer. It needs no runtime files or network access. Using the bundled source,
-including through these defaults, makes all five embedded components reachable
-regardless of selections. Binary distributions containing those data must include
-the five notice/license files in
-[the bundled-data distribution instructions](../../THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data).
-The code's MIT license does not replace those data terms.
+importer. It needs no runtime files or network access. Any binary referencing
+`DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds all five components,
+even when every call supplies a custom source or different selections. Direct
+use of `BundledDictionarySource` also retains all five. Options control runtime
+import and assessment; they do not remove the embedded assets. Distribute these
+binaries with the five notice/license files in the
+[bundled-data distribution instructions][bundled-notices]. They include CC BY-SA
+4.0 IPA-derived data and Unicode License v3 notices; the code's MIT license does
+not replace those data terms.
 
 ## Budgets and capacity
 
@@ -185,6 +215,53 @@ runs; the model stage does not receive a fresh allowance. The source graph and
 model candidate make single-pass input different from constant-memory processing.
 No default resource limit is raised. Previous source-only budget receipts do not
 promise capacity for the combined pipeline.
+
+### Per-call import cost and pre-input budget floor
+
+Each invocation imports, verifies and parses a fresh account-bound dictionary set
+before reading the document. The default path imports canonical SMuFL and the
+IPA representation bundle even if the document has no dictionary-dependent
+content. The set is reused by the two stages of that invocation, then closed;
+there is no cross-call verified-set cache. Embedded bytes are shared, but parsed
+sets and their verification work are not. Repeated loading of small documents
+therefore pays this fixed cost each time.
+
+The [PR 46 performance review][review-import] reported the following for reviewed
+head `7e7126e9405e0731e6cefa713e801515b4874703`:
+
+| Reviewer probe | Reported per-call result |
+| --- | --- |
+| Bundled import alone | About 3.08 ms, 1.55 MB allocated, 8,641 allocations |
+| One-note default load, prior main | 14,935 ns, about 20 KB allocated |
+| One-note default load, reviewed head | 6,393,642 ns, about 8.6 MB allocated |
+
+These are reviewer-reported timing/allocation observations, not independently
+reproduced benchmarks, latency guarantees or portable capacities. The cited
+comment does not specify a complete benchmark environment. The old default did
+not perform these required assessments, so this is a compatibility-cost
+comparison rather than equivalent validation work. No caching redesign is
+introduced by this migration.
+
+The [same review's logical-budget probe][review-budget] reported 3,279,308 rule
+steps for one required import, about 16.4% of the default 20,000,000-step account.
+The 301,683 canonical SMuFL bytes plus 58,745 IPA representation bytes also charge
+360,428 `MaxExternalBytes` before the document is read. This existing import-byte
+accounting applies to embedded data despite no network or filesystem fetch; the
+charge is not a claim that an external service was contacted.
+
+| Reviewer's one-note probe | Standalone source semantics | Mandatory loader |
+| --- | ---: | ---: |
+| Minimum `MaxRuleSteps` in that probe | 109,716 | 3,486,332 |
+| Minimum configured `MaxExternalBytes` in that probe | 1 | 360,428 |
+| Minimum `MaxBufferedBytes` in that probe | 675,607 | 1,372,253 |
+
+These are reviewer-measured logical boundaries at the named head, not new defaults
+or independently measured general minima. The standalone comparison does not
+include the mandatory loader's import and direct-model stage. Previously
+sufficient explicit budgets can now fail before any input read, leaving
+`Source.Requested=false`, `Model.Requested=false` and no document. Recheck tuned
+budgets for the entire operation; an import refusal is resource incompleteness,
+not invalid MusicXML.
 
 ### Low-level retained-report ownership
 
@@ -208,26 +285,41 @@ report copies remain outside this lease's admitted storage contract. See the
 The unchanged original `testdata/official/MozaChloSample.musicxml` is 223,068 bytes
 of UTF-16BE input, with SHA-256
 `4323af5d7daa23ee3ae4fc27ff51274e98055a775824c49d3f4312f7586bc23e`.
-Mandatory default loading reaches the 64 MiB (67,108,864-byte) buffered-byte
-ceiling before source EOF. It retains `SyntaxIncomplete`, `InputComplete=false`
-and incomplete conversion, with `Model.Requested=false` and no document. The
-error retains both resource-limit and incomplete-assessment recognition. This is
-a capacity change from the earlier narrower source-only loading contract, not a
-MusicXML violation or a malformed-input claim.
+On the asserted linux/amd64 migration control, mandatory default loading reaches
+the 64 MiB (67,108,864-byte) buffered-byte ceiling before source EOF. It retains
+`SyntaxIncomplete`, `InputComplete=false` and incomplete conversion, with
+`Model.Requested=false` and no document. The error retains both resource-limit
+and incomplete-assessment recognition. This is a capacity change from the earlier
+narrower source-only loading contract, not a
+MusicXML violation or a malformed-input claim. This exact refusal is asserted
+only on amd64; the [reviewer also reproduced it on darwin/arm64 and
+darwin/amd64][review-architecture]. The 386 CI run does not assert this boundary,
+and size-based accounting makes it architecture-dependent.
 
-The [migration control](../../source_dtd_no_fetch_review_test.go) keeps this
-default-budget refusal distinct from a verified configured-capacity control.
-With only `MaxBufferedBytes: 96 << 20` changed, the same original fixture completes
-source input and conversion, but returns `ErrIncompleteAssessment` for unread
-external-DTD evidence. It returns neither a document nor a requested model report;
-this control has no resource-limit or invalid-document error. It is exercised by
-`TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete` and
-`TestSourceAssessmentAgainstSchema` for the exact MozaChlo fixture.
+The smaller original `testdata/official/MozartTrio.musicxml` is 94,916 bytes.
+The [PR 46 reviewer][review-mozart] also observed a default 64 MiB refusal for
+that fixture: 67,108,764 bytes live plus a 452-byte request exceeded 67,108,864.
+In that observation source EOF and conversion were complete, but source
+finalization retained a resource-limit terminal and the loader returned no
+document. This reviewer-reported receipt at the reviewed head is now reproduced
+by the focused linux/amd64 regression
+[TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete][official-capacity-test].
+It is not a portable boundary. Input byte size alone cannot place the capacity
+threshold above 200 KB.
+
+The same [migration test][official-capacity-test] keeps both amd64 default-buffer
+refusals distinct from configured-capacity controls. With only
+`MaxBufferedBytes: 96 << 20` changed, each original fixture completes source input
+and conversion, but returns `ErrIncompleteAssessment` for unread external-DTD
+evidence. Neither returns a document or a requested model report; both configured
+controls exclude resource-limit and invalid-document errors.
+`TestSourceAssessmentAgainstSchema` additionally exercises the exact MozaChlo
+control. The 386 run checks configured DTD authority, not the default frontiers.
 
 The 96 MiB (100,663,296-byte) allowance is fixture-specific, not a new default, a
 measured minimum, a production recommendation or evidence that the external DTD
 was read. Earlier standalone source-semantics observations remain in the
-[historical capacity receipt](resource-fragment-budget-evidence.md#official-utf-16be-sample-and-standalone-composition).
+[historical capacity receipt][capacity-history].
 Logical live accounting is not heap usage or a general input-byte capacity
 guarantee; the original bytes, BOM and DOCTYPE are preserved in both controls.
 
@@ -250,3 +342,13 @@ bounded obligations. See the
 Historical profile-identity tables, design proposals, measurements and execution
 receipts remain evidence for their stated revisions. They do not verify this
 later loading migration; verification must use the changed tree.
+
+[review-corpus]: https://github.com/go-muse/go-musicxml/pull/46#discussion_r4302240891
+[review-import]: https://github.com/go-muse/go-musicxml/pull/46#discussion_r4302240900
+[review-budget]: https://github.com/go-muse/go-musicxml/pull/46#discussion_r4302240905
+[review-architecture]: https://github.com/go-muse/go-musicxml/pull/46#discussion_r4302240930
+[review-mozart]: https://github.com/go-muse/go-musicxml/pull/46#discussion_r4302240934
+[bundled-notices]: ../../THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
+[capacity-history]: resource-fragment-budget-evidence.md#official-utf-16be-sample-and-standalone-composition
+
+[official-capacity-test]: ../../source_dtd_no_fetch_review_test.go#L62

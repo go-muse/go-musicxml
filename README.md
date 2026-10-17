@@ -127,8 +127,11 @@ is never silently replaced with U+FFFD.
 Nil or empty assessment options select this fixed pipeline, with bundled canonical
 SMuFL and IPA representation evidence. `DecodeResult` exposes `Source`,
 `Conversion` and `Model` separately; any failure or incomplete required assessment
-withholds `Document`. Use ordinary `Decode` for transport-only loading. See the
-[breaking-change migration guide](docs/validation/assessed-loading-pipeline.md).
+withholds `Document`. Neither loader can accept an unread external DOCTYPE
+subset, including with default options; raising budgets does not close that gap.
+Use ordinary `Decode` for transport-only loading, without a validation guarantee.
+See the [migration guide][assessed-loading] for compatibility, per-call import
+costs and bundled-data distribution requirements.
 
 XML decoding supports UTF-8 (with or without a BOM), UTF-16BE/LE (with a BOM,
 or without one when the XML declaration names the byte order), and
@@ -220,21 +223,22 @@ profile. Effective Container paths stay distinct from physical Raw; explicit
 Sounds input retains effective mapping fields. No auxiliary filename discovery
 or external DTD/schema/dictionary fetching is introduced.
 
-The opt-in [encoded semantic compositions](docs/validation/semantic-composition-scope.md)
-join source/current-model XSD, local, timeline and contextual checks with bounded
+The [encoded semantic compositions][semantic-compositions] are explicitly
+selectable for inspection/assessment and fixed in the assessed loaders. They join
+source/current-model XSD, local, timeline and contextual checks with bounded
 barline/repeat proofs and registered XML Framework/shorthand/element fragments.
 Matching graph and raw/current-MXL profiles pin those intrinsic interpretations.
 Inspection and standalone model/package assessment keep explicit dictionary
 selection; the assessed loaders use the fixed defaults described above. Missing
-evidence and original package/indirection limits remain visible. These profiles add no external musical
-intent provider and make no universal-conformance claim.
+evidence and original package/indirection limits remain visible. These profiles
+add no external musical intent provider and make no universal-conformance claim.
 
 For original-input inspection, use `InspectXML` with an explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the
 same local clauses), or the unchanged `ProfileSourceXSDPreview` (XSD only).
 These narrower profiles are not accepted by either assessed loader. Unread
-external DOCTYPE subsets still make
-all source profiles incomplete, including `Chant.musicxml`, `MozartTrio.musicxml`
+external DOCTYPE subsets still make all source profiles incomplete, including
+`Chant.musicxml`, `MozartTrio.musicxml`
 and `MozaChloSample.musicxml`. Strict assessed decoding returns no document for
 those original files. There is no new DTD trust, stripping, fetching or ignore
 policy. The two DOCTYPE-free official opus examples are a separate assessable
@@ -243,10 +247,10 @@ source case.
 These intrinsic profiles do not establish complete MusicXML conformance, full
 repeat/playback/layout semantics, author intent, or package and linked-resource
 validity. Separate additive graph/package profiles assess bounded selected
-resource obligations as described below. See the [scope and evidence](docs/validation/model-assessment-scope.md)
+resource obligations as described below. See the [scope and evidence][model-scope]
 and [API contract](API.md#direct-current-model-assessment). Inspection and
 standalone model/package assessment still require explicit profiles; the fixed
-assessed-loading pipeline is the exception. A runnable [direct-model example](model_assessment_example_test.go)
+assessed-loading pipeline is the exception. A runnable [direct-model example][model-example]
 shows explicit profile selection and the model report axes.
 
 All assessment profiles share finite resource budgets; input byte size alone
@@ -423,11 +427,16 @@ in this README.
 ## License
 
 The library code is licensed under the [MIT License](LICENSE). Bundled schemas,
-test fixtures and runtime dictionary data retain their own terms. Programs that
-use `BundledDictionarySource`, including through either assessed loader's
-defaults, make all five components reachable regardless of selections, including
-W3C FSA, CC BY-SA 4.0 and Unicode License v3 data.
-Distribute binaries containing those data with the five notice/license files
-listed in [`THIRD_PARTY_NOTICES.md`][bundled-data-notices].
+test fixtures and runtime dictionary data retain their own terms. Any binary
+referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds all five
+dictionary components, even with custom-source options. Direct use of
+`BundledDictionarySource` also retains all five. These include W3C FSA, CC BY-SA
+4.0 and Unicode License v3 data. Distribute these binaries with the five
+notice/license files listed in [`THIRD_PARTY_NOTICES.md`][bundled-data-notices].
 
 [bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
+
+[assessed-loading]: docs/validation/assessed-loading-pipeline.md
+[semantic-compositions]: docs/validation/semantic-composition-scope.md
+[model-scope]: docs/validation/model-assessment-scope.md
+[model-example]: model_assessment_example_test.go
