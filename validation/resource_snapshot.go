@@ -70,6 +70,9 @@ type ResourceSnapshot struct {
 // a known violation its conformance becomes undetermined. A nonnil snapshot must
 // be closed or transferred
 // to a package session sharing the exact same Account.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (s *Session) FinishWithResourceSnapshot(ctx context.Context, end Completion) (Report, *ResourceSnapshot, error) {
 	return s.finishResource(ctx, end, true)
 }

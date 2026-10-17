@@ -37,6 +37,9 @@ type ReportLease struct {
 // be admitted, the best report is returned as incomplete with no lease; callers
 // must not continue dependent assessment work. Close the lease when its storage
 // is discarded or transferred out of the root operation to its caller.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (s *Session) FinishWithRetainedReport(ctx context.Context, end Completion) (report Report, lease *ReportLease, err error) {
 	report, _, err = s.finishWithOwnership(ctx, end, false, &lease)
 	return report, lease, err

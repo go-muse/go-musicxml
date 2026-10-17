@@ -11,6 +11,40 @@ security or data-integrity defect requires otherwise.
 
 `MusicXMLVersion` is the supported schema version.
 
+`TestPublicAPISnapshot` records every exported identifier of the root and
+`validation` packages, including signatures, struct fields with their XML
+tags, methods, and the fields of the `internal/xsd` types that
+`validation.Schema*` aliases re-export. The golden files live in
+`testdata/api/`. An intentional API change updates them in the same change
+with `go test -run TestPublicAPISnapshot -update-api .`, so the diff shows
+each addition, removal, or changed declaration for review.
+
+Error message text is not part of the API; match errors with `errors.Is` and
+`errors.As`.
+
+### Interfaces implemented by callers
+
+`DictionarySource` and `validation.ResourceResolver` are implemented by
+callers, so their method sets are frozen. New capabilities will be offered as
+separate optional interfaces discovered with type assertions. A resolver that
+receives a request branch it does not recognize should return the request ID
+with `State: validation.EvidenceUnsupported`, a `Reason`, and no payload.
+
+### Comparable structs
+
+Several option and value structs are comparable today, including
+`DecodeOptions`, `EncodeOptions`, `MXLOptions`, `AssessmentOptions`,
+`DecodeAssessmentOptions`, `PartDefinition`, `MXLRootFile`, and
+`ValidationIssue`. New fields added to these structs are kept comparable
+(scalars or pointers), so `==` on them keeps compiling. Comparability of
+other structs, in particular generated model types, is not guaranteed; see
+[Generated model compatibility](#generated-model-compatibility).
+
+`validation.Integer`, `validation.Decimal`, and `validation.Rational` hold
+internal pointers. They, and structs that contain them such as
+`validation.Atomic` and `validation.ContextPosition`, compile with `==` but do
+not compare numeric values. Use their `Equal` and `Cmp` methods.
+
 ## Documents
 
 `Document` is a sealed interface. Its supported implementations are:
@@ -32,8 +66,14 @@ Most exported types mirror MusicXML 4.0 XSD complex and simple types.
 
 - Optional scalar attributes and elements use pointers.
 - Repeated elements use slices.
-- XSD enumerations use named string types and constants.
-- XSD choices use wrapper structs where exactly one field must be set.
+- Named XSD enumerations use named string types and constants. Anonymous
+  enumerations, such as the XLink `show`, `actuate`, and `type` attributes and
+  `xml:space`, and union types such as `FontSize` are plain or named strings
+  without constants.
+- Repeated XSD choices use `...Content` wrapper structs where exactly one
+  field must be set. A non-repeated choice is flattened into mutually
+  exclusive optional fields of the owning type, for example `Note.Pitch`,
+  `Note.Unpitched`, and `Note.Rest`; `Validate` reports more than one set.
 - Types whose child order is semantically significant expose `Content` and
   generated `Add...` methods. Their generated `...Contents` slice types append
   recognized elements and discard unknown elements during unmarshalling, so
@@ -48,7 +88,42 @@ precision. Integers must fit their generated Go type. Exact arbitrary-precision
 XSD numbers are outside the model's representational range.
 
 Directly assigning generated fields is supported. Constructors and `Add...`
-methods are conveniences, not a separate object model.
+methods are conveniences, not a separate object model. Generated `Add...`
+methods store the pointer they receive. The hand-written `AddMeasure` methods
+store a copy of their argument, so populate a measure before adding it or edit
+the stored element. Constructors leave `XMLName` empty, while decoding fills
+it; `Encode` ignores `XMLName`.
+
+### Generated model compatibility
+
+The generated types follow the bundled schema. When a later MusicXML schema
+is adopted, these changes are treated as additive:
+
+- new optional fields, attributes, and generated methods such as
+  `Effective...` and `...MatchesFixed`;
+- new `...Content` variants and new types;
+- new enumeration constants.
+
+These properties are not guaranteed and may change with the schema:
+
+- comparability with `==` and use as map keys;
+- unkeyed composite literals of generated structs;
+- exhaustive handling of `...Content` variants or enumeration values without
+  a default branch;
+- which generated types implement `xml.Marshaler`, `xml.Unmarshaler`,
+  `xml.MarshalerAttr`, or `xml.UnmarshalerAttr`. Some types have whole-struct
+  marshal methods only because they contain built-in integer fields;
+- embedding a generated type in a caller-defined struct to extend its XML.
+  Promoted marshal methods take over the outer struct and drop its own fields
+  and `XMLName`, so embed nothing or wrap the value in a named field.
+
+Schema changes that alter a field's shape, such as optional to repeated
+(pointer to slice), required to optional (value to pointer), an element of
+type `empty` gaining its own type, a plain type becoming ordered `Content`,
+or a string becoming an enumeration, are breaking. They are released only in
+a minor version with migration notes. `TestPublicAPISnapshot` makes every
+such change, including a field whose XML tag is reassigned from an attribute
+to an element, visible in review.
 
 ## Transport
 
@@ -77,7 +152,10 @@ default namespace with `xmlns=""` remains allowed.
 The shared source scanner checks XML 1.0 declaration and local DTD grammar,
 namespace closure and original encoding before model filtering. XML defects wrap
 `*xml.SyntaxError`; resource and unavailable-encoding/DTD semantics retain their
-separate typed causes. `xml.SyntaxError.Line` identifies a decoded-source
+separate typed causes. Well-formed input that relies on a deliberately
+unimplemented feature, such as DTD entity expansion or an encoding without a
+decoder, matches `ErrUnsupportedXMLFeature`; for compatibility it also matches
+`ErrIncompleteAssessment`. `xml.SyntaxError.Line` identifies a decoded-source
 recognition position, not an attribute-start location. Source assessment findings
 supply explicit original-byte positions where available.
 
@@ -99,8 +177,18 @@ When the expected root type is known, `DecodeScorePartwise`,
 concrete pointer type. They return `ErrUnsupportedRoot` for any other root.
 Each typed helper has a corresponding `WithOptions` variant.
 
+`DecodeContext(ctx, reader, options)` decodes like `DecodeWithOptions` and
+checks `ctx` while reading input, so a large or slow reader can be abandoned
+without closing it. A canceled call returns an error that matches `ctx.Err()`;
+a nil `ctx` is a `*validation.ConfigurationError`. The existing functions keep
+using `context.Background()`. There are no typed context variants; narrow the
+result with `AsScorePartwise`, `AsScoreTimewise`, or `AsOpusDocument`.
+
 `Encode` writes one root element without an XML declaration and does not call
-`Validate`. It rejects invalid UTF-8 and characters forbidden by XML 1.0 before
+`Validate`. `EncodeWithOptions` performs the same checks and can add the
+standard XML declaration (`EncodeOptions.XMLDeclaration`) and indentation
+(`EncodeOptions.Indent`, spaces and tabs only). Zero options write exactly the
+bytes of `Encode`; invalid options match `ErrInvalidEncodeOptions`. It rejects invalid UTF-8 and characters forbidden by XML 1.0 before
 writing output, rather than silently replacing them with U+FFFD. `Validate`
 reports these failures as representation issues. MXL encoding adds an XML
 declaration to stored MusicXML documents.
@@ -119,6 +207,23 @@ XML-declaration checks, or foreign-namespace filtering for ordinary struct
 fields, nor the encoder's XML-text preflight. Go's
 `encoding/xml` matches unqualified struct tags by local name, so `Decode` and
 its typed variants remain the recommended document entry points.
+
+Further differences of direct `encoding/xml` use:
+
+- `xml.Marshal` of a cyclic opus model recurses until the Go runtime aborts
+  with a fatal stack overflow, which cannot be recovered. `Encode` returns
+  `ErrDocumentCycle` instead.
+- Only the three root types carry an `XMLName`. `xml.Marshal` of another
+  generated value, such as a `Note`, uses the Go type name as the element
+  name; use `xml.Encoder.EncodeElement` with an explicit start element.
+- `xml.Unmarshal` accepts a namespace-qualified root and fills plain fields,
+  but ordered `Content` matches only unqualified names and stays empty.
+  `Decode` rejects such a root with `ErrUnsupportedRoot`.
+- The `XMLName` tag fixes the root element name, so a containing struct field
+  tagged with a different element name fails to marshal.
+
+`EncodeWithOptions` writes an XML declaration or indented output with the
+same checks as `Encode`; prefer it to configuring an `xml.Encoder` directly.
 
 `Encode` and `ResolveOpus` reject cyclic opus models and document nesting deeper
 than 4096 elements before recursive traversal. `Validate` preserves that legacy
@@ -1472,7 +1577,13 @@ accessors cover `MXLPackage.Document` and other polymorphic document values.
 
 `ResolveOpus` decodes linked XML resources with the default XML depth limit of
 256, independently of the `MXLOptions.MaxXMLDepth` used to read the primary
-document. There is currently no separate linked-document depth option.
+document. `ResolveOpusWithOptions(DecodeOptions)` applies the caller's limit to
+every linked document; `ResolveOpus` is equivalent to calling it with zero
+options.
+
+`DecodeMXLContext` and `DecodeMXLPackageContext` take a `context.Context` and
+check it while the archive is read, between archive entries, and while the
+primary document is decoded. Cancellation errors match `ctx.Err()`.
 
 `ResolveOpus` builds a memoized graph. Repeated links share targets, and
 opus-link cycles between archive documents are supported. `SyncResolvedOpus`
@@ -1485,6 +1596,25 @@ Public sentinel errors are intended for `errors.Is`, including
 `ErrDocumentTooDeep` and `ErrDocumentCycle` for unsafe programmatically built
 models. `UnsupportedRootError`, `MXLLinkError`, and `ValidationError` provide
 structured context and are intended for `errors.As`.
+
+Errors defined outside `errors.go`:
+
+- `ErrIncompleteAssessment` shares its identity with
+  `validation.ErrIncompleteAssessment` and marks unfinished assessment, not an
+  XSD violation.
+- `ErrUnsupportedXMLFeature` marks well-formed input that relies on an
+  unimplemented XML feature; it also matches `ErrIncompleteAssessment`.
+- `ErrEntityNestingLimit` reports internal-DTD entity expansion beyond the
+  nesting limit.
+- `ErrDictionaryUnavailable` and `*DictionaryImportError` report dictionary
+  import failures; the typed error unwraps to the provider's error.
+- `*ConversionError` reports a model-mapping failure in assessed loading;
+  its `Cause` holds the mapper error.
+- `ErrInvalidDecodeOptions`, `ErrInvalidEncodeOptions`, and
+  `ErrInvalidMXLOptions` report invalid transport options. Invalid
+  assessment options are reported as `*validation.ConfigurationError`.
+
+All exported error types tolerate a nil receiver in `Error` and `Unwrap`.
 
 ## Auxiliary source assemblies
 

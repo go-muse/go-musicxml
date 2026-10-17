@@ -152,6 +152,8 @@ func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error
 // selected resource dependencies in one finite account. The caller reader stays
 // open. Ordinary normative findings have nil operation error; inspect Satisfied.
 // The resolver owns transport authorization and blocked-I/O cancellation.
+// options.Graph.Profile must be ProfileResourceGraph; any other value,
+// including the zero value, is a configuration error.
 func InspectXMLWithResources(ctx context.Context, reader io.Reader, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
 	if reader == nil {
 		return validation.AssessmentBundle{}, ErrNilReader
@@ -181,6 +183,8 @@ func (g *resourceGraphRun) inspectPrimarySource(reader io.Reader) (validation.As
 // AssessModelWithResources walks the current model directly and never encodes it
 // to recover source history. Its opaque representation identity is fresh each
 // run. Lost xsi discovery metadata remains explicitly unavailable.
+// options.Graph.Profile must be ProfileResourceGraph; any other value,
+// including the zero value, is a configuration error.
 func AssessModelWithResources(ctx context.Context, document Document, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
 	if _, err := validationSchemaForDocument(document); err != nil {
 		return validation.AssessmentBundle{}, err

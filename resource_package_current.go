@@ -14,6 +14,8 @@ import (
 // the encoder's current-state score.musicxml default; it proves no original
 // container, header, lexical media-type presence or source order. Callers must
 // not mutate the package or its resource bytes until this call returns.
+// options.Graph.Profile must be ProfileMXLModel; any other value, including the
+// zero value, is a configuration error.
 func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
 	if value == nil {
 		return validation.AssessmentBundle{}, ErrNilMXLPackage

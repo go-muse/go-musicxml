@@ -5,6 +5,7 @@ import "context"
 // TimingPlayScope distinguishes a note-local encoding from a subsequent-note update.
 type TimingPlayScope string
 
+// Supported TimingPlayScope values.
 const (
 	// TimingPlayCurrentNote affects only the containing note.
 	TimingPlayCurrentNote TimingPlayScope = "current-note"

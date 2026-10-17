@@ -5,6 +5,7 @@ import "context"
 // NavigationListeningKind is the closed continuing-listening instruction family.
 type NavigationListeningKind string
 
+// Supported NavigationListeningKind values.
 const (
 	// NavigationListeningSync selects synchronization behavior.
 	NavigationListeningSync NavigationListeningKind = "sync"

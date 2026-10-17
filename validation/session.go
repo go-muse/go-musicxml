@@ -58,6 +58,8 @@ func (e *SessionError) Unwrap() []error {
 
 // UnsupportedRootError describes a known root excluded by the selected profile.
 // It denotes a capability boundary, not malformed XML or normative invalidity.
+// It is unrelated to musicxml.UnsupportedRootError, which reports an XML root
+// element that the decoder cannot represent.
 type UnsupportedRootError struct {
 	Name    QName
 	Profile ProfileID
@@ -304,6 +306,7 @@ func (s *Session) retain(amount int64) error {
 }
 
 // Open starts one balanced occurrence and copies retained headers and bindings.
+// It is an XML node event paired with Close, not a resource acquisition.
 func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 	if err := s.event(ctx, "Open"); err != nil {
 		return err
@@ -482,6 +485,10 @@ func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Ev
 
 // Close seals one occurrence. Ordinary predicate failures are retained findings,
 // not method errors. Independent local decisions are established before EOF.
+//
+// Close is the node event paired with Open; it does not release the session
+// and Session does not implement io.Closer. Finish (or one of its variants)
+// ends the session and releases its storage.
 func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 	if err := s.event(ctx, "Close"); err != nil {
 		return err

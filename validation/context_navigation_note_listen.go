@@ -5,6 +5,7 @@ import "context"
 // NavigationNoteListenKind identifies a note-local listening/assessment carrier.
 type NavigationNoteListenKind string
 
+// Supported NavigationNoteListenKind values.
 const (
 	// NavigationAssess is an explicit per-note assessment override.
 	NavigationAssess NavigationNoteListenKind = "assess"

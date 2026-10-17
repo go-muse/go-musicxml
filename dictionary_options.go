@@ -55,6 +55,10 @@ type DecodeDictionaryAssessmentOptions struct {
 // Open must honor its own cancellation of blocked I/O. Every usable nonnil Body
 // transfers ownership, even alongside an error; the assessment closes it once.
 // Metadata URLs do not confer transport or redirect authorization.
+//
+// DictionarySource is implemented by callers, so its method set is frozen.
+// New capabilities will be offered as separate optional interfaces that the
+// importer discovers with type assertions.
 type DictionarySource interface {
 	Open(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error)
 }

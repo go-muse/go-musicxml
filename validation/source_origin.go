@@ -181,6 +181,9 @@ func sameSourceOriginLocation(a, b Location) bool {
 // provider must be the selected available sealed source-origin plan for the
 // active root assembly. Attribute origins follow the corresponding present
 // Attribute event; schema declaration validity does not establish ownership.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (s *Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceOriginContextResult) (err error) {
 	if err = s.event(ctx, "SourceOrigin"); err != nil {
 		return err
@@ -266,6 +269,9 @@ func (s *Session) SourceOrigin(ctx context.Context, provider RuleKey, in SourceO
 // CompleteSourceOrigins seals origin enumeration once after root closure. Known
 // true requires every admitted node and present attribute to have an origin.
 // Final assessment additionally requires complete input and fact enumeration.
+//
+// Adapter API: the root musicxml package uses this to stream facts into an
+// engine; application code is not expected to call it.
 func (s *Session) CompleteSourceOrigins(ctx context.Context, provider RuleKey, complete Evidence[bool]) error {
 	if err := s.event(ctx, "CompleteSourceOrigins"); err != nil {
 		return err

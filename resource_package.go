@@ -77,6 +77,8 @@ func (g *resourceGraphRun) ownArchive(a *mxlAssessmentArchive) error {
 // InspectMXL assesses original ZIP headers, its original container source and
 // selected archive-local resources using one bounded account. The reader stays
 // open. External I/O occurs only through explicitly selected resolver requests.
+// options.Graph.Profile must be ProfileMXLSource; any other value, including
+// the zero value, is a configuration error.
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
 	if reader == nil {
 		return validation.AssessmentBundle{}, ErrNilReader

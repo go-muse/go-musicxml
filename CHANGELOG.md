@@ -9,6 +9,33 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add `DecodeContext`, `DecodeMXLContext` and `DecodeMXLPackageContext`. They
+  decode like the `WithOptions` variants and stop when the context is canceled,
+  checking it while input is read; cancellation errors match `ctx.Err()`.
+  Existing decoders keep using `context.Background()` and are unchanged.
+- Add `EncodeWithOptions` and `EncodeOptions` for an XML declaration and
+  indented output with the same cycle, nesting and XML-text checks as
+  `Encode`. Zero options write exactly the bytes of `Encode`. Invalid options
+  match the new `ErrInvalidEncodeOptions`.
+- Add `MXLPackage.ResolveOpusWithOptions`, which applies the caller's
+  `DecodeOptions` to linked documents. `ResolveOpus` keeps the default limit.
+- Add `ErrUnsupportedXMLFeature`, matched by decode errors for well-formed
+  input that relies on an unimplemented XML feature such as DTD entity
+  expansion or an unavailable encoding. These errors still match
+  `ErrIncompleteAssessment`.
+- Add `validation.Rational.Cmp` and `Equal` methods on `validation.Rational`,
+  `Decimal` and `Integer`. These types compile with `==` but compare internal
+  pointers.
+- Add `validation.SchemaXSDNamespace` and untyped constants for the string
+  vocabulary of the `validation.Schema*` metadata aliases.
+- Add `TestPublicAPISnapshot` and the golden files in `testdata/api/`, which
+  record the exported API of the root and `validation` packages, including
+  generated struct fields with their XML tags, comparability and method sets.
+- Document the compatibility policy for generated model types, comparable
+  option structs and caller-implemented interfaces in `API.md`, API levels in
+  the `validation` package documentation, and API conventions and the
+  snapshot workflow in `CONTRIBUTING.md`.
+
 - Add `validation.Session.FinishWithRetainedReport` and `ReportLease.Close` for
   explicit ownership of already admitted report context across assessment stages.
   The assessed loaders use this bounded accounting seam; report data remains
@@ -53,6 +80,13 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   package, indirection, unread-external and incomplete-capability gates.
 
 ### Fixed
+
+- `UnsupportedRootError` and `MXLLinkError` no longer panic when `Error` or
+  `Unwrap` is called on a nil receiver, matching the package's other error
+  types.
+- Correct `API.md` statements about XSD choices (only repeated choices use
+  wrapper structs) and enumerations (anonymous enumerations have no
+  constants), and list the remaining differences of direct `encoding/xml` use.
 
 - Avoid boxing nonnumeric reflected state fields solely to recognize immutable
   numeric wrappers. Preserve exact measurement, traversal, work charges and
