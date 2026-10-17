@@ -4,8 +4,26 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"sync"
 	"testing"
 )
+
+func TestRetainedReportLeaseCopylockMarker(t *testing.T) {
+	typ := reflect.TypeFor[ReportLease]()
+	marker, ok := typ.FieldByName("noCopy")
+	if !ok || marker.Anonymous || marker.Type.Size() != 0 || !reflect.PointerTo(marker.Type).Implements(reflect.TypeFor[sync.Locker]()) || marker.Type.Implements(reflect.TypeFor[sync.Locker]()) {
+		t.Fatal("lease must carry a non-embedded zero-size pointer-Locker marker for go vet copylocks")
+	}
+	// Keeping the zero-size marker first avoids trailing-zero-field padding.
+	plain := reflect.TypeFor[struct {
+		account  *Account
+		retained int64
+		closed   bool
+	}]()
+	if typ.Size() != plain.Size() {
+		t.Fatalf("copylock marker changed lease size: %d want %d", typ.Size(), plain.Size())
+	}
+}
 
 func retainedReportTestSession(t *testing.T, text string) (*Session, int64) {
 	t.Helper()
@@ -39,14 +57,8 @@ func TestRetainedReportTransfersAlreadyAdmittedContext(t *testing.T) {
 	if used, _ := s.account.Usage(BudgetBufferedBytes); used != contextBytes+reportLeaseControlBytes {
 		t.Fatalf("live charge=%d want context/control=%d", used, contextBytes+reportLeaseControlBytes)
 	}
-	for _, kind := range []BudgetKind{BudgetDiagnostics, BudgetDiagnosticBytes} {
-		before, _ := s.account.Usage(kind)
-		if err := lease.Close(); err != nil {
-			t.Fatal(err)
-		}
-		if after, _ := s.account.Usage(kind); after != before {
-			t.Fatalf("closing lease refunded cumulative %s", kind)
-		}
+	if err := lease.Close(); err != nil {
+		t.Fatal(err)
 	}
 	if err := lease.Close(); err != nil {
 		t.Fatal(err)
@@ -59,6 +71,34 @@ func TestRetainedReportTransfersAlreadyAdmittedContext(t *testing.T) {
 	}
 	if _, second, err := s.FinishWithRetainedReport(context.Background(), Completion{}); !errors.Is(err, ErrInvalidSession) || second != nil {
 		t.Fatalf("second finish lease=%v err=%v", second, err)
+	}
+}
+
+func TestRetainedReportClosePreservesCumulativeDiagnosticQuotas(t *testing.T) {
+	s, _ := retainedReportTestSession(t, "bad")
+	report, lease, err := s.FinishWithRetainedReport(context.Background(), Completion{InputComplete: true, Syntax: SyntaxWellFormed})
+	if err != nil || lease == nil || report.Counts.Fail == 0 || len(report.Findings) == 0 {
+		t.Fatalf("fixture must retain a failing diagnostic: report=%+v lease=%v err=%v", report, lease, err)
+	}
+	defer lease.Close()
+	kinds := []BudgetKind{BudgetDiagnostics, BudgetDiagnosticBytes}
+	before := make([]int64, len(kinds))
+	for i, kind := range kinds {
+		before[i], err = s.account.Usage(kind)
+		if err != nil || before[i] <= 0 {
+			t.Fatalf("fixture needs nonzero cumulative %s before first Close: usage=%d err=%v", kind, before[i], err)
+		}
+	}
+	for closeNumber := 1; closeNumber <= 2; closeNumber++ {
+		if err := lease.Close(); err != nil {
+			t.Fatal(err)
+		}
+		for i, kind := range kinds {
+			after, err := s.account.Usage(kind)
+			if err != nil || after != before[i] {
+				t.Errorf("Close %d changed cumulative %s: before=%d after=%d err=%v", closeNumber, kind, before[i], after, err)
+			}
+		}
 	}
 }
 

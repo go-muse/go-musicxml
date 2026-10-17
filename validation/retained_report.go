@@ -7,6 +7,13 @@ import "context"
 // publishValidatedContextResult and are transferred, never charged twice.
 const reportLeaseControlBytes int64 = 64
 
+// reportLeaseNoCopy lets go vet's copylocks pass diagnose accidental value
+// copies. It has no runtime state and is never locked.
+type reportLeaseNoCopy struct{}
+
+func (*reportLeaseNoCopy) Lock()   {}
+func (*reportLeaseNoCopy) Unlock() {}
+
 // ReportLease keeps a finished report's context projection charged to its root
 // account while another assessment stage runs. It owns accounting only: the
 // returned Report remains caller-owned and is not invalidated by Close. Its
@@ -15,6 +22,7 @@ const reportLeaseControlBytes int64 = 64
 // Do not copy a lease or use it concurrently. Caller mutations or additional
 // copies of the report are outside the admitted projection's storage contract.
 type ReportLease struct {
+	noCopy   reportLeaseNoCopy
 	account  *Account
 	retained int64
 	closed   bool
