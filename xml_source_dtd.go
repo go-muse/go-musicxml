@@ -74,7 +74,14 @@ type sourceDTDParser struct {
 	segments         *[]sourceDTDTextSegment
 	segmentEnd       sourceXMLPosition
 	segmentsReserved int64
+	// declarationBase is the external entity being read at the < of the
+	// current declaration.
+	declarationBase string
 }
+
+// sourceDTDMaxTextSegments bounds one replacement map. Text past it, such as
+// a literal made of many character references, has no known site.
+const sourceDTDMaxTextSegments = 256
 
 // parseSourceDTD starts immediately after the literal <!DOCTYPE. It consumes
 // exactly through the closing >, retaining only the document type name and a
@@ -217,6 +224,9 @@ func (p *sourceDTDParser) subset() {
 			p.store.state.BindingCutoff = p.store.state.Standalone != sourceDTDStandaloneYes
 		case '<':
 			start := p.referenceOrigin()
+			if input, ok := p.input.(*sourceDTDExternalInput); ok {
+				p.declarationBase = input.systemID()
+			}
 			p.read()
 			switch p.peek() {
 			case '?':
@@ -531,6 +541,7 @@ func (p *sourceDTDParser) entity() {
 		return
 	}
 	d.External = true
+	base := p.declarationBase
 	d.PublicID, d.SystemID = p.externalID(false)
 	space := p.space()
 	if p.peek() == 'N' && !d.Parameter {
@@ -544,6 +555,11 @@ func (p *sourceDTDParser) entity() {
 	}
 	p.endDeclaration()
 	p.collect(d)
+	if p.err == nil && d.Parameter && p.external {
+		if record := p.store.declarations[len(p.store.declarations)-1]; record.Binding && base != record.Origin.Entity {
+			p.err = p.store.setDeclarationBase(record, base)
+		}
+	}
 }
 
 // Public identifiers may omit their system literal only in NOTATION.
@@ -1141,8 +1157,12 @@ func (p *sourceDTDParser) addSegment(segment sourceDTDTextSegment, text []byte) 
 			text = text[size:]
 		}
 	}
-	if extends {
+	if extends || n > sourceDTDMaxTextSegments {
 		return
+	}
+	if n == sourceDTDMaxTextSegments {
+		// The rest of the replacement has no known site.
+		segment = sourceDTDTextSegment{Offset: segment.Offset}
 	}
 	if int64(n) >= p.segmentsReserved/sourceDTDTextSegmentBytes {
 		capacity := max(4, 2*int64(cap(segments)))

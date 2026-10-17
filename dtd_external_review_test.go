@@ -73,17 +73,23 @@ func TestExternalDTDHonoursAssessmentBudgets(t *testing.T) {
 	// is charged to the document directly.
 	prepared, err := newSourceDTDResolver(nil).prepare(context.Background(), "-//Recordare//DTD MusicXML 4.0 Partwise//EN", "")
 	require.NoError(t, err)
-	longest := 0
-	for _, d := range prepared.declarations {
-		longest = max(longest, len(d.Name), len(d.Element), len(d.RawType), len(d.RawValue), len(d.Replacement), len(d.Origin.Entity))
-	}
 	// Without the closure the document needs fewer than 128 scalar bytes.
-	require.Greater(t, longest, 128)
+	require.Greater(t, prepared.longest, int64(128))
 	for _, internal := range []string{"", ` [<!ENTITY % local "x">]`} {
 		input := dtdTestScore(strings.TrimSuffix(partwiseDOCTYPE, ">")+internal+">", "T", "")
 		_, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: 128}})
 		requireResourceKind(t, err, validation.BudgetScalarBytes, "bundled closure under MaxScalarBytes 128: "+internal)
 	}
+	// Importing needs exactly the scalar limit that parsing for internal
+	// parameter entities needs: the longest string, a PE literal included.
+	for _, internal := range []string{"", ` [<!ENTITY % local "x">]`} {
+		input := dtdTestScore(strings.TrimSuffix(partwiseDOCTYPE, ">")+internal+">", "T", "")
+		_, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: prepared.longest}})
+		require.NoError(t, err, internal)
+		_, err = InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxScalarBytes: prepared.longest - 1}})
+		requireResourceKind(t, err, validation.BudgetScalarBytes, "one byte below the longest closure string: "+internal)
+	}
+
 	// The partwise closure nests seven deep; the document itself only three.
 	require.Equal(t, int64(7), prepared.depth)
 	for limit, fails := range map[int64]bool{6: true, 7: false} {
@@ -363,4 +369,99 @@ func TestDecodeNormalizesExternalNamespaceDefaults(t *testing.T) {
 			assert.Empty(t, prepared.namespaces["score"], dtd)
 		}
 	}
+}
+
+func TestExternalDTDRelativeBaseIsTheParsingEntity(t *testing.T) {
+	t.Parallel()
+
+	// XML 4.2.2: a relative identifier is relative to the external entity
+	// containing the < that starts the declaration when it is parsed. Here
+	// the declaration of inner is written in b/mods.ent but parsed as the
+	// replacement of %decl; while a/main.dtd is read.
+	var requests []DTDRequest
+	source := DTDSourceFunc(func(_ context.Context, request DTDRequest) ([]byte, error) {
+		requests = append(requests, request)
+		switch request.SystemID + " " + request.BaseSystemID {
+		case "a/main.dtd ":
+			return []byte(`<!ENTITY % mods SYSTEM "../b/mods.ent"> %mods; %decl; %inner;`), nil
+		case "../b/mods.ent a/main.dtd":
+			return []byte(`<!ENTITY % decl "<!ENTITY &#37; inner SYSTEM 'inner.mod'>">`), nil
+		case "inner.mod a/main.dtd":
+			return []byte(`<!ENTITY x "from-a">`), nil
+		case "inner.mod b/mods.ent":
+			return []byte(`<!ENTITY x "from-b">`), nil
+		}
+		return nil, ErrDTDNotFound
+	})
+	prepared, err := newSourceDTDResolver(&DTDOptions{Source: source}).prepare(context.Background(), "", "a/main.dtd")
+	require.NoError(t, err)
+	for _, d := range prepared.declarations {
+		if d.Name == "x" {
+			assert.Equal(t, "from-a", d.Replacement)
+		}
+	}
+	require.Len(t, requests, 3)
+	assert.Equal(t, DTDRequest{SystemID: "inner.mod", BaseSystemID: "a/main.dtd"}, requests[2])
+}
+
+func TestExternalDTDSitesAfterTextDeclarations(t *testing.T) {
+	t.Parallel()
+
+	// Sites are in the entity after its byte order mark is removed and line
+	// ends are normalized, the text declaration included.
+	files := map[string]string{
+		"m.dtd": "\xef\xbb\xbf<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<!ENTITY % e SYSTEM \"e.ent\"> %e;\r\n<!ENTITY x 'X'>",
+		"e.ent": "<?xml encoding='UTF-8'?>\n\n<!ENTITY y 'Y'>",
+	}
+	prepared, err := newSourceDTDResolver(&DTDOptions{Source: mapDTDSource(files)}).prepare(context.Background(), "", "m.dtd")
+	require.NoError(t, err)
+	want := map[string]sourceXMLPosition{
+		"x": {ByteOffset: int64(strings.Index("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!ENTITY % e SYSTEM \"e.ent\"> %e;\n<!ENTITY x", "<!ENTITY x")), Line: 3, Column: 1},
+		"y": {ByteOffset: int64(len("<?xml encoding='UTF-8'?>\n\n")), Line: 3, Column: 1},
+	}
+	for _, d := range prepared.declarations {
+		if position, ok := want[d.Name]; ok {
+			assert.Equal(t, position, d.Origin.Span.Start, d.Name)
+			delete(want, d.Name)
+		}
+	}
+	assert.Empty(t, want)
+}
+
+func TestExternalDTDReplacementMapsAreBounded(t *testing.T) {
+	t.Parallel()
+
+	// Each character reference starts its own segment; a long run of them
+	// must not multiply the literal's storage.
+	literal := strings.Repeat("a&#9;", 200_000)
+	dtd := `<!ENTITY % pa "` + literal + `"><!ENTITY % pb "` + literal + `"><!ENTITY x "X">`
+	account, err := validation.NewBudgetAccount(validation.Budgets{})
+	require.NoError(t, err)
+	store, err := newSourceDTDStore(context.Background(), account, sourceDTDStandaloneAbsent)
+	require.NoError(t, err)
+	defer store.Close()
+	store.parsed = true
+	_, _, err = parseExternalSubset(context.Background(), store, &sourceDTDResolver{}, sourceDTDEntity{name: "big.dtd", systemID: "big.dtd", text: dtd, size: int64(len(dtd))}, false, 64)
+	require.NoError(t, err)
+	for d, segments := range store.segments {
+		assert.LessOrEqual(t, len(segments), sourceDTDMaxTextSegments+1, d.Name)
+		assert.Empty(t, segments[len(segments)-1].Entity, "text past the bound has no site")
+	}
+
+	// A declaration written past the bound has no known site; one before it
+	// keeps its site.
+	late := `<!ENTITY % late "` + strings.Repeat("&#32;", 300) + `<!ENTITY z 'Z'>"> %late; ` +
+		`<!ENTITY % early "<!ENTITY w 'W'>` + strings.Repeat("&#32;", 300) + `"> %early;`
+	prepared, err := newSourceDTDResolver(&DTDOptions{Source: mapDTDSource{"late.dtd": late}}).prepare(context.Background(), "", "late.dtd")
+	require.NoError(t, err)
+	sites := map[string]bool{}
+	for _, d := range prepared.declarations {
+		sites[d.Name] = d.Origin.SpanAvailable
+	}
+	assert.Equal(t, map[string]bool{"z": false, "w": true}, sites)
+
+	doc := `<!DOCTYPE score-partwise SYSTEM "big.dtd"><score-partwise><work><work-title>&x;</work-title></work>` +
+		`<part-list><score-part id="P1"><part-name>M</part-name></score-part></part-list><part id="P1"><measure number="1"/></part></score-partwise>`
+	_, err = DecodeWithOptions(strings.NewReader(doc), DecodeOptions{DTD: &DTDOptions{Source: mapDTDSource{"big.dtd": dtd}}})
+	assert.NoError(t, err)
 }

@@ -26,10 +26,13 @@ type DTDRequest struct {
 	PublicID string
 	// SystemID is the system identifier as written, or empty.
 	SystemID string
-	// BaseSystemID is the system identifier of the DTD entity that contains
-	// the declaration of the requested parameter entity, for resolving a
-	// relative SystemID (XML 4.2.2). It is empty for the DOCTYPE external
-	// subset and for parameter entities declared in the internal subset.
+	// BaseSystemID is the system identifier of the external DTD entity that
+	// was being read when the declaration of the requested parameter entity
+	// was parsed, for resolving a relative SystemID (XML 4.2.2). For a
+	// declaration in the replacement text of an internal parameter entity,
+	// that is the entity in which the parameter entity was referenced. It is
+	// empty for the DOCTYPE external subset and for parameter entities
+	// declared in the internal subset.
 	BaseSystemID string
 }
 

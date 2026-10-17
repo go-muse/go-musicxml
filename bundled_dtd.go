@@ -128,9 +128,16 @@ func bundledDTDLookup(publicID, systemID, baseSystemID string) (string, bool) {
 // bundledDTDEntityText returns a bundled file as external entity text, after
 // the end-of-line normalization that every external parsed entity receives.
 func bundledDTDEntityText(file string) (string, error) {
+	text, _, err := bundledDTDEntity(file)
+	return text, err
+}
+
+// bundledDTDEntity also returns where the text starts after any text
+// declaration.
+func bundledDTDEntity(file string) (string, sourceXMLPosition, error) {
 	data, err := bundledDTDFiles.ReadFile(bundledDTDDirectory + "/" + file)
 	if err != nil {
-		return "", fmt.Errorf("bundled DTD %s is missing: %w", file, err)
+		return "", sourceXMLPosition{}, fmt.Errorf("bundled DTD %s is missing: %w", file, err)
 	}
 	return sourceDTDExternalText(data)
 }
