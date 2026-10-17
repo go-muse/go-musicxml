@@ -62,6 +62,9 @@ func companionSummary(ledger map[string]any) string {
 }
 
 func validateCompanionSummary(ledger map[string]any, text string) error {
+	// Git may check Markdown out with CRLF. Preserve every other byte, including
+	// bare carriage returns and content whitespace, for the exact comparison.
+	text = strings.ReplaceAll(text, "\r\n", "\n")
 	if strings.Count(text, companionTitle+"\n") != 1 {
 		return fmt.Errorf("companion title must name the baseline, PR 42 and PR 46 evidence layers")
 	}
@@ -82,27 +85,59 @@ func TestFinalReconciliationCompanionSummary(t *testing.T) {
 	}
 }
 
+func TestFinalReconciliationCompanionSummaryLineEndings(t *testing.T) {
+	_, ledger := loadLedger(t)
+	good := companionTitle + "\n\n" + companionSummary(ledger)
+	for _, tc := range []struct {
+		name, newline string
+		valid         bool
+	}{
+		{"LF", "\n", true},
+		{"CRLF", "\r\n", true},
+		{"bare CR", "\r", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			text := strings.ReplaceAll(good, "\n", tc.newline)
+			err := validateCompanionSummary(ledger, text)
+			if (err == nil) != tc.valid {
+				t.Fatalf("valid=%t: %v", tc.valid, err)
+			}
+		})
+	}
+}
+
 func TestFinalReconciliationRejectsStaleCompanionSummary(t *testing.T) {
 	_, ledger := loadLedger(t)
 	good := companionTitle + "\n\n" + companionSummary(ledger)
 	if err := validateCompanionSummary(ledger, good); err != nil {
 		t.Fatal(err)
 	}
-	for _, tc := range []struct{ name, from, to string }{
-		{"title", "PR 42 and PR 46 evidence", "PR 42 evidence"},
-		{"route count", "127 total", "126 total"},
-		{"layer", "`pr46-assessed-loading`", "`baseline`"},
-		{"axis count", "89 mapped", "91 mapped"},
-		{"route list", "- `TestSourceTruncatedMarkupPublic`", "- `TestOmittedMigratedRoute`"},
-		{"superseded status", "`decision-only`,", "`mapped`,"},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			bad := strings.Replace(good, tc.from, tc.to, 1)
-			if bad == good {
-				t.Fatal("mutation did not change the summary")
-			}
-			if err := validateCompanionSummary(ledger, bad); err == nil {
-				t.Fatal("stale companion summary accepted")
+	for _, ending := range []struct{ name, newline string }{{"LF", "\n"}, {"CRLF", "\r\n"}} {
+		t.Run(ending.name, func(t *testing.T) {
+			for _, tc := range []struct{ name, from, to string }{
+				{"title", "PR 42 and PR 46 evidence", "PR 42 evidence"},
+				{"route count", "127 total", "126 total"},
+				{"layer", "`pr46-assessed-loading`", "`baseline`"},
+				{"axis count", "89 mapped", "91 mapped"},
+				{"route list", "- `TestSourceTruncatedMarkupPublic`", "- `TestOmittedMigratedRoute`"},
+				{"superseded status", "`decision-only`,", "`mapped`,"},
+				{"embedded CR", "127 total", "127\r total"},
+				{"content spacing", "127 total", "127  total"},
+			} {
+				t.Run(tc.name, func(t *testing.T) {
+					bad := strings.Replace(good, tc.from, tc.to, 1)
+					if bad == good {
+						t.Fatal("mutation did not change the summary")
+					}
+					bad = strings.ReplaceAll(bad, "\n", ending.newline)
+					want := "companion evidence summary"
+					if tc.name == "title" {
+						want = "companion title"
+					}
+					if err := validateCompanionSummary(ledger, bad); err == nil || !strings.Contains(err.Error(), want) {
+						t.Fatalf("stale companion summary needs %q rejection: %v", want, err)
+					}
+				})
 			}
 		})
 	}
