@@ -186,6 +186,12 @@ refused the baseline but admitted the correction. All retained account charges
 returned to zero after finalization. These are capacity measurements, not
 controlled CPU/RSS benchmarks or final whole-PR acceptance.
 
+Later change: the internal-DTD profile now reads the bundled official MusicXML
+external DTD. The same test now expects that profile to complete satisfied at
+the default budget (about 27 MiB retained before `Finish`) and to be refused as a
+resource limit at 24,000,000 bytes, while the preview keeps its unread-DTD
+evidence. The measurements above describe the earlier unread-DTD state.
+
 The expanded xmllint table separates explicit observed oracle classes from the
 bounded reader's source-supported disposition. It records nonfatal validity
 errors, validity/internal-error cascades and deliberate standalone/PE
