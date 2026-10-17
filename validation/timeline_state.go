@@ -247,7 +247,7 @@ func stateMeasure(ctx context.Context, s *Session, v reflect.Value) (int64, erro
 	if !v.IsValid() {
 		return 0, nil
 	}
-	if v.CanInterface() {
+	if v.CanInterface() && (v.Kind() == reflect.Interface || v.Kind() == reflect.Struct && (v.Type() == reflect.TypeFor[Integer]() || v.Type() == reflect.TypeFor[Decimal]() || v.Type() == reflect.TypeFor[Rational]())) {
 		switch n := v.Interface().(type) {
 		case Integer:
 			return n.ByteSize() + 64, nil
