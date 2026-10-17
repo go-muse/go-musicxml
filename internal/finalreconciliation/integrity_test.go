@@ -199,6 +199,9 @@ func validateLedger(root string, ledger map[string]any) error {
 			return fmt.Errorf("unreferenced case %s", id)
 		}
 	}
+	if err := validateAssessedLoadingSupersession(tests, cases); err != nil {
+		return err
+	}
 	questionDoc, err := readJSON(root, "docs/validation/plan/open-questions.json")
 	if err != nil {
 		return err

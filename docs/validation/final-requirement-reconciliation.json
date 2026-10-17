@@ -1,15 +1,15 @@
 {
   "format": "musicxml-final-requirement-reconciliation-1",
-  "title": "2026-10-16 baseline requirement reconciliation with labeled PR 42 evidence",
+  "title": "2026-10-16 baseline reconciliation with labeled PR 42 and PR 46 migration evidence",
   "baseline": {
     "commit": "0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9",
     "tree": "1e78190afb839ba0cd5b91bc5fb8bff6a102638d"
   },
   "authority": {
     "approved_plan_sha256": "d0685e4462c50a85f60eff58ac5419ce394e01e0ee9d71804a6df9d7b6cdc483",
-    "scope": "Author reconciliation only. Baseline runtime evidence and PR 42-added tests/ledger guards are labeled separately. Exact-tree acceptance is a separate receipt; independent design/QA, mass corpus acceptance and performance assessment are outside this ledger."
+    "scope": "Author reconciliation only. Baseline, PR 42-added and PR 46 assessed-loading migration evidence are labeled separately. Exact-tree acceptance is a separate receipt; independent design/QA, mass corpus acceptance and performance assessment are outside this ledger."
   },
-  "classification_policy": "Original statuses remain immutable; requirement classifications describe the frozen pre-acceptance baseline. Axis routes distinguish baseline from PR 42-added evidence. No row claims final-tree execution. Related test names, returned Unknown and fixture quantity never establish closure; reviewed classifications, residuals, closure criteria and axis mappings are pinned against drift.",
+  "classification_policy": "Original statuses remain immutable; requirement classifications describe the frozen pre-acceptance baseline. Axis routes distinguish baseline, PR 42-added and PR 46 mandatory-loading migration evidence. Superseded opt-in clauses retain their originals but are explicitly decision-only, never mapped to current opposite-behavior tests. No row claims final-tree execution. Related test names, returned Unknown and fixture quantity never establish closure; reviewed classifications, residuals, closure criteria and axis mappings are pinned against drift.",
   "preserved_sources": [
     {
       "path": "docs/validation/plan/implementation-plan.json",
@@ -1546,7 +1546,7 @@
       "targets": [
         "source"
       ],
-      "implementation": "Frozen baseline implementation: nil assessment remained permissive; non-nil selection was validated before reading and strict failure withheld a model. The authorized mandatory-loading migration supersedes those assessed-option clauses: nil/empty options now select SourceSemantics then ModelSemantics, and ordinary Decode remains permissive. Original clauses, classifications and axis dispositions below are retained as historical records, not current opt-in certification; current contract: docs/validation/assessed-loading-pipeline.md.",
+      "implementation": "Frozen baseline implementation: nil assessment remained permissive; non-nil selection was validated before reading and strict failure withheld a model. The authorized mandatory-loading migration supersedes those assessed-option clauses: nil/empty options now select SourceSemantics then ModelSemantics, and ordinary Decode remains permissive. Original clauses and requirement classifications remain historical; the superseded boundary and missing-fact axes are now decision-only with explicit gaps, not current opt-in certification. Current contract: docs/validation/assessed-loading-pipeline.md.",
       "implementation_refs": [
         "assessment.go"
       ],
@@ -7380,7 +7380,7 @@
             "TestAssessedDecodeSkippedSubtreeXMLContracts",
             "TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed"
           ],
-          "assessment_basis": "PR 42-added cases assert spaced lexical and expanded-name duplicates inside unknown/foreign skipped subtrees through ordinary Decode and permissive/strict DecodeAssessed, with distinct-name controls and duplicate-specific errors.",
+          "assessment_basis": "PR 42-origin fixtures, migrated in PR 46, assert spaced lexical and expanded-name duplicates inside unknown/foreign skipped subtrees through ordinary Decode and default/explicit mandatory DecodeAssessed, with distinct-name controls and duplicate-specific errors.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -7479,7 +7479,7 @@
           "case_ids": [
             "TestSourceTruncatedMarkupPublic"
           ],
-          "assessment_basis": "Truncated markup delivered through public InspectXML and DecodeAssessed entry points => No completed well-formed report or returned model; syntax/incomplete evidence is retained.",
+          "assessment_basis": "Truncated markup through ordinary Decode, default/explicit mandatory assessed loading, and separately selected XSD-preview/internal-DTD inspection => No completed well-formed report or returned model; syntax/incomplete evidence is retained.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -7491,7 +7491,7 @@
           "case_ids": [
             "TestSourceAssessmentSyntaxUnderSkippedContent"
           ],
-          "assessment_basis": "unknown undeclared-prefix subtree, malformed foreign attribute, truncated CDATA under permissive and strict options => Both modes preserve xml.SyntaxError and withhold a document.",
+          "assessment_basis": "Unknown undeclared-prefix subtree, malformed foreign attribute and truncated CDATA under default and explicit mandatory assessed options; a well-formed Fifth Edition skipped-name control => Both assessed selections preserve xml.SyntaxError and withhold malformed input. Ordinary Decode accepts the well-formed skipped-name control; mandatory loading reports its independent source violation without inventing an XML syntax error.",
           "gap": "Mapped cases substantiate their named inputs/outcomes; complete evidence for the following original axis is not asserted: Repeat invalid placement inside skipped unknown/foreign subtrees and under existing namespace/depth guards in both modes.",
           "gap_kind": "historical-case-mapping-not-exhaustive"
         }
@@ -7561,7 +7561,7 @@
           "case_ids": [
             "TestAssessedDecodeSkippedSubtreeXMLContracts"
           ],
-          "assessment_basis": "PR 42-added skipped-subtree fixtures reject duplicate attributes, nested DOCTYPE, undeclared prefixes and mismatched closing names in unknown/foreign content under ordinary Decode and permissive/strict DecodeAssessed; diagnostic checks distinguish the specific duplicate, DOCTYPE and undeclared-prefix causes.",
+          "assessment_basis": "PR 42-origin skipped-subtree fixtures, migrated in PR 46, reject duplicate attributes, nested DOCTYPE, undeclared prefixes and mismatched closing names in unknown/foreign content under ordinary Decode and default/explicit mandatory DecodeAssessed; diagnostic checks distinguish the specific duplicate, DOCTYPE and undeclared-prefix causes.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -7585,7 +7585,7 @@
           "case_ids": [
             "TestSourceTruncatedMarkupPublic"
           ],
-          "assessment_basis": "Truncated markup delivered through public InspectXML and DecodeAssessed entry points => No completed well-formed report or returned model; syntax/incomplete evidence is retained.",
+          "assessment_basis": "Truncated markup through ordinary Decode, default/explicit mandatory assessed loading, and separately selected XSD-preview/internal-DTD inspection => No completed well-formed report or returned model; syntax/incomplete evidence is retained.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -9462,7 +9462,7 @@
           "case_ids": [
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -9474,7 +9474,7 @@
           "case_ids": [
             "TestSourceAssessmentPreflightDoesNotRead"
           ],
-          "assessment_basis": "nil context, canceled context, empty/unknown/model profile, negative depth/budget with a counting reader => Configuration fails with zero reader calls, no Close and no document.",
+          "assessment_basis": "Nil/canceled context, narrow/unknown/model profiles, and negative depth/budget with a counting reader => Preflight fails with zero reader calls, no Close and no document.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -9482,26 +9482,26 @@
           "original_cases": [
             "Nil assessment differs from a non-nil assessment with empty profile; no implicit catalog/resolver work in permissive mode."
           ],
-          "assessment": "mapped",
+          "assessment": "decision-only",
           "case_ids": [
             "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate",
             "TestSourceAssessmentPreflightDoesNotRead"
           ],
-          "assessment_basis": "Empty score with nil assessment versus explicit source profile => Permissive conversion returns model and unrequested source; explicit strict report records violation and withholds model.; nil context, canceled context, empty/unknown/model profile, negative depth/budget with a counting reader => Configuration fails with zero reader calls, no Close and no document.",
-          "gap": "",
-          "gap_kind": "none"
+          "assessment_basis": "The original opt-in clause is preserved verbatim for history. The current route requires nil, empty and explicit assessed options to select the same mandatory source pipeline, and separates permissive ordinary Decode. No current unrequested-source or nil-versus-empty assessed-option behavior is certified. The accompanying preflight test rejects narrow/unknown/wrong-target selections, not an empty profile.",
+          "gap": "Superseded by mandatory assessed loading, docs/validation/assessed-loading-pipeline.md. The current routed test asserts the opposite of this original opt-in clause; it supplies migration evidence, not proof that the historical behavior still holds.",
+          "gap_kind": "superseded-api-contract"
         },
         "missing_fact": {
           "original_cases": [
             "Unrequested source assessment is not reported as satisfied or conformant success."
           ],
-          "assessment": "mapped",
+          "assessment": "decision-only",
           "case_ids": [
             "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate"
           ],
-          "assessment_basis": "Empty score with nil assessment versus explicit source profile => Permissive conversion returns model and unrequested source; explicit strict report records violation and withholds model.",
-          "gap": "",
-          "gap_kind": "none"
+          "assessment_basis": "The original opt-in clause is preserved verbatim for history. The current route requires nil, empty and explicit assessed options to select the same mandatory source pipeline, and separates permissive ordinary Decode. No current unrequested-source or nil-versus-empty assessed-option behavior is certified.",
+          "gap": "Superseded by mandatory assessed loading, docs/validation/assessed-loading-pipeline.md. The current routed test asserts the opposite of this original opt-in clause; it supplies migration evidence, not proof that the historical behavior still holds.",
+          "gap_kind": "superseded-api-contract"
         },
         "interaction": {
           "original_cases": [
@@ -9512,7 +9512,7 @@
             "TestSourceAssessmentPreflightDoesNotRead",
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "nil context, canceled context, empty/unknown/model profile, negative depth/budget with a counting reader => Configuration fails with zero reader calls, no Close and no document.; Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Nil/canceled context, narrow/unknown/model profiles, and negative depth/budget with a counting reader => Preflight fails with zero reader calls, no Close and no document.; Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -9604,7 +9604,7 @@
           "case_ids": [
             "TestSourceTruncatedMarkupPublic"
           ],
-          "assessment_basis": "Truncated markup delivered through public InspectXML and DecodeAssessed entry points => No completed well-formed report or returned model; syntax/incomplete evidence is retained.",
+          "assessment_basis": "Truncated markup through ordinary Decode, default/explicit mandatory assessed loading, and separately selected XSD-preview/internal-DTD inspection => No completed well-formed report or returned model; syntax/incomplete evidence is retained.",
           "gap": "Mapped cases substantiate their named inputs/outcomes; complete evidence for the following original axis is not asserted: No EOF or incomplete document index means assessment remains incomplete.",
           "gap_kind": "historical-case-mapping-not-exhaustive"
         },
@@ -9673,7 +9673,7 @@
           "case_ids": [
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "",
           "gap_kind": "none"
         },
@@ -9722,7 +9722,7 @@
             "TestAssessModelReportsCurrentEditsWithoutMutation",
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "Decoded model edited before direct assessment => Report observes current edit with model paths and does not mutate model or use stale source.; Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Decoded model edited before direct assessment => Report observes current edit with model paths and does not mutate model or use stale source.; Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -11516,7 +11516,7 @@
           "case_ids": [
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "Mapped cases substantiate their named inputs/outcomes; complete evidence for the following original axis is not asserted: Check Validate depth/cycle recognition for both legacy sentinel and specific cause; retain ErrMXLTooLarge wrapping ErrInvalidMXL.",
           "gap_kind": "historical-case-mapping-not-exhaustive"
         },
@@ -11541,7 +11541,7 @@
             "TestDecodeAssessedTruncatedSummaryPreservesJoinedCauses",
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "Strict decode with bounded/truncated details and independent causes => Typed summary and errors.Is preserve joined conversion/syntax/incomplete identities.; Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Strict decode with bounded/truncated details and independent causes => Typed summary and errors.Is preserve joined conversion/syntax/incomplete identities.; Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "Mapped cases substantiate their named inputs/outcomes; complete evidence for the following original axis is not asserted: Cancellation/deadline and simultaneous conversion/syntax causes remain reachable through errors.Is/errors.As; audit old representation/lexical paths before redirecting wrappers.",
           "gap_kind": "historical-case-mapping-not-exhaustive"
         }
@@ -11866,7 +11866,7 @@
             "TestDecodeAssessedUsesTighterDepthLimit",
             "TestBudgetDefaultsFiniteCopiedAndEachFieldNegativeRejected"
           ],
-          "assessment_basis": "Public assessed decode checks both tighter-cap directions after option resolution with exact limit and legacy error identity; the separate budget-default test checks finite copied zero defaults. Zero/default combinations are not claimed as the two explicit-cap fixture inputs.",
+          "assessment_basis": "Public mandatory assessed decode checks both tighter-cap directions after option resolution with exact limit and legacy error identity. Ordinary DecodeWithOptions separately preserves its legacy-only error, while default assessed loading also reports the mandatory resource error. The separate budget-default test checks finite copied zero defaults; the two explicit-cap inputs are not zero/default combinations.",
           "gap": "",
           "gap_kind": "none"
         }
@@ -13827,7 +13827,7 @@
             "TestSourceAssessmentPreflightDoesNotRead",
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "nil context, canceled context, empty/unknown/model profile, negative depth/budget with a counting reader => Configuration fails with zero reader calls, no Close and no document.; Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Nil/canceled context, narrow/unknown/model profiles, and negative depth/budget with a counting reader => Preflight fails with zero reader calls, no Close and no document.; Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "Mapped cases substantiate their named inputs/outcomes; complete evidence for the following original axis is not asserted: Retain existing entry-point signatures and test unkeyed option literals before any new fields are considered.",
           "gap_kind": "historical-case-mapping-not-exhaustive"
         }
@@ -14000,7 +14000,7 @@
           "case_ids": [
             "TestBoundedLocalStrictAccordionIntegration"
           ],
-          "assessment_basis": "Empty accordion-registration under permissive, XSD-only, source-local and model-local routes => Only the selected local profiles add the presence violation; no legacy expansion.",
+          "assessment_basis": "Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment => Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
           "gap": "Mapped cases substantiate their named inputs/outcomes; complete evidence for the following original axis is not asserted: Enabling all research records or silently expanding legacy Validate to new prose fails scope review.",
           "gap_kind": "historical-case-mapping-not-exhaustive"
         },
@@ -17456,20 +17456,21 @@
       "id": "TestSourceAssessmentSyntaxUnderSkippedContent",
       "file": "assessment_test.go",
       "function": "TestSourceAssessmentSyntaxUnderSkippedContent",
-      "input": "unknown undeclared-prefix subtree, malformed foreign attribute, truncated CDATA under permissive and strict options",
-      "expected": "Both modes preserve xml.SyntaxError and withhold a document.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
+      "input": "Unknown undeclared-prefix subtree, malformed foreign attribute and truncated CDATA under default and explicit mandatory assessed options; a well-formed Fifth Edition skipped-name control",
+      "expected": "Both assessed selections preserve xml.SyntaxError and withhold malformed input. Ordinary Decode accepts the well-formed skipped-name control; mandatory loading reports its independent source violation without inventing an XML syntax error.",
+      "scope": "Current default/explicit assessed selections both require SourceSemantics; the ordinary mapping control uses Decode separately. Inspected assertions only, not an execution receipt or proof of every original planned case.",
       "anchors": [
         {
           "file": "assessment_test.go",
-          "text": "skipped source escaped XML checks"
+          "text": "\tfor _, input := range []string{\n\t\t`<score-partwise><unknown><p:child/></unknown></score-partwise>`,\n\t\t`<score-partwise><f:unknown xmlns:f=\"urn:f\"><x a=\"1\"a=\"2\"/></f:unknown></score-partwise>`,\n\t\t`<score-partwise><unknown><![CDATA[missing-end</unknown></score-partwise>`,\n\t} {"
         },
         {
           "file": "assessment_test.go",
           "text": "t.Errorf(\"skipped source escaped XML checks: strict=%t %+v %v\", strict, result, err)"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestXMLDoctypeDoesNotFetchExternalDTD",
@@ -17494,9 +17495,9 @@
       "id": "TestSourceTruncatedMarkupPublic",
       "file": "xml_source_eof_test.go",
       "function": "TestSourceTruncatedMarkupPublic",
-      "input": "Truncated markup delivered through public InspectXML and DecodeAssessed entry points",
+      "input": "Truncated markup through ordinary Decode, default/explicit mandatory assessed loading, and separately selected XSD-preview/internal-DTD inspection",
       "expected": "No completed well-formed report or returned model; syntax/incomplete evidence is retained.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
+      "scope": "Migrated public routes retain syntax/incomplete evidence under mandatory loading and separately selected inspection profiles. Inspected assertions only, not an execution receipt or proof of every original planned case.",
       "anchors": [
         {
           "file": "xml_source_eof_test.go",
@@ -17507,7 +17508,8 @@
           "text": "t.Errorf(\"truncated markup lost its syntax cause: %v\", err)"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestValidateElementAttributeContracts",
@@ -18349,20 +18351,21 @@
       "id": "TestSourceAssessmentPreflightDoesNotRead",
       "file": "assessment_test.go",
       "function": "TestSourceAssessmentPreflightDoesNotRead",
-      "input": "nil context, canceled context, empty/unknown/model profile, negative depth/budget with a counting reader",
-      "expected": "Configuration fails with zero reader calls, no Close and no document.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
+      "input": "Nil/canceled context, narrow/unknown/model profiles, and negative depth/budget with a counting reader",
+      "expected": "Preflight fails with zero reader calls, no Close and no document.",
+      "scope": "Current mandatory-loader preflight assertions. Empty profiles are accepted defaults and are not part of this rejection fixture. Inspected assertions only, not an execution receipt or proof of every original planned case.",
       "anchors": [
         {
           "file": "assessment_test.go",
-          "text": "\tcanceled, cancel := context.WithCancel(context.Background())\n\tcancel()\n\ttests := []struct {\n\t\tname    string\n\t\tctx     context.Context\n\t\toptions DecodeAssessmentOptions\n\t\twant    error\n\t}{\n\t\t{\"nil-context\", nil, DecodeAssessmentOptions{}, validation.ErrInvalidConfiguration},\n\t\t{\"canceled\", canceled, DecodeAssessmentOptions{}, context.Canceled},\n\t\t{\"depth\", context.Background(), DecodeAssessmentOptions{Decode: DecodeOptions{-1}}, ErrInvalidDecodeOptions},"
+          "text": "\t\t{\"narrow-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},\n\t\t{\"unknown-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: \"unknown\"}}, validation.ErrInvalidConfiguration},\n\t\t{\"model-profile\", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: \"musicxml-4.0/model\"}}, validation.ErrInvalidConfiguration},"
         },
         {
           "file": "assessment_test.go",
           "text": "t.Errorf(\"error=%v; want %v\", err, tt.want)"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate",
@@ -18370,7 +18373,7 @@
       "function": "TestDecodeAssessedMandatoryAndOrdinaryDecodeAreSeparate",
       "input": "Empty score through ordinary Decode, explicit XSD-preview inspection, and nil/empty/explicit SourceSemantics assessed options",
       "expected": "Ordinary Decode maps the model and XSD-preview inspection records its violation. Every assessed option selects mandatory SourceSemantics, withholds the invalid model, and leaves the model stage unrequested.",
-      "scope": "Historical route ID retained for the frozen baseline opt-in axis mapping. The current function tests the authorized mandatory-loading supersession: nil and empty assessed options no longer request permissive conversion. This binding does not recertify the original opt-in or empty-profile-rejection clauses; ordinary Decode remains permissive. See docs/validation/assessed-loading-pipeline.md. Inspected fixture/assertions only, not fresh execution evidence.",
+      "scope": "Historical route ID retained, with current PR 46 evidence explicitly separated from the baseline. Nil, empty and explicit assessed options now require the same semantic pipeline; ordinary Decode remains permissive. This test contradicts the original opt-in boundary and unrequested-source clauses, so those axes are decision-only with a superseded-api-contract gap. See docs/validation/assessed-loading-pipeline.md. Inspected assertions only, not an execution receipt.",
       "anchors": [
         {
           "file": "assessment_test.go",
@@ -18381,15 +18384,16 @@
           "text": "\tfor _, options := range []DecodeAssessmentOptions{{}, {Assessment: &AssessmentOptions{}}, strictSourceOptions()} {\n\t\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(input), options)\n\t\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.Source.Requested || result.Source.Profile.ID != ProfileSourceSemantics || result.Source.Conformance != validation.ConformanceViolated || result.Model.Requested {\n\t\t\tt.Fatalf(\"mandatory result=%+v error=%v\", result, err)\n\t\t}\n\t}"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestBoundedLocalStrictAccordionIntegration",
       "file": "model_assessment_contract_test.go",
       "function": "TestBoundedLocalStrictAccordionIntegration",
-      "input": "Empty accordion-registration under permissive, XSD-only, source-local and model-local routes",
-      "expected": "Only the selected local profiles add the presence violation; no legacy expansion.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
+      "input": "Empty accordion-registration through ordinary Decode, Validate, XSD-preview inspection, mandatory SourceSemantics loading and ModelLocal assessment",
+      "expected": "Ordinary mapping and XSD-only checks succeed; mandatory SourceSemantics and separate ModelLocal assessment reject the local presence violation.",
+      "scope": "Current integration route uses mandatory SourceSemantics, not a source-local loader option. Standalone ModelLocal and XSD-only assertions remain explicit. Inspected assertions only, not an execution receipt or proof of every original planned case.",
       "anchors": [
         {
           "file": "model_assessment_contract_test.go",
@@ -18397,10 +18401,11 @@
         },
         {
           "file": "model_assessment_contract_test.go",
-          "text": "t.Fatalf(\"permissive transport: %v\", err)"
+          "text": "\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})\n\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.Source.InputComplete || !result.Source.AssessmentComplete {\n\t\tt.Fatalf(\"strict local outcome: %+v %v\", result, err)\n\t}"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedObservesFilteredSource",
@@ -18408,7 +18413,7 @@
       "function": "TestDecodeAssessedObservesFilteredSource",
       "input": "Foreign source content through permissive ordinary Decode and mandatory SourceSemantics assessed loading",
       "expected": "Ordinary Decode maps the filtered model; mandatory source assessment still rejects the unprojected source violation and withholds the model.",
-      "scope": "Historical route ID and baseline classification retained. The permissive comparison now uses ordinary Decode; mandatory DecodeAssessed has no nil-assessment opt-out. The source-observation obligation remains covered, without recertifying the superseded opt-in API. See docs/validation/assessed-loading-pipeline.md. Inspected fixture/assertions only, not fresh execution evidence or proof of every original planned case.",
+      "scope": "Historical route ID retained with current PR 46 evidence. The permissive comparison uses ordinary Decode; mandatory DecodeAssessed has no nil-assessment opt-out. The source-observation obligation remains covered without recertifying the superseded opt-in API. Inspected assertions only, not an execution receipt or proof of every original planned case.",
       "anchors": [
         {
           "file": "assessed_decode_test.go",
@@ -18419,7 +18424,8 @@
           "text": "\tstrict, err := DecodeAssessed(context.Background(), strings.NewReader(input), strictSourceOptions())\n\tif !errors.Is(err, ErrInvalidDocument) || strict.Document != nil || strict.Source.Conformance != validation.ConformanceViolated {\n\t\tt.Fatalf(\"filtered source disappeared: %+v %v\", strict, err)\n\t}"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestSourceObserverRetainsUnprojectedFactsAndScopes",
@@ -19698,10 +19704,10 @@
       "id": "TestDecodeAssessedUsesTighterDepthLimit",
       "file": "assessed_decode_test.go",
       "function": "TestDecodeAssessedUsesTighterDepthLimit",
-      "evidence_layer": "baseline",
-      "input": "Explicit Decode depth 2 / assessment depth 3 and reversed caps, plus nil-assessment legacy control.",
-      "expected": "The smaller resolved depth cap wins with exact resource limit 2, correct legacy sentinel, no normative violation and no model.",
-      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "evidence_layer": "pr46-assessed-loading",
+      "input": "Explicit decode depth 2 / assessment depth 3 and reversed caps, plus ordinary DecodeWithOptions and default mandatory-assessment controls.",
+      "expected": "The smaller explicit cap wins with resource limit 2 and the appropriate legacy sentinel. Ordinary DecodeWithOptions keeps ErrXMLTooDeep without ErrResourceLimit; default assessed loading keeps both identities, requests source assessment and returns no document.",
+      "scope": "Current mandatory-loader and separate ordinary-decoder depth assertions. There is no nil-assessment permissive mode. Inspected assertions only, not an execution receipt or proof of unrelated planned cases.",
       "anchors": [
         {
           "file": "assessed_decode_test.go",
@@ -19710,8 +19716,17 @@
         {
           "file": "assessed_decode_test.go",
           "text": "t.Errorf(\"tighter depth result=%+v resource=%+v error=%v\", result, resource, err)"
+        },
+        {
+          "file": "assessed_decode_test.go",
+          "text": "\tordinary, err := DecodeWithOptions(strings.NewReader(input), DecodeOptions{MaxXMLDepth: 2})\n\tif !errors.Is(err, ErrXMLTooDeep) || errors.Is(err, validation.ErrResourceLimit) || ordinary != nil {\n\t\tt.Errorf(\"ordinary decode changed legacy depth error: %T %v\", ordinary, err)\n\t}"
+        },
+        {
+          "file": "assessed_decode_test.go",
+          "text": "\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: 2}})\n\tif !errors.Is(err, ErrXMLTooDeep) || !errors.Is(err, validation.ErrResourceLimit) || !result.Source.Requested || result.Document != nil {\n\t\tt.Errorf(\"default assessment did not enforce mandatory depth accounting: %+v %v\", result, err)\n\t}"
         }
-      ]
+      ],
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestAssessModelFiniteResourcesAndIndependentAxes",
@@ -19774,10 +19789,10 @@
       "id": "TestAssessedDecodeSkippedSubtreeXMLContracts",
       "file": "assessed_skipped_xml_contract_test.go",
       "function": "TestAssessedDecodeSkippedSubtreeXMLContracts",
-      "evidence_layer": "pr42-added",
-      "input": "Unknown and foreign skipped subtrees with spaced lexical/expanded-name duplicates, nested DOCTYPE, undeclared prefixes and mismatched closing tags, through ordinary and both assessed decode modes.",
+      "evidence_layer": "pr46-assessed-loading",
+      "input": "Unknown and foreign skipped subtrees with spaced lexical/expanded-name duplicates, nested DOCTYPE, undeclared prefixes and mismatched closing tags, through ordinary Decode and default/explicit mandatory assessed loading.",
       "expected": "Each mode preserves XML syntax error, rejects the document and checks duplicate, DOCTYPE and undeclared-prefix diagnostics instead of accepting an unrelated syntax failure.",
-      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "scope": "PR 42 fixtures migrated to the PR 46 mandatory-loader contract. Both assessed selections are mandatory; ordinary Decode remains a separate route. Inspected assertions only, not an execution receipt or proof of unrelated planned cases.",
       "anchors": [
         {
           "file": "assessed_skipped_xml_contract_test.go",
@@ -19787,16 +19802,17 @@
           "file": "assessed_skipped_xml_contract_test.go",
           "text": "t.Fatalf(\"wrong XML failure: got %q, want %q\", syntax.Msg, tc.diagnostic)"
         }
-      ]
+      ],
+      "prior_evidence_layer": "pr42-added"
     },
     {
       "id": "TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed",
       "file": "assessed_skipped_xml_contract_test.go",
       "function": "TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed",
-      "evidence_layer": "pr42-added",
+      "evidence_layer": "pr46-assessed-loading",
       "input": "Distinct ordinary and expanded attribute names in unknown/foreign skipped subtrees.",
-      "expected": "Ordinary Decode succeeds; strict assessment keeps independent XSD rejection without inventing XML syntax error.",
-      "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
+      "expected": "Ordinary Decode succeeds; mandatory assessment keeps independent XSD rejection without inventing XML syntax error.",
+      "scope": "PR 42 fixture migrated to mandatory SourceSemantics loading, with ordinary Decode as the independent mapping control. Inspected assertions only, not an execution receipt or proof of unrelated planned cases.",
       "anchors": [
         {
           "file": "assessed_skipped_xml_contract_test.go",
@@ -19806,7 +19822,8 @@
           "file": "assessed_skipped_xml_contract_test.go",
           "text": "t.Fatalf(\"strict assessment manufactured malformed XML: %v\", err)"
         }
-      ]
+      ],
+      "prior_evidence_layer": "pr42-added"
     }
   ],
   "issues": [
@@ -26252,14 +26269,15 @@
     "execution_note": "This ledger records inspected regression routes and author-run integrity controls. Runtime route execution and integrated-tree acceptance must be read from their separate receipts; classifications do not supply execution evidence.",
     "anchored_routes": 127,
     "routes_by_evidence_layer": {
-      "baseline": 123,
-      "pr42-added": 4
+      "baseline": 116,
+      "pr46-assessed-loading": 9,
+      "pr42-added": 2
     },
     "axis_dispositions": {
-      "mapped": 91,
+      "mapped": 89,
       "partial": 228,
       "missing-evidence": 6,
-      "decision-only": 140,
+      "decision-only": 142,
       "not-elected": 10
     },
     "requirement_classifications": {
