@@ -171,10 +171,8 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 		}
 		result.Conversion.State = state
 		conversionErr = &ConversionError{State: state, Cause: mapErr}
-		if run.source.observer != nil {
-			conversionLocation = modelTokens.last.location
-			conversionNode = modelTokens.last.node
-		}
+		conversionLocation = modelTokens.last.location
+		conversionNode = modelTokens.last.node
 	} else {
 		result.Conversion.State = validation.ConversionConverted
 	}
@@ -243,23 +241,23 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if _, err := decode.xmlDepth(); err != nil {
 		return nil, err
 	}
-	var config *sourceAssessmentConfig
-	if assessment != nil {
-		engine, err := sourceAssessmentEngineForProfile(assessment.Profile)
-		if err != nil {
-			return nil, err
-		}
-		account, err := validation.NewBudgetAccount(assessment.Budgets)
-		if err != nil {
-			return nil, err
-		}
-		config = &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine}, ByteOwner: sourceBytesPrimary}
+	if assessment == nil {
+		return nil, &validation.ConfigurationError{Field: "assessment", Reason: "source assessment requires an explicit configuration"}
 	}
+	engine, err := sourceAssessmentEngineForProfile(assessment.Profile)
+	if err != nil {
+		return nil, err
+	}
+	account, err := validation.NewBudgetAccount(assessment.Budgets)
+	if err != nil {
+		return nil, err
+	}
+	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine}, ByteOwner: sourceBytesPrimary}
 	return newSourceAssessmentRunWithConfig(ctx, reader, decode, config, converting)
 }
 
-// A nil config is only the existing unassessed permissive transport. A nonnil
-// config always requires an existing account and an explicit selected profile.
+// Source assessment always requires an existing account and an explicit selected
+// profile. Ordinary conversion does not use this adapter.
 func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, decode DecodeOptions, config *sourceAssessmentConfig, converting bool) (*sourceAssessmentRun, error) {
 	if err := assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return nil, err
@@ -271,60 +269,53 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 	if err != nil {
 		return nil, err
 	}
-	run := &sourceAssessmentRun{ctx: ctx, documentID: sourceDocumentID}
-	byteOwner := sourceBytesPrimary
-	if config != nil {
-		if err := config.validate(validation.TargetSource); err != nil {
-			return nil, err
-		}
-		if err := config.ByteOwner.validate(); err != nil {
-			return nil, err
-		}
-		run.account, run.documentID, run.entry = config.Account, config.DocumentID, config.Entry
-		byteOwner = config.ByteOwner
-		// Ordinary inspection has no decode/model depth contract. A resource
-		// adapter can deliberately supply its separate MXL XML-depth cap.
-		if !converting {
-			maxDepth = config.XMLDepth
-		} else if config.XMLDepth > 0 && config.XMLDepth < maxDepth {
-			maxDepth = config.XMLDepth
-		}
-		run.session, err = config.assessmentRunConfig.begin(ctx)
-		if err != nil {
-			return nil, err
-		}
+	if config == nil {
+		return nil, &validation.ConfigurationError{Field: "source assessment config", Reason: "must not be nil"}
+	}
+	if err := config.validate(validation.TargetSource); err != nil {
+		return nil, err
+	}
+	if err := config.ByteOwner.validate(); err != nil {
+		return nil, err
+	}
+	run := &sourceAssessmentRun{ctx: ctx, account: config.Account, documentID: config.DocumentID, entry: config.Entry}
+	// Ordinary inspection has no decode/model depth contract. A resource
+	// adapter can deliberately supply its separate MXL XML-depth cap.
+	if !converting {
+		maxDepth = config.XMLDepth
+	} else if config.XMLDepth > 0 && config.XMLDepth < maxDepth {
+		maxDepth = config.XMLDepth
+	}
+	run.session, err = config.assessmentRunConfig.begin(ctx)
+	if err != nil {
+		return nil, err
 	}
 	fail := func(cause error) (*sourceAssessmentRun, error) {
 		report, finishErr := run.finish(cause)
 		run.startupReport = report
 		return run, errors.Join(cause, finishErr)
 	}
-	var internalDTD, sourceDeclarations, captureAttributeLexical, sourceDTDIDs bool
-	if config != nil {
-		internalDTD, sourceDeclarations, captureAttributeLexical = sourceDTDPolicy(config.Profile)
-		sourceDTDIDs = config.Engine.SourceDTDIDsSelected(config.Profile)
-	}
-	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: byteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical, CaptureDTDIDs: sourceDTDIDs})
+	internalDTD, sourceDeclarations, captureAttributeLexical := sourceDTDPolicy(config.Profile)
+	sourceDTDIDs := config.Engine.SourceDTDIDsSelected(config.Profile)
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: config.ByteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical, CaptureDTDIDs: sourceDTDIDs})
 	if err != nil {
 		return fail(err)
 	}
-	run.source = &observingXMLSource{ctx: ctx, lexical: lexical, decoder: xml.NewTokenDecoder(lexical), musicXMLRoot: converting}
-	if run.session != nil {
-		run.source.observer, err = newSourceFactObserverWithIdentity(ctx, run.session, run.account, run.documentID, run.entry)
-		if err != nil {
+	run.source = &observingXMLSource{ctx: ctx, lexical: lexical, decoder: xml.NewTokenDecoder(lexical)}
+	run.source.observer, err = newSourceFactObserverWithIdentity(ctx, run.session, run.account, run.documentID, run.entry)
+	if err != nil {
+		return fail(err)
+	}
+	run.source.observer.sourceDeclarations = sourceDeclarations
+	run.source.observer.sourceDTDIDs = sourceDTDIDs
+	run.source.observer.captureAttributeLexical = captureAttributeLexical
+	if internalDTD {
+		const originBridgeBytes = 512
+		if err := run.account.Charge(validation.BudgetBufferedBytes, originBridgeBytes); err != nil {
 			return fail(err)
 		}
-		run.source.observer.sourceDeclarations = sourceDeclarations
-		run.source.observer.sourceDTDIDs = sourceDTDIDs
-		run.source.observer.captureAttributeLexical = captureAttributeLexical
-		if internalDTD {
-			const originBridgeBytes = 512
-			if err := run.account.Charge(validation.BudgetBufferedBytes, originBridgeBytes); err != nil {
-				return fail(err)
-			}
-			run.source.observer.retained += originBridgeBytes
-			run.source.observer.origins = &sourceOriginObserver{engine: config.Engine, session: run.session, profile: config.Profile}
-		}
+		run.source.observer.retained += originBridgeBytes
+		run.source.observer.origins = &sourceOriginObserver{engine: config.Engine, session: run.session, profile: config.Profile}
 	}
 	return run, nil
 }
@@ -384,9 +375,6 @@ func (r *sourceAssessmentRun) finish(cause error) (validation.Report, error) {
 	completion, err := r.finishInput(cause)
 	if err != nil {
 		return validation.Report{}, err
-	}
-	if r.session == nil {
-		return validation.Report{}, completion.Cause
 	}
 	return r.session.Finish(r.ctx, completion)
 }
