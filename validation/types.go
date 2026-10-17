@@ -1,7 +1,3 @@
-// Package validation provides a bounded fact-stream assessment foundation.
-// It does not parse XML, traverse musicxml models, fetch external resources, or
-// provide a ready MusicXML conformance profile. Callers supply reviewed catalogs
-// and truthful facts; reports describe only the explicitly selected obligations.
 package validation
 
 // ProfileID identifies an explicit target-specific assessment contract.
@@ -126,6 +122,11 @@ const (
 
 // Atomic is a tagged exact value. Only its selected field may be populated;
 // Boolean uses Text "true" or "false". Numeric wrappers are immutable values.
+//
+// Atomic, and structs that contain it such as Scalar, compile with == but
+// compare the Integer and Decimal wrappers by internal pointer. Compare the
+// Kind and the selected field instead, using Integer.Equal or Decimal.Equal
+// for numbers, and do not use these structs as map keys.
 type Atomic struct {
 	Kind    AtomicKind
 	Text    string

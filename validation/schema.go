@@ -2,6 +2,12 @@ package validation
 
 import "github.com/go-muse/go-musicxml/internal/xsd"
 
+// The Schema* metadata types below are aliases of the schema kernel's types.
+// Their exported fields are part of this package's API even though the
+// declarations live in an internal package; see `go doc` on the internal
+// package source for field-level comments. Build values with keyed composite
+// literals, because fields may be added.
+
 // SchemaData is XML-neutral XSD metadata. CompileSchema snapshots it; successful
 // compilation is not a claim of general XSD schema validity or UPA closure.
 type SchemaData = xsd.SchemaData
@@ -59,6 +65,23 @@ type SchemaParticleKind = xsd.ParticleKind
 
 // SchemaDerivation carries XSD derivation prohibition bits.
 type SchemaDerivation = xsd.Derivation
+
+// SchemaXSDNamespace is the XML Schema namespace that qualifies built-in type
+// names in SchemaData, for example {http://www.w3.org/2001/XMLSchema}string.
+const SchemaXSDNamespace = xsd.XSDNamespace
+
+// Untyped vocabulary for string fields of the schema metadata aliases:
+// SchemaValueConstraint.Kind and the ProcessContents field of SchemaAny and
+// SchemaAnyAttribute. An empty ProcessContents selects the XSD default,
+// strict processing.
+const (
+	SchemaConstraintDefault = "default"
+	SchemaConstraintFixed   = "fixed"
+
+	SchemaProcessStrict = "strict"
+	SchemaProcessLax    = "lax"
+	SchemaProcessSkip   = "skip"
+)
 
 // Supported schema vocabulary retains the authoritative XSD metadata values.
 const (

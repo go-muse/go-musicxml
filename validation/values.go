@@ -12,6 +12,10 @@ const MaxExactValueBytes = 1 << 20
 
 // Integer is an immutable exact integer. Its zero value is uninitialized, not
 // numeric zero. Initialized values can be copied and shared across goroutines.
+//
+// Compare values with Cmp or Equal. The == operator compiles but compares
+// internal pointers, so numerically equal values are generally not ==, and
+// Integer is not suitable as a map key.
 type Integer struct {
 	value *big.Int
 	text  string
@@ -56,6 +60,16 @@ func (n Integer) Cmp(other Integer) (int, error) {
 	return n.value.Cmp(other.value), nil
 }
 
+// Equal reports whether n and other hold the same exact integer. Two
+// uninitialized values are equal; an uninitialized value never equals an
+// initialized one.
+func (n Integer) Equal(other Integer) bool {
+	if !n.Valid() || !other.Valid() {
+		return n.Valid() == other.Valid()
+	}
+	return n.value.Cmp(other.value) == 0
+}
+
 // String returns the bounded canonical base-ten value, or "<uninitialized>".
 func (n Integer) String() string {
 	if !n.Valid() {
@@ -71,6 +85,10 @@ func (n Integer) ByteSize() int64 { return n.bytes }
 // Decimal is an immutable exact finite decimal. Its normalized rational has a
 // positive denominator containing only factors 2 and 5. Its zero value is
 // uninitialized; initialized values can be copied and shared across goroutines.
+//
+// Compare values with Cmp or Equal. The == operator compiles but compares
+// internal pointers, so numerically equal values are generally not ==, and
+// Decimal is not suitable as a map key.
 type Decimal struct {
 	value *big.Rat
 	text  string
@@ -144,6 +162,16 @@ func (n Decimal) Cmp(other Decimal) (int, error) {
 		return 0, &ConfigurationError{Field: "Decimal.Cmp", Reason: "uninitialized operand"}
 	}
 	return n.value.Cmp(other.value), nil
+}
+
+// Equal reports whether n and other hold the same exact decimal value, so 1.0
+// equals 1. Two uninitialized values are equal; an uninitialized value never
+// equals an initialized one.
+func (n Decimal) Equal(other Decimal) bool {
+	if !n.Valid() || !other.Valid() {
+		return n.Valid() == other.Valid()
+	}
+	return n.value.Cmp(other.value) == 0
 }
 
 // String returns the bounded canonical decimal expansion, or "<uninitialized>".
