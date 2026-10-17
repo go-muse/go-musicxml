@@ -1,11 +1,14 @@
-# Final requirement reconciliation: baseline and PR 42 evidence
+# Final requirement reconciliation: baseline, PR 42 and PR 46 evidence
 
-Date: 16 October 2026. This is an author-produced development reconciliation,
+Baseline date: 16 October 2026; migration evidence updated 17 October 2026.
+This is an author-produced development reconciliation,
 not independent design/QA acceptance or an integrated-tree execution certificate.
 Requirement classifications retain merged baseline commit
 `0b5a2f24b89ef628d2d09b361cbcbe390b9f01b9`, tree
 `1e78190afb839ba0cd5b91bc5fb8bff6a102638d`. Regression routes added by PR 42 are
-explicitly labeled `pr42-added`; they are not attributed to that baseline.
+labeled `pr42-added`. Routes migrated to the mandatory assessed-loading API in
+PR 46 are labeled `pr46-assessed-loading`, with their former layer retained as
+`prior_evidence_layer`. Neither layer is attributed to the baseline.
 
 The additive [machine-readable ledger](final-requirement-reconciliation.json)
 retains every original requirement and attached test contract: exactly 95 and
@@ -22,37 +25,75 @@ prior ownership pointers, directly matching functional crosswalk rows, execution
 disposition, residual and closure criterion.
 
 Each test contract retains positive, negative, boundary, missing-fact and
-interaction axes separately. All 127 concrete regression routes are used by at
-least one axis. They carry input/outcome descriptions and unique source anchors
-bound to the named test or its directly referenced fixtures. There are 123
-baseline routes and four PR 42 additions:
+interaction axes separately. Every concrete regression route is used by at least
+one axis. Routes carry input/outcome descriptions and unique source anchors
+bound to the named test or its directly referenced fixtures.
 
-- `TestAssessedDecodeSkippedSubtreeXMLContracts` and
-  `TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed` in
-  `assessed_skipped_xml_contract_test.go` distinguish lexical/expanded-name
-  duplicates from whitespace errors, with ordinary and strict decode controls.
-- `TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix` in
-  `internal/finalreconciliation/review_mutations_test.go` checks missing source
-  graph edges even when the ledger and source fingerprints change consistently.
-- `TestFinalReconciliationRejectsHistoricalExecutionPromotion` in
-  `internal/finalreconciliation/ledger_test.go` guards this ledger's historical
-  execution boundary. It does not prove general profile readiness.
+<!-- evidence-summary:start -->
+## Evidence summary
 
-There are 78 implemented-awaiting-current-verification rows, 13 explicit bounded
-limitations, two unresolved evidence/execution decisions and two
-optional-not-elected rows. No row claims final-tree verified completion or a
-newly established missing runtime algorithm.
+Anchored routes: 127 total; 111 `baseline`, 2 `pr42-added`, and
+14 `pr46-assessed-loading`.
 
-The five axes have 91 mapped, 228 partial, 140 decision-only, ten not-elected
-and six missing-evidence dispositions. These are evidence classifications,
-not runtime pass/fail totals. In particular:
+Requirement classifications: 78 implemented-awaiting-current-verification,
+13 explicit-bounded-limitation, 2 unresolved-decision, and
+2 optional-not-elected.
+
+Axis dispositions: 89 mapped, 228 partial, 142 decision-only,
+10 not-elected, and 6 missing-evidence.
+
+### pr42-added routes
+
+- `TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix`
+- `TestFinalReconciliationRejectsHistoricalExecutionPromotion`
+
+### pr46-assessed-loading routes
+
+- `TestAssessedDecodeSkippedDistinctAttributesRemainWellFormed` (prior layer: `pr42-added`)
+- `TestAssessedDecodeSkippedSubtreeXMLContracts` (prior layer: `pr42-added`)
+- `TestBoundedLocalStrictAccordionIntegration` (prior layer: `baseline`)
+- `TestDecodeAssessedDrainsAfterOverflowAndPreservesTailCauses` (prior layer: `baseline`)
+- `TestDecodeAssessedObservesFilteredSource` (prior layer: `baseline`)
+- `TestDecodeAssessedPermissiveAndStrictSourceAreSeparate` (prior layer: `baseline`)
+- `TestDecodeAssessedRetainsOverflowDuringInterruptedDrain` (prior layer: `baseline`)
+- `TestDecodeAssessedSourceAndConversionDomains` (prior layer: `baseline`)
+- `TestDecodeAssessedTruncatedSummaryPreservesJoinedCauses` (prior layer: `baseline`)
+- `TestDecodeAssessedUsesTighterDepthLimit` (prior layer: `baseline`)
+- `TestIPARepresentationPublicSourceModelAndAssessedReader` (prior layer: `baseline`)
+- `TestSourceAssessmentPreflightDoesNotRead` (prior layer: `baseline`)
+- `TestSourceAssessmentSyntaxUnderSkippedContent` (prior layer: `baseline`)
+- `TestSourceTruncatedMarkupPublic` (prior layer: `baseline`)
+
+### Superseded opt-in axes
+
+- `TEST-DEF-ADAPT-OPTIN/boundary`: `decision-only`,
+  with `superseded-api-contract` gap.
+
+- `TEST-DEF-ADAPT-OPTIN/missing_fact`: `decision-only`,
+  with `superseded-api-contract` gap.
+<!-- evidence-summary:end -->
+
+PR 46 routes include tests changed through the shared `strictSourceOptions`
+helper as well as edited test bodies. The two skipped-XML routes originated in
+PR 42, but their assessed legs now require the mandatory source/model pipeline;
+ordinary `Decode` remains their separate mapping control.
+
+The original opt-in `boundary` and `missing_fact` clauses remain verbatim for
+history. The current route asserts mandatory assessment for nil, empty and
+explicit options, so it cannot prove those superseded clauses. Their explicit
+decision-only gaps refer to
+[the mandatory-loading contract](assessed-loading-pipeline.md).
+These classifications and route labels are not runtime pass/fail totals. No row
+claims final-tree verified completion or a newly established missing runtime
+algorithm. In particular:
 
 - A partial mapping retains the exact original illustrative text and identifies
   the clauses that its related assertions do not prove. It does not assert an
   absent implementation or absent current regression.
-- RESULT-AXES/negative retains a baseline gap: Unknown-only report behavior and
-  strict unavailable-witness rejection are asserted separately, without jointly
-  excluding normative failure. The PR-added
+- RESULT-AXES/negative retains its historical combined-assertion gap: the baseline
+  Unknown-only report behavior and the PR 46 migrated IPA unavailable-witness
+  rejection are asserted separately, without jointly excluding normative failure.
+  The PR-added
   `TestFinalConfigurationSelectedNilDictionaryPublicReports` supplies a later
   combined public contract, documented in
   [the configuration matrix](final-configuration-contracts.md).
@@ -120,6 +161,10 @@ The narrow test-only package `internal/finalreconciliation` checks:
   routed test parameter; conditional tool/environment skips remain permitted
 - Pinned per-row classification/residual/closure policy, per-axis assessment,
   basis/gap/routes, and case descriptions, anchors and evidence layers
+- All reviewed mandatory-loader route layers, including shared-helper changes,
+  retain their prior layer and cannot be relabeled baseline or PR 42 evidence
+- The bounded companion summary matches ledger counts, nonbaseline route lists
+  and the two superseded opt-in axes
 - Summary totals derived from requirement, contract, issue, candidate,
   translation and case rows, including classifications, route layers, axis
   dispositions and explicit final-tree execution records

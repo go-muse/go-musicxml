@@ -10,7 +10,6 @@ import (
 // evidence for those clauses. Keep that semantic exclusion independently.
 func validateAssessedLoadingSupersession(tests, cases map[string]map[string]any) error {
 	const contractID = "TEST-DEF-ADAPT-OPTIN"
-	const routeID = "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate"
 	const decision = "docs/validation/assessed-loading-pipeline.md"
 	axisMap, _ := tests[contractID]["axes"].(map[string]any)
 	for _, name := range []string{"boundary", "missing_fact"} {
@@ -20,8 +19,10 @@ func validateAssessedLoadingSupersession(tests, cases map[string]map[string]any)
 			return fmt.Errorf("superseded opt-in axis %s/%s requires an explicit migration gap, not mapped opposite-behavior evidence", contractID, name)
 		}
 	}
-	if stringField(cases[routeID], "evidence_layer") != "pr46-assessed-loading" {
-		return fmt.Errorf("current assessed-loading route %s must not be labeled baseline evidence", routeID)
+	for routeID, prior := range reviewedAssessedLoadingRoutes {
+		if stringField(cases[routeID], "evidence_layer") != "pr46-assessed-loading" || stringField(cases[routeID], "prior_evidence_layer") != prior {
+			return fmt.Errorf("current assessed-loading route %s must retain its PR 46 layer and prior %s provenance", routeID, prior)
+		}
 	}
 	return nil
 }

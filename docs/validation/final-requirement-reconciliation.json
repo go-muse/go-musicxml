@@ -17870,7 +17870,8 @@
           "text": "t.Fatalf(\"inspection=%+v err=%v\", inspection, inspectErr)"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedDrainsAfterOverflowAndPreservesTailCauses",
@@ -17889,7 +17890,8 @@
           "text": "t.Fatalf(\"conversion lost: %+v %v\", result, err)"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestDecodeAssessedRetainsOverflowDuringInterruptedDrain",
@@ -17908,7 +17910,8 @@
           "text": "t.Errorf(\"interrupted drain: %+v error=%v\", result, err)"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestExactConstructorsRejectOversizeBeforeCopyOrExpansion",
@@ -19128,7 +19131,8 @@
           "text": "t.Fatalf(\"truncation summary lost joined causes: %v\", err)"
         }
       ],
-      "evidence_layer": "baseline"
+      "evidence_layer": "pr46-assessed-loading",
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestIncompleteErrorPreservesIdentityAndCause",
@@ -19751,7 +19755,7 @@
       "id": "TestIPARepresentationPublicSourceModelAndAssessedReader",
       "file": "dictionary_ipa_representation_pipeline_test.go",
       "function": "TestIPARepresentationPublicSourceModelAndAssessedReader",
-      "evidence_layer": "baseline",
+      "evidence_layer": "pr46-assessed-loading",
       "input": "Selected positive IPA dictionary with unavailable representation witness in source/model/assessed-reader paths.",
       "expected": "Assessed-reader unavailable witness returns incomplete assessment and no document; this route alone does not assert zero normative failures.",
       "scope": "Inspected concrete regression fixture/assertions; not an execution receipt or proof of unrelated planned cases.",
@@ -19764,7 +19768,8 @@
           "file": "dictionary_ipa_representation_pipeline_test.go",
           "text": "t.Fatalf(\"unproved witness acceptance: %v %v\", result.Document, err)"
         }
-      ]
+      ],
+      "prior_evidence_layer": "baseline"
     },
     {
       "id": "TestFinalReconciliationRejectsConsistentlyUnlinkedMatrix",
@@ -26269,8 +26274,8 @@
     "execution_note": "This ledger records inspected regression routes and author-run integrity controls. Runtime route execution and integrated-tree acceptance must be read from their separate receipts; classifications do not supply execution evidence.",
     "anchored_routes": 127,
     "routes_by_evidence_layer": {
-      "baseline": 116,
-      "pr46-assessed-loading": 9,
+      "baseline": 111,
+      "pr46-assessed-loading": 14,
       "pr42-added": 2
     },
     "axis_dispositions": {
