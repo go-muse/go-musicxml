@@ -1546,7 +1546,7 @@
       "targets": [
         "source"
       ],
-      "implementation": "Nil assessment remains permissive; non-nil selection is validated before reading and strict failure withholds a model.",
+      "implementation": "Frozen baseline implementation: nil assessment remained permissive; non-nil selection was validated before reading and strict failure withheld a model. The authorized mandatory-loading migration supersedes those assessed-option clauses: nil/empty options now select SourceSemantics then ModelSemantics, and ordinary Decode remains permissive. Original clauses, classifications and axis dispositions below are retained as historical records, not current opt-in certification; current contract: docs/validation/assessed-loading-pipeline.md.",
       "implementation_refs": [
         "assessment.go"
       ],
@@ -17500,7 +17500,7 @@
       "anchors": [
         {
           "file": "xml_source_eof_test.go",
-          "text": "\tfor _, source := range []string{\n\t\t`<?A`, `<?A `, `<?xml `, `<?xml version=\"1.0\"`,\n\t\t`<?xml version=\"1.0\" `, assessedScore(\"1\", \"\") + `<?A`,\n\t} {\n\t\tfor _, api := range []struct {\n\t\t\tname    string\n\t\t\tprofile validation.ProfileID\n\t\t}{\n\t\t\t{\"decode\", \"\"}, {\"decode-assessed-permissive\", \"\"},\n\t\t\t{\"inspect-preview\", ProfileSourceXSDPreview}, {\"decode-preview\", ProfileSourceXSDPreview},\n\t\t\t{\"inspect-internal-dtd\", ProfileSourceInternalDTD}, {\"decode-internal-dtd\", ProfileSourceInternalDTD},"
+          "text": "\tfor _, source := range []string{\n\t\t`<?A`, `<?A `, `<?xml `, `<?xml version=\"1.0\"`,\n\t\t`<?xml version=\"1.0\" `, assessedScore(\"1\", \"\") + `<?A`,\n\t} {\n\t\tfor _, api := range []struct {\n\t\t\tname    string\n\t\t\tprofile validation.ProfileID\n\t\t}{\n\t\t\t{\"decode\", \"\"}, {\"decode-assessed-default\", \"\"},\n\t\t\t{\"inspect-preview\", ProfileSourceXSDPreview}, {\"decode-semantics\", ProfileSourceSemantics},\n\t\t\t{\"inspect-internal-dtd\", ProfileSourceInternalDTD},"
         },
         {
           "file": "xml_source_eof_test.go",
@@ -18367,18 +18367,18 @@
     {
       "id": "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate",
       "file": "assessment_test.go",
-      "function": "TestDecodeAssessedPermissiveAndStrictSourceAreSeparate",
-      "input": "Empty score with nil assessment versus explicit source profile",
-      "expected": "Permissive conversion returns model and unrequested source; explicit strict report records violation and withholds model.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
+      "function": "TestDecodeAssessedMandatoryAndOrdinaryDecodeAreSeparate",
+      "input": "Empty score through ordinary Decode, explicit XSD-preview inspection, and nil/empty/explicit SourceSemantics assessed options",
+      "expected": "Ordinary Decode maps the model and XSD-preview inspection records its violation. Every assessed option selects mandatory SourceSemantics, withholds the invalid model, and leaves the model stage unrequested.",
+      "scope": "Historical route ID retained for the frozen baseline opt-in axis mapping. The current function tests the authorized mandatory-loading supersession: nil and empty assessed options no longer request permissive conversion. This binding does not recertify the original opt-in or empty-profile-rejection clauses; ordinary Decode remains permissive. See docs/validation/assessed-loading-pipeline.md. Inspected fixture/assertions only, not fresh execution evidence.",
       "anchors": [
         {
           "file": "assessment_test.go",
-          "text": "\tinput := `<score-partwise/>`\n\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{})\n\tif err != nil || result.Document == nil || result.Source.Requested || result.Source.Satisfied() || result.Conversion.State != validation.ConversionConverted {\n\t\tt.Fatalf(\"permissive result=%+v error=%v\", result, err)\n\t}\n\treport, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})\n\tif err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.Conformance != validation.ConformanceViolated {\n\t\tt.Fatalf(\"inspection result=%+v error=%v\", report, err)\n\t}\n\tresult, err = DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}})\n\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || result.Source.Conformance != validation.ConformanceViolated {"
+          "text": "\tinput := `<score-partwise/>`\n\tdocument, err := Decode(strings.NewReader(input))\n\tif err != nil || document == nil {\n\t\tt.Fatalf(\"ordinary decode document=%T error=%v\", document, err)\n\t}"
         },
         {
           "file": "assessment_test.go",
-          "text": "t.Fatalf(\"permissive result=%+v error=%v\", result, err)"
+          "text": "\tfor _, options := range []DecodeAssessmentOptions{{}, {Assessment: &AssessmentOptions{}}, strictSourceOptions()} {\n\t\tresult, err := DecodeAssessed(context.Background(), strings.NewReader(input), options)\n\t\tif !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.Source.Requested || result.Source.Profile.ID != ProfileSourceSemantics || result.Source.Conformance != validation.ConformanceViolated || result.Model.Requested {\n\t\t\tt.Fatalf(\"mandatory result=%+v error=%v\", result, err)\n\t\t}\n\t}"
         }
       ],
       "evidence_layer": "baseline"
@@ -18406,17 +18406,17 @@
       "id": "TestDecodeAssessedObservesFilteredSource",
       "file": "assessed_decode_test.go",
       "function": "TestDecodeAssessedObservesFilteredSource",
-      "input": "Unknown/foreign source elements and attributes dropped by typed model conversion",
-      "expected": "Strict source observer still assesses unprojected source facts.",
-      "scope": "Inspected concrete regression fixture/assertions; not fresh execution evidence and not proof of every original planned case.",
+      "input": "Foreign source content through permissive ordinary Decode and mandatory SourceSemantics assessed loading",
+      "expected": "Ordinary Decode maps the filtered model; mandatory source assessment still rejects the unprojected source violation and withholds the model.",
+      "scope": "Historical route ID and baseline classification retained. The permissive comparison now uses ordinary Decode; mandatory DecodeAssessed has no nil-assessment opt-out. The source-observation obligation remains covered, without recertifying the superseded opt-in API. See docs/validation/assessed-loading-pipeline.md. Inspected fixture/assertions only, not fresh execution evidence or proof of every original planned case.",
       "anchors": [
         {
           "file": "assessed_decode_test.go",
-          "text": "\tinput := assessedScore(\"1\", `<foreign:ignored xmlns:foreign=\"urn:foreign\"><staves rubbish=\"yes\">2</staves></foreign:ignored>`)\n\tpermissive, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{})\n\tif err != nil || permissive.Document == nil || permissive.Source.Requested {\n\t\tt.Fatalf(\"permissive foreign extension: %+v %v\", permissive, err)\n\t}\n\tstrict, err := DecodeAssessed(context.Background(), strings.NewReader(input), strictSourceOptions())\n\tif !errors.Is(err, ErrInvalidDocument) || strict.Document != nil || strict.Source.Conformance != validation.ConformanceViolated {\n\t\tt.Fatalf(\"filtered source disappeared: %+v %v\", strict, err)\n\t}\n}\n"
+          "text": "\tinput := assessedScore(\"1\", `<foreign:ignored xmlns:foreign=\"urn:foreign\"><staves rubbish=\"yes\">2</staves></foreign:ignored>`)\n\tpermissive, err := Decode(strings.NewReader(input))\n\tif err != nil || permissive == nil {\n\t\tt.Fatalf(\"ordinary foreign extension: %T %v\", permissive, err)\n\t}"
         },
         {
           "file": "assessed_decode_test.go",
-          "text": "t.Fatalf(\"permissive foreign extension: %+v %v\", permissive, err)"
+          "text": "\tstrict, err := DecodeAssessed(context.Background(), strings.NewReader(input), strictSourceOptions())\n\tif !errors.Is(err, ErrInvalidDocument) || strict.Document != nil || strict.Source.Conformance != validation.ConformanceViolated {\n\t\tt.Fatalf(\"filtered source disappeared: %+v %v\", strict, err)\n\t}"
         }
       ],
       "evidence_layer": "baseline"
