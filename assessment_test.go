@@ -111,6 +111,24 @@ func TestSourceAssessmentDTDCompletenessAxes(t *testing.T) {
 			if !tt.complete && report.Counts.Unsupported == 0 {
 				t.Errorf("DTD missing required unsupported blocker: %+v %v", report, err)
 			}
+			semantic, semanticErr := InspectXML(context.Background(), strings.NewReader(tt.prefix+valid), AssessmentOptions{Profile: ProfileSourceSemantics})
+			if semanticErr != nil || !semantic.InputComplete {
+				t.Fatalf("semantic DTD control did not finish: inputComplete=%v error=%v", semantic.InputComplete, semanticErr)
+			}
+			wantInvalid := semantic.Conformance == validation.ConformanceViolated
+			wantIncomplete := !semantic.AssessmentComplete || !semantic.InputComplete || semantic.Syntax != validation.SyntaxWellFormed || semantic.BlockingProblems != 0 || semantic.Terminal != nil
+			for _, wrapper := range []bool{false, true} {
+				result, loadErr := mandatoryDecode(wrapper, context.Background(), strings.NewReader(tt.prefix+valid), nil)
+				if (result.Document != nil) != semantic.Satisfied() || (loadErr == nil) != semantic.Satisfied() || result.Conversion.State != validation.ConversionConverted || result.Source.Satisfied() != semantic.Satisfied() || result.Model.Requested != semantic.Satisfied() {
+					t.Fatalf("%s DTD acceptance differs from semantic control: document=%T source-satisfied=%v model-requested=%v conversion=%s want-satisfied=%v error=%v", mandatoryLoaderName(wrapper), result.Document, result.Source.Satisfied(), result.Model.Requested, result.Conversion.State, semantic.Satisfied(), loadErr)
+				}
+				if errors.Is(loadErr, ErrInvalidDocument) != wantInvalid || errors.Is(loadErr, ErrIncompleteAssessment) != wantIncomplete || errors.Is(loadErr, validation.ErrResourceLimit) {
+					t.Errorf("%s DTD error classes differ from source control: want-invalid=%v want-incomplete=%v error=%v", mandatoryLoaderName(wrapper), wantInvalid, wantIncomplete, loadErr)
+				}
+				if semantic.Satisfied() && !result.Model.Satisfied() {
+					t.Fatalf("%s accepted source without a satisfied model", mandatoryLoaderName(wrapper))
+				}
+			}
 		})
 	}
 }

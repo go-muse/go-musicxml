@@ -146,6 +146,182 @@ func TestMandatoryAssessedLoadingRejectsModelInvalidAfterDecimalUnderflow(t *tes
 	}
 }
 
+func TestMandatoryAssessedLoadingKeepsSourceReportLeaseDuringModel(t *testing.T) {
+	source := mandatoryScore("1", strings.Repeat(`<note><rest/><duration>1</duration></note>`, 4))
+	sourceNodes, _ := mandatoryStandaloneNodeCounts(t, source, validation.Budgets{})
+	expected := mandatoryIndependentLeaseCheckpoint(t, source, sourceNodes)
+	observed := &mandatoryLeaseCheckpointContext{Context: context.Background(), sourceNodes: sourceNodes}
+	run, modelConfig := mandatoryLeaseFixture(t, observed, source)
+	result, err := decodeAssessedRun(observed, run, modelConfig, nil)
+	if err != nil || result.Document == nil {
+		t.Fatalf("pipeline control failed: document=%T error=%v", result.Document, err)
+	}
+	mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
+	mandatorySatisfiedReport(t, result.Model, ProfileModelSemantics, validation.TargetModel)
+	if !observed.modelSeen || observed.modelBuffered != expected.modelBuffered {
+		t.Fatalf("source report lease was not retained through model assessment: checkpoint=%d want=%d, independently measured lease=%d", observed.modelBuffered, expected.modelBuffered, expected.leaseBytes)
+	}
+	t.Logf("model checkpoint=%d; post-source storage=%d; source report lease=%d", observed.modelBuffered, expected.postSourceBuffered, expected.leaseBytes)
+}
+
+func TestMandatoryAssessedLoadingModelStartupCancellationLeavesUnrequestedReport(t *testing.T) {
+	source := mandatoryScore("1", strings.Repeat(`<note><rest/><duration>1</duration></note>`, 4))
+	sourceNodes, _ := mandatoryStandaloneNodeCounts(t, source, validation.Budgets{})
+	expected := mandatoryIndependentLeaseCheckpoint(t, source, sourceNodes)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	observed := &mandatoryLeaseCheckpointContext{Context: ctx, sourceNodes: sourceNodes, cancel: cancel, cancelAtBuffered: expected.modelStartupBuffered}
+	run, modelConfig := mandatoryLeaseFixture(t, observed, source)
+	result, err := decodeAssessedRun(observed, run, modelConfig, nil)
+	if !observed.startupCanceled || !errors.Is(err, context.Canceled) || !errors.Is(err, ErrIncompleteAssessment) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
+		t.Fatalf("model startup cancellation missed its boundary: canceled=%v document=%T conversion=%s error=%v", observed.startupCanceled, result.Document, result.Conversion.State, err)
+	}
+	var incomplete *validation.IncompleteError
+	if !errors.As(err, &incomplete) || incomplete.Reason != "canceled-before-begin" || !errors.Is(incomplete.Cause, context.Canceled) {
+		t.Fatalf("cancellation did not occur at model-session Begin: %v", err)
+	}
+	mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
+	if result.Model.Requested || result.Model.Profile.ID != "" || observed.modelSeen {
+		t.Fatalf("startup cancellation invented a started model report: requested=%v profile=%s node-observed=%v", result.Model.Requested, result.Model.Profile.ID, observed.modelSeen)
+	}
+}
+
+type mandatoryLeaseCheckpoint struct {
+	modelBuffered, modelStartupBuffered, postSourceBuffered, leaseBytes int64
+}
+
+// Establish the expected checkpoint through the validation seam itself, without
+// calling either root finalization helper or the pipeline under test. This
+// remains a live oracle if the root closes its lease early or uses plain Finish.
+func mandatoryIndependentLeaseCheckpoint(t *testing.T, source string, sourceNodes int64) mandatoryLeaseCheckpoint {
+	t.Helper()
+	observed := &mandatoryLeaseCheckpointContext{Context: context.Background(), sourceNodes: sourceNodes}
+	run, modelConfig := mandatoryLeaseFixture(t, observed, source)
+	dictionaryBytes := observed.dictionaryBuffered
+	projected := &namespaceXMLTokenReader{source: run.source, allowQualifiedAttribute: musicXMLQualifiedAttribute}
+	modelTokens := &assessedModelTokenReader{source: projected, account: run.account, ctx: observed, observer: run.source.observer}
+	defer modelTokens.close()
+	decoder := xml.NewTokenDecoder(modelTokens)
+	start, err := readRoot(decoder)
+	if err != nil {
+		t.Fatal(err)
+	}
+	document := &ScorePartwise{}
+	if err := decoder.DecodeElement(document, &start); err != nil {
+		t.Fatal(err)
+	}
+	completion, err := run.finishInput(run.drain())
+	if err != nil {
+		t.Fatal(err)
+	}
+	report, lease, err := run.session.FinishWithRetainedReport(observed, completion)
+	if err != nil || lease == nil || !report.Satisfied() || len(report.Context) == 0 {
+		t.Fatalf("independent source lease missing: lease=%v context=%d satisfied=%v error=%v", lease != nil, len(report.Context), report.Satisfied(), err)
+	}
+	defer lease.Close()
+	postSource := mandatoryLiveBuffered(t, run.account)
+	observed.postSourceBuffered = postSource
+	modelReport, _, err := assessModelWithConfig(observed, document, modelConfig, modelWalkOptions{})
+	if err != nil || !modelReport.Satisfied() || !observed.modelSeen || observed.modelStartupBuffered <= postSource {
+		t.Fatalf("independent model control failed: satisfied=%v checkpoint-seen=%v error=%v", modelReport.Satisfied(), observed.modelSeen, err)
+	}
+	beforeClose := mandatoryLiveBuffered(t, run.account)
+	if err := lease.Close(); err != nil {
+		t.Fatal(err)
+	}
+	afterClose := mandatoryLiveBuffered(t, run.account)
+	leaseBytes := beforeClose - afterClose
+	if leaseBytes <= 0 || beforeClose != postSource || afterClose != dictionaryBytes+modelTokens.retained {
+		t.Fatalf("independent lease-close delta is not isolated: before=%d after=%d dictionaries=%d candidate=%d post-source=%d", beforeClose, afterClose, dictionaryBytes, modelTokens.retained, postSource)
+	}
+	if err := modelTokens.close(); err != nil {
+		t.Fatal(err)
+	}
+	return mandatoryLeaseCheckpoint{modelBuffered: observed.modelBuffered, modelStartupBuffered: observed.modelStartupBuffered, postSourceBuffered: postSource, leaseBytes: leaseBytes}
+}
+
+func mandatoryLeaseFixture(t *testing.T, observed *mandatoryLeaseCheckpointContext, source string) (*sourceAssessmentRun, assessmentRunConfig) {
+	t.Helper()
+	options := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}, Dictionaries: DictionaryOptions{
+		Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource(),
+	}}
+	config, err := dictionaryAssessmentConfig(observed, options, validation.TargetSource)
+	if err != nil || config.Dictionaries == nil {
+		t.Fatalf("fixture dictionary configuration: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := config.Dictionaries.Close(); err != nil {
+			t.Error(err)
+		}
+		for _, kind := range []validation.BudgetKind{validation.BudgetBufferedBytes, validation.BudgetDepth} {
+			if used, err := config.Account.Usage(kind); err != nil || used != 0 {
+				t.Errorf("finished root retained %s=%d: %v", kind, used, err)
+			}
+		}
+	})
+	observed.account = config.Account
+	observed.dictionaryBuffered = mandatoryLiveBuffered(t, config.Account)
+	run, err := newSourceAssessmentRunWithConfig(observed, strings.NewReader(source), DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: config, ByteOwner: sourceBytesPrimary}, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	observed.source = run
+	modelConfig := config
+	modelConfig.Profile, modelConfig.DocumentID = ProfileModelSemantics, modelDocumentID
+	modelConfig.Engine, err = modelAssessmentEngineForProfile(ProfileModelSemantics)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return run, modelConfig
+}
+
+func mandatoryLiveBuffered(t *testing.T, account *validation.Account) int64 {
+	t.Helper()
+	used, err := account.Usage(validation.BudgetBufferedBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return used
+}
+
+// Observe real account transitions rather than relying on a poll count, a timer,
+// stack inspection, or a production-only test hook. The startup cancel point is
+// independently measured after source finalization has released its scratch.
+type mandatoryLeaseCheckpointContext struct {
+	context.Context
+	account              *validation.Account
+	dictionaryBuffered   int64
+	source               *sourceAssessmentRun
+	sourceNodes          int64
+	modelSeen            bool
+	modelBuffered        int64
+	postSourceBuffered   int64
+	modelStartupBuffered int64
+	cancel               context.CancelFunc
+	cancelAtBuffered     int64
+	startupCanceled      bool
+}
+
+func (c *mandatoryLeaseCheckpointContext) Err() error {
+	if c.account != nil && c.source != nil && c.source.inputFinished {
+		nodes, nodeErr := c.account.Usage(validation.BudgetNodes)
+		buffered, bufferErr := c.account.Usage(validation.BudgetBufferedBytes)
+		if nodeErr == nil && bufferErr == nil {
+			if c.postSourceBuffered != 0 && c.modelStartupBuffered == 0 && nodes == c.sourceNodes && buffered > c.postSourceBuffered {
+				c.modelStartupBuffered = buffered
+			}
+			if nodes > c.sourceNodes && !c.modelSeen {
+				c.modelSeen, c.modelBuffered = true, buffered
+			}
+			if c.cancel != nil && !c.startupCanceled && nodes == c.sourceNodes && buffered == c.cancelAtBuffered {
+				c.startupCanceled = true
+				c.cancel()
+			}
+		}
+	}
+	return c.Context.Err()
+}
+
 func mandatoryDecode(wrapper bool, ctx context.Context, reader io.Reader, options *AssessmentOptions) (DecodeResult, error) {
 	if !wrapper {
 		return DecodeAssessed(ctx, reader, DecodeAssessmentOptions{Assessment: options})
