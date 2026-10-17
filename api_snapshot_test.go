@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"go/ast"
 	"go/importer"
+	"go/parser"
 	"go/token"
 	"go/types"
 	"os"
@@ -12,6 +14,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var updateAPISnapshot = flag.Bool(
@@ -146,12 +150,15 @@ func apiTypeLines(
 			rhs = alias.Rhs()
 		}
 		lines := []string{fmt.Sprintf("type %s = %s", name, typeString(rhs))}
-		// An alias of another package's struct exposes that struct's fields.
+		// A named type declared in this package has its own entries. Any other
+		// target, including another package's type or an anonymous struct
+		// reached through an alias chain, is part of this package's API, so
+		// describe its structure and method sets under the alias name.
 		if named, ok := target.(*types.Named); ok &&
-			named.Obj().Pkg() != object.Pkg() {
-			lines = append(lines, apiStructLines(name, named, typeString)...)
+			named.Obj().Pkg() == object.Pkg() {
+			return lines
 		}
-		return lines
+		return append(lines, apiTypeBody(name, "type "+name, target, typeString)...)
 	}
 
 	named := object.Type().(*types.Named)
@@ -160,12 +167,23 @@ func apiTypeLines(
 		name,
 		apiTypeParams(named.TypeParams(), typeString),
 	)
+	return apiTypeBody(name, header, named, typeString)
+}
 
+// apiTypeBody describes the public structure of value under name: its kind,
+// struct fields in declaration order with tags and comparability, interface
+// methods, or underlying type, followed by its value and pointer method sets.
+func apiTypeBody(
+	name string,
+	header string,
+	value types.Type,
+	typeString func(types.Type) string,
+) []string {
 	var lines []string
-	switch underlying := named.Underlying().(type) {
+	switch underlying := value.Underlying().(type) {
 	case *types.Struct:
 		comparability := "not comparable"
-		if types.Comparable(named) {
+		if types.Comparable(value) {
 			comparability = "comparable"
 		}
 		lines = append(lines, fmt.Sprintf(
@@ -173,7 +191,7 @@ func apiTypeLines(
 			header,
 			comparability,
 		))
-		lines = append(lines, apiStructLines(name, named, typeString)...)
+		lines = append(lines, apiStructLines(name, underlying, typeString)...)
 
 	case *types.Interface:
 		lines = append(lines, header+" interface")
@@ -206,8 +224,8 @@ func apiTypeLines(
 
 	// Method sets include methods promoted through embedded fields, which
 	// change encoding/xml behavior without any declaration in this type.
-	valueMethods := types.NewMethodSet(named)
-	pointerMethods := types.NewMethodSet(types.NewPointer(named))
+	valueMethods := types.NewMethodSet(value)
+	pointerMethods := types.NewMethodSet(types.NewPointer(value))
 	for index := range pointerMethods.Len() {
 		selection := pointerMethods.At(index)
 		method := selection.Obj()
@@ -235,22 +253,20 @@ func apiTypeLines(
 	return lines
 }
 
+// apiStructLines records each exported field and, because encoding/xml
+// writes elements in field order, one line with the exported field order.
 func apiStructLines(
 	name string,
-	named *types.Named,
+	structure *types.Struct,
 	typeString func(types.Type) string,
 ) []string {
-	structure, ok := named.Underlying().(*types.Struct)
-	if !ok {
-		return nil
-	}
-
-	var lines []string
+	var lines, order []string
 	for index := range structure.NumFields() {
 		field := structure.Field(index)
 		if !field.Exported() {
 			continue
 		}
+		order = append(order, field.Name())
 		kind := "field"
 		if field.Embedded() {
 			kind = "embedded"
@@ -266,6 +282,13 @@ func apiStructLines(
 			line += " `" + tag + "`"
 		}
 		lines = append(lines, line)
+	}
+	if len(order) > 1 {
+		lines = append(lines, fmt.Sprintf(
+			"type %s struct, field order %s",
+			name,
+			strings.Join(order, " "),
+		))
 	}
 
 	return lines
@@ -326,4 +349,114 @@ func apiSnapshotSample(lines []string) string {
 		return "  (none)"
 	}
 	return "  " + strings.Join(lines, "\n  ")
+}
+
+type apiFixtureImporter map[string]*types.Package
+
+func (i apiFixtureImporter) Import(path string) (*types.Package, error) {
+	if pkg := i[path]; pkg != nil {
+		return pkg, nil
+	}
+	return nil, fmt.Errorf("unknown fixture import %q", path)
+}
+
+// apiFixtureSnapshot type-checks a two-package fixture in which public
+// re-exports declarations of kernel, mirroring validation and internal/xsd.
+func apiFixtureSnapshot(t *testing.T, kernelSource, publicSource string) []string {
+	t.Helper()
+
+	fset := token.NewFileSet()
+	check := func(path, source string, imports apiFixtureImporter) *types.Package {
+		file, err := parser.ParseFile(fset, path+".go", source, 0)
+		if err != nil {
+			t.Fatalf("parse %s: %v", path, err)
+		}
+		config := types.Config{Importer: imports}
+		pkg, err := config.Check(path, fset, []*ast.File{file}, nil)
+		if err != nil {
+			t.Fatalf("type-check %s: %v", path, err)
+		}
+		return pkg
+	}
+
+	kernel := check("example.com/m/internal/kernel", kernelSource, nil)
+	public := check(
+		"example.com/m/public",
+		publicSource,
+		apiFixtureImporter{kernel.Path(): kernel},
+	)
+	return apiSnapshot(public)
+}
+
+func TestPublicAPISnapshotDetectsReexportedChanges(t *testing.T) {
+	t.Parallel()
+
+	const reexport = `package public
+import "example.com/m/internal/kernel"
+type Name = kernel.QName
+type Derivation = kernel.Derivation
+type Schema = kernel.Schema
+`
+	const kernel = `package kernel
+type QName = struct{ Space, Local string }
+type Derivation uint8
+type Schema struct {
+	Name QName
+	note int
+}
+`
+	baseline := apiFixtureSnapshot(t, kernel, reexport)
+	assert.Contains(t, baseline, "type Name struct, field Local string")
+	assert.Contains(t, baseline, "type Derivation uint8")
+	assert.Contains(t, baseline, "type Schema struct, comparable")
+
+	tests := map[string]string{
+		"anonymous struct field renamed": strings.Replace(
+			kernel,
+			"Space, Local string",
+			"Space, Name string",
+			1,
+		),
+		"named target retyped with method": strings.Replace(
+			kernel,
+			"type Derivation uint8",
+			"type Derivation uint16\nfunc (Derivation) Has() bool { return false }",
+			1,
+		),
+		"struct comparability changed": strings.Replace(
+			kernel,
+			"note int",
+			"note []int",
+			1,
+		),
+	}
+	for name, mutated := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.NotEqual(t, baseline, apiFixtureSnapshot(t, mutated, reexport))
+		})
+	}
+}
+
+func TestPublicAPISnapshotDetectsFieldReorder(t *testing.T) {
+	t.Parallel()
+
+	const kernel = `package kernel`
+	const ordered = `package public
+type Work struct {
+	WorkNumber *string ` + "`xml:\"work-number,omitempty\"`" + `
+	WorkTitle  *string ` + "`xml:\"work-title,omitempty\"`" + `
+}
+`
+	swapped := `package public
+type Work struct {
+	WorkTitle  *string ` + "`xml:\"work-title,omitempty\"`" + `
+	WorkNumber *string ` + "`xml:\"work-number,omitempty\"`" + `
+}
+`
+	baseline := apiFixtureSnapshot(t, kernel, ordered)
+	assert.Equal(t, baseline, apiFixtureSnapshot(t, kernel, ordered))
+	assert.Contains(t, baseline, "type Work struct, field order WorkNumber WorkTitle")
+	assert.NotEqual(t, baseline, apiFixtureSnapshot(t, kernel, swapped))
 }
