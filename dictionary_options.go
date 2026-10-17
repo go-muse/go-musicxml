@@ -8,7 +8,10 @@ import (
 )
 
 // DictionaryOptions selects fixed dictionary components supplied by the caller.
-// Empty Selections invokes no source; nil (including typed-nil) Source leaves
+// Standalone Inspect/Assess calls with empty Selections invoke no source.
+// Assessed loaders use bundled required data when Source is nil and Selections
+// is empty; explicit partial selections are rejected before I/O.
+// Otherwise nil (including typed-nil) Source leaves
 // selected capabilities unavailable. A component is requested at most once per
 // root assessment. Selection never authorizes network, file or DTD access.
 // The caller must not mutate options or source bytes during assessment.
@@ -18,7 +21,8 @@ type DictionaryOptions struct {
 }
 
 // DictionaryAssessmentOptions adds explicit pinned capabilities to a standalone
-// assessment without changing existing AssessmentOptions or default profiles.
+// assessment. DecodeAssessedWithDictionaries applies its fixed mandatory stages
+// and bundled defaults instead of standalone profile selection.
 type DictionaryAssessmentOptions struct {
 	Assessment   AssessmentOptions
 	Dictionaries DictionaryOptions
@@ -38,8 +42,10 @@ type MXLDictionaryAssessmentOptions struct {
 	Dictionaries DictionaryOptions
 }
 
-// DecodeDictionaryAssessmentOptions combines decoding with an optional explicit
-// dictionary assessment; a nil Assessment requests decoding without assessment.
+// DecodeDictionaryAssessmentOptions configures mandatory assessed loading.
+// Nil Assessment selects the fixed source/model stages with bundled required data.
+// Explicit options may change finite budgets and compatible pinned dictionary
+// transport, but cannot disable either stage or its required relations.
 type DecodeDictionaryAssessmentOptions struct {
 	Decode     DecodeOptions
 	Assessment *DictionaryAssessmentOptions

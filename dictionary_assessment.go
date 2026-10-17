@@ -94,38 +94,18 @@ func AssessModelWithDictionaries(ctx context.Context, document Document, options
 	return report, errors.Join(loadErr, runErr)
 }
 
-// DecodeAssessedWithDictionaries converts and assesses through the same source
-// parser. Nil Assessment retains DecodeAssessed's unassessed conversion behavior.
-// Any conversion, source, dictionary operation or strict acceptance error
-// discards the returned model while preserving the best source report.
-func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (result DecodeResult, err error) {
-	if options.Assessment == nil {
-		return DecodeAssessed(ctx, reader, DecodeAssessmentOptions{Decode: options.Decode})
-	}
-	result.Conversion.State = validation.ConversionIncomplete
-	if dictionaryNil(reader) {
-		return result, ErrNilReader
-	}
-	if _, err := options.Decode.xmlDepth(); err != nil {
-		return result, err
-	}
-	cfg, loadErr := dictionaryAssessmentConfig(ctx, *options.Assessment, validation.TargetSource)
-	if cfg.Dictionaries == nil {
-		return result, loadErr
-	}
-	defer func() {
-		err = errors.Join(err, cfg.Dictionaries.Close())
-		if err != nil {
-			result.Document = nil
-		}
-	}()
-	run, startErr := newSourceAssessmentRunWithConfig(ctx, reader, options.Decode, &sourceAssessmentConfig{assessmentRunConfig: cfg, ByteOwner: sourceBytesPrimary}, true)
-	if startErr != nil {
-		if run != nil {
-			result.Source = run.startupReport
-		}
-		return result, errors.Join(loadErr, startErr)
-	}
-	result, runErr := decodeAssessedRun(ctx, run, true)
-	return result, errors.Join(loadErr, runErr)
+// DecodeAssessedWithDictionaries uses the same mandatory source/model pipeline
+// as DecodeAssessed. Nil/empty options use bundled required dictionary data.
+// Explicit dictionary options must include canonical SMuFL and IPA representation
+// relations. Their Source is honored without fallback, including unavailable or
+// failed inputs; selections cannot disable required checks. One set is imported
+// and shared by both stages of each call, without cross-call verified-set reuse.
+// Any operation or acceptance failure discards Document.
+//
+// Referencing this loader embeds all five bundled components regardless of
+// options, including custom sources. Distribute the notice/license files listed
+// in THIRD_PARTY_NOTICES.md. Inputs with unread external DOCTYPE subsets cannot
+// satisfy this loader; ordinary Decode provides conversion only, not validation.
+func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error) {
+	return decodeValidated(ctx, reader, options.Decode, options.Assessment)
 }

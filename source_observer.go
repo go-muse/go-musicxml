@@ -452,14 +452,13 @@ func (o *sourceFactObserver) close() error {
 // observingXMLSource is the sole raw-prefix expansion boundary. Its independent
 // parser stack survives model-conversion failure and owns the eventual EOF.
 type observingXMLSource struct {
-	ctx          context.Context
-	decoder      *xml.Decoder
-	lexical      *sourceXMLTokenReader
-	observer     *sourceFactObserver
-	failure      error
-	eof          bool
-	musicXMLRoot bool
-	started      bool
+	ctx      context.Context
+	decoder  *xml.Decoder
+	lexical  *sourceXMLTokenReader
+	observer *sourceFactObserver
+	failure  error
+	eof      bool
+	started  bool
 }
 
 func (s *observingXMLSource) Token() (xml.Token, error) {
@@ -482,14 +481,10 @@ func (s *observingXMLSource) Token() (xml.Token, error) {
 		}
 		return nil, err
 	}
-	if start, ok := token.(xml.StartElement); ok && !s.started {
+	if _, ok := token.(xml.StartElement); ok && !s.started {
 		s.started = true
 		if s.observer != nil {
 			s.observer.dtdUnavailable = s.lexical.Summary().DTD.Unsupported
-		}
-		if s.musicXMLRoot && s.observer == nil && (start.Name.Space != "" || (start.Name.Local != "score-partwise" && start.Name.Local != "score-timewise" && start.Name.Local != "opus")) {
-			s.failure = &UnsupportedRootError{Name: start.Name}
-			return nil, s.failure
 		}
 	}
 	if s.observer != nil {

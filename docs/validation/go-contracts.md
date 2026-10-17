@@ -23,6 +23,12 @@ verification. The proposed name `Assess` was not used because the generated mode
 already exports that type. Broader timeline, package/link and external contracts
 below remain future work; the original planning statuses are unchanged.
 
+**Assessed-loading migration:** the optional/nil-assessment decoder examples below
+are historical proposals, not the current loading contract. Both assessed loaders
+now require fixed source and direct-model semantic acceptance, with required
+bundled evidence by default. See the [current migration guide](assessed-loading-pipeline.md)
+and [public loading API](../../API.md#mandatory-assessed-loading).
+
 ## 1. Boundaries and dependency direction
 
 Proposed package placement is deliberately small:

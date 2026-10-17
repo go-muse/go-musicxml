@@ -16,7 +16,7 @@ func assessedScore(staves, extra string) string {
 	return `<score-partwise version="4.0"><part-list><score-part id="P1"><part-name>Music</part-name></score-part></part-list><part id="P1"><measure number="1"><attributes><staves>` + staves + `</staves>` + extra + `</attributes></measure></part></score-partwise>`
 }
 func strictSourceOptions() DecodeAssessmentOptions {
-	return DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}}
+	return DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}}
 }
 
 type onceEOFReader struct {
@@ -70,11 +70,11 @@ func TestDecodeAssessedSourceAndConversionDomains(t *testing.T) {
 				t.Errorf("invalid classification=%v", err)
 			}
 			if tt.conversion == validation.ConversionConverted {
-				if err != nil || result.Document == nil {
+				if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
 					t.Errorf("conversion result=%+v err=%v", result, err)
 				}
 			} else {
-				if err == nil || result.Document != nil {
+				if err == nil || result.Document != nil || result.Model.Requested {
 					t.Errorf("partial model escaped=%+v error=%v", result, err)
 				}
 			}
@@ -137,9 +137,9 @@ func TestSourceAssessmentReaderOwnershipAndUnsupportedRoot(t *testing.T) {
 
 func TestDecodeAssessedObservesFilteredSource(t *testing.T) {
 	input := assessedScore("1", `<foreign:ignored xmlns:foreign="urn:foreign"><staves rubbish="yes">2</staves></foreign:ignored>`)
-	permissive, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{})
-	if err != nil || permissive.Document == nil || permissive.Source.Requested {
-		t.Fatalf("permissive foreign extension: %+v %v", permissive, err)
+	permissive, err := Decode(strings.NewReader(input))
+	if err != nil || permissive == nil {
+		t.Fatalf("ordinary foreign extension: %T %v", permissive, err)
 	}
 	strict, err := DecodeAssessed(context.Background(), strings.NewReader(input), strictSourceOptions())
 	if !errors.Is(err, ErrInvalidDocument) || strict.Document != nil || strict.Source.Conformance != validation.ConformanceViolated {
@@ -446,16 +446,20 @@ func TestDecodeAssessedUsesTighterDepthLimit(t *testing.T) {
 		{"decode-is-tighter", 2, 3, true}, {"assessment-is-tighter", 3, 2, false},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: tt.decode}, Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxDepth: tt.assessment}}})
+			result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: tt.decode}, Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: validation.Budgets{MaxDepth: tt.assessment}}})
 			var resource *validation.ResourceError
 			if !errors.As(err, &resource) || resource.Kind != validation.BudgetDepth || resource.Limit != 2 || errors.Is(err, ErrXMLTooDeep) != tt.legacy || errors.Is(err, ErrInvalidDocument) || result.Source.Terminal == nil || result.Source.Terminal.Category != validation.CategoryResource || result.Document != nil {
 				t.Errorf("tighter depth result=%+v resource=%+v error=%v", result, resource, err)
 			}
 		})
 	}
-	permissive, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: 2}})
-	if !errors.Is(err, ErrXMLTooDeep) || errors.Is(err, validation.ErrResourceLimit) || permissive.Source.Requested {
-		t.Errorf("nil assessment changed legacy depth error: %+v %v", permissive, err)
+	ordinary, err := DecodeWithOptions(strings.NewReader(input), DecodeOptions{MaxXMLDepth: 2})
+	if !errors.Is(err, ErrXMLTooDeep) || errors.Is(err, validation.ErrResourceLimit) || ordinary != nil {
+		t.Errorf("ordinary decode changed legacy depth error: %T %v", ordinary, err)
+	}
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: 2}})
+	if !errors.Is(err, ErrXMLTooDeep) || !errors.Is(err, validation.ErrResourceLimit) || !result.Source.Requested || result.Document != nil {
+		t.Errorf("default assessment did not enforce mandatory depth accounting: %+v %v", result, err)
 	}
 }
 
@@ -504,7 +508,7 @@ func TestDecodeAssessedConversionLocationKeepsMappedOwner(t *testing.T) {
 }
 
 func TestAssessedModelRetentionSurvivesSourceFinalization(t *testing.T) {
-	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(assessedScore("1", "")), DecodeOptions{}, strictSourceOptions().Assessment, true)
+	run, err := newSourceAssessmentRun(context.Background(), strings.NewReader(assessedScore("1", "")), DecodeOptions{}, &AssessmentOptions{Profile: ProfileSourceXSDPreview}, true)
 	if err != nil {
 		t.Fatal(err)
 	}

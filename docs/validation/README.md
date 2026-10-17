@@ -27,6 +27,12 @@ implemented bounded timeline profiles and current exact-head acceptance.
 
 ## Reading order
 
+For `DecodeAssessed` and `DecodeAssessedWithDictionaries`, start with the
+[mandatory assessed-loading pipeline and migration](assessed-loading-pipeline.md):
+fixed source and direct-model semantic acceptance, bundled defaults, explicit
+overrides and retained errors. The inspection/assessment profiles below remain
+explicit choices; older receipts preserve their stated revisions.
+
 Start with the [direct-model/local scope and ownership evidence](model-assessment-scope.md)
 for `AssessModel`, the direct XSD-only `Validate` migration and explicit local
 profiles. Then read the [source assessment scope and ownership ledger](source-assessment-scope.md)

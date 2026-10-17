@@ -61,7 +61,9 @@ The public explicit profiles are:
 These are bounded target-specific claims, not unqualified MusicXML validity.
 They are available through explicit selection, but final combined review and
 acceptance evidence remain pending. The existing `musicxml-4.0/source-xsd-preview` retains its exact
-scope, IDs and source behavior. No profile becomes an implicit default.
+scope, IDs and source behavior. These local/XSD profiles remain explicit
+inspection/assessment choices. The later assessed-loading defaults are the
+separate semantic profiles described below.
 
 All source profiles remain unable to accept unread external-DOCTYPE subsets,
 including the three committed official score examples. No DTD trust, stripping,
@@ -92,14 +94,17 @@ selected normative predicate instances; model blockers are a separate axis.
 `Report.Profile` carries the target, registry commit, catalog digest, required
 keys, support and normative closure.
 
-Use `AssessModel` with a model profile and `InspectXML`/strict `DecodeAssessed`
-with a source profile. Empty, unknown or wrong-target selection fails preflight;
-there is no default-profile fallback. A nil `DecodeAssessmentOptions.Assessment`
-still selects permissive conversion with mandatory XML/security checks. A present
-empty accordion registration is XSD-valid but locally invalid: `Validate` and
-the preview retain the XSD result, while strict source-local withholds the model
-and model-local reports the added violation. See `TestBoundedLocalStrictAccordionIntegration`
-and the runnable [AssessModel example](../../model_assessment_example_test.go).
+Use `AssessModel` with an explicit model profile and `InspectXML` with an explicit
+source profile. Empty, unknown or wrong-target selection fails their preflight;
+there is no default-profile fallback in those inspection/assessment APIs.
+The [later assessed-loading migration](assessed-loading-pipeline.md) instead fixes
+`ProfileSourceSemantics` then direct `ProfileModelSemantics` in both assessed
+loaders. Nil/empty assessment options select that pipeline; narrower source-local
+options are rejected. A present empty accordion registration is XSD-valid but
+locally invalid: `Validate` and the preview retain the XSD result, while the
+mandatory assessed loader withholds the model and model-local reports the added
+violation. See `TestBoundedLocalStrictAccordionIntegration` and the runnable
+[AssessModel example](../../model_assessment_example_test.go).
 
 ## Selected musical obligations
 

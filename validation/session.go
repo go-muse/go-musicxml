@@ -126,6 +126,7 @@ type Session struct {
 	contextServices         map[RuleKey]*contextService
 	contextElementRoles     map[contextBoundElementKey][]contextRole
 	contextResults          []ContextResult
+	contextReportRetained   int64
 	timeline                map[RuleKey]*timelineService
 	localDocuments          map[*localPlan]localDocumentResult
 	schema                  *schemaSession
@@ -564,6 +565,10 @@ func (s *Session) Finish(ctx context.Context, end Completion) (Report, error) {
 }
 
 func (s *Session) finishResource(ctx context.Context, end Completion, snapshot bool) (Report, *ResourceSnapshot, error) {
+	return s.finishWithOwnership(ctx, end, snapshot, nil)
+}
+
+func (s *Session) finishWithOwnership(ctx context.Context, end Completion, snapshot bool, reportLease **ReportLease) (Report, *ResourceSnapshot, error) {
 	if s == nil {
 		return Report{}, nil, &SessionError{Operation: "Finish", Reason: "nil session"}
 	}
@@ -639,20 +644,22 @@ func (s *Session) finishResource(ctx context.Context, end Completion, snapshot b
 	report := s.accumulator.finish(s.inputComplete, end.Syntax)
 	report.Context = s.contextResults
 	var resource *ResourceSnapshot
+	var ownershipErr error
 	if snapshot {
-		var snapshotErr error
-		resource, snapshotErr = s.makeResourceSnapshot(ctx, report)
-		if snapshotErr != nil {
-			addCause(snapshotErr)
-			report.AssessmentComplete = false
-			if report.Counts.Fail == 0 {
-				report.Conformance = ConformanceUndetermined
-			}
-			if report.Terminal == nil {
-				category, reason := terminalClassification(snapshotErr, malformedSource)
-				report.Terminal = &TerminalSummary{Category: category, Reason: reason}
-				report.BlockingProblems++
-			}
+		resource, ownershipErr = s.makeResourceSnapshot(ctx, report)
+	} else if reportLease != nil {
+		*reportLease, ownershipErr = s.retainFinishedReport()
+	}
+	if ownershipErr != nil {
+		addCause(ownershipErr)
+		report.AssessmentComplete = false
+		if report.Counts.Fail == 0 {
+			report.Conformance = ConformanceUndetermined
+		}
+		if report.Terminal == nil {
+			category, reason := terminalClassification(ownershipErr, malformedSource)
+			report.Terminal = &TerminalSummary{Category: category, Reason: reason}
+			report.BlockingProblems++
 		}
 	}
 	if s.terminalCause != nil {
@@ -732,6 +739,7 @@ func (s *Session) cleanup() {
 	s.timeline = nil
 	s.contextServices = nil
 	s.contextResults = nil
+	s.contextReportRetained = 0
 	if s.depth > 0 {
 		_ = s.account.Release(BudgetDepth, s.depth)
 		s.depth = 0

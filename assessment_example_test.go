@@ -15,7 +15,7 @@ func ExampleInspectXML() {
 }
 
 func ExampleDecodeAssessed() {
-	result, err := musicxml.DecodeAssessed(context.Background(), strings.NewReader(`<score-partwise/>`), musicxml.DecodeAssessmentOptions{})
-	fmt.Println(result.Document != nil, result.Source.Requested, result.Conversion.State, err)
-	// Output: true false converted <nil>
+	result, err := musicxml.DecodeAssessed(context.Background(), strings.NewReader(`<opus/>`), musicxml.DecodeAssessmentOptions{})
+	fmt.Println(result.Document != nil, result.Source.Satisfied(), result.Model.Satisfied(), result.Conversion.State, err)
+	// Output: true true true converted <nil>
 }

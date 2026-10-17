@@ -86,8 +86,8 @@ func TestSourceDeclarationCompositionDictionaryPreconditions(t *testing.T) {
 
 func TestSourceDeclarationCompositionStrictDecode(t *testing.T) {
 	input := `<!DOCTYPE opus [<!ATTLIST opus version CDATA "4.0">]><opus/>`
-	result, err := DecodeAssessedWithDictionaries(context.Background(), strings.NewReader(input), DecodeDictionaryAssessmentOptions{Assessment: &DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceInternalDTDDictionaries}}})
-	if err != nil || result.Document == nil || !result.Source.Satisfied() {
+	result, err := DecodeAssessedWithDictionaries(context.Background(), strings.NewReader(input), DecodeDictionaryAssessmentOptions{Assessment: &DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceSemantics}}})
+	if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
 		t.Fatalf("result=%+v error=%v", result, err)
 	}
 }

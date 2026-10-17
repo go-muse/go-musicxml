@@ -26,7 +26,7 @@ func TestAssessedDecodeSkippedSubtreeXMLContracts(t *testing.T) {
 		{"foreign mismatched close", `<v:unknown xmlns:v="urn:vendor"><child></different></v:unknown>`, ""},
 	}
 	for _, tc := range cases {
-		for _, mode := range []string{"decode", "assessed permissive", "assessed strict"} {
+		for _, mode := range []string{"decode", "assessed default", "assessed explicit"} {
 			t.Run(tc.name+"/"+mode, func(t *testing.T) {
 				input := `<score-partwise>` + tc.subtree + `</score-partwise>`
 				var document Document
@@ -35,7 +35,7 @@ func TestAssessedDecodeSkippedSubtreeXMLContracts(t *testing.T) {
 					document, err = Decode(strings.NewReader(input))
 				} else {
 					options := DecodeAssessmentOptions{}
-					if mode == "assessed strict" {
+					if mode == "assessed explicit" {
 						options = strictSourceOptions()
 					}
 					result, decodeErr := DecodeAssessed(context.Background(), strings.NewReader(input), options)

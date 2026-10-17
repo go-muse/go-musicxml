@@ -221,6 +221,10 @@ func (s *Session) publishValidatedContextResult(ctx context.Context, in ContextR
 	// The per-record reserve covers geometric slice backing growth and the
 	// simultaneous old/new backing arrays; payload allocations were precharged.
 	s.contextResults = append(s.contextResults, out)
+	// The projection owns these charges independently of intrinsic facts and
+	// provider scratch. A retained-report finalizer can transfer the admitted
+	// subtotal without copying or temporarily releasing the live projection.
+	s.contextReportRetained += s.retained - before
 	return nil
 }
 

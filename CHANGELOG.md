@@ -9,13 +9,19 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add `validation.Session.FinishWithRetainedReport` and `ReportLease.Close` for
+  explicit ownership of already admitted report context across assessment stages.
+  The assessed loaders use this bounded accounting seam; report data remains
+  usable after close and existing resource-snapshot APIs are unchanged.
+
 - Add `BundledDictionarySource()` for the existing pinned SMuFL, MusicXML 4.0
   standard-sounds and IPA-derived components. Explicit offline generation
   prepares committed local assets embedded at build time; callers need no data
-  files or runtime fetch. Existing selections, profiles, nil-source behavior,
-  importer accounting and bounded evidence semantics remain unchanged. Using
-  the bundled source makes all five components reachable regardless of selected
-  relations, including the separately licensed IPA data. Binary distributions
+  files or runtime fetch. Explicit selections, profiles, explicit nil-source
+  behavior, importer accounting and bounded evidence semantics remain unchanged;
+  see the [assessed-loading migration][assessed-loading] for its wrapper defaults.
+  Referencing the bundled source or either assessed loader embeds all five
+  components regardless of options, including the separately licensed IPA data. Binary distributions
   containing those data must include the five notice/license files listed in
   [the distribution instructions][bundled-data-notices].
 
@@ -364,10 +370,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   passing on that exact main commit. This historical checkpoint does not close
   batch-6 acceptance or B5-PERF-01, or claim complete MusicXML conformance.
 
-- Add opt-in single-pass `InspectXML` and `DecodeAssessed` with explicit
-  `ProfileSourceXSDPreview`, original-byte locations, bounded retained facts and
-  independent source-conformance/model-conversion outcomes. This is a source XSD
-  preview, not a complete production MusicXML profile. Unread external DOCTYPE
+- Add single-pass original-source inspection with `InspectXML` and explicit
+  `ProfileSourceXSDPreview`, original-byte locations and bounded retained facts.
+  `DecodeAssessed` uses the same parser ownership but now fixes the semantic
+  source/model pipeline described below; it does not accept the preview profile.
+  The source-XSD preview is not a complete production MusicXML profile. Unread external DOCTYPE
   subsets prevent source acceptance, including all three committed official score
   samples; strict assessed decoding returns no document for those files. The two
   committed DOCTYPE-free opus examples are within the preview's assessable scope.
@@ -396,6 +403,43 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   this count).
 
 ### Changed
+
+- **Breaking relative to the unreleased development API, not v0.1.0:**
+  `DecodeAssessed` and `DecodeAssessedWithDictionaries` always require
+  the existing `ProfileSourceSemantics` followed by direct
+  `ProfileModelSemantics`. Nil/empty assessment options use these fixed defaults;
+  narrower, wrong-target and unknown profiles fail before I/O. `DecodeResult`
+  adds an independent `Model` report; source, conversion, model, operation or
+  close failure withholds `Document`. Replace external unkeyed `DecodeResult`
+  literals with keyed literals. Neither loader can accept an unread external
+  DOCTYPE subset, including with default options. Callers needing the old
+  nil-assessment conversion behavior must use `Decode`/`DecodeWithOptions`; these
+  are transport operations, not validation substitutes. On the asserted
+  linux/amd64 control, the 223,068-byte original MozaChlo fixture reaches the
+  64 MiB default buffer limit before EOF. The reviewer also reported a refusal
+  for 94,916-byte MozartTrio after EOF and conversion. These are
+  architecture-dependent capacity receipts; the 386 run does not assert them.
+  Resource refusal remains incomplete assessment, not normative invalidity.
+- The assessed loaders default to bundled canonical SMuFL and current IPA
+  representation evidence. Explicit dictionary overrides must include both
+  required relations and never silently fall back. A single finite account and
+  imported dictionary set cover source and model stages; no reader replay, model
+  re-encoding, external DTD fetch, profile widening or budget increase is added.
+  Inspection, standalone model assessment and package APIs retain their existing
+  explicit contracts. See the [migration guide](docs/validation/assessed-loading-pipeline.md),
+  including the external-DOCTYPE compatibility impact. Earlier receipts and
+  profile identity records remain historical evidence for their stated revisions.
+- Any binary referencing either assessed loader now embeds all five bundled
+  dictionary components, even with custom-source options. Distributors must ship
+  the five [notice/license files][bundled-data-notices], including the CC BY-SA
+  4.0 IPA-derived data and Unicode License v3 notices.
+- Each default load re-imports and verifies both required bundled components
+  before reading the document; there is no cross-call verified-set cache. At
+  reviewed head `7e7126e`, the reviewer reported about 3.08 ms and 1.55 MB allocated
+  for import alone, plus logical charges of 3,279,308 rule steps and 360,428
+  `MaxExternalBytes`. These are reviewer-reported observations, not independent
+  benchmarks or portable minima. Previously sufficient budgets can now refuse
+  before source reads. See the [cost and budget disclosure][loading-cost].
 
 - Add optional `ContextResult.SourceOrigin` for selected source-origin providers.
   External unkeyed `ContextResult` literals must migrate to keyed literals.
@@ -723,3 +767,6 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 [0.1.0]: https://github.com/go-muse/go-musicxml/releases/tag/v0.1.0
 
 [bundled-data-notices]: THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
+
+[assessed-loading]: docs/validation/assessed-loading-pipeline.md
+[loading-cost]: docs/validation/assessed-loading-pipeline.md#per-call-import-cost-and-pre-input-budget-floor

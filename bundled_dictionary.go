@@ -13,11 +13,17 @@ import (
 // dictionary components: SMuFL 1.4 glyphnames and ranges, MusicXML 4.0 standard
 // sounds, and the IPA 2015/Unicode 13 positive and representation bundles.
 //
-// Use it as DictionaryOptions.Source with explicit Selections and a dictionary
-// assessment profile. It activates no capability by itself and does not change
-// nil-source behavior. Each Open returns an independent reader over immutable
-// embedded bytes; no file access, network access or generation occurs at runtime.
-// The ordinary importer still accounts, verifies and parses those bytes.
+// Use it as DictionaryOptions.Source with explicit Selections for inspection or
+// standalone assessment. The assessed loaders select their required components
+// by default when the source is nil and selections are empty. Each Open returns
+// an independent reader over immutable embedded bytes; no file access, network
+// access or generation occurs at runtime. Each loader invocation still imports,
+// accounts, verifies and parses its selected bytes; there is no cross-call set cache.
+//
+// Any binary referencing DecodeAssessed or DecodeAssessedWithDictionaries embeds
+// all five components, even with custom-source options. Direct use of this source
+// also retains all five. Distribute the five notice/license files listed in
+// THIRD_PARTY_NOTICES.md, including the CC BY-SA and Unicode data notices.
 //
 // The IPA bundles retain their reviewed, bounded positive-witness authority;
 // they are not the original publications or a complete IPA grammar. Data retain
