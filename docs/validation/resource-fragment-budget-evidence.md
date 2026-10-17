@@ -231,6 +231,9 @@ is independent of the snapshot/index corrections.
 byte counts and distinct typed resource limits.
 `TestReviewOfficialOriginalDOCTYPEBufferAndEvidence` checks the original-byte
 finite allowance without turning unread-DTD evidence into a validation pass.
+Since the bundled official MusicXML DTD is read, the same test pins the default
+buffer refusal and then expects a satisfied assessment with 256 MiB and
+100,000,000 rule steps.
 
 ## Focused verification
 

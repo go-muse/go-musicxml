@@ -1,0 +1,1346 @@
+package musicxml
+
+import (
+	"bytes"
+	"context"
+	"encoding/xml"
+	"errors"
+	"fmt"
+	"io"
+	"net/url"
+	"path"
+	"strings"
+	"sync"
+	"unicode/utf8"
+	"unsafe"
+
+	"github.com/go-muse/go-musicxml/validation"
+)
+
+// External DTD subsets are read only from bundled official MusicXML DTDs or
+// from a caller DTDSource; nothing is fetched. A resolved subset is parsed by
+// the same declaration grammar as the internal subset, extended with the
+// external-subset productions: parameter-entity references inside markup
+// declarations and entity values, conditional sections and external parameter
+// entities.
+//
+// XML 1.0 section 2.8 processes the internal subset first, so its declarations,
+// including parameter entities that customize the external subset, bind first.
+// When the internal subset declares no parameter entity, the external subset
+// cannot depend on it: its closure is parsed once into an immutable
+// sourceDTDPrepared, which documents import after their internal subset.
+// Otherwise the external subset is parsed into the document's own store.
+
+const (
+	sourceDTDExternalSubsetRegion sourceDTDRegion = "external-subset"
+	// sourceDTDExternalEnd is returned by Peek at the end of the external
+	// subset itself. Read never crosses it.
+	sourceDTDExternalEnd rune = -3
+	// sourceDTDExternalTextBytes caps one caller-supplied DTD entity.
+	sourceDTDExternalTextBytes = 16 << 20
+	// sourceDTDMaxEntityIdentifierBytes bounds the system identifier that
+	// source origins report in validation.Location.Entry.
+	sourceDTDMaxEntityIdentifierBytes = 4096
+)
+
+type sourceDTDExternalFrameKind uint8
+
+const (
+	sourceDTDExternalRoot sourceDTDExternalFrameKind = iota
+	// A declaration-level frame holds a parameter entity referenced between
+	// declarations; its end is the parser-visible parameter boundary.
+	sourceDTDExternalDeclaration
+	// An inline frame holds a parameter entity referenced inside a markup
+	// declaration or an entity value; its end is transparent.
+	sourceDTDExternalInline
+)
+
+type sourceDTDExternalFrame struct {
+	kind sourceDTDExternalFrameKind
+	name string
+	// systemID is set for frames that hold the text of an external entity;
+	// their positions are source-origin coordinates in that entity.
+	systemID string
+	text     string
+	// padded frames read one space before and after text (XML 4.4.8)
+	// without copying it.
+	padded      bool
+	offset      int
+	position    sourceXMLPosition
+	declaration *sourceDTDDeclaration
+	// segments map the replacement text of an internal parameter entity to
+	// where it is written; cursor caches the last lookup.
+	segments []sourceDTDTextSegment
+	cursor   sourceDTDSegmentCursor
+	// charged is the buffered bytes admitted for an external entity's text,
+	// released when the frame is left.
+	charged int64
+}
+
+func (f *sourceDTDExternalFrame) pad() int {
+	if f.padded {
+		return 1
+	}
+	return 0
+}
+
+func (f *sourceDTDExternalFrame) length() int { return len(f.text) + 2*f.pad() }
+
+// at decodes the rune at offset, which is below length.
+func (f *sourceDTDExternalFrame) at(offset int) (rune, int) {
+	if f.padded && (offset == 0 || offset == len(f.text)+1) {
+		return ' ', 1
+	}
+	return utf8.DecodeRuneInString(f.text[offset-f.pad():])
+}
+
+// sourceDTDTextSegment maps replacement text from Offset on to where it is
+// written: Position in the normalized text of the external entity Entity. An
+// exact segment corresponds byte for byte; the character that a character
+// reference produces maps to the reference. An empty Entity is unknown.
+type sourceDTDTextSegment struct {
+	Offset   int
+	Entity   string
+	Position sourceXMLPosition
+	Exact    bool
+}
+
+const sourceDTDTextSegmentBytes = int64(unsafe.Sizeof(sourceDTDTextSegment{}))
+
+type sourceDTDSegmentCursor struct {
+	index, offset int
+	position      sourceXMLPosition
+	valid         bool
+}
+
+// sourceDTDSegmentPosition locates replacement offset in segments. Sequential
+// lookups advance the cursor instead of rescanning.
+func sourceDTDSegmentPosition(text string, segments []sourceDTDTextSegment, cursor *sourceDTDSegmentCursor, offset int) (string, sourceXMLPosition, bool) {
+	if len(segments) == 0 || offset < segments[0].Offset || offset > len(text) {
+		return "", sourceXMLPosition{}, false
+	}
+	if !cursor.valid || offset < cursor.offset || offset < segments[cursor.index].Offset {
+		*cursor = sourceDTDSegmentCursor{offset: segments[0].Offset, position: segments[0].Position, valid: true}
+	}
+	for cursor.index+1 < len(segments) && segments[cursor.index+1].Offset <= offset {
+		cursor.index++
+		cursor.offset, cursor.position = segments[cursor.index].Offset, segments[cursor.index].Position
+	}
+	segment := segments[cursor.index]
+	if segment.Entity == "" || !segment.Exact && offset != segment.Offset {
+		return "", sourceXMLPosition{}, false
+	}
+	for cursor.offset < offset {
+		r, size := utf8.DecodeRuneInString(text[cursor.offset:])
+		cursor.position.ByteOffset += int64(size)
+		cursor.position.advanceCoordinates(r)
+		cursor.offset += size
+	}
+	return segment.Entity, cursor.position, true
+}
+
+// sourceDTDExternalInput feeds normalized external DTD text to the
+// declaration parser. Replacement text is never re-decoded. Frames, their
+// segment lookups and parameter-entity completion are charged to account.
+type sourceDTDExternalInput struct {
+	ctx     context.Context
+	account *validation.Account
+	frames  []sourceDTDExternalFrame
+	// maxDepth bounds conditional-section and content-model nesting; deepest
+	// records the deepest nesting checked.
+	maxDepth, deepest int64
+	// segments returns the replacement map of an internal parameter entity;
+	// done records that a parameter entity's replacement was processed.
+	segments func(*sourceDTDDeclaration) []sourceDTDTextSegment
+	done     func(*sourceDTDDeclaration) error
+}
+
+const sourceDTDExternalFrameBytes = int64(unsafe.Sizeof(sourceDTDExternalFrame{}))
+
+func newSourceDTDExternalInput(ctx context.Context, account *validation.Account, root sourceDTDEntity, maxDepth int64) *sourceDTDExternalInput {
+	return &sourceDTDExternalInput{ctx: ctx, account: account, maxDepth: maxDepth, frames: []sourceDTDExternalFrame{{kind: sourceDTDExternalRoot, name: root.name, systemID: root.systemID, text: root.text, position: sourceDTDEntityStart(root.start), charged: root.charged}}}
+}
+
+// sourceDTDEntityStart defaults a zero start to the beginning of an entity.
+func sourceDTDEntityStart(start sourceXMLPosition) sourceXMLPosition {
+	if start.Line == 0 {
+		return sourceXMLPosition{Line: 1, Column: 1}
+	}
+	return start
+}
+
+func (in *sourceDTDExternalInput) unit() (rune, int, error) {
+	for {
+		top := &in.frames[len(in.frames)-1]
+		if top.offset < top.length() {
+			r, size := top.at(top.offset)
+			if r == utf8.RuneError && size <= 1 || !sourceXMLChar(r) {
+				return 0, 0, in.SyntaxError("illegal character in external DTD")
+			}
+			return r, size, nil
+		}
+		switch top.kind {
+		case sourceDTDExternalInline:
+			if err := in.pop(); err != nil {
+				return 0, 0, err
+			}
+		case sourceDTDExternalDeclaration:
+			return sourceDTDParameterBoundary, 0, nil
+		default:
+			return sourceDTDExternalEnd, 0, nil
+		}
+	}
+}
+
+// pop leaves a completely read frame: its parameter entity's replacement has
+// been processed in this context.
+func (in *sourceDTDExternalInput) pop() error {
+	top := in.frames[len(in.frames)-1]
+	in.frames = in.frames[:len(in.frames)-1]
+	_ = in.account.Release(validation.BudgetBufferedBytes, sourceDTDExternalFrameBytes+top.charged)
+	if top.declaration != nil && in.done != nil {
+		return in.done(top.declaration)
+	}
+	return nil
+}
+
+func (in *sourceDTDExternalInput) Peek() (rune, error) {
+	if err := in.ctx.Err(); err != nil {
+		return 0, err
+	}
+	r, _, err := in.unit()
+	return r, err
+}
+
+func (in *sourceDTDExternalInput) Read() (rune, error) {
+	if err := in.ctx.Err(); err != nil {
+		return 0, err
+	}
+	r, size, err := in.unit()
+	if err != nil {
+		return 0, err
+	}
+	switch r {
+	case sourceDTDExternalEnd:
+		return 0, io.EOF
+	case sourceDTDParameterBoundary:
+		return 0, in.SyntaxError("markup crosses a parameter entity boundary")
+	}
+	top := &in.frames[len(in.frames)-1]
+	top.offset += size
+	top.position.ByteOffset += int64(size)
+	top.position.advanceCoordinates(r)
+	return r, nil
+}
+
+// next reports the rune after the next one in the same frame, for recognizing a
+// parameter-entity reference. A reference never spans frames.
+func (in *sourceDTDExternalInput) next() rune {
+	top := &in.frames[len(in.frames)-1]
+	if top.offset >= top.length() {
+		return 0
+	}
+	_, size := top.at(top.offset)
+	if top.offset+size >= top.length() {
+		return 0
+	}
+	r, _ := top.at(top.offset + size)
+	return r
+}
+
+func (in *sourceDTDExternalInput) depth() int { return len(in.frames) }
+
+// file returns the innermost frame holding an external entity's text, for
+// diagnostics.
+func (in *sourceDTDExternalInput) file() *sourceDTDExternalFrame {
+	for i := len(in.frames) - 1; i > 0; i-- {
+		if in.frames[i].systemID != "" {
+			return &in.frames[i]
+		}
+	}
+	return &in.frames[0]
+}
+
+func (in *sourceDTDExternalInput) SyntaxError(message string) error {
+	file := in.file()
+	where := in.frames[0].name
+	if file.name != where {
+		where += " (" + file.name + ")"
+	}
+	return &xml.SyntaxError{Msg: "external DTD " + where + ": " + message, Line: max(file.position.Line, 0)}
+}
+
+func (in *sourceDTDExternalInput) systemID() string { return in.file().systemID }
+
+// sourcePosition locates the next character of the innermost frame in the
+// normalized text of the external entity where it is written. Text that came
+// from somewhere else, such as an internal-subset parameter entity or a
+// padding space, is unknown.
+func (in *sourceDTDExternalInput) sourcePosition() (string, sourceXMLPosition, bool) {
+	top := &in.frames[len(in.frames)-1]
+	if top.systemID != "" {
+		return top.systemID, top.position, top.position.Line > 0 && top.position.ByteOffset >= 0
+	}
+	if len(top.segments) == 0 {
+		return "", sourceXMLPosition{}, false
+	}
+	offset := top.offset - top.pad()
+	if offset < 0 {
+		return "", sourceXMLPosition{}, false
+	}
+	return sourceDTDSegmentPosition(top.text, top.segments, &top.cursor, min(offset, len(top.text)))
+}
+
+// DTDPosition reports the current coordinates where the next character is
+// written, or zero coordinates when that is unknown.
+func (in *sourceDTDExternalInput) DTDPosition() sourceXMLPosition {
+	_, position, _ := in.sourcePosition()
+	return position
+}
+
+// push enters replacement text. A padded frame reads one leading and one
+// following space, as XML 4.4.8 requires for a parameter entity included in
+// the DTD; a frame included in an entity value is not padded (XML 4.4.5).
+//
+// push owns frame.charged: it releases it if it fails.
+func (in *sourceDTDExternalInput) push(frame sourceDTDExternalFrame, padded bool) (err error) {
+	defer func() {
+		if err != nil {
+			_ = in.account.Release(validation.BudgetBufferedBytes, frame.charged)
+		}
+	}()
+	entities := 0
+	for _, f := range in.frames {
+		if f.declaration != nil && f.declaration == frame.declaration {
+			return in.SyntaxError("recursive parameter entity " + sourceXMLDiagnosticValue(frame.name))
+		}
+		if f.kind != sourceDTDExternalRoot {
+			entities++
+		}
+	}
+	if entities >= sourceXMLEntityMaxDepth {
+		return fmt.Errorf("%w: %w", ErrEntityNestingLimit, &validation.ResourceError{Kind: validation.BudgetDepth, Limit: sourceXMLEntityMaxDepth, Used: int64(entities), Requested: 1})
+	}
+	if err := in.account.Charge(validation.BudgetEvents, int64(len(frame.text))+3); err != nil {
+		return err
+	}
+	if err := in.account.Charge(validation.BudgetBufferedBytes, sourceDTDExternalFrameBytes); err != nil {
+		return err
+	}
+	// frame.position holds where an external entity's text starts.
+	frame.padded = padded
+	frame.position = sourceDTDEntityStart(frame.position)
+	if padded {
+		// The padding space is not part of the entity's text.
+		frame.position.ByteOffset--
+		frame.position.Column--
+	}
+	if frame.systemID == "" && frame.declaration != nil && in.segments != nil {
+		frame.segments = in.segments(frame.declaration)
+	}
+	in.frames = append(in.frames, frame)
+	return nil
+}
+
+func (in *sourceDTDExternalInput) PushDTDParameter(declaration *sourceDTDDeclaration, _ sourceDTDOrigin) error {
+	return in.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + declaration.Name + ";", text: declaration.Replacement, declaration: declaration}, true)
+}
+
+// FinishDTDParameter leaves a declaration-level frame. The parser records the
+// parameter entity as read itself.
+func (in *sourceDTDExternalInput) FinishDTDParameter() error {
+	top := &in.frames[len(in.frames)-1]
+	if top.kind != sourceDTDExternalDeclaration || top.offset != top.length() {
+		return in.SyntaxError("unbalanced parameter entity boundary")
+	}
+	in.frames = in.frames[:len(in.frames)-1]
+	return in.account.Release(validation.BudgetBufferedBytes, sourceDTDExternalFrameBytes+top.charged)
+}
+
+func (in *sourceDTDExternalInput) DTDInParameter() bool { return true }
+
+// DTDParameterOrigin locates a declaration where its text is written. A
+// declaration whose text comes from somewhere unknown has no span.
+func (in *sourceDTDExternalInput) DTDParameterOrigin() (sourceDTDOrigin, error) {
+	if err := in.ctx.Err(); err != nil {
+		return sourceDTDOrigin{}, err
+	}
+	origin := sourceDTDOrigin{Region: sourceDTDExternalSubsetRegion, ExternalMarkup: true}
+	if entity, position, ok := in.sourcePosition(); ok && entity != "" {
+		origin.Entity = entity
+		origin.SpanAvailable = true
+		origin.Span.Start = position
+	}
+	return origin, nil
+}
+
+// CheckDTDDepth applies the document's depth limit, like the internal
+// subset's reader, as well as the hard ceiling.
+func (in *sourceDTDExternalInput) CheckDTDDepth(depth int64) error {
+	in.deepest = max(in.deepest, depth)
+	if depth > in.maxDepth {
+		return &validation.ResourceError{Kind: validation.BudgetDepth, Limit: in.maxDepth, Requested: depth}
+	}
+	if depth > sourceDTDMaxDepth {
+		return &validation.ResourceError{Kind: validation.BudgetDepth, Limit: sourceDTDMaxDepth, Requested: depth}
+	}
+	return nil
+}
+
+// sourceDTDExternalText applies the XML 4.3.1 text-declaration and 2.11
+// end-of-line rules to the bytes of one external parsed entity. Only UTF-8 is
+// accepted. It returns the text after any text declaration and where that
+// text starts in the entity after its byte order mark is removed and its line
+// ends are normalized, the coordinate space of declaration sites.
+//
+// With a non-nil account the normalized copy, the library's only one, is
+// admitted as buffered bytes before it is made; charged is what stays
+// admitted, and the caller releases it when the text is no longer read.
+func sourceDTDExternalText(account *validation.Account, data []byte) (text string, start sourceXMLPosition, charged int64, err error) {
+	start = sourceXMLPosition{Line: 1, Column: 1}
+	if len(data) > sourceDTDExternalTextBytes {
+		return "", start, 0, &validation.ResourceError{Kind: validation.BudgetExternalBytes, Limit: sourceDTDExternalTextBytes, Requested: int64(len(data))}
+	}
+	data = bytes.TrimPrefix(data, []byte("\xef\xbb\xbf"))
+	if !utf8.Valid(data) {
+		return "", start, 0, errors.New("external DTD is not valid UTF-8")
+	}
+	if account != nil {
+		if err := account.Charge(validation.BudgetBufferedBytes, int64(len(data))); err != nil {
+			return "", start, 0, err
+		}
+		charged = int64(len(data))
+	}
+	var normalized strings.Builder
+	normalized.Grow(len(data))
+	for i := 0; i < len(data); i++ {
+		if data[i] != '\r' {
+			normalized.WriteByte(data[i])
+			continue
+		}
+		normalized.WriteByte('\n')
+		if i+1 < len(data) && data[i+1] == '\n' {
+			i++
+		}
+	}
+	text = normalized.String()
+	if account != nil && charged > int64(len(text)) {
+		_ = account.Release(validation.BudgetBufferedBytes, charged-int64(len(text)))
+		charged = int64(len(text))
+	}
+	if rest, found := strings.CutPrefix(text, "<?xml"); found && rest != "" && sourceXMLSpace(rune(rest[0])) {
+		body, err := sourceDTDTextDeclaration(rest)
+		if err != nil {
+			if account != nil {
+				_ = account.Release(validation.BudgetBufferedBytes, charged)
+			}
+			return "", start, 0, err
+		}
+		for _, r := range text[:len(text)-len(body)] {
+			start.ByteOffset += int64(utf8.RuneLen(r))
+			start.advanceCoordinates(r)
+		}
+		// The body shares the normalized copy, which stays admitted.
+		text = body
+	}
+	return text, start, charged, nil
+}
+
+// sourceDTDTextDeclaration consumes the remainder of a text declaration:
+// TextDecl ::= '<?xml' VersionInfo? EncodingDecl S? '?>'. It returns the text
+// after it and requires UTF-8.
+func sourceDTDTextDeclaration(rest string) (string, error) {
+	space := func() bool {
+		n := len(rest)
+		rest = strings.TrimLeft(rest, " \t\n")
+		return len(rest) != n
+	}
+	pseudo := func(name string) (string, bool) {
+		saved := rest
+		if !space() || !strings.HasPrefix(rest, name) {
+			rest = saved
+			return "", false
+		}
+		rest = rest[len(name):]
+		space()
+		if !strings.HasPrefix(rest, "=") {
+			rest = saved
+			return "", false
+		}
+		rest = rest[1:]
+		space()
+		if rest == "" || rest[0] != '"' && rest[0] != '\'' {
+			rest = saved
+			return "", false
+		}
+		end := strings.IndexByte(rest[1:], rest[0])
+		if end < 0 {
+			rest = saved
+			return "", false
+		}
+		value := rest[1 : end+1]
+		rest = rest[end+2:]
+		return value, true
+	}
+	if version, ok := pseudo("version"); ok && !sourceDTDVersionNum(version) {
+		return "", fmt.Errorf("malformed XML version %q in external DTD text declaration", version)
+	}
+	encoding, ok := pseudo("encoding")
+	if !ok {
+		return "", errors.New("text declaration in external DTD requires an encoding")
+	}
+	if !sourceDTDEncName(encoding) {
+		return "", fmt.Errorf("malformed encoding name %q in external DTD text declaration", encoding)
+	}
+	if normalizeCharset(encoding) != "utf8" {
+		return "", fmt.Errorf("external DTD encoding %q is not supported; only UTF-8 is", encoding)
+	}
+	space()
+	if !strings.HasPrefix(rest, "?>") {
+		return "", errors.New("malformed text declaration in external DTD")
+	}
+	return rest[2:], nil
+}
+
+// sourceDTDVersionNum reports VersionNum ::= '1.' [0-9]+.
+func sourceDTDVersionNum(value string) bool {
+	if len(value) < 3 || value[:2] != "1." {
+		return false
+	}
+	for i := 2; i < len(value); i++ {
+		if value[i] < '0' || value[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// sourceDTDEncName reports EncName ::= [A-Za-z] ([A-Za-z0-9._] | '-')*.
+func sourceDTDEncName(value string) bool {
+	for i := 0; i < len(value); i++ {
+		c := value[i]
+		letter := c >= 'A' && c <= 'Z' || c >= 'a' && c <= 'z'
+		if !letter && (i == 0 || !(c >= '0' && c <= '9' || c == '.' || c == '_' || c == '-')) {
+			return false
+		}
+	}
+	return value != ""
+}
+
+// sourceDTDPrepared is the immutable result of reading one external subset.
+// Records are values whose strings are no longer owned by any store; importing
+// stores copy them under their own accounting.
+type sourceDTDPrepared struct {
+	// declarations holds every read declaration except parameter entities,
+	// in document order, including definitions that do not bind.
+	declarations []sourceDTDDeclaration
+	// characters holds internal general entities whose replacement text is
+	// exactly one character, such as the ISO Latin entities of MusicXML.
+	characters map[string]rune
+	// namespaces holds defaulted xmlns attributes by lexical element name,
+	// with their values normalized (XML 3.3.3).
+	namespaces map[string][]xml.Attr
+	bytes      int64
+	// depth is the deepest conditional-section or content-model nesting;
+	// longest is the longest string read, parameter entities included, so
+	// that importing needs the same MaxScalarBytes as parsing.
+	depth, longest int64
+	// parameterIncomplete records a parameter entity whose replacement
+	// contains a reference that was never processed.
+	parameterIncomplete bool
+}
+
+// sourceDTDResolver locates external DTD entities. A nil resolver disables
+// external subsets, preserving the historical unread behaviour.
+type sourceDTDResolver struct {
+	source DTDSource
+}
+
+// newSourceDTDResolver ignores a nil or typed-nil source, like the dictionary
+// sources, rather than calling a method on it.
+func newSourceDTDResolver(options *DTDOptions) *sourceDTDResolver {
+	resolver := &sourceDTDResolver{}
+	if options != nil && !dictionaryNil(options.Source) {
+		resolver.source = options.Source
+	}
+	return resolver
+}
+
+// sourceDTDEntity is one resolved external entity.
+type sourceDTDEntity struct {
+	name, systemID, text string
+	bundled              bool
+	size                 int64
+	// start is where text begins in the normalized entity, after any text
+	// declaration; the zero value is its beginning.
+	start sourceXMLPosition
+	// charged is the buffered bytes admitted for text, which its reader
+	// releases.
+	charged int64
+}
+
+var bundledDTDPrepared sync.Map // file name -> *bundledDTDPreparation
+
+type bundledDTDPreparation struct {
+	once     sync.Once
+	prepared *sourceDTDPrepared
+	err      error
+}
+
+// root resolves the DOCTYPE external subset: the caller source first, then
+// the bundled DTDs. found is false when neither provides it.
+// With a non-nil account a caller entity's text is admitted to it.
+func (r *sourceDTDResolver) root(ctx context.Context, account *validation.Account, publicID, systemID string) (sourceDTDEntity, bool, error) {
+	if r == nil || publicID == "" && systemID == "" {
+		return sourceDTDEntity{}, false, nil
+	}
+	if r.source != nil {
+		data, err := r.source.OpenDTD(ctx, DTDRequest{PublicID: publicID, SystemID: systemID})
+		switch {
+		case err == nil:
+			text, start, charged, textErr := sourceDTDExternalText(account, data)
+			if textErr != nil {
+				var resource *validation.ResourceError
+				if account != nil && errors.As(textErr, &resource) && resource.Kind == validation.BudgetBufferedBytes {
+					return sourceDTDEntity{}, false, textErr
+				}
+				return sourceDTDEntity{}, false, &DTDError{PublicID: publicID, SystemID: systemID, Err: textErr}
+			}
+			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data)), start: start, charged: charged}, true, nil
+		case errors.Is(err, ErrDTDNotFound):
+		case ctx.Err() != nil:
+			return sourceDTDEntity{}, false, ctx.Err()
+		default:
+			return sourceDTDEntity{}, false, &DTDError{PublicID: publicID, SystemID: systemID, Err: err}
+		}
+	}
+	file, ok := bundledDTDLookup(publicID, systemID, "")
+	if !ok {
+		return sourceDTDEntity{}, false, nil
+	}
+	return sourceDTDEntity{name: file, systemID: bundledDTDSystemPrefixes[0] + file, bundled: true}, true, nil
+}
+
+// prepare returns the immutable external subset named by a DOCTYPE, or nil
+// when no source or bundled DTD provides it. A bundled closure is prepared
+// once per process; a caller-supplied one for every call.
+func (r *sourceDTDResolver) prepare(ctx context.Context, publicID, systemID string) (*sourceDTDPrepared, error) {
+	entity, found, err := r.root(ctx, nil, publicID, systemID)
+	if err != nil || !found {
+		return nil, err
+	}
+	return r.prepareEntity(ctx, entity, publicID, systemID)
+}
+
+// prepareEntity prepares a resolved DOCTYPE external subset.
+func (r *sourceDTDResolver) prepareEntity(ctx context.Context, entity sourceDTDEntity, publicID, systemID string) (*sourceDTDPrepared, error) {
+	if !entity.bundled {
+		prepared, err := prepareSourceDTD(ctx, r, entity, false)
+		if err != nil {
+			return nil, &DTDError{PublicID: publicID, SystemID: systemID, Err: err}
+		}
+		return prepared, nil
+	}
+	value, _ := bundledDTDPrepared.LoadOrStore(entity.name, &bundledDTDPreparation{})
+	preparation := value.(*bundledDTDPreparation)
+	preparation.once.Do(func() {
+		// The bundled closure is static, so its one preparation is not tied to
+		// any caller's cancellation.
+		text, start, err := bundledDTDEntity(entity.name)
+		if err != nil {
+			preparation.err = err
+			return
+		}
+		entity.text, entity.size, entity.start = text, int64(len(text)), start
+		preparation.prepared, preparation.err = prepareSourceDTD(context.Background(), &sourceDTDResolver{}, entity, true)
+	})
+	if preparation.err != nil {
+		return nil, &DTDError{PublicID: publicID, SystemID: systemID, Err: preparation.err}
+	}
+	return preparation.prepared, nil
+}
+
+// parameter resolves an external parameter entity relative to base, the
+// system identifier of the entity containing its declaration (XML 4.2.2).
+// Entities of a caller-supplied subset ask the caller first; bundled
+// closures never do.
+func (r *sourceDTDResolver) parameter(ctx context.Context, account *validation.Account, d *sourceDTDDeclaration, base string, bundledOnly bool) (sourceDTDEntity, bool, error) {
+	if !bundledOnly && r.source != nil {
+		data, err := r.source.OpenDTD(ctx, DTDRequest{PublicID: d.PublicID, SystemID: d.SystemID, BaseSystemID: base})
+		switch {
+		case err == nil:
+			text, start, charged, textErr := sourceDTDExternalText(account, data)
+			if textErr != nil {
+				var resource *validation.ResourceError
+				if errors.As(textErr, &resource) && resource.Kind == validation.BudgetBufferedBytes {
+					return sourceDTDEntity{}, false, textErr
+				}
+				return sourceDTDEntity{}, false, &DTDError{PublicID: d.PublicID, SystemID: d.SystemID, Err: textErr}
+			}
+			systemID := sourceDTDJoinSystemID(base, d.SystemID)
+			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data)), start: start, charged: charged}, true, nil
+		case errors.Is(err, ErrDTDNotFound):
+		case ctx.Err() != nil:
+			return sourceDTDEntity{}, false, ctx.Err()
+		default:
+			return sourceDTDEntity{}, false, &DTDError{PublicID: d.PublicID, SystemID: d.SystemID, Err: err}
+		}
+	}
+	file, ok := bundledDTDLookup(d.PublicID, d.SystemID, base)
+	if !ok {
+		return sourceDTDEntity{}, false, nil
+	}
+	text, start, err := bundledDTDEntity(file)
+	if err != nil {
+		return sourceDTDEntity{}, false, err
+	}
+	return sourceDTDEntity{name: file, systemID: bundledDTDSystemPrefixes[0] + file, text: text, bundled: true, size: int64(len(text)), start: start}, true, nil
+}
+
+// sourceDTDJoinSystemID resolves a relative system identifier against an
+// absolute URI base (RFC 3986), or against a relative base path.
+func sourceDTDJoinSystemID(base, systemID string) string {
+	if base == "" || systemID == "" {
+		return systemID
+	}
+	if reference, err := url.Parse(systemID); err == nil {
+		if reference.IsAbs() {
+			return systemID
+		}
+		if parsed, err := url.Parse(base); err == nil && parsed.IsAbs() {
+			return parsed.ResolveReference(reference).String()
+		}
+	}
+	if strings.HasPrefix(systemID, "/") {
+		return systemID
+	}
+	return path.Clean(path.Join(path.Dir(base), systemID))
+}
+
+// sourceDTDExternalError keeps an external DTD's syntax error from matching
+// *xml.SyntaxError, which identifies a defect in the document itself.
+func sourceDTDExternalError(err error) error {
+	var syntax *xml.SyntaxError
+	if errors.As(err, &syntax) {
+		if syntax.Line > 0 {
+			return fmt.Errorf("%s (line %d)", syntax.Msg, syntax.Line)
+		}
+		return errors.New(syntax.Msg)
+	}
+	return err
+}
+
+// parseExternalSubset parses one external subset into store, whose account
+// also charges the parameter-entity replacement work and whose maxDepth
+// bounds its nesting. bundledOnly closures never consult the caller source.
+// It returns the bytes read and the deepest nesting.
+func parseExternalSubset(ctx context.Context, store *sourceDTDStore, resolver *sourceDTDResolver, root sourceDTDEntity, bundledOnly bool, maxDepth int64) (int64, int64, error) {
+	size := root.size
+	input := newSourceDTDExternalInput(ctx, store.account, root, maxDepth)
+	input.segments = store.replacementSegments
+	input.done = store.parameterRead
+	// Frames left by a failure, and the root's text, are released here.
+	defer func() {
+		released := int64(len(input.frames)-1) * sourceDTDExternalFrameBytes
+		for _, f := range input.frames {
+			released += f.charged
+		}
+		_ = store.account.Release(validation.BudgetBufferedBytes, released)
+	}()
+	p := sourceDTDParser{input: input, store: store, external: true}
+	p.resolveParameter = func(d *sourceDTDDeclaration) (sourceDTDEntity, bool, error) {
+		base, recorded := store.declarationBase(d)
+		if !recorded {
+			base = d.Origin.Entity
+		}
+		entity, found, err := resolver.parameter(ctx, store.account, d, base, bundledOnly)
+		if err == nil && found {
+			if err = store.account.Charge(validation.BudgetExternalBytes, entity.size); err != nil {
+				_ = store.account.Release(validation.BudgetBufferedBytes, entity.charged)
+				return sourceDTDEntity{}, false, err
+			}
+			size += entity.size
+		}
+		return entity, found, err
+	}
+	defer func() { store.release(int64(cap(p.parameters)) * int64(unsafe.Sizeof((*sourceDTDDeclaration)(nil)))) }()
+	p.subset()
+	if p.err == nil && (p.conditionalDepth != 0 || len(p.parameters) != 0) {
+		p.fail("unterminated conditional section or parameter entity")
+	}
+	return size, input.deepest, p.err
+}
+
+// prepareSourceDTD parses one external subset with a private account and
+// returns its read declarations. It serves the bundled closures, which are
+// static, and ordinary decoding, which has no budgets; assessments parse a
+// caller-supplied subset into the document's store instead. Its bounded
+// events also limit parameter-entity amplification.
+func prepareSourceDTD(ctx context.Context, resolver *sourceDTDResolver, root sourceDTDEntity, bundledOnly bool) (*sourceDTDPrepared, error) {
+	account, err := validation.NewBudgetAccount(validation.Budgets{})
+	if err != nil {
+		return nil, err
+	}
+	store, err := newSourceDTDStore(ctx, account, sourceDTDStandaloneAbsent)
+	if err != nil {
+		return nil, err
+	}
+	defer store.Close()
+	store.parsed = true
+	size, depth, err := parseExternalSubset(ctx, store, resolver, root, bundledOnly, sourceDTDMaxDepth)
+	if err != nil {
+		return nil, sourceDTDExternalError(err)
+	}
+	if store.state.ParameterEntityUnread {
+		return nil, fmt.Errorf("external DTD references the unavailable parameter entity %q", store.state.FirstUnreadParameter)
+	}
+	d, message, err := store.defaultReferenceViolation(false)
+	if err != nil {
+		return nil, err
+	}
+	if d != nil {
+		return nil, sourceDTDExternalDefect(message, d.Origin)
+	}
+	prepared := &sourceDTDPrepared{bytes: size, depth: depth, parameterIncomplete: store.parameterReplacementUnread()}
+	for _, d := range store.Declarations() {
+		prepared.longest = max(prepared.longest, sourceDTDRecordLongest(d))
+		if d.Kind == sourceDTDParameterEntityDeclaration {
+			continue
+		}
+		record := *d
+		record.Origin.Ancestry = nil
+		prepared.declarations = append(prepared.declarations, record)
+		if !record.Binding {
+			continue
+		}
+		switch {
+		case record.Kind == sourceDTDGeneralEntityDeclaration && !record.External && record.Notation == "":
+			if r, n := utf8.DecodeRuneInString(record.Replacement); n == len(record.Replacement) && n > 0 && r != '<' && r != '&' && sourceXMLChar(r) {
+				if prepared.characters == nil {
+					prepared.characters = make(map[string]rune)
+				}
+				prepared.characters[record.Name] = r
+			}
+		case record.Kind == sourceDTDAttributeDeclaration && (record.Name == "xmlns" || strings.HasPrefix(record.Name, "xmlns:")) &&
+			(record.DefaultKind == sourceDTDDefaultValue || record.DefaultKind == sourceDTDDefaultFixed):
+			attrName, valid := sourceXMLQName(record.Name)
+			if !valid {
+				continue
+			}
+			value, ok, err := store.normalizeDefault(record.RawValue, record.AttributeType != "CDATA")
+			if err != nil {
+				return nil, err
+			}
+			if !ok {
+				continue
+			}
+			if prepared.namespaces == nil {
+				prepared.namespaces = make(map[string][]xml.Attr)
+			}
+			prepared.namespaces[record.Element] = append(prepared.namespaces[record.Element], xml.Attr{Name: attrName, Value: value})
+		}
+	}
+	return prepared, nil
+}
+
+// normalizeDefault normalizes an attribute default from the store's own
+// declarations (XML 3.3.3): character references append their character,
+// entity references are replaced recursively, and literal white space becomes
+// a space; tokenized types also trim and collapse spaces. ok is false for a
+// value that is not a well-formed attribute value, such as one that reaches
+// an external, unparsed or undeclared entity or a <.
+func (s *sourceDTDStore) normalizeDefault(raw string, tokenized bool) (string, bool, error) {
+	var out strings.Builder
+	var active []*sourceDTDDeclaration
+	var expand func(text string) (bool, error)
+	expand = func(text string) (bool, error) {
+		if err := s.account.Charge(validation.BudgetEvents, int64(len(text))+1); err != nil {
+			return false, err
+		}
+		for i := 0; i < len(text); {
+			r, size := utf8.DecodeRuneInString(text[i:])
+			switch {
+			case r == '<':
+				return false, nil
+			case r == '&':
+				end := strings.IndexByte(text[i:], ';')
+				if end < 0 {
+					return false, nil
+				}
+				reference := text[i+1 : i+end]
+				i += end + 1
+				if c, count, valid, err := s.replacementCharacterReference(text[i-end-1 : i]); err != nil {
+					return false, err
+				} else if count != 0 {
+					if !valid {
+						return false, nil
+					}
+					out.WriteRune(c)
+					continue
+				}
+				if c := sourceDTDPredefinedEntity(reference); c != 0 {
+					out.WriteRune(c)
+					continue
+				}
+				entity, known := s.Entity(reference, false)
+				if !known || entity.External || entity.Notation != "" || len(active) >= sourceXMLEntityMaxDepth {
+					return false, nil
+				}
+				for _, a := range active {
+					if a == entity {
+						return false, nil
+					}
+				}
+				active = append(active, entity)
+				ok, err := expand(entity.Replacement)
+				active = active[:len(active)-1]
+				if !ok || err != nil {
+					return false, err
+				}
+				continue
+			case sourceXMLSpace(r):
+				out.WriteByte(' ')
+				i += size
+			default:
+				out.WriteRune(r)
+				i += size
+			}
+			if out.Len() > sourceDTDExternalTextBytes {
+				return false, &validation.ResourceError{Kind: validation.BudgetScalarBytes, Limit: sourceDTDExternalTextBytes, Requested: int64(out.Len())}
+			}
+		}
+		return true, nil
+	}
+	ok, err := expand(raw)
+	if !ok || err != nil {
+		return "", false, err
+	}
+	value := out.String()
+	if tokenized {
+		value = strings.Join(strings.FieldsFunc(value, func(r rune) bool { return r == ' ' }), " ")
+	}
+	return value, true, nil
+}
+
+// sourceDTDPredefinedEntity returns the character of a predefined entity, or
+// zero.
+func sourceDTDPredefinedEntity(name string) rune {
+	switch name {
+	case "amp":
+		return '&'
+	case "lt":
+		return '<'
+	case "gt":
+		return '>'
+	case "apos":
+		return '\''
+	case "quot":
+		return '"'
+	}
+	return 0
+}
+
+// sourceDTDExternalDefect describes a defect in an external DTD declaration
+// without the *xml.SyntaxError identity of document defects.
+func sourceDTDExternalDefect(message string, origin sourceDTDOrigin) error {
+	if origin.SpanAvailable && origin.Entity != "" {
+		return fmt.Errorf("%s (external DTD %s, line %d)", message, sourceXMLDiagnosticValue(origin.Entity), origin.Span.Start.Line)
+	}
+	return errors.New(message)
+}
+
+// sourceDTDRecordBytes is the retained string storage of one declaration.
+func sourceDTDRecordBytes(d *sourceDTDDeclaration) int64 {
+	return int64(len(d.Name) + len(d.Element) + len(d.AttributeType) + len(d.RawType) + len(d.RawValue) + len(d.Replacement) + len(d.PublicID) + len(d.SystemID) + len(d.Notation) + len(d.Origin.Entity))
+}
+
+// importExternalSubset appends a prepared external subset after the internal
+// subset. The store's ordinary first-binding rule keeps internal declarations,
+// and an earlier unread parameter entity still cuts off later bindings. The
+// preparation was not charged to this store's account, so its nesting and
+// its longest string are checked against this account's limits here.
+func (s *sourceDTDStore) importExternalSubset(prepared *sourceDTDPrepared, maxDepth int64) error {
+	if prepared.depth > maxDepth {
+		return &validation.ResourceError{Kind: validation.BudgetDepth, Limit: maxDepth, Requested: prepared.depth}
+	}
+	if err := s.account.Check(validation.BudgetScalarBytes, prepared.longest); err != nil {
+		return err
+	}
+	if err := s.account.Charge(validation.BudgetExternalBytes, prepared.bytes); err != nil {
+		return err
+	}
+	for _, d := range prepared.declarations {
+		d.Origin.Region, d.Origin.ExternalMarkup = sourceDTDExternalSubsetRegion, true
+		if err := s.reserve(sourceDTDRecordBytes(&d)); err != nil {
+			return err
+		}
+		if err := s.add(d); err != nil {
+			return err
+		}
+	}
+	s.externalParameterIncomplete = prepared.parameterIncomplete
+	return nil
+}
+
+// sourceDTDRecordLongest is the longest retained string of one declaration.
+func sourceDTDRecordLongest(d *sourceDTDDeclaration) int64 {
+	return int64(max(len(d.Name), len(d.Element), len(d.AttributeType), len(d.RawType), len(d.RawValue), len(d.Replacement), len(d.PublicID), len(d.SystemID), len(d.Notation)))
+}
+
+// completeExternalSubset recomputes declaration completeness once the
+// external subset has been read, including parameter entities that it
+// processed.
+func (s *sourceDTDStore) completeExternalSubset() {
+	s.state.ExternalSubsetUnread = false
+	complete := !s.failed && s.state.GrammarComplete && !s.state.ParameterEntityUnread
+	s.state.DeclarationsComplete = complete
+	s.state.AttributeDeclarationsComplete = complete
+	s.state.UnparsedEntitiesComplete = complete
+	s.state.ParameterEntityWellFormednessIncomplete = s.externalParameterIncomplete || s.parameterReplacementUnread()
+	s.refreshWellFormedness()
+}
+
+// parameterReplacementUnread reports a bound parameter entity whose
+// replacement contains a reference and was never processed.
+func (s *sourceDTDStore) parameterReplacementUnread() bool {
+	for _, d := range s.declarations {
+		if d.Parameter && d.Binding && strings.Contains(d.Replacement, "%") && !s.parametersRead[d] {
+			return true
+		}
+	}
+	return false
+}
+
+// declaresParameterEntity reports whether the internal subset bound a
+// parameter entity that the external subset could reference.
+func (s *sourceDTDStore) declaresParameterEntity() bool {
+	for _, d := range s.declarations {
+		if d.Kind == sourceDTDParameterEntityDeclaration && d.Binding {
+			return true
+		}
+	}
+	return false
+}
+
+// conditionalSection parses the remainder of <![ after the opening bracket.
+// Its keyword may come from a parameter-entity reference.
+func (p *sourceDTDParser) conditionalSection() {
+	p.inDeclaration = true
+	p.space()
+	keyword := p.keyword()
+	p.space()
+	p.inDeclaration = false
+	p.expect('[')
+	if p.err != nil {
+		return
+	}
+	switch keyword {
+	case "INCLUDE":
+		p.conditionalDepth++
+		p.checkDepth(int64(p.conditionalDepth))
+		if p.err == nil {
+			p.subset()
+		}
+		p.conditionalDepth--
+	case "IGNORE":
+		p.ignoredSection()
+	default:
+		p.fail("expected INCLUDE or IGNORE in a conditional section")
+	}
+}
+
+// closeConditionalSection consumes ]]>. A section must close in the parameter
+// entity replacement text that opened it (XML 2.8, PE Between Declarations).
+func (p *sourceDTDParser) closeConditionalSection() {
+	if n := len(p.parameterConditionals); n != 0 && p.conditionalDepth <= p.parameterConditionals[n-1] {
+		p.fail("conditional section closes outside the parameter entity that opened it")
+		return
+	}
+	p.read()
+	p.expect(']')
+	p.expect('>')
+}
+
+// ignoredSection skips an IGNORE section, including nested sections, without
+// recognizing references or declarations (XML 3.4).
+func (p *sourceDTDParser) ignoredSection() {
+	depth := 1
+	var previous2, previous1 rune
+	for p.err == nil {
+		r := p.read()
+		switch {
+		case previous2 == '<' && previous1 == '!' && r == '[':
+			depth++
+			r = 0
+		case previous2 == ']' && previous1 == ']' && r == '>':
+			depth--
+			if depth == 0 {
+				return
+			}
+			r = 0
+		}
+		previous2, previous1 = previous1, r
+	}
+}
+
+// parameterText resolves the replacement text of a parameter entity
+// referenced in the external subset.
+func (p *sourceDTDParser) parameterText(name string) (*sourceDTDDeclaration, sourceDTDEntity, bool) {
+	d, known := p.store.Entity(name, true)
+	if !known {
+		p.unreadParameter(name)
+		return nil, sourceDTDEntity{}, false
+	}
+	if !d.External {
+		return d, sourceDTDEntity{name: "%" + name + ";", text: d.Replacement}, true
+	}
+	entity, found, err := p.resolveParameter(d)
+	if err != nil {
+		p.err = err
+		return nil, sourceDTDEntity{}, false
+	}
+	if !found {
+		p.unreadParameter(name)
+		return nil, sourceDTDEntity{}, false
+	}
+	return d, entity, true
+}
+
+// referenceName consumes name; after the percent sign of a parameter-entity
+// reference. Inside a markup declaration the reference is replaced, so it is
+// not captured; inside a literal it is part of the raw spelling.
+func (p *sourceDTDParser) referenceName(capture bool) string {
+	if !capture {
+		saved := p.capture
+		p.capture = nil
+		defer func() { p.capture = saved }()
+	}
+	name := p.name(sourceDTDNCName, true)
+	if p.err != nil {
+		return ""
+	}
+	if p.read() != ';' {
+		p.releaseBytes(int64(len(name)))
+		p.fail("parameter entity reference requires ;")
+		return ""
+	}
+	return name
+}
+
+// declarationReference replaces a parameter-entity reference recognized inside
+// a markup declaration of the external subset with its padded replacement.
+func (p *sourceDTDParser) declarationReference(input *sourceDTDExternalInput) {
+	if _, err := input.Read(); err != nil {
+		p.err = err
+		return
+	}
+	name := p.referenceName(false)
+	if p.err != nil {
+		return
+	}
+	defer p.releaseBytes(int64(len(name)))
+	d, entity, ok := p.parameterText(name)
+	if !ok {
+		p.fail("undeclared or unavailable parameter entity in external DTD declaration")
+		return
+	}
+	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d, position: entity.start, charged: entity.charged}, true)
+}
+
+// literalParameter includes a parameter entity's replacement text in an entity
+// value literal: it is processed in place of the reference, unpadded, so its
+// own references are recognized and its quotes do not end the literal (XML
+// 4.4.5). The percent sign has already been read.
+func (p *sourceDTDParser) literalParameter(input *sourceDTDExternalInput) {
+	name := p.referenceName(true)
+	if p.err != nil {
+		return
+	}
+	defer p.releaseBytes(int64(len(name)))
+	d, entity, ok := p.parameterText(name)
+	if !ok {
+		return
+	}
+	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d, position: entity.start, charged: entity.charged}, false)
+}
+
+// externalSystemID is the frame identity for an external parameter entity's
+// text; internal replacement text has none.
+func (e sourceDTDEntity) externalSystemID(d *sourceDTDDeclaration) string {
+	if d != nil && d.External {
+		return e.systemID
+	}
+	return ""
+}
+
+func (p *sourceDTDParser) unreadParameter(name string) {
+	p.info.Unsupported = true
+	p.info.WellFormednessIncomplete = true
+	p.store.state.ParameterEntityUnread = true
+	if p.store.state.FirstUnreadParameter == "" {
+		p.store.state.FirstUnreadParameter = strings.Clone(name)
+	}
+	p.store.state.BindingCutoff = true
+}
+
+// pushExternalParameter enters an external parameter entity referenced between
+// declarations.
+func (p *sourceDTDParser) pushExternalParameter(d *sourceDTDDeclaration) bool {
+	input, ok := p.input.(*sourceDTDExternalInput)
+	if !ok || p.resolveParameter == nil {
+		return false
+	}
+	entity, found, err := p.resolveParameter(d)
+	if err != nil {
+		p.err = err
+		return true
+	}
+	if !found {
+		return false
+	}
+	next, err := p.store.growPointers(p.parameters)
+	if err != nil {
+		_ = p.store.account.Release(validation.BudgetBufferedBytes, entity.charged)
+		p.err = err
+		return true
+	}
+	p.parameters = next
+	if p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + d.Name + ";", systemID: entity.systemID, text: entity.text, declaration: d, position: entity.start, charged: entity.charged}, true); p.err != nil {
+		return true
+	}
+	p.parameters = append(p.parameters, d)
+	p.parameterConditionals = append(p.parameterConditionals, p.conditionalDepth)
+	return true
+}
+
+// importExternalDTD reads the DOCTYPE external subset into the document's
+// declaration store after its internal subset. An identifier that no source
+// or bundled DTD provides stays unread, as before.
+func (r *sourceXMLTokenReader) importExternalDTD() error {
+	state := r.dtdStore.State()
+	if r.dtdResolver == nil || !state.ExternalSubsetUnread {
+		return nil
+	}
+	root, found, err := r.dtdResolver.root(r.cursor.ctx, r.account, state.PublicID, state.SystemID)
+	if err != nil || !found {
+		return err
+	}
+	if root.bundled && !r.dtdStore.declaresParameterEntity() {
+		// The bundled closure cannot depend on this document, so its one
+		// preparation is imported.
+		prepared, err := r.dtdResolver.prepareEntity(r.cursor.ctx, root, state.PublicID, state.SystemID)
+		if err != nil {
+			return err
+		}
+		if err := r.dtdStore.importExternalSubset(prepared, r.maxDepth); err != nil {
+			return err
+		}
+	} else if err := r.parseExternalDTD(root, state); err != nil {
+		return err
+	}
+	r.dtdStore.completeExternalSubset()
+	// XML 4.1 orders an entity declaration before a direct reference in an
+	// attribute default across both subsets, internal first.
+	d, message, err := r.dtdStore.defaultReferenceViolation(state.ParameterEntityReferences)
+	if err != nil || d == nil {
+		return err
+	}
+	if d.Origin.Region == sourceDTDExternalSubsetRegion {
+		return &DTDError{PublicID: state.PublicID, SystemID: state.SystemID, Err: sourceDTDExternalDefect(message, d.Origin)}
+	}
+	return sourceDTDDiagnosticAt(r.syntax(message), d.Origin)
+}
+
+// parseExternalDTD parses a caller-supplied external subset, or one that
+// internal parameter entities can customize, into the document's store under
+// its account and depth limit.
+func (r *sourceXMLTokenReader) parseExternalDTD(root sourceDTDEntity, state sourceDTDStoreState) error {
+	if root.bundled {
+		text, start, err := bundledDTDEntity(root.name)
+		if err != nil {
+			return &DTDError{PublicID: state.PublicID, SystemID: state.SystemID, Err: err}
+		}
+		root.text, root.size, root.start = text, int64(len(text)), start
+	}
+	if err := r.account.Charge(validation.BudgetExternalBytes, root.size); err != nil {
+		_ = r.account.Release(validation.BudgetBufferedBytes, root.charged)
+		return err
+	}
+	if _, _, err := parseExternalSubset(r.cursor.ctx, r.dtdStore, r.dtdResolver, root, root.bundled, r.maxDepth); err != nil {
+		var resource *validation.ResourceError
+		if errors.As(err, &resource) || r.cursor.ctx.Err() != nil {
+			return err
+		}
+		return &DTDError{PublicID: state.PublicID, SystemID: state.SystemID, Err: sourceDTDExternalError(err)}
+	}
+	return nil
+}
+
+// legacyExternalDTDApplies reports whether the grammar-only path may use its
+// external subset. That path does not interpret an internal subset, so any
+// internal entity or attribute-list declaration or parameter-entity reference,
+// which could override the external subset, keeps the historical result.
+func (r *sourceXMLTokenReader) legacyExternalDTDApplies() bool {
+	return !r.internalDTD && r.dtdResolver != nil && r.dtd.ExternalSubset &&
+		!r.dtd.HasEntityDeclarations && !r.dtd.HasAttributeDeclarations && !r.dtd.HasParameterReferences
+}
+
+func (r *sourceXMLTokenReader) legacyExternalDTD() (*sourceDTDPrepared, error) {
+	if !r.externalDTDResolved {
+		r.externalDTDResolved = true
+		r.externalDTD, r.externalDTDErr = r.dtdResolver.prepare(r.cursor.ctx, r.dtd.PublicID, r.dtd.SystemID)
+	}
+	return r.externalDTD, r.externalDTDErr
+}
+
+// externalCharacterEntity expands a single-character general entity declared
+// by the external subset on the grammar-only path. A standalone document may
+// not use it (XML 4.1, Entity Declared). Attribute normalization turns a
+// whitespace replacement into a space (XML 3.3.3).
+func (r *sourceXMLTokenReader) externalCharacterEntity(name string, context sourceXMLEntityContext) (rune, bool, error) {
+	if !r.legacyExternalDTDApplies() || r.standalone == sourceDTDStandaloneYes {
+		return 0, false, nil
+	}
+	prepared, err := r.legacyExternalDTD()
+	if err != nil || prepared == nil {
+		return 0, false, err
+	}
+	c, ok := prepared.characters[name]
+	if !ok {
+		return 0, false, nil
+	}
+	r.metadata.Reference = true
+	if context == sourceEntityAttribute && sourceXMLSpace(c) {
+		c = ' '
+	}
+	return c, true, nil
+}
+
+// applyExternalNamespaceDefaults adds namespace declarations that the
+// external subset defaults for an element and the start tag omits. Other
+// defaulted attributes are deliberately not added on the grammar-only path. A
+// DTD resolution error is kept for unboundPrefix, which reports it only if a
+// binding is actually missing.
+func (r *sourceXMLTokenReader) applyExternalNamespaceDefaults(element string, attributes []xml.Attr, metadata []sourceXMLAttribute) ([]xml.Attr, []sourceXMLAttribute) {
+	if !r.legacyExternalDTDApplies() {
+		return attributes, metadata
+	}
+	prepared, _ := r.legacyExternalDTD()
+	if prepared == nil {
+		return attributes, metadata
+	}
+	for _, def := range prepared.namespaces[element] {
+		specified := false
+		for _, a := range attributes {
+			if a.Name == def.Name {
+				specified = true
+				break
+			}
+		}
+		if !specified {
+			attributes = append(attributes, def)
+			metadata = append(metadata, sourceXMLAttribute{NamespaceDeclaration: true})
+		}
+	}
+	return attributes, metadata
+}

@@ -88,7 +88,7 @@ func buildSourceAuxiliaryCompositionDefinitions() (*assessmentDefinitions, error
 				p.Support[j].Rule = replacement
 			}
 		}
-		p.NormativeClosure = "Explicit source-only pinned MusicXML 4.0 " + string(assembly) + " XSD assessment after bounded actually-read internal-DTD processing. Effective values, physical occurrence evidence and retained lexical spellings remain independently qualified. Source origins retain separately available physical, declaration and reference sites. Unread external declarations, syntax, unsupported capabilities and incomplete provenance retain their gates. Schema hints never fetch or select a schema. No Document model, automatic auxiliary discovery, application mapping choice, playback or standalone package-conformance claim."
+		p.NormativeClosure = "Explicit source-only pinned MusicXML 4.0 " + string(assembly) + " XSD assessment after bounded actually-read internal-DTD processing, including a DOCTYPE external subset read from the bundled official MusicXML DTDs or a caller DTD source. Effective values, physical occurrence evidence and retained lexical spellings remain independently qualified. Source origins retain separately available physical, declaration and reference sites. Unrecognized external declarations, syntax, unsupported capabilities and incomplete provenance retain their gates. Schema hints never fetch or select a schema. No Document model, automatic auxiliary discovery, application mapping choice, playback or standalone package-conformance claim."
 		if assembly == validation.AssemblyContainer {
 			p.NormativeClosure += " Ordered rootfile inventory and effective path/media-type values preserve content prerequisites; physical Raw never reconstructs defaults or entity replacement spellings."
 		} else {

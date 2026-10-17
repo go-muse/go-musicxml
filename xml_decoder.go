@@ -15,8 +15,8 @@ func newXMLDecoder(reader io.Reader) (*xml.Decoder, error) {
 	return xml.NewTokenDecoder(source), nil
 }
 
-func newDepthLimitedXMLDecoder(ctx context.Context, reader io.Reader, maximum int) (*xml.Decoder, error) {
-	source, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, MaxDepth: maximum})
+func newDepthLimitedXMLDecoder(ctx context.Context, reader io.Reader, maximum int, dtd *DTDOptions) (*xml.Decoder, error) {
+	source, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, MaxDepth: maximum, DTD: newSourceDTDResolver(dtd)})
 	if err != nil {
 		return nil, err
 	}

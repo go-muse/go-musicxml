@@ -140,7 +140,8 @@ options use the documented safe default.
 XML reading rejects duplicate attributes (including collisions after namespace
 expansion) and repeated DOCTYPE declarations or declarations inside/after the
 root, even in skipped unknown or foreign-namespace subtrees. A single prolog
-DOCTYPE is accepted without loading external DTDs; an XML declaration is not
+DOCTYPE is accepted; external DTDs are never fetched (see
+[External DTD subsets](#external-dtd-subsets)). An XML declaration is not
 required. If present, the XML declaration must be first, before whitespace,
 comments, processing instructions or DOCTYPE; an encoding byte order mark is
 allowed before it. Repeated declarations and all other case variants of the
@@ -168,9 +169,11 @@ errors do not expose a decoded document or become successful end-of-input.
 Literal attribute tabs and line endings normalize to spaces, while numeric
 references preserve their referenced whitespace. Contradictory BOM/encoding
 declarations, undeclared prefixes, malformed declaration/DTD grammar and illegal
-reserved namespace bindings are now rejected. DTD defaults and replacement text
-are not implemented or fetched; unsupported declaration WFC/infoset dependencies
-are explicit assessment limitations. See the
+reserved namespace bindings are now rejected. Ordinary decoding does not apply
+DTD attribute defaults or internal-subset entity replacement text; it uses a
+resolved external subset only as described under
+[External DTD subsets](#external-dtd-subsets). Unsupported declaration
+WFC/infoset dependencies are explicit assessment limitations. See the
 [source parser scope](docs/validation/source-parser-scope.md) for the precise
 syntax, compatibility, encoding and DTD boundary.
 
@@ -229,6 +232,105 @@ Further differences of direct `encoding/xml` use:
 
 `EncodeWithOptions` writes an XML declaration or indented output with the
 same checks as `Encode`; prefer it to configuring an `xml.Encoder` directly.
+
+### External DTD subsets
+
+The official MusicXML 4.0 DTD modules are bundled in `schema/musicxml-4.0`
+next to the XSD files and pinned by SHA-256. A DOCTYPE external subset is
+resolved, never fetched:
+
+- A public identifier listed in the official
+  `schema/musicxml-4.0/catalog.xml` selects its bundled file. As in that
+  catalog, the identifiers of MusicXML 1.0 through 3.1 resolve to the
+  backward-compatible 4.0 files. The MIDI DTD is not bundled.
+- Otherwise an official system identifier `http(s)://www.musicxml.org/dtds/`
+  (or `musicxml.org/dtds/`) selects the file of the same name, which is the
+  current 4.0 version.
+- `DTDOptions.Source` is asked first. Returning `ErrDTDNotFound` for the
+  DOCTYPE external subset selects the bundled closure, including its modules.
+  When the source supplies the external subset, each external parameter entity
+  it references is requested from the source and then from the bundled files;
+  `DTDRequest.BaseSystemID` names the external entity that was being read when
+  its declaration was parsed, for resolving a relative system identifier (XML
+  4.2.2). Any other source error is reported as
+  a `*DTDError`, which matches `ErrDTDUnavailable`, as do caller bytes that are
+  not a well-formed UTF-8 external subset, including a text declaration whose
+  version is not `1.` followed by digits or whose encoding name is malformed
+  or not UTF-8. A `*DTDError` never matches `*xml.SyntaxError`. One caller
+  entity may not exceed 16 MiB. A typed-nil source is ignored.
+- Any other identifier leaves the external subset unread, as before.
+
+The source is configured through `DecodeOptions.DTD` for ordinary and assessed
+decoding, `MXLOptions.DTD` for MXL decoding and `AssessmentOptions.DTD` for
+assessments. Where two of them apply, the narrower one wins:
+`DecodeAssessmentOptions.Decode.DTD` over `AssessmentOptions.DTD`, and
+`MXLAssessmentOptions.Graph.DTD` over `MXLAssessmentOptions.MXL.DTD`. The
+bundled closure is parsed once per process; an external subset supplied by the
+source is parsed for every document that names it, under the assessment's
+budgets when one reads it.
+
+Ordinary decoding (`Decode`, the typed decoders, MXL decoding and opus link
+resolution) uses a resolved external subset for two things only: general
+entities whose replacement text is one character, such as the ISO Latin
+`&eacute;` of the MusicXML DTDs, and defaulted namespace declarations, such as
+the `xmlns:xlink` default that lets an opus omit its declaration. A namespace
+default is normalized as an attribute value (XML 3.3.3): character references
+and references to internal entities of the external subset are replaced, and a
+default that is not a well-formed attribute value is not applied. Other DTD
+attribute defaults are not added to the model. A document that decoded before
+decodes to the same tokens, with one exception: a defaulted namespace
+declaration now applies to an element that omits it even where an ancestor
+binds the same prefix to another namespace, as XML 3.3.2 requires. With a
+resolved external subset, a prefix that neither the document nor the DTD binds
+is reported as an `*xml.SyntaxError`, as it is without a DOCTYPE, instead of
+`ErrUnsupportedXMLFeature`.
+
+Ordinary decoding does not use the external subset when the internal subset
+contains entity declarations, attribute-list declarations or parameter-entity
+references, because it does not interpret them, and does not expand its
+entities in a document declared `standalone="yes"` (XML 4.1, Entity Declared).
+It ignores identifiers longer than 4096 bytes. In these cases the previous
+behaviour remains. A caller source error is reported only when one of these
+features actually needs the DTD.
+
+Source profiles that read DTD declarations, including `ProfileSourceSemantics`
+used by `DecodeAssessed`, read the resolved external subset after the internal
+subset with XML first-binding precedence. Parameter entities declared in the
+internal subset are in scope while the external subset is read, so they can
+select its conditional sections or replace its parameter entities. An external
+subset that the source supplies, or that internal parameter entities can
+customize, is parsed into the document's declarations under the assessment's
+budgets, including `MaxScalarBytes` for every literal and name and `MaxDepth`
+for conditional-section and content-model nesting; `MaxBufferedBytes` holds the
+normalized text of each caller entity while it is read, as well as the
+declarations, frames and replacement maps. The bundled closure is
+prepared once; importing it charges the document's buffered bytes and checks
+its longest string against `MaxScalarBytes` and its deepest nesting against
+`MaxDepth`.
+
+The well-formedness constraints on attribute defaults apply to the external
+subset as to the internal one, to every read definition, including duplicates
+that do not bind: a general entity must be declared before a direct reference
+in a default, the internal subset counting as earlier (XML 2.8, 4.1), and may
+be neither external nor unparsed. A defect in an external declaration is a
+`*DTDError`; one in the internal subset remains an `*xml.SyntaxError`. Its
+attribute defaults and entities form the effective source infoset
+and, as for internal-subset declarations, reach the model converted by assessed
+loading. Source origins locate a declaration from an external entity by that
+entity's system identifier in `validation.Location.Entry`, with
+`validation.CoordinateSpaceExternalDTD` line, column and byte coordinates in its
+text after the byte order mark is removed and line ends are normalized, any text
+declaration included. A declaration generated by a parameter
+entity is located where its text is written, which can be the literal of that
+parameter entity or of one it includes in another module; for example the
+`default-x` attribute of `note` is located in the `%position;` literal of
+`common.mod`. A declaration whose text comes from an internal-subset parameter
+entity, or from past the 256th segment of a parameter entity's replacement map
+(each character reference starts a segment), and a declaration site in an
+entity whose identifier is longer than 4096 bytes, are unknown evidence, so
+such an assessment is incomplete. Profiles that do not read DTD declarations, such as
+`ProfileSourceXSDPreview` and `ProfileMXLSource`, keep reporting the external
+subset as unread whatever the options say.
 
 `Encode` and `ResolveOpus` reject cyclic opus models and document nesting deeper
 than 4096 elements before recursive traversal. `Validate` preserves that legacy
@@ -878,28 +980,26 @@ the result to the caller. It adds no loading option. Ordinary `Finish` and
 
 ## Original-source inspection and assessed loading
 
-**Current source input limit:** an unread external DOCTYPE subset prevents
-source acceptance, including in the mandatory assessed-loading pipeline. The
-committed official score samples `Chant.musicxml`, `MozartTrio.musicxml` and
-UTF-16 `MozaChloSample.musicxml` therefore produce
-unsupported/incomplete source reports. `DecodeAssessed` returns no `Document`
-for them. On the asserted linux/amd64 control, default loading of the 223,068-byte
-MozaChlo source reaches the 64 MiB buffer ceiling before source EOF; conversion is
-incomplete and the model stage is unrequested. The reviewer also reported a
-default buffer refusal for 94,916-byte MozartTrio after EOF and conversion. These
-are architecture-dependent receipts, not portable input-size limits; 386 does not
-assert them. See the [capacity controls][loading-capacity] for provenance. The DOCTYPE-free
-`OpusLink.musicxml` and `OpusScore.musicxml` fixtures are within the currently
-assessable source scope. The source-XSD preview remains developmental and
-DTD-independent; the semantic source profile processes bounded internal
-declarations but still cannot accept an unread external subset. Neither provides
-source acceptance for the usual external-DOCTYPE MusicXML score exports.
-A familiar public identifier is not treated as proof that an unread DTD is
-infoset-neutral. Removing a DOCTYPE changes the input and is not equivalent
-assessment of the original file. DTD closure remains later work. Callers relying
-on the earlier nil-assessment loading of such files can use `Decode` or
-`DecodeWithOptions` for transport/conversion only; those APIs do not validate the
-source or replace successful assessed loading.
+**Source input limits:** a DOCTYPE external subset is read from the bundled
+official MusicXML DTDs or a caller DTD source, as described under
+[External DTD subsets](#external-dtd-subsets). An unrecognized external subset
+still prevents source acceptance, including in the mandatory assessed-loading
+pipeline. With the bundled DTDs, `DecodeAssessed` accepts the committed official
+`Chant.musicxml` with default budgets. The larger `MozartTrio.musicxml` and
+UTF-16 `MozaChloSample.musicxml` now complete their full source and model
+assessment and need more than the default 64 MiB buffer and 20,000,000 rule
+steps; with 256 MiB and 100,000,000 steps both are accepted. Their default
+buffer refusals are architecture-dependent receipts, not portable input-size
+limits; 386 does not assert them. See the [capacity controls][loading-capacity]
+for provenance. Of the 154 score and opus files in `testdata/official` and the
+MusicXML test suite, default assessed loading accepted 140 when measured for
+this change, and `TestAssessedLoadingCorpusMeasurement` keeps that floor; the
+rest report genuine violations, unestablished semantic context or resource
+limits, none of them unread-DTD evidence. The source-XSD preview remains developmental and
+DTD-independent and still reports any external subset as unread. Removing a
+DOCTYPE changes the input and is not equivalent assessment of the original
+file. `Decode` and `DecodeWithOptions` remain transport/conversion only; those
+APIs do not validate the source or replace successful assessed loading.
 
 `InspectXML(ctx, reader, AssessmentOptions{Profile: ProfileSourceXSDPreview})`
 assesses original XML without creating a Go document. Use `ProfileSourceLocal`
@@ -977,10 +1077,11 @@ before the shared absent-attribute optimization.
 Composition costs differ from that XSD-only table. In the historical
 linux/amd64 receipt below, the original 223,068-byte UTF-16BE
 `MozaChloSample.musicxml` with `ProfileSourceSemantics` exhausts the default
-64 MiB buffer. With only `MaxBufferedBytes: 96 << 20` changed, this particular
-fixture completes input processing, but assessment remains incomplete because its
-external DTD is unread. This is a measured finite allowance for that exact input
-and profile, not a new default or a minimum/general capacity guarantee.
+64 MiB buffer. Its external subset is now read from the bundled official DTD, so
+the assessment does its full work: with `MaxBufferedBytes: 256 << 20` and
+`MaxRuleSteps: 100_000_000` this particular fixture completes and is satisfied.
+This is a measured finite allowance for that exact input and profile, not a new
+default or a minimum/general capacity guarantee.
 Removing the encoded DOCTYPE produces a different 222,824-byte control.
 `ProfileSourceInternalDTDDictionaries` assesses that control within defaults
 (observed live-account peak 44,036,266 bytes). `ProfileSourceSemantics` instead
@@ -1042,8 +1143,8 @@ It does not compose the local/timeline/context/package profiles. Existing
 inspection profiles, plain `Decode` and standalone current-model behavior are
 unchanged with respect to DTD processing. Nil-assessment `DecodeAssessed` now
 uses its mandatory source semantic profile. External subsets/entities are never
-fetched; their missing evidence
-remains incomplete. This is not a validating DTD processor or general XML
+fetched; a subset that neither the bundled official MusicXML DTDs nor a caller
+DTD source provides remains incomplete evidence. This is not a validating DTD processor or general XML
 processor-conformance claim.
 
 The shared scanner also corrects an earlier malformed-tail acceptance bug:
@@ -1097,8 +1198,10 @@ contributions](docs/validation/dtd-infoset-scope.md) and
 Provenance has a material capacity cost. In the paired `MozartTrio.musicxml`
 measurement (94,916 original bytes, 3,687 occurrence rows), retained bytes before
 `Finish` were 22,588,921 with this profile versus 11,632,335 with source/XSD
-preview. Both completed input at the default 64 MiB limit, but remained
-assessment-incomplete because the external DTD was unread. These fixture-specific
+preview while the external DTD was unread. With the bundled external DTD read,
+this profile retains about 27 MiB before `Finish` and completes satisfied within
+the default 64 MiB limit, while a 24,000,000-byte buffer is refused as a
+resource limit; the preview still reports the unread subset. These fixture-specific
 figures are not a general maximum document size; paths, ancestry and copied
 evidence affect admission.
 
@@ -1618,6 +1721,9 @@ Errors defined outside `errors.go`:
   import failures; the typed error unwraps to the provider's error.
 - `*ConversionError` reports a model-mapping failure in assessed loading;
   its `Cause` holds the mapper error.
+- `ErrDTDNotFound` is returned by a `DTDSource` that declines an identifier;
+  `ErrDTDUnavailable` and `*DTDError` report a DTD source failure or unreadable
+  caller DTD bytes.
 - `ErrInvalidDecodeOptions`, `ErrInvalidEncodeOptions`, and
   `ErrInvalidMXLOptions` report invalid transport options. Invalid
   assessment options are reported as `*validation.ConfigurationError`.
@@ -1760,8 +1866,8 @@ storage still overlaps. On Go 1.27.2 linux/amd64, the single-note-per-measure
 now admits 576 measures (77,227 source bytes) with defaults; 577 measures
 (77,361 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
 531/532 and initial PR 43 568/569 boundaries are historical; all four cases
-now complete. Exact/one-short snapshot controls pin 66,195,329 bytes for
-569 measures and 67,118,297 bytes for 577 measures.
+now complete. Exact/one-short snapshot controls pin 66,195,635 bytes for
+569 measures and 67,118,603 bytes for 577 measures.
 The review reported the
 500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
 previous boundary of 494 measures (about 66 KB), and comparison boundaries of
@@ -1770,8 +1876,8 @@ for its "legacy graph" comparator. These are fixture/profile-specific
 observations, not a general document-byte guarantee or heap/RSS limit.
 
 The separate 2,000-empty-measure, three-`#m1` fixture is only 86,052 source bytes
-but still refuses snapshot admission at default budgets: 54,486,614 live bytes
-plus a 34,741,160-byte request exceed 67,108,864 bytes. Its regression that uses
+but still refuses snapshot admission at default budgets: 54,486,816 live bytes
+plus a 34,741,264-byte request exceed 67,108,864 bytes. Its regression that uses
 512 MiB of buffer isolates the unchanged 20,000,000-step limit; it does not prove
 all-default capacity, nor is 512 MiB a measured minimum or recommendation.
 Choose explicit finite limits for the actual profile and input. See the

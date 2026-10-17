@@ -16,7 +16,7 @@ import (
 func TestSourceDeclarationCompositionPreservesProfiles(t *testing.T) {
 	want := map[validation.ProfileID]string{
 		ProfileSourceXSDPreview:         "957dd2347a6d7ac1fded6be66e0a82c96492e7870fa6bf0a2ac7f7cbd218120f",
-		ProfileSourceInternalDTD:        "6559640eda77c589d64a482c92ac2f9d652b2030ab676f2c7cd374c076802bda",
+		ProfileSourceInternalDTD:        "114202c6b37bfa5ef962804625cd22dbb8bfad77627ec7745282edfb2d7d6d5d",
 		ProfileSourceLocal:              "41b4d99a5f6fc70e22bfe3ce0385c1bbe13693e8baacf35970d79facb9ccd542",
 		ProfileSourceLinks:              "ff0ec0dd30142325e24d84c36c75bad9b2034092d0d11089c1b6a692f2df9b3d",
 		ProfileSourceDictionaries:       "4d2391d0dc93fd9137d42d0432d3bf7bd4490ecb1e4380d4559bdb68dfac907b",

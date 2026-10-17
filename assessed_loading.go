@@ -76,6 +76,7 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 	if cfg.Dictionaries == nil {
 		return result, loadErr
 	}
+	cfg.DTD = normalized.Assessment.DTD
 	defer func() {
 		err = errors.Join(err, cfg.Dictionaries.Close())
 		if err != nil {

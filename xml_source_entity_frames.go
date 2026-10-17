@@ -33,7 +33,10 @@ type sourceXMLEntityInput struct {
 	ExternalMarkup       bool
 	Declaration          sourceXMLSpan
 	DeclarationAvailable bool
-	DeclarationRecord    *sourceDTDDeclaration
+	// DeclarationEntity names the external DTD entity containing Declaration;
+	// empty means the document itself.
+	DeclarationEntity string
+	DeclarationRecord *sourceDTDDeclaration
 }
 type sourceXMLEntityFrame struct {
 	parent                    *sourceXMLEntityFrame

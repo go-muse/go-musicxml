@@ -70,11 +70,20 @@ for the model stage; it is not caller-replaceable. Any other profile, including
 `ProfileSourceContext`, narrower internal-DTD/dictionary profiles, model/package
 profiles and unknown IDs, fails configuration before I/O.
 
-**External-DOCTYPE migration:** neither assessed loader can accept input with
-an unread external DOCTYPE subset, including with nil or empty assessment
-options. External DTD closure is not implemented and no subset is fetched or
-trusted. Raising budgets does not remove this authority limit. This affects
-common MusicXML exports as well as the committed official score fixtures.
+**External DOCTYPE subsets:** both assessed loaders read a DOCTYPE external
+subset from the bundled official MusicXML 4.0 DTDs, selected by the official
+catalog's public identifiers (MusicXML 1.0 through 4.0) or official system
+identifiers, or from a caller `DTDSource` (`DecodeOptions.DTD`). No subset is
+fetched. An unrecognized external subset still cannot be accepted, including
+with nil or empty assessment options, and raising budgets does not remove that
+authority limit. See [External DTD subsets](../../API.md#external-dtd-subsets).
+
+With the bundled DTDs, default assessed loading accepted 140 of the 154 score and
+opus files in `testdata/official` and the MusicXML test suite when measured for
+this change, including the 148 test-suite files' common external DOCTYPE;
+`TestAssessedLoadingCorpusMeasurement` keeps that floor. The remaining files
+report genuine violations, unestablished semantic context or resource limits,
+not unread-DTD evidence. The history below records the state before the bundled DTDs.
 
 In the [PR 46 corpus review][review-corpus] of head `7e7126e9405e0731e6cefa713e801515b4874703`,
 the reviewer reported that default loading changed from 153 of 157 repository
@@ -301,25 +310,21 @@ The [PR 46 reviewer][review-mozart] also observed a default 64 MiB refusal for
 that fixture: 67,108,764 bytes live plus a 452-byte request exceeded 67,108,864.
 In that observation source EOF and conversion were complete, but source
 finalization retained a resource-limit terminal and the loader returned no
-document. This reviewer-reported receipt at the reviewed head is now reproduced
-by the focused linux/amd64 regression
-[TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete][official-capacity-test].
-It is not a portable boundary. Input byte size alone cannot place the capacity
-threshold above 200 KB.
+document. It is not a portable boundary. Input byte size alone cannot place the
+capacity threshold above 200 KB.
 
-The same [migration test][official-capacity-test] keeps both amd64 default-buffer
-refusals distinct from configured-capacity controls. With only
-`MaxBufferedBytes: 96 << 20` changed, each original fixture completes source input
-and conversion, but returns `ErrIncompleteAssessment` for unread external-DTD
-evidence. Neither returns a document or a requested model report; both configured
-controls exclude resource-limit and invalid-document errors.
-`TestSourceAssessmentAgainstSchema` additionally exercises the exact MozaChlo
-control. The 386 run checks configured DTD authority, not the default frontiers.
+With the bundled external DTD, both larger originals do their full source and
+model work. The focused regression
+[TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD][official-capacity-test]
+keeps their amd64 default 64 MiB buffer refusals, which return no document, and
+then accepts both with `MaxBufferedBytes: 256 << 20` and
+`MaxRuleSteps: 100_000_000`. `Chant.musicxml` is accepted with default budgets.
+`TestSourceAssessmentAgainstSchema` exercises the same controls. The 386 run
+checks the configured acceptance, not the default frontiers.
 
-The 96 MiB (100,663,296-byte) allowance is fixture-specific, not a new default, a
-measured minimum, a production recommendation or evidence that the external DTD
-was read. Earlier standalone source-semantics observations remain in the
-[historical capacity receipt][capacity-history].
+The configured allowance is fixture-specific, not a new default, a measured
+minimum or a production recommendation. Earlier standalone source-semantics
+observations remain in the [historical capacity receipt][capacity-history].
 Logical live accounting is not heap usage or a general input-byte capacity
 guarantee; the original bytes, BOM and DOCTYPE are preserved in both controls.
 
@@ -327,9 +332,9 @@ guarantee; the original bytes, BOM and DOCTYPE are preserved in both controls.
 
 These are the existing bounded semantic profiles. Required `Unknown`, unsupported
 or otherwise incomplete evidence remains an error and withholds the document.
-External DTD subsets and entities are never fetched or assumed harmless. Bounded
-processing of actually read internal declarations does not add general DTD
-validation. Source and current-model evidence remain distinct.
+External DTD subsets and entities are never fetched. A subset is read only from
+the bundled official MusicXML DTDs or a caller DTD source; bounded processing of
+actually read declarations does not add general DTD validation. Source and current-model evidence remain distinct.
 
 Successful loading establishes only the selected intrinsic source and model
 contracts. It does not establish universal MusicXML conformance, arbitrary
@@ -351,4 +356,4 @@ later loading migration; verification must use the changed tree.
 [bundled-notices]: ../../THIRD_PARTY_NOTICES.md#embedded-copies-of-the-pinned-dictionary-data
 [capacity-history]: resource-fragment-budget-evidence.md#official-utf-16be-sample-and-standalone-composition
 
-[official-capacity-test]: ../../source_dtd_no_fetch_review_test.go#L62
+[official-capacity-test]: ../../source_dtd_no_fetch_review_test.go#L67

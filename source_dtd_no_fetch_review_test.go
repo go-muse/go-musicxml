@@ -59,7 +59,12 @@ func TestSourceInternalDTDPublicExternalIdentifiersStayUnread(t *testing.T) {
 	}
 }
 
-func TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete(t *testing.T) {
+// officialDTDCapacity is the configured capacity at which the two larger
+// official scores complete source and model assessment with their bundled
+// external DTD. Their default-budget refusals are pinned separately.
+var officialDTDCapacity = validation.Budgets{MaxBufferedBytes: 256 << 20, MaxRuleSteps: 100_000_000}
+
+func TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD(t *testing.T) {
 	for _, name := range []string{"MozartTrio.musicxml", "MozaChloSample.musicxml", "Chant.musicxml"} {
 		t.Run(name, func(t *testing.T) {
 			input, err := os.ReadFile(filepath.Join("testdata", "official", name))
@@ -70,87 +75,50 @@ func TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete(t *testing.T) {
 			if !bytes.Contains(input, []byte("DOCTYPE")) && !bytes.Contains(input, []byte{'D', 0, 'O', 0, 'C', 0, 'T', 0, 'Y', 0, 'P', 0, 'E', 0}) {
 				t.Fatal("fixture lost its original DOCTYPE")
 			}
-			for _, decode := range []bool{false, true} {
-				var report validation.Report
-				if decode {
-					var result DecodeResult
-					if name == "MozaChloSample.musicxml" || name == "MozartTrio.musicxml" {
-						result, err = decodeOfficialWithDeclaredCapacityControl(t, input, name)
-					} else {
-						result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
-					}
-					if result.Document != nil || result.Model.Requested || result.Conversion.State != validation.ConversionConverted {
-						t.Fatalf("unaccepted DTD exposed a model or lost completed conversion: document=%T modelRequested=%t conversion=%s", result.Document, result.Model.Requested, result.Conversion.State)
-					}
-					report = result.Source
-				} else {
-					report, err = InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+			budgets := officialDTDCapacity
+			if name == "Chant.musicxml" {
+				budgets = validation.Budgets{}
+			}
+			report, err := InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD, Budgets: budgets})
+			if err != nil || !report.InputComplete || !report.AssessmentComplete || !report.Satisfied() {
+				t.Fatalf("bundled external DTD inspection: err=%v syntax=%s complete=%t satisfied=%t counts=%+v", err, report.Syntax, report.AssessmentComplete, report.Satisfied(), report.Counts)
+			}
+			for _, f := range report.Findings {
+				if strings.Contains(string(f.Reason), "dtd-infoset-unavailable") {
+					t.Fatalf("resolved external DTD still reported unavailable: %+v", f)
 				}
-				if (!decode && err != nil) || (decode && !errors.Is(err, validation.ErrIncompleteAssessment)) || errors.Is(err, validation.ErrResourceLimit) || report.Syntax == validation.SyntaxMalformed || !report.InputComplete || report.Satisfied() {
-					t.Fatalf("decode=%t err=%v syntax=%s complete=%t satisfied=%t", decode, err, report.Syntax, report.InputComplete, report.Satisfied())
-				}
-				unavailable := false
-				for _, f := range report.Findings {
-					if strings.Contains(string(f.Reason), "dtd-infoset-unavailable") {
-						unavailable = true
-					}
-				}
-				if !unavailable {
-					t.Fatal("missing causal unread-DTD evidence")
-				}
+			}
+			var result DecodeResult
+			if name == "Chant.musicxml" {
+				result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+			} else {
+				result, err = decodeOfficialWithDeclaredCapacityControl(t, input, name)
+			}
+			if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() || result.Conversion.State != validation.ConversionConverted {
+				t.Fatalf("strict loading with the bundled external DTD: document=%T source=%t model=%t conversion=%s error=%v", result.Document, result.Source.Satisfied(), result.Model.Satisfied(), result.Conversion.State, err)
 			}
 		})
 	}
 }
 
-// The original UTF-16 Moza sample already has a reviewed 96 MiB source-semantics
-// control in TestReviewOfficialOriginalDOCTYPEBufferAndEvidence. Mandatory
-// loading additionally keeps the converted candidate and both pinned dictionary
-// components live. Its default boundary is asserted before this configured
-// control, rather than increasing the default limit to recover the old result.
-func decodeMozaWithDeclaredCapacityControl(t *testing.T, input []byte) (DecodeResult, error) {
-	t.Helper()
-	return decodeOfficialWithDeclaredCapacityControl(t, input, "MozaChloSample.musicxml")
-}
-
-// Both official scores require a configured-capacity control before a refusal
-// can be attributed only to their unread external DTD. Their default refusal
-// points differ: MozartTrio reaches source EOF; MozaChlo does not.
+// Both larger official scores exceed the default budgets once their external
+// DTD is read: source and model assessment then do their full work. The
+// default refusal is an amd64 receipt, not a portable storage-size promise;
+// every architecture runs the configured-capacity acceptance.
 func decodeOfficialWithDeclaredCapacityControl(t *testing.T, input []byte, name string) (DecodeResult, error) {
 	t.Helper()
-	var result DecodeResult
-	var err error
-	// This frontier is an amd64 receipt, not a portable storage-size promise.
-	// Smaller architectures still run the configured DTD authority control.
 	if runtime.GOARCH == "amd64" {
-		result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+		result, err := DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
 		var resource *validation.ResourceError
 		if !errors.As(err, &resource) || resource.Kind != validation.BudgetBufferedBytes || resource.Limit != validation.DefaultBudgets().MaxBufferedBytes || resource.Used > resource.Limit || resource.Requested <= resource.Limit-resource.Used || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) {
 			t.Fatalf("original %s default capacity changed: resource=%+v error=%v", name, resource, err)
 		}
-		wantConversion, wantEOF := validation.ConversionIncomplete, false
-		if name == "MozartTrio.musicxml" {
-			wantConversion, wantEOF = validation.ConversionConverted, true
-		}
-		if result.Document != nil || result.Model.Requested || result.Conversion.State != wantConversion || !result.Source.Requested || result.Source.InputComplete != wantEOF || result.Source.AssessmentComplete || result.Source.Terminal == nil || result.Source.Terminal.Category != validation.CategoryResource {
-			t.Fatalf("default capacity refusal leaked acceptance: document=%T modelRequested=%t conversion=%s sourceRequested=%t inputComplete=%t assessmentComplete=%t syntax=%s", result.Document, result.Model.Requested, result.Conversion.State, result.Source.Requested, result.Source.InputComplete, result.Source.AssessmentComplete, result.Source.Syntax)
-		}
-		if !wantEOF && result.Source.Syntax != validation.SyntaxIncomplete {
-			t.Fatalf("pre-EOF capacity refusal must leave source syntax incomplete: %s", result.Source.Syntax)
+		if result.Document != nil || result.Source.AssessmentComplete || result.Source.Terminal == nil || result.Source.Terminal.Category != validation.CategoryResource {
+			t.Fatalf("default capacity refusal leaked acceptance: document=%T assessmentComplete=%t", result.Document, result.Source.AssessmentComplete)
 		}
 		t.Logf("original %s default buffered-byte checkpoint: used=%d requested=%d limit=%d inputComplete=%v conversion=%s", name, resource.Used, resource.Requested, resource.Limit, result.Source.InputComplete, result.Conversion.State)
 	}
 	options := strictSourceOptions()
-	options.Assessment.Budgets.MaxBufferedBytes = 96 << 20
-	result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), options)
-	if !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) || errors.Is(err, validation.ErrResourceLimit) || result.Document != nil || result.Model.Requested || result.Conversion.State != validation.ConversionConverted || !result.Source.InputComplete || result.Source.AssessmentComplete || result.Source.Satisfied() {
-		t.Fatalf("configured-capacity DTD control: document=%T modelRequested=%t conversion=%s inputComplete=%t assessmentComplete=%t error=%v", result.Document, result.Model.Requested, result.Conversion.State, result.Source.InputComplete, result.Source.AssessmentComplete, err)
-	}
-	for _, finding := range result.Source.Findings {
-		if strings.Contains(string(finding.Reason), "dtd-infoset-unavailable") {
-			return result, err
-		}
-	}
-	t.Fatal("configured-capacity control lost the original unread external-DTD evidence")
-	return result, err
+	options.Assessment.Budgets = officialDTDCapacity
+	return DecodeAssessed(context.Background(), bytes.NewReader(input), options)
 }

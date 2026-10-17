@@ -110,9 +110,14 @@ is reported, never silently truncated into complete evidence.
 ## Finite resources and no transport
 
 There is no network/filesystem resolver, ambient schema/entity loading, or new
-transport permission. An external declaration can be observed without reading
-its target. Official samples with external MusicXML DOCTYPEs still have missing
-external evidence; this slice does not claim their source readiness.
+transport permission. A DOCTYPE external subset is read only from the bundled
+official MusicXML DTDs, selected by the official catalog's public identifiers or
+official system identifiers, or from a caller `DTDSource`; it is parsed with the
+external-subset grammar (parameter-entity references in declarations and entity
+values, conditional sections, external parameter entities) and imported after
+the internal subset. Declarations from it carry their external entity and
+coordinates as source-origin sites. Any other external declaration can be
+observed without reading its target and remains missing evidence.
 
 One existing account covers the scanner, declaration store, defaults, observer
 and session. Input hashes/bytes cover original bytes once. Internal replacement
@@ -135,8 +140,11 @@ for source/XSD preview. The earlier PR38 head retained 24,982,035 bytes; removin
 duplicate validation and auditing the typed copy reduced rule steps from
 3,726,713 to 2,345,211. With a common 24,000,000-byte limit the earlier head
 refused input and the correction completed it. At the default 64 MiB both
-completed input, with assessment still incomplete because the external DTD was
-unread. All retained account charges returned to zero after finalization. These are
+completed input, with assessment then incomplete because the external DTD was
+unread. Now that its bundled external DTD is read, this profile retains about
+27 MiB before `Finish` and completes satisfied at the default 64 MiB, while the
+24,000,000-byte limit is refused as a resource limit
+(`TestSourceOriginReviewOfficialCapacity`). All retained account charges returned to zero after finalization. These are
 fixture-specific capacity observations, not a throughput or universal score-size
 promise, and do not close `B5-PERF-01`.
 
@@ -160,7 +168,7 @@ denominators and accepted historical statuses are not rewritten.
 
 | Original obligation | Delivered contribution | Retained owner/dependency |
 | --- | --- | --- |
-| `REQ-DEF-XML-DOCTYPE` / `TEST-DEF-XML-DOCTYPE` | Selected read internal declarations, bounded frames, defaults, normalization and honest origin/closure | External subset/entities, complete DTD/XML processor duties and old-profile limits remain final external closure |
+| `REQ-DEF-XML-DOCTYPE` / `TEST-DEF-XML-DOCTYPE` | Selected read internal declarations, a bundled or caller external subset, bounded frames, defaults, normalization and honest origin/closure | Unrecognized external subsets and external general entities, complete DTD/XML processor duties and old-profile limits remain final external closure |
 | `CHECK-context-xml-reserved-semantics` | Effective namespace attributes assembled before namespace expansion, source-only provenance | General XML Base, xml:id, XInclude and external rules remain final external closure |
 | `REQ-DEF-XSI-SCHEMALOC`, `REQ-DEF-XSI-NONAMESPACE` | Effective attributes reach the existing shared source XSD machinery without invented physical history | Resolver/graph hint consumers are not newly composed; current-model discarded history remains Unknown |
 | `REQ-DEF-OPS-SCALARS`, `REQ-DEF-NUM-DOMAIN`, `REQ-DEF-NUM-EXACT` | Declaration storage is a prerequisite for later declaration-dependent domains | XSD ENTITY membership, wider scalar/equality promises are not claimed closed |
@@ -169,8 +177,8 @@ denominators and accepted historical statuses are not rewritten.
 | `B5-PERF-01` | Bounded accounting regressions only | Comparative throughput, memory, scaling and final performance acceptance remain independently owned |
 
 Still explicit: unused recursive declarations and unverified predefined-entity
-redeclarations can prevent full well-formedness closure; external data is never
-assumed read; broader declaration validity is not a parser success claim.
+redeclarations can prevent full well-formedness closure; external data other
+than a bundled or caller-supplied subset is never assumed read; broader declaration validity is not a parser success claim.
 Dictionaries (SMuFL, IPA, sounds), residual musical/intent clauses, ZIP/JAR/MIME
 and package/link normative gates, generic promised kernel contracts and final
 requirement reconciliation remain in the approved program. The historical

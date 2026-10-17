@@ -6,7 +6,11 @@ bundled material retains its upstream terms and notices.
 ## MusicXML 4.0 schemas
 
 Files under `schema/musicxml-4.0` originate from the MusicXML 4.0
-specification.
+specification. The DTD modules (`*.dtd`, `*.mod` and the ISO entity sets
+`isolat1.ent` and `isolat2.ent`) come unchanged from
+[github.com/w3c/musicxml](https://github.com/w3c/musicxml) tag `v4.0`
+(commit `799e2defb2ece0ae7bafe08dcbcac25b2c631d53`) and are embedded in
+binaries that use the decoder. `bundled_dtd.go` pins their SHA-256 digests.
 
 Copyright © 2004-2021 the Contributors to the MusicXML Specification,
 published by the W3C Music Notation Community Group under the

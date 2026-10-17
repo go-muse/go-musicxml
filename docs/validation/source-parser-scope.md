@@ -41,17 +41,21 @@ referenced characters. This can change decoded string values for such input.
 This section records the legacy and existing source-profile boundary. The
 explicitly selected `ProfileSourceInternalDTD` has the separately documented
 [bounded internal-DTD contract](dtd-infoset-scope.md); it does not change the
-profiles described below or authorize external loading.
+profiles described below or authorize external loading. That contract, and
+ordinary decoding to the limited extent described in
+[External DTD subsets](../../API.md#external-dtd-subsets), now read a DOCTYPE
+external subset from the bundled official MusicXML DTDs or a caller DTD source.
 
 The no-fetch reader checks the local grammar of DOCTYPE, ELEMENT, ATTLIST,
 ENTITY, NOTATION, comments and PIs. Empty and comment/PI-only internal subsets
 are supported. A DOCTYPE/root-name mismatch is a DTD validity matter and is not
 rejected by the XML syntax layer. External identifiers remain inert.
 
-DTD defaults, tokenized attribute normalization, general-entity replacement,
-entity declaration ordering/recursion and external-subset processing are not
-implemented. Legacy decode still ignores unused declarations and does not apply
-default attributes. Source assessment receives explicit unsupported evidence
+DTD defaults, tokenized attribute normalization, general-entity replacement and
+entity declaration ordering/recursion are not implemented on this path. Legacy
+decode still ignores unused declarations and does not apply default attributes;
+from a resolved external subset it uses only one-character general entities and
+defaulted namespace declarations. Source assessment receives explicit unsupported evidence
 instead of claiming those resulting infoset facts are complete. Uninterpreted
 ATTLIST/ENTITY declaration families also make XML well-formedness assessment
 incomplete: local grammar closure does not establish all declaration WFCs.
@@ -59,12 +63,11 @@ An unread external identifier alone is distinguished from this internal-declarat
 WFC limitation, while still exposing possible infoset dependencies as unsupported.
 
 Consequently, the source preview cannot satisfy an ordinary score that includes
-an external DOCTYPE. This includes all three committed official score samples;
-strict assessed decoding rejects their source assessment despite successful
-model conversion. The two committed opus examples contain no DOCTYPE. Neither a
-known MusicXML public identifier nor xmllint's XSD-only acceptance proves that
-an unread external subset is infoset-neutral. No ignore-DTD policy or implicit
-DTD loading is provided in this batch.
+an external DOCTYPE, including the three committed official score samples. The
+two committed opus examples contain no DOCTYPE. xmllint's XSD-only acceptance
+does not prove that an unread external subset is infoset-neutral. Strict
+assessed decoding instead reads the bundled official DTD for a known MusicXML
+identifier. No ignore-DTD policy or network DTD loading is provided.
 
 Parameter-entity replacement needed to continue the internal-subset grammar,
 non-predefined entity expansion, and namespace bindings that could depend on

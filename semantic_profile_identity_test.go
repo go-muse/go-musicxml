@@ -18,11 +18,11 @@ func TestSemanticProfilesExactFinalIdentity(t *testing.T) {
 		target           validation.Target
 		catalog, profile string
 	}{
-		{ProfileSourceSemantics, validation.TargetSource, "9c1a974d3c3f1d664d91f76929bc8302a389811d018664c5e48bb8d62f59fe6b", "32f5e18154cf299202cbdf7abb8bd080a811077bdbe4bdab82e30d63586566b2"},
+		{ProfileSourceSemantics, validation.TargetSource, "e7e6d4195bb87a483d410c8a4f9cbd43eff9a1d488d93ffa02d8102b50211a63", "c15a9728c81ff126911ab99d68d776c28a3d368fd89dbbe61163802654c8c475"},
 		{ProfileModelSemantics, validation.TargetModel, "e85bf8df6094ca313a4f36523eafc6bad2cd4140bfce933b9c3fe026d70bd8f9", "3ec86e6676086552bdf57492671eee6f7ec2101d805d44aac960116174782ab4"},
-		{ProfileResourceGraphSemantics, validation.TargetPackage, "6aa620fbc44c979f58e00829af02c201059837013f0c1488db4c93c21bf8a55c", "9c48afc11c720fd27091ddd33d3eb8daf9bf132435d0ecdd838fb4d04a1c34f2"},
-		{ProfileMXLSourceSemantics, validation.TargetPackage, "6aa620fbc44c979f58e00829af02c201059837013f0c1488db4c93c21bf8a55c", "cd09e76351aa69a5e5f76ccd5df227717851d6d62fc7a50eeb3c6e151fdee28a"},
-		{ProfileMXLModelSemantics, validation.TargetPackage, "6aa620fbc44c979f58e00829af02c201059837013f0c1488db4c93c21bf8a55c", "1886b7a9d4158deadae62f533ae29b7f9d6cd6f8c521bc0be05052ade5fcf315"},
+		{ProfileResourceGraphSemantics, validation.TargetPackage, "e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89", "6a31be186ffde08b3200e47e3f4f231b1c7f4f5a85e7974b14a274babb103902"},
+		{ProfileMXLSourceSemantics, validation.TargetPackage, "e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89", "3f66d7fc32e67703f6f101b712b0d1590df5a73c9c38cf806569778895ee1f8e"},
+		{ProfileMXLModelSemantics, validation.TargetPackage, "e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89", "80b49b7fb23033452638593cdf7775c8db5ca39de8fe9ea7f2054c0fec87213f"},
 	} {
 		t.Run(string(tc.id), func(t *testing.T) {
 			var p validation.Profile

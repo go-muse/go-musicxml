@@ -127,8 +127,11 @@ is never silently replaced with U+FFFD.
 Nil or empty assessment options select this fixed pipeline, with bundled canonical
 SMuFL and IPA representation evidence. `DecodeResult` exposes `Source`,
 `Conversion` and `Model` separately; any failure or incomplete required assessment
-withholds `Document`. Neither loader can accept an unread external DOCTYPE
-subset, including with default options; raising budgets does not close that gap.
+withholds `Document`. A DOCTYPE external subset is read from the bundled official
+MusicXML 4.0 DTDs, which also resolve the identifiers of MusicXML 1.0 through 3.1
+as the official catalog does, or from a caller `DTDSource`; nothing is fetched.
+An unrecognized external subset still cannot be accepted, and raising budgets does
+not close that gap.
 Use ordinary `Decode` for transport-only loading, without a validation guarantee.
 See the [migration guide][assessed-loading] for compatibility, per-call import
 costs and bundled-data distribution requirements.
@@ -186,9 +189,9 @@ profile under the default budgets. Both stop at the 20,000,000-step limit;
 raising work alone still reaches the default 64 MiB buffered-byte limit.
 Explicit finite `MaxRuleSteps: 1 << 34` and `MaxBufferedBytes: 512 << 20`
 complete the measured source/current-model cases. Source measurements remove
-only the unsupported DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration
-are preserved. Unmodified DOCTYPE-bearing source remains unsupported by the
-source assessment contract.
+only the DOCTYPE; MozaChlo's UTF-16BE BOM and encoding declaration are
+preserved. The unmodified DOCTYPE-bearing originals are now assessed with their
+bundled external DTD; see [External DTD subsets](API.md#external-dtd-subsets).
 See [matched resource evidence](docs/validation/evidence/context-round3-resource-acceptance.md)
 for exact minima and outcomes. Exhaustion is incomplete assessment, not a
 MusicXML violation or a readiness success.
@@ -203,8 +206,8 @@ transport metadata.
 
 The separate developmental `ProfileSourceInternalDTD` processes bounded internal
 declarations, entity replacements and effective attributes with typed occurrence
-origins. External DTDs are not fetched, and existing profiles do not opt into this
-processing. See its [scope and retained obligations](docs/validation/dtd-infoset-scope.md).
+origins, including a bundled or caller-supplied external subset. External DTDs
+are not fetched, and the other existing profiles do not opt into this processing. See its [scope and retained obligations](docs/validation/dtd-infoset-scope.md).
 
 The explicit [standalone compositions](docs/validation/source-declarations-scope.md)
 add declaration-dependent ENTITY/ENTITIES checks and reuse local, nonfetching
@@ -237,12 +240,15 @@ For original-input inspection, use `InspectXML` with an explicit
 `ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD
 plus the same local clauses), or the unchanged `ProfileSourceXSDPreview` (XSD
 only). These narrower profiles are not accepted by either assessed loader.
-Unread external DOCTYPE subsets still make all source profiles incomplete,
-including `Chant.musicxml`, `MozartTrio.musicxml` and
-`MozaChloSample.musicxml`. Strict assessed decoding returns no document for
-those original files. There is no new DTD trust, stripping, fetching or ignore
-policy. The two DOCTYPE-free official opus examples are a separate assessable
-source case.
+Profiles that do not read DTD declarations still report any external DOCTYPE
+subset as unread. Strict assessed decoding reads the bundled official DTD and
+accepts `Chant.musicxml` with default budgets; `MozartTrio.musicxml` and
+`MozaChloSample.musicxml` are accepted with larger explicit budgets. Of the 154
+score and opus files in `testdata/official` and the MusicXML test suite, default
+assessed loading accepted 140 when measured for this change. There is no DTD
+fetching, stripping or ignore policy: the bundled DTDs are selected only by the
+official public and system identifiers, and any other DTD comes from a caller
+`DTDSource`.
 
 These intrinsic profiles do not establish complete MusicXML conformance, full
 repeat/playback/layout semantics, author intent, or package and linked-resource

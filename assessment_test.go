@@ -40,7 +40,7 @@ func TestSourceAssessmentPreflightDoesNotRead(t *testing.T) {
 	}{
 		{"nil-context", nil, DecodeAssessmentOptions{}, validation.ErrInvalidConfiguration},
 		{"canceled", canceled, DecodeAssessmentOptions{}, context.Canceled},
-		{"depth", context.Background(), DecodeAssessmentOptions{Decode: DecodeOptions{-1}}, ErrInvalidDecodeOptions},
+		{"depth", context.Background(), DecodeAssessmentOptions{Decode: DecodeOptions{MaxXMLDepth: -1}}, ErrInvalidDecodeOptions},
 		{"narrow-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},
 		{"unknown-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "unknown"}}, validation.ErrInvalidConfiguration},
 		{"model-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "musicxml-4.0/model"}}, validation.ErrInvalidConfiguration},

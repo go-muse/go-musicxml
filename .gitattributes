@@ -22,3 +22,9 @@ docs/validation/deferred-inventory.md text eol=lf
 internal/dictionarydata/data/** -text linguist-generated=true
 # The pinned upstream sounds.xml retains CRLF and literal trailing spaces.
 internal/dictionarydata/data/musicxml-4.0/sounds.xml -whitespace
+
+# Bundled official MusicXML DTD modules keep their upstream CRLF bytes;
+# bundled_dtd.go pins each file's SHA-256.
+schema/musicxml-4.0/*.dtd -text
+schema/musicxml-4.0/*.mod -text
+schema/musicxml-4.0/*.ent -text

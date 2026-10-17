@@ -15,6 +15,11 @@ type DecodeOptions struct {
 	// MaxXMLDepth is the maximum number of simultaneously open XML elements.
 	// Zero selects 256; values above 4096 are invalid.
 	MaxXMLDepth int
+	// DTD supplies caller DTD bytes ahead of the bundled official MusicXML
+	// DTDs. Nil uses only the bundled DTDs. Decoding uses an external subset
+	// only for character entities and defaulted namespace declarations; other
+	// DTD defaults are not added to the decoded model.
+	DTD *DTDOptions
 }
 
 // DefaultDecodeOptions returns the limits used by Decode and the typed decode
@@ -51,6 +56,8 @@ type MXLOptions struct {
 	MaxResourcesBytes int64
 	// MaxXMLDepth has the same zero default and 4096 maximum as DecodeOptions.
 	MaxXMLDepth int
+	// DTD has the same meaning as DecodeOptions.DTD for the root document.
+	DTD *DTDOptions
 }
 
 // DefaultMXLOptions returns the limits used by DecodeMXL and
@@ -122,6 +129,7 @@ func (o MXLOptions) limits() (mxlLimits, error) {
 			o.MaxResourcesBytes,
 			defaults.MaxResourcesBytes,
 		),
+		dtd: o.DTD,
 		xmlDepth: int(valueOrDefault(
 			int64(o.MaxXMLDepth),
 			int64(defaults.MaxXMLDepth),

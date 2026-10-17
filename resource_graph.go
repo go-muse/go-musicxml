@@ -171,7 +171,7 @@ func (g *resourceGraphRun) inspectPrimarySource(reader io.Reader) (validation.As
 		return g.finish(err)
 	}
 	id := g.next("source")
-	result := assessResourceSource(g.ctx, reader, sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.source, Engine: engine}, ByteOwner: sourceBytesPrimary})
+	result := assessResourceSource(g.ctx, reader, sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.source, Engine: engine}, ByteOwner: sourceBytesPrimary})
 	digest := ""
 	if result.DigestComplete {
 		digest = hex.EncodeToString(result.Digest[:])
@@ -203,7 +203,7 @@ func (g *resourceGraphRun) assessPrimaryModel(document Document) (validation.Ass
 	}
 	id := g.next("model")
 	pin := g.primaryPin(validation.ResourceCurrentModel, "")
-	result := assessResourceModel(g.ctx, document, assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.model, Engine: engine})
+	result := assessResourceModel(g.ctx, document, assessmentRunConfig{Account: g.options.account, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: id, Profile: g.profiles.model, Engine: engine})
 	return g.finishPrimary(result, pin, id)
 }
 func (g *resourceGraphRun) finishPrimary(result resourceIntrinsicResult, pin validation.ResourcePin, id string) (validation.AssessmentBundle, error) {
@@ -262,13 +262,17 @@ func (g *resourceGraphRun) retainUntransferredIntrinsic(result resourceIntrinsic
 	return err
 }
 
-// A malformed parse can export an owned report before any root assembly exists.
-// Retain that syntax failure without manufacturing an extra transfer error.
-// Other unadmitted-root contracts (including unsupported roots and empty input)
-// keep their existing transfer behavior.
+// A malformed parse, or a DOCTYPE external subset that could not be supplied,
+// can export an owned report before any root assembly exists. Retain that
+// failure without manufacturing an extra transfer error. Other unadmitted-root
+// contracts (including unsupported roots and empty input) keep their existing
+// transfer behavior.
 func shouldRetainMalformedIntrinsicWithoutAssembly(result resourceIntrinsicResult) bool {
+	if result.Snapshot == nil || result.Snapshot.Header().Assembly.State == validation.EvidenceKnown {
+		return false
+	}
 	var syntax *xml.SyntaxError
-	return result.Snapshot != nil && result.Report.Syntax == validation.SyntaxMalformed && errors.As(result.Err, &syntax) && result.Snapshot.Header().Assembly.State != validation.EvidenceKnown
+	return result.Report.Syntax == validation.SyntaxMalformed && errors.As(result.Err, &syntax) || errors.Is(result.Err, ErrDTDUnavailable)
 }
 
 // joinResourceErrors preserves unrelated causes without repeating a cause that

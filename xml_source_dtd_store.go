@@ -64,8 +64,12 @@ type sourceDTDOriginStep struct {
 }
 
 type sourceDTDOrigin struct {
-	Sequence         int64
-	Region           sourceDTDRegion
+	Sequence int64
+	Region   sourceDTDRegion
+	// Entity, when nonempty, is the system identifier of the external DTD
+	// entity whose normalized text Span is relative to; otherwise Span is in
+	// the document's original bytes.
+	Entity           string
 	Span             sourceXMLSpan
 	SpanAvailable    bool
 	ExternalMarkup   bool
@@ -114,17 +118,27 @@ type sourceDTDStoreKey struct {
 	element, name string
 }
 type sourceDTDStore struct {
-	parametersRead         map[*sourceDTDDeclaration]bool
-	entitiesContentRead    map[*sourceDTDDeclaration]bool
-	entitiesUnchecked      int64
-	context                context.Context
-	account                *validation.Account
-	state                  sourceDTDStoreState
-	declarations           []*sourceDTDDeclaration
-	bindings               map[sourceDTDStoreKey]*sourceDTDDeclaration
-	attributes             map[string][]*sourceDTDDeclaration
-	owned                  int64
-	parsed, closed, failed bool
+	parametersRead      map[*sourceDTDDeclaration]bool
+	entitiesContentRead map[*sourceDTDDeclaration]bool
+	// segments maps the replacement text of parameter entities declared in
+	// an external subset to where it is written.
+	segments map[*sourceDTDDeclaration][]sourceDTDTextSegment
+	// bases records, for an external parameter entity declared in an
+	// external subset, the external entity being read when its declaration
+	// was parsed: the base of a relative system identifier (XML 4.2.2).
+	bases map[*sourceDTDDeclaration]string
+	// externalParameterIncomplete carries an imported closure's unprocessed
+	// parameter-entity replacement.
+	externalParameterIncomplete bool
+	entitiesUnchecked           int64
+	context                     context.Context
+	account                     *validation.Account
+	state                       sourceDTDStoreState
+	declarations                []*sourceDTDDeclaration
+	bindings                    map[sourceDTDStoreKey]*sourceDTDDeclaration
+	attributes                  map[string][]*sourceDTDDeclaration
+	owned                       int64
+	parsed, closed, failed      bool
 }
 
 func newSourceDTDStore(ctx context.Context, account *validation.Account, standalone sourceDTDStandalone) (*sourceDTDStore, error) {
@@ -156,7 +170,7 @@ func (s *sourceDTDStore) Close() error {
 	err := s.account.Release(validation.BudgetBufferedBytes, s.owned)
 	s.owned = 0
 	s.declarations, s.bindings, s.attributes = nil, nil, nil
-	s.parametersRead, s.entitiesContentRead = nil, nil
+	s.parametersRead, s.entitiesContentRead, s.segments, s.bases = nil, nil, nil, nil
 	s.state = sourceDTDStoreState{}
 	return err
 }
@@ -443,6 +457,56 @@ func (s *sourceDTDStore) copyOrigin(origin sourceDTDOrigin) (sourceDTDOrigin, er
 	origin.Ancestry = ancestry
 	return origin, nil
 }
+
+// replacementSegments returns the replacement map of a parameter entity
+// declared in an external subset, or nil.
+func (s *sourceDTDStore) replacementSegments(d *sourceDTDDeclaration) []sourceDTDTextSegment {
+	return s.segments[d]
+}
+
+// setReplacementSegments retains a copy of a parameter entity's replacement
+// map. The entity strings are borrowed from the declaring frames.
+func (s *sourceDTDStore) setReplacementSegments(d *sourceDTDDeclaration, segments []sourceDTDTextSegment) error {
+	if len(segments) == 0 {
+		return nil
+	}
+	if s.segments == nil {
+		if err := s.reserve(sourceDTDStoreMapBytes); err != nil {
+			return err
+		}
+		s.segments = make(map[*sourceDTDDeclaration][]sourceDTDTextSegment)
+	}
+	if int64(len(segments)) > (math.MaxInt64-sourceDTDStoreIndexBytes)/sourceDTDTextSegmentBytes {
+		return &validation.ResourceError{Kind: validation.BudgetBufferedBytes, Requested: math.MaxInt64}
+	}
+	if err := s.reserve(sourceDTDStoreIndexBytes + int64(len(segments))*sourceDTDTextSegmentBytes); err != nil {
+		return err
+	}
+	s.segments[d] = append([]sourceDTDTextSegment(nil), segments...)
+	return nil
+}
+
+func (s *sourceDTDStore) declarationBase(d *sourceDTDDeclaration) (string, bool) {
+	base, ok := s.bases[d]
+	return base, ok
+}
+
+// setDeclarationBase records a declaration's base. The string is borrowed
+// from the declaring frame.
+func (s *sourceDTDStore) setDeclarationBase(d *sourceDTDDeclaration, base string) error {
+	if s.bases == nil {
+		if err := s.reserve(sourceDTDStoreMapBytes); err != nil {
+			return err
+		}
+		s.bases = make(map[*sourceDTDDeclaration]string)
+	}
+	if err := s.reserve(sourceDTDStoreIndexBytes); err != nil {
+		return err
+	}
+	s.bases[d] = base
+	return nil
+}
+
 func (s *sourceDTDStore) parameterRead(d *sourceDTDDeclaration) error {
 	if s.parametersRead[d] {
 		return nil

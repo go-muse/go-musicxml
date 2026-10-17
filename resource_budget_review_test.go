@@ -96,18 +96,16 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 		}
 		t.Logf("original UTF-16 sample default buffer: %v", err)
 	}
-	r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: validation.Budgets{MaxBufferedBytes: 96 << 20}})
-	if err != nil || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
-		t.Fatalf("unread external DTD evidence changed: complete=%v err=%v", r.AssessmentComplete, err)
+	// With configured capacity the original bytes complete: the external
+	// subset comes from the bundled official MusicXML DTD.
+	r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: officialDTDCapacity})
+	if err != nil || !r.InputComplete || !r.AssessmentComplete || !r.Satisfied() {
+		t.Fatalf("original external-DOCTYPE sample with configured capacity: complete=%v satisfied=%v err=%v", r.AssessmentComplete, r.Satisfied(), err)
 	}
-	found := false
 	for _, finding := range r.Findings {
 		if finding.Reason == "dtd-infoset-unavailable" {
-			found = true
+			t.Fatalf("bundled external DTD still reported unavailable: %+v", finding)
 		}
-	}
-	if !found {
-		t.Fatal("lost external-DOCTYPE limitation")
 	}
 }
 
@@ -192,7 +190,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 			}
 			bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 			if tc.refuses {
-				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42053858, 25064439)
+				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42054060, 25064543)
 			} else {
 				reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
 			}
@@ -212,8 +210,10 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	bundle, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), reviewBudgetFragmentOptions(0))
 	// Historical live-byte witnesses were 57,607,574 and then 54,998,870;
 	// declaration-canonical role reuse lowers only the live side again.
-	// The final snapshot still requests the same 34,741,160 bytes.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54486614, 34741160)
+	// The external-DTD closure wording adds 202 live and 104 requested bytes:
+	// the graph and intrinsic source profile texts are charged as retained
+	// strings.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54486816, 34741264)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -228,8 +228,8 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 		measures, bytes int
 		used, requested int64
 	}{
-		{569, 76289, 41477418, 24717911},
-		{577, 77361, 42053858, 25064439},
+		{569, 76289, 41477620, 24718015},
+		{577, 77361, 42054060, 25064543},
 	} {
 		for _, short := range []int64{0, 1} {
 			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {
