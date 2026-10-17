@@ -64,8 +64,12 @@ type sourceDTDOriginStep struct {
 }
 
 type sourceDTDOrigin struct {
-	Sequence         int64
-	Region           sourceDTDRegion
+	Sequence int64
+	Region   sourceDTDRegion
+	// Entity, when nonempty, is the system identifier of the external DTD
+	// entity whose normalized text Span is relative to; otherwise Span is in
+	// the document's original bytes.
+	Entity           string
 	Span             sourceXMLSpan
 	SpanAvailable    bool
 	ExternalMarkup   bool

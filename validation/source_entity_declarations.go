@@ -14,7 +14,9 @@ import (
 // ignored duplicates and declarations past an unread-parameter-entity cutoff
 // must not be supplied. Sequence is a positive document-local declaration
 // identity, not a schema declaration or element NodeID. Origin is independently
-// available: known locations identify real original-byte declaration sites.
+// available: known locations identify real declaration sites, either in the
+// document's original bytes or, with CoordinateSpaceExternalDTD and the entity
+// named by Location.Entry, in an external DTD entity.
 type SourceEntityDeclaration struct {
 	Name     string
 	Unparsed bool
@@ -134,8 +136,10 @@ func (s *Session) SourceEntityDeclarations(ctx context.Context, facts SourceEnti
 			if err = validateLocation(row.Origin.Value, TargetSource, s.documentID); err != nil {
 				return err
 			}
-			if row.Origin.Value.Position == nil || row.Origin.Value.Position.CoordinateSpace != "original-bytes" {
-				return contract("source entity declaration origin", "known site requires original-byte coordinates")
+			position := row.Origin.Value.Position
+			external := position != nil && position.CoordinateSpace == CoordinateSpaceExternalDTD && row.Origin.Value.Entry != ""
+			if position == nil || position.CoordinateSpace != CoordinateSpaceOriginalBytes && !external {
+				return contract("source entity declaration origin", "known site requires original-byte or external-DTD coordinates")
 			}
 		}
 		nameBytes := int64(len(row.Name))

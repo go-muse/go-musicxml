@@ -34,13 +34,17 @@ type sourceDTDInfo struct {
 	HasNotationDeclarations  bool
 	HasParameterReferences   bool
 	Unsupported              bool
+	// PublicID and SystemID are the DOCTYPE external identifier as written.
+	// The grammar-only path keeps them only up to sourceDTDMaxIdentifierBytes.
+	PublicID, SystemID string
 }
 
 // These hard ceilings also bound callers without the optional budget methods.
 // The parent reader may impose lower limits and return its typed resource error.
 const (
-	sourceDTDMaxNameBytes = 1 << 20
-	sourceDTDMaxDepth     = 1024
+	sourceDTDMaxNameBytes       = 1 << 20
+	sourceDTDMaxDepth           = 1024
+	sourceDTDMaxIdentifierBytes = 4096
 )
 
 type sourceDTDParser struct {
@@ -54,6 +58,13 @@ type sourceDTDParser struct {
 	inDeclaration            bool
 	lastPeek                 rune
 	parameters               []*sourceDTDDeclaration
+	// external selects the external-subset grammar: parameter-entity
+	// references inside declarations and entity values, conditional sections
+	// and resolved external parameter entities. inLiteral suppresses reference
+	// recognition inside quoted literals.
+	external, inLiteral bool
+	conditionalDepth    int
+	resolveParameter    func(*sourceDTDDeclaration) (text, systemID string, found bool, err error)
 }
 
 // parseSourceDTD starts immediately after the literal <!DOCTYPE. It consumes
@@ -79,6 +90,7 @@ func (p *sourceDTDParser) doctype() {
 		p.info.ExternalSubset = true
 		p.info.Unsupported = true
 		publicID, systemID := p.externalID(false)
+		p.info.PublicID, p.info.SystemID = publicID, systemID
 		if p.store != nil {
 			p.store.state.ExternalSubsetUnread = true
 			p.store.state.PublicID = publicID
@@ -111,7 +123,22 @@ func (p *sourceDTDParser) subset() {
 			}
 			p.parameters = p.parameters[:len(p.parameters)-1]
 			p.err = p.store.parameterRead(d)
+		case sourceDTDExternalEnd:
+			if !p.external || p.conditionalDepth != 0 || len(p.parameters) != 0 {
+				p.fail("unexpected end of external DTD subset")
+			}
+			return
 		case ']':
+			if p.external {
+				if p.conditionalDepth == 0 {
+					p.fail("unexpected ] in external DTD subset")
+					return
+				}
+				p.read()
+				p.expect(']')
+				p.expect('>')
+				return
+			}
 			if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
 				p.fail("parameter entity cannot close the caller DTD subset")
 				return
@@ -155,6 +182,13 @@ func (p *sourceDTDParser) subset() {
 				p.parameters = append(p.parameters, declaration)
 				continue
 			}
+			if p.external && known && declaration.External && declaration.Notation == "" && p.pushExternalParameter(declaration) {
+				p.releaseBytes(int64(len(name)))
+				if p.err != nil {
+					return
+				}
+				continue
+			}
 			p.info.Unsupported = true
 			p.info.WellFormednessIncomplete = true
 			p.store.state.ParameterEntityUnread = true
@@ -176,6 +210,11 @@ func (p *sourceDTDParser) subset() {
 				if p.peek() == '-' {
 					p.literal("--")
 					p.comment()
+					continue
+				}
+				if p.peek() == '[' && p.external {
+					p.read()
+					p.conditionalSection()
 					continue
 				}
 				if p.peek() == '[' && start.ExternalMarkup {
@@ -506,6 +545,8 @@ const (
 
 func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacementValue string) {
 	p.literalGeneralReferences = false
+	p.inLiteral = true
+	defer func() { p.inLiteral = false }()
 	quote := p.read()
 	if quote == '%' && p.inDeclaration {
 		p.parameterDeclarationReference()
@@ -523,12 +564,27 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 		defer replacement.close()
 		defer func() { p.capture = nil }()
 	}
+	// The grammar-only path retains a bounded external identifier so plain
+	// decoding can locate a bundled or caller-supplied external subset.
+	var identifier []byte
+	keepIdentifier := p.store == nil && (kind == sourceDTDPublicLiteral || kind == sourceDTDSystemLiteral)
+	if keepIdentifier {
+		// One fixed allocation keeps arbitrarily long literals streaming.
+		identifier = make([]byte, 0, sourceDTDMaxIdentifierBytes)
+	}
 	for p.err == nil {
 		r := p.peek()
 		if r == quote {
 			p.capture = nil
 			p.read()
 			break
+		}
+		if keepIdentifier {
+			if len(identifier)+utf8.RuneLen(r) > sourceDTDMaxIdentifierBytes {
+				keepIdentifier, identifier = false, nil
+			} else {
+				identifier = utf8.AppendRune(identifier, r)
+			}
 		}
 		start := len(raw.value)
 		r = p.read()
@@ -549,6 +605,10 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 					p.literalGeneralReferences = true
 				}
 			} else if kind == sourceDTDEntityLiteral && r == '%' {
+				if p.external && p.store != nil {
+					p.literalParameter(&replacement)
+					continue
+				}
 				p.parameterDeclarationReference()
 			} else if kind == sourceDTDAttributeLiteral && r == '<' {
 				p.fail("literal < in DTD attribute default")
@@ -570,6 +630,9 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 		if p.err == nil && kind == sourceDTDEntityLiteral {
 			replacementValue, p.err = replacement.string()
 		}
+	}
+	if keepIdentifier && p.err == nil {
+		rawValue = string(identifier)
 	}
 	return rawValue, replacementValue
 }
@@ -835,7 +898,7 @@ func (p *sourceDTDParser) literal(s string) {
 
 func (p *sourceDTDParser) expect(want rune) {
 	if got := p.read(); got != want {
-		if got == '%' && p.inDeclaration {
+		if got == '%' && p.inDeclaration && !p.external {
 			p.parameterDeclarationReference()
 		} else {
 			p.fail("unexpected delimiter in DTD declaration")
@@ -856,6 +919,12 @@ func (p *sourceDTDParser) peek() rune {
 	r, err := p.input.Peek()
 	p.lastPeek = r
 	p.inputError(err)
+	if r == '%' && p.err == nil && p.external && p.inDeclaration && !p.inLiteral {
+		if input, ok := p.input.(*sourceDTDExternalInput); ok && sourceDTDNameStart(input.next()) {
+			p.declarationReference(input)
+			return p.peek()
+		}
+	}
 	return r
 }
 
@@ -888,7 +957,7 @@ func (p *sourceDTDParser) inputError(err error) {
 
 func (p *sourceDTDParser) fail(message string) {
 	if p.err == nil {
-		if p.inDeclaration && p.lastPeek == '%' {
+		if p.inDeclaration && p.lastPeek == '%' && !p.external {
 			p.parameterDeclarationReference()
 			return
 		}

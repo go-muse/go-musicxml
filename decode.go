@@ -182,7 +182,7 @@ func newDocumentDecoder(
 		return nil, xml.StartElement{}, err
 	}
 
-	decoder, err := newDepthLimitedXMLDecoder(ctx, reader, maxDepth)
+	decoder, err := newDepthLimitedXMLDecoder(ctx, reader, maxDepth, options.DTD)
 	if err != nil {
 		return nil, xml.StartElement{}, fmt.Errorf(
 			"musicxml: initialize XML decoder: %w",

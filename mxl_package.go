@@ -287,7 +287,7 @@ func (a *openedMXL) decodeDocument(
 	document, err := DecodeContext(
 		ctx,
 		bytes.NewReader(documentData),
-		DecodeOptions{MaxXMLDepth: limits.xmlDepth},
+		DecodeOptions{MaxXMLDepth: limits.xmlDepth, DTD: limits.dtd},
 	)
 	if err != nil {
 		return nil, fmt.Errorf(

@@ -15,6 +15,9 @@ type sourceXMLOriginStep struct {
 	Entity                             string
 	DeclarationAvailable, UseAvailable bool
 	Declaration, Use                   sourceXMLSpan
+	// DeclarationEntity names the external DTD entity containing Declaration;
+	// empty means the document itself.
+	DeclarationEntity string
 }
 type sourceXMLOrigin struct {
 	Kind                               sourceXMLOriginKind
@@ -24,8 +27,11 @@ type sourceXMLOrigin struct {
 	PhysicalAvailable                  bool
 	DeclarationAvailable, UseAvailable bool
 	Declaration, Use                   sourceXMLSpan
-	Ancestry                           []sourceXMLOriginStep
-	AncestryComplete                   bool
+	// DeclarationEntity names the external DTD entity containing Declaration;
+	// empty means the document itself.
+	DeclarationEntity string
+	Ancestry          []sourceXMLOriginStep
+	AncestryComplete  bool
 }
 
 func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified bool) error {
@@ -47,6 +53,7 @@ func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified
 	out.PhysicalAvailable = false
 	out.Declaration = frame.input.Declaration
 	out.DeclarationAvailable = frame.input.DeclarationAvailable
+	out.DeclarationEntity = frame.input.DeclarationEntity
 	out.Use = frame.use
 	out.UseAvailable = frame.useAvailable
 	if err := r.tokenReserve(int64(frame.depth) * 160); err != nil {
@@ -54,7 +61,7 @@ func (r *sourceXMLTokenReader) captureOrigin(target **sourceXMLOrigin, specified
 	}
 	out.Ancestry = make([]sourceXMLOriginStep, frame.depth)
 	for i := frame.depth - 1; frame != nil; i-- {
-		out.Ancestry[i] = sourceXMLOriginStep{Entity: frame.input.Name, DeclarationAvailable: frame.input.DeclarationAvailable, Declaration: frame.input.Declaration, UseAvailable: frame.useAvailable, Use: frame.use}
+		out.Ancestry[i] = sourceXMLOriginStep{Entity: frame.input.Name, DeclarationAvailable: frame.input.DeclarationAvailable, Declaration: frame.input.Declaration, DeclarationEntity: frame.input.DeclarationEntity, UseAvailable: frame.useAvailable, Use: frame.use}
 		frame = frame.parent
 	}
 	return nil

@@ -148,6 +148,18 @@ type SourcePosition struct {
 	CoordinateSpace string
 }
 
+// Source coordinate spaces used by SourcePosition.CoordinateSpace.
+const (
+	// CoordinateSpaceOriginalBytes locates a position in the assessed
+	// document's original bytes.
+	CoordinateSpaceOriginalBytes = "original-bytes"
+	// CoordinateSpaceExternalDTD locates a DTD declaration read from an
+	// external DTD entity, whose system identifier is Location.Entry. Offsets,
+	// lines and columns count that entity's text after end-of-line
+	// normalization and text-declaration removal.
+	CoordinateSpaceExternalDTD = "external-dtd-text"
+)
+
 // Location identifies a source/model/package occurrence without inventing lines.
 type Location struct {
 	Target                  Target
