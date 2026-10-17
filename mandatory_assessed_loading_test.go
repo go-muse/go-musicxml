@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -186,15 +185,7 @@ func mandatoryScore(divisions, notes string) string {
 
 func mandatoryModelReport(t *testing.T, result DecodeResult) validation.Report {
 	t.Helper()
-	field := reflect.ValueOf(result).FieldByName("Model")
-	if !field.IsValid() {
-		t.Fatal("DecodeResult must expose the independent Model assessment report")
-	}
-	report, ok := field.Interface().(validation.Report)
-	if !ok {
-		t.Fatal("DecodeResult.Model must be a validation.Report")
-	}
-	return report
+	return result.Model
 }
 
 func mandatorySatisfiedReport(t *testing.T, report validation.Report, profile validation.ProfileID, target validation.Target) {
