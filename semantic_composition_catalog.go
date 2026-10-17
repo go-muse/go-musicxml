@@ -61,7 +61,7 @@ func buildSemanticAssessmentDefinitions(target validation.Target) (*assessmentDe
 	}
 	selected.NormativeClosure = "Explicit bounded assessment of encoded MusicXML 4.0 XSD, local, exact timeline, contextual and nonfetching resource facts. Selected normative consumers include independently proved barline location and graphical-repeat content. Unavailable timing, unresolved source clauses and unsupported representation capabilities remain explicit; no renderer, external desired-score comparison, inferred exporter intention or universal conformance claim. Canonical SMuFL membership and the actual supported IPA evidence require only caller-selected data at relevant occurrences; no dictionary is loaded automatically. Optional standard-sound recognition and dictionary-backed rendering advice are not added by this composition."
 	if target == validation.TargetSource {
-		selected.NormativeClosure += " Actually read bounded internal declarations and owned source origins distinguish physical from effective values. Unread external declarations remain unavailable; no external subset is fetched. Joined DTD/XSD shorthand authority is document-local."
+		selected.NormativeClosure += " Actually read bounded internal declarations, a DOCTYPE external subset read from the bundled official MusicXML DTDs or a caller DTD source, and owned source origins distinguish physical from effective values. Unrecognized external declarations remain unavailable; no external subset is fetched from the network. Joined DTD/XSD shorthand authority is document-local."
 	} else {
 		selected.NormativeClosure += " Current-model assessment never reconstructs discarded source, namespaces, DTD declarations or original bytes."
 	}

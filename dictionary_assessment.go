@@ -104,8 +104,9 @@ func AssessModelWithDictionaries(ctx context.Context, document Document, options
 //
 // Referencing this loader embeds all five bundled components regardless of
 // options, including custom sources. Distribute the notice/license files listed
-// in THIRD_PARTY_NOTICES.md. Inputs with unread external DOCTYPE subsets cannot
-// satisfy this loader; ordinary Decode provides conversion only, not validation.
+// in THIRD_PARTY_NOTICES.md. A DOCTYPE external subset is read from the bundled
+// official MusicXML DTDs or options.Decode.DTD; an unrecognized one cannot
+// satisfy this loader. Ordinary Decode provides conversion only, not validation.
 func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error) {
 	return decodeValidated(ctx, reader, options.Decode, options.Assessment)
 }

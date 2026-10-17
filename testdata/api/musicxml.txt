@@ -891,8 +891,9 @@ type Assess struct, field Type YesNo `xml:"type,attr"`
 type Assess struct, field order Type Player TimeOnly
 type AssessmentOptions struct, comparable
 type AssessmentOptions struct, field Budgets validation.Budgets
+type AssessmentOptions struct, field DTD *DTDOptions
 type AssessmentOptions struct, field Profile validation.ProfileID
-type AssessmentOptions struct, field order Profile Budgets
+type AssessmentOptions struct, field order Profile Budgets DTD
 type Attributes struct, field Clef []Clef `xml:"clef"`
 type Attributes struct, field Directive []struct{Value string "xml:\",chardata\""; Lang *string "xml:\"http://www.w3.org/XML/1998/namespace lang,attr,omitempty\""; DefaultX *Tenths "xml:\"default-x,attr,omitempty\""; DefaultY *Tenths "xml:\"default-y,attr,omitempty\""; RelativeX *Tenths "xml:\"relative-x,attr,omitempty\""; RelativeY *Tenths "xml:\"relative-y,attr,omitempty\""; FontFamily *FontFamily "xml:\"font-family,attr,omitempty\""; FontStyle *FontStyle "xml:\"font-style,attr,omitempty\""; FontSize *FontSize "xml:\"font-size,attr,omitempty\""; FontWeight *FontWeight "xml:\"font-weight,attr,omitempty\""; Color *Color "xml:\"color,attr,omitempty\""} `xml:"directive"`
 type Attributes struct, field Divisions *PositiveDivisions `xml:"divisions,omitempty"`
@@ -1142,6 +1143,25 @@ type CreditContent, method (*CreditContent) UnmarshalXML(decoder *xml.Decoder, s
 type CreditContent, method (CreditContent) MarshalXML(encoder *xml.Encoder, _ xml.StartElement) error
 type CreditContents []CreditContent
 type CreditContents, method (*CreditContents) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
+type DTDError struct, comparable
+type DTDError struct, field Err error
+type DTDError struct, field PublicID string
+type DTDError struct, field SystemID string
+type DTDError struct, field order PublicID SystemID Err
+type DTDError, method (*DTDError) Error() string
+type DTDError, method (*DTDError) Is(target error) bool
+type DTDError, method (*DTDError) Unwrap() error
+type DTDOptions struct, comparable
+type DTDOptions struct, field Source DTDSource
+type DTDRequest struct, comparable
+type DTDRequest struct, field BaseSystemID string
+type DTDRequest struct, field PublicID string
+type DTDRequest struct, field SystemID string
+type DTDRequest struct, field order PublicID SystemID BaseSystemID
+type DTDSource interface
+type DTDSource interface, method OpenDTD(ctx context.Context, request DTDRequest) ([]byte, error)
+type DTDSourceFunc func(ctx context.Context, request DTDRequest) ([]byte, error)
+type DTDSourceFunc, method (DTDSourceFunc) OpenDTD(ctx context.Context, request DTDRequest) ([]byte, error)
 type Dashes struct, comparable
 type Dashes struct, field Color *Color `xml:"color,attr,omitempty"`
 type Dashes struct, field DashLength *Tenths `xml:"dash-length,attr,omitempty"`
@@ -1163,7 +1183,9 @@ type DecodeDictionaryAssessmentOptions struct, field Assessment *DictionaryAsses
 type DecodeDictionaryAssessmentOptions struct, field Decode DecodeOptions
 type DecodeDictionaryAssessmentOptions struct, field order Decode Assessment
 type DecodeOptions struct, comparable
+type DecodeOptions struct, field DTD *DTDOptions
 type DecodeOptions struct, field MaxXMLDepth int
+type DecodeOptions struct, field order MaxXMLDepth DTD
 type DecodeResult struct, field Conversion validation.ConversionResult
 type DecodeResult struct, field Document Document
 type DecodeResult struct, field Model validation.Report
@@ -2394,13 +2416,14 @@ type MXLLinkError struct, field order SourcePath Href TargetPath Err
 type MXLLinkError, method (*MXLLinkError) Error() string
 type MXLLinkError, method (*MXLLinkError) Unwrap() error
 type MXLOptions struct, comparable
+type MXLOptions struct, field DTD *DTDOptions
 type MXLOptions struct, field MaxArchiveBytes int64
 type MXLOptions struct, field MaxDocumentBytes int64
 type MXLOptions struct, field MaxMetadataBytes int64
 type MXLOptions struct, field MaxResourceBytes int64
 type MXLOptions struct, field MaxResourcesBytes int64
 type MXLOptions struct, field MaxXMLDepth int
-type MXLOptions struct, field order MaxArchiveBytes MaxMetadataBytes MaxDocumentBytes MaxResourceBytes MaxResourcesBytes MaxXMLDepth
+type MXLOptions struct, field order MaxArchiveBytes MaxMetadataBytes MaxDocumentBytes MaxResourceBytes MaxResourcesBytes MaxXMLDepth DTD
 type MXLPackage struct, field Document Document
 type MXLPackage struct, field Resources []MXLResource
 type MXLPackage struct, field RootFiles []MXLRootFile
@@ -4063,6 +4086,8 @@ type Work struct, field order WorkNumber WorkTitle Opus
 type YYYYMMDD string
 type YesNo string
 type YesNoNumber string
+var ErrDTDNotFound error
+var ErrDTDUnavailable error
 var ErrDictionaryUnavailable error
 var ErrDocumentCycle error
 var ErrDocumentTooDeep error
