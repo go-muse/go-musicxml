@@ -33,7 +33,7 @@ func TestNoteOriginsExactIndependentAdjustmentsBothOrders(t *testing.T) {
 			service := &timelineService{}
 			b := noteOriginBindings()
 			n := runtimeNote(t, b, 20, 6, false)
-			n.end.Order = stateKnown(order)
+			n.end.Order = testEvidence(stateKnown(order))
 			stateAttribute(b, n, timelineRoleNoteAttack, stateAtomicDecimal(t, -1, 1).Value)
 			stateAttribute(b, n, timelineRoleNoteRelease, stateAtomicDecimal(t, 2, 1).Value)
 			fact := noteOriginFact(t)
@@ -163,7 +163,7 @@ func TestNoteOriginsPublicationTransactionalAndExactRoles(t *testing.T) {
 	if err := service.readNoteOrigins(ctx, s, b, n, noteOriginFact(t), stateKnown(stateDecimal(t, 3, 1))); !errors.Is(err, context.Canceled) || len(service.NoteOrigins) != 0 {
 		t.Fatalf("cancel = %v; map = %+v", err, service.NoteOrigins)
 	}
-	n.header.Declaration = stateKnown(DeclarationID{Occurrence: "foreign-note"})
+	n.header.Declaration = testEvidence(stateKnown(DeclarationID{Occurrence: "foreign-note"}))
 	n.header.Name = QName{Local: "note"}
 	if err := service.readNoteOrigins(context.Background(), s, b, n, noteOriginFact(t), stateKnown(stateDecimal(t, 3, 1))); err == nil || len(service.NoteOrigins) != 0 {
 		t.Fatalf("name fallback accepted = %v", err)
@@ -234,7 +234,7 @@ func TestNoteOriginsThousandOrdinaryNotesFitDefaultBudgets(t *testing.T) {
 			for i := 0; i < 1000; i++ {
 				id := NodeID(20 + i*10)
 				n := runtimeNote(t, b, id, 1, false)
-				n.end.Order = stateKnown(order)
+				n.end.Order = testEvidence(stateKnown(order))
 				fact := noteOriginFact(t)
 				fact.Position.Value.Offset = mustRational(t, int64(i), 30)
 				fact.End = stateKnown(fact.Position.Value)

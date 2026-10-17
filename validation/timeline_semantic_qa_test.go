@@ -84,7 +84,7 @@ func TestTimelineSemanticQARuntimeUnobservedNoteBreaksPrincipal(t *testing.T) {
 	s, svc, b := runtimeFixture(t)
 	divisions := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 1, 1)))
 	hidden := runtimeNote(t, b, 40, 1, false)
-	hidden.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "qa-intervening-note-binding-unavailable"}
+	hidden.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "qa-intervening-note-binding-unavailable"})
 	if err := svc.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, divisions, runtimeNote(t, b, 30, 4, false), hidden, runtimeNote(t, b, 50, 2, true))); err != nil {
 		t.Fatal(err)
 	}

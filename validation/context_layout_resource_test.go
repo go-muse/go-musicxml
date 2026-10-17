@@ -65,7 +65,7 @@ func TestLayoutGroupDisplayEnumerationGate(t *testing.T) {
 			parent.closed = false
 			n := localNode(2, 1, name)
 			use := b.Roles[layoutRole(name)][0]
-			n.header.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: use.Declaration}
+			n.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceKnown, Value: use.Declaration})
 			s.nodes = map[NodeID]*factNode{1: parent, 2: n}
 			r := &contextReader{ctx: context.Background(), s: s, b: b}
 			if err := layoutStatic(r, RuleKey{"layout", 1}, n, &contextPlan{}); err != nil {

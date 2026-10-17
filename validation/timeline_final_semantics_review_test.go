@@ -229,7 +229,7 @@ func TestTimelineFinalReviewLaterVoiceGapKeepsEarlierGraceDonors(t *testing.T) {
 	first := runtimeBlock(b, 0, attrs, voiced(30, 1), note, voiced(50, 1))
 	bad := voiced(60, 1)
 	cause := &DecisionRef{Rule: RuleKey{"later-voice-scalar", 1}, Subject: NodeRef{"d", 63}}
-	bad.children[1].end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "later-invalid-voice", Cause: cause}
+	bad.children[1].end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "later-invalid-voice", Cause: cause})
 	second := runtimeBlock(b, 1, bad)
 	for _, block := range []timelineMeasureBlock{first, second} {
 		if err := svc.readMeasure(context.Background(), s, b, block); err != nil {
@@ -944,7 +944,7 @@ func TestTimelineFinalReviewUnplacedKeyPresenceKeepsWitnesses(t *testing.T) {
 			}
 			key := stateNode(b, timelineRoleAttributesKey, 81, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 82, fifths))
 			if mode == "hidden-content" {
-				key.end.ChildrenComplete = stateUnknown[bool]("key-content-unavailable")
+				key.end.ChildrenComplete = testEvidence(stateUnknown[bool]("key-content-unavailable"))
 			}
 			if mode == "unknown-scope" {
 				stateAttribute(b, key, timelineRoleKeyNumber, Atomic{Kind: AtomicInteger, Integer: stateInt(t, 1)})

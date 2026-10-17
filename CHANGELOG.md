@@ -48,11 +48,35 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reduce bounded-assessment storage amplification and repeated work: compact
+  private node facts, share exact session-owned evidence and final role caches,
+  admit DFS scratch by live capacity, build exact-size XSD witness vectors,
+  release temporary attribute indexes, and meter actual state projections.
+  Public loading behavior, selected checks and default limits are unchanged.
+  Retained-container growth now also charges actual copy work against
+  `MaxRuleSteps`; a previously just-sufficient explicit allowance can refuse
+  even for the same input (reviewer XSD/local controls observed +0.6–1.1%).
+  Compiled type/use identities each add one compile record and 64 logical
+  bytes, so custom schemas near fixed compile/catalog limits can also refuse.
+  The temporary schema attribute index now admits its header/first group
+  and conservative entry storage before allocating, rather than undercounting
+  small maps; near-limit explicit buffer allowances may refuse sooner.
+  Callers with tuned explicit limits should revalidate them and allow headroom.
+  Resource/cancellation checkpoints can change as more required work is reached;
+  large-model default assessments still have explicit resource ceilings. See
+  [the corpus correction scope and residual limitations](docs/validation/corpus-resource-fixes.md).
+
 - Tighten source-origin snapshot accounting without raising defaults. Capacity
   remains limited by two owned origin copies and overlapping session storage:
-  the amd64 single-note DTD/dictionary graph fixture admits 531 measures
-  (71,197 bytes), then refuses 532 (71,331 bytes); the earlier reported boundary
-  was 494 measures (about 66 KB). The review reported the 500-measure case at
+  the historical amd64 boundary of 531 measures (71,197 bytes) admitted and
+  532 (71,331 bytes) refused was superseded by compact retained facts. The
+  initial PR 43 checkpoint `c0d73972` admits 568 measures (76,155 bytes),
+  then refuses 569 (76,289 bytes): 42,495,274 live bytes plus a 24,717,911-byte
+  request. Review corrections further reduce repeated role-cache storage: the
+  same fixture now completes at 576 measures (77,227 bytes) and refuses 577
+  (77,361 bytes), at 42,053,858 live bytes plus a 25,064,439-byte request.
+  The earlier reported boundary was 494 measures (about 66 KB).
+  The review reported the 500-measure case at
   about 62.9 of 67.1 MB, with comparisons of about 114 KB for standalone DTD/dictionary
   assessment and 168 KB for the legacy graph. These are fixture-specific
   observations, not general document-size guarantees. The 86,052-byte,

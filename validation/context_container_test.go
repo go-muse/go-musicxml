@@ -66,7 +66,7 @@ func containerTestFixture(t *testing.T) (*Session, *contextPlan) {
 	b := &contextBindings{Elements: map[contextRole]map[DeclarationID]struct{}{}, Attributes: map[contextRole]map[ComponentID]AttributeSelector{}}
 	for i, n := range []*factNode{root, files, first, second} {
 		n.header.Declaration.Value.Assembly = AssemblyContainer
-		n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextAssemblyType(AssemblyContainer, []string{"container", "rootfiles", "rootfile", "rootfile"}[i])}
+		n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextAssemblyType(AssemblyContainer, []string{"container", "rootfiles", "rootfile", "rootfile"}[i])})
 		n.header.Location = Location{Target: TargetSource, DocumentID: s.documentID, Path: "/container", Position: &SourcePosition{Line: 1, Column: i + 1}}
 		role := []contextRole{containerRoot, containerRootfiles, containerRootfile, containerRootfile}[i]
 		b.Elements[role] = map[DeclarationID]struct{}{n.header.Declaration.Value: {}}
@@ -100,11 +100,11 @@ func TestContainerMetadataUnavailableEvidence(t *testing.T) {
 				case "lexeme":
 					s.nodes[3].attributes[0].Scalar.Lexeme = Evidence[string]{State: state, Reason: "source-gap", Cause: cause}
 				case "enumeration":
-					s.nodes[2].end.ChildrenComplete = Evidence[bool]{State: state, Reason: "source-gap", Cause: cause}
+					s.nodes[2].end.ChildrenComplete = testEvidence(Evidence[bool]{State: state, Reason: "source-gap", Cause: cause})
 				case "order":
-					s.nodes[2].end.Order = Evidence[OrderKind]{State: state, Reason: "source-gap", Cause: cause}
+					s.nodes[2].end.Order = testEvidence(Evidence[OrderKind]{State: state, Reason: "source-gap", Cause: cause})
 				case "binding":
-					s.nodes[3].header.Declaration = Evidence[DeclarationID]{State: state, Reason: "source-gap", Cause: cause}
+					s.nodes[3].header.Declaration = testEvidence(Evidence[DeclarationID]{State: state, Reason: "source-gap", Cause: cause})
 				}
 				d, pending, err := evaluateContextContainerMetadata(context.Background(), s, nil, RuleKey{"container-test", 1}, p, true)
 				if err != nil || pending || d.Outcome != OutcomePass {
@@ -229,7 +229,7 @@ func TestContainerMetadataCancellationAndFactBudget(t *testing.T) {
 func TestContainerMetadataRejectsUnprovedSourceOrder(t *testing.T) {
 	for _, order := range []OrderKind{OrderModelContent, OrderModelFields} {
 		s, p := containerTestFixture(t)
-		s.nodes[2].end.Order = Evidence[OrderKind]{State: EvidenceKnown, Value: order}
+		s.nodes[2].end.Order = testEvidence(Evidence[OrderKind]{State: EvidenceKnown, Value: order})
 		_, _, err := evaluateContextContainerMetadata(context.Background(), s, nil, RuleKey{"container-test", 1}, p, true)
 		if err != nil {
 			t.Fatal(err)

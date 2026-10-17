@@ -59,7 +59,7 @@ func newLayoutFormatting(r *contextReader, key RuleKey) (*layoutFormatting, erro
 					return nil, r.err
 				}
 				if ch.header.Declaration.State != EvidenceKnown {
-					f.closed = stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+					f.closed = stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 				}
 			}
 			f.closed = timelineMergeAvailability(f.closed, r.enumerated(n))

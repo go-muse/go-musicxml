@@ -68,7 +68,7 @@ func performanceLocalRoles(r *contextReader, key RuleKey, n *factNode, out *Timi
 						break
 					}
 					if ch.header.Declaration.State != EvidenceKnown {
-						out.LayoutOrigin = stateUnavailable[DeclarationID, NodeRef](ch.header.Declaration)
+						out.LayoutOrigin = stateUnavailable[DeclarationID, NodeRef](*ch.header.Declaration)
 						break
 					}
 					if !r.matches(ch, "perf-accidental-mark") {

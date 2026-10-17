@@ -119,7 +119,7 @@ func (service *timelineService) figuredBassAnchor(r *stateReader, domains []figu
 				}
 				if !r.matches(candidate, timelineRoleNote) {
 					if candidate.header.Declaration.State != EvidenceKnown && r.potential(candidate, timelineRoleNote) {
-						addGap(stateUnavailable[DeclarationID, NodeRef](candidate.header.Declaration), lower)
+						addGap(stateUnavailable[DeclarationID, NodeRef](*candidate.header.Declaration), lower)
 					}
 					continue
 				}

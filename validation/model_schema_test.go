@@ -17,7 +17,7 @@ func TestModelSchemaBridgeKeepsCurrentValue(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	n := &factNode{header: NodeHeader{ID: 1, Name: QName{Local: "root"}}, closed: true, end: NodeEnd{Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceUnsupported, Reason: "no-source"}, Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: exact}}}, AttributesComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, ChildrenComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, Order: Evidence[OrderKind]{State: EvidenceKnown, Value: OrderModelFields}}}
+	n := &factNode{header: testRetainedHeader(NodeHeader{ID: 1, Name: QName{Local: "root"}}), closed: true, end: testRetainedEnd(NodeEnd{Scalar: Scalar{Lexeme: Evidence[string]{State: EvidenceUnsupported, Reason: "no-source"}, Value: Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: exact}}}, AttributesComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, ChildrenComplete: Evidence[bool]{State: EvidenceKnown, Value: true}, Order: Evidence[OrderKind]{State: EvidenceKnown, Value: OrderModelFields}})}
 	got, err := s.schemaSubject(ctx, n)
 	if err != nil {
 		t.Fatal(err)
@@ -28,7 +28,7 @@ func TestModelSchemaBridgeKeepsCurrentValue(t *testing.T) {
 	if got.Current.Value.Number.Compare(xsd.Decimal{Fraction: "1"}) <= 0 {
 		t.Fatal("binary-exact current 0.1 was rounded")
 	}
-	n.end.Order = Evidence[OrderKind]{State: EvidenceUnsupported, Reason: "content-hole"}
+	n.end.Order = testEvidence(Evidence[OrderKind]{State: EvidenceUnsupported, Reason: "content-hole"})
 	got, err = s.schemaSubject(ctx, n)
 	if err != nil {
 		t.Fatal(err)
@@ -104,7 +104,7 @@ func TestModelSchemaBindsPendingCurrentRoot(t *testing.T) {
 	if s.nodes[1].header.Declaration.State != EvidenceKnown {
 		t.Fatalf("no exact root binding: %+v", s.nodes[1].header)
 	}
-	if got := s.nodes[1].end.Scalar; got.Lexeme.State != EvidenceUnsupported || got.Value.Value.Integer.String() != "0" {
+	if got := s.nodes[1].end.Scalar.value(); got.Lexeme.State != EvidenceUnsupported || got.Value.Value.Integer.String() != "0" {
 		t.Fatalf("current input overwritten: %+v", got)
 	}
 	report, err := s.Finish(ctx, Completion{InputComplete: true, Syntax: SyntaxNotAssessed})
@@ -212,7 +212,7 @@ func TestModelSchemaContentHoleKeepsIndependentAttributeFailure(t *testing.T) {
 	if got := s.schemaResult(s.nodes[1], XSDCheckAttributes); got.Valid || !got.Complete {
 		t.Fatalf("independent attribute failure lost: %+v", got)
 	}
-	if got := s.nodes[2].header.Declaration; got.State != EvidenceInvalid || got.Cause == nil || got.Cause.Rule.ID != "test.model-representation" {
+	if got := *s.nodes[2].header.Declaration; got.State != EvidenceInvalid || got.Cause == nil || got.Cause.Rule.ID != "test.model-representation" {
 		t.Fatalf("child lost representation cause: %+v", got)
 	}
 	if got := s.schemaResult(s.nodes[1], XSDCheckContent); !got.Valid || got.Complete || len(got.Issues) != 0 {

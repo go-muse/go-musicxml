@@ -21,7 +21,7 @@ func (s *Session) evaluate(ctx context.Context, n *factNode, key RuleKey, final 
 		return err
 	}
 	p, hasPlan := s.catalog.plans[r.Predicate]
-	selected := selectorDecision(r.Selector, n.header)
+	selected := selectorDecision(r.Selector, n.header.value())
 	if r.Selector.Assembly != nil && p.kind == planModelRepresentation {
 		selected = s.modelAssemblyDecision(*r.Selector.Assembly)
 	} else if r.Selector.Assembly != nil {

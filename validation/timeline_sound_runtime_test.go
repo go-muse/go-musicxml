@@ -139,8 +139,8 @@ func TestTimelineRuntimeUnknownPublisherGapsOnlyPotentialFamilies(t *testing.T) 
 			b.Roles[role][0].DeclaredTypeKnown = true
 			b.Roles[role][0].DeclaredType = typ
 			unknown := stateNode(b, role, 50, stateAbsent[Atomic]())
-			unknown.header.Declaration = stateUnknown[DeclarationID]("unbound-publisher")
-			unknown.header.Type = stateKnown(typ)
+			unknown.header.Declaration = testEvidence(stateUnknown[DeclarationID]("unbound-publisher"))
+			unknown.header.Type = testEvidence(stateKnown(typ))
 			if err := svc.readMeasure(ctx, s, b, runtimeBlock(b, 0, unknown)); err != nil {
 				t.Fatal(err)
 			}

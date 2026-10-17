@@ -1,5 +1,20 @@
 # Fragment lookup and source-origin transport budgets
 
+Historical PR 41 receipt at published baseline `d336f089`. The recorded
+measurements below are preserved; the named test implementations have changed.
+At the initial PR 43 checkpoint `c0d73972`, those tests assert 532 completion,
+the adjacent 568/569 boundary, and 54,998,870 live bytes for the medium fragment.
+The official-source test then accepted either a rule-step or buffered-byte
+refusal. PR 43 review corrections subsequently move the synthetic adjacent
+boundary to 576/577, reduce medium-fragment live bytes to 54,486,614, and pin a
+buffered-byte refusal for the official source witness in `aab8677`. See the
+linked current scope for exact/one-short controls. The old rule-step refusal
+is historical. Commands below reproduce the historical claims only when run
+against their recorded baseline, not against current tests. See
+[the current correction scope](corpus-resource-fixes.md) and the current
+`resource_budget_review_test.go`; the old numbers below are not current-head
+capacity claims.
+
 This receipt covers PR 41 review items 4291055418, 4291055432 and 4291055313,
 including the reopened capacity observation in comment 4293498146.
 It records bounded resource-accounting corrections and the measured distinction

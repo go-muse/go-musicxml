@@ -53,9 +53,9 @@ func TestSpanRound3LocalTieHonorsHierarchyGaps(t *testing.T) {
 					applyGap := func(n *factNode) {
 						if state != EvidenceKnown {
 							if axis == "children" {
-								n.end.ChildrenComplete = gap
+								n.end.ChildrenComplete = testEvidence(gap)
 							} else {
-								n.end.Order = stateUnavailable[bool, OrderKind](gap)
+								n.end.Order = testEvidence(stateUnavailable[bool, OrderKind](gap))
 							}
 						}
 					}

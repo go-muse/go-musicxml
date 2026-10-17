@@ -248,7 +248,7 @@ func contextRepeatSingletonAttributes(r *contextReader, n *factNode, exact *Attr
 		return status
 	}
 	if n.end.AttributesComplete.State != EvidenceKnown {
-		return n.end.AttributesComplete
+		return *n.end.AttributesComplete
 	}
 	if !n.end.AttributesComplete.Value {
 		return stateUnknown[bool]("context-repeat-singleton-attributes-incomplete")

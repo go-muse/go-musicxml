@@ -18,7 +18,7 @@ func figuredOriginFixture(t *testing.T, order OrderKind) (*Session, *timelineSer
 	late := runtimeNote(t, b, 30, 3, false)
 	nearest := runtimeNote(t, b, 40, 3, false)
 	block := runtimeBlock(b, 0, figure, late, early, nearest)
-	block.content.end.Order = stateKnown(order)
+	block.content.end.Order = testEvidence(stateKnown(order))
 	service := &timelineService{Facts: map[NodeID]timelineEventFact{}}
 	for id, offset := range map[NodeID]int64{10: 1, 20: 0, 30: 3, 40: 2} {
 		service.Facts[id] = timelineEventFact{Position: timelineAt(block, stateKnown(mustRational(t, offset, 1))), Part: block.part, Staff: stateAbsent[Integer](), Voice: stateAbsent[string]()}
@@ -131,7 +131,7 @@ func TestFiguredBassOriginLaterUnknownMarkersDoNotMaskEarlierAnchor(t *testing.T
 		t.Run(map[bool]string{false: "later-last", true: "later-first"}[laterFirst], func(t *testing.T) {
 			s, service, b, block := figuredOriginFixture(t, OrderSource)
 			late := block.content.children[1]
-			late.end.ChildrenComplete = stateUnknown[bool]("later-note-branches-unavailable")
+			late.end.ChildrenComplete = testEvidence(stateUnknown[bool]("later-note-branches-unavailable"))
 			if !laterFirst {
 				block.content.children[1], block.content.children[3] = block.content.children[3], block.content.children[1]
 			}
@@ -248,7 +248,7 @@ func TestFiguredBassFollowingNoteCanCrossCompleteMeasures(t *testing.T) {
 	for _, order := range []OrderKind{OrderSource, OrderModelContent} {
 		s, v, b, first := figuredOriginFixture(t, order)
 		second := runtimeBlock(b, 1, first.content.children[3])
-		second.content.end.Order = stateKnown(order)
+		second.content.end.Order = testEvidence(stateKnown(order))
 		first.content.children = first.content.children[:1]
 		first.content.children[0].children = append(first.content.children[0].children, stateNode(b, timelineRoleFiguredBassDuration, 12, stateAtomicDecimal(t, 1, 1)))
 		f := v.Facts[40]
@@ -378,7 +378,7 @@ func TestFiguredBassThousandDistinctOriginsDefaultBudget(t *testing.T) {
 		b := noteOriginBindings()
 		v := &timelineService{Facts: map[NodeID]timelineEventFact{}}
 		block := runtimeBlock(b, 0)
-		block.content.end.Order = stateKnown(order)
+		block.content.end.Order = testEvidence(stateKnown(order))
 		for i := 0; i < 1000; i++ {
 			id := NodeID(1000 + i*10)
 			figure := stateNode(b, timelineRoleFiguredBass, id, stateAbsent[Atomic](), stateNode(b, timelineRoleFiguredBassFigure, id+1, stateAbsent[Atomic]()), stateNode(b, timelineRoleFiguredBassDuration, id+2, stateAtomicDecimal(t, 1, 1)))

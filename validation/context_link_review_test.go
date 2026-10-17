@@ -20,7 +20,7 @@ func TestResourceReviewLinkFreeIndexRetainsOnlyPartOwnership(t *testing.T) {
 func TestResourceReviewSubjectDeclarationCauseIsOwnedAndRemapped(t *testing.T) {
 	node := resourceTestNode(1, 0, "root")
 	cause := &DecisionRef{Rule: RuleKey{ID: "declaration", Revision: 1}, Subject: NodeRef{"d", 1}}
-	node.header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "declaration-unavailable", Cause: cause}
+	node.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "declaration-unavailable", Cause: cause})
 	r, _ := resourceTestReader(t, node)
 	shell := resourceShell(r.s, node, Evidence[NodeRef]{State: EvidenceAbsent})
 	shell.Group = &ResourceGroupContext{Value: Evidence[string]{State: EvidenceAbsent}}

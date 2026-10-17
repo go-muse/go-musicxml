@@ -91,7 +91,7 @@ func (s *Session) resourceFragments(ctx context.Context) (*resourceFragmentSnaps
 		}
 		n := s.nodes[id]
 		out.Elements[i] = resourceFragmentElement{Subject: NodeRef{s.documentID, id}, Parent: NodeRef{s.documentID, n.header.Parent}, Order: uint64(i) + 1}
-		if !n.closed || n.end.Order.State != EvidenceKnown || !knownComplete(n.end.ChildrenComplete) {
+		if !n.closed || n.end.Order.State != EvidenceKnown || !knownComplete(*n.end.ChildrenComplete) {
 			out.Complete = stateUnknown[bool]("fragment-element-order-incomplete")
 		}
 	}

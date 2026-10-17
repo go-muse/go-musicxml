@@ -432,7 +432,7 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 				domain = d.Value
 			}
 			if complete.State == EvidenceKnown {
-				complete = stateUnavailable[DeclarationID, bool](node.header.Declaration)
+				complete = stateUnavailable[DeclarationID, bool](*node.header.Declaration)
 			}
 			if old, ok := gaps[domain]; ok {
 				gaps[domain] = timelineMergeAvailability(old, complete)
@@ -455,7 +455,7 @@ func evaluateContextSpans(ctx context.Context, s *Session, n *factNode, key Rule
 				a := NodeRef{s.documentID, anchor.header.ID}
 				g := complete
 				if g.State == EvidenceKnown {
-					g = stateUnavailable[DeclarationID, bool](node.header.Declaration)
+					g = stateUnavailable[DeclarationID, bool](*node.header.Declaration)
 				}
 				if old, ok := localGaps[a]; ok {
 					localGaps[a] = timelineMergeAvailability(old, g)

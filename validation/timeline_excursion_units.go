@@ -138,7 +138,7 @@ func timelineUnitPublishers(ctx context.Context, s *Session, b *timelineBindings
 			case r.matches(event, timelineRoleAttributes):
 				value = timelineAttributeUnits(r, event)
 			case event.header.Declaration.State != EvidenceKnown && r.potential(event, timelineRoleAttributes):
-				value = stateUnavailable[DeclarationID, Decimal](event.header.Declaration)
+				value = stateUnavailable[DeclarationID, Decimal](*event.header.Declaration)
 			default:
 				continue
 			}

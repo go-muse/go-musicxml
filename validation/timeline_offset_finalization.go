@@ -120,7 +120,7 @@ func (service *timelineService) finalizeOffsetEvent(ctx context.Context, s *Sess
 					return r.err
 				}
 				if child.header.Declaration.State != EvidenceKnown && r.potential(child, timelineRoleDirectionSound) && block.part.State == EvidenceKnown {
-					if err := service.gapSoundPublishers(ctx, s, block.part.Value, block.ordinal, stateUnavailable[DeclarationID, musicalPosition](child.header.Declaration)); err != nil {
+					if err := service.gapSoundPublishers(ctx, s, block.part.Value, block.ordinal, stateUnavailable[DeclarationID, musicalPosition](*child.header.Declaration)); err != nil {
 						return err
 					}
 				}

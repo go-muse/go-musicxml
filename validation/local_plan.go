@@ -402,7 +402,7 @@ func localWorst(a, b Decision) Decision {
 func localMatches(ctx context.Context, s *Session, n *factNode, declarations []DeclarationID) (bool, Decision, error) {
 	e := n.header.Declaration
 	if e.State != EvidenceKnown {
-		return false, localGap(e), nil
+		return false, localGap(*e), nil
 	}
 	for _, d := range declarations {
 		if err := s.step(ctx, 1); err != nil {
@@ -450,7 +450,7 @@ func (s *Session) localScalar(ctx context.Context, n *factNode, a *AttributeSele
 	// Generic fact streams already promise domain-validated typed values. They
 	// have no implicit defaults; production source/model catalogs use the kernel.
 	if a == nil {
-		return n.end.Scalar.Value, nil
+		return *n.end.Scalar.Value, nil
 	}
 	v, _, e := s.lookupAttribute(ctx, n, *a)
 	return v, e
@@ -483,7 +483,7 @@ func (s *Session) localPresence(ctx context.Context, n *factNode, declarations [
 				return Decision{Outcome: OutcomePass}, ch, nil
 			}
 			if !ch.closed || ch.end.ChildrenComplete.State != EvidenceKnown || !ch.end.ChildrenComplete.Value {
-				gap = localWorst(gap, localIncomplete(ch.end.ChildrenComplete, "children-incomplete"))
+				gap = localWorst(gap, localIncomplete(*ch.end.ChildrenComplete, "children-incomplete"))
 			}
 		}
 		if !s.inputComplete {
@@ -500,7 +500,7 @@ func (s *Session) localPresence(ctx context.Context, n *factNode, declarations [
 			}
 		}
 		if !n.closed || n.end.ChildrenComplete.State != EvidenceKnown || !n.end.ChildrenComplete.Value {
-			gap = localWorst(gap, localIncomplete(n.end.ChildrenComplete, "children-incomplete"))
+			gap = localWorst(gap, localIncomplete(*n.end.ChildrenComplete, "children-incomplete"))
 		}
 	}
 	if gap.Outcome != OutcomePass {
@@ -618,7 +618,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 			}
 			return Decision{Outcome: OutcomeNotApplicable, Reason: "trigger-absent"}, false, nil
 		}
-		owner := selectorDecision(p.Owner, n.header)
+		owner := selectorDecision(p.Owner, n.header.value())
 		if owner.Outcome == OutcomeNotApplicable {
 			return Decision{Outcome: OutcomeFail, Reason: "local-owner-mismatch", Expected: "the required exact owner selector", Actual: n.header.Name.Local}, false, nil
 		}
@@ -798,7 +798,7 @@ func (s *Session) evaluateLocalPlan(ctx context.Context, n *factNode, p *localPl
 			values = append(values, entry{node: ch, value: v.Value})
 		}
 		if !n.closed || n.end.ChildrenComplete.State != EvidenceKnown || !n.end.ChildrenComplete.Value {
-			gap = localWorst(gap, localIncomplete(n.end.ChildrenComplete, "children-incomplete"))
+			gap = localWorst(gap, localIncomplete(*n.end.ChildrenComplete, "children-incomplete"))
 		}
 		if gap.Outcome != OutcomePass {
 			return gap, false, nil

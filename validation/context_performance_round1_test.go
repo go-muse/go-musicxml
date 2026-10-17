@@ -28,7 +28,7 @@ func TestPerformanceRound1MissingEventAndDeclarationStayCausal(t *testing.T) {
 	}
 	cause := &DecisionRef{Rule: RuleKey{"declaration", 1}, Subject: NodeRef{"d", 2}}
 	n := localNode(2, 0, "bend")
-	n.header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-declaration", Cause: cause}
+	n.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-declaration", Cause: cause})
 	for _, populated := range []bool{false, true} {
 		if populated {
 			s.contextServices[key].Performance = &contextPerformanceService{Bends: map[NodeID]performanceBendProof{99: {}}}

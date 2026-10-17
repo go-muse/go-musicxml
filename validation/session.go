@@ -75,9 +75,9 @@ func (e *UnsupportedRootError) Error() string {
 func (e *UnsupportedRootError) Unwrap() error { return ErrIncompleteAssessment }
 
 type factNode struct {
-	modelRepresentation *ModelRepresentationFact
-	header              NodeHeader
-	end                 NodeEnd
+	modelRepresentation *modelRepresentationRecord
+	header              retainedHeader
+	end                 retainedEnd
 	closed              bool
 	children            []*factNode
 	attributes          []AttributeFact
@@ -110,6 +110,10 @@ type documentPrerequisite struct {
 // terminal; call Finish exactly once even on cancellation to release live gauges.
 // Reports own their contents after cleanup. The caller must serialize methods.
 type Session struct {
+	facts                   *retainedFactPool
+	nodeCapacity            int
+	commonModelSeal         *modelRepresentationRecord
+	commonAttributeSeal     *Evidence[bool]
 	dtdIDs                  *sourceDTDIDs
 	sourceEntities          *sourceEntityDeclarations
 	dictionaries            *dictionaryLease
@@ -120,6 +124,7 @@ type Session struct {
 	sourceOriginUnavailable bool
 	sourceOriginSeal        *Evidence[bool]
 	contextServices         map[RuleKey]*contextService
+	contextElementRoles     map[contextBoundElementKey][]contextRole
 	contextResults          []ContextResult
 	timeline                map[RuleKey]*timelineService
 	localDocuments          map[*localPlan]localDocumentResult
@@ -315,10 +320,10 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 		return s.fail(err)
 	}
 	s.depth++
-	if err := s.retain(headerLogicalBytes(node)); err != nil {
-		return s.fail(err)
-	}
-	if err := validateHeader(node, s.profile.Target, s.documentID); err != nil {
+	if err := s.validateRetainedHeader(node); err != nil {
+		if errors.Is(err, ErrResourceLimit) {
+			return s.fail(err)
+		}
 		return s.fail(&SessionError{Operation: "Open", Reason: "invalid node header", Cause: err})
 	}
 	if _, exists := s.nodes[node.ID]; exists {
@@ -336,8 +341,15 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 			}
 		}
 		if !found {
-			// The validated header lease already admits these QName bytes. Retain
-			// only the observed name; no accepted occurrence or schema is invented.
+			// A rejected root has no accepted node lease. Admit its independently
+			// retained name before copying, without inventing schema evidence.
+			size, err := retainedFactSize(32, int64(len(node.Name.Space)), int64(len(node.Name.Local)))
+			if err != nil {
+				return s.fail(err)
+			}
+			if err := s.retain(size); err != nil {
+				return s.fail(err)
+			}
 			s.rejectedRootName = QName{Space: strings.Clone(node.Name.Space), Local: strings.Clone(node.Name.Local)}
 			return s.fail(&UnsupportedRootError{Name: node.Name, Profile: s.profile.ID})
 		}
@@ -355,7 +367,26 @@ func (s *Session) Open(ctx context.Context, node NodeHeader) error {
 			return s.fail(contract("source schema root", "no selected compiled schema"))
 		}
 	}
-	retained := &factNode{header: cloneHeader(node)}
+	header, err := s.retainFactHeader(ctx, node)
+	if err != nil {
+		return s.fail(err)
+	}
+	if err = s.growFactNodes(ctx); err != nil {
+		return s.fail(err)
+	}
+	if s.sequence, err = growFactSlice(ctx, s, s.sequence); err != nil {
+		return s.fail(err)
+	}
+	if s.stack, err = growFactSlice(ctx, s, s.stack); err != nil {
+		return s.fail(err)
+	}
+	if len(s.stack) > 0 {
+		parent := s.stack[len(s.stack)-1]
+		if parent.children, err = growFactSlice(ctx, s, parent.children); err != nil {
+			return s.fail(err)
+		}
+	}
+	retained := &factNode{header: header, end: s.zeroEnd()}
 	if len(s.stack) == 0 {
 		s.root = retained
 	} else {
@@ -433,11 +464,18 @@ func (s *Session) CompleteAttributes(ctx context.Context, id NodeID, complete Ev
 	if err := validateEvidence(complete, "attribute completeness"); err != nil {
 		return s.fail(err)
 	}
+	if canonicalComplete(complete) && s.commonAttributeSeal != nil {
+		n.attributeSeal = s.commonAttributeSeal
+		return nil
+	}
 	if err := s.retain(64 + evidenceLogicalBytes(complete)); err != nil {
 		return s.fail(err)
 	}
 	owned := cloneEvidence(complete)
 	n.attributeSeal = &owned
+	if canonicalComplete(complete) {
+		s.commonAttributeSeal = n.attributeSeal
+	}
 	return nil
 }
 
@@ -452,9 +490,6 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 	}
 	n := s.stack[len(s.stack)-1]
 	if err := s.checkScalar(end.Scalar); err != nil {
-		return s.fail(err)
-	}
-	if err := s.retain(endLogicalBytes(end)); err != nil {
 		return s.fail(err)
 	}
 	if err := validateEnd(end, s.profile.Target); err != nil {
@@ -475,7 +510,11 @@ func (s *Session) Close(ctx context.Context, end NodeEnd) error {
 	if end.AttributesComplete.State != EvidenceKnown || !end.AttributesComplete.Value {
 		s.attributeEnumerationIncomplete = true
 	}
-	n.end = cloneEnd(end)
+	ownedEnd, err := s.retainFactEnd(end)
+	if err != nil {
+		return s.fail(err)
+	}
+	n.end = ownedEnd
 	n.closed = true
 	s.stack = s.stack[:len(s.stack)-1]
 	if err := s.account.Release(BudgetDepth, 1); err != nil {
@@ -680,6 +719,9 @@ func (s *Session) cleanup() {
 	s.sourceOriginExpected = 0
 	s.sourceOriginUncertain = false
 	s.sourceOriginUnavailable = false
+	// Drop borrowed schema bindings before closing their run and releasing the
+	// session-owned cache allowance below.
+	s.contextElementRoles = nil
 	if s.schema != nil && s.schema.run != nil {
 		_ = s.schema.run.Close()
 	}
@@ -699,9 +741,13 @@ func (s *Session) cleanup() {
 		s.retained = 0
 	}
 	s.nodes = nil
+	s.facts = nil
+	s.nodeCapacity = 0
 	s.sequence = nil
 	s.stack = nil
 	s.root = nil
+	s.commonModelSeal = nil
+	s.commonAttributeSeal = nil
 	s.rejectedRootName = QName{}
 	s.decisions = nil
 	s.successful = nil
@@ -737,18 +783,8 @@ func locationLogicalBytes(v Location) int64 {
 func scalarLogicalBytes(v Scalar) int64 {
 	return 192 + int64(len(v.Lexeme.Value)) + atomicLogicalBytes(v.Value.Value) + evidenceLogicalBytes(v.Lexeme) + evidenceLogicalBytes(v.Value)
 }
-func headerLogicalBytes(v NodeHeader) int64 {
-	n := int64(512+len(v.Name.Space)+len(v.Name.Local)+len(v.Type.Value.Name.Space)+len(v.Type.Value.Name.Local)+len(v.Type.Value.Occurrence)+len(v.Declaration.Value.OwnerOccurrence)+len(v.Declaration.Value.Occurrence)) + locationLogicalBytes(v.Location) + evidenceLogicalBytes(v.Type) + evidenceLogicalBytes(v.Declaration)
-	for _, b := range v.Bindings {
-		n += int64(64 + len(b.Prefix) + len(b.URI))
-	}
-	return n
-}
 func attributeLogicalBytes(v AttributeFact) int64 {
 	return 256 + int64(len(v.Name.Space)+len(v.Name.Local)+len(v.Declaration.Value.OwnerOccurrence)+len(v.Declaration.Value.Occurrence)) + locationLogicalBytes(v.Location) + scalarLogicalBytes(v.Scalar) + evidenceLogicalBytes(v.Declaration) + evidenceLogicalBytes(v.Presence)
-}
-func endLogicalBytes(v NodeEnd) int64 {
-	return 192 + scalarLogicalBytes(v.Scalar) + evidenceLogicalBytes(v.ChildrenComplete) + evidenceLogicalBytes(v.AttributesComplete) + evidenceLogicalBytes(v.Order)
 }
 func profileLogicalBytes(v Profile) int64 {
 	n := int64(512 + len(v.ID) + len(v.MusicXMLVersion) + len(v.CatalogDigest) + len(v.RegistryCommit) + len(v.NormativeClosure))

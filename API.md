@@ -286,7 +286,8 @@ work/retention. No input-byte charge is invented for the existing object graph,
 and the 64 MiB default live-buffer limit is not a model-size or heap guarantee.
 No schema, DTD or linked resource is fetched.
 
-For XSD-only budget sizing, the following Go 1.27.2 linux/amd64 measurements
+Historical XSD-only sizing retained in published baseline `d336f089`
+(Go 1.27.2 linux/amd64): the following recorded measurements
 use `ProfileModelXSD` or `ProfileSourceXSDPreview`, with a shared account and
 verified success at the exact minimum allowance and resource failure one
 byte/step below it. These are fixture-specific costs after compact
@@ -295,20 +296,55 @@ local/timeline-profile measurements:
 
 | Input and target | Nodes | Minimum live-buffer allowance (bytes) | Rule steps |
 | --- | ---: | ---: | ---: |
-| Current `MozartTrio.musicxml` model | 2,516 | 16,321,980 | 2,784,531 |
+| Baseline `MozartTrio.musicxml` model | 2,516 | 16,321,980 | 2,784,531 |
 | Same model with each part's measures repeated twice | 4,913 | 31,644,150 | 5,441,724 |
-| Current `MozaChloSample.musicxml` model | 3,185 | 20,338,110 | 3,482,930 |
+| Baseline `MozaChloSample.musicxml` model | 3,185 | 20,338,110 | 3,482,930 |
 | Source MozartTrio, DOCTYPE-free measurement control | 2,516 | 18,209,624 | 2,893,122 |
 
-For these current-model fixtures this is about 6.4–6.5 KB and 1,094–1,108 rule
-steps per node; the source control is about 7.2 KB and 1,150 steps per node.
-Thus the default buffer allowance admits roughly 10,000 model nodes or 9,000
-source nodes in this family, before other limits; the step allowance alone
-would admit roughly 18,000 or 17,000 respectively. Real scores can exceed these
+Those recorded current-model fixtures cost about 6.4–6.5 KB and
+1,094–1,108 rule steps per node; the source control is about 7.2 KB and
+1,150 steps per node. The historical estimates imply roughly 10,000 model
+nodes or 9,000 source nodes in this family, before other limits; the step
+allowance alone
+would admit roughly 18,000 or 17,000 respectively. These are historical
+calculations, not current-head capacities. Real scores can exceed these
 defaults. These estimates are neither guaranteed capacities nor heap/total
 allocation measurements: attributes, text, types, failures and selected local
 rules change the cost. Choose informed finite overrides and handle resource
 outcomes. The legacy `Validate` facade does not inherit these default ceilings.
+
+The corpus resource corrections change these costs. Retained node-map and
+sequence/stack/child-vector growth now charges one rule step per copied entry
+plus one per growth operation, before allocation/copying. This is newly metered
+storage-management work, even for the same completed input, rather than only
+later progress after a prior refusal. A tuned `MaxRuleSteps` that just completed
+on `d336f089` can now refuse: the retained regression uses 953,719 steps for
+`01a-Pitches-Pitches.xml` with `ProfileModelXSD`, and 556,569 steps for the
+100-measure generated `ProfileSourceXSDPreview` fixture. Both still complete
+with the default work allowance and the same explicit buffer allowance.
+Callers using tuned explicit step limits must revalidate them and allow headroom.
+The reviewer measured approximately 0.6–1.1% more steps for its XSD/local
+controls; this is a bounded observation, not a universal percentage.
+
+The temporary schema attribute-name index now reserves a modeled fixed
+512-byte header/first-group allowance plus 128 bytes per entry, releasing it
+when publication returns. Published baseline `d336f089` instead retained
+96 bytes per attribute cumulatively until session cleanup. The current lease
+replaces that cumulative retention; it can be larger for early elements before
+the baseline's accumulated retention exceeds it.
+
+The initial PR 43 checkpoint `c0d73972` had already made the 96-byte-per-entry
+charge transient, but that lease could under-admit small Go maps. Relative to
+that intermediate checkpoint only, the corrected lease is larger by
+512 + 32 × attribute-count logical bytes. A limit tuned to that transient peak
+can refuse sooner. This delta does not describe the full change from the
+published baseline and does not add permanent retained storage.
+
+Compiled type/use identities also each admit one additional compile record and
+64 logical bytes. The fixed compile limits remain 65,536 records and 64 MiB;
+near-limit custom schemas or catalog configurations may therefore be refused
+where the baseline accepted them. The extra charge represents a separately
+retained immutable identity, not a new semantic validation requirement.
 
 The source control removes DOCTYPE only to isolate cost in an experiment; it is
 different input, not a supported workaround for assessing the original file.
@@ -745,10 +781,12 @@ The implementation retains a budgeted fact graph; single-pass input does not
 mean constant-memory processing. The caller retains ownership of the reader.
 
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
-64 MiB file or one million nodes can be assessed. The current budget-sizing
-table above measures the DOCTYPE-free MozartTrio source control at 18,209,624
+64 MiB file or one million nodes can be assessed. The historical `d336f089`
+budget-sizing
+table above measured the DOCTYPE-free MozartTrio source control at 18,209,624
 bytes and 2,893,122 rule steps for 2,516 nodes: about 7.2 KB and 1,150 steps per
-node, or roughly 9,000 such nodes under the default buffer allowance. Those are
+node, or roughly 9,000 such nodes under the default buffer allowance. Those
+baseline-derived estimates are not current-head capacities. They are
 logical accounting estimates, not heap/RSS measurements or a universal element
 limit. Ordinary larger scores can exceed the default. Set informed finite
 overrides in `AssessmentOptions.Budgets`; all other limits still apply. Earlier
@@ -1230,11 +1268,14 @@ failures, remain terminal rather than being relabeled unavailable.
 
 ### Default-budget boundary
 
-Selecting dictionaries does not raise the finite defaults. In the repeated-rest/
+Selecting dictionaries does not raise the finite defaults. The following are
+historical PR 40 Round 1 observations, with the exact revision mapping in the
+linked dated receipt; they have not been remeasured after the corpus resource
+corrections and are not current-head note-count boundaries. In the repeated-rest/
 accidental fixture measured for the Round 1 correction, all four components are
-imported before assessment. Standalone source/model completes at 368 notes and
-refuses at 369; graph and raw/current MXL complete operational enumeration at
-363 and refuse at 364 on the unchanged 20,000,000-rule-step cap. Current-model
+imported before assessment. Standalone source/model completed at 368 notes and
+refused at 369; graph and raw/current MXL completed operational enumeration at
+363 and refused at 364 on the unchanged 20,000,000-rule-step cap. Current-model
 bundles retain their independent schema-hint unknown below that boundary.
 The earlier published `a772914` observations were 320/321 and 316/317;
 [the dated evidence][dictionary-budget-evidence] preserves both measurements.
@@ -1479,8 +1520,12 @@ Default-buffer capacity is limited for source-origin graph compositions: every
 selected origin row has two independently owned snapshot copies while session
 storage still overlaps. On Go 1.27.2 linux/amd64, the single-note-per-measure
 `reviewBudgetScore` fixture with `ProfileResourceGraphInternalDTDDictionaries`
-admits 531 measures (71,197 source bytes) with defaults; 532 measures (71,331
-bytes) refuse the 64 MiB live-buffer allowance. The review reported the
+now admits 576 measures (77,227 source bytes) with defaults; 577 measures
+(77,361 bytes) refuse the 64 MiB live-buffer allowance. The earlier published
+531/532 and initial PR 43 568/569 boundaries are historical; all four cases
+now complete. Exact/one-short snapshot controls pin 66,195,329 bytes for
+569 measures and 67,118,297 bytes for 577 measures.
+The review reported the
 500-measure case at approximately 62.9 MB of the 67.1 MB allowance, a
 previous boundary of 494 measures (about 66 KB), and comparison boundaries of
 about 114 KB for standalone `ProfileSourceInternalDTDDictionaries` and 168 KB
@@ -1488,12 +1533,14 @@ for its "legacy graph" comparator. These are fixture/profile-specific
 observations, not a general document-byte guarantee or heap/RSS limit.
 
 The separate 2,000-empty-measure, three-`#m1` fixture is only 86,052 source bytes
-but still refuses snapshot admission at default budgets: 57,607,574 live bytes
+but still refuses snapshot admission at default budgets: 54,486,614 live bytes
 plus a 34,741,160-byte request exceed 67,108,864 bytes. Its regression that uses
 512 MiB of buffer isolates the unchanged 20,000,000-step limit; it does not prove
 all-default capacity, nor is 512 MiB a measured minimum or recommendation.
 Choose explicit finite limits for the actual profile and input. See the
 [fixture definitions, provenance and boundary checks](docs/validation/resource-fragment-budget-evidence.md#default-buffer-capacity-is-fixture-specific).
+The [corpus resource correction receipt](docs/validation/corpus-resource-fixes.md)
+distinguishes the current boundary from the earlier published measurements.
 
 `ResourceSnapshotHeader.LinkProjectionSelected` records selection of an
 `ImplementationAvailable` sealed local-link plan for the established assembly.

@@ -158,21 +158,6 @@ func cloneScalar(v Scalar) Scalar {
 	v.Value.Value = cloneAtomic(v.Value.Value)
 	return v
 }
-func cloneHeader(v NodeHeader) NodeHeader {
-	v.Name.Space = strings.Clone(v.Name.Space)
-	v.Name.Local = strings.Clone(v.Name.Local)
-	v.Location = cloneLocation(v.Location)
-	v.Type = cloneEvidence(v.Type)
-	v.Type.Value = cloneComponent(v.Type.Value)
-	v.Declaration = cloneEvidence(v.Declaration)
-	v.Declaration.Value = cloneDeclaration(v.Declaration.Value)
-	bindings := make([]Binding, len(v.Bindings))
-	for i, b := range v.Bindings {
-		bindings[i] = Binding{strings.Clone(b.Prefix), strings.Clone(b.URI)}
-	}
-	v.Bindings = bindings
-	return v
-}
 func cloneAttribute(v AttributeFact) AttributeFact {
 	v.Location = cloneLocation(v.Location)
 	v.Declaration = cloneEvidence(v.Declaration)
@@ -180,14 +165,6 @@ func cloneAttribute(v AttributeFact) AttributeFact {
 	v.Presence = cloneEvidence(v.Presence)
 	v.Scalar = cloneScalar(v.Scalar)
 	v.Name = QName{strings.Clone(v.Name.Space), strings.Clone(v.Name.Local)}
-	return v
-}
-func cloneEnd(v NodeEnd) NodeEnd {
-	v.Scalar = cloneScalar(v.Scalar)
-	v.ChildrenComplete = cloneEvidence(v.ChildrenComplete)
-	v.AttributesComplete = cloneEvidence(v.AttributesComplete)
-	v.Order = cloneEvidence(v.Order)
-	v.Order.Value = OrderKind(strings.Clone(string(v.Order.Value)))
 	return v
 }
 func cloneContext(v ContextFact) ContextFact {

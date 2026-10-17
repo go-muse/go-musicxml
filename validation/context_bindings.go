@@ -36,6 +36,8 @@ type contextAttributeTable struct {
 }
 
 type contextBindings struct {
+	// ElementRoles is sorted and immutable after compilation. Final readers may
+	// borrow a slice using the exact run binding that published its declaration.
 	ElementRoles   map[DeclarationID][]contextRole
 	OwnerTables    map[ComponentID]*contextAttributeTable
 	assembly       Assembly

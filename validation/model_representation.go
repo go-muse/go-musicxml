@@ -41,6 +41,19 @@ type ModelRepresentationFact struct {
 	Problems []ModelProblem
 }
 
+// modelRepresentationRecord omits the ingress-only Owner. Its containing node
+// supplies identity for every evaluation and diagnostic. Records are immutable
+// after admission; only the exact empty successful seal is shared, within one
+// session, to avoid allocating identical completeness payloads per occurrence.
+type modelRepresentationRecord struct {
+	Complete Evidence[bool]
+	Problems []ModelProblem
+}
+
+func canonicalComplete(v Evidence[bool]) bool {
+	return v.State == EvidenceKnown && v.Value && v.Reason == "" && v.Cause == nil
+}
+
 // NewModelRepresentationPlan creates a sealed model-only node predicate for the
 // selected schema assembly. It requires a mandatory CategoryModel rule with an
 // identical assembly selector and no prerequisites. A missing examination fact
@@ -142,11 +155,15 @@ func (s *Session) ModelRepresentation(ctx context.Context, fact ModelRepresentat
 	if err := s.step(ctx, 1+evidenceLogicalBytes(fact.Complete)/64); err != nil {
 		return s.fail(err)
 	}
+	common := len(fact.Problems) == 0 && canonicalComplete(fact.Complete)
+	if common && s.commonModelSeal != nil {
+		n.modelRepresentation = s.commonModelSeal
+		return nil
+	}
 	if err := s.retain(size); err != nil {
 		return s.fail(err)
 	}
-	owned := fact
-	owned.Complete = cloneEvidence(fact.Complete)
+	owned := modelRepresentationRecord{Complete: cloneEvidence(fact.Complete)}
 	owned.Problems = make([]ModelProblem, len(fact.Problems))
 	for i, p := range fact.Problems {
 		p.Code = Code(strings.Clone(string(p.Code)))
@@ -157,6 +174,9 @@ func (s *Session) ModelRepresentation(ctx context.Context, fact ModelRepresentat
 		owned.Problems[i] = p
 	}
 	n.modelRepresentation = &owned
+	if common {
+		s.commonModelSeal = n.modelRepresentation
+	}
 	return nil
 }
 
@@ -251,7 +271,11 @@ func (s *Session) invalidateModelRepresentation(ctx context.Context, n *factNode
 		invalid := Evidence[Atomic]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
 		switch p.Axis {
 		case ModelAxisScalar:
-			n.end.Scalar.Value = invalid
+			owned, err := s.retainInternalAtomic(invalid)
+			if err != nil {
+				return err
+			}
+			n.end.Scalar.Value = owned
 		case ModelAxisAttribute:
 			for i := range n.attributes {
 				if err := s.step(ctx, 1); err != nil {
@@ -263,8 +287,13 @@ func (s *Session) invalidateModelRepresentation(ctx context.Context, n *factNode
 				}
 			}
 		case ModelAxisChildren:
-			n.end.ChildrenComplete = Evidence[bool]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
-			n.end.Order = Evidence[OrderKind]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
+			// Reserve both immutable replacement records before publishing either.
+			if err := s.retain(retainedBoolBytes + retainedOrderBytes); err != nil {
+				return err
+			}
+			children := Evidence[bool]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
+			order := Evidence[OrderKind]{State: EvidenceInvalid, Reason: p.Code, Cause: cause}
+			n.end.ChildrenComplete, n.end.Order = &children, &order
 		}
 	}
 	return nil

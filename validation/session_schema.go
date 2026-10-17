@@ -65,7 +65,7 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 		out.ChildrenComplete = n.closed && n.end.ChildrenComplete.State == EvidenceKnown && n.end.ChildrenComplete.Value && out.ChildrenOrderKnown
 		out.Text, out.TextKnown = "", false
 		var err error
-		out.Current, err = s.schemaCurrent(ctx, n.end.Scalar.Value)
+		out.Current, err = s.schemaCurrent(ctx, *n.end.Scalar.Value)
 		if err != nil {
 			return out, err
 		}
@@ -115,6 +115,94 @@ func (s *Session) schemaSubject(ctx context.Context, n *factNode) (xsd.Subject, 
 	return out, nil
 }
 
+// schemaBindFrame borrows witnesses from Run until Run.Close. Only children
+// owns additional backing storage; Run.Complete consumes it synchronously and
+// keeps a by-value Completion, never the caller's slice.
+type schemaBindFrame struct {
+	node      *factNode
+	use       xsd.Use
+	binding   xsd.Binding
+	witnesses []xsd.Witness
+	next      int
+	children  []xsd.Completion
+	entered   bool
+}
+
+// Fixed conservative slot envelopes cover both amd64 and 386 (size-guarded in
+// tests). Charge allocated capacity, not the number of all document nodes.
+const schemaBindFrameBytes int64 = 256
+const schemaBindCompletionBytes int64 = 64
+
+type schemaBindScratch struct {
+	account *Account
+	frames  []schemaBindFrame
+	bytes   int64
+}
+
+func (w *schemaBindScratch) reserve(count, slot int64) error {
+	n, err := rationalCheckedMul(BudgetBufferedBytes, count, slot)
+	if err != nil {
+		return err
+	}
+	if _, err := AllocationSize(n); err != nil {
+		return err
+	}
+	if err := w.account.Charge(BudgetBufferedBytes, n); err != nil {
+		return err
+	}
+	w.bytes += n
+	return nil
+}
+
+func (w *schemaBindScratch) releaseBytes(n int64) {
+	_ = w.account.Release(BudgetBufferedBytes, n)
+	w.bytes -= n
+}
+
+func (w *schemaBindScratch) push(ctx context.Context, frame schemaBindFrame) error {
+	if ctx == nil {
+		return contract("context", "must not be nil")
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if len(w.frames) == cap(w.frames) {
+		// The byte-size check also bounds capacity and its host-int conversion.
+		capacity, err := rationalCheckedMul(BudgetBufferedBytes, int64(cap(w.frames)), 2)
+		if err != nil {
+			return err
+		}
+		capacity = max(1, capacity)
+		if err := w.reserve(capacity, schemaBindFrameBytes); err != nil {
+			return err
+		}
+		grown := make([]schemaBindFrame, len(w.frames), int(capacity))
+		copy(grown, w.frames)
+		oldBytes := int64(cap(w.frames)) * schemaBindFrameBytes
+		clear(w.frames)
+		w.frames = grown
+		// Reserve the complete new allocation before dropping the old one:
+		// old and new backing arrays coexist while copying.
+		w.releaseBytes(oldBytes)
+	}
+	w.frames = append(w.frames, frame)
+	return nil
+}
+
+func (w *schemaBindScratch) pop() {
+	last := len(w.frames) - 1
+	n := int64(cap(w.frames[last].children)) * schemaBindCompletionBytes
+	w.frames[last] = schemaBindFrame{}
+	w.frames = w.frames[:last]
+	w.releaseBytes(n)
+}
+
+func (w *schemaBindScratch) release() {
+	clear(w.frames)
+	w.frames = nil
+	w.releaseBytes(w.bytes)
+}
+
 // bindSourceSchema owns the pending source-fact transition. Exact child uses
 // come only from the shared grammar witness; a path or QName never guesses one.
 func (s *Session) bindSourceSchema(ctx context.Context) error {
@@ -154,24 +242,16 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 	if !ok {
 		return contract("source schema root", "no compiled root use")
 	}
-	type frame struct {
-		node      *factNode
-		use       xsd.Use
-		binding   xsd.Binding
-		witnesses []xsd.Witness
-		next      int
-		children  []xsd.Completion
-		entered   bool
-	}
-	if err := s.retain(256 * int64(len(s.nodes))); err != nil {
+	scratch := schemaBindScratch{account: s.account}
+	defer scratch.release()
+	if err := scratch.push(ctx, schemaBindFrame{node: s.root, use: rootUse}); err != nil {
 		return err
 	}
-	stack := []frame{{node: s.root, use: rootUse}}
-	for len(stack) > 0 {
+	for len(scratch.frames) > 0 {
 		if err := s.step(ctx, 1); err != nil {
 			return err
 		}
-		f := &stack[len(stack)-1]
+		f := &scratch.frames[len(scratch.frames)-1]
 		if !f.entered {
 			subject, subjectErr := s.schemaSubject(ctx, f.node)
 			if subjectErr != nil {
@@ -193,7 +273,7 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 				return err
 			}
 			f.witnesses = state.run.Witnesses(binding)
-			if err := s.retain(int64(len(f.witnesses)) * 64); err != nil {
+			if err := scratch.reserve(int64(len(f.witnesses)), schemaBindCompletionBytes); err != nil {
 				return err
 			}
 			f.children = make([]xsd.Completion, 0, len(f.witnesses))
@@ -213,7 +293,11 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 			if child == nil {
 				return contract("schema witness", "unknown child occurrence")
 			}
-			stack = append(stack, frame{node: child, use: witness.Use})
+			// No pointer into the old backing array survives a possible resize.
+			f = nil
+			if err := scratch.push(ctx, schemaBindFrame{node: child, use: witness.Use}); err != nil {
+				return err
+			}
 			continue
 		}
 		completion, completeErr := state.run.Complete(ctx, f.binding, f.children)
@@ -223,12 +307,15 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 		if completeErr != nil {
 			return completeErr
 		}
-		stack = stack[:len(stack)-1]
-		if len(stack) > 0 {
-			parent := &stack[len(stack)-1]
+		f = nil
+		scratch.pop()
+		if len(scratch.frames) > 0 {
+			parent := &scratch.frames[len(scratch.frames)-1]
 			parent.children = append(parent.children, completion)
 		}
 	}
+	// The remaining causal/identity work does not need traversal storage.
+	scratch.release()
 	// An unmatched subtree remains unavailable. Preserve its exact containing
 	// content failure as the causal identity when that rule was selected.
 	for _, id := range s.sequence {
@@ -267,14 +354,21 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 			ancestor = s.nodes[ancestor.header.Parent]
 		}
 		state.nodes[id] = item
-		n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: item.reason}
-		n.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: item.reason}
+		typ := Evidence[ComponentID]{State: EvidenceUnsupported, Reason: item.reason}
+		decl := Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: item.reason}
 		if item.cause != nil {
-			n.header.Type.State = EvidenceInvalid
-			n.header.Type.Cause = item.cause
-			n.header.Declaration.State = EvidenceInvalid
-			n.header.Declaration.Cause = item.cause
+			typ.State, typ.Cause = EvidenceInvalid, item.cause
+			decl.State, decl.Cause = EvidenceInvalid, item.cause
 		}
+		ownedType, err := s.retainType(typ)
+		if err != nil {
+			return err
+		}
+		ownedDeclaration, err := s.retainDeclaration(decl)
+		if err != nil {
+			return err
+		}
+		n.header.Type, n.header.Declaration = ownedType, ownedDeclaration
 	}
 	identity, identityErr := state.run.IdentityPreview(ctx)
 	state.identity = identity
@@ -284,34 +378,77 @@ func (s *Session) bindSourceSchema(ctx context.Context) error {
 	return identityErr
 }
 
+// The local QName-to-slot map needs a header and an entire first group even
+// for one attribute. Larger Go maps round hints up for load factor and table
+// capacity: reserve three key/value/control slots per entry, plus fixed
+// header/first-group space. Payload-size guards and independent measured heap
+// tests cover allocator rounding and table/directory overhead as well.
+const (
+	schemaAttributeIndexHeaderBytes int64 = 512
+	schemaAttributeIndexSlotBytes   int64 = 128
+)
+
+func schemaAttributeIndexBytes(count int64) (int64, error) {
+	slots, err := rationalCheckedMul(BudgetBufferedBytes, count, schemaAttributeIndexSlotBytes)
+	if err != nil {
+		return 0, err
+	}
+	return retainedFactSize(schemaAttributeIndexHeaderBytes, slots)
+}
+
 func (s *Session) publishSchemaFacts(ctx context.Context, n *factNode, use xsd.Use, binding xsd.Binding) error {
 	state := s.schema
 	declaration := state.active.declaration(use)
-	n.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "declaration-identity-unavailable"}
+	decl := Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "declaration-identity-unavailable"}
 	if validDeclaration(declaration) {
-		n.header.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: declaration}
+		decl = Evidence[DeclarationID]{State: EvidenceKnown, Value: declaration}
 	}
+	typ := Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "actual-type-unavailable"}
+	var typeKey xsd.CacheIdentity
 	if kind, known := state.run.ActualType(binding); known {
 		component := state.active.component(kind)
 		if validComponent(component) {
-			n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: component}
+			typ = Evidence[ComponentID]{State: EvidenceKnown, Value: component}
+			typeKey = kind.CacheIdentity()
 		} else {
-			n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "type-identity-unavailable"}
+			typ = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "type-identity-unavailable"}
 		}
-	} else {
-		n.header.Type = Evidence[ComponentID]{State: EvidenceUnsupported, Reason: "actual-type-unavailable"}
 	}
+	ownedDeclaration, err := s.retainSchemaDeclaration(ctx, use.CacheIdentity(), decl)
+	if err != nil {
+		return err
+	}
+	ownedType, err := s.retainSchemaType(ctx, typeKey, typ)
+	if err != nil {
+		return err
+	}
+	n.header.Declaration, n.header.Type = ownedDeclaration, ownedType
 	if s.profile.Target != TargetModel {
 		scalar, err := s.schemaAtomic(ctx, state.run.Scalar(binding))
 		if err != nil {
 			return err
 		}
-		n.end.Scalar.Value = scalar
+		owned, err := s.retainSchemaAtomic(scalar)
+		if err != nil {
+			return err
+		}
+		n.end.Scalar.Value = owned
 	}
-	if err := s.retain(int64(len(n.attributes)) * 96); err != nil {
+	indexBytes, err := schemaAttributeIndexBytes(int64(len(n.attributes)))
+	if err != nil {
 		return err
 	}
-	attributes := make(map[QName]int, len(n.attributes))
+	if err := s.account.Charge(BudgetBufferedBytes, indexBytes); err != nil {
+		return err
+	}
+	// The name-to-slot index is local to publication. Only the independently
+	// retained declaration/scalar facts escape; drop the map on every exit.
+	var attributes map[QName]int
+	defer func() {
+		attributes = nil
+		_ = s.account.Release(BudgetBufferedBytes, indexBytes)
+	}()
+	attributes = make(map[QName]int, len(n.attributes))
 	for i := range n.attributes {
 		if n.attributes[i].Presence.State == EvidenceAbsent {
 			continue
@@ -837,7 +974,7 @@ func (s *Session) schemaEffectiveScalar(ctx context.Context, node NodeID, attrib
 	}
 	if attribute == (QName{}) {
 		if n.end.Scalar.Value.State == EvidenceInvalid {
-			return n.end.Scalar.Value, nil
+			return *n.end.Scalar.Value, nil
 		}
 		result := s.schema.run.Results(bound.binding)
 		if !result.Scalar.Valid {

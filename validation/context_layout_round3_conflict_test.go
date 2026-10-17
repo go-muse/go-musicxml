@@ -50,7 +50,7 @@ func TestLayoutRound3ConflictingAdmittedBreaksEveryOrder(t *testing.T) {
 						if statement >= 0 {
 							print := localNode(id, measure.header.ID, "print")
 							id++
-							print.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: typ}
+							print.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: typ})
 							value := "yes"
 							if statement == 1 {
 								value = "no"

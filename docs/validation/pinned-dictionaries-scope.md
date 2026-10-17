@@ -392,8 +392,10 @@ fixture-specific observations, not universal note-count capacities, bundle
 acceptance or B5-PERF-01 closure. See the [measured
 conditions](pinned-dictionaries-evidence.md#default-budget-observations).
 
-The Round1 correction recheck observes 368/369 for standalone source/model and
-363/364 for graph/MXL with those same finite limits. See the paired
+The historical PR 40 Round 1 correction recheck observed 368/369 for standalone
+source/model and 363/364 for graph/MXL with those same finite limits. These observations have
+not been remeasured after the corpus resource corrections and are not
+current-head capacity claims. See the paired
 [correction measurements](pinned-dictionaries-evidence.md#round1-correction-measurements-2026-10-14)
 for exact work counters, fixture qualifications and unchanged capability gaps.
 

@@ -113,10 +113,10 @@ func TestSpanRound1HierarchyGapWithEstablishedPartIdentity(t *testing.T) {
 					}
 					if index == 1 {
 						if axis == "children" {
-							measure.end.ChildrenComplete = gap
+							measure.end.ChildrenComplete = testEvidence(gap)
 						}
 						if axis == "order" {
-							measure.end.Order = stateUnavailable[bool, OrderKind](gap)
+							measure.end.Order = testEvidence(stateUnavailable[bool, OrderKind](gap))
 						}
 					}
 				}
@@ -222,7 +222,7 @@ func TestSpanRound1NonTemporalPositionsAreAbsentWithUnavailableTimeline(t *testi
 			if tc.family == SpanBarre {
 				parent = spanUnitNode(r, spanRole_frameNote, root)
 				f := spanUnitNode(r, spanRole_frameFret, parent)
-				f.end.Scalar.Value = spanInteger(1)
+				f.end.Scalar.Value = testEvidence(spanInteger(1))
 			}
 			n := spanUnitNode(r, tc.node, parent)
 			spanUnitAttribute(r, n, tc.role, spanString("start"))

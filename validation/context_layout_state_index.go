@@ -74,7 +74,7 @@ func layoutGetStateIndex(r *contextReader, key RuleKey, p *contextPlan) (*layout
 				return nil, r.err
 			}
 			if event.header.Declaration.State != EvidenceKnown {
-				unavailable := timelineGapAs[DeclarationID, bool](event.header.Declaration, "layout-statement-declaration-unavailable")
+				unavailable := timelineGapAs[DeclarationID, bool](*event.header.Declaration, "layout-statement-declaration-unavailable")
 				snapshot = layoutNumberingSnapshot{Ordinal: b.ordinal, Value: stateUnavailable[bool, string](unavailable)}
 				if e = index.symbolGap(r, b, unavailable, layoutStateFact(r, p, event)); e != nil {
 					return nil, e

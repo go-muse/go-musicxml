@@ -9,7 +9,7 @@ func (s *Session) timelineConsumerMatch(ctx context.Context, n *factNode, p *tim
 		return false, Decision{}, err
 	}
 	if n.header.Declaration.State != EvidenceKnown {
-		return false, localGap(n.header.Declaration), nil
+		return false, localGap(*n.header.Declaration), nil
 	}
 	for _, use := range p.Bindings.Roles[role] {
 		if err := s.step(ctx, 1); err != nil {
@@ -27,7 +27,7 @@ func (s *Session) timelineConsumerMatch(ctx context.Context, n *factNode, p *tim
 func (s *Session) timelineConsumerChild(ctx context.Context, n *factNode, p *timelineConsumerPlan, role timelineRole) (*factNode, Decision, error) {
 	gap := Decision{Outcome: OutcomePass}
 	if !n.closed || n.end.ChildrenComplete.State != EvidenceKnown || !n.end.ChildrenComplete.Value {
-		gap = localIncomplete(n.end.ChildrenComplete, "timeline-children-incomplete")
+		gap = localIncomplete(*n.end.ChildrenComplete, "timeline-children-incomplete")
 	}
 	var found *factNode
 	for _, ch := range n.children {
@@ -62,7 +62,7 @@ func (s *Session) timelineConsumerStructure(ctx context.Context, n *factNode) (D
 		return Decision{}, err
 	}
 	if !n.closed || n.end.ChildrenComplete.State != EvidenceKnown || !n.end.ChildrenComplete.Value {
-		return localIncomplete(n.end.ChildrenComplete, "timeline-children-incomplete"), nil
+		return localIncomplete(*n.end.ChildrenComplete, "timeline-children-incomplete"), nil
 	}
 	if s.schema == nil {
 		return Decision{Outcome: OutcomePass}, nil

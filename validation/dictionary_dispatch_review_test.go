@@ -23,12 +23,12 @@ func TestDictionaryRelevanceMatchesUnfilteredEvaluation(t *testing.T) {
 			for _, evidence := range []EvidenceState{EvidenceKnown, EvidenceUnknown, EvidenceInvalid} {
 				t.Run(string(tc.operation)+"/"+string(role)+"/"+string(evidence), func(t *testing.T) {
 					n := localNode(1, 0, "subject")
-					n.header.Type = stateKnown(contextNamedType("xs:string"))
-					n.end.Scalar.Value = stateKnown(Atomic{Kind: AtomicString, Text: "a"})
+					n.header.Type = testEvidence(stateKnown(contextNamedType("xs:string")))
+					n.end.Scalar.Value = testEvidence(stateKnown(Atomic{Kind: AtomicString, Text: "a"}))
 					decl := n.header.Declaration.Value
 					cause := &DecisionRef{Rule: RuleKey{ID: "schema", Revision: 1}, Subject: NodeRef{"doc", 1}}
 					if evidence != EvidenceKnown {
-						n.header.Declaration = Evidence[DeclarationID]{State: evidence, Reason: "declaration-unavailable", Cause: cause}
+						n.header.Declaration = testEvidence(Evidence[DeclarationID]{State: evidence, Reason: "declaration-unavailable", Cause: cause})
 					}
 					b := &contextBindings{assembly: AssemblyMusicXML, ElementRoles: map[DeclarationID][]contextRole{decl: {role}}, Elements: map[contextRole]map[DeclarationID]struct{}{role: {decl: {}}}, OwnerTables: map[ComponentID]*contextAttributeTable{}}
 					if role == "dictionary.sound" {
@@ -90,8 +90,8 @@ func TestDictionaryAssessedTypeCandidateKeepsExactIdentity(t *testing.T) {
 			defer s.cleanup()
 			s.documentID = "doc"
 			n := localNode(1, 0, "not-a-dictionary-element")
-			n.header.Type = stateKnown(typ)
-			n.end.Scalar.Value = stateKnown(Atomic{Kind: AtomicString, Text: "restQuarter"})
+			n.header.Type = testEvidence(stateKnown(typ))
+			n.end.Scalar.Value = testEvidence(stateKnown(Atomic{Kind: AtomicString, Text: "restQuarter"}))
 			b := &contextBindings{assembly: AssemblyMusicXML, OwnerTables: map[ComponentID]*contextAttributeTable{}}
 			p := &dictionaryPlan{Bindings: b, Operation: DictionaryCanonical, Types: []ComponentID{good}}
 			_, _, err := s.evaluateDictionary(context.Background(), n, RuleDefinition{Key: RuleKey{ID: "dictionary", Revision: 1}}, p, true)

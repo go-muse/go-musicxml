@@ -89,8 +89,8 @@ func TestContextReaderExactOwnerPresenceAndInterruption(t *testing.T) {
 	s := rationalSession(t, Budgets{})
 	defer s.cleanup()
 	n := localNode(1, 0, "beam")
-	n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("beam")}
-	n.header.Declaration = Evidence[DeclarationID]{State: EvidenceKnown, Value: b.Roles["core-beam"][0].Declaration}
+	n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("beam")})
+	n.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceKnown, Value: b.Roles["core-beam"][0].Declaration})
 	r := &contextReader{ctx: context.Background(), s: s, b: b}
 	if !r.matches(n, "core-beam") || !r.attributeOwner(n, "core-number") {
 		t.Fatal("exact roles not selected")

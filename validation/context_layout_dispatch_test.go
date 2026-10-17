@@ -82,7 +82,7 @@ func TestLayoutDispatchMatchesExhaustiveRoleReference(t *testing.T) {
 				run := func(fast bool) []ContextResult {
 					s, n, r := localEvidenceFixture(t, EvidenceKnown, spec.Role)
 					defer s.cleanup()
-					n.end.Scalar.Value = stateKnown(localString("1"))
+					n.end.Scalar.Value = testEvidence(stateKnown(localString("1")))
 					s.sequence = []NodeID{0, n.header.ID} // An absent sequence entry is harmless.
 					if spec.Attribute {
 						r.b.Roles = map[contextRole][]SchemaUse{}
@@ -91,27 +91,27 @@ func TestLayoutDispatchMatchesExhaustiveRoleReference(t *testing.T) {
 					}
 					switch axis {
 					case "declaration-unknown":
-						n.header.Declaration = stateUnknown[DeclarationID]("declaration-unavailable")
+						n.header.Declaration = testEvidence(stateUnknown[DeclarationID]("declaration-unavailable"))
 					case "declaration-invalid":
-						n.header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "declaration-invalid"}
+						n.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "declaration-invalid"})
 					case "type-unknown":
-						n.header.Type = stateUnknown[ComponentID]("type-unavailable")
+						n.header.Type = testEvidence(stateUnknown[ComponentID]("type-unavailable"))
 					case "type-invalid":
-						n.header.Type = Evidence[ComponentID]{State: EvidenceInvalid, Reason: "type-invalid"}
+						n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceInvalid, Reason: "type-invalid"})
 					case "value-unknown", "value-invalid":
 						state := EvidenceUnknown
 						if axis == "value-invalid" {
 							state = EvidenceInvalid
 						}
 						unavailable := Evidence[Atomic]{State: state, Reason: "value-unavailable", Cause: &DecisionRef{Rule: RuleKey{"source-prerequisite", 1}, Subject: NodeRef{"doc", 2}}}
-						n.end.Scalar.Value = unavailable
+						n.end.Scalar.Value = testEvidence(unavailable)
 						if spec.Attribute {
 							n.attributes[0].Scalar.Value = unavailable
 						}
 					case "attributes-incomplete":
-						n.end.AttributesComplete = stateUnknown[bool]("attributes-incomplete")
+						n.end.AttributesComplete = testEvidence(stateUnknown[bool]("attributes-incomplete"))
 					case "children-incomplete":
-						n.end.ChildrenComplete = stateUnknown[bool]("children-incomplete")
+						n.end.ChildrenComplete = testEvidence(stateUnknown[bool]("children-incomplete"))
 					}
 					if err := layoutDispatchRun(t, fast, s, &contextPlan{Bindings: r.b}); err != nil {
 						t.Fatal(err)
@@ -269,7 +269,7 @@ func TestLayoutDispatchCombinedRolesPreserveOrderAndIndependentAxes(t *testing.T
 		run := func(fast bool) []ContextResult {
 			s, n, r := localEvidenceFixture(t, EvidenceKnown, "unrelated")
 			defer s.cleanup()
-			n.end.Scalar.Value = stateKnown(localString("no"))
+			n.end.Scalar.Value = testEvidence(stateKnown(localString("no")))
 			s.sequence = []NodeID{n.header.ID}
 			for _, spec := range contextLayoutBindingSpecs() {
 				if spec.Attribute {
@@ -334,7 +334,7 @@ func TestLayoutDispatchExactAndOneUnderWorkLimits(t *testing.T) {
 			s, p := layoutDispatchUnrelatedFixture(t, 1, budget)
 			if selected {
 				n := s.nodes[1]
-				n.header.Type = stateKnown(contextNamedType("dispatch-owner"))
+				n.header.Type = testEvidence(stateKnown(contextNamedType("dispatch-owner")))
 				p.Bindings.Attributes = map[contextRole]map[ComponentID]AttributeSelector{layoutRole("constant.0.attribute"): {n.header.Type.Value: localAttr("implicit")}}
 				// Exercise the compatibility index too; a real compiled plan provides an
 				// immutable owner table without retaining this session-local fallback.
@@ -375,7 +375,7 @@ func TestLayoutDispatchParentOnlyLookupRefusal(t *testing.T) {
 	defer s.cleanup()
 	n := s.nodes[1]
 	n.header.Parent = 2
-	n.header.Declaration = stateUnknown[DeclarationID]("child-unavailable")
+	n.header.Declaration = testEvidence(stateUnknown[DeclarationID]("child-unavailable"))
 	parent := localNode(2, 0, "parent")
 	s.nodes[2] = parent
 	// The first nine charges reach the parent-only exact declaration lookup;

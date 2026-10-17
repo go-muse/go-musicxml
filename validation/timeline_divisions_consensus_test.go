@@ -27,7 +27,7 @@ func TestTimelineUnplacedDivisionsPreserveOnlyIndependentSameValue(t *testing.T)
 			child := stateNode(b, timelineRoleAttributesDivisions, 31, value)
 			attrs := stateNode(b, timelineRoleAttributes, 30, stateAbsent[Atomic](), child)
 			if mode == "hidden" {
-				child.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "hidden-divisions"}
+				child.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceUnsupported, Reason: "hidden-divisions"})
 			}
 			placement := stateGapPlacement{Displaced: true}
 			if mode == "excluded-different" {

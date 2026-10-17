@@ -50,6 +50,12 @@ func statePartialQuery[T any](ctx context.Context, s *Session, h *timelineState,
 // quadratic exceptional path is bounded by shared work and exact scratch
 // admission; ordinary fully contained histories keep their binary-search path.
 func queryPartialState[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) Evidence[V], inclusive, ownedResult bool, initial func() (stateResult[V], error), extra ...[]stateGap) (stateResult[V], error) {
+	return queryPartialStateWithProject(ctx, s, h, history, pos, staff, func(value T) (Evidence[V], error) {
+		return project(value), nil
+	}, inclusive, ownedResult, initial, extra...)
+}
+
+func queryPartialStateWithProject[T, V any](ctx context.Context, s *Session, h *timelineState, history *stateHistory[T], pos musicalPosition, staff Evidence[Integer], project func(T) (Evidence[V], error), inclusive, ownedResult bool, initial func() (stateResult[V], error), extra ...[]stateGap) (stateResult[V], error) {
 	out := stateResult[V]{}
 	index, err := stateIndex(ctx, s, history)
 	if err != nil {
@@ -192,7 +198,10 @@ func queryPartialState[T, V any](ctx context.Context, s *Session, h *timelineSta
 		}
 		value := stateUnavailable[T, V](p.Value)
 		if p.Value.State == EvidenceKnown {
-			value = project(p.Value.Value)
+			value, err = project(p.Value.Value)
+			if err != nil {
+				return out, err
+			}
 		}
 		// A known repeat condition makes this a possible publication. An actual
 		// invalid/unsupported condition remains causal evidence, even in consensus.

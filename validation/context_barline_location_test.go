@@ -103,7 +103,7 @@ func TestBarlineLocationIndependentLowerSurvivesUnknownSuffix(t *testing.T) {
 		// The later unenumerated mover cannot erase the earlier contained backup
 		// departure at 4, and its causal gap is irrelevant to this one-sided proof.
 		unknown := stateNode(b, timelineRoleForward, 70, stateAbsent[Atomic]())
-		unknown.header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "later-invalid", Cause: &DecisionRef{Rule: RuleKey{"cause", 1}, Subject: NodeRef{"d", 70}}}
+		unknown.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "later-invalid", Cause: &DecisionRef{Rule: RuleKey{"cause", 1}, Subject: NodeRef{"d", 70}}})
 		content.children = append(content.children, unknown)
 		_, d, err := barlineLocationBoundary(context.Background(), s, service, b, content, 60, at, location)
 		want := OutcomeFail
@@ -124,9 +124,9 @@ func TestBarlineLocationRelevantGapsKeepCause(t *testing.T) {
 			gap := Evidence[bool]{State: EvidenceInvalid, Reason: "relevant-invalid", Cause: cause}
 			switch kind {
 			case "enumeration":
-				content.end.ChildrenComplete = gap
+				content.end.ChildrenComplete = testEvidence(gap)
 			case "declaration":
-				content.children[2].header.Declaration = stateUnavailable[bool, DeclarationID](gap)
+				content.children[2].header.Declaration = testEvidence(stateUnavailable[bool, DeclarationID](gap))
 			case "duration":
 				f := service.Facts[40]
 				f.Duration = stateUnavailable[bool, Rational](gap)
@@ -136,7 +136,7 @@ func TestBarlineLocationRelevantGapsKeepCause(t *testing.T) {
 				f.Units = stateUnavailable[bool, Decimal](gap)
 				service.Facts[40] = f
 			case "branch":
-				content.children[2].end.ChildrenComplete = gap
+				content.children[2].end.ChildrenComplete = testEvidence(gap)
 			}
 			got, decision, err := barlineLocationBoundary(context.Background(), s, service, b, content, 60, at, "right")
 			if err != nil || decision.Outcome != "" || got.State != EvidenceInvalid || got.Reason != gap.Reason || !reflect.DeepEqual(got.Cause, cause) {
@@ -258,7 +258,7 @@ func TestBarlineLocationBufferedAdmissionAndFailureRetention(t *testing.T) {
 				if e := s.retain(remaining); e != nil {
 					t.Fatal(e)
 				}
-				e := s.record(rule, &factNode{header: NodeHeader{ID: 60}}, d)
+				e := s.record(rule, &factNode{header: testRetainedHeader(NodeHeader{ID: 60}), end: testRetainedEnd(NodeEnd{})}, d)
 				if !errors.Is(e, ErrResourceLimit) || s.accumulator.report.Counts.Fail != 1 {
 					t.Fatalf("failure lost during cache exhaustion: %v %+v", e, s.accumulator.report)
 				}
@@ -303,7 +303,7 @@ func TestBarlineLocationUnknownMoverBlocksEndButNotKnownLeft(t *testing.T) {
 	s, service, b, content, at := barlineBoundaryFixture(t, Budgets{})
 	defer s.cleanup()
 	cause := &DecisionRef{Rule: RuleKey{"unavailable-mover", 1}, Subject: NodeRef{"d", 50}}
-	content.children[3].header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "unavailable-mover", Cause: cause}
+	content.children[3].header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "unavailable-mover", Cause: cause})
 	left := stateNode(b, timelineRoleBarline, 70, stateAbsent[Atomic]())
 	left.header.Parent = content.header.ID
 	content.children = append([]*factNode{left}, content.children...)
@@ -337,19 +337,19 @@ func TestBarlineLocationMovementSideEvidence(t *testing.T) {
 					event = stateNode(b, role, 70, stateAbsent[Atomic]())
 					want = true
 				case "unknown-declaration":
-					event.header.Declaration = stateUnknown[DeclarationID]("unavailable-declaration")
+					event.header.Declaration = testEvidence(stateUnknown[DeclarationID]("unavailable-declaration"))
 					state = EvidenceUnknown
 				case "invalid-declaration":
-					event.header.Declaration = Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-declaration", Cause: cause}
+					event.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "invalid-declaration", Cause: cause})
 					state = EvidenceInvalid
 				case "missing-subject":
 					bar = stateNode(b, timelineRoleBarline, 80, stateAbsent[Atomic]())
 					state = EvidenceUnknown
 				case "incomplete":
-					content.end.ChildrenComplete = stateUnknown[bool]("incomplete-children")
+					content.end.ChildrenComplete = testEvidence(stateUnknown[bool]("incomplete-children"))
 					state = EvidenceUnknown
 				case "unordered":
-					content.end.Order = stateKnown(OrderModelFields)
+					content.end.Order = testEvidence(stateKnown(OrderModelFields))
 					state = EvidenceUnknown
 				}
 				content.children = []*factNode{bar, event}

@@ -142,7 +142,7 @@ func TestLayoutRound3UnknownPartBucketsLiveThroughPublication(t *testing.T) {
 			measure.children = []*factNode{print}
 			print.children = []*factNode{staff}
 			r := layoutRound1Reader(t, measure, print, staff)
-			staff.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("staff-layout")}
+			staff.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("staff-layout")})
 			r.b.Attributes = map[contextRole]map[ComponentID]AttributeSelector{layoutRole("staff-layout.@number"): {staff.header.Type.Value: localAttr("number")}}
 			probe := &layoutRound3ScratchContext{Context: context.Background(), s: r.s, cancelOnPublication: cancel}
 			r.ctx = probe
@@ -206,7 +206,7 @@ func TestLayoutRound3KnownPartBucketsRemainRetained(t *testing.T) {
 	measure.children = []*factNode{print}
 	print.children = []*factNode{staff}
 	r := layoutRound1Reader(t, measure, print, staff)
-	staff.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("staff-layout")}
+	staff.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextNamedType("staff-layout")})
 	r.b.Attributes = map[contextRole]map[ComponentID]AttributeSelector{layoutRole("staff-layout.@number"): {staff.header.Type.Value: localAttr("number")}}
 	probe := &layoutRound3ScratchContext{Context: context.Background(), s: r.s}
 	r.ctx = probe
@@ -252,7 +252,7 @@ func TestLayoutRound3UnavailableDividerSelectionHasNoDefaultProvenance(t *testin
 			measure := localNode(1, 0, "measure")
 			system := localNode(2, 0, "system-layout")
 			cause := &DecisionRef{Rule: RuleKey{"fixture", 1}, Subject: NodeRef{"score", 2}}
-			system.end.ChildrenComplete = Evidence[bool]{State: state, Reason: "divider-selection-unavailable", Cause: cause}
+			system.end.ChildrenComplete = testEvidence(Evidence[bool]{State: state, Reason: "divider-selection-unavailable", Cause: cause})
 			r := layoutRound1Reader(t, measure, system)
 			l := layoutScopes{r: r, key: RuleKey{"layout", 1}}
 			frame := layoutFrame{systemLayout: system, systemCertain: true, first: Evidence[bool]{State: EvidenceKnown, Value: false}, page: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"score", 1}}, system: Evidence[NodeRef]{State: EvidenceKnown, Value: NodeRef{"score", 1}}}

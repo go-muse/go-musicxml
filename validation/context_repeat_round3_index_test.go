@@ -23,7 +23,7 @@ func repeatR3ContainerFixture(t *testing.T, count int, timewise bool, limits Bud
 	}
 	p.Bindings.Hierarchies[i] = h
 	add := func(id, parent NodeID, d DeclarationID) *factNode {
-		n := &factNode{header: NodeHeader{ID: id, Parent: parent, Declaration: stateKnown(d)}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderModelContent)}}
+		n := &factNode{header: testRetainedHeader(NodeHeader{ID: id, Parent: parent, Declaration: stateKnown(d)}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderModelContent)})}
 		s.nodes[id] = n
 		s.sequence = append(s.sequence, id)
 		return n
@@ -38,7 +38,7 @@ func repeatR3ContainerFixture(t *testing.T, count int, timewise bool, limits Bud
 		id := NodeID(2 + 2*j)
 		add(id, 1, outer)
 		n := add(id+1, id, inner)
-		n.end.ChildrenComplete = Evidence[bool]{State: EvidenceInvalid, Reason: "model-choice-cardinality", Cause: cause}
+		n.end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceInvalid, Reason: "model-choice-cardinality", Cause: cause})
 	}
 	return s, &contextReader{ctx: context.Background(), s: s, b: &contextBindings{}}, &timelineService{}, p, cause
 }
@@ -58,7 +58,7 @@ func TestRound3RepeatContainerExactBindings(t *testing.T) {
 				case "wrong-parent":
 					n.header.Parent = 1
 				case "unknown-declaration":
-					n.header.Declaration = stateUnknown[DeclarationID]("unknown-container")
+					n.header.Declaration = testEvidence(stateUnknown[DeclarationID]("unknown-container"))
 				}
 				index, free, err := contextRepeatBuildProofIndex(r, timeline, nil, p)
 				if err != nil {
@@ -91,7 +91,7 @@ func TestRound3RepeatUnknownRosterCoverageAndCausalOrder(t *testing.T) {
 		causes := []*DecisionRef{{Rule: RuleKey{"first", 1}, Subject: NodeRef{"d", 10}}, {Rule: RuleKey{"second", 1}, Subject: NodeRef{"d", 11}}}
 		timeline := &timelineService{Facts: map[NodeID]timelineEventFact{}}
 		for i, id := range []NodeID{10, 11} {
-			s.nodes[id] = &factNode{header: NodeHeader{ID: id, Declaration: Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "note-declaration", Cause: causes[i]}}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+			s.nodes[id] = &factNode{header: testRetainedHeader(NodeHeader{ID: id, Declaration: Evidence[DeclarationID]{State: EvidenceInvalid, Reason: "note-declaration", Cause: causes[i]}}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 			timeline.Facts[id] = timelineEventFact{Part: stateKnown(parts[i])}
 		}
 		index, free, err := contextRepeatBuildProofIndex(&contextReader{ctx: context.Background(), s: s, b: &contextBindings{}}, timeline, nil)
@@ -219,7 +219,7 @@ func TestRound3RepeatTerminalExtentProjections(t *testing.T) {
 				want = "4"
 			}
 			d := localDecl(kind)
-			n := &factNode{header: NodeHeader{ID: 10, Declaration: stateKnown(d)}, closed: true, end: NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+			n := &factNode{header: testRetainedHeader(NodeHeader{ID: 10, Declaration: stateKnown(d)}), closed: true, end: testRetainedEnd(NodeEnd{ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 			s.nodes = map[NodeID]*factNode{10: n}
 			s.sequence = []NodeID{10}
 			timeline := &timelineService{Facts: map[NodeID]timelineEventFact{10: {Part: stateKnown(part), Origin: stateKnown(origin), Duration: stateKnown(duration)}}}
@@ -337,7 +337,7 @@ func TestRound3RepeatKnownPartEventlessContainerIsolation(t *testing.T) {
 				t.Fatal("invalid identity fixture")
 			}
 			cause := &DecisionRef{Rule: RuleKey{"provider-enumeration", 1}, Subject: NodeRef{"doc", containers[1].header.ID}}
-			containers[1].end.ChildrenComplete = Evidence[bool]{State: EvidenceInvalid, Reason: "eventless-container", Cause: cause}
+			containers[1].end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceInvalid, Reason: "eventless-container", Cause: cause})
 			index, free, err := contextRepeatBuildProofIndex(&contextReader{ctx: context.Background(), s: s, b: &contextBindings{}}, &timelineService{}, nil, p)
 			if err != nil {
 				t.Fatal(err)
@@ -362,8 +362,8 @@ func TestRound3RepeatEverySemanticContainer(t *testing.T) {
 	for _, tw := range []bool{false, true} {
 		for _, id := range []NodeID{1, 2, 3} {
 			s, r, timeline, p, cause := repeatR3ContainerFixture(t, 1, tw, Budgets{})
-			s.nodes[3].end.ChildrenComplete = stateKnown(true)
-			s.nodes[id].end.ChildrenComplete = Evidence[bool]{State: EvidenceInvalid, Reason: "container-enumeration", Cause: cause}
+			s.nodes[3].end.ChildrenComplete = testEvidence(stateKnown(true))
+			s.nodes[id].end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceInvalid, Reason: "container-enumeration", Cause: cause})
 			index, free, err := contextRepeatBuildProofIndex(r, timeline, nil, p)
 			if err != nil {
 				t.Fatal(err)

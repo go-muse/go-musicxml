@@ -229,7 +229,7 @@ func (r *stateReader) play(n *factNode) Evidence[playState] {
 			kind = playOther
 		default:
 			if ch.header.Declaration.State != EvidenceKnown {
-				return stateUnavailable[DeclarationID, playState](ch.header.Declaration)
+				return stateUnavailable[DeclarationID, playState](*ch.header.Declaration)
 			}
 			continue
 		}

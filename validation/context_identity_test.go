@@ -19,7 +19,7 @@ func ciRule(id string) RuleDefinition {
 	return RuleDefinition{Key: RuleKey{ID: RuleID(id), Revision: 1}}
 }
 func ciNode(id, parent NodeID) *factNode {
-	return &factNode{header: factHeader(id, parent, "test.slot", "slot"), end: factEnd(id), closed: true}
+	return &factNode{header: testRetainedHeader(factHeader(id, parent, "test.slot", "slot")), end: testRetainedEnd(factEnd(id)), closed: true}
 }
 func ciSelector() AttributeSelector {
 	return AttributeSelector{Name: QName{Local: "id"}, Declaration: DeclarationID{Assembly: AssemblyMusicXML, OwnerOccurrence: "test.slot", Occurrence: "test.id"}}
@@ -587,7 +587,7 @@ func TestContextDefaultUsesOnlyProvenAbsentSlot(t *testing.T) {
 				n.attributes = nil
 			case "incomplete":
 				n.attributes = nil
-				n.end.AttributesComplete = Evidence[bool]{State: EvidenceKnown, Value: false}
+				n.end.AttributesComplete = testEvidence(Evidence[bool]{State: EvidenceKnown, Value: false})
 			case "unknown-presence":
 				n.attributes[0].Presence = Evidence[bool]{State: EvidenceUnknown, Reason: "upstream-missing"}
 			case "unsupported-presence":

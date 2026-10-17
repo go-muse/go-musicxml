@@ -39,7 +39,7 @@ func localDecimal(t *testing.T, v string) Decimal {
 func localNode(id, parent NodeID, d string) *factNode {
 	h := factHeader(id, parent, d, d)
 	h.Declaration.Value = localDecl(d)
-	return &factNode{header: h, end: factEnd(id), closed: true}
+	return &factNode{header: testRetainedHeader(h), end: testRetainedEnd(factEnd(id)), closed: true}
 }
 func localSetAttr(n *factNode, name string, v Atomic) {
 	a := localAttr(name)
@@ -69,7 +69,7 @@ func TestLocalScalarAndPresentAttributePlans(t *testing.T) {
 	}
 	for _, v := range []string{"", "equals", " ", " equals ", "Equals"} {
 		n := localNode(1, 0, "relation")
-		n.end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: localString(v)}
+		n.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceKnown, Value: localString(v)})
 		want := OutcomeFail
 		if v == "" || v == "equals" {
 			want = OutcomePass
@@ -141,7 +141,7 @@ func TestLocalBeamDistinctAndIncomplete(t *testing.T) {
 		}
 	}
 	n := localNode(1, 0, "note")
-	n.end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "partial"}
+	n.end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "partial"})
 	if d := localRun(t, p, n, n); d.Outcome != OutcomeUnknown {
 		t.Fatal(d)
 	}
@@ -184,7 +184,7 @@ func TestLocalPresenceImplicationAndParentScope(t *testing.T) {
 	if d := localRun(t, q, parent, oct, oct, cancel); d.Outcome != OutcomeFail {
 		t.Fatal(d)
 	}
-	parent.end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "partial"}
+	parent.end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "partial"})
 	if d := localRun(t, q, parent, oct, oct, cancel); d.Outcome != OutcomeUnknown {
 		t.Fatal(d)
 	}
@@ -194,7 +194,7 @@ func TestLocalDocumentMarkerAndExactChildValues(t *testing.T) {
 	marker := localNode(2, 1, "concert")
 	tr := localNode(3, 1, "transpose")
 	ch := localNode(4, 3, "chromatic")
-	ch.end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "0")}}
+	ch.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceKnown, Value: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "0")}})
 	root.children = []*factNode{marker, tr}
 	tr.children = []*factNode{ch}
 	p, e := NewDocumentMarkerValuesPlan([]DeclarationID{localDecl("concert")}, []ChildValueRequirement{{Child: localDecl("chromatic"), Expected: Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "0")}}, {Child: localDecl("diatonic"), Expected: localInteger(t, 0), AllowAbsent: true}})
@@ -219,7 +219,7 @@ func TestLocalDocumentMarkerAndExactChildValues(t *testing.T) {
 	if d := localRun(t, q, root, tr, tr, ch); d.Outcome != OutcomeFail {
 		t.Fatal(d)
 	}
-	root.end.ChildrenComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "partial"}
+	root.end.ChildrenComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "partial"})
 	if d := localRun(t, q, root, tr, tr, ch); d.Outcome != OutcomeUnknown {
 		t.Fatal(d)
 	}
@@ -279,12 +279,12 @@ func TestLocalPlanCopyDigestAndInvalidPrerequisites(t *testing.T) {
 	}
 	n := localNode(1, 0, "relation")
 	cause := &DecisionRef{Rule: RuleKey{ID: "schema.scalar", Revision: 1}, Subject: NodeRef{DocumentID: "doc", Node: 1}}
-	n.end.Scalar.Value = Evidence[Atomic]{State: EvidenceInvalid, Reason: "bad-scalar", Cause: cause}
+	n.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceInvalid, Reason: "bad-scalar", Cause: cause})
 	d := localRun(t, p, n, n)
 	if d.Outcome != OutcomeBlocked || d.Cause == nil || *d.Cause != *cause {
 		t.Fatalf("lost cause %+v", d)
 	}
-	n.end.Scalar.Value = Evidence[Atomic]{State: EvidenceUnsupported, Reason: "unknown-domain"}
+	n.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceUnsupported, Reason: "unknown-domain"})
 	if d := localRun(t, p, n, n); d.Outcome != OutcomeUnsupported {
 		t.Fatal(d)
 	}
@@ -314,11 +314,11 @@ func TestLocalIncompleteAntecedentAndExactDeclarations(t *testing.T) {
 		t.Fatal(e)
 	}
 	n := localNode(1, 0, "slur")
-	n.end.AttributesComplete = Evidence[bool]{State: EvidenceUnknown, Reason: "unknown-presence"}
+	n.end.AttributesComplete = testEvidence(Evidence[bool]{State: EvidenceUnknown, Reason: "unknown-presence"})
 	if d := localRun(t, p, n, n); d.Outcome != OutcomeUnknown {
 		t.Fatal(d)
 	}
-	n.end.AttributesComplete = Evidence[bool]{State: EvidenceKnown, Value: true}
+	n.end.AttributesComplete = testEvidence(Evidence[bool]{State: EvidenceKnown, Value: true})
 	if d := localRun(t, p, n, n); d.Outcome != OutcomeNotApplicable {
 		t.Fatal(d)
 	}
@@ -428,11 +428,11 @@ func TestLocalMarkerValuesIndependentConjuncts(t *testing.T) {
 					known := localNode(5, 3, knownName)
 					root.children = []*factNode{marker, owner}
 					owner.children = []*factNode{unknown, known}
-					unknown.end.Scalar.Value = Evidence[Atomic]{State: state, Reason: "unavailable-scalar"}
+					unknown.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: state, Reason: "unavailable-scalar"})
 					if state == EvidenceInvalid {
 						unknown.end.Scalar.Value.Cause = cause
 					}
-					known.end.Scalar.Value = Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, knownValue)}
+					known.end.Scalar.Value = testEvidence(Evidence[Atomic]{State: EvidenceKnown, Value: localInteger(t, knownValue)})
 					p, e := NewDocumentMarkerValuesPlan([]DeclarationID{localDecl("marker")}, []ChildValueRequirement{{Child: unknown.header.Declaration.Value, Expected: localInteger(t, 0)}, {Child: known.header.Declaration.Value, Expected: localInteger(t, 0)}})
 					if e != nil {
 						t.Fatal(e)
@@ -440,7 +440,7 @@ func TestLocalMarkerValuesIndependentConjuncts(t *testing.T) {
 					d := localRun(t, p, root, owner, marker, owner, unknown, known)
 					want := OutcomeFail
 					if knownValue == 0 {
-						want = localGap(unknown.end.Scalar.Value).Outcome
+						want = localGap(*unknown.end.Scalar.Value).Outcome
 					}
 					if d.Outcome != want {
 						t.Fatalf("independent conjunct lost: want=%s got=%+v", want, d)

@@ -136,7 +136,7 @@ func barlineMovementSide(ctx context.Context, s *Session, b *timelineBindings, c
 			continue
 		}
 		if event.header.Declaration.State != EvidenceKnown {
-			gap = timelineMergeAvailability(gap, timelineGapAs[DeclarationID, bool](event.header.Declaration, "barline-event-declaration-unavailable"))
+			gap = timelineMergeAvailability(gap, timelineGapAs[DeclarationID, bool](*event.header.Declaration, "barline-event-declaration-unavailable"))
 			continue
 		}
 		moving := r.matches(event, timelineRoleNote) || r.matches(event, timelineRoleBackup) || r.matches(event, timelineRoleForward)
@@ -212,7 +212,7 @@ func barlineLocationBoundary(ctx context.Context, s *Session, service *timelineS
 			return Evidence[Rational]{}, Decision{}, err
 		}
 		if event.header.Declaration.State != EvidenceKnown {
-			merge(timelineGapAs[DeclarationID, bool](event.header.Declaration, "barline-event-declaration-unavailable"))
+			merge(timelineGapAs[DeclarationID, bool](*event.header.Declaration, "barline-event-declaration-unavailable"))
 			prefix = false
 			continue
 		}

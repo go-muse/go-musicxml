@@ -39,16 +39,16 @@ func singletonRepeatFixture(t *testing.T, limits Budgets) (*contextReader, *time
 			value Atomic
 		}{{contextRepeatPitchStep, localString(step)}, {contextRepeatPitchAlter, Atomic{Kind: AtomicDecimal, Decimal: localDecimal(t, "0")}}, {contextRepeatPitchOctave, localInteger(t, 4)}} {
 			scalar := spanUnitNode(r, v.role, pitch)
-			scalar.end.Scalar.Value = stateKnown(v.value)
+			scalar.end.Scalar.Value = testEvidence(stateKnown(v.value))
 		}
 		duration := spanUnitNode(r, contextRepeatNoteDuration, n)
-		duration.end.Scalar.Value = stateAtomicDecimal(t, 1, 1)
+		duration.end.Scalar.Value = testEvidence(stateAtomicDecimal(t, 1, 1))
 		in := spanUnitNode(r, contextRepeatNoteInstrument, n)
 		spanUnitAttribute(r, in, contextRepeatInstrumentID, stateAtomicText("I1"))
 		voice := spanUnitNode(r, contextRepeatNoteVoice, n)
-		voice.end.Scalar.Value = stateAtomicText("1")
+		voice.end.Scalar.Value = testEvidence(stateAtomicText("1"))
 		staff := spanUnitNode(r, contextRepeatNoteStaff, n)
-		staff.end.Scalar.Value = stateAtomicInteger(t, 1)
+		staff.end.Scalar.Value = testEvidence(stateAtomicInteger(t, 1))
 		pos, end := statePosition(t, 0, int64(i), 1), statePosition(t, 0, int64(i+1), 1)
 		pos.Part = part
 		end.Part = part
@@ -130,7 +130,7 @@ func TestIndependentSingletonRepeatOwnedPrerequisiteCauses(t *testing.T) {
 			invalid := Evidence[bool]{State: EvidenceInvalid, Reason: "independent-unavailable", Cause: cause}
 			switch kind {
 			case "attributes":
-				r.s.nodes[id].end.AttributesComplete = invalid
+				r.s.nodes[id].end.AttributesComplete = testEvidence(invalid)
 			case "end":
 				f := timeline.Facts[id]
 				f.End = stateUnavailable[bool, musicalPosition](invalid)
@@ -228,7 +228,7 @@ func TestIndependentSingletonRepeatDeclinesIncompleteDomain(t *testing.T) {
 				r.s.sequence = append(r.s.sequence, id)
 				index.events[part] = append(index.events[part], id)
 			case "unknown-attributes":
-				r.s.nodes[ids[0]].end.AttributesComplete = stateUnknown[bool]("unknown-attributes")
+				r.s.nodes[ids[0]].end.AttributesComplete = testEvidence(stateUnknown[bool]("unknown-attributes"))
 			case "wrong-instrument-part":
 				timeline.State.NoteInstruments[0].Part = NodeRef{"d", 200}
 			case "wrong-instrument-document":
@@ -257,7 +257,7 @@ func TestIndependentSingletonRepeatEventRosterAdmission(t *testing.T) {
 	run := func(ctx context.Context, limits Budgets) (int64, error) {
 		s, r, timeline, plan, _ := repeatR3ContainerFixture(t, 1, false, limits)
 		r.ctx = ctx
-		s.nodes[3].end.ChildrenComplete = stateKnown(true)
+		s.nodes[3].end.ChildrenComplete = testEvidence(stateKnown(true))
 		// Seed an already established canonical identity at the enclosing part;
 		// this isolates roster allocation from the identity resolver's own budgets.
 		timeline.Facts = map[NodeID]timelineEventFact{2: {Part: stateKnown(NodeRef{"d", 100})}}

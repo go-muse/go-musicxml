@@ -225,7 +225,7 @@ func TestCrossReviewSpanExtractionPreservesCategoryCause(t *testing.T) {
 		note := spanUnitNode(r, spanRole_note, nil)
 		child := spanUnitNode(r, spanRole_notePitch, note)
 		cause := &DecisionRef{Rule: RuleKey{"declaration", 1}, Subject: NodeRef{r.s.documentID, child.header.ID}}
-		child.header.Declaration = Evidence[DeclarationID]{State: state, Reason: "category-declaration-gap", Cause: cause}
+		child.header.Declaration = testEvidence(Evidence[DeclarationID]{State: state, Reason: "category-declaration-gap", Cause: cause})
 		mark := spanUnitNode(r, spanRole_arpeggiate, note)
 		e := spanExtract(r, RuleKey{"spans", 1}, mark, spanFamilyBinding{family: SpanArpeggiate, node: spanRole_arpeggiate, number: spanRole_arpeggiate_number, identity: SpanIdentityNumber}, nil, nil, 1, nil)
 		if r.err != nil {

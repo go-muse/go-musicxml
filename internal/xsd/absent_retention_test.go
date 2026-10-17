@@ -455,7 +455,7 @@ func TestRunAbsentAttributeCacheAdmission(t *testing.T) {
 			func() {
 				defer recoverRun(&err)
 				owner, _ := run.typeID(state.actual)
-				run.context.absentAttributeResult(effective, owner.path, effective.Attributes, 0)
+				run.context.absentAttributeResult(effective, owner.Occurrence(), effective.Attributes, 0)
 			}()
 			if !errors.Is(err, errMeterStop) {
 				t.Fatalf("stop=%v", err)

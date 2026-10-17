@@ -17,7 +17,7 @@ func soundsTestFixture(t *testing.T) (*Session, *contextPlan) {
 	b := &contextBindings{Elements: map[contextRole]map[DeclarationID]struct{}{}, Attributes: map[contextRole]map[ComponentID]AttributeSelector{}}
 	for i, n := range []*factNode{owner, child} {
 		n.header.Declaration.Value.Assembly = AssemblySounds
-		n.header.Type = Evidence[ComponentID]{State: EvidenceKnown, Value: contextAssemblyType(AssemblySounds, []string{"sound", "ensemble"}[i])}
+		n.header.Type = testEvidence(Evidence[ComponentID]{State: EvidenceKnown, Value: contextAssemblyType(AssemblySounds, []string{"sound", "ensemble"}[i])})
 		n.header.Location = Location{Target: TargetSource, DocumentID: s.documentID, Path: "/sounds/sound", Position: &SourcePosition{Line: 1, Column: 2}}
 		role := []contextRole{soundsSound, soundsEnsemble}[i]
 		b.Elements[role] = map[DeclarationID]struct{}{n.header.Declaration.Value: {}}
@@ -32,7 +32,7 @@ func soundsTestFixture(t *testing.T) (*Session, *contextPlan) {
 		b.Attributes[v.role] = map[ComponentID]AttributeSelector{v.n.header.Type.Value: a}
 		v.n.attributes = append(v.n.attributes, AttributeFact{Owner: v.n.header.ID, Name: a.Name, Declaration: Evidence[DeclarationID]{State: EvidenceKnown, Value: a.Declaration}, Presence: Evidence[bool]{State: EvidenceKnown, Value: true}, Scalar: Scalar{Value: localKnownText(v.text)}, Location: v.n.header.Location})
 	}
-	child.end.Scalar.Value = localKnownText(" library  value ")
+	child.end.Scalar.Value = testEvidence(localKnownText(" library  value "))
 	owner.children = []*factNode{child}
 	s.nodes = map[NodeID]*factNode{1: owner, 2: child}
 	s.sequence = []NodeID{1, 2}
@@ -48,8 +48,8 @@ func TestSoundsMappingUnavailableEvidence(t *testing.T) {
 		s.nodes[1].attributes[1].Scalar.Value = missing
 		s.nodes[2].attributes[0].Scalar.Value = missing
 		s.nodes[2].attributes[1].Scalar.Value = missing
-		s.nodes[2].end.Scalar.Value = missing
-		s.nodes[1].end.ChildrenComplete = Evidence[bool]{State: state, Reason: "source-enumeration-gap", Cause: cause}
+		s.nodes[2].end.Scalar.Value = testEvidence(missing)
+		s.nodes[1].end.ChildrenComplete = testEvidence(Evidence[bool]{State: state, Reason: "source-enumeration-gap", Cause: cause})
 		d, pending, err := evaluateContextSoundsMapping(context.Background(), s, nil, RuleKey{"sounds-test", 1}, p, true)
 		if err != nil || pending || d.Outcome != OutcomePass || len(s.contextResults) != 2 {
 			t.Fatalf("projection failed: %+v %v", d, err)

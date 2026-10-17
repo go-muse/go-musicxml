@@ -171,12 +171,12 @@ func newResourceLinkIndex(r *contextReader) *resourceLinkIndex {
 			if !marker {
 				nextContent = next
 				if child.header.Declaration.State != EvidenceKnown && child.header.Name.Space == "" && (child.header.Name.Local == "link" || child.header.Name.Local == "bookmark") {
-					nextContent = stateUnavailable[DeclarationID, NodeRef](child.header.Declaration)
+					nextContent = stateUnavailable[DeclarationID, NodeRef](*child.header.Declaration)
 				}
 			}
 		}
 		if n.header.Declaration.State != EvidenceKnown && complete.State == EvidenceKnown {
-			complete = stateUnavailable[DeclarationID, bool](n.header.Declaration)
+			complete = stateUnavailable[DeclarationID, bool](*n.header.Declaration)
 			if complete.State == EvidenceAbsent {
 				complete = stateUnknown[bool]("resource-descendant-declaration-unavailable")
 			}

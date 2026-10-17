@@ -17,7 +17,7 @@ func TestTimelineFinalizersPublishGraceDonorsAfterCompleteMeasures(t *testing.T)
 			runtimeBlock(b, 1, runtimeNote(t, b, 50, 2, false)),
 		}
 		for _, block := range blocks {
-			block.content.end.Order = stateKnown(order)
+			block.content.end.Order = testEvidence(stateKnown(order))
 			if err := service.readMeasure(context.Background(), s, b, block); err != nil {
 				t.Fatal(err)
 			}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
+
 	"github.com/go-muse/go-musicxml/internal/xsd"
 )
 
@@ -19,6 +20,16 @@ type contextReader struct {
 	attributeIntern map[contextAttributeInternKey]*contextAttributeTable
 	elementCache    map[DeclarationID][]contextRole
 	ownerCache      map[ComponentID]*contextAttributeTable
+}
+
+// A retained declaration is immutable, session-owned evidence. Schema
+// publication canonicalizes cause-free Known declarations by exact compiled use,
+// so different node bindings can share this identity. Pair it with the exact
+// compiled table, not its digest, so distinct plans cannot share roles.
+// The session owns this cache; final readers borrow its immutable role slices.
+type contextBoundElementKey struct {
+	bindings    *contextBindings
+	declaration *Evidence[DeclarationID]
 }
 
 func (r *contextReader) step(n int64) bool {
@@ -37,6 +48,31 @@ func (r *contextReader) matches(n *factNode, role contextRole) bool {
 	if n == nil || r.b == nil || !r.step(1) || n.header.Declaration.State != EvidenceKnown {
 		return false
 	}
+	if r.b.bindingDigest != "" && r.b.ElementRoles != nil && r.s.finished && n.closed && r.s.schema != nil && r.s.schema.bound && r.s.schema.identityReady && r.s.schema.run != nil {
+		if roles, ready := r.boundElementRoles(n); ready {
+			// The compiled set is sorted. A bounded binary search avoids both
+			// hashing the declaration again and a full role-vocabulary scan.
+			for lo, hi := 0, len(roles); lo < hi; {
+				mid := lo + (hi-lo)/2
+				candidate := roles[mid]
+				if !r.step(1 + int64(min(len(candidate), len(role)))) {
+					return false
+				}
+				if candidate == role {
+					return true
+				}
+				if candidate < role {
+					lo = mid + 1
+				} else {
+					hi = mid
+				}
+			}
+			return false
+		}
+		if r.err != nil {
+			return false
+		}
+	}
 	if r.b.Elements != nil {
 		if !r.step(int64(len(role)) + contextDeclarationBytes(n.header.Declaration.Value)) {
 			return false
@@ -50,6 +86,59 @@ func (r *contextReader) matches(n *factNode, role contextRole) bool {
 		}
 	}
 	return false
+}
+
+// boundElementRoles is used only during final provider evaluation: Finish has
+// sealed the public event API, bindSourceSchema has published every declaration,
+// and finalizeSourceSchema has completed. No declaration can change in this
+// phase. Open copied caller evidence, and schema publication replaced it through
+// retainSchemaDeclaration; roots and child uses therefore borrow owned records.
+// Earlier readers and private mutable/manual bindings use matches' exact
+// lookup instead, so late publication never installs a stale classification.
+// EvidenceKnown is still checked on every call, outside this cache. A cached
+// empty role set is only a classification of a known declaration, not evidence
+// that a declaration or any musical fact is absent.
+func (r *contextReader) boundElementRoles(n *factNode) ([]contextRole, bool) {
+	if !r.step(1) {
+		return nil, false
+	}
+	bound, ok := r.s.schema.nodes[n.header.ID]
+	if !ok || !bound.available || bound.binding == (xsd.Binding{}) {
+		return nil, false
+	}
+	if !r.step(1) {
+		return nil, false
+	}
+	key := contextBoundElementKey{bindings: r.b, declaration: n.header.Declaration}
+	roles, ready := r.s.contextElementRoles[key]
+	if ready {
+		return roles, true
+	}
+	if !r.step(contextDeclarationBytes(n.header.Declaration.Value)) {
+		return nil, false
+	}
+	roles = r.b.ElementRoles[n.header.Declaration.Value]
+	if !r.step(1) {
+		return nil, false
+	}
+	// One compact entry per exact declaration/table pair across all final readers.
+	// This eliminates duplicate provider-local maps while keeping their admitted
+	// storage owned by the session until cleanup. The allowance covers map
+	// buckets, geometric growth and allocator rounding; compiled bindings still
+	// own the borrowed immutable role slice.
+	retained := int64(256)
+	if r.s.contextElementRoles == nil {
+		// The first map group reserves room for multiple key/value slots.
+		retained += 256
+	}
+	if r.err = r.s.retain(retained); r.err != nil {
+		return nil, false
+	}
+	if r.s.contextElementRoles == nil {
+		r.s.contextElementRoles = make(map[contextBoundElementKey][]contextRole)
+	}
+	r.s.contextElementRoles[key] = roles
+	return roles, true
 }
 
 // roles returns a borrowed immutable set of exact element roles. The lookup
@@ -549,7 +638,7 @@ func (r *contextReader) attribute(n *factNode, role contextRole) Evidence[Atomic
 	}
 	if !ok {
 		if n.header.Type.State != EvidenceKnown {
-			return stateUnavailable[ComponentID, Atomic](n.header.Type)
+			return stateUnavailable[ComponentID, Atomic](*n.header.Type)
 		}
 		return Evidence[Atomic]{State: EvidenceUnsupported, Reason: "context-attribute-binding-unavailable"}
 	}
@@ -661,7 +750,7 @@ func (r *contextReader) child(n *factNode, role contextRole) (*factNode, Evidenc
 			return nil, stateUnknown[bool]("context-interrupted")
 		}
 		if ch.header.Declaration.State != EvidenceKnown {
-			return nil, stateUnavailable[DeclarationID, bool](ch.header.Declaration)
+			return nil, stateUnavailable[DeclarationID, bool](*ch.header.Declaration)
 		}
 		if r.matches(ch, role) {
 			if found != nil {
@@ -694,7 +783,7 @@ func (r *contextReader) presence(n *factNode, role contextRole) Evidence[bool] {
 	}
 	if !ok {
 		if n.header.Type.State != EvidenceKnown {
-			return stateUnavailable[ComponentID, bool](n.header.Type)
+			return stateUnavailable[ComponentID, bool](*n.header.Type)
 		}
 		return Evidence[bool]{State: EvidenceUnsupported, Reason: "context-attribute-binding-unavailable"}
 	}

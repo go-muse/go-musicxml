@@ -133,7 +133,7 @@ func TestTimelineRuntimeUnknownPublisherMasksInheritedState(t *testing.T) {
 	s, service, b := runtimeFixture(t)
 	attr := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleAttributesDivisions, 21, stateAtomicDecimal(t, 2, 1)), stateNode(b, timelineRoleAttributesKey, 22, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 23, stateAtomicInteger(t, 0))))
 	unknown := stateNode(b, timelineRoleDirection, 30, stateAbsent[Atomic]())
-	unknown.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "publisher-kind-unknown"}
+	unknown.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "publisher-kind-unknown"})
 	if err := service.readMeasure(context.Background(), s, b, runtimeBlock(b, 0, attr, unknown)); err != nil {
 		t.Fatal(err)
 	}

@@ -33,6 +33,7 @@ type Compiled struct {
 	digest                               string
 	logicalBytes                         int64
 	compileRecordCount, compileEdgeCount int64
+	nextIdentity                         uint64
 	roots                                map[QName]Use
 	simpleTypes                          map[*SimpleSchema]TypeID
 	complexTypes                         map[*ComplexSchema]TypeID
@@ -53,7 +54,7 @@ type Use struct {
 	original, declaration *ElementSchema
 	attribute             *AttributeSchema
 	owner                 TypeID
-	ownerPath, path       string
+	identity              *compiledIdentity
 }
 
 // Declaration returns the expanded declaration name, or the zero name.
@@ -106,32 +107,92 @@ func (u Use) DeclaredType() (TypeID, bool) {
 }
 
 // OwnerOccurrence returns the exact assembly-neutral owning component path.
-func (u Use) OwnerOccurrence() string { return u.ownerPath }
+func (u Use) OwnerOccurrence() string {
+	if u.identity == nil {
+		return ""
+	}
+	return u.identity.ownerPath
+}
 
 // Occurrence returns the exact assembly-neutral structural use path.
-func (u Use) Occurrence() string { return u.path }
+func (u Use) Occurrence() string {
+	if u.identity == nil {
+		return ""
+	}
+	return u.identity.path
+}
 
 // OwnerPath is an alias for OwnerOccurrence.
-func (u Use) OwnerPath() string { return u.ownerPath }
+func (u Use) OwnerPath() string { return u.OwnerOccurrence() }
 
 // Path is an alias for Occurrence.
-func (u Use) Path() string { return u.path }
+func (u Use) Path() string { return u.Occurrence() }
 
 // TypeID identifies a named, anonymous or built-in type without exposing DTOs.
 type TypeID struct {
-	schema  *Compiled
-	simple  *SimpleSchema
-	complex *ComplexSchema
-	builtin string
-	name    QName
-	path    string
+	schema   *Compiled
+	simple   *SimpleSchema
+	complex  *ComplexSchema
+	builtin  string
+	name     QName
+	identity *compiledIdentity
 }
 
 // Name returns the named type's expanded name; anonymous types have a zero name.
 func (t TypeID) Name() QName { return t.name }
 
 // Occurrence returns the assembly-neutral structural component path.
-func (t TypeID) Occurrence() string { return t.path }
+func (t TypeID) Occurrence() string {
+	if t.identity == nil {
+		return ""
+	}
+	return t.identity.path
+}
+
+// CacheIdentity is an exact immutable assembly-local token. Its owner pointer
+// keeps the compiled assembly alive; ordinals have meaning only for that owner.
+// It contains no strings, so callers need not repeatedly hash schema paths.
+type CacheIdentity struct {
+	owner   *Compiled
+	ordinal uint64
+}
+
+func (id CacheIdentity) BelongsTo(owner *Compiled) bool {
+	return owner != nil && id.owner == owner && id.ordinal != 0
+}
+
+type compiledIdentity struct {
+	owner           *Compiled
+	ordinal         uint64
+	ownerPath, path string
+}
+
+const compiledIdentityBytes int64 = 64
+
+func (t TypeID) CacheIdentity() CacheIdentity {
+	if t.identity == nil || t.identity.owner != t.schema {
+		return CacheIdentity{}
+	}
+	return CacheIdentity{t.schema, t.identity.ordinal}
+}
+func (u Use) CacheIdentity() CacheIdentity {
+	if u.identity == nil || u.identity.owner != u.schema {
+		return CacheIdentity{}
+	}
+	return CacheIdentity{u.schema, u.identity.ordinal}
+}
+func (c *Compiled) newIdentity(b *compileBudget, ownerPath, path string) (*compiledIdentity, error) {
+	if c.nextIdentity == ^uint64(0) {
+		return nil, fmt.Errorf("xsd: compiled identity ordinal overflow")
+	}
+	if err := b.add(compiledIdentityBytes, 1, 0); err != nil {
+		return nil, err
+	}
+	ordinal := c.nextIdentity + 1
+	identity := &compiledIdentity{owner: c, ordinal: ordinal, ownerPath: ownerPath, path: path}
+	c.nextIdentity = ordinal
+	return identity, nil
+}
 
 type particleUseKey struct {
 	owner    TypeID
@@ -572,32 +633,42 @@ func schemaGraphDigest(data SchemaData, records map[graphPointer]uint64) string 
 func (c *Compiled) recordPath(value any) string {
 	return "/records/" + strconv.FormatUint(c.records[pointerKey(reflect.ValueOf(value))], 10)
 }
-func (c *Compiled) addType(b *compileBudget, id TypeID) error {
-	if err := b.add(192+int64(len(id.path)), 1, 0); err != nil {
+func (c *Compiled) addType(b *compileBudget, id *TypeID, path string) error {
+	if err := b.add(192+int64(len(path)), 1, 0); err != nil {
 		return err
 	}
-	c.components = append(c.components, id)
+	identity, err := c.newIdentity(b, "", path)
+	if err != nil {
+		return err
+	}
+	id.identity = identity
+	c.components = append(c.components, *id)
 	if id.simple != nil {
 		if _, ok := c.simpleTypes[id.simple]; !ok {
-			c.simpleTypes[id.simple] = id
+			c.simpleTypes[id.simple] = *id
 		}
 	}
 	if id.complex != nil {
 		if _, ok := c.complexTypes[id.complex]; !ok {
-			c.complexTypes[id.complex] = id
+			c.complexTypes[id.complex] = *id
 		}
 	}
 	return nil
 }
-func (c *Compiled) addUse(b *compileBudget, use Use) error {
-	if err := b.add(288+int64(len(use.path))+int64(len(use.ownerPath)), 1, 1); err != nil {
+func (c *Compiled) addUse(b *compileBudget, use *Use, ownerPath, path string) error {
+	if err := b.add(288+int64(len(path))+int64(len(ownerPath)), 1, 1); err != nil {
 		return err
 	}
-	c.uses = append(c.uses, use)
+	identity, err := c.newIdentity(b, ownerPath, path)
+	if err != nil {
+		return err
+	}
+	use.identity = identity
+	c.uses = append(c.uses, *use)
 	return nil
 }
-func (c *Compiled) elementUse(element *ElementSchema, owner, path string) Use {
-	u := Use{schema: c, original: element, declaration: element, ownerPath: owner, path: path}
+func (c *Compiled) elementUse(element *ElementSchema) Use {
+	u := Use{schema: c, original: element, declaration: element}
 	// Preserve an unresolved reference as metadata. Resolution is deliberately
 	// only a single lookup, matching the kernel's lazy declaration resolution.
 	if element != nil && element.Reference.Local != "" {
@@ -610,8 +681,8 @@ func (c *Compiled) index(b *compileBudget) error {
 	// Builtins are immutable vocabulary, indexed even when an instance's
 	// xsi:type is the first occurrence of that name. No scalar is assessed.
 	for _, name := range strings.Fields("anyType anySimpleType string normalizedString token language Name NCName NMTOKEN ID IDREF ENTITY NMTOKENS IDREFS ENTITIES boolean decimal float double integer long int short byte nonPositiveInteger negativeInteger nonNegativeInteger positiveInteger unsignedLong unsignedInt unsignedShort unsignedByte base64Binary hexBinary anyURI QName NOTATION date dateTime duration gDay gMonth gMonthDay gYear gYearMonth time") {
-		id := TypeID{schema: c, builtin: name, name: QName{Space: XSDNamespace, Local: name}, path: "/builtins/" + name}
-		if err := c.addType(b, id); err != nil {
+		id := TypeID{schema: c, builtin: name, name: QName{Space: XSDNamespace, Local: name}}
+		if err := c.addType(b, &id, "/builtins/"+name); err != nil {
 			return err
 		}
 		c.builtinTypes[name] = id
@@ -625,8 +696,8 @@ func (c *Compiled) index(b *compileBudget) error {
 		if typ == nil {
 			continue
 		}
-		id := TypeID{schema: c, simple: typ.Simple, complex: typ.Complex, name: name, path: "/types/" + strconv.Itoa(i)}
-		if err := c.addType(b, id); err != nil {
+		id := TypeID{schema: c, simple: typ.Simple, complex: typ.Complex, name: name}
+		if err := c.addType(b, &id, "/types/"+strconv.Itoa(i)); err != nil {
 			return err
 		}
 		c.namedTypes[name] = id
@@ -676,7 +747,7 @@ func (c *Compiled) index(b *compileBudget) error {
 	}
 	for _, entry := range entries {
 		value := objects[entry.key].Interface()
-		id := TypeID{schema: c, path: "/records/" + strconv.FormatUint(entry.id, 10)}
+		id := TypeID{schema: c}
 		switch value := value.(type) {
 		case *SimpleSchema:
 			if _, ok := c.simpleTypes[value]; ok {
@@ -691,7 +762,7 @@ func (c *Compiled) index(b *compileBudget) error {
 		default:
 			continue
 		}
-		if err := c.addType(b, id); err != nil {
+		if err := c.addType(b, &id, "/records/"+strconv.FormatUint(entry.id, 10)); err != nil {
 			return err
 		}
 	}
@@ -702,8 +773,8 @@ func (c *Compiled) index(b *compileBudget) error {
 			continue
 		}
 		path := "/elements/" + strconv.Itoa(i)
-		use := c.elementUse(element, path, path)
-		if err := c.addUse(b, use); err != nil {
+		use := c.elementUse(element)
+		if err := c.addUse(b, &use, path, path); err != nil {
 			return err
 		}
 		c.roots[name] = use
@@ -720,8 +791,8 @@ func (c *Compiled) index(b *compileBudget) error {
 }
 func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 	for i := range owner.complex.Attributes {
-		use := Use{schema: c, attribute: &owner.complex.Attributes[i], owner: owner, ownerPath: owner.path, path: owner.path + "/attributes/" + strconv.Itoa(i)}
-		if err := c.addUse(b, use); err != nil {
+		use := Use{schema: c, attribute: &owner.complex.Attributes[i], owner: owner}
+		if err := c.addUse(b, &use, owner.Occurrence(), owner.Occurrence()+"/attributes/"+strconv.Itoa(i)); err != nil {
 			return err
 		}
 		c.attributeUses[attributeUseKey{owner, i}] = use
@@ -730,7 +801,7 @@ func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 		particle *ParticleSchema
 		path     string
 	}
-	stack := []task{{owner.complex.Particle, owner.path + "/particle"}}
+	stack := []task{{owner.complex.Particle, owner.Occurrence() + "/particle"}}
 	seen := make(map[*ParticleSchema]bool)
 	for len(stack) != 0 {
 		current := stack[len(stack)-1]
@@ -743,9 +814,9 @@ func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 			return err
 		}
 		if p.Element != nil {
-			use := c.elementUse(p.Element, owner.path, current.path+"/element")
+			use := c.elementUse(p.Element)
 			use.owner = owner
-			if err := c.addUse(b, use); err != nil {
+			if err := c.addUse(b, &use, owner.Occurrence(), current.path+"/element"); err != nil {
 				return err
 			}
 			if err := c.indexInheritedParticleUse(b, p, use); err != nil {
@@ -762,7 +833,7 @@ func (c *Compiled) indexComplex(b *compileBudget, owner TypeID) error {
 			return err
 		}
 		for i := len(p.Children) - 1; i >= 0; i-- {
-			stack = append(stack, task{p.Children[i], owner.path + c.recordPath(p) + "/children/" + strconv.Itoa(i)})
+			stack = append(stack, task{p.Children[i], owner.Occurrence() + c.recordPath(p) + "/children/" + strconv.Itoa(i)})
 		}
 	}
 	return nil

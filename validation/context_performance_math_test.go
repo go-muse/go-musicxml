@@ -124,7 +124,7 @@ func TestPerformanceEveryDefaultEvidenceAxes(t *testing.T) {
 				attr := AttributeSelector{Name: QName{Local: d.name}, Declaration: decl}
 				element := localDecl("perf-element")
 				b := &contextBindings{Roles: map[contextRole][]SchemaUse{"perf-root-alter": {{Declaration: element}}}, Attributes: map[contextRole]map[ComponentID]AttributeSelector{d.role: {owner: attr}}}
-				n := &factNode{header: NodeHeader{ID: 1, Type: stateKnown(owner), Declaration: stateKnown(element)}, closed: true, end: NodeEnd{AttributesComplete: stateKnown(true), ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+				n := &factNode{header: testRetainedHeader(NodeHeader{ID: 1, Type: stateKnown(owner), Declaration: stateKnown(element)}), closed: true, end: testRetainedEnd(NodeEnd{AttributesComplete: stateKnown(true), ChildrenComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 				cause := &DecisionRef{Rule: RuleKey{"test-cause", 1}, Subject: NodeRef{"d", 1}}
 				if state != EvidenceAbsent {
 					value := Evidence[Atomic]{State: state, Value: d.fallback}
@@ -177,7 +177,7 @@ func TestPerformanceTimelineProjectionEvidenceAxes(t *testing.T) {
 		ref := Evidence[NodeRef]{State: st, Cause: c, Value: NodeRef{"d", 2}}
 		voice := Evidence[string]{State: st, Cause: c, Value: "V"}
 		service := &timelineService{Facts: map[NodeID]timelineEventFact{1: {Origin: pos, Position: pos, End: pos, Duration: rational, PrincipalDuration: rational, Principal: ref, Units: decimal, Staff: integer, Voice: voice, Part: ref}}}
-		n := &factNode{header: NodeHeader{ID: 1}}
+		n := &factNode{header: testRetainedHeader(NodeHeader{ID: 1}), end: testRetainedEnd(NodeEnd{})}
 		out, ok, err := performanceTimelineFact(context.Background(), s, service, &performanceAdviceIndex{}, n)
 		if err != nil || !ok {
 			t.Fatal(ok, err)

@@ -36,7 +36,7 @@ func stateBindings() *timelineBindings {
 	return &fixture.bindings
 }
 func stateNode(b *timelineBindings, role timelineRole, id NodeID, scalar Evidence[Atomic], children ...*factNode) *factNode {
-	n := &factNode{header: NodeHeader{ID: id, Declaration: stateKnown(b.Roles[role][0].Declaration)}, closed: true, children: children, end: NodeEnd{ID: id, Scalar: Scalar{Value: scalar}, ChildrenComplete: stateKnown(true), AttributesComplete: stateKnown(true), Order: stateKnown(OrderSource)}}
+	n := &factNode{header: testRetainedHeader(NodeHeader{ID: id, Declaration: stateKnown(b.Roles[role][0].Declaration)}), closed: true, children: children, end: testRetainedEnd(NodeEnd{ID: id, Scalar: Scalar{Value: scalar}, ChildrenComplete: stateKnown(true), AttributesComplete: stateKnown(true), Order: stateKnown(OrderSource)})}
 	for _, c := range children {
 		c.header.Parent = id
 	}
@@ -238,9 +238,9 @@ func TestTimelineStateModelFieldsAreStructuralNotChronology(t *testing.T) {
 	stateClose(t, s, h, 0)
 	b := stateBindings()
 	key := stateNode(b, timelineRoleAttributesKey, 21, stateAbsent[Atomic](), stateNode(b, timelineRoleKeyFifths, 22, stateAtomicInteger(t, 0)))
-	key.end.Order = stateKnown(OrderModelFields)
+	key.end.Order = testEvidence(stateKnown(OrderModelFields))
 	attrs := stateNode(b, timelineRoleAttributes, 20, stateAbsent[Atomic](), key)
-	attrs.end.Order = stateKnown(OrderModelFields)
+	attrs.end.Order = testEvidence(stateKnown(OrderModelFields))
 	if e := h.readAttributes(context.Background(), s, b, attrs, statePosition(t, 0, 0, 1)); e != nil {
 		t.Fatal(e)
 	}
@@ -286,8 +286,8 @@ func TestTimelineStateUnknownPublisherGapsAllButKnownTypeNarrows(t *testing.T) {
 		b.Roles[role][0].DeclaredType = ComponentID{Kind: ComponentType, Name: QName{Local: "other-type"}}
 	}
 	child := stateNode(b, timelineRoleAttributesKey, 31, stateAbsent[Atomic]())
-	child.header.Declaration = Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "unbound-key-use"}
-	child.header.Type = stateKnown(keyType)
+	child.header.Declaration = testEvidence(Evidence[DeclarationID]{State: EvidenceUnknown, Reason: "unbound-key-use"})
+	child.header.Type = testEvidence(stateKnown(keyType))
 	attrs := stateNode(b, timelineRoleAttributes, 30, stateAbsent[Atomic](), child)
 	if e := isolated.readAttributes(context.Background(), s, b, attrs, statePosition(t, 0, 0, 1)); e != nil {
 		t.Fatal(e)
@@ -357,7 +357,7 @@ func TestTimelineStateInstrumentGapsPreserveStrongestCause(t *testing.T) {
 		h := &timelineState{}
 		sound := stateNode(b, timelineRoleSound, 20, stateAbsent[Atomic](), stateNode(b, timelineRoleSoundInstrumentChange, 21, stateAbsent[Atomic](), stateNode(b, timelineRoleInstrumentChangeInstrumentSound, 22, stateAtomicText("stated"))))
 		if incomplete {
-			sound.end.ChildrenComplete = stateUnknown[bool]("children-unavailable")
+			sound.end.ChildrenComplete = testEvidence(stateUnknown[bool]("children-unavailable"))
 		}
 		if e := h.gapInstrumentChanges(context.Background(), s, b, sound, part, 1, position); e != nil {
 			t.Fatal(e)
