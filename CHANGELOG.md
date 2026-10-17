@@ -48,6 +48,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Avoid boxing nonnumeric reflected state fields solely to recognize immutable
+  numeric wrappers. Preserve exact measurement, traversal, work charges and
+  cancellation/error behavior; see [the allocation receipt](docs/validation/state-measure-boxing.md).
+
 - Reuse private per-invocation dictionary hash scratch buffers instead of
   allocating them for every encoded field. Preserve hash bytes, write chunks,
   budget charges, cancellation checks, dictionary identities and public APIs.
