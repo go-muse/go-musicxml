@@ -10,7 +10,7 @@ func (r *sourceXMLTokenReader) PushDTDParameter(declaration *sourceDTDDeclaratio
 	if err := r.event(); err != nil {
 		return err
 	}
-	input := sourceXMLEntityInput{Name: declaration.Name, Replacement: declaration.Replacement, Parameter: true, Padded: true, ExternalMarkup: true, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationRecord: declaration}
+	input := sourceXMLEntityInput{Name: declaration.Name, Replacement: declaration.Replacement, Parameter: true, Padded: true, ExternalMarkup: true, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationEntity: declaration.Origin.Entity, DeclarationRecord: declaration}
 	if err := r.pushEntity(input, sourceEntityDTD, use.Span); err != nil {
 		return err
 	}

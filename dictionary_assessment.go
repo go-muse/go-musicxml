@@ -62,6 +62,7 @@ func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options D
 	if cfg.Dictionaries == nil {
 		return report, loadErr
 	}
+	cfg.DTD = options.Assessment.DTD
 	defer func() { err = errors.Join(err, cfg.Dictionaries.Close()) }()
 	run, startErr := newSourceAssessmentRunWithConfig(ctx, reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: cfg, ByteOwner: sourceBytesPrimary}, false)
 	if startErr != nil {
@@ -104,8 +105,9 @@ func AssessModelWithDictionaries(ctx context.Context, document Document, options
 //
 // Referencing this loader embeds all five bundled components regardless of
 // options, including custom sources. Distribute the notice/license files listed
-// in THIRD_PARTY_NOTICES.md. Inputs with unread external DOCTYPE subsets cannot
-// satisfy this loader; ordinary Decode provides conversion only, not validation.
+// in THIRD_PARTY_NOTICES.md. A DOCTYPE external subset is read from the bundled
+// official MusicXML DTDs or options.Decode.DTD; an unrecognized one cannot
+// satisfy this loader. Ordinary Decode provides conversion only, not validation.
 func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error) {
 	return decodeValidated(ctx, reader, options.Decode, options.Assessment)
 }

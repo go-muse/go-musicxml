@@ -378,7 +378,7 @@ func (g *resourceGraphRun) loadExternalDocument(item graphExpansion, index uint6
 	if cached := g.cache[key]; cached != nil {
 		return cached, base, item.pkg, unknown, indirect, g.checkIntrinsicXMLDepth(cached, item.pkg)
 	}
-	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, Dictionaries: g.dictionaries, DocumentID: g.next("source"), Profile: g.profiles.source, XMLDepth: g.intrinsicXMLDepth(item.pkg), Engine: engine}, ByteOwner: sourceBytesAccounted})
+	intrinsic := assessResourceSource(g.ctx, bytes.NewReader(body.bytes), sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: g.options.account, DTD: g.options.dtd, Dictionaries: g.dictionaries, DocumentID: g.next("source"), Profile: g.profiles.source, XMLDepth: g.intrinsicXMLDepth(item.pkg), Engine: engine}, ByteOwner: sourceBytesAccounted})
 	if intrinsic.Snapshot == nil || shouldRetainMalformedIntrinsicWithoutAssembly(intrinsic) {
 		return nil, base, item.pkg, unknown, indirect, g.retainUntransferredIntrinsic(intrinsic, result.Pin, nil)
 	}

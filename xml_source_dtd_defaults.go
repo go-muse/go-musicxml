@@ -3,6 +3,8 @@ package musicxml
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
+
 	"github.com/go-muse/go-musicxml/validation"
 )
 
@@ -44,6 +46,10 @@ func sourceDTDDiagnosticAt(err error, origin sourceDTDOrigin) error {
 	var syntax *xml.SyntaxError
 	if !errors.As(err, &syntax) {
 		return err
+	}
+	if origin.SpanAvailable && origin.Entity != "" {
+		// The defect is in an external DTD entity, not at a document line.
+		return &xml.SyntaxError{Msg: fmt.Sprintf("%s (external DTD %s, line %d)", syntax.Msg, sourceXMLDiagnosticValue(origin.Entity), origin.Span.Start.Line)}
 	}
 	line := 0
 	if origin.SpanAvailable {

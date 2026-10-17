@@ -166,6 +166,7 @@ type mxlLimits struct {
 	resourceSize  int64
 	resourcesSize int64
 	xmlDepth      int
+	dtd           *DTDOptions
 }
 
 type mxlContainer struct {

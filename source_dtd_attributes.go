@@ -75,6 +75,7 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 			metadata[i].Origin.DeclarationExpected = true
 			metadata[i].Origin.Declaration = declaration.Origin.Span
 			metadata[i].Origin.DeclarationAvailable = declaration.Origin.SpanAvailable
+			metadata[i].Origin.DeclarationEntity = declaration.Origin.Entity
 		}
 		if declaration.AttributeType != "CDATA" {
 			value, err := r.normalizeDTDTokenized(attributes[i].Value)
@@ -143,7 +144,7 @@ func (r *sourceXMLTokenReader) applyDTDAttributes(element string, attributes []x
 		if err := r.tokenReserve(256); err != nil {
 			return nil, nil, err
 		}
-		origin := &sourceXMLOrigin{Kind: sourceOriginDefault, Specified: false, DeclarationExpected: true, UseExpected: true, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, AncestryComplete: true}
+		origin := &sourceXMLOrigin{Kind: sourceOriginDefault, Specified: false, DeclarationExpected: true, UseExpected: true, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationEntity: declaration.Origin.Entity, AncestryComplete: true}
 		if r.metadata.Origin != nil {
 			origin.UseAvailable = r.metadata.Origin.PhysicalAvailable
 			if origin.UseAvailable {

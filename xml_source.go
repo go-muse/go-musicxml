@@ -20,6 +20,9 @@ type sourceXMLConfig struct {
 	InternalDTD             bool
 	CaptureAttributeLexical bool
 	CaptureDTDIDs           bool
+	// DTD resolves a DOCTYPE external subset from bundled or caller DTDs.
+	// Nil leaves every external subset unread.
+	DTD *sourceDTDResolver
 }
 type sourceXMLAttribute struct {
 	NameSpan, ValueSpan  sourceXMLSpan
@@ -90,7 +93,14 @@ type sourceXMLTokenReader struct {
 	standalone                                                 sourceDTDStandalone
 	dtdBytes                                                   int64
 	dtdOriginScratch                                           []sourceDTDOriginStep
-	err                                                        error
+	dtdResolver                                                *sourceDTDResolver
+	// The grammar-only path resolves its external subset on first use and
+	// keeps a resolution error until a character entity or namespace binding
+	// actually needs the DTD.
+	externalDTD         *sourceDTDPrepared
+	externalDTDResolved bool
+	externalDTDErr      error
+	err                 error
 }
 
 func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXMLTokenReader, error) {
@@ -123,7 +133,7 @@ func newSourceXMLTokenReader(input io.Reader, config sourceXMLConfig) (*sourceXM
 	if config.Account != nil && config.Account.Limits().MaxDepth < maximum {
 		maximum = config.Account.Limits().MaxDepth
 	}
-	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, internalDTD: config.InternalDTD, captureAttributeLexical: config.CaptureAttributeLexical, captureDTDIDs: config.CaptureDTDIDs, maxDepth: maximum, retained: sourceXMLReaderBytes}, nil
+	return &sourceXMLTokenReader{cursor: cursor, account: config.Account, internalDTD: config.InternalDTD, captureAttributeLexical: config.CaptureAttributeLexical, captureDTDIDs: config.CaptureDTDIDs, dtdResolver: config.DTD, maxDepth: maximum, retained: sourceXMLReaderBytes}, nil
 }
 func (r *sourceXMLTokenReader) Metadata() sourceXMLTokenMeta { return r.metadata }
 func (r *sourceXMLTokenReader) Summary() sourceXMLSummary {
@@ -566,6 +576,9 @@ func (r *sourceXMLTokenReader) reference(context sourceXMLEntityContext, start s
 	if r.internalDTD {
 		return r.entityReference(name, context, sourceXMLSpan{Start: start, End: r.position()})
 	}
+	if c, ok, err := r.externalCharacterEntity(name, context); err != nil || ok {
+		return c, err
+	}
 	if r.dtd.ExternalSubset || r.dtd.HasEntityDeclarations || r.dtd.HasParameterReferences {
 		return 0, &sourceXMLUnsupportedError{Feature: "DTD entity expansion", Reason: "dtd-entity-expansion"}
 	}
@@ -865,6 +878,8 @@ func (r *sourceXMLTokenReader) start() (xml.Token, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		attributes, metadata = r.applyExternalNamespaceDefaults(nameString, attributes, metadata)
 	}
 	r.metadata.Attributes = metadata
 	if err = r.open(name, attributes); err != nil {
@@ -1254,6 +1269,9 @@ func (r *sourceXMLTokenReader) doctypeToken() (xml.Token, error) {
 		if err != nil {
 			return nil, err
 		}
+		if err = r.importExternalDTD(); err != nil {
+			return nil, err
+		}
 		if err = r.validateDTDDefaults(); err != nil {
 			return nil, err
 		}
@@ -1296,6 +1314,13 @@ func (r *sourceXMLTokenReader) ReleaseDTDBytes(n int64) {
 func (r *sourceXMLTokenReader) unboundPrefix(prefix string) error {
 	if r.internalDTD && r.dtdStore != nil && r.dtdStore.State().AttributeDeclarationsComplete {
 		return r.syntax("undeclared XML namespace prefix " + sourceXMLDiagnosticValue(prefix))
+	}
+	if r.legacyExternalDTDApplies() {
+		if prepared, err := r.legacyExternalDTD(); err != nil {
+			return err
+		} else if prepared != nil {
+			return r.syntax("undeclared XML namespace prefix " + sourceXMLDiagnosticValue(prefix))
+		}
 	}
 	if r.dtd.HasAttributeDeclarations || r.dtd.ExternalSubset || r.dtd.HasParameterReferences {
 		return &sourceXMLUnsupportedError{Feature: "namespace bindings requiring DTD default attributes", Reason: "dtd-namespace-binding-unavailable"}

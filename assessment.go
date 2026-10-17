@@ -27,6 +27,10 @@ import (
 type AssessmentOptions struct {
 	Profile validation.ProfileID
 	Budgets validation.Budgets
+	// DTD supplies caller DTD bytes ahead of the bundled official MusicXML
+	// DTDs to source profiles that read DTD declarations. Nil uses only the
+	// bundled DTDs. Model assessment ignores it.
+	DTD *DTDOptions
 }
 
 // DecodeAssessmentOptions configures mandatory assessed loading. Nil Assessment
@@ -117,8 +121,9 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // returns a document; nil operation error alone is not acceptance. The profiles
 // retain their bounded coverage: unsupported cases remain incomplete. No DTD,
 // schema, dictionary or linked resource is fetched. The input is never closed.
-// Inputs with unread external DOCTYPE subsets cannot satisfy this loader;
-// ordinary Decode provides conversion only, not validation.
+// A DOCTYPE external subset is read from the bundled official MusicXML DTDs
+// or options.Decode.DTD; an unrecognized one cannot satisfy this loader.
+// Ordinary Decode provides conversion only, not validation.
 // InspectXML documents source coordinates and cancellation limits.
 //
 // Any binary referencing DecodeAssessed or DecodeAssessedWithDictionaries embeds
@@ -260,7 +265,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if err != nil {
 		return nil, err
 	}
-	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine}, ByteOwner: sourceBytesPrimary}
+	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD}, ByteOwner: sourceBytesPrimary}
 	return newSourceAssessmentRunWithConfig(ctx, reader, decode, config, converting)
 }
 
@@ -305,7 +310,17 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 	}
 	internalDTD, sourceDeclarations, captureAttributeLexical := sourceDTDPolicy(config.Profile)
 	sourceDTDIDs := config.Engine.SourceDTDIDsSelected(config.Profile)
-	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: config.ByteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical, CaptureDTDIDs: sourceDTDIDs})
+	// Profiles that read DTD declarations also read a bundled or caller
+	// external subset; the others keep reporting it as unread.
+	var dtd *sourceDTDResolver
+	if internalDTD {
+		options := decode.DTD
+		if options == nil {
+			options = config.DTD
+		}
+		dtd = newSourceDTDResolver(options)
+	}
+	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: config.ByteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical, CaptureDTDIDs: sourceDTDIDs, DTD: dtd})
 	if err != nil {
 		return fail(err)
 	}

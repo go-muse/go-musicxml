@@ -24,6 +24,9 @@ type assessmentRunConfig struct {
 	// XMLDepth is an independent per-document representation cap. Zero leaves
 	// inspection governed only by the shared account; MXL supplies its default.
 	XMLDepth int
+	// DTD supplies caller DTD bytes to source profiles that read DTD
+	// declarations when the run's DecodeOptions.DTD is nil.
+	DTD *DTDOptions
 }
 
 func (c assessmentRunConfig) begin(ctx context.Context) (*validation.Session, error) {

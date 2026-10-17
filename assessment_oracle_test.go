@@ -3,7 +3,6 @@ package musicxml
 import (
 	"bytes"
 	"context"
-	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -52,9 +51,10 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 			assertXMLLintOutcome(t, xmllint, filepath.Join("schema", "musicxml-4.0", "musicxml.xsd"), filepath.Join("schema", "musicxml-4.0", "catalog.xml"), tt.input, tt.valid)
 		})
 	}
-	// These unchanged original files intentionally exercise both the usable
-	// DTD-independent scope and the explicit external-subset capability boundary.
-	// xmllint's XSD result does not establish unread DTD infoset neutrality.
+	// These unchanged original files exercise the external-subset boundary of a
+	// profile that does not read DTDs and strict loading, which reads their
+	// bundled official external DTD. xmllint's XSD result does not establish
+	// DTD infoset neutrality.
 	for _, fixture := range []struct {
 		name, schema string
 		externalDTD  bool
@@ -90,13 +90,13 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 				}
 				var result DecodeResult
 				var decodeErr error
-				if fixture.name == "MozaChloSample.musicxml" {
-					result, decodeErr = decodeMozaWithDeclaredCapacityControl(t, input)
-				} else {
+				if fixture.name == "Chant.musicxml" {
 					result, decodeErr = DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+				} else {
+					result, decodeErr = decodeOfficialWithDeclaredCapacityControl(t, input, fixture.name)
 				}
-				if result.Document != nil || result.Conversion.State != validation.ConversionConverted || !errors.Is(decodeErr, ErrIncompleteAssessment) || errors.Is(decodeErr, ErrInvalidDocument) || !result.Source.InputComplete || result.Model.Requested {
-					t.Fatalf("strict external-DTD result: %+v %v", result, decodeErr)
+				if decodeErr != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
+					t.Fatalf("strict loading with the bundled external DTD: document=%T source=%t model=%t error=%v", result.Document, result.Source.Satisfied(), result.Model.Satisfied(), decodeErr)
 				}
 			} else if !report.Satisfied() {
 				t.Fatalf("DOCTYPE-free official opus fixture: %+v", report)

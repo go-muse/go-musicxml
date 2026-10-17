@@ -96,18 +96,16 @@ func TestReviewOfficialOriginalDOCTYPEBufferAndEvidence(t *testing.T) {
 		}
 		t.Logf("original UTF-16 sample default buffer: %v", err)
 	}
-	r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: validation.Budgets{MaxBufferedBytes: 96 << 20}})
-	if err != nil || !r.InputComplete || r.AssessmentComplete || r.Satisfied() {
-		t.Fatalf("unread external DTD evidence changed: complete=%v err=%v", r.AssessmentComplete, err)
+	// With configured capacity the original bytes complete: the external
+	// subset comes from the bundled official MusicXML DTD.
+	r, err := InspectXML(context.Background(), bytes.NewReader(raw), AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: officialDTDCapacity})
+	if err != nil || !r.InputComplete || !r.AssessmentComplete || !r.Satisfied() {
+		t.Fatalf("original external-DOCTYPE sample with configured capacity: complete=%v satisfied=%v err=%v", r.AssessmentComplete, r.Satisfied(), err)
 	}
-	found := false
 	for _, finding := range r.Findings {
 		if finding.Reason == "dtd-infoset-unavailable" {
-			found = true
+			t.Fatalf("bundled external DTD still reported unavailable: %+v", finding)
 		}
-	}
-	if !found {
-		t.Fatal("lost external-DOCTYPE limitation")
 	}
 }
 

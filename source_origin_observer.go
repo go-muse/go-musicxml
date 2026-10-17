@@ -79,7 +79,7 @@ func (o *sourceFactObserver) publishSourceOrigin(frame *sourceObserverFrame, att
 		out.Physical = validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: location}
 	}
 	if in.DeclarationAvailable {
-		out.Declaration = o.sourceOriginSite(in.Declaration)
+		out.Declaration = o.sourceDeclarationSite(in.DeclarationEntity, in.Declaration)
 	} else if in.Kind == sourceOriginDefault || in.Kind == sourceOriginEntity || in.DeclarationExpected {
 		reason := "source-origin-declaration-unavailable"
 		if in.DeclarationUnavailableReason != "" {
@@ -102,7 +102,7 @@ func (o *sourceFactObserver) publishSourceOrigin(frame *sourceObserverFrame, att
 				Declaration: validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: "source-origin-declaration-unavailable"},
 				Use:         validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: "source-origin-use-unavailable"}}
 			if step.DeclarationAvailable {
-				out.Ancestry[i].Declaration = o.sourceOriginSite(step.Declaration)
+				out.Ancestry[i].Declaration = o.sourceDeclarationSite(step.DeclarationEntity, step.Declaration)
 			}
 			if step.UseAvailable {
 				out.Ancestry[i].Use = o.sourceOriginSite(step.Use)
@@ -114,6 +114,23 @@ func (o *sourceFactObserver) publishSourceOrigin(frame *sourceObserverFrame, att
 
 func (o *sourceFactObserver) sourceOriginSite(span sourceXMLSpan) validation.Evidence[validation.Location] {
 	return validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: o.location("", span.Start)}
+}
+
+// sourceDeclarationSite locates a DTD declaration. A declaration read from an
+// external DTD entity is located by that entity's system identifier in Entry
+// and by coordinates in its normalized text.
+func (o *sourceFactObserver) sourceDeclarationSite(entity string, span sourceXMLSpan) validation.Evidence[validation.Location] {
+	if entity == "" {
+		return o.sourceOriginSite(span)
+	}
+	if len(entity) > sourceDTDMaxEntityIdentifierBytes {
+		return validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: "source-origin-external-entity-identifier-unavailable"}
+	}
+	return validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: sourceExternalDTDLocation(o.documentID, entity, span.Start)}
+}
+
+func sourceExternalDTDLocation(documentID, entity string, position sourceXMLPosition) validation.Location {
+	return validation.Location{Target: validation.TargetSource, DocumentID: documentID, Entry: entity, Position: &validation.SourcePosition{ByteOffset: position.ByteOffset, Line: position.Line, Column: position.Column, CoordinateSpace: validation.CoordinateSpaceExternalDTD}}
 }
 
 func (o *sourceFactObserver) sealSourceOrigins(ctx context.Context) error {

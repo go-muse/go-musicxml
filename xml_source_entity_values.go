@@ -25,7 +25,7 @@ func (r *sourceXMLTokenReader) entityReference(name string, context sourceXMLEnt
 			// The nested reference belongs to this declaration's replacement text.
 			// A PE-origin caller cannot move a directly declared alias's references
 			// into a PE for XML 1.0 section 4.1's standalone-domain condition.
-			err := r.pushEntity(sourceXMLEntityInput{Name: declaration.Name, Replacement: declaration.Replacement, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationRecord: declaration, ExternalMarkup: declaration.Origin.ExternalMarkup}, context, use)
+			err := r.pushEntity(sourceXMLEntityInput{Name: declaration.Name, Replacement: declaration.Replacement, Declaration: declaration.Origin.Span, DeclarationAvailable: declaration.Origin.SpanAvailable, DeclarationEntity: declaration.Origin.Entity, DeclarationRecord: declaration, ExternalMarkup: declaration.Origin.ExternalMarkup}, context, use)
 			return sourceXMLExpandedRune, err
 		}
 		state := r.dtdStore.State()
@@ -105,7 +105,7 @@ func (r *sourceXMLTokenReader) attributeValue(quote rune, owner *sourceXMLEntity
 	}
 }
 func (r *sourceXMLTokenReader) dtdAttributeValue(raw string, declaration sourceDTDOrigin) (string, error) {
-	input := sourceXMLEntityInput{Replacement: raw, Declaration: declaration.Span, DeclarationAvailable: declaration.SpanAvailable, ExternalMarkup: declaration.ExternalMarkup}
+	input := sourceXMLEntityInput{Replacement: raw, Declaration: declaration.Span, DeclarationAvailable: declaration.SpanAvailable, DeclarationEntity: declaration.Entity, ExternalMarkup: declaration.ExternalMarkup}
 	if err := r.pushEntity(input, sourceEntityAttribute, r.metadata.Span); err != nil {
 		return "", err
 	}

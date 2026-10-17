@@ -56,7 +56,11 @@ type MXLAssessmentOptions struct {
 }
 
 func (o MXLAssessmentOptions) linked() LinkedAssessmentOptions {
-	return LinkedAssessmentOptions{Graph: o.Graph, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies}
+	linked := LinkedAssessmentOptions{Graph: o.Graph, Identity: o.Identity, Resolver: o.Resolver, Dependencies: o.Dependencies}
+	if linked.Graph.DTD == nil {
+		linked.Graph.DTD = o.MXL.DTD
+	}
+	return linked
 }
 
 type resourceRunOptions struct {
@@ -64,6 +68,7 @@ type resourceRunOptions struct {
 	identity ResourceIdentity
 	resolver validation.ResourceResolver
 	selected map[ResourceDependency]bool
+	dtd      *DTDOptions
 }
 
 func validateLinkedAssessmentOptions(ctx context.Context, o LinkedAssessmentOptions, expected validation.ProfileID) (resourceRunOptions, error) {
@@ -119,7 +124,7 @@ func validateLinkedAssessmentOptions(ctx context.Context, o LinkedAssessmentOpti
 	if err != nil {
 		return out, err
 	}
-	out.account, out.identity, out.resolver = account, o.Identity, o.Resolver
+	out.account, out.identity, out.resolver, out.dtd = account, o.Identity, o.Resolver, o.Graph.DTD
 	if dictionaryNil(out.resolver) {
 		out.resolver = nil
 	}

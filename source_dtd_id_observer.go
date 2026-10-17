@@ -67,7 +67,7 @@ func (o *sourceFactObserver) publishSourceDTDIDAttribute(frame *sourceObserverFr
 		f.IsID = validation.Evidence[bool]{State: validation.EvidenceKnown, Value: true}
 		f.Declaration = &validation.SourceDTDIDDeclaration{Sequence: uint64(d.Origin.Sequence), Element: d.Element, Attribute: d.Name, DefaultKind: string(d.DefaultKind), Origin: validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: "source-dtd-id-declaration-origin-unavailable"}}
 		if d.Origin.SpanAvailable {
-			f.Declaration.Origin = o.sourceOriginSite(d.Origin.Span)
+			f.Declaration.Origin = o.sourceDeclarationSite(d.Origin.Entity, d.Origin.Span)
 		}
 	}
 	return sink.SourceDTDIDAttribute(o.ctx, f)

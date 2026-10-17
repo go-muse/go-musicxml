@@ -48,6 +48,17 @@ See [the runtime asset maintenance guide](internal/dictionarydata/README.md).
 A newly embedded IPA bundle must retain its declared affirmative coverage and
 source lineage; more bytes do not establish a complete negative oracle.
 
+## Bundled MusicXML DTDs
+
+The official MusicXML 4.0 DTD modules in `schema/musicxml-4.0` are copied
+byte for byte from the upstream release and must never be edited. To update
+them, replace the files from the new official release, update the size and
+SHA-256 pins and the provenance comment in `bundled_dtd.go`, keep
+`bundledDTDPublicIDs` equal to the release's `catalog.xml` (enforced by
+`TestBundledDTDPublicIDsMatchOfficialCatalog`) and update
+`THIRD_PARTY_NOTICES.md`. `.gitattributes` keeps their CRLF bytes unchanged
+on every platform.
+
 ## Local checks
 
 Run the standard checks before opening a pull request:

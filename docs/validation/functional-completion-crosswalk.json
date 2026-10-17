@@ -1312,7 +1312,7 @@
       ],
       "classification": "implemented_tested_selected_contract",
       "disposition": "No automatic schema/DTD/external-entity/XInclude/dictionary loading is preserved; actually read internal declarations are explicitly selected and source limits remain visible.",
-      "limit": "External subsets/entities stay unread; complete internal declaration/occurrence facts do not fabricate external completeness. XLink hints are data.",
+      "limit": "External subsets are read only from the bundled official MusicXML DTDs or a caller DTD source; other external subsets and external general entities stay unread, and complete internal declaration/occurrence facts do not fabricate external completeness. XLink hints are data.",
       "code": [
         "xml_source_dtd.go",
         "assessment.go",
@@ -1323,7 +1323,7 @@
         "TestXMLDoctypeDoesNotFetchExternalDTD": [
           "xml_wellformedness_test.go"
         ],
-        "TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete": [
+        "TestSourceInternalDTDOfficialDOCTYPEsResolveBundledDTD": [
           "source_dtd_no_fetch_review_test.go"
         ],
         "TestDTDPackageCompositionGraphDefaultLinksAndNoFetch": [
