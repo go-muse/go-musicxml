@@ -95,7 +95,7 @@ func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions
 }
 
 func modelAcceptanceError(report validation.Report, status modelWalkStatus) error {
-	if report.Satisfied() {
+	if report.Satisfied() && !status.HasProblems {
 		return nil
 	}
 	var invalid error
