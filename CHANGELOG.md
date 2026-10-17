@@ -48,6 +48,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
+- Reuse private per-invocation dictionary hash scratch buffers instead of
+  allocating them for every encoded field. Preserve hash bytes, write chunks,
+  budget charges, cancellation checks, dictionary identities and public APIs.
+  See [the bounded measurement receipt](docs/validation/dictionary-hash-scratch.md).
+
 - Reduce bounded-assessment storage amplification and repeated work: compact
   private node facts, share exact session-owned evidence and final role caches,
   admit DFS scratch by live capacity, build exact-size XSD witness vectors,
