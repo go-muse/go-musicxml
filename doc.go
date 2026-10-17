@@ -13,7 +13,8 @@
 // SyncResolvedOpus support linked documents inside an archive.
 //
 // DecodeContext, DecodeMXLContext, and DecodeMXLPackageContext accept a
-// context.Context and stop reading when it is canceled. EncodeWithOptions adds
+// context.Context and stop at their next cancellation check after it is done;
+// a Read call that blocks is not interrupted. EncodeWithOptions adds
 // an XML declaration or indentation while keeping Encode's checks. The
 // WithOptions variants set resource limits; zero option values select the
 // package defaults.

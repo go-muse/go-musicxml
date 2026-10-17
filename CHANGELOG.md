@@ -10,9 +10,11 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - Add `DecodeContext`, `DecodeMXLContext` and `DecodeMXLPackageContext`. They
-  decode like the `WithOptions` variants and stop when the context is canceled,
-  checking it while input is read; cancellation errors match `ctx.Err()`.
-  Existing decoders keep using `context.Background()` and are unchanged.
+  decode like the `WithOptions` variants with cooperative cancellation: the
+  context is checked between reads, while MXL entries are expanded and before
+  a result is returned, and cancellation errors match `ctx.Err()`. A blocked
+  `Read` is not interrupted. Existing decoders keep using
+  `context.Background()` and are unchanged.
 - Add `EncodeWithOptions` and `EncodeOptions` for an XML declaration and
   indented output with the same cycle, nesting and XML-text checks as
   `Encode`. Zero options write exactly the bytes of `Encode`. Invalid options

@@ -60,10 +60,12 @@ func DecodeMXLPackageWithOptions(
 // DecodeMXLPackageWithOptions and stops when ctx is canceled or its deadline
 // passes.
 //
-// Cancellation is checked while the archive is read, between archive entries
-// and while the primary document is decoded. The returned error then matches
-// ctx.Err() with errors.Is. A nil ctx is rejected with a
-// *validation.ConfigurationError.
+// Cancellation is cooperative, as for DecodeContext: ctx is checked before
+// each read of the archive, while each entry is expanded, while the primary
+// document is decoded and before the package is returned. The returned error
+// then matches ctx.Err() with errors.Is, not ErrInvalidMXL. A Read call that
+// blocks cannot be interrupted; give a blocking reader its own deadline or
+// close it. A nil ctx is rejected with a *validation.ConfigurationError.
 func DecodeMXLPackageContext(
 	ctx context.Context,
 	reader io.Reader,
@@ -214,6 +216,7 @@ func openMXL(
 		return nil, err
 	}
 	if err := validateMXLMIMEType(
+		ctx,
 		entries[mxlMIMETypePath],
 		limits.metadataSize,
 	); err != nil {
@@ -226,6 +229,7 @@ func openMXL(
 	}
 
 	containerData, err := readMXLFile(
+		ctx,
 		containerFile,
 		limits.metadataSize,
 	)
@@ -272,6 +276,7 @@ func (a *openedMXL) decodeDocument(
 		return nil, err
 	}
 	documentData, err := readMXLFile(
+		ctx,
 		a.documentFile,
 		limits.documentSize,
 	)
@@ -327,6 +332,11 @@ func decodeMXLPackageContext(
 
 	resources, err := archive.decodeResources(ctx, limits)
 	if err != nil {
+		return nil, err
+	}
+	// A cancellation that arrives after the last entry was expanded must not
+	// turn into a successful result.
+	if err := mxlContextErr(ctx); err != nil {
 		return nil, err
 	}
 
@@ -411,7 +421,7 @@ func (a *openedMXL) decodeResources(
 			)
 		}
 
-		data, err := readMXLFile(file, limits.resourceSize)
+		data, err := readMXLFile(ctx, file, limits.resourceSize)
 		if err != nil {
 			return nil, err
 		}

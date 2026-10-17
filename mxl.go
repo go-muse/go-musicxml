@@ -54,11 +54,13 @@ func DecodeMXLWithOptions(
 // DecodeMXLContext reads a compressed MusicXML document like
 // DecodeMXLWithOptions and stops when ctx is canceled or its deadline passes.
 //
-// Cancellation is checked while the archive is read, between archive entries
-// and while the root document is decoded. The returned error then matches
-// ctx.Err() with errors.Is. A nil ctx is rejected with a
-// *validation.ConfigurationError. Use AsScorePartwise, AsScoreTimewise or
-// AsOpusDocument to narrow the result.
+// Cancellation is cooperative, as for DecodeContext: ctx is checked before
+// each read of the archive, while each entry is expanded, while the root
+// document is decoded and before a result is returned. The returned error then
+// matches ctx.Err() with errors.Is, not ErrInvalidMXL. A Read call that blocks
+// cannot be interrupted; give a blocking reader its own deadline or close it.
+// A nil ctx is rejected with a *validation.ConfigurationError. Use
+// AsScorePartwise, AsScoreTimewise or AsOpusDocument to narrow the result.
 func DecodeMXLContext(
 	ctx context.Context,
 	reader io.Reader,
@@ -197,7 +199,15 @@ func decodeMXLContext(
 		return nil, err
 	}
 
-	return archive.decodeDocument(ctx, limits)
+	document, err := archive.decodeDocument(ctx, limits)
+	if err != nil {
+		return nil, err
+	}
+	if err := mxlContextErr(ctx); err != nil {
+		return nil, err
+	}
+
+	return document, nil
 }
 
 func indexMXLEntries(
@@ -252,6 +262,7 @@ func validMXLPath(
 }
 
 func validateMXLMIMEType(
+	ctx context.Context,
 	file *zip.File,
 	limit int64,
 ) error {
@@ -264,7 +275,7 @@ func validateMXLMIMEType(
 		return ErrMXLInvalidMIMEType
 	}
 
-	value, err := readMXLFile(file, limit)
+	value, err := readMXLFile(ctx, file, limit)
 	if err != nil {
 		return err
 	}
@@ -358,7 +369,11 @@ func decodeMXLContainer(
 	return result, nil
 }
 
+// readMXLFile expands one archive entry. A done ctx stops the expansion at the
+// next read and takes precedence over any read or close error, so
+// cancellation is never reported as an invalid archive.
 func readMXLFile(
+	ctx context.Context,
 	file *zip.File,
 	limit int64,
 ) ([]byte, error) {
@@ -381,8 +396,15 @@ func readMXLFile(
 		)
 	}
 
-	result, readErr := readMXLStream(reader, limit, file.Name)
+	result, readErr := readMXLStream(
+		mxlContextReader(ctx, reader),
+		limit,
+		file.Name,
+	)
 	closeErr := reader.Close()
+	if err := mxlContextErr(ctx); err != nil {
+		return nil, err
+	}
 	if readErr != nil {
 		return nil, readErr
 	}

@@ -88,11 +88,15 @@ func NewScorePartwiseMeasure(
 	return ScorePartwisePartMeasure{Number: number}
 }
 
-// AddMeasure appends a copy of measure to a partwise part.
+// AddMeasure appends a shallow copy of measure to a partwise part.
 //
-// Populate measure before the call. Later changes to the argument do not reach
-// the stored copy; edit value.Measure[len(value.Measure)-1] instead. Generated
-// ordered-content Add methods such as AddNote store the pointer they receive.
+// Assigning a field of the argument after the call, including replacing or
+// appending to its Content slice, does not change the stored measure. The copy
+// shares the existing Content backing array and every pointer, so assigning
+// Content[i] or changing a note reached through either value changes both.
+// Populate measure before the call or edit value.Measure[len(value.Measure)-1].
+// Generated ordered-content Add methods such as AddNote store the pointer they
+// receive.
 func (value *ScorePartwisePart) AddMeasure(
 	measure ScorePartwisePartMeasure,
 ) {
@@ -122,10 +126,13 @@ func (value *ScoreTimewiseMeasure) AddPart(id string) {
 	value.Part = append(value.Part, ScoreTimewiseMeasurePart{ID: id})
 }
 
-// AddMeasure appends a copy of measure to a timewise score.
+// AddMeasure appends a shallow copy of measure to a timewise score.
 //
-// Populate measure before the call. Later changes to the argument do not reach
-// the stored copy; edit value.Measure[len(value.Measure)-1] instead.
+// Assigning a field of the argument after the call, including replacing or
+// appending to its Part slice, does not change the stored measure, but the
+// copy shares the existing Part backing array and the data reached through
+// it. Populate measure before the call or edit
+// value.Measure[len(value.Measure)-1].
 func (value *ScoreTimewise) AddMeasure(
 	measure ScoreTimewiseMeasure,
 ) {

@@ -90,8 +90,10 @@ XSD numbers are outside the model's representational range.
 Directly assigning generated fields is supported. Constructors and `Add...`
 methods are conveniences, not a separate object model. Generated `Add...`
 methods store the pointer they receive. The hand-written `AddMeasure` methods
-store a copy of their argument, so populate a measure before adding it or edit
-the stored element. Constructors leave `XMLName` empty, while decoding fills
+store a shallow copy of their argument: reassigning its fields or slice
+headers afterwards does not reach the stored measure, while changes made
+through its shared slices and pointers do. Populate a measure before adding it
+or edit the stored element. Constructors leave `XMLName` empty, while decoding fills
 it; `Encode` ignores `XMLName`.
 
 ### Generated model compatibility
@@ -177,10 +179,13 @@ When the expected root type is known, `DecodeScorePartwise`,
 concrete pointer type. They return `ErrUnsupportedRoot` for any other root.
 Each typed helper has a corresponding `WithOptions` variant.
 
-`DecodeContext(ctx, reader, options)` decodes like `DecodeWithOptions` and
-checks `ctx` while reading input, so a large or slow reader can be abandoned
-without closing it. A canceled call returns an error that matches `ctx.Err()`;
-a nil `ctx` is a `*validation.ConfigurationError`. The existing functions keep
+`DecodeContext(ctx, reader, options)` decodes like `DecodeWithOptions` with
+cooperative cancellation: it checks `ctx` before each read from the reader and
+while parsing already buffered input, and stops at the next check after `ctx`
+is done. A canceled call returns an error that matches `ctx.Err()`; a nil
+`ctx` is a `*validation.ConfigurationError`. A `Read` call that blocks cannot
+be interrupted, so give a reader that can block its own deadline, use
+context-aware I/O, or close it to unblock the call. The existing functions keep
 using `context.Background()`. There are no typed context variants; narrow the
 result with `AsScorePartwise`, `AsScoreTimewise`, or `AsOpusDocument`.
 
@@ -1581,9 +1586,12 @@ document. `ResolveOpusWithOptions(DecodeOptions)` applies the caller's limit to
 every linked document; `ResolveOpus` is equivalent to calling it with zero
 options.
 
-`DecodeMXLContext` and `DecodeMXLPackageContext` take a `context.Context` and
-check it while the archive is read, between archive entries, and while the
-primary document is decoded. Cancellation errors match `ctx.Err()`.
+`DecodeMXLContext` and `DecodeMXLPackageContext` take a `context.Context`
+with the same cooperative cancellation. They check it before each read of the
+archive, while each entry is expanded, while the primary document is decoded
+and before returning a result, so a cancellation during the last entry is not
+reported as success. Cancellation errors match `ctx.Err()` and do not match
+`ErrInvalidMXL`; a blocked `Read` is not interrupted.
 
 `ResolveOpus` builds a memoized graph. Repeated links share targets, and
 opus-link cycles between archive documents are supported. `SyncResolvedOpus`

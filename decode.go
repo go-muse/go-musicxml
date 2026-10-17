@@ -30,9 +30,12 @@ func DecodeWithOptions(
 // DecodeWithOptions and stops reading when ctx is canceled or its deadline
 // passes.
 //
-// Cancellation is checked while the input is read, so a large or slow reader
-// does not have to be closed to abandon the call. The returned error then
-// matches ctx.Err() with errors.Is. A nil ctx is rejected with a
+// Cancellation is cooperative. DecodeContext checks ctx before each read from
+// reader and while it parses input that is already buffered, and stops at the
+// next such check after ctx is done; the returned error then matches ctx.Err()
+// with errors.Is. It cannot interrupt a Read call that blocks. When reader can
+// block, give it its own deadline, use context-aware I/O, or close it to make
+// the pending Read return. A nil ctx is rejected with a
 // *validation.ConfigurationError. Use AsScorePartwise, AsScoreTimewise or
 // AsOpusDocument to narrow the result. DecodeContext does not call Validate.
 func DecodeContext(
