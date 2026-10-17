@@ -468,7 +468,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `DecodeAssessed` accepts 140 of the 154 score and opus files in
   `testdata/official` and the MusicXML test suite instead of 2; larger files can
   now reach resource limits where they previously stopped at unread-DTD
-  evidence. Their profile closures and catalog digests change accordingly;
+  evidence. Their profile closures and catalog digests change accordingly, and
+  the longer closure texts move the documented amd64 graph buffer witnesses by
+  202 live and 104 requested bytes;
   profiles that do not read DTDs keep their digests and still report external
   subsets as unread.
 - With a resolved external subset, ordinary decoding reports a namespace prefix

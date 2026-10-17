@@ -133,22 +133,30 @@ already established issues and explicit incompleteness must remain preserved.
 
 On Go 1.27.2 linux/amd64, the unchanged single-note-per-measure source-origin
 fixture now completes at 576 measures (77,227 source bytes) and refuses snapshot
-admission at 577 measures (77,361 bytes): 42,053,858 live bytes plus a
-25,064,439-byte request. Historical 531/532 and initial PR 43 568/569 controls
+admission at 577 measures (77,361 bytes): 42,054,060 live bytes plus a
+25,064,543-byte request. Historical 531/532 and initial PR 43 568/569 controls
 remain and now all complete. The initial PR 43 checkpoint `c0d73972` refused
 569 at 42,495,274 live bytes plus 24,717,911 requested bytes; declaration-key
-role reuse reduces that fixture's live charge to 41,477,418 bytes.
+role reuse reduces that fixture's live charge to 41,477,418 bytes (41,477,620
+after the external-DTD profile wording below).
 
 Explicit exact/one-short controls pin both the 569-measure snapshot at
-66,195,329 bytes and the 577-measure snapshot at 67,118,297 bytes. These are
+66,195,635 bytes and the 577-measure snapshot at 67,118,603 bytes. These are
 fixture-specific overlap-admission tests, not changed defaults or general limit
 recommendations. Successful controls check every expected source-origin row.
 
-The separate 86,052-byte fragment fixture still refuses its 34,741,160-byte
-snapshot request; live storage is now 54,486,614 bytes rather than the initial
+The separate 86,052-byte fragment fixture still refuses its 34,741,264-byte
+snapshot request; live storage is now 54,486,816 bytes rather than the initial
 PR 43 54,998,870 or historical PR 41 57,607,574 bytes. These logical charges
 are not heap or RSS measurements. The changed boundaries reflect less retained
 role-cache duplication, not relaxed checks or a raised default budget.
+
+The bundled external-DTD change lengthens the normative closure of
+`ProfileResourceGraphInternalDTDDictionaries` by 98 bytes and of its intrinsic
+`ProfileSourceInternalDTDDictionaries` by 104 bytes. Both texts are retained
+strings, so these witnesses moved by exactly 202 live and 104 requested bytes
+(PR 43 values: 42,053,858/25,064,439 at 577 measures, 41,477,418/24,717,911 at
+569 and 54,486,614/34,741,160 for the fragment). No accounting rule changed.
 
 ## Residual limits and interpretation
 
