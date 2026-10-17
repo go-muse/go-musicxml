@@ -3,7 +3,11 @@
 This opt-in composition joins the implemented MusicXML 4.0 checks without claiming
 universal conformance or reconstructing a desired score. It uses the existing
 assessment and dictionary entry points; no new provider or options structure is
-introduced. No profile is selected implicitly.
+introduced. Inspection and standalone model/package assessment require explicit
+selection. The later [assessed-loading migration](assessed-loading-pipeline.md)
+fixes these existing source/model profiles and required bundled evidence in both
+assessed decoders; it does not change these profile identities or enlarge their
+normative scope.
 
 ## Exact interpretations
 
@@ -30,9 +34,11 @@ rendering advice are not added to the score profiles.
 All entry points reject incompatible profile/target combinations before caller
 I/O. One root imports only selected dictionary components, owns the set, and
 shares its account and actual capability identity across intrinsic assessments
-and cache reuse. Dictionary sources and selections are caller chosen,
-including the embedded `BundledDictionarySource`; there is no automatic
-dictionary selection, schema or DTD fetch. Existing resolver authority and
+and cache reuse. Inspection and standalone model/package assessment keep
+caller-chosen dictionary sources and selections, including the embedded
+`BundledDictionarySource`. The assessed decoders default to canonical SMuFL and
+IPA representation evidence and require both relations in an explicit override.
+There is no schema or external DTD fetch. Existing resolver authority and
 resource ownership contracts still apply.
 
 ## XML fragments and musical proofs

@@ -9,11 +9,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
+- Add `validation.Session.FinishWithRetainedReport` and `ReportLease.Close` for
+  explicit ownership of already admitted report context across assessment stages.
+  The assessed loaders use this bounded accounting seam; report data remains
+  usable after close and existing resource-snapshot APIs are unchanged.
+
 - Add `BundledDictionarySource()` for the existing pinned SMuFL, MusicXML 4.0
   standard-sounds and IPA-derived components. Explicit offline generation
   prepares committed local assets embedded at build time; callers need no data
-  files or runtime fetch. Existing selections, profiles, nil-source behavior,
-  importer accounting and bounded evidence semantics remain unchanged. Using
+  files or runtime fetch. Explicit selections, profiles, explicit nil-source
+  behavior, importer accounting and bounded evidence semantics remain unchanged;
+  the assessed-loader default migration is documented above. Using
   the bundled source makes all five components reachable regardless of selected
   relations, including the separately licensed IPA data. Binary distributions
   containing those data must include the five notice/license files listed in
@@ -396,6 +402,26 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   this count).
 
 ### Changed
+
+- **Breaking:** `DecodeAssessed` and `DecodeAssessedWithDictionaries` always require
+  the existing `ProfileSourceSemantics` followed by direct
+  `ProfileModelSemantics`. Nil/empty assessment options use these fixed defaults;
+  narrower, wrong-target and unknown profiles fail before I/O. `DecodeResult`
+  adds an independent `Model` report; source, conversion, model, operation or
+  close failure withholds `Document`. Replace external unkeyed `DecodeResult`
+  literals with keyed literals. Ordinary `Decode` remains transport-only. The
+  unchanged 223,068-byte original MozaChlo fixture now reaches the 64 MiB default
+  buffer limit before source EOF; resource refusal remains incomplete assessment,
+  not normative invalidity.
+- The assessed loaders default to bundled canonical SMuFL and current IPA
+  representation evidence. Explicit dictionary overrides must include both
+  required relations and never silently fall back. A single finite account and
+  imported dictionary set cover source and model stages; no reader replay, model
+  re-encoding, external DTD fetch, profile widening or budget increase is added.
+  Inspection, standalone model assessment and package APIs retain their existing
+  explicit contracts. See the [migration guide](docs/validation/assessed-loading-pipeline.md),
+  including bundled-data distribution requirements. Earlier receipts and profile
+  identity records remain historical evidence for their stated revisions.
 
 - Add optional `ContextResult.SourceOrigin` for selected source-origin providers.
   External unkeyed `ContextResult` literals must migrate to keyed literals.

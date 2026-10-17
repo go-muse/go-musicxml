@@ -6,6 +6,12 @@ adds explicit `ProfileSourceLocal` using this same source pipeline and adds
 `AssessModel`/direct XSD-only `Validate` for current objects. It does not change
 this preview's required keys or source/DTD limits; broader readiness is separate.
 
+**Current loading contract:** the opt-in/nil-assessment `DecodeAssessed` behavior
+recorded below is historical. Both assessed loaders now require fixed source and
+direct-model semantic acceptance; the source-XSD preview remains explicitly
+selectable through `InspectXML`. See the [assessed-loading migration](assessed-loading-pipeline.md).
+The profile and source evidence boundaries described here remain unchanged.
+
 ## Contract and architecture
 
 **Practical input scope:** this preview cannot accept files with an unread

@@ -14,7 +14,18 @@ options. The coverage additions passed against unchanged production code; no
 configuration defect was demonstrated, no baseline failure is claimed, and no
 API redesign, constructor reduction, profile widening or default increase is
 needed for this item. Bundled pinned-data delivery is an additive source
-implementation, not a change to selection or missing-capability semantics.
+implementation, not a change to selection or missing-capability semantics at
+that recorded revision.
+
+**Later breaking migration:** the matrix, test names and receipts below retain
+that revision's optional assessed-decoder contract. They do not describe the
+current defaults of `DecodeAssessed` or `DecodeAssessedWithDictionaries`. Both now
+require `ProfileSourceSemantics` then direct `ProfileModelSemantics`, with
+required bundled evidence by default and no document on either stage's failure.
+See the [current assessed-loading contract](assessed-loading-pipeline.md).
+Inspection, standalone model assessment and package APIs retain their explicit
+profile/data behavior; the historical execution record is not a receipt for the
+later migration.
 
 ## Entry-point / profile / options matrix
 

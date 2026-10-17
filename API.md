@@ -216,7 +216,7 @@ and already-canceled contexts fail before model traversal.
 | --- | --- | --- |
 | `ProfileModelXSD` | `musicxml-4.0/model-xsd` | Current generated structure/value XSD plus required model representation checks |
 | `ProfileModelLocal` | `musicxml-4.0/model-local` | The same model checks plus the explicitly selected local musical and typed-reference clauses |
-| `ProfileSourceLocal` | `musicxml-4.0/source-local` | Original single-pass source XSD plus those same local clauses; used with `InspectXML` or strict `DecodeAssessed` |
+| `ProfileSourceLocal` | `musicxml-4.0/source-local` | Original single-pass source XSD plus those same local clauses; selected with `InspectXML` |
 | `ProfileModelTimeline` | `musicxml-4.0/model-timeline` | Model-local scope plus the bounded exact timeline/effective-state provider and selected chord/numeral consumers |
 | `ProfileSourceTimeline` | `musicxml-4.0/source-timeline` | Source-local scope plus the same timeline provider and consumers on original input |
 | `ProfileModelContext` | `musicxml-4.0/model-context` | Frozen model-timeline scope plus bounded typed context projections and selected contextual predicates |
@@ -230,7 +230,9 @@ clause list, exclusions, test evidence and remaining owners are in the
 supports the three roots above; score-only local predicates are inapplicable to
 opus and never assess linked opus/score content. Version selection is the pinned
 MusicXML 4.0 schema, not an invented requirement that the `version` attribute
-equal `4.0`. No profile is an implicit default. The separately compiled
+equal `4.0`. `InspectXML` and `AssessModel` have no implicit default profile.
+The [assessed loaders](#mandatory-assessed-loading) instead fix the source and
+model semantic profiles. The separately compiled
 `ProfileSourceXSDPreview` remains developmental with its existing scope and IDs.
 
 The direct adapter uses generated field/choice metadata and the same authoritative
@@ -376,7 +378,8 @@ throughput or memory improvement. Cold initialization adds further cost.
 ### Exact timeline and effective-state profiles
 
 Select `ProfileModelTimeline` with `AssessModel`, or `ProfileSourceTimeline`
-with `InspectXML` / the explicit assessment in strict `DecodeAssessed`.
+with `InspectXML`. These narrower profiles cannot replace the fixed semantic
+profiles in `DecodeAssessed` or `DecodeAssessedWithDictionaries`.
 These profiles use a separately compiled engine and add exactly three required
 bindings to their corresponding local profile: `MX40-TIMELINE-effective-state@1`,
 `MX40-TIMELINE-chord-duration-bound@1`, and
@@ -681,8 +684,9 @@ digests cover canonical metadata and typed plan parameters.
 `Report.Satisfied()` evaluates independent syntax, input/assessment completion,
 conformance and blocker axes. A nil operation error alone is not acceptance.
 Evidence-only limitations and normative findings are report outcomes; terminal
-failures preserve typed incomplete/resource/cancellation causes. Call `Finish`
-exactly once even after an event error to release owned live resources. Required
+failures preserve typed incomplete/resource/cancellation causes. Finalize exactly
+once with `Finish` or the selected retained-report/resource-snapshot variant,
+even after an event error, to release or explicitly transfer owned live resources. Required
 model/policy/context blockers do not become normative violations, and diagnostic
 truncation does not erase counts or blockers. Formatting is bounded and offline.
 
@@ -740,17 +744,43 @@ representations remain unchanged. The additive model-representation event is
 required only when its corresponding sealed plan is selected; older generic
 fact sessions and the source preview retain their contracts.
 
+### Retained report ownership
+
+`Session.FinishWithRetainedReport(ctx, end)` returns `(Report, *ReportLease, error)`
+and finalizes the session like `Finish`. It transfers the already admitted
+`Report.Context` projection to an optional lease before intrinsic cleanup, plus a
+bounded ownership-handle charge. It does not copy the report, admit its projection
+a second time or create a resource snapshot. Reports without context need no
+lease. If the handle cannot be admitted, the best report is returned incomplete
+with no lease; dependent assessment must not continue.
+
+Close every nonnil lease, including one returned with an error. `ReportLease.Close()`
+needs no context, is safe for nil/already-closed leases, and releases the live
+context/control allowance exactly once without refunding cumulative work or
+diagnostic quotas. A lease has one owner: do not copy it or use it concurrently.
+Returned report data remains caller-owned and usable after `Close`; caller
+mutations and extra report copies are outside the admitted projection accounting.
+
+The assessed loaders use this cross-package ownership seam to keep source context
+charged while the direct-model stage runs, then close the lease when transferring
+the result to the caller. It adds no loading option. Ordinary `Finish` and
+`FinishWithResourceSnapshot` retain their existing contracts.
+
 ## Opt-in original-source assessment
 
 **Current source input limit:** an unread external DOCTYPE subset prevents
-acceptance by either source profile. The committed official score samples
-`Chant.musicxml`,
-`MozartTrio.musicxml` and UTF-16 `MozaChloSample.musicxml` therefore produce
-unsupported/incomplete source reports. Strict `DecodeAssessed` returns no
-`Document` for them even though model conversion succeeds. The DOCTYPE-free
+source acceptance, including in the mandatory assessed-loading pipeline. The
+committed official score samples `Chant.musicxml`, `MozartTrio.musicxml` and
+UTF-16 `MozaChloSample.musicxml` therefore produce
+unsupported/incomplete source reports. `DecodeAssessed` returns no `Document`
+for them. Mandatory default loading of the 223,068-byte MozaChlo source reaches
+the 64 MiB buffered-byte ceiling before source EOF, leaving conversion incomplete
+and the model stage unrequested; see the [capacity migration control](docs/validation/assessed-loading-pipeline.md#official-score-capacity-control). The DOCTYPE-free
 `OpusLink.musicxml` and `OpusScore.musicxml` fixtures are within the currently
-assessable source scope. This is a developmental DTD-independent preview, not
-validation support for the usual external-DOCTYPE MusicXML score exports.
+assessable source scope. The source-XSD preview remains developmental and
+DTD-independent; the semantic source profile processes bounded internal
+declarations but still cannot accept an unread external subset. Neither provides
+source acceptance for the usual external-DOCTYPE MusicXML score exports.
 A familiar public identifier is not treated as proof that an unread DTD is
 infoset-neutral. Removing a DOCTYPE changes the input and is not equivalent
 assessment of the original file. DTD closure remains later work.
@@ -765,12 +795,30 @@ Ordinary normative failures return a report with no operational error. Syntax,
 I/O, cancellation, resource and fatal capability failures preserve their causes
 with the best partial report.
 
+### Mandatory assessed loading
+
 `DecodeAssessed(ctx, reader, DecodeAssessmentOptions{...})` returns a
-`DecodeResult` with independent `Source`, `Conversion` and `Document` fields.
-A nonnil `Assessment` requires an explicit profile and strict acceptance; source
-failure or incompleteness discards the returned document. A nil `Assessment`
-keeps permissive model conversion and mandatory XML checks, with no catalog load
-and `Source.Requested == false`. Existing `DecodeOptions` is unchanged.
+`DecodeResult` with independent `Source`, `Conversion`, `Model` and `Document`
+fields. This is an intentional breaking change from optional source assessment.
+Both assessed loaders always require the existing `ProfileSourceSemantics` and,
+after source acceptance and successful conversion, `ProfileModelSemantics`.
+Nil `Assessment`, empty options and an empty `Assessment.Profile` select these
+fixed defaults; explicit `ProfileSourceSemantics` is also accepted. Any other
+profile, including narrower source profiles, wrong-target profiles or unknown
+IDs, is a configuration error before source reads or dictionary callbacks.
+`Assessment.Budgets` remains configurable and existing `DecodeOptions` safety
+limits are preserved. `InspectXML` and `AssessModel` keep their explicit-profile
+contracts. Ordinary `Decode` remains transport-only.
+
+The result includes `Model validation.Report`. Any earlier operation failure,
+unsatisfied or incomplete source report, or conversion failure prevents the model
+stage, leaving
+`Model.Requested == false`. Once reached, model assessment walks the actual Go
+object directly and preserves its own report, including on failure. `Document` is
+returned only when both reports are satisfied, conversion succeeds and there is
+no operation or close error. All other outcomes retain the available reports and
+return no document. See the [migration guide](docs/validation/assessed-loading-pipeline.md)
+for defaults, dictionary overrides and examples.
 
 The observer sees every original element, physical attribute, namespace binding,
 child order and direct character segment before Go-model filtering or skipping.
@@ -778,7 +826,10 @@ The XML parser has one owner. After a recoverable model mapping error, that same
 healthy parser is drained; the failed reflection decoder is never resumed.
 There is no reader replay, second XML parse or model Encode→parse in this path.
 The implementation retains a budgeted fact graph; single-pass input does not
-mean constant-memory processing. The caller retains ownership of the reader.
+mean constant-memory processing. One finite budget account covers dictionary
+import, source assessment and direct model assessment, with the source report's
+retained context accounted for while the model stage runs. One imported dictionary
+set is shared across both stages. The caller retains ownership of the reader.
 
 The default 64 MiB `MaxBufferedBytes` is a safety cap, not a promise that a
 64 MiB file or one million nodes can be assessed. The historical `d336f089`
@@ -841,20 +892,25 @@ defines its exact support, ownership, verification and remaining obligations.
 `ProfileSourceLocal` adds only the [selected local clauses](docs/validation/model-assessment-scope.md#selected-musical-obligations)
 and retains all source-parser/XSD/DTD limits. Empty accordion registration, for
 example, passes the XSD-only preview and legacy `Validate`, but fails either local
-profile. Strict source-local decode withholds that otherwise converted document.
+profile. The mandatory assessed loaders also withhold that otherwise converted
+document through their source semantic profile.
 These existing profiles introduce no DTD stripping, fetching, trust or ignore-DTD option.
 
 ### Selected internal-DTD source profile
 
 `ProfileSourceInternalDTD` (`musicxml-4.0/source-internal-dtd`) is a separate
-developmental profile for `InspectXML` and the source phase of `DecodeAssessed`.
+developmental profile selected explicitly with `InspectXML`. The mandatory
+assessed loaders select the existing `ProfileSourceSemantics` composition, which
+includes bounded internal-declaration processing, rather than this narrower
+profile.
 It supports the three score/Opus roots and reuses the six sealed XSD operations
 after bounded processing of actually read internal declarations. It applies
 supported internal entity replacements, attribute defaults and declared
 non-CDATA normalization before namespace expansion, assessment and conversion.
 It does not compose the local/timeline/context/package profiles. Existing
-profiles, plain `Decode`, nil-assessment decode and current-model behavior are
-unchanged with respect to DTD processing. External subsets/entities are never
+inspection profiles, plain `Decode` and standalone current-model behavior are
+unchanged with respect to DTD processing. Nil-assessment `DecodeAssessed` now
+uses its mandatory source semantic profile. External subsets/entities are never
 fetched; their missing evidence
 remains incomplete. This is not a validating DTD processor or general XML
 processor-conformance claim.
@@ -991,9 +1047,12 @@ single-goroutine lifecycle; independent sessions own separate declaration facts.
 
 ## Opt-in pinned dictionaries
 
-The dictionary entry points are additive and require their own explicit profile.
-They do not change `Validate`, ordinary decode/assessment, existing option shapes,
-`validation.RunOptions`, or any old profile's selected rules and catalog digest.
+Dictionary inspection and standalone model/package assessment require their own
+explicit profiles. The [mandatory assessed loaders](#mandatory-assessed-loading)
+are the exception: they select fixed semantic profiles and required bundled
+evidence by default. This wrapper migration does not change `Validate`, ordinary
+`Decode`, `InspectXML`, `AssessModel`, `validation.RunOptions`, or any existing
+profile's selected rules and catalog digest.
 The full [selected scope](docs/validation/pinned-dictionaries-scope.md) separates
 implemented relations from unresolved obligations; the dated
 [verification record](docs/validation/pinned-dictionaries-evidence.md) is not a
@@ -1013,7 +1072,7 @@ implicitly select or open the canonical-name component.
 | --- | --- | --- |
 | `InspectXMLWithDictionaries` | `DictionaryAssessmentOptions.Assessment.Profile = ProfileSourceDictionaries` or `ProfileSourceSoundsDictionaries` | `validation.Report` |
 | `AssessModelWithDictionaries` | `DictionaryAssessmentOptions.Assessment.Profile = ProfileModelDictionaries` | `validation.Report` |
-| `DecodeAssessedWithDictionaries` | `DecodeDictionaryAssessmentOptions.Assessment` points to source dictionary options | `DecodeResult` |
+| `DecodeAssessedWithDictionaries` | Nil/empty options or `Assessment.Assessment.Profile = ProfileSourceSemantics`; explicit dictionary overrides must include both required relations | `DecodeResult` |
 | `InspectXMLWithResourcesAndDictionaries`, `AssessModelWithResourcesAndDictionaries` | `LinkedDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileResourceGraphDictionaries` | `validation.AssessmentBundle` |
 | `InspectMXLWithDictionaries` | `MXLDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileMXLSourceDictionaries` | `validation.AssessmentBundle` |
 | `AssessMXLPackageWithDictionaries` | `MXLDictionaryAssessmentOptions.Resources.Graph.Profile = ProfileMXLModelDictionaries` | `validation.AssessmentBundle` |
@@ -1022,9 +1081,22 @@ All entry points also return an operation error. Standalone options compose an
 unchanged `AssessmentOptions` with `Dictionaries DictionaryOptions`. Linked/MXL
 options compose the corresponding unchanged resource options with `Dictionaries`.
 `DecodeDictionaryAssessmentOptions` contains `Decode DecodeOptions` and
-`Assessment *DictionaryAssessmentOptions`; nil assessment retains unassessed
-conversion. With an assessment, any conversion, source, dictionary-operation or
-strict acceptance error discards the model and preserves the best source report.
+`Assessment *DictionaryAssessmentOptions`; nil assessment uses the same mandatory
+source/model pipeline and bundled defaults as `DecodeAssessed`. A `Dictionaries`
+value with nil `Source` and no selections also selects defaults:
+`DictionaryManifestSMuFL14Canonical` with `DictionaryRelationCanonicalName`, and
+`DictionaryManifestIPARepresentation2015Unicode13` with
+`DictionaryRelationIPARepresentation`. These constants belong to `validation`.
+
+Any other dictionary options must explicitly include both required relations;
+other supported selections may be added. Missing required relations, including a
+custom source with empty selections, fail configuration before any input read or
+callback. An explicit source is honored, including nil/typed-nil or unavailable
+sources with explicit selections; import failures never trigger bundled fallback
+or additional implicit component requests. Any source, model, conversion, dictionary-operation,
+close or strict acceptance error discards the document while preserving available
+source and model reports. Low-level inspection and package APIs keep their
+existing explicit-selection and missing-capability behavior.
 
 The original dictionary profile IDs are:
 
@@ -1116,17 +1188,22 @@ unread-external gates remain active. See
 Set `DictionaryOptions.Source` to `BundledDictionarySource()` to use the five
 bundled components: SMuFL 1.4 canonical glyph names and ranges, MusicXML 4.0
 standard sounds, and the separate IPA 2015/Unicode 13 positive and representation
-bundles. Keep `Selections` explicit. The same source is usable by standalone,
+bundles. Keep `Selections` explicit for inspection and standalone model,
 linked-document and MXL dictionary entry points; no caller data files are needed.
+The assessed loaders alone select bundled canonical SMuFL and IPA representation
+evidence when `Source` is nil and there are no selections.
 
 The existing bounded importer verifies raw and transformed identities and owns
 its parsed data. Embedding changes delivery only: profiles, catalog identities,
 relations, finite budgets and source/current-model authority are unchanged.
-Nil sources still leave selected capabilities unavailable. Empty selections do
-not open the bundled source. Caller-provided sources remain supported.
+For explicit dictionary options, nil sources still leave selected capabilities
+unavailable and empty selections do not implicitly open the bundled source. The
+assessed-loader defaults are the specific exception above; a custom source with
+empty selections is rejected there. Caller-provided sources remain supported.
 
-Using `BundledDictionarySource` makes all five embedded component assets
-reachable, including the CC BY-SA 4.0 IPA bundles, regardless of `Selections`.
+Using `BundledDictionarySource`, including through the assessed-loader defaults,
+makes all five embedded component assets reachable, including the CC BY-SA 4.0
+IPA bundles, regardless of `Selections`.
 Selections control which components are imported and assessed; they do not
 prune the bundled implementation's references to the other assets. The data
 retain their W3C FSA, CC BY-SA 4.0 and Unicode License v3 terms, separately from
@@ -1226,7 +1303,8 @@ admitted sessions. `Close` is idempotent for an initialized set; nil/uninitializ
 sets are errors. Storage is released exactly once when the owner is closed and
 the last session finishes. Failed session initialization releases its borrow.
 Finalize each admitted session exactly once with `Finish` or the selected
-`FinishWithResourceSnapshot` path, including after an event failure. Returned reports
+`FinishWithRetainedReport` / `FinishWithResourceSnapshot` path, including after an
+event failure. Close any retained-report lease even on failure. Returned reports
 are owned values and retain no dictionary borrow. `Fingerprint` returns a fixed
 `[32]byte` identity and rejects a closed/uninitialized owner.
 
@@ -2092,12 +2170,16 @@ selection, while an independently observed encoding recommendation remains visib
 ## Encoded semantic compositions
 
 `ProfileSourceSemantics` and `ProfileModelSemantics` select the bounded combined
-encoded MusicXML interpretation through existing `InspectXML`, `DecodeAssessed`,
-`AssessModel` and corresponding dictionary entry points. Source selects actually
-read internal declarations and owned origins; model selects current-state facts.
-Dictionary data is supplied through the unchanged `DictionaryOptions` contract.
-Neither profile loads data automatically or selects standard-sound recognition
-and dictionary-backed rendering advice for score nodes.
+encoded MusicXML interpretation through existing `InspectXML`, `AssessModel` and
+corresponding dictionary entry points. They are also the fixed source/model
+profiles of both [mandatory assessed loaders](#mandatory-assessed-loading).
+Source selects actually read internal declarations and owned origins; model
+selects current-state facts. Inspection and standalone model/package assessment
+keep explicit dictionary selection through `DictionaryOptions`; the assessed
+loaders provide the required bundled defaults. Neither profile itself loads data
+automatically or selects standard-sound recognition and dictionary-backed
+rendering advice for score nodes. This orchestration change does not widen the
+profiles or alter their catalog identities.
 
 For resources, use the existing dictionary graph/MXL entry points with the exact
 compatible `ProfileResourceGraphSemantics`, `ProfileMXLSourceSemantics` or
