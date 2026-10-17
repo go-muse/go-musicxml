@@ -56,3 +56,22 @@ lookup memoization and budget synchronization were audited but not changed.
 They require different ownership/accounting or cancellation tradeoffs, or lack a
 measured material gain. Whole-PR ordinary/race/fuzz acceptance and exact-head CI
 are recorded separately in the PR, not inferred from these component checks.
+
+## Review: shared numeric-type registry
+
+The guard retains its exact inline comparisons, formatted across lines for
+readability. A closed-set regression checks the complete registry cardinality and
+keys against those three wrappers in both directions. A future registry addition
+requires an explicit update to the guard and test, rather than silently bypassing
+the existing wrapper tests.
+
+A direct map-membership helper was evaluated and rejected: five alternating
+pairs of `BenchmarkStateMeasureGuard` on the same Go 1.27.2 linux/amd64 host,
+GOMAXPROCS=1, 300 ms per sample, increased median focused walker time by 8.4%
+(AddressableRows), 6.3% (TimingValue), and 4.4% (TimingAddressable). Allocation
+counts and bytes were identical. An exact-comparison helper was also evaluated;
+the compiler did not inline it, and five alternating pairs had mixed timing
+changes of -0.8%, +3.1%, and +1.6% respectively, with TimingValue slower in four
+of five pairs. It was not selected because it adds a call to this hot path without
+an allocation benefit. These are local walker comparisons, not whole-assessment
+speed claims. The final production expression is unchanged apart from whitespace.

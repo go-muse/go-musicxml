@@ -66,3 +66,36 @@ func TestStateMeasureGuardInterfaceNilAndJointFrontiers(t *testing.T) {
 		}
 	}
 }
+
+// The fast guard intentionally spells out this closed set rather than paying
+// for a map lookup per struct. A registry addition must update the guard and this
+// contract together; it cannot silently pass the existing three-wrapper tests.
+func TestStateMeasureNumericRegistryClosedSet(t *testing.T) {
+	want := map[reflect.Type]bool{
+		reflect.TypeFor[Integer]():  true,
+		reflect.TypeFor[Decimal]():  true,
+		reflect.TypeFor[Rational](): true,
+	}
+	if len(resourceNumericFields) != len(want) {
+		t.Fatalf("numeric registry has %d entries, want %d; review stateMeasure guard", len(resourceNumericFields), len(want))
+	}
+	for typ, byteField := range resourceNumericFields {
+		value := reflect.Zero(typ)
+		wrapped := value.Interface()
+		for _, input := range []reflect.Value{value, reflect.ValueOf(&wrapped).Elem()} {
+			s := rationalSession(t, Budgets{MaxRuleSteps: 1})
+			size, err := stateMeasure(context.Background(), s, input)
+			if err != nil || size != value.Field(byteField).Int()+64 || s.account.usage[9] != 1 {
+				t.Fatalf("registry type %v is not a terminal numeric value: size=%d err=%v steps=%d", typ, size, err, s.account.usage[9])
+			}
+		}
+		if !want[typ] {
+			t.Fatalf("unhandled numeric registry type %v; update stateMeasure guard", typ)
+		}
+	}
+	for typ := range want {
+		if _, ok := resourceNumericFields[typ]; !ok {
+			t.Fatalf("numeric wrapper %v missing from registry", typ)
+		}
+	}
+}
