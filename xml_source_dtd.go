@@ -68,6 +68,12 @@ type sourceDTDParser struct {
 	// declaration-level parameter entity, parallel to parameters.
 	parameterConditionals []int
 	resolveParameter      func(*sourceDTDDeclaration) (sourceDTDEntity, bool, error)
+	// segments, when non-nil, collects where each part of the entity literal
+	// being read is written. segmentEnd is where the last exact segment's
+	// text ends; segmentsReserved is the charged capacity.
+	segments         *[]sourceDTDTextSegment
+	segmentEnd       sourceXMLPosition
+	segmentsReserved int64
 }
 
 // parseSourceDTD starts immediately after the literal <!DOCTYPE. It consumes
@@ -235,7 +241,10 @@ func (p *sourceDTDParser) subset() {
 				// Only real declarations need an ancestry snapshot. The two ASCII
 				// prefix bytes were consumed while distinguishing comments/PIs.
 				p.origin = p.declarationOrigin()
-				if p.origin.SpanAvailable {
+				if _, external := p.input.(*sourceDTDExternalInput); external {
+					// The declaration starts where its < is written.
+					p.origin = start
+				} else if p.origin.SpanAvailable {
 					p.origin.Span.Start = start.Span.Start
 				} else if n := len(p.origin.Ancestry); n != 0 {
 					p.origin.Ancestry[n-1].ReplacementOffset = max(0, p.origin.Ancestry[n-1].ReplacementOffset-2)
@@ -499,10 +508,26 @@ func (p *sourceDTDParser) entity() {
 	d.Name = p.name(sourceDTDNCName, p.store != nil)
 	p.requireSpace()
 	if r := p.peek(); r == '\'' || r == '"' {
+		// A parameter entity of an external subset keeps where its
+		// replacement is written, for the declarations it generates.
+		var segments []sourceDTDTextSegment
+		if d.Parameter && p.external && p.store != nil {
+			p.segments = &segments
+			defer func() {
+				p.releaseBytes(p.segmentsReserved)
+				p.segmentsReserved = 0
+			}()
+		}
 		d.RawValue, d.Replacement = p.quoted(sourceDTDEntityLiteral)
+		p.segments = nil
 		d.HasGeneralReferences = p.literalGeneralReferences
 		p.endDeclaration()
 		p.collect(d)
+		if p.err == nil && len(segments) != 0 {
+			if record := p.store.declarations[len(p.store.declarations)-1]; record.Binding {
+				p.err = p.store.setReplacementSegments(record, segments)
+			}
+		}
 		return
 	}
 	d.External = true
@@ -616,6 +641,14 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 			}
 		}
 		start := len(raw.value)
+		grown := len(replacement.value)
+		var segment sourceDTDTextSegment
+		if p.segments != nil {
+			segment.Entity, segment.Position, segment.Exact = external.sourcePosition()
+			if !segment.Exact {
+				segment.Entity = ""
+			}
+		}
 		r = p.read()
 		if p.err != nil {
 			break
@@ -653,6 +686,12 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 				p.err = replacement.append(raw.value[start:])
 			} else {
 				p.err = replacement.append(included.value)
+			}
+			if p.segments != nil && p.err == nil && len(replacement.value) > grown {
+				// A character reference's character is not written as itself.
+				segment.Exact = segment.Exact && !numeric
+				segment.Offset = grown
+				p.addSegment(segment, replacement.value[grown:])
 			}
 		}
 	}
@@ -1075,10 +1114,48 @@ func (p *sourceDTDParser) collect(d sourceDTDDeclaration) {
 	if p.store == nil || p.err != nil {
 		return
 	}
-	if position, ok := p.input.(interface{ DTDPosition() sourceXMLPosition }); ok && d.Origin.SpanAvailable {
+	if external, ok := p.input.(*sourceDTDExternalInput); ok && d.Origin.SpanAvailable {
+		// An end written in another entity is not a span in this one.
+		d.Origin.Span.End = d.Origin.Span.Start
+		if entity, position, known := external.sourcePosition(); known && entity == d.Origin.Entity && position.ByteOffset >= d.Origin.Span.Start.ByteOffset {
+			d.Origin.Span.End = position
+		}
+	} else if position, ok := p.input.(interface{ DTDPosition() sourceXMLPosition }); ok && d.Origin.SpanAvailable {
 		d.Origin.Span.End = position.DTDPosition()
 	}
 	p.err = p.store.add(d)
+}
+
+// addSegment records where text, just appended to a replacement, is written.
+// Text written right after the previous exact segment extends it.
+func (p *sourceDTDParser) addSegment(segment sourceDTDTextSegment, text []byte) {
+	segments := *p.segments
+	n := len(segments)
+	extends := n != 0 && segment.Exact && segments[n-1].Exact && segments[n-1].Entity == segment.Entity && p.segmentEnd == segment.Position
+	if segment.Exact {
+		p.segmentEnd = segment.Position
+		for len(text) != 0 {
+			r, size := utf8.DecodeRune(text)
+			p.segmentEnd.ByteOffset += int64(size)
+			p.segmentEnd.advanceCoordinates(r)
+			text = text[size:]
+		}
+	}
+	if extends {
+		return
+	}
+	if int64(n) >= p.segmentsReserved/sourceDTDTextSegmentBytes {
+		capacity := max(4, 2*int64(cap(segments)))
+		if !p.reserveBytes(capacity * sourceDTDTextSegmentBytes) {
+			return
+		}
+		next := make([]sourceDTDTextSegment, n, capacity)
+		copy(next, segments)
+		p.releaseBytes(p.segmentsReserved)
+		p.segmentsReserved = capacity * sourceDTDTextSegmentBytes
+		segments = next
+	}
+	*p.segments = append(segments, segment)
 }
 
 // XML 4.1's direct ATTLIST-default order rule is a WFC, distinct from
@@ -1089,14 +1166,28 @@ func (p *sourceDTDParser) collect(d sourceDTDDeclaration) {
 // violation without fetching anything. Normalization/indirect WFCs remain for
 // the effective-attribute layer, which must also inspect unused defaults.
 func (p *sourceDTDParser) checkDefaultReferences() {
-	for _, d := range p.store.declarations {
+	d, message, err := p.store.defaultReferenceViolation(p.info.HasParameterReferences)
+	if err != nil {
+		p.err = err
+	} else if d != nil {
+		p.failAt(d.Origin, message)
+	}
+}
+
+// defaultReferenceViolation returns the first read attribute definition whose
+// default directly references a general entity that is not declared before it
+// (by store order, so the internal subset comes before the external one), is
+// unparsed or is external. An undeclared entity is proven only when no
+// declaration can be unread.
+func (s *sourceDTDStore) defaultReferenceViolation(hasParameterReferences bool) (*sourceDTDDeclaration, string, error) {
+	for _, d := range s.declarations {
 		if d.Kind != sourceDTDAttributeDeclaration || !d.HasGeneralReferences {
 			continue
 		}
 		raw := d.RawValue
 		for i := 0; i < len(raw); i++ {
-			if p.err = p.store.check(); p.err != nil {
-				return
+			if err := s.check(); err != nil {
+				return nil, "", err
 			}
 			if raw[i] != '&' || raw[i+1] == '#' {
 				continue
@@ -1104,45 +1195,41 @@ func (p *sourceDTDParser) checkDefaultReferences() {
 			start := i + 1
 			i = start
 			for raw[i] != ';' {
-				if p.err = p.store.check(); p.err != nil {
-					return
+				if err := s.check(); err != nil {
+					return nil, "", err
 				}
 				i++
 			}
-			if p.err = p.store.account.Charge(validation.BudgetEvents, 1); p.err != nil {
-				return
+			if err := s.account.Charge(validation.BudgetEvents, 1); err != nil {
+				return nil, "", err
 			}
 			name := raw[start:i]
 			switch name {
 			case "amp", "lt", "gt", "apos", "quot":
 				continue
 			}
-			entity, known := p.store.Entity(name, false)
+			entity, known := s.Entity(name, false)
 			if !known {
-				if !d.Origin.ExternalMarkup && (p.store.state.Standalone == sourceDTDStandaloneYes || (!p.store.state.ExternalSubsetUnread && !p.info.HasParameterReferences)) {
-					p.failAt(d.Origin, "undeclared general entity in DTD attribute default")
-					return
+				if !d.Origin.ExternalMarkup && (s.state.Standalone == sourceDTDStandaloneYes || (!s.state.ExternalSubsetUnread && !s.state.ParameterEntityUnread && !hasParameterReferences)) {
+					return d, "undeclared general entity in DTD attribute default", nil
 				}
 				continue
 			}
-			if p.store.state.Standalone == sourceDTDStandaloneYes && !d.Origin.ExternalMarkup && entity.Origin.ExternalMarkup {
-				p.failAt(d.Origin, "standalone DTD default reference requires a declaration outside parameter entities")
-				return
+			if s.state.Standalone == sourceDTDStandaloneYes && !d.Origin.ExternalMarkup && entity.Origin.ExternalMarkup {
+				return d, "standalone DTD default reference requires a declaration outside parameter entities", nil
 			}
 			if entity.Origin.Sequence >= d.Origin.Sequence {
-				p.failAt(d.Origin, "general entity declaration must precede its direct reference in a DTD attribute default")
-				return
+				return d, "general entity declaration must precede its direct reference in a DTD attribute default", nil
 			}
 			if entity.Notation != "" {
-				p.failAt(d.Origin, "unparsed XML entity cannot be referenced")
-				return
+				return d, "unparsed XML entity cannot be referenced", nil
 			}
 			if entity.External {
-				p.failAt(d.Origin, "external entity reference in DTD attribute default")
-				return
+				return d, "external entity reference in DTD attribute default", nil
 			}
 		}
 	}
+	return nil, "", nil
 }
 
 // The same scanner may elect whole-declaration internal PE frames. A boundary

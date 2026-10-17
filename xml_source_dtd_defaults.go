@@ -3,7 +3,6 @@ package musicxml
 import (
 	"encoding/xml"
 	"errors"
-	"fmt"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -26,6 +25,9 @@ func (r *sourceXMLTokenReader) validateDTDDefaults() error {
 		}
 		before := r.tokenOwned
 		if _, err := r.dtdAttributeValue(declaration.RawValue, declaration.Origin); err != nil {
+			if declaration.Origin.Region == sourceDTDExternalSubsetRegion {
+				return r.externalDTDDefect(err, declaration.Origin)
+			}
 			return sourceDTDDiagnosticAt(err, declaration.Origin)
 		}
 		// The normalized value is deliberately discarded. Its retained scratch,
@@ -39,6 +41,18 @@ func (r *sourceXMLTokenReader) validateDTDDefaults() error {
 	return r.dtdStore.completeDefaultWellFormedness()
 }
 
+// externalDTDDefect reports a deferred check of an external declaration as a
+// *DTDError: the defect is in the supplied DTD, not in the document.
+// Resource, cancellation and other non-syntax errors keep their identity.
+func (r *sourceXMLTokenReader) externalDTDDefect(err error, origin sourceDTDOrigin) error {
+	var syntax *xml.SyntaxError
+	if !errors.As(err, &syntax) {
+		return err
+	}
+	state := r.dtdStore.State()
+	return &DTDError{PublicID: state.PublicID, SystemID: state.SystemID, Err: sourceDTDExternalDefect(syntax.Msg, origin)}
+}
+
 // A deferred declaration check reports the declaration's actual source line,
 // or the enclosing physical PE use for generated text. Resource/cancellation
 // errors keep their original identity; the source cursor is never rewound.
@@ -46,10 +60,6 @@ func sourceDTDDiagnosticAt(err error, origin sourceDTDOrigin) error {
 	var syntax *xml.SyntaxError
 	if !errors.As(err, &syntax) {
 		return err
-	}
-	if origin.SpanAvailable && origin.Entity != "" {
-		// The defect is in an external DTD entity, not at a document line.
-		return &xml.SyntaxError{Msg: fmt.Sprintf("%s (external DTD %s, line %d)", syntax.Msg, sourceXMLDiagnosticValue(origin.Entity), origin.Span.Start.Line)}
 	}
 	line := 0
 	if origin.SpanAvailable {

@@ -47,8 +47,9 @@ type DTDRequest struct {
 // One entity may not exceed 16 MiB.
 //
 // A bundled closure is parsed once per process, but an external subset that
-// the source supplies is parsed for every document that names it. A source
-// should therefore return ErrDTDNotFound for identifiers it does not own.
+// the source supplies is parsed for every document that names it, under the
+// assessment's budgets when one reads it. A source should therefore return
+// ErrDTDNotFound for identifiers it does not own.
 // Ordinary decoding resolves the external subset of every document with an
 // external DOCTYPE; it ignores identifiers longer than 4096 bytes.
 //
