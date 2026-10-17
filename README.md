@@ -234,12 +234,12 @@ evidence and original package/indirection limits remain visible. These profiles
 add no external musical intent provider and make no universal-conformance claim.
 
 For original-input inspection, use `InspectXML` with an explicit
-`ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD plus the
-same local clauses), or the unchanged `ProfileSourceXSDPreview` (XSD only).
-These narrower profiles are not accepted by either assessed loader. Unread
-external DOCTYPE subsets still make all source profiles incomplete, including
-`Chant.musicxml`, `MozartTrio.musicxml`
-and `MozaChloSample.musicxml`. Strict assessed decoding returns no document for
+`ProfileSourceContext`, `ProfileSourceTimeline`, `ProfileSourceLocal` (XSD
+plus the same local clauses), or the unchanged `ProfileSourceXSDPreview` (XSD
+only). These narrower profiles are not accepted by either assessed loader.
+Unread external DOCTYPE subsets still make all source profiles incomplete,
+including `Chant.musicxml`, `MozartTrio.musicxml` and
+`MozaChloSample.musicxml`. Strict assessed decoding returns no document for
 those original files. There is no new DTD trust, stripping, fetching or ignore
 policy. The two DOCTYPE-free official opus examples are a separate assessable
 source case.

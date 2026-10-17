@@ -48,16 +48,16 @@ text. They are explicitly embedded so `go mod vendor` preserves these exact file
 - `data/ipa-representation/NOTICES.txt`
 - `data/ipa-representation/LICENSE-UNICODE-V3.txt`
 
-These data have separate upstream/adapted-data terms, including CC BY-SA 4.0 for
-the IPA-derived data; the implementation code license does not replace them.
-Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds
-all five components, even when calls pass custom sources or selections. Direct
-use of `BundledDictionarySource` also retains all five. Binary distributors must
-ship the five files above alongside the binary, retaining their attribution and
-license links. The private notice
-filesystem can be removed by the linker; embedding it does not guarantee that
-notices are accessible from a compiled binary. See `THIRD_PARTY_NOTICES.md` at the
-repository root for distribution guidance.
+These data have separate upstream/adapted-data terms, including CC BY-SA 4.0
+for the IPA-derived data; the implementation code license does not replace
+them. Any binary referencing `DecodeAssessed` or
+`DecodeAssessedWithDictionaries` embeds all five components, even when calls
+pass custom sources or selections. Direct use of `BundledDictionarySource`
+also retains all five. Binary distributors must ship the five files above
+alongside the binary, retaining their attribution and license links. The
+private notice filesystem can be removed by the linker; embedding it does not
+guarantee that notices are accessible from a compiled binary. See
+`THIRD_PARTY_NOTICES.md` at the repository root for distribution guidance.
 
 The copied notices are byte-identical source records. Their references to an
 accompanying full positive ledger concern the original source distribution,

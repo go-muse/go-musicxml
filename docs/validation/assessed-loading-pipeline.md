@@ -285,16 +285,16 @@ report copies remain outside this lease's admitted storage contract. See the
 The unchanged original `testdata/official/MozaChloSample.musicxml` is 223,068 bytes
 of UTF-16BE input, with SHA-256
 `4323af5d7daa23ee3ae4fc27ff51274e98055a775824c49d3f4312f7586bc23e`.
-On the asserted linux/amd64 migration control, mandatory default loading reaches
-the 64 MiB (67,108,864-byte) buffered-byte ceiling before source EOF. It retains
-`SyntaxIncomplete`, `InputComplete=false` and incomplete conversion, with
-`Model.Requested=false` and no document. The error retains both resource-limit
-and incomplete-assessment recognition. This is a capacity change from the earlier
-narrower source-only loading contract, not a
-MusicXML violation or a malformed-input claim. This exact refusal is asserted
-only on amd64; the [reviewer also reproduced it on darwin/arm64 and
-darwin/amd64][review-architecture]. The 386 CI run does not assert this boundary,
-and size-based accounting makes it architecture-dependent.
+On the asserted linux/amd64 migration control, mandatory default loading
+reaches the 64 MiB (67,108,864-byte) buffered-byte ceiling before source EOF.
+It retains `SyntaxIncomplete`, `InputComplete=false` and incomplete
+conversion, with `Model.Requested=false` and no document. The error retains
+both resource-limit and incomplete-assessment recognition. This is a capacity
+change from the earlier narrower source-only loading contract, not a MusicXML
+violation or a malformed-input claim. This exact refusal is asserted only on
+amd64; the [reviewer also reproduced it on darwin/arm64 and
+darwin/amd64][review-architecture]. The 386 CI run does not assert this
+boundary, and size-based accounting makes it architecture-dependent.
 
 The smaller original `testdata/official/MozartTrio.musicxml` is 94,916 bytes.
 The [PR 46 reviewer][review-mozart] also observed a default 64 MiB refusal for

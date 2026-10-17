@@ -1222,18 +1222,18 @@ unavailable and empty selections do not implicitly open the bundled source. The
 assessed-loader defaults are the specific exception above; a custom source with
 empty selections is rejected there. Caller-provided sources remain supported.
 
-Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries` embeds
-all five component assets, including both CC BY-SA 4.0 IPA bundles, regardless of
-options or custom/nil dictionary sources. Direct use of `BundledDictionarySource`
-also retains all five. Selections control runtime import and assessment; they do
-not prune the binary's asset references. The data
-retain their W3C FSA, CC BY-SA 4.0 and Unicode License v3 terms, separately from
-the MIT code license. Distribute binaries containing these data with all five
-notice/license files listed in
-[the bundled-data distribution instructions][bundled-data-notices].
-Those instructions also link the detailed IPA modification and provenance
-records. No particular linker behavior or binary-size saving is guaranteed for
-programs that reference neither assessed loader nor the bundled source.
+Any binary referencing `DecodeAssessed` or `DecodeAssessedWithDictionaries`
+embeds all five component assets, including both CC BY-SA 4.0 IPA bundles,
+regardless of options or custom/nil dictionary sources. Direct use of
+`BundledDictionarySource` also retains all five. Selections control runtime
+import and assessment; they do not prune the binary's asset references. The
+data retain their W3C FSA, CC BY-SA 4.0 and Unicode License v3 terms,
+separately from the MIT code license. Distribute binaries containing these
+data with all five notice/license files listed in [the bundled-data
+distribution instructions][bundled-data-notices]. Those instructions also link
+the detailed IPA modification and provenance records. No particular linker
+behavior or binary-size saving is guaranteed for programs that reference
+neither assessed loader nor the bundled source.
 
 Ordinary compilation embeds committed local files with `go:embed`; it neither
 runs generation nor fetches dictionary data. Explicit `go generate ./...`
