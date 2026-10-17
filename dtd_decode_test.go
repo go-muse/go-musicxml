@@ -249,9 +249,9 @@ func TestExternalDTDIsNeverFetched(t *testing.T) {
 	assert.Zero(t, requests.Load())
 }
 
-func TestDecodeMXLUsesDTDOptions(t *testing.T) {
-	t.Parallel()
-
+// houseDTDArchive is an MXL archive whose score names a caller-owned DTD.
+func houseDTDArchive(t *testing.T) []byte {
+	t.Helper()
 	var archive bytes.Buffer
 	writer := zip.NewWriter(&archive)
 	for name, content := range map[string]string{
@@ -264,16 +264,60 @@ func TestDecodeMXLUsesDTDOptions(t *testing.T) {
 		require.NoError(t, err)
 	}
 	require.NoError(t, writer.Close())
+	return archive.Bytes()
+}
 
-	_, err := DecodeMXL(bytes.NewReader(archive.Bytes()))
+func TestDecodeMXLUsesDTDOptions(t *testing.T) {
+	t.Parallel()
+
+	archive := houseDTDArchive(t)
+	_, err := DecodeMXL(bytes.NewReader(archive))
 	assert.ErrorIs(t, err, ErrUnsupportedXMLFeature)
 
 	options := MXLOptions{DTD: &DTDOptions{Source: mapDTDSource{"house.dtd": `<!ENTITY house "H">`}}}
-	document, err := DecodeMXLWithOptions(bytes.NewReader(archive.Bytes()), options)
+	document, err := DecodeMXLWithOptions(bytes.NewReader(archive), options)
 	require.NoError(t, err)
 	score, ok := AsScorePartwise(document)
 	require.True(t, ok)
 	assert.Equal(t, "H", *score.Work.WorkTitle)
+}
+
+func TestMXLAssessmentDTDOptions(t *testing.T) {
+	t.Parallel()
+
+	archive := houseDTDArchive(t)
+	house := &DTDOptions{Source: mapDTDSource{"house.dtd": `<!ENTITY house "H">`}}
+	failing := &DTDOptions{Source: DTDSourceFunc(func(context.Context, DTDRequest) ([]byte, error) { return nil, os.ErrPermission })}
+	inspect := func(o MXLAssessmentOptions) (validation.AssessmentBundle, error) {
+		o.Graph.Profile = ProfileMXLSourceSemantics
+		return InspectMXLWithDictionaries(context.Background(), bytes.NewReader(archive), MXLDictionaryAssessmentOptions{
+			Resources:    o,
+			Dictionaries: DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource()},
+		})
+	}
+
+	_, err := inspect(MXLAssessmentOptions{})
+	assert.ErrorIs(t, err, ErrIncompleteAssessment, "the house DTD stays unread without a source")
+
+	// Graph.DTD configures every assessed child; MXL.DTD is the fallback.
+	for name, o := range map[string]MXLAssessmentOptions{
+		"Graph.DTD": {Graph: AssessmentOptions{DTD: house}},
+		"MXL.DTD":   {MXL: MXLOptions{DTD: house}},
+	} {
+		bundle, err := inspect(o)
+		require.NoError(t, err, name)
+		assert.True(t, bundle.Satisfied(), name)
+	}
+
+	_, err = inspect(MXLAssessmentOptions{Graph: AssessmentOptions{DTD: failing}, MXL: MXLOptions{DTD: house}})
+	assert.ErrorIs(t, err, ErrDTDUnavailable, "Graph.DTD takes precedence over MXL.DTD")
+	assert.ErrorIs(t, err, os.ErrPermission)
+	assert.NotErrorIs(t, err, validation.ErrInvalidConfiguration, "a DTD source failure is not a resource transfer contract failure")
+
+	// Profiles that do not read DTD declarations leave the external subset
+	// unread whatever the options say.
+	_, err = InspectMXL(context.Background(), bytes.NewReader(archive), MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSource, DTD: house}})
+	assert.ErrorIs(t, err, ErrIncompleteAssessment)
 }
 
 func TestDecodeExternalDTDDocumentedLimits(t *testing.T) {
@@ -304,4 +348,194 @@ func TestDecodeExternalDTDDocumentedLimits(t *testing.T) {
 	_, err = DecodeWithOptions(strings.NewReader(dtdTestScore(`<!DOCTYPE score-partwise SYSTEM "house.dtd">`, "&house;", "")), huge)
 	assert.ErrorIs(t, err, ErrDTDUnavailable)
 	assert.ErrorIs(t, err, validation.ErrResourceLimit)
+}
+
+func TestExternalDTDHonoursInternalParameterEntities(t *testing.T) {
+	t.Parallel()
+
+	// The internal subset is read first, so its parameter entities win over
+	// the external declarations (XML 2.8, 4.2) and select the timewise
+	// sections of score.mod: the partwise version default disappears.
+	doctype := strings.TrimSuffix(partwiseDOCTYPE, ">") + ` [<!ENTITY % partwise "IGNORE"><!ENTITY % timewise "INCLUDE">]>`
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(dtdTestScore(doctype, "Title", "")), DecodeAssessmentOptions{})
+	require.NoError(t, err)
+	score, ok := AsScorePartwise(result.Document)
+	require.True(t, ok)
+	assert.Nil(t, score.Version, "the overridden sections declare no partwise default")
+	report, err := InspectXML(context.Background(), strings.NewReader(dtdTestScore(doctype, "Title", "")), AssessmentOptions{Profile: ProfileSourceInternalDTD})
+	require.NoError(t, err)
+	for _, row := range report.Context {
+		origin := row.SourceOrigin
+		if origin != nil && origin.Attribute != nil && origin.Attribute.Local == "version" {
+			assert.NotEqual(t, validation.SourceOriginDefault, origin.Kind, "no partwise version default after the override")
+		}
+	}
+
+	// Reading the external subset is charged to the document's budget, with
+	// or without internal parameter entities.
+	for _, d := range []string{partwiseDOCTYPE, doctype} {
+		_, err = InspectXML(context.Background(), strings.NewReader(dtdTestScore(d, "Title", "")),
+			AssessmentOptions{Profile: ProfileSourceInternalDTD, Budgets: validation.Budgets{MaxBufferedBytes: 1 << 20}})
+		var resource *validation.ResourceError
+		require.ErrorAs(t, err, &resource, d)
+		assert.Equal(t, validation.BudgetBufferedBytes, resource.Kind, d)
+		assert.ErrorIs(t, err, ErrIncompleteAssessment, d)
+	}
+
+	// Ordinary decoding does not interpret parameter entities, so a document
+	// whose internal subset declares one keeps the historical result.
+	opus := `<!DOCTYPE opus PUBLIC "-//Recordare//DTD MusicXML 4.0 Opus//EN" "http://www.musicxml.org/dtds/opus.dtd" ` +
+		`[<!ENTITY % link-attributes "xlink:href CDATA #REQUIRED">]><opus><score xlink:href="s.musicxml"/></opus>`
+	_, err = Decode(strings.NewReader(opus))
+	assert.ErrorIs(t, err, ErrUnsupportedXMLFeature)
+}
+
+func TestExternalDTDLongIdentifiers(t *testing.T) {
+	t.Parallel()
+
+	long := "house/" + strings.Repeat("d", 5000) + ".dtd"
+	source := DTDSourceFunc(func(_ context.Context, request DTDRequest) ([]byte, error) {
+		if request.SystemID == long {
+			return []byte(`<!ENTITY house "H"><!ATTLIST score-partwise version CDATA "4.0">`), nil
+		}
+		return nil, ErrDTDNotFound
+	})
+	input := dtdTestScore(`<!DOCTYPE score-partwise SYSTEM "`+long+`">`, "&house;", "")
+
+	// A declaration site in an entity whose identifier exceeds the reported
+	// limit is unknown evidence, which makes the assessment incomplete rather
+	// than a configuration or contract failure.
+	_, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Decode: DecodeOptions{DTD: &DTDOptions{Source: source}}})
+	assert.ErrorIs(t, err, ErrIncompleteAssessment)
+	assert.NotErrorIs(t, err, validation.ErrInvalidConfiguration)
+	assert.NotErrorIs(t, err, validation.ErrInvalidSession)
+
+	// Ordinary decoding does not resolve identifiers longer than 4096 bytes.
+	_, err = DecodeWithOptions(strings.NewReader(input), DecodeOptions{DTD: &DTDOptions{Source: source}})
+	assert.ErrorIs(t, err, ErrUnsupportedXMLFeature)
+}
+
+func TestExternalDTDTypedNilSource(t *testing.T) {
+	t.Parallel()
+
+	var source DTDSourceFunc
+	score, err := DecodeScorePartwiseWithOptions(strings.NewReader(dtdTestScore(partwiseDOCTYPE, "&eacute;", "")), DecodeOptions{DTD: &DTDOptions{Source: source}})
+	require.NoError(t, err)
+	assert.Equal(t, "é", *score.Work.WorkTitle)
+
+	_, err = DecodeAssessed(context.Background(), strings.NewReader(dtdTestScore(partwiseDOCTYPE, "&eacute;", "")),
+		DecodeAssessmentOptions{Decode: DecodeOptions{DTD: &DTDOptions{Source: source}}})
+	require.NoError(t, err)
+}
+
+func TestDecodeStandaloneDocumentIgnoresExternalEntities(t *testing.T) {
+	t.Parallel()
+
+	input := strings.Replace(dtdTestScore(partwiseDOCTYPE, "&eacute;", ""), `encoding="UTF-8"?>`, `encoding="UTF-8" standalone="yes"?>`, 1)
+	_, err := Decode(strings.NewReader(input))
+	assert.ErrorIs(t, err, ErrUnsupportedXMLFeature, "XML 4.1 Entity Declared: a standalone document may not use external declarations")
+
+	input = strings.Replace(dtdTestScore(partwiseDOCTYPE, "Title", ""), `encoding="UTF-8"?>`, `encoding="UTF-8" standalone="no"?>`, 1)
+	_, err = Decode(strings.NewReader(strings.Replace(input, "Title", "&eacute;", 1)))
+	require.NoError(t, err)
+}
+
+func TestDecodeExternalDTDNamespaceEdges(t *testing.T) {
+	t.Parallel()
+
+	// A #FIXED namespace default in the external subset applies to an element
+	// that omits the attribute, even when an ancestor binds the prefix to a
+	// different namespace (XML 3.3.2). This is the one token difference that
+	// resolving the bundled DTDs introduces for ordinary decoding.
+	opus := `<!DOCTYPE opus PUBLIC "-//Recordare//DTD MusicXML 4.0 Opus//EN" "http://www.musicxml.org/dtds/opus.dtd">` +
+		`<opus xmlns:xlink="urn:other"><score xlink:href="score.musicxml"/></opus>`
+	document, err := Decode(strings.NewReader(opus))
+	require.NoError(t, err)
+	value, ok := AsOpusDocument(document)
+	require.True(t, ok)
+	require.Len(t, value.Content, 1)
+	assert.Equal(t, "score.musicxml", value.Content[0].Score.Href)
+
+	// With a resolved external subset, a prefix that neither the document nor
+	// the DTD binds is an XML syntax error, as it is without a DOCTYPE.
+	unbound := `<words q:a="1">x</words>`
+	_, err = Decode(strings.NewReader(dtdTestScore(partwiseDOCTYPE, "Title", `<direction><direction-type>`+unbound+`</direction-type></direction>`)))
+	var syntax *xml.SyntaxError
+	assert.ErrorAs(t, err, &syntax)
+	assert.NotErrorIs(t, err, ErrUnsupportedXMLFeature)
+
+	// An unresolved external subset might bind it, so the historical result
+	// remains.
+	_, err = Decode(strings.NewReader(dtdTestScore(`<!DOCTYPE score-partwise SYSTEM "partwise.dtd">`, "Title", `<direction><direction-type>`+unbound+`</direction-type></direction>`)))
+	assert.ErrorIs(t, err, ErrUnsupportedXMLFeature)
+}
+
+func TestAssessmentOptionsDTDIsHonoured(t *testing.T) {
+	t.Parallel()
+
+	source := &DTDOptions{Source: mapDTDSource{"house.dtd": `<!ENTITY house "H">`}}
+	input := dtdTestScore(`<!DOCTYPE score-partwise SYSTEM "house.dtd">`, "&house;", "")
+	read := func() io.Reader { return strings.NewReader(input) }
+	dictionaries := DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource()}
+
+	result, err := DecodeAssessed(context.Background(), read(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{DTD: source}})
+	require.NoError(t, err)
+	score, ok := AsScorePartwise(result.Document)
+	require.True(t, ok)
+	assert.Equal(t, "H", *score.Work.WorkTitle)
+
+	result, err = DecodeAssessedWithDictionaries(context.Background(), read(), DecodeDictionaryAssessmentOptions{
+		Assessment: &DictionaryAssessmentOptions{Assessment: AssessmentOptions{DTD: source}, Dictionaries: dictionaries},
+	})
+	require.NoError(t, err)
+	score, ok = AsScorePartwise(result.Document)
+	require.True(t, ok)
+	assert.Equal(t, "H", *score.Work.WorkTitle)
+
+	report, err := InspectXMLWithDictionaries(context.Background(), read(), DictionaryAssessmentOptions{
+		Assessment:   AssessmentOptions{Profile: ProfileSourceSemantics, DTD: source},
+		Dictionaries: dictionaries,
+	})
+	require.NoError(t, err)
+	assert.True(t, report.Satisfied())
+
+	// DecodeOptions.DTD takes precedence over AssessmentOptions.DTD.
+	decline := &DTDOptions{Source: DTDSourceFunc(func(context.Context, DTDRequest) ([]byte, error) { return nil, os.ErrPermission })}
+	_, err = DecodeAssessed(context.Background(), read(), DecodeAssessmentOptions{Decode: DecodeOptions{DTD: decline}, Assessment: &AssessmentOptions{DTD: source}})
+	assert.ErrorIs(t, err, os.ErrPermission)
+}
+
+// TestAssessedLoadingCorpusMeasurement backs the documented measurement of
+// default assessed loading over the official files and the MusicXML test
+// suite. The accepted count is a floor that may rise; no rejection may come
+// from an unread external DTD.
+func TestAssessedLoadingCorpusMeasurement(t *testing.T) {
+	t.Parallel()
+
+	var files []string
+	for _, dir := range []string{"testdata/official", "testdata/corpus"} {
+		require.NoError(t, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err == nil && !info.IsDir() && (strings.HasSuffix(path, ".xml") || strings.HasSuffix(path, ".musicxml")) {
+				files = append(files, path)
+			}
+			return err
+		}))
+	}
+	require.Len(t, files, 154, "the documented denominator")
+	accepted := 0
+	for _, file := range files {
+		data, err := os.ReadFile(file)
+		require.NoError(t, err)
+		result, err := DecodeAssessed(context.Background(), bytes.NewReader(data), DecodeAssessmentOptions{})
+		if err == nil {
+			accepted++
+			continue
+		}
+		assert.NotErrorIs(t, err, ErrUnsupportedXMLFeature, file)
+		assert.NotErrorIs(t, err, ErrDTDUnavailable, file)
+		for _, f := range result.Source.Findings {
+			assert.NotContains(t, string(f.Reason), "dtd-infoset-unavailable", file)
+		}
+	}
+	assert.GreaterOrEqual(t, accepted, 140)
 }

@@ -243,10 +243,12 @@ only). These narrower profiles are not accepted by either assessed loader.
 Profiles that do not read DTD declarations still report any external DOCTYPE
 subset as unread. Strict assessed decoding reads the bundled official DTD and
 accepts `Chant.musicxml` with default budgets; `MozartTrio.musicxml` and
-`MozaChloSample.musicxml` are accepted with larger explicit budgets. Of the 153
+`MozaChloSample.musicxml` are accepted with larger explicit budgets. Of the 154
 score and opus files in `testdata/official` and the MusicXML test suite, default
-assessed loading accepts 140. There is no DTD fetching, stripping or ignore
-policy; trust is limited to the official public and system identifiers.
+assessed loading accepted 140 when measured for this change. There is no DTD
+fetching, stripping or ignore policy: the bundled DTDs are selected only by the
+official public and system identifiers, and any other DTD comes from a caller
+`DTDSource`.
 
 These intrinsic profiles do not establish complete MusicXML conformance, full
 repeat/playback/layout semantics, author intent, or package and linked-resource

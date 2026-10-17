@@ -26,9 +26,10 @@ type DTDRequest struct {
 	PublicID string
 	// SystemID is the system identifier as written, or empty.
 	SystemID string
-	// BaseSystemID is the system identifier of the DTD entity containing the
-	// reference, for resolving a relative SystemID. It is empty for the
-	// DOCTYPE external subset.
+	// BaseSystemID is the system identifier of the DTD entity that contains
+	// the declaration of the requested parameter entity, for resolving a
+	// relative SystemID (XML 4.2.2). It is empty for the DOCTYPE external
+	// subset and for parameter entities declared in the internal subset.
 	BaseSystemID string
 }
 
@@ -43,6 +44,14 @@ type DTDRequest struct {
 //
 // The returned bytes must be UTF-8, optionally with a byte order mark and a
 // text declaration, and are not retained after the call that requested them.
+// One entity may not exceed 16 MiB.
+//
+// A bundled closure is parsed once per process, but an external subset that
+// the source supplies is parsed for every document that names it. A source
+// should therefore return ErrDTDNotFound for identifiers it does not own.
+// Ordinary decoding resolves the external subset of every document with an
+// external DOCTYPE; it ignores identifiers longer than 4096 bytes.
+//
 // DTDSource is implemented by callers, so its method set is frozen.
 type DTDSource interface {
 	OpenDTD(ctx context.Context, request DTDRequest) ([]byte, error)
@@ -61,12 +70,14 @@ func (f DTDSourceFunc) OpenDTD(ctx context.Context, request DTDRequest) ([]byte,
 // MusicXML 1.0 through 4.0 as the official MusicXML catalog does; a nil
 // *DTDOptions uses only them.
 type DTDOptions struct {
-	// Source, when non-nil, is consulted before the bundled DTDs.
+	// Source, when non-nil, is consulted before the bundled DTDs. A nil or
+	// typed-nil Source is ignored.
 	Source DTDSource
 }
 
 // DTDError reports a DTD that could not be supplied or read. It matches
-// ErrDTDUnavailable and unwraps to the source or syntax error.
+// ErrDTDUnavailable and unwraps to the source error or to a description of the
+// defect in the DTD bytes, which never matches *xml.SyntaxError.
 type DTDError struct {
 	PublicID string
 	SystemID string

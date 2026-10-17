@@ -5,10 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/xml"
+	"errors"
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -74,12 +77,9 @@ func TestBundledDTDResolution(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 
-			name, text, ok := bundledDTD(test.publicID, test.systemID, test.base)
+			name, ok := bundledDTDLookup(test.publicID, test.systemID, test.base)
 			assert.Equal(t, test.want != "", ok)
 			assert.Equal(t, test.want, name)
-			if ok {
-				assert.Equal(t, bundledDTDText(test.want), text)
-			}
 		})
 	}
 }
@@ -225,4 +225,109 @@ func TestPrepareCallerDTDErrors(t *testing.T) {
 	assert.ErrorIs(t, err, ErrDTDUnavailable)
 	assert.ErrorIs(t, err, os.ErrPermission)
 	assert.False(t, strings.Contains(err.Error(), "syntax"))
+}
+
+// bundledDTDPosition locates needle after anchor in a bundled entity's
+// normalized text, as 1-based line and column and a byte offset.
+func bundledDTDPosition(t *testing.T, file, anchor, needle string) sourceXMLPosition {
+	t.Helper()
+	text, err := bundledDTDEntityText(file)
+	require.NoError(t, err)
+	start := strings.Index(text, anchor)
+	require.GreaterOrEqual(t, start, 0, anchor)
+	offset := start + strings.Index(text[start:], needle)
+	line := 1 + strings.Count(text[:offset], "\n")
+	column := 1 + utf8.RuneCountInString(text[strings.LastIndex(text[:offset], "\n")+1:offset])
+	return sourceXMLPosition{ByteOffset: int64(offset), Line: line, Column: column}
+}
+
+func TestPreparedDTDDeclarationCoordinates(t *testing.T) {
+	t.Parallel()
+
+	prepared, err := newSourceDTDResolver(nil).prepare(context.Background(), "-//Recordare//DTD MusicXML 4.0 Partwise//EN", "")
+	require.NoError(t, err)
+	find := func(kind sourceDTDDeclarationKind, element, name string) sourceDTDDeclaration {
+		for _, d := range prepared.declarations {
+			if d.Kind == kind && d.Element == element && d.Name == name {
+				return d
+			}
+		}
+		t.Fatalf("missing %s %s %s", kind, element, name)
+		return sourceDTDDeclaration{}
+	}
+	tests := []struct {
+		declaration          sourceDTDDeclaration
+		file, anchor, needle string
+	}{
+		{find(sourceDTDAttributeDeclaration, "beam", "number"), "note.mod", "<!ATTLIST beam", "number"},
+		{find(sourceDTDElementDeclaration, "", "note"), "note.mod", "<!ELEMENT note\n", "<!ELEMENT note\n"},
+		{find(sourceDTDGeneralEntityDeclaration, "", "eacute"), "isolat1.ent", "<!ENTITY eacute", "<!ENTITY eacute"},
+	}
+	for _, test := range tests {
+		origin := test.declaration.Origin
+		assert.True(t, origin.SpanAvailable, test.anchor)
+		assert.Equal(t, bundledDTDSystemPrefixes[0]+test.file, origin.Entity, test.anchor)
+		assert.Equal(t, bundledDTDPosition(t, test.file, test.anchor, test.needle), origin.Span.Start, test.anchor)
+		assert.Greater(t, origin.Span.End.ByteOffset, origin.Span.Start.ByteOffset, test.anchor)
+	}
+	for _, d := range prepared.declarations {
+		for _, value := range []string{d.Name, d.Element, d.RawType, d.RawValue, d.Replacement} {
+			assert.NotContains(t, value, "\r", "end-of-line normalization of %s %s", d.Kind, d.Name)
+		}
+	}
+}
+
+func TestPrepareCallerDTDLiteralsAndNesting(t *testing.T) {
+	t.Parallel()
+
+	source := mapDTDSource{"x.dtd": `<!ENTITY % b "x"><!ENTITY % a "&#37;b;"><!ENTITY c "%a;">` +
+		`<!ENTITY % q '"'><!ENTITY d "a%q;b">`}
+	prepared, err := newSourceDTDResolver(&DTDOptions{Source: source}).prepare(context.Background(), "", "x.dtd")
+	require.NoError(t, err)
+	assert.Equal(t, 'x', prepared.characters["c"], "included text is rescanned for references")
+	for _, d := range prepared.declarations {
+		switch d.Name {
+		case "c":
+			assert.Equal(t, "%a;", d.RawValue, "the raw spelling keeps the reference")
+		case "d":
+			assert.Equal(t, `a"b`, d.Replacement, "quotes in included text do not end the literal")
+		}
+	}
+
+	for name, text := range map[string]string{
+		"section opened in a parameter entity": `<!ENTITY % open "<![INCLUDE[ <!ENTITY a 'b'>"> %open; ]]>`,
+		"section closed in a parameter entity": `<!ENTITY % close "]]>"> <![INCLUDE[ %close;`,
+		"section closed and reopened in one":   `<!ENTITY % swap "]]><![INCLUDE["> <![INCLUDE[ %swap; ]]>`,
+		"recursive literal inclusion":          `<!ENTITY % a "&#37;a;"><!ENTITY c "%a;">`,
+	} {
+		_, err := newSourceDTDResolver(&DTDOptions{Source: mapDTDSource{"x.dtd": text}}).prepare(context.Background(), "", "x.dtd")
+		assert.ErrorIs(t, err, ErrDTDUnavailable, name)
+		var syntax *xml.SyntaxError
+		assert.False(t, errors.As(err, &syntax), "%s: an external DTD defect is not a document syntax error", name)
+	}
+}
+
+func TestPrepareCallerDTDRelativeBase(t *testing.T) {
+	t.Parallel()
+
+	var bases sync.Map
+	source := DTDSourceFunc(func(_ context.Context, request DTDRequest) ([]byte, error) {
+		bases.Store(request.SystemID, request.BaseSystemID)
+		switch request.SystemID {
+		case "http://ex/root.dtd":
+			return []byte(`<!ENTITY % d SYSTEM "sub/decls.ent"> %d; %m;`), nil
+		case "sub/decls.ent":
+			return []byte(`<!ENTITY % m SYSTEM "m.ent">`), nil
+		case "m.ent":
+			return []byte(`<!ENTITY x "X">`), nil
+		}
+		return nil, ErrDTDNotFound
+	})
+	prepared, err := newSourceDTDResolver(&DTDOptions{Source: source}).prepare(context.Background(), "", "http://ex/root.dtd")
+	require.NoError(t, err)
+	assert.Equal(t, 'X', prepared.characters["x"])
+	base, _ := bases.Load("m.ent")
+	assert.Equal(t, "http://ex/sub/decls.ent", base, "XML 4.2.2: relative to the entity containing the declaration")
+	assert.Equal(t, "http://ex/c.ent", sourceDTDJoinSystemID("http://ex/a/b.dtd", "../c.ent"))
+	assert.Equal(t, "dir/c.ent", sourceDTDJoinSystemID("dir/b.dtd", "c.ent"))
 }

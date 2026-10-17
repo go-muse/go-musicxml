@@ -15,12 +15,16 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   official `musicxml.org/dtds/` system identifiers select the pinned 4.0 files.
   Ordinary decoding uses a resolved subset only for one-character general
   entities, such as `&eacute;`, and defaulted namespace declarations, such as
-  `xmlns:xlink`; other DTD defaults are not added to the model, and files that
-  decoded before decode to the same tokens.
+  `xmlns:xlink`; other DTD defaults are not added to the model. Files that
+  decoded before decode to the same tokens, except that a DTD namespace default
+  now applies even where an ancestor binds the same prefix to another
+  namespace.
 - Add `DTDSource`, `DTDSourceFunc`, `DTDRequest`, `DTDOptions`, `DTDError`,
   `ErrDTDNotFound` and `ErrDTDUnavailable`, with `DTD` fields on
   `DecodeOptions`, `MXLOptions` and `AssessmentOptions`, so callers can supply
-  their own DTD bytes ahead of the bundled DTDs.
+  their own DTD bytes ahead of the bundled DTDs. `DecodeOptions.DTD` takes
+  precedence over `AssessmentOptions.DTD` in assessed decoding, and
+  `MXLAssessmentOptions.Graph.DTD` over `MXLAssessmentOptions.MXL.DTD`.
 - Add `validation.CoordinateSpaceOriginalBytes` and
   `validation.CoordinateSpaceExternalDTD`. Source origins and entity declaration
   facts locate a declaration read from an external DTD entity by its system
@@ -459,13 +463,17 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - Source profiles that read DTD declarations (the `ProfileSourceInternalDTD`
   family, `ProfileSourceSemantics` and the internal-DTD and semantic package
-  profiles) now read a recognized DOCTYPE external subset. Default
-  `DecodeAssessed` accepts 140 of the 153 score and opus files in
+  profiles) now read a recognized DOCTYPE external subset, with parameter
+  entities from the internal subset in scope. Measured for this change, default
+  `DecodeAssessed` accepts 140 of the 154 score and opus files in
   `testdata/official` and the MusicXML test suite instead of 2; larger files can
   now reach resource limits where they previously stopped at unread-DTD
   evidence. Their profile closures and catalog digests change accordingly;
   profiles that do not read DTDs keep their digests and still report external
   subsets as unread.
+- With a resolved external subset, ordinary decoding reports a namespace prefix
+  that neither the document nor the DTD binds as an `*xml.SyntaxError`, as
+  without a DOCTYPE, instead of `ErrUnsupportedXMLFeature`.
 - New trailing `DTD` fields break unkeyed composite literals of
   `DecodeOptions`, `MXLOptions` and `AssessmentOptions`; keyed literals and `==`
   are unaffected.

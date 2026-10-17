@@ -62,6 +62,7 @@ func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options D
 	if cfg.Dictionaries == nil {
 		return report, loadErr
 	}
+	cfg.DTD = options.Assessment.DTD
 	defer func() { err = errors.Join(err, cfg.Dictionaries.Close()) }()
 	run, startErr := newSourceAssessmentRunWithConfig(ctx, reader, DecodeOptions{}, &sourceAssessmentConfig{assessmentRunConfig: cfg, ByteOwner: sourceBytesPrimary}, false)
 	if startErr != nil {

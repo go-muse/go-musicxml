@@ -95,45 +95,44 @@ var bundledDTDSystemPrefixes = []string{
 	"https://musicxml.org/dtds/",
 }
 
-// bundledDTD returns the bundled file for an external identifier. A known
-// public identifier wins, as in the official catalog's prefer="public" group;
-// otherwise an official absolute system identifier, or a relative one against
-// an official base, selects the file of the same name.
-func bundledDTD(publicID, systemID, baseSystemID string) (name, text string, ok bool) {
+// bundledDTDLookup returns the bundled file for an external identifier. A
+// known public identifier wins, as in the official catalog's prefer="public"
+// group; otherwise an official absolute system identifier, or a relative one
+// against an official base, selects the file of the same name.
+func bundledDTDLookup(publicID, systemID, baseSystemID string) (string, bool) {
 	if file, known := bundledDTDPublicIDs[sourceDTDNormalizePublicID(publicID)]; known {
-		return file, bundledDTDText(file), true
+		return file, true
+	}
+	pinned := func(file string) (string, bool) {
+		if _, ok := bundledDTDPins[file]; !ok {
+			return "", false
+		}
+		return file, true
 	}
 	for _, prefix := range bundledDTDSystemPrefixes {
 		if file, found := strings.CutPrefix(systemID, prefix); found {
-			if _, pinned := bundledDTDPins[file]; pinned {
-				return file, bundledDTDText(file), true
-			}
-			return "", "", false
+			return pinned(file)
 		}
 	}
 	if systemID == "" || strings.Contains(systemID, ":") || strings.HasPrefix(systemID, "/") {
-		return "", "", false
+		return "", false
 	}
 	for _, prefix := range bundledDTDSystemPrefixes {
-		if strings.HasPrefix(baseSystemID, prefix) {
-			file := path.Clean(path.Join(path.Dir(strings.TrimPrefix(baseSystemID, prefix)), systemID))
-			if _, pinned := bundledDTDPins[file]; pinned {
-				return file, bundledDTDText(file), true
-			}
-			return "", "", false
+		if rest, found := strings.CutPrefix(baseSystemID, prefix); found {
+			return pinned(path.Clean(path.Join(path.Dir(rest), systemID)))
 		}
 	}
-	return "", "", false
+	return "", false
 }
 
-// bundledDTDText returns a pinned file. The pins are verified by tests; a
-// mismatch here would be a build-time packaging defect.
-func bundledDTDText(file string) string {
+// bundledDTDEntityText returns a bundled file as external entity text, after
+// the end-of-line normalization that every external parsed entity receives.
+func bundledDTDEntityText(file string) (string, error) {
 	data, err := bundledDTDFiles.ReadFile(bundledDTDDirectory + "/" + file)
 	if err != nil {
-		panic(fmt.Sprintf("musicxml: bundled DTD %s is missing: %v", file, err))
+		return "", fmt.Errorf("bundled DTD %s is missing: %w", file, err)
 	}
-	return string(data)
+	return sourceDTDExternalText(data)
 }
 
 // sourceDTDNormalizePublicID applies the XML 4.2.2 public identifier match

@@ -265,10 +265,7 @@ func newSourceAssessmentRun(ctx context.Context, reader io.Reader, decode Decode
 	if err != nil {
 		return nil, err
 	}
-	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine}, ByteOwner: sourceBytesPrimary}
-	if decode.DTD == nil {
-		decode.DTD = assessment.DTD
-	}
+	config := &sourceAssessmentConfig{assessmentRunConfig: assessmentRunConfig{Account: account, DocumentID: sourceDocumentID, Profile: assessment.Profile, Engine: engine, DTD: assessment.DTD}, ByteOwner: sourceBytesPrimary}
 	return newSourceAssessmentRunWithConfig(ctx, reader, decode, config, converting)
 }
 
@@ -317,7 +314,11 @@ func newSourceAssessmentRunWithConfig(ctx context.Context, reader io.Reader, dec
 	// external subset; the others keep reporting it as unread.
 	var dtd *sourceDTDResolver
 	if internalDTD {
-		dtd = newSourceDTDResolver(decode.DTD)
+		options := decode.DTD
+		if options == nil {
+			options = config.DTD
+		}
+		dtd = newSourceDTDResolver(options)
 	}
 	lexical, err := newSourceXMLTokenReader(reader, sourceXMLConfig{Context: ctx, Account: run.account, MaxDepth: maxDepth, ByteOwner: config.ByteOwner, InternalDTD: internalDTD, CaptureAttributeLexical: captureAttributeLexical, CaptureDTDIDs: sourceDTDIDs, DTD: dtd})
 	if err != nil {

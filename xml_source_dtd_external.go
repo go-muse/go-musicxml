@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"path"
 	"strings"
 	"sync"
 	"unicode/utf8"
+	"unsafe"
 
 	"github.com/go-muse/go-musicxml/validation"
 )
@@ -20,9 +22,14 @@ import (
 // the same declaration grammar as the internal subset, extended with the
 // external-subset productions: parameter-entity references inside markup
 // declarations and entity values, conditional sections and external parameter
-// entities. Parsing happens once per closure into an immutable
-// sourceDTDPrepared, whose declarations a document's store imports after its
-// internal subset, so first-binding precedence matches XML 1.0 section 2.8.
+// entities.
+//
+// XML 1.0 section 2.8 processes the internal subset first, so its declarations,
+// including parameter entities that customize the external subset, bind first.
+// When the internal subset declares no parameter entity, the external subset
+// cannot depend on it: its closure is parsed once into an immutable
+// sourceDTDPrepared, which documents import after their internal subset.
+// Otherwise the external subset is parsed into the document's own store.
 
 const (
 	sourceDTDExternalSubsetRegion sourceDTDRegion = "external-subset"
@@ -31,17 +38,10 @@ const (
 	sourceDTDExternalEnd rune = -3
 	// sourceDTDExternalTextBytes caps one caller-supplied DTD entity.
 	sourceDTDExternalTextBytes = 16 << 20
+	// sourceDTDMaxEntityIdentifierBytes bounds the system identifier that
+	// source origins report in validation.Location.Entry.
+	sourceDTDMaxEntityIdentifierBytes = 4096
 )
-
-// sourceDTDExternalBudgets bound the private account that parses one external
-// closure. They are independent of the document's assessment budgets: bundled
-// DTDs are trusted static data, and caller bytes are additionally charged to the
-// document account when an assessment imports them.
-func sourceDTDExternalBudgets() validation.Budgets {
-	budgets := validation.DefaultBudgets()
-	budgets.MaxEvents = 64_000_000
-	return budgets
-}
 
 type sourceDTDExternalFrameKind uint8
 
@@ -51,13 +51,15 @@ const (
 	// declarations; its end is the parser-visible parameter boundary.
 	sourceDTDExternalDeclaration
 	// An inline frame holds a parameter entity referenced inside a markup
-	// declaration; its end is transparent.
+	// declaration or an entity value; its end is transparent.
 	sourceDTDExternalInline
 )
 
 type sourceDTDExternalFrame struct {
-	kind        sourceDTDExternalFrameKind
-	name        string
+	kind sourceDTDExternalFrameKind
+	name string
+	// systemID is set for frames that hold the text of an external entity;
+	// their positions are source-origin coordinates in that entity.
 	systemID    string
 	text        string
 	offset      int
@@ -142,28 +144,38 @@ func (in *sourceDTDExternalInput) next() rune {
 	return r
 }
 
-func (in *sourceDTDExternalInput) SyntaxError(message string) error {
-	top := in.frames[len(in.frames)-1]
-	root := in.frames[0]
-	where := root.name
-	if top.name != root.name {
-		where += " (" + top.name + ")"
-	}
-	return &xml.SyntaxError{Msg: "external DTD " + where + ": " + message, Line: top.position.Line}
-}
+func (in *sourceDTDExternalInput) depth() int { return len(in.frames) }
 
-func (in *sourceDTDExternalInput) systemID() string {
-	for i := len(in.frames) - 1; i >= 0; i-- {
+// file returns the innermost frame holding an external entity's text. Inside
+// parameter-entity replacement text its position is just after the reference.
+func (in *sourceDTDExternalInput) file() *sourceDTDExternalFrame {
+	for i := len(in.frames) - 1; i > 0; i-- {
 		if in.frames[i].systemID != "" {
-			return in.frames[i].systemID
+			return &in.frames[i]
 		}
 	}
-	return ""
+	return &in.frames[0]
 }
 
-// push enlarges replacement text by one leading and one following space, as
-// XML 4.4.8 requires for a parameter entity included in the DTD.
-func (in *sourceDTDExternalInput) push(frame sourceDTDExternalFrame) error {
+func (in *sourceDTDExternalInput) SyntaxError(message string) error {
+	file := in.file()
+	where := in.frames[0].name
+	if file.name != where {
+		where += " (" + file.name + ")"
+	}
+	return &xml.SyntaxError{Msg: "external DTD " + where + ": " + message, Line: max(file.position.Line, 0)}
+}
+
+func (in *sourceDTDExternalInput) systemID() string { return in.file().systemID }
+
+// DTDPosition reports the current coordinates in the innermost external
+// entity, for the end of a declaration span.
+func (in *sourceDTDExternalInput) DTDPosition() sourceXMLPosition { return in.file().position }
+
+// push enters replacement text. A padded frame is enlarged by one leading and
+// one following space, as XML 4.4.8 requires for a parameter entity included
+// in the DTD; a frame included in an entity value is not (XML 4.4.5).
+func (in *sourceDTDExternalInput) push(frame sourceDTDExternalFrame, padded bool) error {
 	entities := 0
 	for _, f := range in.frames {
 		if f.declaration != nil && f.declaration == frame.declaration {
@@ -179,19 +191,18 @@ func (in *sourceDTDExternalInput) push(frame sourceDTDExternalFrame) error {
 	if err := in.account.Charge(validation.BudgetEvents, int64(len(frame.text))+3); err != nil {
 		return err
 	}
-	frame.text = " " + frame.text + " "
-	if frame.systemID != "" {
-		// The padding space is not part of the external entity's text.
+	frame.position = sourceXMLPosition{Line: 1, Column: 1}
+	if padded {
+		frame.text = " " + frame.text + " "
+		// The padding space is not part of the entity's text.
 		frame.position = sourceXMLPosition{ByteOffset: -1, Line: 1}
-	} else {
-		frame.position = sourceXMLPosition{Line: 1, Column: 1}
 	}
 	in.frames = append(in.frames, frame)
 	return nil
 }
 
 func (in *sourceDTDExternalInput) PushDTDParameter(declaration *sourceDTDDeclaration, _ sourceDTDOrigin) error {
-	return in.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + declaration.Name + ";", text: declaration.Replacement, declaration: declaration})
+	return in.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + declaration.Name + ";", text: declaration.Replacement, declaration: declaration}, true)
 }
 
 func (in *sourceDTDExternalInput) FinishDTDParameter() error {
@@ -205,25 +216,17 @@ func (in *sourceDTDExternalInput) FinishDTDParameter() error {
 
 func (in *sourceDTDExternalInput) DTDInParameter() bool { return true }
 
-// DTDParameterOrigin locates a declaration at the current position of the
-// innermost frame that holds the text of an external entity. Inside parameter
-// entity replacement text that is the position just after the reference.
+// DTDParameterOrigin locates a declaration at the current position in the
+// innermost external entity.
 func (in *sourceDTDExternalInput) DTDParameterOrigin() (sourceDTDOrigin, error) {
 	if err := in.ctx.Err(); err != nil {
 		return sourceDTDOrigin{}, err
 	}
 	origin := sourceDTDOrigin{Region: sourceDTDExternalSubsetRegion, ExternalMarkup: true}
-	for i := len(in.frames) - 1; i >= 0; i-- {
-		frame := in.frames[i]
-		if frame.systemID == "" {
-			continue
-		}
-		if frame.position.Line > 0 && frame.position.ByteOffset >= 0 {
-			origin.Entity = frame.systemID
-			origin.SpanAvailable = true
-			origin.Span.Start = frame.position
-		}
-		break
+	if file := in.file(); file.systemID != "" && file.position.Line > 0 && file.position.ByteOffset >= 0 {
+		origin.Entity = file.systemID
+		origin.SpanAvailable = true
+		origin.Span.Start = file.position
 	}
 	return origin, nil
 }
@@ -249,32 +252,66 @@ func sourceDTDExternalText(data []byte) (string, error) {
 	text := strings.ReplaceAll(string(data), "\r\n", "\n")
 	text = strings.ReplaceAll(text, "\r", "\n")
 	if rest, found := strings.CutPrefix(text, "<?xml"); found && rest != "" && sourceXMLSpace(rune(rest[0])) {
-		end := strings.Index(rest, "?>")
-		if end < 0 {
-			return "", errors.New("unterminated text declaration in external DTD")
+		body, err := sourceDTDTextDeclaration(rest)
+		if err != nil {
+			return "", err
 		}
-		declaration := rest[:end]
-		encoding := ""
-		if i := strings.Index(declaration, "encoding"); i >= 0 {
-			value := strings.TrimLeft(declaration[i+len("encoding"):], " \t\n")
-			if value, found = strings.CutPrefix(value, "="); found {
-				value = strings.TrimLeft(value, " \t\n")
-				if value != "" && (value[0] == '"' || value[0] == '\'') {
-					if close := strings.IndexByte(value[1:], value[0]); close >= 0 {
-						encoding = value[1 : close+1]
-					}
-				}
-			}
-		}
-		if encoding == "" {
-			return "", errors.New("text declaration in external DTD requires an encoding")
-		}
-		if normalizeCharset(encoding) != "utf8" {
-			return "", fmt.Errorf("external DTD encoding %q is not supported; only UTF-8 is", encoding)
-		}
-		text = rest[end+len("?>"):]
+		text = body
 	}
 	return text, nil
+}
+
+// sourceDTDTextDeclaration consumes the remainder of a text declaration:
+// TextDecl ::= '<?xml' VersionInfo? EncodingDecl S? '?>'. It returns the text
+// after it and requires UTF-8.
+func sourceDTDTextDeclaration(rest string) (string, error) {
+	space := func() bool {
+		n := len(rest)
+		rest = strings.TrimLeft(rest, " \t\n")
+		return len(rest) != n
+	}
+	pseudo := func(name string) (string, bool) {
+		saved := rest
+		if !space() || !strings.HasPrefix(rest, name) {
+			rest = saved
+			return "", false
+		}
+		rest = rest[len(name):]
+		space()
+		if !strings.HasPrefix(rest, "=") {
+			rest = saved
+			return "", false
+		}
+		rest = rest[1:]
+		space()
+		if rest == "" || rest[0] != '"' && rest[0] != '\'' {
+			rest = saved
+			return "", false
+		}
+		end := strings.IndexByte(rest[1:], rest[0])
+		if end < 0 {
+			rest = saved
+			return "", false
+		}
+		value := rest[1 : end+1]
+		rest = rest[end+2:]
+		return value, true
+	}
+	if version, ok := pseudo("version"); ok && !strings.HasPrefix(version, "1.") {
+		return "", fmt.Errorf("unsupported XML version %q in external DTD text declaration", version)
+	}
+	encoding, ok := pseudo("encoding")
+	if !ok {
+		return "", errors.New("text declaration in external DTD requires an encoding")
+	}
+	if normalizeCharset(encoding) != "utf8" {
+		return "", fmt.Errorf("external DTD encoding %q is not supported; only UTF-8 is", encoding)
+	}
+	space()
+	if !strings.HasPrefix(rest, "?>") {
+		return "", errors.New("malformed text declaration in external DTD")
+	}
+	return rest[2:], nil
 }
 
 // sourceDTDPrepared is the immutable result of reading one external subset.
@@ -296,12 +333,21 @@ type sourceDTDResolver struct {
 	source DTDSource
 }
 
+// newSourceDTDResolver ignores a nil or typed-nil source, like the dictionary
+// sources, rather than calling a method on it.
 func newSourceDTDResolver(options *DTDOptions) *sourceDTDResolver {
 	resolver := &sourceDTDResolver{}
-	if options != nil {
+	if options != nil && !dictionaryNil(options.Source) {
 		resolver.source = options.Source
 	}
 	return resolver
+}
+
+// sourceDTDEntity is one resolved external entity.
+type sourceDTDEntity struct {
+	name, systemID, text string
+	bundled              bool
+	size                 int64
 }
 
 var bundledDTDPrepared sync.Map // file name -> *bundledDTDPreparation
@@ -312,11 +358,11 @@ type bundledDTDPreparation struct {
 	err      error
 }
 
-// prepare returns the external subset named by a DOCTYPE, or nil when no
-// source or bundled DTD provides it. Errors are DTD source or syntax failures.
-func (r *sourceDTDResolver) prepare(ctx context.Context, publicID, systemID string) (*sourceDTDPrepared, error) {
+// root resolves the DOCTYPE external subset: the caller source first, then
+// the bundled DTDs. found is false when neither provides it.
+func (r *sourceDTDResolver) root(ctx context.Context, publicID, systemID string) (sourceDTDEntity, bool, error) {
 	if r == nil || publicID == "" && systemID == "" {
-		return nil, nil
+		return sourceDTDEntity{}, false, nil
 	}
 	if r.source != nil {
 		data, err := r.source.OpenDTD(ctx, DTDRequest{PublicID: publicID, SystemID: systemID})
@@ -324,79 +370,157 @@ func (r *sourceDTDResolver) prepare(ctx context.Context, publicID, systemID stri
 		case err == nil:
 			text, textErr := sourceDTDExternalText(data)
 			if textErr != nil {
-				return nil, &DTDError{PublicID: publicID, SystemID: systemID, Err: textErr}
+				return sourceDTDEntity{}, false, &DTDError{PublicID: publicID, SystemID: systemID, Err: textErr}
 			}
-			prepared, err := prepareSourceDTD(ctx, r, systemID, systemID, text, true)
-			if err != nil {
-				return nil, &DTDError{PublicID: publicID, SystemID: systemID, Err: err}
-			}
-			return prepared, nil
+			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data))}, true, nil
 		case errors.Is(err, ErrDTDNotFound):
 		case ctx.Err() != nil:
-			return nil, ctx.Err()
+			return sourceDTDEntity{}, false, ctx.Err()
 		default:
-			return nil, &DTDError{PublicID: publicID, SystemID: systemID, Err: err}
+			return sourceDTDEntity{}, false, &DTDError{PublicID: publicID, SystemID: systemID, Err: err}
 		}
 	}
-	name, text, ok := bundledDTD(publicID, systemID, "")
+	file, ok := bundledDTDLookup(publicID, systemID, "")
 	if !ok {
-		return nil, nil
+		return sourceDTDEntity{}, false, nil
 	}
-	entry, _ := bundledDTDPrepared.LoadOrStore(name, &bundledDTDPreparation{})
-	preparation := entry.(*bundledDTDPreparation)
+	return sourceDTDEntity{name: file, systemID: bundledDTDSystemPrefixes[0] + file, bundled: true}, true, nil
+}
+
+// prepare returns the immutable external subset named by a DOCTYPE, or nil
+// when no source or bundled DTD provides it. A bundled closure is prepared
+// once per process; a caller-supplied one for every call.
+func (r *sourceDTDResolver) prepare(ctx context.Context, publicID, systemID string) (*sourceDTDPrepared, error) {
+	entity, found, err := r.root(ctx, publicID, systemID)
+	if err != nil || !found {
+		return nil, err
+	}
+	if !entity.bundled {
+		prepared, err := prepareSourceDTD(ctx, r, entity, false)
+		if err != nil {
+			return nil, &DTDError{PublicID: publicID, SystemID: systemID, Err: err}
+		}
+		return prepared, nil
+	}
+	value, _ := bundledDTDPrepared.LoadOrStore(entity.name, &bundledDTDPreparation{})
+	preparation := value.(*bundledDTDPreparation)
 	preparation.once.Do(func() {
 		// The bundled closure is static, so its one preparation is not tied to
 		// any caller's cancellation.
-		preparation.prepared, preparation.err = prepareSourceDTD(context.Background(), &sourceDTDResolver{}, name, bundledDTDSystemPrefixes[0]+name, text, false)
+		text, err := bundledDTDEntityText(entity.name)
+		if err != nil {
+			preparation.err = err
+			return
+		}
+		entity.text, entity.size = text, int64(len(text))
+		preparation.prepared, preparation.err = prepareSourceDTD(context.Background(), &sourceDTDResolver{}, entity, true)
 	})
 	if preparation.err != nil {
-		return nil, fmt.Errorf("musicxml: bundled DTD %s: %w", name, preparation.err)
+		return nil, &DTDError{PublicID: publicID, SystemID: systemID, Err: preparation.err}
 	}
 	return preparation.prepared, nil
 }
 
-// parameter resolves an external parameter entity. Entities referenced from a
-// caller-supplied subset ask the caller first; bundled closures never do.
-func (r *sourceDTDResolver) parameter(ctx context.Context, d *sourceDTDDeclaration, base string, caller bool) (text, systemID string, found bool, size int64, err error) {
-	if caller && r.source != nil {
-		data, sourceErr := r.source.OpenDTD(ctx, DTDRequest{PublicID: d.PublicID, SystemID: d.SystemID, BaseSystemID: base})
+// parameter resolves an external parameter entity relative to base, the
+// system identifier of the entity containing its declaration (XML 4.2.2).
+// Entities of a caller-supplied subset ask the caller first; bundled
+// closures never do.
+func (r *sourceDTDResolver) parameter(ctx context.Context, d *sourceDTDDeclaration, base string, bundledOnly bool) (sourceDTDEntity, bool, error) {
+	if !bundledOnly && r.source != nil {
+		data, err := r.source.OpenDTD(ctx, DTDRequest{PublicID: d.PublicID, SystemID: d.SystemID, BaseSystemID: base})
 		switch {
-		case sourceErr == nil:
-			text, err = sourceDTDExternalText(data)
-			if err != nil {
-				return "", "", false, 0, &DTDError{PublicID: d.PublicID, SystemID: d.SystemID, Err: err}
+		case err == nil:
+			text, textErr := sourceDTDExternalText(data)
+			if textErr != nil {
+				return sourceDTDEntity{}, false, &DTDError{PublicID: d.PublicID, SystemID: d.SystemID, Err: textErr}
 			}
-			return text, sourceDTDJoinSystemID(base, d.SystemID), true, int64(len(data)), nil
-		case errors.Is(sourceErr, ErrDTDNotFound):
+			systemID := sourceDTDJoinSystemID(base, d.SystemID)
+			return sourceDTDEntity{name: systemID, systemID: systemID, text: text, size: int64(len(data))}, true, nil
+		case errors.Is(err, ErrDTDNotFound):
 		case ctx.Err() != nil:
-			return "", "", false, 0, ctx.Err()
+			return sourceDTDEntity{}, false, ctx.Err()
 		default:
-			return "", "", false, 0, &DTDError{PublicID: d.PublicID, SystemID: d.SystemID, Err: sourceErr}
+			return sourceDTDEntity{}, false, &DTDError{PublicID: d.PublicID, SystemID: d.SystemID, Err: err}
 		}
 	}
-	name, text, ok := bundledDTD(d.PublicID, d.SystemID, base)
+	file, ok := bundledDTDLookup(d.PublicID, d.SystemID, base)
 	if !ok {
-		return "", "", false, 0, nil
+		return sourceDTDEntity{}, false, nil
 	}
-	return text, bundledDTDSystemPrefixes[0] + name, true, int64(len(text)), nil
+	text, err := bundledDTDEntityText(file)
+	if err != nil {
+		return sourceDTDEntity{}, false, err
+	}
+	return sourceDTDEntity{name: file, systemID: bundledDTDSystemPrefixes[0] + file, text: text, bundled: true, size: int64(len(text))}, true, nil
 }
 
+// sourceDTDJoinSystemID resolves a relative system identifier against an
+// absolute URI base (RFC 3986), or against a relative base path.
 func sourceDTDJoinSystemID(base, systemID string) string {
-	if base == "" || systemID == "" || strings.Contains(systemID, ":") || strings.HasPrefix(systemID, "/") {
+	if base == "" || systemID == "" {
 		return systemID
 	}
-	if i := strings.LastIndexByte(base, '/'); i >= 0 {
-		return base[:i+1] + path.Clean(systemID)
+	if reference, err := url.Parse(systemID); err == nil {
+		if reference.IsAbs() {
+			return systemID
+		}
+		if parsed, err := url.Parse(base); err == nil && parsed.IsAbs() {
+			return parsed.ResolveReference(reference).String()
+		}
 	}
-	return systemID
+	if strings.HasPrefix(systemID, "/") {
+		return systemID
+	}
+	return path.Clean(path.Join(path.Dir(base), systemID))
+}
+
+// sourceDTDExternalError keeps an external DTD's syntax error from matching
+// *xml.SyntaxError, which identifies a defect in the document itself.
+func sourceDTDExternalError(err error) error {
+	var syntax *xml.SyntaxError
+	if errors.As(err, &syntax) {
+		if syntax.Line > 0 {
+			return fmt.Errorf("%s (line %d)", syntax.Msg, syntax.Line)
+		}
+		return errors.New(syntax.Msg)
+	}
+	return err
+}
+
+// parseExternalSubset parses one external subset into store, whose account
+// also charges the parameter-entity replacement work. bundledOnly closures
+// never consult the caller source.
+func parseExternalSubset(ctx context.Context, store *sourceDTDStore, resolver *sourceDTDResolver, root sourceDTDEntity, bundledOnly bool) (int64, error) {
+	size := root.size
+	input := newSourceDTDExternalInput(ctx, store.account, root.name, root.systemID, root.text)
+	p := sourceDTDParser{input: input, store: store, external: true}
+	p.resolveParameter = func(d *sourceDTDDeclaration) (sourceDTDEntity, bool, error) {
+		base := d.Origin.Entity
+		if base == "" && d.Origin.Region == sourceDTDExternalSubsetRegion {
+			base = input.systemID()
+		}
+		entity, found, err := resolver.parameter(ctx, d, base, bundledOnly)
+		if err == nil && found {
+			if err = store.account.Charge(validation.BudgetExternalBytes, entity.size); err != nil {
+				return sourceDTDEntity{}, false, err
+			}
+			size += entity.size
+		}
+		return entity, found, err
+	}
+	defer func() { store.release(int64(cap(p.parameters)) * int64(unsafe.Sizeof((*sourceDTDDeclaration)(nil)))) }()
+	p.subset()
+	if p.err == nil && (p.conditionalDepth != 0 || len(p.parameters) != 0) {
+		p.fail("unterminated conditional section or parameter entity")
+	}
+	return size, p.err
 }
 
 // prepareSourceDTD parses one external subset with a private account and
-// returns its binding declarations. An unresolved external parameter entity
-// leaves the closure incomplete, which is reported as unavailable (nil, nil
-// for bundled data would hide a packaging defect, so it is an error there).
-func prepareSourceDTD(ctx context.Context, resolver *sourceDTDResolver, name, systemID, text string, caller bool) (*sourceDTDPrepared, error) {
-	account, err := validation.NewBudgetAccount(sourceDTDExternalBudgets())
+// returns its binding declarations. Its bounded events also limit parameter
+// entity amplification in caller DTDs.
+func prepareSourceDTD(ctx context.Context, resolver *sourceDTDResolver, root sourceDTDEntity, bundledOnly bool) (*sourceDTDPrepared, error) {
+	account, err := validation.NewBudgetAccount(validation.Budgets{})
 	if err != nil {
 		return nil, err
 	}
@@ -406,29 +530,14 @@ func prepareSourceDTD(ctx context.Context, resolver *sourceDTDResolver, name, sy
 	}
 	defer store.Close()
 	store.parsed = true
-	prepared := &sourceDTDPrepared{bytes: int64(len(text))}
-	input := newSourceDTDExternalInput(ctx, account, name, systemID, text)
-	p := sourceDTDParser{input: input, store: store, external: true}
-	p.resolveParameter = func(d *sourceDTDDeclaration) (string, string, bool, error) {
-		text, system, found, size, err := resolver.parameter(ctx, d, input.systemID(), caller)
-		if err == nil && found {
-			if chargeErr := account.Charge(validation.BudgetExternalBytes, size); chargeErr != nil {
-				return "", "", false, chargeErr
-			}
-			prepared.bytes += size
-		}
-		return text, system, found, err
-	}
-	p.subset()
-	if p.err == nil && (p.conditionalDepth != 0 || len(p.parameters) != 0) {
-		p.fail("unterminated conditional section or parameter entity")
-	}
-	if p.err != nil {
-		return nil, p.err
+	size, err := parseExternalSubset(ctx, store, resolver, root, bundledOnly)
+	if err != nil {
+		return nil, sourceDTDExternalError(err)
 	}
 	if store.state.ParameterEntityUnread {
 		return nil, fmt.Errorf("external DTD references the unavailable parameter entity %q", store.state.FirstUnreadParameter)
 	}
+	prepared := &sourceDTDPrepared{bytes: size}
 	for _, d := range store.Declarations() {
 		if !d.Binding || d.Kind == sourceDTDParameterEntityDeclaration {
 			continue
@@ -438,7 +547,7 @@ func prepareSourceDTD(ctx context.Context, resolver *sourceDTDResolver, name, sy
 		prepared.declarations = append(prepared.declarations, record)
 		switch {
 		case record.Kind == sourceDTDGeneralEntityDeclaration && !record.External && record.Notation == "":
-			if r, size := utf8.DecodeRuneInString(record.Replacement); size == len(record.Replacement) && size > 0 && r != '<' && r != '&' && sourceXMLChar(r) {
+			if r, n := utf8.DecodeRuneInString(record.Replacement); n == len(record.Replacement) && n > 0 && r != '<' && r != '&' && sourceXMLChar(r) {
 				if prepared.characters == nil {
 					prepared.characters = make(map[string]rune)
 				}
@@ -465,6 +574,11 @@ func prepareSourceDTD(ctx context.Context, resolver *sourceDTDResolver, name, sy
 	return prepared, nil
 }
 
+// sourceDTDRecordBytes is the retained string storage of one declaration.
+func sourceDTDRecordBytes(d *sourceDTDDeclaration) int64 {
+	return int64(len(d.Name) + len(d.Element) + len(d.AttributeType) + len(d.RawType) + len(d.RawValue) + len(d.Replacement) + len(d.PublicID) + len(d.SystemID) + len(d.Notation) + len(d.Origin.Entity))
+}
+
 // importExternalSubset appends a prepared external subset after the internal
 // subset. The store's ordinary first-binding rule keeps internal declarations,
 // and an earlier unread parameter entity still cuts off later bindings.
@@ -474,17 +588,37 @@ func (s *sourceDTDStore) importExternalSubset(prepared *sourceDTDPrepared) error
 	}
 	for _, d := range prepared.declarations {
 		d.Origin.Region, d.Origin.ExternalMarkup = sourceDTDExternalSubsetRegion, true
+		if err := s.reserve(sourceDTDRecordBytes(&d)); err != nil {
+			return err
+		}
 		if err := s.add(d); err != nil {
 			return err
 		}
 	}
+	s.completeExternalSubset()
+	return nil
+}
+
+// completeExternalSubset recomputes declaration completeness once the
+// external subset has been read.
+func (s *sourceDTDStore) completeExternalSubset() {
 	s.state.ExternalSubsetUnread = false
 	complete := !s.failed && s.state.GrammarComplete && !s.state.ParameterEntityUnread
 	s.state.DeclarationsComplete = complete
 	s.state.AttributeDeclarationsComplete = complete
 	s.state.UnparsedEntitiesComplete = complete
 	s.refreshWellFormedness()
-	return nil
+}
+
+// declaresParameterEntity reports whether the internal subset bound a
+// parameter entity that the external subset could reference.
+func (s *sourceDTDStore) declaresParameterEntity() bool {
+	for _, d := range s.declarations {
+		if d.Kind == sourceDTDParameterEntityDeclaration && d.Binding {
+			return true
+		}
+	}
+	return false
 }
 
 // conditionalSection parses the remainder of <![ after the opening bracket.
@@ -514,6 +648,18 @@ func (p *sourceDTDParser) conditionalSection() {
 	}
 }
 
+// closeConditionalSection consumes ]]>. A section must close in the parameter
+// entity replacement text that opened it (XML 2.8, PE Between Declarations).
+func (p *sourceDTDParser) closeConditionalSection() {
+	if n := len(p.parameterConditionals); n != 0 && p.conditionalDepth <= p.parameterConditionals[n-1] {
+		p.fail("conditional section closes outside the parameter entity that opened it")
+		return
+	}
+	p.read()
+	p.expect(']')
+	p.expect('>')
+}
+
 // ignoredSection skips an IGNORE section, including nested sections, without
 // recognizing references or declarations (XML 3.4).
 func (p *sourceDTDParser) ignoredSection() {
@@ -536,82 +682,94 @@ func (p *sourceDTDParser) ignoredSection() {
 	}
 }
 
+// parameterText resolves the replacement text of a parameter entity
+// referenced in the external subset.
+func (p *sourceDTDParser) parameterText(name string) (*sourceDTDDeclaration, sourceDTDEntity, bool) {
+	d, known := p.store.Entity(name, true)
+	if !known {
+		p.unreadParameter(name)
+		return nil, sourceDTDEntity{}, false
+	}
+	if !d.External {
+		return d, sourceDTDEntity{name: "%" + name + ";", text: d.Replacement}, true
+	}
+	entity, found, err := p.resolveParameter(d)
+	if err != nil {
+		p.err = err
+		return nil, sourceDTDEntity{}, false
+	}
+	if !found {
+		p.unreadParameter(name)
+		return nil, sourceDTDEntity{}, false
+	}
+	return d, entity, true
+}
+
+// referenceName consumes name; after the percent sign of a parameter-entity
+// reference. Inside a markup declaration the reference is replaced, so it is
+// not captured; inside a literal it is part of the raw spelling.
+func (p *sourceDTDParser) referenceName(capture bool) string {
+	if !capture {
+		saved := p.capture
+		p.capture = nil
+		defer func() { p.capture = saved }()
+	}
+	name := p.name(sourceDTDNCName, true)
+	if p.err != nil {
+		return ""
+	}
+	if p.read() != ';' {
+		p.releaseBytes(int64(len(name)))
+		p.fail("parameter entity reference requires ;")
+		return ""
+	}
+	return name
+}
+
 // declarationReference replaces a parameter-entity reference recognized inside
 // a markup declaration of the external subset with its padded replacement.
 func (p *sourceDTDParser) declarationReference(input *sourceDTDExternalInput) {
-	saved := p.capture
-	p.capture = nil
-	defer func() { p.capture = saved }()
 	if _, err := input.Read(); err != nil {
 		p.err = err
 		return
 	}
-	name := p.name(sourceDTDNCName, true)
+	name := p.referenceName(false)
 	if p.err != nil {
 		return
 	}
 	defer p.releaseBytes(int64(len(name)))
-	if r, err := input.Read(); err != nil || r != ';' {
-		if err != nil {
-			p.err = err
-		} else {
-			p.fail("parameter entity reference requires ;")
-		}
+	d, entity, ok := p.parameterText(name)
+	if !ok {
+		p.fail("undeclared or unavailable parameter entity in external DTD declaration")
 		return
 	}
-	d, known := p.store.Entity(name, true)
-	if !known {
-		p.unreadParameter(name)
-		p.fail("undeclared parameter entity in external DTD declaration")
-		return
-	}
-	text := d.Replacement
-	if d.External {
-		resolved, _, found, err := p.resolveParameter(d)
-		if err != nil {
-			p.err = err
-			return
-		}
-		if !found {
-			p.unreadParameter(name)
-			p.fail("unavailable external parameter entity in DTD declaration")
-			return
-		}
-		text = resolved
-	}
-	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", text: text, declaration: d})
+	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d}, true)
 }
 
 // literalParameter includes a parameter entity's replacement text in an entity
-// value literal without padding (XML 4.4.5).
-func (p *sourceDTDParser) literalParameter(replacement *sourceDTDText) {
-	name := p.name(sourceDTDNCName, true)
-	p.expect(';')
+// value literal: it is processed in place of the reference, unpadded, so its
+// own references are recognized and its quotes do not end the literal (XML
+// 4.4.5). The percent sign has already been read.
+func (p *sourceDTDParser) literalParameter(input *sourceDTDExternalInput) {
+	name := p.referenceName(true)
 	if p.err != nil {
 		return
 	}
 	defer p.releaseBytes(int64(len(name)))
-	d, known := p.store.Entity(name, true)
-	if !known {
-		p.unreadParameter(name)
+	d, entity, ok := p.parameterText(name)
+	if !ok {
 		return
 	}
-	text := d.Replacement
-	if d.External {
-		resolved, _, found, err := p.resolveParameter(d)
-		if err != nil {
-			p.err = err
-			return
-		}
-		if !found {
-			p.unreadParameter(name)
-			return
-		}
-		text = resolved
+	p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalInline, name: "%" + name + ";", systemID: entity.externalSystemID(d), text: entity.text, declaration: d}, false)
+}
+
+// externalSystemID is the frame identity for an external parameter entity's
+// text; internal replacement text has none.
+func (e sourceDTDEntity) externalSystemID(d *sourceDTDDeclaration) string {
+	if d != nil && d.External {
+		return e.systemID
 	}
-	if replacement.store != nil {
-		p.err = replacement.append([]byte(text))
-	}
+	return ""
 }
 
 func (p *sourceDTDParser) unreadParameter(name string) {
@@ -631,7 +789,7 @@ func (p *sourceDTDParser) pushExternalParameter(d *sourceDTDDeclaration) bool {
 	if !ok || p.resolveParameter == nil {
 		return false
 	}
-	text, systemID, found, err := p.resolveParameter(d)
+	entity, found, err := p.resolveParameter(d)
 	if err != nil {
 		p.err = err
 		return true
@@ -645,10 +803,11 @@ func (p *sourceDTDParser) pushExternalParameter(d *sourceDTDDeclaration) bool {
 		return true
 	}
 	p.parameters = next
-	if p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + d.Name + ";", systemID: systemID, text: text, declaration: d}); p.err != nil {
+	if p.err = input.push(sourceDTDExternalFrame{kind: sourceDTDExternalDeclaration, name: "%" + d.Name + ";", systemID: entity.systemID, text: entity.text, declaration: d}, true); p.err != nil {
 		return true
 	}
 	p.parameters = append(p.parameters, d)
+	p.parameterConditionals = append(p.parameterConditionals, p.conditionalDepth)
 	return true
 }
 
@@ -660,19 +819,46 @@ func (r *sourceXMLTokenReader) importExternalDTD() error {
 	if r.dtdResolver == nil || !state.ExternalSubsetUnread {
 		return nil
 	}
-	prepared, err := r.dtdResolver.prepare(r.cursor.ctx, state.PublicID, state.SystemID)
-	if err != nil || prepared == nil {
+	if !r.dtdStore.declaresParameterEntity() {
+		prepared, err := r.dtdResolver.prepare(r.cursor.ctx, state.PublicID, state.SystemID)
+		if err != nil || prepared == nil {
+			return err
+		}
+		return r.dtdStore.importExternalSubset(prepared)
+	}
+	// Internal parameter entities can customize the external subset, so it is
+	// parsed here with them in scope, charged to the document account.
+	root, found, err := r.dtdResolver.root(r.cursor.ctx, state.PublicID, state.SystemID)
+	if err != nil || !found {
 		return err
 	}
-	return r.dtdStore.importExternalSubset(prepared)
+	if root.bundled {
+		if root.text, err = bundledDTDEntityText(root.name); err != nil {
+			return &DTDError{PublicID: state.PublicID, SystemID: state.SystemID, Err: err}
+		}
+		root.size = int64(len(root.text))
+	}
+	if err := r.account.Charge(validation.BudgetExternalBytes, root.size); err != nil {
+		return err
+	}
+	if _, err := parseExternalSubset(r.cursor.ctx, r.dtdStore, r.dtdResolver, root, root.bundled); err != nil {
+		var resource *validation.ResourceError
+		if errors.As(err, &resource) || r.cursor.ctx.Err() != nil {
+			return err
+		}
+		return &DTDError{PublicID: state.PublicID, SystemID: state.SystemID, Err: sourceDTDExternalError(err)}
+	}
+	r.dtdStore.completeExternalSubset()
+	return nil
 }
 
 // legacyExternalDTDApplies reports whether the grammar-only path may use its
-// external subset. An internal subset that the grammar-only path does not
-// interpret (declarations of the given kind or parameter-entity references)
-// could override it, so it keeps the historical unavailable result.
-func (r *sourceXMLTokenReader) legacyExternalDTDApplies(internalDeclarations bool) bool {
-	return !r.internalDTD && r.dtdResolver != nil && r.dtd.ExternalSubset && !internalDeclarations && !r.dtd.HasParameterReferences
+// external subset. That path does not interpret an internal subset, so any
+// internal entity or attribute-list declaration or parameter-entity reference,
+// which could override the external subset, keeps the historical result.
+func (r *sourceXMLTokenReader) legacyExternalDTDApplies() bool {
+	return !r.internalDTD && r.dtdResolver != nil && r.dtd.ExternalSubset &&
+		!r.dtd.HasEntityDeclarations && !r.dtd.HasAttributeDeclarations && !r.dtd.HasParameterReferences
 }
 
 func (r *sourceXMLTokenReader) legacyExternalDTD() (*sourceDTDPrepared, error) {
@@ -684,10 +870,11 @@ func (r *sourceXMLTokenReader) legacyExternalDTD() (*sourceDTDPrepared, error) {
 }
 
 // externalCharacterEntity expands a single-character general entity declared
-// by the external subset on the grammar-only path. Attribute normalization
-// turns a whitespace replacement into a space (XML 3.3.3).
+// by the external subset on the grammar-only path. A standalone document may
+// not use it (XML 4.1, Entity Declared). Attribute normalization turns a
+// whitespace replacement into a space (XML 3.3.3).
 func (r *sourceXMLTokenReader) externalCharacterEntity(name string, context sourceXMLEntityContext) (rune, bool, error) {
-	if !r.legacyExternalDTDApplies(r.dtd.HasEntityDeclarations) {
+	if !r.legacyExternalDTDApplies() || r.standalone == sourceDTDStandaloneYes {
 		return 0, false, nil
 	}
 	prepared, err := r.legacyExternalDTD()
@@ -711,7 +898,7 @@ func (r *sourceXMLTokenReader) externalCharacterEntity(name string, context sour
 // DTD resolution error is kept for unboundPrefix, which reports it only if a
 // binding is actually missing.
 func (r *sourceXMLTokenReader) applyExternalNamespaceDefaults(element string, attributes []xml.Attr, metadata []sourceXMLAttribute) ([]xml.Attr, []sourceXMLAttribute) {
-	if !r.legacyExternalDTDApplies(r.dtd.HasAttributeDeclarations) {
+	if !r.legacyExternalDTDApplies() {
 		return attributes, metadata
 	}
 	prepared, _ := r.legacyExternalDTD()

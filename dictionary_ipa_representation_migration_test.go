@@ -79,7 +79,7 @@ func TestIPARepresentationExactCatalogMigrationAndRuleRevision(t *testing.T) {
 		before, after string
 	}{
 		{newDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphDictionaries, ProfileMXLSourceDictionaries, ProfileMXLModelDictionaries}, "14e5cdb4bc6b9fd2b7315f0059255fd8fc14fd43217e46238b1b64fd503b1333", "f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44"},
-		{dtdDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphInternalDTDDictionaries, ProfileMXLSourceInternalDTDDictionaries, ProfileMXLModelInternalDTDDictionaries}, "4ecfcba585d635aa3a67ae6748985bb63c2b0482e6257cff7ccf39220acad319", "3aa084524bb5ae9020c4801afe10c2b617f3be48f5e003018379808023bb53f5"},
+		{dtdDictionaryPackageAssessmentCatalog, []validation.ProfileID{ProfileResourceGraphInternalDTDDictionaries, ProfileMXLSourceInternalDTDDictionaries, ProfileMXLModelInternalDTDDictionaries}, "4ecfcba585d635aa3a67ae6748985bb63c2b0482e6257cff7ccf39220acad319", "69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648"},
 	} {
 		c, err := tc.factory()
 		if err != nil {

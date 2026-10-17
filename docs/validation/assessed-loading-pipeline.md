@@ -78,11 +78,12 @@ fetched. An unrecognized external subset still cannot be accepted, including
 with nil or empty assessment options, and raising budgets does not remove that
 authority limit. See [External DTD subsets](../../API.md#external-dtd-subsets).
 
-With the bundled DTDs, default assessed loading accepts 140 of the 153 score and
-opus files in `testdata/official` and the MusicXML test suite, including the
-148 test-suite files' common external DOCTYPE. The remaining files report genuine
-violations, unestablished semantic context or resource limits, not unread-DTD
-evidence. The history below records the state before the bundled DTDs.
+With the bundled DTDs, default assessed loading accepted 140 of the 154 score and
+opus files in `testdata/official` and the MusicXML test suite when measured for
+this change, including the 148 test-suite files' common external DOCTYPE;
+`TestAssessedLoadingCorpusMeasurement` keeps that floor. The remaining files
+report genuine violations, unestablished semantic context or resource limits,
+not unread-DTD evidence. The history below records the state before the bundled DTDs.
 
 In the [PR 46 corpus review][review-corpus] of head `7e7126e9405e0731e6cefa713e801515b4874703`,
 the reviewer reported that default loading changed from 153 of 157 repository

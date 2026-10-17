@@ -90,7 +90,7 @@ func (r *sourceXMLTokenReader) exportEntityDeclarations(ctx context.Context, doc
 			return err
 		}
 		if d.Origin.SpanAvailable {
-			if err := add(int64(unsafe.Sizeof(validation.SourcePosition{}))); err != nil {
+			if err := add(int64(unsafe.Sizeof(validation.SourcePosition{})) + int64(len(d.Origin.Entity))); err != nil {
 				return err
 			}
 		}
@@ -124,11 +124,13 @@ func (r *sourceXMLTokenReader) exportEntityDeclarations(ctx context.Context, doc
 			return err
 		}
 		fact := validation.SourceEntityDeclaration{Name: strings.Clone(d.Name), Unparsed: d.Notation != "", Sequence: uint64(d.Origin.Sequence), Origin: validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: "source-entity-declaration-origin-unavailable"}}
-		if d.Origin.SpanAvailable && d.Origin.Entity != "" {
-			fact.Origin = validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: sourceExternalDTDLocation(ownedID, strings.Clone(d.Origin.Entity), d.Origin.Span.Start)}
-		} else if d.Origin.SpanAvailable {
+		switch {
+		case !d.Origin.SpanAvailable:
+		case d.Origin.Entity == "":
 			p := d.Origin.Span.Start
-			fact.Origin = validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: validation.Location{Target: validation.TargetSource, DocumentID: ownedID, Entry: ownedEntry, Position: &validation.SourcePosition{ByteOffset: p.ByteOffset, Line: p.Line, Column: p.Column, CoordinateSpace: "original-bytes"}}}
+			fact.Origin = validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: validation.Location{Target: validation.TargetSource, DocumentID: ownedID, Entry: ownedEntry, Position: &validation.SourcePosition{ByteOffset: p.ByteOffset, Line: p.Line, Column: p.Column, CoordinateSpace: validation.CoordinateSpaceOriginalBytes}}}
+		case len(d.Origin.Entity) <= sourceDTDMaxEntityIdentifierBytes:
+			fact.Origin = validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: sourceExternalDTDLocation(ownedID, strings.Clone(d.Origin.Entity), d.Origin.Span.Start)}
 		}
 		facts.Declarations = append(facts.Declarations, fact)
 	}

@@ -386,7 +386,7 @@ func sourceLexeme(value string) validation.Scalar {
 	return validation.Scalar{Lexeme: validation.Evidence[string]{State: validation.EvidenceKnown, Value: value}, Value: validation.Evidence[validation.Atomic]{State: validation.EvidenceUnknown, Reason: "schema-binding-pending"}}
 }
 func (o *sourceFactObserver) location(path string, position sourceXMLPosition) validation.Location {
-	return validation.Location{Target: validation.TargetSource, DocumentID: o.documentID, Entry: o.entry, Path: path, Position: &validation.SourcePosition{ByteOffset: position.ByteOffset, Line: position.Line, Column: position.Column, CoordinateSpace: "original-bytes"}}
+	return validation.Location{Target: validation.TargetSource, DocumentID: o.documentID, Entry: o.entry, Path: path, Position: &validation.SourcePosition{ByteOffset: position.ByteOffset, Line: position.Line, Column: position.Column, CoordinateSpace: validation.CoordinateSpaceOriginalBytes}}
 }
 
 // The last source location outlives its closing frame when a mapper reports a

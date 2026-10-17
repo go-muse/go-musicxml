@@ -105,7 +105,7 @@ func (r *sourceXMLTokenReader) attributeValue(quote rune, owner *sourceXMLEntity
 	}
 }
 func (r *sourceXMLTokenReader) dtdAttributeValue(raw string, declaration sourceDTDOrigin) (string, error) {
-	input := sourceXMLEntityInput{Replacement: raw, Declaration: declaration.Span, DeclarationAvailable: declaration.SpanAvailable, ExternalMarkup: declaration.ExternalMarkup}
+	input := sourceXMLEntityInput{Replacement: raw, Declaration: declaration.Span, DeclarationAvailable: declaration.SpanAvailable, DeclarationEntity: declaration.Entity, ExternalMarkup: declaration.ExternalMarkup}
 	if err := r.pushEntity(input, sourceEntityAttribute, r.metadata.Span); err != nil {
 		return "", err
 	}

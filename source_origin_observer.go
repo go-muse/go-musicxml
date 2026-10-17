@@ -123,6 +123,9 @@ func (o *sourceFactObserver) sourceDeclarationSite(entity string, span sourceXML
 	if entity == "" {
 		return o.sourceOriginSite(span)
 	}
+	if len(entity) > sourceDTDMaxEntityIdentifierBytes {
+		return validation.Evidence[validation.Location]{State: validation.EvidenceUnknown, Reason: "source-origin-external-entity-identifier-unavailable"}
+	}
 	return validation.Evidence[validation.Location]{State: validation.EvidenceKnown, Value: sourceExternalDTDLocation(o.documentID, entity, span.Start)}
 }
 

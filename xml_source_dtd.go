@@ -64,7 +64,10 @@ type sourceDTDParser struct {
 	// recognition inside quoted literals.
 	external, inLiteral bool
 	conditionalDepth    int
-	resolveParameter    func(*sourceDTDDeclaration) (text, systemID string, found bool, err error)
+	// parameterConditionals records conditionalDepth at each entered
+	// declaration-level parameter entity, parallel to parameters.
+	parameterConditionals []int
+	resolveParameter      func(*sourceDTDDeclaration) (sourceDTDEntity, bool, error)
 }
 
 // parseSourceDTD starts immediately after the literal <!DOCTYPE. It consumes
@@ -118,6 +121,13 @@ func (p *sourceDTDParser) subset() {
 				return
 			}
 			d := p.parameters[len(p.parameters)-1]
+			if n := len(p.parameterConditionals); p.external && n != 0 {
+				if p.parameterConditionals[n-1] != p.conditionalDepth {
+					p.fail("conditional section is not closed in the parameter entity that opened it")
+					return
+				}
+				p.parameterConditionals = p.parameterConditionals[:n-1]
+			}
 			if p.err = input.FinishDTDParameter(); p.err != nil {
 				return
 			}
@@ -134,9 +144,7 @@ func (p *sourceDTDParser) subset() {
 					p.fail("unexpected ] in external DTD subset")
 					return
 				}
-				p.read()
-				p.expect(']')
-				p.expect('>')
+				p.closeConditionalSection()
 				return
 			}
 			if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
@@ -180,6 +188,9 @@ func (p *sourceDTDParser) subset() {
 					return
 				}
 				p.parameters = append(p.parameters, declaration)
+				if p.external {
+					p.parameterConditionals = append(p.parameterConditionals, p.conditionalDepth)
+				}
 				continue
 			}
 			if p.external && known && declaration.External && declaration.Notation == "" && p.pushExternalParameter(declaration) {
@@ -556,13 +567,22 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 		p.fail("expected a quoted DTD literal")
 		return "", ""
 	}
-	var raw, replacement sourceDTDText
+	var raw, replacement, included sourceDTDText
 	if p.store != nil {
-		raw.store, replacement.store = p.store, p.store
+		raw.store, replacement.store, included.store = p.store, p.store, p.store
 		p.capture = &raw
 		defer raw.close()
 		defer replacement.close()
+		defer included.close()
 		defer func() { p.capture = nil }()
+	}
+	// In the external subset a literal can contain the unpadded text of a
+	// parameter entity (XML 4.4.5). Only the literal's own frame can close it,
+	// and only its own characters form the raw lexical spelling.
+	external, _ := p.input.(*sourceDTDExternalInput)
+	owner := 0
+	if p.external && external != nil {
+		owner = external.depth()
 	}
 	// The grammar-only path retains a bounded external identifier so plain
 	// decoding can locate a bundled or caller-supplied external subset.
@@ -574,10 +594,19 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 	}
 	for p.err == nil {
 		r := p.peek()
-		if r == quote {
+		own := owner == 0 || external.depth() == owner
+		if r == quote && own {
 			p.capture = nil
 			p.read()
 			break
+		}
+		if p.store != nil {
+			if own {
+				p.capture = &raw
+			} else {
+				included.value = included.value[:0]
+				p.capture = &included
+			}
 		}
 		if keepIdentifier {
 			if len(identifier)+utf8.RuneLen(r) > sourceDTDMaxIdentifierBytes {
@@ -605,8 +634,8 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 					p.literalGeneralReferences = true
 				}
 			} else if kind == sourceDTDEntityLiteral && r == '%' {
-				if p.external && p.store != nil {
-					p.literalParameter(&replacement)
+				if p.external && external != nil && p.store != nil {
+					p.literalParameter(external)
 					continue
 				}
 				p.parameterDeclarationReference()
@@ -620,8 +649,10 @@ func (p *sourceDTDParser) quoted(kind sourceDTDQuotedKind) (rawValue, replacemen
 			// recognition context. RawValue separately preserves the lexical spelling.
 			if numeric {
 				p.err = replacement.appendRune(decoded)
-			} else {
+			} else if own {
 				p.err = replacement.append(raw.value[start:])
+			} else {
+				p.err = replacement.append(included.value)
 			}
 		}
 	}
@@ -1011,6 +1042,10 @@ func sourceDTDPublicChar(r rune) bool {
 // declaration origin. PushDTDParameter needs only the physical use span. A PE
 // reference's active ancestry is captured later for declarations it introduces.
 func (p *sourceDTDParser) referenceOrigin() sourceDTDOrigin {
+	if input, ok := p.input.(*sourceDTDExternalInput); ok {
+		origin, _ := input.DTDParameterOrigin()
+		return origin
+	}
 	origin := sourceDTDOrigin{Region: sourceDTDInternalSubset, AncestryComplete: true}
 	if input, ok := p.input.(sourceDTDParameterInput); ok && input.DTDInParameter() {
 		return sourceDTDOrigin{Region: sourceDTDParameterEntityRegion, ExternalMarkup: true}

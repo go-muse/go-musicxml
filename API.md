@@ -246,35 +246,63 @@ resolved, never fetched:
 - Otherwise an official system identifier `http(s)://www.musicxml.org/dtds/`
   (or `musicxml.org/dtds/`) selects the file of the same name, which is the
   current 4.0 version.
-- `DTDOptions.Source`, set through `DecodeOptions.DTD`, `MXLOptions.DTD` or
-  `AssessmentOptions.DTD`, is asked first. Returning `ErrDTDNotFound` for the
+- `DTDOptions.Source` is asked first. Returning `ErrDTDNotFound` for the
   DOCTYPE external subset selects the bundled closure, including its modules.
   When the source supplies the external subset, each external parameter entity
-  it references is requested from the source and then from the bundled files.
-  Any other source error is reported as a `*DTDError`, which matches
-  `ErrDTDUnavailable`, as do caller bytes that are not a well-formed UTF-8
-  external subset. One caller entity may not exceed 16 MiB.
+  it references is requested from the source and then from the bundled files;
+  `DTDRequest.BaseSystemID` names the entity that contains its declaration, for
+  resolving a relative system identifier. Any other source error is reported as
+  a `*DTDError`, which matches `ErrDTDUnavailable`, as do caller bytes that are
+  not a well-formed UTF-8 external subset. A `*DTDError` never matches
+  `*xml.SyntaxError`. One caller entity may not exceed 16 MiB. A typed-nil
+  source is ignored.
 - Any other identifier leaves the external subset unread, as before.
+
+The source is configured through `DecodeOptions.DTD` for ordinary and assessed
+decoding, `MXLOptions.DTD` for MXL decoding and `AssessmentOptions.DTD` for
+assessments. Where two of them apply, the narrower one wins:
+`DecodeAssessmentOptions.Decode.DTD` over `AssessmentOptions.DTD`, and
+`MXLAssessmentOptions.Graph.DTD` over `MXLAssessmentOptions.MXL.DTD`. The
+bundled closure is parsed once per process; an external subset supplied by the
+source is parsed for every document that names it.
 
 Ordinary decoding (`Decode`, the typed decoders, MXL decoding and opus link
 resolution) uses a resolved external subset for two things only: general
 entities whose replacement text is one character, such as the ISO Latin
 `&eacute;` of the MusicXML DTDs, and defaulted namespace declarations, such as
 the `xmlns:xlink` default that lets an opus omit its declaration. Other DTD
-attribute defaults are not added to the model, so a document that decoded before
-decodes to the same tokens. An internal subset with entity declarations,
-attribute-list declarations or parameter-entity references keeps the previous
-behaviour, because ordinary decoding does not interpret it. A caller source
-error is reported only when one of these features actually needs the DTD.
+attribute defaults are not added to the model. A document that decoded before
+decodes to the same tokens, with one exception: a defaulted namespace
+declaration now applies to an element that omits it even where an ancestor
+binds the same prefix to another namespace, as XML 3.3.2 requires. With a
+resolved external subset, a prefix that neither the document nor the DTD binds
+is reported as an `*xml.SyntaxError`, as it is without a DOCTYPE, instead of
+`ErrUnsupportedXMLFeature`.
+
+Ordinary decoding does not use the external subset when the internal subset
+contains entity declarations, attribute-list declarations or parameter-entity
+references, because it does not interpret them, and does not expand its
+entities in a document declared `standalone="yes"` (XML 4.1, Entity Declared).
+It ignores identifiers longer than 4096 bytes. In these cases the previous
+behaviour remains. A caller source error is reported only when one of these
+features actually needs the DTD.
 
 Source profiles that read DTD declarations, including `ProfileSourceSemantics`
 used by `DecodeAssessed`, read the resolved external subset after the internal
-subset with XML first-binding precedence. Its attribute defaults and entities
-form the effective source infoset and, as for internal-subset declarations,
-reach the model converted by assessed loading. Source origins locate a
-declaration from an external entity by that entity's system identifier in
-`validation.Location.Entry`, with
-`validation.CoordinateSpaceExternalDTD` coordinates in its normalized text.
+subset with XML first-binding precedence. Parameter entities declared in the
+internal subset are in scope while the external subset is read, so they can
+select its conditional sections or replace its parameter entities. Reading
+the external subset is charged to the document's buffered-byte budget either
+way. Its attribute defaults and entities form the effective source infoset
+and, as for internal-subset declarations, reach the model converted by assessed
+loading. Source origins locate a declaration from an external entity by that
+entity's system identifier in `validation.Location.Entry`, with
+`validation.CoordinateSpaceExternalDTD` line, column and byte coordinates in its
+text after end-of-line normalization. A declaration site in an entity whose
+identifier is longer than 4096 bytes is unknown evidence, so such an assessment
+is incomplete. Profiles that do not read DTD declarations, such as
+`ProfileSourceXSDPreview` and `ProfileMXLSource`, keep reporting the external
+subset as unread whatever the options say.
 
 `Encode` and `ResolveOpus` reject cyclic opus models and document nesting deeper
 than 4096 elements before recursive traversal. `Validate` preserves that legacy
@@ -935,10 +963,11 @@ assessment and need more than the default 64 MiB buffer and 20,000,000 rule
 steps; with 256 MiB and 100,000,000 steps both are accepted. Their default
 buffer refusals are architecture-dependent receipts, not portable input-size
 limits; 386 does not assert them. See the [capacity controls][loading-capacity]
-for provenance. Of the 153 score and opus files in `testdata/official` and the
-MusicXML test suite, default assessed loading accepts 140; the rest report
-genuine violations, unestablished semantic context or resource limits, none of
-them unread-DTD evidence. The source-XSD preview remains developmental and
+for provenance. Of the 154 score and opus files in `testdata/official` and the
+MusicXML test suite, default assessed loading accepted 140 when measured for
+this change, and `TestAssessedLoadingCorpusMeasurement` keeps that floor; the
+rest report genuine violations, unestablished semantic context or resource
+limits, none of them unread-DTD evidence. The source-XSD preview remains developmental and
 DTD-independent and still reports any external subset as unread. Removing a
 DOCTYPE changes the input and is not equivalent assessment of the original
 file. `Decode` and `DecodeWithOptions` remain transport/conversion only; those

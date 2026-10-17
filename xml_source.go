@@ -1315,7 +1315,7 @@ func (r *sourceXMLTokenReader) unboundPrefix(prefix string) error {
 	if r.internalDTD && r.dtdStore != nil && r.dtdStore.State().AttributeDeclarationsComplete {
 		return r.syntax("undeclared XML namespace prefix " + sourceXMLDiagnosticValue(prefix))
 	}
-	if r.legacyExternalDTDApplies(r.dtd.HasAttributeDeclarations) {
+	if r.legacyExternalDTDApplies() {
 		if prepared, err := r.legacyExternalDTD(); err != nil {
 			return err
 		} else if prepared != nil {
