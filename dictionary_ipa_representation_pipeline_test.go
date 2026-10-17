@@ -21,6 +21,31 @@ func dictionaryRepresentationSource(t *testing.T, calls *int) DictionarySource {
 		return DictionaryComponentResult{Request: q, State: validation.EvidenceKnown, Body: io.NopCloser(bytes.NewReader(raw))}, nil
 	})
 }
+func assessedRepresentationDictionaries(t *testing.T, calls *int) DictionaryOptions {
+	t.Helper()
+	seen := map[validation.DictionaryManifestID]bool{}
+	return DictionaryOptions{
+		Selections: []validation.DictionarySelection{dictionaryImportSelection(validation.DictionaryManifestSMuFL14Canonical), dictionaryRepresentationTestSelection()},
+		Source: dictionaryImportSourceFunc(func(_ context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+			*calls++
+			if seen[request.Manifest] {
+				t.Fatalf("component loaded more than once: %s", request.Manifest)
+			}
+			seen[request.Manifest] = true
+			var raw []byte
+			switch request.Manifest {
+			case validation.DictionaryManifestSMuFL14Canonical:
+				raw = dictionaryImportFixture(t, request.Manifest)
+			case validation.DictionaryManifestIPARepresentation2015Unicode13:
+				raw = dictionaryRepresentationFixture(t)
+			default:
+				t.Fatalf("unselected component requested: %s", request.Manifest)
+			}
+			return DictionaryComponentResult{Request: request, State: validation.EvidenceKnown, Body: io.NopCloser(bytes.NewReader(raw))}, nil
+		}),
+	}
+}
+
 func requireRepresentationReport(t *testing.T, r validation.Report, value string, known bool) {
 	t.Helper()
 	rows := dictionaryResults(r, validation.ContextDictionaryIPARepresentation)
@@ -56,23 +81,29 @@ func TestIPARepresentationPublicSourceModelAndAssessedReader(t *testing.T) {
 					options.Assessment.Profile = ProfileModelDictionaries
 					report, err = AssessModelWithDictionaries(ctx, doc, options)
 				case "assessed-reader":
+					options.Assessment.Profile = ProfileSourceSemantics
+					options.Dictionaries = assessedRepresentationDictionaries(t, &calls)
 					result, e := DecodeAssessedWithDictionaries(ctx, strings.NewReader(text), DecodeDictionaryAssessmentOptions{Assessment: &options})
 					report, err = result.Source, e
 					if value == "a\u0327" {
-						if result.Document != nil || !errors.Is(err, ErrIncompleteAssessment) {
+						if result.Document != nil || !errors.Is(err, ErrIncompleteAssessment) || result.Model.Requested {
 							t.Fatalf("unproved witness acceptance: %v %v", result.Document, err)
 						}
 						err = nil
-					} else if result.Document == nil {
-						t.Fatal("accepted representation conversion lost")
+					} else if result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
+						t.Fatalf("accepted representation source/model assessment lost: %+v %v", result, err)
 					}
 				}
 				if err != nil {
 					t.Fatal(err)
 				}
 				requireRepresentationReport(t, report, value, value != "a\u0327")
-				if calls != 1 {
-					t.Fatalf("component loads=%d", calls)
+				wantCalls := 1
+				if mode == "assessed-reader" {
+					wantCalls = 2
+				}
+				if calls != wantCalls {
+					t.Fatalf("component loads=%d want=%d", calls, wantCalls)
 				}
 			})
 		}

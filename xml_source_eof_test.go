@@ -93,9 +93,9 @@ func TestSourceTruncatedMarkupPublic(t *testing.T) {
 			name    string
 			profile validation.ProfileID
 		}{
-			{"decode", ""}, {"decode-assessed-permissive", ""},
-			{"inspect-preview", ProfileSourceXSDPreview}, {"decode-preview", ProfileSourceXSDPreview},
-			{"inspect-internal-dtd", ProfileSourceInternalDTD}, {"decode-internal-dtd", ProfileSourceInternalDTD},
+			{"decode", ""}, {"decode-assessed-default", ""},
+			{"inspect-preview", ProfileSourceXSDPreview}, {"decode-semantics", ProfileSourceSemantics},
+			{"inspect-internal-dtd", ProfileSourceInternalDTD},
 		} {
 			t.Run(api.name+"/"+source, func(t *testing.T) {
 				input := &onceEOFReader{input: source}
@@ -124,7 +124,7 @@ func TestSourceTruncatedMarkupPublic(t *testing.T) {
 				if !errors.As(err, &syntax) || errors.Is(err, io.EOF) || errors.Is(err, ErrEmptyDocument) {
 					t.Errorf("truncated markup lost its syntax cause: %v", err)
 				}
-				if api.profile != "" {
+				if api.name != "decode" {
 					if !errors.Is(err, ErrIncompleteAssessment) || report.Syntax != validation.SyntaxMalformed || report.InputComplete || report.AssessmentComplete || report.Satisfied() || report.Terminal == nil || report.Terminal.Category != validation.CategorySyntax || report.Terminal.Reason != "malformed-source" {
 						t.Errorf("error=%v syntax=%s inputComplete=%t assessmentComplete=%t terminal=%+v", err, report.Syntax, report.InputComplete, report.AssessmentComplete, report.Terminal)
 					}
@@ -150,8 +150,11 @@ func TestSourceTruncatedMarkupNonEOFCause(t *testing.T) {
 		{"joined-canceled", errors.Join(io.EOF, context.Canceled), validation.CategoryResource, "canceled"},
 		{"joined-resource", errors.Join(io.EOF, &validation.ResourceError{Kind: validation.BudgetInputBytes, Limit: 3, Used: 3, Requested: 1}), validation.CategoryResource, "resource-limit"},
 	} {
-		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceInternalDTD} {
+		for _, profile := range []validation.ProfileID{ProfileSourceXSDPreview, ProfileSourceInternalDTD, ProfileSourceSemantics} {
 			for _, decode := range []bool{false, true} {
+				if decode && profile != ProfileSourceSemantics {
+					continue // Narrow profiles remain inspection-only contracts.
+				}
 				name := tc.name + "/" + string(profile) + "/inspect"
 				if decode {
 					name = tc.name + "/" + string(profile) + "/decode"

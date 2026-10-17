@@ -88,8 +88,14 @@ func TestSourceAssessmentAgainstSchema(t *testing.T) {
 				if !found {
 					t.Fatal("missing explicit DTD capability explanation")
 				}
-				result, decodeErr := DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
-				if result.Document != nil || result.Conversion.State != validation.ConversionConverted || !errors.Is(decodeErr, ErrIncompleteAssessment) || errors.Is(decodeErr, ErrInvalidDocument) {
+				var result DecodeResult
+				var decodeErr error
+				if fixture.name == "MozaChloSample.musicxml" {
+					result, decodeErr = decodeMozaWithDeclaredCapacityControl(t, input)
+				} else {
+					result, decodeErr = DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+				}
+				if result.Document != nil || result.Conversion.State != validation.ConversionConverted || !errors.Is(decodeErr, ErrIncompleteAssessment) || errors.Is(decodeErr, ErrInvalidDocument) || !result.Source.InputComplete || result.Model.Requested {
 					t.Fatalf("strict external-DTD result: %+v %v", result, decodeErr)
 				}
 			} else if !report.Satisfied() {

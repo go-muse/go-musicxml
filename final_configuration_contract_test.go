@@ -39,6 +39,13 @@ func finalConfigurationDictionaries(source musicxml.DictionarySource) musicxml.D
 	}
 }
 
+func assessedDecodeDictionarySelections() []validation.DictionarySelection {
+	return []validation.DictionarySelection{
+		{Manifest: validation.DictionaryManifestSMuFL14Canonical, Relations: []validation.DictionaryRelation{validation.DictionaryRelationCanonicalName}},
+		{Manifest: validation.DictionaryManifestIPARepresentation2015Unicode13, Relations: []validation.DictionaryRelation{validation.DictionaryRelationIPARepresentation}},
+	}
+}
+
 func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing.T) {
 	ctx := context.Background()
 	document := musicxml.NewOpusDocument()
@@ -76,10 +83,12 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 			return err
 		}},
 		{"DecodeAssessedWithDictionaries", musicxml.ProfileModelSemantics, func(profile validation.ProfileID, p *finalConfigurationIO) error {
+			dictionaries := finalConfigurationDictionaries(p)
+			dictionaries.Selections = assessedDecodeDictionarySelections()
 			result, err := musicxml.DecodeAssessedWithDictionaries(ctx, p, musicxml.DecodeDictionaryAssessmentOptions{
-				Assessment: &musicxml.DictionaryAssessmentOptions{Assessment: musicxml.AssessmentOptions{Profile: profile}, Dictionaries: finalConfigurationDictionaries(p)},
+				Assessment: &musicxml.DictionaryAssessmentOptions{Assessment: musicxml.AssessmentOptions{Profile: profile}, Dictionaries: dictionaries},
 			})
-			if result.Document != nil || result.Source.Requested || result.Conversion.State != validation.ConversionIncomplete {
+			if result.Document != nil || result.Source.Requested || result.Model.Requested || result.Conversion.State != validation.ConversionIncomplete {
 				t.Fatalf("invalid configuration exposed a converted or assessed document: %+v", result)
 			}
 			return err
@@ -102,6 +111,9 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 				name string
 				id   validation.ProfileID
 			}{{"empty", ""}, {"unknown", "test/unknown-profile"}, {"wrong-target", entry.wrong}} {
+				if entry.name == "DecodeAssessedWithDictionaries" && selection.name == "empty" {
+					selection.name, selection.id = "narrow-source", musicxml.ProfileSourceDictionaries
+				}
 				t.Run(selection.name, func(t *testing.T) {
 					probe := &finalConfigurationIO{}
 					err := entry.run(selection.id, probe)
@@ -159,8 +171,11 @@ func TestFinalConfigurationSelectedNilDictionaryPublicReports(t *testing.T) {
 				t.Fatal(err)
 			}
 			finalConfigurationRequireUnavailableDictionary(t, report)
-			result, err := musicxml.DecodeAssessedWithDictionaries(ctx, strings.NewReader(finalConfigurationSMuFLScore), musicxml.DecodeDictionaryAssessmentOptions{Assessment: &options})
-			if !errors.Is(err, musicxml.ErrIncompleteAssessment) || errors.Is(err, musicxml.ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
+			decodeOptions := options
+			decodeOptions.Assessment.Profile = musicxml.ProfileSourceSemantics
+			decodeOptions.Dictionaries.Selections = assessedDecodeDictionarySelections()
+			result, err := musicxml.DecodeAssessedWithDictionaries(ctx, strings.NewReader(finalConfigurationSMuFLScore), musicxml.DecodeDictionaryAssessmentOptions{Assessment: &decodeOptions})
+			if !errors.Is(err, musicxml.ErrIncompleteAssessment) || errors.Is(err, musicxml.ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || result.Model.Requested {
 				t.Fatalf("strict incomplete result=%+v error=%v", result, err)
 			}
 			finalConfigurationRequireUnavailableDictionary(t, result.Source)

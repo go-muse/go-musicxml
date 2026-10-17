@@ -157,12 +157,26 @@ func TestBundledDictionaryPublicAssessmentPreservesSelection(t *testing.T) {
 					o.Assessment.Profile = musicxml.ProfileModelDictionaries
 					report, err = musicxml.AssessModelWithDictionaries(context.Background(), doc, o)
 				case "assessed decode":
-					result, e := musicxml.DecodeAssessedWithDictionaries(context.Background(), strings.NewReader(score), musicxml.DecodeDictionaryAssessmentOptions{Assessment: &o})
-					report, err = result.Source, e
-					if tc.known && result.Document == nil {
-						t.Fatal("known dictionary prevented decoding")
+					o.Assessment.Profile = musicxml.ProfileSourceSemantics
+					if len(o.Dictionaries.Selections) != 0 {
+						o.Dictionaries.Selections = assessedDecodeDictionarySelections()
 					}
-					if !tc.known && errors.Is(err, musicxml.ErrIncompleteAssessment) {
+					reader := strings.NewReader(score)
+					result, e := musicxml.DecodeAssessedWithDictionaries(context.Background(), reader, musicxml.DecodeDictionaryAssessmentOptions{Assessment: &o})
+					if tc.name == "unselected" {
+						if !errors.Is(e, validation.ErrInvalidConfiguration) || result.Document != nil || result.Source.Requested || result.Model.Requested || reader.Len() != len(score) {
+							t.Fatalf("incomplete explicit selection was not rejected before input: %+v %v", result, e)
+						}
+						return
+					}
+					report, err = result.Source, e
+					if tc.known && (result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied()) {
+						t.Fatalf("known dictionary prevented source/model acceptance: %+v %v", result, err)
+					}
+					if !tc.known {
+						if !errors.Is(err, musicxml.ErrIncompleteAssessment) || result.Document != nil || result.Model.Requested {
+							t.Fatalf("unavailable explicit provider was repaired or accepted: %+v %v", result, err)
+						}
 						err = nil
 					}
 				}

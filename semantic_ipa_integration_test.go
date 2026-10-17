@@ -31,23 +31,29 @@ func TestSemanticIPARepresentationPublicSourceModelAndAssessedReader(t *testing.
 					options.Assessment.Profile = ProfileModelSemantics
 					report, err = AssessModelWithDictionaries(ctx, doc, options)
 				case "assessed-reader":
+					options.Assessment.Profile = ProfileSourceSemantics
+					options.Dictionaries = assessedRepresentationDictionaries(t, &calls)
 					result, e := DecodeAssessedWithDictionaries(ctx, strings.NewReader(text), DecodeDictionaryAssessmentOptions{Assessment: &options})
 					report, err = result.Source, e
 					if value == "a\u0327" {
-						if result.Document != nil || !errors.Is(err, ErrIncompleteAssessment) {
+						if result.Document != nil || !errors.Is(err, ErrIncompleteAssessment) || result.Model.Requested {
 							t.Fatalf("unproved witness acceptance: %v %v", result.Document, err)
 						}
 						err = nil
-					} else if result.Document == nil {
-						t.Fatal("accepted representation conversion lost")
+					} else if result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
+						t.Fatalf("accepted representation source/model assessment lost: %+v %v", result, err)
 					}
 				}
 				if err != nil {
 					t.Fatal(err)
 				}
 				requireRepresentationReport(t, report, value, value != "a\u0327")
-				if calls != 1 {
-					t.Fatalf("component loads=%d", calls)
+				wantCalls := 1
+				if mode == "assessed-reader" {
+					wantCalls = 2
+				}
+				if calls != wantCalls {
+					t.Fatalf("component loads=%d want=%d", calls, wantCalls)
 				}
 			})
 		}

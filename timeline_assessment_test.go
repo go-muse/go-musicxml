@@ -106,7 +106,7 @@ func TestTimelineProfilesAreExplicitAndLegacyRemainsXSDOnly(t *testing.T) {
 			t.Fatalf("frozen source profile broadened: %s %v %s", profile, err, localFindings(r))
 		}
 	}
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceTimeline}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
 	if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
 		t.Fatalf("strict timeline acceptance: %+v %v", result, err)
 	}

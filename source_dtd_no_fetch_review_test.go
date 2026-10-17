@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -42,7 +43,7 @@ func TestSourceInternalDTDPublicExternalIdentifiersStayUnread(t *testing.T) {
 				var err error
 				if decode {
 					var result DecodeResult
-					result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceInternalDTD}})
+					result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
 					report = result.Source
 				} else {
 					report, err = InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
@@ -73,7 +74,14 @@ func TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete(t *testing.T) {
 				var report validation.Report
 				if decode {
 					var result DecodeResult
-					result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceInternalDTD}})
+					if name == "MozaChloSample.musicxml" {
+						result, err = decodeMozaWithDeclaredCapacityControl(t, input)
+					} else {
+						result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+					}
+					if result.Document != nil || result.Model.Requested || result.Conversion.State != validation.ConversionConverted {
+						t.Fatalf("unaccepted DTD exposed a model or lost completed conversion: document=%T modelRequested=%t conversion=%s", result.Document, result.Model.Requested, result.Conversion.State)
+					}
 					report = result.Source
 				} else {
 					report, err = InspectXML(context.Background(), bytes.NewReader(input), AssessmentOptions{Profile: ProfileSourceInternalDTD})
@@ -93,4 +101,41 @@ func TestSourceInternalDTDOfficialDOCTYPEsRemainIncomplete(t *testing.T) {
 			}
 		})
 	}
+}
+
+// The original UTF-16 Moza sample already has a reviewed 96 MiB source-semantics
+// control in TestReviewOfficialOriginalDOCTYPEBufferAndEvidence. Mandatory
+// loading additionally keeps the converted candidate and both pinned dictionary
+// components live. Its default boundary is asserted before this configured
+// control, rather than increasing the default limit to recover the old result.
+func decodeMozaWithDeclaredCapacityControl(t *testing.T, input []byte) (DecodeResult, error) {
+	t.Helper()
+	var result DecodeResult
+	var err error
+	// This frontier is an amd64 receipt, not a portable storage-size promise.
+	// Smaller architectures still run the configured DTD authority control.
+	if runtime.GOARCH == "amd64" {
+		result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), strictSourceOptions())
+		var resource *validation.ResourceError
+		if !errors.As(err, &resource) || resource.Kind != validation.BudgetBufferedBytes || resource.Limit != validation.DefaultBudgets().MaxBufferedBytes || resource.Used > resource.Limit || resource.Requested <= resource.Limit-resource.Used || !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) {
+			t.Fatalf("original Moza default capacity changed: resource=%+v error=%v", resource, err)
+		}
+		if result.Document != nil || result.Model.Requested || result.Conversion.State != validation.ConversionIncomplete || !result.Source.Requested || result.Source.InputComplete || result.Source.AssessmentComplete || result.Source.Syntax != validation.SyntaxIncomplete {
+			t.Fatalf("default capacity refusal leaked acceptance: document=%T modelRequested=%t conversion=%s sourceRequested=%t inputComplete=%t assessmentComplete=%t syntax=%s", result.Document, result.Model.Requested, result.Conversion.State, result.Source.Requested, result.Source.InputComplete, result.Source.AssessmentComplete, result.Source.Syntax)
+		}
+		t.Logf("original Moza default buffered-byte checkpoint: used=%d requested=%d limit=%d", resource.Used, resource.Requested, resource.Limit)
+	}
+	options := strictSourceOptions()
+	options.Assessment.Budgets.MaxBufferedBytes = 96 << 20
+	result, err = DecodeAssessed(context.Background(), bytes.NewReader(input), options)
+	if !errors.Is(err, ErrIncompleteAssessment) || errors.Is(err, ErrInvalidDocument) || errors.Is(err, validation.ErrResourceLimit) || result.Document != nil || result.Model.Requested || result.Conversion.State != validation.ConversionConverted || !result.Source.InputComplete || result.Source.AssessmentComplete || result.Source.Satisfied() {
+		t.Fatalf("configured-capacity DTD control: document=%T modelRequested=%t conversion=%s inputComplete=%t assessmentComplete=%t error=%v", result.Document, result.Model.Requested, result.Conversion.State, result.Source.InputComplete, result.Source.AssessmentComplete, err)
+	}
+	for _, finding := range result.Source.Findings {
+		if strings.Contains(string(finding.Reason), "dtd-infoset-unavailable") {
+			return result, err
+		}
+	}
+	t.Fatal("configured-capacity control lost the original unread external-DTD evidence")
+	return result, err
 }

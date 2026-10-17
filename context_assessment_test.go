@@ -125,7 +125,7 @@ func TestContextTimeOnlyInvalidPrerequisiteAndStrictDecode(t *testing.T) {
 	}
 
 	source := contextFixtureXML(`<note time-only="10,2"><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration></note>`, false)
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceContext}})
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
 	if err == nil || result.Document != nil {
 		t.Fatalf("strict context returned rejected model: %+v,%v", result, err)
 	}

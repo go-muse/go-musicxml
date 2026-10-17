@@ -91,8 +91,8 @@ func TestFigureNumberUnrestrictedTextPreservesSourceDeclaration(t *testing.T) {
 func TestFigureNumberUnrestrictedTextStrictDecode(t *testing.T) {
 	for _, timewise := range []bool{false, true} {
 		source := contextFixtureXML(`<figured-bass><figure><figure-number>Ⅵ</figure-number></figure></figured-bass>`, timewise)
-		result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceContext}})
-		if err != nil || result.Document == nil {
+		result, err := DecodeAssessed(context.Background(), strings.NewReader(source), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics}})
+		if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
 			t.Fatalf("valid open notation rejected by strict decode: %v", err)
 		}
 	}

@@ -41,10 +41,10 @@ func TestSourceAssessmentPreflightDoesNotRead(t *testing.T) {
 		{"nil-context", nil, DecodeAssessmentOptions{}, validation.ErrInvalidConfiguration},
 		{"canceled", canceled, DecodeAssessmentOptions{}, context.Canceled},
 		{"depth", context.Background(), DecodeAssessmentOptions{Decode: DecodeOptions{-1}}, ErrInvalidDecodeOptions},
-		{"empty-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{}}, validation.ErrInvalidConfiguration},
+		{"narrow-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}}, validation.ErrInvalidConfiguration},
 		{"unknown-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "unknown"}}, validation.ErrInvalidConfiguration},
 		{"model-profile", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: "musicxml-4.0/model"}}, validation.ErrInvalidConfiguration},
-		{"negative-budget", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview, Budgets: validation.Budgets{MaxNodes: -1}}}, validation.ErrInvalidConfiguration},
+		{"negative-budget", context.Background(), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceSemantics, Budgets: validation.Budgets{MaxNodes: -1}}}, validation.ErrInvalidConfiguration},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -63,19 +63,21 @@ func TestSourceAssessmentPreflightDoesNotRead(t *testing.T) {
 	}
 }
 
-func TestDecodeAssessedPermissiveAndStrictSourceAreSeparate(t *testing.T) {
+func TestDecodeAssessedMandatoryAndOrdinaryDecodeAreSeparate(t *testing.T) {
 	input := `<score-partwise/>`
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{})
-	if err != nil || result.Document == nil || result.Source.Requested || result.Source.Satisfied() || result.Conversion.State != validation.ConversionConverted {
-		t.Fatalf("permissive result=%+v error=%v", result, err)
+	document, err := Decode(strings.NewReader(input))
+	if err != nil || document == nil {
+		t.Fatalf("ordinary decode document=%T error=%v", document, err)
 	}
 	report, err := InspectXML(context.Background(), strings.NewReader(input), AssessmentOptions{Profile: ProfileSourceXSDPreview})
 	if err != nil || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.Conformance != validation.ConformanceViolated {
 		t.Fatalf("inspection result=%+v error=%v", report, err)
 	}
-	result, err = DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Profile: ProfileSourceXSDPreview}})
-	if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || result.Source.Conformance != validation.ConformanceViolated {
-		t.Fatalf("strict result=%+v error=%v", result, err)
+	for _, options := range []DecodeAssessmentOptions{{}, {Assessment: &AssessmentOptions{}}, strictSourceOptions()} {
+		result, err := DecodeAssessed(context.Background(), strings.NewReader(input), options)
+		if !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Conversion.State != validation.ConversionConverted || !result.Source.Requested || result.Source.Profile.ID != ProfileSourceSemantics || result.Source.Conformance != validation.ConformanceViolated || result.Model.Requested {
+			t.Fatalf("mandatory result=%+v error=%v", result, err)
+		}
 	}
 }
 
@@ -100,11 +102,13 @@ func TestSourceAssessmentDTDCompletenessAxes(t *testing.T) {
 			if err != nil || !report.InputComplete || report.Syntax != tt.syntax || report.Satisfied() != tt.complete {
 				t.Fatalf("DTD axes report=%+v error=%v", report, err)
 			}
-			result, err := DecodeAssessed(context.Background(), strings.NewReader(tt.prefix+valid), strictSourceOptions())
-			if result.Conversion.State != validation.ConversionConverted || (err == nil) != tt.complete || errors.Is(err, ErrInvalidDocument) || (result.Document != nil) != tt.complete {
-				t.Errorf("DTD strict decode=%+v error=%v", result, err)
+			// The preview's frozen DTD scope is independent of ordinary mapping
+			// and of the mandatory loader's internal-DTD semantic composition.
+			document, decodeErr := Decode(strings.NewReader(tt.prefix + valid))
+			if decodeErr != nil || document == nil {
+				t.Errorf("DTD ordinary decode=%T error=%v", document, decodeErr)
 			}
-			if !tt.complete && (!errors.Is(err, ErrIncompleteAssessment) || report.Counts.Unsupported == 0) {
+			if !tt.complete && report.Counts.Unsupported == 0 {
 				t.Errorf("DTD missing required unsupported blocker: %+v %v", report, err)
 			}
 		})
@@ -148,9 +152,15 @@ func TestSourceAssessmentSyntaxUnderSkippedContent(t *testing.T) {
 			}
 		}
 	}
-	result, err := DecodeAssessed(context.Background(), strings.NewReader(`<score-partwise><𐀀/></score-partwise>`), DecodeAssessmentOptions{})
-	if err != nil || result.Document == nil {
-		t.Errorf("valid Fifth Edition skipped name rejected: %+v %v", result, err)
+	input := `<score-partwise><𐀀/></score-partwise>`
+	document, err := Decode(strings.NewReader(input))
+	if err != nil || document == nil {
+		t.Fatalf("valid Fifth Edition skipped name rejected by ordinary mapping: %T %v", document, err)
+	}
+	result, err := DecodeAssessed(context.Background(), strings.NewReader(input), DecodeAssessmentOptions{})
+	var syntax *xml.SyntaxError
+	if errors.As(err, &syntax) || !errors.Is(err, ErrInvalidDocument) || result.Document != nil || result.Source.Syntax != validation.SyntaxWellFormed {
+		t.Errorf("well-formed skipped name lost its independent source violation: %+v %v", result, err)
 	}
 }
 
