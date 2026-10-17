@@ -55,6 +55,7 @@ scopes and their explicit limitations:
 - [Explicit DTD and dictionary package composition](dtd-package-composition-scope.md)
 - [Pinned dictionary scope, API boundaries and remaining obligations](pinned-dictionaries-scope.md)
 - [Pinned dictionary verification checkpoint](pinned-dictionaries-evidence.md)
+- [Dictionary hash scratch reuse measurements](dictionary-hash-scratch.md)
 - [Bounded IPA representation and identity migration](ipa-representation.md)
 
 The proposal pages below describe the wider architecture. Implemented bounded

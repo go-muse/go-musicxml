@@ -13,6 +13,11 @@ type dictionaryEncoder struct {
 	hash    hash.Hash
 	bytes   int64
 	err     error
+	// Each digest/fingerprint invocation owns its encoder and scratch. Hash
+	// Write inherits io.Writer's no-retention contract, so sequential writes
+	// can reuse these buffers within the existing fixed scratch admission.
+	countScratch [4]byte
+	textScratch  [256]byte
 }
 
 func (w *dictionaryEncoder) write(data []byte) {
@@ -26,16 +31,14 @@ func (w *dictionaryEncoder) write(data []byte) {
 	w.bytes += int64(len(data))
 }
 func (w *dictionaryEncoder) count(n uint32) {
-	var buf [4]byte
-	binary.BigEndian.PutUint32(buf[:], n)
-	w.write(buf[:])
+	binary.BigEndian.PutUint32(w.countScratch[:], n)
+	w.write(w.countScratch[:])
 }
 func (w *dictionaryEncoder) text(s string) {
 	w.count(uint32(len(s)))
-	var buf [256]byte
 	for len(s) > 0 && w.err == nil {
-		n := copy(buf[:], s)
-		w.write(buf[:n])
+		n := copy(w.textScratch[:], s)
+		w.write(w.textScratch[:n])
 		s = s[n:]
 	}
 }
