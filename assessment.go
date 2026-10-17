@@ -13,7 +13,9 @@ import (
 )
 
 // AssessmentOptions selects an explicit target-specific profile and finite shared limits.
-// An empty or unknown Profile is invalid; zero budget fields select defaults.
+// Standalone Inspect/Assess calls require a known nonempty Profile; zero budget
+// fields select defaults. DecodeAssessed instead fixes its required stages and
+// accepts an empty Profile as the mandatory source/model pipeline default.
 // Source and model profiles describe their bounded target-specific scope and
 // cannot be interchanged. Standalone source/model entry points reject the
 // separate package/resource-graph profiles. Source
@@ -27,23 +29,26 @@ type AssessmentOptions struct {
 	Budgets validation.Budgets
 }
 
-// DecodeAssessmentOptions keeps assessment opt-in without changing DecodeOptions.
-// A nil Assessment performs permissive model conversion and mandatory XML checks
-// without loading a catalog. A nonnil Assessment requires an explicit profile.
+// DecodeAssessmentOptions configures mandatory assessed loading. Nil Assessment
+// and an empty Profile select the required source and model semantic stages.
+// A nonempty Profile must be ProfileSourceSemantics; it cannot narrow validation.
+// Budgets are shared by dictionary import and both stages. Decode remains the
+// separate conversion-only API.
 type DecodeAssessmentOptions struct {
 	Decode     DecodeOptions
 	Assessment *AssessmentOptions
 }
 
-// DecodeResult separates original-source assessment from model conversion.
-// Document is nonnil only after conversion, source EOF, and (when requested)
-// source acceptance all succeed. Converted means successful mapping under the
+// DecodeResult preserves original-source and current-model reports separately.
+// Document is nonnil only after conversion, source EOF, and both required
+// assessments succeed. Model is unrequested if an earlier stage failed. Converted means successful mapping under the
 // existing Go model contract, not exact numeric or lexical round-trip equality.
 // Conversion.Findings is optional bounded detail; State and the returned typed
 // error remain authoritative if the diagnostic quota omits that detail.
 type DecodeResult struct {
 	Document   Document
 	Source     validation.Report
+	Model      validation.Report
 	Conversion validation.ConversionResult
 }
 
@@ -96,35 +101,36 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 	return report, errors.Join(err, finishErr)
 }
 
-// DecodeAssessed maps one MusicXML document while optionally assessing all of its
-// original source. Observation precedes model namespace filtering and skipping.
-// After a recoverable model-conversion failure the same healthy source parser is
-// drained, so a later source violation or malformed tail remains visible. No
-// input replay, model encoding or second XML parse is performed.
+// DecodeAssessed reads and maps one MusicXML document, always assessing its
+// original source and then its current Go model with the built-in semantic
+// profiles. Source observation precedes namespace filtering and skipped fields;
+// model assessment walks the converted graph directly, without encoding/replay.
+// After recoverable conversion failure, the healthy parser is drained so later
+// source violations remain visible. Model assessment runs only after source and
+// conversion acceptance. Both stages share one finite budget account and the
+// bundled pinned canonical SMuFL and IPA representation data.
 //
-// Strict assessment rejects a violated or incomplete report and always discards
-// a partial model. Nil Assessment retains permissive conversion, legacy depth
-// limits and context checks, and leaves Source.Requested false. The input is
-// never closed. InspectXML documents source coordinates and cancellation limits.
-// A returned ValidationError contains only stored normative failure details;
-// Issues can be empty when the diagnostic budget excludes them. The operation
-// error explains truncation without adding synthetic issues. Source.Counts
-// counts rule evaluations, which need not equal the number of stored details.
-func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (result DecodeResult, err error) {
-	result.Conversion.State = validation.ConversionIncomplete
-	run, err := newSourceAssessmentRun(ctx, reader, options.Decode, options.Assessment, true)
-	if err != nil {
-		if run != nil {
-			result.Source = run.startupReport
-		}
-		return result, err
+// Nil/empty assessment options enable the required stages. A narrower profile is
+// a configuration error. Violated, incomplete or unavailable assessment never
+// returns a document; nil operation error alone is not acceptance. The profiles
+// retain their bounded coverage: unsupported cases remain incomplete. No DTD,
+// schema, dictionary or linked resource is fetched. The input is never closed.
+// InspectXML documents source coordinates and cancellation limits.
+//
+// ValidationError contains stored normative/model failure details, possibly
+// empty when diagnostic quotas omit them. Source and Model preserve authoritative
+// counts and completion separately; Conversion describes mapping, not acceptance.
+func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (DecodeResult, error) {
+	var assessment *DictionaryAssessmentOptions
+	if options.Assessment != nil {
+		assessment = &DictionaryAssessmentOptions{Assessment: *options.Assessment}
 	}
-	return decodeAssessedRun(ctx, run, options.Assessment != nil)
+	return decodeValidated(ctx, reader, options.Decode, assessment)
 }
 
 // decodeAssessedRun preserves the single source/parser owner for both the
 // original public API and additive capability wrappers.
-func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, assessed bool) (result DecodeResult, err error) {
+func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfig assessmentRunConfig, priorErr error) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	// The mapping decoder only receives namespace-neutral projected elements and
 	// the existing allowlisted expanded attributes. Its namespace table is empty.
@@ -183,16 +189,22 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, assessed b
 	// The candidate remains live through root/identity/report finalization and
 	// source acceptance. Releasing it earlier would admit overlapping retained
 	// data against a budget that no longer represented the live operation.
-	report, finishErr := run.finish(sourceErr)
+	report, reportLease, finishErr := run.finishRetained(sourceErr)
 	result.Source = report
 	if conversionErr != nil && result.Conversion.State != validation.ConversionIncomplete {
 		result.Conversion.Findings = run.conversionFinding(result.Conversion.State, conversionLocation, conversionNode)
 	}
-	acceptanceErr := error(nil)
-	if assessed {
-		acceptanceErr = sourceAcceptanceError(report)
+	acceptanceErr := sourceAcceptanceError(report)
+	err = errors.Join(priorErr, conversionErr, sourceErr, finishErr, acceptanceErr)
+	if err == nil {
+		var modelErr error
+		var modelStatus modelWalkStatus
+		result.Model, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
+		err = errors.Join(modelErr, modelAcceptanceError(result.Model, modelStatus))
 	}
-	err = errors.Join(conversionErr, sourceErr, finishErr, acceptanceErr)
+	// Both reports and the candidate coexist throughout the model phase.
+	// Closing the lease releases accounting, never the caller-owned report.
+	err = errors.Join(err, reportLease.Close())
 	if err != nil {
 		document = nil
 	}
@@ -379,6 +391,14 @@ func (r *sourceAssessmentRun) finish(cause error) (validation.Report, error) {
 	return r.session.Finish(r.ctx, completion)
 }
 
+func (r *sourceAssessmentRun) finishRetained(cause error) (validation.Report, *validation.ReportLease, error) {
+	completion, err := r.finishInput(cause)
+	if err != nil {
+		return validation.Report{}, nil, err
+	}
+	return r.session.FinishWithRetainedReport(r.ctx, completion)
+}
+
 func sourceFatalError(err error) bool {
 	return err != nil && (errors.Is(err, validation.ErrResourceLimit) || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) || errors.Is(err, validation.ErrInvalidSession))
 }
@@ -402,7 +422,7 @@ func sourceAcceptanceError(report validation.Report) error {
 			invalid = fmt.Errorf("%w; source assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, report.Counts.Fail)
 		}
 	}
-	if !report.AssessmentComplete || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.BlockingProblems != 0 || report.Terminal != nil {
+	if !report.AssessmentComplete || !report.InputComplete || report.Syntax != validation.SyntaxWellFormed || report.BlockingProblems != 0 || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0 || invalid == nil {
 		return errors.Join(invalid, &validation.IncompleteError{Reason: "source-profile-not-satisfied"})
 	}
 	return invalid
