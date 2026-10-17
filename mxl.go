@@ -3,6 +3,7 @@ package musicxml
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -48,6 +49,27 @@ func DecodeMXLWithOptions(
 	}
 
 	return decodeMXL(reader, limits)
+}
+
+// DecodeMXLContext reads a compressed MusicXML document like
+// DecodeMXLWithOptions and stops when ctx is canceled or its deadline passes.
+//
+// Cancellation is checked while the archive is read, between archive entries
+// and while the root document is decoded. The returned error then matches
+// ctx.Err() with errors.Is. A nil ctx is rejected with a
+// *validation.ConfigurationError. Use AsScorePartwise, AsScoreTimewise or
+// AsOpusDocument to narrow the result.
+func DecodeMXLContext(
+	ctx context.Context,
+	reader io.Reader,
+	options MXLOptions,
+) (Document, error) {
+	limits, err := options.limits()
+	if err != nil {
+		return nil, err
+	}
+
+	return decodeMXLContext(ctx, reader, limits)
 }
 
 // DecodeMXLScorePartwise reads a compressed score-partwise document.
@@ -162,12 +184,20 @@ func decodeMXL(
 	reader io.Reader,
 	limits mxlLimits,
 ) (Document, error) {
-	archive, err := openMXL(reader, limits)
+	return decodeMXLContext(context.Background(), reader, limits)
+}
+
+func decodeMXLContext(
+	ctx context.Context,
+	reader io.Reader,
+	limits mxlLimits,
+) (Document, error) {
+	archive, err := openMXL(ctx, reader, limits)
 	if err != nil {
 		return nil, err
 	}
 
-	return archive.decodeDocument(limits)
+	return archive.decodeDocument(ctx, limits)
 }
 
 func indexMXLEntries(

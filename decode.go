@@ -2,6 +2,7 @@ package musicxml
 
 import (
 	"bytes"
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -22,7 +23,24 @@ func DecodeWithOptions(
 	reader io.Reader,
 	options DecodeOptions,
 ) (Document, error) {
-	decoder, start, err := newDocumentDecoder(reader, options)
+	return DecodeContext(context.Background(), reader, options)
+}
+
+// DecodeContext reads one uncompressed MusicXML root document like
+// DecodeWithOptions and stops reading when ctx is canceled or its deadline
+// passes.
+//
+// Cancellation is checked while the input is read, so a large or slow reader
+// does not have to be closed to abandon the call. The returned error then
+// matches ctx.Err() with errors.Is. A nil ctx is rejected with a
+// *validation.ConfigurationError. Use AsScorePartwise, AsScoreTimewise or
+// AsOpusDocument to narrow the result. DecodeContext does not call Validate.
+func DecodeContext(
+	ctx context.Context,
+	reader io.Reader,
+	options DecodeOptions,
+) (Document, error) {
+	decoder, start, err := newDocumentDecoder(ctx, reader, options)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +151,11 @@ func decodeExpectedDocument(
 	document Document,
 	options DecodeOptions,
 ) error {
-	decoder, start, err := newDocumentDecoder(reader, options)
+	decoder, start, err := newDocumentDecoder(
+		context.Background(),
+		reader,
+		options,
+	)
 	if err != nil {
 		return err
 	}
@@ -145,6 +167,7 @@ func decodeExpectedDocument(
 }
 
 func newDocumentDecoder(
+	ctx context.Context,
 	reader io.Reader,
 	options DecodeOptions,
 ) (*xml.Decoder, xml.StartElement, error) {
@@ -156,7 +179,7 @@ func newDocumentDecoder(
 		return nil, xml.StartElement{}, err
 	}
 
-	decoder, err := newDepthLimitedXMLDecoder(reader, maxDepth)
+	decoder, err := newDepthLimitedXMLDecoder(ctx, reader, maxDepth)
 	if err != nil {
 		return nil, xml.StartElement{}, fmt.Errorf(
 			"musicxml: initialize XML decoder: %w",

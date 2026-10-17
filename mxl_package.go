@@ -3,8 +3,11 @@ package musicxml
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"fmt"
 	"io"
+
+	"github.com/go-muse/go-musicxml/validation"
 )
 
 // MXLPackage is a compressed MusicXML document and its related files.
@@ -51,6 +54,27 @@ func DecodeMXLPackageWithOptions(
 	}
 
 	return decodeMXLPackage(reader, limits)
+}
+
+// DecodeMXLPackageContext reads a compressed MusicXML package like
+// DecodeMXLPackageWithOptions and stops when ctx is canceled or its deadline
+// passes.
+//
+// Cancellation is checked while the archive is read, between archive entries
+// and while the primary document is decoded. The returned error then matches
+// ctx.Err() with errors.Is. A nil ctx is rejected with a
+// *validation.ConfigurationError.
+func DecodeMXLPackageContext(
+	ctx context.Context,
+	reader io.Reader,
+	options MXLOptions,
+) (*MXLPackage, error) {
+	limits, err := options.limits()
+	if err != nil {
+		return nil, err
+	}
+
+	return decodeMXLPackageContext(ctx, reader, limits)
 }
 
 // EncodeMXLPackage writes a compressed MusicXML document together with its
@@ -147,19 +171,29 @@ func defaultMXLLimits() mxlLimits {
 }
 
 func openMXL(
+	ctx context.Context,
 	reader io.Reader,
 	limits mxlLimits,
 ) (*openedMXL, error) {
 	if reader == nil {
 		return nil, ErrNilReader
 	}
+	if err := mxlContextErr(ctx); err != nil {
+		return nil, err
+	}
 
 	data, err := readMXLStream(
-		reader,
+		mxlContextReader(ctx, reader),
 		limits.archiveSize,
 		"archive",
 	)
 	if err != nil {
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return nil, fmt.Errorf("musicxml: read MXL archive: %w", ctxErr)
+		}
+		return nil, err
+	}
+	if err := mxlContextErr(ctx); err != nil {
 		return nil, err
 	}
 
@@ -231,8 +265,12 @@ func openMXL(
 }
 
 func (a *openedMXL) decodeDocument(
+	ctx context.Context,
 	limits mxlLimits,
 ) (Document, error) {
+	if err := mxlContextErr(ctx); err != nil {
+		return nil, err
+	}
 	documentData, err := readMXLFile(
 		a.documentFile,
 		limits.documentSize,
@@ -241,7 +279,8 @@ func (a *openedMXL) decodeDocument(
 		return nil, err
 	}
 
-	document, err := DecodeWithOptions(
+	document, err := DecodeContext(
+		ctx,
 		bytes.NewReader(documentData),
 		DecodeOptions{MaxXMLDepth: limits.xmlDepth},
 	)
@@ -260,7 +299,15 @@ func decodeMXLPackage(
 	reader io.Reader,
 	limits mxlLimits,
 ) (*MXLPackage, error) {
-	archive, err := openMXL(reader, limits)
+	return decodeMXLPackageContext(context.Background(), reader, limits)
+}
+
+func decodeMXLPackageContext(
+	ctx context.Context,
+	reader io.Reader,
+	limits mxlLimits,
+) (*MXLPackage, error) {
+	archive, err := openMXL(ctx, reader, limits)
 	if err != nil {
 		return nil, err
 	}
@@ -273,12 +320,12 @@ func decodeMXLPackage(
 		return nil, err
 	}
 
-	document, err := archive.decodeDocument(limits)
+	document, err := archive.decodeDocument(ctx, limits)
 	if err != nil {
 		return nil, err
 	}
 
-	resources, err := archive.decodeResources(limits)
+	resources, err := archive.decodeResources(ctx, limits)
 	if err != nil {
 		return nil, err
 	}
@@ -337,12 +384,16 @@ func decodeMXLPackageRootFiles(
 }
 
 func (a *openedMXL) decodeResources(
+	ctx context.Context,
 	limits mxlLimits,
 ) ([]MXLResource, error) {
 	var result []MXLResource
 	var total int64
 
 	for _, file := range a.archive.File {
+		if err := mxlContextErr(ctx); err != nil {
+			return nil, err
+		}
 		if file.FileInfo().IsDir() ||
 			file.Name == mxlMIMETypePath ||
 			file.Name == mxlContainerPath ||
@@ -489,4 +540,43 @@ func validMXLContentPath(value string) bool {
 // literal ZIP entry name. Ordinary resource names are not XML metadata.
 func validMXLRootFilePath(value string) bool {
 	return validMXLContentPath(value) && validXMLText(value)
+}
+
+// mxlContextErr reports a nil or finished decode context. Context-free
+// decoders pass context.Background, which never reports an error here.
+func mxlContextErr(ctx context.Context) error {
+	if ctx == nil {
+		return &validation.ConfigurationError{
+			Field:  "context",
+			Reason: "must not be nil",
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("musicxml: decode MXL: %w", err)
+	}
+
+	return nil
+}
+
+// mxlContextReader stops an archive read once ctx is done. Contexts that can
+// never be canceled keep the original reader.
+func mxlContextReader(ctx context.Context, reader io.Reader) io.Reader {
+	if ctx.Done() == nil {
+		return reader
+	}
+
+	return contextReader{ctx: ctx, reader: reader}
+}
+
+type contextReader struct {
+	ctx    context.Context
+	reader io.Reader
+}
+
+func (r contextReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+
+	return r.reader.Read(p)
 }
