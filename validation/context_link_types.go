@@ -140,13 +140,11 @@ func resourcePayloadValid(p ContextProperty, v *ResourceContextResult) bool {
 		}
 		switch v.Link.Kind {
 		case ResourceBookmark:
-			absent := resourceAbsentAttribute()
-			return v.Link.Href == absent && v.Link.Show == absent && v.Link.Actuate == absent && v.Link.Fragment.State == EvidenceAbsent
+			return v.Link.Href.absent() && v.Link.Show.absent() && v.Link.Actuate.absent() && v.Link.Fragment.State == EvidenceAbsent
 		case ResourceScoreLink:
 			return true
 		case ResourcePartLink, ResourceOpusScore, ResourceOpusLink, ResourceScoreWorkOpus:
-			absent := resourceAbsentAttribute()
-			return v.Link.Element == absent && v.Link.Position == absent && v.Link.Attachment.State == EvidenceAbsent
+			return v.Link.Element.absent() && v.Link.Position.absent() && v.Link.Attachment.State == EvidenceAbsent
 		}
 	case ContextResourceImage:
 		return v.Image != nil

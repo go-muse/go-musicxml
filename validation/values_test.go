@@ -3,6 +3,7 @@ package validation
 import (
 	"errors"
 	"math/big"
+	"reflect"
 	"testing"
 )
 
@@ -300,6 +301,14 @@ func TestImmutableNumbersSupportConcurrentReads(t *testing.T) {
 	for worker := 0; worker < 8; worker++ {
 		if failure := <-failures; failure != "" {
 			t.Error("concurrent immutable", failure)
+		}
+	}
+}
+
+func TestExactValuesAreNotComparable(t *testing.T) {
+	for _, value := range []any{Integer{}, Decimal{}, Rational{}, Atomic{}, ContextPosition{}} {
+		if reflect.TypeOf(value).Comparable() {
+			t.Errorf("%T is comparable with ==; it must use Equal or Cmp", value)
 		}
 	}
 }

@@ -23,6 +23,11 @@ or changed identifier to its replacement.
   `ErrNilReader` or `ErrNilWriter` instead of panicking or returning a read
   error. `validation.Report.Format` and `FormatLocalized` reject a typed-nil
   writer with `ErrInvalidConfiguration`.
+- `validation.Integer`, `validation.Decimal` and `validation.Rational` are no
+  longer comparable, so neither are the 23 structs that contain them, such as
+  `validation.Atomic`, `validation.Scalar` and `validation.ContextPosition`.
+  `==` used to compare internal pointers, so numerically equal values were
+  generally unequal; it now fails to compile. Use `Equal` or `Cmp`.
 
 ### Added
 

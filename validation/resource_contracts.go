@@ -592,7 +592,7 @@ func ValidateResourceResult(q ResourceRequest, r ResourceResult) error {
 			return contract("image result", "explicit supported dimension unit required")
 		}
 		for _, d := range []Evidence[Decimal]{v.Width, v.Height, v.PixelAspectRatio} {
-			if err := validateEvidence(d, "image dimension"); err != nil {
+			if err := validateEvidenceValue(d, "image dimension", d.Value.isZero()); err != nil {
 				return err
 			}
 			if d.State == EvidenceKnown && (!d.Value.Valid() || d.Value.value.Sign() <= 0) {

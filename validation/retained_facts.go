@@ -155,10 +155,10 @@ func (s *Session) retainLexeme(v Evidence[string]) (*Evidence[string], error) {
 	return &owned, nil
 }
 func (s *Session) retainAtomic(v Evidence[Atomic]) (*Evidence[Atomic], error) {
-	if v == s.facts.pendingAtomic {
+	if atomicEvidenceIdentical(v, s.facts.pendingAtomic) {
 		return &s.facts.pendingAtomic, nil
 	}
-	if v == s.facts.absentAtomic {
+	if atomicEvidenceIdentical(v, s.facts.absentAtomic) {
 		return &s.facts.absentAtomic, nil
 	}
 	n, err := retainedFactSize(retainedAtomicBytes, evidenceLogicalBytes(v), int64(len(v.Value.Text)), int64(len(v.Value.Name.Space)), int64(len(v.Value.Name.Local)), v.Value.Integer.ByteSize(), v.Value.Decimal.ByteSize())

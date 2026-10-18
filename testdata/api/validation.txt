@@ -574,15 +574,14 @@ type AssociationResult struct, field TargetInstrumentID Evidence[string]
 type AssociationResult struct, field TargetPartID Evidence[string]
 type AssociationResult struct, field order Request Membership Authority TargetPartID TargetInstrumentID
 type AssociationResult struct, not comparable
-type Atomic struct, comparable
 type Atomic struct, field Decimal Decimal
 type Atomic struct, field Integer Integer
 type Atomic struct, field Kind AtomicKind
 type Atomic struct, field Name QName
 type Atomic struct, field Text string
 type Atomic struct, field order Kind Text Integer Decimal Name
+type Atomic struct, not comparable
 type AtomicKind string
-type AttributeFact struct, comparable
 type AttributeFact struct, field Declaration Evidence[DeclarationID]
 type AttributeFact struct, field Location Location
 type AttributeFact struct, field Name QName
@@ -590,6 +589,7 @@ type AttributeFact struct, field Owner NodeID
 type AttributeFact struct, field Presence Evidence[bool]
 type AttributeFact struct, field Scalar Scalar
 type AttributeFact struct, field order Owner Name Declaration Presence Scalar Location
+type AttributeFact struct, not comparable
 type AttributeSelector struct, comparable
 type AttributeSelector struct, field Declaration DeclarationID
 type AttributeSelector struct, field Name QName
@@ -622,11 +622,11 @@ type BundleFailures struct, field Truncated bool
 type BundleFailures struct, field Violated bool
 type BundleFailures struct, field order Violated Incomplete Failed Truncated Findings
 type BundleFailures struct, not comparable
-type ChildValueRequirement struct, comparable
 type ChildValueRequirement struct, field AllowAbsent bool
 type ChildValueRequirement struct, field Child DeclarationID
 type ChildValueRequirement struct, field Expected Atomic
 type ChildValueRequirement struct, field order Child Expected AllowAbsent
+type ChildValueRequirement struct, not comparable
 type Code string
 type Comparison string
 type CompiledCatalog struct, not comparable
@@ -663,7 +663,6 @@ type ConfigurationError struct, field order Field Reason
 type ConfigurationError, method (*ConfigurationError) Error() string
 type ConfigurationError, method (*ConfigurationError) Unwrap() error
 type ConformanceState string
-type ContainerContextResult struct, comparable
 type ContainerContextResult struct, field Container NodeRef
 type ContainerContextResult struct, field Content Evidence[bool]
 type ContainerContextResult struct, field FullPath Evidence[Atomic]
@@ -674,6 +673,7 @@ type ContainerContextResult struct, field Ordinal Evidence[uint64]
 type ContainerContextResult struct, field Parent NodeRef
 type ContainerContextResult struct, field Role ContainerContextRole
 type ContainerContextResult struct, field order Role Container Parent Ordinal FullPath MediaType FullPathRaw MediaTypeRaw Content
+type ContainerContextResult struct, not comparable
 type ContainerContextRole string
 type ContextConsumerSpec struct, comparable
 type ContextConsumerSpec struct, field Provider RuleKey
@@ -692,13 +692,13 @@ type ContextPlanSpec struct, comparable
 type ContextPlanSpec struct, field Schema *CompiledSchema
 type ContextPlanSpec struct, field TimelineProvider RuleKey
 type ContextPlanSpec struct, field order Schema TimelineProvider
-type ContextPosition struct, comparable
 type ContextPosition struct, field Measure NodeRef
 type ContextPosition struct, field MeasureOrdinal uint64
 type ContextPosition struct, field Offset Rational
 type ContextPosition struct, field Part NodeRef
 type ContextPosition struct, field UnprovedFrame bool
 type ContextPosition struct, field order Part Measure MeasureOrdinal Offset UnprovedFrame
+type ContextPosition struct, not comparable
 type ContextProperty string
 type ContextProvenance string
 type ContextResult struct, field Container *ContainerContextResult `json:",omitempty"`
@@ -736,7 +736,7 @@ type Counts struct, field Pass uint64
 type Counts struct, field Unknown uint64
 type Counts struct, field Unsupported uint64
 type Counts struct, field order Pass Fail NotApplicable Unknown Unsupported Blocked
-type Decimal struct, comparable
+type Decimal struct, not comparable
 type Decimal, method (Decimal) ByteSize() int64
 type Decimal, method (Decimal) Cmp(other Decimal) (int, error)
 type Decimal, method (Decimal) Equal(other Decimal) bool
@@ -912,7 +912,7 @@ type IncompleteError struct, field Reason string
 type IncompleteError struct, field order Reason Cause
 type IncompleteError, method (*IncompleteError) Error() string
 type IncompleteError, method (*IncompleteError) Unwrap() []error
-type Integer struct, comparable
+type Integer struct, not comparable
 type Integer, method (Integer) ByteSize() int64
 type Integer, method (Integer) Cmp(other Integer) (int, error)
 type Integer, method (Integer) Equal(other Integer) bool
@@ -1122,7 +1122,6 @@ type InventoryTestContract struct, field Status string `json:"status"`
 type InventoryTestContract struct, field Targets []string `json:"targets"`
 type InventoryTestContract struct, field order ID CheckIDs RequirementIDs Targets Status AxisStatus CaseInstantiationGate
 type InventoryTestContract struct, not comparable
-type LayoutContextResult struct, comparable
 type LayoutContextResult struct, field Applicability Evidence[bool]
 type LayoutContextResult struct, field Basis string
 type LayoutContextResult struct, field Conversion Evidence[Rational]
@@ -1136,6 +1135,7 @@ type LayoutContextResult struct, field Staff Evidence[Integer]
 type LayoutContextResult struct, field System Evidence[NodeRef]
 type LayoutContextResult struct, field Unit ContextUnit
 type LayoutContextResult struct, field order Scope Origin Part Page System Staff Conversion Basis Raw Applicability Unit Provenance
+type LayoutContextResult struct, not comparable
 type LinkedResourceKind string
 type Location struct, comparable
 type Location struct, field DocumentID string
@@ -1194,7 +1194,6 @@ type NavigationDirective struct, field Kind NavigationKind
 type NavigationDirective struct, field Label Evidence[string]
 type NavigationDirective struct, field TimeOnly Evidence[string]
 type NavigationDirective struct, field order Kind Label Enabled TimeOnly Defaulted
-type NavigationInstrumentState struct, comparable
 type NavigationInstrumentState struct, field Bank NavigationStateValue[Integer]
 type NavigationInstrumentState struct, field Channel NavigationStateValue[Integer]
 type NavigationInstrumentState struct, field DeviceName NavigationStateValue[string]
@@ -1210,9 +1209,9 @@ type NavigationInstrumentState struct, field Unpitched NavigationStateValue[Inte
 type NavigationInstrumentState struct, field Virtual NavigationStateValue[NavigationVirtualInstrument]
 type NavigationInstrumentState struct, field Volume NavigationStateValue[Decimal]
 type NavigationInstrumentState struct, field order Instrument Sound Performance Virtual Channel Bank Program Unpitched Name DeviceName DevicePort Volume Pan Elevation
+type NavigationInstrumentState struct, not comparable
 type NavigationKind string
 type NavigationListeningKind string
-type NavigationListeningStatement struct, comparable
 type NavigationListeningStatement struct, field Active Evidence[bool]
 type NavigationListeningStatement struct, field Kind NavigationListeningKind
 type NavigationListeningStatement struct, field Latency Evidence[Decimal]
@@ -1223,6 +1222,7 @@ type NavigationListeningStatement struct, field TimeOnly Evidence[string]
 type NavigationListeningStatement struct, field Type Evidence[string]
 type NavigationListeningStatement struct, field Value Evidence[string]
 type NavigationListeningStatement struct, field order PlayerTarget Source Kind Player Type Latency Value TimeOnly Active
+type NavigationListeningStatement struct, not comparable
 type NavigationNoteListenKind string
 type NavigationNoteListening struct, comparable
 type NavigationNoteListening struct, field Active Evidence[bool]
@@ -1253,15 +1253,15 @@ type NavigationOccurrence struct, field Source NodeRef
 type NavigationOccurrence struct, field Tempo Evidence[Decimal]
 type NavigationOccurrence struct, field order NoteListening Play Instruments EndDynamics Listening Source Pass Epoch Frames Played Tempo Dynamics Pizzicato
 type NavigationOccurrence struct, not comparable
-type NavigationPassFrame struct, comparable
 type NavigationPassFrame struct, field Pass Integer
 type NavigationPassFrame struct, field Region NodeRef
 type NavigationPassFrame struct, field order Region Pass
-type NavigationPerformance struct, comparable
+type NavigationPassFrame struct, not comparable
 type NavigationPerformance struct, field Ensemble Integer
 type NavigationPerformance struct, field EnsembleEmpty bool
 type NavigationPerformance struct, field Solo bool
 type NavigationPerformance struct, field order Solo EnsembleEmpty Ensemble
+type NavigationPerformance struct, not comparable
 type NavigationPlayInstruction struct, field Active Evidence[bool]
 type NavigationPlayInstruction struct, field Instruction TimingPlayInstruction
 type NavigationPlayInstruction struct, field order Instruction Active
@@ -1274,13 +1274,13 @@ type NavigationVirtualInstrument struct, comparable
 type NavigationVirtualInstrument struct, field Library Evidence[string]
 type NavigationVirtualInstrument struct, field Name Evidence[string]
 type NavigationVirtualInstrument struct, field order Library Name
-type NodeEnd struct, comparable
 type NodeEnd struct, field AttributesComplete Evidence[bool]
 type NodeEnd struct, field ChildrenComplete Evidence[bool]
 type NodeEnd struct, field ID NodeID
 type NodeEnd struct, field Order Evidence[OrderKind]
 type NodeEnd struct, field Scalar Scalar
 type NodeEnd struct, field order ID Scalar ChildrenComplete AttributesComplete Order
+type NodeEnd struct, not comparable
 type NodeHeader struct, field Bindings []Binding
 type NodeHeader struct, field Declaration Evidence[DeclarationID]
 type NodeHeader struct, field ID NodeID
@@ -1364,7 +1364,6 @@ type PackageIdentity struct, field Pin ResourcePin
 type PackageIdentity struct, field PinUnavailable bool
 type PackageIdentity struct, field Representation ResourceRepresentation
 type PackageIdentity struct, field order ID Parent Representation Pin BaseURI ArchiveEntry PinUnavailable
-type PackageImageAdvice struct, comparable
 type PackageImageAdvice struct, field Availability Evidence[bool]
 type PackageImageAdvice struct, field IntrinsicAspectRatio Evidence[Rational]
 type PackageImageAdvice struct, field Metadata *ImageMetadataResult
@@ -1374,6 +1373,7 @@ type PackageImageAdvice struct, field Source ResourceAdoptionID
 type PackageImageAdvice struct, field SpecifiedAspectRatio Evidence[Rational]
 type PackageImageAdvice struct, field Template uint64
 type PackageImageAdvice struct, field order Source Template Request Availability Metadata IntrinsicAspectRatio SpecifiedAspectRatio PreservesAspectRatio
+type PackageImageAdvice struct, not comparable
 type PackageMimetypeObservation struct, field ByteLength Evidence[uint64]
 type PackageMimetypeObservation struct, field ContentComplete Evidence[bool]
 type PackageMimetypeObservation struct, field Entry PackageFactID
@@ -1448,7 +1448,7 @@ type QName struct, comparable
 type QName struct, field Local string
 type QName struct, field Space string
 type QName struct, field order Space Local
-type Rational struct, comparable
+type Rational struct, not comparable
 type Rational, method (Rational) ByteSize() int64
 type Rational, method (Rational) Cmp(other Rational) (int, error)
 type Rational, method (Rational) Equal(other Rational) bool
@@ -1546,11 +1546,11 @@ type ResourceAdoptionOptions struct, field Package PackageID
 type ResourceAdoptionOptions struct, field Root bool
 type ResourceAdoptionOptions struct, field order BaseURI ArchiveEntry Package DocumentID Root
 type ResourceAssessmentID string
-type ResourceAttribute struct, comparable
 type ResourceAttribute struct, field Presence Evidence[bool]
 type ResourceAttribute struct, field Raw Evidence[string]
 type ResourceAttribute struct, field Value Evidence[Atomic]
 type ResourceAttribute struct, field order Presence Raw Value
+type ResourceAttribute struct, not comparable
 type ResourceContextResult struct, comparable
 type ResourceContextResult struct, field Group *ResourceGroupContext
 type ResourceContextResult struct, field Image *ResourceImageContext
@@ -1606,7 +1606,6 @@ type ResourceIDFact struct, field Subject NodeRef
 type ResourceIDFact struct, field Unique Evidence[bool]
 type ResourceIDFact struct, field Value string
 type ResourceIDFact struct, field order Value Declaration Subject Source Part Kind Unique Location
-type ResourceImageContext struct, comparable
 type ResourceImageContext struct, field Credit bool
 type ResourceImageContext struct, field Height ResourceAttribute
 type ResourceImageContext struct, field MediaType ResourceAttribute
@@ -1614,11 +1613,11 @@ type ResourceImageContext struct, field Scaling Evidence[string]
 type ResourceImageContext struct, field Source ResourceAttribute
 type ResourceImageContext struct, field Width ResourceAttribute
 type ResourceImageContext struct, field order Credit Source MediaType Width Height Scaling
-type ResourceInstrumentContext struct, comparable
+type ResourceImageContext struct, not comparable
 type ResourceInstrumentContext struct, field ID ResourceAttribute
 type ResourceInstrumentContext struct, field Target Evidence[NodeRef]
 type ResourceInstrumentContext struct, field order ID Target
-type ResourceLinkContext struct, comparable
+type ResourceInstrumentContext struct, not comparable
 type ResourceLinkContext struct, field Actuate ResourceAttribute
 type ResourceLinkContext struct, field ActuationIntent Evidence[string]
 type ResourceLinkContext struct, field Attachment Evidence[NodeRef]
@@ -1630,6 +1629,7 @@ type ResourceLinkContext struct, field Position ResourceAttribute
 type ResourceLinkContext struct, field PresentationIntent Evidence[string]
 type ResourceLinkContext struct, field Show ResourceAttribute
 type ResourceLinkContext struct, field order PresentationIntent ActuationIntent Kind Href Show Actuate Element Position Attachment Fragment
+type ResourceLinkContext struct, not comparable
 type ResourceLinkKind string
 type ResourcePin struct, comparable
 type ResourcePin struct, field CanonicalID string
@@ -1768,10 +1768,10 @@ type SMuFLRange struct, field Names []string
 type SMuFLRange struct, field Start uint32
 type SMuFLRange struct, field order ID Start End Names
 type SMuFLRange struct, not comparable
-type Scalar struct, comparable
 type Scalar struct, field Lexeme Evidence[string]
 type Scalar struct, field Value Evidence[Atomic]
 type Scalar struct, field order Lexeme Value
+type Scalar struct, not comparable
 type SchemaAny = xsd.AnySchema
 type SchemaAny struct, comparable
 type SchemaAny struct, field Namespace string
@@ -1942,7 +1942,6 @@ type SessionError struct, field Reason string
 type SessionError struct, field order Operation Reason Cause
 type SessionError, method (*SessionError) Error() string
 type SessionError, method (*SessionError) Unwrap() []error
-type SoundMappingContextResult struct, comparable
 type SoundMappingContextResult struct, field Content Evidence[bool]
 type SoundMappingContextResult struct, field Direction SoundMappingDirection
 type SoundMappingContextResult struct, field LibraryID Evidence[Atomic]
@@ -1952,6 +1951,7 @@ type SoundMappingContextResult struct, field Role SoundMappingRole
 type SoundMappingContextResult struct, field Sound NodeRef
 type SoundMappingContextResult struct, field SoundID Evidence[Atomic]
 type SoundMappingContextResult struct, field order Role Direction Sound SoundID LibraryID Primary Number Content
+type SoundMappingContextResult struct, not comparable
 type SoundMappingDirection string
 type SoundMappingRole string
 type SourceDTDIDAttribute struct, comparable
@@ -2047,18 +2047,17 @@ type TimelinePlanSpec struct, field PartOwners []ReferenceOwner
 type TimelinePlanSpec struct, field Schema *CompiledSchema
 type TimelinePlanSpec struct, field order Schema PartOwners
 type TimelinePlanSpec struct, not comparable
-type TimingAdjustment struct, comparable
 type TimingAdjustment struct, field Delta Evidence[Rational]
 type TimingAdjustment struct, field Origin Evidence[ContextPosition]
 type TimingAdjustment struct, field Position Evidence[ContextPosition]
 type TimingAdjustment struct, field Raw Evidence[Decimal]
 type TimingAdjustment struct, field Units Evidence[Decimal]
 type TimingAdjustment struct, field order Raw Units Delta Origin Position
+type TimingAdjustment struct, not comparable
 type TimingAdvisory struct, comparable
 type TimingAdvisory struct, field Clause Code
 type TimingAdvisory struct, field Satisfied Evidence[bool]
 type TimingAdvisory struct, field order Clause Satisfied
-type TimingBend struct, comparable
 type TimingBend struct, field Accelerate Evidence[bool]
 type TimingBend struct, field Beats Evidence[Decimal]
 type TimingBend struct, field Bend NodeRef
@@ -2070,6 +2069,7 @@ type TimingBend struct, field RawBeats Evidence[Decimal]
 type TimingBend struct, field Release TimingAdjustment
 type TimingBend struct, field ReleasePresent Evidence[bool]
 type TimingBend struct, field order Bend Release FirstBeat LastBeat OriginalNote ReleasePresent RawBeats Beats RawAccelerate Accelerate
+type TimingBend struct, not comparable
 type TimingContextResult struct, field Advisories []TimingAdvisory
 type TimingContextResult struct, field AllStaves Evidence[bool]
 type TimingContextResult struct, field Anchor Evidence[NodeRef]
@@ -2189,23 +2189,23 @@ type TimingContextResult struct, field WrittenPitch Evidence[Rational]
 type TimingContextResult struct, field WrittenStep Evidence[string]
 type TimingContextResult struct, field order AllStaves ScopeStaff PartOrder MeasureLabel Advisories CursorAfter SwingRatio StateOrigins Spatial Meter FretNumber FretOpenString EditorialPlaybackSuppressed TrillIncludesInitialSound TrillExcludesClosingTurn LayoutOrigin TuningBottomUp StaffTopDown RootAlterPrintObject EffectiveTempo EffectiveDynamics EffectivePizzicato EffectiveVelocity PitchIntent Kind Play PlayComplete Attack Release MakeTime Previous Following Bends Figures Tunings ChainInterpretation Origin Position End Duration PrincipalDuration Principal Units Staff Voice Part ScoreOnset ScoreEnd Chord Grace Cue BendsComplete GraceNode StealPrevious StealFollowing Anchor AnchorPosition AnchorStaff AnchorVoice ChainPosition ChainEnd GroupStart FiguresComplete DurationRaw AnchorUnits DurationUnits Tempo Dynamics ReferenceVelocity EndDynamics EndReferenceVelocity Pizzicato TimeOnly Pan Elevation MIDIUnpitched MIDINote SwingType SwingFirst SwingSecond Straight SwingEligible SwingRealized SwungOnset SwungEnd BendAlter PreBend BendRelease BendNegativeApplicable BendNegativeSatisfied Staves Instruments StaffExists TranspositionChromatic TranspositionDiatonic TranspositionOctave ChromaticDisplacement DiatonicDisplacement DoublingAbove WrittenStep WrittenAlter WrittenOctave WrittenPitch SoundingPitch StaffType Capo KeyFifths KeyMode KeyCancel CancelLocation TimeSymbol TimeSeparator SenzaMisura TimePrintObject ClefSign ClefLine ClefOctave
 type TimingContextResult struct, not comparable
-type TimingDonor struct, comparable
 type TimingDonor struct, field DonorDuration Evidence[Rational]
 type TimingDonor struct, field Fraction Evidence[Rational]
 type TimingDonor struct, field Note Evidence[NodeRef]
 type TimingDonor struct, field Raw Evidence[Decimal]
 type TimingDonor struct, field StolenDuration Evidence[Rational]
 type TimingDonor struct, field order Note Raw DonorDuration Fraction StolenDuration
+type TimingDonor struct, not comparable
 type TimingMeterPair struct, comparable
 type TimingMeterPair struct, field BeatType Evidence[string]
 type TimingMeterPair struct, field Beats Evidence[string]
 type TimingMeterPair struct, field order Beats BeatType
-type TimingPercent struct, comparable
 type TimingPercent struct, field Origin Evidence[ContextPosition]
 type TimingPercent struct, field Percent Evidence[Decimal]
 type TimingPercent struct, field Position Evidence[ContextPosition]
 type TimingPercent struct, field Raw Evidence[Decimal]
 type TimingPercent struct, field order Raw Percent Origin Position
+type TimingPercent struct, not comparable
 type TimingPlayInstruction struct, field Instrument Evidence[NodeRef]
 type TimingPlayInstruction struct, field Scope TimingPlayScope
 type TimingPlayInstruction struct, field Source NodeRef
@@ -2235,7 +2235,6 @@ type TimingStateSource struct, comparable
 type TimingStateSource struct, field Kind Code
 type TimingStateSource struct, field Source NodeRef
 type TimingStateSource struct, field order Source Kind
-type TimingTuning struct, comparable
 type TimingTuning struct, field AdjustedPitch Evidence[Rational]
 type TimingTuning struct, field Alter Evidence[Decimal]
 type TimingTuning struct, field Capo Evidence[Integer]
@@ -2244,6 +2243,7 @@ type TimingTuning struct, field Octave Evidence[Integer]
 type TimingTuning struct, field OpenPitch Evidence[Rational]
 type TimingTuning struct, field Step Evidence[string]
 type TimingTuning struct, field order Line Octave Step Alter Capo OpenPitch AdjustedPitch
+type TimingTuning struct, not comparable
 type UnsupportedRootError struct, comparable
 type UnsupportedRootError struct, field Name QName
 type UnsupportedRootError struct, field Profile ProfileID

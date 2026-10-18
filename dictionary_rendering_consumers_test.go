@@ -1,6 +1,7 @@
 package musicxml
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -78,7 +79,7 @@ func assertDictionaryLocalSourceModel(t *testing.T, text string, canonicalCount 
 							continue
 						}
 						found++
-						if row.Input != expected.input || row.Effective != expected.effective {
+						if !reflect.DeepEqual(row.Input, expected.input) || !reflect.DeepEqual(row.Effective, expected.effective) {
 							t.Errorf("%s: input=%+v effective=%+v, want input=%+v effective=%+v", row.Role, row.Input, row.Effective, expected.input, expected.effective)
 						}
 						if row.Applicability.State != validation.EvidenceKnown || !row.Applicability.Value || row.Result.State != validation.EvidenceAbsent {

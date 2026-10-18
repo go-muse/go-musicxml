@@ -48,10 +48,11 @@ Several option and value structs are comparable today, including
 other structs, in particular generated model types, is not guaranteed; see
 [Generated model compatibility](#generated-model-compatibility).
 
-`validation.Integer`, `validation.Decimal`, and `validation.Rational` hold
-internal pointers. They, and structs that contain them such as
-`validation.Atomic` and `validation.ContextPosition`, compile with `==` but do
-not compare numeric values. Use their `Equal` and `Cmp` methods.
+`validation.Integer`, `validation.Decimal`, and `validation.Rational` are not
+comparable: `==` on them, or on structs that contain them such as
+`validation.Atomic` and `validation.ContextPosition`, does not compile, and they
+cannot be map keys. Compare them with their `Equal` and `Cmp` methods, and
+compare containing structs field by field.
 
 ## Scenarios
 

@@ -145,6 +145,22 @@ type Atomic struct {
 	Name    QName
 }
 
+// isZero reports whether a is the zero Atomic.
+func (a Atomic) isZero() bool {
+	return a.Kind == "" && a.Text == "" && a.Integer.isZero() && a.Decimal.isZero() && a.Name == (QName{})
+}
+
+// identical reports whether a and b have the same representation, as == did
+// before Atomic became non-comparable: exact values compare by identity.
+func (a Atomic) identical(b Atomic) bool {
+	return a.Kind == b.Kind && a.Text == b.Text && a.Integer.identical(b.Integer) && a.Decimal.identical(b.Decimal) && a.Name == b.Name
+}
+
+// atomicEvidenceIdentical is == for Evidence[Atomic].
+func atomicEvidenceIdentical(a, b Evidence[Atomic]) bool {
+	return a.State == b.State && a.Reason == b.Reason && a.Cause == b.Cause && a.Value.identical(b.Value)
+}
+
 // Scalar separates original XML-normalized lexeme evidence from current values.
 type Scalar struct {
 	Lexeme Evidence[string]
