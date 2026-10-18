@@ -476,6 +476,72 @@ func (value ScorePartwisePartMeasureContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected ScorePartwisePartMeasureContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value ScorePartwisePartMeasureContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected ScorePartwisePartMeasureContent variant, or
+// "" unless exactly one variant is set.
+func (value ScorePartwisePartMeasureContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value ScorePartwisePartMeasureContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Note != nil {
+		name, selected, count = "note", value.Note, count+1
+	}
+	if value.Backup != nil {
+		name, selected, count = "backup", value.Backup, count+1
+	}
+	if value.Forward != nil {
+		name, selected, count = "forward", value.Forward, count+1
+	}
+	if value.Direction != nil {
+		name, selected, count = "direction", value.Direction, count+1
+	}
+	if value.Attributes != nil {
+		name, selected, count = "attributes", value.Attributes, count+1
+	}
+	if value.Harmony != nil {
+		name, selected, count = "harmony", value.Harmony, count+1
+	}
+	if value.FiguredBass != nil {
+		name, selected, count = "figured-bass", value.FiguredBass, count+1
+	}
+	if value.Print != nil {
+		name, selected, count = "print", value.Print, count+1
+	}
+	if value.Sound != nil {
+		name, selected, count = "sound", value.Sound, count+1
+	}
+	if value.Listening != nil {
+		name, selected, count = "listening", value.Listening, count+1
+	}
+	if value.Barline != nil {
+		name, selected, count = "barline", value.Barline, count+1
+	}
+	if value.Grouping != nil {
+		name, selected, count = "grouping", value.Grouping, count+1
+	}
+	if value.Link != nil {
+		name, selected, count = "link", value.Link, count+1
+	}
+	if value.Bookmark != nil {
+		name, selected, count = "bookmark", value.Bookmark, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // ScoreTimewiseMeasurePartContents stores the recognized ordered child elements of ScoreTimewiseMeasurePart.
 type ScoreTimewiseMeasurePartContents []ScoreTimewiseMeasurePartContent
 
@@ -865,6 +931,72 @@ func (value ScoreTimewiseMeasurePartContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected ScoreTimewiseMeasurePartContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value ScoreTimewiseMeasurePartContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected ScoreTimewiseMeasurePartContent variant, or
+// "" unless exactly one variant is set.
+func (value ScoreTimewiseMeasurePartContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value ScoreTimewiseMeasurePartContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Note != nil {
+		name, selected, count = "note", value.Note, count+1
+	}
+	if value.Backup != nil {
+		name, selected, count = "backup", value.Backup, count+1
+	}
+	if value.Forward != nil {
+		name, selected, count = "forward", value.Forward, count+1
+	}
+	if value.Direction != nil {
+		name, selected, count = "direction", value.Direction, count+1
+	}
+	if value.Attributes != nil {
+		name, selected, count = "attributes", value.Attributes, count+1
+	}
+	if value.Harmony != nil {
+		name, selected, count = "harmony", value.Harmony, count+1
+	}
+	if value.FiguredBass != nil {
+		name, selected, count = "figured-bass", value.FiguredBass, count+1
+	}
+	if value.Print != nil {
+		name, selected, count = "print", value.Print, count+1
+	}
+	if value.Sound != nil {
+		name, selected, count = "sound", value.Sound, count+1
+	}
+	if value.Listening != nil {
+		name, selected, count = "listening", value.Listening, count+1
+	}
+	if value.Barline != nil {
+		name, selected, count = "barline", value.Barline, count+1
+	}
+	if value.Grouping != nil {
+		name, selected, count = "grouping", value.Grouping, count+1
+	}
+	if value.Link != nil {
+		name, selected, count = "link", value.Link, count+1
+	}
+	if value.Bookmark != nil {
+		name, selected, count = "bookmark", value.Bookmark, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // The closed current-model map is generated from the same final field plans.

@@ -3376,6 +3376,81 @@ func (value ArticulationsContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected ArticulationsContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value ArticulationsContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected ArticulationsContent variant, or
+// "" unless exactly one variant is set.
+func (value ArticulationsContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value ArticulationsContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Accent != nil {
+		name, selected, count = "accent", value.Accent, count+1
+	}
+	if value.StrongAccent != nil {
+		name, selected, count = "strong-accent", value.StrongAccent, count+1
+	}
+	if value.Staccato != nil {
+		name, selected, count = "staccato", value.Staccato, count+1
+	}
+	if value.Tenuto != nil {
+		name, selected, count = "tenuto", value.Tenuto, count+1
+	}
+	if value.DetachedLegato != nil {
+		name, selected, count = "detached-legato", value.DetachedLegato, count+1
+	}
+	if value.Staccatissimo != nil {
+		name, selected, count = "staccatissimo", value.Staccatissimo, count+1
+	}
+	if value.Spiccato != nil {
+		name, selected, count = "spiccato", value.Spiccato, count+1
+	}
+	if value.Scoop != nil {
+		name, selected, count = "scoop", value.Scoop, count+1
+	}
+	if value.Plop != nil {
+		name, selected, count = "plop", value.Plop, count+1
+	}
+	if value.Doit != nil {
+		name, selected, count = "doit", value.Doit, count+1
+	}
+	if value.Falloff != nil {
+		name, selected, count = "falloff", value.Falloff, count+1
+	}
+	if value.BreathMark != nil {
+		name, selected, count = "breath-mark", value.BreathMark, count+1
+	}
+	if value.Caesura != nil {
+		name, selected, count = "caesura", value.Caesura, count+1
+	}
+	if value.Stress != nil {
+		name, selected, count = "stress", value.Stress, count+1
+	}
+	if value.Unstress != nil {
+		name, selected, count = "unstress", value.Unstress, count+1
+	}
+	if value.SoftAccent != nil {
+		name, selected, count = "soft-accent", value.SoftAccent, count+1
+	}
+	if value.OtherArticulation != nil {
+		name, selected, count = "other-articulation", value.OtherArticulation, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // CreditContents stores the recognized ordered child elements of Credit.
 type CreditContents []CreditContent
 
@@ -3575,6 +3650,48 @@ func (value CreditContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected CreditContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value CreditContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected CreditContent variant, or
+// "" unless exactly one variant is set.
+func (value CreditContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value CreditContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.CreditType != nil {
+		name, selected, count = "credit-type", value.CreditType, count+1
+	}
+	if value.Link != nil {
+		name, selected, count = "link", value.Link, count+1
+	}
+	if value.Bookmark != nil {
+		name, selected, count = "bookmark", value.Bookmark, count+1
+	}
+	if value.CreditImage != nil {
+		name, selected, count = "credit-image", value.CreditImage, count+1
+	}
+	if value.CreditWords != nil {
+		name, selected, count = "credit-words", value.CreditWords, count+1
+	}
+	if value.CreditSymbol != nil {
+		name, selected, count = "credit-symbol", value.CreditSymbol, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // DirectionTypeContents stores the recognized ordered child elements of DirectionType.
 type DirectionTypeContents []DirectionTypeContent
 
@@ -3676,6 +3793,36 @@ func (value DirectionTypeContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected DirectionTypeContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value DirectionTypeContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected DirectionTypeContent variant, or
+// "" unless exactly one variant is set.
+func (value DirectionTypeContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value DirectionTypeContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Words != nil {
+		name, selected, count = "words", value.Words, count+1
+	}
+	if value.Symbol != nil {
+		name, selected, count = "symbol", value.Symbol, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // DynamicsContents stores the recognized ordered child elements of Dynamics.
@@ -4381,6 +4528,111 @@ func (value DynamicsContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected DynamicsContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value DynamicsContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected DynamicsContent variant, or
+// "" unless exactly one variant is set.
+func (value DynamicsContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value DynamicsContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.P != nil {
+		name, selected, count = "p", value.P, count+1
+	}
+	if value.Pp != nil {
+		name, selected, count = "pp", value.Pp, count+1
+	}
+	if value.Ppp != nil {
+		name, selected, count = "ppp", value.Ppp, count+1
+	}
+	if value.Pppp != nil {
+		name, selected, count = "pppp", value.Pppp, count+1
+	}
+	if value.Ppppp != nil {
+		name, selected, count = "ppppp", value.Ppppp, count+1
+	}
+	if value.Pppppp != nil {
+		name, selected, count = "pppppp", value.Pppppp, count+1
+	}
+	if value.F != nil {
+		name, selected, count = "f", value.F, count+1
+	}
+	if value.Ff != nil {
+		name, selected, count = "ff", value.Ff, count+1
+	}
+	if value.Fff != nil {
+		name, selected, count = "fff", value.Fff, count+1
+	}
+	if value.Ffff != nil {
+		name, selected, count = "ffff", value.Ffff, count+1
+	}
+	if value.Fffff != nil {
+		name, selected, count = "fffff", value.Fffff, count+1
+	}
+	if value.Ffffff != nil {
+		name, selected, count = "ffffff", value.Ffffff, count+1
+	}
+	if value.Mp != nil {
+		name, selected, count = "mp", value.Mp, count+1
+	}
+	if value.Mf != nil {
+		name, selected, count = "mf", value.Mf, count+1
+	}
+	if value.Sf != nil {
+		name, selected, count = "sf", value.Sf, count+1
+	}
+	if value.Sfp != nil {
+		name, selected, count = "sfp", value.Sfp, count+1
+	}
+	if value.Sfpp != nil {
+		name, selected, count = "sfpp", value.Sfpp, count+1
+	}
+	if value.Fp != nil {
+		name, selected, count = "fp", value.Fp, count+1
+	}
+	if value.Rf != nil {
+		name, selected, count = "rf", value.Rf, count+1
+	}
+	if value.Rfz != nil {
+		name, selected, count = "rfz", value.Rfz, count+1
+	}
+	if value.Sfz != nil {
+		name, selected, count = "sfz", value.Sfz, count+1
+	}
+	if value.Sffz != nil {
+		name, selected, count = "sffz", value.Sffz, count+1
+	}
+	if value.Fz != nil {
+		name, selected, count = "fz", value.Fz, count+1
+	}
+	if value.N != nil {
+		name, selected, count = "n", value.N, count+1
+	}
+	if value.Pf != nil {
+		name, selected, count = "pf", value.Pf, count+1
+	}
+	if value.Sfzp != nil {
+		name, selected, count = "sfzp", value.Sfzp, count+1
+	}
+	if value.OtherDynamics != nil {
+		name, selected, count = "other-dynamics", value.OtherDynamics, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // EncodingContents stores the recognized ordered child elements of Encoding.
 type EncodingContents []EncodingContent
 
@@ -4554,6 +4806,45 @@ func (value EncodingContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected EncodingContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value EncodingContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected EncodingContent variant, or
+// "" unless exactly one variant is set.
+func (value EncodingContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value EncodingContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.EncodingDate != nil {
+		name, selected, count = "encoding-date", value.EncodingDate, count+1
+	}
+	if value.Encoder != nil {
+		name, selected, count = "encoder", value.Encoder, count+1
+	}
+	if value.Software != nil {
+		name, selected, count = "software", value.Software, count+1
+	}
+	if value.EncodingDescription != nil {
+		name, selected, count = "encoding-description", value.EncodingDescription, count+1
+	}
+	if value.Supports != nil {
+		name, selected, count = "supports", value.Supports, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // HarmonyContents stores the recognized ordered child elements of Harmony.
@@ -4779,6 +5070,51 @@ func (value HarmonyContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected HarmonyContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value HarmonyContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected HarmonyContent variant, or
+// "" unless exactly one variant is set.
+func (value HarmonyContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value HarmonyContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Root != nil {
+		name, selected, count = "root", value.Root, count+1
+	}
+	if value.Numeral != nil {
+		name, selected, count = "numeral", value.Numeral, count+1
+	}
+	if value.Function != nil {
+		name, selected, count = "function", value.Function, count+1
+	}
+	if value.Kind != nil {
+		name, selected, count = "kind", value.Kind, count+1
+	}
+	if value.Inversion != nil {
+		name, selected, count = "inversion", value.Inversion, count+1
+	}
+	if value.Bass != nil {
+		name, selected, count = "bass", value.Bass, count+1
+	}
+	if value.Degree != nil {
+		name, selected, count = "degree", value.Degree, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // InterchangeableContents stores the recognized ordered child elements of Interchangeable.
 type InterchangeableContents []InterchangeableContent
 
@@ -4880,6 +5216,36 @@ func (value InterchangeableContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected InterchangeableContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value InterchangeableContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected InterchangeableContent variant, or
+// "" unless exactly one variant is set.
+func (value InterchangeableContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value InterchangeableContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Beats != nil {
+		name, selected, count = "beats", value.Beats, count+1
+	}
+	if value.BeatType != nil {
+		name, selected, count = "beat-type", value.BeatType, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // KeyContents stores the recognized ordered child elements of Key.
@@ -5009,6 +5375,39 @@ func (value KeyContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected KeyContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value KeyContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected KeyContent variant, or
+// "" unless exactly one variant is set.
+func (value KeyContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value KeyContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.KeyStep != nil {
+		name, selected, count = "key-step", value.KeyStep, count+1
+	}
+	if value.KeyAlter != nil {
+		name, selected, count = "key-alter", value.KeyAlter, count+1
+	}
+	if value.KeyAccidental != nil {
+		name, selected, count = "key-accidental", value.KeyAccidental, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // ListenContents stores the recognized ordered child elements of Listen.
 type ListenContents []ListenContent
 
@@ -5136,6 +5535,39 @@ func (value ListenContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected ListenContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value ListenContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected ListenContent variant, or
+// "" unless exactly one variant is set.
+func (value ListenContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value ListenContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Assess != nil {
+		name, selected, count = "assess", value.Assess, count+1
+	}
+	if value.Wait != nil {
+		name, selected, count = "wait", value.Wait, count+1
+	}
+	if value.OtherListen != nil {
+		name, selected, count = "other-listen", value.OtherListen, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // ListeningContents stores the recognized ordered child elements of Listening.
 type ListeningContents []ListeningContent
 
@@ -5237,6 +5669,36 @@ func (value ListeningContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected ListeningContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value ListeningContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected ListeningContent variant, or
+// "" unless exactly one variant is set.
+func (value ListeningContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value ListeningContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Sync != nil {
+		name, selected, count = "sync", value.Sync, count+1
+	}
+	if value.OtherListening != nil {
+		name, selected, count = "other-listening", value.OtherListening, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // LyricContents stores the recognized ordered child elements of Lyric.
@@ -5534,6 +5996,60 @@ func (value LyricContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected LyricContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value LyricContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected LyricContent variant, or
+// "" unless exactly one variant is set.
+func (value LyricContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value LyricContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Syllabic != nil {
+		name, selected, count = "syllabic", value.Syllabic, count+1
+	}
+	if value.Text != nil {
+		name, selected, count = "text", value.Text, count+1
+	}
+	if value.Elision != nil {
+		name, selected, count = "elision", value.Elision, count+1
+	}
+	if value.Extend != nil {
+		name, selected, count = "extend", value.Extend, count+1
+	}
+	if value.Laughing != nil {
+		name, selected, count = "laughing", value.Laughing, count+1
+	}
+	if value.Humming != nil {
+		name, selected, count = "humming", value.Humming, count+1
+	}
+	if value.EndLine != nil {
+		name, selected, count = "end-line", value.EndLine, count+1
+	}
+	if value.EndParagraph != nil {
+		name, selected, count = "end-paragraph", value.EndParagraph, count+1
+	}
+	if value.Footnote != nil {
+		name, selected, count = "footnote", value.Footnote, count+1
+	}
+	if value.Level != nil {
+		name, selected, count = "level", value.Level, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // MetronomeContents stores the recognized ordered child elements of Metronome.
 type MetronomeContents []MetronomeContent
 
@@ -5757,6 +6273,51 @@ func (value MetronomeContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected MetronomeContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value MetronomeContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected MetronomeContent variant, or
+// "" unless exactly one variant is set.
+func (value MetronomeContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value MetronomeContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.BeatUnit != nil {
+		name, selected, count = "beat-unit", value.BeatUnit, count+1
+	}
+	if value.BeatUnitDot != nil {
+		name, selected, count = "beat-unit-dot", value.BeatUnitDot, count+1
+	}
+	if value.BeatUnitTied != nil {
+		name, selected, count = "beat-unit-tied", value.BeatUnitTied, count+1
+	}
+	if value.PerMinute != nil {
+		name, selected, count = "per-minute", value.PerMinute, count+1
+	}
+	if value.MetronomeArrows != nil {
+		name, selected, count = "metronome-arrows", value.MetronomeArrows, count+1
+	}
+	if value.MetronomeNote != nil {
+		name, selected, count = "metronome-note", value.MetronomeNote, count+1
+	}
+	if value.MetronomeRelation != nil {
+		name, selected, count = "metronome-relation", value.MetronomeRelation, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // NameDisplayContents stores the recognized ordered child elements of NameDisplay.
 type NameDisplayContents []NameDisplayContent
 
@@ -5858,6 +6419,36 @@ func (value NameDisplayContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected NameDisplayContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value NameDisplayContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected NameDisplayContent variant, or
+// "" unless exactly one variant is set.
+func (value NameDisplayContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value NameDisplayContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.DisplayText != nil {
+		name, selected, count = "display-text", value.DisplayText, count+1
+	}
+	if value.AccidentalText != nil {
+		name, selected, count = "accidental-text", value.AccidentalText, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // NotationsContents stores the recognized ordered child elements of Notations.
@@ -6251,6 +6842,72 @@ func (value NotationsContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected NotationsContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value NotationsContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected NotationsContent variant, or
+// "" unless exactly one variant is set.
+func (value NotationsContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value NotationsContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Tied != nil {
+		name, selected, count = "tied", value.Tied, count+1
+	}
+	if value.Slur != nil {
+		name, selected, count = "slur", value.Slur, count+1
+	}
+	if value.Tuplet != nil {
+		name, selected, count = "tuplet", value.Tuplet, count+1
+	}
+	if value.Glissando != nil {
+		name, selected, count = "glissando", value.Glissando, count+1
+	}
+	if value.Slide != nil {
+		name, selected, count = "slide", value.Slide, count+1
+	}
+	if value.Ornaments != nil {
+		name, selected, count = "ornaments", value.Ornaments, count+1
+	}
+	if value.Technical != nil {
+		name, selected, count = "technical", value.Technical, count+1
+	}
+	if value.Articulations != nil {
+		name, selected, count = "articulations", value.Articulations, count+1
+	}
+	if value.Dynamics != nil {
+		name, selected, count = "dynamics", value.Dynamics, count+1
+	}
+	if value.Fermata != nil {
+		name, selected, count = "fermata", value.Fermata, count+1
+	}
+	if value.Arpeggiate != nil {
+		name, selected, count = "arpeggiate", value.Arpeggiate, count+1
+	}
+	if value.NonArpeggiate != nil {
+		name, selected, count = "non-arpeggiate", value.NonArpeggiate, count+1
+	}
+	if value.AccidentalMark != nil {
+		name, selected, count = "accidental-mark", value.AccidentalMark, count+1
+	}
+	if value.OtherNotation != nil {
+		name, selected, count = "other-notation", value.OtherNotation, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // NoteheadTextContents stores the recognized ordered child elements of NoteheadText.
 type NoteheadTextContents []NoteheadTextContent
 
@@ -6352,6 +7009,36 @@ func (value NoteheadTextContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected NoteheadTextContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value NoteheadTextContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected NoteheadTextContent variant, or
+// "" unless exactly one variant is set.
+func (value NoteheadTextContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value NoteheadTextContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.DisplayText != nil {
+		name, selected, count = "display-text", value.DisplayText, count+1
+	}
+	if value.AccidentalText != nil {
+		name, selected, count = "accidental-text", value.AccidentalText, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // OrnamentsContents stores the recognized ordered child elements of Ornaments.
@@ -6793,6 +7480,78 @@ func (value OrnamentsContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected OrnamentsContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value OrnamentsContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected OrnamentsContent variant, or
+// "" unless exactly one variant is set.
+func (value OrnamentsContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value OrnamentsContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.TrillMark != nil {
+		name, selected, count = "trill-mark", value.TrillMark, count+1
+	}
+	if value.Turn != nil {
+		name, selected, count = "turn", value.Turn, count+1
+	}
+	if value.DelayedTurn != nil {
+		name, selected, count = "delayed-turn", value.DelayedTurn, count+1
+	}
+	if value.InvertedTurn != nil {
+		name, selected, count = "inverted-turn", value.InvertedTurn, count+1
+	}
+	if value.DelayedInvertedTurn != nil {
+		name, selected, count = "delayed-inverted-turn", value.DelayedInvertedTurn, count+1
+	}
+	if value.VerticalTurn != nil {
+		name, selected, count = "vertical-turn", value.VerticalTurn, count+1
+	}
+	if value.InvertedVerticalTurn != nil {
+		name, selected, count = "inverted-vertical-turn", value.InvertedVerticalTurn, count+1
+	}
+	if value.Shake != nil {
+		name, selected, count = "shake", value.Shake, count+1
+	}
+	if value.WavyLine != nil {
+		name, selected, count = "wavy-line", value.WavyLine, count+1
+	}
+	if value.Mordent != nil {
+		name, selected, count = "mordent", value.Mordent, count+1
+	}
+	if value.InvertedMordent != nil {
+		name, selected, count = "inverted-mordent", value.InvertedMordent, count+1
+	}
+	if value.Schleifer != nil {
+		name, selected, count = "schleifer", value.Schleifer, count+1
+	}
+	if value.Tremolo != nil {
+		name, selected, count = "tremolo", value.Tremolo, count+1
+	}
+	if value.Haydn != nil {
+		name, selected, count = "haydn", value.Haydn, count+1
+	}
+	if value.OtherOrnament != nil {
+		name, selected, count = "other-ornament", value.OtherOrnament, count+1
+	}
+	if value.AccidentalMark != nil {
+		name, selected, count = "accidental-mark", value.AccidentalMark, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // PartListContents stores the recognized ordered child elements of PartList.
 type PartListContents []PartListContent
 
@@ -6894,6 +7653,36 @@ func (value PartListContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected PartListContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value PartListContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected PartListContent variant, or
+// "" unless exactly one variant is set.
+func (value PartListContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value PartListContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.PartGroup != nil {
+		name, selected, count = "part-group", value.PartGroup, count+1
+	}
+	if value.ScorePart != nil {
+		name, selected, count = "score-part", value.ScorePart, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // PlayContents stores the recognized ordered child elements of Play.
@@ -7047,6 +7836,42 @@ func (value PlayContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected PlayContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value PlayContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected PlayContent variant, or
+// "" unless exactly one variant is set.
+func (value PlayContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value PlayContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Ipa != nil {
+		name, selected, count = "ipa", value.Ipa, count+1
+	}
+	if value.Mute != nil {
+		name, selected, count = "mute", value.Mute, count+1
+	}
+	if value.SemiPitched != nil {
+		name, selected, count = "semi-pitched", value.SemiPitched, count+1
+	}
+	if value.OtherPlay != nil {
+		name, selected, count = "other-play", value.OtherPlay, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // ScorePartContents stores the recognized ordered child elements of ScorePart.
 type ScorePartContents []ScorePartContent
 
@@ -7148,6 +7973,36 @@ func (value ScorePartContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected ScorePartContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value ScorePartContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected ScorePartContent variant, or
+// "" unless exactly one variant is set.
+func (value ScorePartContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value ScorePartContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.MIDIDevice != nil {
+		name, selected, count = "midi-device", value.MIDIDevice, count+1
+	}
+	if value.MIDIInstrument != nil {
+		name, selected, count = "midi-instrument", value.MIDIInstrument, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // SoundContents stores the recognized ordered child elements of Sound.
@@ -7299,6 +8154,42 @@ func (value SoundContent) MarshalXML(
 	}
 
 	return nil
+}
+
+// Value returns the selected SoundContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value SoundContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected SoundContent variant, or
+// "" unless exactly one variant is set.
+func (value SoundContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value SoundContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.InstrumentChange != nil {
+		name, selected, count = "instrument-change", value.InstrumentChange, count+1
+	}
+	if value.MIDIDevice != nil {
+		name, selected, count = "midi-device", value.MIDIDevice, count+1
+	}
+	if value.MIDIInstrument != nil {
+		name, selected, count = "midi-instrument", value.MIDIInstrument, count+1
+	}
+	if value.Play != nil {
+		name, selected, count = "play", value.Play, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
 }
 
 // TechnicalContents stores the recognized ordered child elements of Technical.
@@ -8100,6 +8991,123 @@ func (value TechnicalContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected TechnicalContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value TechnicalContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected TechnicalContent variant, or
+// "" unless exactly one variant is set.
+func (value TechnicalContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value TechnicalContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.UpBow != nil {
+		name, selected, count = "up-bow", value.UpBow, count+1
+	}
+	if value.DownBow != nil {
+		name, selected, count = "down-bow", value.DownBow, count+1
+	}
+	if value.Harmonic != nil {
+		name, selected, count = "harmonic", value.Harmonic, count+1
+	}
+	if value.OpenString != nil {
+		name, selected, count = "open-string", value.OpenString, count+1
+	}
+	if value.ThumbPosition != nil {
+		name, selected, count = "thumb-position", value.ThumbPosition, count+1
+	}
+	if value.Fingering != nil {
+		name, selected, count = "fingering", value.Fingering, count+1
+	}
+	if value.Pluck != nil {
+		name, selected, count = "pluck", value.Pluck, count+1
+	}
+	if value.DoubleTongue != nil {
+		name, selected, count = "double-tongue", value.DoubleTongue, count+1
+	}
+	if value.TripleTongue != nil {
+		name, selected, count = "triple-tongue", value.TripleTongue, count+1
+	}
+	if value.Stopped != nil {
+		name, selected, count = "stopped", value.Stopped, count+1
+	}
+	if value.SnapPizzicato != nil {
+		name, selected, count = "snap-pizzicato", value.SnapPizzicato, count+1
+	}
+	if value.Fret != nil {
+		name, selected, count = "fret", value.Fret, count+1
+	}
+	if value.String != nil {
+		name, selected, count = "string", value.String, count+1
+	}
+	if value.HammerOn != nil {
+		name, selected, count = "hammer-on", value.HammerOn, count+1
+	}
+	if value.PullOff != nil {
+		name, selected, count = "pull-off", value.PullOff, count+1
+	}
+	if value.Bend != nil {
+		name, selected, count = "bend", value.Bend, count+1
+	}
+	if value.Tap != nil {
+		name, selected, count = "tap", value.Tap, count+1
+	}
+	if value.Heel != nil {
+		name, selected, count = "heel", value.Heel, count+1
+	}
+	if value.Toe != nil {
+		name, selected, count = "toe", value.Toe, count+1
+	}
+	if value.Fingernails != nil {
+		name, selected, count = "fingernails", value.Fingernails, count+1
+	}
+	if value.Hole != nil {
+		name, selected, count = "hole", value.Hole, count+1
+	}
+	if value.Arrow != nil {
+		name, selected, count = "arrow", value.Arrow, count+1
+	}
+	if value.Handbell != nil {
+		name, selected, count = "handbell", value.Handbell, count+1
+	}
+	if value.BrassBend != nil {
+		name, selected, count = "brass-bend", value.BrassBend, count+1
+	}
+	if value.Flip != nil {
+		name, selected, count = "flip", value.Flip, count+1
+	}
+	if value.Smear != nil {
+		name, selected, count = "smear", value.Smear, count+1
+	}
+	if value.Open != nil {
+		name, selected, count = "open", value.Open, count+1
+	}
+	if value.HalfMuted != nil {
+		name, selected, count = "half-muted", value.HalfMuted, count+1
+	}
+	if value.HarmonMute != nil {
+		name, selected, count = "harmon-mute", value.HarmonMute, count+1
+	}
+	if value.Golpe != nil {
+		name, selected, count = "golpe", value.Golpe, count+1
+	}
+	if value.OtherTechnical != nil {
+		name, selected, count = "other-technical", value.OtherTechnical, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // TimeContents stores the recognized ordered child elements of Time.
 type TimeContents []TimeContent
 
@@ -8202,6 +9210,76 @@ func (value TimeContent) MarshalXML(
 
 	return nil
 }
+
+// Value returns the selected TimeContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value TimeContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected TimeContent variant, or
+// "" unless exactly one variant is set.
+func (value TimeContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value TimeContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Beats != nil {
+		name, selected, count = "beats", value.Beats, count+1
+	}
+	if value.BeatType != nil {
+		name, selected, count = "beat-type", value.BeatType, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
+// Values of the xlink:actuate attribute. The fields that carry it are strings.
+const (
+	// XLinkActuateOnRequest is the "onRequest" value of xlink:actuate.
+	XLinkActuateOnRequest = "onRequest"
+	// XLinkActuateOnLoad is the "onLoad" value of xlink:actuate.
+	XLinkActuateOnLoad = "onLoad"
+	// XLinkActuateOther is the "other" value of xlink:actuate.
+	XLinkActuateOther = "other"
+	// XLinkActuateNone is the "none" value of xlink:actuate.
+	XLinkActuateNone = "none"
+)
+
+// Values of the xlink:show attribute. The fields that carry it are strings.
+const (
+	// XLinkShowNew is the "new" value of xlink:show.
+	XLinkShowNew = "new"
+	// XLinkShowReplace is the "replace" value of xlink:show.
+	XLinkShowReplace = "replace"
+	// XLinkShowEmbed is the "embed" value of xlink:show.
+	XLinkShowEmbed = "embed"
+	// XLinkShowOther is the "other" value of xlink:show.
+	XLinkShowOther = "other"
+	// XLinkShowNone is the "none" value of xlink:show.
+	XLinkShowNone = "none"
+)
+
+// Values of the xlink:type attribute. The fields that carry it are strings.
+const (
+	// XLinkTypeSimple is the "simple" value of xlink:type.
+	XLinkTypeSimple = "simple"
+)
+
+// Values of the xml:space attribute. The fields that carry it are strings.
+const (
+	// XMLSpaceDefault is the "default" value of xml:space.
+	XMLSpaceDefault = "default"
+	// XMLSpacePreserve is the "preserve" value of xml:space.
+	XMLSpacePreserve = "preserve"
+)
 
 type xmlAttributes struct {
 	Footnote     *FormattedText     `xml:"footnote,omitempty"`

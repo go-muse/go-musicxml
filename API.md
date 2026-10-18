@@ -246,12 +246,21 @@ Most exported types mirror MusicXML 4.0 XSD complex and simple types.
 
 - Optional scalar attributes and elements use pointers.
 - Repeated elements use slices.
-- Named XSD enumerations use named string types and constants. Anonymous
-  enumerations, such as the XLink `show`, `actuate`, and `type` attributes and
-  `xml:space`, and union types such as `FontSize` are plain or named strings
-  without constants.
+- Named XSD enumerations use named string types and constants. A restriction
+  enumeration also has `IsKnown()`, an exact match against its constants, and
+  `Values()`, a new slice of them in schema order, for example
+  `YesNo("").Values()`. Union types with enumerated members, such as
+  `NumberOrNormal`, have constants for those members only and no helpers.
+- Anonymous enumerations, the XLink `show`, `actuate` and `type` attributes and
+  `xml:space`, stay plain strings with untyped constants: `XLinkShowNew`,
+  `XLinkActuateOnRequest`, `XLinkTypeSimple`, `XMLSpacePreserve` and the
+  others. Union types such as `FontSize` are named strings without constants.
 - Repeated XSD choices use `...Content` wrapper structs where exactly one
-  field must be set. A non-repeated choice is flattened into mutually
+  field must be set. `Value()` returns the selected variant, a pointer, and
+  `ElementName()` its XML element name; both are zero unless exactly one variant
+  is set. Variants can share a Go type, for example most `DynamicsContent`
+  variants are `*Empty`, so switch on `ElementName()` or on the type of
+  `Value()` with a default branch. A non-repeated choice is flattened into mutually
   exclusive optional fields of the owning type, for example `Note.Pitch`,
   `Note.Unpitched`, and `Note.Rest`; `Validate` reports more than one set.
 - Types whose child order is semantically significant expose `Content` and

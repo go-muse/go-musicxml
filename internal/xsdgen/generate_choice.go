@@ -585,6 +585,58 @@ func (r *complexTypeRenderer) renderChoice(
 	target.WriteString("\t}\n\n")
 	target.WriteString("\treturn nil\n")
 	target.WriteString("}\n\n")
+
+	renderChoiceAccessors(target, choice)
+}
+
+// renderChoiceAccessors renders Value and ElementName. Variants can share a Go
+// type, so a type switch on Value alone cannot tell them apart.
+func renderChoiceAccessors(target *bytes.Buffer, choice *complexChoice) {
+	fmt.Fprintf(
+		target,
+		"// Value returns the selected %s variant, a pointer, or nil unless exactly\n"+
+			"// one variant is set. ElementName tells apart variants of the same type.\n",
+		choice.goType,
+	)
+	fmt.Fprintf(target, "func (value %s) Value() any {\n", choice.goType)
+	target.WriteString("\t_, selected := value.selected()\n")
+	target.WriteString("\treturn selected\n")
+	target.WriteString("}\n\n")
+
+	fmt.Fprintf(
+		target,
+		"// ElementName returns the local XML name of the selected %s variant, or\n"+
+			"// \"\" unless exactly one variant is set.\n",
+		choice.goType,
+	)
+	fmt.Fprintf(target, "func (value %s) ElementName() string {\n", choice.goType)
+	target.WriteString("\tname, _ := value.selected()\n")
+	target.WriteString("\treturn name\n")
+	target.WriteString("}\n\n")
+
+	fmt.Fprintf(
+		target,
+		"func (value %s) selected() (string, any) {\n",
+		choice.goType,
+	)
+	target.WriteString("\tvar name string\n")
+	target.WriteString("\tvar selected any\n")
+	target.WriteString("\tcount := 0\n")
+	for _, variant := range choice.variants {
+		fmt.Fprintf(target, "\tif value.%s != nil {\n", variant.goName)
+		fmt.Fprintf(
+			target,
+			"\t\tname, selected, count = %s, value.%s, count+1\n",
+			strconv.Quote(variant.name.Local),
+			variant.goName,
+		)
+		target.WriteString("\t}\n")
+	}
+	target.WriteString("\tif count != 1 {\n")
+	target.WriteString("\t\treturn \"\", nil\n")
+	target.WriteString("\t}\n")
+	target.WriteString("\treturn name, selected\n")
+	target.WriteString("}\n\n")
 }
 
 func xmlNameExpression(name QName) string {

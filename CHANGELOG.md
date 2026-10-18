@@ -39,6 +39,10 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Add `ErrInvalidConfiguration` (identical to
   `validation.ErrInvalidConfiguration`), which `ErrInvalidDecodeOptions`,
   `ErrInvalidEncodeOptions` and `ErrInvalidMXLOptions` now match.
+- Add `IsKnown()` and `Values()` to every generated restriction enumeration,
+  `Value()` and `ElementName()` to every `...Content` choice type, and untyped
+  constants for the anonymous `xlink:type`, `xlink:show`, `xlink:actuate` and
+  `xml:space` enumerations, such as `XLinkShowNew`.
 - Add the `validation.TimingKind…` constants for every
   `TimingContextResult.Kind` value; the field keeps its `Code` type.
 - Add `DictionarySourceFunc`, `validation.ResourceResolverFunc`,

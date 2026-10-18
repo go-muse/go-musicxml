@@ -14,6 +14,20 @@ const (
 	AboveBelowBelow AboveBelow = "below"
 )
 
+// IsKnown reports whether value is exactly one of the AboveBelow constants.
+func (value AboveBelow) IsKnown() bool {
+	switch value {
+	case AboveBelowAbove, AboveBelowBelow:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the AboveBelow constants in schema order.
+func (AboveBelow) Values() []AboveBelow {
+	return []AboveBelow{AboveBelowAbove, AboveBelowBelow}
+}
+
 // AccidentalValue represents the "accidental-value" XSD simple type.
 type AccidentalValue string
 
@@ -102,6 +116,20 @@ const (
 	AccidentalValueOther AccidentalValue = "other"
 )
 
+// IsKnown reports whether value is exactly one of the AccidentalValue constants.
+func (value AccidentalValue) IsKnown() bool {
+	switch value {
+	case AccidentalValueSharp, AccidentalValueNatural, AccidentalValueFlat, AccidentalValueDoubleSharp, AccidentalValueSharpSharp, AccidentalValueFlatFlat, AccidentalValueNaturalSharp, AccidentalValueNaturalFlat, AccidentalValueQuarterFlat, AccidentalValueQuarterSharp, AccidentalValueThreeQuartersFlat, AccidentalValueThreeQuartersSharp, AccidentalValueSharpDown, AccidentalValueSharpUp, AccidentalValueNaturalDown, AccidentalValueNaturalUp, AccidentalValueFlatDown, AccidentalValueFlatUp, AccidentalValueDoubleSharpDown, AccidentalValueDoubleSharpUp, AccidentalValueFlatFlatDown, AccidentalValueFlatFlatUp, AccidentalValueArrowDown, AccidentalValueArrowUp, AccidentalValueTripleSharp, AccidentalValueTripleFlat, AccidentalValueSlashQuarterSharp, AccidentalValueSlashSharp, AccidentalValueSlashFlat, AccidentalValueDoubleSlashFlat, AccidentalValueSharp1, AccidentalValueSharp2, AccidentalValueSharp3, AccidentalValueSharp5, AccidentalValueFlat1, AccidentalValueFlat2, AccidentalValueFlat3, AccidentalValueFlat4, AccidentalValueSori, AccidentalValueKoron, AccidentalValueOther:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the AccidentalValue constants in schema order.
+func (AccidentalValue) Values() []AccidentalValue {
+	return []AccidentalValue{AccidentalValueSharp, AccidentalValueNatural, AccidentalValueFlat, AccidentalValueDoubleSharp, AccidentalValueSharpSharp, AccidentalValueFlatFlat, AccidentalValueNaturalSharp, AccidentalValueNaturalFlat, AccidentalValueQuarterFlat, AccidentalValueQuarterSharp, AccidentalValueThreeQuartersFlat, AccidentalValueThreeQuartersSharp, AccidentalValueSharpDown, AccidentalValueSharpUp, AccidentalValueNaturalDown, AccidentalValueNaturalUp, AccidentalValueFlatDown, AccidentalValueFlatUp, AccidentalValueDoubleSharpDown, AccidentalValueDoubleSharpUp, AccidentalValueFlatFlatDown, AccidentalValueFlatFlatUp, AccidentalValueArrowDown, AccidentalValueArrowUp, AccidentalValueTripleSharp, AccidentalValueTripleFlat, AccidentalValueSlashQuarterSharp, AccidentalValueSlashSharp, AccidentalValueSlashFlat, AccidentalValueDoubleSlashFlat, AccidentalValueSharp1, AccidentalValueSharp2, AccidentalValueSharp3, AccidentalValueSharp5, AccidentalValueFlat1, AccidentalValueFlat2, AccidentalValueFlat3, AccidentalValueFlat4, AccidentalValueSori, AccidentalValueKoron, AccidentalValueOther}
+}
+
 // AccordionMiddle represents the "accordion-middle" XSD simple type.
 type AccordionMiddle uint64
 
@@ -147,6 +175,20 @@ const (
 	ArrowDirectionOther ArrowDirection = "other"
 )
 
+// IsKnown reports whether value is exactly one of the ArrowDirection constants.
+func (value ArrowDirection) IsKnown() bool {
+	switch value {
+	case ArrowDirectionLeft, ArrowDirectionUp, ArrowDirectionRight, ArrowDirectionDown, ArrowDirectionNorthwest, ArrowDirectionNortheast, ArrowDirectionSoutheast, ArrowDirectionSouthwest, ArrowDirectionLeftRight, ArrowDirectionUpDown, ArrowDirectionNorthwestSoutheast, ArrowDirectionNortheastSouthwest, ArrowDirectionOther:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the ArrowDirection constants in schema order.
+func (ArrowDirection) Values() []ArrowDirection {
+	return []ArrowDirection{ArrowDirectionLeft, ArrowDirectionUp, ArrowDirectionRight, ArrowDirectionDown, ArrowDirectionNorthwest, ArrowDirectionNortheast, ArrowDirectionSoutheast, ArrowDirectionSouthwest, ArrowDirectionLeftRight, ArrowDirectionUpDown, ArrowDirectionNorthwestSoutheast, ArrowDirectionNortheastSouthwest, ArrowDirectionOther}
+}
+
 // ArrowStyle represents the "arrow-style" XSD simple type.
 type ArrowStyle string
 
@@ -167,6 +209,20 @@ const (
 	ArrowStyleOther ArrowStyle = "other"
 )
 
+// IsKnown reports whether value is exactly one of the ArrowStyle constants.
+func (value ArrowStyle) IsKnown() bool {
+	switch value {
+	case ArrowStyleSingle, ArrowStyleDouble, ArrowStyleFilled, ArrowStyleHollow, ArrowStylePaired, ArrowStyleCombined, ArrowStyleOther:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the ArrowStyle constants in schema order.
+func (ArrowStyle) Values() []ArrowStyle {
+	return []ArrowStyle{ArrowStyleSingle, ArrowStyleDouble, ArrowStyleFilled, ArrowStyleHollow, ArrowStylePaired, ArrowStyleCombined, ArrowStyleOther}
+}
+
 // BackwardForward represents the "backward-forward" XSD simple type.
 type BackwardForward string
 
@@ -176,6 +232,20 @@ const (
 	// BackwardForwardForward is the "forward" value.
 	BackwardForwardForward BackwardForward = "forward"
 )
+
+// IsKnown reports whether value is exactly one of the BackwardForward constants.
+func (value BackwardForward) IsKnown() bool {
+	switch value {
+	case BackwardForwardBackward, BackwardForwardForward:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the BackwardForward constants in schema order.
+func (BackwardForward) Values() []BackwardForward {
+	return []BackwardForward{BackwardForwardBackward, BackwardForwardForward}
+}
 
 // BarStyle represents the "bar-style" XSD simple type.
 type BarStyle string
@@ -205,6 +275,20 @@ const (
 	BarStyleNone BarStyle = "none"
 )
 
+// IsKnown reports whether value is exactly one of the BarStyle constants.
+func (value BarStyle) IsKnown() bool {
+	switch value {
+	case BarStyleRegular, BarStyleDotted, BarStyleDashed, BarStyleHeavy, BarStyleLightLight, BarStyleLightHeavy, BarStyleHeavyLight, BarStyleHeavyHeavy, BarStyleTick, BarStyleShort, BarStyleNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the BarStyle constants in schema order.
+func (BarStyle) Values() []BarStyle {
+	return []BarStyle{BarStyleRegular, BarStyleDotted, BarStyleDashed, BarStyleHeavy, BarStyleLightLight, BarStyleLightHeavy, BarStyleHeavyLight, BarStyleHeavyHeavy, BarStyleTick, BarStyleShort, BarStyleNone}
+}
+
 // BeamLevel represents the "beam-level" XSD simple type.
 type BeamLevel uint64
 
@@ -233,6 +317,20 @@ const (
 	// BeamValueBackwardHook is the "backward hook" value.
 	BeamValueBackwardHook BeamValue = "backward hook"
 )
+
+// IsKnown reports whether value is exactly one of the BeamValue constants.
+func (value BeamValue) IsKnown() bool {
+	switch value {
+	case BeamValueBegin, BeamValueContinue, BeamValueEnd, BeamValueForwardHook, BeamValueBackwardHook:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the BeamValue constants in schema order.
+func (BeamValue) Values() []BeamValue {
+	return []BeamValue{BeamValueBegin, BeamValueContinue, BeamValueEnd, BeamValueForwardHook, BeamValueBackwardHook}
+}
 
 // BeaterValue represents the "beater-value" XSD simple type.
 type BeaterValue string
@@ -280,6 +378,20 @@ const (
 	BeaterValueWireBrush BeaterValue = "wire brush"
 )
 
+// IsKnown reports whether value is exactly one of the BeaterValue constants.
+func (value BeaterValue) IsKnown() bool {
+	switch value {
+	case BeaterValueBow, BeaterValueChimeHammer, BeaterValueCoin, BeaterValueDrumStick, BeaterValueFinger, BeaterValueFingernail, BeaterValueFist, BeaterValueGuiroScraper, BeaterValueHammer, BeaterValueHand, BeaterValueJazzStick, BeaterValueKnittingNeedle, BeaterValueMetalHammer, BeaterValueSlideBrushOnGong, BeaterValueSnareStick, BeaterValueSpoonMallet, BeaterValueSuperball, BeaterValueTriangleBeater, BeaterValueTriangleBeaterPlain, BeaterValueWireBrush:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the BeaterValue constants in schema order.
+func (BeaterValue) Values() []BeaterValue {
+	return []BeaterValue{BeaterValueBow, BeaterValueChimeHammer, BeaterValueCoin, BeaterValueDrumStick, BeaterValueFinger, BeaterValueFingernail, BeaterValueFist, BeaterValueGuiroScraper, BeaterValueHammer, BeaterValueHand, BeaterValueJazzStick, BeaterValueKnittingNeedle, BeaterValueMetalHammer, BeaterValueSlideBrushOnGong, BeaterValueSnareStick, BeaterValueSpoonMallet, BeaterValueSuperball, BeaterValueTriangleBeater, BeaterValueTriangleBeaterPlain, BeaterValueWireBrush}
+}
+
 // BendShape represents the "bend-shape" XSD simple type.
 type BendShape string
 
@@ -289,6 +401,20 @@ const (
 	// BendShapeCurved is the "curved" value.
 	BendShapeCurved BendShape = "curved"
 )
+
+// IsKnown reports whether value is exactly one of the BendShape constants.
+func (value BendShape) IsKnown() bool {
+	switch value {
+	case BendShapeAngled, BendShapeCurved:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the BendShape constants in schema order.
+func (BendShape) Values() []BendShape {
+	return []BendShape{BendShapeAngled, BendShapeCurved}
+}
 
 // BreathMarkValue represents the "breath-mark-value" XSD simple type.
 type BreathMarkValue string
@@ -305,6 +431,20 @@ const (
 	// BreathMarkValueSalzedo is the "salzedo" value.
 	BreathMarkValueSalzedo BreathMarkValue = "salzedo"
 )
+
+// IsKnown reports whether value is exactly one of the BreathMarkValue constants.
+func (value BreathMarkValue) IsKnown() bool {
+	switch value {
+	case BreathMarkValueEmpty, BreathMarkValueComma, BreathMarkValueTick, BreathMarkValueUpbow, BreathMarkValueSalzedo:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the BreathMarkValue constants in schema order.
+func (BreathMarkValue) Values() []BreathMarkValue {
+	return []BreathMarkValue{BreathMarkValueEmpty, BreathMarkValueComma, BreathMarkValueTick, BreathMarkValueUpbow, BreathMarkValueSalzedo}
+}
 
 // CaesuraValue represents the "caesura-value" XSD simple type.
 type CaesuraValue string
@@ -324,6 +464,20 @@ const (
 	CaesuraValueEmpty CaesuraValue = ""
 )
 
+// IsKnown reports whether value is exactly one of the CaesuraValue constants.
+func (value CaesuraValue) IsKnown() bool {
+	switch value {
+	case CaesuraValueNormal, CaesuraValueThick, CaesuraValueShort, CaesuraValueCurved, CaesuraValueSingle, CaesuraValueEmpty:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the CaesuraValue constants in schema order.
+func (CaesuraValue) Values() []CaesuraValue {
+	return []CaesuraValue{CaesuraValueNormal, CaesuraValueThick, CaesuraValueShort, CaesuraValueCurved, CaesuraValueSingle, CaesuraValueEmpty}
+}
+
 // CancelLocation represents the "cancel-location" XSD simple type.
 type CancelLocation string
 
@@ -336,6 +490,20 @@ const (
 	CancelLocationBeforeBarline CancelLocation = "before-barline"
 )
 
+// IsKnown reports whether value is exactly one of the CancelLocation constants.
+func (value CancelLocation) IsKnown() bool {
+	switch value {
+	case CancelLocationLeft, CancelLocationRight, CancelLocationBeforeBarline:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the CancelLocation constants in schema order.
+func (CancelLocation) Values() []CancelLocation {
+	return []CancelLocation{CancelLocationLeft, CancelLocationRight, CancelLocationBeforeBarline}
+}
+
 // CircularArrow represents the "circular-arrow" XSD simple type.
 type CircularArrow string
 
@@ -345,6 +513,20 @@ const (
 	// CircularArrowAnticlockwise is the "anticlockwise" value.
 	CircularArrowAnticlockwise CircularArrow = "anticlockwise"
 )
+
+// IsKnown reports whether value is exactly one of the CircularArrow constants.
+func (value CircularArrow) IsKnown() bool {
+	switch value {
+	case CircularArrowClockwise, CircularArrowAnticlockwise:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the CircularArrow constants in schema order.
+func (CircularArrow) Values() []CircularArrow {
+	return []CircularArrow{CircularArrowClockwise, CircularArrowAnticlockwise}
+}
 
 // ClefSign represents the "clef-sign" XSD simple type.
 type ClefSign string
@@ -365,6 +547,20 @@ const (
 	// ClefSignNone is the "none" value.
 	ClefSignNone ClefSign = "none"
 )
+
+// IsKnown reports whether value is exactly one of the ClefSign constants.
+func (value ClefSign) IsKnown() bool {
+	switch value {
+	case ClefSignG, ClefSignF, ClefSignC, ClefSignPercussion, ClefSignTAB, ClefSignJianpu, ClefSignNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the ClefSign constants in schema order.
+func (ClefSign) Values() []ClefSign {
+	return []ClefSign{ClefSignG, ClefSignF, ClefSignC, ClefSignPercussion, ClefSignTAB, ClefSignJianpu, ClefSignNone}
+}
 
 // Color represents the "color" XSD simple type.
 type Color string
@@ -392,6 +588,20 @@ const (
 	CSSFontSizeXxLarge CSSFontSize = "xx-large"
 )
 
+// IsKnown reports whether value is exactly one of the CSSFontSize constants.
+func (value CSSFontSize) IsKnown() bool {
+	switch value {
+	case CSSFontSizeXxSmall, CSSFontSizeXSmall, CSSFontSizeSmall, CSSFontSizeMedium, CSSFontSizeLarge, CSSFontSizeXLarge, CSSFontSizeXxLarge:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the CSSFontSize constants in schema order.
+func (CSSFontSize) Values() []CSSFontSize {
+	return []CSSFontSize{CSSFontSizeXxSmall, CSSFontSizeXSmall, CSSFontSizeSmall, CSSFontSizeMedium, CSSFontSizeLarge, CSSFontSizeXLarge, CSSFontSizeXxLarge}
+}
+
 // DegreeSymbolValue represents the "degree-symbol-value" XSD simple type.
 type DegreeSymbolValue string
 
@@ -408,6 +618,20 @@ const (
 	DegreeSymbolValueHalfDiminished DegreeSymbolValue = "half-diminished"
 )
 
+// IsKnown reports whether value is exactly one of the DegreeSymbolValue constants.
+func (value DegreeSymbolValue) IsKnown() bool {
+	switch value {
+	case DegreeSymbolValueMajor, DegreeSymbolValueMinor, DegreeSymbolValueAugmented, DegreeSymbolValueDiminished, DegreeSymbolValueHalfDiminished:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the DegreeSymbolValue constants in schema order.
+func (DegreeSymbolValue) Values() []DegreeSymbolValue {
+	return []DegreeSymbolValue{DegreeSymbolValueMajor, DegreeSymbolValueMinor, DegreeSymbolValueAugmented, DegreeSymbolValueDiminished, DegreeSymbolValueHalfDiminished}
+}
+
 // DegreeTypeValue represents the "degree-type-value" XSD simple type.
 type DegreeTypeValue string
 
@@ -419,6 +643,20 @@ const (
 	// DegreeTypeValueSubtract is the "subtract" value.
 	DegreeTypeValueSubtract DegreeTypeValue = "subtract"
 )
+
+// IsKnown reports whether value is exactly one of the DegreeTypeValue constants.
+func (value DegreeTypeValue) IsKnown() bool {
+	switch value {
+	case DegreeTypeValueAdd, DegreeTypeValueAlter, DegreeTypeValueSubtract:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the DegreeTypeValue constants in schema order.
+func (DegreeTypeValue) Values() []DegreeTypeValue {
+	return []DegreeTypeValue{DegreeTypeValueAdd, DegreeTypeValueAlter, DegreeTypeValueSubtract}
+}
 
 // DistanceType represents the "distance-type" XSD simple type.
 type DistanceType string
@@ -485,6 +723,20 @@ const (
 	EffectValueWindWhistle EffectValue = "wind whistle"
 )
 
+// IsKnown reports whether value is exactly one of the EffectValue constants.
+func (value EffectValue) IsKnown() bool {
+	switch value {
+	case EffectValueAnvil, EffectValueAutoHorn, EffectValueBirdWhistle, EffectValueCannon, EffectValueDuckCall, EffectValueGunShot, EffectValueKlaxonHorn, EffectValueLionsRoar, EffectValueLotusFlute, EffectValueMegaphone, EffectValuePoliceWhistle, EffectValueSiren, EffectValueSlideWhistle, EffectValueThunderSheet, EffectValueWindMachine, EffectValueWindWhistle:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the EffectValue constants in schema order.
+func (EffectValue) Values() []EffectValue {
+	return []EffectValue{EffectValueAnvil, EffectValueAutoHorn, EffectValueBirdWhistle, EffectValueCannon, EffectValueDuckCall, EffectValueGunShot, EffectValueKlaxonHorn, EffectValueLionsRoar, EffectValueLotusFlute, EffectValueMegaphone, EffectValuePoliceWhistle, EffectValueSiren, EffectValueSlideWhistle, EffectValueThunderSheet, EffectValueWindMachine, EffectValueWindWhistle}
+}
+
 // EnclosureShape represents the "enclosure-shape" XSD simple type.
 type EnclosureShape string
 
@@ -521,6 +773,20 @@ const (
 	EnclosureShapeNone EnclosureShape = "none"
 )
 
+// IsKnown reports whether value is exactly one of the EnclosureShape constants.
+func (value EnclosureShape) IsKnown() bool {
+	switch value {
+	case EnclosureShapeRectangle, EnclosureShapeSquare, EnclosureShapeOval, EnclosureShapeCircle, EnclosureShapeBracket, EnclosureShapeInvertedBracket, EnclosureShapeTriangle, EnclosureShapeDiamond, EnclosureShapePentagon, EnclosureShapeHexagon, EnclosureShapeHeptagon, EnclosureShapeOctagon, EnclosureShapeNonagon, EnclosureShapeDecagon, EnclosureShapeNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the EnclosureShape constants in schema order.
+func (EnclosureShape) Values() []EnclosureShape {
+	return []EnclosureShape{EnclosureShapeRectangle, EnclosureShapeSquare, EnclosureShapeOval, EnclosureShapeCircle, EnclosureShapeBracket, EnclosureShapeInvertedBracket, EnclosureShapeTriangle, EnclosureShapeDiamond, EnclosureShapePentagon, EnclosureShapeHexagon, EnclosureShapeHeptagon, EnclosureShapeOctagon, EnclosureShapeNonagon, EnclosureShapeDecagon, EnclosureShapeNone}
+}
+
 // EndingNumber represents the "ending-number" XSD simple type.
 type EndingNumber string
 
@@ -535,6 +801,20 @@ const (
 	// FanNone is the "none" value.
 	FanNone Fan = "none"
 )
+
+// IsKnown reports whether value is exactly one of the Fan constants.
+func (value Fan) IsKnown() bool {
+	switch value {
+	case FanAccel, FanRit, FanNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the Fan constants in schema order.
+func (Fan) Values() []Fan {
+	return []Fan{FanAccel, FanRit, FanNone}
+}
 
 // FermataShape represents the "fermata-shape" XSD simple type.
 type FermataShape string
@@ -560,6 +840,20 @@ const (
 	FermataShapeEmpty FermataShape = ""
 )
 
+// IsKnown reports whether value is exactly one of the FermataShape constants.
+func (value FermataShape) IsKnown() bool {
+	switch value {
+	case FermataShapeNormal, FermataShapeAngled, FermataShapeSquare, FermataShapeDoubleAngled, FermataShapeDoubleSquare, FermataShapeDoubleDot, FermataShapeHalfCurve, FermataShapeCurlew, FermataShapeEmpty:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the FermataShape constants in schema order.
+func (FermataShape) Values() []FermataShape {
+	return []FermataShape{FermataShapeNormal, FermataShapeAngled, FermataShapeSquare, FermataShapeDoubleAngled, FermataShapeDoubleSquare, FermataShapeDoubleDot, FermataShapeHalfCurve, FermataShapeCurlew, FermataShapeEmpty}
+}
+
 // Fifths represents the "fifths" XSD simple type.
 type Fifths int64
 
@@ -579,6 +873,20 @@ const (
 	FontStyleItalic FontStyle = "italic"
 )
 
+// IsKnown reports whether value is exactly one of the FontStyle constants.
+func (value FontStyle) IsKnown() bool {
+	switch value {
+	case FontStyleNormal, FontStyleItalic:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the FontStyle constants in schema order.
+func (FontStyle) Values() []FontStyle {
+	return []FontStyle{FontStyleNormal, FontStyleItalic}
+}
+
 // FontWeight represents the "font-weight" XSD simple type.
 type FontWeight string
 
@@ -588,6 +896,20 @@ const (
 	// FontWeightBold is the "bold" value.
 	FontWeightBold FontWeight = "bold"
 )
+
+// IsKnown reports whether value is exactly one of the FontWeight constants.
+func (value FontWeight) IsKnown() bool {
+	switch value {
+	case FontWeightNormal, FontWeightBold:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the FontWeight constants in schema order.
+func (FontWeight) Values() []FontWeight {
+	return []FontWeight{FontWeightNormal, FontWeightBold}
+}
 
 // GlassValue represents the "glass-value" XSD simple type.
 type GlassValue string
@@ -600,6 +922,20 @@ const (
 	// GlassValueWindChimes is the "wind chimes" value.
 	GlassValueWindChimes GlassValue = "wind chimes"
 )
+
+// IsKnown reports whether value is exactly one of the GlassValue constants.
+func (value GlassValue) IsKnown() bool {
+	switch value {
+	case GlassValueGlassHarmonica, GlassValueGlassHarp, GlassValueWindChimes:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the GlassValue constants in schema order.
+func (GlassValue) Values() []GlassValue {
+	return []GlassValue{GlassValueGlassHarmonica, GlassValueGlassHarp, GlassValueWindChimes}
+}
 
 // GlyphType represents the "glyph-type" XSD simple type.
 type GlyphType string
@@ -616,6 +952,20 @@ const (
 	GroupBarlineValueMensurstrich GroupBarlineValue = "Mensurstrich"
 )
 
+// IsKnown reports whether value is exactly one of the GroupBarlineValue constants.
+func (value GroupBarlineValue) IsKnown() bool {
+	switch value {
+	case GroupBarlineValueYes, GroupBarlineValueNo, GroupBarlineValueMensurstrich:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the GroupBarlineValue constants in schema order.
+func (GroupBarlineValue) Values() []GroupBarlineValue {
+	return []GroupBarlineValue{GroupBarlineValueYes, GroupBarlineValueNo, GroupBarlineValueMensurstrich}
+}
+
 // GroupSymbolValue represents the "group-symbol-value" XSD simple type.
 type GroupSymbolValue string
 
@@ -631,6 +981,20 @@ const (
 	// GroupSymbolValueSquare is the "square" value.
 	GroupSymbolValueSquare GroupSymbolValue = "square"
 )
+
+// IsKnown reports whether value is exactly one of the GroupSymbolValue constants.
+func (value GroupSymbolValue) IsKnown() bool {
+	switch value {
+	case GroupSymbolValueNone, GroupSymbolValueBrace, GroupSymbolValueLine, GroupSymbolValueBracket, GroupSymbolValueSquare:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the GroupSymbolValue constants in schema order.
+func (GroupSymbolValue) Values() []GroupSymbolValue {
+	return []GroupSymbolValue{GroupSymbolValueNone, GroupSymbolValueBrace, GroupSymbolValueLine, GroupSymbolValueBracket, GroupSymbolValueSquare}
+}
 
 // HandbellValue represents the "handbell-value" XSD simple type.
 type HandbellValue string
@@ -662,6 +1026,20 @@ const (
 	HandbellValueSwing HandbellValue = "swing"
 )
 
+// IsKnown reports whether value is exactly one of the HandbellValue constants.
+func (value HandbellValue) IsKnown() bool {
+	switch value {
+	case HandbellValueBelltree, HandbellValueDamp, HandbellValueEcho, HandbellValueGyro, HandbellValueHandMartellato, HandbellValueMalletLift, HandbellValueMalletTable, HandbellValueMartellato, HandbellValueMartellatoLift, HandbellValueMutedMartellato, HandbellValuePluckLift, HandbellValueSwing:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the HandbellValue constants in schema order.
+func (HandbellValue) Values() []HandbellValue {
+	return []HandbellValue{HandbellValueBelltree, HandbellValueDamp, HandbellValueEcho, HandbellValueGyro, HandbellValueHandMartellato, HandbellValueMalletLift, HandbellValueMalletTable, HandbellValueMartellato, HandbellValueMartellatoLift, HandbellValueMutedMartellato, HandbellValuePluckLift, HandbellValueSwing}
+}
+
 // HarmonClosedLocation represents the "harmon-closed-location" XSD simple type.
 type HarmonClosedLocation string
 
@@ -676,6 +1054,20 @@ const (
 	HarmonClosedLocationTop HarmonClosedLocation = "top"
 )
 
+// IsKnown reports whether value is exactly one of the HarmonClosedLocation constants.
+func (value HarmonClosedLocation) IsKnown() bool {
+	switch value {
+	case HarmonClosedLocationRight, HarmonClosedLocationBottom, HarmonClosedLocationLeft, HarmonClosedLocationTop:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the HarmonClosedLocation constants in schema order.
+func (HarmonClosedLocation) Values() []HarmonClosedLocation {
+	return []HarmonClosedLocation{HarmonClosedLocationRight, HarmonClosedLocationBottom, HarmonClosedLocationLeft, HarmonClosedLocationTop}
+}
+
 // HarmonClosedValue represents the "harmon-closed-value" XSD simple type.
 type HarmonClosedValue string
 
@@ -687,6 +1079,20 @@ const (
 	// HarmonClosedValueHalf is the "half" value.
 	HarmonClosedValueHalf HarmonClosedValue = "half"
 )
+
+// IsKnown reports whether value is exactly one of the HarmonClosedValue constants.
+func (value HarmonClosedValue) IsKnown() bool {
+	switch value {
+	case HarmonClosedValueYes, HarmonClosedValueNo, HarmonClosedValueHalf:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the HarmonClosedValue constants in schema order.
+func (HarmonClosedValue) Values() []HarmonClosedValue {
+	return []HarmonClosedValue{HarmonClosedValueYes, HarmonClosedValueNo, HarmonClosedValueHalf}
+}
 
 // HarmonyArrangement represents the "harmony-arrangement" XSD simple type.
 type HarmonyArrangement string
@@ -700,6 +1106,20 @@ const (
 	HarmonyArrangementDiagonal HarmonyArrangement = "diagonal"
 )
 
+// IsKnown reports whether value is exactly one of the HarmonyArrangement constants.
+func (value HarmonyArrangement) IsKnown() bool {
+	switch value {
+	case HarmonyArrangementVertical, HarmonyArrangementHorizontal, HarmonyArrangementDiagonal:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the HarmonyArrangement constants in schema order.
+func (HarmonyArrangement) Values() []HarmonyArrangement {
+	return []HarmonyArrangement{HarmonyArrangementVertical, HarmonyArrangementHorizontal, HarmonyArrangementDiagonal}
+}
+
 // HarmonyType represents the "harmony-type" XSD simple type.
 type HarmonyType string
 
@@ -711,6 +1131,20 @@ const (
 	// HarmonyTypeAlternate is the "alternate" value.
 	HarmonyTypeAlternate HarmonyType = "alternate"
 )
+
+// IsKnown reports whether value is exactly one of the HarmonyType constants.
+func (value HarmonyType) IsKnown() bool {
+	switch value {
+	case HarmonyTypeExplicit, HarmonyTypeImplied, HarmonyTypeAlternate:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the HarmonyType constants in schema order.
+func (HarmonyType) Values() []HarmonyType {
+	return []HarmonyType{HarmonyTypeExplicit, HarmonyTypeImplied, HarmonyTypeAlternate}
+}
 
 // HoleClosedLocation represents the "hole-closed-location" XSD simple type.
 type HoleClosedLocation string
@@ -726,6 +1160,20 @@ const (
 	HoleClosedLocationTop HoleClosedLocation = "top"
 )
 
+// IsKnown reports whether value is exactly one of the HoleClosedLocation constants.
+func (value HoleClosedLocation) IsKnown() bool {
+	switch value {
+	case HoleClosedLocationRight, HoleClosedLocationBottom, HoleClosedLocationLeft, HoleClosedLocationTop:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the HoleClosedLocation constants in schema order.
+func (HoleClosedLocation) Values() []HoleClosedLocation {
+	return []HoleClosedLocation{HoleClosedLocationRight, HoleClosedLocationBottom, HoleClosedLocationLeft, HoleClosedLocationTop}
+}
+
 // HoleClosedValue represents the "hole-closed-value" XSD simple type.
 type HoleClosedValue string
 
@@ -737,6 +1185,20 @@ const (
 	// HoleClosedValueHalf is the "half" value.
 	HoleClosedValueHalf HoleClosedValue = "half"
 )
+
+// IsKnown reports whether value is exactly one of the HoleClosedValue constants.
+func (value HoleClosedValue) IsKnown() bool {
+	switch value {
+	case HoleClosedValueYes, HoleClosedValueNo, HoleClosedValueHalf:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the HoleClosedValue constants in schema order.
+func (HoleClosedValue) Values() []HoleClosedValue {
+	return []HoleClosedValue{HoleClosedValueYes, HoleClosedValueNo, HoleClosedValueHalf}
+}
 
 // KindValue represents the "kind-value" XSD simple type.
 type KindValue string
@@ -810,6 +1272,20 @@ const (
 	KindValueNone KindValue = "none"
 )
 
+// IsKnown reports whether value is exactly one of the KindValue constants.
+func (value KindValue) IsKnown() bool {
+	switch value {
+	case KindValueMajor, KindValueMinor, KindValueAugmented, KindValueDiminished, KindValueDominant, KindValueMajorSeventh, KindValueMinorSeventh, KindValueDiminishedSeventh, KindValueAugmentedSeventh, KindValueHalfDiminished, KindValueMajorMinor, KindValueMajorSixth, KindValueMinorSixth, KindValueDominantNinth, KindValueMajorNinth, KindValueMinorNinth, KindValueDominant11th, KindValueMajor11th, KindValueMinor11th, KindValueDominant13th, KindValueMajor13th, KindValueMinor13th, KindValueSuspendedSecond, KindValueSuspendedFourth, KindValueNeapolitan, KindValueItalian, KindValueFrench, KindValueGerman, KindValuePedal, KindValuePower, KindValueTristan, KindValueOther, KindValueNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the KindValue constants in schema order.
+func (KindValue) Values() []KindValue {
+	return []KindValue{KindValueMajor, KindValueMinor, KindValueAugmented, KindValueDiminished, KindValueDominant, KindValueMajorSeventh, KindValueMinorSeventh, KindValueDiminishedSeventh, KindValueAugmentedSeventh, KindValueHalfDiminished, KindValueMajorMinor, KindValueMajorSixth, KindValueMinorSixth, KindValueDominantNinth, KindValueMajorNinth, KindValueMinorNinth, KindValueDominant11th, KindValueMajor11th, KindValueMinor11th, KindValueDominant13th, KindValueMajor13th, KindValueMinor13th, KindValueSuspendedSecond, KindValueSuspendedFourth, KindValueNeapolitan, KindValueItalian, KindValueFrench, KindValueGerman, KindValuePedal, KindValuePower, KindValueTristan, KindValueOther, KindValueNone}
+}
+
 // LeftCenterRight represents the "left-center-right" XSD simple type.
 type LeftCenterRight string
 
@@ -822,6 +1298,20 @@ const (
 	LeftCenterRightRight LeftCenterRight = "right"
 )
 
+// IsKnown reports whether value is exactly one of the LeftCenterRight constants.
+func (value LeftCenterRight) IsKnown() bool {
+	switch value {
+	case LeftCenterRightLeft, LeftCenterRightCenter, LeftCenterRightRight:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the LeftCenterRight constants in schema order.
+func (LeftCenterRight) Values() []LeftCenterRight {
+	return []LeftCenterRight{LeftCenterRightLeft, LeftCenterRightCenter, LeftCenterRightRight}
+}
+
 // LeftRight represents the "left-right" XSD simple type.
 type LeftRight string
 
@@ -831,6 +1321,20 @@ const (
 	// LeftRightRight is the "right" value.
 	LeftRightRight LeftRight = "right"
 )
+
+// IsKnown reports whether value is exactly one of the LeftRight constants.
+func (value LeftRight) IsKnown() bool {
+	switch value {
+	case LeftRightLeft, LeftRightRight:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the LeftRight constants in schema order.
+func (LeftRight) Values() []LeftRight {
+	return []LeftRight{LeftRightLeft, LeftRightRight}
+}
 
 // LineEnd represents the "line-end" XSD simple type.
 type LineEnd string
@@ -848,6 +1352,20 @@ const (
 	LineEndNone LineEnd = "none"
 )
 
+// IsKnown reports whether value is exactly one of the LineEnd constants.
+func (value LineEnd) IsKnown() bool {
+	switch value {
+	case LineEndUp, LineEndDown, LineEndBoth, LineEndArrow, LineEndNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the LineEnd constants in schema order.
+func (LineEnd) Values() []LineEnd {
+	return []LineEnd{LineEndUp, LineEndDown, LineEndBoth, LineEndArrow, LineEndNone}
+}
+
 // LineLength represents the "line-length" XSD simple type.
 type LineLength string
 
@@ -860,6 +1378,20 @@ const (
 	LineLengthLong LineLength = "long"
 )
 
+// IsKnown reports whether value is exactly one of the LineLength constants.
+func (value LineLength) IsKnown() bool {
+	switch value {
+	case LineLengthShort, LineLengthMedium, LineLengthLong:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the LineLength constants in schema order.
+func (LineLength) Values() []LineLength {
+	return []LineLength{LineLengthShort, LineLengthMedium, LineLengthLong}
+}
+
 // LineShape represents the "line-shape" XSD simple type.
 type LineShape string
 
@@ -869,6 +1401,20 @@ const (
 	// LineShapeCurved is the "curved" value.
 	LineShapeCurved LineShape = "curved"
 )
+
+// IsKnown reports whether value is exactly one of the LineShape constants.
+func (value LineShape) IsKnown() bool {
+	switch value {
+	case LineShapeStraight, LineShapeCurved:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the LineShape constants in schema order.
+func (LineShape) Values() []LineShape {
+	return []LineShape{LineShapeStraight, LineShapeCurved}
+}
 
 // LineType represents the "line-type" XSD simple type.
 type LineType string
@@ -883,6 +1429,20 @@ const (
 	// LineTypeWavy is the "wavy" value.
 	LineTypeWavy LineType = "wavy"
 )
+
+// IsKnown reports whether value is exactly one of the LineType constants.
+func (value LineType) IsKnown() bool {
+	switch value {
+	case LineTypeSolid, LineTypeDashed, LineTypeDotted, LineTypeWavy:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the LineType constants in schema order.
+func (LineType) Values() []LineType {
+	return []LineType{LineTypeSolid, LineTypeDashed, LineTypeDotted, LineTypeWavy}
+}
 
 // LineWidthType represents the "line-width-type" XSD simple type.
 type LineWidthType string
@@ -899,6 +1459,20 @@ const (
 	MarginTypeBoth MarginType = "both"
 )
 
+// IsKnown reports whether value is exactly one of the MarginType constants.
+func (value MarginType) IsKnown() bool {
+	switch value {
+	case MarginTypeOdd, MarginTypeEven, MarginTypeBoth:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the MarginType constants in schema order.
+func (MarginType) Values() []MarginType {
+	return []MarginType{MarginTypeOdd, MarginTypeEven, MarginTypeBoth}
+}
+
 // MeasureNumberingValue represents the "measure-numbering-value" XSD simple type.
 type MeasureNumberingValue string
 
@@ -910,6 +1484,20 @@ const (
 	// MeasureNumberingValueSystem is the "system" value.
 	MeasureNumberingValueSystem MeasureNumberingValue = "system"
 )
+
+// IsKnown reports whether value is exactly one of the MeasureNumberingValue constants.
+func (value MeasureNumberingValue) IsKnown() bool {
+	switch value {
+	case MeasureNumberingValueNone, MeasureNumberingValueMeasure, MeasureNumberingValueSystem:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the MeasureNumberingValue constants in schema order.
+func (MeasureNumberingValue) Values() []MeasureNumberingValue {
+	return []MeasureNumberingValue{MeasureNumberingValueNone, MeasureNumberingValueMeasure, MeasureNumberingValueSystem}
+}
 
 // MeasureText represents the "measure-text" XSD simple type.
 type MeasureText string
@@ -953,6 +1541,20 @@ const (
 	// MembraneValueTomtom is the "tomtom" value.
 	MembraneValueTomtom MembraneValue = "tomtom"
 )
+
+// IsKnown reports whether value is exactly one of the MembraneValue constants.
+func (value MembraneValue) IsKnown() bool {
+	switch value {
+	case MembraneValueBassDrum, MembraneValueBassDrumOnSide, MembraneValueBongos, MembraneValueChineseTomtom, MembraneValueCongaDrum, MembraneValueCuica, MembraneValueGobletDrum, MembraneValueIndoAmericanTomtom, MembraneValueJapaneseTomtom, MembraneValueMilitaryDrum, MembraneValueSnareDrum, MembraneValueSnareDrumSnaresOff, MembraneValueTabla, MembraneValueTambourine, MembraneValueTenorDrum, MembraneValueTimbales, MembraneValueTomtom:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the MembraneValue constants in schema order.
+func (MembraneValue) Values() []MembraneValue {
+	return []MembraneValue{MembraneValueBassDrum, MembraneValueBassDrumOnSide, MembraneValueBongos, MembraneValueChineseTomtom, MembraneValueCongaDrum, MembraneValueCuica, MembraneValueGobletDrum, MembraneValueIndoAmericanTomtom, MembraneValueJapaneseTomtom, MembraneValueMilitaryDrum, MembraneValueSnareDrum, MembraneValueSnareDrumSnaresOff, MembraneValueTabla, MembraneValueTambourine, MembraneValueTenorDrum, MembraneValueTimbales, MembraneValueTomtom}
+}
 
 // MetalValue represents the "metal-value" XSD simple type.
 type MetalValue string
@@ -1023,6 +1625,20 @@ const (
 	// MetalValueVietnameseHat is the "Vietnamese hat" value.
 	MetalValueVietnameseHat MetalValue = "Vietnamese hat"
 )
+
+// IsKnown reports whether value is exactly one of the MetalValue constants.
+func (value MetalValue) IsKnown() bool {
+	switch value {
+	case MetalValueAgogo, MetalValueAlmglocken, MetalValueBell, MetalValueBellPlate, MetalValueBellTree, MetalValueBrakeDrum, MetalValueCencerro, MetalValueChainRattle, MetalValueChineseCymbal, MetalValueCowbell, MetalValueCrashCymbals, MetalValueCrotale, MetalValueCymbalTongs, MetalValueDomedGong, MetalValueFingerCymbals, MetalValueFlexatone, MetalValueGong, MetalValueHiHat, MetalValueHighHatCymbals, MetalValueHandbell, MetalValueJawHarp, MetalValueJingleBells, MetalValueMusicalSaw, MetalValueShellBells, MetalValueSistrum, MetalValueSizzleCymbal, MetalValueSleighBells, MetalValueSuspendedCymbal, MetalValueTamTam, MetalValueTamTamWithBeater, MetalValueTriangle, MetalValueVietnameseHat:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the MetalValue constants in schema order.
+func (MetalValue) Values() []MetalValue {
+	return []MetalValue{MetalValueAgogo, MetalValueAlmglocken, MetalValueBell, MetalValueBellPlate, MetalValueBellTree, MetalValueBrakeDrum, MetalValueCencerro, MetalValueChainRattle, MetalValueChineseCymbal, MetalValueCowbell, MetalValueCrashCymbals, MetalValueCrotale, MetalValueCymbalTongs, MetalValueDomedGong, MetalValueFingerCymbals, MetalValueFlexatone, MetalValueGong, MetalValueHiHat, MetalValueHighHatCymbals, MetalValueHandbell, MetalValueJawHarp, MetalValueJingleBells, MetalValueMusicalSaw, MetalValueShellBells, MetalValueSistrum, MetalValueSizzleCymbal, MetalValueSleighBells, MetalValueSuspendedCymbal, MetalValueTamTam, MetalValueTamTamWithBeater, MetalValueTriangle, MetalValueVietnameseHat}
+}
 
 // MIDI128 represents the "midi-128" XSD simple type.
 type MIDI128 uint64
@@ -1139,6 +1755,20 @@ const (
 	MutePalm Mute = "palm"
 )
 
+// IsKnown reports whether value is exactly one of the Mute constants.
+func (value Mute) IsKnown() bool {
+	switch value {
+	case MuteOn, MuteOff, MuteStraight, MuteCup, MuteHarmonNoStem, MuteHarmonStem, MuteBucket, MutePlunger, MuteHat, MuteSolotone, MutePractice, MuteStopMute, MuteStopHand, MuteEcho, MutePalm:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the Mute constants in schema order.
+func (Mute) Values() []Mute {
+	return []Mute{MuteOn, MuteOff, MuteStraight, MuteCup, MuteHarmonNoStem, MuteHarmonStem, MuteBucket, MutePlunger, MuteHat, MuteSolotone, MutePractice, MuteStopMute, MuteStopHand, MuteEcho, MutePalm}
+}
+
 // NonNegativeDecimal represents the "non-negative-decimal" XSD simple type.
 type NonNegativeDecimal float64
 
@@ -1177,6 +1807,20 @@ const (
 	NoteSizeTypeLarge NoteSizeType = "large"
 )
 
+// IsKnown reports whether value is exactly one of the NoteSizeType constants.
+func (value NoteSizeType) IsKnown() bool {
+	switch value {
+	case NoteSizeTypeCue, NoteSizeTypeGrace, NoteSizeTypeGraceCue, NoteSizeTypeLarge:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the NoteSizeType constants in schema order.
+func (NoteSizeType) Values() []NoteSizeType {
+	return []NoteSizeType{NoteSizeTypeCue, NoteSizeTypeGrace, NoteSizeTypeGraceCue, NoteSizeTypeLarge}
+}
+
 // NoteTypeValue represents the "note-type-value" XSD simple type.
 type NoteTypeValue string
 
@@ -1210,6 +1854,20 @@ const (
 	// NoteTypeValueMaxima is the "maxima" value.
 	NoteTypeValueMaxima NoteTypeValue = "maxima"
 )
+
+// IsKnown reports whether value is exactly one of the NoteTypeValue constants.
+func (value NoteTypeValue) IsKnown() bool {
+	switch value {
+	case NoteTypeValue1024th, NoteTypeValue512th, NoteTypeValue256th, NoteTypeValue128th, NoteTypeValue64th, NoteTypeValue32nd, NoteTypeValue16th, NoteTypeValueEighth, NoteTypeValueQuarter, NoteTypeValueHalf, NoteTypeValueWhole, NoteTypeValueBreve, NoteTypeValueLong, NoteTypeValueMaxima:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the NoteTypeValue constants in schema order.
+func (NoteTypeValue) Values() []NoteTypeValue {
+	return []NoteTypeValue{NoteTypeValue1024th, NoteTypeValue512th, NoteTypeValue256th, NoteTypeValue128th, NoteTypeValue64th, NoteTypeValue32nd, NoteTypeValue16th, NoteTypeValueEighth, NoteTypeValueQuarter, NoteTypeValueHalf, NoteTypeValueWhole, NoteTypeValueBreve, NoteTypeValueLong, NoteTypeValueMaxima}
+}
 
 // NoteheadValue represents the "notehead-value" XSD simple type.
 type NoteheadValue string
@@ -1273,6 +1931,20 @@ const (
 	NoteheadValueOther NoteheadValue = "other"
 )
 
+// IsKnown reports whether value is exactly one of the NoteheadValue constants.
+func (value NoteheadValue) IsKnown() bool {
+	switch value {
+	case NoteheadValueSlash, NoteheadValueTriangle, NoteheadValueDiamond, NoteheadValueSquare, NoteheadValueCross, NoteheadValueX, NoteheadValueCircleX, NoteheadValueInvertedTriangle, NoteheadValueArrowDown, NoteheadValueArrowUp, NoteheadValueCircled, NoteheadValueSlashed, NoteheadValueBackSlashed, NoteheadValueNormal, NoteheadValueCluster, NoteheadValueCircleDot, NoteheadValueLeftTriangle, NoteheadValueRectangle, NoteheadValueNone, NoteheadValueDo, NoteheadValueRe, NoteheadValueMi, NoteheadValueFa, NoteheadValueFaUp, NoteheadValueSo, NoteheadValueLa, NoteheadValueTi, NoteheadValueOther:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the NoteheadValue constants in schema order.
+func (NoteheadValue) Values() []NoteheadValue {
+	return []NoteheadValue{NoteheadValueSlash, NoteheadValueTriangle, NoteheadValueDiamond, NoteheadValueSquare, NoteheadValueCross, NoteheadValueX, NoteheadValueCircleX, NoteheadValueInvertedTriangle, NoteheadValueArrowDown, NoteheadValueArrowUp, NoteheadValueCircled, NoteheadValueSlashed, NoteheadValueBackSlashed, NoteheadValueNormal, NoteheadValueCluster, NoteheadValueCircleDot, NoteheadValueLeftTriangle, NoteheadValueRectangle, NoteheadValueNone, NoteheadValueDo, NoteheadValueRe, NoteheadValueMi, NoteheadValueFa, NoteheadValueFaUp, NoteheadValueSo, NoteheadValueLa, NoteheadValueTi, NoteheadValueOther}
+}
+
 // NumberLevel represents the "number-level" XSD simple type.
 type NumberLevel uint64
 
@@ -1323,6 +1995,20 @@ const (
 	NumeralModeHarmonicMinor NumeralMode = "harmonic minor"
 )
 
+// IsKnown reports whether value is exactly one of the NumeralMode constants.
+func (value NumeralMode) IsKnown() bool {
+	switch value {
+	case NumeralModeMajor, NumeralModeMinor, NumeralModeNaturalMinor, NumeralModeMelodicMinor, NumeralModeHarmonicMinor:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the NumeralMode constants in schema order.
+func (NumeralMode) Values() []NumeralMode {
+	return []NumeralMode{NumeralModeMajor, NumeralModeMinor, NumeralModeNaturalMinor, NumeralModeMelodicMinor, NumeralModeHarmonicMinor}
+}
+
 // NumeralValue represents the "numeral-value" XSD simple type.
 type NumeralValue uint64
 
@@ -1349,6 +2035,20 @@ const (
 	OnOffOff OnOff = "off"
 )
 
+// IsKnown reports whether value is exactly one of the OnOff constants.
+func (value OnOff) IsKnown() bool {
+	switch value {
+	case OnOffOn, OnOffOff:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the OnOff constants in schema order.
+func (OnOff) Values() []OnOff {
+	return []OnOff{OnOffOn, OnOffOff}
+}
+
 // OverUnder represents the "over-under" XSD simple type.
 type OverUnder string
 
@@ -1358,6 +2058,20 @@ const (
 	// OverUnderUnder is the "under" value.
 	OverUnderUnder OverUnder = "under"
 )
+
+// IsKnown reports whether value is exactly one of the OverUnder constants.
+func (value OverUnder) IsKnown() bool {
+	switch value {
+	case OverUnderOver, OverUnderUnder:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the OverUnder constants in schema order.
+func (OverUnder) Values() []OverUnder {
+	return []OverUnder{OverUnderOver, OverUnderUnder}
+}
 
 // PedalType represents the "pedal-type" XSD simple type.
 type PedalType string
@@ -1378,6 +2092,20 @@ const (
 	// PedalTypeResume is the "resume" value.
 	PedalTypeResume PedalType = "resume"
 )
+
+// IsKnown reports whether value is exactly one of the PedalType constants.
+func (value PedalType) IsKnown() bool {
+	switch value {
+	case PedalTypeStart, PedalTypeStop, PedalTypeSostenuto, PedalTypeChange, PedalTypeContinue, PedalTypeDiscontinue, PedalTypeResume:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the PedalType constants in schema order.
+func (PedalType) Values() []PedalType {
+	return []PedalType{PedalTypeStart, PedalTypeStop, PedalTypeSostenuto, PedalTypeChange, PedalTypeContinue, PedalTypeDiscontinue, PedalTypeResume}
+}
 
 // Percent represents the "percent" XSD simple type.
 type Percent float64
@@ -1430,6 +2158,20 @@ const (
 	// PitchedValueXylophone is the "xylophone" value.
 	PitchedValueXylophone PitchedValue = "xylophone"
 )
+
+// IsKnown reports whether value is exactly one of the PitchedValue constants.
+func (value PitchedValue) IsKnown() bool {
+	switch value {
+	case PitchedValueCelesta, PitchedValueChimes, PitchedValueGlockenspiel, PitchedValueLithophone, PitchedValueMallet, PitchedValueMarimba, PitchedValueSteelDrums, PitchedValueTubaphone, PitchedValueTubularChimes, PitchedValueVibraphone, PitchedValueXylophone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the PitchedValue constants in schema order.
+func (PitchedValue) Values() []PitchedValue {
+	return []PitchedValue{PitchedValueCelesta, PitchedValueChimes, PitchedValueGlockenspiel, PitchedValueLithophone, PitchedValueMallet, PitchedValueMarimba, PitchedValueSteelDrums, PitchedValueTubaphone, PitchedValueTubularChimes, PitchedValueVibraphone, PitchedValueXylophone}
+}
 
 // PositiveDecimal represents the "positive-decimal" XSD simple type.
 type PositiveDecimal float64
@@ -1501,6 +2243,20 @@ const (
 	PrincipalVoiceSymbolNone PrincipalVoiceSymbol = "none"
 )
 
+// IsKnown reports whether value is exactly one of the PrincipalVoiceSymbol constants.
+func (value PrincipalVoiceSymbol) IsKnown() bool {
+	switch value {
+	case PrincipalVoiceSymbolHauptstimme, PrincipalVoiceSymbolNebenstimme, PrincipalVoiceSymbolPlain, PrincipalVoiceSymbolNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the PrincipalVoiceSymbol constants in schema order.
+func (PrincipalVoiceSymbol) Values() []PrincipalVoiceSymbol {
+	return []PrincipalVoiceSymbol{PrincipalVoiceSymbolHauptstimme, PrincipalVoiceSymbolNebenstimme, PrincipalVoiceSymbolPlain, PrincipalVoiceSymbolNone}
+}
+
 // RightLeftMiddle represents the "right-left-middle" XSD simple type.
 type RightLeftMiddle string
 
@@ -1512,6 +2268,20 @@ const (
 	// RightLeftMiddleMiddle is the "middle" value.
 	RightLeftMiddleMiddle RightLeftMiddle = "middle"
 )
+
+// IsKnown reports whether value is exactly one of the RightLeftMiddle constants.
+func (value RightLeftMiddle) IsKnown() bool {
+	switch value {
+	case RightLeftMiddleRight, RightLeftMiddleLeft, RightLeftMiddleMiddle:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the RightLeftMiddle constants in schema order.
+func (RightLeftMiddle) Values() []RightLeftMiddle {
+	return []RightLeftMiddle{RightLeftMiddleRight, RightLeftMiddleLeft, RightLeftMiddleMiddle}
+}
 
 // RotationDegrees represents the "rotation-degrees" XSD simple type.
 type RotationDegrees float64
@@ -1555,6 +2325,20 @@ const (
 	SemiPitchedVeryLow SemiPitched = "very-low"
 )
 
+// IsKnown reports whether value is exactly one of the SemiPitched constants.
+func (value SemiPitched) IsKnown() bool {
+	switch value {
+	case SemiPitchedHigh, SemiPitchedMediumHigh, SemiPitchedMedium, SemiPitchedMediumLow, SemiPitchedLow, SemiPitchedVeryLow:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the SemiPitched constants in schema order.
+func (SemiPitched) Values() []SemiPitched {
+	return []SemiPitched{SemiPitchedHigh, SemiPitchedMediumHigh, SemiPitchedMedium, SemiPitchedMediumLow, SemiPitchedLow, SemiPitchedVeryLow}
+}
+
 // Semitones represents the "semitones" XSD simple type.
 type Semitones float64
 
@@ -1589,6 +2373,20 @@ const (
 	ShowFretsLetters ShowFrets = "letters"
 )
 
+// IsKnown reports whether value is exactly one of the ShowFrets constants.
+func (value ShowFrets) IsKnown() bool {
+	switch value {
+	case ShowFretsNumbers, ShowFretsLetters:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the ShowFrets constants in schema order.
+func (ShowFrets) Values() []ShowFrets {
+	return []ShowFrets{ShowFretsNumbers, ShowFretsLetters}
+}
+
 // ShowTuplet represents the "show-tuplet" XSD simple type.
 type ShowTuplet string
 
@@ -1600,6 +2398,20 @@ const (
 	// ShowTupletNone is the "none" value.
 	ShowTupletNone ShowTuplet = "none"
 )
+
+// IsKnown reports whether value is exactly one of the ShowTuplet constants.
+func (value ShowTuplet) IsKnown() bool {
+	switch value {
+	case ShowTupletActual, ShowTupletBoth, ShowTupletNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the ShowTuplet constants in schema order.
+func (ShowTuplet) Values() []ShowTuplet {
+	return []ShowTuplet{ShowTupletActual, ShowTupletBoth, ShowTupletNone}
+}
 
 // SMuFLAccidentalGlyphName represents the "smufl-accidental-glyph-name" XSD simple type.
 type SMuFLAccidentalGlyphName SMuFLGlyphName
@@ -1633,6 +2445,20 @@ const (
 	// StaffDivideSymbolUpDown is the "up-down" value.
 	StaffDivideSymbolUpDown StaffDivideSymbol = "up-down"
 )
+
+// IsKnown reports whether value is exactly one of the StaffDivideSymbol constants.
+func (value StaffDivideSymbol) IsKnown() bool {
+	switch value {
+	case StaffDivideSymbolDown, StaffDivideSymbolUp, StaffDivideSymbolUpDown:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StaffDivideSymbol constants in schema order.
+func (StaffDivideSymbol) Values() []StaffDivideSymbol {
+	return []StaffDivideSymbol{StaffDivideSymbolDown, StaffDivideSymbolUp, StaffDivideSymbolUpDown}
+}
 
 // StaffLine represents the "staff-line" XSD simple type.
 type StaffLine uint64
@@ -1679,6 +2505,20 @@ const (
 	StaffTypeRegular StaffType = "regular"
 )
 
+// IsKnown reports whether value is exactly one of the StaffType constants.
+func (value StaffType) IsKnown() bool {
+	switch value {
+	case StaffTypeOssia, StaffTypeEditorial, StaffTypeCue, StaffTypeAlternate, StaffTypeRegular:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StaffType constants in schema order.
+func (StaffType) Values() []StaffType {
+	return []StaffType{StaffTypeOssia, StaffTypeEditorial, StaffTypeCue, StaffTypeAlternate, StaffTypeRegular}
+}
+
 // StartNote represents the "start-note" XSD simple type.
 type StartNote string
 
@@ -1691,6 +2531,20 @@ const (
 	StartNoteBelow StartNote = "below"
 )
 
+// IsKnown reports whether value is exactly one of the StartNote constants.
+func (value StartNote) IsKnown() bool {
+	switch value {
+	case StartNoteUpper, StartNoteMain, StartNoteBelow:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StartNote constants in schema order.
+func (StartNote) Values() []StartNote {
+	return []StartNote{StartNoteUpper, StartNoteMain, StartNoteBelow}
+}
+
 // StartStop represents the "start-stop" XSD simple type.
 type StartStop string
 
@@ -1700,6 +2554,20 @@ const (
 	// StartStopStop is the "stop" value.
 	StartStopStop StartStop = "stop"
 )
+
+// IsKnown reports whether value is exactly one of the StartStop constants.
+func (value StartStop) IsKnown() bool {
+	switch value {
+	case StartStopStart, StartStopStop:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StartStop constants in schema order.
+func (StartStop) Values() []StartStop {
+	return []StartStop{StartStopStart, StartStopStop}
+}
 
 // StartStopChangeContinue represents the "start-stop-change-continue" XSD simple type.
 type StartStopChangeContinue string
@@ -1715,6 +2583,20 @@ const (
 	StartStopChangeContinueContinue StartStopChangeContinue = "continue"
 )
 
+// IsKnown reports whether value is exactly one of the StartStopChangeContinue constants.
+func (value StartStopChangeContinue) IsKnown() bool {
+	switch value {
+	case StartStopChangeContinueStart, StartStopChangeContinueStop, StartStopChangeContinueChange, StartStopChangeContinueContinue:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StartStopChangeContinue constants in schema order.
+func (StartStopChangeContinue) Values() []StartStopChangeContinue {
+	return []StartStopChangeContinue{StartStopChangeContinueStart, StartStopChangeContinueStop, StartStopChangeContinueChange, StartStopChangeContinueContinue}
+}
+
 // StartStopContinue represents the "start-stop-continue" XSD simple type.
 type StartStopContinue string
 
@@ -1726,6 +2608,20 @@ const (
 	// StartStopContinueContinue is the "continue" value.
 	StartStopContinueContinue StartStopContinue = "continue"
 )
+
+// IsKnown reports whether value is exactly one of the StartStopContinue constants.
+func (value StartStopContinue) IsKnown() bool {
+	switch value {
+	case StartStopContinueStart, StartStopContinueStop, StartStopContinueContinue:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StartStopContinue constants in schema order.
+func (StartStopContinue) Values() []StartStopContinue {
+	return []StartStopContinue{StartStopContinueStart, StartStopContinueStop, StartStopContinueContinue}
+}
 
 // StartStopDiscontinue represents the "start-stop-discontinue" XSD simple type.
 type StartStopDiscontinue string
@@ -1739,6 +2635,20 @@ const (
 	StartStopDiscontinueDiscontinue StartStopDiscontinue = "discontinue"
 )
 
+// IsKnown reports whether value is exactly one of the StartStopDiscontinue constants.
+func (value StartStopDiscontinue) IsKnown() bool {
+	switch value {
+	case StartStopDiscontinueStart, StartStopDiscontinueStop, StartStopDiscontinueDiscontinue:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StartStopDiscontinue constants in schema order.
+func (StartStopDiscontinue) Values() []StartStopDiscontinue {
+	return []StartStopDiscontinue{StartStopDiscontinueStart, StartStopDiscontinueStop, StartStopDiscontinueDiscontinue}
+}
+
 // StartStopSingle represents the "start-stop-single" XSD simple type.
 type StartStopSingle string
 
@@ -1750,6 +2660,20 @@ const (
 	// StartStopSingleSingle is the "single" value.
 	StartStopSingleSingle StartStopSingle = "single"
 )
+
+// IsKnown reports whether value is exactly one of the StartStopSingle constants.
+func (value StartStopSingle) IsKnown() bool {
+	switch value {
+	case StartStopSingleStart, StartStopSingleStop, StartStopSingleSingle:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StartStopSingle constants in schema order.
+func (StartStopSingle) Values() []StartStopSingle {
+	return []StartStopSingle{StartStopSingleStart, StartStopSingleStop, StartStopSingleSingle}
+}
 
 // StemValue represents the "stem-value" XSD simple type.
 type StemValue string
@@ -1764,6 +2688,20 @@ const (
 	// StemValueNone is the "none" value.
 	StemValueNone StemValue = "none"
 )
+
+// IsKnown reports whether value is exactly one of the StemValue constants.
+func (value StemValue) IsKnown() bool {
+	switch value {
+	case StemValueDown, StemValueUp, StemValueDouble, StemValueNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StemValue constants in schema order.
+func (StemValue) Values() []StemValue {
+	return []StemValue{StemValueDown, StemValueUp, StemValueDouble, StemValueNone}
+}
 
 // Step represents the "step" XSD simple type.
 type Step string
@@ -1785,6 +2723,20 @@ const (
 	StepG Step = "G"
 )
 
+// IsKnown reports whether value is exactly one of the Step constants.
+func (value Step) IsKnown() bool {
+	switch value {
+	case StepA, StepB, StepC, StepD, StepE, StepF, StepG:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the Step constants in schema order.
+func (Step) Values() []Step {
+	return []Step{StepA, StepB, StepC, StepD, StepE, StepF, StepG}
+}
+
 // StickLocation represents the "stick-location" XSD simple type.
 type StickLocation string
 
@@ -1798,6 +2750,20 @@ const (
 	// StickLocationCymbalEdge is the "cymbal edge" value.
 	StickLocationCymbalEdge StickLocation = "cymbal edge"
 )
+
+// IsKnown reports whether value is exactly one of the StickLocation constants.
+func (value StickLocation) IsKnown() bool {
+	switch value {
+	case StickLocationCenter, StickLocationRim, StickLocationCymbalBell, StickLocationCymbalEdge:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StickLocation constants in schema order.
+func (StickLocation) Values() []StickLocation {
+	return []StickLocation{StickLocationCenter, StickLocationRim, StickLocationCymbalBell, StickLocationCymbalEdge}
+}
 
 // StickMaterial represents the "stick-material" XSD simple type.
 type StickMaterial string
@@ -1814,6 +2780,20 @@ const (
 	// StickMaterialX is the "x" value.
 	StickMaterialX StickMaterial = "x"
 )
+
+// IsKnown reports whether value is exactly one of the StickMaterial constants.
+func (value StickMaterial) IsKnown() bool {
+	switch value {
+	case StickMaterialSoft, StickMaterialMedium, StickMaterialHard, StickMaterialShaded, StickMaterialX:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StickMaterial constants in schema order.
+func (StickMaterial) Values() []StickMaterial {
+	return []StickMaterial{StickMaterialSoft, StickMaterialMedium, StickMaterialHard, StickMaterialShaded, StickMaterialX}
+}
 
 // StickType represents the "stick-type" XSD simple type.
 type StickType string
@@ -1841,6 +2821,20 @@ const (
 	StickTypeYarn StickType = "yarn"
 )
 
+// IsKnown reports whether value is exactly one of the StickType constants.
+func (value StickType) IsKnown() bool {
+	switch value {
+	case StickTypeBassDrum, StickTypeDoubleBassDrum, StickTypeGlockenspiel, StickTypeGum, StickTypeHammer, StickTypeSuperball, StickTypeTimpani, StickTypeWound, StickTypeXylophone, StickTypeYarn:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the StickType constants in schema order.
+func (StickType) Values() []StickType {
+	return []StickType{StickTypeBassDrum, StickTypeDoubleBassDrum, StickTypeGlockenspiel, StickTypeGum, StickTypeHammer, StickTypeSuperball, StickTypeTimpani, StickTypeWound, StickTypeXylophone, StickTypeYarn}
+}
+
 // StringNumber represents the "string-number" XSD simple type.
 type StringNumber uint64
 
@@ -1864,6 +2858,20 @@ const (
 	SwingTypeValueEighth SwingTypeValue = "eighth"
 )
 
+// IsKnown reports whether value is exactly one of the SwingTypeValue constants.
+func (value SwingTypeValue) IsKnown() bool {
+	switch value {
+	case SwingTypeValue16th, SwingTypeValueEighth:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the SwingTypeValue constants in schema order.
+func (SwingTypeValue) Values() []SwingTypeValue {
+	return []SwingTypeValue{SwingTypeValue16th, SwingTypeValueEighth}
+}
+
 // Syllabic represents the "syllabic" XSD simple type.
 type Syllabic string
 
@@ -1878,6 +2886,20 @@ const (
 	SyllabicMiddle Syllabic = "middle"
 )
 
+// IsKnown reports whether value is exactly one of the Syllabic constants.
+func (value Syllabic) IsKnown() bool {
+	switch value {
+	case SyllabicSingle, SyllabicBegin, SyllabicEnd, SyllabicMiddle:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the Syllabic constants in schema order.
+func (Syllabic) Values() []Syllabic {
+	return []Syllabic{SyllabicSingle, SyllabicBegin, SyllabicEnd, SyllabicMiddle}
+}
+
 // SymbolSize represents the "symbol-size" XSD simple type.
 type SymbolSize string
 
@@ -1891,6 +2913,20 @@ const (
 	// SymbolSizeLarge is the "large" value.
 	SymbolSizeLarge SymbolSize = "large"
 )
+
+// IsKnown reports whether value is exactly one of the SymbolSize constants.
+func (value SymbolSize) IsKnown() bool {
+	switch value {
+	case SymbolSizeFull, SymbolSizeCue, SymbolSizeGraceCue, SymbolSizeLarge:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the SymbolSize constants in schema order.
+func (SymbolSize) Values() []SymbolSize {
+	return []SymbolSize{SymbolSizeFull, SymbolSizeCue, SymbolSizeGraceCue, SymbolSizeLarge}
+}
 
 // SyncType represents the "sync-type" XSD simple type.
 type SyncType string
@@ -1910,6 +2946,20 @@ const (
 	SyncTypeAlwaysEvent SyncType = "always-event"
 )
 
+// IsKnown reports whether value is exactly one of the SyncType constants.
+func (value SyncType) IsKnown() bool {
+	switch value {
+	case SyncTypeNone, SyncTypeTempo, SyncTypeMostlyTempo, SyncTypeMostlyEvent, SyncTypeEvent, SyncTypeAlwaysEvent:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the SyncType constants in schema order.
+func (SyncType) Values() []SyncType {
+	return []SyncType{SyncTypeNone, SyncTypeTempo, SyncTypeMostlyTempo, SyncTypeMostlyEvent, SyncTypeEvent, SyncTypeAlwaysEvent}
+}
+
 // SystemRelation represents the "system-relation" XSD simple type.
 type SystemRelation SystemRelationNumber
 
@@ -1921,6 +2971,20 @@ const (
 	// SystemRelationNone is the "none" value.
 	SystemRelationNone SystemRelation = "none"
 )
+
+// IsKnown reports whether value is exactly one of the SystemRelation constants.
+func (value SystemRelation) IsKnown() bool {
+	switch value {
+	case SystemRelationOnlyTop, SystemRelationAlsoTop, SystemRelationNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the SystemRelation constants in schema order.
+func (SystemRelation) Values() []SystemRelation {
+	return []SystemRelation{SystemRelationOnlyTop, SystemRelationAlsoTop, SystemRelationNone}
+}
 
 // SystemRelationNumber represents the "system-relation-number" XSD simple type.
 type SystemRelationNumber string
@@ -1938,6 +3002,20 @@ const (
 	SystemRelationNumberNone SystemRelationNumber = "none"
 )
 
+// IsKnown reports whether value is exactly one of the SystemRelationNumber constants.
+func (value SystemRelationNumber) IsKnown() bool {
+	switch value {
+	case SystemRelationNumberOnlyTop, SystemRelationNumberOnlyBottom, SystemRelationNumberAlsoTop, SystemRelationNumberAlsoBottom, SystemRelationNumberNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the SystemRelationNumber constants in schema order.
+func (SystemRelationNumber) Values() []SystemRelationNumber {
+	return []SystemRelationNumber{SystemRelationNumberOnlyTop, SystemRelationNumberOnlyBottom, SystemRelationNumberAlsoTop, SystemRelationNumberAlsoBottom, SystemRelationNumberNone}
+}
+
 // TapHand represents the "tap-hand" XSD simple type.
 type TapHand string
 
@@ -1947,6 +3025,20 @@ const (
 	// TapHandRight is the "right" value.
 	TapHandRight TapHand = "right"
 )
+
+// IsKnown reports whether value is exactly one of the TapHand constants.
+func (value TapHand) IsKnown() bool {
+	switch value {
+	case TapHandLeft, TapHandRight:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TapHand constants in schema order.
+func (TapHand) Values() []TapHand {
+	return []TapHand{TapHandLeft, TapHandRight}
+}
 
 // Tenths represents the "tenths" XSD simple type.
 type Tenths float64
@@ -1986,6 +3078,20 @@ const (
 	TextDirectionRlo TextDirection = "rlo"
 )
 
+// IsKnown reports whether value is exactly one of the TextDirection constants.
+func (value TextDirection) IsKnown() bool {
+	switch value {
+	case TextDirectionLtr, TextDirectionRtl, TextDirectionLro, TextDirectionRlo:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TextDirection constants in schema order.
+func (TextDirection) Values() []TextDirection {
+	return []TextDirection{TextDirectionLtr, TextDirectionRtl, TextDirectionLro, TextDirectionRlo}
+}
+
 // TiedType represents the "tied-type" XSD simple type.
 type TiedType string
 
@@ -1999,6 +3105,20 @@ const (
 	// TiedTypeLetRing is the "let-ring" value.
 	TiedTypeLetRing TiedType = "let-ring"
 )
+
+// IsKnown reports whether value is exactly one of the TiedType constants.
+func (value TiedType) IsKnown() bool {
+	switch value {
+	case TiedTypeStart, TiedTypeStop, TiedTypeContinue, TiedTypeLetRing:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TiedType constants in schema order.
+func (TiedType) Values() []TiedType {
+	return []TiedType{TiedTypeStart, TiedTypeStop, TiedTypeContinue, TiedTypeLetRing}
+}
 
 // TimeOnly represents the "time-only" XSD simple type.
 type TimeOnly string
@@ -2021,6 +3141,20 @@ const (
 	TimeRelationHyphen TimeRelation = "hyphen"
 )
 
+// IsKnown reports whether value is exactly one of the TimeRelation constants.
+func (value TimeRelation) IsKnown() bool {
+	switch value {
+	case TimeRelationParentheses, TimeRelationBracket, TimeRelationEquals, TimeRelationSlash, TimeRelationSpace, TimeRelationHyphen:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TimeRelation constants in schema order.
+func (TimeRelation) Values() []TimeRelation {
+	return []TimeRelation{TimeRelationParentheses, TimeRelationBracket, TimeRelationEquals, TimeRelationSlash, TimeRelationSpace, TimeRelationHyphen}
+}
+
 // TimeSeparator represents the "time-separator" XSD simple type.
 type TimeSeparator string
 
@@ -2036,6 +3170,20 @@ const (
 	// TimeSeparatorAdjacent is the "adjacent" value.
 	TimeSeparatorAdjacent TimeSeparator = "adjacent"
 )
+
+// IsKnown reports whether value is exactly one of the TimeSeparator constants.
+func (value TimeSeparator) IsKnown() bool {
+	switch value {
+	case TimeSeparatorNone, TimeSeparatorHorizontal, TimeSeparatorDiagonal, TimeSeparatorVertical, TimeSeparatorAdjacent:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TimeSeparator constants in schema order.
+func (TimeSeparator) Values() []TimeSeparator {
+	return []TimeSeparator{TimeSeparatorNone, TimeSeparatorHorizontal, TimeSeparatorDiagonal, TimeSeparatorVertical, TimeSeparatorAdjacent}
+}
 
 // TimeSymbol represents the "time-symbol" XSD simple type.
 type TimeSymbol string
@@ -2054,6 +3202,20 @@ const (
 	// TimeSymbolNormal is the "normal" value.
 	TimeSymbolNormal TimeSymbol = "normal"
 )
+
+// IsKnown reports whether value is exactly one of the TimeSymbol constants.
+func (value TimeSymbol) IsKnown() bool {
+	switch value {
+	case TimeSymbolCommon, TimeSymbolCut, TimeSymbolSingleNumber, TimeSymbolNote, TimeSymbolDottedNote, TimeSymbolNormal:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TimeSymbol constants in schema order.
+func (TimeSymbol) Values() []TimeSymbol {
+	return []TimeSymbol{TimeSymbolCommon, TimeSymbolCut, TimeSymbolSingleNumber, TimeSymbolNote, TimeSymbolDottedNote, TimeSymbolNormal}
+}
 
 // TipDirection represents the "tip-direction" XSD simple type.
 type TipDirection string
@@ -2077,6 +3239,20 @@ const (
 	TipDirectionSouthwest TipDirection = "southwest"
 )
 
+// IsKnown reports whether value is exactly one of the TipDirection constants.
+func (value TipDirection) IsKnown() bool {
+	switch value {
+	case TipDirectionUp, TipDirectionDown, TipDirectionLeft, TipDirectionRight, TipDirectionNorthwest, TipDirectionNortheast, TipDirectionSoutheast, TipDirectionSouthwest:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TipDirection constants in schema order.
+func (TipDirection) Values() []TipDirection {
+	return []TipDirection{TipDirectionUp, TipDirectionDown, TipDirectionLeft, TipDirectionRight, TipDirectionNorthwest, TipDirectionNortheast, TipDirectionSoutheast, TipDirectionSouthwest}
+}
+
 // TopBottom represents the "top-bottom" XSD simple type.
 type TopBottom string
 
@@ -2086,6 +3262,20 @@ const (
 	// TopBottomBottom is the "bottom" value.
 	TopBottomBottom TopBottom = "bottom"
 )
+
+// IsKnown reports whether value is exactly one of the TopBottom constants.
+func (value TopBottom) IsKnown() bool {
+	switch value {
+	case TopBottomTop, TopBottomBottom:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TopBottom constants in schema order.
+func (TopBottom) Values() []TopBottom {
+	return []TopBottom{TopBottomTop, TopBottomBottom}
+}
 
 // TremoloMarks represents the "tremolo-marks" XSD simple type.
 type TremoloMarks int64
@@ -2103,6 +3293,20 @@ const (
 	// TremoloTypeUnmeasured is the "unmeasured" value.
 	TremoloTypeUnmeasured TremoloType = "unmeasured"
 )
+
+// IsKnown reports whether value is exactly one of the TremoloType constants.
+func (value TremoloType) IsKnown() bool {
+	switch value {
+	case TremoloTypeStart, TremoloTypeStop, TremoloTypeSingle, TremoloTypeUnmeasured:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TremoloType constants in schema order.
+func (TremoloType) Values() []TremoloType {
+	return []TremoloType{TremoloTypeStart, TremoloTypeStop, TremoloTypeSingle, TremoloTypeUnmeasured}
+}
 
 // TrillBeats represents the "trill-beats" XSD simple type.
 type TrillBeats float64
@@ -2140,6 +3344,20 @@ const (
 	TrillStepUnison TrillStep = "unison"
 )
 
+// IsKnown reports whether value is exactly one of the TrillStep constants.
+func (value TrillStep) IsKnown() bool {
+	switch value {
+	case TrillStepWhole, TrillStepHalf, TrillStepUnison:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TrillStep constants in schema order.
+func (TrillStep) Values() []TrillStep {
+	return []TrillStep{TrillStepWhole, TrillStepHalf, TrillStepUnison}
+}
+
 // TwoNoteTurn represents the "two-note-turn" XSD simple type.
 type TwoNoteTurn string
 
@@ -2152,6 +3370,20 @@ const (
 	TwoNoteTurnNone TwoNoteTurn = "none"
 )
 
+// IsKnown reports whether value is exactly one of the TwoNoteTurn constants.
+func (value TwoNoteTurn) IsKnown() bool {
+	switch value {
+	case TwoNoteTurnWhole, TwoNoteTurnHalf, TwoNoteTurnNone:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the TwoNoteTurn constants in schema order.
+func (TwoNoteTurn) Values() []TwoNoteTurn {
+	return []TwoNoteTurn{TwoNoteTurnWhole, TwoNoteTurnHalf, TwoNoteTurnNone}
+}
+
 // UpDown represents the "up-down" XSD simple type.
 type UpDown string
 
@@ -2161,6 +3393,20 @@ const (
 	// UpDownDown is the "down" value.
 	UpDownDown UpDown = "down"
 )
+
+// IsKnown reports whether value is exactly one of the UpDown constants.
+func (value UpDown) IsKnown() bool {
+	switch value {
+	case UpDownUp, UpDownDown:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the UpDown constants in schema order.
+func (UpDown) Values() []UpDown {
+	return []UpDown{UpDownUp, UpDownDown}
+}
 
 // UpDownStopContinue represents the "up-down-stop-continue" XSD simple type.
 type UpDownStopContinue string
@@ -2176,6 +3422,20 @@ const (
 	UpDownStopContinueContinue UpDownStopContinue = "continue"
 )
 
+// IsKnown reports whether value is exactly one of the UpDownStopContinue constants.
+func (value UpDownStopContinue) IsKnown() bool {
+	switch value {
+	case UpDownStopContinueUp, UpDownStopContinueDown, UpDownStopContinueStop, UpDownStopContinueContinue:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the UpDownStopContinue constants in schema order.
+func (UpDownStopContinue) Values() []UpDownStopContinue {
+	return []UpDownStopContinue{UpDownStopContinueUp, UpDownStopContinueDown, UpDownStopContinueStop, UpDownStopContinueContinue}
+}
+
 // UprightInverted represents the "upright-inverted" XSD simple type.
 type UprightInverted string
 
@@ -2185,6 +3445,20 @@ const (
 	// UprightInvertedInverted is the "inverted" value.
 	UprightInvertedInverted UprightInverted = "inverted"
 )
+
+// IsKnown reports whether value is exactly one of the UprightInverted constants.
+func (value UprightInverted) IsKnown() bool {
+	switch value {
+	case UprightInvertedUpright, UprightInvertedInverted:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the UprightInverted constants in schema order.
+func (UprightInverted) Values() []UprightInverted {
+	return []UprightInverted{UprightInvertedUpright, UprightInvertedInverted}
+}
 
 // Valign represents the "valign" XSD simple type.
 type Valign string
@@ -2200,6 +3474,20 @@ const (
 	ValignBaseline Valign = "baseline"
 )
 
+// IsKnown reports whether value is exactly one of the Valign constants.
+func (value Valign) IsKnown() bool {
+	switch value {
+	case ValignTop, ValignMiddle, ValignBottom, ValignBaseline:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the Valign constants in schema order.
+func (Valign) Values() []Valign {
+	return []Valign{ValignTop, ValignMiddle, ValignBottom, ValignBaseline}
+}
+
 // ValignImage represents the "valign-image" XSD simple type.
 type ValignImage string
 
@@ -2211,6 +3499,20 @@ const (
 	// ValignImageBottom is the "bottom" value.
 	ValignImageBottom ValignImage = "bottom"
 )
+
+// IsKnown reports whether value is exactly one of the ValignImage constants.
+func (value ValignImage) IsKnown() bool {
+	switch value {
+	case ValignImageTop, ValignImageMiddle, ValignImageBottom:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the ValignImage constants in schema order.
+func (ValignImage) Values() []ValignImage {
+	return []ValignImage{ValignImageTop, ValignImageMiddle, ValignImageBottom}
+}
 
 // WedgeType represents the "wedge-type" XSD simple type.
 type WedgeType string
@@ -2225,6 +3527,20 @@ const (
 	// WedgeTypeContinue is the "continue" value.
 	WedgeTypeContinue WedgeType = "continue"
 )
+
+// IsKnown reports whether value is exactly one of the WedgeType constants.
+func (value WedgeType) IsKnown() bool {
+	switch value {
+	case WedgeTypeCrescendo, WedgeTypeDiminuendo, WedgeTypeStop, WedgeTypeContinue:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the WedgeType constants in schema order.
+func (WedgeType) Values() []WedgeType {
+	return []WedgeType{WedgeTypeCrescendo, WedgeTypeDiminuendo, WedgeTypeStop, WedgeTypeContinue}
+}
 
 // Winged represents the "winged" XSD simple type.
 type Winged string
@@ -2241,6 +3557,20 @@ const (
 	// WingedDoubleCurved is the "double-curved" value.
 	WingedDoubleCurved Winged = "double-curved"
 )
+
+// IsKnown reports whether value is exactly one of the Winged constants.
+func (value Winged) IsKnown() bool {
+	switch value {
+	case WingedNone, WingedStraight, WingedCurved, WingedDoubleStraight, WingedDoubleCurved:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the Winged constants in schema order.
+func (Winged) Values() []Winged {
+	return []Winged{WingedNone, WingedStraight, WingedCurved, WingedDoubleStraight, WingedDoubleCurved}
+}
 
 // WoodValue represents the "wood-value" XSD simple type.
 type WoodValue string
@@ -2290,6 +3620,20 @@ const (
 	WoodValueWoodBlock WoodValue = "wood block"
 )
 
+// IsKnown reports whether value is exactly one of the WoodValue constants.
+func (value WoodValue) IsKnown() bool {
+	switch value {
+	case WoodValueBambooScraper, WoodValueBoardClapper, WoodValueCabasa, WoodValueCastanets, WoodValueCastanetsWithHandle, WoodValueClaves, WoodValueFootballRattle, WoodValueGuiro, WoodValueLogDrum, WoodValueMaraca, WoodValueMaracas, WoodValueQuijada, WoodValueRainstick, WoodValueRatchet, WoodValueRecoReco, WoodValueSandpaperBlocks, WoodValueSlitDrum, WoodValueTempleBlock, WoodValueVibraslap, WoodValueWhip, WoodValueWoodBlock:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the WoodValue constants in schema order.
+func (WoodValue) Values() []WoodValue {
+	return []WoodValue{WoodValueBambooScraper, WoodValueBoardClapper, WoodValueCabasa, WoodValueCastanets, WoodValueCastanetsWithHandle, WoodValueClaves, WoodValueFootballRattle, WoodValueGuiro, WoodValueLogDrum, WoodValueMaraca, WoodValueMaracas, WoodValueQuijada, WoodValueRainstick, WoodValueRatchet, WoodValueRecoReco, WoodValueSandpaperBlocks, WoodValueSlitDrum, WoodValueTempleBlock, WoodValueVibraslap, WoodValueWhip, WoodValueWoodBlock}
+}
+
 // YesNo represents the "yes-no" XSD simple type.
 type YesNo string
 
@@ -2299,6 +3643,20 @@ const (
 	// YesNoNo is the "no" value.
 	YesNoNo YesNo = "no"
 )
+
+// IsKnown reports whether value is exactly one of the YesNo constants.
+func (value YesNo) IsKnown() bool {
+	switch value {
+	case YesNoYes, YesNoNo:
+		return true
+	}
+	return false
+}
+
+// Values returns a new slice of the YesNo constants in schema order.
+func (YesNo) Values() []YesNo {
+	return []YesNo{YesNoYes, YesNoNo}
+}
 
 // YesNoNumber represents the "yes-no-number" XSD simple type.
 type YesNoNumber string

@@ -149,6 +149,9 @@ func GenerateComplexTypesWithOptions(
 	for _, choice := range renderer.choices {
 		renderer.renderChoice(&body, choice)
 	}
+	if err := renderAttributeEnumerations(&body, index); err != nil {
+		return nil, err
+	}
 
 	hasNumericXML, err := renderer.renderNumericXML(&body)
 	if err != nil {

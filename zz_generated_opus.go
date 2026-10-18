@@ -229,6 +229,39 @@ func (value OpusDocumentContent) MarshalXML(
 	return nil
 }
 
+// Value returns the selected OpusDocumentContent variant, a pointer, or nil unless exactly
+// one variant is set. ElementName tells apart variants of the same type.
+func (value OpusDocumentContent) Value() any {
+	_, selected := value.selected()
+	return selected
+}
+
+// ElementName returns the local XML name of the selected OpusDocumentContent variant, or
+// "" unless exactly one variant is set.
+func (value OpusDocumentContent) ElementName() string {
+	name, _ := value.selected()
+	return name
+}
+
+func (value OpusDocumentContent) selected() (string, any) {
+	var name string
+	var selected any
+	count := 0
+	if value.Opus != nil {
+		name, selected, count = "opus", value.Opus, count+1
+	}
+	if value.OpusLink != nil {
+		name, selected, count = "opus-link", value.OpusLink, count+1
+	}
+	if value.Score != nil {
+		name, selected, count = "score", value.Score, count+1
+	}
+	if count != 1 {
+		return "", nil
+	}
+	return name, selected
+}
+
 // The closed current-model map is generated from the same final field plans.
 func init() {
 	modelDescriptors["OpusDocument"] = &modelDescriptor{Name: "OpusDocument", GoFields: 4, MappedFields: 3, SchemaType: modelName{Local: "opus"}, Root: modelName{Local: "opus"}, Attributes: []modelField{{Name: "Version", Index: []int{3}, XML: modelName{Local: "version"}, Optional: true, Kind: modelString}}, Elements: []modelField{{Name: "Title", Index: []int{1}, XML: modelName{Local: "title"}, Optional: true, Repeated: false, Kind: modelString}, {Name: "Content", Index: []int{2}, Repeated: true, Variants: []modelField{{Name: "Opus", Index: []int{0}, XML: modelName{Local: "opus"}, Optional: true, Child: "OpusDocument"}, {Name: "OpusLink", Index: []int{1}, XML: modelName{Local: "opus-link"}, Optional: true, Child: "OpusLink"}, {Name: "Score", Index: []int{2}, XML: modelName{Local: "score"}, Optional: true, Child: "OpusScore"}}}}}

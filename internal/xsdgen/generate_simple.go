@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"math"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -167,7 +168,54 @@ func (r *simpleTypeRenderer) renderPlan(
 	}
 	target.WriteString(")\n\n")
 
+	// A union's constants cover only its enumerated members, so only a
+	// restriction can tell known values apart.
+	if plan.Definition.Form == SimpleTypeRestriction &&
+		len(plan.Definition.Enumerations) == len(enumerations) {
+		renderEnumerationHelpers(target, plan.GoName, enumerations)
+	}
+
 	return nil
+}
+
+// renderEnumerationHelpers renders IsKnown and Values for a restriction
+// whose constants are its complete value space.
+func renderEnumerationHelpers(
+	target *bytes.Buffer,
+	goName string,
+	enumerations []EnumerationPlan,
+) {
+	names := make([]string, len(enumerations))
+	for index, enumeration := range enumerations {
+		names[index] = enumeration.GoName
+	}
+
+	fmt.Fprintf(
+		target,
+		"// IsKnown reports whether value is exactly one of the %s constants.\n",
+		goName,
+	)
+	fmt.Fprintf(target, "func (value %s) IsKnown() bool {\n", goName)
+	target.WriteString("\tswitch value {\n")
+	fmt.Fprintf(target, "\tcase %s:\n", strings.Join(names, ", "))
+	target.WriteString("\t\treturn true\n")
+	target.WriteString("\t}\n")
+	target.WriteString("\treturn false\n")
+	target.WriteString("}\n\n")
+
+	fmt.Fprintf(
+		target,
+		"// Values returns a new slice of the %s constants in schema order.\n",
+		goName,
+	)
+	fmt.Fprintf(target, "func (%s) Values() []%s {\n", goName, goName)
+	fmt.Fprintf(
+		target,
+		"\treturn []%s{%s}\n",
+		goName,
+		strings.Join(names, ", "),
+	)
+	target.WriteString("}\n\n")
 }
 
 func (r *simpleTypeRenderer) definitionGoType(
