@@ -1180,7 +1180,7 @@ type DecodeMXLAssessmentOptions struct, field order Assessment Lenient
 type DecodeMXLAssessmentOptions struct, not comparable
 type DecodeMXLResult struct, field Accepted bool
 type DecodeMXLResult struct, field Conversion validation.ConversionResult
-type DecodeMXLResult struct, field Model validation.Report
+type DecodeMXLResult struct, field Model validation.AssessmentBundle
 type DecodeMXLResult struct, field Package *MXLPackage
 type DecodeMXLResult struct, field Source validation.AssessmentBundle
 type DecodeMXLResult struct, field order Package Source Model Conversion Accepted

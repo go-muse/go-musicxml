@@ -178,6 +178,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 		// The first compact-fact checkpoint completed 568 and refused 569 at
 		// used42,495,274/requested24,717,911. Declaration-canonical role reuse
 		// now admits both and moves the adjacent default boundary to 576/577.
+		// The current-state schema-hint wording adds 84 live bytes.
 		{568, 76155, false},
 		{569, 76289, false},
 		{576, 77227, false},
@@ -190,7 +191,7 @@ func TestReviewOriginGraphDefaultBufferBoundary(t *testing.T) {
 			}
 			bundle, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(source), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphInternalDTDDictionaries}}})
 			if tc.refuses {
-				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42054060, 25064543)
+				reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 42054144, 25064543)
 			} else {
 				reviewBudgetAssertCompleteOrigins(t, bundle, err, 8*tc.measures+8)
 			}
@@ -212,8 +213,8 @@ func TestReviewFragmentGraphMediumScoreDefaultBufferRefusal(t *testing.T) {
 	// declaration-canonical role reuse lowers only the live side again.
 	// The external-DTD closure wording adds 202 live and 104 requested bytes:
 	// the graph and intrinsic source profile texts are charged as retained
-	// strings.
-	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54486816, 34741264)
+	// strings. The current-state schema-hint wording adds 84 live bytes.
+	reviewBudgetAssertGraphBufferRefusal(t, bundle, err, 54486900, 34741264)
 	t.Logf("source bytes=%d err=%v", len(source), err)
 }
 
@@ -228,8 +229,8 @@ func TestReviewOriginGraphExactSnapshotBufferAdmission(t *testing.T) {
 		measures, bytes int
 		used, requested int64
 	}{
-		{569, 76289, 41477620, 24718015},
-		{577, 77361, 42054060, 25064543},
+		{569, 76289, 41477704, 24718015},
+		{577, 77361, 42054144, 25064543},
 	} {
 		for _, short := range []int64{0, 1} {
 			t.Run(fmt.Sprintf("%d/short-%d", tc.measures, short), func(t *testing.T) {

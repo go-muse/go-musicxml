@@ -29,7 +29,13 @@ const (
 	PackageCheckMimetypeAdvice         PackageCheck = "mimetype-advice"
 	PackageCheckEntryNameAdvice        PackageCheck = "entry-name-advice"
 	PackageCheckCompressionObservation PackageCheck = "compression-observation"
-	PackageCheckSchemaHintPairs        PackageCheck = "schema-hint-pairs"
+	// PackageCheckSchemaHintPairs pairs the schema hints of source
+	// resources. A model snapshot publishes no hints, so the check does not
+	// apply to model resources; it used to leave them unknown. The plan
+	// carries no revision, so a catalog that binds this check should revise
+	// its rule to make the change visible in its digest, as the root
+	// package's MX40-PACKAGE-schema-hint-pairs revision 2 does.
+	PackageCheckSchemaHintPairs PackageCheck = "schema-hint-pairs"
 )
 
 // PackageCheckImageScaling and PackageCheckFileMetadataAdvice expose optional

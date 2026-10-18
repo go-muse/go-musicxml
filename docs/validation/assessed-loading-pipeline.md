@@ -2,13 +2,16 @@
 
 `DecodeAssessed` now always requires the existing `ProfileSourceSemantics`
 followed by direct `ProfileModelSemantics`. `DecodeMXLAssessed` assesses the
-original archive with `ProfileMXLSourceSemantics` instead and then the primary
-document with `ProfileModelSemantics`. The former
+original archive with `ProfileMXLSourceSemantics` instead and then the current
+state of the whole converted package with `ProfileMXLModelSemantics`, as
+`AssessMXLPackage` does. The former
 `DecodeAssessedWithDictionaries` was removed; its dictionary options are
 `AssessmentOptions.Dictionaries`.
 This breaks the earlier unreleased development API; these entry points did not
-exist in v0.1.0. It does not widen either profile, change its catalog digest, or
-establish complete MusicXML conformance.
+exist in v0.1.0. It does not widen the XML loader's profiles or change their
+catalog digests, and it does not establish complete MusicXML conformance. The
+MXL package profiles changed identity later, with revision 2 of the schema-hint
+pairing rule.
 
 Ordinary `Decode`, typed decode helpers and `DecodeWithOptions` remain transport
 operations. `InspectXML`, `AssessModel` and the resource/MXL inspection and
@@ -69,9 +72,12 @@ diagnostic truncation cannot turn either into acceptance.
 
 ## Options and migration
 
-Both loaders accept nil assessment options, an empty assessment value, or the
-explicit `ProfileSourceSemantics`. They always select `ProfileModelSemantics`
-for the model stage; it is not caller-replaceable. Any other profile, including
+`DecodeAssessed` accepts nil assessment options, an empty assessment value, or
+the explicit `ProfileSourceSemantics`, and always selects
+`ProfileModelSemantics` for the model stage. `DecodeMXLAssessed` accepts an
+empty `Graph.Profile` or `ProfileMXLSourceSemantics`, and always selects
+`ProfileMXLModelSemantics` for the model stage. Neither model profile is
+caller-replaceable. Any other profile, including
 `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`,
 `ProfileSourceContext`, narrower internal-DTD/dictionary profiles, model/package
 profiles and unknown IDs, fails configuration before I/O.
@@ -227,8 +233,9 @@ not replace those data terms.
 ## Budgets and capacity
 
 One finite account covers dictionary import, source assessment and model
-assessment. The single imported dictionary set remains available across both
-stages. Retained source-report context stays accounted for while the model stage
+assessment. `DecodeAssessed` imports one dictionary set for both stages;
+`DecodeMXLAssessed` imports it once per stage, because each stage's graph owns
+its set. Retained source-report context stays accounted for while the model stage
 runs; the model stage does not receive a fresh allowance. The source graph and
 model candidate make single-pass input different from constant-memory processing.
 No default resource limit is raised. Previous source-only budget receipts do not

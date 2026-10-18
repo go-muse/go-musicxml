@@ -12,17 +12,18 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Organize loading and checking around three scenarios (see API.md,
   "Scenarios"): `Decode`/`DecodeMXL` without validation; strict loading with
   `DecodeAssessed` and the new `DecodeMXLAssessed`; and model checks with
-  `AssessModel`, on the primary document only for an MXL package: the rest of
-  an edited package is not reassessed. With unexhausted
-  budgets, `AssessModel` on a document from `DecodeAssessed` gives the same
-  report as its model stage.
+  `AssessModel`, or `AssessMXLPackage` for the current state of a whole MXL
+  package. With unexhausted budgets, `AssessModel` on a document from
+  `DecodeAssessed` gives the same report as its model stage, and
+  `AssessMXLPackage` on a package from `DecodeMXLAssessed` the same outcomes.
 - Add `DecodeAssessmentOptions.Lenient` and `DecodeResult.Accepted`. The
   lenient mode returns the converted document with both reports when an
   assessment finds violations or is incomplete, with a nil error; operational
   failures still return an error.
 - Add `DecodeMXLAssessed`, `DecodeMXLAssessmentOptions` and `DecodeMXLResult`.
   It assesses the original archive with `ProfileMXLSourceSemantics`, converts
-  it and assesses the primary document with `ProfileModelSemantics`, with one
+  it and assesses the current state of the whole converted package with
+  `ProfileMXLModelSemantics` (`DecodeMXLResult.Model` is that bundle), with one
   shared budget account and a lenient mode. It checks every option before the
   first read, meters the archive read as `InspectMXL` does and keeps the source
   bundle charged until it returns.
@@ -370,8 +371,9 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `ProfileMXLModel` metadata with sealed package/root/link checks, distinct
   capability policy and optional advice, and fixed intrinsic catalog digest
   tables. Preserve all eight earlier profiles and source/model entry-point
-  selection. Current-model discarded schema hints remain an explicit selected
-  discovery limitation; current packages do not fabricate original ZIP evidence.
+  selection. Current-model discarded schema hints remained an explicit selected
+  discovery limitation until revision 2 of the pairing rule (see Changed);
+  current packages do not fabricate original ZIP evidence.
 
 - Add source-only ordered container metadata projections through
   `NewContainerMetadataContextPlan` and `ContextResult.Container`. Exact source
@@ -493,6 +495,23 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- `AssessMXLPackage` and `AssessModelWithResources` assess a current model as it
+  would be encoded. `MX40-PACKAGE-schema-hint-pairs` revision 2 makes
+  schema-hint pairing not applicable to a current model resource, so it
+  neither fails nor blocks completion: the Go model cannot represent xsi hints
+  and the encoders write none. Before, it was unknown
+  (`schema-discovery-pairing-unavailable`), so no current-model graph or
+  package bundle could be satisfied; now an unedited package decoded from an
+  archive that `InspectMXL` accepts is satisfied, unless conversion lost a fact
+  the source supplied, such as an internal-DTD attribute default. Retained raw
+  resources keep
+  their source pairing, and original hints are still not reconstructed. The
+  rule is shared by every package catalog, so the catalog digests and complete
+  profiles of all resource-graph and MXL profiles change, including the source
+  profiles, whose outcomes for source resources are unchanged. Catalogs built
+  with `validation.NewPackageCatalog` that bind
+  `validation.PackageCheckSchemaHintPairs` get the new outcome for model
+  resources without a digest change unless they revise their rule.
 - An empty `Profile` now selects the full semantic profile, with the bundled
   required dictionaries, instead of returning a configuration error:
   `ProfileSourceSemantics` for `InspectXML`, `ProfileModelSemantics` for

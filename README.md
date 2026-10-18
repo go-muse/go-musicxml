@@ -94,7 +94,7 @@ construction and compressed `.mxl` round trips in
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
 | Load only after source and current-model semantic acceptance (scenario 2) | `DecodeAssessed`, `DecodeMXLAssessed`; `Lenient` returns the document with its reports |
-| Check a current model with the semantic profile (scenario 3) | `AssessModel` with empty options; for an MXL package, on its primary `Document` only, not the whole package |
+| Check a current model with the semantic profile (scenario 3) | `AssessModel` with empty options; `AssessMXLPackage` with empty options for the current state of a whole MXL package |
 | Assess current model with an explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
 | Inspect original source | `InspectXML` (empty profile: `ProfileSourceSemantics`), `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
@@ -303,8 +303,8 @@ Default budgets can still stop modest inputs. In a specific repeated-note fixtur
 with all four dictionary components imported, standalone source/model assessment
 completes at 368 notes and exhausts the unchanged 20,000,000-step limit at 369;
 graph and raw/current MXL complete operational enumeration at 363 and refuse
-364. Current-model bundles retained an independent schema-hint unknown even below
-that limit. These are fixture-specific observations, not general capacities or
+364. When this was measured, current-model bundles also kept a schema-hint
+unknown, which revision 2 of the pairing rule removed. These are fixture-specific observations, not general capacities or
 B5-PERF-01 closure. See the [measured conditions][dictionary-budget-evidence].
 
 [dictionary-budget-evidence]: docs/validation/pinned-dictionaries-evidence.md#default-budget-observations
@@ -325,10 +325,11 @@ current MXL profiles. The returned bundle preserves a package report and separat
 canonical intrinsic reports. Check both the error and `bundle.Satisfied()`.
 Original headers/container bytes and current package fields have different,
 explicit scopes; current models are never serialized to manufacture source proof.
-The shipped graph/package profiles select schema-discovery evidence that current
-models discard. Consequently `AssessModelWithResources` and `AssessMXLPackage`
-bundles remain incomplete and cannot be `Satisfied()`, even when their intrinsic
-current-model reports are satisfied. The discarded hint history stays Unknown.
+A current model is assessed as it would be encoded: it carries no xsi schema
+hints, so schema-hint pairing does not apply to it. An unedited package decoded
+from an archive that `InspectMXL` accepts satisfies `AssessMXLPackage`, unless
+conversion lost a fact the source supplied, such as an internal-DTD attribute
+default. Original hints are not reconstructed; `InspectMXL` reports them.
 
 External retrieval and image/association/role metadata require an explicitly
 selected dependency and caller-provided resolver. Empty selections perform no
@@ -336,9 +337,7 @@ external I/O. The resolver owns transport authorization; no built-in network,
 filesystem, schema-hint, DTD or entity fetching is introduced. One finite account
 covers the complete graph, including aliases and nested packages; legacy MXL byte
 caps also apply. Unavailable providers, incomplete inventories and unsupported
-ZIP/media/indirection interpretations remain explicit gaps. Current models cannot
-recover discarded original schema hints and can therefore remain incomplete even
-without outgoing links. See the [package scope](docs/validation/package-profile-scope.md)
+ZIP/media/indirection interpretations remain explicit gaps. See the [package scope](docs/validation/package-profile-scope.md)
 and [graph API](API.md#selected-resource-graph-entry-points) for exact contracts.
 Runnable [source graph and MXL examples](resource_assessment_example_test.go)
 show explicit profile selection and bundle acceptance checks.

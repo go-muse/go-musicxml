@@ -17,10 +17,14 @@ import (
 // An empty options.Graph.Profile selects ProfileMXLModelSemantics with the
 // bundled required dictionaries, or options.Graph.Dictionaries. Otherwise it
 // must be ProfileMXLModel, or a dictionary MXL model profile when
-// options.Graph.Dictionaries is set. A decoded package cannot carry
-// source-only evidence such as discarded schema hints, so its package report
-// can stay incomplete; DecodeMXLAssessed proves package rules from the
-// original archive instead.
+// options.Graph.Dictionaries is set. The package is assessed as
+// EncodeMXLPackage would write it: the current Document carries no xsi schema
+// hints, so schema-hint pairing does not apply to it. An unedited package
+// decoded from an archive that InspectMXL accepts is satisfied unless
+// conversion lost a fact the source supplied, such as an internal-DTD
+// attribute default, which decoding does not apply. Original hints are not
+// reconstructed. Retained raw resources that are reached keep their source
+// assessment.
 func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
 	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLModelSemantics); ok {
 		options.Graph = graph

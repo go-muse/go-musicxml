@@ -138,6 +138,8 @@ also incorporates the selected intrinsic dictionary migration.
 
 `TestPackageProfilesPublishedBaselineMigration` verifies all six mappings against
 an immutable capture of complete profiles executed from that public commit.
+A later deliberate revision moves the corrected catalogs again; see
+[the current-state revision](package-profile-scope.md#current-state-revision).
 The fixture includes its source commit and preserves the old closure/rule data;
 its byte hash, profile count, unique IDs, target and before/after catalog values
 are asserted independently of the current implementation.

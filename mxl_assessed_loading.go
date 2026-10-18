@@ -26,15 +26,15 @@ type DecodeMXLAssessmentOptions struct {
 	Lenient bool
 }
 
-// DecodeMXLResult preserves the original-archive bundle and the primary
-// document's model report separately. Package is non-nil only after
-// conversion and, in the default strict mode, only when Accepted.
+// DecodeMXLResult preserves the original-archive bundle and the converted
+// package's bundle separately. Package is non-nil only after conversion and,
+// in the default strict mode, only when Accepted.
 type DecodeMXLResult struct {
 	Package *MXLPackage
 	Source  validation.AssessmentBundle
-	// Model is the report of the primary document only. The other resources
-	// of the package are assessed in Source, from the original archive.
-	Model validation.Report
+	// Model is the bundle of the converted package's current state, as
+	// AssessMXLPackage reports it with ProfileMXLModelSemantics.
+	Model validation.AssessmentBundle
 	// Conversion carries the conversion state only; a conversion failure is
 	// also the returned *ConversionError.
 	Conversion validation.ConversionResult
@@ -45,33 +45,32 @@ type DecodeMXLResult struct {
 
 // DecodeMXLAssessed reads an MXL archive once, assesses the original archive
 // as InspectMXL does with ProfileMXLSourceSemantics, converts it as
-// DecodeMXLPackageContext does and assesses the primary document's current
-// model as DecodeAssessed and AssessModel do with ProfileModelSemantics.
-// Package rules are proved from the original archive: a decoded package
-// cannot carry evidence such as discarded schema hints, so AssessMXLPackage
-// on it stays incomplete. The model stage covers the primary document only;
-// AssessModel(result.Package.Document) repeats it, but neither reassesses the
-// whole package.
+// DecodeMXLPackageContext does and assesses the current state of the whole
+// converted package as AssessMXLPackage does with ProfileMXLModelSemantics.
+// AssessMXLPackage on result.Package with the same Assessment options and an
+// empty Graph.Profile repeats the model stage.
 //
 // Every option is checked before the reader is touched. The archive is read
 // once into a buffer and indexed for the source stage, both metered as in
-// InspectMXL. Both assessments share one account bounded by
-// Assessment.Graph.Budgets, and each imports its dictionaries. The archive
-// bytes stay charged to that account until conversion finishes, and the
-// source bundle until the call returns. Conversion parses the same bytes again
-// as DecodeMXLPackageContext does, so the converted package is bounded by the
-// MXL limits, as for DecodeMXLPackage. A reader failure or a corrupt archive
-// matches ErrInvalidMXL and leaves Source the zero bundle; an archive layout
-// the assessment does not process, such as one with a preamble, is reported in
-// Source, as by InspectMXL, and its terminated assessment returns an error that
-// matches ErrIncompleteAssessment.
+// InspectMXL. Both stages use the same resources, resolver and dependencies,
+// so the model stage asks the caller's resolver again; they share one account
+// bounded by Assessment.Graph.Budgets and each import their dictionaries. The
+// archive bytes stay charged to that account until conversion finishes, and
+// the source bundle until the call returns. Conversion parses the same bytes
+// again as DecodeMXLPackageContext does, so the converted package is bounded
+// by the MXL limits, as for DecodeMXLPackage. A reader failure or a corrupt
+// archive matches ErrInvalidMXL and leaves Source the zero bundle; an archive
+// layout the assessment does not process, such as one with a preamble, is
+// reported in Source, as by InspectMXL, and its terminated assessment returns
+// an error that matches ErrIncompleteAssessment.
 //
-// In the default strict mode the archive is converted and its model assessed
-// only after the source bundle is accepted, and Package is returned only when
-// both assessments are accepted; a rejection returns an error that matches
-// ErrInvalidDocument for violations or ErrIncompleteAssessment otherwise. In
-// the lenient mode the archive is converted, the model assessed and Package
-// returned after any source stage without an operational failure. In both
+// In the default strict mode the archive is converted and the package
+// assessed only after the source bundle is accepted, and Package is returned
+// only when both bundles are accepted; a rejection returns an error that
+// matches ErrInvalidDocument for violations or ErrIncompleteAssessment
+// otherwise. In the lenient mode the archive is converted, the package
+// assessed and Package returned after any source stage without an
+// operational failure. In both
 // modes an operational failure returns its error and no package: invalid
 // options, cancellation, an unreadable or unsafe archive, resource limits, a
 // terminated assessment, a dictionary import failure or a conversion failure.
@@ -110,7 +109,8 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 		linked.Graph.Profile, linked.Graph.Dictionaries = profile, nil
 		return linked
 	}
-	// Every option is checked before the reader is touched.
+	// Every option is checked before the reader is touched. The model stage
+	// uses the same options under its own fixed profile.
 	if _, err := validateLinkedAssessmentOptionsAccount(ctx, stage(ProfileMXLSourceSemantics), ProfileMXLSourceSemantics, account); err != nil {
 		return result, err
 	}
@@ -187,33 +187,30 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 		decodeMXLStageHook("model", account)
 	}
 
-	modelEngine, err := modelAssessmentEngineForProfile(ProfileModelSemantics)
-	if err != nil {
+	// The model stage assesses the converted package as AssessMXLPackage does.
+	model, err := startDictionaryResourceGraphAccount(ctx, stage(ProfileMXLModelSemantics), dictionaries, ProfileMXLModelDictionaries, account)
+	if model == nil {
 		return result, err
 	}
-	set, loadErr := loadValidatedDictionarySet(ctx, account, dictionaries)
-	if set == nil || loadErr != nil {
-		if set != nil {
-			loadErr = errors.Join(loadErr, set.Close())
-		}
-		if loadErr == nil {
-			loadErr = &validation.ConfigurationError{Field: "dictionary set", Reason: "loader returned neither a set nor a failure"}
-		}
-		return result, loadErr
-	}
-	config := assessmentRunConfig{Account: account, DocumentID: modelDocumentID, Profile: ProfileModelSemantics, Engine: modelEngine, Dictionaries: set}
-	var status modelWalkStatus
 	var modelErr error
-	result.Model, status, modelErr = assessModelWithConfig(ctx, pkg.Document, config, modelWalkOptions{})
-	if modelErr = errors.Join(modelErr, set.Close()); modelErr != nil {
-		return result, modelErr
+	if err != nil {
+		result.Model, modelErr = model.finish(err)
+	} else {
+		model.mxlOptions = options.Assessment.MXL
+		result.Model, modelErr = model.assessCurrentPackage(pkg)
 	}
-	acceptanceErr := modelAcceptanceError(result.Model, status)
-	if acceptanceErr != nil && !options.Lenient {
-		return result, acceptanceErr
+	modelAccepted := result.Model.Satisfied()
+	if modelErr != nil {
+		if options.Lenient || modelAccepted {
+			return result, modelErr
+		}
+		return result, errors.Join(modelErr, bundleAcceptanceError("mxl-model", result.Model))
+	}
+	if !modelAccepted && !options.Lenient {
+		return result, bundleAcceptanceError("mxl-model", result.Model)
 	}
 	result.Package = pkg
-	result.Accepted = sourceAccepted && acceptanceErr == nil
+	result.Accepted = sourceAccepted && modelAccepted
 	return result, nil
 }
 

@@ -32,7 +32,7 @@ func TestDTDPackageCompositionPreservesPublishedProfilesAndMigratesDTDShorthand(
 			t.Fatal(err)
 		}
 		got := fmt.Sprintf("%x", sha256.Sum256(b))
-		expected := migrateIPARepresentationProfileHash(t, id, want[id])
+		expected := migrateCurrentStatePackageProfileHash(t, id, migrateIPARepresentationProfileHash(t, id, want[id]))
 		if got != expected {
 			t.Errorf("profile %s changed: got %s want %s", id, got, expected)
 		}

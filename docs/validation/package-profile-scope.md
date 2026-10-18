@@ -100,13 +100,50 @@ and the package cannot be satisfied. This behavior is covered by
 framing guard does not interpret unknown extra kinds, change unrelated-entry
 admission, or expand ZIP support.
 
+## Current-state revision
+
+Revision 2 of `MX40-PACKAGE-schema-hint-pairs` assesses a current model resource
+as it would be encoded, so schema-hint pairing is not applicable to it. Every
+package catalog shares the rule, so every catalog digest moves, including the
+source and graph profiles whose source-resource outcomes are unchanged.
+`current_state_package_migration_test.go` maps each earlier capture to its new
+identity and pins the complete Profile JSON of all twelve profiles.
+
+The revision follows a rule-by-rule audit of a freshly decoded package and of a
+package with extra resources. Each rule's fact is (a) derivable from the current
+model or `MXLPackage` fields, (b) fixed by `EncodeMXLPackage` for every value it
+accepts, or (c) dependent on original bytes:
+
+| Rule `MX40-PACKAGE-…` | Current package | Class |
+|---|---|---|
+| `container-path`, `mimetype-stored`, `mimetype-no-extra`, `mimetype-no-prefix`, `mimetype-advice`, `entry-name-advice`, `compression-observation` | not applicable: raw-only scopes | (b): a stored mimetype entry without an extra field is written first, then `META-INF/container.xml` built from `RootFiles`; entry names are valid UTF-8 paths; Store for mimetype, Deflate for the rest |
+| `first-root-musicxml`, `first-media-type`, `link-target`, `group-match`, `file-metadata-advice` | evaluated from the current fields | (a) |
+| `rootfile-root`, `score-before-parts`, `instrument-association`, `image-scaling` | evaluated from the current fields; in the audited cases, which had no resolver, unknown where `InspectMXL` on the same bytes is unknown (nested `.mxl` indirection, role, association and image providers) | (a), an open interpretation or a provider; never (c) |
+| `schema-hint-pairs` | revision 1: unknown for every model resource; revision 2: not applicable to model resources, source pairing for retained raw resources | (a)+(b): the generated model types cannot represent `xsi:schemaLocation` or `xsi:noNamespaceSchemaLocation`, and the encoders write `xml.Header` plus `Encode`, without hints or a DOCTYPE; only "did the original have hints" is (c), which is not asked of a current model |
+
+`TestAssessMXLPackageCurrentStateMatchesEncodedArchive` and
+`TestAssessMXLPackageCurrentStateCorpus` check the result: package findings and
+acceptance agree with `InspectMXL` on the bytes `EncodeMXLPackage` writes,
+after edits and for every official and test-suite file accepted as an archive.
+
+| Package catalog group | Before | After |
+|---|---|---|
+| Ordinary graph/raw-MXL/current-MXL | `554a97e25d6494c2e0550519fd4f6d2a439ca2f31e01a82baa7e28a00ddd2088` | `bcc5d047e4de9f02a61cfdd86f57297f9655006ea0fb6f04ef38628d05dcc28f` |
+| Dictionary graph/raw-MXL/current-MXL | `f80db03b147d43021db39d1762880c2ef8e83967c1002c37b92229eb0feabd44` | `bbb60bcd61359b41fda394d95e29d93c42c8c0526b101e98f375b698204d6658` |
+| Internal-DTD dictionary graph/raw-MXL/current-MXL | `69d813b09c15ea5083d382fe8864a41179e93cf52c4b04bfb140493070df7648` | `135bb292eac14befeb45ac8c96e0f950028dffa39a7a152d4b2c5759aa8a792b` |
+| Semantic graph/raw-MXL/current-MXL | `e7be6720d91cdc81becf07f5312b6c86039f27290ccb72139643186118cc4a89` | `ab43413ab5e82f27b9ffd406d542e006c2f87d6ebdcc30ea912d667100f34533` |
+
 ## Boundaries that affect readiness
 
 - Current models cannot prove discarded original xsi hints absent or complete.
-  With schema discovery selected by the shipped profiles, every current-model
-  graph/package bundle therefore remains incomplete and cannot be Satisfied,
-  even when its intrinsic model report is satisfied. Discarded history is an
-  explicit Unknown capability result, never a proven absence. Source odd-length
+  When this scope was recorded, schema discovery therefore left every
+  current-model graph/package bundle incomplete. Revision 2 of
+  `MX40-PACKAGE-schema-hint-pairs` assesses a current model as it would be
+  encoded instead: the model cannot represent xsi hints and the encoders write
+  none, so the pairing is not applicable to it and neither fails nor blocks
+  completion. The discarded history is still not
+  reconstructed; it is simply not the question asked of a current model. Retained
+  raw resources keep source pairing. Source odd-length
   hints remain valid `list(anyURI)` values when their members are valid.
   Known-false pairing yields `OutcomeFail` under `CategoryCapability`,
   `ClassPolicy` and `RolePredicate`, retaining `schema-location-unmatched-token`

@@ -51,11 +51,14 @@ func TestResourceGraphSchemaHintSiblingPrecedence(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				want, reason := validation.OutcomeUnknown, validation.Code("schema-discovery-pairing-unavailable")
+				// A current model is assessed as it would be encoded: without
+				// xsi attributes, so the pairing does not apply to it.
+				var want validation.Outcome
+				var reason validation.Code
 				var cause *validation.DecisionRef
 				original := mode == "source" || mode == "raw-package"
 				if original {
-					want = validation.OutcomeBlocked
+					want, reason = validation.OutcomeBlocked, "schema-discovery-pairing-unavailable"
 					if tc.odd {
 						want, reason = validation.OutcomeFail, "schema-location-unmatched-token"
 					}
@@ -83,17 +86,22 @@ func TestResourceGraphSchemaHintSiblingPrecedence(t *testing.T) {
 						continue
 					}
 					found++
-					if f.Outcome != want || f.Reason != reason || f.Category != validation.CategoryCapability || !reflect.DeepEqual(f.Cause, cause) {
+					if !original {
+						t.Errorf("current model offered a pairing obligation: %+v", f)
+					} else if f.Outcome != want || f.Reason != reason || f.Category != validation.CategoryCapability || !reflect.DeepEqual(f.Cause, cause) {
 						t.Errorf("want %s/%s cause=%+v; got %+v", want, reason, cause, f)
 					}
 				}
-				if found != 1 || b.Satisfied() || !b.EnumerationComplete() {
+				if original && (found != 1 || b.Satisfied() || !b.EnumerationComplete()) {
 					t.Errorf("pairing obligation lost: findings=%d satisfied=%t enumeration=%t", found, b.Satisfied(), b.EnumerationComplete())
+				}
+				if !original && (found != 0 || !b.EnumerationComplete()) {
+					t.Errorf("current model pairing: findings=%d enumeration=%t", found, b.EnumerationComplete())
 				}
 				// The malformed sibling independently violates intrinsic XSD. The
 				// discovery policy itself must not invent a normative package failure.
 				r := b.PackageReport()
-				if r.Counts.Fail != 0 || r.Conformance == validation.ConformanceViolated || r.AssessmentComplete != (original && tc.odd) {
+				if r.Counts.Fail != 0 || r.Conformance == validation.ConformanceViolated || r.AssessmentComplete != (!original || tc.odd) {
 					t.Errorf("discovery changed package conformance/completion: %+v", r)
 				}
 			})
