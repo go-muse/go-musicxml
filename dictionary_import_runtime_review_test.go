@@ -20,7 +20,7 @@ func TestDictionaryRuntimeFailuresKeepUsableReport(t *testing.T) {
 		t.Run(which, func(t *testing.T) {
 			var body *resourceTestBody
 			var wantCause error
-			opts := DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(id)}}}
+			opts := dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: ProfileSourceDictionaries}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{dictionaryImportSelection(id)}}}
 			opts.Dictionaries.Source = dictionaryImportSourceFunc(func(_ context.Context, r DictionaryComponentRequest) (DictionaryComponentResult, error) {
 				out := DictionaryComponentResult{Request: r, State: validation.EvidenceKnown}
 				raw := dictionaryImportFixture(t, id)
@@ -65,7 +65,7 @@ func TestDictionaryRuntimeFailuresKeepUsableReport(t *testing.T) {
 				out.Body = body
 				return out, openErr
 			})
-			report, err := InspectXMLWithDictionaries(context.Background(), strings.NewReader(`<opus/>`), opts)
+			report, err := inspectXMLWithDictionaries(context.Background(), strings.NewReader(`<opus/>`), opts)
 			if err == nil || errors.Is(err, validation.ErrInvalidConfiguration) || !report.Requested || !report.InputComplete || !report.Satisfied() {
 				t.Fatalf("report requested=%v complete=%v satisfied=%v error=%v", report.Requested, report.InputComplete, report.Satisfied(), err)
 			}

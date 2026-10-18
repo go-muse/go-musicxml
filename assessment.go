@@ -121,7 +121,7 @@ func (e *ConversionError) Unwrap() error {
 // non-nil options.Dictionaries requires a dictionary or semantic one.
 func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions) (report validation.Report, err error) {
 	if assessment, dictionaries, ok := options.scenario(ProfileSourceSemantics); ok {
-		return inspectXMLWithDictionaries(ctx, reader, DictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
+		return inspectXMLWithDictionaries(ctx, reader, dictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
 	}
 	run, err := newSourceAssessmentRun(ctx, reader, DecodeOptions{}, &options, false)
 	if err != nil {
@@ -167,9 +167,9 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // empty when diagnostic quotas omit them. Source and Model preserve authoritative
 // counts and completion separately; Conversion describes mapping, not acceptance.
 func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (DecodeResult, error) {
-	var assessment *DictionaryAssessmentOptions
+	var assessment *dictionaryAssessmentOptions
 	if options.Assessment != nil {
-		assessment = &DictionaryAssessmentOptions{Assessment: *options.Assessment}
+		assessment = &dictionaryAssessmentOptions{Assessment: *options.Assessment}
 		if dictionaries := options.Assessment.Dictionaries; dictionaries != nil {
 			assessment.Dictionaries = *dictionaries
 		}

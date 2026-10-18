@@ -131,13 +131,13 @@ func TestDictionaryGraphProviderErrorKeepsIndependentFamilyFailure(t *testing.T)
 			var e error
 			switch mode {
 			case "source":
-				b, e = InspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
+				b, e = inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
 			case "model":
-				b, e = AssessModelWithResourcesAndDictionaries(ctx, doc, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
+				b, e = assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
 			case "raw MXL":
-				b, e = InspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: d})
+				b, e = inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: d})
 			case "current MXL":
-				b, e = AssessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelDictionaries}}, Dictionaries: d})
+				b, e = assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelDictionaries}}, Dictionaries: d})
 			}
 			if !errors.Is(e, boom) || calls != 1 || body.closed != 1 || !b.EnumerationComplete() {
 				t.Fatalf("err=%v calls=%d close=%d enumeration=%v", e, calls, body.closed, b.EnumerationComplete())
@@ -168,7 +168,7 @@ func TestDictionaryGraphUnselectedSourceNeverCalled(t *testing.T) {
 		return DictionaryComponentResult{}, errors.New("unselected callback")
 	})
 	input := resourceScore(`<note><rest/><duration>1</duration><accidental smufl="accidentalSharp">sharp</accidental></note>`)
-	b, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: DictionaryOptions{Source: source}})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: DictionaryOptions{Source: source}})
 	if err != nil || calls != 0 || b.ResourceCount() != 1 {
 		t.Fatal(err, calls, b.ResourceCount())
 	}
@@ -230,13 +230,13 @@ func TestDictionaryGraphKnownSetReachesEveryPrimaryRepresentation(t *testing.T) 
 			var e error
 			switch mode {
 			case "source":
-				b, e = InspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
+				b, e = inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
 			case "model":
-				b, e = AssessModelWithResourcesAndDictionaries(ctx, doc, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
+				b, e = assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
 			case "raw MXL":
-				b, e = InspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: d})
+				b, e = inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(input, "main.musicxml", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: d})
 			case "current MXL":
-				b, e = AssessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelDictionaries}}, Dictionaries: d})
+				b, e = assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelDictionaries}}, Dictionaries: d})
 			}
 			if e != nil || *calls != 1 {
 				t.Fatal(e, *calls)
@@ -268,7 +268,7 @@ func TestDictionaryGraphNestedAliasPackagesShareOneVerifiedSet(t *testing.T) {
 	root := `<opus xmlns:xlink="http://www.w3.org/1999/xlink"><score xlink:href="https://dictionary.test/a.mxl"/><score xlink:href="https://dictionary.test/b.mxl"/></opus>`
 	resolver := &packageResolverFixture{data: map[string][]byte{"https://dictionary.test/a.mxl": archive, "https://dictionary.test/b.mxl": archive}, canonical: map[string]string{"https://dictionary.test/a.mxl": "same-archive", "https://dictionary.test/b.mxl": "same-archive"}}
 	source, calls, bodies := dictionaryGraphKnownSource(t)
-	b, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}, Dictionaries: DictionaryOptions{Selections: dictionaryGraphSelection(), Source: source}})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(root), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceDocuments}}, Dictionaries: DictionaryOptions{Selections: dictionaryGraphSelection(), Source: source}})
 	if err != nil || *calls != 1 || resolver.calls != 2 || b.ResourceCount() != 3 || !b.EnumerationComplete() {
 		t.Fatalf("err=%v imports=%d links=%d resources=%d complete=%v", err, *calls, resolver.calls, b.ResourceCount(), b.EnumerationComplete())
 	}

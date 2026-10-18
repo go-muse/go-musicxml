@@ -117,16 +117,16 @@ func TestSourceAssessmentDTDCompletenessAxes(t *testing.T) {
 			}
 			wantInvalid := semantic.Conformance == validation.ConformanceViolated
 			wantIncomplete := !semantic.AssessmentComplete || !semantic.InputComplete || semantic.Syntax != validation.SyntaxWellFormed || semantic.BlockingProblems != 0 || semantic.Terminal != nil
-			for _, wrapper := range []bool{false, true} {
-				result, loadErr := mandatoryDecode(wrapper, context.Background(), strings.NewReader(tt.prefix+valid), nil)
+			for _, explicit := range []bool{false, true} {
+				result, loadErr := mandatoryDecode(explicit, context.Background(), strings.NewReader(tt.prefix+valid), nil)
 				if (result.Document != nil) != semantic.Satisfied() || (loadErr == nil) != semantic.Satisfied() || result.Conversion.State != validation.ConversionConverted || result.Source.Satisfied() != semantic.Satisfied() || result.Model.Requested != semantic.Satisfied() {
-					t.Fatalf("%s DTD acceptance differs from semantic control: document=%T source-satisfied=%v model-requested=%v conversion=%s want-satisfied=%v error=%v", mandatoryLoaderName(wrapper), result.Document, result.Source.Satisfied(), result.Model.Requested, result.Conversion.State, semantic.Satisfied(), loadErr)
+					t.Fatalf("%s DTD acceptance differs from semantic control: document=%T source-satisfied=%v model-requested=%v conversion=%s want-satisfied=%v error=%v", mandatoryLoaderName(explicit), result.Document, result.Source.Satisfied(), result.Model.Requested, result.Conversion.State, semantic.Satisfied(), loadErr)
 				}
 				if errors.Is(loadErr, ErrInvalidDocument) != wantInvalid || errors.Is(loadErr, ErrIncompleteAssessment) != wantIncomplete || errors.Is(loadErr, validation.ErrResourceLimit) {
-					t.Errorf("%s DTD error classes differ from source control: want-invalid=%v want-incomplete=%v error=%v", mandatoryLoaderName(wrapper), wantInvalid, wantIncomplete, loadErr)
+					t.Errorf("%s DTD error classes differ from source control: want-invalid=%v want-incomplete=%v error=%v", mandatoryLoaderName(explicit), wantInvalid, wantIncomplete, loadErr)
 				}
 				if semantic.Satisfied() && !result.Model.Satisfied() {
-					t.Fatalf("%s accepted source without a satisfied model", mandatoryLoaderName(wrapper))
+					t.Fatalf("%s accepted source without a satisfied model", mandatoryLoaderName(explicit))
 				}
 			}
 		})

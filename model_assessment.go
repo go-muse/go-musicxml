@@ -34,7 +34,7 @@ const modelDocumentID = "model"
 // current string to shared schema-domain checks, never an original source lexeme.
 func AssessModel(ctx context.Context, document Document, options AssessmentOptions) (validation.Report, error) {
 	if assessment, dictionaries, ok := options.scenario(ProfileModelSemantics); ok {
-		return assessModelWithDictionaries(ctx, document, DictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
+		return assessModelWithDictionaries(ctx, document, dictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
 	}
 	report, _, err := assessModel(ctx, document, options, modelWalkOptions{})
 	return report, err

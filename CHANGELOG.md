@@ -12,7 +12,8 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Organize loading and checking around three scenarios (see API.md,
   "Scenarios"): `Decode`/`DecodeMXL` without validation; strict loading with
   `DecodeAssessed` and the new `DecodeMXLAssessed`; and model checks with
-  `AssessModel`, on the primary document for an MXL package. With unexhausted
+  `AssessModel`, on the primary document only for an MXL package: the rest of
+  an edited package is not reassessed. With unexhausted
   budgets, `AssessModel` on a document from `DecodeAssessed` gives the same
   report as its model stage.
 - Add `DecodeAssessmentOptions.Lenient` and `DecodeResult.Accepted`. The
@@ -22,7 +23,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Add `DecodeMXLAssessed`, `DecodeMXLAssessmentOptions` and `DecodeMXLResult`.
   It assesses the original archive with `ProfileMXLSourceSemantics`, converts
   it and assesses the primary document with `ProfileModelSemantics`, with one
-  shared budget account and a lenient mode.
+  shared budget account and a lenient mode. It checks every option before the
+  first read, meters the archive read as `InspectMXL` does and keeps the source
+  bundle charged until it returns.
+- Add `validation.PackageSession.FinishWithRetainedBundle`, which keeps a
+  finished bundle's storage charged to the account until its lease is closed,
+  and `validation.AssessmentBundle.Failures` with `validation.BundleFailures`,
+  which classify a bundle that is not satisfied from its authoritative counts,
+  including failed evaluations whose diagnostics were truncated.
 - Add `AssessmentOptions.Dictionaries`, used directly by `InspectXML`,
   `AssessModel` and `DecodeAssessed` and as `Graph.Dictionaries` by the
   resource and MXL entry points.
@@ -527,7 +535,7 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   are unaffected.
 
 - **Breaking relative to the unreleased development API, not v0.1.0:**
-  `DecodeAssessed` and `DecodeAssessedWithDictionaries` always require
+  `DecodeAssessed` always requires
   the existing `ProfileSourceSemantics` followed by direct
   `ProfileModelSemantics`. Nil/empty assessment options use these fixed defaults;
   narrower, wrong-target and unknown profiles fail before I/O. `DecodeResult`
@@ -631,14 +639,14 @@ and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   can fail spuriously with `context deadline exceeded` on Go 1.26
   (go.dev/issue/75804).
 
-### Deprecated
+### Removed
 
-These wrappers keep their behaviour, apart from the `ValidationIssue` fields
-that `DecodeAssessedWithDictionaries` shares with `DecodeAssessed`, and will be
-removed in the next minor release. An empty profile still fails there. The
-replacement gives the same result for every profile the wrapper accepts:
+**Breaking relative to the unreleased development API, not v0.1.0:** these
+functions duplicated the scenario entry points and were removed. The
+replacement gives the same result for every profile the removed function
+accepted:
 
-| Deprecated | Replacement |
+| Removed | Replacement |
 | --- | --- |
 | `InspectXMLWithDictionaries(ctx, r, DictionaryAssessmentOptions{Assessment: a, Dictionaries: d})` | `InspectXML(ctx, r, a)` with `a.Dictionaries = &d` |
 | `AssessModelWithDictionaries(ctx, doc, DictionaryAssessmentOptions{Assessment: a, Dictionaries: d})` | `AssessModel(ctx, doc, a)` with `a.Dictionaries = &d` |
@@ -650,7 +658,7 @@ replacement gives the same result for every profile the wrapper accepts:
 
 The option types `DictionaryAssessmentOptions`,
 `DecodeDictionaryAssessmentOptions`, `LinkedDictionaryAssessmentOptions` and
-`MXLDictionaryAssessmentOptions` are deprecated with them.
+`MXLDictionaryAssessmentOptions` were removed with them.
 
 ### Fixed
 

@@ -8,9 +8,11 @@ import (
 	"errors"
 	"io"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/go-muse/go-musicxml/validation"
 	"github.com/stretchr/testify/assert"
@@ -130,100 +132,6 @@ func TestScenarioThreeMatchesStrictLoadingModel(t *testing.T) {
 	}
 }
 
-func TestDeprecatedAssessmentWrappersAreEquivalent(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-	dictionaries := DictionaryOptions{Selections: mandatoryDictionarySelections(), Source: BundledDictionarySource()}
-	document, err := Decode(strings.NewReader(mandatoryDictionaryScore()))
-	require.NoError(t, err)
-	archive := scenarioMXL(t, mandatoryDictionaryScore())
-	pkg, err := DecodeMXLPackage(bytes.NewReader(archive))
-	require.NoError(t, err)
-
-	for _, profile := range []validation.ProfileID{ProfileSourceDictionaries, ProfileSourceSemantics} {
-		old, oldErr := InspectXMLWithDictionaries(ctx, strings.NewReader(mandatoryDictionaryScore()), DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}, Dictionaries: dictionaries})
-		new, newErr := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), AssessmentOptions{Profile: profile, Dictionaries: &dictionaries})
-		assert.Equal(t, oldErr, newErr, profile)
-		assert.True(t, reflect.DeepEqual(old, new), "InspectXMLWithDictionaries %s", profile)
-	}
-	for _, profile := range []validation.ProfileID{ProfileModelDictionaries, ProfileModelSemantics} {
-		old, oldErr := AssessModelWithDictionaries(ctx, document, DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}, Dictionaries: dictionaries})
-		new, newErr := AssessModel(ctx, document, AssessmentOptions{Profile: profile, Dictionaries: &dictionaries})
-		assert.Equal(t, oldErr, newErr, profile)
-		assert.True(t, reflect.DeepEqual(old, new), "AssessModelWithDictionaries %s", profile)
-	}
-	{
-		old, oldErr := DecodeAssessedWithDictionaries(ctx, strings.NewReader(mandatoryDictionaryScore()), DecodeDictionaryAssessmentOptions{Assessment: &DictionaryAssessmentOptions{Dictionaries: dictionaries}})
-		new, newErr := DecodeAssessed(ctx, strings.NewReader(mandatoryDictionaryScore()), DecodeAssessmentOptions{Assessment: &AssessmentOptions{Dictionaries: &dictionaries}})
-		assert.Equal(t, oldErr, newErr)
-		assert.True(t, reflect.DeepEqual(old, new), "DecodeAssessedWithDictionaries")
-	}
-	for _, profile := range []validation.ProfileID{ProfileResourceGraphDictionaries, ProfileResourceGraphSemantics} {
-		old, oldErr := InspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(mandatoryDictionaryScore()), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}}, Dictionaries: dictionaries})
-		new, newErr := InspectXMLWithResources(ctx, strings.NewReader(mandatoryDictionaryScore()), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile, Dictionaries: &dictionaries}})
-		assert.Equal(t, oldErr, newErr, profile)
-		assert.Equal(t, summarizeBundle(old), summarizeBundle(new), "InspectXMLWithResourcesAndDictionaries %s", profile)
-
-		old, oldErr = AssessModelWithResourcesAndDictionaries(ctx, document, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile}}, Dictionaries: dictionaries})
-		new, newErr = AssessModelWithResources(ctx, document, LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: profile, Dictionaries: &dictionaries}})
-		assert.Equal(t, oldErr, newErr, profile)
-		assert.Equal(t, summarizeBundle(old), summarizeBundle(new), "AssessModelWithResourcesAndDictionaries %s", profile)
-	}
-	for _, profile := range []validation.ProfileID{ProfileMXLSourceDictionaries, ProfileMXLSourceSemantics} {
-		old, oldErr := InspectMXLWithDictionaries(ctx, bytes.NewReader(archive), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile}}, Dictionaries: dictionaries})
-		new, newErr := InspectMXL(ctx, bytes.NewReader(archive), MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile, Dictionaries: &dictionaries}})
-		assert.Equal(t, oldErr, newErr, profile)
-		assert.Equal(t, summarizeBundle(old), summarizeBundle(new), "InspectMXLWithDictionaries %s", profile)
-	}
-	for _, profile := range []validation.ProfileID{ProfileMXLModelDictionaries, ProfileMXLModelSemantics} {
-		old, oldErr := AssessMXLPackageWithDictionaries(ctx, pkg, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile}}, Dictionaries: dictionaries})
-		new, newErr := AssessMXLPackage(ctx, pkg, MXLAssessmentOptions{Graph: AssessmentOptions{Profile: profile, Dictionaries: &dictionaries}})
-		assert.Equal(t, oldErr, newErr, profile)
-		assert.Equal(t, summarizeBundle(old), summarizeBundle(new), "AssessMXLPackageWithDictionaries %s", profile)
-	}
-
-	// A deprecated option type sets dictionaries once; each call uses a
-	// profile it accepts, so only the duplicate is rejected.
-	twice := func(profile validation.ProfileID) AssessmentOptions {
-		return AssessmentOptions{Profile: profile, Dictionaries: &dictionaries}
-	}
-	for name, call := range map[string]func() error{
-		"InspectXMLWithDictionaries": func() error {
-			_, err := InspectXMLWithDictionaries(ctx, strings.NewReader(scenarioValid), DictionaryAssessmentOptions{Assessment: twice(ProfileSourceDictionaries), Dictionaries: dictionaries})
-			return err
-		},
-		"AssessModelWithDictionaries": func() error {
-			_, err := AssessModelWithDictionaries(ctx, document, DictionaryAssessmentOptions{Assessment: twice(ProfileModelDictionaries), Dictionaries: dictionaries})
-			return err
-		},
-		"DecodeAssessedWithDictionaries": func() error {
-			_, err := DecodeAssessedWithDictionaries(ctx, strings.NewReader(scenarioValid), DecodeDictionaryAssessmentOptions{Assessment: &DictionaryAssessmentOptions{Assessment: twice(ProfileSourceSemantics), Dictionaries: dictionaries}})
-			return err
-		},
-		"InspectXMLWithResourcesAndDictionaries": func() error {
-			_, err := InspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(scenarioValid), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: twice(ProfileResourceGraphDictionaries)}, Dictionaries: dictionaries})
-			return err
-		},
-		"AssessModelWithResourcesAndDictionaries": func() error {
-			_, err := AssessModelWithResourcesAndDictionaries(ctx, document, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: twice(ProfileResourceGraphDictionaries)}, Dictionaries: dictionaries})
-			return err
-		},
-		"InspectMXLWithDictionaries": func() error {
-			_, err := InspectMXLWithDictionaries(ctx, bytes.NewReader(archive), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: twice(ProfileMXLSourceDictionaries)}, Dictionaries: dictionaries})
-			return err
-		},
-		"AssessMXLPackageWithDictionaries": func() error {
-			_, err := AssessMXLPackageWithDictionaries(ctx, pkg, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: twice(ProfileMXLModelDictionaries)}, Dictionaries: dictionaries})
-			return err
-		},
-	} {
-		var configuration *validation.ConfigurationError
-		require.ErrorAs(t, call(), &configuration, name)
-		assert.Contains(t, configuration.Field, "Dictionaries", name)
-	}
-}
-
 func TestLenientAssessedLoading(t *testing.T) {
 	t.Parallel()
 
@@ -340,8 +248,7 @@ func TestDecodeMXLAssessed(t *testing.T) {
 	_, err = DecodeMXLAssessed(ctx, nil, DecodeMXLAssessmentOptions{})
 	assert.ErrorIs(t, err, ErrNilReader)
 
-	// The archive bytes held for the call are charged to the shared account
-	// on top of what the source stage needs on its own.
+	// Both stages share one account.
 	minimum := func(run func(validation.Budgets) error) int64 {
 		low, high := int64(1), int64(1<<30)
 		for low < high {
@@ -363,7 +270,7 @@ func TestDecodeMXLAssessed(t *testing.T) {
 		_, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: b}}, Lenient: true})
 		return err
 	})
-	assert.GreaterOrEqual(t, loadMinimum, inspectMinimum+int64(len(valid)))
+	assert.GreaterOrEqual(t, loadMinimum, inspectMinimum, "the loader does at least the source stage's work on one account")
 
 	// Operational failures.
 	canceled, cancel := context.WithCancel(ctx)
@@ -619,4 +526,275 @@ func TestDecodeMXLAssessedReview(t *testing.T) {
 	inspected, err := InspectXML(ctx, strings.NewReader(mandatoryDictionaryScore()), AssessmentOptions{Dictionaries: &DictionaryOptions{}})
 	require.NoError(t, err)
 	assert.True(t, inspected.Satisfied())
+}
+
+// TestDecodeMXLAssessedRetainsSourceBundle observes the shared account when
+// conversion and the model stage start: the archive bytes stay charged until
+// conversion finishes, the source bundle, whose reports keep their contexts,
+// until the loader returns, and everything is released when it returns, also
+// after an interruption. It sets a package hook, so it does not run in
+// parallel.
+func TestDecodeMXLAssessedRetainsSourceBundle(t *testing.T) {
+	valid := scenarioMXL(t, scenarioValid)
+	var account *validation.Account
+	usage := map[string]int64{}
+	decodeMXLStageHook = func(stage string, a *validation.Account) {
+		account = a
+		usage[stage], _ = a.Usage(validation.BudgetBufferedBytes)
+	}
+	t.Cleanup(func() { decodeMXLStageHook = nil })
+
+	result, err := DecodeMXLAssessed(context.Background(), bytes.NewReader(valid), DecodeMXLAssessmentOptions{})
+	require.NoError(t, err)
+	require.True(t, result.Accepted)
+	contexts := 0
+	for i := 0; i < result.Source.ResourceCount(); i++ {
+		_, report, _ := result.Source.ResourceReport(i)
+		contexts += len(report.Context)
+	}
+	require.Positive(t, contexts, "the source bundle keeps resource-report contexts")
+	// Each retained context row is measured at no less than 32 bytes.
+	assert.GreaterOrEqual(t, usage["model"], int64(32*contexts), "the source bundle is charged during the model stage")
+	assert.GreaterOrEqual(t, usage["conversion"]-usage["model"], int64(len(valid)), "the archive bytes are charged during conversion and released after it")
+	used, err := account.Usage(validation.BudgetBufferedBytes)
+	require.NoError(t, err)
+	assert.Zero(t, used, "everything is released when the loader returns")
+
+	canceled, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	decodeMXLStageHook = func(stage string, a *validation.Account) {
+		account = a
+		if stage == "model" {
+			cancel()
+		}
+	}
+	result, err = DecodeMXLAssessed(canceled, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Lenient: true})
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.Nil(t, result.Package)
+	used, err = account.Usage(validation.BudgetBufferedBytes)
+	require.NoError(t, err)
+	assert.Zero(t, used, "an interrupted model stage releases the source bundle too")
+}
+
+func TestDecodeMXLAssessedClassifiesTruncatedViolations(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	// A violation whose diagnostics are truncated is still a violation.
+	violated := scenarioMXL(t, scenarioSourceViolated)
+	_, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxDiagnosticBytes: 1}}}})
+	assert.ErrorIs(t, err, ErrInvalidDocument)
+	assert.NotErrorIs(t, err, ErrIncompleteAssessment)
+	assert.Contains(t, err.Error(), "diagnostic details were truncated")
+
+	// A violation next to independent incompleteness reports both, also when
+	// the violation's diagnostics are truncated.
+	both := rawMXL(t, mandatoryScore("0", `<note time-only="1,1"><rest/><duration>1</duration></note>`))
+	for _, budgets := range []validation.Budgets{{}, {MaxDiagnosticBytes: 1}} {
+		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(both), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: budgets}}})
+		assert.ErrorIs(t, err, ErrInvalidDocument, "%+v", budgets)
+		assert.ErrorIs(t, err, ErrIncompleteAssessment, "%+v", budgets)
+		// A strict rejection comes before conversion.
+		assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "%+v", budgets)
+	}
+}
+
+func TestDecodeMXLAssessedConvertsOnlyAfterAcceptance(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	violated := scenarioMXL(t, scenarioSourceViolated)
+	result, err := DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{})
+	assert.ErrorIs(t, err, ErrInvalidDocument)
+	assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "strict: a rejected archive is not converted")
+	assert.Nil(t, result.Package)
+
+	result, err = DecodeMXLAssessed(ctx, bytes.NewReader(violated), DecodeMXLAssessmentOptions{Lenient: true})
+	require.NoError(t, err)
+	assert.Equal(t, validation.ConversionConverted, result.Conversion.State, "lenient: the rejected archive is converted")
+	assert.NotNil(t, result.Package)
+	assert.False(t, result.Accepted)
+
+	// A step budget that stops the source stage stops the loader before
+	// conversion in both modes.
+	valid := scenarioMXL(t, scenarioValid)
+	for _, lenient := range []bool{false, true} {
+		result, err := DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Lenient: lenient, Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxRuleSteps: 20000}}}})
+		var resource *validation.ResourceError
+		require.ErrorAs(t, err, &resource, "lenient=%v", lenient)
+		assert.Equal(t, validation.BudgetRuleSteps, resource.Kind)
+		assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "lenient=%v", lenient)
+	}
+}
+
+func TestDecodeMXLAssessedOpenErrors(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	valid := scenarioMXL(t, scenarioValid)
+	// A reader failure matches ErrInvalidMXL and keeps its cause, as in
+	// DecodeMXL; Source is the zero bundle.
+	result, err := DecodeMXLAssessed(ctx, &failingAfterReader{source: bytes.NewReader(valid), after: 64}, DecodeMXLAssessmentOptions{})
+	assert.ErrorIs(t, err, ErrInvalidMXL)
+	assert.ErrorContains(t, err, "disk failure")
+	assert.Equal(t, validation.AssessmentBundle{}, result.Source)
+	_, err = DecodeMXL(&failingAfterReader{source: bytes.NewReader(valid), after: 64})
+	assert.ErrorIs(t, err, ErrInvalidMXL, "DecodeMXL classifies the same failure alike")
+
+	// A reader that makes no progress is a reader failure too.
+	_, err = DecodeMXLAssessed(ctx, &emptyReads{}, DecodeMXLAssessmentOptions{})
+	assert.ErrorIs(t, err, ErrInvalidMXL)
+	assert.ErrorIs(t, err, io.ErrNoProgress)
+
+	// Cancellation and budgets keep their own errors.
+	canceled, cancel := context.WithCancel(ctx)
+	defer cancel()
+	_, err = DecodeMXLAssessed(canceled, &failingAfterReader{source: bytes.NewReader(valid), after: 64, cancel: cancel}, DecodeMXLAssessmentOptions{})
+	assert.ErrorIs(t, err, context.Canceled)
+	assert.NotErrorIs(t, err, ErrInvalidMXL)
+	_, err = DecodeMXLAssessed(ctx, bytes.NewReader(valid), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxInputBytes: 100}}}})
+	var resource *validation.ResourceError
+	assert.ErrorAs(t, err, &resource)
+	assert.NotErrorIs(t, err, ErrInvalidMXL)
+
+	// An archive with a preamble decodes, but the assessment does not process
+	// it: the source stage reports it, as InspectMXL does, and its terminated
+	// assessment ends the loader in both modes.
+	var preamble bytes.Buffer
+	preamble.WriteString("preamble bytes")
+	writer := zip.NewWriter(&preamble)
+	writer.SetOffset(int64(preamble.Len()))
+	for _, entry := range []struct{ name, content string }{
+		{"META-INF/container.xml", `<container><rootfiles><rootfile full-path="score.musicxml" media-type="application/vnd.recordare.musicxml+xml"/></rootfiles></container>`},
+		{"score.musicxml", scenarioValid},
+	} {
+		w, err := writer.Create(entry.name)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, entry.content)
+		require.NoError(t, err)
+	}
+	require.NoError(t, writer.Close())
+	_, err = DecodeMXL(bytes.NewReader(preamble.Bytes()))
+	require.NoError(t, err, "DecodeMXL accepts the preamble")
+	inspected, err := InspectMXL(ctx, bytes.NewReader(preamble.Bytes()), MXLAssessmentOptions{})
+	require.ErrorIs(t, err, ErrIncompleteAssessment)
+	require.NotNil(t, inspected.PackageReport().Terminal)
+	for _, lenient := range []bool{false, true} {
+		result, err = DecodeMXLAssessed(ctx, bytes.NewReader(preamble.Bytes()), DecodeMXLAssessmentOptions{Lenient: lenient})
+		assert.ErrorIs(t, err, ErrIncompleteAssessment, "lenient=%v", lenient)
+		assert.NotErrorIs(t, err, ErrInvalidMXL, "lenient=%v", lenient)
+		assert.Equal(t, inspected.PackageReport().Terminal, result.Source.PackageReport().Terminal, "lenient=%v: the source stage reports the archive as InspectMXL does", lenient)
+		assert.Nil(t, result.Package, "lenient=%v", lenient)
+	}
+}
+
+type emptyReads struct{ calls int }
+
+func (r *emptyReads) Read([]byte) (int, error) {
+	r.calls++
+	return 0, nil
+}
+
+func TestDecodeMXLAssessedMetersArchiveReads(t *testing.T) {
+	t.Parallel()
+
+	// Every read is metered work: a reader that never makes progress stops at
+	// the step budget, before anything is buffered. The deadline only keeps an
+	// unmetered read from hanging the test.
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	reader := &emptyReads{}
+	_, err := DecodeMXLAssessed(ctx, reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Budgets: validation.Budgets{MaxRuleSteps: 10}}}})
+	var resource *validation.ResourceError
+	require.ErrorAs(t, err, &resource)
+	assert.Equal(t, validation.BudgetRuleSteps, resource.Kind)
+	assert.LessOrEqual(t, reader.calls, 10)
+}
+
+func TestDecodeMXLAssessedMetersZIPInventory(t *testing.T) {
+	// Many empty entries make the central-directory inventory large next to
+	// the archive bytes, so some buffered budget admits the whole read but not
+	// the inventory. That refusal comes before the inventory is parsed and
+	// before any later work: the dictionary source is never asked and nothing
+	// is converted. It counts allocations, so it does not run in parallel.
+	var archive bytes.Buffer
+	writer := zip.NewWriter(&archive)
+	for _, entry := range []struct{ name, content string }{
+		{"META-INF/container.xml", `<container><rootfiles><rootfile full-path="score.musicxml" media-type="application/vnd.recordare.musicxml+xml"/></rootfiles></container>`},
+		{"score.musicxml", scenarioValid},
+	} {
+		w, err := writer.Create(entry.name)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, entry.content)
+		require.NoError(t, err)
+	}
+	const entries = 2000
+	for i := 0; i < entries; i++ {
+		_, err := writer.Create("pad/" + strconv.Itoa(i))
+		require.NoError(t, err)
+	}
+	require.NoError(t, writer.Close())
+	data := archive.Bytes()
+
+	var opened atomic.Int64
+	source := DictionarySourceFunc(func(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+		opened.Add(1)
+		return BundledDictionarySource().Open(ctx, request)
+	})
+	dictionaries := &DictionaryOptions{Source: source, Selections: requiredDictionarySelections()}
+	for budget := int64(len(data)); budget < 16*int64(len(data)); budget += 256 {
+		reader := &assessmentCountingReader{source: bytes.NewReader(data)}
+		opened.Store(0)
+		result, err := DecodeMXLAssessed(context.Background(), reader, DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Dictionaries: dictionaries, Budgets: validation.Budgets{MaxBufferedBytes: budget}}}})
+		var resource *validation.ResourceError
+		require.ErrorAs(t, err, &resource, "budget %d", budget)
+		require.Equal(t, validation.BudgetBufferedBytes, resource.Kind, "budget %d", budget)
+		if reader.bytes < len(data) {
+			continue // refused during the read
+		}
+		assert.Zero(t, opened.Load(), "budget %d: the inventory is admitted before the dictionary import", budget)
+		assert.Equal(t, validation.ConversionIncomplete, result.Conversion.State, "budget %d: the inventory is admitted before conversion", budget)
+		allocs := testing.AllocsPerRun(3, func() {
+			_, _ = DecodeMXLAssessed(context.Background(), bytes.NewReader(data), DecodeMXLAssessmentOptions{Assessment: MXLAssessmentOptions{Graph: AssessmentOptions{Dictionaries: dictionaries, Budgets: validation.Budgets{MaxBufferedBytes: budget}}}})
+		})
+		// Parsing the inventory allocates about four times per entry; a
+		// refusal before it allocates a few dozen times in all.
+		assert.Less(t, allocs, float64(entries)/4, "budget %d: the inventory is not parsed before it is admitted", budget)
+		return
+	}
+	t.Fatal("no budget admitted the read and refused the inventory")
+}
+
+func TestMXLAssessmentArchiveDetachData(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	data := scenarioMXL(t, scenarioValid)
+	account, err := validation.NewBudgetAccount(validation.Budgets{})
+	require.NoError(t, err)
+	usage := func() int64 {
+		used, err := account.Usage(validation.BudgetBufferedBytes)
+		require.NoError(t, err)
+		return used
+	}
+
+	// A borrowed representation belongs to its upstream owner.
+	borrowed, err := borrowMXLAssessmentArchive(ctx, data, MXLOptions{}, account)
+	require.NoError(t, err)
+	detached, reserved := borrowed.detachData()
+	assert.Nil(t, detached)
+	assert.Zero(t, reserved)
+	borrowed.Close()
+	assert.Zero(t, usage())
+
+	// An owned one hands over exactly the reservation of its bytes.
+	owned, err := openMXLAssessmentArchive(ctx, bytes.NewReader(data), MXLOptions{}, account)
+	require.NoError(t, err)
+	detached, reserved = owned.detachData()
+	assert.Equal(t, data, detached)
+	assert.Equal(t, int64(cap(detached)), reserved)
+	owned.Close()
+	assert.Equal(t, reserved, usage(), "Close keeps the detached reservation")
+	require.NoError(t, account.Release(validation.BudgetBufferedBytes, reserved))
+	assert.Zero(t, usage())
 }

@@ -20,43 +20,25 @@ type DictionaryOptions struct {
 	Source     DictionarySource
 }
 
-// DictionaryAssessmentOptions adds explicit pinned capabilities to a standalone
-// assessment. DecodeAssessedWithDictionaries applies its fixed mandatory stages
-// and bundled defaults instead of standalone profile selection.
-//
-// Deprecated: Set AssessmentOptions.Dictionaries instead.
-type DictionaryAssessmentOptions struct {
+// dictionaryAssessmentOptions pairs standalone assessment options with the
+// dictionary capabilities that AssessmentOptions.Dictionaries selected.
+type dictionaryAssessmentOptions struct {
 	Assessment   AssessmentOptions
 	Dictionaries DictionaryOptions
 }
 
-// LinkedDictionaryAssessmentOptions shares one dictionary set and resource
+// linkedDictionaryAssessmentOptions shares one dictionary set and resource
 // account across the explicitly selected linked assessment graph.
-//
-// Deprecated: Set LinkedAssessmentOptions.Graph.Dictionaries instead.
-type LinkedDictionaryAssessmentOptions struct {
+type linkedDictionaryAssessmentOptions struct {
 	Resources    LinkedAssessmentOptions
 	Dictionaries DictionaryOptions
 }
 
-// MXLDictionaryAssessmentOptions adds pinned capabilities to an MXL assessment.
+// mxlDictionaryAssessmentOptions adds pinned capabilities to an MXL assessment.
 // Existing independent archive limits continue to apply.
-//
-// Deprecated: Set MXLAssessmentOptions.Graph.Dictionaries instead.
-type MXLDictionaryAssessmentOptions struct {
+type mxlDictionaryAssessmentOptions struct {
 	Resources    MXLAssessmentOptions
 	Dictionaries DictionaryOptions
-}
-
-// DecodeDictionaryAssessmentOptions configures mandatory assessed loading.
-// Nil Assessment selects the fixed source/model stages with bundled required data.
-// Explicit options may change finite budgets and compatible pinned dictionary
-// transport, but cannot disable either stage or its required relations.
-//
-// Deprecated: Use DecodeAssessmentOptions with Assessment.Dictionaries.
-type DecodeDictionaryAssessmentOptions struct {
-	Decode     DecodeOptions
-	Assessment *DictionaryAssessmentOptions
 }
 
 // DictionarySource supplies caller-authorized transport for exact pinned bytes.

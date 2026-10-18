@@ -39,8 +39,6 @@ func TestBundledDictionaryLinkage(t *testing.T) {
 		`musicxml.AssessModelWithResources(ctx, musicxml.NewOpusDocument(), musicxml.LinkedAssessmentOptions{})`: true,
 		`musicxml.InspectMXL(ctx, r, musicxml.MXLAssessmentOptions{})`:                                           true,
 		`musicxml.AssessMXLPackage(ctx, &musicxml.MXLPackage{}, musicxml.MXLAssessmentOptions{})`:                true,
-		`musicxml.DecodeAssessedWithDictionaries(ctx, r, musicxml.DecodeDictionaryAssessmentOptions{})`:          true,
-		`musicxml.InspectXMLWithDictionaries(ctx, r, musicxml.DictionaryAssessmentOptions{})`:                    false,
 		`musicxml.Decode(r)`:    false,
 		`musicxml.DecodeMXL(r)`: false,
 		`musicxml.Validate(musicxml.NewOpusDocument()), error(nil)`:           false,

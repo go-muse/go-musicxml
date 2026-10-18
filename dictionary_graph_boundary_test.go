@@ -19,11 +19,11 @@ func TestDictionaryGraphTypedNilBeforeProvider(t *testing.T) {
 	d := DictionaryOptions{Selections: dictionaryGraphSelection(), Source: source}
 	for _, run := range []func() error{
 		func() error {
-			_, e := InspectXMLWithResourcesAndDictionaries(context.Background(), reader, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
+			_, e := inspectXMLWithResourcesAndDictionaries(context.Background(), reader, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: d})
 			return e
 		},
 		func() error {
-			_, e := InspectMXLWithDictionaries(context.Background(), reader, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: d})
+			_, e := inspectMXLWithDictionaries(context.Background(), reader, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}, Dictionaries: d})
 			return e
 		},
 	} {

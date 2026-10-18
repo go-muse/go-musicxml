@@ -23,7 +23,7 @@ func TestSourceDeclarationCompositionProfiles(t *testing.T) {
 			var report validation.Report
 			var err error
 			if strings.HasSuffix(string(profile), "-dictionaries") {
-				report, err = InspectXMLWithDictionaries(context.Background(), r, DictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}})
+				report, err = inspectXMLWithDictionaries(context.Background(), r, dictionaryAssessmentOptions{Assessment: AssessmentOptions{Profile: profile}})
 			} else {
 				report, err = InspectXML(context.Background(), r, AssessmentOptions{Profile: profile})
 			}

@@ -662,15 +662,11 @@ func AsOpusDocument(document Document) (*OpusDocument, bool)
 func AsScorePartwise(document Document) (*ScorePartwise, bool)
 func AsScoreTimewise(document Document) (*ScoreTimewise, bool)
 func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessmentOptions) (validation.AssessmentBundle, error)
-func AssessMXLPackageWithDictionaries(ctx context.Context, value *MXLPackage, options MXLDictionaryAssessmentOptions) (validation.AssessmentBundle, error)
 func AssessModel(ctx context.Context, document Document, options AssessmentOptions) (validation.Report, error)
-func AssessModelWithDictionaries(ctx context.Context, document Document, options DictionaryAssessmentOptions) (report validation.Report, err error)
 func AssessModelWithResources(ctx context.Context, document Document, options LinkedAssessmentOptions) (validation.AssessmentBundle, error)
-func AssessModelWithResourcesAndDictionaries(ctx context.Context, document Document, options LinkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error)
 func BundledDictionarySource() DictionarySource
 func Decode(reader io.Reader) (Document, error)
 func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessmentOptions) (DecodeResult, error)
-func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error)
 func DecodeContext(ctx context.Context, reader io.Reader, options DecodeOptions) (Document, error)
 func DecodeMXL(reader io.Reader) (Document, error)
 func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLAssessmentOptions) (result DecodeMXLResult, err error)
@@ -699,11 +695,8 @@ func EncodeMXL(writer io.Writer, document Document) error
 func EncodeMXLPackage(writer io.Writer, value *MXLPackage) error
 func EncodeWithOptions(writer io.Writer, document Document, options EncodeOptions) error
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error)
-func InspectMXLWithDictionaries(ctx context.Context, reader io.Reader, options MXLDictionaryAssessmentOptions) (validation.AssessmentBundle, error)
 func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions) (report validation.Report, err error)
-func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options DictionaryAssessmentOptions) (report validation.Report, err error)
 func InspectXMLWithResources(ctx context.Context, reader io.Reader, options LinkedAssessmentOptions) (validation.AssessmentBundle, error)
-func InspectXMLWithResourcesAndDictionaries(ctx context.Context, reader io.Reader, options LinkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error)
 func NewOpusDocument() *OpusDocument
 func NewPitchedNote(step Step, octave Octave, duration PositiveDivisions) *Note
 func NewRestNote(duration PositiveDivisions) *Note
@@ -1181,10 +1174,6 @@ type DecodeAssessmentOptions struct, field Assessment *AssessmentOptions
 type DecodeAssessmentOptions struct, field Decode DecodeOptions
 type DecodeAssessmentOptions struct, field Lenient bool
 type DecodeAssessmentOptions struct, field order Decode Assessment Lenient
-type DecodeDictionaryAssessmentOptions struct, comparable
-type DecodeDictionaryAssessmentOptions struct, field Assessment *DictionaryAssessmentOptions
-type DecodeDictionaryAssessmentOptions struct, field Decode DecodeOptions
-type DecodeDictionaryAssessmentOptions struct, field order Decode Assessment
 type DecodeMXLAssessmentOptions struct, field Assessment MXLAssessmentOptions
 type DecodeMXLAssessmentOptions struct, field Lenient bool
 type DecodeMXLAssessmentOptions struct, field order Assessment Lenient
@@ -1271,10 +1260,6 @@ type DegreeValue struct, field Value uint64 `xml:",chardata"`
 type DegreeValue struct, field order Value Symbol Text DefaultX DefaultY RelativeX RelativeY FontFamily FontStyle FontSize FontWeight Color
 type DegreeValue, method (*DegreeValue) UnmarshalXML(decoder *xml.Decoder, start xml.StartElement) error
 type DegreeValue, method (DegreeValue) MarshalXML(encoder *xml.Encoder, start xml.StartElement) error
-type DictionaryAssessmentOptions struct, field Assessment AssessmentOptions
-type DictionaryAssessmentOptions struct, field Dictionaries DictionaryOptions
-type DictionaryAssessmentOptions struct, field order Assessment Dictionaries
-type DictionaryAssessmentOptions struct, not comparable
 type DictionaryComponentRequest struct, comparable
 type DictionaryComponentRequest struct, field Component validation.DictionaryComponentPin
 type DictionaryComponentRequest struct, field Manifest validation.DictionaryManifestID
@@ -2302,10 +2287,6 @@ type LinkedAssessmentOptions struct, field Identity ResourceIdentity
 type LinkedAssessmentOptions struct, field Resolver validation.ResourceResolver
 type LinkedAssessmentOptions struct, field order Graph Identity Resolver Dependencies
 type LinkedAssessmentOptions struct, not comparable
-type LinkedDictionaryAssessmentOptions struct, field Dictionaries DictionaryOptions
-type LinkedDictionaryAssessmentOptions struct, field Resources LinkedAssessmentOptions
-type LinkedDictionaryAssessmentOptions struct, field order Resources Dictionaries
-type LinkedDictionaryAssessmentOptions struct, not comparable
 type Listen struct, field Content ListenContents `xml:",any"`
 type Listen struct, not comparable
 type Listen, method (*Listen) AddAssess(element *Assess) *Assess
@@ -2420,10 +2401,6 @@ type MXLAssessmentOptions struct, field MXL MXLOptions
 type MXLAssessmentOptions struct, field Resolver validation.ResourceResolver
 type MXLAssessmentOptions struct, field order Graph Identity Resolver Dependencies MXL
 type MXLAssessmentOptions struct, not comparable
-type MXLDictionaryAssessmentOptions struct, field Dictionaries DictionaryOptions
-type MXLDictionaryAssessmentOptions struct, field Resources MXLAssessmentOptions
-type MXLDictionaryAssessmentOptions struct, field order Resources Dictionaries
-type MXLDictionaryAssessmentOptions struct, not comparable
 type MXLLinkError struct, comparable
 type MXLLinkError struct, field Err error
 type MXLLinkError struct, field Href string

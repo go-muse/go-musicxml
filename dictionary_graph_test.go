@@ -73,16 +73,16 @@ func TestDictionaryGraphEntryPointsKeepRepresentationAndProfiles(t *testing.T) {
 		count          int
 	}{
 		{"source", func() (validation.AssessmentBundle, error) {
-			return InspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<opus/>`), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}})
+			return inspectXMLWithResourcesAndDictionaries(ctx, strings.NewReader(`<opus/>`), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}})
 		}, validation.TargetSource, ProfileSourceDictionaries, ProfileResourceGraphDictionaries, 1},
 		{"model", func() (validation.AssessmentBundle, error) {
-			return AssessModelWithResourcesAndDictionaries(ctx, doc, LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}})
+			return assessModelWithResourcesAndDictionaries(ctx, doc, linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}})
 		}, validation.TargetModel, ProfileModelDictionaries, ProfileResourceGraphDictionaries, 1},
 		{"raw MXL", func() (validation.AssessmentBundle, error) {
-			return InspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}})
+			return inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}}})
 		}, validation.TargetSource, ProfileSourceDictionaries, ProfileMXLSourceDictionaries, 2},
 		{"current MXL", func() (validation.AssessmentBundle, error) {
-			return AssessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelDictionaries}}})
+			return assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLModelDictionaries}}})
 		}, validation.TargetModel, ProfileModelDictionaries, ProfileMXLModelDictionaries, 1},
 	}
 	for _, tc := range cases {
@@ -131,11 +131,11 @@ func TestDictionaryGraphConfigurationBeforeAnyIO(t *testing.T) {
 	})
 	for _, tc := range []struct {
 		name    string
-		options LinkedDictionaryAssessmentOptions
+		options linkedDictionaryAssessmentOptions
 	}{
-		{"old graph profile", LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}}},
-		{"unknown manifest", LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: "unknown", Relations: []validation.DictionaryRelation{"canonical-name"}}}}}},
-		{"bad dependency", LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}, Dependencies: []ResourceDependency{"invalid"}}}},
+		{"old graph profile", linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraph}}}},
+		{"unknown manifest", linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}, Dictionaries: DictionaryOptions{Selections: []validation.DictionarySelection{{Manifest: "unknown", Relations: []validation.DictionaryRelation{"canonical-name"}}}}}},
+		{"bad dependency", linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}, Dependencies: []ResourceDependency{"invalid"}}}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := &dictionaryGraphReader{}
@@ -143,14 +143,14 @@ func TestDictionaryGraphConfigurationBeforeAnyIO(t *testing.T) {
 			if len(tc.options.Dictionaries.Selections) == 0 {
 				tc.options.Dictionaries.Selections = dictionaryGraphSelection()
 			}
-			_, err := InspectXMLWithResourcesAndDictionaries(context.Background(), r, tc.options)
+			_, err := inspectXMLWithResourcesAndDictionaries(context.Background(), r, tc.options)
 			if !errors.Is(err, validation.ErrInvalidConfiguration) || r.reads != 0 || calls != 0 {
 				t.Fatalf("err=%v reads=%d callbacks=%d", err, r.reads, calls)
 			}
 		})
 	}
 	r := &dictionaryGraphReader{}
-	_, err := InspectMXLWithDictionaries(context.Background(), r, MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}, MXL: MXLOptions{MaxXMLDepth: -1}}, Dictionaries: DictionaryOptions{Source: source, Selections: dictionaryGraphSelection()}})
+	_, err := inspectMXLWithDictionaries(context.Background(), r, mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}, MXL: MXLOptions{MaxXMLDepth: -1}}, Dictionaries: DictionaryOptions{Source: source, Selections: dictionaryGraphSelection()}})
 	if err == nil || r.reads != 0 || calls != 0 {
 		t.Fatalf("invalid MXL: %v %d %d", err, r.reads, calls)
 	}
@@ -171,13 +171,13 @@ func TestDictionaryGraphPreservesPackageRoleSelection(t *testing.T) {
 			}
 			return validation.ResourceResult{RequestID: q.ID, State: validation.EvidenceUnknown, Reason: "test-role-unavailable"}, nil
 		})
-		opts := MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceRoles}}}
+		opts := mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}, Resolver: resolver, Dependencies: []ResourceDependency{ResourceRoles}}}
 		var e error
 		if current {
 			opts.Resources.Graph.Profile = ProfileMXLModelDictionaries
-			_, e = AssessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, opts)
+			_, e = assessMXLPackageWithDictionaries(ctx, &MXLPackage{Document: doc}, opts)
 		} else {
-			_, e = InspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), opts)
+			_, e = inspectMXLWithDictionaries(ctx, bytes.NewReader(packageGraphBytes(`<opus/>`, "main.opus", "")), opts)
 		}
 		if e != nil || calls != 1 {
 			t.Errorf("current=%t err=%v role callbacks=%d", current, e, calls)
@@ -187,7 +187,7 @@ func TestDictionaryGraphPreservesPackageRoleSelection(t *testing.T) {
 
 func TestDictionaryGraphPreservesMXLXMLDepth(t *testing.T) {
 	root := `<opus><opus><opus><opus/></opus></opus></opus>`
-	_, err := InspectMXLWithDictionaries(context.Background(), bytes.NewReader(packageGraphBytes(root, "main.opus", "")), MXLDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}, MXL: MXLOptions{MaxXMLDepth: 3}}})
+	_, err := inspectMXLWithDictionaries(context.Background(), bytes.NewReader(packageGraphBytes(root, "main.opus", "")), mxlDictionaryAssessmentOptions{Resources: MXLAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileMXLSourceDictionaries}, MXL: MXLOptions{MaxXMLDepth: 3}}})
 	if !errors.Is(err, ErrXMLTooDeep) || !errors.Is(err, validation.ErrResourceLimit) {
 		t.Fatal("dictionary profile bypassed package XML cap", err)
 	}

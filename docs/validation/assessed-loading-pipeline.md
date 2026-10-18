@@ -1,7 +1,9 @@
 # Mandatory assessed-loading pipeline
 
-`DecodeAssessed` and `DecodeAssessedWithDictionaries` now always require the
-existing `ProfileSourceSemantics` followed by direct `ProfileModelSemantics`.
+`DecodeAssessed` now always requires the existing `ProfileSourceSemantics`
+followed by direct `ProfileModelSemantics`; `DecodeMXLAssessed` does the same
+for MXL. The former `DecodeAssessedWithDictionaries` was removed; its
+dictionary options are `AssessmentOptions.Dictionaries`.
 This breaks the earlier unreleased development API; these entry points did not
 exist in v0.1.0. It does not widen either profile, change its catalog digest, or
 establish complete MusicXML conformance.
@@ -117,8 +119,9 @@ document, err := musicxml.DecodeWithOptions(reader, decodeOptions)
 
 To retain a narrower source-only assessment, use `InspectXML` with its explicit
 profile and inspect `report.Satisfied()`. For dictionary-dependent profiles, use
-`InspectXMLWithDictionaries` with explicit `Dictionaries.Source` and `Selections`;
-plain `InspectXML` does not supply dictionary evidence. This includes the source
+`InspectXML` with explicit `Dictionaries.Source` and `Selections`; with an
+explicit profile and nil `Dictionaries`, `InspectXML` supplies no dictionary
+evidence. This includes the source
 dictionary, internal-DTD dictionary and source-sounds dictionary profiles.
 Ordinary normative violations still return a report without an operation error.
 A separate conversion needs its own reader; do not reuse a consumed reader.
@@ -163,8 +166,8 @@ to the score semantic profiles.
 
 `DecodeAssessed` uses the same defaults when `Assessment` or
 `Assessment.Dictionaries` is nil, or when the dictionaries' `Source` is nil and
-they have no selections (nil and empty slices both qualify). The deprecated
-`DecodeAssessedWithDictionaries` behaves the same. A typed-nil `Source` is an explicit override and does not activate
+they have no selections (nil and empty slices both qualify). A typed-nil
+`Source` is an explicit override and does not activate
 defaults. Any explicit override must include both required manifest/relation
 pairs. Other supported selections may be added; unknown, duplicate or incomplete
 selections fail before input reads or callbacks.

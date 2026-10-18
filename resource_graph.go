@@ -23,6 +23,10 @@ func ordinaryResourceIntrinsicProfiles() resourceIntrinsicProfiles {
 }
 
 type resourceGraphRun struct {
+	// retainBundle makes finish keep the bundle's storage charged in
+	// bundleLease, which the caller then owns.
+	retainBundle          bool
+	bundleLease           *validation.ReportLease
 	ctx                   context.Context
 	options               resourceRunOptions
 	profiles              resourceIntrinsicProfiles
@@ -143,7 +147,15 @@ func (g *resourceGraphRun) primaryPin(representation validation.ResourceRepresen
 	return p
 }
 func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error) {
-	b, e := g.session.Finish(g.ctx, validation.PackageCompletion{InputComplete: err == nil, Cause: err})
+	end := validation.PackageCompletion{InputComplete: err == nil, Cause: err}
+	var b validation.AssessmentBundle
+	var e error
+	if g.retainBundle {
+		// The caller keeps the bundle's storage charged while it continues.
+		b, g.bundleLease, e = g.session.FinishWithRetainedBundle(g.ctx, end)
+	} else {
+		b, e = g.session.Finish(g.ctx, end)
+	}
 	g.close()
 	return b, joinResourceErrors(joinResourceErrors(err, e), g.dictionaryErr)
 }
@@ -159,7 +171,7 @@ func (g *resourceGraphRun) finish(err error) (validation.AssessmentBundle, error
 func InspectXMLWithResources(ctx context.Context, reader io.Reader, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
 	if graph, dictionaries, ok := options.Graph.scenario(ProfileResourceGraphSemantics); ok {
 		options.Graph = graph
-		return inspectXMLWithResourcesAndDictionaries(ctx, reader, LinkedDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+		return inspectXMLWithResourcesAndDictionaries(ctx, reader, linkedDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
 	}
 	if reader == nil {
 		return validation.AssessmentBundle{}, ErrNilReader
@@ -196,7 +208,7 @@ func (g *resourceGraphRun) inspectPrimarySource(reader io.Reader) (validation.As
 func AssessModelWithResources(ctx context.Context, document Document, options LinkedAssessmentOptions) (validation.AssessmentBundle, error) {
 	if graph, dictionaries, ok := options.Graph.scenario(ProfileResourceGraphSemantics); ok {
 		options.Graph = graph
-		return assessModelWithResourcesAndDictionaries(ctx, document, LinkedDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+		return assessModelWithResourcesAndDictionaries(ctx, document, linkedDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
 	}
 	if _, err := validationSchemaForDocument(document); err != nil {
 		return validation.AssessmentBundle{}, err

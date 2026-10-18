@@ -37,8 +37,8 @@ The slice adds fixed, verified, immutable dictionary capabilities; exact
 source/current-model consumers; and propagation through selected resource graphs
 and nested MXL packages. The source-sounds intrinsic row admits compatible
 explicitly supplied fact-stream snapshots; the root dictionary package catalog
-constructor is private. Standalone `InspectXMLWithDictionaries` supports
-`ProfileSourceSoundsDictionaries`, but public graph/MXL wrappers do not discover,
+constructor is private. Standalone `InspectXML` with `Dictionaries` supports
+`ProfileSourceSoundsDictionaries`, but public graph/MXL entry points do not discover,
 resolve or assess sounds children. The slice selects SMuFL 1.4 canonical names
 and exact ranges, MusicXML 4.0 standard-sound recognition, unchanged partial
 IPA positive-v1 facts and a separately selected bounded representation witness.
@@ -425,7 +425,7 @@ for exact work counters, fixture qualifications and unchanged capability gaps.
 
 Any binary referencing `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`,
 `AssessModel`, `InspectXMLWithResources`, `AssessModelWithResources`,
-`InspectMXL`, `AssessMXLPackage` or `DecodeAssessedWithDictionaries` embeds
+`InspectMXL` or `AssessMXLPackage` embeds
 all five component assets, including both CC BY-SA 4.0 IPA bundles, even with
 custom-source options. Direct use of `BundledDictionarySource` also retains all
 five. Selection limits runtime import and assessment, not the binary's asset

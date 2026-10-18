@@ -27,7 +27,7 @@ implemented bounded timeline profiles and current exact-head acceptance.
 
 ## Reading order
 
-For `DecodeAssessed` and `DecodeAssessedWithDictionaries`, start with the
+For `DecodeAssessed` and `DecodeMXLAssessed`, start with the
 [mandatory assessed-loading pipeline and migration](assessed-loading-pipeline.md):
 fixed source and direct-model semantic acceptance, bundled defaults, explicit
 overrides and retained errors. The inspection/assessment profiles below remain

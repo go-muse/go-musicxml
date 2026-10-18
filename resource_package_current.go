@@ -24,7 +24,7 @@ import (
 func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
 	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLModelSemantics); ok {
 		options.Graph = graph
-		return assessMXLPackageWithDictionaries(ctx, value, MXLDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+		return assessMXLPackageWithDictionaries(ctx, value, mxlDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
 	}
 	if value == nil {
 		return validation.AssessmentBundle{}, ErrNilMXLPackage

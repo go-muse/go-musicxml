@@ -12,8 +12,8 @@ import (
 // assessedLoadingOptions elects fixed validation stages, never a caller-selected
 // weaker profile. Explicit dictionary inputs remain authoritative: an unavailable
 // or invalid override is not repaired with bundled data.
-func assessedLoadingOptions(options *DictionaryAssessmentOptions) (DictionaryAssessmentOptions, error) {
-	var out DictionaryAssessmentOptions
+func assessedLoadingOptions(options *dictionaryAssessmentOptions) (dictionaryAssessmentOptions, error) {
+	var out dictionaryAssessmentOptions
 	if options != nil {
 		out = *options
 	}
@@ -57,7 +57,7 @@ func requireDictionaryRelations(dictionaries DictionaryOptions, required []valid
 
 // decodeValidated owns one account and one imported set across both stages.
 // Inspect/Assess entry points continue to use their explicit profile contracts.
-func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions, options *DictionaryAssessmentOptions, lenient bool) (result DecodeResult, err error) {
+func decodeValidated(ctx context.Context, reader io.Reader, decode DecodeOptions, options *dictionaryAssessmentOptions, lenient bool) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	if err = assessmentContext(ctx, "canceled-before-source"); err != nil {
 		return result, err

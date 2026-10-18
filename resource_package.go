@@ -84,7 +84,7 @@ func (g *resourceGraphRun) ownArchive(a *mxlAssessmentArchive) error {
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
 	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLSourceSemantics); ok {
 		options.Graph = graph
-		return inspectMXLWithDictionaries(ctx, reader, MXLDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+		return inspectMXLWithDictionaries(ctx, reader, mxlDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
 	}
 	if reader == nil {
 		return validation.AssessmentBundle{}, ErrNilReader
@@ -102,6 +102,12 @@ func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOpti
 
 func (g *resourceGraphRun) inspectRawPackage(reader io.Reader) (validation.AssessmentBundle, error) {
 	a, readErr := openMXLAssessmentArchive(g.ctx, reader, g.mxlOptions, g.options.account)
+	return g.inspectOpenedRawPackage(a, readErr)
+}
+
+// inspectOpenedRawPackage takes ownership of an archive opened on this run's
+// account, together with its open error.
+func (g *resourceGraphRun) inspectOpenedRawPackage(a *mxlAssessmentArchive, readErr error) (validation.AssessmentBundle, error) {
 	var err error
 	if a == nil {
 		return g.finish(readErr)

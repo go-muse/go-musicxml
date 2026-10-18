@@ -94,7 +94,7 @@ construction and compressed `.mxl` round trips in
 | Preserve MXL resources | `DecodeMXLPackage`, `DecodeMXLPackageWithOptions`, `EncodeMXLPackage` |
 | Validate current model against MusicXML 4.0 XSD | `Validate`, root `Validate` methods |
 | Load only after source and current-model semantic acceptance (scenario 2) | `DecodeAssessed`, `DecodeMXLAssessed`; `Lenient` returns the document with its reports |
-| Check a current model with the semantic profile (scenario 3) | `AssessModel` with empty options; for an MXL package, on its `Document` |
+| Check a current model with the semantic profile (scenario 3) | `AssessModel` with empty options; for an MXL package, on its primary `Document` only, not the whole package |
 | Assess current model with an explicit profile/report | `AssessModel`, `ProfileModelXSD`, `ProfileModelLocal`, `ProfileModelTimeline`, `ProfileModelContext` |
 | Inspect original source | `InspectXML` (empty profile: `ProfileSourceSemantics`), `ProfileSourceXSDPreview`, `ProfileSourceLocal`, `ProfileSourceTimeline`, `ProfileSourceContext` |
 | Assess original source after bounded internal DTD processing | `ProfileSourceInternalDTD` |
@@ -439,8 +439,8 @@ in this README.
 The library code is licensed under the [MIT License](LICENSE). Bundled schemas,
 test fixtures and runtime dictionary data retain their own terms. Any binary
 referencing `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`, `AssessModel`,
-`InspectXMLWithResources`, `AssessModelWithResources`, `InspectMXL`,
-`AssessMXLPackage` or `DecodeAssessedWithDictionaries` embeds all five
+`InspectXMLWithResources`, `AssessModelWithResources`, `InspectMXL` or
+`AssessMXLPackage` embeds all five
 dictionary components, even with custom-source options. Direct use of
 `BundledDictionarySource` also retains all five. These include W3C FSA, CC BY-SA
 4.0 and Unicode License v3 data. Distribute these binaries with the five

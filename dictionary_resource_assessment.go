@@ -69,23 +69,11 @@ func startDictionaryResourceGraphAccount(ctx context.Context, resources LinkedAs
 	return g, nil
 }
 
-// InspectXMLWithResourcesAndDictionaries assesses original MusicXML/Opus bytes,
+// inspectXMLWithResourcesAndDictionaries assesses original MusicXML/Opus bytes,
 // selected resources and explicitly selected dictionaries in one finite account.
 // The caller reader stays open. Provider failures accompany a partial result;
 // dictionary gaps never suppress independently proved schema/family failures.
-// options.Resources.Graph.Dictionaries must be nil; Dictionaries applies.
-//
-// Deprecated: Use InspectXMLWithResources with Graph.Dictionaries set to
-// &options.Dictionaries; it gives the same result for every profile
-// this function accepts.
-func InspectXMLWithResourcesAndDictionaries(ctx context.Context, reader io.Reader, options LinkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
-	if err := singleGraphDictionaries(options.Resources.Graph); err != nil {
-		return validation.AssessmentBundle{}, err
-	}
-	return inspectXMLWithResourcesAndDictionaries(ctx, reader, options)
-}
-
-func inspectXMLWithResourcesAndDictionaries(ctx context.Context, reader io.Reader, options LinkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
+func inspectXMLWithResourcesAndDictionaries(ctx context.Context, reader io.Reader, options linkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
 	if dictionaryNil(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
@@ -99,22 +87,10 @@ func inspectXMLWithResourcesAndDictionaries(ctx context.Context, reader io.Reade
 	return g.inspectPrimarySource(reader)
 }
 
-// AssessModelWithResourcesAndDictionaries assesses the current MusicXML/Opus
+// assessModelWithResourcesAndDictionaries assesses the current MusicXML/Opus
 // model directly with one root-owned dictionary set and selected resources.
 // It never encodes the model or reconstructs discarded source information.
-// options.Resources.Graph.Dictionaries must be nil; Dictionaries applies.
-//
-// Deprecated: Use AssessModelWithResources with Graph.Dictionaries set to
-// &options.Dictionaries; it gives the same result for every profile
-// this function accepts.
-func AssessModelWithResourcesAndDictionaries(ctx context.Context, document Document, options LinkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
-	if err := singleGraphDictionaries(options.Resources.Graph); err != nil {
-		return validation.AssessmentBundle{}, err
-	}
-	return assessModelWithResourcesAndDictionaries(ctx, document, options)
-}
-
-func assessModelWithResourcesAndDictionaries(ctx context.Context, document Document, options LinkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
+func assessModelWithResourcesAndDictionaries(ctx context.Context, document Document, options linkedDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
 	if _, err := validationSchemaForDocument(document); err != nil {
 		return validation.AssessmentBundle{}, err
 	}
@@ -128,22 +104,10 @@ func assessModelWithResourcesAndDictionaries(ctx context.Context, document Docum
 	return g.assessPrimaryModel(document)
 }
 
-// InspectMXLWithDictionaries assesses original MXL bytes and selected resources
+// inspectMXLWithDictionaries assesses original MXL bytes and selected resources
 // with one root account and dictionary import. Container/ZIP evidence, nested
 // boundaries and indirection limits retain the ordinary package contracts.
-// options.Resources.Graph.Dictionaries must be nil; Dictionaries applies.
-//
-// Deprecated: Use InspectMXL with Graph.Dictionaries set to
-// &options.Dictionaries; it gives the same result for every profile
-// this function accepts.
-func InspectMXLWithDictionaries(ctx context.Context, reader io.Reader, options MXLDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
-	if err := singleGraphDictionaries(options.Resources.Graph); err != nil {
-		return validation.AssessmentBundle{}, err
-	}
-	return inspectMXLWithDictionaries(ctx, reader, options)
-}
-
-func inspectMXLWithDictionaries(ctx context.Context, reader io.Reader, options MXLDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
+func inspectMXLWithDictionaries(ctx context.Context, reader io.Reader, options mxlDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
 	if dictionaryNil(reader) {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}
@@ -161,22 +125,10 @@ func inspectMXLWithDictionaries(ctx context.Context, reader io.Reader, options M
 	return g.inspectRawPackage(reader)
 }
 
-// AssessMXLPackageWithDictionaries assesses a current MXLPackage without encoding
+// assessMXLPackageWithDictionaries assesses a current MXLPackage without encoding
 // its primary model. Selected retained XML and nested packages share the same
 // verified dictionaries and finite account; source-only evidence stays separate.
-// options.Resources.Graph.Dictionaries must be nil; Dictionaries applies.
-//
-// Deprecated: Use AssessMXLPackage with Graph.Dictionaries set to
-// &options.Dictionaries; it gives the same result for every profile
-// this function accepts.
-func AssessMXLPackageWithDictionaries(ctx context.Context, value *MXLPackage, options MXLDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
-	if err := singleGraphDictionaries(options.Resources.Graph); err != nil {
-		return validation.AssessmentBundle{}, err
-	}
-	return assessMXLPackageWithDictionaries(ctx, value, options)
-}
-
-func assessMXLPackageWithDictionaries(ctx context.Context, value *MXLPackage, options MXLDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
+func assessMXLPackageWithDictionaries(ctx context.Context, value *MXLPackage, options mxlDictionaryAssessmentOptions) (validation.AssessmentBundle, error) {
 	if value == nil {
 		return validation.AssessmentBundle{}, ErrNilMXLPackage
 	}
@@ -195,13 +147,4 @@ func assessMXLPackageWithDictionaries(ctx context.Context, value *MXLPackage, op
 	}
 	g.mxlOptions = options.Resources.MXL
 	return g.assessCurrentPackage(value)
-}
-
-// singleGraphDictionaries rejects dictionary options given twice in a
-// deprecated wrapper.
-func singleGraphDictionaries(graph AssessmentOptions) error {
-	if graph.Dictionaries != nil {
-		return &validation.ConfigurationError{Field: "Graph.Dictionaries", Reason: "dictionaries are set by the Dictionaries field of this deprecated option type"}
-	}
-	return nil
 }

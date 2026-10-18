@@ -519,6 +519,7 @@ type AssessmentBundle, method (AssessmentBundle) AdoptionCount() int
 type AssessmentBundle, method (AssessmentBundle) EnumerationComplete() bool
 type AssessmentBundle, method (AssessmentBundle) Failure() (ResourceFailureSummary, bool)
 type AssessmentBundle, method (AssessmentBundle) FailureReport() (Report, bool)
+type AssessmentBundle, method (AssessmentBundle) Failures() BundleFailures
 type AssessmentBundle, method (AssessmentBundle) FileMetadataAt(i int) (PackageFileMetadataObservation, bool)
 type AssessmentBundle, method (AssessmentBundle) FileMetadataCount() int
 type AssessmentBundle, method (AssessmentBundle) ImageAdviceAt(i int) (PackageImageAdvice, bool)
@@ -591,6 +592,13 @@ type Budgets struct, field MaxNodes int64
 type Budgets struct, field MaxRuleSteps int64
 type Budgets struct, field MaxScalarBytes int64
 type Budgets struct, field order MaxInputBytes MaxExternalBytes MaxBufferedBytes MaxDepth MaxNodes MaxAttributes MaxEvents MaxScalarBytes MaxIDs MaxRuleSteps MaxContextFacts MaxLinkedDocuments MaxDiagnostics MaxDiagnosticBytes
+type BundleFailures struct, field Failed uint64
+type BundleFailures struct, field Findings []Finding
+type BundleFailures struct, field Incomplete bool
+type BundleFailures struct, field Truncated bool
+type BundleFailures struct, field Violated bool
+type BundleFailures struct, field order Violated Incomplete Failed Truncated Findings
+type BundleFailures struct, not comparable
 type ChildValueRequirement struct, comparable
 type ChildValueRequirement struct, field AllowAbsent bool
 type ChildValueRequirement struct, field Child DeclarationID
@@ -1380,6 +1388,7 @@ type PackageSession, method (*PackageSession) AdoptResource(ctx context.Context,
 type PackageSession, method (*PackageSession) Adoption(ctx context.Context, id ResourceAdoptionID) (*ResourceAdoption, error)
 type PackageSession, method (*PackageSession) ExpansionOwner(ctx context.Context, id ResourceAdoptionID) (ResourceAdoptionID, error)
 type PackageSession, method (*PackageSession) Finish(ctx context.Context, end PackageCompletion) (AssessmentBundle, error)
+type PackageSession, method (*PackageSession) FinishWithRetainedBundle(ctx context.Context, end PackageCompletion) (AssessmentBundle, *ReportLease, error)
 type PackageSession, method (*PackageSession) ObserveAssociation(ctx context.Context, q AssociationRequest, r AssociationResult) error
 type PackageSession, method (*PackageSession) ObserveEdge(ctx context.Context, e PackageEdgeObservation) error
 type PackageSession, method (*PackageSession) ObserveEntry(ctx context.Context, e PackageEntryObservation) error

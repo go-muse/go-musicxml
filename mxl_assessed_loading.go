@@ -32,7 +32,9 @@ type DecodeMXLAssessmentOptions struct {
 type DecodeMXLResult struct {
 	Package *MXLPackage
 	Source  validation.AssessmentBundle
-	Model   validation.Report
+	// Model is the report of the primary document only. The other resources
+	// of the package are assessed in Source, from the original archive.
+	Model validation.Report
 	// Conversion carries the conversion state only; a conversion failure is
 	// also the returned *ConversionError.
 	Conversion validation.ConversionResult
@@ -47,16 +49,29 @@ type DecodeMXLResult struct {
 // model as DecodeAssessed and AssessModel do with ProfileModelSemantics.
 // Package rules are proved from the original archive: a decoded package
 // cannot carry evidence such as discarded schema hints, so AssessMXLPackage
-// on it stays incomplete. Both assessments share one account bounded by
-// Assessment.Graph.Budgets, and each imports its dictionaries. The archive
-// bytes held for the call are charged to that account. The converted package
-// itself is bounded by the MXL limits, as for DecodeMXLPackage.
+// on it stays incomplete. The model stage covers the primary document only;
+// AssessModel(result.Package.Document) repeats it, but neither reassesses the
+// whole package.
 //
-// In the default strict mode the model is assessed only after the archive is
-// accepted, and Package is returned only when both assessments are accepted;
-// a rejection returns an error that matches ErrInvalidDocument for violations
-// or ErrIncompleteAssessment otherwise. In the lenient mode the model is
-// assessed and Package returned after any successful conversion. In both
+// Every option is checked before the reader is touched. The archive is read
+// once into a buffer and indexed for the source stage, both metered as in
+// InspectMXL. Both assessments share one account bounded by
+// Assessment.Graph.Budgets, and each imports its dictionaries. The archive
+// bytes stay charged to that account until conversion finishes, and the
+// source bundle until the call returns. Conversion parses the same bytes again
+// as DecodeMXLPackageContext does, so the converted package is bounded by the
+// MXL limits, as for DecodeMXLPackage. A reader failure or a corrupt archive
+// matches ErrInvalidMXL and leaves Source the zero bundle; an archive layout
+// the assessment does not process, such as one with a preamble, is reported in
+// Source, as by InspectMXL, and its terminated assessment returns an error that
+// matches ErrIncompleteAssessment.
+//
+// In the default strict mode the archive is converted and its model assessed
+// only after the source bundle is accepted, and Package is returned only when
+// both assessments are accepted; a rejection returns an error that matches
+// ErrInvalidDocument for violations or ErrIncompleteAssessment otherwise. In
+// the lenient mode the archive is converted, the model assessed and Package
+// returned after any source stage without an operational failure. In both
 // modes an operational failure returns its error and no package: invalid
 // options, cancellation, an unreadable or unsafe archive, resource limits, a
 // terminated assessment, a dictionary import failure or a conversion failure.
@@ -101,38 +116,61 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	}
 	// Conversion resolves DTDs as the source stage does: Graph.DTD first.
 	limits.dtd = stage(ProfileMXLSourceSemantics).Graph.DTD
-	data, err := readMXLAssessedArchive(ctx, reader, limits.archiveSize, account)
-	if err != nil {
-		return result, err
+	// The archive is read and indexed on the shared account, metered as in
+	// InspectMXL: reads, buffer growth and the ZIP inventory are admitted
+	// before they happen.
+	recorder := &mxlReadErrorRecorder{reader: reader}
+	archive, openErr := openMXLAssessmentArchive(ctx, recorder, options.Assessment.MXL, account)
+	if fatal := decodeMXLOpenError(ctx, archive, openErr, recorder.err); fatal != nil {
+		archive.Close()
+		return result, fatal
 	}
-	defer func() { _ = account.Release(validation.BudgetBufferedBytes, int64(len(data))) }()
-	if _, err := zip.NewReader(bytes.NewReader(data), int64(len(data))); err != nil {
-		return result, fmt.Errorf("%w: open ZIP archive: %w", ErrInvalidMXL, err)
+	// The loader keeps the archive bytes and their reservation for conversion;
+	// the source stage reads them until it closes the archive.
+	data, reserved := archive.detachData()
+	releaseData := func() {
+		if reserved != 0 {
+			_ = account.Release(validation.BudgetBufferedBytes, reserved)
+			data, reserved = nil, 0
+		}
 	}
+	defer releaseData()
 
 	var sourceErr error
 	source, err := startDictionaryResourceGraphAccount(ctx, stage(ProfileMXLSourceSemantics), dictionaries, ProfileMXLSourceDictionaries, account)
 	if source == nil {
+		archive.Close()
 		return result, err
 	}
+	// The source bundle stays charged until the loader returns, so the later
+	// stages are bounded by the combined live storage.
+	source.retainBundle = true
 	if err != nil {
+		archive.Close()
 		result.Source, sourceErr = source.finish(err)
 	} else {
 		source.mxlOptions = options.Assessment.MXL
-		result.Source, sourceErr = source.inspectRawPackage(bytes.NewReader(data))
+		// An archive the assessment cannot process, such as one with a
+		// preamble, is reported in the bundle, as by InspectMXL.
+		result.Source, sourceErr = source.inspectOpenedRawPackage(archive, openErr)
 	}
-	acceptanceErr := bundleAcceptanceError("mxl-source", result.Source)
+	defer func() { err = errors.Join(err, source.bundleLease.Close()) }()
+	sourceAccepted := result.Source.Satisfied()
 	if sourceErr != nil {
-		if options.Lenient {
+		if options.Lenient || sourceAccepted {
 			return result, sourceErr
 		}
-		return result, errors.Join(sourceErr, acceptanceErr)
+		return result, errors.Join(sourceErr, bundleAcceptanceError("mxl-source", result.Source))
 	}
-	if acceptanceErr != nil && !options.Lenient {
-		return result, acceptanceErr
+	if !sourceAccepted && !options.Lenient {
+		return result, bundleAcceptanceError("mxl-source", result.Source)
 	}
 
+	if decodeMXLStageHook != nil {
+		decodeMXLStageHook("conversion", account)
+	}
 	pkg, convErr := decodeMXLPackageContext(ctx, bytes.NewReader(data), limits)
+	releaseData()
 	if convErr != nil {
 		state := validation.ConversionFailed
 		switch {
@@ -145,6 +183,9 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 		return result, &ConversionError{State: state, Cause: convErr}
 	}
 	result.Conversion.State = validation.ConversionConverted
+	if decodeMXLStageHook != nil {
+		decodeMXLStageHook("model", account)
+	}
 
 	modelEngine, err := modelAssessmentEngineForProfile(ProfileModelSemantics)
 	if err != nil {
@@ -167,94 +208,87 @@ func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLA
 	if modelErr = errors.Join(modelErr, set.Close()); modelErr != nil {
 		return result, modelErr
 	}
-	acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.Model, status))
+	acceptanceErr := modelAcceptanceError(result.Model, status)
 	if acceptanceErr != nil && !options.Lenient {
 		return result, acceptanceErr
 	}
 	result.Package = pkg
-	result.Accepted = acceptanceErr == nil
+	result.Accepted = sourceAccepted && acceptanceErr == nil
 	return result, nil
 }
 
-// bundleAcceptanceError describes a bundle that is not satisfied: failed rule
-// evaluations of its package and resource reports as a *ValidationError, and
-// an IncompleteError when anything else kept it from being satisfied.
+// mxlReadErrorRecorder keeps the last failure of the caller's reader, so that
+// it can be told apart from archive and budget failures.
+type mxlReadErrorRecorder struct {
+	reader io.Reader
+	err    error
+}
+
+func (r *mxlReadErrorRecorder) Read(p []byte) (int, error) {
+	n, err := r.reader.Read(p)
+	if err != nil && err != io.EOF {
+		r.err = err
+	}
+	return n, err
+}
+
+// decodeMXLOpenError returns the error that ends the loader when the archive
+// cannot be read or indexed, classified as DecodeMXL does: a reader failure,
+// including a reader that makes no progress, and a corrupt archive match
+// ErrInvalidMXL; cancellation, limits, budgets and configuration keep their
+// own errors. Any other failure of a completely read archive, such as an
+// archive layout the assessment does not process, returns nil: the source
+// stage reports it in the bundle.
+func decodeMXLOpenError(ctx context.Context, archive *mxlAssessmentArchive, err, readErr error) error {
+	if err == nil {
+		if archive == nil {
+			return &validation.ConfigurationError{Field: "archive", Reason: "opener returned neither an archive nor a failure"}
+		}
+		return nil
+	}
+	if ctxErr := ctx.Err(); ctxErr != nil && errors.Is(err, ctxErr) {
+		return err
+	}
+	var resource *validation.ResourceError
+	var configuration *validation.ConfigurationError
+	switch {
+	case readErr != nil, errors.Is(err, io.ErrNoProgress):
+		return fmt.Errorf("%w: read archive: %w", ErrInvalidMXL, err)
+	case errors.Is(err, zip.ErrFormat):
+		return fmt.Errorf("%w: open ZIP archive: %w", ErrInvalidMXL, err)
+	case errors.As(err, &resource), errors.As(err, &configuration), errors.Is(err, ErrMXLTooLarge), archive == nil, !archive.inputComplete:
+		return err
+	}
+	return nil
+}
+
+// bundleAcceptanceError describes a bundle that is not satisfied, from the
+// authoritative conformance and counts of its reports: a *ValidationError for
+// failed rule evaluations, even when their diagnostics were truncated, and an
+// IncompleteError when anything else kept it from being satisfied. Only the
+// stored failed findings are copied.
 func bundleAcceptanceError(stage string, bundle validation.AssessmentBundle) error {
 	if bundle.Satisfied() {
 		return nil
 	}
-	reports := []validation.Report{bundle.PackageReport()}
-	for i := 0; i < bundle.ResourceCount(); i++ {
-		if _, report, ok := bundle.ResourceReport(i); ok {
-			reports = append(reports, report)
-		}
-	}
-	var issues []ValidationIssue
-	violatedOnly := bundle.EnumerationComplete()
-	for _, report := range reports {
-		for _, finding := range report.Findings {
-			if finding.Outcome == validation.OutcomeFail && (finding.Category == validation.CategoryNormative || finding.Category == validation.CategoryModel) {
-				issues = append(issues, assessmentIssue(finding))
-			}
-		}
-		if !report.Satisfied() && (report.Conformance != validation.ConformanceViolated || !report.AssessmentComplete || !report.InputComplete || report.Terminal != nil || report.Counts.Unknown != 0 || report.Counts.Unsupported != 0 || report.Counts.Blocked != 0) {
-			violatedOnly = false
-		}
-	}
+	failures := bundle.Failures()
 	var invalid error
-	if len(issues) != 0 {
+	if failures.Violated {
+		issues := make([]ValidationIssue, 0, len(failures.Findings))
+		for _, finding := range failures.Findings {
+			issues = append(issues, assessmentIssue(finding))
+		}
 		invalid = &ValidationError{Issues: issues}
+		if failures.Truncated {
+			invalid = fmt.Errorf("%w; %s assessment: failed rule evaluations: %d; diagnostic details were truncated", invalid, stage, failures.Failed)
+		}
 	}
-	if invalid == nil || !violatedOnly {
+	if invalid == nil || failures.Incomplete {
 		return errors.Join(invalid, &validation.IncompleteError{Reason: stage + "-profile-not-satisfied"})
 	}
 	return invalid
 }
 
-// readMXLAssessedArchive reads the archive within the MXL archive limit and
-// the account's remaining input and buffered-byte budgets, and leaves the
-// bytes charged as buffered. Exceeding the archive limit is ErrInvalidMXL, as
-// in DecodeMXL; exceeding a budget is a *validation.ResourceError.
-func readMXLAssessedArchive(ctx context.Context, reader io.Reader, archiveSize int64, account *validation.Account) ([]byte, error) {
-	type archiveBudget struct {
-		kind        validation.BudgetKind
-		limit, used int64
-	}
-	limits := account.Limits()
-	usedInput, _ := account.Usage(validation.BudgetInputBytes)
-	usedBuffered, _ := account.Usage(validation.BudgetBufferedBytes)
-	budgets := []archiveBudget{
-		{validation.BudgetInputBytes, limits.MaxInputBytes, usedInput},
-		{validation.BudgetBufferedBytes, limits.MaxBufferedBytes, usedBuffered},
-	}
-	var binding *archiveBudget
-	limit := archiveSize
-	for i := range budgets {
-		if remaining := budgets[i].limit - budgets[i].used; remaining < limit {
-			limit, binding = max(remaining, 0), &budgets[i]
-		}
-	}
-	var data []byte
-	var err error
-	if binding == nil {
-		data, err = readMXLStream(mxlContextReader(ctx, reader), archiveSize, "archive")
-	} else {
-		data, err = io.ReadAll(io.LimitReader(mxlContextReader(ctx, reader), limit+1))
-		if err != nil {
-			err = fmt.Errorf("%w: read archive: %w", ErrInvalidMXL, err)
-		}
-	}
-	if err != nil {
-		if ctxErr := ctx.Err(); ctxErr != nil {
-			return nil, ctxErr
-		}
-		return nil, err
-	}
-	if binding != nil && int64(len(data)) > limit {
-		return nil, &validation.ResourceError{Kind: binding.kind, Limit: binding.limit, Used: binding.used, Requested: int64(len(data))}
-	}
-	if err := account.Charge(validation.BudgetBufferedBytes, int64(len(data))); err != nil {
-		return nil, err
-	}
-	return data, nil
-}
+// decodeMXLStageHook observes the shared account just before the conversion
+// and model stages of DecodeMXLAssessed. Tests set it; it is nil otherwise.
+var decodeMXLStageHook func(stage string, account *validation.Account)

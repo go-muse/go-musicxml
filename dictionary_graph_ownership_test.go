@@ -214,7 +214,7 @@ func TestDictionaryGraphTerminalImportStopsBeforePrimaryAndReleases(t *testing.T
 
 func TestDictionaryGraphDoesNotEnableInternalDTD(t *testing.T) {
 	input := `<!DOCTYPE score-partwise [<!ENTITY glyph "accidentalSharp">]>` + resourceScore(`<note><rest/><duration>1</duration><accidental smufl="&glyph;">sharp</accidental></note>`)
-	b, err := InspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), LinkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}})
+	b, err := inspectXMLWithResourcesAndDictionaries(context.Background(), strings.NewReader(input), linkedDictionaryAssessmentOptions{Resources: LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: ProfileResourceGraphDictionaries}}})
 	if err == nil && b.Satisfied() {
 		t.Fatal("dictionary profile silently enabled internal DTD")
 	}

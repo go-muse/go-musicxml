@@ -87,8 +87,8 @@ is included by this addition.
 five supported components described above, together with copies of their
 notices and Unicode permission text. Any binary referencing
 `DecodeAssessed`, `DecodeMXLAssessed`, `InspectXML`, `AssessModel`,
-`InspectXMLWithResources`, `AssessModelWithResources`, `InspectMXL`,
-`AssessMXLPackage` or `DecodeAssessedWithDictionaries` embeds all five component assets, including both
+`InspectXMLWithResources`, `AssessModelWithResources`, `InspectMXL` or
+`AssessMXLPackage` embeds all five component assets, including both
 CC BY-SA 4.0 IPA bundles, regardless of options or caller-provided/nil dictionary
 sources. Direct use of `BundledDictionarySource` also retains all five. Selections
 control runtime import and assessment, not which assets the binary contains. These data retain their

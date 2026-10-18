@@ -37,9 +37,9 @@ func TestAssessedLoadingAllDocumentRoots(t *testing.T) {
 		{"timewise", `<score-timewise version="4.0"><part-list><score-part id="P1"><part-name>Music</part-name></score-part></part-list><measure number="1"><part id="P1"><attributes><divisions>1</divisions></attributes><note><rest/><duration>1</duration></note></part></measure></score-timewise>`},
 		{"opus", `<opus version="4.0"><title>Collection</title><opus><title>Nested</title></opus></opus>`},
 	} {
-		for _, wrapper := range []bool{false, true} {
-			t.Run(tc.name+"/"+mandatoryLoaderName(wrapper), func(t *testing.T) {
-				result, err := mandatoryDecode(wrapper, context.Background(), strings.NewReader(tc.source), nil)
+		for _, explicit := range []bool{false, true} {
+			t.Run(tc.name+"/"+mandatoryLoaderName(explicit), func(t *testing.T) {
+				result, err := mandatoryDecode(explicit, context.Background(), strings.NewReader(tc.source), nil)
 				if err != nil || result.Document == nil || !result.Source.Satisfied() || !result.Model.Satisfied() {
 					t.Fatalf("document=%T source=%v model=%v err=%v", result.Document, result.Source.Satisfied(), result.Model.Satisfied(), err)
 				}
