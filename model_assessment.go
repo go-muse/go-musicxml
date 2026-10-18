@@ -10,9 +10,17 @@ import (
 const modelDocumentID = "model"
 
 // AssessModel assesses the current generated Go document directly, without
-// encoding it, invoking XML marshal methods, or parsing XML. Options must name
-// an explicit model-target profile. It does not reconstruct original source
-// order, spelling, presence, namespaces, discarded content or numeric precision.
+// encoding it, invoking XML marshal methods, or parsing XML. It does not
+// reconstruct original source order, spelling, presence, namespaces, discarded
+// content or numeric precision.
+//
+// An empty Profile selects ProfileModelSemantics with the bundled required
+// dictionaries, or options.Dictionaries: exactly the model assessment of
+// DecodeAssessed, so a document that DecodeAssessed returned gets the same
+// model report while the budgets are not exhausted. (The loader's model stage
+// shares its account with the source report, so a tight diagnostic or buffer
+// budget can truncate or refuse the two differently.) Otherwise Profile must be a model-target profile, and a
+// non-nil options.Dictionaries requires a dictionary or semantic one.
 //
 // Ordinary normative or model-representation findings have a nil operation
 // error; use Report.Satisfied for acceptance. Configuration, cancellation,
@@ -25,6 +33,9 @@ const modelDocumentID = "model"
 // not an encoder's shortest decimal spelling. String-backed fields provide their
 // current string to shared schema-domain checks, never an original source lexeme.
 func AssessModel(ctx context.Context, document Document, options AssessmentOptions) (validation.Report, error) {
+	if assessment, dictionaries, ok := options.scenario(ProfileModelSemantics); ok {
+		return assessModelWithDictionaries(ctx, document, DictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
+	}
 	report, _, err := assessModel(ctx, document, options, modelWalkOptions{})
 	return report, err
 }

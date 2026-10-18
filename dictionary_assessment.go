@@ -54,7 +54,19 @@ func dictionaryAssessmentConfig(ctx context.Context, options DictionaryAssessmen
 // Only the explicit internal-DTD dictionary profile elects DTD composition.
 // Source owns its reader; this call
 // closes only streams returned by the selected DictionarySource.
+// options.Assessment.Dictionaries must be nil; Dictionaries applies.
+//
+// Deprecated: Use InspectXML with AssessmentOptions.Dictionaries set to
+// &options.Dictionaries; it gives the same result for every profile
+// this function accepts.
 func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options DictionaryAssessmentOptions) (report validation.Report, err error) {
+	if err := options.single(); err != nil {
+		return validation.Report{}, err
+	}
+	return inspectXMLWithDictionaries(ctx, reader, options)
+}
+
+func inspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options DictionaryAssessmentOptions) (report validation.Report, err error) {
 	if dictionaryNil(reader) {
 		return report, ErrNilReader
 	}
@@ -79,7 +91,19 @@ func InspectXMLWithDictionaries(ctx context.Context, reader io.Reader, options D
 // AssessModelWithDictionaries directly assesses the current generated model and
 // selected dictionary evidence. It never reconstructs original lexical values,
 // namespaces or discarded xsi:type declarations by encoding the model.
+// options.Assessment.Dictionaries must be nil; Dictionaries applies.
+//
+// Deprecated: Use AssessModel with AssessmentOptions.Dictionaries set to
+// &options.Dictionaries; it gives the same result for every profile
+// this function accepts.
 func AssessModelWithDictionaries(ctx context.Context, document Document, options DictionaryAssessmentOptions) (report validation.Report, err error) {
+	if err := options.single(); err != nil {
+		return validation.Report{}, err
+	}
+	return assessModelWithDictionaries(ctx, document, options)
+}
+
+func assessModelWithDictionaries(ctx context.Context, document Document, options DictionaryAssessmentOptions) (report validation.Report, err error) {
 	if err := assessmentContext(ctx, "canceled-before-model"); err != nil {
 		return report, err
 	}
@@ -108,6 +132,25 @@ func AssessModelWithDictionaries(ctx context.Context, document Document, options
 // in THIRD_PARTY_NOTICES.md. A DOCTYPE external subset is read from the bundled
 // official MusicXML DTDs or options.Decode.DTD; an unrecognized one cannot
 // satisfy this loader. Ordinary Decode provides conversion only, not validation.
+// options.Assessment.Assessment.Dictionaries must be nil.
+//
+// Deprecated: Use DecodeAssessed with DecodeAssessmentOptions.Assessment set to
+// the same AssessmentOptions and its Dictionaries set to the dictionary
+// options; it gives the same result for every profile
+// this function accepts.
 func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error) {
-	return decodeValidated(ctx, reader, options.Decode, options.Assessment)
+	if options.Assessment != nil {
+		if err := options.Assessment.single(); err != nil {
+			return DecodeResult{Conversion: validation.ConversionResult{State: validation.ConversionIncomplete}}, err
+		}
+	}
+	return decodeValidated(ctx, reader, options.Decode, options.Assessment, false)
+}
+
+// single rejects dictionary options given twice in a deprecated wrapper.
+func (o DictionaryAssessmentOptions) single() error {
+	if o.Assessment.Dictionaries != nil {
+		return &validation.ConfigurationError{Field: "Assessment.Dictionaries", Reason: "dictionaries are set by the Dictionaries field of this deprecated option type"}
+	}
+	return nil
 }

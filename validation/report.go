@@ -55,6 +55,13 @@ func (r Report) Format(w io.Writer) error {
 	return r.FormatLocalized(w, nil)
 }
 
+// String returns the text that Format writes, within the same limits.
+func (r Report) String() string {
+	var out strings.Builder
+	_ = r.Format(&out)
+	return out.String()
+}
+
 // FormatLocalized formats a report using optional per-rule replacement text.
 // Only Title, Explanation, and Message are translated; semantic metadata and
 // source URLs are unchanged. Missing, empty, oversized, invalid UTF-8, or control-

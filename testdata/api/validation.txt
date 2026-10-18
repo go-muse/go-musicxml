@@ -442,6 +442,7 @@ func AllocationSize(bytes int64) (int, error)
 func ClassifyResourceMediaType(ctx context.Context, account *Account, value string) (Evidence[ResourceRepresentation], error)
 func CompileSchema(assembly Assembly, data SchemaData) (*CompiledSchema, error)
 func DefaultBudgets() Budgets
+func Known[T any](value T) Evidence[T]
 func LookupDictionaryManifest(id DictionaryManifestID) (DictionaryManifest, bool)
 func MusicXML40Inventory() Inventory
 func NewAtomicComparisonPlan(comparison Comparison, expected Atomic) (Plan, error)
@@ -500,6 +501,7 @@ func NewTypedReferencePlan(spec ReferencePlanSpec) (Plan, error)
 func NewXMLFragmentLinkContextPlan(schema *CompiledSchema, sourceInfoset bool) (Plan, error)
 func NewXSDPlan(schema *CompiledSchema, check XSDCheck) (Plan, error)
 func NewXSDPlanWithSourceDeclarations(schema *CompiledSchema, check XSDCheck) (Plan, error)
+func Unknown[T any](reason Code) Evidence[T]
 func ValidateResourceRequest(q ResourceRequest) error
 func ValidateResourceResult(q ResourceRequest, r ResourceResult) error
 func VerifyDictionaryComponent(ctx context.Context, a *Account, id DictionaryComponentID, raw []byte) (DictionaryComponentCertificate, error)
@@ -1482,6 +1484,7 @@ type Report struct, not comparable
 type Report, method (Report) Format(w io.Writer) error
 type Report, method (Report) FormatLocalized(w io.Writer, translations map[RuleKey]RuleText) error
 type Report, method (Report) Satisfied() bool
+type Report, method (Report) String() string
 type ReportLease struct, comparable
 type ReportLease, method (*ReportLease) Close() error
 type ResourceAdoption struct, comparable
@@ -1614,6 +1617,8 @@ type ResourceRequest struct, field order ID Document Image Association Roles
 type ResourceRequestID string
 type ResourceResolver interface
 type ResourceResolver interface, method Resolve(context.Context, ResourceRequest) (ResourceResult, error)
+type ResourceResolverFunc func(context.Context, ResourceRequest) (ResourceResult, error)
+type ResourceResolverFunc, method (ResourceResolverFunc) Resolve(ctx context.Context, request ResourceRequest) (ResourceResult, error)
 type ResourceResult struct, field Association *AssociationResult
 type ResourceResult struct, field Authority EvidenceAuthority
 type ResourceResult struct, field Body io.ReadCloser

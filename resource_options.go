@@ -72,6 +72,12 @@ type resourceRunOptions struct {
 }
 
 func validateLinkedAssessmentOptions(ctx context.Context, o LinkedAssessmentOptions, expected validation.ProfileID) (resourceRunOptions, error) {
+	return validateLinkedAssessmentOptionsAccount(ctx, o, expected, nil)
+}
+
+// validateLinkedAssessmentOptionsAccount uses account when it is non-nil, so
+// that several graph runs share one operation's budgets.
+func validateLinkedAssessmentOptionsAccount(ctx context.Context, o LinkedAssessmentOptions, expected validation.ProfileID, account *validation.Account) (resourceRunOptions, error) {
 	var out resourceRunOptions
 	invalid := func(field, reason string) (resourceRunOptions, error) {
 		return out, &validation.ConfigurationError{Field: field, Reason: reason}
@@ -120,9 +126,11 @@ func validateLinkedAssessmentOptions(ctx context.Context, o LinkedAssessmentOpti
 			return invalid("retrieval URI", "absolute usable URI required")
 		}
 	}
-	account, err := validation.NewBudgetAccount(o.Graph.Budgets)
-	if err != nil {
-		return out, err
+	if account == nil {
+		var err error
+		if account, err = validation.NewBudgetAccount(o.Graph.Budgets); err != nil {
+			return out, err
+		}
 	}
 	out.account, out.identity, out.resolver, out.dtd = account, o.Identity, o.Resolver, o.Graph.DTD
 	if dictionaryNil(out.resolver) {

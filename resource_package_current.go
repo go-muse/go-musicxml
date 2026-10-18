@@ -14,9 +14,18 @@ import (
 // the encoder's current-state score.musicxml default; it proves no original
 // container, header, lexical media-type presence or source order. Callers must
 // not mutate the package or its resource bytes until this call returns.
-// options.Graph.Profile must be ProfileMXLModel; any other value, including the
-// zero value, is a configuration error.
+// An empty options.Graph.Profile selects ProfileMXLModelSemantics with the
+// bundled required dictionaries, or options.Graph.Dictionaries. Otherwise it
+// must be ProfileMXLModel, or a dictionary MXL model profile when
+// options.Graph.Dictionaries is set. A decoded package cannot carry
+// source-only evidence such as discarded schema hints, so its package report
+// can stay incomplete; DecodeMXLAssessed proves package rules from the
+// original archive instead.
 func AssessMXLPackage(ctx context.Context, value *MXLPackage, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
+	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLModelSemantics); ok {
+		options.Graph = graph
+		return assessMXLPackageWithDictionaries(ctx, value, MXLDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+	}
 	if value == nil {
 		return validation.AssessmentBundle{}, ErrNilMXLPackage
 	}

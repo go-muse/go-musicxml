@@ -23,6 +23,8 @@ type DictionaryOptions struct {
 // DictionaryAssessmentOptions adds explicit pinned capabilities to a standalone
 // assessment. DecodeAssessedWithDictionaries applies its fixed mandatory stages
 // and bundled defaults instead of standalone profile selection.
+//
+// Deprecated: Set AssessmentOptions.Dictionaries instead.
 type DictionaryAssessmentOptions struct {
 	Assessment   AssessmentOptions
 	Dictionaries DictionaryOptions
@@ -30,6 +32,8 @@ type DictionaryAssessmentOptions struct {
 
 // LinkedDictionaryAssessmentOptions shares one dictionary set and resource
 // account across the explicitly selected linked assessment graph.
+//
+// Deprecated: Set LinkedAssessmentOptions.Graph.Dictionaries instead.
 type LinkedDictionaryAssessmentOptions struct {
 	Resources    LinkedAssessmentOptions
 	Dictionaries DictionaryOptions
@@ -37,6 +41,8 @@ type LinkedDictionaryAssessmentOptions struct {
 
 // MXLDictionaryAssessmentOptions adds pinned capabilities to an MXL assessment.
 // Existing independent archive limits continue to apply.
+//
+// Deprecated: Set MXLAssessmentOptions.Graph.Dictionaries instead.
 type MXLDictionaryAssessmentOptions struct {
 	Resources    MXLAssessmentOptions
 	Dictionaries DictionaryOptions
@@ -46,6 +52,8 @@ type MXLDictionaryAssessmentOptions struct {
 // Nil Assessment selects the fixed source/model stages with bundled required data.
 // Explicit options may change finite budgets and compatible pinned dictionary
 // transport, but cannot disable either stage or its required relations.
+//
+// Deprecated: Use DecodeAssessmentOptions with Assessment.Dictionaries.
 type DecodeDictionaryAssessmentOptions struct {
 	Decode     DecodeOptions
 	Assessment *DictionaryAssessmentOptions
@@ -61,6 +69,18 @@ type DecodeDictionaryAssessmentOptions struct {
 // importer discovers with type assertions.
 type DictionarySource interface {
 	Open(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error)
+}
+
+// DictionarySourceFunc adapts a function to DictionarySource. A nil
+// DictionarySourceFunc is a typed-nil source: the importer supplies nothing
+// from it, as for a nil Source, so its selections stay unavailable. Like any
+// typed-nil source it is an explicit override, not a request for the bundled
+// defaults.
+type DictionarySourceFunc func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error)
+
+// Open calls f(ctx, request).
+func (f DictionarySourceFunc) Open(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error) {
+	return f(ctx, request)
 }
 
 // DictionaryComponentRequest identifies one compiled manifest and exact raw pin.

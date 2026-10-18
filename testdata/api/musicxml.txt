@@ -673,6 +673,7 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 func DecodeAssessedWithDictionaries(ctx context.Context, reader io.Reader, options DecodeDictionaryAssessmentOptions) (DecodeResult, error)
 func DecodeContext(ctx context.Context, reader io.Reader, options DecodeOptions) (Document, error)
 func DecodeMXL(reader io.Reader) (Document, error)
+func DecodeMXLAssessed(ctx context.Context, reader io.Reader, options DecodeMXLAssessmentOptions) (result DecodeMXLResult, err error)
 func DecodeMXLContext(ctx context.Context, reader io.Reader, options MXLOptions) (Document, error)
 func DecodeMXLOpusDocument(reader io.Reader) (*OpusDocument, error)
 func DecodeMXLOpusDocumentWithOptions(reader io.Reader, options MXLOptions) (*OpusDocument, error)
@@ -710,7 +711,7 @@ func NewScorePartwise(parts ...PartDefinition) *ScorePartwise
 func NewScorePartwiseMeasure(number string) ScorePartwisePartMeasure
 func NewScoreTimewise(parts ...PartDefinition) *ScoreTimewise
 func NewScoreTimewiseMeasure(number string, partIDs ...string) ScoreTimewiseMeasure
-func Ptr[T any][T any](value T) *T
+func Ptr[T any](value T) *T
 func Validate(document Document) error
 type AboveBelow string
 type Accidental struct, comparable
@@ -892,8 +893,9 @@ type Assess struct, field order Type Player TimeOnly
 type AssessmentOptions struct, comparable
 type AssessmentOptions struct, field Budgets validation.Budgets
 type AssessmentOptions struct, field DTD *DTDOptions
+type AssessmentOptions struct, field Dictionaries *DictionaryOptions
 type AssessmentOptions struct, field Profile validation.ProfileID
-type AssessmentOptions struct, field order Profile Budgets DTD
+type AssessmentOptions struct, field order Profile Budgets DTD Dictionaries
 type Attributes struct, field Clef []Clef `xml:"clef"`
 type Attributes struct, field Directive []struct{Value string "xml:\",chardata\""; Lang *string "xml:\"http://www.w3.org/XML/1998/namespace lang,attr,omitempty\""; DefaultX *Tenths "xml:\"default-x,attr,omitempty\""; DefaultY *Tenths "xml:\"default-y,attr,omitempty\""; RelativeX *Tenths "xml:\"relative-x,attr,omitempty\""; RelativeY *Tenths "xml:\"relative-y,attr,omitempty\""; FontFamily *FontFamily "xml:\"font-family,attr,omitempty\""; FontStyle *FontStyle "xml:\"font-style,attr,omitempty\""; FontSize *FontSize "xml:\"font-size,attr,omitempty\""; FontWeight *FontWeight "xml:\"font-weight,attr,omitempty\""; Color *Color "xml:\"color,attr,omitempty\""} `xml:"directive"`
 type Attributes struct, field Divisions *PositiveDivisions `xml:"divisions,omitempty"`
@@ -1177,20 +1179,33 @@ type Dashes struct, field order Type Number DashLength SpaceLength DefaultX Defa
 type DecodeAssessmentOptions struct, comparable
 type DecodeAssessmentOptions struct, field Assessment *AssessmentOptions
 type DecodeAssessmentOptions struct, field Decode DecodeOptions
-type DecodeAssessmentOptions struct, field order Decode Assessment
+type DecodeAssessmentOptions struct, field Lenient bool
+type DecodeAssessmentOptions struct, field order Decode Assessment Lenient
 type DecodeDictionaryAssessmentOptions struct, comparable
 type DecodeDictionaryAssessmentOptions struct, field Assessment *DictionaryAssessmentOptions
 type DecodeDictionaryAssessmentOptions struct, field Decode DecodeOptions
 type DecodeDictionaryAssessmentOptions struct, field order Decode Assessment
+type DecodeMXLAssessmentOptions struct, field Assessment MXLAssessmentOptions
+type DecodeMXLAssessmentOptions struct, field Lenient bool
+type DecodeMXLAssessmentOptions struct, field order Assessment Lenient
+type DecodeMXLAssessmentOptions struct, not comparable
+type DecodeMXLResult struct, field Accepted bool
+type DecodeMXLResult struct, field Conversion validation.ConversionResult
+type DecodeMXLResult struct, field Model validation.Report
+type DecodeMXLResult struct, field Package *MXLPackage
+type DecodeMXLResult struct, field Source validation.AssessmentBundle
+type DecodeMXLResult struct, field order Package Source Model Conversion Accepted
+type DecodeMXLResult struct, not comparable
 type DecodeOptions struct, comparable
 type DecodeOptions struct, field DTD *DTDOptions
 type DecodeOptions struct, field MaxXMLDepth int
 type DecodeOptions struct, field order MaxXMLDepth DTD
+type DecodeResult struct, field Accepted bool
 type DecodeResult struct, field Conversion validation.ConversionResult
 type DecodeResult struct, field Document Document
 type DecodeResult struct, field Model validation.Report
 type DecodeResult struct, field Source validation.Report
-type DecodeResult struct, field order Document Source Model Conversion
+type DecodeResult struct, field order Document Source Model Conversion Accepted
 type DecodeResult struct, not comparable
 type Defaults struct, field Appearance *Appearance `xml:"appearance,omitempty"`
 type Defaults struct, field ConcertScore *Empty `xml:"concert-score,omitempty"`
@@ -1284,6 +1299,8 @@ type DictionaryOptions struct, field order Selections Source
 type DictionaryOptions struct, not comparable
 type DictionarySource interface
 type DictionarySource interface, method Open(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error)
+type DictionarySourceFunc func(context.Context, DictionaryComponentRequest) (DictionaryComponentResult, error)
+type DictionarySourceFunc, method (DictionarySourceFunc) Open(ctx context.Context, request DictionaryComponentRequest) (DictionaryComponentResult, error)
 type Direction struct, field DirectionType []DirectionType `xml:"direction-type"`
 type Direction struct, field Directive *YesNo `xml:"directive,attr,omitempty"`
 type Direction struct, field Footnote *FormattedText `xml:"footnote,omitempty"`
@@ -4026,7 +4043,8 @@ type ValidationIssue struct, comparable
 type ValidationIssue struct, field Constraint string
 type ValidationIssue struct, field Message string
 type ValidationIssue struct, field Path string
-type ValidationIssue struct, field order Path Constraint Message
+type ValidationIssue struct, field Rule string
+type ValidationIssue struct, field order Path Constraint Message Rule
 type ValidationIssue, method (ValidationIssue) String() string
 type Valign string
 type ValignImage string
@@ -4094,6 +4112,7 @@ var ErrDocumentTooDeep error
 var ErrEmptyDocument error
 var ErrEntityNestingLimit error
 var ErrIncompleteAssessment error
+var ErrInvalidConfiguration error
 var ErrInvalidDecodeOptions error
 var ErrInvalidDocument error
 var ErrInvalidEncodeOptions error

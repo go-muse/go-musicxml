@@ -7491,28 +7491,28 @@
       "function": "TestResourceGraphFiniteCyclesAndVerifiedParseReuse",
       "line": 84,
       "end_line_bound": 97,
-      "file_sha256": "7e293ce11a010f647c66008ae6770e536f6ca5b589ec6f184bff942682cecf1e"
+      "file_sha256": "3c20b5e79b241c596ac4fa93e42c8f23dd06adfc32a572636adc26a295ffa390"
     },
     "resource_graph_test.go::TestResourceGraphNoResolverForUnselectedOrInvalidHref": {
       "file": "resource_graph_test.go",
       "function": "TestResourceGraphNoResolverForUnselectedOrInvalidHref",
       "line": 98,
       "end_line_bound": 119,
-      "file_sha256": "7e293ce11a010f647c66008ae6770e536f6ca5b589ec6f184bff942682cecf1e"
+      "file_sha256": "3c20b5e79b241c596ac4fa93e42c8f23dd06adfc32a572636adc26a295ffa390"
     },
     "resource_graph_test.go::TestResourceGraphPrimaryReports": {
       "file": "resource_graph_test.go",
       "function": "TestResourceGraphPrimaryReports",
       "line": 14,
       "end_line_bound": 43,
-      "file_sha256": "7e293ce11a010f647c66008ae6770e536f6ca5b589ec6f184bff942682cecf1e"
+      "file_sha256": "3c20b5e79b241c596ac4fa93e42c8f23dd06adfc32a572636adc26a295ffa390"
     },
     "resource_graph_test.go::TestResourceGraphRejectsUnrequestedRevisionChurn": {
       "file": "resource_graph_test.go",
       "function": "TestResourceGraphRejectsUnrequestedRevisionChurn",
       "line": 120,
       "end_line_bound": 132,
-      "file_sha256": "7e293ce11a010f647c66008ae6770e536f6ca5b589ec6f184bff942682cecf1e"
+      "file_sha256": "3c20b5e79b241c596ac4fa93e42c8f23dd06adfc32a572636adc26a295ffa390"
     },
     "resource_graph_transfer_retention_test.go::TestQAPostExportRetentionKeepsBoundedSummaryWhenWorkRefused": {
       "file": "resource_graph_transfer_retention_test.go",

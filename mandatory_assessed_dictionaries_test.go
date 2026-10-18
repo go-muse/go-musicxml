@@ -268,7 +268,7 @@ func TestMandatoryAssessedLoadingModelCancellationPreservesSourceAndReleasesOwne
 			if err != nil {
 				t.Fatal(err)
 			}
-			result, err := decodeAssessedRun(observed, run, modelCfg, nil)
+			result, err := decodeAssessedRun(observed, run, modelCfg, nil, false)
 			err = errors.Join(err, cfg.Dictionaries.Close())
 			mandatorySatisfiedReport(t, result.Source, ProfileSourceSemantics, validation.TargetSource)
 			if result.Conversion.State != validation.ConversionConverted || !result.Model.Requested {

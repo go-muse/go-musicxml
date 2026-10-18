@@ -152,7 +152,7 @@ func TestMandatoryAssessedLoadingKeepsSourceReportLeaseDuringModel(t *testing.T)
 	expected := mandatoryIndependentLeaseCheckpoint(t, source, sourceNodes)
 	observed := &mandatoryLeaseCheckpointContext{Context: context.Background(), sourceNodes: sourceNodes}
 	run, modelConfig := mandatoryLeaseFixture(t, observed, source)
-	result, err := decodeAssessedRun(observed, run, modelConfig, nil)
+	result, err := decodeAssessedRun(observed, run, modelConfig, nil, false)
 	if err != nil || result.Document == nil {
 		t.Fatalf("pipeline control failed: document=%T error=%v", result.Document, err)
 	}
@@ -172,7 +172,7 @@ func TestMandatoryAssessedLoadingModelStartupCancellationLeavesUnrequestedReport
 	defer cancel()
 	observed := &mandatoryLeaseCheckpointContext{Context: ctx, sourceNodes: sourceNodes, cancel: cancel, cancelAtBuffered: expected.modelStartupBuffered}
 	run, modelConfig := mandatoryLeaseFixture(t, observed, source)
-	result, err := decodeAssessedRun(observed, run, modelConfig, nil)
+	result, err := decodeAssessedRun(observed, run, modelConfig, nil, false)
 	if !observed.startupCanceled || !errors.Is(err, context.Canceled) || !errors.Is(err, ErrIncompleteAssessment) || result.Document != nil || result.Conversion.State != validation.ConversionConverted {
 		t.Fatalf("model startup cancellation missed its boundary: canceled=%v document=%T conversion=%s error=%v", observed.startupCanceled, result.Document, result.Conversion.State, err)
 	}

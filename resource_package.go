@@ -77,9 +77,15 @@ func (g *resourceGraphRun) ownArchive(a *mxlAssessmentArchive) error {
 // InspectMXL assesses original ZIP headers, its original container source and
 // selected archive-local resources using one bounded account. The reader stays
 // open. External I/O occurs only through explicitly selected resolver requests.
-// options.Graph.Profile must be ProfileMXLSource; any other value, including
-// the zero value, is a configuration error.
+// An empty options.Graph.Profile selects ProfileMXLSourceSemantics with the
+// bundled required dictionaries, or options.Graph.Dictionaries. Otherwise it
+// must be ProfileMXLSource, or a dictionary MXL source profile when
+// options.Graph.Dictionaries is set.
 func InspectMXL(ctx context.Context, reader io.Reader, options MXLAssessmentOptions) (validation.AssessmentBundle, error) {
+	if graph, dictionaries, ok := options.Graph.scenario(ProfileMXLSourceSemantics); ok {
+		options.Graph = graph
+		return inspectMXLWithDictionaries(ctx, reader, MXLDictionaryAssessmentOptions{Resources: options, Dictionaries: dictionaries})
+	}
 	if reader == nil {
 		return validation.AssessmentBundle{}, ErrNilReader
 	}

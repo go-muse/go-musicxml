@@ -46,7 +46,7 @@ func TestResourceGraphConfigurationNoInput(t *testing.T) {
 	if !errors.Is(err, ErrNilReader) {
 		t.Fatal(err)
 	}
-	_, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{})
+	_, err = InspectXMLWithResources(context.Background(), strings.NewReader(`<opus/>`), LinkedAssessmentOptions{Graph: AssessmentOptions{Profile: "test/unknown-profile"}})
 	if !errors.Is(err, validation.ErrInvalidConfiguration) {
 		t.Fatal(err)
 	}

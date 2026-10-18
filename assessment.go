@@ -12,10 +12,12 @@ import (
 	"github.com/go-muse/go-musicxml/validation"
 )
 
-// AssessmentOptions selects an explicit target-specific profile and finite shared limits.
-// Standalone Inspect/Assess calls require a known nonempty Profile; zero budget
-// fields select defaults. DecodeAssessed instead fixes its required stages and
-// accepts an empty Profile as the mandatory source/model pipeline default.
+// AssessmentOptions selects a target-specific profile and finite shared limits.
+// An empty Profile selects the full semantic profile of each entry point, with
+// the bundled required dictionaries unless Dictionaries is set; a non-empty
+// Profile must be known and fit the entry point. Zero budget fields select
+// defaults. DecodeAssessed fixes its required stages and accepts only an empty
+// Profile or ProfileSourceSemantics.
 // Source and model profiles describe their bounded target-specific scope and
 // cannot be interchanged. Standalone source/model entry points reject the
 // separate package/resource-graph profiles. Source
@@ -31,6 +33,12 @@ type AssessmentOptions struct {
 	// DTDs to source profiles that read DTD declarations. Nil uses only the
 	// bundled DTDs. Model assessment ignores it.
 	DTD *DTDOptions
+	// Dictionaries selects pinned dictionary capabilities, which the
+	// dictionary and semantic profiles consult. With an empty Profile, nil or
+	// a value with a nil Source and no selections selects the bundled data
+	// those profiles require; with an explicit profile, nil keeps the
+	// profile's dictionary-free behaviour.
+	Dictionaries *DictionaryOptions
 }
 
 // DecodeAssessmentOptions configures mandatory assessed loading. Nil Assessment
@@ -41,6 +49,13 @@ type AssessmentOptions struct {
 type DecodeAssessmentOptions struct {
 	Decode     DecodeOptions
 	Assessment *AssessmentOptions
+	// Lenient returns the converted document even when an assessment finds
+	// violations or is incomplete, with err == nil and DecodeResult.Accepted
+	// false. Operational failures still return an error and no document:
+	// malformed XML, I/O, cancellation, resource limits, conversion failure,
+	// dictionary import failure and invalid configuration. The model is
+	// assessed even after source findings, so both reports are complete.
+	Lenient bool
 }
 
 // DecodeResult preserves original-source and current-model reports separately.
@@ -56,6 +71,11 @@ type DecodeResult struct {
 	Source     validation.Report
 	Model      validation.Report
 	Conversion validation.ConversionResult
+	// Accepted reports that conversion succeeded and both the source and the
+	// model assessment were accepted. In the default strict mode Document is
+	// non-nil exactly when Accepted. In the lenient mode Document is also
+	// returned when Accepted is false.
+	Accepted bool
 }
 
 // ConversionError preserves a model-mapping failure independently of source
@@ -94,7 +114,15 @@ func (e *ConversionError) Unwrap() error {
 // Overlong display paths are omitted without dropping occurrence IDs/positions.
 // Context is checked during parsing and evaluation; it cannot interrupt a Read
 // blocked inside an arbitrary reader, which must provide its own cancellation.
+//
+// An empty Profile selects ProfileSourceSemantics with the bundled required
+// dictionaries, or options.Dictionaries: the source assessment of
+// DecodeAssessed. Otherwise Profile must be a source-target profile, and a
+// non-nil options.Dictionaries requires a dictionary or semantic one.
 func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions) (report validation.Report, err error) {
+	if assessment, dictionaries, ok := options.scenario(ProfileSourceSemantics); ok {
+		return inspectXMLWithDictionaries(ctx, reader, DictionaryAssessmentOptions{Assessment: assessment, Dictionaries: dictionaries})
+	}
 	run, err := newSourceAssessmentRun(ctx, reader, DecodeOptions{}, &options, false)
 	if err != nil {
 		if run != nil {
@@ -117,8 +145,12 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // bundled pinned canonical SMuFL and IPA representation data.
 //
 // Nil/empty assessment options enable the required stages. A narrower profile is
-// a configuration error. Violated, incomplete or unavailable assessment never
-// returns a document; nil operation error alone is not acceptance. The profiles
+// a configuration error. options.Assessment.Dictionaries replaces the bundled
+// required dictionary data and must select canonical SMuFL and IPA
+// representation relations. By default, violated, incomplete or unavailable
+// assessment never returns a document; nil operation error alone is not
+// acceptance. options.Lenient returns the document with its reports instead,
+// and DecodeResult.Accepted tells the two outcomes apart. The profiles
 // retain their bounded coverage: unsupported cases remain incomplete. No DTD,
 // schema, dictionary or linked resource is fetched. The input is never closed.
 // A DOCTYPE external subset is read from the bundled official MusicXML DTDs
@@ -126,8 +158,9 @@ func InspectXML(ctx context.Context, reader io.Reader, options AssessmentOptions
 // Ordinary Decode provides conversion only, not validation.
 // InspectXML documents source coordinates and cancellation limits.
 //
-// Any binary referencing DecodeAssessed or DecodeAssessedWithDictionaries embeds
-// all five bundled dictionary components, even with custom dictionary options.
+// Any binary referencing DecodeAssessed embeds all five bundled dictionary
+// components, even with custom dictionary options; API.md lists the other
+// entry points that do.
 // Distribute their notice/license files; see THIRD_PARTY_NOTICES.md.
 //
 // ValidationError contains stored normative/model failure details, possibly
@@ -137,13 +170,17 @@ func DecodeAssessed(ctx context.Context, reader io.Reader, options DecodeAssessm
 	var assessment *DictionaryAssessmentOptions
 	if options.Assessment != nil {
 		assessment = &DictionaryAssessmentOptions{Assessment: *options.Assessment}
+		if dictionaries := options.Assessment.Dictionaries; dictionaries != nil {
+			assessment.Dictionaries = *dictionaries
+		}
+		assessment.Assessment.Dictionaries = nil
 	}
-	return decodeValidated(ctx, reader, options.Decode, assessment)
+	return decodeValidated(ctx, reader, options.Decode, assessment, options.Lenient)
 }
 
 // decodeAssessedRun preserves the single source/parser owner for both the
 // original public API and additive capability wrappers.
-func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfig assessmentRunConfig, priorErr error) (result DecodeResult, err error) {
+func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfig assessmentRunConfig, priorErr error, lenient bool) (result DecodeResult, err error) {
 	result.Conversion.State = validation.ConversionIncomplete
 	// The mapping decoder only receives namespace-neutral projected elements and
 	// the existing allowlisted expanded attributes. Its namespace table is empty.
@@ -205,13 +242,24 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	if conversionErr != nil && result.Conversion.State != validation.ConversionIncomplete {
 		result.Conversion.Findings = run.conversionFinding(result.Conversion.State, conversionLocation, conversionNode)
 	}
+	// Acceptance errors describe the assessments; every other error is an
+	// operational failure, which no mode tolerates. The lenient mode still
+	// assesses the model after source findings, so that both reports exist.
 	acceptanceErr := sourceAcceptanceError(report)
-	err = errors.Join(priorErr, conversionErr, sourceErr, finishErr, acceptanceErr)
-	if err == nil {
+	operationErr := errors.Join(priorErr, conversionErr, sourceErr, finishErr)
+	modelAssessed := false
+	if operationErr == nil && (acceptanceErr == nil || lenient) {
 		var modelErr error
 		var modelStatus modelWalkStatus
 		result.Model, modelStatus, modelErr = assessModelWithConfig(ctx, document, modelConfig, modelWalkOptions{})
-		err = errors.Join(modelErr, modelAcceptanceError(result.Model, modelStatus))
+		operationErr = modelErr
+		acceptanceErr = errors.Join(acceptanceErr, modelAcceptanceError(result.Model, modelStatus))
+		modelAssessed = true
+	}
+	accepted := operationErr == nil && acceptanceErr == nil && modelAssessed
+	err = operationErr
+	if !lenient {
+		err = errors.Join(operationErr, acceptanceErr)
 	}
 	// Both reports and the candidate coexist throughout the model phase.
 	// Closing the lease releases accounting, never the caller-owned report.
@@ -223,6 +271,7 @@ func decodeAssessedRun(ctx context.Context, run *sourceAssessmentRun, modelConfi
 	err = errors.Join(err, cleanupErr)
 	if err == nil {
 		result.Document = document
+		result.Accepted = accepted
 	}
 	return result, err
 }
@@ -422,7 +471,7 @@ func sourceAcceptanceError(report validation.Report) error {
 		issues := make([]ValidationIssue, 0)
 		for _, finding := range report.Findings {
 			if finding.Category == validation.CategoryNormative && finding.Outcome == validation.OutcomeFail {
-				issues = append(issues, ValidationIssue{Path: finding.Location.Path, Constraint: string(finding.Rule.ID), Message: string(finding.Reason)})
+				issues = append(issues, assessmentIssue(finding))
 			}
 		}
 		invalid = &ValidationError{Issues: issues}

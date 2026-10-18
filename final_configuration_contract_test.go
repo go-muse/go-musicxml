@@ -114,6 +114,11 @@ func TestFinalConfigurationUncoveredEntrypointsRejectProfilesBeforeIO(t *testing
 				if entry.name == "DecodeAssessedWithDictionaries" && selection.name == "empty" {
 					selection.name, selection.id = "narrow-source", musicxml.ProfileSourceDictionaries
 				}
+				// An empty profile selects the full semantic profile of the
+				// non-deprecated entry points (TestEmptyProfileSelectsSemanticProfile).
+				if selection.name == "empty" && finalConfigurationEmptySelectsSemantic[entry.name] {
+					continue
+				}
 				t.Run(selection.name, func(t *testing.T) {
 					probe := &finalConfigurationIO{}
 					err := entry.run(selection.id, probe)
@@ -223,4 +228,11 @@ func TestFinalConfigurationSelectedNilResolverDictionaryGraph(t *testing.T) {
 			t.Fatalf("selected missing resolver reason lost: %+v", report.Findings)
 		})
 	}
+}
+
+var finalConfigurationEmptySelectsSemantic = map[string]bool{
+	"InspectXMLWithResources":  true,
+	"AssessModelWithResources": true,
+	"InspectMXL":               true,
+	"AssessMXLPackage":         true,
 }

@@ -660,7 +660,7 @@ func (c *Context) identityDetail(path, constraint, message string) {
 		v = freshResult()
 	}
 	v.Valid = false
-	detail := Detail{Issue: Issue{path, constraint, message}, Subject: id, Attribute: attribute}
+	detail := Detail{Issue: Issue{Path: path, Constraint: constraint, Message: message}, Subject: id, Attribute: attribute}
 	v.Issues = appendRetained(c, v.Issues, detail)
 	issues := appendRetained(c, r.identityIssues, detail)
 	r.identityResults[id] = v
