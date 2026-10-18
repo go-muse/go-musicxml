@@ -135,6 +135,7 @@ func (r *simpleTypeRenderer) renderPlan(
 	}
 
 	target.WriteString("const (\n")
+	literals := make([]string, 0, len(enumerations))
 	for _, enumeration := range enumerations {
 		literal, err := enumerationLiteral(
 			goTypeValue.Kind,
@@ -163,6 +164,7 @@ func (r *simpleTypeRenderer) renderPlan(
 				enumeration.Value,
 			)
 		}
+		literals = append(literals, literal)
 		fmt.Fprintf(
 			target,
 			"\t%s %s = %s\n",
@@ -177,7 +179,7 @@ func (r *simpleTypeRenderer) renderPlan(
 	// restriction can tell known values apart.
 	if plan.Definition.Form == SimpleTypeRestriction &&
 		len(plan.Definition.Enumerations) == len(enumerations) {
-		renderEnumerationHelpers(target, plan.GoName, enumerations)
+		renderEnumerationHelpers(target, plan.GoName, enumerations, literals)
 	}
 
 	return nil
@@ -189,10 +191,19 @@ func renderEnumerationHelpers(
 	target *bytes.Buffer,
 	goName string,
 	enumerations []EnumerationPlan,
+	literals []string,
 ) {
 	names := make([]string, len(enumerations))
+	// Distinct lexical values such as 1 and 01 can share a Go value, which
+	// a switch may list only once.
+	var cases []string
+	seen := make(map[string]bool, len(literals))
 	for index, enumeration := range enumerations {
 		names[index] = enumeration.GoName
+		if !seen[literals[index]] {
+			seen[literals[index]] = true
+			cases = append(cases, enumeration.GoName)
+		}
 	}
 
 	fmt.Fprintf(
@@ -203,7 +214,7 @@ func renderEnumerationHelpers(
 	)
 	fmt.Fprintf(target, "func (value %s) IsKnown() bool {\n", goName)
 	target.WriteString("\tswitch value {\n")
-	fmt.Fprintf(target, "\tcase %s:\n", strings.Join(names, ", "))
+	fmt.Fprintf(target, "\tcase %s:\n", strings.Join(cases, ", "))
 	target.WriteString("\t\treturn true\n")
 	target.WriteString("\t}\n")
 	target.WriteString("\treturn false\n")

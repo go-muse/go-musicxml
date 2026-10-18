@@ -130,6 +130,27 @@ func (m *NameManifest) Assign(key, derived string) (string, error) {
 	return name, nil
 }
 
+// External returns the listed name of the type that another schema of the
+// destination package declares under the local name of declaration, which a
+// generation names as external rather than owning it. Exactly one other
+// schema must list it; derived is only used to describe a failure.
+func (m *NameManifest) External(declaration *Declaration, derived string) (string, error) {
+	own := path.Base(declarationPath(declaration))
+	suffix := " type " + declaration.Name.Local
+	var found []string
+	for key := range m.byKey {
+		file, rest, ok := strings.Cut(key, " ")
+		if ok && file != own && " "+rest == suffix {
+			found = append(found, key)
+		}
+	}
+	if len(found) != 1 {
+		slices.Sort(found)
+		return "", fmt.Errorf("%w: external type %s (%s) needs exactly one listed owner in another schema, found %d: %s", ErrNameManifest, declaration.Name.Local, derived, len(found), strings.Join(found, ", "))
+	}
+	return m.byKey[found[0]], nil
+}
+
 // Added returns the components that the manifest did not list, by key.
 func (m *NameManifest) Added() map[string]string {
 	result := make(map[string]string, len(m.added))

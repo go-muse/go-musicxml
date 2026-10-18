@@ -173,6 +173,8 @@ func (r *complexTypeRenderer) buildChoice(
 	if err != nil {
 		return nil, err
 	}
+	// Anonymous variant types are keyed under the wrapper's schema key.
+	r.ownerKeys[goType] = ownerKey + " content"
 	description := "ordered content for " + owner
 	if err := r.reserveTypeName(goType, description); err != nil {
 		return nil, err
@@ -226,6 +228,11 @@ func (r *complexTypeRenderer) buildChoice(
 		goName, err := GoTypeName(element.Name.Local)
 		if err != nil {
 			return nil, err
+		}
+		// A variant field cannot share a name with a method of the wrapper,
+		// as attribute fields take Attr after an element of the same name.
+		if choiceMethodNames[goName] {
+			goName += "Element"
 		}
 		goTypeValue, err := r.elementGoType(element, goType)
 		if err != nil {
@@ -601,6 +608,12 @@ func (r *complexTypeRenderer) renderChoice(
 	target.WriteString("}\n\n")
 
 	renderChoiceAccessors(target, choice)
+}
+
+// choiceMethodNames are the methods of a choice wrapper, which its variant
+// fields must not shadow.
+var choiceMethodNames = map[string]bool{
+	"Value": true, "ElementName": true, "MarshalXML": true, "UnmarshalXML": true,
 }
 
 // renderChoiceAccessors renders Value and ElementName. Variants can share a Go
